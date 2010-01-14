@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	EphemerisRow::~EphemerisRow() {
 	}
 
@@ -200,22 +199,30 @@ namespace asdm {
 	
 	}
 	
-	EphemerisRow* EphemerisRow::fromBin(EndianISStream& eiss, EphemerisTable& table) {
-		EphemerisRow* row = new  EphemerisRow(table);
-		
-		
+void EphemerisRow::ephemerisIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->ephemerisId =  Tag::fromBin(eiss);
+		ephemerisId =  Tag::fromBin(eiss);
 		
 	
+	
+}
 
 		
+	
+	EphemerisRow* EphemerisRow::fromBin(EndianISStream& eiss, EphemerisTable& table, const vector<string>& attributesSeq) {
+		EphemerisRow* row = new  EphemerisRow(table);
 		
-		
-		
+		map<string, EphemerisAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "EphemerisTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -288,6 +295,12 @@ namespace asdm {
 	
 	
 	
+
+	
+	
+	 fromBinMethods["ephemerisId"] = &EphemerisRow::ephemerisIdFromBin; 
+		
+	
 	
 	}
 	
@@ -312,7 +325,12 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["ephemerisId"] = &EphemerisRow::ephemerisIdFromBin; 
+			
+	
+			
 	}
 
 	
@@ -332,6 +350,17 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, EphemerisAttributeFromBin> EphemerisRow::initFromBinMethods() {
+		map<string, EphemerisAttributeFromBin> result;
+		
+		result["ephemerisId"] = &EphemerisRow::ephemerisIdFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

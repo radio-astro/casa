@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalWVRRow::~CalWVRRow() {
 	}
 
@@ -1159,140 +1158,176 @@ namespace asdm {
 	
 	}
 	
-	CalWVRRow* CalWVRRow::fromBin(EndianISStream& eiss, CalWVRTable& table) {
-		CalWVRRow* row = new  CalWVRRow(table);
-		
-		
+void CalWVRRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
+	
+}
+void CalWVRRow::calDataIdFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->calDataId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void CalWVRRow::calReductionIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eiss);
 		
 	
-
+	
+}
+void CalWVRRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
+		startValidTime =  ArrayTime::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->wvrMethod = CWVRMethod::from_int(eiss.readInt());
-			
+}
+void CalWVRRow::endValidTimeFromBin(EndianISStream& eiss) {
 		
 	
-
-	
-	
 		
-			
-		row->numInputAntennas =  eiss.readInt();
-			
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
 		
 	
-
+	
+}
+void CalWVRRow::wvrMethodFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
+		wvrMethod = CWVRMethod::from_int(eiss.readInt());
+			
+		
 	
-		row->inputAntennaNames.clear();
+	
+}
+void CalWVRRow::numInputAntennasFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numInputAntennas =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalWVRRow::inputAntennaNamesFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		inputAntennaNames.clear();
 		
 		unsigned int inputAntennaNamesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < inputAntennaNamesDim1; i++)
 			
-			row->inputAntennaNames.push_back(eiss.readString());
+			inputAntennaNames.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalWVRRow::numChanFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numChan =  eiss.readInt();
+		numChan =  eiss.readInt();
 			
 		
 	
-
 	
+}
+void CalWVRRow::chanFreqFromBin(EndianISStream& eiss) {
 		
-		
-			
-	
-	row->chanFreq = Frequency::from1DBin(eiss);	
-	
-
-		
-	
-
 	
 		
 		
 			
 	
-	row->chanWidth = Frequency::from1DBin(eiss);	
+	chanFreq = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalWVRRow::chanWidthFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->refTemp = Temperature::from2DBin(eiss);		
+	chanWidth = Frequency::from1DBin(eiss);	
 	
 
 		
 	
+	
+}
+void CalWVRRow::refTempFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	refTemp = Temperature::from2DBin(eiss);		
+	
 
+		
+	
+	
+}
+void CalWVRRow::numPolyFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numPoly =  eiss.readInt();
+		numPoly =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CalWVRRow::pathCoeffFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->pathCoeff.clear();
+		pathCoeff.clear();
 			
 		unsigned int pathCoeffDim1 = eiss.readInt();
 		unsigned int pathCoeffDim2 = eiss.readInt();
@@ -1310,69 +1345,92 @@ namespace asdm {
 				}
 				pathCoeffAux2.push_back(pathCoeffAux1);
 			}
-			row->pathCoeff.push_back(pathCoeffAux2);
+			pathCoeff.push_back(pathCoeffAux2);
 		}	
 	
 
 		
 	
-
+	
+}
+void CalWVRRow::polyFreqLimitsFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->polyFreqLimits = Frequency::from1DBin(eiss);	
+	polyFreqLimits = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalWVRRow::wetPathFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->wetPath.clear();
+		wetPath.clear();
 		
 		unsigned int wetPathDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < wetPathDim1; i++)
 			
-			row->wetPath.push_back(eiss.readFloat());
+			wetPath.push_back(eiss.readFloat());
 			
 	
 
 		
 	
-
+	
+}
+void CalWVRRow::dryPathFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->dryPath.clear();
+		dryPath.clear();
 		
 		unsigned int dryPathDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < dryPathDim1; i++)
 			
-			row->dryPath.push_back(eiss.readFloat());
+			dryPath.push_back(eiss.readFloat());
 			
 	
 
 		
 	
-
+	
+}
+void CalWVRRow::waterFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->water =  Length::fromBin(eiss);
+		water =  Length::fromBin(eiss);
 		
 	
+	
+}
 
 		
+	
+	CalWVRRow* CalWVRRow::fromBin(EndianISStream& eiss, CalWVRTable& table, const vector<string>& attributesSeq) {
+		CalWVRRow* row = new  CalWVRRow(table);
 		
-		
-		
+		map<string, CalWVRAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalWVRTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2102,6 +2160,29 @@ wvrMethod = CWVRMethod::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalWVRRow::antennaNameFromBin; 
+	 fromBinMethods["calDataId"] = &CalWVRRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalWVRRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalWVRRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalWVRRow::endValidTimeFromBin; 
+	 fromBinMethods["wvrMethod"] = &CalWVRRow::wvrMethodFromBin; 
+	 fromBinMethods["numInputAntennas"] = &CalWVRRow::numInputAntennasFromBin; 
+	 fromBinMethods["inputAntennaNames"] = &CalWVRRow::inputAntennaNamesFromBin; 
+	 fromBinMethods["numChan"] = &CalWVRRow::numChanFromBin; 
+	 fromBinMethods["chanFreq"] = &CalWVRRow::chanFreqFromBin; 
+	 fromBinMethods["chanWidth"] = &CalWVRRow::chanWidthFromBin; 
+	 fromBinMethods["refTemp"] = &CalWVRRow::refTempFromBin; 
+	 fromBinMethods["numPoly"] = &CalWVRRow::numPolyFromBin; 
+	 fromBinMethods["pathCoeff"] = &CalWVRRow::pathCoeffFromBin; 
+	 fromBinMethods["polyFreqLimits"] = &CalWVRRow::polyFreqLimitsFromBin; 
+	 fromBinMethods["wetPath"] = &CalWVRRow::wetPathFromBin; 
+	 fromBinMethods["dryPath"] = &CalWVRRow::dryPathFromBin; 
+	 fromBinMethods["water"] = &CalWVRRow::waterFromBin; 
+		
+	
 	
 	}
 	
@@ -2194,7 +2275,29 @@ wvrMethod = CWVRMethod::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalWVRRow::antennaNameFromBin; 
+		 fromBinMethods["calDataId"] = &CalWVRRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalWVRRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalWVRRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalWVRRow::endValidTimeFromBin; 
+		 fromBinMethods["wvrMethod"] = &CalWVRRow::wvrMethodFromBin; 
+		 fromBinMethods["numInputAntennas"] = &CalWVRRow::numInputAntennasFromBin; 
+		 fromBinMethods["inputAntennaNames"] = &CalWVRRow::inputAntennaNamesFromBin; 
+		 fromBinMethods["numChan"] = &CalWVRRow::numChanFromBin; 
+		 fromBinMethods["chanFreq"] = &CalWVRRow::chanFreqFromBin; 
+		 fromBinMethods["chanWidth"] = &CalWVRRow::chanWidthFromBin; 
+		 fromBinMethods["refTemp"] = &CalWVRRow::refTempFromBin; 
+		 fromBinMethods["numPoly"] = &CalWVRRow::numPolyFromBin; 
+		 fromBinMethods["pathCoeff"] = &CalWVRRow::pathCoeffFromBin; 
+		 fromBinMethods["polyFreqLimits"] = &CalWVRRow::polyFreqLimitsFromBin; 
+		 fromBinMethods["wetPath"] = &CalWVRRow::wetPathFromBin; 
+		 fromBinMethods["dryPath"] = &CalWVRRow::dryPathFromBin; 
+		 fromBinMethods["water"] = &CalWVRRow::waterFromBin; 
+			
+	
+			
 	}
 
 	
@@ -2446,6 +2549,34 @@ wvrMethod = CWVRMethod::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalWVRAttributeFromBin> CalWVRRow::initFromBinMethods() {
+		map<string, CalWVRAttributeFromBin> result;
+		
+		result["antennaName"] = &CalWVRRow::antennaNameFromBin;
+		result["calDataId"] = &CalWVRRow::calDataIdFromBin;
+		result["calReductionId"] = &CalWVRRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalWVRRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalWVRRow::endValidTimeFromBin;
+		result["wvrMethod"] = &CalWVRRow::wvrMethodFromBin;
+		result["numInputAntennas"] = &CalWVRRow::numInputAntennasFromBin;
+		result["inputAntennaNames"] = &CalWVRRow::inputAntennaNamesFromBin;
+		result["numChan"] = &CalWVRRow::numChanFromBin;
+		result["chanFreq"] = &CalWVRRow::chanFreqFromBin;
+		result["chanWidth"] = &CalWVRRow::chanWidthFromBin;
+		result["refTemp"] = &CalWVRRow::refTempFromBin;
+		result["numPoly"] = &CalWVRRow::numPolyFromBin;
+		result["pathCoeff"] = &CalWVRRow::pathCoeffFromBin;
+		result["polyFreqLimits"] = &CalWVRRow::polyFreqLimitsFromBin;
+		result["wetPath"] = &CalWVRRow::wetPathFromBin;
+		result["dryPath"] = &CalWVRRow::dryPathFromBin;
+		result["water"] = &CalWVRRow::waterFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

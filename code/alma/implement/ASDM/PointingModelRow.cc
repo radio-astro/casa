@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	PointingModelRow::~PointingModelRow() {
 	}
 
@@ -737,123 +736,145 @@ namespace asdm {
 
 	}
 	
-	PointingModelRow* PointingModelRow::fromBin(EndianISStream& eiss, PointingModelTable& table) {
-		PointingModelRow* row = new  PointingModelRow(table);
-		
-		
+void PointingModelRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void PointingModelRow::pointingModelIdFromBin(EndianISStream& eiss) {
 		
-			
-		row->pointingModelId =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->numCoeff =  eiss.readInt();
+		pointingModelId =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void PointingModelRow::numCoeffFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numCoeff =  eiss.readInt();
+			
+		
+	
+	
+}
+void PointingModelRow::coeffNameFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffName.clear();
+		coeffName.clear();
 		
 		unsigned int coeffNameDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
 			
-			row->coeffName.push_back(eiss.readString());
+			coeffName.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void PointingModelRow::coeffValFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffVal.clear();
+		coeffVal.clear();
 		
 		unsigned int coeffValDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffValDim1; i++)
 			
-			row->coeffVal.push_back(eiss.readFloat());
+			coeffVal.push_back(eiss.readFloat());
 			
 	
 
 		
 	
+	
+}
+void PointingModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		polarizationType = CPolarizationType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void PointingModelRow::receiverBandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void PointingModelRow::assocNatureFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		assocNature =  eiss.readString();
+			
+		
+	
+	
+}
+void PointingModelRow::assocPointingModelIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		assocPointingModelId =  eiss.readInt();
+			
+		
+	
+	
+}
 
-	
-	
+void PointingModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
 		
-			
-		row->polarizationType = CPolarizationType::from_int(eiss.readInt());
-			
-		
-	
-
-	
-	
-		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
-	
-	
-		
-			
-		row->assocNature =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->assocPointingModelId =  eiss.readInt();
-			
-		
-	
-
-		
-		
-		
-	row->coeffFormulaExists = eiss.readBoolean();
-	if (row->coeffFormulaExists) {
+	coeffFormulaExists = eiss.readBoolean();
+	if (coeffFormulaExists) {
 		
 	
 	
 		
 			
 	
-		row->coeffFormula.clear();
+		coeffFormula.clear();
 		
 		unsigned int coeffFormulaDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
 			
-			row->coeffFormula.push_back(eiss.readString());
+			coeffFormula.push_back(eiss.readString());
 			
 	
 
@@ -861,8 +882,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	PointingModelRow* PointingModelRow::fromBin(EndianISStream& eiss, PointingModelTable& table, const vector<string>& attributesSeq) {
+		PointingModelRow* row = new  PointingModelRow(table);
 		
+		map<string, PointingModelAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PointingModelTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1320,6 +1354,21 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &PointingModelRow::antennaIdFromBin; 
+	 fromBinMethods["pointingModelId"] = &PointingModelRow::pointingModelIdFromBin; 
+	 fromBinMethods["numCoeff"] = &PointingModelRow::numCoeffFromBin; 
+	 fromBinMethods["coeffName"] = &PointingModelRow::coeffNameFromBin; 
+	 fromBinMethods["coeffVal"] = &PointingModelRow::coeffValFromBin; 
+	 fromBinMethods["polarizationType"] = &PointingModelRow::polarizationTypeFromBin; 
+	 fromBinMethods["receiverBand"] = &PointingModelRow::receiverBandFromBin; 
+	 fromBinMethods["assocNature"] = &PointingModelRow::assocNatureFromBin; 
+	 fromBinMethods["assocPointingModelId"] = &PointingModelRow::assocPointingModelIdFromBin; 
+		
+	
+	 fromBinMethods["coeffFormula"] = &PointingModelRow::coeffFormulaFromBin; 
 	
 	}
 	
@@ -1387,7 +1436,21 @@ receiverBand = CReceiverBand::from_int(0);
 		else
 			coeffFormulaExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &PointingModelRow::antennaIdFromBin; 
+		 fromBinMethods["pointingModelId"] = &PointingModelRow::pointingModelIdFromBin; 
+		 fromBinMethods["numCoeff"] = &PointingModelRow::numCoeffFromBin; 
+		 fromBinMethods["coeffName"] = &PointingModelRow::coeffNameFromBin; 
+		 fromBinMethods["coeffVal"] = &PointingModelRow::coeffValFromBin; 
+		 fromBinMethods["polarizationType"] = &PointingModelRow::polarizationTypeFromBin; 
+		 fromBinMethods["receiverBand"] = &PointingModelRow::receiverBandFromBin; 
+		 fromBinMethods["assocNature"] = &PointingModelRow::assocNatureFromBin; 
+		 fromBinMethods["assocPointingModelId"] = &PointingModelRow::assocPointingModelIdFromBin; 
+			
+	
+		 fromBinMethods["coeffFormula"] = &PointingModelRow::coeffFormulaFromBin; 
+			
 	}
 
 	
@@ -1521,6 +1584,26 @@ receiverBand = CReceiverBand::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, PointingModelAttributeFromBin> PointingModelRow::initFromBinMethods() {
+		map<string, PointingModelAttributeFromBin> result;
+		
+		result["antennaId"] = &PointingModelRow::antennaIdFromBin;
+		result["pointingModelId"] = &PointingModelRow::pointingModelIdFromBin;
+		result["numCoeff"] = &PointingModelRow::numCoeffFromBin;
+		result["coeffName"] = &PointingModelRow::coeffNameFromBin;
+		result["coeffVal"] = &PointingModelRow::coeffValFromBin;
+		result["polarizationType"] = &PointingModelRow::polarizationTypeFromBin;
+		result["receiverBand"] = &PointingModelRow::receiverBandFromBin;
+		result["assocNature"] = &PointingModelRow::assocNatureFromBin;
+		result["assocPointingModelId"] = &PointingModelRow::assocPointingModelIdFromBin;
+		
+		
+		result["coeffFormula"] = &PointingModelRow::coeffFormulaFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

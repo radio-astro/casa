@@ -74,7 +74,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	FreqOffsetRow::~FreqOffsetRow() {
 	}
 
@@ -429,52 +428,72 @@ namespace asdm {
 	
 	}
 	
-	FreqOffsetRow* FreqOffsetRow::fromBin(EndianISStream& eiss, FreqOffsetTable& table) {
+void FreqOffsetRow::antennaIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		antennaId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void FreqOffsetRow::spectralWindowIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void FreqOffsetRow::timeIntervalFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+	
+}
+void FreqOffsetRow::feedIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		feedId =  eiss.readInt();
+			
+		
+	
+	
+}
+void FreqOffsetRow::offsetFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		offset =  Frequency::fromBin(eiss);
+		
+	
+	
+}
+
+		
+	
+	FreqOffsetRow* FreqOffsetRow::fromBin(EndianISStream& eiss, FreqOffsetTable& table, const vector<string>& attributesSeq) {
 		FreqOffsetRow* row = new  FreqOffsetRow(table);
 		
-		
-		
-	
-		
-		
-		row->antennaId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->feedId =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-		row->offset =  Frequency::fromBin(eiss);
-		
-	
-
-		
-		
-		
-		
+		map<string, FreqOffsetAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FreqOffsetTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -754,6 +773,16 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &FreqOffsetRow::antennaIdFromBin; 
+	 fromBinMethods["spectralWindowId"] = &FreqOffsetRow::spectralWindowIdFromBin; 
+	 fromBinMethods["timeInterval"] = &FreqOffsetRow::timeIntervalFromBin; 
+	 fromBinMethods["feedId"] = &FreqOffsetRow::feedIdFromBin; 
+	 fromBinMethods["offset"] = &FreqOffsetRow::offsetFromBin; 
+		
+	
 	
 	}
 	
@@ -794,7 +823,16 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &FreqOffsetRow::antennaIdFromBin; 
+		 fromBinMethods["spectralWindowId"] = &FreqOffsetRow::spectralWindowIdFromBin; 
+		 fromBinMethods["timeInterval"] = &FreqOffsetRow::timeIntervalFromBin; 
+		 fromBinMethods["feedId"] = &FreqOffsetRow::feedIdFromBin; 
+		 fromBinMethods["offset"] = &FreqOffsetRow::offsetFromBin; 
+			
+	
+			
 	}
 
 	
@@ -871,6 +909,21 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, FreqOffsetAttributeFromBin> FreqOffsetRow::initFromBinMethods() {
+		map<string, FreqOffsetAttributeFromBin> result;
+		
+		result["antennaId"] = &FreqOffsetRow::antennaIdFromBin;
+		result["spectralWindowId"] = &FreqOffsetRow::spectralWindowIdFromBin;
+		result["timeInterval"] = &FreqOffsetRow::timeIntervalFromBin;
+		result["feedId"] = &FreqOffsetRow::feedIdFromBin;
+		result["offset"] = &FreqOffsetRow::offsetFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

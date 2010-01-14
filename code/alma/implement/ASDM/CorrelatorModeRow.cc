@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CorrelatorModeRow::~CorrelatorModeRow() {
 	}
 
@@ -699,135 +698,170 @@ namespace asdm {
 	
 	}
 	
-	CorrelatorModeRow* CorrelatorModeRow::fromBin(EndianISStream& eiss, CorrelatorModeTable& table) {
-		CorrelatorModeRow* row = new  CorrelatorModeRow(table);
-		
-		
+void CorrelatorModeRow::correlatorModeIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->correlatorModeId =  Tag::fromBin(eiss);
+		correlatorModeId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void CorrelatorModeRow::numBasebandFromBin(EndianISStream& eiss) {
 		
-			
-		row->numBaseband =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numBaseband =  eiss.readInt();
+			
+		
 	
-		row->basebandNames.clear();
+	
+}
+void CorrelatorModeRow::basebandNamesFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		basebandNames.clear();
 		
 		unsigned int basebandNamesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < basebandNamesDim1; i++)
 			
-			row->basebandNames.push_back(CBasebandName::from_int(eiss.readInt()));
+			basebandNames.push_back(CBasebandName::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CorrelatorModeRow::basebandConfigFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->basebandConfig.clear();
+		basebandConfig.clear();
 		
 		unsigned int basebandConfigDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < basebandConfigDim1; i++)
 			
-			row->basebandConfig.push_back(eiss.readInt());
+			basebandConfig.push_back(eiss.readInt());
 			
 	
 
 		
 	
-
+	
+}
+void CorrelatorModeRow::accumModeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->accumMode = CAccumMode::from_int(eiss.readInt());
+		accumMode = CAccumMode::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CorrelatorModeRow::binModeFromBin(EndianISStream& eiss) {
 		
-			
-		row->binMode =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->numAxes =  eiss.readInt();
+		binMode =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CorrelatorModeRow::numAxesFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numAxes =  eiss.readInt();
+			
+		
+	
+	
+}
+void CorrelatorModeRow::axesOrderArrayFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->axesOrderArray.clear();
+		axesOrderArray.clear();
 		
 		unsigned int axesOrderArrayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < axesOrderArrayDim1; i++)
 			
-			row->axesOrderArray.push_back(CAxisName::from_int(eiss.readInt()));
+			axesOrderArray.push_back(CAxisName::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CorrelatorModeRow::filterModeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->filterMode.clear();
+		filterMode.clear();
 		
 		unsigned int filterModeDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < filterModeDim1; i++)
 			
-			row->filterMode.push_back(CFilterMode::from_int(eiss.readInt()));
+			filterMode.push_back(CFilterMode::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CorrelatorModeRow::correlatorNameFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->correlatorName = CCorrelatorName::from_int(eiss.readInt());
+		correlatorName = CCorrelatorName::from_int(eiss.readInt());
 			
 		
 	
+	
+}
 
 		
+	
+	CorrelatorModeRow* CorrelatorModeRow::fromBin(EndianISStream& eiss, CorrelatorModeTable& table, const vector<string>& attributesSeq) {
+		CorrelatorModeRow* row = new  CorrelatorModeRow(table);
 		
-		
-		
+		map<string, CorrelatorModeAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CorrelatorModeTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1230,6 +1264,21 @@ accumMode = CAccumMode::from_int(0);
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 correlatorName = CCorrelatorName::from_int(0);
 	
+
+	
+	
+	 fromBinMethods["correlatorModeId"] = &CorrelatorModeRow::correlatorModeIdFromBin; 
+	 fromBinMethods["numBaseband"] = &CorrelatorModeRow::numBasebandFromBin; 
+	 fromBinMethods["basebandNames"] = &CorrelatorModeRow::basebandNamesFromBin; 
+	 fromBinMethods["basebandConfig"] = &CorrelatorModeRow::basebandConfigFromBin; 
+	 fromBinMethods["accumMode"] = &CorrelatorModeRow::accumModeFromBin; 
+	 fromBinMethods["binMode"] = &CorrelatorModeRow::binModeFromBin; 
+	 fromBinMethods["numAxes"] = &CorrelatorModeRow::numAxesFromBin; 
+	 fromBinMethods["axesOrderArray"] = &CorrelatorModeRow::axesOrderArrayFromBin; 
+	 fromBinMethods["filterMode"] = &CorrelatorModeRow::filterModeFromBin; 
+	 fromBinMethods["correlatorName"] = &CorrelatorModeRow::correlatorNameFromBin; 
+		
+	
 	
 	}
 	
@@ -1290,7 +1339,21 @@ correlatorName = CCorrelatorName::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["correlatorModeId"] = &CorrelatorModeRow::correlatorModeIdFromBin; 
+		 fromBinMethods["numBaseband"] = &CorrelatorModeRow::numBasebandFromBin; 
+		 fromBinMethods["basebandNames"] = &CorrelatorModeRow::basebandNamesFromBin; 
+		 fromBinMethods["basebandConfig"] = &CorrelatorModeRow::basebandConfigFromBin; 
+		 fromBinMethods["accumMode"] = &CorrelatorModeRow::accumModeFromBin; 
+		 fromBinMethods["binMode"] = &CorrelatorModeRow::binModeFromBin; 
+		 fromBinMethods["numAxes"] = &CorrelatorModeRow::numAxesFromBin; 
+		 fromBinMethods["axesOrderArray"] = &CorrelatorModeRow::axesOrderArrayFromBin; 
+		 fromBinMethods["filterMode"] = &CorrelatorModeRow::filterModeFromBin; 
+		 fromBinMethods["correlatorName"] = &CorrelatorModeRow::correlatorNameFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1443,6 +1506,26 @@ correlatorName = CCorrelatorName::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CorrelatorModeAttributeFromBin> CorrelatorModeRow::initFromBinMethods() {
+		map<string, CorrelatorModeAttributeFromBin> result;
+		
+		result["correlatorModeId"] = &CorrelatorModeRow::correlatorModeIdFromBin;
+		result["numBaseband"] = &CorrelatorModeRow::numBasebandFromBin;
+		result["basebandNames"] = &CorrelatorModeRow::basebandNamesFromBin;
+		result["basebandConfig"] = &CorrelatorModeRow::basebandConfigFromBin;
+		result["accumMode"] = &CorrelatorModeRow::accumModeFromBin;
+		result["binMode"] = &CorrelatorModeRow::binModeFromBin;
+		result["numAxes"] = &CorrelatorModeRow::numAxesFromBin;
+		result["axesOrderArray"] = &CorrelatorModeRow::axesOrderArrayFromBin;
+		result["filterMode"] = &CorrelatorModeRow::filterModeFromBin;
+		result["correlatorName"] = &CorrelatorModeRow::correlatorNameFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

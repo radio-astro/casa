@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	HistoryRow::~HistoryRow() {
 	}
 
@@ -595,92 +594,124 @@ namespace asdm {
 	
 	}
 	
-	HistoryRow* HistoryRow::fromBin(EndianISStream& eiss, HistoryTable& table) {
+void HistoryRow::execBlockIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		execBlockId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void HistoryRow::timeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		time =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void HistoryRow::messageFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		message =  eiss.readString();
+			
+		
+	
+	
+}
+void HistoryRow::priorityFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		priority =  eiss.readString();
+			
+		
+	
+	
+}
+void HistoryRow::originFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		origin =  eiss.readString();
+			
+		
+	
+	
+}
+void HistoryRow::objectIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		objectId =  eiss.readString();
+			
+		
+	
+	
+}
+void HistoryRow::applicationFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		application =  eiss.readString();
+			
+		
+	
+	
+}
+void HistoryRow::cliCommandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		cliCommand =  eiss.readString();
+			
+		
+	
+	
+}
+void HistoryRow::appParmsFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		appParms =  eiss.readString();
+			
+		
+	
+	
+}
+
+		
+	
+	HistoryRow* HistoryRow::fromBin(EndianISStream& eiss, HistoryTable& table, const vector<string>& attributesSeq) {
 		HistoryRow* row = new  HistoryRow(table);
 		
-		
-		
-	
-		
-		
-		row->execBlockId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->time =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->message =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->priority =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->origin =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->objectId =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->application =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->cliCommand =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->appParms =  eiss.readString();
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, HistoryAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "HistoryTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1062,6 +1093,20 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["execBlockId"] = &HistoryRow::execBlockIdFromBin; 
+	 fromBinMethods["time"] = &HistoryRow::timeFromBin; 
+	 fromBinMethods["message"] = &HistoryRow::messageFromBin; 
+	 fromBinMethods["priority"] = &HistoryRow::priorityFromBin; 
+	 fromBinMethods["origin"] = &HistoryRow::originFromBin; 
+	 fromBinMethods["objectId"] = &HistoryRow::objectIdFromBin; 
+	 fromBinMethods["application"] = &HistoryRow::applicationFromBin; 
+	 fromBinMethods["cliCommand"] = &HistoryRow::cliCommandFromBin; 
+	 fromBinMethods["appParms"] = &HistoryRow::appParmsFromBin; 
+		
+	
 	
 	}
 	
@@ -1118,7 +1163,20 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["execBlockId"] = &HistoryRow::execBlockIdFromBin; 
+		 fromBinMethods["time"] = &HistoryRow::timeFromBin; 
+		 fromBinMethods["message"] = &HistoryRow::messageFromBin; 
+		 fromBinMethods["priority"] = &HistoryRow::priorityFromBin; 
+		 fromBinMethods["origin"] = &HistoryRow::originFromBin; 
+		 fromBinMethods["objectId"] = &HistoryRow::objectIdFromBin; 
+		 fromBinMethods["application"] = &HistoryRow::applicationFromBin; 
+		 fromBinMethods["cliCommand"] = &HistoryRow::cliCommandFromBin; 
+		 fromBinMethods["appParms"] = &HistoryRow::appParmsFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1259,6 +1317,25 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, HistoryAttributeFromBin> HistoryRow::initFromBinMethods() {
+		map<string, HistoryAttributeFromBin> result;
+		
+		result["execBlockId"] = &HistoryRow::execBlockIdFromBin;
+		result["time"] = &HistoryRow::timeFromBin;
+		result["message"] = &HistoryRow::messageFromBin;
+		result["priority"] = &HistoryRow::priorityFromBin;
+		result["origin"] = &HistoryRow::originFromBin;
+		result["objectId"] = &HistoryRow::objectIdFromBin;
+		result["application"] = &HistoryRow::applicationFromBin;
+		result["cliCommand"] = &HistoryRow::cliCommandFromBin;
+		result["appParms"] = &HistoryRow::appParmsFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

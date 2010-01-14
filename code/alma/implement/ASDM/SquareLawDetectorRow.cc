@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SquareLawDetectorRow::~SquareLawDetectorRow() {
 	}
 
@@ -296,40 +295,54 @@ namespace asdm {
 	
 	}
 	
-	SquareLawDetectorRow* SquareLawDetectorRow::fromBin(EndianISStream& eiss, SquareLawDetectorTable& table) {
+void SquareLawDetectorRow::squareLawDetectorIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		squareLawDetectorId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void SquareLawDetectorRow::numBandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numBand =  eiss.readInt();
+			
+		
+	
+	
+}
+void SquareLawDetectorRow::bandTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		bandType = CDetectorBandType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+
+		
+	
+	SquareLawDetectorRow* SquareLawDetectorRow::fromBin(EndianISStream& eiss, SquareLawDetectorTable& table, const vector<string>& attributesSeq) {
 		SquareLawDetectorRow* row = new  SquareLawDetectorRow(table);
 		
-		
-		
-	
-		
-		
-		row->squareLawDetectorId =  Tag::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->numBand =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->bandType = CDetectorBandType::from_int(eiss.readInt());
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, SquareLawDetectorAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SquareLawDetectorTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -477,6 +490,14 @@ namespace asdm {
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 bandType = CDetectorBandType::from_int(0);
 	
+
+	
+	
+	 fromBinMethods["squareLawDetectorId"] = &SquareLawDetectorRow::squareLawDetectorIdFromBin; 
+	 fromBinMethods["numBand"] = &SquareLawDetectorRow::numBandFromBin; 
+	 fromBinMethods["bandType"] = &SquareLawDetectorRow::bandTypeFromBin; 
+		
+	
 	
 	}
 	
@@ -509,7 +530,14 @@ bandType = CDetectorBandType::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["squareLawDetectorId"] = &SquareLawDetectorRow::squareLawDetectorIdFromBin; 
+		 fromBinMethods["numBand"] = &SquareLawDetectorRow::numBandFromBin; 
+		 fromBinMethods["bandType"] = &SquareLawDetectorRow::bandTypeFromBin; 
+			
+	
+			
 	}
 
 	
@@ -571,6 +599,19 @@ bandType = CDetectorBandType::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, SquareLawDetectorAttributeFromBin> SquareLawDetectorRow::initFromBinMethods() {
+		map<string, SquareLawDetectorAttributeFromBin> result;
+		
+		result["squareLawDetectorId"] = &SquareLawDetectorRow::squareLawDetectorIdFromBin;
+		result["numBand"] = &SquareLawDetectorRow::numBandFromBin;
+		result["bandType"] = &SquareLawDetectorRow::bandTypeFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

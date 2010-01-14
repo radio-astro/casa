@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalBandpassRow::~CalBandpassRow() {
 	}
 
@@ -1297,171 +1296,216 @@ namespace asdm {
 
 	}
 	
-	CalBandpassRow* CalBandpassRow::fromBin(EndianISStream& eiss, CalBandpassTable& table) {
-		CalBandpassRow* row = new  CalBandpassRow(table);
-		
-		
+void CalBandpassRow::basebandNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->basebandName = CBasebandName::from_int(eiss.readInt());
+		basebandName = CBasebandName::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CalBandpassRow::sidebandFromBin(EndianISStream& eiss) {
 		
-			
-		row->sideband = CNetSideband::from_int(eiss.readInt());
-			
-		
-	
-
 	
 	
 		
 			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+		sideband = CNetSideband::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CalBandpassRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
 		
-			
-		row->typeCurve = CCalCurveType::from_int(eiss.readInt());
-			
-		
-	
-
 	
 	
 		
 			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
 			
 		
 	
-
 	
+}
+void CalBandpassRow::typeCurveFromBin(EndianISStream& eiss) {
 		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->numAntenna =  eiss.readInt();
+		typeCurve = CCalCurveType::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CalBandpassRow::receiverBandFromBin(EndianISStream& eiss) {
 		
-			
-		row->numPoly =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void CalBandpassRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalBandpassRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalBandpassRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalBandpassRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalBandpassRow::numAntennaFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numAntenna =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalBandpassRow::numPolyFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numPoly =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalBandpassRow::numReceptorFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numReceptor =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalBandpassRow::antennaNamesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->antennaNames.clear();
+		antennaNames.clear();
 		
 		unsigned int antennaNamesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < antennaNamesDim1; i++)
 			
-			row->antennaNames.push_back(eiss.readString());
+			antennaNames.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalBandpassRow::refAntennaNameFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->refAntennaName =  eiss.readString();
+		refAntennaName =  eiss.readString();
 			
 		
 	
-
+	
+}
+void CalBandpassRow::freqLimitsFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->freqLimits = Frequency::from1DBin(eiss);	
+	freqLimits = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalBandpassRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalBandpassRow::curveFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->curve.clear();
+		curve.clear();
 			
 		unsigned int curveDim1 = eiss.readInt();
 		unsigned int curveDim2 = eiss.readInt();
@@ -1479,56 +1523,63 @@ namespace asdm {
 				}
 				curveAux2.push_back(curveAux1);
 			}
-			row->curve.push_back(curveAux2);
+			curve.push_back(curveAux2);
 		}	
 	
 
 		
 	
-
+	
+}
+void CalBandpassRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->reducedChiSquared.clear();
+		reducedChiSquared.clear();
 		
 		unsigned int reducedChiSquaredDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
 			
-			row->reducedChiSquared.push_back(eiss.readDouble());
+			reducedChiSquared.push_back(eiss.readDouble());
 			
 	
 
 		
 	
+	
+}
 
+void CalBandpassRow::numBaselineFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->numBaselineExists = eiss.readBoolean();
-	if (row->numBaselineExists) {
+	numBaselineExists = eiss.readBoolean();
+	if (numBaselineExists) {
 		
 	
 	
 		
 			
-		row->numBaseline =  eiss.readInt();
+		numBaseline =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->rmsExists = eiss.readBoolean();
-	if (row->rmsExists) {
+	
+}
+void CalBandpassRow::rmsFromBin(EndianISStream& eiss) {
+		
+	rmsExists = eiss.readBoolean();
+	if (rmsExists) {
 		
 	
 	
 		
 			
 	
-		row->rms.clear();
+		rms.clear();
 		
 		unsigned int rmsDim1 = eiss.readInt();
 		unsigned int rmsDim2 = eiss.readInt();
@@ -1539,7 +1590,7 @@ namespace asdm {
 			
 			rmsAux1.push_back(eiss.readFloat());
 			
-			row->rms.push_back(rmsAux1);
+			rms.push_back(rmsAux1);
 		}
 	
 	
@@ -1548,8 +1599,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	CalBandpassRow* CalBandpassRow::fromBin(EndianISStream& eiss, CalBandpassTable& table, const vector<string>& attributesSeq) {
+		CalBandpassRow* row = new  CalBandpassRow(table);
 		
+		map<string, CalBandpassAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalBandpassTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2413,6 +2477,31 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["basebandName"] = &CalBandpassRow::basebandNameFromBin; 
+	 fromBinMethods["sideband"] = &CalBandpassRow::sidebandFromBin; 
+	 fromBinMethods["atmPhaseCorrection"] = &CalBandpassRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["typeCurve"] = &CalBandpassRow::typeCurveFromBin; 
+	 fromBinMethods["receiverBand"] = &CalBandpassRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalBandpassRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalBandpassRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalBandpassRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalBandpassRow::endValidTimeFromBin; 
+	 fromBinMethods["numAntenna"] = &CalBandpassRow::numAntennaFromBin; 
+	 fromBinMethods["numPoly"] = &CalBandpassRow::numPolyFromBin; 
+	 fromBinMethods["numReceptor"] = &CalBandpassRow::numReceptorFromBin; 
+	 fromBinMethods["antennaNames"] = &CalBandpassRow::antennaNamesFromBin; 
+	 fromBinMethods["refAntennaName"] = &CalBandpassRow::refAntennaNameFromBin; 
+	 fromBinMethods["freqLimits"] = &CalBandpassRow::freqLimitsFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalBandpassRow::polarizationTypesFromBin; 
+	 fromBinMethods["curve"] = &CalBandpassRow::curveFromBin; 
+	 fromBinMethods["reducedChiSquared"] = &CalBandpassRow::reducedChiSquaredFromBin; 
+		
+	
+	 fromBinMethods["numBaseline"] = &CalBandpassRow::numBaselineFromBin; 
+	 fromBinMethods["rms"] = &CalBandpassRow::rmsFromBin; 
 	
 	}
 	
@@ -2527,7 +2616,31 @@ receiverBand = CReceiverBand::from_int(0);
 		else
 			rmsExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["basebandName"] = &CalBandpassRow::basebandNameFromBin; 
+		 fromBinMethods["sideband"] = &CalBandpassRow::sidebandFromBin; 
+		 fromBinMethods["atmPhaseCorrection"] = &CalBandpassRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["typeCurve"] = &CalBandpassRow::typeCurveFromBin; 
+		 fromBinMethods["receiverBand"] = &CalBandpassRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalBandpassRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalBandpassRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalBandpassRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalBandpassRow::endValidTimeFromBin; 
+		 fromBinMethods["numAntenna"] = &CalBandpassRow::numAntennaFromBin; 
+		 fromBinMethods["numPoly"] = &CalBandpassRow::numPolyFromBin; 
+		 fromBinMethods["numReceptor"] = &CalBandpassRow::numReceptorFromBin; 
+		 fromBinMethods["antennaNames"] = &CalBandpassRow::antennaNamesFromBin; 
+		 fromBinMethods["refAntennaName"] = &CalBandpassRow::refAntennaNameFromBin; 
+		 fromBinMethods["freqLimits"] = &CalBandpassRow::freqLimitsFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalBandpassRow::polarizationTypesFromBin; 
+		 fromBinMethods["curve"] = &CalBandpassRow::curveFromBin; 
+		 fromBinMethods["reducedChiSquared"] = &CalBandpassRow::reducedChiSquaredFromBin; 
+			
+	
+		 fromBinMethods["numBaseline"] = &CalBandpassRow::numBaselineFromBin; 
+		 fromBinMethods["rms"] = &CalBandpassRow::rmsFromBin; 
+			
 	}
 
 	
@@ -2755,6 +2868,36 @@ receiverBand = CReceiverBand::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalBandpassAttributeFromBin> CalBandpassRow::initFromBinMethods() {
+		map<string, CalBandpassAttributeFromBin> result;
+		
+		result["basebandName"] = &CalBandpassRow::basebandNameFromBin;
+		result["sideband"] = &CalBandpassRow::sidebandFromBin;
+		result["atmPhaseCorrection"] = &CalBandpassRow::atmPhaseCorrectionFromBin;
+		result["typeCurve"] = &CalBandpassRow::typeCurveFromBin;
+		result["receiverBand"] = &CalBandpassRow::receiverBandFromBin;
+		result["calDataId"] = &CalBandpassRow::calDataIdFromBin;
+		result["calReductionId"] = &CalBandpassRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalBandpassRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalBandpassRow::endValidTimeFromBin;
+		result["numAntenna"] = &CalBandpassRow::numAntennaFromBin;
+		result["numPoly"] = &CalBandpassRow::numPolyFromBin;
+		result["numReceptor"] = &CalBandpassRow::numReceptorFromBin;
+		result["antennaNames"] = &CalBandpassRow::antennaNamesFromBin;
+		result["refAntennaName"] = &CalBandpassRow::refAntennaNameFromBin;
+		result["freqLimits"] = &CalBandpassRow::freqLimitsFromBin;
+		result["polarizationTypes"] = &CalBandpassRow::polarizationTypesFromBin;
+		result["curve"] = &CalBandpassRow::curveFromBin;
+		result["reducedChiSquared"] = &CalBandpassRow::reducedChiSquaredFromBin;
+		
+		
+		result["numBaseline"] = &CalBandpassRow::numBaselineFromBin;
+		result["rms"] = &CalBandpassRow::rmsFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

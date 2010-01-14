@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	AlmaRadiometerRow::~AlmaRadiometerRow() {
 	}
 
@@ -352,52 +351,66 @@ namespace asdm {
 
 	}
 	
-	AlmaRadiometerRow* AlmaRadiometerRow::fromBin(EndianISStream& eiss, AlmaRadiometerTable& table) {
+void AlmaRadiometerRow::almaRadiometerIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		almaRadiometerId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+
+void AlmaRadiometerRow::numAntennaFromBin(EndianISStream& eiss) {
+		
+	numAntennaExists = eiss.readBoolean();
+	if (numAntennaExists) {
+		
+	
+	
+		
+			
+		numAntenna =  eiss.readInt();
+			
+		
+	
+
+	}
+	
+}
+void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
+		
+	spectralWindowIdExists = eiss.readBoolean();
+	if (spectralWindowIdExists) {
+		
+	
+		
+		
+			
+	
+	spectralWindowId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+	
+}
+	
+	
+	AlmaRadiometerRow* AlmaRadiometerRow::fromBin(EndianISStream& eiss, AlmaRadiometerTable& table, const vector<string>& attributesSeq) {
 		AlmaRadiometerRow* row = new  AlmaRadiometerRow(table);
 		
-		
-		
-	
-		
-		
-		row->almaRadiometerId =  Tag::fromBin(eiss);
-		
-	
-
-		
-		
-		
-	row->numAntennaExists = eiss.readBoolean();
-	if (row->numAntennaExists) {
-		
-	
-	
-		
-			
-		row->numAntenna =  eiss.readInt();
-			
-		
-	
-
-	}
-
-	row->spectralWindowIdExists = eiss.readBoolean();
-	if (row->spectralWindowIdExists) {
-		
-	
-		
-		
-			
-	
-	row->spectralWindowId = Tag::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-		
+		map<string, AlmaRadiometerAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "AlmaRadiometerTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -646,6 +659,14 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["almaRadiometerId"] = &AlmaRadiometerRow::almaRadiometerIdFromBin; 
+		
+	
+	 fromBinMethods["numAntenna"] = &AlmaRadiometerRow::numAntennaFromBin; 
+	 fromBinMethods["spectralWindowId"] = &AlmaRadiometerRow::spectralWindowIdFromBin; 
 	
 	}
 	
@@ -692,7 +713,14 @@ namespace asdm {
 		else
 			spectralWindowIdExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["almaRadiometerId"] = &AlmaRadiometerRow::almaRadiometerIdFromBin; 
+			
+	
+		 fromBinMethods["numAntenna"] = &AlmaRadiometerRow::numAntennaFromBin; 
+		 fromBinMethods["spectralWindowId"] = &AlmaRadiometerRow::spectralWindowIdFromBin; 
+			
 	}
 
 	
@@ -712,6 +740,19 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, AlmaRadiometerAttributeFromBin> AlmaRadiometerRow::initFromBinMethods() {
+		map<string, AlmaRadiometerAttributeFromBin> result;
+		
+		result["almaRadiometerId"] = &AlmaRadiometerRow::almaRadiometerIdFromBin;
+		
+		
+		result["numAntenna"] = &AlmaRadiometerRow::numAntennaFromBin;
+		result["spectralWindowId"] = &AlmaRadiometerRow::spectralWindowIdFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

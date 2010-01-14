@@ -46,31 +46,10 @@ using std::set;
 using asdmIDL::StateRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <Tag.h>
+using  asdm::Tag;
 
 
 
@@ -92,28 +71,13 @@ using namespace CalibrationDeviceMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file State.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -122,10 +86,13 @@ namespace asdm {
 
 	
 
+class StateRow;
+typedef void (StateRow::*StateAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The StateRow class is a row of a StateTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class StateRow {
@@ -140,49 +107,6 @@ public:
 	 */
 	StateTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a StateRowIDL struct.
-	 */
-	StateRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct StateRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (StateRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the StateTable to which the row built by deserialization will be parented.
-	  */
-	 static StateRow* fromBin(EndianISStream& eiss, StateTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -383,12 +307,34 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this StateRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param calDeviceName
+	    
+	 * @param sig
+	    
+	 * @param ref
+	    
+	 * @param onSky
+	    
 	 */ 
 	bool compareNoAutoInc(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param calDeviceName
+	    
+	 * @param sig
+	    
+	 * @param ref
+	    
+	 * @param onSky
+	    
+	 */ 
 	bool compareRequiredValue(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky); 
 		 
 	
@@ -537,6 +483,65 @@ private:
 	// Links //
 	///////////
 	
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, StateAttributeFromBin> fromBinMethods;
+void stateIdFromBin( EndianISStream& eiss);
+void calDeviceNameFromBin( EndianISStream& eiss);
+void sigFromBin( EndianISStream& eiss);
+void refFromBin( EndianISStream& eiss);
+void onSkyFromBin( EndianISStream& eiss);
+
+void weightFromBin( EndianISStream& eiss);
+	
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a StateRowIDL struct.
+	 */
+	StateRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct StateRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (StateRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the StateTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static StateRow* fromBin(EndianISStream& eiss, StateTable& table, const vector<string>& attributesSeq);	 
 
 };
 

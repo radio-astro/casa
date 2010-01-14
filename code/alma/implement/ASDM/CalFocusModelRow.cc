@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalFocusModelRow::~CalFocusModelRow() {
 	}
 
@@ -1129,211 +1128,270 @@ namespace asdm {
 	
 	}
 	
-	CalFocusModelRow* CalFocusModelRow::fromBin(EndianISStream& eiss, CalFocusModelTable& table) {
-		CalFocusModelRow* row = new  CalFocusModelRow(table);
-		
-		
+void CalFocusModelRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void CalFocusModelRow::receiverBandFromBin(EndianISStream& eiss) {
 		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
 	
 	
 		
 			
-		row->polarizationType = CPolarizationType::from_int(eiss.readInt());
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
 			
 		
 	
-
 	
+}
+void CalFocusModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
 		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+		polarizationType = CPolarizationType::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void CalFocusModelRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusModelRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusModelRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusModelRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusModelRow::antennaMakeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numCoeff =  eiss.readInt();
+		antennaMake = CAntennaMake::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CalFocusModelRow::numCoeffFromBin(EndianISStream& eiss) {
 		
-			
-		row->numSourceObs =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numCoeff =  eiss.readInt();
+			
+		
 	
-		row->coeffName.clear();
+	
+}
+void CalFocusModelRow::numSourceObsFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numSourceObs =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalFocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		coeffName.clear();
 		
 		unsigned int coeffNameDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
 			
-			row->coeffName.push_back(eiss.readString());
+			coeffName.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalFocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffFormula.clear();
+		coeffFormula.clear();
 		
 		unsigned int coeffFormulaDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
 			
-			row->coeffFormula.push_back(eiss.readString());
+			coeffFormula.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalFocusModelRow::coeffValueFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffValue.clear();
+		coeffValue.clear();
 		
 		unsigned int coeffValueDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffValueDim1; i++)
 			
-			row->coeffValue.push_back(eiss.readFloat());
+			coeffValue.push_back(eiss.readFloat());
 			
 	
 
 		
 	
-
+	
+}
+void CalFocusModelRow::coeffErrorFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffError.clear();
+		coeffError.clear();
 		
 		unsigned int coeffErrorDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffErrorDim1; i++)
 			
-			row->coeffError.push_back(eiss.readFloat());
+			coeffError.push_back(eiss.readFloat());
 			
 	
 
 		
 	
-
+	
+}
+void CalFocusModelRow::coeffFixedFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffFixed.clear();
+		coeffFixed.clear();
 		
 		unsigned int coeffFixedDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffFixedDim1; i++)
 			
-			row->coeffFixed.push_back(eiss.readBoolean());
+			coeffFixed.push_back(eiss.readBoolean());
 			
 	
 
 		
 	
-
+	
+}
+void CalFocusModelRow::focusModelFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->focusModel =  eiss.readString();
+		focusModel =  eiss.readString();
 			
 		
 	
-
+	
+}
+void CalFocusModelRow::focusRMSFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->focusRMS = Length::from1DBin(eiss);	
+	focusRMS = Length::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalFocusModelRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->reducedChiSquared =  eiss.readDouble();
+		reducedChiSquared =  eiss.readDouble();
 			
 		
 	
+	
+}
 
 		
+	
+	CalFocusModelRow* CalFocusModelRow::fromBin(EndianISStream& eiss, CalFocusModelTable& table, const vector<string>& attributesSeq) {
+		CalFocusModelRow* row = new  CalFocusModelRow(table);
 		
-		
-		
+		map<string, CalFocusModelAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalFocusModelTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2077,6 +2135,29 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalFocusModelRow::antennaNameFromBin; 
+	 fromBinMethods["receiverBand"] = &CalFocusModelRow::receiverBandFromBin; 
+	 fromBinMethods["polarizationType"] = &CalFocusModelRow::polarizationTypeFromBin; 
+	 fromBinMethods["calDataId"] = &CalFocusModelRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalFocusModelRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalFocusModelRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalFocusModelRow::endValidTimeFromBin; 
+	 fromBinMethods["antennaMake"] = &CalFocusModelRow::antennaMakeFromBin; 
+	 fromBinMethods["numCoeff"] = &CalFocusModelRow::numCoeffFromBin; 
+	 fromBinMethods["numSourceObs"] = &CalFocusModelRow::numSourceObsFromBin; 
+	 fromBinMethods["coeffName"] = &CalFocusModelRow::coeffNameFromBin; 
+	 fromBinMethods["coeffFormula"] = &CalFocusModelRow::coeffFormulaFromBin; 
+	 fromBinMethods["coeffValue"] = &CalFocusModelRow::coeffValueFromBin; 
+	 fromBinMethods["coeffError"] = &CalFocusModelRow::coeffErrorFromBin; 
+	 fromBinMethods["coeffFixed"] = &CalFocusModelRow::coeffFixedFromBin; 
+	 fromBinMethods["focusModel"] = &CalFocusModelRow::focusModelFromBin; 
+	 fromBinMethods["focusRMS"] = &CalFocusModelRow::focusRMSFromBin; 
+	 fromBinMethods["reducedChiSquared"] = &CalFocusModelRow::reducedChiSquaredFromBin; 
+		
+	
 	
 	}
 	
@@ -2169,7 +2250,29 @@ antennaMake = CAntennaMake::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalFocusModelRow::antennaNameFromBin; 
+		 fromBinMethods["receiverBand"] = &CalFocusModelRow::receiverBandFromBin; 
+		 fromBinMethods["polarizationType"] = &CalFocusModelRow::polarizationTypeFromBin; 
+		 fromBinMethods["calDataId"] = &CalFocusModelRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalFocusModelRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalFocusModelRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalFocusModelRow::endValidTimeFromBin; 
+		 fromBinMethods["antennaMake"] = &CalFocusModelRow::antennaMakeFromBin; 
+		 fromBinMethods["numCoeff"] = &CalFocusModelRow::numCoeffFromBin; 
+		 fromBinMethods["numSourceObs"] = &CalFocusModelRow::numSourceObsFromBin; 
+		 fromBinMethods["coeffName"] = &CalFocusModelRow::coeffNameFromBin; 
+		 fromBinMethods["coeffFormula"] = &CalFocusModelRow::coeffFormulaFromBin; 
+		 fromBinMethods["coeffValue"] = &CalFocusModelRow::coeffValueFromBin; 
+		 fromBinMethods["coeffError"] = &CalFocusModelRow::coeffErrorFromBin; 
+		 fromBinMethods["coeffFixed"] = &CalFocusModelRow::coeffFixedFromBin; 
+		 fromBinMethods["focusModel"] = &CalFocusModelRow::focusModelFromBin; 
+		 fromBinMethods["focusRMS"] = &CalFocusModelRow::focusRMSFromBin; 
+		 fromBinMethods["reducedChiSquared"] = &CalFocusModelRow::reducedChiSquaredFromBin; 
+			
+	
+			
 	}
 
 	
@@ -2409,6 +2512,34 @@ antennaMake = CAntennaMake::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalFocusModelAttributeFromBin> CalFocusModelRow::initFromBinMethods() {
+		map<string, CalFocusModelAttributeFromBin> result;
+		
+		result["antennaName"] = &CalFocusModelRow::antennaNameFromBin;
+		result["receiverBand"] = &CalFocusModelRow::receiverBandFromBin;
+		result["polarizationType"] = &CalFocusModelRow::polarizationTypeFromBin;
+		result["calDataId"] = &CalFocusModelRow::calDataIdFromBin;
+		result["calReductionId"] = &CalFocusModelRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalFocusModelRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalFocusModelRow::endValidTimeFromBin;
+		result["antennaMake"] = &CalFocusModelRow::antennaMakeFromBin;
+		result["numCoeff"] = &CalFocusModelRow::numCoeffFromBin;
+		result["numSourceObs"] = &CalFocusModelRow::numSourceObsFromBin;
+		result["coeffName"] = &CalFocusModelRow::coeffNameFromBin;
+		result["coeffFormula"] = &CalFocusModelRow::coeffFormulaFromBin;
+		result["coeffValue"] = &CalFocusModelRow::coeffValueFromBin;
+		result["coeffError"] = &CalFocusModelRow::coeffErrorFromBin;
+		result["coeffFixed"] = &CalFocusModelRow::coeffFixedFromBin;
+		result["focusModel"] = &CalFocusModelRow::focusModelFromBin;
+		result["focusRMS"] = &CalFocusModelRow::focusRMSFromBin;
+		result["reducedChiSquared"] = &CalFocusModelRow::reducedChiSquaredFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

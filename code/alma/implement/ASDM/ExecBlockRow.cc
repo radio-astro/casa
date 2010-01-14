@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	ExecBlockRow::~ExecBlockRow() {
 	}
 
@@ -1434,238 +1433,324 @@ namespace asdm {
 
 	}
 	
-	ExecBlockRow* ExecBlockRow::fromBin(EndianISStream& eiss, ExecBlockTable& table) {
+void ExecBlockRow::execBlockIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		execBlockId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::startTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::endTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::execBlockNumFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		execBlockNum =  eiss.readInt();
+			
+		
+	
+	
+}
+void ExecBlockRow::execBlockUIDFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		execBlockUID =  EntityRef::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::projectIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		projectId =  EntityRef::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::configNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		configName =  eiss.readString();
+			
+		
+	
+	
+}
+void ExecBlockRow::telescopeNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		telescopeName =  eiss.readString();
+			
+		
+	
+	
+}
+void ExecBlockRow::observerNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		observerName =  eiss.readString();
+			
+		
+	
+	
+}
+void ExecBlockRow::observingLogFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		observingLog =  eiss.readString();
+			
+		
+	
+	
+}
+void ExecBlockRow::sessionReferenceFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		sessionReference =  eiss.readString();
+			
+		
+	
+	
+}
+void ExecBlockRow::sbSummaryFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		sbSummary =  EntityRef::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::schedulerModeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		schedulerMode =  eiss.readString();
+			
+		
+	
+	
+}
+void ExecBlockRow::baseRangeMinFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		baseRangeMin =  Length::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::baseRangeMaxFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		baseRangeMax =  Length::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::baseRmsMinorFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		baseRmsMinor =  Length::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::baseRmsMajorFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		baseRmsMajor =  Length::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::basePaFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		basePa =  Angle::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::siteAltitudeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		siteAltitude =  Length::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::siteLongitudeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		siteLongitude =  Angle::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::siteLatitudeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		siteLatitude =  Angle::fromBin(eiss);
+		
+	
+	
+}
+void ExecBlockRow::abortedFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		aborted =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void ExecBlockRow::numAntennaFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numAntenna =  eiss.readInt();
+			
+		
+	
+	
+}
+void ExecBlockRow::antennaIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	antennaId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void ExecBlockRow::sBSummaryIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		sBSummaryId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+
+void ExecBlockRow::releaseDateFromBin(EndianISStream& eiss) {
+		
+	releaseDateExists = eiss.readBoolean();
+	if (releaseDateExists) {
+		
+	
+		
+		
+		releaseDate =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
+		
+	flagRowExists = eiss.readBoolean();
+	if (flagRowExists) {
+		
+	
+	
+		
+			
+		flagRow =  eiss.readBoolean();
+			
+		
+	
+
+	}
+	
+}
+	
+	
+	ExecBlockRow* ExecBlockRow::fromBin(EndianISStream& eiss, ExecBlockTable& table, const vector<string>& attributesSeq) {
 		ExecBlockRow* row = new  ExecBlockRow(table);
 		
-		
-		
-	
-		
-		
-		row->execBlockId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->execBlockNum =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-		row->execBlockUID =  EntityRef::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->projectId =  EntityRef::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->configName =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->telescopeName =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->observerName =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->observingLog =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->sessionReference =  eiss.readString();
-			
-		
-	
-
-	
-		
-		
-		row->sbSummary =  EntityRef::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->schedulerMode =  eiss.readString();
-			
-		
-	
-
-	
-		
-		
-		row->baseRangeMin =  Length::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->baseRangeMax =  Length::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->baseRmsMinor =  Length::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->baseRmsMajor =  Length::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->basePa =  Angle::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->siteAltitude =  Length::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->siteLongitude =  Angle::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->siteLatitude =  Angle::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->aborted =  eiss.readBoolean();
-			
-		
-	
-
-	
-	
-		
-			
-		row->numAntenna =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->antennaId = Tag::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-		
-		
-		row->sBSummaryId =  Tag::fromBin(eiss);
-		
-	
-
-		
-		
-		
-	row->releaseDateExists = eiss.readBoolean();
-	if (row->releaseDateExists) {
-		
-	
-		
-		
-		row->releaseDate =  ArrayTime::fromBin(eiss);
-		
-	
-
-	}
-
-	row->flagRowExists = eiss.readBoolean();
-	if (row->flagRowExists) {
-		
-	
-	
-		
-			
-		row->flagRow =  eiss.readBoolean();
-			
-		
-	
-
-	}
-
-		
+		map<string, ExecBlockAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ExecBlockTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2799,6 +2884,38 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["execBlockId"] = &ExecBlockRow::execBlockIdFromBin; 
+	 fromBinMethods["startTime"] = &ExecBlockRow::startTimeFromBin; 
+	 fromBinMethods["endTime"] = &ExecBlockRow::endTimeFromBin; 
+	 fromBinMethods["execBlockNum"] = &ExecBlockRow::execBlockNumFromBin; 
+	 fromBinMethods["execBlockUID"] = &ExecBlockRow::execBlockUIDFromBin; 
+	 fromBinMethods["projectId"] = &ExecBlockRow::projectIdFromBin; 
+	 fromBinMethods["configName"] = &ExecBlockRow::configNameFromBin; 
+	 fromBinMethods["telescopeName"] = &ExecBlockRow::telescopeNameFromBin; 
+	 fromBinMethods["observerName"] = &ExecBlockRow::observerNameFromBin; 
+	 fromBinMethods["observingLog"] = &ExecBlockRow::observingLogFromBin; 
+	 fromBinMethods["sessionReference"] = &ExecBlockRow::sessionReferenceFromBin; 
+	 fromBinMethods["sbSummary"] = &ExecBlockRow::sbSummaryFromBin; 
+	 fromBinMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin; 
+	 fromBinMethods["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromBin; 
+	 fromBinMethods["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromBin; 
+	 fromBinMethods["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromBin; 
+	 fromBinMethods["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromBin; 
+	 fromBinMethods["basePa"] = &ExecBlockRow::basePaFromBin; 
+	 fromBinMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin; 
+	 fromBinMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin; 
+	 fromBinMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin; 
+	 fromBinMethods["aborted"] = &ExecBlockRow::abortedFromBin; 
+	 fromBinMethods["numAntenna"] = &ExecBlockRow::numAntennaFromBin; 
+	 fromBinMethods["antennaId"] = &ExecBlockRow::antennaIdFromBin; 
+	 fromBinMethods["sBSummaryId"] = &ExecBlockRow::sBSummaryIdFromBin; 
+		
+	
+	 fromBinMethods["releaseDate"] = &ExecBlockRow::releaseDateFromBin; 
+	 fromBinMethods["flagRow"] = &ExecBlockRow::flagRowFromBin; 
 	
 	}
 	
@@ -2941,7 +3058,38 @@ namespace asdm {
 		else
 			flagRowExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["execBlockId"] = &ExecBlockRow::execBlockIdFromBin; 
+		 fromBinMethods["startTime"] = &ExecBlockRow::startTimeFromBin; 
+		 fromBinMethods["endTime"] = &ExecBlockRow::endTimeFromBin; 
+		 fromBinMethods["execBlockNum"] = &ExecBlockRow::execBlockNumFromBin; 
+		 fromBinMethods["execBlockUID"] = &ExecBlockRow::execBlockUIDFromBin; 
+		 fromBinMethods["projectId"] = &ExecBlockRow::projectIdFromBin; 
+		 fromBinMethods["configName"] = &ExecBlockRow::configNameFromBin; 
+		 fromBinMethods["telescopeName"] = &ExecBlockRow::telescopeNameFromBin; 
+		 fromBinMethods["observerName"] = &ExecBlockRow::observerNameFromBin; 
+		 fromBinMethods["observingLog"] = &ExecBlockRow::observingLogFromBin; 
+		 fromBinMethods["sessionReference"] = &ExecBlockRow::sessionReferenceFromBin; 
+		 fromBinMethods["sbSummary"] = &ExecBlockRow::sbSummaryFromBin; 
+		 fromBinMethods["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin; 
+		 fromBinMethods["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromBin; 
+		 fromBinMethods["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromBin; 
+		 fromBinMethods["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromBin; 
+		 fromBinMethods["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromBin; 
+		 fromBinMethods["basePa"] = &ExecBlockRow::basePaFromBin; 
+		 fromBinMethods["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin; 
+		 fromBinMethods["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin; 
+		 fromBinMethods["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin; 
+		 fromBinMethods["aborted"] = &ExecBlockRow::abortedFromBin; 
+		 fromBinMethods["numAntenna"] = &ExecBlockRow::numAntennaFromBin; 
+		 fromBinMethods["antennaId"] = &ExecBlockRow::antennaIdFromBin; 
+		 fromBinMethods["sBSummaryId"] = &ExecBlockRow::sBSummaryIdFromBin; 
+			
+	
+		 fromBinMethods["releaseDate"] = &ExecBlockRow::releaseDateFromBin; 
+		 fromBinMethods["flagRow"] = &ExecBlockRow::flagRowFromBin; 
+			
 	}
 
 	
@@ -3289,6 +3437,43 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, ExecBlockAttributeFromBin> ExecBlockRow::initFromBinMethods() {
+		map<string, ExecBlockAttributeFromBin> result;
+		
+		result["execBlockId"] = &ExecBlockRow::execBlockIdFromBin;
+		result["startTime"] = &ExecBlockRow::startTimeFromBin;
+		result["endTime"] = &ExecBlockRow::endTimeFromBin;
+		result["execBlockNum"] = &ExecBlockRow::execBlockNumFromBin;
+		result["execBlockUID"] = &ExecBlockRow::execBlockUIDFromBin;
+		result["projectId"] = &ExecBlockRow::projectIdFromBin;
+		result["configName"] = &ExecBlockRow::configNameFromBin;
+		result["telescopeName"] = &ExecBlockRow::telescopeNameFromBin;
+		result["observerName"] = &ExecBlockRow::observerNameFromBin;
+		result["observingLog"] = &ExecBlockRow::observingLogFromBin;
+		result["sessionReference"] = &ExecBlockRow::sessionReferenceFromBin;
+		result["sbSummary"] = &ExecBlockRow::sbSummaryFromBin;
+		result["schedulerMode"] = &ExecBlockRow::schedulerModeFromBin;
+		result["baseRangeMin"] = &ExecBlockRow::baseRangeMinFromBin;
+		result["baseRangeMax"] = &ExecBlockRow::baseRangeMaxFromBin;
+		result["baseRmsMinor"] = &ExecBlockRow::baseRmsMinorFromBin;
+		result["baseRmsMajor"] = &ExecBlockRow::baseRmsMajorFromBin;
+		result["basePa"] = &ExecBlockRow::basePaFromBin;
+		result["siteAltitude"] = &ExecBlockRow::siteAltitudeFromBin;
+		result["siteLongitude"] = &ExecBlockRow::siteLongitudeFromBin;
+		result["siteLatitude"] = &ExecBlockRow::siteLatitudeFromBin;
+		result["aborted"] = &ExecBlockRow::abortedFromBin;
+		result["numAntenna"] = &ExecBlockRow::numAntennaFromBin;
+		result["antennaId"] = &ExecBlockRow::antennaIdFromBin;
+		result["sBSummaryId"] = &ExecBlockRow::sBSummaryIdFromBin;
+		
+		
+		result["releaseDate"] = &ExecBlockRow::releaseDateFromBin;
+		result["flagRow"] = &ExecBlockRow::flagRowFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

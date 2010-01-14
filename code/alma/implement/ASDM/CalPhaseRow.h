@@ -46,31 +46,25 @@ using std::set;
 using asdmIDL::CalPhaseRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Interval.h>
+using  asdm::Interval;
+
+#include <Angle.h>
+using  asdm::Angle;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <Length.h>
+using  asdm::Length;
+
+#include <Frequency.h>
+using  asdm::Frequency;
 
 
 
@@ -127,28 +121,13 @@ using namespace PolarizationTypeMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file CalPhase.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -163,10 +142,13 @@ class CalDataRow;
 class CalReductionRow;
 	
 
+class CalPhaseRow;
+typedef void (CalPhaseRow::*CalPhaseAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The CalPhaseRow class is a row of a CalPhaseTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class CalPhaseRow {
@@ -181,49 +163,6 @@ public:
 	 */
 	CalPhaseTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a CalPhaseRowIDL struct.
-	 */
-	CalPhaseRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct CalPhaseRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (CalPhaseRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the CalPhaseTable to which the row built by deserialization will be parented.
-	  */
-	 static CalPhaseRow* fromBin(EndianISStream& eiss, CalPhaseTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -924,12 +863,88 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalPhaseRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param basebandName
+	    
+	 * @param receiverBand
+	    
+	 * @param atmPhaseCorrection
+	    
+	 * @param calDataId
+	    
+	 * @param calReductionId
+	    
+	 * @param startValidTime
+	    
+	 * @param endValidTime
+	    
+	 * @param numBaseline
+	    
+	 * @param numReceptor
+	    
+	 * @param ampli
+	    
+	 * @param antennaNames
+	    
+	 * @param baselineLengths
+	    
+	 * @param decorrelationFactor
+	    
+	 * @param direction
+	    
+	 * @param frequencyRange
+	    
+	 * @param integrationTime
+	    
+	 * @param phase
+	    
+	 * @param polarizationTypes
+	    
+	 * @param phaseRMS
+	    
+	 * @param statPhaseRMS
+	    
 	 */ 
 	bool compareNoAutoInc(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param startValidTime
+	    
+	 * @param endValidTime
+	    
+	 * @param numBaseline
+	    
+	 * @param numReceptor
+	    
+	 * @param ampli
+	    
+	 * @param antennaNames
+	    
+	 * @param baselineLengths
+	    
+	 * @param decorrelationFactor
+	    
+	 * @param direction
+	    
+	 * @param frequencyRange
+	    
+	 * @param integrationTime
+	    
+	 * @param phase
+	    
+	 * @param polarizationTypes
+	    
+	 * @param phaseRMS
+	    
+	 * @param statPhaseRMS
+	    
+	 */ 
 	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS); 
 		 
 	
@@ -1245,6 +1260,80 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, CalPhaseAttributeFromBin> fromBinMethods;
+void basebandNameFromBin( EndianISStream& eiss);
+void receiverBandFromBin( EndianISStream& eiss);
+void atmPhaseCorrectionFromBin( EndianISStream& eiss);
+void calDataIdFromBin( EndianISStream& eiss);
+void calReductionIdFromBin( EndianISStream& eiss);
+void startValidTimeFromBin( EndianISStream& eiss);
+void endValidTimeFromBin( EndianISStream& eiss);
+void numBaselineFromBin( EndianISStream& eiss);
+void numReceptorFromBin( EndianISStream& eiss);
+void ampliFromBin( EndianISStream& eiss);
+void antennaNamesFromBin( EndianISStream& eiss);
+void baselineLengthsFromBin( EndianISStream& eiss);
+void decorrelationFactorFromBin( EndianISStream& eiss);
+void directionFromBin( EndianISStream& eiss);
+void frequencyRangeFromBin( EndianISStream& eiss);
+void integrationTimeFromBin( EndianISStream& eiss);
+void phaseFromBin( EndianISStream& eiss);
+void polarizationTypesFromBin( EndianISStream& eiss);
+void phaseRMSFromBin( EndianISStream& eiss);
+void statPhaseRMSFromBin( EndianISStream& eiss);
+
+void correctionValidityFromBin( EndianISStream& eiss);
+	
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a CalPhaseRowIDL struct.
+	 */
+	CalPhaseRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct CalPhaseRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (CalPhaseRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the CalPhaseTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalPhaseRow* fromBin(EndianISStream& eiss, CalPhaseTable& table, const vector<string>& attributesSeq);	 
 
 };
 

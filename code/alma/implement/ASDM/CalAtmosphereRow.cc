@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalAtmosphereRow::~CalAtmosphereRow() {
 	}
 
@@ -2332,90 +2331,114 @@ namespace asdm {
 
 	}
 	
-	CalAtmosphereRow* CalAtmosphereRow::fromBin(EndianISStream& eiss, CalAtmosphereTable& table) {
-		CalAtmosphereRow* row = new  CalAtmosphereRow(table);
-		
-		
+void CalAtmosphereRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void CalAtmosphereRow::receiverBandFromBin(EndianISStream& eiss) {
 		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->numFreq =  eiss.readInt();
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void CalAtmosphereRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalAtmosphereRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalAtmosphereRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalAtmosphereRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalAtmosphereRow::numFreqFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numLoad =  eiss.readInt();
+		numFreq =  eiss.readInt();
 			
 		
 	
-
 	
-	
+}
+void CalAtmosphereRow::numLoadFromBin(EndianISStream& eiss) {
 		
-			
-		row->numReceptor =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numLoad =  eiss.readInt();
+			
+		
 	
-		row->forwardEffSpectrum.clear();
+	
+}
+void CalAtmosphereRow::numReceptorFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numReceptor =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalAtmosphereRow::forwardEffSpectrumFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		forwardEffSpectrum.clear();
 		
 		unsigned int forwardEffSpectrumDim1 = eiss.readInt();
 		unsigned int forwardEffSpectrumDim2 = eiss.readInt();
@@ -2426,80 +2449,101 @@ namespace asdm {
 			
 			forwardEffSpectrumAux1.push_back(eiss.readFloat());
 			
-			row->forwardEffSpectrum.push_back(forwardEffSpectrumAux1);
+			forwardEffSpectrum.push_back(forwardEffSpectrumAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::frequencyRangeFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->frequencyRange = Frequency::from1DBin(eiss);	
+	frequencyRange = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::groundPressureFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->groundPressure =  Pressure::fromBin(eiss);
+		groundPressure =  Pressure::fromBin(eiss);
 		
 	
-
+	
+}
+void CalAtmosphereRow::groundRelHumidityFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->groundRelHumidity =  Humidity::fromBin(eiss);
+		groundRelHumidity =  Humidity::fromBin(eiss);
 		
 	
-
+	
+}
+void CalAtmosphereRow::frequencySpectrumFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->frequencySpectrum = Frequency::from1DBin(eiss);	
+	frequencySpectrum = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::groundTemperatureFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->groundTemperature =  Temperature::fromBin(eiss);
+		groundTemperature =  Temperature::fromBin(eiss);
 		
 	
-
+	
+}
+void CalAtmosphereRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::powerSkySpectrumFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->powerSkySpectrum.clear();
+		powerSkySpectrum.clear();
 		
 		unsigned int powerSkySpectrumDim1 = eiss.readInt();
 		unsigned int powerSkySpectrumDim2 = eiss.readInt();
@@ -2510,20 +2554,23 @@ namespace asdm {
 			
 			powerSkySpectrumAux1.push_back(eiss.readFloat());
 			
-			row->powerSkySpectrum.push_back(powerSkySpectrumAux1);
+			powerSkySpectrum.push_back(powerSkySpectrumAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::powerLoadSpectrumFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->powerLoadSpectrum.clear();
+		powerLoadSpectrum.clear();
 			
 		unsigned int powerLoadSpectrumDim1 = eiss.readInt();
 		unsigned int powerLoadSpectrumDim2 = eiss.readInt();
@@ -2541,61 +2588,76 @@ namespace asdm {
 				}
 				powerLoadSpectrumAux2.push_back(powerLoadSpectrumAux1);
 			}
-			row->powerLoadSpectrum.push_back(powerLoadSpectrumAux2);
+			powerLoadSpectrum.push_back(powerLoadSpectrumAux2);
 		}	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::syscalTypeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->syscalType = CSyscalMethod::from_int(eiss.readInt());
+		syscalType = CSyscalMethod::from_int(eiss.readInt());
 			
 		
 	
-
 	
+}
+void CalAtmosphereRow::tAtmSpectrumFromBin(EndianISStream& eiss) {
 		
-		
-			
-	
-	row->tAtmSpectrum = Temperature::from2DBin(eiss);		
-	
-
-		
-	
-
 	
 		
 		
 			
 	
-	row->tRecSpectrum = Temperature::from2DBin(eiss);		
+	tAtmSpectrum = Temperature::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::tRecSpectrumFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->tSysSpectrum = Temperature::from2DBin(eiss);		
+	tRecSpectrum = Temperature::from2DBin(eiss);		
 	
 
 		
 	
+	
+}
+void CalAtmosphereRow::tSysSpectrumFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	tSysSpectrum = Temperature::from2DBin(eiss);		
+	
 
+		
+	
+	
+}
+void CalAtmosphereRow::tauSpectrumFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->tauSpectrum.clear();
+		tauSpectrum.clear();
 		
 		unsigned int tauSpectrumDim1 = eiss.readInt();
 		unsigned int tauSpectrumDim2 = eiss.readInt();
@@ -2606,98 +2668,117 @@ namespace asdm {
 			
 			tauSpectrumAux1.push_back(eiss.readFloat());
 			
-			row->tauSpectrum.push_back(tauSpectrumAux1);
+			tauSpectrum.push_back(tauSpectrumAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::tAtmFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->tAtm = Temperature::from1DBin(eiss);	
+	tAtm = Temperature::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::tRecFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->tRec = Temperature::from1DBin(eiss);	
+	tRec = Temperature::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::tSysFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->tSys = Temperature::from1DBin(eiss);	
+	tSys = Temperature::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::tauFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->tau.clear();
+		tau.clear();
 		
 		unsigned int tauDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < tauDim1; i++)
 			
-			row->tau.push_back(eiss.readFloat());
+			tau.push_back(eiss.readFloat());
 			
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::waterFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->water = Length::from1DBin(eiss);	
+	water = Length::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalAtmosphereRow::waterErrorFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->waterError = Length::from1DBin(eiss);	
+	waterError = Length::from1DBin(eiss);	
 	
 
 		
 	
+	
+}
 
+void CalAtmosphereRow::alphaSpectrumFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->alphaSpectrumExists = eiss.readBoolean();
-	if (row->alphaSpectrumExists) {
+	alphaSpectrumExists = eiss.readBoolean();
+	if (alphaSpectrumExists) {
 		
 	
 	
 		
 			
 	
-		row->alphaSpectrum.clear();
+		alphaSpectrum.clear();
 		
 		unsigned int alphaSpectrumDim1 = eiss.readInt();
 		unsigned int alphaSpectrumDim2 = eiss.readInt();
@@ -2708,7 +2789,7 @@ namespace asdm {
 			
 			alphaSpectrumAux1.push_back(eiss.readFloat());
 			
-			row->alphaSpectrum.push_back(alphaSpectrumAux1);
+			alphaSpectrum.push_back(alphaSpectrumAux1);
 		}
 	
 	
@@ -2717,21 +2798,24 @@ namespace asdm {
 	
 
 	}
-
-	row->forwardEfficiencyExists = eiss.readBoolean();
-	if (row->forwardEfficiencyExists) {
+	
+}
+void CalAtmosphereRow::forwardEfficiencyFromBin(EndianISStream& eiss) {
+		
+	forwardEfficiencyExists = eiss.readBoolean();
+	if (forwardEfficiencyExists) {
 		
 	
 	
 		
 			
 	
-		row->forwardEfficiency.clear();
+		forwardEfficiency.clear();
 		
 		unsigned int forwardEfficiencyDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < forwardEfficiencyDim1; i++)
 			
-			row->forwardEfficiency.push_back(eiss.readFloat());
+			forwardEfficiency.push_back(eiss.readFloat());
 			
 	
 
@@ -2739,21 +2823,24 @@ namespace asdm {
 	
 
 	}
-
-	row->forwardEfficiencyErrorExists = eiss.readBoolean();
-	if (row->forwardEfficiencyErrorExists) {
+	
+}
+void CalAtmosphereRow::forwardEfficiencyErrorFromBin(EndianISStream& eiss) {
+		
+	forwardEfficiencyErrorExists = eiss.readBoolean();
+	if (forwardEfficiencyErrorExists) {
 		
 	
 	
 		
 			
 	
-		row->forwardEfficiencyError.clear();
+		forwardEfficiencyError.clear();
 		
 		unsigned int forwardEfficiencyErrorDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < forwardEfficiencyErrorDim1; i++)
 			
-			row->forwardEfficiencyError.push_back(eiss.readDouble());
+			forwardEfficiencyError.push_back(eiss.readDouble());
 			
 	
 
@@ -2761,21 +2848,24 @@ namespace asdm {
 	
 
 	}
-
-	row->sbGainExists = eiss.readBoolean();
-	if (row->sbGainExists) {
+	
+}
+void CalAtmosphereRow::sbGainFromBin(EndianISStream& eiss) {
+		
+	sbGainExists = eiss.readBoolean();
+	if (sbGainExists) {
 		
 	
 	
 		
 			
 	
-		row->sbGain.clear();
+		sbGain.clear();
 		
 		unsigned int sbGainDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < sbGainDim1; i++)
 			
-			row->sbGain.push_back(eiss.readFloat());
+			sbGain.push_back(eiss.readFloat());
 			
 	
 
@@ -2783,21 +2873,24 @@ namespace asdm {
 	
 
 	}
-
-	row->sbGainErrorExists = eiss.readBoolean();
-	if (row->sbGainErrorExists) {
+	
+}
+void CalAtmosphereRow::sbGainErrorFromBin(EndianISStream& eiss) {
+		
+	sbGainErrorExists = eiss.readBoolean();
+	if (sbGainErrorExists) {
 		
 	
 	
 		
 			
 	
-		row->sbGainError.clear();
+		sbGainError.clear();
 		
 		unsigned int sbGainErrorDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < sbGainErrorDim1; i++)
 			
-			row->sbGainError.push_back(eiss.readFloat());
+			sbGainError.push_back(eiss.readFloat());
 			
 	
 
@@ -2805,16 +2898,19 @@ namespace asdm {
 	
 
 	}
-
-	row->sbGainSpectrumExists = eiss.readBoolean();
-	if (row->sbGainSpectrumExists) {
+	
+}
+void CalAtmosphereRow::sbGainSpectrumFromBin(EndianISStream& eiss) {
+		
+	sbGainSpectrumExists = eiss.readBoolean();
+	if (sbGainSpectrumExists) {
 		
 	
 	
 		
 			
 	
-		row->sbGainSpectrum.clear();
+		sbGainSpectrum.clear();
 		
 		unsigned int sbGainSpectrumDim1 = eiss.readInt();
 		unsigned int sbGainSpectrumDim2 = eiss.readInt();
@@ -2825,7 +2921,7 @@ namespace asdm {
 			
 			sbGainSpectrumAux1.push_back(eiss.readFloat());
 			
-			row->sbGainSpectrum.push_back(sbGainSpectrumAux1);
+			sbGainSpectrum.push_back(sbGainSpectrumAux1);
 		}
 	
 	
@@ -2834,8 +2930,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	CalAtmosphereRow* CalAtmosphereRow::fromBin(EndianISStream& eiss, CalAtmosphereTable& table, const vector<string>& attributesSeq) {
+		CalAtmosphereRow* row = new  CalAtmosphereRow(table);
 		
+		map<string, CalAtmosphereAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalAtmosphereTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -4286,6 +4395,46 @@ syscalType = CSyscalMethod::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalAtmosphereRow::antennaNameFromBin; 
+	 fromBinMethods["receiverBand"] = &CalAtmosphereRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalAtmosphereRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalAtmosphereRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalAtmosphereRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalAtmosphereRow::endValidTimeFromBin; 
+	 fromBinMethods["numFreq"] = &CalAtmosphereRow::numFreqFromBin; 
+	 fromBinMethods["numLoad"] = &CalAtmosphereRow::numLoadFromBin; 
+	 fromBinMethods["numReceptor"] = &CalAtmosphereRow::numReceptorFromBin; 
+	 fromBinMethods["forwardEffSpectrum"] = &CalAtmosphereRow::forwardEffSpectrumFromBin; 
+	 fromBinMethods["frequencyRange"] = &CalAtmosphereRow::frequencyRangeFromBin; 
+	 fromBinMethods["groundPressure"] = &CalAtmosphereRow::groundPressureFromBin; 
+	 fromBinMethods["groundRelHumidity"] = &CalAtmosphereRow::groundRelHumidityFromBin; 
+	 fromBinMethods["frequencySpectrum"] = &CalAtmosphereRow::frequencySpectrumFromBin; 
+	 fromBinMethods["groundTemperature"] = &CalAtmosphereRow::groundTemperatureFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalAtmosphereRow::polarizationTypesFromBin; 
+	 fromBinMethods["powerSkySpectrum"] = &CalAtmosphereRow::powerSkySpectrumFromBin; 
+	 fromBinMethods["powerLoadSpectrum"] = &CalAtmosphereRow::powerLoadSpectrumFromBin; 
+	 fromBinMethods["syscalType"] = &CalAtmosphereRow::syscalTypeFromBin; 
+	 fromBinMethods["tAtmSpectrum"] = &CalAtmosphereRow::tAtmSpectrumFromBin; 
+	 fromBinMethods["tRecSpectrum"] = &CalAtmosphereRow::tRecSpectrumFromBin; 
+	 fromBinMethods["tSysSpectrum"] = &CalAtmosphereRow::tSysSpectrumFromBin; 
+	 fromBinMethods["tauSpectrum"] = &CalAtmosphereRow::tauSpectrumFromBin; 
+	 fromBinMethods["tAtm"] = &CalAtmosphereRow::tAtmFromBin; 
+	 fromBinMethods["tRec"] = &CalAtmosphereRow::tRecFromBin; 
+	 fromBinMethods["tSys"] = &CalAtmosphereRow::tSysFromBin; 
+	 fromBinMethods["tau"] = &CalAtmosphereRow::tauFromBin; 
+	 fromBinMethods["water"] = &CalAtmosphereRow::waterFromBin; 
+	 fromBinMethods["waterError"] = &CalAtmosphereRow::waterErrorFromBin; 
+		
+	
+	 fromBinMethods["alphaSpectrum"] = &CalAtmosphereRow::alphaSpectrumFromBin; 
+	 fromBinMethods["forwardEfficiency"] = &CalAtmosphereRow::forwardEfficiencyFromBin; 
+	 fromBinMethods["forwardEfficiencyError"] = &CalAtmosphereRow::forwardEfficiencyErrorFromBin; 
+	 fromBinMethods["sbGain"] = &CalAtmosphereRow::sbGainFromBin; 
+	 fromBinMethods["sbGainError"] = &CalAtmosphereRow::sbGainErrorFromBin; 
+	 fromBinMethods["sbGainSpectrum"] = &CalAtmosphereRow::sbGainSpectrumFromBin; 
 	
 	}
 	
@@ -4488,7 +4637,46 @@ syscalType = CSyscalMethod::from_int(0);
 		else
 			sbGainSpectrumExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalAtmosphereRow::antennaNameFromBin; 
+		 fromBinMethods["receiverBand"] = &CalAtmosphereRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalAtmosphereRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalAtmosphereRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalAtmosphereRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalAtmosphereRow::endValidTimeFromBin; 
+		 fromBinMethods["numFreq"] = &CalAtmosphereRow::numFreqFromBin; 
+		 fromBinMethods["numLoad"] = &CalAtmosphereRow::numLoadFromBin; 
+		 fromBinMethods["numReceptor"] = &CalAtmosphereRow::numReceptorFromBin; 
+		 fromBinMethods["forwardEffSpectrum"] = &CalAtmosphereRow::forwardEffSpectrumFromBin; 
+		 fromBinMethods["frequencyRange"] = &CalAtmosphereRow::frequencyRangeFromBin; 
+		 fromBinMethods["groundPressure"] = &CalAtmosphereRow::groundPressureFromBin; 
+		 fromBinMethods["groundRelHumidity"] = &CalAtmosphereRow::groundRelHumidityFromBin; 
+		 fromBinMethods["frequencySpectrum"] = &CalAtmosphereRow::frequencySpectrumFromBin; 
+		 fromBinMethods["groundTemperature"] = &CalAtmosphereRow::groundTemperatureFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalAtmosphereRow::polarizationTypesFromBin; 
+		 fromBinMethods["powerSkySpectrum"] = &CalAtmosphereRow::powerSkySpectrumFromBin; 
+		 fromBinMethods["powerLoadSpectrum"] = &CalAtmosphereRow::powerLoadSpectrumFromBin; 
+		 fromBinMethods["syscalType"] = &CalAtmosphereRow::syscalTypeFromBin; 
+		 fromBinMethods["tAtmSpectrum"] = &CalAtmosphereRow::tAtmSpectrumFromBin; 
+		 fromBinMethods["tRecSpectrum"] = &CalAtmosphereRow::tRecSpectrumFromBin; 
+		 fromBinMethods["tSysSpectrum"] = &CalAtmosphereRow::tSysSpectrumFromBin; 
+		 fromBinMethods["tauSpectrum"] = &CalAtmosphereRow::tauSpectrumFromBin; 
+		 fromBinMethods["tAtm"] = &CalAtmosphereRow::tAtmFromBin; 
+		 fromBinMethods["tRec"] = &CalAtmosphereRow::tRecFromBin; 
+		 fromBinMethods["tSys"] = &CalAtmosphereRow::tSysFromBin; 
+		 fromBinMethods["tau"] = &CalAtmosphereRow::tauFromBin; 
+		 fromBinMethods["water"] = &CalAtmosphereRow::waterFromBin; 
+		 fromBinMethods["waterError"] = &CalAtmosphereRow::waterErrorFromBin; 
+			
+	
+		 fromBinMethods["alphaSpectrum"] = &CalAtmosphereRow::alphaSpectrumFromBin; 
+		 fromBinMethods["forwardEfficiency"] = &CalAtmosphereRow::forwardEfficiencyFromBin; 
+		 fromBinMethods["forwardEfficiencyError"] = &CalAtmosphereRow::forwardEfficiencyErrorFromBin; 
+		 fromBinMethods["sbGain"] = &CalAtmosphereRow::sbGainFromBin; 
+		 fromBinMethods["sbGainError"] = &CalAtmosphereRow::sbGainErrorFromBin; 
+		 fromBinMethods["sbGainSpectrum"] = &CalAtmosphereRow::sbGainSpectrumFromBin; 
+			
 	}
 
 	
@@ -4877,6 +5065,51 @@ syscalType = CSyscalMethod::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalAtmosphereAttributeFromBin> CalAtmosphereRow::initFromBinMethods() {
+		map<string, CalAtmosphereAttributeFromBin> result;
+		
+		result["antennaName"] = &CalAtmosphereRow::antennaNameFromBin;
+		result["receiverBand"] = &CalAtmosphereRow::receiverBandFromBin;
+		result["calDataId"] = &CalAtmosphereRow::calDataIdFromBin;
+		result["calReductionId"] = &CalAtmosphereRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalAtmosphereRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalAtmosphereRow::endValidTimeFromBin;
+		result["numFreq"] = &CalAtmosphereRow::numFreqFromBin;
+		result["numLoad"] = &CalAtmosphereRow::numLoadFromBin;
+		result["numReceptor"] = &CalAtmosphereRow::numReceptorFromBin;
+		result["forwardEffSpectrum"] = &CalAtmosphereRow::forwardEffSpectrumFromBin;
+		result["frequencyRange"] = &CalAtmosphereRow::frequencyRangeFromBin;
+		result["groundPressure"] = &CalAtmosphereRow::groundPressureFromBin;
+		result["groundRelHumidity"] = &CalAtmosphereRow::groundRelHumidityFromBin;
+		result["frequencySpectrum"] = &CalAtmosphereRow::frequencySpectrumFromBin;
+		result["groundTemperature"] = &CalAtmosphereRow::groundTemperatureFromBin;
+		result["polarizationTypes"] = &CalAtmosphereRow::polarizationTypesFromBin;
+		result["powerSkySpectrum"] = &CalAtmosphereRow::powerSkySpectrumFromBin;
+		result["powerLoadSpectrum"] = &CalAtmosphereRow::powerLoadSpectrumFromBin;
+		result["syscalType"] = &CalAtmosphereRow::syscalTypeFromBin;
+		result["tAtmSpectrum"] = &CalAtmosphereRow::tAtmSpectrumFromBin;
+		result["tRecSpectrum"] = &CalAtmosphereRow::tRecSpectrumFromBin;
+		result["tSysSpectrum"] = &CalAtmosphereRow::tSysSpectrumFromBin;
+		result["tauSpectrum"] = &CalAtmosphereRow::tauSpectrumFromBin;
+		result["tAtm"] = &CalAtmosphereRow::tAtmFromBin;
+		result["tRec"] = &CalAtmosphereRow::tRecFromBin;
+		result["tSys"] = &CalAtmosphereRow::tSysFromBin;
+		result["tau"] = &CalAtmosphereRow::tauFromBin;
+		result["water"] = &CalAtmosphereRow::waterFromBin;
+		result["waterError"] = &CalAtmosphereRow::waterErrorFromBin;
+		
+		
+		result["alphaSpectrum"] = &CalAtmosphereRow::alphaSpectrumFromBin;
+		result["forwardEfficiency"] = &CalAtmosphereRow::forwardEfficiencyFromBin;
+		result["forwardEfficiencyError"] = &CalAtmosphereRow::forwardEfficiencyErrorFromBin;
+		result["sbGain"] = &CalAtmosphereRow::sbGainFromBin;
+		result["sbGainError"] = &CalAtmosphereRow::sbGainErrorFromBin;
+		result["sbGainSpectrum"] = &CalAtmosphereRow::sbGainSpectrumFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

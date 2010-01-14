@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	ScanRow::~ScanRow() {
 	}
 
@@ -1163,136 +1162,161 @@ namespace asdm {
 
 	}
 	
-	ScanRow* ScanRow::fromBin(EndianISStream& eiss, ScanTable& table) {
-		ScanRow* row = new  ScanRow(table);
-		
-		
+void ScanRow::execBlockIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->execBlockId =  Tag::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void ScanRow::scanNumberFromBin(EndianISStream& eiss) {
 		
-			
-		row->scanNumber =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-		row->startTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endTime =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->numIntent =  eiss.readInt();
+		scanNumber =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void ScanRow::startTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void ScanRow::endTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void ScanRow::numIntentFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numSubScan =  eiss.readInt();
+		numIntent =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void ScanRow::numSubScanFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numSubScan =  eiss.readInt();
+			
+		
+	
+	
+}
+void ScanRow::scanIntentFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->scanIntent.clear();
+		scanIntent.clear();
 		
 		unsigned int scanIntentDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < scanIntentDim1; i++)
 			
-			row->scanIntent.push_back(CScanIntent::from_int(eiss.readInt()));
+			scanIntent.push_back(CScanIntent::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void ScanRow::calDataTypeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->calDataType.clear();
+		calDataType.clear();
 		
 		unsigned int calDataTypeDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < calDataTypeDim1; i++)
 			
-			row->calDataType.push_back(CCalDataOrigin::from_int(eiss.readInt()));
+			calDataType.push_back(CCalDataOrigin::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void ScanRow::calibrationOnLineFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->calibrationOnLine.clear();
+		calibrationOnLine.clear();
 		
 		unsigned int calibrationOnLineDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < calibrationOnLineDim1; i++)
 			
-			row->calibrationOnLine.push_back(eiss.readBoolean());
+			calibrationOnLine.push_back(eiss.readBoolean());
 			
 	
 
 		
 	
+	
+}
+void ScanRow::flagRowFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		flagRow =  eiss.readBoolean();
+			
+		
+	
+	
+}
 
-	
-	
+void ScanRow::calibrationFunctionFromBin(EndianISStream& eiss) {
 		
-			
-		row->flagRow =  eiss.readBoolean();
-			
-		
-	
-
-		
-		
-		
-	row->calibrationFunctionExists = eiss.readBoolean();
-	if (row->calibrationFunctionExists) {
+	calibrationFunctionExists = eiss.readBoolean();
+	if (calibrationFunctionExists) {
 		
 	
 	
 		
 			
 	
-		row->calibrationFunction.clear();
+		calibrationFunction.clear();
 		
 		unsigned int calibrationFunctionDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < calibrationFunctionDim1; i++)
 			
-			row->calibrationFunction.push_back(CCalibrationFunction::from_int(eiss.readInt()));
+			calibrationFunction.push_back(CCalibrationFunction::from_int(eiss.readInt()));
 			
 	
 
@@ -1300,21 +1324,24 @@ namespace asdm {
 	
 
 	}
-
-	row->calibrationSetExists = eiss.readBoolean();
-	if (row->calibrationSetExists) {
+	
+}
+void ScanRow::calibrationSetFromBin(EndianISStream& eiss) {
+		
+	calibrationSetExists = eiss.readBoolean();
+	if (calibrationSetExists) {
 		
 	
 	
 		
 			
 	
-		row->calibrationSet.clear();
+		calibrationSet.clear();
 		
 		unsigned int calibrationSetDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < calibrationSetDim1; i++)
 			
-			row->calibrationSet.push_back(CCalibrationSet::from_int(eiss.readInt()));
+			calibrationSet.push_back(CCalibrationSet::from_int(eiss.readInt()));
 			
 	
 
@@ -1322,21 +1349,24 @@ namespace asdm {
 	
 
 	}
-
-	row->calPatternExists = eiss.readBoolean();
-	if (row->calPatternExists) {
+	
+}
+void ScanRow::calPatternFromBin(EndianISStream& eiss) {
+		
+	calPatternExists = eiss.readBoolean();
+	if (calPatternExists) {
 		
 	
 	
 		
 			
 	
-		row->calPattern.clear();
+		calPattern.clear();
 		
 		unsigned int calPatternDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < calPatternDim1; i++)
 			
-			row->calPattern.push_back(CAntennaMotionPattern::from_int(eiss.readInt()));
+			calPattern.push_back(CAntennaMotionPattern::from_int(eiss.readInt()));
 			
 	
 
@@ -1344,35 +1374,41 @@ namespace asdm {
 	
 
 	}
-
-	row->numFieldExists = eiss.readBoolean();
-	if (row->numFieldExists) {
+	
+}
+void ScanRow::numFieldFromBin(EndianISStream& eiss) {
+		
+	numFieldExists = eiss.readBoolean();
+	if (numFieldExists) {
 		
 	
 	
 		
 			
-		row->numField =  eiss.readInt();
+		numField =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->fieldNameExists = eiss.readBoolean();
-	if (row->fieldNameExists) {
+	
+}
+void ScanRow::fieldNameFromBin(EndianISStream& eiss) {
+		
+	fieldNameExists = eiss.readBoolean();
+	if (fieldNameExists) {
 		
 	
 	
 		
 			
 	
-		row->fieldName.clear();
+		fieldName.clear();
 		
 		unsigned int fieldNameDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < fieldNameDim1; i++)
 			
-			row->fieldName.push_back(eiss.readString());
+			fieldName.push_back(eiss.readString());
 			
 	
 
@@ -1380,22 +1416,38 @@ namespace asdm {
 	
 
 	}
-
-	row->sourceNameExists = eiss.readBoolean();
-	if (row->sourceNameExists) {
+	
+}
+void ScanRow::sourceNameFromBin(EndianISStream& eiss) {
+		
+	sourceNameExists = eiss.readBoolean();
+	if (sourceNameExists) {
 		
 	
 	
 		
 			
-		row->sourceName =  eiss.readString();
+		sourceName =  eiss.readString();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	ScanRow* ScanRow::fromBin(EndianISStream& eiss, ScanTable& table, const vector<string>& attributesSeq) {
+		ScanRow* row = new  ScanRow(table);
 		
+		map<string, ScanAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ScanTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2131,6 +2183,27 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["execBlockId"] = &ScanRow::execBlockIdFromBin; 
+	 fromBinMethods["scanNumber"] = &ScanRow::scanNumberFromBin; 
+	 fromBinMethods["startTime"] = &ScanRow::startTimeFromBin; 
+	 fromBinMethods["endTime"] = &ScanRow::endTimeFromBin; 
+	 fromBinMethods["numIntent"] = &ScanRow::numIntentFromBin; 
+	 fromBinMethods["numSubScan"] = &ScanRow::numSubScanFromBin; 
+	 fromBinMethods["scanIntent"] = &ScanRow::scanIntentFromBin; 
+	 fromBinMethods["calDataType"] = &ScanRow::calDataTypeFromBin; 
+	 fromBinMethods["calibrationOnLine"] = &ScanRow::calibrationOnLineFromBin; 
+	 fromBinMethods["flagRow"] = &ScanRow::flagRowFromBin; 
+		
+	
+	 fromBinMethods["calibrationFunction"] = &ScanRow::calibrationFunctionFromBin; 
+	 fromBinMethods["calibrationSet"] = &ScanRow::calibrationSetFromBin; 
+	 fromBinMethods["calPattern"] = &ScanRow::calPatternFromBin; 
+	 fromBinMethods["numField"] = &ScanRow::numFieldFromBin; 
+	 fromBinMethods["fieldName"] = &ScanRow::fieldNameFromBin; 
+	 fromBinMethods["sourceName"] = &ScanRow::sourceNameFromBin; 
 	
 	}
 	
@@ -2257,7 +2330,27 @@ namespace asdm {
 		else
 			sourceNameExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["execBlockId"] = &ScanRow::execBlockIdFromBin; 
+		 fromBinMethods["scanNumber"] = &ScanRow::scanNumberFromBin; 
+		 fromBinMethods["startTime"] = &ScanRow::startTimeFromBin; 
+		 fromBinMethods["endTime"] = &ScanRow::endTimeFromBin; 
+		 fromBinMethods["numIntent"] = &ScanRow::numIntentFromBin; 
+		 fromBinMethods["numSubScan"] = &ScanRow::numSubScanFromBin; 
+		 fromBinMethods["scanIntent"] = &ScanRow::scanIntentFromBin; 
+		 fromBinMethods["calDataType"] = &ScanRow::calDataTypeFromBin; 
+		 fromBinMethods["calibrationOnLine"] = &ScanRow::calibrationOnLineFromBin; 
+		 fromBinMethods["flagRow"] = &ScanRow::flagRowFromBin; 
+			
+	
+		 fromBinMethods["calibrationFunction"] = &ScanRow::calibrationFunctionFromBin; 
+		 fromBinMethods["calibrationSet"] = &ScanRow::calibrationSetFromBin; 
+		 fromBinMethods["calPattern"] = &ScanRow::calPatternFromBin; 
+		 fromBinMethods["numField"] = &ScanRow::numFieldFromBin; 
+		 fromBinMethods["fieldName"] = &ScanRow::fieldNameFromBin; 
+		 fromBinMethods["sourceName"] = &ScanRow::sourceNameFromBin; 
+			
 	}
 
 	
@@ -2411,6 +2504,32 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, ScanAttributeFromBin> ScanRow::initFromBinMethods() {
+		map<string, ScanAttributeFromBin> result;
+		
+		result["execBlockId"] = &ScanRow::execBlockIdFromBin;
+		result["scanNumber"] = &ScanRow::scanNumberFromBin;
+		result["startTime"] = &ScanRow::startTimeFromBin;
+		result["endTime"] = &ScanRow::endTimeFromBin;
+		result["numIntent"] = &ScanRow::numIntentFromBin;
+		result["numSubScan"] = &ScanRow::numSubScanFromBin;
+		result["scanIntent"] = &ScanRow::scanIntentFromBin;
+		result["calDataType"] = &ScanRow::calDataTypeFromBin;
+		result["calibrationOnLine"] = &ScanRow::calibrationOnLineFromBin;
+		result["flagRow"] = &ScanRow::flagRowFromBin;
+		
+		
+		result["calibrationFunction"] = &ScanRow::calibrationFunctionFromBin;
+		result["calibrationSet"] = &ScanRow::calibrationSetFromBin;
+		result["calPattern"] = &ScanRow::calPatternFromBin;
+		result["numField"] = &ScanRow::numFieldFromBin;
+		result["fieldName"] = &ScanRow::fieldNameFromBin;
+		result["sourceName"] = &ScanRow::sourceNameFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

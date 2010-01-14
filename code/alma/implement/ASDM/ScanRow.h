@@ -46,31 +46,13 @@ using std::set;
 using asdmIDL::ScanRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Tag.h>
+using  asdm::Tag;
 
 
 
@@ -122,28 +104,13 @@ using namespace AntennaMotionPatternMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file Scan.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -155,10 +122,13 @@ namespace asdm {
 class ExecBlockRow;
 	
 
+class ScanRow;
+typedef void (ScanRow::*ScanAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The ScanRow class is a row of a ScanTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class ScanRow {
@@ -173,49 +143,6 @@ public:
 	 */
 	ScanTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a ScanRowIDL struct.
-	 */
-	ScanRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct ScanRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (ScanRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the ScanTable to which the row built by deserialization will be parented.
-	  */
-	 static ScanRow* fromBin(EndianISStream& eiss, ScanTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -800,12 +727,54 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this ScanRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param execBlockId
+	    
+	 * @param scanNumber
+	    
+	 * @param startTime
+	    
+	 * @param endTime
+	    
+	 * @param numIntent
+	    
+	 * @param numSubScan
+	    
+	 * @param scanIntent
+	    
+	 * @param calDataType
+	    
+	 * @param calibrationOnLine
+	    
+	 * @param flagRow
+	    
 	 */ 
 	bool compareNoAutoInc(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param startTime
+	    
+	 * @param endTime
+	    
+	 * @param numIntent
+	    
+	 * @param numSubScan
+	    
+	 * @param scanIntent
+	    
+	 * @param calDataType
+	    
+	 * @param calibrationOnLine
+	    
+	 * @param flagRow
+	    
+	 */ 
 	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow); 
 		 
 	
@@ -1069,6 +1038,75 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, ScanAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianISStream& eiss);
+void scanNumberFromBin( EndianISStream& eiss);
+void startTimeFromBin( EndianISStream& eiss);
+void endTimeFromBin( EndianISStream& eiss);
+void numIntentFromBin( EndianISStream& eiss);
+void numSubScanFromBin( EndianISStream& eiss);
+void scanIntentFromBin( EndianISStream& eiss);
+void calDataTypeFromBin( EndianISStream& eiss);
+void calibrationOnLineFromBin( EndianISStream& eiss);
+void flagRowFromBin( EndianISStream& eiss);
+
+void calibrationFunctionFromBin( EndianISStream& eiss);
+void calibrationSetFromBin( EndianISStream& eiss);
+void calPatternFromBin( EndianISStream& eiss);
+void numFieldFromBin( EndianISStream& eiss);
+void fieldNameFromBin( EndianISStream& eiss);
+void sourceNameFromBin( EndianISStream& eiss);
+	
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a ScanRowIDL struct.
+	 */
+	ScanRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct ScanRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (ScanRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the ScanTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ScanRow* fromBin(EndianISStream& eiss, ScanTable& table, const vector<string>& attributesSeq);	 
 
 };
 

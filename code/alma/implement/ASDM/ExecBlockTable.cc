@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -117,12 +122,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int ExecBlockTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -155,62 +159,58 @@ namespace asdm {
 		return new ExecBlockRow (*this);
 	}
 	
-	ExecBlockRow *ExecBlockTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param startTime. 
+ 	 * @param startTime 
 	
- 	 * @param endTime. 
+ 	 * @param endTime 
 	
- 	 * @param execBlockNum. 
+ 	 * @param execBlockNum 
 	
- 	 * @param execBlockUID. 
+ 	 * @param execBlockUID 
 	
- 	 * @param projectId. 
+ 	 * @param projectId 
 	
- 	 * @param configName. 
+ 	 * @param configName 
 	
- 	 * @param telescopeName. 
+ 	 * @param telescopeName 
 	
- 	 * @param observerName. 
+ 	 * @param observerName 
 	
- 	 * @param observingLog. 
+ 	 * @param observingLog 
 	
- 	 * @param sessionReference. 
+ 	 * @param sessionReference 
 	
- 	 * @param sbSummary. 
+ 	 * @param sbSummary 
 	
- 	 * @param schedulerMode. 
+ 	 * @param schedulerMode 
 	
- 	 * @param baseRangeMin. 
+ 	 * @param baseRangeMin 
 	
- 	 * @param baseRangeMax. 
+ 	 * @param baseRangeMax 
 	
- 	 * @param baseRmsMinor. 
+ 	 * @param baseRmsMinor 
 	
- 	 * @param baseRmsMajor. 
+ 	 * @param baseRmsMajor 
 	
- 	 * @param basePa. 
+ 	 * @param basePa 
 	
- 	 * @param siteAltitude. 
+ 	 * @param siteAltitude 
 	
- 	 * @param siteLongitude. 
+ 	 * @param siteLongitude 
 	
- 	 * @param siteLatitude. 
+ 	 * @param siteLatitude 
 	
- 	 * @param aborted. 
+ 	 * @param aborted 
 	
- 	 * @param numAntenna. 
+ 	 * @param numAntenna 
 	
- 	 * @param antennaId. 
+ 	 * @param antennaId 
 	
- 	 * @param sBSummaryId. 
+ 	 * @param sBSummaryId 
 	
      */
 	ExecBlockRow* ExecBlockTable::newRow(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId){
@@ -266,68 +266,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	ExecBlockRow* ExecBlockTable::newRowFull(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId)	{
-		ExecBlockRow *row = new ExecBlockRow(*this);
-			
-		row->setStartTime(startTime);
-			
-		row->setEndTime(endTime);
-			
-		row->setExecBlockNum(execBlockNum);
-			
-		row->setExecBlockUID(execBlockUID);
-			
-		row->setProjectId(projectId);
-			
-		row->setConfigName(configName);
-			
-		row->setTelescopeName(telescopeName);
-			
-		row->setObserverName(observerName);
-			
-		row->setObservingLog(observingLog);
-			
-		row->setSessionReference(sessionReference);
-			
-		row->setSbSummary(sbSummary);
-			
-		row->setSchedulerMode(schedulerMode);
-			
-		row->setBaseRangeMin(baseRangeMin);
-			
-		row->setBaseRangeMax(baseRangeMax);
-			
-		row->setBaseRmsMinor(baseRmsMinor);
-			
-		row->setBaseRmsMajor(baseRmsMajor);
-			
-		row->setBasePa(basePa);
-			
-		row->setSiteAltitude(siteAltitude);
-			
-		row->setSiteLongitude(siteLongitude);
-			
-		row->setSiteLatitude(siteLatitude);
-			
-		row->setAborted(aborted);
-			
-		row->setNumAntenna(numAntenna);
-			
-		row->setAntennaId(antennaId);
-			
-		row->setSBSummaryId(sBSummaryId);
-	
-		return row;				
-	}
 	
 
 
 ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
-	return new ExecBlockRow(*this, *row);
-}
-
-ExecBlockRow* ExecBlockTable::newRowCopy(ExecBlockRow* row) {
 	return new ExecBlockRow(*this, *row);
 }
 
@@ -647,27 +589,13 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 	}
 #endif
 
-	char *ExecBlockTable::toFITS() const  {
-		throw ConversionException("Not implemented","ExecBlock");
-	}
-
-	void ExecBlockTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","ExecBlock");
-	}
-
-	string ExecBlockTable::toVOTable() const {
-		throw ConversionException("Not implemented","ExecBlock");
-	}
-
-	void ExecBlockTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","ExecBlock");
-	}
-
 	
 	string ExecBlockTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/2/ExecBlockTable.xsd\"> ");	
+		buf.append("<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:excblk=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/2/ExecBlockTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -725,6 +653,10 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 		}
 		if (!xml.isStr("</ExecBlockTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -733,11 +665,57 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 	}
 	
 	
-	string ExecBlockTable::toMIME() {
-		EndianOSStream eoss;
+	string ExecBlockTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:excblk=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/2/ExecBlockTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ExecBlockTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<execBlockId/>\n"; 
+		oss << "<startTime/>\n"; 
+		oss << "<endTime/>\n"; 
+		oss << "<execBlockNum/>\n"; 
+		oss << "<execBlockUID/>\n"; 
+		oss << "<projectId/>\n"; 
+		oss << "<configName/>\n"; 
+		oss << "<telescopeName/>\n"; 
+		oss << "<observerName/>\n"; 
+		oss << "<observingLog/>\n"; 
+		oss << "<sessionReference/>\n"; 
+		oss << "<sbSummary/>\n"; 
+		oss << "<schedulerMode/>\n"; 
+		oss << "<baseRangeMin/>\n"; 
+		oss << "<baseRangeMax/>\n"; 
+		oss << "<baseRmsMinor/>\n"; 
+		oss << "<baseRmsMajor/>\n"; 
+		oss << "<basePa/>\n"; 
+		oss << "<siteAltitude/>\n"; 
+		oss << "<siteLongitude/>\n"; 
+		oss << "<siteLatitude/>\n"; 
+		oss << "<aborted/>\n"; 
+		oss << "<numAntenna/>\n"; 
+		oss << "<antennaId/>\n"; 
+		oss << "<sBSummaryId/>\n"; 
+
+		oss << "<releaseDate/>\n"; 
+		oss << "<flagRow/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</ExecBlockTable>\n";
+
+		return oss.str();				
+	}
+	
+	string ExecBlockTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -762,13 +740,7 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -796,39 +768,177 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 
 	
 	void ExecBlockTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "ExecBlock");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			ExecBlockRow* aRow = ExecBlockRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "ExecBlock");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "ExecBlock");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "ExecBlock");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "ExecBlock");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "ExecBlock");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "ExecBlock");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("execBlockId") ; 
+     
+    attributesSeq.push_back("startTime") ; 
+     
+    attributesSeq.push_back("endTime") ; 
+     
+    attributesSeq.push_back("execBlockNum") ; 
+     
+    attributesSeq.push_back("execBlockUID") ; 
+     
+    attributesSeq.push_back("projectId") ; 
+     
+    attributesSeq.push_back("configName") ; 
+     
+    attributesSeq.push_back("telescopeName") ; 
+     
+    attributesSeq.push_back("observerName") ; 
+     
+    attributesSeq.push_back("observingLog") ; 
+     
+    attributesSeq.push_back("sessionReference") ; 
+     
+    attributesSeq.push_back("sbSummary") ; 
+     
+    attributesSeq.push_back("schedulerMode") ; 
+     
+    attributesSeq.push_back("baseRangeMin") ; 
+     
+    attributesSeq.push_back("baseRangeMax") ; 
+     
+    attributesSeq.push_back("baseRmsMinor") ; 
+     
+    attributesSeq.push_back("baseRmsMajor") ; 
+     
+    attributesSeq.push_back("basePa") ; 
+     
+    attributesSeq.push_back("siteAltitude") ; 
+     
+    attributesSeq.push_back("siteLongitude") ; 
+     
+    attributesSeq.push_back("siteLatitude") ; 
+     
+    attributesSeq.push_back("aborted") ; 
+     
+    attributesSeq.push_back("numAntenna") ; 
+     
+    attributesSeq.push_back("antennaId") ; 
+     
+    attributesSeq.push_back("sBSummaryId") ; 
+    
+     
+    attributesSeq.push_back("releaseDate") ; 
+     
+    attributesSeq.push_back("flagRow") ; 
+              
+     }
+    else if (string("ExecBlockTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/ExecBlockTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "ExecBlock");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/ExecBlockTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "ExecBlock");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/ExecBlockTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "ExecBlock");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/ExecBlockTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "ExecBlock");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	ExecBlockRow* aRow = ExecBlockRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "ExecBlock");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "ExecBlock");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -837,7 +947,19 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/ExecBlock.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "ExecBlock");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "ExecBlock");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/ExecBlock.bin";
@@ -849,60 +971,75 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "ExecBlock");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/ExecBlock.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "ExecBlock");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "ExecBlock");
-		}
 	}
 
 	
 	void ExecBlockTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/ExecBlock.bin";
-		else
-			tablename = directory + "/ExecBlock.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "ExecBlock");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"ExecBlock");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"ExecBlock");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/ExecBlock.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/ExecBlock.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the ExecBlock table", "ExecBlock");
 	}			
+
+	
+  void ExecBlockTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/ExecBlock.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "ExecBlock");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"ExecBlock");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"ExecBlock");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void ExecBlockTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/ExecBlock.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "ExecBlock");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "ExecBlock");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "ExecBlock");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

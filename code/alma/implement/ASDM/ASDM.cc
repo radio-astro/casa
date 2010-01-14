@@ -1082,7 +1082,7 @@ namespace asdm {
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\"> ");
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\"> ");
 
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");
@@ -1437,23 +1437,7 @@ namespace asdm {
 		this->beam->fromIDL(x->beam);
 	}
 #endif
-	
-	string ASDM::toVOTable() const  {
-		throw ConversionException("Not implemented","ASDM");
-	}
-	
-	void ASDM::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","ASDM");
-	}
-	
-	char * ASDM::toFITS() const {
-		throw ConversionException("Not implemented","ASDM");
-	}
-	
-	void ASDM::fromFITS(char * fits) {
-		throw ConversionException("Not implemented","ASDM");
-	}
-	
+		
 	/**
 	 * Write this ASDM dataset to the specified directory
 	 * as a collection of XML documents. 

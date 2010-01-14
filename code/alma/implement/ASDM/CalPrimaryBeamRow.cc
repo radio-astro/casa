@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalPrimaryBeamRow::~CalPrimaryBeamRow() {
 	}
 
@@ -834,140 +833,184 @@ namespace asdm {
 	
 	}
 	
-	CalPrimaryBeamRow* CalPrimaryBeamRow::fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table) {
-		CalPrimaryBeamRow* row = new  CalPrimaryBeamRow(table);
-		
-		
+void CalPrimaryBeamRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void CalPrimaryBeamRow::receiverBandFromBin(EndianISStream& eiss) {
 		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
 			
 		
+	
+	
+}
+void CalPrimaryBeamRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalPrimaryBeamRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalPrimaryBeamRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalPrimaryBeamRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalPrimaryBeamRow::antennaMakeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		antennaMake = CAntennaMake::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalPrimaryBeamRow::frequencyRangeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	frequencyRange = Frequency::from1DBin(eiss);	
 	
 
-	
-		
-		
-			
-	
-	row->frequencyRange = Frequency::from1DBin(eiss);	
-	
-
 		
 	
-
+	
+}
+void CalPrimaryBeamRow::numReceptorFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		numReceptor =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CalPrimaryBeamRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalPrimaryBeamRow::mainBeamEfficiencyFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->mainBeamEfficiency.clear();
+		mainBeamEfficiency.clear();
 		
 		unsigned int mainBeamEfficiencyDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < mainBeamEfficiencyDim1; i++)
 			
-			row->mainBeamEfficiency.push_back(eiss.readDouble());
+			mainBeamEfficiency.push_back(eiss.readDouble());
 			
 	
 
 		
 	
-
+	
+}
+void CalPrimaryBeamRow::beamMapUIDFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->beamMapUID =  EntityRef::fromBin(eiss);
+		beamMapUID =  EntityRef::fromBin(eiss);
 		
 	
-
+	
+}
+void CalPrimaryBeamRow::relativeAmplitudeRmsFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->relativeAmplitudeRms =  eiss.readFloat();
+		relativeAmplitudeRms =  eiss.readFloat();
 			
 		
 	
+	
+}
 
 		
+	
+	CalPrimaryBeamRow* CalPrimaryBeamRow::fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table, const vector<string>& attributesSeq) {
+		CalPrimaryBeamRow* row = new  CalPrimaryBeamRow(table);
 		
-		
-		
+		map<string, CalPrimaryBeamAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPrimaryBeamTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1524,6 +1567,24 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalPrimaryBeamRow::antennaNameFromBin; 
+	 fromBinMethods["receiverBand"] = &CalPrimaryBeamRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalPrimaryBeamRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalPrimaryBeamRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalPrimaryBeamRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalPrimaryBeamRow::endValidTimeFromBin; 
+	 fromBinMethods["antennaMake"] = &CalPrimaryBeamRow::antennaMakeFromBin; 
+	 fromBinMethods["frequencyRange"] = &CalPrimaryBeamRow::frequencyRangeFromBin; 
+	 fromBinMethods["numReceptor"] = &CalPrimaryBeamRow::numReceptorFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalPrimaryBeamRow::polarizationTypesFromBin; 
+	 fromBinMethods["mainBeamEfficiency"] = &CalPrimaryBeamRow::mainBeamEfficiencyFromBin; 
+	 fromBinMethods["beamMapUID"] = &CalPrimaryBeamRow::beamMapUIDFromBin; 
+	 fromBinMethods["relativeAmplitudeRms"] = &CalPrimaryBeamRow::relativeAmplitudeRmsFromBin; 
+		
+	
 	
 	}
 	
@@ -1596,7 +1657,24 @@ antennaMake = CAntennaMake::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalPrimaryBeamRow::antennaNameFromBin; 
+		 fromBinMethods["receiverBand"] = &CalPrimaryBeamRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalPrimaryBeamRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalPrimaryBeamRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalPrimaryBeamRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalPrimaryBeamRow::endValidTimeFromBin; 
+		 fromBinMethods["antennaMake"] = &CalPrimaryBeamRow::antennaMakeFromBin; 
+		 fromBinMethods["frequencyRange"] = &CalPrimaryBeamRow::frequencyRangeFromBin; 
+		 fromBinMethods["numReceptor"] = &CalPrimaryBeamRow::numReceptorFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalPrimaryBeamRow::polarizationTypesFromBin; 
+		 fromBinMethods["mainBeamEfficiency"] = &CalPrimaryBeamRow::mainBeamEfficiencyFromBin; 
+		 fromBinMethods["beamMapUID"] = &CalPrimaryBeamRow::beamMapUIDFromBin; 
+		 fromBinMethods["relativeAmplitudeRms"] = &CalPrimaryBeamRow::relativeAmplitudeRmsFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1777,6 +1855,29 @@ antennaMake = CAntennaMake::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalPrimaryBeamAttributeFromBin> CalPrimaryBeamRow::initFromBinMethods() {
+		map<string, CalPrimaryBeamAttributeFromBin> result;
+		
+		result["antennaName"] = &CalPrimaryBeamRow::antennaNameFromBin;
+		result["receiverBand"] = &CalPrimaryBeamRow::receiverBandFromBin;
+		result["calDataId"] = &CalPrimaryBeamRow::calDataIdFromBin;
+		result["calReductionId"] = &CalPrimaryBeamRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalPrimaryBeamRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalPrimaryBeamRow::endValidTimeFromBin;
+		result["antennaMake"] = &CalPrimaryBeamRow::antennaMakeFromBin;
+		result["frequencyRange"] = &CalPrimaryBeamRow::frequencyRangeFromBin;
+		result["numReceptor"] = &CalPrimaryBeamRow::numReceptorFromBin;
+		result["polarizationTypes"] = &CalPrimaryBeamRow::polarizationTypesFromBin;
+		result["mainBeamEfficiency"] = &CalPrimaryBeamRow::mainBeamEfficiencyFromBin;
+		result["beamMapUID"] = &CalPrimaryBeamRow::beamMapUIDFromBin;
+		result["relativeAmplitudeRms"] = &CalPrimaryBeamRow::relativeAmplitudeRmsFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SourceRow::~SourceRow() {
 	}
 
@@ -2259,187 +2258,224 @@ namespace asdm {
 
 	}
 	
-	SourceRow* SourceRow::fromBin(EndianISStream& eiss, SourceTable& table) {
-		SourceRow* row = new  SourceRow(table);
-		
-		
+void SourceRow::sourceIdFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->sourceId =  eiss.readInt();
+		sourceId =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void SourceRow::timeIntervalFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
 		
 	
-
 	
+}
+void SourceRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->code =  eiss.readString();
-			
-		
-	
-
 	
 		
 		
-			
-	
-	row->direction = Angle::from1DBin(eiss);	
-	
-
+		spectralWindowId =  Tag::fromBin(eiss);
 		
 	
-
 	
-		
-		
-			
-	
-	row->properMotion = AngularRate::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-	
-		
-			
-		row->sourceName =  eiss.readString();
-			
-		
-	
-
-		
-		
-		
-	row->directionCodeExists = eiss.readBoolean();
-	if (row->directionCodeExists) {
+}
+void SourceRow::codeFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		code =  eiss.readString();
 			
 		
 	
-
-	}
-
-	row->directionEquinoxExists = eiss.readBoolean();
-	if (row->directionEquinoxExists) {
+	
+}
+void SourceRow::directionFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->directionEquinox =  ArrayTime::fromBin(eiss);
-		
+			
+	
+	direction = Angle::from1DBin(eiss);	
 	
 
-	}
+		
+	
+	
+}
+void SourceRow::properMotionFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	properMotion = AngularRate::from1DBin(eiss);	
+	
 
-	row->calibrationGroupExists = eiss.readBoolean();
-	if (row->calibrationGroupExists) {
+		
+	
+	
+}
+void SourceRow::sourceNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->calibrationGroup =  eiss.readInt();
+		sourceName =  eiss.readString();
+			
+		
+	
+	
+}
+
+void SourceRow::directionCodeFromBin(EndianISStream& eiss) {
+		
+	directionCodeExists = eiss.readBoolean();
+	if (directionCodeExists) {
+		
+	
+	
+		
+			
+		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
 			
 		
 	
 
 	}
+	
+}
+void SourceRow::directionEquinoxFromBin(EndianISStream& eiss) {
+		
+	directionEquinoxExists = eiss.readBoolean();
+	if (directionEquinoxExists) {
+		
+	
+		
+		
+		directionEquinox =  ArrayTime::fromBin(eiss);
+		
+	
 
-	row->catalogExists = eiss.readBoolean();
-	if (row->catalogExists) {
+	}
+	
+}
+void SourceRow::calibrationGroupFromBin(EndianISStream& eiss) {
+		
+	calibrationGroupExists = eiss.readBoolean();
+	if (calibrationGroupExists) {
 		
 	
 	
 		
 			
-		row->catalog =  eiss.readString();
+		calibrationGroup =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->deltaVelExists = eiss.readBoolean();
-	if (row->deltaVelExists) {
-		
 	
+}
+void SourceRow::catalogFromBin(EndianISStream& eiss) {
 		
-		
-		row->deltaVel =  Speed::fromBin(eiss);
-		
-	
-
-	}
-
-	row->positionExists = eiss.readBoolean();
-	if (row->positionExists) {
-		
-	
-		
-		
-			
-	
-	row->position = Length::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-	row->numLinesExists = eiss.readBoolean();
-	if (row->numLinesExists) {
+	catalogExists = eiss.readBoolean();
+	if (catalogExists) {
 		
 	
 	
 		
 			
-		row->numLines =  eiss.readInt();
+		catalog =  eiss.readString();
 			
 		
 	
 
 	}
+	
+}
+void SourceRow::deltaVelFromBin(EndianISStream& eiss) {
+		
+	deltaVelExists = eiss.readBoolean();
+	if (deltaVelExists) {
+		
+	
+		
+		
+		deltaVel =  Speed::fromBin(eiss);
+		
+	
 
-	row->transitionExists = eiss.readBoolean();
-	if (row->transitionExists) {
+	}
+	
+}
+void SourceRow::positionFromBin(EndianISStream& eiss) {
+		
+	positionExists = eiss.readBoolean();
+	if (positionExists) {
+		
+	
+		
+		
+			
+	
+	position = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+	
+}
+void SourceRow::numLinesFromBin(EndianISStream& eiss) {
+		
+	numLinesExists = eiss.readBoolean();
+	if (numLinesExists) {
+		
+	
+	
+		
+			
+		numLines =  eiss.readInt();
+			
+		
+	
+
+	}
+	
+}
+void SourceRow::transitionFromBin(EndianISStream& eiss) {
+		
+	transitionExists = eiss.readBoolean();
+	if (transitionExists) {
 		
 	
 	
 		
 			
 	
-		row->transition.clear();
+		transition.clear();
 		
 		unsigned int transitionDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < transitionDim1; i++)
 			
-			row->transition.push_back(eiss.readString());
+			transition.push_back(eiss.readString());
 			
 	
 
@@ -2447,157 +2483,187 @@ namespace asdm {
 	
 
 	}
-
-	row->restFrequencyExists = eiss.readBoolean();
-	if (row->restFrequencyExists) {
+	
+}
+void SourceRow::restFrequencyFromBin(EndianISStream& eiss) {
+		
+	restFrequencyExists = eiss.readBoolean();
+	if (restFrequencyExists) {
 		
 	
 		
 		
 			
 	
-	row->restFrequency = Frequency::from1DBin(eiss);	
+	restFrequency = Frequency::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->sysVelExists = eiss.readBoolean();
-	if (row->sysVelExists) {
+	
+}
+void SourceRow::sysVelFromBin(EndianISStream& eiss) {
+		
+	sysVelExists = eiss.readBoolean();
+	if (sysVelExists) {
 		
 	
 		
 		
 			
 	
-	row->sysVel = Speed::from1DBin(eiss);	
+	sysVel = Speed::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->rangeVelExists = eiss.readBoolean();
-	if (row->rangeVelExists) {
+	
+}
+void SourceRow::rangeVelFromBin(EndianISStream& eiss) {
+		
+	rangeVelExists = eiss.readBoolean();
+	if (rangeVelExists) {
 		
 	
 		
 		
 			
 	
-	row->rangeVel = Speed::from1DBin(eiss);	
+	rangeVel = Speed::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->sourceModelExists = eiss.readBoolean();
-	if (row->sourceModelExists) {
+	
+}
+void SourceRow::sourceModelFromBin(EndianISStream& eiss) {
+		
+	sourceModelExists = eiss.readBoolean();
+	if (sourceModelExists) {
 		
 	
 	
 		
 			
-		row->sourceModel = CSourceModel::from_int(eiss.readInt());
-			
-		
-	
-
-	}
-
-	row->frequencyRefCodeExists = eiss.readBoolean();
-	if (row->frequencyRefCodeExists) {
-		
-	
-	
-		
-			
-		row->frequencyRefCode = CFrequencyReferenceCode::from_int(eiss.readInt());
+		sourceModel = CSourceModel::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
-	row->numFreqExists = eiss.readBoolean();
-	if (row->numFreqExists) {
+	
+}
+void SourceRow::frequencyRefCodeFromBin(EndianISStream& eiss) {
+		
+	frequencyRefCodeExists = eiss.readBoolean();
+	if (frequencyRefCodeExists) {
 		
 	
 	
 		
 			
-		row->numFreq =  eiss.readInt();
-			
-		
-	
-
-	}
-
-	row->numStokesExists = eiss.readBoolean();
-	if (row->numStokesExists) {
-		
-	
-	
-		
-			
-		row->numStokes =  eiss.readInt();
+		frequencyRefCode = CFrequencyReferenceCode::from_int(eiss.readInt());
 			
 		
 	
 
 	}
+	
+}
+void SourceRow::numFreqFromBin(EndianISStream& eiss) {
+		
+	numFreqExists = eiss.readBoolean();
+	if (numFreqExists) {
+		
+	
+	
+		
+			
+		numFreq =  eiss.readInt();
+			
+		
+	
 
-	row->frequencyExists = eiss.readBoolean();
-	if (row->frequencyExists) {
+	}
+	
+}
+void SourceRow::numStokesFromBin(EndianISStream& eiss) {
+		
+	numStokesExists = eiss.readBoolean();
+	if (numStokesExists) {
+		
+	
+	
+		
+			
+		numStokes =  eiss.readInt();
+			
+		
+	
+
+	}
+	
+}
+void SourceRow::frequencyFromBin(EndianISStream& eiss) {
+		
+	frequencyExists = eiss.readBoolean();
+	if (frequencyExists) {
 		
 	
 		
 		
 			
 	
-	row->frequency = Frequency::from1DBin(eiss);	
+	frequency = Frequency::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->frequencyIntervalExists = eiss.readBoolean();
-	if (row->frequencyIntervalExists) {
+	
+}
+void SourceRow::frequencyIntervalFromBin(EndianISStream& eiss) {
+		
+	frequencyIntervalExists = eiss.readBoolean();
+	if (frequencyIntervalExists) {
 		
 	
 		
 		
 			
 	
-	row->frequencyInterval = Frequency::from1DBin(eiss);	
+	frequencyInterval = Frequency::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->stokesParameterExists = eiss.readBoolean();
-	if (row->stokesParameterExists) {
+	
+}
+void SourceRow::stokesParameterFromBin(EndianISStream& eiss) {
+		
+	stokesParameterExists = eiss.readBoolean();
+	if (stokesParameterExists) {
 		
 	
 	
 		
 			
 	
-		row->stokesParameter.clear();
+		stokesParameter.clear();
 		
 		unsigned int stokesParameterDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < stokesParameterDim1; i++)
 			
-			row->stokesParameter.push_back(CStokesParameter::from_int(eiss.readInt()));
+			stokesParameter.push_back(CStokesParameter::from_int(eiss.readInt()));
 			
 	
 
@@ -2605,104 +2671,135 @@ namespace asdm {
 	
 
 	}
-
-	row->fluxExists = eiss.readBoolean();
-	if (row->fluxExists) {
+	
+}
+void SourceRow::fluxFromBin(EndianISStream& eiss) {
+		
+	fluxExists = eiss.readBoolean();
+	if (fluxExists) {
 		
 	
 		
 		
 			
 	
-	row->flux = Flux::from2DBin(eiss);		
+	flux = Flux::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
-	row->fluxErrExists = eiss.readBoolean();
-	if (row->fluxErrExists) {
+	
+}
+void SourceRow::fluxErrFromBin(EndianISStream& eiss) {
+		
+	fluxErrExists = eiss.readBoolean();
+	if (fluxErrExists) {
 		
 	
 		
 		
 			
 	
-	row->fluxErr = Flux::from2DBin(eiss);		
+	fluxErr = Flux::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
-	row->positionAngleExists = eiss.readBoolean();
-	if (row->positionAngleExists) {
+	
+}
+void SourceRow::positionAngleFromBin(EndianISStream& eiss) {
+		
+	positionAngleExists = eiss.readBoolean();
+	if (positionAngleExists) {
 		
 	
 		
 		
 			
 	
-	row->positionAngle = Angle::from1DBin(eiss);	
+	positionAngle = Angle::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->positionAngleErrExists = eiss.readBoolean();
-	if (row->positionAngleErrExists) {
+	
+}
+void SourceRow::positionAngleErrFromBin(EndianISStream& eiss) {
+		
+	positionAngleErrExists = eiss.readBoolean();
+	if (positionAngleErrExists) {
 		
 	
 		
 		
 			
 	
-	row->positionAngleErr = Angle::from1DBin(eiss);	
+	positionAngleErr = Angle::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->sizeExists = eiss.readBoolean();
-	if (row->sizeExists) {
+	
+}
+void SourceRow::sizeFromBin(EndianISStream& eiss) {
+		
+	sizeExists = eiss.readBoolean();
+	if (sizeExists) {
 		
 	
 		
 		
 			
 	
-	row->size = Angle::from2DBin(eiss);		
+	size = Angle::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
-	row->sizeErrExists = eiss.readBoolean();
-	if (row->sizeErrExists) {
+	
+}
+void SourceRow::sizeErrFromBin(EndianISStream& eiss) {
+		
+	sizeErrExists = eiss.readBoolean();
+	if (sizeErrExists) {
 		
 	
 		
 		
 			
 	
-	row->sizeErr = Angle::from2DBin(eiss);		
+	sizeErr = Angle::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
+	
+}
+	
+	
+	SourceRow* SourceRow::fromBin(EndianISStream& eiss, SourceTable& table, const vector<string>& attributesSeq) {
+		SourceRow* row = new  SourceRow(table);
 		
+		map<string, SourceAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SourceTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -4297,6 +4394,42 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["sourceId"] = &SourceRow::sourceIdFromBin; 
+	 fromBinMethods["timeInterval"] = &SourceRow::timeIntervalFromBin; 
+	 fromBinMethods["spectralWindowId"] = &SourceRow::spectralWindowIdFromBin; 
+	 fromBinMethods["code"] = &SourceRow::codeFromBin; 
+	 fromBinMethods["direction"] = &SourceRow::directionFromBin; 
+	 fromBinMethods["properMotion"] = &SourceRow::properMotionFromBin; 
+	 fromBinMethods["sourceName"] = &SourceRow::sourceNameFromBin; 
+		
+	
+	 fromBinMethods["directionCode"] = &SourceRow::directionCodeFromBin; 
+	 fromBinMethods["directionEquinox"] = &SourceRow::directionEquinoxFromBin; 
+	 fromBinMethods["calibrationGroup"] = &SourceRow::calibrationGroupFromBin; 
+	 fromBinMethods["catalog"] = &SourceRow::catalogFromBin; 
+	 fromBinMethods["deltaVel"] = &SourceRow::deltaVelFromBin; 
+	 fromBinMethods["position"] = &SourceRow::positionFromBin; 
+	 fromBinMethods["numLines"] = &SourceRow::numLinesFromBin; 
+	 fromBinMethods["transition"] = &SourceRow::transitionFromBin; 
+	 fromBinMethods["restFrequency"] = &SourceRow::restFrequencyFromBin; 
+	 fromBinMethods["sysVel"] = &SourceRow::sysVelFromBin; 
+	 fromBinMethods["rangeVel"] = &SourceRow::rangeVelFromBin; 
+	 fromBinMethods["sourceModel"] = &SourceRow::sourceModelFromBin; 
+	 fromBinMethods["frequencyRefCode"] = &SourceRow::frequencyRefCodeFromBin; 
+	 fromBinMethods["numFreq"] = &SourceRow::numFreqFromBin; 
+	 fromBinMethods["numStokes"] = &SourceRow::numStokesFromBin; 
+	 fromBinMethods["frequency"] = &SourceRow::frequencyFromBin; 
+	 fromBinMethods["frequencyInterval"] = &SourceRow::frequencyIntervalFromBin; 
+	 fromBinMethods["stokesParameter"] = &SourceRow::stokesParameterFromBin; 
+	 fromBinMethods["flux"] = &SourceRow::fluxFromBin; 
+	 fromBinMethods["fluxErr"] = &SourceRow::fluxErrFromBin; 
+	 fromBinMethods["positionAngle"] = &SourceRow::positionAngleFromBin; 
+	 fromBinMethods["positionAngleErr"] = &SourceRow::positionAngleErrFromBin; 
+	 fromBinMethods["size"] = &SourceRow::sizeFromBin; 
+	 fromBinMethods["sizeErr"] = &SourceRow::sizeErrFromBin; 
 	
 	}
 	
@@ -4609,7 +4742,42 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 		else
 			sizeErrExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["sourceId"] = &SourceRow::sourceIdFromBin; 
+		 fromBinMethods["timeInterval"] = &SourceRow::timeIntervalFromBin; 
+		 fromBinMethods["spectralWindowId"] = &SourceRow::spectralWindowIdFromBin; 
+		 fromBinMethods["code"] = &SourceRow::codeFromBin; 
+		 fromBinMethods["direction"] = &SourceRow::directionFromBin; 
+		 fromBinMethods["properMotion"] = &SourceRow::properMotionFromBin; 
+		 fromBinMethods["sourceName"] = &SourceRow::sourceNameFromBin; 
+			
+	
+		 fromBinMethods["directionCode"] = &SourceRow::directionCodeFromBin; 
+		 fromBinMethods["directionEquinox"] = &SourceRow::directionEquinoxFromBin; 
+		 fromBinMethods["calibrationGroup"] = &SourceRow::calibrationGroupFromBin; 
+		 fromBinMethods["catalog"] = &SourceRow::catalogFromBin; 
+		 fromBinMethods["deltaVel"] = &SourceRow::deltaVelFromBin; 
+		 fromBinMethods["position"] = &SourceRow::positionFromBin; 
+		 fromBinMethods["numLines"] = &SourceRow::numLinesFromBin; 
+		 fromBinMethods["transition"] = &SourceRow::transitionFromBin; 
+		 fromBinMethods["restFrequency"] = &SourceRow::restFrequencyFromBin; 
+		 fromBinMethods["sysVel"] = &SourceRow::sysVelFromBin; 
+		 fromBinMethods["rangeVel"] = &SourceRow::rangeVelFromBin; 
+		 fromBinMethods["sourceModel"] = &SourceRow::sourceModelFromBin; 
+		 fromBinMethods["frequencyRefCode"] = &SourceRow::frequencyRefCodeFromBin; 
+		 fromBinMethods["numFreq"] = &SourceRow::numFreqFromBin; 
+		 fromBinMethods["numStokes"] = &SourceRow::numStokesFromBin; 
+		 fromBinMethods["frequency"] = &SourceRow::frequencyFromBin; 
+		 fromBinMethods["frequencyInterval"] = &SourceRow::frequencyIntervalFromBin; 
+		 fromBinMethods["stokesParameter"] = &SourceRow::stokesParameterFromBin; 
+		 fromBinMethods["flux"] = &SourceRow::fluxFromBin; 
+		 fromBinMethods["fluxErr"] = &SourceRow::fluxErrFromBin; 
+		 fromBinMethods["positionAngle"] = &SourceRow::positionAngleFromBin; 
+		 fromBinMethods["positionAngleErr"] = &SourceRow::positionAngleErrFromBin; 
+		 fromBinMethods["size"] = &SourceRow::sizeFromBin; 
+		 fromBinMethods["sizeErr"] = &SourceRow::sizeErrFromBin; 
+			
 	}
 
 	
@@ -4711,6 +4879,47 @@ frequencyRefCode = CFrequencyReferenceCode::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, SourceAttributeFromBin> SourceRow::initFromBinMethods() {
+		map<string, SourceAttributeFromBin> result;
+		
+		result["sourceId"] = &SourceRow::sourceIdFromBin;
+		result["timeInterval"] = &SourceRow::timeIntervalFromBin;
+		result["spectralWindowId"] = &SourceRow::spectralWindowIdFromBin;
+		result["code"] = &SourceRow::codeFromBin;
+		result["direction"] = &SourceRow::directionFromBin;
+		result["properMotion"] = &SourceRow::properMotionFromBin;
+		result["sourceName"] = &SourceRow::sourceNameFromBin;
+		
+		
+		result["directionCode"] = &SourceRow::directionCodeFromBin;
+		result["directionEquinox"] = &SourceRow::directionEquinoxFromBin;
+		result["calibrationGroup"] = &SourceRow::calibrationGroupFromBin;
+		result["catalog"] = &SourceRow::catalogFromBin;
+		result["deltaVel"] = &SourceRow::deltaVelFromBin;
+		result["position"] = &SourceRow::positionFromBin;
+		result["numLines"] = &SourceRow::numLinesFromBin;
+		result["transition"] = &SourceRow::transitionFromBin;
+		result["restFrequency"] = &SourceRow::restFrequencyFromBin;
+		result["sysVel"] = &SourceRow::sysVelFromBin;
+		result["rangeVel"] = &SourceRow::rangeVelFromBin;
+		result["sourceModel"] = &SourceRow::sourceModelFromBin;
+		result["frequencyRefCode"] = &SourceRow::frequencyRefCodeFromBin;
+		result["numFreq"] = &SourceRow::numFreqFromBin;
+		result["numStokes"] = &SourceRow::numStokesFromBin;
+		result["frequency"] = &SourceRow::frequencyFromBin;
+		result["frequencyInterval"] = &SourceRow::frequencyIntervalFromBin;
+		result["stokesParameter"] = &SourceRow::stokesParameterFromBin;
+		result["flux"] = &SourceRow::fluxFromBin;
+		result["fluxErr"] = &SourceRow::fluxErrFromBin;
+		result["positionAngle"] = &SourceRow::positionAngleFromBin;
+		result["positionAngleErr"] = &SourceRow::positionAngleErrFromBin;
+		result["size"] = &SourceRow::sizeFromBin;
+		result["sizeErr"] = &SourceRow::sizeErrFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

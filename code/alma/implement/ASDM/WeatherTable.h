@@ -42,96 +42,78 @@ using std::string;
 using std::vector;
 using std::map;
 
+
+
 #include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <PartId.h>
-#include <Pressure.h>
+using  asdm::Angle;
+
 #include <Speed.h>
+using  asdm::Speed;
+
 #include <Tag.h>
+using  asdm::Tag;
+
 #include <Temperature.h>
+using  asdm::Temperature;
+
+#include <Humidity.h>
+using  asdm::Humidity;
+
+#include <ArrayTimeInterval.h>
+using  asdm::ArrayTimeInterval;
+
+#include <Pressure.h>
+using  asdm::Pressure;
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
 #include <ConversionException.h>
 #include <DuplicateKey.h>
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-
-/*
-#include <Enumerations.h>
-using namespace enumerations;
-*/
-
-
-
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
+using asdm::DuplicateKey;
+using asdm::ConversionException;
+using asdm::NoSuchRow;
+using asdm::DuplicateKey;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
 using asdmIDL::WeatherTableIDL;
 #endif
-
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::PartId;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
 
 #include <Representable.h>
 
@@ -150,7 +132,7 @@ class WeatherRow;
  * Weather station information.
  * <BR>
  
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Weather </CAPTION>
@@ -286,7 +268,7 @@ class WeatherRow;
  * </TABLE>
  */
 class WeatherTable : public Representable {
-	friend class asdm::ASDM;
+	friend class ASDM;
 
 public:
 
@@ -322,16 +304,6 @@ public:
 	 */
 	string getName() const;
 
-	/**
-	 * Return this table's Entity.
-	 */
-	Entity getEntity() const;
-
-	/**
-	 * Set this table's Entity.
-	 * @param e An entity. 
-	 */
-	void setEntity(Entity e);
 
 	//
 	// ====> Row creation.
@@ -343,53 +315,42 @@ public:
 	 */
 	WeatherRow *newRow();
 	
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	WeatherRow* newRowEmpty();
-
 	
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param stationId. 
+ 	 * @param stationId
 	
- 	 * @param timeInterval. 
+ 	 * @param timeInterval
 	
- 	 * @param pressure. 
+ 	 * @param pressure
 	
- 	 * @param pressureFlag. 
+ 	 * @param pressureFlag
 	
- 	 * @param relHumidity. 
+ 	 * @param relHumidity
 	
- 	 * @param relHumidityFlag. 
+ 	 * @param relHumidityFlag
 	
- 	 * @param temperature. 
+ 	 * @param temperature
 	
- 	 * @param temperatureFlag. 
+ 	 * @param temperatureFlag
 	
- 	 * @param windDirection. 
+ 	 * @param windDirection
 	
- 	 * @param windDirectionFlag. 
+ 	 * @param windDirectionFlag
 	
- 	 * @param windSpeed. 
+ 	 * @param windSpeed
 	
- 	 * @param windSpeedFlag. 
+ 	 * @param windSpeedFlag
 	
- 	 * @param windMax. 
+ 	 * @param windMax
 	
- 	 * @param windMaxFlag. 
+ 	 * @param windMaxFlag
 	
      */
 	WeatherRow *newRow(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag);
 	
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	WeatherRow *newRowFull(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag);
 
 
 	/**
@@ -405,12 +366,6 @@ public:
 	 * @param row the row which is to be copied.
 	 */
 	 WeatherRow *newRow(WeatherRow *row); 
-
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	 WeatherRow *newRowCopy(WeatherRow *row); 
 
 	//
 	// ====> Append a row to its table.
@@ -469,9 +424,9 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param stationId. 
+	 * @param stationId
 	
-	 * @param timeInterval. 
+	 * @param timeInterval
 	
  	 *
 	 */
@@ -487,134 +442,37 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param stationId.
+ 	 * @param stationId
  	 		
- 	 * @param timeInterval.
+ 	 * @param timeInterval
  	 		
- 	 * @param pressure.
+ 	 * @param pressure
  	 		
- 	 * @param pressureFlag.
+ 	 * @param pressureFlag
  	 		
- 	 * @param relHumidity.
+ 	 * @param relHumidity
  	 		
- 	 * @param relHumidityFlag.
+ 	 * @param relHumidityFlag
  	 		
- 	 * @param temperature.
+ 	 * @param temperature
  	 		
- 	 * @param temperatureFlag.
+ 	 * @param temperatureFlag
  	 		
- 	 * @param windDirection.
+ 	 * @param windDirection
  	 		
- 	 * @param windDirectionFlag.
+ 	 * @param windDirectionFlag
  	 		
- 	 * @param windSpeed.
+ 	 * @param windSpeed
  	 		
- 	 * @param windSpeedFlag.
+ 	 * @param windSpeedFlag
  	 		
- 	 * @param windMax.
+ 	 * @param windMax
  	 		
- 	 * @param windMaxFlag.
+ 	 * @param windMaxFlag
  	 		 
  	 */
 	WeatherRow* lookup(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag); 
 
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a WeatherTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a WeatherTableIDL
-	 */
-	WeatherTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a WeatherTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(WeatherTableIDL x) ;
-#endif
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	char *toFITS() const ;
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	void fromFITS(char *fits) ;
-
-	/**
-	 * To be implemented
-	 * @throw ConversionException
-	 */
-	string toVOTable() const ;
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	void fromVOTable(string vo) ;
-
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for Weather (WeatherTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
-	
-	/**
-	 * Populate this table from the content of a XML document that is required to
-	 * be conform to the XML schema defined for a Weather (WeatherTable.xsd).
-	 * @throws ConversionException
-	 * 
-	 */
-	void fromXML(string xmlDoc) ;
-	
-   /**
-	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
-	 * @returns a string containing the MIME message.
-	 * 
-	 */
-	string toMIME();
-	
-   /** 
-     * Extracts the binary part of a MIME message and deserialize its content
-	 * to fill this with the result of the deserialization. 
-	 * @param mimeMsg the string containing the MIME message.
-	 * @throws ConversionException
-	 */
-	 void setFromMIME(const string & mimeMsg);
-	
-	/**
-	  * Stores a representation (binary or XML) of this table into a file.
-	  *
-	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
-	  * will be saved in a file "Weather.bin" or an XML representation (fileAsBin==false) will be saved in a file "Weather.xml".
-	  * The file is always written in a directory whose name is passed as a parameter.
-	 * @param directory The name of directory  where the file containing the table's representation will be saved.
-	  * 
-	  */
-	  void toFile(string directory);
-	  
-	/**
-	 * Reads and parses a file containing a representation of a WeatherTable as those produced  by the toFile method.
-	 * This table is populated with the result of the parsing.
-	 * @param directory The name of the directory containing the file te be read and parsed.
-	 * @throws ConversionException If any error occurs while reading the 
-	 * files in the directory or parsing them.
-	 *
-	 */
-	 void setFromFile(const string& directory);	
 
 private:
 
@@ -665,7 +523,7 @@ private:
 	 * Insert a WeatherRow* in a vector of WeatherRow* so that it's ordered by ascending time.
 	 *
 	 * @param WeatherRow* x . The pointer to be inserted.
-	 * @param vector <WeatherRow*>& row. A reference to the vector where to insert x.
+	 * @param vector <WeatherRow*>& row . A reference to the vector where to insert x.
 	 *
 	 */
 	 WeatherRow * insertByStartTime(WeatherRow* x, vector<WeatherRow* >& row);
@@ -674,7 +532,7 @@ private:
 
 // A data structure to store the pointers on the table's rows.
 
-// In all cases we maintain a private ArrayList of WeatherRow s.
+// In all cases we maintain a private vector of WeatherRow s.
    vector<WeatherRow * > privateRows;
    
 
@@ -705,8 +563,108 @@ private:
 	
 
 
+	/**
+	 * Return this table's Entity.
+	 */
+	Entity getEntity() const;
+
+	/**
+	 * Set this table's Entity.
+	 * @param e An entity. 
+	 */
+	void setEntity(Entity e);
+
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a WeatherTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a WeatherTableIDL
+	 */
+	WeatherTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a WeatherTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(WeatherTableIDL x) ;
+#endif
+	
+	
 	void error() ; //throw(ConversionException);
 
+	/**
+	 * Translate this table to an XML representation conform
+	 * to the schema defined for Weather (WeatherTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
+	
+	/**
+	 * Populate this table from the content of a XML document that is required to
+	 * be conform to the XML schema defined for a Weather (WeatherTable.xsd).
+	 * @throws ConversionException
+	 * 
+	 */
+	void fromXML(string xmlDoc) ;
+		
+	/**
+	  * Private methods involved during the build of this table out of the content
+	  * of file(s) containing an external representation of a Weather table.
+	  */
+	void setFromMIMEFile(const string& directory);
+	void setFromXMLFile(const string& directory);
+	
+		 /**
+	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
+	 * @returns a string containing the MIME message.
+	 *
+	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
+	 * 
+	 */
+	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+  
+	
+   /** 
+     * Extracts the binary part of a MIME message and deserialize its content
+	 * to fill this with the result of the deserialization. 
+	 * @param mimeMsg the string containing the MIME message.
+	 * @throws ConversionException
+	 */
+	 void setFromMIME(const string & mimeMsg);
+	
+	/**
+	  * Private methods involved during the export of this table into disk file(s).
+	  */
+	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	
+	/**
+	  * Stores a representation (binary or XML) of this table into a file.
+	  *
+	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
+	  * will be saved in a file "Weather.bin" or an XML representation (fileAsBin==false) will be saved in a file "Weather.xml".
+	  * The file is always written in a directory whose name is passed as a parameter.
+	 * @param directory The name of directory  where the file containing the table's representation will be saved.
+	  * 
+	  */
+	  void toFile(string directory);
+	  
+	/**
+	 * Reads and parses a file containing a representation of a WeatherTable as those produced  by the toFile method.
+	 * This table is populated with the result of the parsing.
+	 * @param directory The name of the directory containing the file te be read and parsed.
+	 * @throws ConversionException If any error occurs while reading the 
+	 * files in the directory or parsing them.
+	 *
+	 */
+	 void setFromFile(const string& directory);	
+ 
 };
 
 } // End namespace asdm

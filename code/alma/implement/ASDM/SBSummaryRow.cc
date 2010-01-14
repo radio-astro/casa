@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SBSummaryRow::~SBSummaryRow() {
 	}
 
@@ -1086,201 +1085,260 @@ namespace asdm {
 
 	}
 	
-	SBSummaryRow* SBSummaryRow::fromBin(EndianISStream& eiss, SBSummaryTable& table) {
-		SBSummaryRow* row = new  SBSummaryRow(table);
-		
-		
+void SBSummaryRow::sBSummaryIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->sBSummaryId =  Tag::fromBin(eiss);
+		sBSummaryId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void SBSummaryRow::sbSummaryUIDFromBin(EndianISStream& eiss) {
 		
-		
-		row->sbSummaryUID =  EntityRef::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->projectUID =  EntityRef::fromBin(eiss);
+		sbSummaryUID =  EntityRef::fromBin(eiss);
 		
 	
-
+	
+}
+void SBSummaryRow::projectUIDFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->obsUnitSetId =  EntityRef::fromBin(eiss);
+		projectUID =  EntityRef::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->frequency =  eiss.readDouble();
-			
+}
+void SBSummaryRow::obsUnitSetIdFromBin(EndianISStream& eiss) {
 		
 	
-
-	
-	
 		
-			
-		row->frequencyBand = CReceiverBand::from_int(eiss.readInt());
-			
+		
+		obsUnitSetId =  EntityRef::fromBin(eiss);
 		
 	
-
+	
+}
+void SBSummaryRow::frequencyFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->sbType = CSBType::from_int(eiss.readInt());
+		frequency =  eiss.readDouble();
 			
 		
 	
-
 	
+}
+void SBSummaryRow::frequencyBandFromBin(EndianISStream& eiss) {
 		
-		
-		row->sbDuration =  Interval::fromBin(eiss);
-		
-	
-
-	
-		
-		
-			
-	
-	row->centerDirection = Angle::from1DBin(eiss);	
-	
-
-		
-	
-
 	
 	
 		
 			
-		row->numObservingMode =  eiss.readInt();
+		frequencyBand = CReceiverBand::from_int(eiss.readInt());
 			
 		
+	
+	
+}
+void SBSummaryRow::sbTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		sbType = CSBType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void SBSummaryRow::sbDurationFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		sbDuration =  Interval::fromBin(eiss);
+		
+	
+	
+}
+void SBSummaryRow::centerDirectionFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	centerDirection = Angle::from1DBin(eiss);	
 	
 
+		
+	
+	
+}
+void SBSummaryRow::numObservingModeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numObservingMode =  eiss.readInt();
+			
+		
+	
+	
+}
+void SBSummaryRow::observingModeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->observingMode.clear();
+		observingMode.clear();
 		
 		unsigned int observingModeDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < observingModeDim1; i++)
 			
-			row->observingMode.push_back(eiss.readString());
+			observingMode.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void SBSummaryRow::numberRepeatsFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numberRepeats =  eiss.readInt();
+		numberRepeats =  eiss.readInt();
 			
 		
 	
-
 	
-	
+}
+void SBSummaryRow::numScienceGoalFromBin(EndianISStream& eiss) {
 		
-			
-		row->numScienceGoal =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numScienceGoal =  eiss.readInt();
+			
+		
 	
-		row->scienceGoal.clear();
+	
+}
+void SBSummaryRow::scienceGoalFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		scienceGoal.clear();
 		
 		unsigned int scienceGoalDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < scienceGoalDim1; i++)
 			
-			row->scienceGoal.push_back(eiss.readString());
+			scienceGoal.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void SBSummaryRow::numWeatherConstraintFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numWeatherConstraint =  eiss.readInt();
+		numWeatherConstraint =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void SBSummaryRow::weatherConstraintFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->weatherConstraint.clear();
+		weatherConstraint.clear();
 		
 		unsigned int weatherConstraintDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < weatherConstraintDim1; i++)
 			
-			row->weatherConstraint.push_back(eiss.readString());
+			weatherConstraint.push_back(eiss.readString());
 			
 	
 
 		
 	
+	
+}
 
+void SBSummaryRow::centerDirectionCodeFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->centerDirectionCodeExists = eiss.readBoolean();
-	if (row->centerDirectionCodeExists) {
+	centerDirectionCodeExists = eiss.readBoolean();
+	if (centerDirectionCodeExists) {
 		
 	
 	
 		
 			
-		row->centerDirectionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		centerDirectionCode = CDirectionReferenceCode::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
-	row->centerDirectionEquinoxExists = eiss.readBoolean();
-	if (row->centerDirectionEquinoxExists) {
+	
+}
+void SBSummaryRow::centerDirectionEquinoxFromBin(EndianISStream& eiss) {
+		
+	centerDirectionEquinoxExists = eiss.readBoolean();
+	if (centerDirectionEquinoxExists) {
 		
 	
 		
 		
-		row->centerDirectionEquinox =  ArrayTime::fromBin(eiss);
+		centerDirectionEquinox =  ArrayTime::fromBin(eiss);
 		
 	
 
 	}
-
+	
+}
+	
+	
+	SBSummaryRow* SBSummaryRow::fromBin(EndianISStream& eiss, SBSummaryTable& table, const vector<string>& attributesSeq) {
+		SBSummaryRow* row = new  SBSummaryRow(table);
 		
+		map<string, SBSummaryAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SBSummaryTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2008,6 +2066,29 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromBin; 
+	 fromBinMethods["sbSummaryUID"] = &SBSummaryRow::sbSummaryUIDFromBin; 
+	 fromBinMethods["projectUID"] = &SBSummaryRow::projectUIDFromBin; 
+	 fromBinMethods["obsUnitSetId"] = &SBSummaryRow::obsUnitSetIdFromBin; 
+	 fromBinMethods["frequency"] = &SBSummaryRow::frequencyFromBin; 
+	 fromBinMethods["frequencyBand"] = &SBSummaryRow::frequencyBandFromBin; 
+	 fromBinMethods["sbType"] = &SBSummaryRow::sbTypeFromBin; 
+	 fromBinMethods["sbDuration"] = &SBSummaryRow::sbDurationFromBin; 
+	 fromBinMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromBin; 
+	 fromBinMethods["numObservingMode"] = &SBSummaryRow::numObservingModeFromBin; 
+	 fromBinMethods["observingMode"] = &SBSummaryRow::observingModeFromBin; 
+	 fromBinMethods["numberRepeats"] = &SBSummaryRow::numberRepeatsFromBin; 
+	 fromBinMethods["numScienceGoal"] = &SBSummaryRow::numScienceGoalFromBin; 
+	 fromBinMethods["scienceGoal"] = &SBSummaryRow::scienceGoalFromBin; 
+	 fromBinMethods["numWeatherConstraint"] = &SBSummaryRow::numWeatherConstraintFromBin; 
+	 fromBinMethods["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromBin; 
+		
+	
+	 fromBinMethods["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromBin; 
+	 fromBinMethods["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromBin; 
 	
 	}
 	
@@ -2114,7 +2195,29 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		else
 			centerDirectionEquinoxExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromBin; 
+		 fromBinMethods["sbSummaryUID"] = &SBSummaryRow::sbSummaryUIDFromBin; 
+		 fromBinMethods["projectUID"] = &SBSummaryRow::projectUIDFromBin; 
+		 fromBinMethods["obsUnitSetId"] = &SBSummaryRow::obsUnitSetIdFromBin; 
+		 fromBinMethods["frequency"] = &SBSummaryRow::frequencyFromBin; 
+		 fromBinMethods["frequencyBand"] = &SBSummaryRow::frequencyBandFromBin; 
+		 fromBinMethods["sbType"] = &SBSummaryRow::sbTypeFromBin; 
+		 fromBinMethods["sbDuration"] = &SBSummaryRow::sbDurationFromBin; 
+		 fromBinMethods["centerDirection"] = &SBSummaryRow::centerDirectionFromBin; 
+		 fromBinMethods["numObservingMode"] = &SBSummaryRow::numObservingModeFromBin; 
+		 fromBinMethods["observingMode"] = &SBSummaryRow::observingModeFromBin; 
+		 fromBinMethods["numberRepeats"] = &SBSummaryRow::numberRepeatsFromBin; 
+		 fromBinMethods["numScienceGoal"] = &SBSummaryRow::numScienceGoalFromBin; 
+		 fromBinMethods["scienceGoal"] = &SBSummaryRow::scienceGoalFromBin; 
+		 fromBinMethods["numWeatherConstraint"] = &SBSummaryRow::numWeatherConstraintFromBin; 
+		 fromBinMethods["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromBin; 
+			
+	
+		 fromBinMethods["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromBin; 
+		 fromBinMethods["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromBin; 
+			
 	}
 
 	
@@ -2345,6 +2448,34 @@ centerDirectionCode = CDirectionReferenceCode::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, SBSummaryAttributeFromBin> SBSummaryRow::initFromBinMethods() {
+		map<string, SBSummaryAttributeFromBin> result;
+		
+		result["sBSummaryId"] = &SBSummaryRow::sBSummaryIdFromBin;
+		result["sbSummaryUID"] = &SBSummaryRow::sbSummaryUIDFromBin;
+		result["projectUID"] = &SBSummaryRow::projectUIDFromBin;
+		result["obsUnitSetId"] = &SBSummaryRow::obsUnitSetIdFromBin;
+		result["frequency"] = &SBSummaryRow::frequencyFromBin;
+		result["frequencyBand"] = &SBSummaryRow::frequencyBandFromBin;
+		result["sbType"] = &SBSummaryRow::sbTypeFromBin;
+		result["sbDuration"] = &SBSummaryRow::sbDurationFromBin;
+		result["centerDirection"] = &SBSummaryRow::centerDirectionFromBin;
+		result["numObservingMode"] = &SBSummaryRow::numObservingModeFromBin;
+		result["observingMode"] = &SBSummaryRow::observingModeFromBin;
+		result["numberRepeats"] = &SBSummaryRow::numberRepeatsFromBin;
+		result["numScienceGoal"] = &SBSummaryRow::numScienceGoalFromBin;
+		result["scienceGoal"] = &SBSummaryRow::scienceGoalFromBin;
+		result["numWeatherConstraint"] = &SBSummaryRow::numWeatherConstraintFromBin;
+		result["weatherConstraint"] = &SBSummaryRow::weatherConstraintFromBin;
+		
+		
+		result["centerDirectionCode"] = &SBSummaryRow::centerDirectionCodeFromBin;
+		result["centerDirectionEquinox"] = &SBSummaryRow::centerDirectionEquinoxFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

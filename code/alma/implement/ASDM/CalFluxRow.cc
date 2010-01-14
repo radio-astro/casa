@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalFluxRow::~CalFluxRow() {
 	}
 
@@ -1465,92 +1464,116 @@ namespace asdm {
 
 	}
 	
-	CalFluxRow* CalFluxRow::fromBin(EndianISStream& eiss, CalFluxTable& table) {
-		CalFluxRow* row = new  CalFluxRow(table);
-		
-		
+void CalFluxRow::sourceNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->sourceName =  eiss.readString();
+		sourceName =  eiss.readString();
 			
 		
 	
-
+	
+}
+void CalFluxRow::calDataIdFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->calDataId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void CalFluxRow::calReductionIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void CalFluxRow::startValidTimeFromBin(EndianISStream& eiss) {
 		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->numFrequencyRanges =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->numStokes =  eiss.readInt();
-			
-		
-	
-
 	
 		
 		
-			
-	
-	row->frequencyRanges = Frequency::from2DBin(eiss);		
-	
-
+		startValidTime =  ArrayTime::fromBin(eiss);
 		
 	
-
+	
+}
+void CalFluxRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalFluxRow::numFrequencyRangesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->fluxMethod = CFluxCalibrationMethod::from_int(eiss.readInt());
+		numFrequencyRanges =  eiss.readInt();
 			
 		
+	
+	
+}
+void CalFluxRow::numStokesFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numStokes =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalFluxRow::frequencyRangesFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	frequencyRanges = Frequency::from2DBin(eiss);		
 	
 
+		
+	
+	
+}
+void CalFluxRow::fluxMethodFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		fluxMethod = CFluxCalibrationMethod::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalFluxRow::fluxFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->flux.clear();
+		flux.clear();
 		
 		unsigned int fluxDim1 = eiss.readInt();
 		unsigned int fluxDim2 = eiss.readInt();
@@ -1561,20 +1584,23 @@ namespace asdm {
 			
 			fluxAux1.push_back(eiss.readDouble());
 			
-			row->flux.push_back(fluxAux1);
+			flux.push_back(fluxAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void CalFluxRow::fluxErrorFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->fluxError.clear();
+		fluxError.clear();
 		
 		unsigned int fluxErrorDim1 = eiss.readInt();
 		unsigned int fluxErrorDim2 = eiss.readInt();
@@ -1585,155 +1611,193 @@ namespace asdm {
 			
 			fluxErrorAux1.push_back(eiss.readDouble());
 			
-			row->fluxError.push_back(fluxErrorAux1);
+			fluxError.push_back(fluxErrorAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void CalFluxRow::stokesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->stokes.clear();
+		stokes.clear();
 		
 		unsigned int stokesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < stokesDim1; i++)
 			
-			row->stokes.push_back(CStokesParameter::from_int(eiss.readInt()));
+			stokes.push_back(CStokesParameter::from_int(eiss.readInt()));
 			
 	
 
 		
 	
+	
+}
 
+void CalFluxRow::directionFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->directionExists = eiss.readBoolean();
-	if (row->directionExists) {
+	directionExists = eiss.readBoolean();
+	if (directionExists) {
 		
 	
 		
 		
 			
 	
-	row->direction = Angle::from1DBin(eiss);	
+	direction = Angle::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->directionCodeExists = eiss.readBoolean();
-	if (row->directionCodeExists) {
+	
+}
+void CalFluxRow::directionCodeFromBin(EndianISStream& eiss) {
+		
+	directionCodeExists = eiss.readBoolean();
+	if (directionCodeExists) {
 		
 	
 	
 		
 			
-		row->directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
-	row->directionEquinoxExists = eiss.readBoolean();
-	if (row->directionEquinoxExists) {
+	
+}
+void CalFluxRow::directionEquinoxFromBin(EndianISStream& eiss) {
+		
+	directionEquinoxExists = eiss.readBoolean();
+	if (directionEquinoxExists) {
 		
 	
 		
 		
-		row->directionEquinox =  Angle::fromBin(eiss);
+		directionEquinox =  Angle::fromBin(eiss);
 		
 	
 
 	}
-
-	row->PAExists = eiss.readBoolean();
-	if (row->PAExists) {
+	
+}
+void CalFluxRow::PAFromBin(EndianISStream& eiss) {
+		
+	PAExists = eiss.readBoolean();
+	if (PAExists) {
 		
 	
 		
 		
 			
 	
-	row->PA = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	}
-
-	row->PAErrorExists = eiss.readBoolean();
-	if (row->PAErrorExists) {
-		
-	
-		
-		
-			
-	
-	row->PAError = Angle::from2DBin(eiss);		
+	PA = Angle::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
-	row->sizeExists = eiss.readBoolean();
-	if (row->sizeExists) {
+	
+}
+void CalFluxRow::PAErrorFromBin(EndianISStream& eiss) {
+		
+	PAErrorExists = eiss.readBoolean();
+	if (PAErrorExists) {
 		
 	
 		
 		
 			
 	
-	row->size = Angle::from3DBin(eiss);		
+	PAError = Angle::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
-	row->sizeErrorExists = eiss.readBoolean();
-	if (row->sizeErrorExists) {
+	
+}
+void CalFluxRow::sizeFromBin(EndianISStream& eiss) {
+		
+	sizeExists = eiss.readBoolean();
+	if (sizeExists) {
 		
 	
 		
 		
 			
 	
-	row->sizeError = Angle::from3DBin(eiss);		
+	size = Angle::from3DBin(eiss);		
 	
 
 		
 	
 
 	}
+	
+}
+void CalFluxRow::sizeErrorFromBin(EndianISStream& eiss) {
+		
+	sizeErrorExists = eiss.readBoolean();
+	if (sizeErrorExists) {
+		
+	
+		
+		
+			
+	
+	sizeError = Angle::from3DBin(eiss);		
+	
 
-	row->sourceModelExists = eiss.readBoolean();
-	if (row->sourceModelExists) {
+		
+	
+
+	}
+	
+}
+void CalFluxRow::sourceModelFromBin(EndianISStream& eiss) {
+		
+	sourceModelExists = eiss.readBoolean();
+	if (sourceModelExists) {
 		
 	
 	
 		
 			
-		row->sourceModel = CSourceModel::from_int(eiss.readInt());
+		sourceModel = CSourceModel::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	CalFluxRow* CalFluxRow::fromBin(EndianISStream& eiss, CalFluxTable& table, const vector<string>& attributesSeq) {
+		CalFluxRow* row = new  CalFluxRow(table);
 		
+		map<string, CalFluxAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalFluxTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2677,6 +2741,31 @@ directionCode = CDirectionReferenceCode::from_int(0);
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 sourceModel = CSourceModel::from_int(0);
 	
+
+	
+	
+	 fromBinMethods["sourceName"] = &CalFluxRow::sourceNameFromBin; 
+	 fromBinMethods["calDataId"] = &CalFluxRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalFluxRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalFluxRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalFluxRow::endValidTimeFromBin; 
+	 fromBinMethods["numFrequencyRanges"] = &CalFluxRow::numFrequencyRangesFromBin; 
+	 fromBinMethods["numStokes"] = &CalFluxRow::numStokesFromBin; 
+	 fromBinMethods["frequencyRanges"] = &CalFluxRow::frequencyRangesFromBin; 
+	 fromBinMethods["fluxMethod"] = &CalFluxRow::fluxMethodFromBin; 
+	 fromBinMethods["flux"] = &CalFluxRow::fluxFromBin; 
+	 fromBinMethods["fluxError"] = &CalFluxRow::fluxErrorFromBin; 
+	 fromBinMethods["stokes"] = &CalFluxRow::stokesFromBin; 
+		
+	
+	 fromBinMethods["direction"] = &CalFluxRow::directionFromBin; 
+	 fromBinMethods["directionCode"] = &CalFluxRow::directionCodeFromBin; 
+	 fromBinMethods["directionEquinox"] = &CalFluxRow::directionEquinoxFromBin; 
+	 fromBinMethods["PA"] = &CalFluxRow::PAFromBin; 
+	 fromBinMethods["PAError"] = &CalFluxRow::PAErrorFromBin; 
+	 fromBinMethods["size"] = &CalFluxRow::sizeFromBin; 
+	 fromBinMethods["sizeError"] = &CalFluxRow::sizeErrorFromBin; 
+	 fromBinMethods["sourceModel"] = &CalFluxRow::sourceModelFromBin; 
 	
 	}
 	
@@ -2833,7 +2922,31 @@ sourceModel = CSourceModel::from_int(0);
 		else
 			sourceModelExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["sourceName"] = &CalFluxRow::sourceNameFromBin; 
+		 fromBinMethods["calDataId"] = &CalFluxRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalFluxRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalFluxRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalFluxRow::endValidTimeFromBin; 
+		 fromBinMethods["numFrequencyRanges"] = &CalFluxRow::numFrequencyRangesFromBin; 
+		 fromBinMethods["numStokes"] = &CalFluxRow::numStokesFromBin; 
+		 fromBinMethods["frequencyRanges"] = &CalFluxRow::frequencyRangesFromBin; 
+		 fromBinMethods["fluxMethod"] = &CalFluxRow::fluxMethodFromBin; 
+		 fromBinMethods["flux"] = &CalFluxRow::fluxFromBin; 
+		 fromBinMethods["fluxError"] = &CalFluxRow::fluxErrorFromBin; 
+		 fromBinMethods["stokes"] = &CalFluxRow::stokesFromBin; 
+			
+	
+		 fromBinMethods["direction"] = &CalFluxRow::directionFromBin; 
+		 fromBinMethods["directionCode"] = &CalFluxRow::directionCodeFromBin; 
+		 fromBinMethods["directionEquinox"] = &CalFluxRow::directionEquinoxFromBin; 
+		 fromBinMethods["PA"] = &CalFluxRow::PAFromBin; 
+		 fromBinMethods["PAError"] = &CalFluxRow::PAErrorFromBin; 
+		 fromBinMethods["size"] = &CalFluxRow::sizeFromBin; 
+		 fromBinMethods["sizeError"] = &CalFluxRow::sizeErrorFromBin; 
+		 fromBinMethods["sourceModel"] = &CalFluxRow::sourceModelFromBin; 
+			
 	}
 
 	
@@ -3007,6 +3120,36 @@ sourceModel = CSourceModel::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalFluxAttributeFromBin> CalFluxRow::initFromBinMethods() {
+		map<string, CalFluxAttributeFromBin> result;
+		
+		result["sourceName"] = &CalFluxRow::sourceNameFromBin;
+		result["calDataId"] = &CalFluxRow::calDataIdFromBin;
+		result["calReductionId"] = &CalFluxRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalFluxRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalFluxRow::endValidTimeFromBin;
+		result["numFrequencyRanges"] = &CalFluxRow::numFrequencyRangesFromBin;
+		result["numStokes"] = &CalFluxRow::numStokesFromBin;
+		result["frequencyRanges"] = &CalFluxRow::frequencyRangesFromBin;
+		result["fluxMethod"] = &CalFluxRow::fluxMethodFromBin;
+		result["flux"] = &CalFluxRow::fluxFromBin;
+		result["fluxError"] = &CalFluxRow::fluxErrorFromBin;
+		result["stokes"] = &CalFluxRow::stokesFromBin;
+		
+		
+		result["direction"] = &CalFluxRow::directionFromBin;
+		result["directionCode"] = &CalFluxRow::directionCodeFromBin;
+		result["directionEquinox"] = &CalFluxRow::directionEquinoxFromBin;
+		result["PA"] = &CalFluxRow::PAFromBin;
+		result["PAError"] = &CalFluxRow::PAErrorFromBin;
+		result["size"] = &CalFluxRow::sizeFromBin;
+		result["sizeError"] = &CalFluxRow::sizeErrorFromBin;
+		result["sourceModel"] = &CalFluxRow::sourceModelFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

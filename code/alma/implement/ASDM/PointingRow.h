@@ -46,31 +46,19 @@ using std::set;
 using asdmIDL::PointingRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Angle.h>
+using  asdm::Angle;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <ArrayTimeInterval.h>
+using  asdm::ArrayTimeInterval;
 
 
 
@@ -110,28 +98,13 @@ using namespace DirectionReferenceCodeMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file Pointing.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -146,10 +119,13 @@ class PointingModelRow;
 class AntennaRow;
 	
 
+class PointingRow;
+typedef void (PointingRow::*PointingAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The PointingRow class is a row of a PointingTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class PointingRow {
@@ -164,49 +140,6 @@ public:
 	 */
 	PointingTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a PointingRowIDL struct.
-	 */
-	PointingRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct PointingRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (PointingRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the PointingTable to which the row built by deserialization will be parented.
-	  */
-	 static PointingRow* fromBin(EndianISStream& eiss, PointingTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -827,12 +760,62 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this PointingRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param antennaId
+	    
+	 * @param timeInterval
+	    
+	 * @param numSample
+	    
+	 * @param encoder
+	    
+	 * @param pointingTracking
+	    
+	 * @param usePolynomials
+	    
+	 * @param timeOrigin
+	    
+	 * @param numTerm
+	    
+	 * @param pointingDirection
+	    
+	 * @param target
+	    
+	 * @param offset
+	    
+	 * @param pointingModelId
+	    
 	 */ 
 	bool compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param numSample
+	    
+	 * @param encoder
+	    
+	 * @param pointingTracking
+	    
+	 * @param usePolynomials
+	    
+	 * @param timeOrigin
+	    
+	 * @param numTerm
+	    
+	 * @param pointingDirection
+	    
+	 * @param target
+	    
+	 * @param offset
+	    
+	 * @param pointingModelId
+	    
+	 */ 
 	bool compareRequiredValue(int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId); 
 		 
 	
@@ -1111,6 +1094,76 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, PointingAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianISStream& eiss);
+void timeIntervalFromBin( EndianISStream& eiss);
+void numSampleFromBin( EndianISStream& eiss);
+void encoderFromBin( EndianISStream& eiss);
+void pointingTrackingFromBin( EndianISStream& eiss);
+void usePolynomialsFromBin( EndianISStream& eiss);
+void timeOriginFromBin( EndianISStream& eiss);
+void numTermFromBin( EndianISStream& eiss);
+void pointingDirectionFromBin( EndianISStream& eiss);
+void targetFromBin( EndianISStream& eiss);
+void offsetFromBin( EndianISStream& eiss);
+void pointingModelIdFromBin( EndianISStream& eiss);
+
+void overTheTopFromBin( EndianISStream& eiss);
+void sourceOffsetFromBin( EndianISStream& eiss);
+void sourceOffsetReferenceCodeFromBin( EndianISStream& eiss);
+void sourceOffsetEquinoxFromBin( EndianISStream& eiss);
+void sampledTimeIntervalFromBin( EndianISStream& eiss);
+	
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a PointingRowIDL struct.
+	 */
+	PointingRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct PointingRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (PointingRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the PointingTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static PointingRow* fromBin(EndianISStream& eiss, PointingTable& table, const vector<string>& attributesSeq);	 
 
 };
 

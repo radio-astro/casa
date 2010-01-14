@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	ProcessorRow::~ProcessorRow() {
 	}
 
@@ -341,47 +340,64 @@ namespace asdm {
 	
 	}
 	
-	ProcessorRow* ProcessorRow::fromBin(EndianISStream& eiss, ProcessorTable& table) {
+void ProcessorRow::processorIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		processorId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void ProcessorRow::modeIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		modeId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void ProcessorRow::processorTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		processorType = CProcessorType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void ProcessorRow::processorSubTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		processorSubType = CProcessorSubType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+
+		
+	
+	ProcessorRow* ProcessorRow::fromBin(EndianISStream& eiss, ProcessorTable& table, const vector<string>& attributesSeq) {
 		ProcessorRow* row = new  ProcessorRow(table);
 		
-		
-		
-	
-		
-		
-		row->processorId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->modeId =  Tag::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->processorType = CProcessorType::from_int(eiss.readInt());
-			
-		
-	
-
-	
-	
-		
-			
-		row->processorSubType = CProcessorSubType::from_int(eiss.readInt());
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, ProcessorAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ProcessorTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -568,6 +584,15 @@ processorType = CProcessorType::from_int(0);
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 processorSubType = CProcessorSubType::from_int(0);
 	
+
+	
+	
+	 fromBinMethods["processorId"] = &ProcessorRow::processorIdFromBin; 
+	 fromBinMethods["modeId"] = &ProcessorRow::modeIdFromBin; 
+	 fromBinMethods["processorType"] = &ProcessorRow::processorTypeFromBin; 
+	 fromBinMethods["processorSubType"] = &ProcessorRow::processorSubTypeFromBin; 
+		
+	
 	
 	}
 	
@@ -604,7 +629,15 @@ processorSubType = CProcessorSubType::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["processorId"] = &ProcessorRow::processorIdFromBin; 
+		 fromBinMethods["modeId"] = &ProcessorRow::modeIdFromBin; 
+		 fromBinMethods["processorType"] = &ProcessorRow::processorTypeFromBin; 
+		 fromBinMethods["processorSubType"] = &ProcessorRow::processorSubTypeFromBin; 
+			
+	
+			
 	}
 
 	
@@ -679,6 +712,20 @@ processorSubType = CProcessorSubType::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, ProcessorAttributeFromBin> ProcessorRow::initFromBinMethods() {
+		map<string, ProcessorAttributeFromBin> result;
+		
+		result["processorId"] = &ProcessorRow::processorIdFromBin;
+		result["modeId"] = &ProcessorRow::modeIdFromBin;
+		result["processorType"] = &ProcessorRow::processorTypeFromBin;
+		result["processorSubType"] = &ProcessorRow::processorSubTypeFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

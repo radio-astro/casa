@@ -92,7 +92,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	ConfigDescriptionRow::~ConfigDescriptionRow() {
 	}
 
@@ -1229,172 +1228,209 @@ namespace asdm {
 
 	}
 	
-	ConfigDescriptionRow* ConfigDescriptionRow::fromBin(EndianISStream& eiss, ConfigDescriptionTable& table) {
-		ConfigDescriptionRow* row = new  ConfigDescriptionRow(table);
-		
-		
+void ConfigDescriptionRow::configDescriptionIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->configDescriptionId =  Tag::fromBin(eiss);
+		configDescriptionId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void ConfigDescriptionRow::numAntennaFromBin(EndianISStream& eiss) {
 		
-			
-		row->numAntenna =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->numDataDescription =  eiss.readInt();
+		numAntenna =  eiss.readInt();
 			
 		
 	
-
 	
-	
+}
+void ConfigDescriptionRow::numDataDescriptionFromBin(EndianISStream& eiss) {
 		
-			
-		row->numFeed =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->correlationMode = CCorrelationMode::from_int(eiss.readInt());
+		numDataDescription =  eiss.readInt();
 			
 		
 	
-
 	
-	
+}
+void ConfigDescriptionRow::numFeedFromBin(EndianISStream& eiss) {
 		
-			
-		row->numAtmPhaseCorrection =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numFeed =  eiss.readInt();
+			
+		
 	
-		row->atmPhaseCorrection.clear();
+	
+}
+void ConfigDescriptionRow::correlationModeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		correlationMode = CCorrelationMode::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void ConfigDescriptionRow::numAtmPhaseCorrectionFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numAtmPhaseCorrection =  eiss.readInt();
+			
+		
+	
+	
+}
+void ConfigDescriptionRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		atmPhaseCorrection.clear();
 		
 		unsigned int atmPhaseCorrectionDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < atmPhaseCorrectionDim1; i++)
 			
-			row->atmPhaseCorrection.push_back(CAtmPhaseCorrection::from_int(eiss.readInt()));
+			atmPhaseCorrection.push_back(CAtmPhaseCorrection::from_int(eiss.readInt()));
 			
 	
 
 		
 	
+	
+}
+void ConfigDescriptionRow::processorTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		processorType = CProcessorType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void ConfigDescriptionRow::spectralTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		spectralType = CSpectralResolutionType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void ConfigDescriptionRow::antennaIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	antennaId = Tag::from1DBin(eiss);	
+	
 
-	
-	
-		
-			
-		row->processorType = CProcessorType::from_int(eiss.readInt());
-			
 		
 	
-
 	
-	
+}
+void ConfigDescriptionRow::feedIdFromBin(EndianISStream& eiss) {
 		
-			
-		row->spectralType = CSpectralResolutionType::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->antennaId = Tag::from1DBin(eiss);	
-	
-
-		
-	
-
 	
 	
 		
 			
 	
-		row->feedId.clear();
+		feedId.clear();
 		
 		unsigned int feedIdDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < feedIdDim1; i++)
 			
-			row->feedId.push_back(eiss.readInt());
+			feedId.push_back(eiss.readInt());
 			
 	
 
 		
 	
-
+	
+}
+void ConfigDescriptionRow::switchCycleIdFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->switchCycleId = Tag::from1DBin(eiss);	
+	switchCycleId = Tag::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void ConfigDescriptionRow::dataDescriptionIdFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->dataDescriptionId = Tag::from1DBin(eiss);	
+	dataDescriptionId = Tag::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void ConfigDescriptionRow::processorIdFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->processorId =  Tag::fromBin(eiss);
+		processorId =  Tag::fromBin(eiss);
 		
 	
+	
+}
 
+void ConfigDescriptionRow::phasedArrayListFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->phasedArrayListExists = eiss.readBoolean();
-	if (row->phasedArrayListExists) {
+	phasedArrayListExists = eiss.readBoolean();
+	if (phasedArrayListExists) {
 		
 	
 	
 		
 			
 	
-		row->phasedArrayList.clear();
+		phasedArrayList.clear();
 		
 		unsigned int phasedArrayListDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < phasedArrayListDim1; i++)
 			
-			row->phasedArrayList.push_back(eiss.readInt());
+			phasedArrayList.push_back(eiss.readInt());
 			
 	
 
@@ -1402,35 +1438,41 @@ namespace asdm {
 	
 
 	}
-
-	row->numAssocValuesExists = eiss.readBoolean();
-	if (row->numAssocValuesExists) {
+	
+}
+void ConfigDescriptionRow::numAssocValuesFromBin(EndianISStream& eiss) {
+		
+	numAssocValuesExists = eiss.readBoolean();
+	if (numAssocValuesExists) {
 		
 	
 	
 		
 			
-		row->numAssocValues =  eiss.readInt();
+		numAssocValues =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->assocNatureExists = eiss.readBoolean();
-	if (row->assocNatureExists) {
+	
+}
+void ConfigDescriptionRow::assocNatureFromBin(EndianISStream& eiss) {
+		
+	assocNatureExists = eiss.readBoolean();
+	if (assocNatureExists) {
 		
 	
 	
 		
 			
 	
-		row->assocNature.clear();
+		assocNature.clear();
 		
 		unsigned int assocNatureDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < assocNatureDim1; i++)
 			
-			row->assocNature.push_back(CSpectralResolutionType::from_int(eiss.readInt()));
+			assocNature.push_back(CSpectralResolutionType::from_int(eiss.readInt()));
 			
 	
 
@@ -1438,24 +1480,40 @@ namespace asdm {
 	
 
 	}
-
-	row->assocConfigDescriptionIdExists = eiss.readBoolean();
-	if (row->assocConfigDescriptionIdExists) {
+	
+}
+void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss) {
+		
+	assocConfigDescriptionIdExists = eiss.readBoolean();
+	if (assocConfigDescriptionIdExists) {
 		
 	
 		
 		
 			
 	
-	row->assocConfigDescriptionId = Tag::from1DBin(eiss);	
+	assocConfigDescriptionId = Tag::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
+	
+}
+	
+	
+	ConfigDescriptionRow* ConfigDescriptionRow::fromBin(EndianISStream& eiss, ConfigDescriptionTable& table, const vector<string>& attributesSeq) {
+		ConfigDescriptionRow* row = new  ConfigDescriptionRow(table);
 		
+		map<string, ConfigDescriptionAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ConfigDescriptionTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2596,6 +2654,29 @@ spectralType = CSpectralResolutionType::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["configDescriptionId"] = &ConfigDescriptionRow::configDescriptionIdFromBin; 
+	 fromBinMethods["numAntenna"] = &ConfigDescriptionRow::numAntennaFromBin; 
+	 fromBinMethods["numDataDescription"] = &ConfigDescriptionRow::numDataDescriptionFromBin; 
+	 fromBinMethods["numFeed"] = &ConfigDescriptionRow::numFeedFromBin; 
+	 fromBinMethods["correlationMode"] = &ConfigDescriptionRow::correlationModeFromBin; 
+	 fromBinMethods["numAtmPhaseCorrection"] = &ConfigDescriptionRow::numAtmPhaseCorrectionFromBin; 
+	 fromBinMethods["atmPhaseCorrection"] = &ConfigDescriptionRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["processorType"] = &ConfigDescriptionRow::processorTypeFromBin; 
+	 fromBinMethods["spectralType"] = &ConfigDescriptionRow::spectralTypeFromBin; 
+	 fromBinMethods["antennaId"] = &ConfigDescriptionRow::antennaIdFromBin; 
+	 fromBinMethods["feedId"] = &ConfigDescriptionRow::feedIdFromBin; 
+	 fromBinMethods["switchCycleId"] = &ConfigDescriptionRow::switchCycleIdFromBin; 
+	 fromBinMethods["dataDescriptionId"] = &ConfigDescriptionRow::dataDescriptionIdFromBin; 
+	 fromBinMethods["processorId"] = &ConfigDescriptionRow::processorIdFromBin; 
+		
+	
+	 fromBinMethods["phasedArrayList"] = &ConfigDescriptionRow::phasedArrayListFromBin; 
+	 fromBinMethods["numAssocValues"] = &ConfigDescriptionRow::numAssocValuesFromBin; 
+	 fromBinMethods["assocNature"] = &ConfigDescriptionRow::assocNatureFromBin; 
+	 fromBinMethods["assocConfigDescriptionId"] = &ConfigDescriptionRow::assocConfigDescriptionIdFromBin; 
 	
 	}
 	
@@ -2716,7 +2797,29 @@ spectralType = CSpectralResolutionType::from_int(0);
 		else
 			assocConfigDescriptionIdExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["configDescriptionId"] = &ConfigDescriptionRow::configDescriptionIdFromBin; 
+		 fromBinMethods["numAntenna"] = &ConfigDescriptionRow::numAntennaFromBin; 
+		 fromBinMethods["numDataDescription"] = &ConfigDescriptionRow::numDataDescriptionFromBin; 
+		 fromBinMethods["numFeed"] = &ConfigDescriptionRow::numFeedFromBin; 
+		 fromBinMethods["correlationMode"] = &ConfigDescriptionRow::correlationModeFromBin; 
+		 fromBinMethods["numAtmPhaseCorrection"] = &ConfigDescriptionRow::numAtmPhaseCorrectionFromBin; 
+		 fromBinMethods["atmPhaseCorrection"] = &ConfigDescriptionRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["processorType"] = &ConfigDescriptionRow::processorTypeFromBin; 
+		 fromBinMethods["spectralType"] = &ConfigDescriptionRow::spectralTypeFromBin; 
+		 fromBinMethods["antennaId"] = &ConfigDescriptionRow::antennaIdFromBin; 
+		 fromBinMethods["feedId"] = &ConfigDescriptionRow::feedIdFromBin; 
+		 fromBinMethods["switchCycleId"] = &ConfigDescriptionRow::switchCycleIdFromBin; 
+		 fromBinMethods["dataDescriptionId"] = &ConfigDescriptionRow::dataDescriptionIdFromBin; 
+		 fromBinMethods["processorId"] = &ConfigDescriptionRow::processorIdFromBin; 
+			
+	
+		 fromBinMethods["phasedArrayList"] = &ConfigDescriptionRow::phasedArrayListFromBin; 
+		 fromBinMethods["numAssocValues"] = &ConfigDescriptionRow::numAssocValuesFromBin; 
+		 fromBinMethods["assocNature"] = &ConfigDescriptionRow::assocNatureFromBin; 
+		 fromBinMethods["assocConfigDescriptionId"] = &ConfigDescriptionRow::assocConfigDescriptionIdFromBin; 
+			
 	}
 
 	
@@ -2921,6 +3024,34 @@ spectralType = CSpectralResolutionType::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, ConfigDescriptionAttributeFromBin> ConfigDescriptionRow::initFromBinMethods() {
+		map<string, ConfigDescriptionAttributeFromBin> result;
+		
+		result["configDescriptionId"] = &ConfigDescriptionRow::configDescriptionIdFromBin;
+		result["numAntenna"] = &ConfigDescriptionRow::numAntennaFromBin;
+		result["numDataDescription"] = &ConfigDescriptionRow::numDataDescriptionFromBin;
+		result["numFeed"] = &ConfigDescriptionRow::numFeedFromBin;
+		result["correlationMode"] = &ConfigDescriptionRow::correlationModeFromBin;
+		result["numAtmPhaseCorrection"] = &ConfigDescriptionRow::numAtmPhaseCorrectionFromBin;
+		result["atmPhaseCorrection"] = &ConfigDescriptionRow::atmPhaseCorrectionFromBin;
+		result["processorType"] = &ConfigDescriptionRow::processorTypeFromBin;
+		result["spectralType"] = &ConfigDescriptionRow::spectralTypeFromBin;
+		result["antennaId"] = &ConfigDescriptionRow::antennaIdFromBin;
+		result["feedId"] = &ConfigDescriptionRow::feedIdFromBin;
+		result["switchCycleId"] = &ConfigDescriptionRow::switchCycleIdFromBin;
+		result["dataDescriptionId"] = &ConfigDescriptionRow::dataDescriptionIdFromBin;
+		result["processorId"] = &ConfigDescriptionRow::processorIdFromBin;
+		
+		
+		result["phasedArrayList"] = &ConfigDescriptionRow::phasedArrayListFromBin;
+		result["numAssocValues"] = &ConfigDescriptionRow::numAssocValuesFromBin;
+		result["assocNature"] = &ConfigDescriptionRow::assocNatureFromBin;
+		result["assocConfigDescriptionId"] = &ConfigDescriptionRow::assocConfigDescriptionIdFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

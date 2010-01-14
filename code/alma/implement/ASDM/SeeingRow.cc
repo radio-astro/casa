@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SeeingRow::~SeeingRow() {
 	}
 
@@ -451,71 +450,94 @@ namespace asdm {
 	
 	}
 	
-	SeeingRow* SeeingRow::fromBin(EndianISStream& eiss, SeeingTable& table) {
+void SeeingRow::timeIntervalFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+	
+}
+void SeeingRow::numBaseLengthFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numBaseLength =  eiss.readInt();
+			
+		
+	
+	
+}
+void SeeingRow::baseLengthFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	baseLength = Length::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void SeeingRow::phaseRmsFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	phaseRms = Angle::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void SeeingRow::seeingFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		seeing =  eiss.readFloat();
+			
+		
+	
+	
+}
+void SeeingRow::exponentFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		exponent =  eiss.readFloat();
+			
+		
+	
+	
+}
+
+		
+	
+	SeeingRow* SeeingRow::fromBin(EndianISStream& eiss, SeeingTable& table, const vector<string>& attributesSeq) {
 		SeeingRow* row = new  SeeingRow(table);
 		
-		
-		
-	
-		
-		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->numBaseLength =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->baseLength = Length::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-		
-		
-			
-	
-	row->phaseRms = Angle::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-	
-		
-			
-		row->seeing =  eiss.readFloat();
-			
-		
-	
-
-	
-	
-		
-			
-		row->exponent =  eiss.readFloat();
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, SeeingAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SeeingTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -768,6 +790,17 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["timeInterval"] = &SeeingRow::timeIntervalFromBin; 
+	 fromBinMethods["numBaseLength"] = &SeeingRow::numBaseLengthFromBin; 
+	 fromBinMethods["baseLength"] = &SeeingRow::baseLengthFromBin; 
+	 fromBinMethods["phaseRms"] = &SeeingRow::phaseRmsFromBin; 
+	 fromBinMethods["seeing"] = &SeeingRow::seeingFromBin; 
+	 fromBinMethods["exponent"] = &SeeingRow::exponentFromBin; 
+		
+	
 	
 	}
 	
@@ -812,7 +845,17 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["timeInterval"] = &SeeingRow::timeIntervalFromBin; 
+		 fromBinMethods["numBaseLength"] = &SeeingRow::numBaseLengthFromBin; 
+		 fromBinMethods["baseLength"] = &SeeingRow::baseLengthFromBin; 
+		 fromBinMethods["phaseRms"] = &SeeingRow::phaseRmsFromBin; 
+		 fromBinMethods["seeing"] = &SeeingRow::seeingFromBin; 
+		 fromBinMethods["exponent"] = &SeeingRow::exponentFromBin; 
+			
+	
+			
 	}
 
 	
@@ -920,6 +963,22 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, SeeingAttributeFromBin> SeeingRow::initFromBinMethods() {
+		map<string, SeeingAttributeFromBin> result;
+		
+		result["timeInterval"] = &SeeingRow::timeIntervalFromBin;
+		result["numBaseLength"] = &SeeingRow::numBaseLengthFromBin;
+		result["baseLength"] = &SeeingRow::baseLengthFromBin;
+		result["phaseRms"] = &SeeingRow::phaseRmsFromBin;
+		result["seeing"] = &SeeingRow::seeingFromBin;
+		result["exponent"] = &SeeingRow::exponentFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

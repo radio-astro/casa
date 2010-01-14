@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalSeeingRow::~CalSeeingRow() {
 	}
 
@@ -944,153 +943,203 @@ namespace asdm {
 
 	}
 	
-	CalSeeingRow* CalSeeingRow::fromBin(EndianISStream& eiss, CalSeeingTable& table) {
+void CalSeeingRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalSeeingRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalSeeingRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalSeeingRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalSeeingRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalSeeingRow::frequencyRangeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void CalSeeingRow::integrationTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		integrationTime =  Interval::fromBin(eiss);
+		
+	
+	
+}
+void CalSeeingRow::numBaseLengthsFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numBaseLengths =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalSeeingRow::baselineLengthsFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	baselineLengths = Length::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void CalSeeingRow::phaseRMSFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	phaseRMS = Angle::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void CalSeeingRow::seeingFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		seeing =  Angle::fromBin(eiss);
+		
+	
+	
+}
+void CalSeeingRow::seeingErrorFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		seeingError =  Angle::fromBin(eiss);
+		
+	
+	
+}
+
+void CalSeeingRow::exponentFromBin(EndianISStream& eiss) {
+		
+	exponentExists = eiss.readBoolean();
+	if (exponentExists) {
+		
+	
+	
+		
+			
+		exponent =  eiss.readFloat();
+			
+		
+	
+
+	}
+	
+}
+void CalSeeingRow::outerScaleFromBin(EndianISStream& eiss) {
+		
+	outerScaleExists = eiss.readBoolean();
+	if (outerScaleExists) {
+		
+	
+		
+		
+		outerScale =  Length::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void CalSeeingRow::outerScaleRMSFromBin(EndianISStream& eiss) {
+		
+	outerScaleRMSExists = eiss.readBoolean();
+	if (outerScaleRMSExists) {
+		
+	
+		
+		
+		outerScaleRMS =  Angle::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+	
+	
+	CalSeeingRow* CalSeeingRow::fromBin(EndianISStream& eiss, CalSeeingTable& table, const vector<string>& attributesSeq) {
 		CalSeeingRow* row = new  CalSeeingRow(table);
 		
-		
-		
-	
-	
-		
-			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-			
-	
-	row->frequencyRange = Frequency::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-		
-		
-		row->integrationTime =  Interval::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->numBaseLengths =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->baselineLengths = Length::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-		
-		
-			
-	
-	row->phaseRMS = Angle::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-		
-		
-		row->seeing =  Angle::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->seeingError =  Angle::fromBin(eiss);
-		
-	
-
-		
-		
-		
-	row->exponentExists = eiss.readBoolean();
-	if (row->exponentExists) {
-		
-	
-	
-		
-			
-		row->exponent =  eiss.readFloat();
-			
-		
-	
-
-	}
-
-	row->outerScaleExists = eiss.readBoolean();
-	if (row->outerScaleExists) {
-		
-	
-		
-		
-		row->outerScale =  Length::fromBin(eiss);
-		
-	
-
-	}
-
-	row->outerScaleRMSExists = eiss.readBoolean();
-	if (row->outerScaleRMSExists) {
-		
-	
-		
-		
-		row->outerScaleRMS =  Angle::fromBin(eiss);
-		
-	
-
-	}
-
-		
+		map<string, CalSeeingAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalSeeingTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1763,6 +1812,26 @@ atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["atmPhaseCorrection"] = &CalSeeingRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["calDataId"] = &CalSeeingRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalSeeingRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalSeeingRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalSeeingRow::endValidTimeFromBin; 
+	 fromBinMethods["frequencyRange"] = &CalSeeingRow::frequencyRangeFromBin; 
+	 fromBinMethods["integrationTime"] = &CalSeeingRow::integrationTimeFromBin; 
+	 fromBinMethods["numBaseLengths"] = &CalSeeingRow::numBaseLengthsFromBin; 
+	 fromBinMethods["baselineLengths"] = &CalSeeingRow::baselineLengthsFromBin; 
+	 fromBinMethods["phaseRMS"] = &CalSeeingRow::phaseRMSFromBin; 
+	 fromBinMethods["seeing"] = &CalSeeingRow::seeingFromBin; 
+	 fromBinMethods["seeingError"] = &CalSeeingRow::seeingErrorFromBin; 
+		
+	
+	 fromBinMethods["exponent"] = &CalSeeingRow::exponentFromBin; 
+	 fromBinMethods["outerScale"] = &CalSeeingRow::outerScaleFromBin; 
+	 fromBinMethods["outerScaleRMS"] = &CalSeeingRow::outerScaleRMSFromBin; 
 	
 	}
 	
@@ -1864,7 +1933,26 @@ atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 		else
 			outerScaleRMSExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["atmPhaseCorrection"] = &CalSeeingRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["calDataId"] = &CalSeeingRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalSeeingRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalSeeingRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalSeeingRow::endValidTimeFromBin; 
+		 fromBinMethods["frequencyRange"] = &CalSeeingRow::frequencyRangeFromBin; 
+		 fromBinMethods["integrationTime"] = &CalSeeingRow::integrationTimeFromBin; 
+		 fromBinMethods["numBaseLengths"] = &CalSeeingRow::numBaseLengthsFromBin; 
+		 fromBinMethods["baselineLengths"] = &CalSeeingRow::baselineLengthsFromBin; 
+		 fromBinMethods["phaseRMS"] = &CalSeeingRow::phaseRMSFromBin; 
+		 fromBinMethods["seeing"] = &CalSeeingRow::seeingFromBin; 
+		 fromBinMethods["seeingError"] = &CalSeeingRow::seeingErrorFromBin; 
+			
+	
+		 fromBinMethods["exponent"] = &CalSeeingRow::exponentFromBin; 
+		 fromBinMethods["outerScale"] = &CalSeeingRow::outerScaleFromBin; 
+		 fromBinMethods["outerScaleRMS"] = &CalSeeingRow::outerScaleRMSFromBin; 
+			
 	}
 
 	
@@ -2038,6 +2126,31 @@ atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalSeeingAttributeFromBin> CalSeeingRow::initFromBinMethods() {
+		map<string, CalSeeingAttributeFromBin> result;
+		
+		result["atmPhaseCorrection"] = &CalSeeingRow::atmPhaseCorrectionFromBin;
+		result["calDataId"] = &CalSeeingRow::calDataIdFromBin;
+		result["calReductionId"] = &CalSeeingRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalSeeingRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalSeeingRow::endValidTimeFromBin;
+		result["frequencyRange"] = &CalSeeingRow::frequencyRangeFromBin;
+		result["integrationTime"] = &CalSeeingRow::integrationTimeFromBin;
+		result["numBaseLengths"] = &CalSeeingRow::numBaseLengthsFromBin;
+		result["baselineLengths"] = &CalSeeingRow::baselineLengthsFromBin;
+		result["phaseRMS"] = &CalSeeingRow::phaseRMSFromBin;
+		result["seeing"] = &CalSeeingRow::seeingFromBin;
+		result["seeingError"] = &CalSeeingRow::seeingErrorFromBin;
+		
+		
+		result["exponent"] = &CalSeeingRow::exponentFromBin;
+		result["outerScale"] = &CalSeeingRow::outerScaleFromBin;
+		result["outerScaleRMS"] = &CalSeeingRow::outerScaleRMSFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  
