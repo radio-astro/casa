@@ -691,7 +691,9 @@ namespace casa {
     copySource();
 
     copyAntenna();
-    copyFeed();         // Feed table writing has to be after antenna 
+    if(!copyFeed())         // Feed table writing has to be after antenna 
+      return false;
+    
     copyObservation();
     copyPointing();
     copyWeather();
@@ -5230,6 +5232,9 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
   Bool SubMS::copyFeed()
   {
     const MSFeed& oldFeed = mssel_p.feed();
+
+    // if(oldFeed.nrow() < 1)     Useless, because it ignores spw selection
+    
     MSFeed& newFeed = msOut_p.feed();
     const ROMSFeedColumns incols(oldFeed);
     MSFeedColumns         outcols(newFeed);
@@ -5276,6 +5281,12 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
       }
       antCol.putColumn(newAntIds);
       spwCol.putColumn(newSpwIds);
+    }
+
+    if(newFeed.nrow() < 1){
+      LogIO os(LogOrigin("SubMS", "copyFeed()"));
+      os << LogIO::SEVERE << "No feeds were selected." << LogIO::POST;
+      return false;
     }
     return True;
   }
