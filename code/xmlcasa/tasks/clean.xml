@@ -264,19 +264,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="intArray" name="imsize">
-	    <description>x and y image size in pixels, symmetric for single value</description>
+	    <description>x and y image size in pixels. Single value: same for both</description>
 	    <value type="vector">
     <value>256</value><value>256</value>
 	    </value>
     </param>
 <!--========================================================= -->
     <param type="doubleArray" name="cell" units="arcsec">
-    <description>x and y cell size. default unit arcsec</description>
+    <description>x and y cell size. Default unit arcsec. Single value: same for both</description>
     <value type="vector"><value>1.0</value><value>1.0</value></value>
     </param>
 <!--========================================================= -->
     <param type="any" name="phasecenter">
-	    <description>Image phase center: position or field index</description>
+	    <description>Image center: direction or field index</description>
 	    <any type="variant"/>
 	    <value type="string"></value>
     </param>
