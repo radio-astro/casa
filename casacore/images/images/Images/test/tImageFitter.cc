@@ -358,8 +358,8 @@ int main() {
         	// Q stokes flux test
         	AlwaysAssert(flux(1).getValue() == 0, AipsError);
         	MDirection direction = compList.getRefDirection(0);
-        	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
-        	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);
+        	AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
+        	AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);
 
         	Vector<Double> parameters = compList.getShape(0)->parameters();
 
@@ -371,7 +371,7 @@ int main() {
         	AlwaysAssert(near(minorAxis, 25.55011520, 1e-7), AipsError);
 
         	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
-        	AlwaysAssert(near(positionAngle, 126.3211050, 1e-7), AipsError);
+        	AlwaysAssert(nearAbs(positionAngle, 126.3211050, 1e-7), AipsError);
         }
         {
          	writeTestString("Fit two gaussians");
@@ -413,8 +413,8 @@ int main() {
             	AlwaysAssert(flux(1).getValue() == 0, AipsError);
             	direction = compList.getRefDirection(i);
 
-            	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), expectedLong[i], 1e-7), AipsError);
-            	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), expectedLat[i], 1e-7), AipsError);
+            	AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(), expectedLong[i], 1e-7), AipsError);
+            	AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), expectedLat[i], 1e-7), AipsError);
              	Vector<Double> parameters = compList.getShape(i)->parameters();
             	Double majorAxis = arcsecsPerRadian*parameters(0);
              	AlwaysAssert(near(majorAxis, expectedMajorAxis[i], 1e-7), AipsError);
@@ -423,7 +423,7 @@ int main() {
              	AlwaysAssert(near(minorAxis, expectedMinorAxis[i], 1e-7), AipsError);
 
              	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
-             	AlwaysAssert(near(positionAngle, expectedPositionAngle[i], 1e-7), AipsError);
+             	AlwaysAssert(nearAbs(positionAngle, expectedPositionAngle[i], 5e-6), AipsError);
             }
         }
         {
@@ -431,6 +431,70 @@ int main() {
             ImageFitter fitter(noisyImage, "", "0,0,20,20");
             fitter.fit();
             AlwaysAssert(! fitter.converged(), AipsError);
+        }
+        {
+        	writeTestString("Test of fitting in a multi-polarization image");
+        	Vector<String> stokes(4);
+        	stokes[0] = "I";
+        	stokes[1] = "Q";
+        	stokes[2] = "U";
+        	stokes[3] = "V";
+
+        	Vector<Double> expectedFlux(stokes.size());
+        	expectedFlux[0] = 133.60641;
+        	expectedFlux[1] = 400.81921;
+        	expectedFlux[2] = 375.76801;
+        	expectedFlux[3] = -1157.92212;
+
+        	Vector<Double> expectedRA(stokes.size());
+        	expectedRA[0] = 1.2479113396;
+        	expectedRA[1] = 1.2479113694;
+        	expectedRA[2] = 1.2478908580;
+        	expectedRA[3] = 1.2478908284;
+
+        	Vector<Double> expectedDec(stokes.size());
+        	expectedDec[0] = 0.782579122;
+        	expectedDec[1] = 0.782593666;
+        	expectedDec[2] = 0.782593687;
+        	expectedDec[3] = 0.782579143;
+
+            Vector<Double> expectedMajorAxis(stokes.size());
+            expectedMajorAxis[0] = 7.992524398;
+            expectedMajorAxis[1] = 11.988806751;
+            expectedMajorAxis[2] = 8.991589959;
+            expectedMajorAxis[3] = 12.987878913;
+
+            Vector<Double> expectedMinorAxis(stokes.size());
+            expectedMinorAxis[0] = 5.994405977;
+            expectedMinorAxis[1] = 5.994395540;
+            expectedMinorAxis[2] = 4.995338093;
+            expectedMinorAxis[3] = 7.992524265;
+
+            Vector<Double> expectedPositionAngle(stokes.size());
+            expectedPositionAngle[0] = 40.083248;
+            expectedPositionAngle[1] = 160.083213;
+            expectedPositionAngle[2] = 50.082442;
+            expectedPositionAngle[3] = 135.08243;
+
+        	for (uInt i=0; i<stokes.size(); i++) {
+        		ImageFitter fitter("imfit_stokes.fits", "", "", 0, stokes[i]);
+        		ComponentList compList = fitter.fit();
+        		AlwaysAssert(fitter.converged(), AipsError);
+        		Vector<Quantity> flux;
+        		MDirection direction = compList.getRefDirection(0);
+        		compList.getFlux(flux,0);
+        		AlwaysAssert(compList.nelements() == 1, AipsError);
+        		AlwaysAssert(near(flux(i).getValue(), expectedFlux[i], 1e-5), AipsError);
+        		AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(), expectedRA[i], 1e-8), AipsError);
+        		AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), expectedDec[i], 1e-8), AipsError);
+                Vector<Double> parameters = compList.getShape(0)->parameters();
+                Double majorAxis = arcsecsPerRadian*parameters(0);
+                AlwaysAssert(near(majorAxis, expectedMajorAxis[i], 1e-7), AipsError);
+                Double minorAxis = arcsecsPerRadian*parameters(1);
+                AlwaysAssert(near(minorAxis, expectedMinorAxis[i], 1e-7), AipsError);
+             	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
+             	AlwaysAssert(nearAbs(positionAngle, expectedPositionAngle[i], 5e-6), AipsError);
+        	}
         }
         cout << "ok" << endl;
     }

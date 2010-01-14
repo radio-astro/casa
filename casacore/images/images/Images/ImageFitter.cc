@@ -98,22 +98,27 @@ namespace casa {
     }
 
     ComponentList ImageFitter::fit() {
+
         *itsLog << LogOrigin("ImageFitter", "fit");
         Array<Float> residPixels;
         Array<Bool> residMask;
         Bool converged;
+
         uInt ngauss = estimates.nelements() > 0 ? estimates.nelements() : 1;
         Vector<String> models(ngauss);
         models.set("gaussian");
         ImageAnalysis myImage(image);
+
         Bool fit = True;
         Bool deconvolve = False;
         Bool list = True;
         // TODO make param passed to fitsky a ComponentList so this crap doesn't
         // have to be done.
+
         String errmsg;
         Record estimatesRecord;
         estimates.toRecord(errmsg, estimatesRecord);
+
         results = myImage.fitsky(
             residPixels, residMask, converged, regionRecord,
             chan, stokesString, mask, models,
@@ -121,6 +126,7 @@ namespace casa {
             excludePixelRange, fit, deconvolve, list,
             residual, model
         );
+
         fitDone = True;
         fitConverged = converged;
         if(converged) {
@@ -170,8 +176,8 @@ namespace casa {
         if (image == 0) {
             throw(AipsError("Unable to open image " + imagename));
         }
-        _doRegion(box, regionName, regionPtr);
         _checkImageParameterValidity();
+        _doRegion(box, regionName, regionPtr);
         if(estimatesFilename.empty()) {
         	*itsLog << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
         		<< LogIO::POST;
@@ -192,11 +198,16 @@ namespace casa {
     void ImageFitter::_checkImageParameterValidity() const {
         *itsLog << LogOrigin("ImageFitter", "_checkImageParameterValidity");
         String error;
-        ImageMetaData imageProps(*image);
-        if (imageProps.hasPolarizationAxis() && imageProps.hasSpectralAxis()) {
-            if (! imageProps.areChannelAndStokesValid(error, chan, stokesString)) {
-                *itsLog << error << LogIO::EXCEPTION;
-            }
+        ImageMetaData md(*image);
+        if (md.hasPolarizationAxis()) {
+        	if (! md.isStokesValid(stokesString)) {
+        		*itsLog << "This image has no stokes " << stokesString << LogIO::EXCEPTION;
+        	}
+        }
+        if (md.hasSpectralAxis()) {
+        	if (! md.isChannelNumberValid(chan)) {
+        		*itsLog << "Spectral channel number " << chan << " is not valid for this image." << LogIO::EXCEPTION;
+        	}
         }
     } 
 
@@ -278,12 +289,28 @@ namespace casa {
             blc[i] = 0;
             trc[i] = imShape[i] - 1;
         }
-    
-        Vector<Int> dirNums = ImageMetaData(*image).directionAxesNumbers();
+        ImageMetaData md(*image);
+
+        Vector<Int> dirNums = md.directionAxesNumbers();
+
+
         blc[dirNums[0]] = String::toDouble(blc1);
         blc[dirNums[1]] = String::toDouble(blc2);
         trc[dirNums[0]] = String::toDouble(trc1);
         trc[dirNums[1]] = String::toDouble(trc2);
+
+        if(md.hasSpectralAxis()) {
+        	Int spectralAxisNumber = md.spectralAxisNumber();
+        	blc[spectralAxisNumber] = chan;
+        	trc[spectralAxisNumber] = chan;
+        }
+
+        if(md.hasPolarizationAxis()) {
+        	Int polarizationAxisNumber = md.polarizationAxisNumber();
+        	Int stokesPixelNumber = md.stokesPixelNumber(stokesString);
+        	blc[polarizationAxisNumber] = stokesPixelNumber;
+        	trc[polarizationAxisNumber] = stokesPixelNumber;
+        }
 
         LCBox lcBox(blc, trc, imShape);
         WCBox wcBox(lcBox, image->coordinates());

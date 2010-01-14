@@ -2235,6 +2235,7 @@ ComponentList ImageAnalysis::fitsky(
     const String& residImageName, const String& modelImageName
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
+
 	String error;
 
 	Vector<SkyComponent> estimate;
@@ -2303,6 +2304,7 @@ ComponentList ImageAnalysis::fitsky(
 	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
     }
 
+
     Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 	SubImage<Float> subImageTmp(*pImage_p, slice, False);
 
@@ -2311,6 +2313,7 @@ ComponentList ImageAnalysis::fitsky(
 	ImageRegion* pRegionRegion = 0;
 
     ImageRegion* pMaskRegion = 0;
+
 	AxesSpecifier axesSpec(False);
 
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
@@ -2318,6 +2321,7 @@ ComponentList ImageAnalysis::fitsky(
 			False, axesSpec);
 
     ostringstream oss;
+
     Region.print(oss);
 
 	delete pRegionRegion;
@@ -2335,8 +2339,7 @@ ComponentList ImageAnalysis::fitsky(
 	residMask = subImage.getMask(True).copy();
 
 	// What Stokes type does this plane hold ?
-	Stokes::StokesTypes stokes(Stokes::Undefined);
-	stokes = CoordinateUtil::findSingleStokes(*itsLog, cSys, 0);
+	Stokes::StokesTypes stokes = Stokes::type(stokesString);
 
 	// Form masked array and find min/max
 	MaskedArray<Float> maskedPixels(pixels, residMask, True);
@@ -2354,6 +2357,7 @@ ComponentList ImageAnalysis::fitsky(
 	// Must use subImage in calls as converting positions to absolute
 	// pixel and vice versa
     ComponentList cl;
+
     if (!fitIt) {
 		Vector<Double> parameters;
 		parameters = singleParameterEstimate(fitter, Fit2D::GAUSSIAN,
@@ -2481,9 +2485,7 @@ ComponentList ImageAnalysis::fitsky(
     			modelImageName, modelPixels, *itsLog
     	);
     }
-
 	return cl;
-
 }
 
 void ImageAnalysis::_fitskyExtractBeam(
@@ -5541,13 +5543,14 @@ SubImage<Float> ImageAnalysis::makeSubImage(ImageRegion*& pRegionRegion,
 {
 	*itsLog << LogOrigin("ImageAnalysis", "makeSubImage");
 	SubImage<Float> subImage;
-	//*itsLog << "in makeSubImage, creating the mask: *" << mask << "*" << LogIO::POST;
 	pMaskRegion = makeMaskRegion(mask);
 
 	// We can get away with no region processing if the GlishRegion
 	// is empty and the user is not dropping degenerate axes
 	//*itsLog << "in makeSubImage, doing the subimage: " << theRegion.nfields() << " "<< axesSpecifier.keep()<< LogIO::POST;
+
 	if (theRegion.nfields() == 0 && axesSpecifier.keep()) {
+
 		if (pMaskRegion != 0) {
 			subImage = SubImage<Float> (inImage, *pMaskRegion,
 					writableIfPossible);
@@ -5555,32 +5558,38 @@ SubImage<Float> ImageAnalysis::makeSubImage(ImageRegion*& pRegionRegion,
 			subImage = SubImage<Float> (inImage, True);
 		}
 	} else {
+
 		pRegionRegion = makeRegionRegion(inImage, theRegion, listBoundingBox,
 				os);
+
 		if (pMaskRegion != 0) {
+
 			SubImage<Float>
 					subImage0(inImage, *pMaskRegion, writableIfPossible);
 			subImage = SubImage<Float> (subImage0, *pRegionRegion,
 					writableIfPossible, axesSpecifier);
 		} else {
+
 			subImage = SubImage<Float> (inImage, *pRegionRegion,
 					writableIfPossible, axesSpecifier);
 		}
 	}
-	//
-	//*itsLog << "SubImage made" << LogIO::POST;
+
 	return subImage;
 }
 
 ImageRegion* ImageAnalysis::makeRegionRegion(ImageInterface<Float>& inImage,
 		const Record& theRegion, const Bool listBoundingBox, LogIO& os) {
 	*itsLog << LogOrigin("ImageAnalysis", "makeRegionRegion");
+
 	// Convert from GlishRecord to Record and make ImageRegion
 	// Handles null regions here
 	ImageRegion* pRegion = 0;
 	CoordinateSystem cSys(inImage.coordinates());
+
 	//
 	if (theRegion.nfields() == 0) {
+
 		IPosition blc(inImage.ndim(), 0);
 		IPosition trc(inImage.shape() - 1);
 		LCSlicer slicer(blc, trc, RegionType::Abs);
@@ -5594,13 +5603,17 @@ ImageRegion* ImageAnalysis::makeRegionRegion(ImageInterface<Float>& inImage,
 					<< CoordinateUtil::formatCoordinate(trc, cSys) << ")"
 					<< LogIO::POST;
 		}
-	} else {
+	}
+	else {
 		pRegion = ImageRegion::fromRecord(TableRecord(theRegion), "");
-		//
+
 		if (listBoundingBox) {
+
 			LatticeRegion latRegion = pRegion->toLatticeRegion(
 					inImage.coordinates(), inImage.shape());
+
 			Slicer sl = latRegion.slicer();
+
 			os << LogIO::NORMAL << "Selected bounding box : " << endl;
 			//os << LogIO::NORMAL <<  "    " <<  sl.start()+1 << " to " << sl.end()+1
 			os << LogIO::NORMAL << "    " << sl.start() << " to " << sl.end()
@@ -5609,6 +5622,7 @@ ImageRegion* ImageAnalysis::makeRegionRegion(ImageInterface<Float>& inImage,
 					sl.end(), cSys) << ")" << LogIO::POST;
 		}
 	}
+
 	return pRegion;
 }
 
