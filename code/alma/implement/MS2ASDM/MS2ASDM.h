@@ -37,6 +37,7 @@
 #include <alma/ASDM/Frequency.h>
 #include <alma/ASDM/Angle.h>
 #include <alma/ASDM/Length.h>
+#include <alma/ASDM/ArrayTimeInterval.h>
 #include <alma/Enumerations/CStokesParameter.h>
 #include <alma/Enumerations/CAntennaType.h>
 #include <alma/Enumerations/CBasebandName.h>
@@ -172,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool writeDataDescription();
 
-  Bool writeSwitchCycleDummy(); // write a trivial table with numStep==1
+  Bool writeSwitchCycle(); // not yet fully implemented
 
   Bool writeConfigDescription();
 
@@ -220,6 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Int, asdm::Tag> asdmFieldId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmDataDescriptionId_p;
+  SimpleOrderedMap <Double, asdm::Tag> asdmConfigDescriptionId_p;
 
   SimpleOrderedMap <Int, int> asdmFeedId_p;
 

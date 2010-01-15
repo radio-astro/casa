@@ -89,6 +89,7 @@ namespace casa {
     asdmFieldId_p(Tag()),
     asdmEphemerisId_p(Tag()),
     asdmDataDescriptionId_p(Tag()),
+    asdmConfigDescriptionId_p(Tag()),
     // other maps
     asdmFeedId_p(-1)
   {
@@ -125,8 +126,6 @@ namespace casa {
     std::replace( str.begin(), str.end(), ':', '_' );
     std::replace( str.begin(), str.end(), '/', '_' );
 
-    // cout << str << endl;
-
     return str; 
   }
 
@@ -148,7 +147,6 @@ namespace casa {
 			  const String& archiveid, const String& rangeid, Bool verbose,
 			  Double subscanDuration)
   {
-    Bool rstat(True);
 
     LogIO os(LogOrigin("MS2ASDM", "writeASDM()"));
     os << LogIO::NORMAL << "Converting " << ms_p.tableName() << " to ASDM " << asdmfile
@@ -212,13 +210,15 @@ namespace casa {
       return False;
     }
 
-    if(!writeSwitchCycleDummy()){
+    if(!writeSwitchCycle()){
       return False;
     }
 
-    if(!writeConfigDesc()){
+    if(!writeConfigDescription()){
       return False;
     }
+
+    setSubScanDuration(subscanDuration);
 
     // finish writing the ASDM non-binary data
     try{
@@ -234,13 +234,12 @@ namespace casa {
     if(!setDirectory(asdmfile)){
        return False;
     }
-    
-    setSubScanDuration(subscanDuration);
+
     if(!writeMainBin(datacolumn)){
-      rstat = False;
+      return False;
     }
 
-    return rstat;
+    return True;
 
   }
 
@@ -793,7 +792,7 @@ namespace casa {
   //     Entity ent = tT.getEntity();
   //     ent.setEntityId(theUid);
   //     tT.setEntity(ent);
-  //     os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " ... " << LogIO::POST;
+  //     os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
   //     incrementUid();
   
   //     return rstat;
@@ -848,7 +847,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -913,7 +912,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1003,7 +1002,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled SpectralWindow table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled SpectralWindow table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1142,7 +1141,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Polarization table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Polarization table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1202,7 +1201,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled CorrelatorMode table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled CorrelatorMode table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1224,7 +1223,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled AlmaRadiometer table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled AlmaRadiometer table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1246,7 +1245,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Holography table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Holography table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1391,7 +1390,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Processor table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Processor table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1489,7 +1488,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Field table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Field table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1544,7 +1543,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Receiver table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Receiver table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1716,7 +1715,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Feed table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled Feed table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1773,14 +1772,14 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled DataDescription table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled DataDescription table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
   }
 
-  Bool MS2ASDM::writeSwitchCycleDummy(){ 
-    LogIO os(LogOrigin("MS2ASDM", "writeSwitchCycleDummy()"));
+  Bool MS2ASDM::writeSwitchCycle(){ 
+    LogIO os(LogOrigin("MS2ASDM", "writeSwitchCycle()"));
     
     Bool rstat = True;
     
@@ -1788,55 +1787,351 @@ namespace casa {
     
     asdm::SwitchCycleRow* tR = 0;
     
-    // parameters of the new row
-    int numStep = 1;
-    vector< float > weightArray;
-    weightArray.push_back(1.);
-    vector< vector< Angle > > dirOffsetArray;
-    vector< Angle > aV;
-    aV.push_back(Angle(0.));
-    aV.push_back(Angle(0.));
-    dirOffsetArray.push_back(aV);
-    vector< Frequency > freqOffsetArray;
-    freqOffsetArray.push_back(Frequency(0.));
-    vector< Interval > stepDurationArray;
-    stepDurationArray.push_back(Interval(0)); // set to zero ???
+    // switch cycle table will only be dummy ? -> Francois
+    // dummy if PHASE_ID column doesn't exist in MS main
+    // PHASE_ID identifies bin in switch cycle
+    //   otherwise, e.g. PHASE_ID = 0 and 1 => numStep == 2
 
-    tR = tT.newRow(numStep, weightArray, dirOffsetArray, freqOffsetArray, stepDurationArray);
-    
-    tT.add(tR);
-    
-    EntityId theUid(getCurrentUid());
-    Entity ent = tT.getEntity();
-    ent.setEntityId(theUid);
-    tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled SwitchCycle table " << getCurrentUid() << " with one dummy entry ... " << LogIO::POST;
-    incrementUid();
-    
+    if(phaseId().isNull()){ // phaseId column doesn't exist
+
+      // parameters of the new row
+      int numStep = 1;
+      vector< float > weightArray;
+      weightArray.push_back(1.);
+      vector< vector< Angle > > dirOffsetArray;
+      vector< Angle > aV;
+      aV.push_back(Angle(0.));
+      aV.push_back(Angle(0.));
+      dirOffsetArray.push_back(aV);
+      vector< Frequency > freqOffsetArray;
+      freqOffsetArray.push_back(Frequency(0.));
+      vector< Interval > stepDurationArray;
+      stepDurationArray.push_back(Interval(0)); // set to zero ???
+      
+      tR = tT.newRow(numStep, weightArray, dirOffsetArray, freqOffsetArray, stepDurationArray);
+      
+      tT.add(tR);
+      
+      EntityId theUid(getCurrentUid());
+      Entity ent = tT.getEntity();
+      ent.setEntityId(theUid);
+      tT.setEntity(ent);
+      os << LogIO::NORMAL << "PHASE_ID column doesn't exist in MS Main table.\n Filled ASDM SwitchCycle table " 
+	 << getCurrentUid() << " with one dummy entry." << LogIO::POST;
+      incrementUid();
+    }
+    else{ // phaseId column exists
+      os << LogIO::SEVERE 
+	 << "PHASE_ID column exists in MS Main table but proper creation of ASDM SwitchCycle table not yet implemented." 
+	 << LogIO::POST;
+      rstat = False;
+    }      
+
     return rstat;
   }
 
   Bool MS2ASDM::writeConfigDescription(){
-    LogIO os(LogOrigin("MS2ASDM", "writeConfigDesc()"));
+
+   LogIO os(LogOrigin("MS2ASDM", "writeConfigDesc()"));
 
     Bool rstat = True;
-    asdm::DataDescriptionTable& tT = ASDM_p->getDataDescription();
 
-    asdm::DataDescriptionRow* tR = 0;
+    asdm::ConfigDescriptionTable& cdT = ASDM_p->getConfigDescription();
 
-    // loop over main table
+    asdm::ProcessorTable& procT = ASDM_p->getProcessor();
 
+    asdm::SwitchCycleTable& swcT = ASDM_p->getSwitchCycle();
+    vector< asdm::SwitchCycleRow * > swcRV = swcT.get();
+    Tag swcTag = swcRV[0]->getSwitchCycleId(); // preliminary implementation: get tag from first (and only) row
+
+    uInt nProcTabRows =  processor().nrow();
+    if(nProcTabRows<1){ // processor table not filled, all data will have proc id == -1
+      os <<  LogIO::WARN << "MS contains empty Processor table. Will assume processor type is CORRELATOR." << LogIO::POST;
+      nProcTabRows = 1;
+    }
+
+    // loop over MS processor table (typically, this loop will only be executed once)
+    for(uInt uprocId=0; uprocId<nProcTabRows; uprocId++){
+
+      Int procId = uprocId;
+
+      if(processor().nrow()<1){
+	procId  = -1;
+      }
+
+      os << LogIO::NORMAL << "Processor Id: " << procId << LogIO::POST;
+
+      asdm::ConfigDescriptionRow* cdR = 0;
+
+
+      Tag procIdTag;
+      if(asdmProcessorId_p.isDefined(procId)){
+	procIdTag = asdmProcessorId_p(procId);
+      }
+      else{
+	os << LogIO::SEVERE << "Internal error: undefined mapping for processor id " << procId << LogIO::POST;
+	return False;
+      }
+
+      // get processor type from already existing ASDM processor table
+      ProcessorTypeMod::ProcessorType processorType = procT.getRowByKey(procIdTag)->getProcessorType();
+
+      SpectralResolutionTypeMod::SpectralResolutionType spectralType = SpectralResolutionTypeMod::FULL_RESOLUTION; 
+      // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
+      os << LogIO::NORMAL << "Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;       
+
+//      // set up variables for the time interval to config description id
+//      Double CDValidTimeStart = 0.;
+//      Double CDValidTimeEnd = 0.;
+//      Tag previousCDTag = Tag();
+
+      Bool warned1 = False; // aux. variable to prevent repetitive warnings
+  
+      uInt nMainTabRows = ms_p.nrow();
+      for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
+
+	vector<Tag> antennaId;
+	vector<Tag> dataDId;
+	vector<int> feedId;
+	vector<Tag> switchCycleId;
+	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection> atmPhaseCorrection;
+	int numAntenna = 0;
+	int numFeed = 0;
+	CorrelationModeMod::CorrelationMode correlationMode;
+	
+	// loop over MS main table and find for this proc id
+	//  a) all used antennas
+	//  b) all used DD IDs
+	//  c) all used feed IDs
+	uInt numAutoCorrs = 0;
+	uInt numBaselines = 0;
+
+	if(processorId()(mainTabRow)==procId){
+
+	  //	  cout << "proc id " << procId << " used at main table row " << mainTabRow << endl;
+
+	  uInt i = mainTabRow;
+	  Double thisTStamp = time()(i); 
+
+//	  if(CDValidTimeStart == 0.){ // not yet set
+//	    CDValidTimeStart = thisTStamp;
+//	  }
+	  
+	  while(time()(i)== thisTStamp && i<nMainTabRows){
+	    
+	    // for the later determination of the correlation mode
+	    if(antenna1()(i) == antenna2()(i)){
+	      numAutoCorrs++;
+	    }
+	    else{
+	      numBaselines++;
+	    }
+	    
+	    // antenna ids
+
+	    Int aId = antenna1()(i); 
+	    Tag a1IdTag;
+	    if(asdmAntennaId_p.isDefined(aId)){
+	      a1IdTag = asdmAntennaId_p(aId);
+	    }
+	    else{
+	      os << LogIO::SEVERE << "Internal error: undefined mapping for antenna1 id " << aId 
+		 << " in main table row " << mainTabRow << LogIO::POST;
+	      return False;
+	    }
+	    aId = antenna2()(i); 
+	    Tag a2IdTag;
+	    if(asdmAntennaId_p.isDefined(aId)){
+	      a2IdTag = asdmAntennaId_p(aId);
+	    }
+	    else{
+	      os << LogIO::SEVERE << "Internal error: undefined mapping for antenna2 id " << aId
+		 << " in main table row " << mainTabRow << LogIO::POST;
+	      return False;
+	    }
+
+	    Bool found = False;
+	    for(uInt j=0;j<antennaId.size();j++){
+	      if(a1IdTag == antennaId[j]){
+		found = True;
+		break;
+	      }
+	    }
+	    if(!found){
+	      antennaId.push_back(a1IdTag);
+	    }
+	    found = False;
+	    for(uInt j=0;j<antennaId.size();j++){
+	      if(a2IdTag == antennaId[j]){
+		found = True;
+		break;
+	      }
+	    }
+	    if(!found){
+	      antennaId.push_back(a2IdTag);
+	    }
+	    
+	    // DD IDs
+	    Int dDIdi = dataDescId()(i);
+	    Tag dDIdiTag;
+	    if(asdmDataDescriptionId_p.isDefined(dDIdi)){
+	      dDIdiTag = asdmDataDescriptionId_p(dDIdi);
+	    }
+	    else{
+	      os << LogIO::SEVERE << "Internal error: undefined mapping for data desc. id " << dDIdi
+		 << " in main table row " << mainTabRow << LogIO::POST;
+	      return False;
+	    }
+	      
+	    found = False;
+	    for(uInt j=0;j<dataDId.size();j++){
+	      if(dDIdiTag == dataDId[j]){
+		found = True;
+		break;
+	      }
+	    }
+	    if(!found){
+	      dataDId.push_back(dDIdiTag);
+	    }
+	    
+	    // feed ids
+	    Int fIdi = feed1()(i);
+	    int f1Idi;
+	    if(asdmFeedId_p.isDefined(fIdi)){
+	      f1Idi = asdmFeedId_p(fIdi);
+	    }
+	    else{
+	      os << LogIO::SEVERE << "Internal error: undefined mapping for feed1 id " << fIdi
+		 << " in main table row " << mainTabRow << LogIO::POST;
+	      return False;
+	    }
+	    fIdi = feed2()(i);
+	    int f2Idi;
+	    if(asdmFeedId_p.isDefined(fIdi)){
+	      f2Idi = asdmFeedId_p(fIdi);
+	    }
+	    else{
+	      os << LogIO::SEVERE << "Internal error: undefined mapping for feed2 id " << fIdi
+		 << " in main table row " << mainTabRow << LogIO::POST;
+	      return False;
+	    }
+
+	    found = False;	      
+	    for(uInt j=0;j<feedId.size();j++){
+	      if(f1Idi == feedId[j]){
+		found = True;
+		break;
+	      }
+	    }
+	    if(!found){
+	      feedId.push_back(f1Idi);
+	    }
+	    found = False;
+	    for(uInt j=0;j<feedId.size();j++){
+	      if(f2Idi == feedId[j]){
+		found = True;
+		break;
+	      }
+	    }
+	    if(!found){
+	      feedId.push_back(f2Idi);
+	    }
+	    
+	    i++;
+	  } // end while
+	
+	  numAntenna = antennaId.size();
+	
+	  if(numAutoCorrs==0){
+	    correlationMode = CorrelationModeMod::CROSS_ONLY;
+	  }
+	  else if(numBaselines>0){
+	    correlationMode = CorrelationModeMod::CROSS_AND_AUTO;
+	  }
+	  else{
+	    correlationMode = CorrelationModeMod::AUTO_ONLY;
+	  }
+	  
+	  numFeed = feedId.size();
+	  
+	  switchCycleId.push_back(swcTag); // switch cycle table will only be dummy ? -> Francois
+	  // dummy if PHASE_ID column doesn't exist in MS main
+          // PHASE_ID identifies bin in switch cycle
+	  //   otherwise, e.g. PHASE_ID = 0 and 1 => numStep == 2
+
+	  atmPhaseCorrection.push_back(AtmPhaseCorrectionMod::AP_CORRECTED); // hardwired for the moment !!!
+	  if(!warned1){
+	    os << LogIO::NORMAL << "Assuming atm. phase correction type for data from processor " << procId 
+	       << " is AP_CORRECTED." << LogIO::POST;
+	    warned1 = True;
+	  }
     
+	  // create a new row with its mandatory attributes.
+	  cdR = cdT.newRow (antennaId.size(),
+			    dataDId.size(),
+			    feedId.size(),
+			    correlationMode, 
+			    atmPhaseCorrection.size(),
+			    atmPhaseCorrection, 
+			    processorType, 
+			    spectralType, 
+			    antennaId, 
+			    feedId, 
+			    switchCycleId, 
+			    dataDId, 
+			    procIdTag);
+	  
+	  // optional attributes.
+	  //vector<Tag> assocConfigDescriptionId(1);
+	  //assocConfigDescriptionId[0] = Tag(1, TagType::ConfigDescription);
+	  //vector<int> phasedArrayList(2);
+	  //phasedArrayList[0] = 0;
+	  //phasedArrayList[1] = 1;
+	  //vector<bool> flagAnt(2, false);
+	  //	  vector<SpectralResolutionTypeMod::SpectralResolutionType> assocNature(1);
+	  //assocNature[0] = SpectralResolutionTypeMod::FULL_RESOLUTION;
+	  //cdR->setAssocConfigDescriptionId(assocConfigDescriptionId);
+	  //cdR->setPhasedArrayList(phasedArrayList);
+	  //cdR->setFlagAnt(flagAnt);
+	  //cdR->setAssocNature(assocNature);	  
+	  
+	  // add this row to to the config description table.
+	  //  note that this will check for uniqueness
+	  asdm::ConfigDescriptionRow* tR2 = 0;
 
-    //    tR = tT.newRow();
+	  tR2 = cdT.add(cdR);
+	  Tag newTag = tR2->getConfigDescriptionId();
+	  asdmConfigDescriptionId_p.define(thisTStamp, newTag);
 
-    tT.add(tR);
+// the following was an alternative ID where we have a map from ArrayTimeInterval to Tag
+// 	  if( previousCDTag == Tag() ){ // first time around
+// 	    previousCDTag = newTag;
+// 	  }
+// 	  else if( newTag != previousCDTag ){ 
+// 	    // adding this row caused a new tag to be defined
+//             // or it is using a tag different from that for the previous interval
+// 	    // enter previous tag into map
+// 	    CDValidTimeEnd = thisTStamp;
+// 	    ArrayTimeInterval validTRange(ASDMArrayTime(CDValidTimeStart), 
+// 				     ASDMInterval(CDValidTimeEnd - CDValidTimeStart));
+// 	    asdmConfigDescriptionId_p.define(validTRange, previousCDTag); 
+// 	    // note: several ranges can be mapped to one ID	    
+// 	    // prepare next interval
+// 	    CDValidTimeStart = thisTStamp;
+// 	    previousCDTag = newTag;
+// 	  } // end if new tag
+
+	} // end if proc id
+
+      } // end loop over MS main table
+
+    } // end loop over MS processor table
 
     EntityId theUid(getCurrentUid());
-    Entity ent = tT.getEntity();
+    Entity ent = cdT.getEntity();
     ent.setEntityId(theUid);
-    tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled DataDescription table " << getCurrentUid() << " ... " << LogIO::POST;
+    cdT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " with " << cdT.size() << " rows ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -2066,13 +2361,11 @@ namespace casa {
 
     } // end loop over MS processor table
 
-    cout << "The ConfigDescription table has now " << cdT.size() << " elements" << endl;
-
     EntityId theUid(getCurrentUid());
     Entity ent = cdT.getEntity();
     ent.setEntityId(theUid);
     cdT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " with " << cdT.size() << " rows ..." << LogIO::POST;
     incrementUid();
 
     return rstat;
