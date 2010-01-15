@@ -145,7 +145,7 @@ namespace casa {
 
   Bool MS2ASDM::writeASDM(const String& asdmfile, const String& datacolumn, 
 			  const String& archiveid, const String& rangeid, Bool verbose,
-			  Double subscanDuration)
+			  const Double subscanDuration, const Bool msDataIsAPCorrected)
   {
 
     LogIO os(LogOrigin("MS2ASDM", "writeASDM()"));
@@ -170,7 +170,12 @@ namespace casa {
       os << LogIO::SEVERE << "MS Observation table is empty." << LogIO::POST;
       return False;
     }
-    telName_p = observation().telescopeName()(0); // get name of observatory from first row of observation table
+
+    setObservatoryName(observation().telescopeName()(0)); // get name of observatory from first row of observation table
+
+    setSubScanDuration(subscanDuration);
+
+    setDataAPCorrected(msDataIsAPCorrected);
 
     // write the ASDM tables
 
@@ -217,8 +222,6 @@ namespace casa {
     if(!writeConfigDescription()){
       return False;
     }
-
-    setSubScanDuration(subscanDuration);
 
     // finish writing the ASDM non-binary data
     try{
@@ -1880,15 +1883,12 @@ namespace casa {
       // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
       os << LogIO::NORMAL << "Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;       
 
-//      // set up variables for the time interval to config description id
-//      Double CDValidTimeStart = 0.;
-//      Double CDValidTimeEnd = 0.;
-//      Tag previousCDTag = Tag();
-
-      Bool warned1 = False; // aux. variable to prevent repetitive warnings
-  
       uInt nMainTabRows = ms_p.nrow();
       for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
+
+	vector<Int> msAntennaIdV;
+	vector<Int> msDDIdV;
+	vector<Int> msFeedIdV;
 
 	vector<Tag> antennaId;
 	vector<Tag> dataDId;
@@ -1913,10 +1913,6 @@ namespace casa {
 	  uInt i = mainTabRow;
 	  Double thisTStamp = time()(i); 
 
-//	  if(CDValidTimeStart == 0.){ // not yet set
-//	    CDValidTimeStart = thisTStamp;
-//	  }
-	  
 	  while(time()(i)== thisTStamp && i<nMainTabRows){
 	    
 	    // for the later determination of the correlation mode
@@ -1930,46 +1926,38 @@ namespace casa {
 	    // antenna ids
 
 	    Int aId = antenna1()(i); 
-	    Tag a1IdTag;
-	    if(asdmAntennaId_p.isDefined(aId)){
-	      a1IdTag = asdmAntennaId_p(aId);
+	    Bool found = false;
+	    for(uInt j=0; j<msAntennaIdV.size(); j++){
+	      if(aId == msAntennaIdV[j]){
+		found = True;
+		break;
+	      }
 	    }
-	    else{
-	      os << LogIO::SEVERE << "Internal error: undefined mapping for antenna1 id " << aId 
-		 << " in main table row " << mainTabRow << LogIO::POST;
-	      return False;
+	    if(!found){
+	      msAntennaIdV.push_back(aId);
+	      if(!asdmAntennaId_p.isDefined(aId)){
+		os << LogIO::SEVERE << "Internal error: undefined mapping for antenna1 id " << aId 
+		   << " in main table row " << mainTabRow << LogIO::POST;
+		return False;
+	      }
 	    }
 	    aId = antenna2()(i); 
-	    Tag a2IdTag;
-	    if(asdmAntennaId_p.isDefined(aId)){
-	      a2IdTag = asdmAntennaId_p(aId);
+	    found = false;
+	    for(uInt j=0; j<msAntennaIdV.size(); j++){
+	      if(aId == msAntennaIdV[j]){
+		found = True;
+		break;
+	      }
 	    }
-	    else{
-	      os << LogIO::SEVERE << "Internal error: undefined mapping for antenna2 id " << aId
-		 << " in main table row " << mainTabRow << LogIO::POST;
-	      return False;
+	    if(!found){
+	      msAntennaIdV.push_back(aId);
+	      if(!asdmAntennaId_p.isDefined(aId)){
+		os << LogIO::SEVERE << "Internal error: undefined mapping for antenna2 id " << aId 
+		   << " in main table row " << mainTabRow << LogIO::POST;
+		return False;
+	      }
 	    }
 
-	    Bool found = False;
-	    for(uInt j=0;j<antennaId.size();j++){
-	      if(a1IdTag == antennaId[j]){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      antennaId.push_back(a1IdTag);
-	    }
-	    found = False;
-	    for(uInt j=0;j<antennaId.size();j++){
-	      if(a2IdTag == antennaId[j]){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      antennaId.push_back(a2IdTag);
-	    }
 	    
 	    // DD IDs
 	    Int dDIdi = dataDescId()(i);
@@ -2039,7 +2027,13 @@ namespace casa {
 	    
 	    i++;
 	  } // end while
-	
+
+
+	   // sort the  antenna ids before entering them into the ConfigDescription table
+	  std::sort(msAntennaIdV.begin(), msAntennaIdV.end());
+	  for(uInt i=0; i<msAntennaIdV.size(); i++){
+	    antennaId.push_back(asdmAntennaId_p(msAntennaIdV[i]));
+	  }
 	  numAntenna = antennaId.size();
 	
 	  if(numAutoCorrs==0){
@@ -2059,12 +2053,12 @@ namespace casa {
           // PHASE_ID identifies bin in switch cycle
 	  //   otherwise, e.g. PHASE_ID = 0 and 1 => numStep == 2
 
-	  atmPhaseCorrection.push_back(AtmPhaseCorrectionMod::AP_CORRECTED); // hardwired for the moment !!!
-	  if(!warned1){
-	    os << LogIO::NORMAL << "Assuming atm. phase correction type for data from processor " << procId 
-	       << " is AP_CORRECTED." << LogIO::POST;
-	    warned1 = True;
+	  if(dataIsAPCorrected()){
+	    atmPhaseCorrection.push_back(AtmPhaseCorrectionMod::AP_CORRECTED); 
 	  }
+	  else{
+	    atmPhaseCorrection.push_back(AtmPhaseCorrectionMod::AP_UNCORRECTED); 
+	  }	    
     
 	  // create a new row with its mandatory attributes.
 	  cdR = cdT.newRow (antennaId.size(),
@@ -2102,24 +2096,6 @@ namespace casa {
 	  tR2 = cdT.add(cdR);
 	  Tag newTag = tR2->getConfigDescriptionId();
 	  asdmConfigDescriptionId_p.define(thisTStamp, newTag);
-
-// the following was an alternative ID where we have a map from ArrayTimeInterval to Tag
-// 	  if( previousCDTag == Tag() ){ // first time around
-// 	    previousCDTag = newTag;
-// 	  }
-// 	  else if( newTag != previousCDTag ){ 
-// 	    // adding this row caused a new tag to be defined
-//             // or it is using a tag different from that for the previous interval
-// 	    // enter previous tag into map
-// 	    CDValidTimeEnd = thisTStamp;
-// 	    ArrayTimeInterval validTRange(ASDMArrayTime(CDValidTimeStart), 
-// 				     ASDMInterval(CDValidTimeEnd - CDValidTimeStart));
-// 	    asdmConfigDescriptionId_p.define(validTRange, previousCDTag); 
-// 	    // note: several ranges can be mapped to one ID	    
-// 	    // prepare next interval
-// 	    CDValidTimeStart = thisTStamp;
-// 	    previousCDTag = newTag;
-// 	  } // end if new tag
 
 	} // end if proc id
 

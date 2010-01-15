@@ -98,6 +98,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // get maximum duration of a subscan in seconds
   Double getSubScanDuration(){ return subscanDuration_p; }
 
+  void setDataAPCorrected(const Bool isCorrected = True){
+    dataIsAPCorrected_p = isCorrected; }
+
+  Bool dataIsAPCorrected(){ return dataIsAPCorrected_p; }
+
+  void setObservatoryName(const String& telName){
+    telName_p = telName;
+  }
+
+  void getObservatoryName( String& telName ){
+    telName = telName_p;
+  }
+
   // convert CASA Stokes to ASDM Stokes
   StokesParameterMod::StokesParameter ASDMStokesParameter( Stokes::StokesTypes s);
 
@@ -140,7 +153,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 const String& archiveid="S0", 
 		 const String& rangeid="X1", 
 		 const Bool verbose=True,
-		 const Double subscanDuration = 24.*3600. 
+		 const Double subscanDuration = 24.*3600.,
+		 const Bool msDataIsAPCorrected=True
 		 );
 
  private:
@@ -208,6 +222,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   String currentUid_p; // the last used uid
 
   Double subscanDuration_p; // maximum duration of a subscan in seconds
+
+  Bool dataIsAPCorrected_p; // true if the data in the selected MS data column is 
+                            // AtmPhaseCorrectionMod::AP_CORRECTED, false if it is
+                            // AtmPhaseCorrectionMod::AP_UNCORRECTED
 
   String asdmDir_p; // ASDM output directory name
 

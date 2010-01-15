@@ -40,6 +40,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <description>the X1 in uid://X0/X1/X&lt;running&gt;</description>
 	    <value>X1</value>
     </param>
+    <param type="string" name="subscanduration">
+	    <description>maximum duration of a subscan in the output ASDM</description>
+	    <value>24h</value>
+    </param>
+
+    <param type="bool" name="apcorrected">
+	    <description>data to be regarded as having atmospheric phase correction</description>
+	    <value>True</value>
+    </param>
 
     <param type="bool" name="verbose">
 	    <description>produce log output</description>
@@ -58,8 +67,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
 
   Keyword arguments:
-  vis       -- MS name,
-               default: none
+  vis -- MS name,
+         default: none
 
   asdm -- Name of output ASDM file (directory),
           default: none; example: asdm='ExecBlock3'
@@ -72,12 +81,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: "S0"
 
   rangeid -- the X1 in uid://X0/X1/X&lt;running&gt;
-               default: "X1"
+             default: "X1"
+
+  subscanduration -- maximum duration of a subscan in the output ASDM
+	             default: "24h"
+
+  apcorrected -- If true, the data in column datacolumn should be regarded
+	         as having atmospheric phase correction, default: True
 
   verbose     -- produce log output, default: True
 
   showversion -- report the version of the ASDM class set, 
-               default: True
+                 default: True
 
 
   exportasdm(vis='ngc4826.ms', asdm='uid___S021_X1418_X1', 

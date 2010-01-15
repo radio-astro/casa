@@ -89,6 +89,8 @@ int main(int argc, char *argv[]) {
   String rangeid = "X1"; 
   bool verbose = False;
   bool showversion = False;
+  double subscanduration = 24.*3600.; // default is one day
+  bool apcorrected = True;
 
   boost::filesystem::path msPath;
 
@@ -107,7 +109,9 @@ int main(int argc, char *argv[]) {
     ("datacolumn,d", po::value<string>(), "specifies the datacolumn.")
     ("archiveid,a", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
     ("rangeid,g", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
+    ("subscanduration,s", po::value<double>(), "specifies the maximum duration of a subscan in the out put ASDM (seconds). Default: 86400")
     ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
+    ("apuncorrected,u", "the data given by datacolumn should be regarded as not having an atmospheric phase correction. Default: data is AP corrected.")
     ("verbose,v", "logs numerous informations as the filler is working.")
     ("revision,r", "logs information about the revision of this application.");
   
@@ -142,6 +146,8 @@ int main(int argc, char *argv[]) {
     LogSink::globalSink(theSink);
   }
   
+  // AP corrected?
+  apcorrected = !(vm.count("apuncorrected") > 0);
   // Verbose or quiet ?
   verbose = vm.count("verbose") > 0;
   // showversion ?
@@ -157,6 +163,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("rangeid")) {
     msfile = String(vm["rangeid"].as< string >());
+  }
+
+  if (vm.count("subscanduration")) {
+    subscanduration = vm["subscanduration"].as< double >();
   }
 
   if (vm.count("ms-directory")) {
@@ -187,7 +197,8 @@ int main(int argc, char *argv[]) {
       itsMS = new MeasurementSet(msfile);
       m2a = new MS2ASDM(*itsMS);
       info("Using ASDM version " + m2a->showversion());
-      if (!m2a->writeASDM(asdmfile, datacolumn, archiveid, rangeid, verbose)) {
+      if (!m2a->writeASDM(asdmfile, datacolumn, archiveid, rangeid, verbose,
+			  subscanduration, apcorrected)) {
 	delete m2a;
 	delete itsMS;
 	error("Conversion to ASDM failed.");

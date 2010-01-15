@@ -1,7 +1,8 @@
 import os
 from taskinit import *
 
-def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=None, verbose=None, showversion=None):
+def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=None,
+	       subscanduration=None, apcorrected=None, verbose=None, showversion=None):
 	""" Convert a CASA visibility file (MS) into an ALMA Science Data Model.
                                           
 	Keyword arguments:
@@ -21,6 +22,12 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 	rangeid -- the X1 in uid://X0/X1/X<running>
                   default: "X1"
 
+	subscanduration -- maximum duration of a subscan in the output ASDM
+	          default: "24h"
+
+	apcorrected -- If true, the data in column datacolumn should be regarded
+	          as having atmospheric phase correction, default: True
+
 	verbose     -- produce log output, default: True
 
 	showversion -- report the version of the ASDM class set, 
@@ -31,7 +38,9 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		casalog.origin('exportasdm')
 		parsummary = 'vis=\"'+str(vis)+'\", asdm=\"'+str(asdm)+'\", datacolumn=\"'+str(datacolumn)+'\",'
 		casalog.post(parsummary)
-		parsummary = 'archiveid=\"'+str(archiveid)+'\", rangeid=\"'+str(rangeid)+'\", verbose='+str(verbose)+', showversion='+str(showversion)
+		parsummary = 'archiveid=\"'+str(archiveid)+'\", rangeid=\"'+str(rangeid)+'\", subscanduration=\"'+str(subscanduration)+'\", apcorrected='+str(apcorrected)+'\",'
+		casalog.post(parsummary)
+		parsummary = 'verbose='+str(verbose)+', showversion='+str(showversion)
 		casalog.post(parsummary)
 
 		if not (type(vis)==str) or not (os.path.exists(vis)):
@@ -50,11 +59,21 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if not (datacolumn in allcols):
 			raise Exception, "Input MS does not contain datacolumn %s" % datacolumn
 
-		execute_string='MS2asdm  --datacolumn \"' + datacolumn + '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid + '\" --logfile \"' + casalog.logfile() +'\"'
+		ssdur_secs = 24.*3600 # default is one day
+		if not(subscanduration==""):
+			if (qa.canonical(subscanduration)['unit'].find('s') < 0):
+				raise TypeError, "subscanduation is not a valid time quantity: %s" % subscanduration
+			else:
+				ssdur_secs = qa.canonical(subscanduration)['value']
+
+		execute_string='MS2asdm  --datacolumn \"' + datacolumn + '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid
+		execute_string+= "\" --subscanduration " + str(ssdur_secs) + ' --logfile \"' + casalog.logfile() +'\"'
+		if(not apcorrected):
+			execute_string= execute_string +' --apuncorrected'
 		if(verbose):
-		   execute_string= execute_string +' --verbose'
+			execute_string= execute_string +' --verbose'
 		if(showversion):
-		   execute_string= execute_string +' --revision'
+			execute_string= execute_string +' --revision'
 
 		execute_string = execute_string + ' ' + vis + ' ' + asdm
 		casalog.post('Running the MS2asdm standalone invoked as:')
