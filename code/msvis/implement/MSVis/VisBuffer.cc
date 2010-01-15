@@ -824,6 +824,51 @@ void VisBuffer::resetWeightMat() {
 
 }
 
+// Rotate visibility phase for phase center offsets
+void VisBuffer::phaseCenterShift(Double dx,Double dy) {
+
+  // no-op if no net shift
+  if (!(abs(dx)>0 || abs(dy)>0)) return;
+
+  // Offsets in radians (input is arcsec)
+  //   sign convention will _correct_ data
+  dx*=(-C::pi/180.0/3600.0);
+  dy*=(-C::pi/180.0/3600.0);
+
+  // Extra path as fraction of U and V
+  Vector<Double> udx;
+  udx=uvwMat().row(0);
+  Vector<Double> vdy;
+  vdy=uvwMat().row(1);
+  udx*=dx;    // in m
+  vdy*=dy;
+
+  // Combine axes
+  udx+=vdy;
+  udx/=C::c;  // in light-seconds
+  udx*=(2.0*C::pi);  // in radian.seconds/cycle
+
+  Vector<Double> freq(frequency());
+  Double ph;
+  Complex cph;
+
+  for (Int irow=0;irow<nRow();++irow) 
+    for (Int ichn=0;ichn<nChannel();++ichn) {
+      // Calculate the Complex factor for this row and channel
+      ph=udx(irow)*freq(ichn);
+      cph=Complex(cos(ph),sin(ph));
+      // Shift each correlation:
+      for (Int icor=0;icor<nCorr();++icor) {
+	if (visCubeOK_p)          visCube_p(icor,ichn,irow)*=cph;
+	if (modelVisCubeOK_p)     modelVisCube_p(icor,ichn,irow)*=cph;
+	if (correctedVisCubeOK_p) correctedVisCube_p(icor,ichn,irow)*=cph;
+      }
+    }
+  
+}
+
+
+
 // Divide visCube by modelVisCube
 void VisBuffer::normalize(const Bool& phaseOnly) {
 
@@ -1426,8 +1471,26 @@ Matrix<Float>& VisBuffer::fillImagingWeight()
 const Vector<Float>& VisBuffer::feed_pa(Double time) const
 {return visIter_p->feed_pa(time);}
 
+const Float& VisBuffer::parang0(Double time) const
+{return visIter_p->parang0(time);}
+
+const Vector<Float>& VisBuffer::parang(Double time) const
+{return visIter_p->parang(time);}
+
+const MDirection& VisBuffer::azel0(Double time) const
+{return visIter_p->azel0(time);}
+
+Vector<Double>& VisBuffer::azel0Vec(Double time, Vector<Double>& azelVec) const {
+  MDirection azelMeas=This->azel0(time);
+  azelVec.resize(2);
+  azelVec=azelMeas.getAngle("deg").getValue();
+  return azelVec;
+
+}
+
 const Vector<MDirection>& VisBuffer::azel(Double time) const
 {return visIter_p->azel(time);}
+
 
 Matrix<Double>& VisBuffer::azelMat(Double time, Matrix<Double>& azelMat) const {
   Vector<MDirection> azelMeas=This->azel(time);
@@ -1437,6 +1500,11 @@ Matrix<Double>& VisBuffer::azelMat(Double time, Matrix<Double>& azelMat) const {
   return azelMat;
 
 }
+
+Double VisBuffer::hourang(Double time) const {
+  return visIter_p->hourang(time);
+}
+
 
 Vector<Int> VisBuffer::unique(const Vector<Int>& indices) const
 {

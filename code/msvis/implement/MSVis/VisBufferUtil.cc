@@ -72,21 +72,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="">
 // </todo>
 
-// Set the visibility buffer for a PSF
 
+VisBufferUtil::VisBufferUtil() {};
+
+
+// Construct from a VisBuffer (sets frame info)
+VisBufferUtil::VisBufferUtil(const VisBuffer& vb) {
+
+  // The nominal epoch 
+  MEpoch ep=vb.msColumns().timeMeas()(0);
+
+  // The nominal position
+  String observatory;
+  MPosition pos;
+  if (vb.msColumns().observation().nrow() > 0) {
+    observatory = vb.msColumns().observation().telescopeName()
+      (vb.msColumns().observationId()(0));
+  }
+  if (observatory.length() == 0 || 
+      !MeasTable::Observatory(pos,observatory)) {
+    // unknown observatory, use first antenna
+    pos=vb.msColumns().antenna().positionMeas()(0);
+  }
+ 
+  // The nominal direction
+  MDirection dir=vb.phaseCenter();
+
+  // The nominal MeasFrame
+  mframe_=MeasFrame(ep, pos, dir);
+
+}
+
+
+
+// Set the visibility buffer for a PSF
 void VisBufferUtil::makePSFVisBuffer(VisBuffer& vb) {
   CStokesVector coh(Complex(1.0), Complex(0.0), Complex(0.0), Complex(1.0));
   vb.correctedVisibility()=coh;
 }
 
- Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data, 
-					Cube<Bool>& flag, 
-					const VisBuffer& vb,
-					const Vector<Float>& outFreqGrid, 	const MS::PredefinedColumns whichCol, 
-					const MFrequency::Types freqFrame,
-					const InterpolateArray1D<Float,Complex>::InterpolationMethod interpMethod){
-
-
+Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data, 
+					 Cube<Bool>& flag, 
+					 const VisBuffer& vb,
+					 const Vector<Float>& outFreqGrid, 	
+					 const MS::PredefinedColumns whichCol, 
+					 const MFrequency::Types freqFrame,
+					 const InterpolateArray1D<Float,Complex>::InterpolationMethod interpMethod){
 
   Cube<Complex> origdata;
   // Convert the visibility frequency to the frame requested
@@ -132,43 +163,103 @@ void VisBufferUtil::makePSFVisBuffer(VisBuffer& vb) {
 
 }
 
- void VisBufferUtil::convertFrequency(Vector<Double>& outFreq, const VisBuffer& vb, const MFrequency::Types freqFrame){
-   Vector<Double> inFreq=vb.frequency();
+void VisBufferUtil::convertFrequency(Vector<Double>& outFreq, 
+				     const VisBuffer& vb, 
+				     const MFrequency::Types freqFrame){
    Int spw=vb.spectralWindow();
    MFrequency::Types obsMFreqType=(MFrequency::Types)(vb.msColumns().spectralWindow().measFreqRef()(spw));
-   if(obsMFreqType != freqFrame){
+
+   // The input frequencies (a reference)
+   Vector<Double> inFreq(vb.frequency());
+
+   // The output frequencies
+   outFreq.resize(inFreq.nelements());
+
+   MFrequency::Types newMFreqType=freqFrame;
+   if (freqFrame==MFrequency::N_Types)
+     // Opt out of conversion
+     newMFreqType=obsMFreqType;
+
+
+   // Only convert if the requested frame differs from observed frame
+   if(obsMFreqType != newMFreqType){
+
      // Setting epoch to the first in this iteration
-     MEpoch ep=vb.msColumns().timeMeas()(0);
-     MDirection dir=vb.phaseCenter();
-     // determine the reference frame position
-     String observatory;
-     MPosition telescopePosition;
-     if (vb.msColumns().observation().nrow() > 0) {
-       observatory = vb.msColumns().observation().telescopeName()
-	 (vb.msColumns().observationId()(0));
-     }
-     if (observatory.length() == 0 || 
-	 !MeasTable::Observatory(telescopePosition,observatory)) {
-       // unknown observatory, use first antenna
-       telescopePosition=vb.msColumns().antenna().positionMeas()(0);
-     }
-     MeasFrame frame(ep, telescopePosition, dir);
+     //     MEpoch ep=vb.msColumns().timeMeas()(0);
+     //     MEpoch ep(MVEpoch(vb.time()(0)/86400.0),MEpoch::UTC);
+     //     cout << "Time = " << ep.getValue()  << endl;
+
+     // Reset the timestamp (ASSUMES TIME is constant in the VisBuffer)
+     mframe_.resetEpoch(vb.time()(0)/86400.0);
+
+     // Reset the direction (ASSUMES phaseCenter is constant in the VisBuffer)
+     mframe_.resetDirection(vb.msColumns().field().phaseDirMeasCol()(vb.fieldId())(IPosition(1,0)));
+
+     //     cout << "Frame = " << mframe_ << endl;
+
+     // The conversion engine:
      MFrequency::Convert toNewFrame(obsMFreqType, 
-				    MFrequency::Ref(freqFrame, frame));
-     outFreq.resize(inFreq.nelements());
-     for (uInt k=0; k< inFreq.nelements(); ++k){
+				    MFrequency::Ref(newMFreqType, mframe_));
+
+     // Do the conversion
+     for (uInt k=0; k< inFreq.nelements(); ++k)
        outFreq(k)=toNewFrame(inFreq(k)).getValue().getValue();
-     }
-
-
+     
    }
    else{
      // The requested frame is the same as the observed frame
-     outFreq.resize();
      outFreq=inFreq;
    }
 
  }
+
+ void VisBufferUtil::toVelocity(Vector<Double>& outVel, 
+				const VisBuffer& vb, 
+				const MFrequency::Types freqFrame,
+				const MVFrequency restFreq,
+				const MDoppler::Types veldef){
+
+   // The input frequencies (a reference)
+   Vector<Double> inFreq(vb.frequency());
+
+   // The output velocities
+   outVel.resize(inFreq.nelements());
+
+   // Reset the timestamp (ASSUMES TIME is constant in the VisBuffer)
+   mframe_.resetEpoch(vb.time()(0)/86400.0);
+   
+   // Reset the direction (ASSUMES phaseCenter is constant in the VisBuffer)
+   //mframe_.resetDirection(vb.phaseCenter());
+   mframe_.resetDirection(vb.msColumns().field().phaseDirMeasCol()(vb.fieldId())(IPosition(1,0)));
+ 
+   // The frequency conversion engine:
+   Int spw=vb.spectralWindow();
+   MFrequency::Types obsMFreqType=(MFrequency::Types)(vb.msColumns().spectralWindow().measFreqRef()(spw));
+
+   MFrequency::Types newMFreqType=freqFrame;
+   if (freqFrame==MFrequency::N_Types)
+     // Don't convert frame
+     newMFreqType=obsMFreqType;
+
+   MFrequency::Convert toNewFrame(obsMFreqType, 
+				  MFrequency::Ref(newMFreqType, mframe_));
+
+   // The velocity conversion engine:
+   MDoppler::Convert dopConv(MDoppler::Ref(MDoppler::RELATIVISTIC),
+   			     MDoppler::Ref(veldef));
+
+   // Cope with unspecified rest freq
+   MVFrequency rf=restFreq;
+   if (restFreq.getValue()<=0.0)
+     rf=toNewFrame(inFreq(vb.nChannel()/2)).getValue();
+
+   // Do the conversions
+   for (uInt k=0; k< inFreq.nelements(); ++k)
+     outVel(k)=dopConv(toNewFrame(inFreq(k)).toDoppler(rf)).getValue().get().getValue();
+
+ }
+
+
 // helper function to swap the y and z axes of a Cube
  void VisBufferUtil::swapyz(Cube<Complex>& out, const Cube<Complex>& in)
 {

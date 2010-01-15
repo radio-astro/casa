@@ -215,8 +215,12 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   flagCube_p.resize(other.flagCube_p.shape()); flagCube_p=other.flagCube_p;
   visCube_p.resize(other.visCube_p.shape()); visCube_p=other.visCube_p;
   uvwMat_p.resize(other.uvwMat_p.shape()); uvwMat_p=other.uvwMat_p;
-  pa_p.resize(other.pa_p.nelements()); pa_p=other.pa_p;
+  feedpa_p.resize(other.feedpa_p.nelements()); feedpa_p=other.feedpa_p;
+  parang0_p=other.parang0_p;
+  parang_p.resize(other.parang_p.nelements()); parang_p=other.parang_p;
+  azel0_p=other.azel0_p;
   azel_p.resize(other.azel_p.nelements()); azel_p=other.azel_p;
+  hourang_p=other.hourang_p;
   floatDataFound_p=other.floatDataFound_p;
 
   msd_p=other.msd_p;
@@ -441,8 +445,10 @@ void ROVisibilityIterator::setState()
   // If this is a new MeasurementSet then set up the antenna locations
   if (msIter_p.newMS()) {
     This->nAnt_p = msd_p.setAntennas(msIter_p.msColumns().antenna());
-    This->pa_p.resize(nAnt_p);
-    This->pa_p.set(0);
+    This->feedpa_p.resize(nAnt_p);
+    This->feedpa_p.set(0);
+    This->parang_p.resize(nAnt_p);
+    This->parang_p.set(0);
     This->azel_p.resize(nAnt_p);
 
   }	
@@ -1101,19 +1107,83 @@ const Vector<Float>& ROVisibilityIterator::feed_pa(Double time) const
     Int nAnt = msIter_p.receptorAngle().shape()(1);
     for (Int iant=0;iant<nAnt;iant++) {
       This->msd_p.setAntenna(iant);
-      This->pa_p(iant) = This->msd_p.parAngle();
+      This->feedpa_p(iant) = This->msd_p.parAngle();
       // add angle for receptor 0
-      This->pa_p(iant)+= msIter_p.receptorAngle()(0,iant);
+      This->feedpa_p(iant)+= msIter_p.receptorAngle()(0,iant);
       if (aips_debug) {
 	if (iant==0) 
 	  cout<<"Antenna "<<iant<<" at time: "<<MVTime(mEpoch.getValue())<<
-	  " has PA = "<<This->pa_p(iant)*57.28<<endl;
+	  " has PA = "<<This->feedpa_p(iant)*57.28<<endl;
       }
     }
   }
-  return pa_p;
+  return feedpa_p;
 }
 
+
+// Fill in parallactic angle.
+const Float& ROVisibilityIterator::parang0(Double time) const
+{
+  //  LogMessage message(LogOrigin("ROVisibilityIterator","parang0"));
+
+  // Absolute UT
+  Double ut=time;
+
+  if (ut!=lastfeedpaUT_p) {
+    This->lastfeedpaUT_p=ut;
+
+    // Set up the Epoch using the absolute MJD in seconds
+    // get the Epoch reference from the column
+    MEpoch mEpoch=msIter_p.msColumns().timeMeas()(0);
+    //     now set the value
+    mEpoch.set(MVEpoch(Quantity(ut, "s")));
+
+    This->msd_p.setEpoch(mEpoch);
+
+    // Calculate pa for all antennas.
+    This->msd_p.setAntenna(-1);
+    This->parang0_p = This->msd_p.parAngle();
+    if (aips_debug) 
+      cout<<"At time: "<<MVTime(mEpoch.getValue())<<
+	" PA = "<<This->parang0_p*57.28<<" deg"<<endl;
+  }
+  return parang0_p;
+}
+
+
+// Fill in parallactic angle (NO FEED PA offset!).
+const Vector<Float>& ROVisibilityIterator::parang(Double time) const
+{
+  //  LogMessage message(LogOrigin("ROVisibilityIterator","parang"));
+
+  // Absolute UT
+  Double ut=time;
+
+  if (ut!=lastfeedpaUT_p) {
+    This->lastfeedpaUT_p=ut;
+
+    // Set up the Epoch using the absolute MJD in seconds
+    // get the Epoch reference from the column
+    MEpoch mEpoch=msIter_p.msColumns().timeMeas()(0);
+    //     now set the value
+    mEpoch.set(MVEpoch(Quantity(ut, "s")));
+
+    This->msd_p.setEpoch(mEpoch);
+
+    // Calculate pa for all antennas.
+    Int nAnt = msIter_p.receptorAngle().shape()(1);
+    for (Int iant=0;iant<nAnt;iant++) {
+      This->msd_p.setAntenna(iant);
+      This->parang_p(iant) = This->msd_p.parAngle();
+      if (aips_debug) {
+	if (iant==0) 
+	  cout<<"Antenna "<<iant<<" at time: "<<MVTime(mEpoch.getValue())<<
+	  " has PA = "<<This->parang_p(iant)*57.28<<endl;
+      }
+    }
+  }
+  return parang_p;
+}
 
 // Fill in azimuth/elevation of the antennas.
 // Cloned from feed_pa, we need to check that this is all correct!
@@ -1148,6 +1218,63 @@ const Vector<MDirection>& ROVisibilityIterator::azel(Double time) const
     }
   }
   return azel_p;
+}
+
+// Fill in azimuth/elevation of the antennas.
+// Cloned from feed_pa, we need to check that this is all correct!
+const MDirection& ROVisibilityIterator::azel0(Double time) const
+{
+  //  LogMessage message(LogOrigin("ROVisibilityIterator","azel0"));
+
+  // Absolute UT
+  Double ut=time;
+
+  if (ut!=lastazelUT_p) {
+    This->lastazelUT_p=ut;
+
+    // Set up the Epoch using the absolute MJD in seconds
+    // get the Epoch reference from the column keyword
+    MEpoch mEpoch=msIter_p.msColumns().timeMeas()(0);
+    //     now set the value
+    mEpoch.set(MVEpoch(Quantity(ut, "s")));
+
+    This->msd_p.setEpoch(mEpoch);
+
+    This->msd_p.setAntenna(-1);
+    This->azel0_p = This->msd_p.azel();
+    if (aips_debug)
+      cout<<"At time: "<<MVTime(mEpoch.getValue())<<
+	" AzEl = "<<This->azel0_p.getAngle("deg")<<endl;
+  }
+  return azel0_p;
+}
+
+// Hour angle at specified time.
+const Double& ROVisibilityIterator::hourang(Double time) const
+{
+  //  LogMessage message(LogOrigin("ROVisibilityIterator","azel"));
+
+  // Absolute UT
+  Double ut=time;
+
+  if (ut!=lastazelUT_p) {
+    This->lastazelUT_p=ut;
+
+    // Set up the Epoch using the absolute MJD in seconds
+    // get the Epoch reference from the column keyword
+    MEpoch mEpoch=msIter_p.msColumns().timeMeas()(0);
+    //     now set the value
+    mEpoch.set(MVEpoch(Quantity(ut, "s")));
+
+    This->msd_p.setEpoch(mEpoch);
+
+    This->msd_p.setAntenna(-1);
+
+    This->hourang_p = This->msd_p.hourAngle();
+
+  }
+  return hourang_p;
+
 }
 
 Vector<Float>& ROVisibilityIterator::sigma(Vector<Float>& sig) const
