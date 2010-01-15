@@ -173,17 +173,20 @@ void PlotMSData::loadCache(PMS::Axis xAxis, PMS::Axis yAxis,
 			   const String& msname, 
 			   const PlotMSSelection& selection, 
 			   const PlotMSAveraging& averaging, 
+			   const PlotMSTransformations& transformations, 
 			   PlotMSCacheThread* thread) {
   itsCache_->load(xAxis, yAxis, xData, yData, 
-		  msname, selection,averaging, thread); }
+		  msname, selection,averaging,transformations, thread); }
 
 void PlotMSData::loadCache(const vector<PMS::Axis>& axes,
 			   const vector<PMS::DataColumn>& data, 
 			   const String& msname,
 			   const PlotMSSelection& selection,
 			   const PlotMSAveraging& averaging,
+			   const PlotMSTransformations& transformations,
 			   PlotMSCacheThread* thread) {
-  itsCache_->load(axes, data, msname, selection, averaging, thread); }
+  itsCache_->load(axes, data, 
+		  msname, selection,averaging,transformations, thread); }
 
 
 #ifdef PMSINDEXER

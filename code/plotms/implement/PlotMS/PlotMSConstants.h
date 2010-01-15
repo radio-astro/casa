@@ -114,7 +114,9 @@ public:
 	      SPW,CHANNEL,FREQUENCY,CORR,
 	      ANTENNA1,ANTENNA2,BASELINE,
 	      UVDIST,UVDIST_L,U,V,W,
+	      VELOCITY,
 	      AMP,PHASE,REAL,IMAG,FLAG,
+	      AZ0,EL0,HA0,PA0,
 	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
 	      ROW,FLAG_ROW)
 
@@ -127,8 +129,10 @@ public:
 	      "Spw","Channel","Frequency","Corr",
 	      "Antenna1","Antenna2","Baseline",
 	      "UVDist","UVDist_L","U","V","W",
+	      "Velocity",
 	      "Amp","Phase","Real","Imag","Flag",
-	      "Antenna","Azimuth","Elevation","ParAng",
+	      "Azimuth","Elevation","HourAngle","ParAngle",
+	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAng",
 	      "Row","FlagRow")
 
     //              "time", "uvdist", "channel", "corr", "frequency", "vel_radio",

@@ -86,6 +86,11 @@ public:
   inline void setAntAveraging(Bool doAnt) { 
     antAve_p=doAnt; if (doAnt) setBlnAveraging(False); };
 
+  // Set scalar averaging flag 
+  inline void setScalarAve(Bool doScalar) { 
+    //    cout << "Using " << (doScalar ? "SCALAR" : "VECTOR") << " averaging." << endl;
+    inCoh_p = doScalar; };
+  
   // Control which data column to average
   inline void setNoData() {doVC_p=doMVC_p=doCVC_p=doWC_p=doUVW_p=False;};
   inline void setDoVC()  {doVC_p= doWC_p=True;};
@@ -143,7 +148,7 @@ private:
   // Are we averaging antennas together?
   Bool antAve_p;
 
-  // Are we incoherently averaging?
+  // Are we incoherently (scalar) averaging?
   Bool inCoh_p;
 
   // Accumulation helpers...

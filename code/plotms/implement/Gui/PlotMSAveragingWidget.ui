@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>227</width>
-    <height>138</height>
+    <width>278</width>
+    <height>183</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -203,6 +203,13 @@
     <widget class="QCheckBox" name="spw" >
      <property name="text" >
       <string>All Spectral Windows</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" >
+    <widget class="QCheckBox" name="scalarave" >
+     <property name="text" >
+      <string>Scalar</string>
      </property>
     </widget>
    </item>

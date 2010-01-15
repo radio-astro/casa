@@ -95,11 +95,12 @@ vector<PlotCanvasPtr> PlotMSSinglePlot::canvases() const {
 void PlotMSSinglePlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
     tab.insertDataSubtab(0);
     tab.insertAxesSubtab(1);
-    tab.insertCacheSubtab(2);
-    tab.insertDisplaySubtab(3);
-    tab.insertCanvasSubtab(4);
-    tab.insertExportSubtab(5);
-    tab.clearSubtabsAfter(6);
+    tab.insertTransformationsSubtab(2);
+    tab.insertCacheSubtab(3);
+    tab.insertDisplaySubtab(4);
+    tab.insertCanvasSubtab(5);
+    tab.insertExportSubtab(6);
+    tab.clearSubtabsAfter(7);
 }
 
 void PlotMSSinglePlot::attachToCanvases() {
@@ -277,6 +278,7 @@ bool PlotMSSinglePlot::updateCache() {
 						  d->filename(), 
 						  d->selection(), 
 						  d->averaging(), 
+						  d->transformations(), 
 						  true, 
 						  &PlotMSSinglePlot::cacheLoaded, this);
     itsParent_->getPlotter()->doThreadedOperation(ct);

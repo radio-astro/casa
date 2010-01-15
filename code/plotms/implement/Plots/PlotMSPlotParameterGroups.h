@@ -31,6 +31,7 @@
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
+#include <plotms/PlotMS/PlotMSTransformations.h>
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
 
 #include <casa/namespace.h>
@@ -240,6 +241,7 @@ public:
     PMS_PP_GROUP_PARAM(String, itsFilename_, filename, setFilename, REC_FILENAME)
     PMS_PP_GROUP_PARAM(PlotMSSelection, itsSelection_, selection, setSelection, REC_SELECTION)
     PMS_PP_GROUP_PARAM(PlotMSAveraging, itsAveraging_, averaging, setAveraging, REC_AVERAGING)
+    PMS_PP_GROUP_PARAM(PlotMSTransformations, itsTransformations_, transformations, setTransformations, REC_TRANSFORMATIONS)
 PMS_PP_GROUP_END
     
 

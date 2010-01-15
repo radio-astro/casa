@@ -50,9 +50,12 @@ public:
     // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
-              CHANNEL, TIME, SCAN, FIELD, BASELINE, ANTENNA, SPW)
+              CHANNEL, TIME, SCAN, FIELD, BASELINE, ANTENNA, SPW, 
+	      SCALARAVE)
     PMS_ENUM2(Field, fields, fieldStrings, field,
-              "channel", "time", "scan", "field", "baseline", "antenna", "spw")
+              "channel", "time", "scan", "field", "baseline", 
+	      "antenna", "spw",
+	      "scalar")
     // </group>
               
     // Returns whether the given field has a double value associated with it or
@@ -127,6 +130,7 @@ public:
     bool baseline() const { return getFlag(BASELINE); }
     bool antenna() const { return getFlag(ANTENNA); }
     bool spw() const { return getFlag(SPW); }
+    bool scalarAve() const { return getFlag(SCALARAVE); }
     // </group>
     
     // Convenience methods for setting the standard field values.
@@ -142,6 +146,7 @@ public:
     void setBaseline(bool flag) { setFlag(BASELINE, flag); }
     void setAntenna(bool flag) { setFlag(ANTENNA, flag); }
     void setSpw(bool flag) { setFlag(SPW, flag); }
+    void setScalarAve(bool flag) { setFlag(SCALARAVE,flag); }
     // </group>
     
     
