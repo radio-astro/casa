@@ -259,42 +259,61 @@ class simutil:
         return len(pointings), pointings, [0.]*len(pointings)
 
 
-
     def read_pointings(self, filename):
         """
-        read pointing list from file containing ra,dec [decimal degrees],
-        and scan time (optional,in sec)
+        read pointing list from file containing epoch, ra, dec,
+        and scan time (optional,in sec).
+        Parameter:
+             filename:  (str) the name of input file
+       
+        The input file (ASCII) should contain at least 3 fields separated
+        by a space which specify positions with epoch, ra and dec (in dms
+        or hms).
+        The optional field, time, shoud be a list of decimal numbers
+        which specifies integration time at each position in second.
+        The lines which start with '#' is ignored and can be used
+        as comment lines. 
+        
+        Example of an input file:
+        #Epoch     RA          DEC      TIME(optional)
+        J2000 23h59m28.10 -019d52m12.35 10.0
+        J2000 23h59m32.35 -019d52m12.35 10.0
+        J2000 23h59m36.61 -019d52m12.35 60.0
+        
         """
         f=open(filename)
         line= '  '
         time=[]
         pointings=[]
 
-        epoch="J2000"
         # add option of different epoch in a header line like read_antenna?
 
         while (len(line)>0):
             try: 
                 line=f.readline()
                 if not line.startswith('#'):
-                ### ignoring line that has less than 2 elements
-                     if(len(line.split()) >1):
+                ### ignoring line that has less than 3 elements
+                     if(len(line.split()) >2):
                         splitline=line.split()
-                        ra0=float(splitline[0])
-                        de0=float(splitline[1])
-                        if len(splitline)>2:
-                            time.append(float(splitline[2]))
+                        epoch=splitline[0]
+                        ra0=splitline[1]
+                        de0=splitline[2]
+                        if len(splitline)>3:
+                            time.append(float(splitline[3]))
                         else:
                             time.append(0.)
-                        xstr = qa.formxxx(qa.quantity(ra0,"deg"), format='hms')
-                        ystr = qa.formxxx(qa.quantity(de0,"deg"), format='dms')
+                        xstr = qa.formxxx(qa.quantity(ra0), format='hms')
+                        ystr = qa.formxxx(qa.quantity(de0), format='dms')
                         pointings.append("%s %s %s" % (epoch,xstr,ystr))
             except:
                 break
         f.close()
 
         # need an error check here if zero valid pointings were read
-        
+        if len(pointings) < 1:
+            s="Error: No valid point is found in input file"
+            #casalog.post(s,'ERROR','simutil')
+            self.msg(s,color="31")
         self.msg("read in %i pointing(s) from file" % len(pointings))
         self.pointings=pointings
                 
