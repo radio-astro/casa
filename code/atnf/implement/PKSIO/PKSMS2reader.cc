@@ -777,8 +777,8 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
           if (obsMode1 == "OBSERVE_TARGET") {
             //if (obsMode2 == "ON_SOURCE") pksrec.srcName.append("_pson");
             //if (obsMode2 == "OFF_SOURCE") pksrec.srcName.append("_psoff");
-            if (obsMode2 == "ON_SOURCE") pksrec.srcType = 1 ;
-            if (obsMode2 == "OFF_SOURCE") pksrec.srcType = 0 ;
+            if (obsMode2 == "ON_SOURCE") pksrec.srcType = 0 ;
+            if (obsMode2 == "OFF_SOURCE") pksrec.srcType = 1 ;
           } 
 	}
       } 
