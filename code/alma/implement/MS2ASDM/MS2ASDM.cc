@@ -1899,7 +1899,7 @@ namespace casa {
 	int numFeed = 0;
 	CorrelationModeMod::CorrelationMode correlationMode;
 	
-	// loop over MS main table and find for this proc id
+	// loop over MS main table and find for this proc id and timestamp
 	//  a) all used antennas
 	//  b) all used DD IDs
 	//  c) all used feed IDs
@@ -1961,73 +1961,59 @@ namespace casa {
 	    
 	    // DD IDs
 	    Int dDIdi = dataDescId()(i);
-	    Tag dDIdiTag;
-	    if(asdmDataDescriptionId_p.isDefined(dDIdi)){
-	      dDIdiTag = asdmDataDescriptionId_p(dDIdi);
-	    }
-	    else{
-	      os << LogIO::SEVERE << "Internal error: undefined mapping for data desc. id " << dDIdi
-		 << " in main table row " << mainTabRow << LogIO::POST;
-	      return False;
-	    }
-	      
 	    found = False;
-	    for(uInt j=0;j<dataDId.size();j++){
-	      if(dDIdiTag == dataDId[j]){
+	    for(uInt j=0;j<msDDIdV.size();j++){
+	      if(dDIdi == msDDIdV[j]){
 		found = True;
 		break;
 	      }
 	    }
 	    if(!found){
-	      dataDId.push_back(dDIdiTag);
-	    }
+	      msDDIdV.push_back(dDIdi);
+	      if(!asdmDataDescriptionId_p.isDefined(dDIdi)){
+		os << LogIO::SEVERE << "Internal error: undefined mapping for data desc. id " << dDIdi
+		   << " in main table row " << mainTabRow << LogIO::POST;
+		return False;
+	      }
+	    } 
 	    
 	    // feed ids
 	    Int fIdi = feed1()(i);
-	    int f1Idi;
-	    if(asdmFeedId_p.isDefined(fIdi)){
-	      f1Idi = asdmFeedId_p(fIdi);
+	    found = False;	      
+	    for(uInt j=0;j<msFeedIdV.size();j++){
+	      if(fIdi == msFeedIdV[j]){
+		found = True;
+		break;
+	      }
 	    }
-	    else{
-	      os << LogIO::SEVERE << "Internal error: undefined mapping for feed1 id " << fIdi
-		 << " in main table row " << mainTabRow << LogIO::POST;
-	      return False;
+	    if(!found){
+	      msFeedIdV.push_back(fIdi);
+	      if(!asdmFeedId_p.isDefined(fIdi)){
+		os << LogIO::SEVERE << "Internal error: undefined mapping for feed1 id " << fIdi
+		   << " in main table row " << mainTabRow << LogIO::POST;
+		return False;
+	      }
 	    }
 	    fIdi = feed2()(i);
-	    int f2Idi;
-	    if(asdmFeedId_p.isDefined(fIdi)){
-	      f2Idi = asdmFeedId_p(fIdi);
-	    }
-	    else{
-	      os << LogIO::SEVERE << "Internal error: undefined mapping for feed2 id " << fIdi
-		 << " in main table row " << mainTabRow << LogIO::POST;
-	      return False;
-	    }
-
 	    found = False;	      
-	    for(uInt j=0;j<feedId.size();j++){
-	      if(f1Idi == feedId[j]){
+	    for(uInt j=0;j<msFeedIdV.size();j++){
+	      if(fIdi == msFeedIdV[j]){
 		found = True;
 		break;
 	      }
 	    }
 	    if(!found){
-	      feedId.push_back(f1Idi);
-	    }
-	    found = False;
-	    for(uInt j=0;j<feedId.size();j++){
-	      if(f2Idi == feedId[j]){
-		found = True;
-		break;
+	      msFeedIdV.push_back(fIdi);
+	      if(!asdmFeedId_p.isDefined(fIdi)){
+		os << LogIO::SEVERE << "Internal error: undefined mapping for feed2 id " << fIdi
+		   << " in main table row " << mainTabRow << LogIO::POST;
+		return False;
 	      }
-	    }
-	    if(!found){
-	      feedId.push_back(f2Idi);
 	    }
 	    
 	    i++;
 	  } // end while
-
+	  mainTabRow = i;
 
 	   // sort the  antenna ids before entering them into the ConfigDescription table
 	  std::sort(msAntennaIdV.begin(), msAntennaIdV.end());
@@ -2035,7 +2021,20 @@ namespace casa {
 	    antennaId.push_back(asdmAntennaId_p(msAntennaIdV[i]));
 	  }
 	  numAntenna = antennaId.size();
+	   // sort the DD ids before entering them into the ConfigDescription table
+	  std::sort(msDDIdV.begin(), msDDIdV.end());
+	  for(uInt i=0; i<msDDIdV.size(); i++){
+	    dataDId.push_back(asdmDataDescriptionId_p(msDDIdV[i]));
+	  }
+	   // sort the feed ids before entering them into the ConfigDescription table
+	  std::sort(msFeedIdV.begin(), msFeedIdV.end());
+	  for(uInt i=0; i<msFeedIdV.size(); i++){
+	    feedId.push_back(asdmFeedId_p(msFeedIdV[i]));
+	  }
+	  numFeed = feedId.size();
 	
+
+
 	  if(numAutoCorrs==0){
 	    correlationMode = CorrelationModeMod::CROSS_ONLY;
 	  }
@@ -2045,8 +2044,6 @@ namespace casa {
 	  else{
 	    correlationMode = CorrelationModeMod::AUTO_ONLY;
 	  }
-	  
-	  numFeed = feedId.size();
 	  
 	  switchCycleId.push_back(swcTag); // switch cycle table will only be dummy ? -> Francois
 	  // dummy if PHASE_ID column doesn't exist in MS main
