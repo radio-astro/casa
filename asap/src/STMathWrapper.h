@@ -215,6 +215,14 @@ public:
     casa::String name( antname ) ;
     return ScantableWrapper( STMath::cwcal( tab, mode, name ) ) ;
   }
+  // almacal
+  ScantableWrapper almacal( const ScantableWrapper &in,
+                          const std::string calmode )
+  {
+    casa::CountedPtr<Scantable> tab = in.getCP() ;
+    casa::String mode( calmode ) ;
+    return ScantableWrapper( STMath::almacal( tab, mode ) ) ;
+  }
 };
 
 }

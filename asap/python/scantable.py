@@ -37,7 +37,7 @@ class scantable(Scantable):
         if average is None:
             average = rcParams['scantable.autoaverage']
         if getpt is None:
-            getpt = False
+            getpt = True
         varlist = vars()
         from asap._asap import stmath
         self._math = stmath()

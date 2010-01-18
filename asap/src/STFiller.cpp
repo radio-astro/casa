@@ -310,6 +310,7 @@ int asap::STFiller::read( )
   ProgressMeter fillpm(min, max, "Data importing progress");
 #endif
   PKSrecord pksrec;
+  pksrec.srcType=-1;
   int n = 0;
   bool isGBTFITS = false ;
   if ((header_->antennaname.find( "GBT" ) != String::npos) && File(filename_).isRegular()) {
@@ -375,6 +376,9 @@ int asap::STFiller::read( )
     }
     //*srcnCol = pksrec.srcName;//.before(rx2);
     *srctCol = match;
+    if ( pksrec.srcType != -1 ) {
+      *srctCol = pksrec.srcType ;
+    }
     RecordFieldPtr<uInt> beamCol(rec, "BEAMNO");
     *beamCol = pksrec.beamNo-beamOffset_-1;
     RecordFieldPtr<Int> rbCol(rec, "REFBEAMNO");
@@ -385,8 +389,16 @@ int asap::STFiller::read( )
     //*ifCol = pksrec.IFno-ifOffset_- 1;
     uInt id;
     /// @todo this has to change when nchan isn't global anymore
-    id = table_->frequencies().addEntry(Double(header_->nchan/2),
-                                            pksrec.refFreq, pksrec.freqInc);
+    //id = table_->frequencies().addEntry(Double(header_->nchan/2),
+    //                                        pksrec.refFreq, pksrec.freqInc);
+    if ( pksrec.nchan == 1 ) {
+      id = table_->frequencies().addEntry(Double(0),
+					  pksrec.refFreq, pksrec.freqInc);
+    }
+    else {
+      id = table_->frequencies().addEntry(Double(pksrec.nchan/2),
+					  pksrec.refFreq, pksrec.freqInc);
+    }
     RecordFieldPtr<uInt> mfreqidCol(rec, "FREQ_ID");
     *mfreqidCol = id;
     *ifCol = id;

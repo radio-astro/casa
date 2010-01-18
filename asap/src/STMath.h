@@ -237,6 +237,13 @@ public:
                                       casa::Double choffset,
                                       casa::Double choffset = 0.0 );
 
+  /**
+   * ALMA calibration
+   **/
+  casa::CountedPtr<Scantable> almacal( const casa::CountedPtr<Scantable>& s, 
+                                       const casa::String calmode ) ;
+  casa::CountedPtr<Scantable> almacalfs( const casa::CountedPtr<Scantable>& s ) ;
+
   casa::CountedPtr<Scantable>
     freqSwitch( const casa::CountedPtr<Scantable>& in );
 
@@ -361,6 +368,8 @@ private:
   vector<float> getTcalFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
   vector<float> getTsysFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
   vector<int> getRowIdFromTime( string reftime, casa::CountedPtr<Scantable>& s ) ;
+
+  // Chopper-Wheel type calibration
   vector<float> getCalibratedSpectra( casa::CountedPtr<Scantable>& on,
                                       casa::CountedPtr<Scantable>& off,
                                       casa::CountedPtr<Scantable>& sky,
@@ -368,6 +377,10 @@ private:
                                       casa::CountedPtr<Scantable>& cold,
                                       int index,
                                       string antname ) ;
+  // Tsys * (ON-OFF)/OFF
+  vector<float> getCalibratedSpectra( casa::CountedPtr<Scantable>& on,
+                                      casa::CountedPtr<Scantable>& off,
+                                      int index ) ;
   vector<float> getFSCalibratedSpectra( casa::CountedPtr<Scantable>& sig,
                                         casa::CountedPtr<Scantable>& ref,
                                         casa::CountedPtr<Scantable>& sky,
