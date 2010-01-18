@@ -13,8 +13,10 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                   default: none; example: outputvis='ngc5921_src.ms'
     datacolumn -- Which data column to split out
                   default='corrected'; example: datacolumn='data'
-                  Options: 'data', 'corrected', 'model', 'data,corrected',
-                  'data,model','model,corrected','data,model,corrected','all'
+                  Options: 'data', 'corrected', 'model', 'all',
+                  'float_data', 'lag_data', 'float_data,data', and
+                  'lag_data,data'.
+                  note: 'all' = whichever of the above that are present.
     field -- Field name
               default: field = '' means  use all sources
               field = 1 # will get field_id=1 (if you give it an

@@ -126,7 +126,7 @@ namespace casa {
 
     msOut_p=MeasurementSet();
 
-    // parseColumnNames unavoidably has a static String and Vector<String>.
+    // parseColumnNames unavoidably has a static String and Vector<MS::PredefinedColumns>.
     // Collapse them down to free most of that memory.
     parseColumnNames("None");
   }
@@ -519,7 +519,7 @@ namespace casa {
       
       // Watch out!  This throws an AipsError if ms_p doesn't have the
       // requested columns.
-      const Vector<String> colNamesTok = parseColumnNames(colname, ms_p);
+      const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname, ms_p);
 
       if(!makeSelection()){
 	os << LogIO::SEVERE 
@@ -535,24 +535,25 @@ namespace casa {
       MeasurementSet* outpointer=0;
 
       if(tileShape.nelements() == 3){
-	outpointer=setupMS(msname, nchan_p[0], npol_p[0],  
-			   String(colname), tileShape);
+	outpointer = setupMS(msname, nchan_p[0], npol_p[0],  
+                             colNamesTok, tileShape);
       }
       else if((tileShape.nelements()==1) && (tileShape[0]==0 || tileShape[0]==1)){
-	outpointer=setupMS(msname, nchan_p[0], npol_p[0],mscIn_p->observation().telescopeName()(0),  
-			   String(colname), tileShape[0]);
+	outpointer = setupMS(msname, nchan_p[0], npol_p[0],
+                             mscIn_p->observation().telescopeName()(0),
+                             colNamesTok, tileShape[0]);
       }
       else{
 	//Sweep all other cases of bad tileshape to a default one.
-	outpointer=setupMS(msname, nchan_p[0], npol_p[0],mscIn_p->observation().telescopeName()(0),  
-		   String(colname), 0);
-
+	outpointer = setupMS(msname, nchan_p[0], npol_p[0],
+                             mscIn_p->observation().telescopeName()(0),  
+                             colNamesTok, 0);
       }
       
       msOut_p= *outpointer;
       msc_p=new MSColumns(msOut_p);
       
-      if(!fillAllTables(colname)){
+      if(!fillAllTables(colNamesTok)){
 	delete outpointer;
 	os << LogIO::WARN << msname << " left unfinished." << LogIO::POST;
 	ms_p=MeasurementSet();
@@ -595,9 +596,15 @@ namespace casa {
     }
   }
   
+  MeasurementSet* SubMS::makeScratchSubMS(const String& colname,
+                                          const Bool forceInMemory)
+  {
+    return makeScratchSubMS(parseColumnNames(colname, ms_p), forceInMemory);
+  }
   
-  MeasurementSet* SubMS::makeScratchSubMS(String& colname, Bool forceInMemory){
-    
+  MeasurementSet* SubMS::makeScratchSubMS(const Vector<MS::PredefinedColumns>& whichDataCols,
+                                          const Bool forceInMemory)
+  {
     LogIO os(LogOrigin("SubMS", "makeSubMS()"));
     
     if(max(fieldid_p) >= Int(ms_p.field().nrow())){
@@ -606,9 +613,7 @@ namespace casa {
 	 << "this MS"
 	 << LogIO::POST;
       ms_p=MeasurementSet();
-      return 0;
-      
-      
+      return 0;  
     }
     if(max(spw_p) >= Int(ms_p.spectralWindow().nrow())){
       os << LogIO::SEVERE 
@@ -617,8 +622,6 @@ namespace casa {
 	 << LogIO::POST;
       ms_p=MeasurementSet();
       return 0;
-      
-      
     }
     
     if(!makeSelection()){
@@ -635,7 +638,7 @@ namespace casa {
     
     MeasurementSet* outpointer=setupMS(msname, nchan_p[0], npol_p[0],  
 				       mscIn_p->observation().telescopeName()(0),
-				       "DATA");
+				       whichDataCols);
     
     outpointer->markForDelete();
     //Hmmmmmm....memory...... 
@@ -650,7 +653,7 @@ namespace casa {
     msOut_p = *outpointer;
     msc_p = new MSColumns(msOut_p);
     
-    if(!fillAllTables(colname)){
+    if(!fillAllTables(whichDataCols)){
       delete outpointer;
       outpointer = 0;
       ms_p = MeasurementSet();
@@ -662,65 +665,65 @@ namespace casa {
   }
   
   
-  Bool SubMS::fillAllTables(const String& colname)
-  {
-    //LogIO os(LogOrigin("SubMS", "makeSubMS()"));
-    LogIO os(LogOrigin("SubMS", "fillAllTables()"));
+Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
+{
+  //LogIO os(LogOrigin("SubMS", "makeSubMS()"));
+  LogIO os(LogOrigin("SubMS", "fillAllTables()"));
+  Bool success = true;
     
-    // Should take care of Measures frames for all the time type columns below.
-    // It should be safe to avoid the empty table check (with false) since this
-    // is explicitly a case of a column full of numbers that should be in the
-    // right reference frame, but the column could have, or end up with, the
-    // wrong reference code if nothing is done.  However, the table is still
-    // empty if the reference codes are set up here.
-    msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()));
+  // Should take care of Measures frames for all the time type columns below.
+  // It should be safe to avoid the empty table check (with false) since this
+  // is explicitly a case of a column full of numbers that should be in the
+  // right reference frame, but the column could have, or end up with, the
+  // wrong reference code if nothing is done.  However, the table is still
+  // empty if the reference codes are set up here.
+  msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()));
 
-    // UVW is the only other Measures column in the main table.
-    msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
+  // UVW is the only other Measures column in the main table.
+  msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
 
-    // fill or update
-    if(!fillDDTables()){
+  // fill or update
+  if(!fillDDTables()){
+    return False;
+  }
+
+  // SourceIDs need to be remapped around here.  It could not be done in
+  // selectSource() because mssel_p was not setup yet.
+  relabelSources();
+
+  fillFieldTable();
+  copySource();
+
+  copyAntenna();
+  if(!copyFeed())         // Feed table writing has to be after antenna 
+    return false;
+    
+  copyObservation();
+  copyPointing();
+  copyWeather();
+    
+  sameShape_p = checkSpwShape();
+  doImgWts_p = doWriteImagingWeight(*mscIn_p, datacols);
+    
+  if(timeBin_p <= 0.0){
+    success = fillMainTable(datacols);
+  }
+  else{
+    if(!sameShape_p){
+      os << LogIO::WARN 
+         << "Time averaging of differing spw shapes is not handled yet."
+         << LogIO::POST;
+      os << LogIO::WARN
+         << "Work around: average differently shaped spws separately and then concatenate." 
+         << LogIO::POST;
       return False;
     }
-
-    // SourceIDs need to be remapped around here.  It could not be done in
-    // selectSource() because mssel_p was not setup yet.
-    relabelSources();
-
-    fillFieldTable();
-    copySource();
-
-    copyAntenna();
-    if(!copyFeed())         // Feed table writing has to be after antenna 
-      return false;
-    
-    copyObservation();
-    copyPointing();
-    copyWeather();
-    
-    sameShape_p = checkSpwShape();
-    const Vector<String> columnNames(parseColumnNames(colname, ms_p));
-    doImgWts_p = doWriteImagingWeight(*mscIn_p, columnNames);
-    
-    if(timeBin_p <= 0.0){
-      fillMainTable(columnNames);
-    }
     else{
-      if(!sameShape_p){
-	os << LogIO::WARN 
-	   << "Time averaging of differing spw shapes is not handled yet."
-	   << LogIO::POST;
-	os << LogIO::WARN
-	   << "Work around: average differently shaped spws separately and then concatenate." 
-           << LogIO::POST;
-	return False;
-      }
-      else{
-	fillAverMainTable(columnNames);
-      }
+      fillAverMainTable(datacols);
     }
-    return True;
   }
+  return success;
+}
   
   
   Bool SubMS::makeSelection(){
@@ -848,51 +851,73 @@ namespace casa {
   }
   
 
-  MeasurementSet* SubMS::setupMS(String MSFileName, Int nchan, Int nCorr, 
-				 String telescop, String colName, Int obstype){
-
+  MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
+                                 const Int nCorr, const String& telescop,
+                                 const Vector<MS::PredefinedColumns>& colNames,
+                                 const Int obstype)
+  {
     //Choose an appropriate tileshape
-    IPosition dataShape(2,nCorr,nchan);
-    IPosition tileShape = MSTileLayout::tileShape(dataShape,obstype, telescop);
-    return setupMS(MSFileName, nchan, nCorr, colName, tileShape.asVector());
+    IPosition dataShape(2, nCorr, nchan);
+    IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
+    return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector());
   }
-  MeasurementSet* SubMS::setupMS(String MSFileName, Int nchan, Int nCorr, 
-				 String colName, const Vector<Int>& tshape){
-    
-    
-    
+  MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
+                                 const Int nCorr, 
+				 const Vector<MS::PredefinedColumns>& colNamesTok,
+                                 const Vector<Int>& tshape)
+  {
     if(tshape.nelements() != 3)
       throw(AipsError("TileShape has to have 3 elememts ") );
-    const Vector<String> colNamesTok=SubMS::parseColumnNames(colName);
+
+    // Choose an appropriate tileshape
+    //IPosition dataShape(2,nCorr,nchan);
+    //IPosition tileShape = MSTileLayout::tileShape(dataShape,obsType, telescop);
+    //////////////////
+    
+    IPosition tileShape(tshape);
+
     // Make the MS table
     TableDesc td = MS::requiredTableDesc();
     
+    Vector<String> tiledDataNames;
+
     // Even though we know the data is going to be the same shape throughout I'll
     // still create a column that has a variable shape as this will permit MS's
     // with other shapes to be appended.
     uInt ncols = colNamesTok.nelements();
-    if (ncols < 2)
+    const Bool mustWriteOnlyToData = mustConvertToData(ncols, colNamesTok);
+    
+    if (mustWriteOnlyToData)
       {
 	MS::addColumnToDesc(td, MS::DATA, 2);
 	String hcolName=String("Tiled")+String("DATA");
-	td.defineHypercolumn(hcolName,3,
+	td.defineHypercolumn(hcolName, 3,
 			     stringToVector("DATA"));
+        tiledDataNames.resize(1);
+        tiledDataNames[0] = hcolName;
       }
-    else
-      for(uInt i=0; i < ncols;i++)
-	{
-	  if (colNamesTok[i]==MS::columnName(MS::DATA))
-	    MS::addColumnToDesc(td, MS::DATA, 2);
-	
-	  if (colNamesTok[i]==MS::columnName(MS::MODEL_DATA))
-	    MS::addColumnToDesc(td, MS::MODEL_DATA, 2);
-	  
-	  if (colNamesTok[i]==MS::columnName(MS::CORRECTED_DATA))
-	    MS::addColumnToDesc(td, MS::CORRECTED_DATA, 2);
-	  String hcolName=String("Tiled")+String(colNamesTok[i]);
-	  td.defineHypercolumn(hcolName,3,
-			       stringToVector(colNamesTok[i]));
-	}
+    else{
+      tiledDataNames.resize(ncols);
+      for(uInt i = 0; i < ncols; ++i){
+        // Unfortunately MS::PredefinedColumns aren't ordered so that I can just check if
+        // colNamesTok[i] is in the "data range".
+        if(colNamesTok[i] == MS::DATA ||
+           colNamesTok[i] == MS::MODEL_DATA ||
+           colNamesTok[i] == MS::CORRECTED_DATA ||
+           colNamesTok[i] == MS::FLOAT_DATA ||
+           colNamesTok[i] == MS::LAG_DATA)
+          MS::addColumnToDesc(td, colNamesTok[i], 2);
+        else
+          throw(AipsError(MS::columnName(colNamesTok[i]) +
+                          " is not a recognized data column "));
+
+        String hcolName = String("Tiled") + MS::columnName(colNamesTok[i]);
+        td.defineHypercolumn(hcolName, 3,
+                             stringToVector(MS::columnName(colNamesTok[i])));
+        tiledDataNames[i] = hcolName;
+      }
+    }
+    
     if (isAllColumns(colNamesTok))
       {
 	MS::addColumnToDesc(td, MS::IMAGING_WEIGHT, 1);
@@ -935,23 +960,12 @@ namespace casa {
     newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan);
     newtab.bindColumn(MS::columnName(MS::DATA_DESC_ID), aipsStMan);
     
-    // Choose an appropriate tileshape
-    //IPosition dataShape(2,nCorr,nchan);
-    //IPosition tileShape = MSTileLayout::tileShape(dataShape,obsType, telescop);
-    //////////////////
-    
-    IPosition tileShape(tshape);
-
-
       ///////////////////
     //    itsLog << LogOrigin("MSFitsInput", "setupMeasurementSet");
     //itsLog << LogIO::NORMAL << "Using tile shape "<<tileShape <<" for "<<
     //  array_p<<" with obstype="<< obsType<<LogIO::POST;
     
     //    TiledShapeStMan tiledStMan1("TiledData",tileShape);
-    TiledShapeStMan tiledStMan1Data("TiledDATA",tileShape);
-    TiledShapeStMan tiledStMan1Corrected("TiledCORRECTED_DATA",tileShape);
-    TiledShapeStMan tiledStMan1Model("TiledMODEL_DATA",tileShape);
     TiledShapeStMan tiledStMan1f("TiledFlag",tileShape);
     TiledShapeStMan tiledStMan1fc("TiledFlagCategory",
 				  IPosition(4,tileShape(0),tileShape(1),1,
@@ -965,27 +979,22 @@ namespace casa {
     
     // Bind the DATA, FLAG & WEIGHT_SPECTRUM columns to the tiled stman
     
-    if (colNamesTok.nelements() == 1)
-      {
-	newtab.bindColumn(MS::columnName(MS::DATA),tiledStMan1Data);
+    if (mustWriteOnlyToData){
+      TiledShapeStMan tiledStMan1Data("TiledDATA",tileShape);
+      
+      newtab.bindColumn(MS::columnName(MS::DATA), tiledStMan1Data);
+    }
+    else{
+      for(uInt i = 0; i < ncols; ++i){
+        TiledShapeStMan tiledStMan1Data(tiledDataNames[i], tileShape);
+        
+        newtab.bindColumn(MS::columnName(colNamesTok[i]), tiledStMan1Data);
       }
-    else
-    for(uInt i=0;i<colNamesTok.nelements();i++)
-      {
-	if (colNamesTok[i] == MS::columnName(MS::DATA))
-	  newtab.bindColumn(MS::columnName(MS::DATA),
-			    tiledStMan1Data);
-	else if (colNamesTok[i]==MS::columnName(MS::MODEL_DATA))
-	  newtab.bindColumn(MS::columnName(MS::MODEL_DATA),
-			    tiledStMan1Model);
-	else 
-	  newtab.bindColumn(MS::columnName(MS::CORRECTED_DATA),
-			    tiledStMan1Corrected);
-      }
-    
+    }    
     newtab.bindColumn(MS::columnName(MS::FLAG),tiledStMan1f);
     newtab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),tiledStMan1fc);
     newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM),tiledStMan2);
+    
     newtab.bindColumn(MS::columnName(MS::UVW),tiledStMan3);
     newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
     newtab.bindColumn(MS::columnName(MS::SIGMA),tiledStMan5);
@@ -1021,7 +1030,6 @@ namespace casa {
       info.readmeAddLine
 	("This is a measurement set Table holding astronomical observations");
     }
-    
     
     return ms;
   }
@@ -1374,15 +1382,16 @@ namespace casa {
   }
 
   //
-  // The method is called only in makeSubMS().  Should really be
-  // called in setupMS.  But the latter has been made into a static
-  // method and verifyColumns() cannot be called there.
+  // This method is called only in makeSubMS().  It should really be called in
+  // setupMS.  But that has been made into a static method and verifyColumns()
+  // cannot be called there.
   //
-  void SubMS::verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames)
+  void SubMS::verifyColumns(const MeasurementSet& ms,
+                            const Vector<MS::PredefinedColumns>& colNames)
   {
     LogIO os(LogOrigin("SubMS", "verifyColumns()"));
     for(uInt i=0;i<colNames.nelements();i++)
-      if (!ms_p.tableDesc().isColumn(colNames[i]))
+      if (!ms_p.tableDesc().isColumn(MS::columnName(colNames[i])))
 	{
 	  ostringstream ostr;
 	  ostr << "Desired column (" << colNames[i] << ") not found in the input MS ("
@@ -1391,7 +1400,7 @@ namespace casa {
 	}
   }
 
-  Bool SubMS::doWriteImagingWeight(const ROMSColumns& inMsc, const Vector<String>& columnName)
+  Bool SubMS::doWriteImagingWeight(const ROMSColumns& inMsc, const Vector<MS::PredefinedColumns>& columnName)
   {
     Bool allCols=isAllColumns(columnName);
     Bool inputImgWtsExist=(!inMsc.imagingWeight().isNull() &&
@@ -4743,12 +4752,14 @@ namespace casa {
 
   }
 
-  const Vector<String>& SubMS::parseColumnNames(const String col)
+  const Vector<MS::PredefinedColumns>& SubMS::parseColumnNames(String col)
   {
     // Memoize both for efficiency and so that the info message at the bottom
     // isn't unnecessarily repeated.
     static String my_colNameStr = "";
-    static Vector<String> my_colNameVect;
+    static Vector<MS::PredefinedColumns> my_colNameVect;
+
+    col.upcase();
     if(col == my_colNameStr && col != ""){
       return my_colNameVect;
     }    
@@ -4759,78 +4770,31 @@ namespace casa {
     }
  
     LogIO os(LogOrigin("SubMS", "parseColumnNames()"));
-    Bool allCols=False;
     
-    String tmpNames(col);
-    Vector<String> tokens;
-    uInt  nNames;
-    tmpNames.upcase();
+    uInt nNames;
     
-    if(tmpNames.contains("ALL"))
-      allCols = True;
-
-    { // split name string into individual names
-	char * pch;
-	Int i = 0;
-	pch = strtok((char*)tmpNames.c_str(), " ,");
-	while (pch != NULL){
-          tokens.resize(i + 1, True);
-          tokens[i] = String(pch);
-          ++i;
-          pch = strtok(NULL, " ,");
-	}
-    }
-
-    nNames=tokens.nelements();
-    
-    if (allCols){
-	my_colNameVect.resize(3);
-	my_colNameVect[0] = MS::columnName(MS::DATA);
-	my_colNameVect[1] = MS::columnName(MS::MODEL_DATA);
-	my_colNameVect[2] = MS::columnName(MS::CORRECTED_DATA);
+    if(col.contains("ALL")){
+      nNames = 3;
+      my_colNameVect.resize(nNames);
+      my_colNameVect[0] = MS::DATA;
+      my_colNameVect[1] = MS::MODEL_DATA;
+      my_colNameVect[2] = MS::CORRECTED_DATA;
     }
     else{
-	for(uInt i=0; i<nNames; i++){
-	    my_colNameVect.resize(i+1,True);
-	    my_colNameVect[i]="Unrecognized";
-	    
-	    if (tokens[i]=="OBSERVED" || 
-		tokens[i]=="DATA" || 
-		tokens[i]==MS::columnName(MS::DATA)) 
-	    {
-		my_colNameVect[i] = MS::columnName(MS::DATA);
-	    }
-	    else if(tokens[i]=="MODEL" || 
-		    tokens[i]=="MODEL_DATA" || 
-		    tokens[i]==MS::columnName(MS::MODEL_DATA)) 
-	    {
-		my_colNameVect[i] = "MODEL_DATA";
-	    } 
-	    else if(tokens[i]=="CORRECTED" || 
-		    tokens[i]=="CORRECTED_DATA" || 
-		    tokens[i]==MS::columnName(MS::CORRECTED_DATA)) 
-	    {
-		my_colNameVect[i] = "CORRECTED_DATA";
-	    }
-	    else
-	    {
-		my_colNameVect[0] = MS::columnName(MS::DATA);
-		os << LogIO::SEVERE << "Unrecognized column " << tokens[i]
-		   << " ...using DATA."
-		   << LogIO::POST;
-	    }
-	}
-    } 
+      nNames = dataColStrToEnums(col, my_colNameVect);
+    }
 
     // Whether or not the MS has the columns is checked by verifyColumns().
     // Unfortunately it cannot be done here because this is a static method.
 
-    os << LogIO::NORMAL
-       << "Using ";     // Don't say "Splitting"; this is used elsewhere.
-    for(uInt i=0;i<my_colNameVect.nelements();i++)
-      os << my_colNameVect[i] << " ";
-    os << " column" << (my_colNameVect.nelements() > 1 ? "s." : ".")
-       << LogIO::POST;
+    if(col != "NONE"){  // "NONE" is used by ~SubMS().
+      os << LogIO::NORMAL
+         << "Using ";     // Don't say "Splitting"; this is used elsewhere.
+      for(uInt i = 0; i < nNames; ++i)
+        os << MS::columnName(my_colNameVect[i]) << " ";
+      os << " column" << (my_colNameVect.nelements() > 1 ? "s." : ".")
+         << LogIO::POST;
+    }
     
     my_colNameStr = col;
     return my_colNameVect;
@@ -4841,16 +4805,17 @@ namespace casa {
 // verifyColumns() after calling this.  Unlike the other version, it knows
 // about FLOAT_DATA and LAG_DATA.  It throws an exception if a
 // _specifically_ requested column is absent.
-const Vector<String>& SubMS::parseColumnNames(const String col,
-                                              const MeasurementSet& msref)
+const Vector<MS::PredefinedColumns>& SubMS::parseColumnNames(String col,
+                                                  const MeasurementSet& msref)
 {
   // Memoize both for efficiency and so that the info message at the bottom
   // isn't unnecessarily repeated.
   static String my_colNameStr = "";
-  static Vector<String> my_colNameVect;
+  static Vector<MS::PredefinedColumns> my_colNameVect;
 
-  Vector<String> wanted;                   // Data columns to pick up if present.
+  Vector<MS::PredefinedColumns> wanted;       // Data columns to pick up if present.
   
+  col.upcase();
   if(col == my_colNameStr && col != ""){
     return my_colNameVect;
   }    
@@ -4862,77 +4827,30 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
  
   LogIO os(LogOrigin("SubMS", "parseColumnNames()"));
     
-  String tmpNames(col);
-  Vector<String> tokens;
-  uInt  nNames;
-  tmpNames.upcase();
-    
   // Are we choosy?
-  const Bool doAny = tmpNames.contains("ALL") || tmpNames.contains("ANY");
+  const Bool doAny = col.contains("ALL") || col.contains("ANY");
   
+  uInt nPoss;
   if(doAny){
-    wanted.resize(5);
-    wanted[0] = MS::columnName(MS::DATA);
-    wanted[1] = MS::columnName(MS::MODEL_DATA);
-    wanted[2] = MS::columnName(MS::CORRECTED_DATA);
-    wanted[3] = MS::columnName(MS::FLOAT_DATA);
-    wanted[4] = MS::columnName(MS::LAG_DATA);
+    nPoss = 5;
+    wanted.resize(nPoss);
+    wanted[0] = MS::DATA;
+    wanted[1] = MS::MODEL_DATA;
+    wanted[2] = MS::CORRECTED_DATA;
+    wanted[3] = MS::FLOAT_DATA;
+    wanted[4] = MS::LAG_DATA;
   }
   else{ // split name string into individual names
-    char * pch;
-    Int i = 0;
-    pch = strtok((char*)tmpNames.c_str(), " ,");
-    while (pch != NULL){
-      tokens.resize(i + 1, True);
-      tokens[i] = String(pch);
-      ++i;
-      pch = strtok(NULL, " ,");
-    }
-    nNames=tokens.nelements();
-
-    for(uInt i = 0; i < nNames; ++i){
-      wanted.resize(i + 1, True);
-      wanted[i] = "Unrecognized";
-	    
-      if (tokens[i]=="OBSERVED" || 
-          tokens[i]=="DATA" || 
-          tokens[i]==MS::columnName(MS::DATA)) 
-        {
-          wanted[i] = MS::columnName(MS::DATA);
-        }
-      else if(tokens[i]=="MODEL" || 
-              tokens[i]=="MODEL_DATA" || 
-              tokens[i]==MS::columnName(MS::MODEL_DATA)) 
-        {
-          wanted[i] = "MODEL_DATA";
-        } 
-      else if(tokens[i]=="CORRECTED" || 
-              tokens[i]=="CORRECTED_DATA" || 
-              tokens[i]==MS::columnName(MS::CORRECTED_DATA)) 
-        {
-          wanted[i] = "CORRECTED_DATA";
-        }
-      else if(tokens[i]=="LAG_DATA" ||
-              tokens[i]==MS::columnName(MS::LAG_DATA)) 
-        {
-          wanted[i] = "LAG_DATA";
-        }
-      else
-        {
-          wanted[i] = MS::columnName(MS::DATA);
-          os << LogIO::SEVERE << "Unrecognized column " << tokens[i]
-             << " ...using DATA."
-             << LogIO::POST;
-        }
-    }
+    nPoss = dataColStrToEnums(col, wanted);
   } 
 
-  uInt nPoss = wanted.nelements();
+  uInt nFound = 0;
   my_colNameVect.resize(0);
   for(uInt i = 0; i < nPoss; ++i){
-    if(msref.tableDesc().isColumn(wanted[i])){
-      my_colNameVect.resize(i + 1, true);
-      my_colNameVect[i] = wanted[i];
+    if(msref.tableDesc().isColumn(MS::columnName(wanted[i]))){
+      ++nFound;
+      my_colNameVect.resize(nFound, true);
+      my_colNameVect[nFound - 1] = wanted[i];
     }
     else if(!doAny){
       ostringstream ostr;
@@ -4941,22 +4859,88 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
       throw(AipsError(ostr.str()));
     }
   }
+  if(nFound == 0)
+    throw(AipsError("Did not find and select any data columns."));
   
   os << LogIO::NORMAL
      << "Using ";     // Don't say "Splitting"; this is used elsewhere.
-  for(uInt i = 0; i < my_colNameVect.nelements(); ++i)
-    os << my_colNameVect[i] << " ";
-  os << " column" << (my_colNameVect.nelements() > 1 ? "s." : ".")
-     << LogIO::POST;
+  for(uInt i = 0; i < nFound; ++i)
+    os << MS::columnName(my_colNameVect[i]) << " ";
+  os << "column" << (nFound > 1 ? "s." : ".") << LogIO::POST;
     
   my_colNameStr = col;
   return my_colNameVect;
 }
-  
 
-  Bool SubMS::fillMainTable(const Vector<String>& colNames){
+uInt SubMS::dataColStrToEnums(const String& col, Vector<MS::PredefinedColumns>& colvec)
+{
+  LogIO os(LogOrigin("SubMS", "dataColStrToEnums()"));
+  String tmpNames(col);
+  Vector<String> tokens;
+  tmpNames.upcase();
     
+  // split name string into individual names
+  char * pch;
+  Int i = 0;
+  pch = strtok((char*)tmpNames.c_str(), " ,");
+  while (pch != NULL){
+    tokens.resize(i + 1, True);
+    tokens[i] = String(pch);
+    ++i;
+    pch = strtok(NULL, " ,");
+  }
+
+  uInt nNames = tokens.nelements();
+
+  uInt nFound = 0;
+  for(uInt i = 0; i < nNames; ++i){
+    colvec.resize(nFound + 1, True);
+    colvec[nFound] = MS::UNDEFINED_COLUMN;
+	    
+    if (tokens[i] == "OBSERVED" || 
+        tokens[i] == "DATA" || 
+        tokens[i] == MS::columnName(MS::DATA)){
+      colvec[nFound++] = MS::DATA;
+    }
+    else if(tokens[i] == "FLOAT" || 
+            tokens[i] == "FLOAT_DATA" || 
+            tokens[i] == MS::columnName(MS::FLOAT_DATA)){
+      colvec[nFound++] = MS::FLOAT_DATA;
+    } 
+    else if(tokens[i] == "LAG" || 
+            tokens[i] == "LAG_DATA" || 
+            tokens[i] == MS::columnName(MS::LAG_DATA)){
+      colvec[nFound++] = MS::LAG_DATA;
+    } 
+    else if(tokens[i] == "MODEL" || 
+            tokens[i] == "MODEL_DATA" || 
+            tokens[i] == MS::columnName(MS::MODEL_DATA)){
+      colvec[nFound++] = MS::MODEL_DATA;
+    } 
+    else if(tokens[i] == "CORRECTED" || 
+            tokens[i] == "CORRECTED_DATA" || 
+            tokens[i] == MS::columnName(MS::CORRECTED_DATA)){
+      colvec[nFound++] = MS::CORRECTED_DATA;
+    }
+    else if(tmpNames != "NONE"){  // "NONE" is used by ~SubMS().
+      os << LogIO::SEVERE;
+      if(nFound == 0){
+        colvec[0] = MS::DATA;
+        os << "Unrecognized data column " << tokens[i] << "...trying DATA.";
+      }
+      else
+        os << "Skipping unrecognized data column " << tokens[i];
+      os << LogIO::POST;
+    }
+  }
+  return nFound;
+}
+
+
+  Bool SubMS::fillMainTable(const Vector<MS::PredefinedColumns>& colNames)
+  {  
     LogIO os(LogOrigin("SubMS", "fillMainTable()"));
+    Bool success = true;
     
     msOut_p.addRow(mssel_p.nrow(), True);
     
@@ -5001,11 +4985,17 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
     //Deal with data
     if(!chanModification_p){
       ROArrayColumn<Complex> data;
+      Vector<MS::PredefinedColumns> complexCols;
+      const Bool doFloat = sepFloat(colNames, complexCols);
+      const uInt nDataCols = complexCols.nelements();
+      const Bool writeToDataCol = mustConvertToData(nDataCols, complexCols);
 
-      for(uInt ni = 0; ni < colNames.nelements(); ++ni){
-	getDataColumn(data, colNames[ni]);
-	putDataColumn(*msc_p, data, colNames[ni], (colNames.nelements() == 1));
+      for(uInt ni = 0; ni < nDataCols; ++ni){
+	getDataColumn(data, complexCols[ni]);
+	putDataColumn(*msc_p, data, complexCols[ni], writeToDataCol);
       }
+      if(doFloat)
+        msc_p->floatData().putColumn(mscIn_p->floatData());
       if(doImgWts_p){
         ROArrayColumn<Float> imgWts(mscIn_p->imagingWeight());
         msc_p->imagingWeight().putColumn(imgWts);
@@ -5030,43 +5020,46 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
       if(sameShape_p)
 	writeSimilarSpwShape(colNames);
       else
-	writeDiffSpwShape(colNames);
+	success = writeDiffSpwShape(colNames);
     }
     
-    return True;
+    return success;
   }
   
-  Bool SubMS::getDataColumn(ROArrayColumn<Complex>& data, const String& colName)
+  Bool SubMS::getDataColumn(ROArrayColumn<Complex>& data,
+                            const MS::PredefinedColumns colName)
   {
-    if(colName == MS::columnName(MS::DATA))
+    if(colName == MS::DATA)
       data.reference(mscIn_p->data());
-    else if(colName == MS::columnName(MS::MODEL_DATA))
+    else if(colName == MS::MODEL_DATA)
       data.reference(mscIn_p->modelData());
-    else if(colName == MS::columnName(MS::LAG_DATA))
+    else if(colName == MS::LAG_DATA)
       data.reference(mscIn_p->lagData());
     else                                // The honored-by-time-if-nothing-else
       data.reference(mscIn_p->correctedData()); // default.
     return True;
   }
 
-  Bool SubMS::getDataColumn(ROArrayColumn<Float>& data, const String& colName)
+  Bool SubMS::getDataColumn(ROArrayColumn<Float>& data,
+                            const MS::PredefinedColumns colName)
   {
     data.reference(mscIn_p->floatData());
     return True;
   }
 
   Bool SubMS::putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
-			    const String& colName, const Bool writeToDataCol)
+			    const MS::PredefinedColumns colName,
+                            const Bool writeToDataCol)
   {
-    if(writeToDataCol || colName == MS::columnName(MS::DATA))
+    if(writeToDataCol || colName == MS::DATA)
       msc.data().putColumn(data);
-    else if (colName ==  MS::columnName(MS::MODEL_DATA))
+    else if (colName ==  MS::MODEL_DATA)
       msc.modelData().putColumn(data);
-    else if (colName == MS::columnName(MS::CORRECTED_DATA))
+    else if (colName == MS::CORRECTED_DATA)
       msc.correctedData().putColumn(data);
-    //else if(colName == MS::columnName(MS::FLOAT_DATA)) // promotion from Float
-    //  msc.floatData().putColumn(data);                 // to Complex is pvt?
-    else if(colName == MS::columnName(MS::LAG_DATA))
+    //else if(colName == MS::FLOAT_DATA)              // promotion from Float
+    //  msc.floatData().putColumn(data);              // to Complex is pvt?
+    else if(colName == MS::LAG_DATA)
       msc.lagData().putColumn(data);
     else
       return false;
@@ -5074,9 +5067,10 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
   }
 
   Bool SubMS::putDataColumn(MSColumns& msc, ROArrayColumn<Float>& data, 
-			    const String& colName, const Bool writeToDataCol)
+			    const MS::PredefinedColumns colName,
+                            const Bool writeToDataCol)
   {
-    if(colName == MS::columnName(MS::FLOAT_DATA))
+    if(colName == MS::FLOAT_DATA)
       msc.floatData().putColumn(data);
     else
       return false;
@@ -5084,17 +5078,18 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
   }
 
   Bool SubMS::putDataColumn(MSColumns& msc, Cube<Complex>& data, 
-			    const String& colName, const Bool writeToDataCol)
+			    const MS::PredefinedColumns colName,
+                            const Bool writeToDataCol)
   {
-    if(writeToDataCol || colName == MS::columnName(MS::DATA))
+    if(writeToDataCol || colName == MS::DATA)
       msc.data().putColumn(data);
-    else if (colName ==  MS::columnName(MS::MODEL_DATA))
+    else if (colName ==  MS::MODEL_DATA)
       msc.modelData().putColumn(data);
-    else if (colName == MS::columnName(MS::CORRECTED_DATA))
+    else if (colName == MS::CORRECTED_DATA)
       msc.correctedData().putColumn(data);
-    //else if(colName == MS::columnName(MS::FLOAT_DATA)) // promotion from Float
-    //  msc.floatData().putColumn(data);                 // to Complex is pvt?
-    else if(colName == MS::columnName(MS::LAG_DATA))
+    //else if(colName == MS::FLOAT_DATA)              // promotion from Float
+    //  msc.floatData().putColumn(data);              // to Complex is pvt?
+    else if(colName == MS::LAG_DATA)
       msc.lagData().putColumn(data);
     else
       return false;
@@ -5102,9 +5097,10 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
   }
 
   Bool SubMS::putDataColumn(MSColumns& msc, Cube<Float>& data, 
-			    const String& colName, const Bool writeToDataCol)
+			    const MS::PredefinedColumns colName,
+                            const Bool writeToDataCol)
   {
-    if(colName == MS::columnName(MS::FLOAT_DATA))
+    if(colName == MS::FLOAT_DATA)
       msc.floatData().putColumn(data);
     else
       return false;
@@ -5116,7 +5112,8 @@ const Vector<String>& SubMS::parseColumnNames(const String col,
   //
   // Can only be used when incol and outcol have the same # of rows!
   //
-  void SubMS::remapColumn(const ROScalarColumn<Int>& incol, ScalarColumn<Int>& outcol)
+  void SubMS::remapColumn(const ROScalarColumn<Int>& incol,
+                          ScalarColumn<Int>& outcol)
   {
     Vector<Int> colvec = incol.getColumn();
     Vector<Int> mapper;
@@ -5157,7 +5154,7 @@ void SubMS::relabelIDs()
   remapColumn(mscIn_p->observationId(), msc_p->observationId());
 }
 
-Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
+Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 {    
   LogIO os(LogOrigin("SubMS", "fillAverMainTable()"));
     
@@ -5480,8 +5477,19 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
     return True;
   }
   
-  Bool SubMS::writeDiffSpwShape(const Vector<String>& columnNames)
-  {  
+  Bool SubMS::writeDiffSpwShape(const Vector<MS::PredefinedColumns>& datacols)
+  {
+    LogIO os(LogOrigin("SubMS", "writeDiffSpwShape()"));
+    
+    Vector<MS::PredefinedColumns> complexDataCols;
+    const Bool doFloat = sepFloat(datacols, complexDataCols);
+    if(doFloat){
+      os << LogIO::SEVERE
+         << "Channel averaging of FLOAT_DATA with differently shaped spws is not yet supported."
+         << LogIO::POST;
+      return false;
+    }
+
     Bool doSpWeight = !(mscIn_p->weightSpectrum().isNull()) &&
                       mscIn_p->weightSpectrum().isDefined(0);
     
@@ -5496,9 +5504,8 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
     VisBuffer vb(vi);
     Vector<Int> spwindex(max(spw_p)+1);
     spwindex.set(-1);
-    for (uInt k=0; k < spw_p.nelements() ; ++k){
-      spwindex[spw_p[k]]=k;
-    }
+    for(uInt k = 0; k < spw_p.nelements(); ++k)
+      spwindex[spw_p[k]] = k;
     
     Cube<Complex> vis;
     Cube<Bool> inFlag;
@@ -5508,7 +5515,7 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
     Matrix<Float> inImgWts;
     Cube<Bool> locflag;
 
-    const uInt ntok = columnNames.nelements();
+    const uInt ntok = datacols.nelements();
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
       {
 	for (vi.origin(); vi.more(); vi++) 
@@ -5527,9 +5534,9 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
 		
 	    for(uInt ni=0;ni<ntok;ni++)
 	      {
-		if(columnNames[ni]== MS::columnName(MS::DATA))
+		if(datacols[ni]== MS::DATA)
 		  vis.reference(vb.visCube());
-		else if(columnNames[ni] == MS::columnName(MS::MODEL_DATA))
+		else if(datacols[ni] == MS::MODEL_DATA)
 		  vis.reference(vb.modelVisCube());
 		else
 		  vis.reference(vb.correctedVisCube());
@@ -5611,9 +5618,9 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
 		  msc_p->data().putColumnCells(rowstoadd, averdata);
 		else
 		  {
-		    if(columnNames[ni]== MS::columnName(MS::DATA))
+		    if(datacols[ni] == MS::DATA)
 		      msc_p->data().putColumnCells(rowstoadd, averdata);
-		    if (columnNames[ni]==MS::columnName(MS::MODEL_DATA))
+		    else if(datacols[ni] == MS::MODEL_DATA)
 		      msc_p->modelData().putColumnCells(rowstoadd, averdata);
 		    else
 		      msc_p->correctedData().putColumnCells(rowstoadd, averdata);
@@ -5661,8 +5668,8 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
     
     return True;
   }
-  
-Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
+
+Bool SubMS::writeSimilarSpwShape(const Vector<MS::PredefinedColumns>& datacols){
   Int nrow=mssel_p.nrow();
 
   // Sigh, iflg itself is const, but it points at the start of inflagtmp,
@@ -5691,20 +5698,19 @@ Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
   Cube<Bool> outflag(npol_p[0], nchan_p[0], nrow);
   outflag.set(false);
 
-  const uInt ntok = columnNames.nelements();
-  const Bool writeToDataCol = (ntok == 1) && 
-    (columnNames[0] != MS::FLOAT_DATA) &&
-    (columnNames[0] != MS::LAG_DATA);
+  const uInt ntok = datacols.nelements();
+  const Bool writeToDataCol = mustConvertToData(ntok, datacols);
+  
   for(uInt colind = 0; colind < ntok; colind++){
-    if(columnNames[colind] == MS::FLOAT_DATA){
-      chanAvgSameShapes<Float>(mscIn_p->floatData(), columnNames[colind],
-                                 doSpWeight, wgtSpec, outspweight,
-                                 outwgtspectmp, inwgtspectmp, inwptr, flag,
-                                 inflagtmp, iflg, nrow, outflag, writeToDataCol);
+    if(datacols[colind] == MS::FLOAT_DATA){
+      chanAvgSameShapes<Float>(mscIn_p->floatData(), datacols[colind],
+                               doSpWeight, wgtSpec, outspweight,
+                               outwgtspectmp, inwgtspectmp, inwptr, flag,
+                               inflagtmp, iflg, nrow, outflag, writeToDataCol);
     }
     else
-      chanAvgSameShapes<Complex>(right_column(mscIn_p, columnNames[colind]),
-                                 columnNames[colind], doSpWeight, wgtSpec,
+      chanAvgSameShapes<Complex>(right_column(mscIn_p, datacols[colind]),
+                                 datacols[colind], doSpWeight, wgtSpec,
                                  outspweight, outwgtspectmp, inwgtspectmp,
                                  inwptr, flag, inflagtmp, iflg, nrow, outflag,
                                  writeToDataCol);
@@ -6022,23 +6028,44 @@ uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
 }
 
 const ROArrayColumn<Complex>& SubMS::right_column(const ROMSColumns *msclala,
-                                                  const String& colName)
+                                                const MS::PredefinedColumns col)
 {
-  const String myColName(upcase(colName));
-  
-  if(myColName == MS::columnName(MS::DATA))
+  if(col == MS::DATA)
     return msclala->data();
-  else if(myColName == MS::columnName(MS::MODEL_DATA))
+  else if(col == MS::MODEL_DATA)
     return msclala->modelData();
-  //  else if(myColName == MS::columnName(MS::FLOAT_DATA)) // Not complex.
+  //  else if(col == MS::FLOAT_DATA) // Not complex.
   //  return msclala->floatData();
-  else if(myColName == MS::columnName(MS::LAG_DATA))
+  else if(col == MS::LAG_DATA)
     return msclala->lagData();
   else                                // The honored-by-time-if-nothing-else
     return msclala->correctedData();  // default.
 }
-  
-Bool SubMS::fillTimeAverData(const Vector<String>& dataColNames)
+
+Bool SubMS::sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
+                     Vector<MS::PredefinedColumns>& complexDataCols)
+{
+  // Determine whether FLOAT_DATA is in anyDataCols[], and fill
+  // complexDataCols[] with the Complex members of anyDataCols[].
+  Bool doFloat = false;
+  uInt ntok = anyDataCols.nelements();
+
+  complexDataCols.resize(ntok);
+  uInt j = 0;
+  for(uInt i = 0; i < ntok; ++i){
+    if(anyDataCols[i] != MS::FLOAT_DATA){
+      complexDataCols[j] = anyDataCols[i];
+      ++j;
+    }
+    else
+      doFloat = true;
+  }
+  if(doFloat)
+    complexDataCols.resize(j, true);
+  return doFloat;
+}
+
+Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 {
   LogIO os(LogOrigin("SubMS", "fillTimeAverData()"));
 
@@ -6050,22 +6077,9 @@ Bool SubMS::fillTimeAverData(const Vector<String>& dataColNames)
 
   Int outNrow = msOut_p.nrow();
 
-  // Determine whether to do FLOAT_DATA, and make sure it isn't in
-  // columnNames[], which must refer to only complex data.
-  Bool doFloat = false;
-  uInt ntok = dataColNames.nelements();
-  Vector<String> columnNames;
-  columnNames.resize(ntok);
-  uInt j = 0;
-  for(uInt i = 0; i < ntok; ++i){
-    if(dataColNames[i] != MS::FLOAT_DATA){
-      columnNames[j] = dataColNames[i];
-      ++j;
-    }
-    else
-      doFloat = true;
-  }
-  ntok = j;
+  Vector<MS::PredefinedColumns> columnNames;
+  const Bool doFloat = sepFloat(dataColNames, columnNames);
+  uInt ntok = columnNames.nelements();
 
   //Vector<ROArrayColumn<Complex> > data(ntok);
   ROArrayColumn<Complex> data[ntok];
@@ -6533,8 +6547,11 @@ Bool SubMS::fillTimeAverData(const Vector<String>& dataColNames)
   msc_p->time().putColumn(outTime);
   msc_p->timeCentroid().putColumn(outTC);
 
+  const Bool dataOnly = mustConvertToData(ntok, columnNames);
   for(uInt datacol = 0; datacol < ntok; ++datacol)
-    putDataColumn(*msc_p, outData[datacol], columnNames[datacol], (ntok == 1));
+    putDataColumn(*msc_p, outData[datacol], columnNames[datacol], dataOnly);
+  if(doFloat)
+    msc_p->floatData().putColumn(outFloatData);
 
   if(doSpWeight)
     msc_p->weightSpectrum().putColumn(outSpWeight);
@@ -6546,14 +6563,15 @@ inline Bool SubMS::checkSpwShape()
   return allSame(inNumChan_p) && allSame(nchan_p);
 }
 
-  Bool isAllColumns(const Vector<String>& colNames)
+  Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames)
   {
     Bool dCol=False, mCol=False, cCol=False;
     for(uInt i=0;i<colNames.nelements();i++)
       {
-	if (colNames[i]==MS::columnName(MS::DATA))           dCol=True;
-	if (colNames[i]==MS::columnName(MS::MODEL_DATA))     mCol=True;
-	if (colNames[i]==MS::columnName(MS::CORRECTED_DATA)) cCol=True;
+	if (colNames[i] == MS::DATA)                dCol=True;
+	else if (colNames[i] == MS::MODEL_DATA)     mCol=True;
+	else if (colNames[i] == MS::CORRECTED_DATA) cCol=True;
+        // else turn off all?
       }
     return (dCol && mCol && cCol);
   }

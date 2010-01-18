@@ -28,6 +28,7 @@
 //# $Id$
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSMainEnums.h>
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -85,7 +86,7 @@ class ROMSColumns;
   typedef std::map<const uInt, uivector, uIntCmp> ui2vmap;
 
 template<class T> class ROArrayColumn;
-  Bool isAllColumns(const Vector<String>& colNames);
+  Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);
 
 class SubMS
 {
@@ -161,25 +162,31 @@ class SubMS
   //TileShape of size 1 can have 2 values [0], and [1] ...these are used in to determine the tileshape
   //by using MSTileLayout 
   //Otherwise it has to be a vector size 3  e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351 rows.
-  Bool makeSubMS(String& submsname, String& whichDataCol, const Vector<Int>& tileShape = Vector<Int> (1, 0));
+  Bool makeSubMS(String& submsname, String& whichDataCol,
+                 const Vector<Int>& tileShape=Vector<Int>(1, 0));
 
-  //Method to make a scratch  subMS and even in memory if posssible
+  //Method to make a scratch subMS and even in memory if posssible
   //Useful if temporary subselection/averaging is necessary
   // It'll be in memory if the basic output ms is less than half of 
   // memory reported by HostInfo unless forced to by user...
-  MeasurementSet* makeScratchSubMS(String& whichDataCol, 
-				   Bool forceInMemory=False);
+  MeasurementSet* makeScratchSubMS(const Vector<MS::PredefinedColumns>& whichDataCols, 
+				   const Bool forceInMemory=False);
+  // In this form whichDataCol gets passed to parseColumnNames().
+  MeasurementSet* makeScratchSubMS(const String& whichDataCol, 
+				   const Bool forceInMemory=False);
 
-  // This setup a default new ms
+  // This sets up a default new ms
   // Declared static as it can be (and is) called directly outside of SubMS.
   // Therefore it is not dependent on any member variable.
-  static MeasurementSet* setupMS(String msname, Int nchan, Int npol, 
-				 String telescop, String colName="DATA",
-				 Int obstype=0);
+  static MeasurementSet* setupMS(const String& msname, const Int nchan,
+                                 const Int npol, const String& telescop,
+                                 const Vector<MS::PredefinedColumns>& colNamesTok,
+				 const Int obstype=0);
 
   // Same as above except allowing manual tileshapes
-  static MeasurementSet* setupMS(String msname, Int nchan, Int npol, 
-				 String colName="DATA",
+  static MeasurementSet* setupMS(const String& msname, const Int nchan,
+                                 const Int npol,
+                                 const Vector<MS::PredefinedColumns>& colNamesTok,
 				 const Vector<Int>& tileShape=Vector<Int>(1,0));
 
   
@@ -193,17 +200,32 @@ class SubMS
 
   // Declared static because it's used in setupMS().  Therefore it can't use
   // any member variables.  It is also used in MSFixvis.cc.
-  static const Vector<String>& parseColumnNames(const String colNameList);
+  // colNameList is internally upcased, so it is not const or passed by reference.
+  static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList);
   // This version uses the MeasurementSet to check what columns are present,
   // i.e. it makes col=="all" smarter, and it is not necessary to call
   // verifyColumns() after calling this.  Unlike the other version, it knows
   // about FLOAT_DATA and LAG_DATA.  It throws an exception if a
   // _specifically_ requested column is absent.
-  static const Vector<String>& parseColumnNames(const String colNameList,
-                                                const MeasurementSet& ms);
+  static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList,
+                                                    const MeasurementSet& ms);
 
-  void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
-  Bool doWriteImagingWeight(const ROMSColumns& msc, const Vector<String>& colNames);
+  void verifyColumns(const MeasurementSet& ms, const Vector<MS::PredefinedColumns>& colNames);
+
+  // The output MS must have (at least?) 1 of DATA, FLOAT_DATA, or LAG_DATA.
+  // MODEL_DATA or CORRECTED_DATA will be converted to DATA if necessary.
+  static Bool mustConvertToData(const uInt nTok,
+                                const Vector<MS::PredefinedColumns>& datacols)
+  {
+    return (nTok == 1) && (datacols[0] != MS::FLOAT_DATA) &&
+      (datacols[0] != MS::LAG_DATA);
+  }
+
+  static Bool sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
+                       Vector<MS::PredefinedColumns>& complexDataCols);
+
+  Bool doWriteImagingWeight(const ROMSColumns& msc,
+                            const Vector<MS::PredefinedColumns>& colNames);
 
   // Transform spectral data to different reference frame,
   // optionally regrid the frequency channels 
@@ -308,39 +330,51 @@ class SubMS
 
  private:
   // *** Private member functions ***
-  Bool getDataColumn(ROArrayColumn<Complex>& data, const String& colName);
-  Bool getDataColumn(ROArrayColumn<Float>& data, const String& colName);
+  Bool getDataColumn(ROArrayColumn<Complex>& data,
+                     const MS::PredefinedColumns colName);
+  Bool getDataColumn(ROArrayColumn<Float>& data,
+                     const MS::PredefinedColumns colName);
   Bool putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data,
-                     const String& colName, const Bool writeToDataCol=False);
+                     const MS::PredefinedColumns datacol,
+                     const Bool writeToDataCol=False);
   Bool putDataColumn(MSColumns& msc, ROArrayColumn<Float>& data,
-                     const String& colName, const Bool writeToDataCol=False);
+                     const MS::PredefinedColumns datacol,
+                     const Bool writeToDataCol=False);
   Bool putDataColumn(MSColumns& msc, Cube<Complex>& data,
-                     const String& colName, const Bool writeToDataCol=False);
+                     const MS::PredefinedColumns datacol,
+                     const Bool writeToDataCol=False);
   Bool putDataColumn(MSColumns& msc, Cube<Float>& data,
-                     const String& colName, const Bool writeToDataCol=False);
+                     const MS::PredefinedColumns datacol,
+                     const Bool writeToDataCol=False);
 
+  // Helper function for parseColumnNames().  Converts col to a list of
+  // MS::PredefinedColumnss, and returns the # of recognized data columns.
+  // static because parseColumnNames() is static.
+  static uInt dataColStrToEnums(const String& col,
+                                Vector<MS::PredefinedColumns>& colvec);
+    
   //method that returns the selected ms (?! - but it's Boolean - RR)
   Bool makeSelection();
-  Bool fillAllTables(const String& colname);
+  Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillDDTables();
   Bool fillFieldTable();
-  Bool fillMainTable(const Vector<String>& colNames);
-  Bool fillAverMainTable(const Vector<String>& colNames);
+  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
   Bool copyAntenna();
   Bool copyFeed();
   Bool copySource();
   Bool copyObservation();
   Bool copyPointing();
   Bool copyWeather();
-  Bool writeDiffSpwShape(const Vector<String>& colNames);
-  Bool writeSimilarSpwShape(const Vector<String>& colNames);
+  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
+  Bool writeSimilarSpwShape(const Vector<MS::PredefinedColumns>& colNames);
 
   // The guts of writeSimilarSpwShape(), ripped out so they can handle either
   // Float or Complex data.
   template<class M>
   void chanAvgSameShapes(const ROArrayColumn<M>& data,
-                         const String& columnName, const Bool doSpWeight,
-                         ROArrayColumn<Float>& wgtSpec,
+                         const MS::PredefinedColumns columnName,
+                         const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
                          Cube<Float>& outspweight,
                          Vector<Float>& outwgtspectmp,
                          Matrix<Float>& inwgtspectmp, const Float *inwptr,
@@ -360,13 +394,13 @@ class SubMS
   // Picks a reference to DATA, MODEL_DATA, CORRECTED_DATA, or LAG_DATA out
   // of ms_p.  FLOAT_DATA is not included because it is not natively complex. 
   const ROArrayColumn<Complex>& right_column(const ROMSColumns *ms_p,
-                                             const String& colName);
+                                             const MS::PredefinedColumns datacol);
 
   // Figures out the number, maximum, and index of the selected antennas.
   uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
 
   //Bool fillAverAntTime();
-  Bool fillTimeAverData(const Vector<String>& colNames);
+  Bool fillTimeAverData(const Vector<MS::PredefinedColumns>& colNames);
 
   // Bits of fillTimeAverData() which were internal to it until they needed to
   // be templated to support both FLOAT_DATA and the other data columns (all

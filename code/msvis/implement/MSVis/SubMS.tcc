@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             ++nAdded;
           }
           catch(...){   // NOT AipsError x
-            os << LogIO::SEVERE 
+            os << LogIO::WARN 
                << "Could not add column " << oldColNames[k] << " to "
                << outTab.tableName()
                << LogIO::POST;
@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class M>
 void SubMS::chanAvgSameShapes(const ROArrayColumn<M>& data,
-                              const String& columnName,
+                              const MS::PredefinedColumns columnName,
                               const Bool doSpWeight,
                               ROArrayColumn<Float>& wgtSpec,
                               Cube<Float>& outspweight,
@@ -158,9 +158,7 @@ void SubMS::chanAvgSameShapes(const ROArrayColumn<M>& data,
         ++ck;
     }
   }
-    
   putDataColumn(*msc_p, outdata, columnName, writeToDataCol);
-
 }
 
 template<class M>

@@ -47,6 +47,10 @@ time and frequency in one execution: they must be done separately.
                         <value>data,model</value>
                         <value>model,corrected</value> -->
                         <value>data,model,corrected</value>
+			<value>float_data</value>
+			<value>lag_data</value>
+			<value>float_data,data</value>
+			<value>lag_data,data</value>
                         <value>all</value>
 		</allowed>
 	</param>
@@ -105,13 +109,13 @@ time and frequency in one execution: they must be done separately.
      are included, and any combination of the three data columns (data, model
      and/or corrected) can be selection.
 
-     Split is often used after the initial calibration of the data to remove those
-     sources which need additional flagging, imaging and self-calibration.  The data
-     can be averaged over specified frequency channels of the input data set and time
-     averaging is also available.  
+     Split is often used after the initial calibration of the data to remove
+     those sources which need additional flagging, imaging and
+     self-calibration.  The data can be averaged over specified frequency
+     channels of the input data set and time averaging is also available.
 
-    Note: It is not yet possible to simultaneously average a data set in time and frequency
-    in one execution:  they must be done separately.
+     Note: It is not yet possible to simultaneously average a data set in time
+     and frequency in one execution: they must be done separately.
 
 
         Keyword arguments:
@@ -123,8 +127,9 @@ time and frequency in one execution: they must be done separately.
         datacolumn -- Which data column to split out
                 default='corrected'; example: datacolumn='data'
                 Options: 'data', 'model', 'corrected', 'all',
-                'data,model','data,corrected','model,corrected',
-                note: 'all'='data,model,corrected' 
+                'float_data', 'lag_data', 'float_data,data', and
+                'lag_data,data'.
+                note: 'all' = whichever of the above that are present.
 
         --- Data Selection (see help par.selectdata for more detailed
             information)
