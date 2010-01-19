@@ -89,6 +89,7 @@ namespace casa {
     asdmFieldId_p(Tag()),
     asdmEphemerisId_p(Tag()),
     asdmDataDescriptionId_p(Tag()),
+    asdmStateId_p(Tag()),
     asdmConfigDescriptionId_p(Tag()),
     // other maps
     asdmFeedId_p(-1)
@@ -216,6 +217,14 @@ namespace casa {
     }
 
     if(!writeSwitchCycle()){
+      return False;
+    }
+
+    if(!writeState()){
+      return False;
+    }
+
+    if(!writeSysCal()){
       return False;
     }
 
@@ -795,7 +804,7 @@ namespace casa {
   //     Entity ent = tT.getEntity();
   //     ent.setEntityId(theUid);
   //     tT.setEntity(ent);
-  //     os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+  //     os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
   //     incrementUid();
   
   //     return rstat;
@@ -1833,13 +1842,520 @@ namespace casa {
     return rstat;
   }
 
+  Bool MS2ASDM::writeState(){ 
+    LogIO os(LogOrigin("MS2ASDM", "writeState()"));
+
+    Bool rstat = True;
+
+    asdm::StateTable& tT = ASDM_p->getState();
+
+    asdm::StateRow* tR = 0;
+
+    if(state().nrow()<1){ // State table not filled
+
+      os << LogIO::WARN << "MS State table doesn't exist. Creating ASDM State table with one on-source entry." 
+	 << LogIO::POST;
+     
+      // parameters of the new row
+      bool bSig = True;
+      bool bRef = False;
+      bool bOnSky = True; 
+      CalibrationDeviceMod::CalibrationDevice calDeviceName = CalibrationDeviceMod::NONE;
+
+      tR = tT.newRow(calDeviceName, bSig, bRef, bOnSky);
+      
+      tR->setWeight(1.); // optional column
+
+      // add the new row to the table
+      tT.add(tR);
+      // enter tag into the map
+      asdmStateId_p.define(-1, tR->getStateId());
+    }
+    else{ // MS State table exists
+      for(uInt irow=0; irow<state().nrow(); irow++){
+	// parameters of the new row
+	bool bSig = state().sig()(irow);
+	bool bRef = state().ref()(irow);
+	Double loadT = state().load()(irow);
+	Double noiseT = state().cal()(irow);
+	bool bOnSky = bSig || bRef; 
+	CalibrationDeviceMod::CalibrationDevice calDeviceName;
+	if(0.<loadT && loadT<270.){
+	  calDeviceName = CalibrationDeviceMod::COLD_LOAD;
+	}
+	else if(270<=loadT && loadT<303.){
+	  calDeviceName = CalibrationDeviceMod::AMBIENT_LOAD;
+	}
+	else if(303.<=loadT){
+	  calDeviceName = CalibrationDeviceMod::HOT_LOAD;
+	}
+	else if(0.<noiseT){
+	  calDeviceName = CalibrationDeviceMod::NOISE_TUBE_LOAD;
+	}
+	else{
+	  calDeviceName = CalibrationDeviceMod::NONE;
+	  if(!bSig){
+	    os << LogIO::WARN << "Trouble determining Cal Device for row " << irow << " in MS State table."
+	       << "Assuming NONE." << LogIO::POST;
+	  }
+	}
+	
+	tR = tT.newRow(calDeviceName, bSig, bRef, bOnSky);
+	
+	tR->setWeight(1.); // optional column
+	
+	// add the new row to the table
+	asdm::StateRow* tR2 = 0;
+	
+	tR2 = tT.add(tR);
+	if(tR2 == tR){ // adding this row caused a new tag to be defined
+	  // enter tag into the map
+	  asdmStateId_p.define(irow, tR->getStateId());
+	}
+	else{
+	  os << LogIO::WARN << "Duplicate row in MS State table :" << irow << LogIO::POST;
+	}
+      } // end loop over MS state table
+    } // end else
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled State table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    incrementUid();
+
+    return rstat;
+  }
+
+  Bool MS2ASDM::writeSysCal(){ 
+    LogIO os(LogOrigin("MS2ASDM", "writeSysCal()"));
+
+    Bool rstat = True;
+
+    asdm::SysCalTable& tT = ASDM_p->getSysCal();
+
+    asdm::SysCalRow* tR = 0;
+
+    uInt nSysCalRows = sysCal().nrow();
+
+    if(nSysCalRows<1){ // SysCal table not filled
+      os << LogIO::WARN << "MS SysCal table doesn't exist. Creating ASDM SysCal table with default entries." 
+	 << LogIO::POST;
+    
+      // loop over the main table
+      uInt nMainTabRows = ms_p.nrow();
+      for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
+
+	// get DDId and feed id
+	Int f1Id = feed1()(mainTabRow);
+	Int f2Id = feed2()(mainTabRow);
+	Int DDId = dataDescId()(mainTabRow);	
+	// get start time stamp
+	Double startTime = timeQuant()(mainTabRow).getValue("s");
+	// create vectors of info for each antenna
+	vector< Int > aIdV;
+	vector< Int > SPWIdV;
+	vector< Int > feedIdV;
+	vector< int > nRecV;
+	vector< int > nChanV;
+	SimpleOrderedMap <Int, Int> antennaDone(-1);
+
+	uInt irow = mainTabRow;
+	// while ddid and feed id remain the same
+	while(irow<nMainTabRows &&
+	      dataDescId()(irow) == DDId &&
+	      feed1()(irow) == f1Id &&
+	      feed2()(irow) == f2Id
+	      ){
+	  Int aId = antenna1()(irow);
+	  //   if info for given antenna not yet filled
+	  if(!antennaDone.isDefined(aId)){
+	    //       get info for antenna and fill vectors
+	    aIdV.push_back(aId);
+	    Int spwId = dataDescription().spectralWindowId()(DDId);
+	    SPWIdV.push_back(spwId);
+	    feedIdV.push_back(f1Id);
+	    nRecV.push_back(feed().numReceptors()(f1Id)); 
+	    nChanV.push_back(spectralWindow().numChan()(spwId));
+	    antennaDone.define(aId, f1Id);
+	  }
+	  aId = antenna2()(irow);
+	  //   if info for given antenna not yet filled
+	  if(!antennaDone.isDefined(aId)){
+	    //       get info for antenna and fill vectors
+	    aIdV.push_back(aId);
+	    Int spwId = dataDescription().spectralWindowId()(DDId);
+	    SPWIdV.push_back(spwId);
+	    feedIdV.push_back(f2Id);
+	    nRecV.push_back(feed().numReceptors()(f2Id)); 
+	    nChanV.push_back(spectralWindow().numChan()(spwId));
+	    antennaDone.define(aId, f2Id);
+	  }
+	  irow++;
+	} // end while
+	// get end timestamp
+	Double endTime = timeQuant()(irow-1).getValue("s");
+	// create ArrayTimeInterval
+	asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(startTime),
+					      ASDMInterval(endTime-startTime) );
+	// create new rows in syscal table based on the vectors
+	for(uInt i=0; i<aIdV.size(); i++){
+	  // parameters of the new SysCal row
+	  Tag antennaId = asdmAntennaId_p(aIdV[i]);
+	  Tag spectralWindowId = asdmSpectralWindowId_p(SPWIdV[i]);
+	  int feedId = asdmFeedId_p(feedIdV[i]);
+	  int numReceptor = nRecV[i];
+	  int numChan = nChanV[i];
+
+	  tR = tT.newRow(antennaId, spectralWindowId, timeInterval, feedId, numReceptor, numChan);
+      
+	  // add the new row to the table
+	  tT.add(tR);
+	}
+	mainTabRow = irow;
+      } // end loop over main table
+    }
+    else{ // MS SysCal table exists
+      for(uInt irow=0; irow<nSysCalRows; irow++){
+	// parameters of the new row
+	Tag antennaId = asdmAntennaId_p( sysCal().antennaId()(irow) );
+	Int spwId = sysCal().spectralWindowId()(irow);
+	Tag spectralWindowId = asdmSpectralWindowId_p( spwId );
+	int feedId = sysCal().feedId()(irow);
+	Double tMidPoint = sysCal().timeQuant()(irow).getValue("s");
+	Double tInterval = sysCal().intervalQuant()(irow).getValue("s");
+	asdm::ArrayTimeInterval timeInterval( tMidPoint - tInterval/2., tInterval ); 
+
+	uInt numReceptor = feed().numReceptors()(feedId); 
+	uInt nChan = spectralWindow().numChan()(spwId); 
+
+	tR = tT.newRow(antennaId, spectralWindowId, timeInterval, feedId, (int)numReceptor, (int)nChan);
+
+
+	// now set the optional columns if they exist in the MS
+	
+	// Tant 
+	if(!sysCal().tantFlag().isNull()){
+	  tR->setTantFlag(sysCal().tantFlag()(irow));
+	}
+	if(!sysCal().tantSpectrumQuant().isNull()){
+	  Matrix< Quantum< Float > > sM;
+	  sM.reference(sysCal().tantSpectrumQuant()(irow));
+	  if(sM.shape()(0) != (Int)numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TANT spectrum in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  if(sM.shape()(1) != (Int)nChan){
+	    os << LogIO::SEVERE << "Inconsistent MS: TANT spectrum in syscal table row " << irow
+	       << " should have second dimension as referenced SPW." << LogIO::POST;
+	    return False;
+	  } 
+	  vector< vector< float > > fVV; // presently a float but should be a Temperature ???
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< float > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( sM(i,j).getValue(unitASDMTemp()) ); 
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTantSpectrum(fVV);
+	}
+	else if(!sysCal().tantQuant().isNull()){
+	  Vector< Quantum< Float > > sV;
+	  sV.reference(sysCal().tantQuant()(irow));
+	  vector< vector< float > > fVV; // presently a float but should be a Temperature ???
+	  if(sV.size() != numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TANT in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< float > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( sV[i].getValue(unitASDMTemp()) );
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTantSpectrum(fVV);
+	}
+
+	// Tant/Tsys
+	if(!sysCal().tantTsysFlag().isNull()){
+	  tR->setTantTsysFlag(sysCal().tantTsysFlag()(irow));
+	}
+	if(!sysCal().tantTsysSpectrum().isNull()){
+	  Matrix< Float > sM;
+	  sM.reference(sysCal().tantTsysSpectrum()(irow));
+	  if(sM.shape()(0) != (Int)numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TANT_TSYS spectrum in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  if(sM.shape()(1) != (Int)nChan){
+	    os << LogIO::SEVERE << "Inconsistent MS: TANT_TSYS spectrum in syscal table row " << irow
+	       << " should have second dimension as referenced SPW." << LogIO::POST;
+	    return False;
+	  } 
+	  vector< vector< float > > fVV; 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< float > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( sM(i,j) ); 
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTantTsysSpectrum(fVV);
+	}
+	else if(!sysCal().tantTsys().isNull()){
+	  Vector< Float > sV;
+	  sV.reference(sysCal().tantTsys()(irow));
+	  vector< vector< float > > fVV; 
+	  if(sV.size() != numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TANT_TSYS in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< float > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( sV[i] );
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTantTsysSpectrum(fVV);
+	}
+
+	// Tcal
+	if(!sysCal().tcalFlag().isNull()){
+	  tR->setTcalFlag(sysCal().tcalFlag()(irow));
+	}
+	if(!sysCal().tcalSpectrumQuant().isNull()){
+	  Matrix< Quantum< Float > > sM;
+	  sM.reference(sysCal().tcalSpectrumQuant()(irow));
+	  if(sM.shape()(0) != (Int)numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TCAL spectrum in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  if(sM.shape()(1) != (Int)nChan){
+	    os << LogIO::SEVERE << "Inconsistent MS: TCAL spectrum in syscal table row " << irow
+	       << " should have second dimension as referenced SPW." << LogIO::POST;
+	    return False;
+	  } 
+	  vector< vector< Temperature > > fVV; 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sM(i,j).getValue(unitASDMTemp())) ); 
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTcalSpectrum(fVV);
+	}
+	else if(!sysCal().tcalQuant().isNull()){
+	  Vector< Quantum< Float > > sV;
+	  sV.reference(sysCal().tcalQuant()(irow));
+	  vector< vector< Temperature > > fVV; 
+	  if(sV.size() != numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TCAL in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sV[i].getValue(unitASDMTemp())) );
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTcalSpectrum(fVV);
+	}
+
+	// Trx
+	if(!sysCal().trxFlag().isNull()){
+	  tR->setTrxFlag(sysCal().trxFlag()(irow));
+	}
+	if(!sysCal().trxSpectrumQuant().isNull()){
+	  Matrix< Quantum< Float > > sM;
+	  sM.reference(sysCal().trxSpectrumQuant()(irow));
+	  if(sM.shape()(0) != (Int)numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TRX spectrum in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  if(sM.shape()(1) != (Int)nChan){
+	    os << LogIO::SEVERE << "Inconsistent MS: TRX spectrum in syscal table row " << irow
+	       << " should have second dimension as referenced SPW." << LogIO::POST;
+	    return False;
+	  } 
+	  vector< vector< Temperature > > fVV; 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sM(i,j).getValue(unitASDMTemp())) ); 
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTrxSpectrum(fVV);
+	}
+	else if(!sysCal().trxQuant().isNull()){
+	  Vector< Quantum< Float > > sV;
+	  sV.reference(sysCal().trxQuant()(irow));
+	  vector< vector< Temperature > > fVV; 
+	  if(sV.size() != numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TRX in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sV[i].getValue(unitASDMTemp())) );
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTrxSpectrum(fVV);
+	}
+
+	// Tsky
+	if(!sysCal().tskyFlag().isNull()){
+	  tR->setTskyFlag(sysCal().tskyFlag()(irow));
+	}
+	if(!sysCal().tskySpectrumQuant().isNull()){
+	  Matrix< Quantum< Float > > sM;
+	  sM.reference(sysCal().tskySpectrumQuant()(irow));
+	  if(sM.shape()(0) != (Int)numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TSKY spectrum in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  if(sM.shape()(1) != (Int)nChan){
+	    os << LogIO::SEVERE << "Inconsistent MS: TSKY spectrum in syscal table row " << irow
+	       << " should have second dimension as referenced SPW." << LogIO::POST;
+	    return False;
+	  } 
+	  vector< vector< Temperature > > fVV; 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sM(i,j).getValue(unitASDMTemp())) ); 
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTskySpectrum(fVV);
+	}
+	else if(!sysCal().tskyQuant().isNull()){
+	  Vector< Quantum< Float > > sV;
+	  sV.reference(sysCal().tskyQuant()(irow));
+	  vector< vector< Temperature > > fVV; 
+	  if(sV.size() != numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TSKY in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sV[i].getValue(unitASDMTemp())) );
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTskySpectrum(fVV);
+	}
+
+	// Tsys
+	if(!sysCal().tsysFlag().isNull()){
+	  tR->setTsysFlag(sysCal().tsysFlag()(irow));
+	}
+	if(!sysCal().tsysSpectrumQuant().isNull()){
+	  Matrix< Quantum< Float > > sM;
+	  sM.reference(sysCal().tsysSpectrumQuant()(irow));
+	  if(sM.shape()(0) != (Int)numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TSYS spectrum in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  if(sM.shape()(1) != (Int)nChan){
+	    os << LogIO::SEVERE << "Inconsistent MS: TSYS spectrum in syscal table row " << irow
+	       << " should have second dimension as referenced SPW." << LogIO::POST;
+	    return False;
+	  } 
+	  vector< vector< Temperature > > fVV; 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sM(i,j).getValue(unitASDMTemp())) ); 
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTsysSpectrum(fVV);
+	}
+	else if(!sysCal().tsysQuant().isNull()){
+	  Vector< Quantum< Float > > sV;
+	  sV.reference(sysCal().tsysQuant()(irow));
+	  vector< vector< Temperature > > fVV; 
+	  if(sV.size() != numReceptor){
+	    os << LogIO::SEVERE << "Inconsistent MS: TSYS in syscal table row " << irow
+	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
+	    return False;
+	  } 
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< Temperature > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back( Temperature(sV[i].getValue(unitASDMTemp())) );
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setTsysSpectrum(fVV);
+	}
+
+	// phase diff
+	if(!sysCal().phaseDiffFlag().isNull()){
+	  tR->setPhaseDiffFlag(sysCal().phaseDiffFlag()(irow));
+	}
+	if(!sysCal().phaseDiffQuant().isNull()){
+	  float pD = sysCal().phaseDiffQuant()(irow).getValue(unitASDMAngle());
+	  vector< vector< float > > fVV;
+	  for(uInt i=0; i<numReceptor; i++){
+	    vector< float > fV;
+	    for(uInt j=0; j<nChan; j++){
+	      fV.push_back(pD); 
+	    }
+	    fVV.push_back(fV);
+	  }
+	  tR->setPhaseDiffSpectrum(fVV);
+	}
+	
+	// finally add the completed new row to the table
+	asdm::SysCalRow* tR2 = 0;
+	tR2 = tT.add(tR);
+	if(tR2 != tR){ 
+	  os << LogIO::WARN << "Duplicate row in MS SysCal table :" << irow << LogIO::POST;
+	}	
+
+      } // end loop over MS syscal table
+    } // end else
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled SysCal table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    incrementUid();
+
+    return rstat;
+  }
+
+
   Bool MS2ASDM::writeConfigDescription(){
 
    LogIO os(LogOrigin("MS2ASDM", "writeConfigDesc()"));
 
     Bool rstat = True;
 
-    asdm::ConfigDescriptionTable& cdT = ASDM_p->getConfigDescription();
+    asdm::ConfigDescriptionTable& tT = ASDM_p->getConfigDescription();
 
     asdm::ProcessorTable& procT = ASDM_p->getProcessor();
 
@@ -1864,8 +2380,7 @@ namespace casa {
 
       os << LogIO::NORMAL << "Processor Id: " << procId << LogIO::POST;
 
-      asdm::ConfigDescriptionRow* cdR = 0;
-
+      asdm::ConfigDescriptionRow* tR = 0;
 
       Tag procIdTag;
       if(asdmProcessorId_p.isDefined(procId)){
@@ -1883,6 +2398,9 @@ namespace casa {
       // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
       os << LogIO::NORMAL << "Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;       
 
+
+      // loop over MS Main table
+      Tag previousTag = Tag();
       uInt nMainTabRows = ms_p.nrow();
       for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
 
@@ -1896,6 +2414,7 @@ namespace casa {
 	vector<Tag> switchCycleId;
 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection> atmPhaseCorrection;
 	int numAntenna = 0;
+	int numDD = 0;
 	int numFeed = 0;
 	CorrelationModeMod::CorrelationMode correlationMode;
 	
@@ -1910,13 +2429,13 @@ namespace casa {
 
 	  //	  cout << "proc id " << procId << " used at main table row " << mainTabRow << endl;
 
-	  uInt i = mainTabRow;
-	  Double thisTStamp = time()(i); 
+	  uInt irow = mainTabRow;
+	  Double thisTStamp = time()(irow); 
 
-	  while(time()(i)== thisTStamp && i<nMainTabRows){
+	  while(time()(irow)==thisTStamp && irow<nMainTabRows){
 	    
 	    // for the later determination of the correlation mode
-	    if(antenna1()(i) == antenna2()(i)){
+	    if(antenna1()(irow) == antenna2()(irow)){
 	      numAutoCorrs++;
 	    }
 	    else{
@@ -1925,7 +2444,7 @@ namespace casa {
 	    
 	    // antenna ids
 
-	    Int aId = antenna1()(i); 
+	    Int aId = antenna1()(irow); 
 	    Bool found = false;
 	    for(uInt j=0; j<msAntennaIdV.size(); j++){
 	      if(aId == msAntennaIdV[j]){
@@ -1941,7 +2460,7 @@ namespace casa {
 		return False;
 	      }
 	    }
-	    aId = antenna2()(i); 
+	    aId = antenna2()(irow); 
 	    found = false;
 	    for(uInt j=0; j<msAntennaIdV.size(); j++){
 	      if(aId == msAntennaIdV[j]){
@@ -1960,7 +2479,7 @@ namespace casa {
 
 	    
 	    // DD IDs
-	    Int dDIdi = dataDescId()(i);
+	    Int dDIdi = dataDescId()(irow);
 	    found = False;
 	    for(uInt j=0;j<msDDIdV.size();j++){
 	      if(dDIdi == msDDIdV[j]){
@@ -1978,7 +2497,7 @@ namespace casa {
 	    } 
 	    
 	    // feed ids
-	    Int fIdi = feed1()(i);
+	    Int fIdi = feed1()(irow);
 	    found = False;	      
 	    for(uInt j=0;j<msFeedIdV.size();j++){
 	      if(fIdi == msFeedIdV[j]){
@@ -1994,7 +2513,7 @@ namespace casa {
 		return False;
 	      }
 	    }
-	    fIdi = feed2()(i);
+	    fIdi = feed2()(irow);
 	    found = False;	      
 	    for(uInt j=0;j<msFeedIdV.size();j++){
 	      if(fIdi == msFeedIdV[j]){
@@ -2011,9 +2530,8 @@ namespace casa {
 	      }
 	    }
 	    
-	    i++;
+	    irow++;
 	  } // end while
-	  mainTabRow = i;
 
 	   // sort the  antenna ids before entering them into the ConfigDescription table
 	  std::sort(msAntennaIdV.begin(), msAntennaIdV.end());
@@ -2026,14 +2544,13 @@ namespace casa {
 	  for(uInt i=0; i<msDDIdV.size(); i++){
 	    dataDId.push_back(asdmDataDescriptionId_p(msDDIdV[i]));
 	  }
-	   // sort the feed ids before entering them into the ConfigDescription table
+	  numDD = dataDId.size();
+	  // sort the feed ids before entering them into the ConfigDescription table
 	  std::sort(msFeedIdV.begin(), msFeedIdV.end());
 	  for(uInt i=0; i<msFeedIdV.size(); i++){
 	    feedId.push_back(asdmFeedId_p(msFeedIdV[i]));
 	  }
 	  numFeed = feedId.size();
-	
-
 
 	  if(numAutoCorrs==0){
 	    correlationMode = CorrelationModeMod::CROSS_ONLY;
@@ -2058,19 +2575,19 @@ namespace casa {
 	  }	    
     
 	  // create a new row with its mandatory attributes.
-	  cdR = cdT.newRow (antennaId.size(),
-			    dataDId.size(),
-			    feedId.size(),
-			    correlationMode, 
-			    atmPhaseCorrection.size(),
-			    atmPhaseCorrection, 
-			    processorType, 
-			    spectralType, 
-			    antennaId, 
-			    feedId, 
-			    switchCycleId, 
-			    dataDId, 
-			    procIdTag);
+	  tR = tT.newRow (numAntenna,
+			  numDD,
+			  numFeed,
+			  correlationMode, 
+			  atmPhaseCorrection.size(),
+			  atmPhaseCorrection, 
+			  processorType, 
+			  spectralType, 
+			  antennaId, 
+			  feedId, 
+			  switchCycleId, 
+			  dataDId, 
+			  procIdTag);
 	  
 	  // optional attributes.
 	  //vector<Tag> assocConfigDescriptionId(1);
@@ -2081,18 +2598,24 @@ namespace casa {
 	  //vector<bool> flagAnt(2, false);
 	  //	  vector<SpectralResolutionTypeMod::SpectralResolutionType> assocNature(1);
 	  //assocNature[0] = SpectralResolutionTypeMod::FULL_RESOLUTION;
-	  //cdR->setAssocConfigDescriptionId(assocConfigDescriptionId);
-	  //cdR->setPhasedArrayList(phasedArrayList);
-	  //cdR->setFlagAnt(flagAnt);
-	  //cdR->setAssocNature(assocNature);	  
+	  //tR->setAssocConfigDescriptionId(assocConfigDescriptionId);
+	  //tR->setPhasedArrayList(phasedArrayList);
+	  //tR->setFlagAnt(flagAnt);
+	  //tR->setAssocNature(assocNature);	  
 	  
 	  // add this row to to the config description table.
 	  //  note that this will check for uniqueness
 	  asdm::ConfigDescriptionRow* tR2 = 0;
 
-	  tR2 = cdT.add(cdR);
+	  tR2 = tT.add(tR);
 	  Tag newTag = tR2->getConfigDescriptionId();
-	  asdmConfigDescriptionId_p.define(thisTStamp, newTag);
+	  if(newTag != previousTag){ // memorize the table row and the corresponding Tag every time the Tag changes
+	    asdmConfigDescriptionId_p.define(mainTabRow, newTag);
+	    previousTag = newTag;
+	    cout << "mtrow = " << mainTabRow << ", irow = " << irow << endl;
+	  }
+
+	  mainTabRow = irow;
 
 	} // end if proc id
 
@@ -2101,247 +2624,14 @@ namespace casa {
     } // end loop over MS processor table
 
     EntityId theUid(getCurrentUid());
-    Entity ent = cdT.getEntity();
+    Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
-    cdT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " with " << cdT.size() << " rows ... " << LogIO::POST;
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " with " << tT.size() << " rows ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
 
-  }
-
-
-  Bool MS2ASDM::writeConfigDesc(){ // obsolete
-
-    LogIO os(LogOrigin("MS2ASDM", "writeConfigDesc()"));
-
-    Bool rstat = False;
-
-    asdm::ConfigDescriptionTable& cdT = ASDM_p->getConfigDescription();
-
-    uInt nProcTabRows =  processor().nrow();
-    if(nProcTabRows<1){ // processor table not filled, all data will have proc id == -1
-      os <<  LogIO::WARN << "MS contains empty Processor table. Will assume processor type is CORRELATOR." << LogIO::POST;
-      nProcTabRows = 1;
-    }
-
-    // loop over MS processor table
-    for(uInt uprocId=0; uprocId<nProcTabRows; uprocId++){
-
-      Int procId = uprocId;
-
-      if(processor().nrow()<1){
-	procId  = -1;
-      }
-
-      os << LogIO::NORMAL << "Processor Id: " << procId << LogIO::POST;
-
-      asdm::ConfigDescriptionRow* cdR = 0;
-
-      Tag procIdTag(uprocId, TagType::Processor);
-
-      // determine processor type
-      ProcessorTypeMod::ProcessorType processorType;
-      if(procId>=0){
-	String procType = processor().type()(procId);
-	if(procType == "CORRELATOR"){
-	  processorType = ProcessorTypeMod::CORRELATOR;
-	}
-	else if(procType == "SPECTROMETER"){
-	  processorType = ProcessorTypeMod::SPECTROMETER;
-	}
-	else if(procType == "RADIOMETER"){
-	  processorType = ProcessorTypeMod::RADIOMETER;
-	}
-	else{
-	  os <<  LogIO::SEVERE << "Error: unsuported processor type: " << procType << LogIO::POST;
-	  return False;
-	}
-      }
-      else{
-	processorType = ProcessorTypeMod::CORRELATOR;
-      }
-
-      SpectralResolutionTypeMod::SpectralResolutionType spectralType = SpectralResolutionTypeMod::FULL_RESOLUTION; 
-      // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
-      os << LogIO::NORMAL << "Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;       
-  
-      vector<Tag> antennaId;
-      vector<Tag> dataDId;
-      vector<int> feedId;
-      vector<Tag> switchCycleId;
-      vector<AtmPhaseCorrectionMod::AtmPhaseCorrection> atmPhaseCorrection;
-      int numAntenna = 0;
-      int numFeed = 0;
-      CorrelationModeMod::CorrelationMode correlationMode;
-
-      // loop over MS main table and find for this proc id
-      //  a) all used antennas
-      //  b) all used DD IDs
-      //  c) all used feed IDs
-      uInt numAutoCorrs = 0;
-      uInt numBaselines = 0;
-      uInt nMainTabRows = ms_p.nrow();
-      for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
-	if(processorId()(mainTabRow)==procId){
-
-	  cout << "proc id " << procId << " used at main table row " << mainTabRow << endl;
-
-	  uInt i = mainTabRow;
-	  Double thisTStamp = time()(i); 
-	  while(time()(i)== thisTStamp && i<nMainTabRows){
-	    
-	    // for the later determination of the correlation mode
-	    if(antenna1()(i) == antenna2()(i)){
-	      numAutoCorrs++;
-	    }
-	    else{
-	      numBaselines++;
-	    }
-	    
-	    // antenna ids
-	    Bool found = False;
-	    for(uInt j=0;j<antennaId.size();j++){
-	      if(antenna1()(i) == (Int)antennaId[j].getTagValue()){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      antennaId.push_back(Tag(antenna1()(i), TagType::Antenna));
-	    }
-	    found = False;
-	    for(uInt j=0;j<antennaId.size();j++){
-	      if(antenna2()(i) == (Int)antennaId[j].getTagValue()){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      antennaId.push_back(Tag(antenna2()(i), TagType::Antenna));
-	    }
-	    
-	    // DD IDs
-	    found = False;
-	    for(uInt j=0;j<dataDId.size();j++){
-	      if(dataDescId()(i) == (Int)dataDId[j].getTagValue()){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      dataDId.push_back(Tag(dataDescId()(i), TagType::DataDescription));
-	    }
-	    
-	    // feed ids
-	    found = False;
-	    for(uInt j=0;j<feedId.size();j++){
-	      if(feed1()(i) == feedId[j]){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      feedId.push_back(feed1()(i));
-	    }
-	    found = False;
-	    for(uInt j=0;j<feedId.size();j++){
-	      if(feed2()(i) == feedId[j]){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      feedId.push_back(feed2()(i));
-	    }
-	    
-	    i++;
-	  }
-	
-	  numAntenna = antennaId.size();
-	  if(numAntenna!=(Int)antenna().nrow()){
-	    os << LogIO::WARN << "Number of antennas in ANTENNA table (" << antenna().nrow() 
-	       << ") is not the same as number of antennas for Processor " << procId << " in MAIN table (" << numAntenna
-	       << ")." << LogIO::POST;      
-	  }
-	  if(numAntenna!=(Int)numAutoCorrs && numAutoCorrs>0){
-	    os << LogIO::WARN << "Number of antennas in ANTENNA table (" << antenna().nrow() 
-	       << ") is not the same as number of autocorrelations for Processor " << procId << " in MAIN table (" << numAntenna
-	       << ")." << LogIO::POST;      
-	  }
-	  else if(numAutoCorrs==0){
-	    os << LogIO::NORMAL << "No autocorrelations for Processor " << procId << " in MAIN table." << LogIO::POST;      
-	  }
-	
-	  if(numAutoCorrs==0){
-	    correlationMode = CorrelationModeMod::CROSS_ONLY;
-	  }
-	  else if(numBaselines>0){
-	    correlationMode = CorrelationModeMod::CROSS_AND_AUTO;
-	  }
-	  else{
-	    correlationMode = CorrelationModeMod::AUTO_ONLY;
-	  }
-	  
-	  numFeed = feedId.size();
-	  
-	  switchCycleId.push_back(Tag(0, TagType::SwitchCycle)); // switch cycle table will only be dummy ? -> Francois
-	  // dummy if PHASE_ID column doesn't exist in MS main
-          // PHASE_ID identifies bin in switch cycle
-	  //   otherwise, e.g. PHASE_ID = 0 and 1 => numStep == 2
-
-	  atmPhaseCorrection.push_back(AtmPhaseCorrectionMod::AP_CORRECTED); // hardwired for the moment !!!
-	  os << LogIO::NORMAL << "Assuming atm. phase correction type for data from processor " << procId 
-	     << " is AP_CORRECTED." << LogIO::POST;      
-    
-	  // create a new row with its mandatory attributes.
-	  cdR = cdT.newRow (antennaId.size(),
-			    dataDId.size(),
-			    feedId.size(),
-			    correlationMode, 
-			    atmPhaseCorrection.size(),
-			    atmPhaseCorrection, 
-			    processorType, 
-			    spectralType, 
-			    antennaId, 
-			    feedId, 
-			    switchCycleId, 
-			    dataDId, 
-			    procIdTag);
-	  
-	  // optional attributes.
-	  //vector<Tag> assocConfigDescriptionId(1);
-	  //assocConfigDescriptionId[0] = Tag(1, TagType::ConfigDescription);
-	  //vector<int> phasedArrayList(2);
-	  //phasedArrayList[0] = 0;
-	  //phasedArrayList[1] = 1;
-	  //vector<bool> flagAnt(2, false);
-	  //	  vector<SpectralResolutionTypeMod::SpectralResolutionType> assocNature(1);
-	  //assocNature[0] = SpectralResolutionTypeMod::FULL_RESOLUTION;
-	  //cdR->setAssocConfigDescriptionId(assocConfigDescriptionId);
-	  //cdR->setPhasedArrayList(phasedArrayList);
-	  //cdR->setFlagAnt(flagAnt);
-	  //cdR->setAssocNature(assocNature);
-	  
-	  
-	  // add this row to its table.
-	  cdT.add(cdR);
-	  rstat = True;
-	  break; // quit looking further for this proc ID in main table
-	}
-      } // end loop over MS main table
-
-    } // end loop over MS processor table
-
-    EntityId theUid(getCurrentUid());
-    Entity ent = cdT.getEntity();
-    ent.setEntityId(theUid);
-    cdT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " with " << cdT.size() << " rows ..." << LogIO::POST;
-    incrementUid();
-
-    return rstat;
   }
 
   Bool MS2ASDM::writeMain(){

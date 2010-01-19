@@ -37,6 +37,7 @@
 #include <alma/ASDM/Frequency.h>
 #include <alma/ASDM/Angle.h>
 #include <alma/ASDM/Length.h>
+#include <alma/ASDM/Temperature.h>
 #include <alma/ASDM/ArrayTimeInterval.h>
 #include <alma/Enumerations/CStokesParameter.h>
 #include <alma/Enumerations/CAntennaType.h>
@@ -145,6 +146,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Unit unitASDMLength(){ return Unit(String(asdm::Length::unit())); }
 
+  Unit unitASDMTemp(){ return Unit(String(asdm::Temperature::unit())); }
+
   asdm::Complex ASDMComplex( casa::Complex x ){ return asdm::Complex(x.real(), x.imag()); }
 
   // write the entire ASDM from scratch
@@ -189,9 +192,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool writeSwitchCycle(); // not yet fully implemented
 
-  Bool writeConfigDescription();
+  Bool writeState();
 
-  Bool writeConfigDesc(); // obsolete
+  Bool writeSysCal();
+
+  Bool writeConfigDescription();
 
   Bool writeMain();
 
@@ -239,7 +244,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Int, asdm::Tag> asdmFieldId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmDataDescriptionId_p;
-  SimpleOrderedMap <Double, asdm::Tag> asdmConfigDescriptionId_p;
+  SimpleOrderedMap <Int, asdm::Tag> asdmStateId_p;
+  SimpleOrderedMap <uInt, asdm::Tag> asdmConfigDescriptionId_p;
 
   SimpleOrderedMap <Int, int> asdmFeedId_p;
 

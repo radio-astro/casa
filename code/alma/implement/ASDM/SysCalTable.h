@@ -470,7 +470,7 @@ public:
 	SysCalRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan); 
 
 
-private:
+//private:
 
 	/**
 	 * Create a SysCalTable.

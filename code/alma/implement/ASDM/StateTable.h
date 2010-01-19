@@ -310,7 +310,7 @@ public:
 	StateRow* lookup(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky); 
 
 
-private:
+//private:
 
 	/**
 	 * Create a StateTable.
