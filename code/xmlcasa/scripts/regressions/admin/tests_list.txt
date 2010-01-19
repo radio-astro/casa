@@ -20,6 +20,7 @@ calstat_test                    jmlarsen@eso.org
 clearstat_test                  scastro@eso.org
 coordsystest_regression         dpetry@eso.org
 cvel_test                       dpetry@eso.org
+equinox_vis                     rreid@nrao.edu
 fits-import-export              dpetry@eso.org
 flagdata_test                   jmlarsen@eso.org
 fls3a_hi_regression             kana.sugi@nao.ac.jp
