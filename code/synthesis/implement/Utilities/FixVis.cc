@@ -44,8 +44,8 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   antennaId_p.resize();
   antennaSelStr_p.resize();
   distances_p.resize();
-  dataColNames_p = SubMS::parseColumnNames(dataColName);
-  nDataCols_p = dataColNames_p.nelements();
+  dataCols_p = SubMS::parseColumnNames(dataColName);
+  nDataCols_p = dataCols_p.nelements();
 
   // To use FTMachine, the image has to be set up with coordinates, even
   // though no image will be made.
@@ -877,9 +877,9 @@ void FixVis::processSelected(uInt numInSel)
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
     for(vi.origin(); vi.more(); ++vi){
       for(uInt datacol = 0; datacol < nDataCols_p; ++datacol){
-        if(dataColNames_p[datacol] == MS::columnName(MS::MODEL_DATA))
+        if(dataCols_p[datacol] == MS::MODEL_DATA)
           vb.visCube() = vb.modelVisCube();
-        else if(dataColNames_p[datacol] == MS::columnName(MS::CORRECTED_DATA))
+        else if(dataCols_p[datacol] == MS::CORRECTED_DATA)
           vb.visCube() = vb.correctedVisCube();
 			
         put(vb, -1);

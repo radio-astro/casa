@@ -240,7 +240,7 @@ private:
   Vector<String>   antennaSelStr_p;
   Vector<Double>   distances_p;	        // new distances (m) for each selected
                                         // field
-  Vector<String>   dataColNames_p;
+  Vector<MS::PredefinedColumns> dataCols_p;
   uInt             nDataCols_p;
   uInt             nchan_p;
   Vector<Int>      spectralwindowids_p;
@@ -251,7 +251,8 @@ private:
   ObsInfo            latestObsInfo_p;  
   Vector<Int>        DDIds_p;	        // DataDescription Ids to process
   Vector<Int>        FieldIds_p;        // Field Ids to process
-  Vector<MDirection> phaseDirs_p;       // new phase centers for each selected field
+  Vector<MDirection> phaseDirs_p;       // new phase centers for each selected
+                                        // field
   Int                nSpw_p;	        // Number of spws
   MPosition          mLocation_p;
   Bool               doTrackSource_p;
