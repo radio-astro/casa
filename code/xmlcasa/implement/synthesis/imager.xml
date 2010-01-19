@@ -3710,8 +3710,6 @@ This function is for setting different gridding and memory options
 \item[ft] Standard interferometric gridding
 \item[sd] Standard single dish gridding
 \item[both] ft and sd as appropriate.
-\item[wfmemoryft] option for wide-field imaging, to grid in memory for
-  all facets in one pass through the data
 \item[wproject] option for using the wproject algorithm for wide-field
   imaging; when this option is used the parameter {\tt wprojplanes}
   define the number of convolution functions to be used
@@ -3757,12 +3755,13 @@ especially in wide-field cleaning.
      <description>Fourier transform
   machine</description>
      <value>ft</value>
-     <value>sd</value>
-     <value>both</value>
-     <value>wfmemoryft</value>
-     <value>wproject</value>
-     <value>mosaic</value>
-     <value>ft</value>
+     <allowed kind="enum">
+       <value>ft</value>
+       <value>sd</value>
+       <value>both</value>
+       <value>wproject</value>
+       <value>mosaic</value>
+     </allowed>
      </param>
 
      <param type="int" name="cache">
