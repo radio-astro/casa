@@ -196,7 +196,7 @@ class simutil:
             self.direction=direction
         if type(direction) == list:
             if len(direction) >1:
-                return len(direction), direction
+                return len(direction), direction, [0.]*len(direction)
             else:
                 direction=direction[0]
     
@@ -316,6 +316,7 @@ class simutil:
             self.msg(s,color="31")
         self.msg("read in %i pointing(s) from file" % len(pointings))
         self.pointings=pointings
+        #self.direction=pointings
                 
         return len(pointings), pointings, time
 

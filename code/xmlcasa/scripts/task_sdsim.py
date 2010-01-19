@@ -77,7 +77,21 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             # set up a list of pointings (imsize*cell)
             # If direction is not a list, only hexagonal gridding is currently available
             print 'Start - pointing calcs'
-            nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
+            ### Start mod: 2010/01/19 ###
+            # direction is always a list of strings (defined by .xml)
+            if len(direction) == 1: direction=direction[0]
+            if type(direction) == str:
+                # Assume direction as a filename and read lines if it exists
+                filename=os.path.expanduser(os.path.expandvars(direction))
+                if os.path.exists(filename):
+                    msg('Reading direction information from the file, %s' % filename)
+                    n, direction, time = util.read_pointings(filename)
+
+            out_size = [qa.mul(imsize[0], cell),qa.mul(imsize[1], cell)]
+            #nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
+            nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+            print 'End - pointing calcs'
+            ### End mod #################
             ave , off = util.average_direction(pointings)
             nbands = 1
             fband = 'band'+startfreq
