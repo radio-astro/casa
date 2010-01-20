@@ -9,29 +9,37 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
 
     casalog.origin('sdsim')
 
-    def msg(s, origin=None, color=None):
-        # ansi color codes:
-        # Foreground colors
-        # 30    Black
-        # 31    Red
-        # 32    Green
-        # 33    Yellow
-        # 34    Blue
-        # 35    Magenta
-        # 36    Cyan
-        # 37    White
-        if color==None:
-            clr="\x1b[32m"
-        else:
-            clr="\x1b["+color+"m"
-        bw="\x1b[0m"
-        if origin==None:
-            origin="simutil"
-        print clr+"["+origin+"] "+bw+s
-        casalog.post("")
-        casalog.post(s)
+    ### Start mod: 2010/01/20 kana ###
+    #def msg(s, origin=None, color=None):
+    #    # ansi color codes:
+    #    # Foreground colors
+    #    # 30    Black
+    #    # 31    Red
+    #    # 32    Green
+    #    # 33    Yellow
+    #    # 34    Blue
+    #    # 35    Magenta
+    #    # 36    Cyan
+    #    # 37    White
+    #    if color==None:
+    #        clr="\x1b[32m"
+    #    else:
+    #        clr="\x1b["+color+"m"
+    #    bw="\x1b[0m"
+    #    if origin==None:
+    #        origin="simutil"
+    #    print clr+"["+origin+"] "+bw+s
+    #    casalog.post("")
+    #    casalog.post(s)
+    ### End mod ######################
 
     try:
+        ### Start mod: 2010/01/20 kana ###
+        # set up simulation utility
+        bandwidth=qa.mul(qa.quantity(nchan), qa.quantity(chanwidth))
+        util=simutil(direction,startfreq=qa.quantity(startfreq), bandwidth=bandwidth, verbose=verbose)
+        msg=util.msg
+        ### End mod ######################
         # file check 
         if not os.path.exists(modelimage):
             msg("ERROR -- modelimage '%s' is not found." % modelimage,color="31")
@@ -72,8 +80,10 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
                 cell=incell
 
             # set up simulation utility
-            bandwidth=qa.mul(qa.quantity(nchan), qa.quantity(chanwidth))
-            util=simutil(direction,startfreq=qa.quantity(startfreq), bandwidth=bandwidth, verbose=verbose)
+            ### Start mod: 2010/01/20 kana ###
+            #bandwidth=qa.mul(qa.quantity(nchan), qa.quantity(chanwidth))
+            #util=simutil(direction,startfreq=qa.quantity(startfreq), bandwidth=bandwidth, verbose=verbose)
+            ### End mod ######################
             # set up a list of pointings (imsize*cell)
             # If direction is not a list, only hexagonal gridding is currently available
             print 'Start - pointing calcs'
