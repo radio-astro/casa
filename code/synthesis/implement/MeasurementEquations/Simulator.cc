@@ -1989,6 +1989,52 @@ Bool Simulator::observe(const String&   sourcename,
 
 
 
+
+Bool Simulator::observemany(const Vector<String>&   sourcenames,
+			   const String&   spwname,
+			   const Vector<Quantity>& startTimes, 
+			    const Vector<Quantity>& stopTimes,
+			    const Vector<MDirection>& directions)
+{
+  LogIO os(LogOrigin("Simulator", "observemany()", WHERE));
+  
+
+  try {
+    
+    if(!feedsHaveBeenSet && !feedsInitialized) {
+      os << "Feeds have not been set - using default " << feedMode_p << LogIO::WARN;
+      sim_p->initFeeds(feedMode_p);
+      feedsInitialized = True;
+    }
+    if(!timesHaveBeenSet_p) {
+      os << "Times have not been set - using defaults " << endl
+	 << "     Times will be interpreted as hour angles for first source"
+	 << LogIO::WARN;
+    }
+
+    sim_p->observe(sourcenames, spwname, startTimes, stopTimes, directions);
+
+    if(ms_p) delete ms_p; ms_p=0;
+    if(mssel_p) delete mssel_p; mssel_p=0;
+    ms_p = new MeasurementSet(msname_p, 
+			      TableLock(TableLock::AutoNoReadLocking), 
+			      Table::Update);
+
+    ms_p->flush();
+    ms_p->unlock();
+
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+    return False;
+  } 
+  return True;
+}
+
+
+
+
+
+
 Bool Simulator::predict(const Vector<String>& modelImage, 
 			   const String& compList,
 			   const Bool incremental) {
