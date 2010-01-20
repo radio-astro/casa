@@ -1536,8 +1536,51 @@ namespace casa {
       string name = "unspec. frontend";
       ReceiverBandMod::ReceiverBand frequencyBand = ReceiverBandMod::UNSPECIFIED;
       ReceiverSidebandMod::ReceiverSideband receiverSideband = ReceiverSidebandMod::NOSB; //???
+      Quantity repFreq( (SPWRows[irow]->getRefFreq()).get(), String(Frequency::unit()) );
+      Double repFreqGHz = repFreq.getValue("GHz");
+
       if(telName_p == "ALMA"){
-	// add code to implement ALMA freq band names here !!!
+	// implementation of the ALMA freq bands !!!
+	if(31.<=repFreqGHz &&  repFreqGHz<45.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_01;
+	  receiverSideband = ReceiverSidebandMod::SSB; 
+	}
+	if(67.<=repFreqGHz &&  repFreqGHz<90.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_02;
+	  receiverSideband = ReceiverSidebandMod::SSB; 
+	}
+	if(84.<=repFreqGHz &&  repFreqGHz<116.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_03;
+	  receiverSideband = ReceiverSidebandMod::TSB; 
+	}
+	else if(125.<=repFreqGHz &&  repFreqGHz<163.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_04;
+	  receiverSideband = ReceiverSidebandMod::TSB; 
+	}	  
+	else if(163.<=repFreqGHz &&  repFreqGHz<211.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_05;
+	  receiverSideband = ReceiverSidebandMod::TSB; 
+	}	  
+	else if(211.<=repFreqGHz &&  repFreqGHz<275.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_06;
+	  receiverSideband = ReceiverSidebandMod::TSB; 
+	}	  
+	else if(275.<=repFreqGHz &&  repFreqGHz<373.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_07;
+	  receiverSideband = ReceiverSidebandMod::TSB; 
+	}	  
+	else if(385.<=repFreqGHz &&  repFreqGHz<500.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_08;
+	  receiverSideband = ReceiverSidebandMod::TSB; 
+	}	  
+	else if(602.<=repFreqGHz &&  repFreqGHz<720.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_09;
+	  receiverSideband = ReceiverSidebandMod::DSB; 
+	}	  
+	else if(787.<=repFreqGHz &&  repFreqGHz<950.){
+	  frequencyBand = ReceiverBandMod::ALMA_RB_10;
+	  receiverSideband = ReceiverSidebandMod::DSB; 
+	}	  
       }
       int numLO = 0; // no information in the MS ???
       vector<Frequency > freqLO;
@@ -2632,6 +2675,73 @@ namespace casa {
 
     return rstat;
 
+  }
+
+  Bool MS2ASDM::writeSBSummaryStub(){
+    LogIO os(LogOrigin("MS2ASDM", "writeSBSummaryStub()"));
+    
+    Bool rstat = True;
+    
+    asdm::SBSummaryTable& tT = ASDM_p->getSBSummary();
+    
+    asdm::SBSummaryRow* tR = 0;
+    
+    // parameters of the new row
+    EntityRef sbSummaryUID; // will be filled later ???
+    EntityRef projectUID; // will be filled later ???
+    EntityRef obsUnitSetId; // will be filled later ???
+    double frequency;
+    ReceiverBandMod::ReceiverBand frequencyBand;
+    SBTypeMod::SBType sbType;
+    Interval sbDuration;
+    vector< Angle > centerDirection;
+    int numObservingMode;
+    vector< string > observingMode;
+    int numberRepeats;
+    int numScienceGoal;
+    vector< string > scienceGoal;
+    int numWeatherConstraint;
+    vector< string > weatherConstraint;
+
+    tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, 
+		   centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, 
+		   scienceGoal, numWeatherConstraint, weatherConstraint);
+    
+    tT.add(tR);
+    
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled SBSummary table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    incrementUid();
+    
+    return rstat;
+    
+  }
+
+  Bool MS2ASDM::writeExecBlockStub(){
+    LogIO os(LogOrigin("MS2ASDM", "writeExecBlockStub()"));
+
+    Bool rstat = True;
+
+    return rstat;
+  }
+
+  Bool MS2ASDM::writeScan(){
+    LogIO os(LogOrigin("MS2ASDM", "writeScan()"));
+
+    Bool rstat = True;
+
+    return rstat;
+  }
+
+  Bool MS2ASDM::writeSubScan(){
+    LogIO os(LogOrigin("MS2ASDM", "writeSubScan()"));
+
+    Bool rstat = True;
+
+    return rstat;
   }
 
   Bool MS2ASDM::writeMain(){

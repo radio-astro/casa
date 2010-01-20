@@ -8,6 +8,7 @@ vis_b = 'test.ms'
 #vis_c = 'jupiter6cm.demo.ms'
 #vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
 #vis_e = 'g19_d2usb_targets_line-shortened.ms'
+vis_f = 'Itziar.ms'
 
 #if(not os.path.exists(vis_a)):
 #    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_a)
@@ -19,6 +20,8 @@ if(not os.path.exists(vis_b)):
 #    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_d)
 #if(not os.path.exists(vis_e)):
 #    os.system('cp -R '+os.environ['CASADATA']+'/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
+if(not os.path.exists(vis_f)):
+    os.system('cp -R '+os.environ['CASADATA']+'/regression/exportasdm/input/Itzar.ms .')
 
 
 def verify_asdm(asdmname):
@@ -72,6 +75,30 @@ if (testnumber in testlist):
     try:
         print "\n>>>> Test ", testnumber, ", input MS: ", myvis
         print "small input MS, default output"
+        rval = exportasdm(
+            vis = 'myinput.ms',
+            asdm = 'exportasdm-output.asdm'
+            )
+        print "rval is ", rval
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+'exportasdm-output.asdm'
+        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
+        verify_asdm(omsname)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 3
+if (testnumber in testlist):
+    myvis = vis_f
+    os.system('rm -rf exportasdm-output.asdm myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('exportasdm')
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "simulated input MS, default output"
         rval = exportasdm(
             vis = 'myinput.ms',
             asdm = 'exportasdm-output.asdm'

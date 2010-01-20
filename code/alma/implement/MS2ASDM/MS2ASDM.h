@@ -198,6 +198,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool writeConfigDescription();
 
+  // Scheme
+  // 1) We regard one MS Observation as a set of ASDM ExecBlocks modelled on 
+  //    a single ASDM Scheduling Block
+  // 2) ALMA ExecBlocks are at most 30 minutes long.
+  //    If an MS Observation is more than 30 Minutes long, it is split up into 
+  //    several ASDM ExecBlocks each referring to the same Scheduling Block.
+  // 3) Each ASDM ExecBlock contains one or more ASDM Scans based on the MS scans 
+  // 4) Each ASDM Scan contains one or more ASDM Subscans
+  // 5) Each ASDM Subscan is at most subscanduration long. (external parameter)
+  // 6) If an MS Scan is longer than subscanduration, it is split up into 
+  //    several ASDM subscans.
+
+  Bool writeSBSummaryStub();
+
+  Bool writeExecBlockStub();
+
+  Bool writeScan();
+
+  Bool writeSubScan();
+
   Bool writeMain();
 
   // write the binary part of the ASDM main table
