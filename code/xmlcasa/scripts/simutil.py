@@ -54,7 +54,7 @@ class simutil:
         self.bandwidth=bandwidth
         self.totaltime=totaltime
 
-    def msg(self, s, origin=None, color=None):
+    def msg(self, s, origin=None, priority=None):
         # ansi color codes:
         # Foreground colors
         # 30    Black
@@ -65,16 +65,29 @@ class simutil:
         # 35    Magenta
         # 36    Cyan
         # 37    White
-        if color==None:
+        toterm=False
+        if priority==None:
             clr="\x1b[32m"
+            priority="INFO"
         else:
-            clr="\x1b["+color.__str__()+"m"
+            priority=priority.upper()
+            if priority=="WARN":
+                clr="\x1b[35m"                
+                toterm=True
+                priority="INFO" # otherwise casalog will spew to term also.
+            else:
+                if priority=="ERROR":
+                    clr="\x1b[31m"
+                    toterm=True
+                else:
+                    if not (priority=="DEBUG" or priority[:-1]=="DEBUG"):
+                        priority="INFO"
         bw="\x1b[0m"
         if origin==None:
             origin="simutil"
-        print clr+"["+origin+"] "+bw+s
-        #casalog.post("")
-        casalog.post(s)
+        if toterm:
+            print clr+"["+origin+"] "+bw+s
+        casalog.post(s,priority=priority,origin=origin)
 
 
 # helper function to plot an image (optionally), and calculate its statistics
@@ -98,7 +111,7 @@ class simutil:
             toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
             toJypix=1.
         else:
-            self.msg("WARN: don't know image units for %s" % image,origin="statim")
+            self.msg("%s: unknown units" % image,origin="statim",priority="warn")
             toJyarcsec=1.
             toJypix=1.
         stats=ia.statistics(robust=True)
@@ -126,7 +139,7 @@ class simutil:
             xform=csys.lineartransform(type="direction")
             offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
             if offdiag > 1e-4:
-                self.msg("ERROR: Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",origin="statim",color="31")
+                self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",origin="statim",priority="error")
             factor=pl.sqrt(abs(pl.det(xform)))
             xpix=xpix*factor
             ypix=ypix*factor
@@ -311,9 +324,8 @@ class simutil:
 
         # need an error check here if zero valid pointings were read
         if len(pointings) < 1:
-            s="Error: No valid point is found in input file"
-            #casalog.post(s,'ERROR','simutil')
-            self.msg(s,color="31")
+            s="No valid point is found in input file"
+            self.msg(s,priority="error")
         self.msg("read in %i pointing(s) from file" % len(pointings))
         self.pointings=pointings
         #self.direction=pointings
@@ -398,7 +410,7 @@ class simutil:
             refcode = dirl[0] + ' '
         else:
             refcode = 'J2000'
-            if self.verbose: msg("assuming J2000 for "+direction,origin="simutil.s2m")
+            if self.verbose: self.msg("assuming J2000 for "+direction,origin="simutil.s2m")
         x, y = map(qa.quantity, dirl[-2:])
         if x['unit'] == '': x['unit']='deg'
         if y['unit'] == '': y['unit']='deg'
@@ -410,7 +422,7 @@ class simutil:
         Given a direction as a measure, return it as astring 'refcode lon lat'.
         """
         if dir['type'] != 'direction':
-            msg("ERROR converting direction measure",color="31",origin="simutil.m2s")
+            self.msg("converting direction measure",priority="error",origin="simutil.m2s")
             return False
         ystr = qa.formxxx(dir['m1'], format='dms')
         xstr = qa.formxxx(dir['m0'], format='hms')
@@ -509,7 +521,7 @@ class simutil:
                     flim=[0.305,50]
                     if self.verbose: self.msg("using old VLA Rx specs",origin="noisetemp")
                 else:
-                    self.msg("I don't know about the "+telescope+" receivers, using 200K",color="31",origin="noisetemp")
+                    self.msg("I don't know about the "+telescope+" receivers, using 200K",priority="warn",origin="noisetemp")
                     f0=[10,900]
                     t0=[200,200]
                     flim=[0,5000]
@@ -524,11 +536,11 @@ class simutil:
         # t_rx = sp(obsfreq)[0]
         
         if obsfreq<flim[0]:
-            self.msg("observing freqency is lower than expected for "+telescope,color="31",origin="noise")
-            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),color="31",origin="noise")
+            self.msg("observing freqency is lower than expected for "+telescope,priority="warn",origin="noise")
+            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),priority="warn",origin="noise")
         if obsfreq>flim[1]:
-            self.msg("observing freqency is higher than expected for "+telescope,color="31",origin="noise")
-            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),color="31",origin="noise")
+            self.msg("observing freqency is higher than expected for "+telescope,priority="warn",origin="noise")
+            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),priority="warn",origin="noise")
         if obsfreq<=flim[1] and obsfreq>=flim[0]:
             self.msg("interpolated receiver temp="+str(t_rx),origin="noise")
 
@@ -703,7 +715,7 @@ class simutil:
         f.close()
 
         if not params.has_key("observatory"):
-            self.msg("Must specify observatory in antenna file",origin="readantenna",color="31")
+            self.msg("Must specify observatory in antenna file",origin="readantenna",priority="error")
             return -1
         else:
             self.telescopename=params["observatory"]
@@ -711,7 +723,7 @@ class simutil:
                 self.msg("Using observatory= %s" % params["observatory"],origin="readantenna")
 
         if not params.has_key("coordsys"):
-            self.msg("Must specify coordinate system #coorsys=XYZ|UTM|GEO in antenna file",origin="readantenna",color="31")
+            self.msg("Must specify coordinate system #coorsys=XYZ|UTM|GEO in antenna file",origin="readantenna",priority="error")
             return -1
         else:
             self.coordsys=params["coordsys"]
@@ -731,18 +743,18 @@ class simutil:
                 if params.has_key("zone"):
                     zone=params["zone"]
                 else:
-                    self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
+                    self.msg("You must specify zone=NN in your antenna file",origin="readantenna",priority="error")
                     return -1
                 if params.has_key("datum"):
                     datum=params["datum"]
                 else:
-                    self.msg("You must specify datum in your antenna file",origin="readantenna",color="31")
+                    self.msg("You must specify datum in your antenna file",origin="readantenna",priority="error")
                     return -1
                 if params.has_key("hemisphere"):
                     nors=params["hemisphere"]
                     nors=nors[0].upper()
                 else:
-                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",color="31")
+                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",priority="error")
                     return -1
                 
                 # if self.verbose: foo=self.getdatum(datum,verbose=True)
@@ -756,7 +768,7 @@ class simutil:
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
                     meobs=me.observatory(params["observatory"])
                     if (meobs.__len__()<=1):
-                        self.msg("You need to add "+params["observatory"]+" to the Observatories table in your installation to proceed.",color="31")
+                        self.msg("You need to add "+params["observatory"]+" to the Observatories table in your installation to proceed.",priority="error")
                         return False,False,False,False,False,params["observatory"]
                     obs=me.measure(meobs,'WGS84')
                     obslat=qa.convert(obs['m1'],'deg')['value']
@@ -775,12 +787,12 @@ class simutil:
                         if params.has_key("datum"):
                             datum=params["datum"]
                         else:
-                            self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
+                            self.msg("You must specify zone=NN in your antenna file",origin="readantenna",priority="error")
                             return -1
                         if (datum.upper() != "WGS84"):
-                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readantenna",color="31")
+                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readantenna",priority="error")
                             return -1
-                        self.msg("geodetic coordinates not implemented yet :(",color="31")
+                        self.msg("geodetic coordinates not implemented yet",priority="error")
                     
         return (stnx, stny, stnz, pl.array(ind), id, nant, params["observatory"])
 
@@ -1003,14 +1015,14 @@ class simutil:
             'WGS84' :[   0, 0  ,   0,'WE','World Geodetic System - 84'    ]}
         
         if not datums.has_key(datumcode):
-            self.msg("I can't figure out what datum %s is" % datumcode,color="31")
+            self.msg("unknown datum %s" % datumcode,priority="error")
             return -1
         
         datum=datums[datumcode]
         ellipsoid=datum[3]
         
         if not ellipsoids.has_key(ellipsoid):
-            self.msg("I can't figure out what ellipsoid %s is" % ellipsoid,color="31")
+            self.msg("unknown ellipsoid %s" % ellipsoid,priority="error")
             return -1
         
         if verbose:
@@ -1383,7 +1395,7 @@ class simutil:
             xform=in_csys.lineartransform(type="direction")
             offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
             if offdiag > 1e-4:
-                self.msg("ERROR: Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",color="31")
+                self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
             factor=pl.sqrt(abs(pl.det(xform)))
             # stupid fix for not having Rob's quanta fix
             if int(casalog.version().split()[4][1:5]) < 8000:
@@ -1393,7 +1405,7 @@ class simutil:
     
             # warn if input pixels are not square
             if (abs(incellx['value'])-abs(incelly['value']))/abs(incellx['value']) > 0.001 and not ignorecoord:
-                self.msg("input pixels are not square!",color="31",origin="setup model")
+                self.msg("input pixels are not square!",priority="warn",origin="setup model")
                 if self.verbose:
                     self.msg("using cell = %s (not %s)" % (str(incellx),str(incelly)),origin="setup model")
                 else:
@@ -1440,7 +1452,7 @@ class simutil:
 
         in_nax=arr.shape.__len__()
         if in_nax<2:
-            self.msg("ERROR: Your input model has fewer than 2 dimensions.  Can't proceed",color="31")
+            self.msg("Your input model has fewer than 2 dimensions.  Can't proceed",priority="error")
             return False
 
 
@@ -1460,14 +1472,14 @@ class simutil:
             
         else:            
             if not in_dir['return']:
-                self.msg("ERROR: You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",color="31")
+                self.msg("You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",priority="error")
                 return False            
             ra,dec = in_csys.referencevalue(type="direction")['numeric']
             model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms')+" "+qa.formxxx(str(dec)+"rad",format='dms')
             ra=qa.quantity(str(ra)+"rad")
             dec=qa.quantity(str(dec)+"rad")
             if in_dir['pixel'].__len__() != 2:
-                self.msg("ERROR: I can't understand your direction coordinates, so either edit the header or set ignorecoord=True",color="31")
+                self.msg("I can't understand your direction coordinates, so either edit the header or set ignorecoord=True",priority="error")
                 return False            
             dirax=in_dir['pixel']
             axmap[0]=dirax[0]
@@ -1481,7 +1493,7 @@ class simutil:
         if in_nax==2:            
             # then we can't make a cube (at least, it would be boring)
             if nchan>1: 
-                self.msg("WARN: you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",color="31",origin="setup model")
+                self.msg("you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",priority="warn",origin="setup model")
                 nchan=1
             # add an extra axis to be Spectral:
             arr=arr.reshape([arr.shape[0],arr.shape[1],1])
@@ -1499,9 +1511,9 @@ class simutil:
                     foo=in_spc['pixel']
                 else:
                     foo=in_spc['pixel'][0]
-                    self.msg("WARN: you seem to have two spectral axes",color="31")
+                    self.msg("you seem to have two spectral axes",priority="warn")
                 if arr.shape[foo]>1 and nchan==1:
-                    if self.verbose: self.msg("WARN: You will be flattening your spectral dimension",origin="setup model")
+                    if self.verbose: self.msg("You will be flattening your spectral dimension",origin="setup model",priority="warn")
                 axmap[3]=foo
                 axassigned[foo]=3
                 model_restfreq=in_csys.restfrequency()
@@ -1522,7 +1534,7 @@ class simutil:
                     if in_nax<4:
                         # then we can't make a cube (at least, it would be boring)
                         if nchan>1: 
-                            self.msg("WARN: you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",color="31",origin="setup model")
+                            self.msg("you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",priority="warn",origin="setup model")
                             nchan=1
                         # add an extra axis to be Spectral:
                         arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
@@ -1537,7 +1549,7 @@ class simutil:
                     if axassigned[i]<0: extra_axis=i
                     i+=1
                 if extra_axis<0:                    
-                    self.msg("ERROR: I can't find an unused axis to make Spectral [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),color="31",origin="setup model")
+                    self.msg("I can't find an unused axis to make Spectral [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),priority="error",origin="setup model")
                     return False
                 add_spectral_coord=True
                 
@@ -1546,10 +1558,10 @@ class simutil:
             axassigned[extra_axis]=3
             if nchan>arr.shape[extra_axis]:
                 nchan=arr.shape[extra_axis]
-                self.msg("WARN: you are asking for more channels than you have - truncating output cube to %i channels (%s each)" % (nchan,str(chanwidth)),color="31",origin="setup model")
+                self.msg("you are asking for more channels than you have - truncating output cube to %i channels (%s each)" % (nchan,str(chanwidth)),priority="warn",origin="setup model")
             if arr.shape[extra_axis]>nchan:
                 # actually subsample someday:
-                self.msg("WARN: you are asking for fewer channels (%i) than the input cube - increasing nchan to %i (%s each) " % (nchan,arr.shape[extra_axis],str(chanwidth)),color="31",origin="setup model")
+                self.msg("you are asking for fewer channels (%i) than the input cube - increasing nchan to %i (%s each) " % (nchan,arr.shape[extra_axis],str(chanwidth)),priority="warn",origin="setup model")
                 nchan=arr.shape[extra_axis]
             if arr.shape[extra_axis]>1:
                 model_restfreq=startfreq
@@ -1587,11 +1599,11 @@ class simutil:
                     foo=in_stk['pixel']
                 else:
                     foo=in_stk['pixel'][0]
-                    self.msg("WARN: you seem to have two stokes axes",color="31")                
+                    self.msg("you seem to have two stokes axes",priority="warn")                
                 axmap[2]=foo
                 axassigned[foo]=2
                 if in_shape[foo]>4:
-                    self.msg("ERROR: You appear to have more than 4 Stokes components - please edit your header and/or parameters",color="31")
+                    self.msg("you appear to have more than 4 Stokes components - please edit your header and/or parameters",priority="error")
                     return False                        
                 add_stokes_coord=False
                 if self.verbose: self.msg("Stokes Coordinate %i parsed" % axmap[2],origin="setup model")
@@ -1603,7 +1615,7 @@ class simutil:
                     if axassigned[i]<0: extra_axis=i
                     i+=1
                 if extra_axis<0:
-                    self.msg("ERROR: I can't find an unused axis to make Stokes [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),color="31",origin="setup model")
+                    self.msg("I can't find an unused axis to make Stokes [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),priority="error",origin="setup model")
                     return False
                 add_stokes_coord=True
                             
@@ -1612,17 +1624,17 @@ class simutil:
             axmap[2]=extra_axis
             axassigned[extra_axis]=2
             if arr.shape[extra_axis]>4:
-                self.msg("ERROR: you have %i Stokes parameters in your potential Stokes axis %i.  something is wrong." % (arr.shape[extra_axis],extra_axis))
+                self.msg("you have %i Stokes parameters in your potential Stokes axis %i.  something is wrong." % (arr.shape[extra_axis],extra_axis),priority="error")
                 return False
             if self.verbose: self.msg("Adding Stokes Coordinate",origin="setup model")
             if arr.shape[extra_axis]==4:                    
                 model_stokes="IQUV"
             if arr.shape[extra_axis]==3:                    
                 model_stokes="IQV"
-                self.msg("WARN: setting IQV Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
+                self.msg("setting IQV Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model",priority="warn")
             if arr.shape[extra_axis]==2:                    
                 model_stokes="IQ"
-                self.msg("WARN: setting IQ Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
+                self.msg("setting IQ Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model",priority="warn")
             if arr.shape[extra_axis]<=1:                    
                 model_stokes="I"
 
@@ -1666,15 +1678,15 @@ class simutil:
         # first assure that the csys has the expected order 
         expected=['Direction', 'Direction', 'Stokes', 'Spectral']
         if modelcsys.axiscoordinatetypes() != expected:
-            self.msg("ERROR: internal error with coordinate axis order created by Imager",color="31")
-            self.msg(modelcsys.axiscoordinatetypes().__str__(),color="31")
+            self.msg("internal error with coordinate axis order created by Imager",priority="error")
+            self.msg(modelcsys.axiscoordinatetypes().__str__(),priority="error")
             return False
 
         # more checks:
         foo=pl.array(modelshape)
         if not (pl.array(arr.shape) == pl.array(foo.take(axmap).tolist())).all():
-            self.msg("ERROR: internal error: I'm confused about the shape if your model data cube",color="31")
-            self.msg("have "+foo.take(axmap).__str__()+", want "+in_shape.__str__(),color="31")
+            self.msg("internal error: I'm confused about the shape if your model data cube",priority="error")
+            self.msg("have "+foo.take(axmap).__str__()+", want "+in_shape.__str__(),priority="error")
             return False
 
         ia.setcoordsys(modelcsys.torecord())
@@ -1705,7 +1717,7 @@ class simutil:
             self.msg("simulated image desired channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
             self.msg("simulated image desired pixel size = %8.2e arcsec" % out_cell['value'],origin="setup model")
             if arr.nbytes > 5e7:
-                msg("WARN: your model is large - predicting visibilities may take a while.")
+                msg("your model is large - predicting visibilities may take a while.",priority="warn")
 
 
         ia.putchunk(arr*scalefactor)

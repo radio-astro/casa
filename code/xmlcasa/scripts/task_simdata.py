@@ -32,7 +32,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
     msg=util.msg
     
     if((not os.path.exists(modelimage)) and (not os.path.exists(complist))):
-        msg("ERROR -- No sky input found.  At least one of modelimage or complist must be set.",color="31")
+        msg("No sky input found.  At least one of modelimage or complist must be set.",priority="error")
         return
     
     try:
@@ -69,7 +69,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         if (modelimage == ''):
             
             if cell=="incell":
-                msg("ERROR: You can't use the input header for the pixel size if you don't have an input header!",color="31")
+                msg("You can't use the input header for the pixel size if you don't have an input header!",priority="error")
                 return False
             else:
                 out_cell=qa.convert(cell,'arcsec')
@@ -132,7 +132,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # the pointings will be now, to move the model image there
             
             if cell=="incell":
-                msg("ERROR: You can't use the input header for the pixel size and also ignore the input header information!",color="31")
+                msg("You can't use the input header for the pixel size and also ignore the input header information!",priority="error")
                 return False
             else:
                 in_cell=qa.convert(cell,'arcsec')
@@ -150,7 +150,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 nfld = direction.__len__()
                 if nfld > 1 :
                     pointings = direction
-                    if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction")
+                    if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction",priority="warn")
                 else:
                     # calculate pointings for the user 
                     nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
@@ -238,7 +238,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             nfld = direction.__len__()
             if nfld > 1 :
                 pointings = direction
-                if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction")
+                if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction",priority="warn")
             else:
                 # calculate pointings for the user 
                 nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
@@ -326,7 +326,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
             
             if checkinputs=="only":
-                if verbose: msg("Stopping after checking inputs as requested")
+                msg("Stopping after checking inputs as requested",priority="warn")
                 return
             else:
                 if display==True:
@@ -343,7 +343,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         # (has to be here since we may have changed nchan)
         
         if verbose:
-            msg("preparing empty measurement set")
+            msg("preparing empty measurement set",priority="warn")
 
         sm.open(msfile)
         posobs=me.observatory(telescopename)
@@ -414,12 +414,12 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # we have created modelimage4d from them but if
             # we have components and model image they are not yet combined
             if len(complist)>1:
-                msg("predicting from "+modelimage4d+" and "+complist)
+                msg("predicting from "+modelimage4d+" and "+complist,priority="warn")
             else:
-                msg("predicting from "+modelimage4d)
+                msg("predicting from "+modelimage4d,priority="warn")
             sm.predict(imagename=[modelimage4d],complist=complist)
         else:   # if we're doing only components
-            msg("predicting from "+complist)
+            msg("predicting from "+complist,priority="warn")
             sm.predict(complist=complist)
 
         sm.done()
@@ -438,13 +438,13 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
     
         if noise_thermal:
             if not (util.telescopename == 'ALMA' or util.telescopename == 'ACA'):
-                msg("WARN: thermal noise only works properly for ALMA/ACA",color="31",origin="noise")
+                msg("thermal noise only works properly for ALMA/ACA",origin="noise",priority="warn")
                 
             noise_any=True
 
             noisymsfile = project + ".noisy.ms"
             noisymsroot = project + ".noisy"
-            msg('adding thermal noise to ' + noisymsfile,origin="noise")
+            msg('adding thermal noise to ' + noisymsfile,origin="noise",priority="warn")
 
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
 
@@ -480,7 +480,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                         ",trx="+str(t_rx)+",tau="+str(tau0)+
                         ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-                    msg("** this may take a few minutes, but will be faster in the next CASA release")
+                    msg("** this may take a few minutes, but will be faster in the next CASA release",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
                             tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
@@ -492,7 +492,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                         ",trx="+str(t_rx)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
                         ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
-                    msg("** this may take a few minutes, but will be faster in the next CASA release")
+                    msg("** this may take a few minutes, but will be faster in the next CASA release",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
                             tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
@@ -538,11 +538,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             mstoimage = msfile
 
         if fidelity == True and doclean == False:
-            msg("WARN: You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",origin="deconvolve")
+            msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",origin="deconvolve",priority="warn")
             fidelity=False
 
         if display == True and doclean == False:
-            msg("WARN: Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",origin="deconvolve")
+            msg("Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",origin="deconvolve",priority="warn")
             display=False
 
         if doclean: 
@@ -850,7 +850,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
 
     except TypeError, e:
-        msg("task_simdata -- TypeError: %s" % e,color="31")
+        msg("task_simdata -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
         print "task_simdata -- OptionError: ", e
