@@ -1058,13 +1058,37 @@ void NewMSSimulator::settimes(const Quantity& qIntegrationTime,
   t_offset_p=0.0;
 }
 
+
+// old interface:
 void NewMSSimulator::observe(const String& sourceName,
 			     const String& spWindowName,
 			     const Quantity& qStartTime, 
 			     const Quantity& qStopTime)
 {
-  //LogIO os(LogOrigin("NewMSSimulator", "observe()", WHERE));
-  LogIO os(LogOrigin("NewMSSimulator", "observe()"));
+  Vector<String> sourceNames(1,sourceName);  
+  Vector<Quantity> qStartTimes(1,qStartTime);
+  Vector<Quantity> qStopTimes(1,qStopTime);
+  Vector<MDirection> directions;  // constructs Array<T>(IPosition(1,0))
+
+  NewMSSimulator::observe(sourceNames,spWindowName,qStartTimes,qStopTimes,directions);
+}
+
+
+
+// new interface:
+void NewMSSimulator::observe(const Vector<String>& sourceNames,
+			     const String& spWindowName,
+			     const Vector<Quantity>& qStartTimes, 
+			     const Vector<Quantity>& qStopTimes,
+			     const Vector<MDirection>& directions)
+{  
+
+  // It is assumed that if there are multiple pointings, that they 
+  // are in chronological order.  There is not (yet) any checking that 
+  // e.g. startTimes[2] not be less than stopTimes[1]
+
+  LogIO os(LogOrigin("NewMSSimulator", "observe()", WHERE));
+  //LogIO os(LogOrigin("NewMSSimulator", "observe()"));
 
   MSColumns msc(*ms_p);
   
@@ -1131,20 +1155,25 @@ void NewMSSimulator::observe(const String& sourceName,
 //    os<<String(oss)<<LogIO::DEBUG1;
 //  }
   
-  // Field
+
+
+  // (first) Field
+  // if directions[0]==0 then we need to get the direction from the fieldName
+
   MSFieldColumns& fieldc=msc.field();
   if(fieldc.nrow()==0) {
     os << "Field information not yet defined" << LogIO::EXCEPTION;
   }
   Int baseFieldID=fieldc.nrow();
   Int existingFieldID=-1;
+  Int iSrc=0;
 
   // Check for existing field with correct name
   if(baseFieldID>0) {
     Vector<String> fieldNames;
     fieldc.name().getColumn(fieldNames);
     for(uInt i=0;i<fieldNames.nelements();i++) {
-      if (fieldNames(i)==sourceName) {
+      if (fieldNames(i)==sourceNames[iSrc]) {
 	existingFieldID=i;
 	break;
       }
@@ -1152,7 +1181,7 @@ void NewMSSimulator::observe(const String& sourceName,
   }
   
   if(existingFieldID<0) {
-    os << "Field named " << sourceName << " not yet defined" << LogIO::EXCEPTION;
+    os << "Field named " << sourceNames[iSrc] << " not yet defined" << LogIO::EXCEPTION;
   }
   baseFieldID=existingFieldID;
   Vector<MDirection> fcs(1);
@@ -1160,9 +1189,11 @@ void NewMSSimulator::observe(const String& sourceName,
   msd.setFieldCenter(fcs(0));
   MDirection fieldCenter=fcs(0);
   {
-    os << "Observing source : "<< sourceName
+    os << "Observing source : "<< sourceNames[iSrc]
        << " in direction : " << formatDirection(fieldCenter)<<LogIO::DEBUG1;
   }
+
+
 
   // A bit ugly solution to extract the information about beam offsets
   Cube<RigidVector<Double, 2> > beam_offsets;
@@ -1176,9 +1207,22 @@ void NewMSSimulator::observe(const String& sourceName,
       os<< "Feed table format is incompatible with existing code of NewMSSimulator::observe"<<LogIO::EXCEPTION;
   //
   
-  // Now we know where we are and where we are pointing, we can do the time calculations
+
+
+  // Now we know where we are and where we are pointing, 
+  // we can do the time calculations
+
+  // Note: we'll set Tend here to the end of potentially multiple pointings, 
+  // but we're using the t_offset_p calculated for only the _first_ pointing
+  // which could lead to subtle effects
+
   Double Tstart, Tend, Tint;
-  {
+  // number of pointings:
+  Int nPts=qStartTimes.shape()(0);
+  AlwaysAssert(nPts==qStopTimes.shape()(0),AipsError);
+  AlwaysAssert(nPts==sourceNames.shape()(0),AipsError);
+
+  
     Tint = qIntegrationTime_p.getValue("s");
 
     MEpoch::Ref tref(MEpoch::TAI);
@@ -1188,7 +1232,7 @@ void NewMSSimulator::observe(const String& sourceName,
     // until the qStartTime represents the starting Hour Angle
     if (useHourAngle_p&&!hourAngleDefined_p) {
       msd.setEpoch( mRefTime_p );
-      msd.setFieldCenter(fieldCenter);
+      msd.setFieldCenter(fieldCenter);  // set to first sourceName above
       t_offset_p = - msd.hourAngle() * 3600.0 * 180.0/C::pi / 15.0; // in seconds
       hourAngleDefined_p=True;
 //      os << "Times specified are interpreted as hour angles for first source observed" << endl
@@ -1196,14 +1240,15 @@ void NewMSSimulator::observe(const String& sourceName,
 //	 << formatTime(taiRefTime.get("s").getValue("s")) << LogIO::DEBUG1;
     }
     
-    Tstart = qStartTime.getValue("s") + 
+    Tstart = qStartTimes(0).getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
-    Tend = qStopTime.getValue("s") + 
+    Tend = qStopTimes(nPts).getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
 //    os << "Time range : " << endl
 //       << "     start : " << formatTime(Tstart) << endl
 //       << "     stop  : " << formatTime(Tend) << endl << LogIO::DEBUG1;
-  }
+  
+
 
   // fill Observation Table for every call. Eventually we should fill
   // in the schedule information
@@ -1245,9 +1290,6 @@ void NewMSSimulator::observe(const String& sourceName,
     msc.scanNumber().get(nMSRows-1,scan);
   }
 
-  // One call to observe corresponds to one scan
-  scan++;
-
   // We can extend the ms and the hypercubes just once
   Int nBaselines;
   if(autoCorrelationWt_p > 0.0) {
@@ -1257,7 +1299,17 @@ void NewMSSimulator::observe(const String& sourceName,
     nBaselines =nAnt*(nAnt-1)/2;
   }
   Int nNewRows=nBaselines*nFeed;
-  Int nIntegrations=max(1, Int(0.5+(Tend-Tstart)/Tint));
+
+  //Int nIntegrations=max(1, Int(0.5+(Tend-Tstart)/Tint));
+  Int nIntegrations=0; 
+  Double Tstarti, Tendi;
+  for(uInt i=0;i<nPts;i++) {
+    Tstarti = qStartTimes(i).getValue("s");  
+    // don't need to add RefTime and offset since we're just using the diff in this loop:   
+    Tendi = qStopTimes(i).getValue("s"); 
+    nIntegrations+=max(1, Int(0.5+(Tendi-Tstarti)/Tint));
+  }
+ 
   nNewRows*=nIntegrations;
 
   // We need to do addition in this order to get a new TSM file.
@@ -1318,7 +1370,7 @@ void NewMSSimulator::observe(const String& sourceName,
 
 
  
-  //  os << "Calculating uvw coordinates for " << nIntegrations << " integrations" << LogIO::DEBUG1;
+  os << "Calculating uvw coordinates for " << nIntegrations << " integrations" << LogIO::DEBUG1;
 
   for(Int feed=0; feed<nFeed; feed++) {
     //if (nFeed) 
@@ -1326,6 +1378,71 @@ void NewMSSimulator::observe(const String& sourceName,
     // for now assume that all feeds have the same offsets w.r.t.
     // antenna frame for all antennas
     RigidVector<Double, 2> beamOffset=beam_offsets(0,0,feed);
+
+    for(Int pointing=0; pointing<nPts; pointing++) {
+
+      Tstart = qStartTimes(pointing).getValue("s") + 
+	taiRefTime.get("s").getValue("s") + t_offset_p;
+      Tend = qStopTimes(pointing).getValue("s") + 
+	taiRefTime.get("s").getValue("s") + t_offset_p;
+      nIntegrations=max(1, Int(0.5+(Tend-Tstart)/Tint));
+      Time=Tstart;
+
+      // current phase center for a beam without offset
+      // For each individual beam pointing center always coincides
+      // with the phase center
+      
+      // Note from a previous developer:
+      // ???? May be we can use fcs defined earlier instead of fc ????
+      // RI 201001 I think that's true unless it gets screwed up when 
+      // feed_phc is flipped below, or by the setFieldCenter call
+
+      // MDirection fc = msc.field().phaseDirMeas(baseFieldID);
+
+      // One call to observe corresponds to at least one scan, depending on whether sourceName has different values or not.
+      if (pointing==0) {
+	scan++; 
+      } else {
+	if (not(sourceNames[pointing]==sourceNames[0])) {
+	  scan++;
+
+	  // Check for existing field with correct name
+	  if(baseFieldID>0) {
+	    Vector<String> fieldNames;
+	    fieldc.name().getColumn(fieldNames);
+	    for(uInt i=0;i<fieldNames.nelements();i++) {
+	      if (fieldNames(i)==sourceNames[pointing]) {
+		existingFieldID=i;
+		break;
+	      }
+	    }
+	  }
+	  
+	  if(existingFieldID<0) {
+	    os << "Field named " << sourceNames[pointing] << " not yet defined" << LogIO::EXCEPTION;
+	  }
+	  baseFieldID=existingFieldID;	  
+	  fieldc.phaseDirMeasCol().get(baseFieldID,fcs);
+	  //msd.setFieldCenter(fcs(0));
+	  fieldCenter=fcs(0);	  	
+	}
+      }
+
+      // RI 201001 
+      // if direction is nonzero use that instead of baseFieldID direction
+      // sadly, the default direction is the north pole - if we observe
+      // there we're going to have problems....
+      MDirection northPole;
+      // RI TODO there doesn't seem to be a way to compare two measures
+      // i'll compare the angles for now but if the frames are different...
+      if (directions.shape()(0)>0) {
+	if (not(directions(pointing).getAngle()==northPole.getAngle())) {	
+	  fcs=directions(pointing);
+	}
+      }
+      msd.setFieldCenter(fcs(0));
+
+
 
     for(Int integration=0; integration<nIntegrations; integration++) {
     
@@ -1337,16 +1454,9 @@ void NewMSSimulator::observe(const String& sourceName,
     
       MEpoch ep(Quantity((Time + Tint/2), "s"), MEpoch::UT1);
       msd.setEpoch(ep);
-      
-      // current phase center for a beam without offset
-      // For each individual beam pointing center always coincides
-      // with the phase center
-      
-      // ???? May be we can use fcs defined earlier instead of fc ????
-      MDirection fc = msc.field().phaseDirMeas(baseFieldID);
-      msd.setFieldCenter(fc);
+                  
       msd.setAntenna(0); // assume for now that all par. angles are the same 
-            
+
       Vector<Bool> isShadowed(nAnt);  isShadowed.set(False);
       Vector<Bool> isTooLow(nAnt);    isTooLow.set(False);
       Double fractionBlocked1=0.0, fractionBlocked2=0.0;
@@ -1354,7 +1464,7 @@ void NewMSSimulator::observe(const String& sourceName,
       Double diamMax2 = square( max(antDiam) );
 
       // fringe stopping center could be different for different feeds
-      MDirection feed_phc=fc;
+      MDirection feed_phc=fcs(0);
     
       // Do the first row outside the loop
       msc.scanNumber().put(row+1,scan);
@@ -1487,7 +1597,6 @@ void NewMSSimulator::observe(const String& sourceName,
 	}
     }
     
-        
     
     // Find antennas pointing below the elevation limit
     Vector<Double> azel(2);
@@ -1527,6 +1636,7 @@ void NewMSSimulator::observe(const String& sourceName,
 	}
     }    
     
+    // this is all still inside the single integration loop
     Int numpointrows=nAnt;
     MSPointingColumns& pointingc=msc.pointing();
     Int numPointing=pointingc.nrow();
@@ -1546,10 +1656,13 @@ void NewMSSimulator::observe(const String& sourceName,
       pointingc.directionMeasCol().put(m,direction);
       pointingc.targetMeasCol().put(m,direction);             
     }
-    Time+=Tint; 
-  }  // time ranges
-} // feeds
+    Time+=Tint;  // also reset at the start of each pointing
+    }  // time ranges
+  } // feeds
+} // pointings
+        
   
+
   {
     msd.setAntenna(0);
     Vector<Double> azel=msd.azel().getAngle("rad").getValue("rad");

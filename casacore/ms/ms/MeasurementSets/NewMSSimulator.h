@@ -180,6 +180,12 @@ public:
 	       const Quantity& qStartTime, 
 	       const Quantity& qStopTime);
 
+  void observe(const Vector<String>& sourceNames,
+	       const String& spWindowName,
+	       const Vector<Quantity>& qStartTimes, 
+	       const Vector<Quantity>& qStopTimes,
+	       const Vector<MDirection>& directions);
+
 private:
 
   // Prevent use of default constructor
