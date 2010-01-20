@@ -42,52 +42,168 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
         ### End mod ######################
         # file check 
         if not os.path.exists(modelimage):
-            msg("ERROR -- modelimage '%s' is not found." % modelimage,color="31")
-            raise Error, msg
+            msg("modelimage '%s' is not found." % modelimage,priority="error")
 
         try:
             msfile = project+'.ms'
 
-            # open model image as ia tool "model"; leave open
-            modelia=ia.newimagefromfile(modelimage)
-            
-            # Setup cell sizes of input and output image.
-            # This seems to be needed before calculating position list. 
-            # for people who have put in an array, we should print an error.
-            if type(incell) == 'list':
-                incell=incell[0]
-            # optionally use image header for cell size
-            if incell=='header':                
-                #incellx,incelly=modelia.coordsys().increment()['numeric']
-                modelcs=modelia.coordsys()
-                csincs=modelcs.increment()['numeric']
-                incellx=csincs[modelcs.findcoordinate("direction")['pixel'][0]]
-                incelly=csincs[modelcs.findcoordinate("direction")['pixel'][1]]
-                incellx=qa.quantity(incellx,'rad')
-                incelly=qa.quantity(incelly,'rad')
-                # warn if incells are not square 
-                if not incellx == incelly:
-                    msg("Input pixels are not square!",color="31")
-                    msg("Using incell=incellx=%s" % incellx,color="31")
-                incell=qa.convert(incellx,'arcsec')
-            else:
-                incellx=incell
-                incelly=incell
-
-            # now that incell is set by the user or has been retrieved from the 
-            # image header, we can use it for the output cell also
-            if cell=="incell":
-                cell=incell
-
-            # set up simulation utility
             ### Start mod: 2010/01/20 kana ###
-            #bandwidth=qa.mul(qa.quantity(nchan), qa.quantity(chanwidth))
-            #util=simutil(direction,startfreq=qa.quantity(startfreq), bandwidth=bandwidth, verbose=verbose)
-            ### End mod ######################
-            # set up a list of pointings (imsize*cell)
-            # If direction is not a list, only hexagonal gridding is currently available
-            print 'Start - pointing calcs'
-            ### Start mod: 2010/01/19 ###
+            ##################################################################
+            # convert original model image to 4d shape:
+
+            out_cell=cell
+            # if cell="incell", this will be changed to an
+            # actual value by simutil.image4d below
+
+
+            #if not ignorecoord:
+            if not modifymodel:
+                # we are going to use the input coordinate system, so we
+                # don't calculate pointings until we know the input pixel
+                # size.
+                # image4d will return in_cell and out_cell
+                in_cell='0arcsec'
+                ra=qa.quantity("0.deg")
+                dec=qa.quantity("0.deg")
+            else:
+                # if we're ignoreing coord, then we need to calculate where
+                # the pointings will be now, to move the model image there
+            
+                if cell=="incell":
+                    msg("You can't use the input header for the pixel size and also ignore the input header information!",priority="error")
+                    return False
+                else:
+                    in_cell=qa.convert(cell,'arcsec')
+
+                if type(out_cell) == list:
+                    cellx, celly = map(qa.quantity, out_cell)
+                else:
+                    cellx = qa.quantity(out_cell)
+                    celly = cellx
+
+                out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
+
+#                 if type(direction) == list:
+#                     # manually specified pointings            
+#                     nfld = direction.__len__()
+#                     if nfld > 1 :
+#                         pointings = direction
+#                         if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction")
+#                     else:
+#                         # calculate pointings for the user 
+#                         nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+#                 else:
+#                     # check here if "direction" is a filename, and load it in that case
+#                     # util.read_pointings(filename)
+#                     # calculate pointings for the user 
+#                     nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+
+                # direction is always a list of strings (defined by .xml)
+                if len(direction) == 1: direction=direction[0]
+                if type(direction) == str:
+                    # Assume direction as a filename and read lines if it exists
+                    filename=os.path.expanduser(os.path.expandvars(direction))
+                    if os.path.exists(filename):
+                        msg('Reading direction information from the file, %s' % filename)
+                        n, direction, time = util.read_pointings(filename)
+
+#                out_size = [qa.mul(imsize[0], cell),qa.mul(imsize[1], cell)]
+                #nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
+                nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+                
+                # find imcenter=average central point, and centralpointing
+                # (to be used for phase center)
+                imcenter , offsets = util.average_direction(pointings)
+
+                ## commenting out because sd obs don't need centralpointing
+#                 minoff=1e10
+#                 central=-1
+        
+#                 for i in range(nfld):
+#                     o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
+#                     if o<minoff:
+#                         minoff=o
+#                         central=i
+#                 centralpointing=pointings[central]
+            
+                #epoch, ra, dec = util.direction_splitter(centralpointing)
+                if refdirection=="direction": 
+                    epoch, ra, dec = util.direction_splitter(imcenter)
+                else:
+                    epoch, ra, dec = util.direction_splitter(refdirection)
+            
+
+            # truncate model image name to craete new images in current dir:
+            (modelimage_path,modelimage_local) = os.path.split(os.path.normpath(modelimage))
+            modelimage_local=modelimage_local.strip()
+            if modelimage_local.endswith(".fits"):
+                modelimage_local=modelimage_local.replace(".fits","")
+            if modelimage_local.endswith(".FITS"):
+                modelimage_local=modelimage_local.replace(".FITS","")
+            if modelimage_local.endswith(".fit"):
+                modelimage_local=modelimage_local.replace(".fit","")
+
+            # recast into 4d form
+            modelimage4d=project+"."+modelimage_local+'.coord'        
+            # need this filename whether or not we create the output image
+            modelregrid=project+"."+modelimage_local+".flat"        
+            # modelflat should be the moment zero of that
+            modelflat=project+"."+modelimage_local+".flat0" 
+
+            # this will get set by image4d if required
+            out_nstk=1
+
+            # *** ra is expected and returned in angular quantity/dict
+            (ra,dec,in_cell,out_cell,
+             nchan,startfreq,chanwidth,bandwidth,
+             out_nstk) = util.image4d(modelimage,modelimage4d,
+                                      #inbright,ignorecoord,
+                                      inbright,modifymodel,
+                                      ra,dec,
+                                      in_cell,out_cell,
+                                      nchan,startfreq,chanwidth,bandwidth,
+                                      out_nstk,
+                                      flatimage=modelflat)
+        
+            # (set back to simdata after calls to util)
+            casalog.origin('simdata')
+
+            if verbose:
+                out_shape=[imsize[0],imsize[1],out_nstk,nchan]
+                msg("simulated image desired shape= %s" % out_shape,origin="setup model")
+                msg("simulated image desired center= %f %f" % (qa.convert(ra,"deg")['value'],qa.convert(dec,"deg")['value']),origin="setup model")
+
+
+
+
+            ##################################################################
+            # set imcenter to the center of the mosaic
+            # in clean, we also set to phase center; cleaning with no pointing
+            # at phase center causes issues
+
+            if type(out_cell) == list:
+                cellx, celly = map(qa.quantity, out_cell)
+            else:
+                cellx = qa.quantity(out_cell)
+                celly = cellx
+        
+            out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
+
+#             if type(direction) == list:
+#                 # manually specified pointings            
+#                 nfld = direction.__len__()
+#                 if nfld > 1 :
+#                     pointings = direction
+#                     if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction")
+#                 else:
+#                     # calculate pointings for the user 
+#                     nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+#             else:
+#                 # check here if "direction" is a filename, and load it in that case
+#                 # util.read_pointings(filename)
+#                 # calculate pointings for the user 
+#                 nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+
             # direction is always a list of strings (defined by .xml)
             if len(direction) == 1: direction=direction[0]
             if type(direction) == str:
@@ -97,12 +213,110 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
                     msg('Reading direction information from the file, %s' % filename)
                     n, direction, time = util.read_pointings(filename)
 
-            out_size = [qa.mul(imsize[0], cell),qa.mul(imsize[1], cell)]
+#            out_size = [qa.mul(imsize[0], cell),qa.mul(imsize[1], cell)]
             #nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
             nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-            print 'End - pointing calcs'
+            
+                
+
+            # find imcenter=average central point, and centralpointing
+            # (to be used for phase center)
+            imcenter , offsets = util.average_direction(pointings)
+
+            ## commenting out this part because sd obs don't need centralpointing
+#             minoff=1e10
+#             central=-1
+        
+#             for i in range(nfld):
+#                 o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
+#                 if o<minoff:
+#                     minoff=o
+#                     central=i
+#             centralpointing=pointings[central]
+            
+            # (set back to simdata after calls to util)
+            casalog.origin('simdata')
+
+#             if nfld==1:
+#                 imagermode=''
+#                 ftmachine="ft"
+#                 msg("phase center = " + centralpointing)
+#             else:
+#                 imagermode="mosaic"
+#                 ftmachine="mosaic"
+#                 msg("mosaic center = " + imcenter + "; phase center = " + centralpointing)
+            ## For single dish simulation
+            imagermode=''
+            ftmachine="sd"
+            msg("map center = " + imcenter)
+            if verbose: 
+                for dir in pointings:
+                    msg("   "+dir)
+            ### End mod ######################
+
+
+
+
+            ### Start mod: 2010/01/20 kana ###
+#             # open model image as ia tool "model"; leave open
+#             modelia=ia.newimagefromfile(modelimage)
+            
+#             # Setup cell sizes of input and output image.
+#             # This seems to be needed before calculating position list. 
+#             # for people who have put in an array, we should print an error.
+#             if type(incell) == 'list':
+#                 incell=incell[0]
+#             # optionally use image header for cell size
+#             if incell=='header':                
+#                 #incellx,incelly=modelia.coordsys().increment()['numeric']
+#                 modelcs=modelia.coordsys()
+#                 csincs=modelcs.increment()['numeric']
+#                 incellx=csincs[modelcs.findcoordinate("direction")['pixel'][0]]
+#                 incelly=csincs[modelcs.findcoordinate("direction")['pixel'][1]]
+#                 incellx=qa.quantity(incellx,'rad')
+#                 incelly=qa.quantity(incelly,'rad')
+#                 # warn if incells are not square 
+#                 if not incellx == incelly:
+#                     msg("Input pixels are not square!",color="31")
+#                     msg("Using incell=incellx=%s" % incellx,color="31")
+#                 incell=qa.convert(incellx,'arcsec')
+#             else:
+#                 incellx=incell
+#                 incelly=incell
+
+#             # now that incell is set by the user or has been retrieved from the 
+#             # image header, we can use it for the output cell also
+#             if cell=="incell":
+#                 cell=incell
+            ### End mod ######################
+
+            # set up simulation utility
+            ### Start mod: 2010/01/20 kana ###
+            #bandwidth=qa.mul(qa.quantity(nchan), qa.quantity(chanwidth))
+            #util=simutil(direction,startfreq=qa.quantity(startfreq), bandwidth=bandwidth, verbose=verbose)
+            ### End mod ######################
+
+            # set up a list of pointings (imsize*cell)
+            # If direction is not a list, only hexagonal gridding is currently available
+            ### Start mod: 2010/01/20 ###
+#             print 'Start - pointing calcs'
+#             ### Start mod: 2010/01/19 ###
+#             # direction is always a list of strings (defined by .xml)
+#             if len(direction) == 1: direction=direction[0]
+#             if type(direction) == str:
+#                 # Assume direction as a filename and read lines if it exists
+#                 filename=os.path.expanduser(os.path.expandvars(direction))
+#                 if os.path.exists(filename):
+#                     msg('Reading direction information from the file, %s' % filename)
+#                     n, direction, time = util.read_pointings(filename)
+
+#             out_size = [qa.mul(imsize[0], cell),qa.mul(imsize[1], cell)]
+#             #nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
+#             nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+#             print 'End - pointing calcs'
+#             ### End mod #################
+#             ave , off = util.average_direction(pointings)
             ### End mod #################
-            ave , off = util.average_direction(pointings)
             nbands = 1
             fband = 'band'+startfreq
 
@@ -181,144 +395,146 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             else:
                 imcenter = direction
 
-            msg("done setting up observations")
+            msg("done setting up observations",priority="warn")
 
 
             # fit modelimage into a 4 coordinate image defined by the parameters
             
-            # modelia is already open with the original input model from above
-            insize=modelia.shape()
+            ### Start mod: 2010/01/20 kana ###
+#             # modelia is already open with the original input model from above
+#             insize=modelia.shape()
 
-            # first make a blank 4-dimensional image w/the right cell size
-            modelimage4d=project+"."+modelimage+'.coord'
-            im.open(msfile)    
-            im.selectvis(field=range(nfld), spw=0)
-            # imcenter is the average of the desired pointings
-            # we put the phase center there, rather than at the
-            # reference direction for the input model (refdirection)
-            im.defineimage(nx=insize[0], ny=insize[1], cellx=incellx, celly=incelly, phasecenter=imcenter)
-            im.make(modelimage4d)
-            im.close()
-            im.done()
+#             # first make a blank 4-dimensional image w/the right cell size
+#             modelimage4d=project+"."+modelimage+'.coord'
+#             im.open(msfile)    
+#             im.selectvis(field=range(nfld), spw=0)
+#             # imcenter is the average of the desired pointings
+#             # we put the phase center there, rather than at the
+#             # reference direction for the input model (refdirection)
+#             im.defineimage(nx=insize[0], ny=insize[1], cellx=incellx, celly=incelly, phasecenter=imcenter)
+#             im.make(modelimage4d)
+#             im.close()
+#             im.done()
 
-            if refdirection!=None:
-                if verbose: msg("setting model image direction to "+refdirection)
-                if refdirection!="header":
-                    ia.open(modelimage4d)
-                    modelcs=ia.coordsys()
-                    if refdirection=="direction":
-                        epoch, ra, dec = util.direction_splitter(imcenter)
-                    else:
-                        epoch, ra, dec = util.direction_splitter(refdirection)
-                    ref=[0,0,0,0]
-                    raax=modelcs.findcoordinate("direction")['pixel'][0]
-                    ref[raax]=qa.convert(ra,modelcs.units()[raax])['value']
-                    deax=modelcs.findcoordinate("direction")['pixel'][1]
-                    ref[deax]=qa.convert(dec,modelcs.units()[deax])['value']
-                    spax=modelcs.findcoordinate("spectral")['pixel']
-                    ref[spax]=qa.convert(startfreq,modelcs.units()[spax])['value']
-                    ref[modelcs.findcoordinate("stokes")['pixel']]=1
-                    modelcs.setreferencevalue(ref)
-                    ia.setcoordsys(modelcs.torecord())
-                    ia.done()
-                    if verbose: msg(" ra="+qa.angle(ra)+" dec="+qa.angle(dec))
+#             if refdirection!=None:
+#                 if verbose: msg("setting model image direction to "+refdirection)
+#                 if refdirection!="header":
+#                     ia.open(modelimage4d)
+#                     modelcs=ia.coordsys()
+#                     if refdirection=="direction":
+#                         epoch, ra, dec = util.direction_splitter(imcenter)
+#                     else:
+#                         epoch, ra, dec = util.direction_splitter(refdirection)
+#                     ref=[0,0,0,0]
+#                     raax=modelcs.findcoordinate("direction")['pixel'][0]
+#                     ref[raax]=qa.convert(ra,modelcs.units()[raax])['value']
+#                     deax=modelcs.findcoordinate("direction")['pixel'][1]
+#                     ref[deax]=qa.convert(dec,modelcs.units()[deax])['value']
+#                     spax=modelcs.findcoordinate("spectral")['pixel']
+#                     ref[spax]=qa.convert(startfreq,modelcs.units()[spax])['value']
+#                     ref[modelcs.findcoordinate("stokes")['pixel']]=1
+#                     modelcs.setreferencevalue(ref)
+#                     ia.setcoordsys(modelcs.torecord())
+#                     ia.done()
+#                     if verbose: msg(" ra="+qa.angle(ra)+" dec="+qa.angle(dec))
 
 
-            if refpixel!=None:
-                if refpixel!="header":
-                    ia.open(modelimage4d)
-                    modelcs=ia.coordsys()
-                    if refpixel=="center":
-                        crpix=pl.array([insize[0]/2,insize[1]/2])
-                    else:
-                        # XXX this is pretty fragile code right now
-                        refpixel=refpixel.replace('[','')
-                        refpixel=refpixel.replace(']','')
-                        crpix=pl.array(refpixel.split(','))
-                    ref=[0,0,0,0]
-                    raax=modelcs.findcoordinate("direction")['pixel'][0]
-                    ref[raax]=float(crpix[0])
-                    deax=modelcs.findcoordinate("direction")['pixel'][1]
-                    ref[deax]=float(crpix[1])
-                    spax=modelcs.findcoordinate("spectral")['pixel']
-                    ref[spax]=0
-                    ref[modelcs.findcoordinate("stokes")['pixel']]=0
-                    if verbose: msg("setting model image ref pixel to %f,%f" % (ref[0],ref[1]))
-                    modelcs.setreferencepixel(ref)
-                    ia.setcoordsys(modelcs.torecord())
-                    ia.done()
+#             if refpixel!=None:
+#                 if refpixel!="header":
+#                     ia.open(modelimage4d)
+#                     modelcs=ia.coordsys()
+#                     if refpixel=="center":
+#                         crpix=pl.array([insize[0]/2,insize[1]/2])
+#                     else:
+#                         # XXX this is pretty fragile code right now
+#                         refpixel=refpixel.replace('[','')
+#                         refpixel=refpixel.replace(']','')
+#                         crpix=pl.array(refpixel.split(','))
+#                     ref=[0,0,0,0]
+#                     raax=modelcs.findcoordinate("direction")['pixel'][0]
+#                     ref[raax]=float(crpix[0])
+#                     deax=modelcs.findcoordinate("direction")['pixel'][1]
+#                     ref[deax]=float(crpix[1])
+#                     spax=modelcs.findcoordinate("spectral")['pixel']
+#                     ref[spax]=0
+#                     ref[modelcs.findcoordinate("stokes")['pixel']]=0
+#                     if verbose: msg("setting model image ref pixel to %f,%f" % (ref[0],ref[1]))
+#                     modelcs.setreferencepixel(ref)
+#                     ia.setcoordsys(modelcs.torecord())
+#                     ia.done()
                 
 
-            if inbright=="default":
-                scalefactor=1.
-            else:
-                # scale to input Jy/arcsec
-                if type(incell)==str:
-                    incell=qa.quantity(incell)
-                inbrightpix=float(inbright)*(qa.convert(incell,'arcsec')['value'])**2            
-                stats=modelia.statistics()
-                highvalue=stats['max']
-                scalefactor=inbrightpix/highvalue
+#             if inbright=="default":
+#                 scalefactor=1.
+#             else:
+#                 # scale to input Jy/arcsec
+#                 if type(incell)==str:
+#                     incell=qa.quantity(incell)
+#                 inbrightpix=float(inbright)*(qa.convert(incell,'arcsec')['value'])**2            
+#                 stats=modelia.statistics()
+#                 highvalue=stats['max']
+#                 scalefactor=inbrightpix/highvalue
 
 
-            # arr is the chunk of the input image
-            arr=modelia.getchunk()*scalefactor;
-            blc=[0,0,0,0]
-            trc=[0,0,1,1]
-            naxis=len(arr.shape);
-            modelia.done();
+#             # arr is the chunk of the input image
+#             arr=modelia.getchunk()*scalefactor;
+#             blc=[0,0,0,0]
+#             trc=[0,0,1,1]
+#             naxis=len(arr.shape);
+#             modelia.done();
 
 
-            # now open rescaled output image
-            modelia.open(modelimage4d)            
-            # and overwrite the input shapes with the 4d shapes
-            insize=modelia.shape()
-            incoordsys=modelia.coordsys()
+#             # now open rescaled output image
+#             modelia.open(modelimage4d)            
+#             # and overwrite the input shapes with the 4d shapes
+#             insize=modelia.shape()
+#             incoordsys=modelia.coordsys()
 
-            # arr2 is the chunk of the resized input image
-            arr2=modelia.getchunk()
+#             # arr2 is the chunk of the resized input image
+#             arr2=modelia.getchunk()
 
-            if(arr2.shape[0] >= arr.shape[0] and arr2.shape[1] >= arr.shape[1]):
-                arrin=arr
-                arrout=arr2
-                reversi=False
-            elif(arr2.shape[0] < arr.shape[0] and arr2.shape[1] < arr.shape[1]):
-                arrin=arr2
-                arrout=arr
-                reversi=True
-            blc[0]=(arrout.shape[0]-arrin.shape[0])/2;
-            blc[1]=(arrout.shape[1]-arrin.shape[1])/2;
-            trc[0]=blc[0]+arrin.shape[0];
-            trc[1]=blc[1]+arrin.shape[1];
-            if(naxis==2):
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], 0, 0]=arrin
-                else:
-                    arrin[:,:,0,0]=arrout[blc[0]:trc[0], blc[1]:trc[1]]
-            if(naxis==3):
-                if(arrout.shape[2]==arrin.shape[2]):
-                    blc[2]=0
-                    trc[2]=arrin.shape[2]
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], 0]=arrin
-                else:
-                    arrin[:,:,:,0]=arrout[blc[0]:trc[0], blc[1]:trc[1], :]
-            if(naxis==4):
-                # XXX input images with more than 1 channel need more testing!
-                if((arrout.shape[3]==arrin.shape[3]) and
-                   (arrout.shape[2]==arrin.shape[2])):
-                    blc[3]=0
-                    trc[3]=arrin.shape[3]
-                    blc[2]=0
-                    trc[2]=arrin.shape[2]
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], blc[3]:trc[3]]=arrin
-                else:
-                    arrin=arrout[blc[0]:trc[0], blc[1]:trc[1], : :]
+#             if(arr2.shape[0] >= arr.shape[0] and arr2.shape[1] >= arr.shape[1]):
+#                 arrin=arr
+#                 arrout=arr2
+#                 reversi=False
+#             elif(arr2.shape[0] < arr.shape[0] and arr2.shape[1] < arr.shape[1]):
+#                 arrin=arr2
+#                 arrout=arr
+#                 reversi=True
+#             blc[0]=(arrout.shape[0]-arrin.shape[0])/2;
+#             blc[1]=(arrout.shape[1]-arrin.shape[1])/2;
+#             trc[0]=blc[0]+arrin.shape[0];
+#             trc[1]=blc[1]+arrin.shape[1];
+#             if(naxis==2):
+#                 if(not reversi):
+#                     arrout[blc[0]:trc[0], blc[1]:trc[1], 0, 0]=arrin
+#                 else:
+#                     arrin[:,:,0,0]=arrout[blc[0]:trc[0], blc[1]:trc[1]]
+#             if(naxis==3):
+#                 if(arrout.shape[2]==arrin.shape[2]):
+#                     blc[2]=0
+#                     trc[2]=arrin.shape[2]
+#                 if(not reversi):
+#                     arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], 0]=arrin
+#                 else:
+#                     arrin[:,:,:,0]=arrout[blc[0]:trc[0], blc[1]:trc[1], :]
+#             if(naxis==4):
+#                 # XXX input images with more than 1 channel need more testing!
+#                 if((arrout.shape[3]==arrin.shape[3]) and
+#                    (arrout.shape[2]==arrin.shape[2])):
+#                     blc[3]=0
+#                     trc[3]=arrin.shape[3]
+#                     blc[2]=0
+#                     trc[2]=arrin.shape[2]
+#                 if(not reversi):
+#                     arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], blc[3]:trc[3]]=arrin
+#                 else:
+#                     arrin=arrout[blc[0]:trc[0], blc[1]:trc[1], : :]
 
 
-            modelia.putchunk(arr2)
-            modelia.done()
+#             modelia.putchunk(arr2)
+#             modelia.done()
+            ### End mod ######################
 
             # image should now have 4 axes and same size as output
             # XXX at least in xy (check channels later)        
@@ -391,7 +607,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             
             if noise_thermal:
                 if not (util.telescopename == 'ALMA' or util.telescopename == 'ACA'):
-                    msg("WARN: thermal noise only works properly for ALMA/ACA",color="31",origin="noise")
+                    msg("thermal noise only works properly for ALMA/ACA",priority="warn",origin="noise")
                 
                 noise_any=True
 
