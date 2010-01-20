@@ -22,6 +22,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <value></value>
     </param>
 
+    <param type="bool" name="singledish">
+          <description>Set true to output single-dish data format </description>
+          <value>False</value>
+    </param>
+
     <param type="string" name="corr_mode" >
 	    <description>specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao, co, ac,or all separated by whitespaces is expected</description>
 	    <value>all</value>
