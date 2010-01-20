@@ -43,6 +43,7 @@ stdcasaXMLUtil::stdcasaXMLUtil() :
         kind = XMLString::transcode("kind");
         description = XMLString::transcode("description");
         mustexist = XMLString::transcode("mustexist");
+        allowblank = XMLString::transcode("allowblank");
         units = XMLString::transcode("units");
         any = XMLString::transcode("any");
         limittype = XMLString::transcode("limittype");
@@ -74,6 +75,7 @@ stdcasaXMLUtil::~stdcasaXMLUtil()
     XMLString::release(&range);
     XMLString::release(&description);
     XMLString::release(&mustexist);
+    XMLString::release(&allowblank);
     XMLString::release(&ienum);
     XMLString::release(&kind);
     XMLString::release(&units);
@@ -338,6 +340,17 @@ bool stdcasaXMLUtil::readXML(record &itsRecord,  const Wrapper4InputSource &xmlS
                                         itsRecord[ttName].asRecord()["parameters"].asRecord()[parmName].asRecord().insert("mustexist", true);
                                     } else {
                                         itsRecord[ttName].asRecord()["parameters"].asRecord()[parmName].asRecord().insert("mustexist", false);
+                                    }
+                                    //XMLString::release(&aVal);
+                                }
+                                DOMNode *blankNode = theAttributes->getNamedItem(allowblank);
+                                if(blankNode){
+                                    const XMLCh *myVal = blankNode->getNodeValue();
+                                    char *aVal = XMLString::transcode(myVal);
+                                    if(XMLString::equals("true", aVal) || XMLString::equals("yes", aVal)){
+                                        itsRecord[ttName].asRecord()["parameters"].asRecord()[parmName].asRecord().insert("allowblank", true);
+                                    } else {
+                                        itsRecord[ttName].asRecord()["parameters"].asRecord()[parmName].asRecord().insert("allowblank", false);
                                     }
                                     //XMLString::release(&aVal);
                                 }
