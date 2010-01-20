@@ -80,6 +80,7 @@ namespace casa {
     runningId_p(0),
     currentUid_p("uid://X0/X0/X0"),
     telName_p(""),
+    schedBlockDuration_p(1800.), 
     // the Id to Tag maps
     asdmStationId_p(Tag()),
     asdmAntennaId_p(Tag()),
@@ -91,6 +92,7 @@ namespace casa {
     asdmDataDescriptionId_p(Tag()),
     asdmStateId_p(Tag()),
     asdmConfigDescriptionId_p(Tag()),
+    asdmSBSummaryId_p(Tag()),
     // other maps
     asdmFeedId_p(-1)
   {
@@ -229,6 +231,10 @@ namespace casa {
     }
 
     if(!writeConfigDescription()){
+      return False;
+    }
+
+    if(!writeSBSummaryStub()){ 
       return False;
     }
 
@@ -1534,54 +1540,9 @@ namespace casa {
       asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(feed().timeQuant()(0).getValue("s")),
 					    ASDMInterval(feed().intervalQuant()(0).getValue("s")) ); 
       string name = "unspec. frontend";
-      ReceiverBandMod::ReceiverBand frequencyBand = ReceiverBandMod::UNSPECIFIED;
-      ReceiverSidebandMod::ReceiverSideband receiverSideband = ReceiverSidebandMod::NOSB; //???
-      Quantity repFreq( (SPWRows[irow]->getRefFreq()).get(), String(Frequency::unit()) );
-      Double repFreqGHz = repFreq.getValue("GHz");
-
-      if(telName_p == "ALMA"){
-	// implementation of the ALMA freq bands !!!
-	if(31.<=repFreqGHz &&  repFreqGHz<45.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_01;
-	  receiverSideband = ReceiverSidebandMod::SSB; 
-	}
-	if(67.<=repFreqGHz &&  repFreqGHz<90.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_02;
-	  receiverSideband = ReceiverSidebandMod::SSB; 
-	}
-	if(84.<=repFreqGHz &&  repFreqGHz<116.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_03;
-	  receiverSideband = ReceiverSidebandMod::TSB; 
-	}
-	else if(125.<=repFreqGHz &&  repFreqGHz<163.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_04;
-	  receiverSideband = ReceiverSidebandMod::TSB; 
-	}	  
-	else if(163.<=repFreqGHz &&  repFreqGHz<211.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_05;
-	  receiverSideband = ReceiverSidebandMod::TSB; 
-	}	  
-	else if(211.<=repFreqGHz &&  repFreqGHz<275.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_06;
-	  receiverSideband = ReceiverSidebandMod::TSB; 
-	}	  
-	else if(275.<=repFreqGHz &&  repFreqGHz<373.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_07;
-	  receiverSideband = ReceiverSidebandMod::TSB; 
-	}	  
-	else if(385.<=repFreqGHz &&  repFreqGHz<500.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_08;
-	  receiverSideband = ReceiverSidebandMod::TSB; 
-	}	  
-	else if(602.<=repFreqGHz &&  repFreqGHz<720.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_09;
-	  receiverSideband = ReceiverSidebandMod::DSB; 
-	}	  
-	else if(787.<=repFreqGHz &&  repFreqGHz<950.){
-	  frequencyBand = ReceiverBandMod::ALMA_RB_10;
-	  receiverSideband = ReceiverSidebandMod::DSB; 
-	}	  
-      }
+      ReceiverBandMod::ReceiverBand frequencyBand;
+      ReceiverSidebandMod::ReceiverSideband receiverSideband;
+      setRecBands(SPWRows[irow]->getRefFreq(), frequencyBand, receiverSideband); 
       int numLO = 0; // no information in the MS ???
       vector<Frequency > freqLO;
       //freqLO.push_back(Frequency(1.)); // ???
@@ -2685,30 +2646,69 @@ namespace casa {
     asdm::SBSummaryTable& tT = ASDM_p->getSBSummary();
     
     asdm::SBSummaryRow* tR = 0;
-    
-    // parameters of the new row
-    EntityRef sbSummaryUID; // will be filled later ???
-    EntityRef projectUID; // will be filled later ???
-    EntityRef obsUnitSetId; // will be filled later ???
-    double frequency;
-    ReceiverBandMod::ReceiverBand frequencyBand;
-    SBTypeMod::SBType sbType;
-    Interval sbDuration;
-    vector< Angle > centerDirection;
-    int numObservingMode;
-    vector< string > observingMode;
-    int numberRepeats;
-    int numScienceGoal;
-    vector< string > scienceGoal;
-    int numWeatherConstraint;
-    vector< string > weatherConstraint;
 
-    tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, 
-		   centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, 
-		   scienceGoal, numWeatherConstraint, weatherConstraint);
     
-    tT.add(tR);
-    
+    // make a new row for every entry in the MS Observation table
+    //  (duplicate rows will be eliminated automatically by the ASDM class)
+    // unfortunately, we have to loop over the main table to get some of the information
+
+    SimpleOrderedMap <Int, Bool> obsIdEncountered(False);
+
+    for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
+
+      Int obsId = observationId()(mainTabRow);
+      if(!obsIdEncountered.isDefined(obsId)){
+
+	// parameters of the new row
+	EntityRef sbSummaryUID; // will be filled later ???
+	EntityRef projectUID; // will be filled later ???
+	EntityRef obsUnitSetId; // will be filled later ???
+	Int ddId = dataDescId()(mainTabRow);
+	Int spwId = dataDescription().spectralWindowId()(ddId);
+	double frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq()); 
+	ReceiverBandMod::ReceiverBand frequencyBand; // get from frequency
+	ReceiverSidebandMod::ReceiverSideband rSB;
+	setRecBands(Frequency(frequency), frequencyBand, rSB); 
+	
+	SBTypeMod::SBType sbType = SBTypeMod::OBSERVATORY; //???
+	Vector< Quantum< Double > > tRange;
+	tRange.reference(observation().timeRangeQuant()(obsId)); 
+	Double durationSecs = tRange[1].getValue("s") - tRange[0].getValue("s"); 
+	Interval sbDuration = ASDMInterval(durationSecs);
+	Double tolerance = 1.1;
+	// limit the scheduling block duration (not the same as the observation duration
+	if(durationSecs > schedBlockDuration_p * tolerance){
+	  sbDuration = ASDMInterval(schedBlockDuration_p);
+	}
+	vector< Angle > centerDirection;
+	Int fId = fieldId()(mainTabRow);
+	MDirection theFieldDir = field().phaseDirMeas(fId, 0);
+	Quantum<Vector<Double> > cDV = theFieldDir.getAngle( unitASDMAngle() );
+	centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
+	centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
+
+	int numObservingMode = 1;
+	vector< string > observingMode;
+	observingMode.push_back("observing mode t.b.d.");
+	int numberRepeats = (int) ceil(durationSecs/((double)sbDuration.get()/(double)ArrayTime::unitsInASecond));
+	int numScienceGoal = 1;
+	vector< string > scienceGoal;
+	scienceGoal.push_back("science goal t.b.d.");
+	int numWeatherConstraint=1;
+	vector< string > weatherConstraint;
+	weatherConstraint.push_back("weather constraint t.b.d.");
+	
+	tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, 
+		       centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, 
+		       scienceGoal, numWeatherConstraint, weatherConstraint);
+	
+	tT.add(tR);
+	
+	obsIdEncountered.define(obsId, True);
+
+      } // end if obsId not encountered
+    } // end loop over main table
+
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
@@ -2861,5 +2861,63 @@ namespace casa {
     }
     return rval;
   }
+
+  Bool MS2ASDM::setRecBands( const asdm::Frequency refFreq, 
+			     ReceiverBandMod::ReceiverBand& frequencyBand,
+			     ReceiverSidebandMod::ReceiverSideband& receiverSideband){
+
+    Quantity repFreq( refFreq.get(), String(Frequency::unit()) );
+    Double repFreqGHz = repFreq.getValue("GHz");
+    
+    frequencyBand = ReceiverBandMod::UNSPECIFIED;
+    receiverSideband = ReceiverSidebandMod::NOSB;
+
+    // implementation of the ALMA freq bands !!!
+    if(telName_p == "ALMA"){
+      if(31.<=repFreqGHz &&  repFreqGHz<45.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_01;
+	receiverSideband = ReceiverSidebandMod::SSB; 
+      }
+      if(67.<=repFreqGHz &&  repFreqGHz<90.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_02;
+	receiverSideband = ReceiverSidebandMod::SSB; 
+      }
+      if(84.<=repFreqGHz &&  repFreqGHz<116.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_03;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+      }
+      else if(125.<=repFreqGHz &&  repFreqGHz<163.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_04;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+      }	  
+      else if(163.<=repFreqGHz &&  repFreqGHz<211.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_05;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+      }	  
+      else if(211.<=repFreqGHz &&  repFreqGHz<275.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_06;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+      }	  
+      else if(275.<=repFreqGHz &&  repFreqGHz<373.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_07;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+      }	  
+      else if(385.<=repFreqGHz &&  repFreqGHz<500.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_08;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+      }	  
+      else if(602.<=repFreqGHz &&  repFreqGHz<720.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_09;
+	receiverSideband = ReceiverSidebandMod::DSB; 
+      }	  
+      else if(787.<=repFreqGHz &&  repFreqGHz<950.){
+	frequencyBand = ReceiverBandMod::ALMA_RB_10;
+	receiverSideband = ReceiverSidebandMod::DSB; 
+      }
+      return True;
+    }
+    return False;
+  }  
+
 
 } //#End casa namespace

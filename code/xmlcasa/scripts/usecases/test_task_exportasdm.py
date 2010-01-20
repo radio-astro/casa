@@ -21,7 +21,7 @@ if(not os.path.exists(vis_b)):
 #if(not os.path.exists(vis_e)):
 #    os.system('cp -R '+os.environ['CASADATA']+'/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
 if(not os.path.exists(vis_f)):
-    os.system('cp -R '+os.environ['CASADATA']+'/regression/exportasdm/input/Itzar.ms .')
+    os.system('cp -R '+os.environ['CASADATA']+'/regression/exportasdm/input/Itziar.ms .')
 
 
 def verify_asdm(asdmname):

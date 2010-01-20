@@ -44,6 +44,8 @@
 #include <alma/Enumerations/CBasebandName.h>
 #include <alma/Enumerations/CNetSideband.h>
 #include <alma/Enumerations/CFrequencyReferenceCode.h>
+#include <alma/Enumerations/CReceiverBand.h>
+#include <alma/Enumerations/CReceiverSideband.h>
 
 
 #ifndef MSVIS_MS2ASDM_H
@@ -131,16 +133,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // convert a MS net sideband no. to an ASDM enum
   NetSidebandMod::NetSideband ASDMNetSideBand( const Int netSideband );
 
+  // set the receiver band and receiver sideband based on a representative frequency
+  //   and the previously set observatory name telName_p
+  Bool setRecBands( const asdm::Frequency refFreq, 
+		    ReceiverBandMod::ReceiverBand& frequencyBand,
+		    ReceiverSidebandMod::ReceiverSideband& receiverSideband);
+
   FrequencyReferenceCodeMod::FrequencyReferenceCode ASDMFreqRefCode( const MFrequency::Types refFrame ); 
 
-  Unit unitASDMFreq(){ 
-    if(asdm::Frequency::unit()=="hz"){ // correct for the bad capitalization
-      return Unit("Hz");
-    }
-    else{
-      return Unit(String(asdm::Frequency::unit()));
-    }
-  }
+  Unit unitASDMFreq(){ return Unit(String(asdm::Frequency::unit())); }
 
   Unit unitASDMAngle(){ return Unit(String(asdm::Angle::unit())); }
 
@@ -210,8 +211,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // 6) If an MS Scan is longer than subscanduration, it is split up into 
   //    several ASDM subscans.
 
-  Bool writeSBSummaryStub();
-
+  Bool writeSBSummaryStub(); // "stub" because this table will be completed later
+                             //  with information from the APDM
   Bool writeExecBlockStub();
 
   Bool writeScan();
@@ -246,15 +247,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   String currentUid_p; // the last used uid
 
+  String telName_p; // the name of the observatory from first row of MS observation table
+
   Double subscanDuration_p; // maximum duration of a subscan in seconds
+
+  Double schedBlockDuration_p; // maximum duration of a scheduling or exec block in seconds
 
   Bool dataIsAPCorrected_p; // true if the data in the selected MS data column is 
                             // AtmPhaseCorrectionMod::AP_CORRECTED, false if it is
                             // AtmPhaseCorrectionMod::AP_UNCORRECTED
 
   String asdmDir_p; // ASDM output directory name
-
-  String telName_p; // the name of the observatory from first row of MS observation table
 
   SimpleOrderedMap <String, asdm::Tag> asdmStationId_p;  
   SimpleOrderedMap <Int, asdm::Tag> asdmAntennaId_p;
@@ -265,9 +268,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmDataDescriptionId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmStateId_p;
-  SimpleOrderedMap <uInt, asdm::Tag> asdmConfigDescriptionId_p;
-
-  SimpleOrderedMap <Int, int> asdmFeedId_p;
+  SimpleOrderedMap <uInt, asdm::Tag> asdmConfigDescriptionId_p; // maps from MS Main row#
+  SimpleOrderedMap <Int, asdm::Tag> asdmSBSummaryId_p; // maps from MS Observation Id
+  SimpleOrderedMap <Int, int> asdmFeedId_p; // ASDM feed id is not a Tag
 
 };
 
