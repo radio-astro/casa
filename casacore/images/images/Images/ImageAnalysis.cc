@@ -2226,9 +2226,10 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 
 ComponentList ImageAnalysis::fitsky(
     Array<Float>& residPixels, Array<Bool>& residMask,
-    Bool& converged, Record& Region, const uInt& chan,
+    Bool& converged, Record& inputStats, Record& residStats,
+    Double& chiSquared, Record& region, const uInt& chan,
 	const String& stokesString, const String& mask,
-	const Vector<String>& models, Record& Estimate,
+	const Vector<String>& models, Record& inputEstimate,
 	const Vector<String>& fixed, const Vector<Float>& includepix,
 	const Vector<Float>& excludepix, const Bool fitIt,
 	const Bool deconvolveIt, const Bool list,
@@ -2241,7 +2242,7 @@ ComponentList ImageAnalysis::fitsky(
 	Vector<SkyComponent> estimate;
     
 	ComponentList compList;
-	if (!compList.fromRecord(error, Estimate)) {
+	if (!compList.fromRecord(error, inputEstimate)) {
 		*itsLog << LogIO::WARN
 				<< "Can not  convert input parameter to ComponentList "
 				<< error << LogIO::POST;
@@ -2270,15 +2271,6 @@ ComponentList ImageAnalysis::fitsky(
 	if (!fitIt && nModels > 1) {
 		*itsLog << "Parameter estimates are only available for a single model"
 				<< LogIO::EXCEPTION;
-	}
-
-	for (uInt i = 0; i < nModels; i++) {
-		/*
-		 Fit2D::Types model = Fit2D::type(models(i));
-		 if (model != Fit2D::GAUSSIAN) {
-		 *itsLog << "Only Gaussian models are currently available" << LogIO::EXCEPTION;
-		 }
-		 */
 	}
 
     IPosition imShape = pImage_p->shape();
@@ -2314,15 +2306,13 @@ ComponentList ImageAnalysis::fitsky(
 
     ImageRegion* pMaskRegion = 0;
 
-	AxesSpecifier axesSpec(False);
-
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			subImageTmp, *(ImageRegion::tweakedRegionRecord(&Region)), mask, list, *itsLog,
-			False, axesSpec);
+			subImageTmp, *(ImageRegion::tweakedRegionRecord(&region)), mask, list, *itsLog,
+			False, AxesSpecifier(False));
 
     ostringstream oss;
 
-    Region.print(oss);
+    region.print(oss);
 
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -2452,41 +2442,82 @@ ComponentList ImageAnalysis::fitsky(
 	// Compute residuals
 	Array<Float> modelPixels;
 	fitter.residual(residPixels, modelPixels, pixels);
+	chiSquared = fitter.chiSquared();
 	// Convert units of solution from pixel units to physical units
 	Vector<SkyComponent> result(nModels);
 	Double facToJy;
 	for (uInt i = 0; i < models.nelements(); i++) {
-		ComponentType::Shape modelType = convertModelType(Fit2D::type(
-				modelTypes(i)));
+		ComponentType::Shape modelType = convertModelType(
+			Fit2D::type(modelTypes(i))
+		);
 		Vector<Double> solution = fitter.availableSolution(i);
-		// cout << "solution " << solution << endl;
 		Vector<Double> errors = fitter.availableErrors(i);
-		// cout << "errors " << errors << endl;
 
-		result(i) = ImageUtilities::encodeSkyComponent(*itsLog, facToJy, subImage, modelType,
-				solution, stokes, xIsLong, deconvolveIt);
-		encodeSkyComponentError(*itsLog, result(i), facToJy, subImage,
-				solution, errors, stokes, xIsLong);
+		result(i) = ImageUtilities::encodeSkyComponent(
+			*itsLog, facToJy, subImage, modelType,
+			solution, stokes, xIsLong, deconvolveIt
+		);
+		encodeSkyComponentError(
+			*itsLog, result(i), facToJy, subImage,
+			solution, errors, stokes, xIsLong
+		);
 		cl.add(result(i));
 	}
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
-    if (! residImageName.empty()) {
-        // construct the residual image, copying pattern from ImageProxy
-    	ImageUtilities::writeImage(
-    			subImage.shape(), subImage.coordinates(),
-    			residImageName, residPixels, *itsLog
-    	);
-    }
+	residStats = _fitskyWriteResidualAndGetStats(subImage, residPixels, residImageName);
+
+
+	// PagedImage<Float> residImage(residImageName);
+	ImageMetaData subImageMD(subImage);
+	Vector<Int> inputDirectionAxes = subImageMD.directionAxesNumbers();
+	Record reg;
+	ImageAnalysis(&subImage).statistics(
+		inputStats, inputDirectionAxes, reg, "", Vector<String>(0), Vector<Float>(0), Vector<Float>(0)
+	);
 
     if (! modelImageName.empty()) {
-        // construct the residual image, copying pattern from ImageProxy
+        // construct the model image, copying pattern from ImageProxy
     	ImageUtilities::writeImage(
-    			subImage.shape(), subImage.coordinates(),
-    			modelImageName, modelPixels, *itsLog
+    		subImage.shape(), subImage.coordinates(),
+    		modelImageName, modelPixels, *itsLog
     	);
     }
 	return cl;
 }
+
+Record ImageAnalysis::_fitskyWriteResidualAndGetStats(
+	const SubImage<Float>& subImage, const Array<Float>& residPixels, String residImageName
+) const {
+	*itsLog << LogOrigin("ImageAnalysis", "_fitskyWriteResidualAndGetStats");
+	Bool saveResidImage = ! residImageName.empty();
+	// we need to get stats on the resid image, delete it if necessary afterward
+	if (! saveResidImage) {
+		Time now;
+		String nowString = now.toString();
+		residImageName = "/tmp/fitsky_resid_" + nowString + "GMT.im";
+	}
+	// construct the residual image, copying pattern from ImageProxy
+	// we always need to construct this image to get the sigma, if not
+	// required
+	ImageUtilities::writeImage(
+		subImage.shape(), subImage.coordinates(),
+		residImageName, residPixels, *itsLog
+	);
+	Record residStats;
+	PagedImage<Float> residImage(residImageName);
+	ImageMetaData residMD(residImage);
+	Vector<Int> residDirectionAxes = residMD.directionAxesNumbers();
+	Record reg;
+	ImageAnalysis(&residImage).statistics(
+		residStats, residDirectionAxes, reg, "", Vector<String>(0), Vector<Float>(0), Vector<Float>(0)
+	);
+
+	if (! saveResidImage) {
+		Directory(residImageName).removeRecursive();
+	}
+	return residStats;
+}
+
 
 void ImageAnalysis::_fitskyExtractBeam(
 	Vector<Double>& parameters, const ImageInfo& imageInfo,
@@ -2536,22 +2567,9 @@ void ImageAnalysis::_setFitSkyIncludeExclude(
 		*itsLog << "You cannot give both an include and an exclude pixel range"
 				<< LogIO::EXCEPTION;
 	}
-	if (!doInclude && !doExclude) {
-		if (stokes == Stokes::I) {
-			if (abs(maxVal) >= abs(minVal)) {
-				fitter.setIncludeRange(0.0, maxVal + 0.001);
-				*itsLog << LogIO::NORMAL << "Selecting pixels > 0.0"
-						<< LogIO::POST;
-			}
-            else {
-				fitter.setIncludeRange(minVal - 0.001, 0.0);
-				*itsLog << LogIO::NORMAL << "Selecting pixels < 0.0"
-						<< LogIO::POST;
-			}
-		}
-        else {
-			*itsLog << LogIO::NORMAL << "Selecting all pixels" << LogIO::POST;
-		}
+	else if (!doInclude && !doExclude) {
+		*itsLog << LogIO::NORMAL << "Selecting all pixel values because neither "
+				<< "includepix nor excludepix was specified" << LogIO::POST;
 	}
     else {
 		if (doInclude) {
@@ -4854,12 +4872,13 @@ Bool ImageAnalysis::setrestoringbeam(const Quantity& major,
 	return True;
 }
 
-Bool ImageAnalysis::statistics(Record& statsout, const Vector<Int>& axes,
-		Record& regionRec, const String& mask, const Vector<String>& plotstats,
-		const Vector<Float>& includepix, const Vector<Float>& excludepix,
-		const String& plotterdev, const Int nx, const Int ny, const Bool list,
-		const Bool force, const Bool disk, const Bool robust,
-		const Bool verbose) {
+Bool ImageAnalysis::statistics(
+	Record& statsout, const Vector<Int>& axes,
+	Record& regionRec, const String& mask, const Vector<String>& plotstats,
+	const Vector<Float>& includepix, const Vector<Float>& excludepix,
+	const String& plotterdev, const Int nx, const Int ny, const Bool list,
+	const Bool force, const Bool disk, const Bool robust,
+	const Bool verbose) {
 	String pgdevice("/NULL");
 	*itsLog << LogOrigin("ImageAnalysis", "statistics");
 
@@ -4936,13 +4955,10 @@ Bool ImageAnalysis::statistics(Record& statsout, const Vector<Int>& axes,
 			// changed (pStatistics_p is deleted then)
 
 			if (verbose) {
-				pStatistics_p = new ImageStatistics<Float> (subImage, *itsLog,
-						False, disk);
-				//new ImageStatistics<Float>(subImage, *itsLog, True, disk);
-			} else {
-				pStatistics_p = new ImageStatistics<Float> (subImage, False,
-						disk);
-				//new ImageStatistics<Float>(subImage, True, disk);
+				pStatistics_p = new ImageStatistics<Float> (subImage, *itsLog, False, disk);
+			}
+			else {
+				pStatistics_p = new ImageStatistics<Float> (subImage, False, disk);
 			}
 		} else {
 			// We already have a statistics object.  We only have to set
