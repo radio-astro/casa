@@ -549,9 +549,9 @@ def test_logfile():
             method = test + "imfit: "
         res = code()
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 1):
             success = False
@@ -559,9 +559,9 @@ def test_logfile():
         #default, append
         res = code()
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 2):
             success = False
@@ -570,9 +570,9 @@ def test_logfile():
         # explicit append
         res = code(True)
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 3):
             success = False
@@ -580,9 +580,9 @@ def test_logfile():
         # overwrite
         res = code(False)
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 1):
             success = False
@@ -617,9 +617,9 @@ def test_newestimates():
         res = code()
 
         if (not os.path.exists(newestimates)):
-            passed = False
+            success = False
             msgs += method + "new estimates file was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
  
         expected_sha = sha.sha(open(expected_new_estimates, 'r').read()).hexdigest()
 
