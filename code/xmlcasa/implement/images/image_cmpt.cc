@@ -1392,10 +1392,14 @@ image::fitsky(const ::casac::record& region,
 
     //call the fitsky
     Bool converged;
+    Record inputStats, residStats;
+    Double chiSquared;
     ComponentList compList = itsImage->fitsky(
-        residPixels, residMask, converged, *Region,
-        chan, String(stokes), mask, models, *Estimate, fixed, 
-		includepix, excludepix, fitIt, deconvolveIt, list
+        residPixels, residMask, converged, inputStats,
+        residStats, chiSquared, *Region, chan,
+        String(stokes), mask,
+        models, *Estimate, fixed, includepix, excludepix,
+        fitIt, deconvolveIt, list
     );
 
 
