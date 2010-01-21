@@ -68,6 +68,10 @@ bool Tag::operator < (const Tag &x) const {
 	return tag < x.tag;	
 }
 
+bool Tag::operator > (const Tag &x) const {
+	return tag > x.tag;	
+}
+
 bool Tag::equals(const Tag &x) const {
 	return tag == x.tag && type == x.type;
 }

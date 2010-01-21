@@ -26,6 +26,7 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <casa/Quanta/MVBaseline.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -234,7 +235,7 @@ namespace casa {
       return False;
     }
 
-    if(!writeSBSummaryStub()){ 
+    if(!writeSBSummaryAndExecBlockStubs()){ 
       return False;
     }
 
@@ -2613,10 +2614,9 @@ namespace casa {
 
 	  tR2 = tT.add(tR);
 	  Tag newTag = tR2->getConfigDescriptionId();
-	  if(newTag != previousTag){ // memorize the table row and the corresponding Tag every time the Tag changes
-	    asdmConfigDescriptionId_p.define(mainTabRow, newTag);
-	    previousTag = newTag;
-	    cout << "mtrow = " << mainTabRow << ", irow = " << irow << endl;
+	  Double tStamp = time()(irow);
+	  if(!asdmConfigDescriptionId_p.isDefined(tStamp)){
+	    asdmConfigDescriptionId_p.define(tStamp, newTag); // memorize tag for every timestamp
 	  }
 
 	  mainTabRow = irow;
@@ -2638,8 +2638,8 @@ namespace casa {
 
   }
 
-  Bool MS2ASDM::writeSBSummaryStub(){
-    LogIO os(LogOrigin("MS2ASDM", "writeSBSummaryStub()"));
+  Bool MS2ASDM::writeSBSummaryAndExecBlockStubs(){
+    LogIO os(LogOrigin("MS2ASDM", "writeSBSummaryAndExecBlockStubs()"));
     
     Bool rstat = True;
     
@@ -2647,85 +2647,289 @@ namespace casa {
     
     asdm::SBSummaryRow* tR = 0;
 
+    asdm::ExecBlockTable& tET = ASDM_p->getExecBlock();
     
-    // make a new row for every entry in the MS Observation table
-    //  (duplicate rows will be eliminated automatically by the ASDM class)
-    // unfortunately, we have to loop over the main table to get some of the information
+    asdm::ExecBlockRow* tER = 0;
 
-    SimpleOrderedMap <Int, Bool> obsIdEncountered(False);
+    SimpleOrderedMap <asdm::Tag, Double> execBlockStartTime(-1.); // map from SBSummaryID to current execblock start time
+    SimpleOrderedMap <asdm::Tag, Double> execBlockEndTime(-1.); // map from SBSummaryID to current execblock start time
+    SimpleOrderedMap <asdm::Tag, asdm::ConfigDescriptionRow*> correspConfigDescRow(0); // map from SBSummaryID to the ConfigDescription row of current exec block
+    SimpleOrderedMap <asdm::Tag, Int> execBlockNumber(0); // map from SBSummaryID to current execblock number
+    SimpleOrderedMap <asdm::Tag, Int> obsIdFromSBSum(-1); // map from SBSummaryID to current obs ID
+    SimpleOrderedMap <asdm::Tag, Double> minBaseline(0.); // map from SBSummaryID to minimum baseline of current exec block
+    SimpleOrderedMap <asdm::Tag, Double> maxBaseline(0.); // map from SBSummaryID to maximum baseline of current exec block
 
+    // unfortunately, we have to loop over the main table to get the information
+
+    // but beforehand we calculate the position of the array center for later reference
+
+    MSAntenna anttable = ms_p.antenna();
+    ROMSAntennaColumns ANTCols(anttable);
+    ROScalarMeasColumn<MPosition> ANTPositionMeasCol = ANTCols.positionMeas(); 
+    Int nAnt = 0;
+    Vector<Double> pos(3); pos=0;
+    for (uInt i=0; i<anttable.nrow(); i++) {
+      pos+=ANTPositionMeasCol(i).getValue().get();
+      nAnt++;
+    }
+    if(nAnt>0){
+      pos /= Double(nAnt);
+    }
+    else {
+      os << LogIO::SEVERE << "No antennas in this MS. Cannot proceed ..." 
+	 << LogIO::POST;
+      return False; 
+    }
+
+    MVPosition mObsPos = MVPosition(pos);
+    Length siteAltitude = Length(mObsPos.getLength().getValue(unitASDMLength()));
+    Angle siteLongitude = Angle(mObsPos.getLong("rad").getValue(unitASDMAngle()));
+    Angle siteLatitude = Angle(mObsPos.getLat("rad").getValue(unitASDMAngle()));
+
+    // loop over main table
     for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
 
+      // Step 1: determine SBSummary ID and fill SBSummary table row
+      // (duplicate rows will automatically be taken care of by the row adding method)
+
       Int obsId = observationId()(mainTabRow);
-      if(!obsIdEncountered.isDefined(obsId)){
 
-	// parameters of the new row
-	EntityRef sbSummaryUID; // will be filled later ???
-	EntityRef projectUID; // will be filled later ???
-	EntityRef obsUnitSetId; // will be filled later ???
-	Int ddId = dataDescId()(mainTabRow);
-	Int spwId = dataDescription().spectralWindowId()(ddId);
-	double frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq()); 
-	ReceiverBandMod::ReceiverBand frequencyBand; // get from frequency
-	ReceiverSidebandMod::ReceiverSideband rSB;
-	setRecBands(Frequency(frequency), frequencyBand, rSB); 
-	
-	SBTypeMod::SBType sbType = SBTypeMod::OBSERVATORY; //???
-	Vector< Quantum< Double > > tRange;
-	tRange.reference(observation().timeRangeQuant()(obsId)); 
-	Double durationSecs = tRange[1].getValue("s") - tRange[0].getValue("s"); 
-	Interval sbDuration = ASDMInterval(durationSecs);
-	Double tolerance = 1.1;
-	// limit the scheduling block duration (not the same as the observation duration
-	if(durationSecs > schedBlockDuration_p * tolerance){
-	  sbDuration = ASDMInterval(schedBlockDuration_p);
+      // parameters of the new SBSummary row
+      Int ddId = dataDescId()(mainTabRow);
+      Int spwId = dataDescription().spectralWindowId()(ddId);
+      Int sbKey = obsId+10000*spwId;
+      String sbsUid("sbsummaryUID t.b.d. ");
+      sbsUid = sbsUid + String(sbKey);
+      EntityRef sbSummaryUID(sbsUid.c_str()); // will be filled later 
+      EntityRef projectUID("projectUID t.b.d."); // will be filled later ???
+      EntityRef obsUnitSetId("obsUnitSetId t.b.d."); // will be filled later ???
+      double frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq()); 
+      ReceiverBandMod::ReceiverBand frequencyBand; // get from frequency
+      ReceiverSidebandMod::ReceiverSideband rSB;
+      setRecBands(Frequency(frequency), frequencyBand, rSB); 
+      
+      SBTypeMod::SBType sbType = SBTypeMod::OBSERVATORY; //???
+      Vector< Quantum< Double > > tRange;
+      tRange.reference(observation().timeRangeQuant()(obsId)); 
+      Double durationSecs = tRange[1].getValue("s") - tRange[0].getValue("s"); 
+      Interval sbDuration = ASDMInterval(durationSecs);
+      int numberRepeats = 1;
+      // limit the scheduling block duration (not the same as the observation duration)
+      Double tolerance = 1.1;
+      if(durationSecs > schedBlockDuration_p * tolerance){
+	sbDuration = ASDMInterval(schedBlockDuration_p);
+	numberRepeats = (int) ceil(durationSecs/schedBlockDuration_p);
+	durationSecs = schedBlockDuration_p;
+      }
+      vector< Angle > centerDirection;
+      Int fId = fieldId()(mainTabRow);
+      MDirection theFieldDir = field().phaseDirMeas(fId, 0);
+      centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
+      centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
+      
+      int numObservingMode = 1;
+      vector< string > observingMode;
+      observingMode.push_back("observing mode t.b.d.");
+      int numScienceGoal = 1;
+      vector< string > scienceGoal;
+      scienceGoal.push_back("science goal t.b.d.");
+      int numWeatherConstraint=1;
+      vector< string > weatherConstraint;
+      weatherConstraint.push_back("weather constraint t.b.d.");
+      
+      tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, 
+		     centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, 
+		     scienceGoal, numWeatherConstraint, weatherConstraint);
+      
+      asdm::SBSummaryRow* tR2 = 0;
+      tR2 = tT.add(tR);
+      Tag sBSummaryTag = tR2->getSBSummaryId();
+      if(tR2 != tR){ // adding the row led to the creation of a new tag
+	if(asdmSBSummaryId_p.isDefined(sbKey)){
+	  os << LogIO::WARN << "There is more than one scheduling block necessry for the obsid - spwid pair (" 
+	     << obsId << ", " << spwId << ").\n This can presently not yet be handled properly." << LogIO::POST;
 	}
-	vector< Angle > centerDirection;
-	Int fId = fieldId()(mainTabRow);
-	MDirection theFieldDir = field().phaseDirMeas(fId, 0);
-	Quantum<Vector<Double> > cDV = theFieldDir.getAngle( unitASDMAngle() );
-	centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
-	centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
+	else{
+	  asdmSBSummaryId_p.define(sbKey, sBSummaryTag);
+	}
+      }
 
-	int numObservingMode = 1;
-	vector< string > observingMode;
-	observingMode.push_back("observing mode t.b.d.");
-	int numberRepeats = (int) ceil(durationSecs/((double)sbDuration.get()/(double)ArrayTime::unitsInASecond));
-	int numScienceGoal = 1;
-	vector< string > scienceGoal;
-	scienceGoal.push_back("science goal t.b.d.");
-	int numWeatherConstraint=1;
-	vector< string > weatherConstraint;
-	weatherConstraint.push_back("weather constraint t.b.d.");
-	
-	tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, 
-		       centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, 
-		       scienceGoal, numWeatherConstraint, weatherConstraint);
-	
-	tT.add(tR);
-	
-	obsIdEncountered.define(obsId, True);
+      // now have a valid SBSummaryID for the execblock
 
-      } // end if obsId not encountered
+      // Step 2: write exec block table
+
+      // has the exec block been started already?
+      if(execBlockStartTime.isDefined(sBSummaryTag)){ // yes
+	// continue accumulation of min and max baseline
+	Double baseLine = MVBaseline( (antenna().positionMeas()(antenna1()(mainTabRow))).getValue(),
+				      (antenna().positionMeas()(antenna2()(mainTabRow))).getValue()
+				      ).getLength().getValue(unitASDMLength());
+	if(baseLine>maxBaseline(sBSummaryTag)){
+	  maxBaseline.remove(sBSummaryTag);
+	  maxBaseline.define(sBSummaryTag, baseLine);
+	}
+	else if(baseLine<minBaseline(sBSummaryTag)){
+	  minBaseline.remove(sBSummaryTag);
+	  minBaseline.define(sBSummaryTag, baseLine);
+	}
+
+	// is the exec block complete?
+	Double endT = timeQuant()(mainTabRow).getValue("s") + intervalQuant()(mainTabRow).getValue("s");
+	execBlockEndTime.remove(sBSummaryTag);
+	execBlockEndTime.define(sBSummaryTag, endT);
+	if(endT - execBlockStartTime(sBSummaryTag) >= durationSecs){ // yes, it is complete
+	  
+	  // parameters for a new row
+  
+	  ArrayTime startTime = ASDMArrayTime(execBlockStartTime(sBSummaryTag));
+	  ArrayTime endTime = ASDMArrayTime(endT);
+	  int execBlockNum = execBlockNumber(sBSummaryTag);
+	  EntityRef execBlockUID(getCurrentUid());
+	  incrementUid();
+	  EntityRef projectId = projectUID;
+	  string configName = "configName t.b.d."; // ???
+	  string telescopeName = telName_p;
+	  string observerName = observation().observer()(obsId).c_str();
+	  string observingLog = "";
+	  Vector< String > sV;
+	  sV.reference(observation().log()(obsId)); // the observation log is an array of strings
+	  for(uInt i=0; i<sV.size(); i++){
+	    if(i>0){
+	      observingLog += "\n";
+	    }
+	    observingLog += string(sV[i].c_str());
+	  }
+	  string sessionReference = "sessionReference t.b.d."; // ???
+	  EntityRef sbSummary = sbSummaryUID;
+	  string schedulerMode = "CASA exportasdm"; //???
+	  Length baseRangeMin = Length( minBaseline(sBSummaryTag) );
+	  Length baseRangeMax = Length( maxBaseline(sBSummaryTag) );
+	  Length baseRmsMinor = Length(0); // ???
+	  Length baseRmsMajor = Length(0); // ???
+	  Angle basePa = Angle(0); // ???
+	  bool aborted = False;
+	  asdm::ConfigDescriptionRow* cDR = correspConfigDescRow(sBSummaryTag);
+	  int numAntenna = cDR->getNumAntenna();
+	  vector< Tag > antennaId = cDR->getAntennaId();
+
+	  tER = tET.newRow(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName,
+			   observerName, observingLog, sessionReference, sbSummary, schedulerMode, baseRangeMin,
+			   baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, 
+			   aborted, numAntenna, antennaId, sBSummaryTag);
+	  
+	  tET.add(tER);
+
+	  // undefine the mapping for this Tag since the ExecBlock was completed
+	  execBlockStartTime.remove(sBSummaryTag);
+	  execBlockEndTime.remove(sBSummaryTag);
+	  correspConfigDescRow.remove(sBSummaryTag);
+	  obsIdFromSBSum.remove(sBSummaryTag);
+	  minBaseline.remove(sBSummaryTag);
+	  maxBaseline.remove(sBSummaryTag);
+	  
+	}
+	else{ // no, it is not complete
+	  continue;
+	}
+      } 
+      else{// no, it has not been started, yet
+	execBlockStartTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s"));
+	execBlockEndTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s")+ intervalQuant()(mainTabRow).getValue("s")); // will be updated
+	Int oldNum = 0;
+	if(execBlockNumber.isDefined(sBSummaryTag)){ 
+	  // increment exec block number
+	  oldNum = execBlockNumber(sBSummaryTag);
+	  execBlockNumber.remove(sBSummaryTag);
+	}
+	execBlockNumber.define(sBSummaryTag, oldNum + 1); // sequential numbering starting at 1
+
+	obsIdFromSBSum.define(sBSummaryTag, obsId); // remember the obsId for this exec block
+
+	asdm::ConfigDescriptionRow* cDR = (ASDM_p->getConfigDescription()).getRowByKey(asdmConfigDescriptionId_p(time()(mainTabRow)));
+	if(cDR == 0){
+	  os << LogIO::SEVERE << "Internal error: cannot find matching config description for MS main table row "
+	     << mainTabRow << LogIO::POST;
+	  return False;
+	}
+	correspConfigDescRow.define(sBSummaryTag, cDR); // remember the config description row for this exec block
+
+	// start accumulation of min and max baseline
+	Double bLine = MVBaseline( (antenna().positionMeas()(antenna1()(mainTabRow))).getValue(),
+				   (antenna().positionMeas()(antenna2()(mainTabRow))).getValue()
+				   ).getLength().getValue(unitASDMLength());
+	minBaseline.define(sBSummaryTag, bLine);
+	maxBaseline.define(sBSummaryTag, bLine);
+      }
+
     } // end loop over main table
 
+    // are there pending exec blocks?
+    while(execBlockStartTime.ndefined()>0){ // yes
+      Tag sBSummaryTag = execBlockStartTime.getKey(0); 
+      tR = tT.getRowByKey(sBSummaryTag);
+      Int obsId = obsIdFromSBSum(sBSummaryTag);
+      // parameters for a new row      
+      ArrayTime startTime = ASDMArrayTime(execBlockStartTime(sBSummaryTag));
+      ArrayTime endTime = ASDMArrayTime(execBlockEndTime(sBSummaryTag));
+      int execBlockNum = execBlockNumber(sBSummaryTag);
+      EntityRef execBlockUID(getCurrentUid());
+      incrementUid();
+      EntityRef projectId = tR->getProjectUID();
+      string configName = "configName t.b.d."; // ???
+      string telescopeName = telName_p;
+      string observerName = observation().observer()(obsId).c_str();
+      string observingLog = "";
+      Vector< String > sV;
+      sV.reference(observation().log()(obsId)); // the observation log is an array of strings
+      for(uInt i=0; i<sV.size(); i++){
+	if(i>0){
+	  observingLog += "\n";
+	}
+	observingLog += string(sV[i].c_str());
+      }
+      string sessionReference = "sessionReference t.b.d."; // ???
+      EntityRef sbSummary = tR->getSbSummaryUID();
+      string schedulerMode = "CASA exportasdm"; //???
+      Length baseRangeMin = Length( minBaseline(sBSummaryTag) );
+      Length baseRangeMax = Length( maxBaseline(sBSummaryTag) );
+      Length baseRmsMinor = Length(0); // ???
+      Length baseRmsMajor = Length(0); // ???
+      Angle basePa = Angle(0); // ???
+      bool aborted = False;
+      asdm::ConfigDescriptionRow* cDR = correspConfigDescRow(sBSummaryTag);
+      int numAntenna = cDR->getNumAntenna();
+      vector< Tag > antennaId = cDR->getAntennaId();
+      
+      tER = tET.newRow(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName,
+		       observerName, observingLog, sessionReference, sbSummary, schedulerMode, baseRangeMin,
+		       baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, 
+		       aborted, numAntenna, antennaId, sBSummaryTag);
+      
+      tET.add(tER);
+
+      // undefine the mapping for this Tag since the ExecBlock was completed
+      execBlockStartTime.remove(sBSummaryTag); // need only remove from the map which is tested
+
+    }
+
+    // finish the SBSummary table
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
     os << LogIO::NORMAL << "Filled SBSummary table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
     incrementUid();
+
+    // finish the ExecBlock table
+    theUid = getCurrentUid();
+    ent = tET.getEntity();
+    ent.setEntityId(theUid);
+    tET.setEntity(ent);
+    os << LogIO::NORMAL << "Filled ExecBlock table " << getCurrentUid() << " with " << tET.size() << " rows ..." << LogIO::POST;
+    incrementUid();
     
     return rstat;
     
-  }
-
-  Bool MS2ASDM::writeExecBlockStub(){
-    LogIO os(LogOrigin("MS2ASDM", "writeExecBlockStub()"));
-
-    Bool rstat = True;
-
-    return rstat;
   }
 
   Bool MS2ASDM::writeScan(){

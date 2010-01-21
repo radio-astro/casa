@@ -211,10 +211,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // 6) If an MS Scan is longer than subscanduration, it is split up into 
   //    several ASDM subscans.
 
-  Bool writeSBSummaryStub(); // "stub" because this table will be completed later
+  Bool writeSBSummaryAndExecBlockStubs(); // "stubs" because these table will be completed later
                              //  with information from the APDM
-  Bool writeExecBlockStub();
-
   Bool writeScan();
 
   Bool writeSubScan();
@@ -268,8 +266,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmDataDescriptionId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmStateId_p;
-  SimpleOrderedMap <uInt, asdm::Tag> asdmConfigDescriptionId_p; // maps from MS Main row#
-  SimpleOrderedMap <Int, asdm::Tag> asdmSBSummaryId_p; // maps from MS Observation Id
+  SimpleOrderedMap <Double, asdm::Tag> asdmConfigDescriptionId_p; // maps from MS Main timestamps
+  SimpleOrderedMap <Int, asdm::Tag> asdmSBSummaryId_p; // maps from MS Observation Id + 10000*SpwId
   SimpleOrderedMap <Int, int> asdmFeedId_p; // ASDM feed id is not a Tag
 
 };
