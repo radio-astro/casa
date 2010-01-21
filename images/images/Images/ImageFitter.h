@@ -119,8 +119,8 @@ namespace casa {
             // Did the fit converge? Throw AipsError if the fit has not yet been done.
 			Bool converged() const;
 
-        private:
 
+        private:
             LogIO *itsLog;
             ImageInterface<Float> *image;
             Record regionRecord;
@@ -133,6 +133,8 @@ namespace casa {
             Bool logfileAppend, fitConverged, fitDone;
             Vector<Quantity> peakIntensities, fluxDensities, majorAxes, minorAxes, positionAngles;
             Vector<Vector<Double> > pixelPositions;
+            Record residStats, inputStats;
+            Double chiSquared;
 
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.
@@ -191,6 +193,13 @@ namespace casa {
             // Set the convolved sizes of the fitted components.
             void _setSizes();
 
+			void _getStandardDeviations(Double& inputStdDev, Double& residStdDev) const;
+
+			void _getRMSs(Double& inputRMS, Double& residRMS) const;
+
+			Double _getStatistic(const String& type, const Record& stats) const;
+
+			String _statisticsToString() const;
 
     };
 }
