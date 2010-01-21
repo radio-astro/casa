@@ -262,7 +262,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
   
   // Cursor Position Tracking
 
-  trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea));
+  trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::RightDockWidgetArea));
   
 //trkgDockWidget_->setFeatures(QDockWidget::DockWidgetMovable |
 //  			       QDockWidget::DockWidgetFloatable);
@@ -295,7 +295,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 					// (to outline inner frame (in Ui))
    
 
-  animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea));
+  animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::RightDockWidgetArea));
   
   animDockWidget_->toggleViewAction()->setText("Animator");
   
@@ -533,7 +533,7 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
   
   updateDDMenus_();
 
-  resize(QSize(525, 770).expandedTo(minimumSizeHint()));
+  resize(QSize(600, 770).expandedTo(minimumSizeHint()));
 	// To do: use a QSetting, to preserve size.
 
 }

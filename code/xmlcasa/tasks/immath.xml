@@ -111,6 +111,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <equals value="poli">
                         <default param="sigma"><value>"0.0mJy/beam"</value></default>
                     </equals>
+		    <equals value="pola"/>
+		    <equals value="spix"/>
                 </when>
 
 	</constraints>

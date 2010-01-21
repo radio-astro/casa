@@ -451,7 +451,7 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
             funnyshapes = True
             chanpat = r':\d+(~\d+)?(;\d+)?'
             timechansel = re.sub(chanpat, '', timechansel)
-            datacolstr = 'all'
+            datacolstr = 'all'  # writeDiffSpwShape() needs scratch columns.
             tb.open(inms)
             cns = tb.colnames()
             tb.close()

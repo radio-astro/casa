@@ -82,6 +82,7 @@ expected_residual = "gaussian_model_with_noise_resid.fits"
 convolved_model = "gaussian_convolved.fits"
 estimates_convolved = "estimates_convolved.txt"
 two_gaussians_image = "two_gaussian_model.fits"
+stokes_image = "imfit_stokes.fits"
 two_gaussians_estimates = "estimates_2gauss.txt"
 expected_new_estimates = "expected_new_estimates.txt"
 passed = True
@@ -512,6 +513,9 @@ def fit_using_estimates():
 def near (first, second, epsilon):
     return (abs((first - second)/first) <= abs(epsilon))
 
+def near_abs(first, second, epsilon):
+    return abs(first - second) <= epsilon
+
 # test writing, appending, and overwriting log files
 def test_logfile():
     success = True
@@ -626,6 +630,81 @@ def test_newestimates():
     passed &= success
     return {'success' : success, 'error_msgs' : msgs}
     
+## Test imfit on various polarization planes
+def test_polarization_image():
+    success = True
+    test = 'test_polarization_image: '
+    global msgs
+    def run_fitcomponents(stokes):
+        ia.open(stokes_image)
+        return ia.fitcomponents(stokes=stokes)
+    def run_imfit(stokes):
+        default('imfit')
+        return imfit(imagename=stokes_image, stokes=stokes)
+
+    stokes = ['I','Q','U','V']
+    expectedFlux = [133.60641, 400.81921, 375.76801, -1157.92212]
+    expectedRA = [1.2479113396, 1.2479113694, 1.2478908580, 1.2478908284]
+    expectedDec = [0.782579122, 0.782593666, 0.782593687, 0.782579143]
+    expectedMaj = [7.992524398, 11.988806751, 8.991589959, 12.987878913]
+    expectedMin = [5.994405977, 5.994395540, 4.995338093, 7.992524265]
+    expectedPA = [40.083248, 160.083213, 50.082442, 135.08243]
+
+    for i in [0 ,1]:
+        for j in range(len(stokes)):
+            if (i == 0):
+                code = run_fitcomponents
+                method = test + "ia.fitcomponents: "
+            else:
+                code = run_imfit
+                method += test + "imfit: "
+            res = code(stokes[j])
+
+            clist = res['results']
+            if (not res['converged']):
+                success = False
+                msgs += method + "fit did not converge unexpectedly for stokes " + stokes[j]
+            got = clist['component0']['flux']['value'][j]
+
+            # flux density test
+            if (not near(got, expectedFlux[j], 1e-5)):
+                success = False
+                msgs += method + " " + stokes + " flux density test failure, got " + str(got) + " expected " + str(expectedFlux[j]) + "\n"
+
+            # RA test
+            got = clist['component0']['shape']['direction']['m0']['value']
+            if (not near_abs(got, expectedRA[j], 1e-8)):
+                success = False
+                msgs += method + "stokes " + stokes[j] + " RA test failure, got " + str(got) + " expected " + str(expectedRA[j]) + "\n"
+
+            # Dec test
+            got = clist['component0']['shape']['direction']['m1']['value']
+            if (not near_abs(got, expectedDec[j], 1e-8)):
+                success = False
+                msgs += method + "stokes " + stokes[j] + " Dec test failure, got " + str(got) + " expected " + str(expectedDec[j]) + "\n"
+
+            # Major axis test
+            got = clist['component0']['shape']['majoraxis']['value']
+            if (not near(got, expectedMaj[j], 1e-7)):
+                success = False
+                msgs += method + "stokes " + stokes[j] + " Major axis test failure, got " + str(got) + " expected " + str(expectedMaj[j]) + "\n"
+        
+            # Minor axis test
+            got = clist['component0']['shape']['minoraxis']['value']
+            if (not near(got, expectedMin[j], 1e-7)):
+                success = False
+                msgs += method + "stokes " + stokes[j] + " Minor axis test failure, got " + str(got) + " expected " + str(expectedMin[j]) + "\n"
+
+            # Position angle test
+            got = clist['component0']['shape']['positionangle']['value']
+            if (not near_abs(got, expectedPA[j], 1e-5)):
+                success = False
+                msgs += method + "stokes " + stokes[j] + " Position angle test failure, got " + str(got) + " expected " + str(expectedPA[j]) + "\n"
+    global passed
+    passed &= success
+    return {'success' : success, 'error_msgs' : msgs}
+ 
+   
 # count the number of lines in the specified file in which the spcified string occurs
 def count_matches(filename, match_string):
     count = 0
@@ -649,12 +728,12 @@ def data():
         noisy_image, expected_model, expected_residual,
         convolved_model, estimates_convolved,
         two_gaussians_image, two_gaussians_estimates,
-        expected_new_estimates
+        expected_new_estimates, stokes_image
     ]
 
 
 def doCopy():
-    return [0, 0, 0, 0, 0, 0, 0, 0]
+    return [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 def run():
     testResults=[]
@@ -666,6 +745,7 @@ def run():
     testResults.append(test_nonconvergence())
     testResults.append(test_logfile())
     testResults.append(test_newestimates())   
+    testResults.append(test_polarization_image())   
  
     print "PASSED: ", passed
     print "*** ERROR MES: ", msgs

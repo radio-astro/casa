@@ -33,9 +33,9 @@
 	
 	</description>
 	<input>
-		<param type="string" name="infile" mustexist="true">
+		<param type="string" name="infile" mustexist="true" allowblank='true'>
 			<description> (Optional)  Name of file to visualize.</description>
-			<value>.</value>
+			<value></value>
 		</param>
 
 		<param type="string" name="displaytype">

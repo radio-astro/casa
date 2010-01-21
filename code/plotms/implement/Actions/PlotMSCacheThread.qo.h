@@ -30,6 +30,7 @@
 #include <plotms/Actions/PlotMSThread.qo.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSAveraging.h>
+#include <plotms/PlotMS/PlotMSTransformations.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <QThread>
@@ -62,6 +63,7 @@ public:
 		      const String& msname, 
 		      const PlotMSSelection& selection, 
 		      const PlotMSAveraging& averaging, 
+		      const PlotMSTransformations& transformations, 
 		      bool setupPlot = false,
 		      PMSPTMethod postThreadMethod = NULL,
 		      PMSPTObject postThreadObject = NULL);
@@ -127,6 +129,7 @@ private:
     String itsMSName_;
     PlotMSSelection itsSelection_;
     PlotMSAveraging itsAveraging_;
+    PlotMSTransformations itsTransformations_;
     
     // Whether to set up the cache afterwards.
     bool itsSetupPlot_;

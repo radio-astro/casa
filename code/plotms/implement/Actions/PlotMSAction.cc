@@ -490,7 +490,8 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	            ct = new PlotMSCacheThread(plot, &plot->data(), a,
 	                    vector<PMS::DataColumn>(a.size(), PMS::DEFAULT_DATACOLUMN),
 	                    paramsData->filename(),paramsData->selection(),
-	                    paramsData->averaging(), false,
+			    paramsData->averaging(), paramsData->transformations(),
+			    false,
 	                    &PMS_PP_Cache::notifyWatchers, paramsCache);
 
 	        } else {

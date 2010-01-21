@@ -439,15 +439,16 @@ def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
             use_tb = hasattr(tb, 'colnames')
         except:
             try:
-                import sys
-                sys.path.append(os.environ["CASAPATH"].split()[0] +
-                                '/code/xmlcasa/scripts/recipes')
-                from taskutil import get_global_namespace
-                my_globals = get_global_namespace()
-                tb = my_globals['tb']
+                #import sys
+                ## sys.path.append(os.environ["CASAPATH"].split()[0] +
+                ##                 '/code/xmlcasa/scripts/recipes')
+                ## from taskutil import get_global_namespace
+                ## my_globals = get_global_namespace()
+                ## tb = my_globals['tb']
+                from casa import table as tb
                 use_tb = hasattr(tb, 'colnames')
             except:
-                print "Could not find the tb tool (try running inside a casapy session)."
+                print "Could not find the tb tool.  Try running inside a casapy session or setting PYTHONPATH to /usr/lib/casapy/.../lib/python2.5."
         if need_tb and not use_tb:
             print "Removing", ', '.join(need_tb), "from the criteria for matching."
             musthave.difference_update(need_tb)

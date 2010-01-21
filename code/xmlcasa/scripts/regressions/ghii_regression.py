@@ -50,10 +50,10 @@ weighting="briggs"
 robust=0.0
 
 checkinputs="no"
-#display=False
-#fidelity=False
-display=True
-fidelity=True
+display=False
+fidelity=False
+#display=True
+#fidelity=True
 
 inp()
 go()

@@ -100,6 +100,7 @@ import shutil
 import random
 import time
 import casac
+import numpy
 from tasks import *
 from taskinit import *
 
@@ -965,7 +966,9 @@ def expr_test():
 #        error_msgs:  detailed message(s) of any error(s) that occured.
 ####################################################################
 def pol_test( imageList ):
-    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    success = True
+    errors = ''
+#    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
     casalog.post( "Starting immath INPUT/OUTPUT tests.", 'NORMAL2' )
 
     # First make the I, Q, U, and V files.  This step may not be
@@ -976,46 +979,101 @@ def pol_test( imageList ):
     immath( imageList[3], expr='IM0', stokes='V', outfile='pol_test_V.im' )
 
     imList = ['pol_test_Q.im', 'pol_test_U.im', 'pol_test_V.im']
-    results = None
     try:
-        results = immath( imagename=imList, outfile='pol_test1', mode='poli' )
+        # total polarization intensity
+        outfile = 'pol_test1'
+        if(immath( imagename=imList, outfile=outfile, mode='poli' )):
+            ia.open(outfile)
+            if ia.coordsys().stokes() != 'Ptotal':
+                success = False
+                errors += "\nIncorrect stokes in polarization intensity image"
+            ia.done()
+        else:
+            success = False
+            errors += "\nimmath returned False when determining polarization intensity image"
     except:
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: Failed to create polarization intensity image."
-    if ( not os.path.exists( 'pol_test1' ) or results == None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: output file, 'pol_test1', was not created."
+        success = False
+        errors += "\nError: Failed to create polarization intensity image."
+        
+    try:
+        # linear polarization intensity
+        outfile = 'linear_pol_intensity_test'
+        if(immath( imagename=imList[0:2], outfile=outfile, mode='poli' )):
+            ia.open(outfile)
+            if ia.coordsys().stokes() != 'Plinear':
+                success = False
+                errors += "\nIncorrect stokes in linear polarization image"
+            ia.done()
+        else:
+            success = False
+            errors += "\nimmath returned False when determining linear polarization image"
+    except:
+        success = False
+        errors
 
     imList = ['pol_test_Q.im', 'pol_test_U.im']
-    results = None
     try:
         results = immath( imagename=imList, outfile='pol_test2', mode='pola' )
     except:
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: Failed to create polarization angle image."
-    if ( not os.path.exists( 'pol_test2' ) or results == None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: output file, 'pol_test2', was not created."
-        
+        success = False
+        errors += "\nError: Failed to create polarization angle image."
+    return {'success': success, 'msgs': "", 'error_msgs': errors }
 
-    #imList = [ Need at least two images at different frequencies]
-    #results = None
-    #try:
-    #    results = immath( imagenames=imList, outfile='pol_test3', mode='spix' )
-    #except:
-    #    retValue['success']=False
-    #    retValue['error_msgs']=retValue['error_msgs']\
-    #               +"\nError: Failed to create spectral index image."
-    #if ( not os.path.exists( 'pol_test3' ) or results == None ):
-    #    retValue['success']=False
-    #    retValue['error_msgs']=retValue['error_msgs']\
-    #               +"\nError: output file, 'pol_test3', was not created."
-    
+# verification of fix to CAS-1678
+# https://bugs.aoc.nrao.edu/browse/CAS-1678
+def many_image_test():
+    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    casalog.post( "Starting immath many (>9) image test.", 'NORMAL2' )
+
+    # First make the I, Q, U, and V files.  This step may not be
+    # needed if immath learns to do this for the user.
+ 
+
+    imagename = [
+        'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
+        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
+    ]
+    expr = 'IM0+IM1+IM2+IM3+IM4+IM5+IM6+IM7+IM8+IM9+IM10'
+    try:
+        # full image test
+        outfile = 'full_image_sum.im'
+        if (immath(imagename=imagename, expr=expr, outfile=outfile)):
+            expected = numpy.ndarray([2,2])
+            expected.put(range(expected.size),66)
+            ia.open(outfile)
+            got = ia.getchunk()
+            ia.done()
+            casalog.post("here 6", "WARN")
+            if (not (got == expected).all()):
+                retValue['success'] = False
+                retValue['error_msgs'] += "\n Full image sum not correctly calculated"
+        else:
+            retValue['success'] = False
+            retValue['error_msgs'] += "\nimmath returned False for full image sum"            
+    except:
+        retValue['success'] = False
+        retValue['error_msgs'] += "\nFull image calculation threw an exception: " + str(sys.exc_info()[0])
+
+    try:
+        # subimage image test
+        outfile = 'subimage_sum.im'
+        if (immath(imagename=imagename, expr=expr, outfile=outfile, box='0,0,0,0')):
+            expected = numpy.ndarray([1,1])
+            expected.put(range(expected.size), 66)
+            ia.open(outfile)
+            got = ia.getchunk()
+            ia.done()
+            if (not (got == expected).all()):
+                retValue['success'] = False
+                retValue['error_msgs'] += "\n sub image sum not correctly calculated"
+        else:
+            retValue['success'] = False
+            retValue['error_msgs'] += "\nimmath returned False for sub image sum: " + str(sys.exc_info()[0])
+    except:
+        retValue['success'] = False
+        retValue['error_msgs'] += "\nSub image calculation threw an exception"
     return retValue
+
 ####################################################################
 # Methods for the automated CASA testing
 ####################################################################
@@ -1047,12 +1105,15 @@ def data():
     # has 4 polarizations!
     # 3C129/reference/3C129BC.clean.image              2048x2048x4x1
     
-    return ['ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image' ]
-
+    return [
+        'ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image',
+        'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
+        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
+    ]
 
 def doCopy():
     #print "\n\nIn IMMATH doCopy()\n\n"
-    return [1, 1, 1 ]
+    return [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 def run():
     test_list = [ 'input_test()', 'math_test()', \
@@ -1070,7 +1131,8 @@ def run():
     testResults=[]
     testResults.append( input_test( data() ) )
     testResults.append( expr_test() )
-    testResults.append( pol_test( data() ) )    
+    testResults.append( pol_test( data() ) )
+    testResults.append(many_image_test())
     print "TEST RESULTS: ", testResults
 
     for results in testResults:

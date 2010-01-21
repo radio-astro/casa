@@ -169,9 +169,19 @@ public:
 	    fillDirection2();}
   const Vector<MDirection>& direction2()  const {return This->direction2();}
 
+
+  // NOMINAL parallactic angle (feed p.a. offset NOT included)
+  const Float& parang0(Double time) const; 
+  const Vector<Float>& parang(Double time) const; 
+  
   // Note that azel is a function instead of a cached value
+  const MDirection& azel0(Double time) const; 
+  Vector<Double>& azel0Vec(Double time,Vector<Double>& azelVec) const; 
   const Vector<MDirection>& azel(Double time) const; 
   Matrix<Double>& azelMat(Double time,Matrix<Double>& azelMat) const; 
+
+  // Hour angle for specified time
+  Double hourang(Double time) const;
 
   Int fieldId() const {return fieldIdOK_p ? fieldId_p : This->fillFieldId();}
 
@@ -356,6 +366,9 @@ public:
 
   // Fill weightMat according to sigma column
   void resetWeightMat();
+
+  // Rotate visibility phase for phase center offsets
+  void phaseCenterShift(Double dx, Double dy);
 
   // Update coordinate info - useful for copied VisBuffers that need
   // to retain some state for later reference.

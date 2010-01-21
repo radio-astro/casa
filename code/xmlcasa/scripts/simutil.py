@@ -2,6 +2,7 @@
 # to be available outside of the simdata task
 import casac
 import os
+import shutil
 import commands
 import pdb
 # all I really need is casalog, but how to get it:?
@@ -53,7 +54,7 @@ class simutil:
         self.bandwidth=bandwidth
         self.totaltime=totaltime
 
-    def msg(self, s, origin=None, color=None):
+    def msg(self, s, origin=None, priority=None):
         # ansi color codes:
         # Foreground colors
         # 30    Black
@@ -64,16 +65,29 @@ class simutil:
         # 35    Magenta
         # 36    Cyan
         # 37    White
-        if color==None:
+        toterm=False
+        if priority==None:
             clr="\x1b[32m"
+            priority="INFO"
         else:
-            clr="\x1b["+color.__str__()+"m"
+            priority=priority.upper()
+            if priority=="WARN":
+                clr="\x1b[35m"                
+                toterm=True
+                priority="INFO" # otherwise casalog will spew to term also.
+            else:
+                if priority=="ERROR":
+                    clr="\x1b[31m"
+                    toterm=True
+                else:
+                    if not (priority=="DEBUG" or priority[:-1]=="DEBUG"):
+                        priority="INFO"
         bw="\x1b[0m"
         if origin==None:
             origin="simutil"
-        print clr+"["+origin+"] "+bw+s
-        #casalog.post("")
-        casalog.post(s)
+        if toterm:
+            print clr+"["+origin+"] "+bw+s
+        casalog.post(s,priority=priority,origin=origin)
 
 
 # helper function to plot an image (optionally), and calculate its statistics
@@ -97,7 +111,7 @@ class simutil:
             toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
             toJypix=1.
         else:
-            self.msg("WARN: don't know image units for %s" % image,origin="statim")
+            self.msg("%s: unknown units" % image,origin="statim",priority="warn")
             toJyarcsec=1.
             toJypix=1.
         stats=ia.statistics(robust=True)
@@ -125,7 +139,7 @@ class simutil:
             xform=csys.lineartransform(type="direction")
             offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
             if offdiag > 1e-4:
-                self.msg("ERROR: Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",origin="statim",color="31")
+                self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",origin="statim",priority="error")
             factor=pl.sqrt(abs(pl.det(xform)))
             xpix=xpix*factor
             ypix=ypix*factor
@@ -171,7 +185,7 @@ class simutil:
 
 
 
-    def calc_pointings(self, spacing, imsize, cell, direction=None, relmargin = 0.5):
+    def calc_pointings(self, spacing, imsize, direction=None, relmargin=0.5):
         """
         If direction is a list, simply returns direction and the number of
         pointings in it.
@@ -195,7 +209,7 @@ class simutil:
             self.direction=direction
         if type(direction) == list:
             if len(direction) >1:
-                return len(direction), direction
+                return len(direction), direction, [0.]*len(direction)
             else:
                 direction=direction[0]
     
@@ -204,17 +218,20 @@ class simutil:
         spacing  = qa.quantity(spacing)
         yspacing = qa.mul(0.866025404, spacing)
     
-        if type(cell) == list:
-            cellx, celly = map(qa.quantity, cell)
-        else:
-            cellx = qa.quantity(cell)
-            celly = cellx
-        
-        ysize = qa.mul(imsize[1], celly)
+        #if type(cell) == list:
+        #    cellx, celly = map(qa.quantity, cell)
+        #else:
+        #    cellx = qa.quantity(cell)
+        #    celly = cellx
+        #
+        #xsize = qa.mul(imsize[0], cellx)
+        #ysize = qa.mul(imsize[1], celly)
+        xsize=qa.quantity(imsize[0])
+        ysize=qa.quantity(imsize[1])
+
         nrows = 1+ int(pl.floor(qa.convert(qa.div(ysize, yspacing), '')['value']
                                 - 2.309401077 * relmargin))
 
-        xsize = qa.mul(imsize[0], cellx)
         availcols = 1 + qa.convert(qa.div(xsize, spacing),
                                    '')['value'] - 2.0 * relmargin
         ncols = int(pl.floor(availcols))
@@ -252,9 +269,70 @@ class simutil:
             pointings.append(direction)
         self.msg("using %i generated pointing(s)" % len(pointings))
         self.pointings=pointings
-        return len(pointings), pointings
+        return len(pointings), pointings, [0.]*len(pointings)
 
 
+    def read_pointings(self, filename):
+        """
+        read pointing list from file containing epoch, ra, dec,
+        and scan time (optional,in sec).
+        Parameter:
+             filename:  (str) the name of input file
+       
+        The input file (ASCII) should contain at least 3 fields separated
+        by a space which specify positions with epoch, ra and dec (in dms
+        or hms).
+        The optional field, time, shoud be a list of decimal numbers
+        which specifies integration time at each position in second.
+        The lines which start with '#' is ignored and can be used
+        as comment lines. 
+        
+        Example of an input file:
+        #Epoch     RA          DEC      TIME(optional)
+        J2000 23h59m28.10 -019d52m12.35 10.0
+        J2000 23h59m32.35 -019d52m12.35 10.0
+        J2000 23h59m36.61 -019d52m12.35 60.0
+        
+        """
+        f=open(filename)
+        line= '  '
+        time=[]
+        pointings=[]
+
+        # add option of different epoch in a header line like read_antenna?
+
+        while (len(line)>0):
+            try: 
+                line=f.readline()
+                if not line.startswith('#'):
+                ### ignoring line that has less than 3 elements
+                     if(len(line.split()) >2):
+                        splitline=line.split()
+                        epoch=splitline[0]
+                        ra0=splitline[1]
+                        de0=splitline[2]
+                        if len(splitline)>3:
+                            time.append(float(splitline[3]))
+                        else:
+                            time.append(0.)
+                        xstr = qa.formxxx(qa.quantity(ra0), format='hms')
+                        ystr = qa.formxxx(qa.quantity(de0), format='dms')
+                        pointings.append("%s %s %s" % (epoch,xstr,ystr))
+            except:
+                break
+        f.close()
+
+        # need an error check here if zero valid pointings were read
+        if len(pointings) < 1:
+            s="No valid point is found in input file"
+            self.msg(s,priority="error")
+        self.msg("read in %i pointing(s) from file" % len(pointings))
+        self.pointings=pointings
+        #self.direction=pointings
+                
+        return len(pointings), pointings, time
+
+    
 
     def average_direction(self, directions=None):
         # XXX make deal with list of measures as well as list of strings
@@ -332,7 +410,7 @@ class simutil:
             refcode = dirl[0] + ' '
         else:
             refcode = 'J2000'
-            if self.verbose: msg("assuming J2000 for "+direction,origin="simutil.s2m")
+            if self.verbose: self.msg("assuming J2000 for "+direction,origin="simutil.s2m")
         x, y = map(qa.quantity, dirl[-2:])
         if x['unit'] == '': x['unit']='deg'
         if y['unit'] == '': y['unit']='deg'
@@ -344,7 +422,7 @@ class simutil:
         Given a direction as a measure, return it as astring 'refcode lon lat'.
         """
         if dir['type'] != 'direction':
-            msg("ERROR converting direction measure",color="31",origin="simutil.m2s")
+            self.msg("converting direction measure",priority="error",origin="simutil.m2s")
             return False
         ystr = qa.formxxx(dir['m1'], format='dms')
         xstr = qa.formxxx(dir['m0'], format='hms')
@@ -443,7 +521,7 @@ class simutil:
                     flim=[0.305,50]
                     if self.verbose: self.msg("using old VLA Rx specs",origin="noisetemp")
                 else:
-                    self.msg("I don't know about the "+telescope+" receivers, using 200K",color="31",origin="noisetemp")
+                    self.msg("I don't know about the "+telescope+" receivers, using 200K",priority="warn",origin="noisetemp")
                     f0=[10,900]
                     t0=[200,200]
                     flim=[0,5000]
@@ -458,11 +536,11 @@ class simutil:
         # t_rx = sp(obsfreq)[0]
         
         if obsfreq<flim[0]:
-            self.msg("observing freqency is lower than expected for "+telescope,color="31",origin="noise")
-            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),color="31",origin="noise")
+            self.msg("observing freqency is lower than expected for "+telescope,priority="warn",origin="noise")
+            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),priority="warn",origin="noise")
         if obsfreq>flim[1]:
-            self.msg("observing freqency is higher than expected for "+telescope,color="31",origin="noise")
-            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),color="31",origin="noise")
+            self.msg("observing freqency is higher than expected for "+telescope,priority="warn",origin="noise")
+            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),priority="warn",origin="noise")
         if obsfreq<=flim[1] and obsfreq>=flim[0]:
             self.msg("interpolated receiver temp="+str(t_rx),origin="noise")
 
@@ -637,7 +715,7 @@ class simutil:
         f.close()
 
         if not params.has_key("observatory"):
-            self.msg("Must specify observatory in antenna file",origin="readantenna",color="31")
+            self.msg("Must specify observatory in antenna file",origin="readantenna",priority="error")
             return -1
         else:
             self.telescopename=params["observatory"]
@@ -645,7 +723,7 @@ class simutil:
                 self.msg("Using observatory= %s" % params["observatory"],origin="readantenna")
 
         if not params.has_key("coordsys"):
-            self.msg("Must specify coordinate system #coorsys=XYZ|UTM|GEO in antenna file",origin="readantenna",color="31")
+            self.msg("Must specify coordinate system #coorsys=XYZ|UTM|GEO in antenna file",origin="readantenna",priority="error")
             return -1
         else:
             self.coordsys=params["coordsys"]
@@ -665,18 +743,18 @@ class simutil:
                 if params.has_key("zone"):
                     zone=params["zone"]
                 else:
-                    self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
+                    self.msg("You must specify zone=NN in your antenna file",origin="readantenna",priority="error")
                     return -1
                 if params.has_key("datum"):
                     datum=params["datum"]
                 else:
-                    self.msg("You must specify datum in your antenna file",origin="readantenna",color="31")
+                    self.msg("You must specify datum in your antenna file",origin="readantenna",priority="error")
                     return -1
                 if params.has_key("hemisphere"):
                     nors=params["hemisphere"]
                     nors=nors[0].upper()
                 else:
-                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",color="31")
+                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",priority="error")
                     return -1
                 
                 # if self.verbose: foo=self.getdatum(datum,verbose=True)
@@ -690,7 +768,7 @@ class simutil:
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
                     meobs=me.observatory(params["observatory"])
                     if (meobs.__len__()<=1):
-                        self.msg("You need to add "+params["observatory"]+" to the Observatories table in your installation to proceed.",color="31")
+                        self.msg("You need to add "+params["observatory"]+" to the Observatories table in your installation to proceed.",priority="error")
                         return False,False,False,False,False,params["observatory"]
                     obs=me.measure(meobs,'WGS84')
                     obslat=qa.convert(obs['m1'],'deg')['value']
@@ -709,12 +787,12 @@ class simutil:
                         if params.has_key("datum"):
                             datum=params["datum"]
                         else:
-                            self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
+                            self.msg("You must specify zone=NN in your antenna file",origin="readantenna",priority="error")
                             return -1
                         if (datum.upper() != "WGS84"):
-                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readantenna",color="31")
+                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readantenna",priority="error")
                             return -1
-                        self.msg("geodetic coordinates not implemented yet :(",color="31")
+                        self.msg("geodetic coordinates not implemented yet",priority="error")
                     
         return (stnx, stny, stnz, pl.array(ind), id, nant, params["observatory"])
 
@@ -937,14 +1015,14 @@ class simutil:
             'WGS84' :[   0, 0  ,   0,'WE','World Geodetic System - 84'    ]}
         
         if not datums.has_key(datumcode):
-            self.msg("I can't figure out what datum %s is" % datumcode,color="31")
+            self.msg("unknown datum %s" % datumcode,priority="error")
             return -1
         
         datum=datums[datumcode]
         ellipsoid=datum[3]
         
         if not ellipsoids.has_key(ellipsoid):
-            self.msg("I can't figure out what ellipsoid %s is" % ellipsoid,color="31")
+            self.msg("unknown ellipsoid %s" % ellipsoid,priority="error")
             return -1
         
         if verbose:
@@ -1260,6 +1338,433 @@ class simutil:
             for i in range(n):
                 pl.text(lat[i],lon[i],name[i],horizontalalignment='center',fontsize=8)
 
-#        if dolam:
-#            pl.xlabel("kilolamda")
-#            pl.ylabel("kilolamda")
+        #if dolam:
+        #    pl.xlabel("kilolamda")
+        #    pl.ylabel("kilolamda")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ##################################################################
+    # fit modelimage into a 4 coordinate image defined by the parameters
+    def image4d(self, inimage, outimage, 
+                inbright,ignorecoord,
+                ra,dec,in_cell,out_cell,  # these may be the same
+                nchan,startfreq,chanwidth,bandwidth,
+                out_nstk,
+                flatimage=""):  # if nonzero, create mom -1 image named this
+
+        # call with out_cell set to user parameter "cell"
+        # out_cell may get changed if ignorecoord=F
+
+        # *** ra is expected and returned in angular quantity/dict
+
+        in_ia=ia.newimagefromfile(inimage)            
+        in_shape=in_ia.shape()
+        in_csys=in_ia.coordsys()
+
+
+        if not ignorecoord:
+            # model image pixel sizes
+            increments=in_csys.increment(type="direction")['numeric']
+            incellx=qa.quantity(abs(increments[0]),in_csys.units(type="direction")[0])
+            incelly=qa.quantity(abs(increments[1]),in_csys.units(type="direction")[1])
+            #incellx=qa.convert(incellx,'arcsec')['value']
+            #incelly=qa.convert(incelly,'arcsec')['value']
+            xform=in_csys.lineartransform(type="direction")
+            offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
+            if offdiag > 1e-4:
+                self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
+            factor=pl.sqrt(abs(pl.det(xform)))
+            # stupid fix for not having Rob's quanta fix
+            if int(casalog.version().split()[4][1:5]) < 8000:
+                factor=str(factor)
+            incellx=qa.mul(incellx,factor)
+            incelly=qa.mul(incelly,factor)
+    
+            # warn if input pixels are not square
+            if (abs(incellx['value'])-abs(incelly['value']))/abs(incellx['value']) > 0.001 and not ignorecoord:
+                self.msg("input pixels are not square!",priority="warn",origin="setup model")
+                if self.verbose:
+                    self.msg("using cell = %s (not %s)" % (str(incellx),str(incelly)),origin="setup model")
+                else:
+                    self.msg("using cell = %s" % str(incellx),origin="setup model")
+            in_cell=qa.convert(incellx,'arcsec')
+            
+
+        if out_cell=="incell":
+            out_cell=in_cell
+        
+        out_cell=qa.convert(out_cell,'arcsec')
+
+        if self.verbose:
+            self.msg("input model image shape= %s" % in_shape,origin="setup model")
+            self.msg("input model pixel size = %8.2e arcsec" % in_cell['value'],origin="setup model")
+
+
+
+                
+
+
+        # deal with brightness scaling
+        if (inbright=="unchanged") or (inbright=="default"):
+            scalefactor=1.
+        else:
+            stats=in_ia.statistics()
+            highvalue=stats['max']
+            scalefactor=float(inbright)/highvalue.max()
+
+
+
+        # check shape characteristics of the input;
+        # add degenerate axes as neeed:
+
+        in_dir=in_csys.findcoordinate("direction")
+        in_spc=in_csys.findcoordinate("spectral")
+        in_stk=in_csys.findcoordinate("stokes")
+
+
+        if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
+        arr=in_ia.getchunk()
+        axmap=[-1,-1,-1,-1]
+        axassigned=[-1,-1,-1,-1]
+
+        in_nax=arr.shape.__len__()
+        if in_nax<2:
+            self.msg("Your input model has fewer than 2 dimensions.  Can't proceed",priority="error")
+            return False
+
+
+
+        # we have at least two axes:
+
+        # set model_refdir and model_cell according to ignorecoord
+        if ignorecoord:
+            if self.verbose: self.msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")
+            
+            model_refdir='J2000 '+qa.formxxx(ra,format='hms')+" "+qa.formxxx(dec,format='dms')
+            model_cell=out_cell # in arcsec
+            axmap[0]=0 # direction in first two pixel axes
+            axmap[1]=1
+            axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
+            axassigned[1]=0
+            
+        else:            
+            if not in_dir['return']:
+                self.msg("You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",priority="error")
+                return False            
+            ra,dec = in_csys.referencevalue(type="direction")['numeric']
+            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms')+" "+qa.formxxx(str(dec)+"rad",format='dms')
+            ra=qa.quantity(str(ra)+"rad")
+            dec=qa.quantity(str(dec)+"rad")
+            if in_dir['pixel'].__len__() != 2:
+                self.msg("I can't understand your direction coordinates, so either edit the header or set ignorecoord=True",priority="error")
+                return False            
+            dirax=in_dir['pixel']
+            axmap[0]=dirax[0]
+            axmap[1]=dirax[1]                    
+            model_cell=in_cell # in arcsec
+            axassigned[dirax[0]]=0
+            axassigned[dirax[1]]=0
+            if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
+
+        # if we only have 2d to start with:
+        if in_nax==2:            
+            # then we can't make a cube (at least, it would be boring)
+            if nchan>1: 
+                self.msg("you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",priority="warn",origin="setup model")
+                nchan=1
+            # add an extra axis to be Spectral:
+            arr=arr.reshape([arr.shape[0],arr.shape[1],1])
+            in_shape=arr.shape
+            in_nax=in_shape.__len__() # which should be 3
+            if self.verbose: self.msg("Adding dummy spectral axis",origin="setup model")
+
+        # we have at least 3 axes, either by design or by addition:
+        if ignorecoord:
+            add_spectral_coord=True
+            extra_axis=2
+        else:
+            if in_spc['return']:
+                if type(in_spc['pixel']) == int :
+                    foo=in_spc['pixel']
+                else:
+                    foo=in_spc['pixel'][0]
+                    self.msg("you seem to have two spectral axes",priority="warn")
+                if arr.shape[foo]>1 and nchan==1:
+                    if self.verbose: self.msg("You will be flattening your spectral dimension",origin="setup model",priority="warn")
+                axmap[3]=foo
+                axassigned[foo]=3
+                model_restfreq=in_csys.restfrequency()
+                in_startpix=in_csys.referencepixel(type="spectral")['numeric'][0]
+                model_step=in_csys.increment(type="spectral")['numeric'][0]
+                model_start=in_csys.referencevalue(type="spectral")['numeric'][0]-in_startpix*model_step
+                model_step=str(model_step)+in_csys.units(type="spectral")
+                model_start=str(model_start)+in_csys.units(type="spectral")
+                add_spectral_coord=False
+                if self.verbose: self.msg("Spectral Coordinate %i parsed" % axmap[3],origin="setup model")                
+            else:
+                # we're not ignoreing coord, but we have at least one extra axis
+                # if we have a valid stokes axis, but not a valid spectral axis:
+                if in_stk['return']:
+                    axassigned[in_stk['pixel']]=2
+                    axmap[2]=in_stk['pixel']
+                    # AND, if we only had 3 axes, need to add dummy spectral:
+                    if in_nax<4:
+                        # then we can't make a cube (at least, it would be boring)
+                        if nchan>1: 
+                            self.msg("you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",priority="warn",origin="setup model")
+                            nchan=1
+                        # add an extra axis to be Spectral:
+                        arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
+                        in_shape=arr.shape
+                        in_nax=in_shape.__len__() # which should be 4
+                        if self.verbose: self.msg("Adding dummy spectral axis",origin="setup model")
+                        
+                # find first unused axis - probably at end, but just in case its not:
+                i=0
+                extra_axis=-1
+                while extra_axis<0 and i<4:
+                    if axassigned[i]<0: extra_axis=i
+                    i+=1
+                if extra_axis<0:                    
+                    self.msg("I can't find an unused axis to make Spectral [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),priority="error",origin="setup model")
+                    return False
+                add_spectral_coord=True
+                
+        if add_spectral_coord:
+            axmap[3]=extra_axis
+            axassigned[extra_axis]=3
+            if nchan>arr.shape[extra_axis]:
+                nchan=arr.shape[extra_axis]
+                self.msg("you are asking for more channels than you have - truncating output cube to %i channels (%s each)" % (nchan,str(chanwidth)),priority="warn",origin="setup model")
+            if arr.shape[extra_axis]>nchan:
+                # actually subsample someday:
+                self.msg("you are asking for fewer channels (%i) than the input cube - increasing nchan to %i (%s each) " % (nchan,arr.shape[extra_axis],str(chanwidth)),priority="warn",origin="setup model")
+                nchan=arr.shape[extra_axis]
+            if arr.shape[extra_axis]>1:
+                model_restfreq=startfreq
+                model_start=startfreq
+                model_step=chanwidth
+            else:
+                model_restfreq=startfreq
+                model_start=startfreq            
+                model_step=bandwidth
+            if self.verbose: self.msg("Adding Spectral Coordinate",origin="setup model")
+
+
+
+        # if we only have three axes, add one to be Stokes:
+        if in_nax==3:
+            arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
+            in_shape=arr.shape
+            in_nax=in_shape.__len__() # which should be 4
+            add_stokes_coord=True
+            extra_axis=3
+            if self.verbose: self.msg("Adding dummy Stokes axis",origin="setup model")
+            
+        # we have at least 3 axes, either by design or by addition:
+        if ignorecoord:
+            add_stokes_coord=True
+            extra_axis=3
+        else:
+            if in_stk['return']:
+                model_stokes=in_csys.stokes()
+                foo=model_stokes[0]
+                for i in range(model_stokes.__len__()-1):
+                    foo=foo+model_stokes[i+1]
+                model_stokes=foo
+                if type(in_stk['pixel']) == int:
+                    foo=in_stk['pixel']
+                else:
+                    foo=in_stk['pixel'][0]
+                    self.msg("you seem to have two stokes axes",priority="warn")                
+                axmap[2]=foo
+                axassigned[foo]=2
+                if in_shape[foo]>4:
+                    self.msg("you appear to have more than 4 Stokes components - please edit your header and/or parameters",priority="error")
+                    return False                        
+                add_stokes_coord=False
+                if self.verbose: self.msg("Stokes Coordinate %i parsed" % axmap[2],origin="setup model")
+            else:
+                # find the unused axis:
+                i=0
+                extra_axis=-1
+                while extra_axis<0 and i<4:
+                    if axassigned[i]<0: extra_axis=i
+                    i+=1
+                if extra_axis<0:
+                    self.msg("I can't find an unused axis to make Stokes [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),priority="error",origin="setup model")
+                    return False
+                add_stokes_coord=True
+                            
+
+        if add_stokes_coord:
+            axmap[2]=extra_axis
+            axassigned[extra_axis]=2
+            if arr.shape[extra_axis]>4:
+                self.msg("you have %i Stokes parameters in your potential Stokes axis %i.  something is wrong." % (arr.shape[extra_axis],extra_axis),priority="error")
+                return False
+            if self.verbose: self.msg("Adding Stokes Coordinate",origin="setup model")
+            if arr.shape[extra_axis]==4:                    
+                model_stokes="IQUV"
+            if arr.shape[extra_axis]==3:                    
+                model_stokes="IQV"
+                self.msg("setting IQV Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model",priority="warn")
+            if arr.shape[extra_axis]==2:                    
+                model_stokes="IQ"
+                self.msg("setting IQ Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model",priority="warn")
+            if arr.shape[extra_axis]<=1:                    
+                model_stokes="I"
+
+        if self.verbose:
+            self.msg("axis map for model image = %i %i %i %i" %
+                     (axmap[0],axmap[1],axmap[2],axmap[3]),origin="setup model")
+            if model_stokes.__len__() > out_nstk:
+                self.msg("increasing number of stokes components in 4d image to match the input %s" % model_stokes)
+            if model_stokes.__len__() < out_nstk:
+                self.msg("decreasing number of stokes components in 4d image to match the input %s" % model_stokes)
+
+        out_nstk=model_stokes.__len__()
+        
+
+
+        modelshape=[in_shape[axmap[0]], in_shape[axmap[1]],out_nstk,nchan]
+        ia.fromshape(outimage,modelshape,overwrite=True)
+        modelcsys=ia.coordsys()        
+        modelcsys.setunits(['rad','rad','','Hz'])
+        modelcsys.setincrement([-1*qa.convert(model_cell,modelcsys.units()[0])['value'],
+                                qa.convert(model_cell,modelcsys.units()[1])['value']],
+                                type="direction")
+        # setting both increment and lintransform does bad things.
+        #modelcsys.setlineartransform("direction",
+        #                             pl.array([[-1*qa.convert(model_cell,modelcsys.units()[0])['value'],0.],
+        #                                       [0.,qa.convert(model_cell,modelcsys.units()[1])['value']]]))
+        dirm=self.dir_s2m(model_refdir)
+        raq=dirm['m0']        
+        deq=dirm['m1']        
+        modelcsys.setreferencevalue([qa.convert(raq,modelcsys.units()[0])['value'],
+                                     qa.convert(deq,modelcsys.units()[1])['value']],
+                                    type="direction")
+        modelcsys.setreferencepixel([0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]],
+                                    "direction")
+        modelcsys.setspectral(refcode="LSRK",restfreq=model_restfreq)
+        modelcsys.setreferencevalue(model_start,type="spectral")
+        modelcsys.setreferencepixel(0,type="spectral") # default is middle chan
+        modelcsys.setincrement(qa.convert(model_step,modelcsys.units()[3])['value'],type="spectral")
+        #modelcsys.summary()
+
+        # first assure that the csys has the expected order 
+        expected=['Direction', 'Direction', 'Stokes', 'Spectral']
+        if modelcsys.axiscoordinatetypes() != expected:
+            self.msg("internal error with coordinate axis order created by Imager",priority="error")
+            self.msg(modelcsys.axiscoordinatetypes().__str__(),priority="error")
+            return False
+
+        # more checks:
+        foo=pl.array(modelshape)
+        if not (pl.array(arr.shape) == pl.array(foo.take(axmap).tolist())).all():
+            self.msg("internal error: I'm confused about the shape if your model data cube",priority="error")
+            self.msg("have "+foo.take(axmap).__str__()+", want "+in_shape.__str__(),priority="error")
+            return False
+
+        ia.setcoordsys(modelcsys.torecord())
+        ia.done()
+        ia.open(outimage)
+
+
+        for ax in range(4):
+            if axmap[ax] != ax:
+                if self.verbose: self.msg("swapping input axes %i with %i" % (ax,axmap[ax]),origin="setup model")
+                arr=arr.swapaxes(ax,axmap[ax])                        
+                tmp=axmap[ax]
+                axmap[ax]=ax
+                axmap[tmp]=tmp                
+
+
+        # there's got to be a better way to remove NaNs: :)
+        for i0 in range(arr.shape[0]):
+            for i1 in range(arr.shape[1]):
+                for i2 in range(arr.shape[2]):
+                    for i3 in range(arr.shape[3]):
+                        foo=arr[i0,i1,i2,i3]
+                        if foo!=foo: arr[i0,i1,i2,i3]=0.0
+
+        if self.verbose:
+            self.msg("model array minmax= %e %e" % (arr.min(),arr.max()),origin="setup model")        
+            self.msg("scaling model brightness by a factor of %f" % scalefactor,origin="setup model")
+            self.msg("simulated image desired channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
+            self.msg("simulated image desired pixel size = %8.2e arcsec" % out_cell['value'],origin="setup model")
+            if arr.nbytes > 5e7:
+                msg("your model is large - predicting visibilities may take a while.",priority="warn")
+
+
+        ia.putchunk(arr*scalefactor)
+        ia.close()
+
+        in_ia.close()
+
+        # coord image should now have correct Coordsys and shape
+
+#        if shrinkspectral:
+#            # we had more channels in the cube than requested in the output image.
+
+
+        #####################################################################
+        # make a moment 0 image
+        if flatimage != "":
+            
+            inspectax=modelcsys.findcoordinate('spectral')['pixel']
+            innchan=modelshape[inspectax]
+            
+            stokesax=modelcsys.findcoordinate('stokes')['pixel']
+            innstokes=modelshape[stokesax]
+
+            if innchan>1:
+                if self.verbose: self.msg("creating moment zero input image",origin="setup model")
+                # actually run ia.moments
+                ia.open(outimage)
+                ia.moments(moments=[-1],outfile=flatimage,overwrite=True)
+                ia.done()
+            else:            
+                if self.verbose: self.msg("removing degenerate input image axes",origin="setup model")
+                # just remove degenerate axes from modelimage4d
+                ia.newimagefromimage(infile=outimage,outfile=flatimage,dropdeg=True,overwrite=True)
+                if innstokes<=1:
+                    os.rename(flatimage,flatimage+".tmp")
+                    ia.open(flatimage+".tmp")
+                    ia.adddegaxes(outfile=flatimage,stokes='I',overwrite=True)
+                    ia.done()
+                    shutil.rmtree(flatimage+".tmp")
+            if innstokes>1:
+                os.rename(flatimage,flatimage+".tmp")
+                po.open(flatimage+".tmp")
+                foo=po.stokesi(outfile=flatimage,stokes='I')
+                foo.done()
+                po.done()
+                shutil.rmtree(flatimage+".tmp")
+
+        return ra,dec,in_cell,out_cell,nchan,startfreq,chanwidth,bandwidth,out_nstk
+
+

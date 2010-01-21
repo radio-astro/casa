@@ -145,6 +145,7 @@ Int PKSMS2reader::open(
   cDataDescIdCol.reference(msCols.dataDescId());
   cSpWinIdCol.reference(dataDescCols.spectralWindowId());
   cChanFreqCol.reference(spWinCols.chanFreq());
+  cTotBWCol.reference(spWinCols.totalBandwidth());
 
   cWeatherTimeCol.reference(weatherCols.time());
   cTemperatureCol.reference(weatherCols.temperature());
@@ -704,6 +705,10 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   ROMSAntennaColumns antennaCols(cPKSMS.antenna());
   String telescope = antennaCols.name()(0);
   Bool cGBT = telescope.contains("GBT");
+  //Bool cPM = telescope.contains("PM"); // ACA TP antenna
+  //Bool cDV = telescope.contains("DV"); // VERTEX
+  //Bool cCM = telescope.contains("CM"); // ACA 7m antenna
+  //Bool cALMA = cPM || cDV || cCM ;
   // Observation type.
   // check if State Table exist
   //Bool cHaveStateTab=Table::isReadable(cPKSMS.stateTableName());
@@ -752,6 +757,30 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
             } 
           }
         }
+	else if (cALMA) {
+	  // ALMA tag
+          // split the obsType string and append a proper label
+          string substr[1] ;
+          int numSubstr = split( pksrec.obsType, substr, 1, "," );
+          String obsType = String( substr[0] );
+          int epos = obsType.find_first_of('.');
+          int nextpos = obsType.find_first_of('.',epos+1);
+          string obsMode1 = obsType.substr(0,epos);
+          string obsMode2 = obsType.substr(epos+1,nextpos-epos-1);
+     
+          //cerr <<"obsMode2= "<<obsMode2<<endl;
+          // Current OBS_MODE format:
+          //
+          //     ON: OBSERVE_TARGET.ON_SOURCE
+          //    OFF: OBSERVE_TARGET.OFF_SOURCE
+          //
+          if (obsMode1 == "OBSERVE_TARGET") {
+            //if (obsMode2 == "ON_SOURCE") pksrec.srcName.append("_pson");
+            //if (obsMode2 == "OFF_SOURCE") pksrec.srcName.append("_psoff");
+            if (obsMode2 == "ON_SOURCE") pksrec.srcType = 0 ;
+            if (obsMode2 == "OFF_SOURCE") pksrec.srcType = 1 ;
+          } 
+	}
       } 
     }
   }
@@ -774,10 +803,13 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   
   // Minimal handling on continuum data.
   Vector<Double> chanFreq = cChanFreqCol(iIF);
+  pksrec.nchan = nChan;
   if (nChan == 1) {
-    pksrec.freqInc  = chanFreq(0);
+    //pksrec.freqInc  = chanFreq(0);
+    pksrec.freqInc  = cTotBWCol(iIF); 
     pksrec.refFreq  = chanFreq(0);
-    pksrec.restFreq = 0.0f;
+    pksrec.restFreq.resize(1);
+    pksrec.restFreq[0] = 0.0f;
   } else {
   
     if (cStartChan(iIF) <= cEndChan(iIF)) {
@@ -794,10 +826,12 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
       //restFreq = cSrcRestFrqCol(srcId);
       pksrec.restFreq = cSrcRestFrqCol(srcId);
     } else {
-      pksrec.restFreq = 0.0f;
+      pksrec.restFreq.resize(1);
+      pksrec.restFreq[0] = 0.0f;
     }
   }
-  pksrec.bandwidth = abs(pksrec.freqInc * nChan);
+  //pksrec.bandwidth = abs(pksrec.freqInc * nChan);
+  pksrec.bandwidth = abs(cTotBWCol(0));
 
   pksrec.tcal.resize(cNPol(iIF));
   pksrec.tcal      = 0.0f;

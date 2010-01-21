@@ -51,6 +51,7 @@ class stdcasaXMLUtil {
 	XMLCh *range;
 	XMLCh *description;
 	XMLCh *mustexist;
+	XMLCh *allowblank;
 	XMLCh *ienum;
 	XMLCh *kind;
 	XMLCh *any;

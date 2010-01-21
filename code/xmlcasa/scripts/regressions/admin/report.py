@@ -33,7 +33,8 @@ colormania = True    #
 SOURCE_DIR = os.environ["CASAPATH"].split()[0]
 known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 2.3.1 (build #6826)",
-                  "CASA Version 2.4.0 (build #8115)"]
+                  "CASA Version 2.4.0 (build #8115)",
+                  "CASA Version 3.0.0 (r9888)"]
 
 exclude_host = []
 exclude_test = {}
@@ -47,6 +48,36 @@ def cmp_exec(a, b):
         return 1
     else:
         return 0
+
+# Usual integer / string comparison
+def cmp_std(a, b):
+    if a < b:
+        return -1
+    elif a > b:
+        return 1
+    else:
+        return 0
+
+# Compare version numbers
+def cmp_version(a, b):
+    if a.find('build') >= 0 and b.find('build') < 0:
+        return -1
+    elif a.find('build') < 0 and b.find('build') >= 0:
+        return 1
+    elif a.find('build') >= 0 and b.find('build') >= 0:
+        return cmp_std(a, b)
+    else:
+        # Neither a nor b contain 'build'
+        n = len("CASA Version 3.0.1 (r")
+        if a[:n] != b[:n]:
+            return cmp_std(a[:n], b[:n])
+        else:
+            # Compare XYZ numerically in
+            # "CASA Version 3.0.1 (rXYZ)"
+            a_int = a[n:len(a)-len(")")]
+            b_int = b[n:len(b)-len(")")]
+            return cmp_std(a_int, b_int)
+        
 
 def shorten(s, maxlength=20):
     if len(s) > maxlength:
@@ -158,7 +189,7 @@ def selected_revisions(data):
             stable_versions.append(log['CASA'])
 
     if len(stable_versions) > 0:
-        stable_versions.sort(reverse=True)
+        stable_versions.sort(reverse=True, cmp=cmp_version)
         selected.add(stable_versions[0])
         print "Use latest on stable: ", stable_versions[0]
     else:
@@ -291,7 +322,7 @@ class report:
 
             v = log['CASA']
             if not self.casa_revision.has_key(host) or \
-                   v > self.casa_revision[host]:
+                   cmp_version(v, self.casa_revision[host]) > 0:
                 self.casa_revision[host] = v
 
         latest_on_stable = self.casas[0] # global latest
@@ -308,9 +339,9 @@ class report:
                 host = log['host']
                 v = log['CASA']
                 #if v < self.casa_revision[host] and \
-                if v < self.global_latest and \
+                if cmp_version(v, self.global_latest) < 0 and \
                        (not latest2.has_key(host) or \
-                        v > latest2[host]):
+                        cmp_version(v, latest2[host]) > 0:
                     latest2[host] = v
 
             for host in self.casa_revision.keys():
@@ -854,15 +885,22 @@ class report:
 
         # Find the latest run; CASA version has 1st priority, date has 2nd priority
         log = None
-        latest_run = 'A'
+        latest_run_version = ''
+        latest_run_date = ''
         for l in data:
             if l['host'] == host and \
                (same_version_per_host == False or l['CASA'] == self.casa_revision[host]) and \
                l['testid'] == test and \
                l['type'] == subtest[1] and \
                (subtest[0] == '' or l['image'] == subtest[0]):
-                if (l['CASA'] + l['date']) > latest_run:
-                    latest_run = (l['CASA'] + l['date'])
+
+                if latest_run_version == '' or \
+                   (cmp_version(l['CASA'], latest_run_version) > 0 or \
+                    cmp_version(l['CASA'], latest_run_version) == 0 and \
+                    l['date'] > latest_run_date):
+                    
+                    latest_run_version = l['CASA']
+                    latest_run_date    = l['date']
                     log = l
 
         if host in self.hosts_devel:
@@ -1091,14 +1129,14 @@ class report:
                                            'align=center ' + coords)
                         if extended:
                             fd.write('CRASHED')
-                            if os.system('tail -10 ' + framework_log + ' | grep TIMEOUT >/dev/null') == 0:
+                            if os.system('tail -20 ' + framework_log + ' | grep TIMEOUT >/dev/null') == 0:
                                 fd.write('<br>TIMEOUT')
                                 
                             elif os.system('tail -10 ' + framework_log + ' | grep "casapy returned" >/dev/null') == 0:
                                 error_message = commands.getoutput('tail -10 ' + framework_log + ' | grep -B1 "casapy returned" | head -1')
                                 fd.write('<br><img src="skullnbones.jpg"><br>' + shorten(error_message, 40))
                             else:
-                                fd.write('<br>???')
+                                fd.write('<br>??? unknown reason ???')
 
             else:
                 fd.write('<td align=center '+coords+'>')

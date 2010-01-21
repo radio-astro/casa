@@ -394,6 +394,7 @@ bool PlotMSMultiPlot::updateCache() {
 						  d->filename(), 
 						  d->selection(), 
 						  d->averaging(), 
+						  d->transformations(),
 						  false, 
 						  &PlotMSMultiPlot::cacheLoaded, this);
     itsParent_->getPlotter()->doThreadedOperation(ct);

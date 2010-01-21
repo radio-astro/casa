@@ -151,12 +151,17 @@ and the deconvolved fit results.
 
 The task returns a dictionary with two keys, 'converged' and 'results'.
 The value of 'converged' is a boolean which indicates if the fit converged.
-The value of 'results' is a component list reflecting the fit results. In the
-case of a clean image, the results are the convolved results.
+The value of 'results' is a python dictionary representation of a component
+list reflecting the fit results. In the case of a clean image, the results
+are the convolved results. The results can be converted to a componentlist
+(cl) tool via
 
-The region can either be specified by a box (blc,trc) or a region (if both
-are given, the box is used). Ranges of pixel values can be included or
-excluded from the fit.
+cl.fromrecord(imfit_return['results'])
+
+The region can either be specified by a box(es)
+(blc1, trc1, blc2, trc2, ...) or a region (if both
+are given, the value of box is used). Ranges of pixel values can be
+included or excluded from the fit via includepix and excludepix.
 
 If specified, the task will write the residual and/or model images for
 successful fits.
@@ -182,8 +187,8 @@ mask = '"myimage">5' will use only pixels with values greater than 5.
 INCLUDING AND EXCLUDING PIXELS
 
 Pixels can be included or excluded from the fit based on their values
-using these parameters. Note that specifying both is not permitted and
-will cause an error. If specified, both take an array of two numeric
+using includepix and excludepix. Note that specifying both is not permitted
+and will result in  an error. If specified, both take an array of two numeric
 values.
 
 ESTIMATES

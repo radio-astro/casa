@@ -844,19 +844,31 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		   itsLog << casa::LogIO::NORMAL << "Range checking failed for " << param << casa::LogIO::POST;
 	      }
 	   }
+	   //
+	   // File checking, if the attribute allowblank has been set then just pass it through
+	   // otherwise the file must exist to verify
+	   //
 	   if(constraintsRec.count("mustexist")){
+              bool blanksok(false);
+	      if(constraintsRec.count("allowblank")){
+		      blanksok = constraintsRec["allowblank"].asBool();
+	      }
 	      if(constraintsRec["mustexist"].asBool()){
 	         struct stat mystat;
 		 if(user.type() == variant::STRINGVEC){
 			 vector<string> files = user.asStringVec();
 			 for(unsigned int i = 0; i<files.size(); i++){
-	                     if(stat(files[i].c_str(), &mystat)){
+			     if(blanksok && files[i] == "")
+				continue;
+			     else if(stat(files[i].c_str(), &mystat)){
 		                rstat = false;
 				break;
 			     }
 			 }
 		 } else {
-	            if(stat(user.asString().c_str(), &mystat))
+		    if(blanksok && user.asString() == "")
+			    rstat = true;
+		    else if(stat(user.asString().c_str(), &mystat))
 		       rstat = false;
                  }
 	         if(!silent && !rstat){

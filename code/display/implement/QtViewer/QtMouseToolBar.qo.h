@@ -33,6 +33,8 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Vector.h>
 #include <display/QtViewer/QtMouseToolState.qo.h>
+#include <map>
+#include <string>
 
 
 #include <graphics/X11/X_enter.h>
@@ -98,7 +100,8 @@ class QtMouseToolBar: public QToolBar {
 		 QWidget* parent = 0);
   ~QtMouseToolBar() {  }
 
-
+  QtMouseToolButton *button( const std::string &name );
+  
  
  protected slots:
   
@@ -120,6 +123,8 @@ class QtMouseToolBar: public QToolBar {
   
   // Names of tools within this toolbar (in order)
   Vector<String> tools_;
+
+  std::map<std::string,QtMouseToolButton*> buttons_;
   
 };
 

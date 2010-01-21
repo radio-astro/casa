@@ -358,8 +358,8 @@ int SDFITSreader::open(
   findData(SIG,       "SIG",     TSTRING);
   findData(CAL,       "CAL",     TSTRING);
 
-  findData(RVSYS,     "RVSYS",   TFLOAT);
-  findData(VFRAME,    "VFRAME",  TFLOAT);
+  findData(RVSYS,     "RVSYS",   TDOUBLE);
+  findData(VFRAME,    "VFRAME",  TDOUBLE);
   findData(VELDEF,    "VELDEF",  TSTRING);
 
   if (cStatus) {

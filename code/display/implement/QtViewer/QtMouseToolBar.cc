@@ -65,6 +65,7 @@ QtMouseToolBar::QtMouseToolBar(QtMouseToolState* msbtns, QtDisplayPanel* qdp,
     String tool = tools[i];
     
     QtMouseToolButton* mtb = new QtMouseToolButton(this);
+    buttons_.insert(std::pair<std::string,QtMouseToolButton*>(tool,mtb));
     addWidget(mtb);
     
     mtb->setObjectName(tool.chars());
@@ -92,7 +93,12 @@ QtMouseToolBar::QtMouseToolBar(QtMouseToolState* msbtns, QtDisplayPanel* qdp,
       
   msbtns_->emitBtns();  }
 
-
+QtMouseToolButton *QtMouseToolBar::button( const std::string &name ) {
+    std::map<std::string,QtMouseToolButton*>::iterator it = buttons_.find( name );
+    if ( it != buttons_.end( ) )
+	return it->second;
+    return 0;
+}
    
      
 void QtMouseToolBar::chgMouseBtn_(String tool, Int button) {

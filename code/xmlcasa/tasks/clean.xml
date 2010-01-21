@@ -47,7 +47,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="spw">
-      <description>Spectral windows:channels e.g. \'0~3:3~100\', \'\' is all  </description>
+      <description>Spectral windows:channels e.g. \'0~3:3~100\', \'\' is all</description>
       <any type="variant"/>
       <value type="string"></value>
     </param>
@@ -60,14 +60,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Range of time to select from data</description>
       <value></value>
     </param>
+
     <param type="string" name="uvrange" subparam="true">
       <description>Select data within uvrange </description>
       <value></value>
     </param>
+
     <param type="string" name="antenna" subparam="true">
       <description>Select data based on antenna/baseline</description>
       <value></value>
     </param>
+
     <param type="string" name="scan" subparam="true">
       <description>Scan number range</description>
       <value></value>
@@ -264,19 +267,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="intArray" name="imsize">
-	    <description>x and y image size in pixels, symmetric for single value</description>
+	    <description>x and y image size in pixels. Single value: same for both</description>
 	    <value type="vector">
     <value>256</value><value>256</value>
-	    </value>
+    </value>
     </param>
 <!--========================================================= -->
     <param type="doubleArray" name="cell" units="arcsec">
-    <description>x and y cell size. default unit arcsec</description>
-    <value type="vector"><value>1.0</value><value>1.0</value></value>
+    <description>x &amp; y cell size(s). Default unit arcsec.</description>
+    <value type="vector"><value>1.0</value></value>
     </param>
 <!--========================================================= -->
     <param type="any" name="phasecenter">
-	    <description>Image phase center: position or field index</description>
+	    <description>Image center: direction or field index</description>
 	    <any type="variant"/>
 	    <value type="string"></value>
     </param>
@@ -308,12 +311,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <description>Weighting of uv (natural, uniform, briggs, ...)</description>
     <value>natural</value>
     <allowed kind="enum">
-	    <value>natural</value>
-	    <value>uniform</value>
-	    <value>briggs</value>
-	    <value>briggsabs</value>
-	    <value>radial</value>
-	    <value>superuniform</value>
+      <value>natural</value>
+      <value>uniform</value>
+      <value>briggs</value>
+      <value>briggsabs</value>
+      <value>radial</value>
+      <value>superuniform</value>
     </allowed>
     </param>
 <!--========================================================= -->
@@ -328,7 +331,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="bool" name="uvtaper">
-	    <description>Apply additional uv tapering of  visibilities</description>
+	    <description>Apply additional uv tapering of visibilities</description>
 	    <value>False</value>
     </param>
 <!--========================================================= -->
@@ -632,7 +635,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  imagename=['n5921','outlier1','outlier2'] 
        outlierfile --- Text file name which contains image names, sizes, field
                        centers
-       field -- Select fields to image or mosaic.  Use field id(s) or field name(s).
+       field -- Select fields to image or mosaic.  Use field id(s) or name(s).
                   ['go listobs' to obtain the list id's or names]
                default: ''= all fields
                  If field string is a non-negative integer, it is assumed to
@@ -697,7 +700,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    example: scan='1~5'
                    Check 'go listobs' to insure the scan numbers are in order.
        mode -- Frequency Specification:
-               NOTE: Channels deselected with spw parameter will contain all zeros. 
+               NOTE: Channels deselected with spw parameter will contain all
+                     zeros. 
                See examples below.
                default: 'mfs'
                  mode = 'mfs' means produce one image from all 
@@ -733,24 +737,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  starts at first input channel of first input spw
                  examples: start='5.0km/s', or start='22.3GHz'.
                width -- Output channel width
-                 For mode='channel', default=1; &gt;1 indicates channel averaging.
+                 For mode='channel', default=1; &gt;1 indicates channel averaging
                  example: width=4.
-                 For mode=' 'velocity' or 'frequency', default=''; width of first 
-                 input channel, otherwise must give units
+                 For mode=' 'velocity' or 'frequency', default=''; width of
+                   first input channel, otherwise must give units
                  examples: width='1.0km/s', or width='24.2kHz'.
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
-                 default = 'nearest'   HOWEVER, 'linear' is generally recommended
-               outframe -- For mode='velocity' or 'frequency' velocity reference 
-                 frame of output image
-                 Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB'
+                 default = 'nearest'  HOWEVER, 'linear' is generally recommended
+               outframe -- For mode='velocity' or 'frequency' velocity
+                 reference frame of output image
+                 Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
+                          'LGROUP','CMB'
                  default: ''; same as input data
                  example: frame='bary' for Barycentric frame 
                veltype -- for mode='velocity' gives the velocity definition
                  Options: 'radio','optical' 
                  default: 'radio'
-                 NOTE: the viewer always defaults to displaying 'radio' frame, but can
-                 be changed in position tracking pull down.
+                 NOTE: the viewer always defaults to displaying the 'radio'
+                   frame, but that can be changed in the position tracking
+                   pull down.
            mode='channel' examples:
                spw = '0,1'; mode = 'mfs'
                   will produce one image made from all channels in spw 
@@ -808,15 +814,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                Corrects for the (E)VLA polarization squint using the
                A-Projection algorithm (Bhatnagar et al., AandA (2008)).
                cfcache is the name of the directory to be used to cache the
-                   convolution functions.  These functions can be reused again if
-                   the image parameters are unchanged.  If the image parameters
-                   change, a new cache must be created (or the existing one
-                   removed). 
+                   convolution functions.  These functions can be reused 
+                   again if the image parameters are unchanged.  If the image 
+                   parameters change, a new cache must be created (or the
+                   existing one removed). 
                painc (in degrees) is the Parallactic Angle increment used to
                    compute the convolution functions.
 
   &gt;&gt;&gt; imagermode='mosaic' expandable parameter(s):
-               Make a mosaic of the different pointings (uses csclean style too)
+               Make a mosaic of the different pointings (uses csclean style
+               too)
                mosweight -- Individually weight the fields of the mosaic
                    default: False; example: mosweight=True
                    This can be useful if some of your fields are more
@@ -828,9 +835,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    (standard single dish), 
                    and 'mosaic' (grid using PB as convolution function).
                    default: 'mosaic'; example: ftmachine='ft'
-                   ONLY if imagermode='mosaic' is chosen and ftmachine='mosaic', 
-                   is heterogeneous imaging (CARMA, ALMA) possible using the 
-                   right convolution of primary beams for each baseline.
+                   ONLY if imagermode='mosaic' is chosen and
+                   ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA)
+                   possible using the right convolution of primary beams for
+                   each baseline.
                scaletype -- Controls scaling of pixels in the image plane.
                    (Not fully implemented...for now only controls 
  		   what is seen if interactive=True...but in the future will 
@@ -850,7 +858,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    cycle will stop, degrid and subtract from the visibilities  
                    For poor PSFs, reconcile often (cyclefactor=4 or 5); 
                    For good PSFs, use cyclefactor 1.5 to 2.0. 
-                   Note: threshold = cyclefactor * max sidelobe * max residual.
+                   Note: threshold = cyclefactor * max sidelobe * max residual
  		   default: 1.5; example: cyclefactor=4
  	       cyclespeedup -- Cycle threshold doubles in this number of 
                    iterations 
@@ -867,14 +875,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                synthesized beam, etc. For example if synthesized beam
                is 10" and cell=2", try multscale = [0,5,15]. Note,
                multiscale is currently a bit slow.
- 	       default: multiscale=[] (standard CLEAN using psfmode algorithm,
+ 	       default: multiscale=[] (standard CLEAN with psfmode algorithm,
                no multi-scale). Example:  multiscale = [0,5,15] 
 
   &gt;&gt;&gt; multiscale expandable parameter(s): 
-               negcomponent -- Stop component search when the largest scale has
-                   found this number of negative components; -1 means continue
-                   component search even if the largest component is
-                   negative.  default: -1; example: negcomponent=50
+               negcomponent -- Stop component search when the largest scale
+                 has found this number of negative components;
+                 -1 means continue component search even if the largest
+                 component is negative.  default: -1; example: negcomponent=50
                smallscalebias -- A bias toward smaller scales. 
                    The peak flux found at each scale is weighted by 
                    a factor = 1 - smallscalebias*scale/max_scale, so
@@ -928,15 +936,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                union of mask and cleanbox (see below).
 
   &gt;&gt;&gt; interactive=True expandable parameters
-               npercycle -- this is the  number of iterations between each clean
-                   to update mask interactively.  It is important to modify
-                   this number interactively during the cleaning, starting wiht
-                   a low number like 20, but then increasing as more extended
-                   emission is encountered.
+               npercycle -- this is the  number of iterations between each
+                 interactive update of the mask.  It is important to modify
+                 this number interactively during the cleaning, starting with
+                 a low number like 20, but then increasing as more extended
+                 emission is encountered.
                chaniter -- specify how interactive CLEAN is performed, 
-                 default: chaniter=False;                   example: chaniter=True; step through channels 
-                  WARNING: The interactive clean with chaniter=True for optical velocity
-                    mode (mode='velocity' and veltype='optical') is NOT YET IMPLEMENTED.
+                 default: chaniter=False;
+                 example: chaniter=True; step through channels 
+                  WARNING: The interactive clean with chaniter=True for
+                    optical velocity mode
+                    (mode='velocity' and veltype='optical') is
+                    NOT YET IMPLEMENTED.
 
        mask -- Specification of cleanbox(es), mask image(s), and/or
                region(s) to be used for CLEANing. As long as the image has
@@ -960,16 +971,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                If include outlier fields, then mask need to be specified in
                nested lists: 
                  e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
-               (A clean box with [110,110,150,145] and a image mask for main field, 
-               no mask for 1st outlier field, 1 clean box for second outlier field.)
+               (A clean box with [110,110,150,145] and a image mask for main
+                field, no mask for 1st outlier field, 1 clean box for second
+                outlier field.)
        uvtaper -- Apply additional uv tapering of the visibilities.
                default: uvtaper=False; example: uvtaper=True
 
   &gt;&gt;&gt; uvtaper=True expandable parameters
                outertaper -- uv-taper on outer baselines in uv-plane
                    [bmaj, bmin, bpa] taper Gaussian scale in uv or 
- 		   angular units. NOTE: uv taper in (klambda) is roughly on-sky 
- 	           FWHM(arcsec/200)
+ 		   angular units. NOTE: the on-sky FWHM in arcsec is roughly
+                   the uv taper/200 (klambda).
                    default: outertaper=[]; no outer taper applied
  		   example: outertaper=['5klambda']  circular taper 
  				FWHM=5 kilo-lambda

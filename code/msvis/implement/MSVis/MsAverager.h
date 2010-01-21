@@ -47,7 +47,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/SubMS.h>
+//#include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/SelectAverageSpw.h>
 
 //#include <tableplot/TablePlot/SLog.h>

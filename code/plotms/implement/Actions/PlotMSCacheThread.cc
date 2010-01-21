@@ -42,6 +42,7 @@ PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
 				     const String& msname, 
 				     const PlotMSSelection& selection, 
 				     const PlotMSAveraging& averaging, 
+				     const PlotMSTransformations& transformations, 
 				     bool setupPlot,
 				     PMSPTMethod postThreadMethod, 
 				     PMSPTObject postThreadObject) :
@@ -49,7 +50,8 @@ PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
         postThreadMethod, postThreadObject), itsPlot_(plot),
         itsData_(data), itsLoad_(true),
         itsAxes_(axes), itsAxesData_(dataCols), 
-	itsMSName_(msname),itsSelection_(selection),itsAveraging_(averaging),
+	itsMSName_(msname),itsSelection_(selection),
+	itsAveraging_(averaging),itsTransformations_(transformations),
         itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
     // Make sure axes data vector is same length as axes vector.
     if(itsAxesData_.size() != itsAxes_.size())
@@ -144,6 +146,7 @@ void PlotMSCacheThreadHelper::run() {
 					   itsParent_.itsMSName_, 
 					   itsParent_.itsSelection_, 
 					   itsParent_.itsAveraging_, 
+					   itsParent_.itsTransformations_, 
 					   &itsParent_);
             if(itsParent_.itsSetupPlot_)
                 itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],

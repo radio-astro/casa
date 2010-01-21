@@ -50,6 +50,7 @@ PlotMSAveragingWidget::PlotMSAveragingWidget(QWidget* parent) :
     itsFlags_[PlotMSAveraging::BASELINE] = baseline;
     itsFlags_[PlotMSAveraging::ANTENNA] = antenna;
     itsFlags_[PlotMSAveraging::SPW] = spw;
+    itsFlags_[PlotMSAveraging::SCALARAVE] = scalarave;
     
     itsValues_[PlotMSAveraging::CHANNEL] = channelValue;
     itsValues_[PlotMSAveraging::TIME] = timeValue;
