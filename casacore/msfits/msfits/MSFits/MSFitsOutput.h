@@ -105,6 +105,9 @@ private:
 		      uInt nrif, Bool combineSpw, Double sensitivity,
 		      Int refPixelFreq, Double refFreq, Double chanbw);
 
+  // Write the WX table.
+  static Bool writeWX(FitsOutput *output, const MeasurementSet& ms);
+
   // Convert time to day and fraction.
   static void timeToDay(Int& day, Double& dayFraction, Double time);
 
