@@ -2,14 +2,14 @@ from taskinit import *
 import numpy
 import sys
 
-# Writes out regions above threshold to regionfile+'.rgn'
+# Writes out regions above threshold to regionfile+'.box'
 
 def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch, overwrite):
 
     casalog.origin('boxit')
 
     if not(regionfile):
-        regionfile = imagename + '.rgn'
+        regionfile = imagename + '.box'
 
     if not(overwrite):
         if(os.path.exists(regionfile)):
