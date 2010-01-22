@@ -98,7 +98,6 @@ namespace casa {
     }
 
     ComponentList ImageFitter::fit() {
-
         *itsLog << LogOrigin("ImageFitter", "fit");
         Array<Float> residPixels;
         Array<Bool> residMask;
@@ -112,19 +111,18 @@ namespace casa {
         Bool fit = True;
         Bool deconvolve = False;
         Bool list = True;
-        // TODO make param passed to fitsky a ComponentList so this crap doesn't
-        // have to be done.
 
         String errmsg;
         Record estimatesRecord;
         estimates.toRecord(errmsg, estimatesRecord);
 
         results = myImage.fitsky(
-            residPixels, residMask, converged, regionRecord,
-            chan, stokesString, mask, models,
-            estimatesRecord, fixed, includePixelRange,
-            excludePixelRange, fit, deconvolve, list,
-            residual, model
+            residPixels, residMask, converged,
+            inputStats, residStats, chiSquared,
+            regionRecord, chan, stokesString, mask,
+            models, estimatesRecord, fixed,
+            includePixelRange, excludePixelRange,
+            fit, deconvolve, list, residual, model
         );
 
         fitDone = True;
@@ -137,7 +135,6 @@ namespace casa {
         		Vector<Double> x(2);
         		pixelPositions[i] = x;
         	}
-
         }
         String resultsString = _resultsToString();
         if (converged && ! newEstimatesFileName.empty()) {
@@ -147,16 +144,40 @@ namespace casa {
         if (! logfileName.empty()) {
         	_writeLogfile(resultsString);
         }
-
         return results;
     }
 
     Bool ImageFitter::converged() const {
-	if (!fitDone) {
-		throw AipsError("fit has not yet been performed");
+    	if (!fitDone) {
+    		throw AipsError("fit has not yet been performed");
+    	}
+    	return fitConverged;
+    }
+
+	void ImageFitter::_getStandardDeviations(Double& inputStdDev, Double& residStdDev) const {
+		inputStdDev = _getStatistic("sigma", inputStats);
+		residStdDev = _getStatistic("sigma", residStats);
 	}
-	return fitConverged;
-}
+
+	void ImageFitter::_getRMSs(Double& inputRMS, Double& residRMS) const {
+		inputRMS = _getStatistic("rms", inputStats);
+		residRMS = _getStatistic("rms", residStats);
+	}
+
+	Double ImageFitter::_getStatistic(const String& type, const Record& stats) const {
+		// FIXME ? I cannot figure out a better way of accessing an array element (neither
+		// array[0] nor array(0) work) without having to convert it to a vector or creating
+		// an IPosition object.
+		// I would also think I could get the value of a record element by simply referencing
+		// its key, without having to get a field number, but I cannot figure out how to do that
+		// either.
+
+		Array<Double> statArray;
+		stats.get(stats.fieldNumber(type), statArray);
+		vector<Double> statVec;
+		statArray.tovector(statVec);
+		return statVec[0];
+	}
 
     void ImageFitter::_construct(
         const String& imagename, const String& box, const String& regionName,
@@ -331,6 +352,7 @@ namespace casa {
     	summary << "       --- initial estimates:   " << estimatesString << endl;
 
     	if (converged()) {
+    		summary << _statisticsToString() << endl;
     		for (uInt i = 0; i < results.nelements(); i++) {
     			summary << "Fit on " << image->name(True) << " component " << i << endl;
     			summary << _positionToString(i) << endl;
@@ -343,6 +365,25 @@ namespace casa {
     		summary << "*** FIT FAILED ***" << endl;
     	}
     	return summary.str();
+    }
+
+    String ImageFitter::_statisticsToString() const {
+    	ostringstream stats;
+    	// TODO It is not clear how this chi squred value is calculated and atm it does not
+    	// appear to be useful, so don't report it. In the future, investigate more deeply
+    	// how it is calculated and see if a useful value for reporting can be derived from
+    	// it.
+    	// stats << "       --- Chi-squared of fit " << chiSquared << endl;
+    	stats << "Input and residual image statistics (to be used as a rough guide only as to goodness of fit)" << endl;
+    	Double inputStdDev, residStdDev, inputRMS, residRMS;
+    	_getStandardDeviations(inputStdDev, residStdDev);
+    	_getRMSs(inputRMS, residRMS);
+    	String unit = fluxDensities[0].getUnit();
+    	stats << "       --- Standard deviation of input image " << inputStdDev << " " << unit << endl;
+    	stats << "       --- Standard deviation of residual image " << residStdDev << " " << unit << endl;
+    	stats << "       --- RMS of input image " << inputRMS << " " << unit << endl;
+    	stats << "       --- RMS of residual image " << residRMS << " " << unit << endl;
+    	return stats.str();
     }
 
     String ImageFitter::_positionToString(const uInt compNumber)  {

@@ -233,17 +233,17 @@ class ImageAnalysis
     // adding residImage parameter. If set to blank, do not write residual iamge,
     // else write to the file given.
     ComponentList fitsky(
-    		Array<Float>& pixels, Array<Bool>& pixelmask,
-            Bool& converged, Record& region,
-            const uInt& chan, const String& stokesString,
-            const String& mask, 
-            const Vector<String>& models, Record& estimate, 
-            const Vector<String>& fixedparams, 
-            const Vector<Float>& includepix, 
-            const Vector<Float>& excludepix, 
-            const Bool fit=True,
-            const Bool deconvolve=False, const Bool list=True,
-            const String& residImage="", const String& modelImageName=""
+    	Array<Float>& pixels, Array<Bool>& pixelmask,
+        Bool& converged, Record& inputStats, Record& residStats,
+        Double& chiSquared, Record& region, const uInt& chan,
+        const String& stokesString, const String& mask,
+        const Vector<String>& models, Record& inputEstimate,
+        const Vector<String>& fixedparams,
+        const Vector<Float>& includepix,
+        const Vector<Float>& excludepix,
+        const Bool fit=True,
+        const Bool deconvolve=False, const Bool list=True,
+        const String& residImage="", const String& modelImageName=""
     );
 
     Bool getchunk(Array<Float>& pixel, Array<Bool>& pixmask, 
@@ -412,14 +412,15 @@ class ImageAnalysis
                           const Quantity& pa, const Record& beam, 
                           const Bool remove = False, const Bool log = True);
 
-    Bool statistics(Record& statsout, const Vector<Int>& axes, Record& region, 
-                    const String& mask, const Vector<String>& plotstats, 
-                    const Vector<Float>& includepix, 
-                    const Vector<Float>& excludepix, 
-                    const String& plotter = "/NULL", const Int nx = 1, 
-                    const Int ny = 1, const Bool list = True, 
-                    const Bool force = False, const Bool disk = False, 
-                    const Bool robust = False, const Bool verbose = True);
+    Bool statistics(
+    	Record& statsout, const Vector<Int>& axes, Record& region,
+        const String& mask, const Vector<String>& plotstats,
+        const Vector<Float>& includepix, const Vector<Float>& excludepix,
+        const String& plotter = "/NULL", const Int nx = 1,
+        const Int ny = 1, const Bool list = True,
+        const Bool force = False, const Bool disk = False,
+        const Bool robust = False, const Bool verbose = True
+    );
 
     bool twopointcorrelation(const String& outfile, Record& region, 
                              const String& mask, const Vector<Int>& axes, 
@@ -730,6 +731,12 @@ class ImageAnalysis
     void _fitskyExtractBeam(
     	Vector<Double>& parameters, const ImageInfo& imageInfo,
     	const Bool xIsLong, const CoordinateSystem& cSys
+    ) const;
+
+    // Writes a residual image and gets the stats from that image, and then
+    // deletes the image if the user did not request it be saved.
+    Record _fitskyWriteResidualAndGetStats(
+    	const SubImage<Float>& subImage, const Array<Float>& residPixels, String residImageName
     ) const;
 
 };

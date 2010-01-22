@@ -129,23 +129,24 @@ int main() {
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
-            AlwaysAssert(near(flux(0).getValue(), 60340.7606, 1e-5), AipsError);
+            cout << flux(0).getValue() << endl;
+            AlwaysAssert(near(flux(0).getValue(),  60291.80, 1e-5), AipsError);
             // Q stokes flux test
             AlwaysAssert(flux(1).getValue() == 0, AipsError);
             MDirection direction = compList.getRefDirection(0);
-            AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213381, 1e-5), AipsError);
-            AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.93571e-05, 1e-5), AipsError);
+            AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(),  0.000213379, 1e-5), AipsError);
+            AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), 1.9358247e-5, 1e-5), AipsError);
 
             Vector<Double> parameters = compList.getShape(0)->parameters();
 
             Double majorAxis = arcsecsPerRadian*parameters(0);
-            AlwaysAssert(near(majorAxis, 23.546913, 1e-7), AipsError);
+            AlwaysAssert(near(majorAxis, 23.53002154, 1e-7), AipsError);
 
             Double minorAxis = arcsecsPerRadian*parameters(1);
-            AlwaysAssert(near(minorAxis, 18.876406, 1e-7), AipsError);
+            AlwaysAssert(near(minorAxis, 18.86212502, 1e-7), AipsError);
 
             Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
-            AlwaysAssert(near(positionAngle, 119.897741, 1e-7), AipsError);
+            AlwaysAssert(nearAbs(positionAngle, 119.881851057, 1e-7), AipsError);
         }
         {
             writeTestString(
@@ -157,23 +158,23 @@ int main() {
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
-            AlwaysAssert(near(flux(0).getValue(), 60323.3212, 1e-5), AipsError);
+            AlwaysAssert(near(flux(0).getValue(), 60319.860, 1e-5), AipsError);
             // Q stokes flux test
             AlwaysAssert(flux(1).getValue() == 0, AipsError);
             MDirection direction = compList.getRefDirection(0);
-            AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213372, 1e-5), AipsError);
-            AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.93593e-05, 1e-5), AipsError);
+            AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(), 0.000213372, 1e-5), AipsError);
+            AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), 1.9359058e-5, 1e-5), AipsError);
 
             Vector<Double> parameters = compList.getShape(0)->parameters();
 
             Double majorAxis = arcsecsPerRadian*parameters(0);
-            AlwaysAssert(near(majorAxis, 23.545291, 1e-7), AipsError);
+            AlwaysAssert(near(majorAxis, 23.545212, 1e-7), AipsError);
 
             Double minorAxis = arcsecsPerRadian*parameters(1);
-            AlwaysAssert(near(minorAxis, 18.866377, 1e-7), AipsError);
+            AlwaysAssert(near(minorAxis, 18.864505, 1e-7), AipsError);
 
             Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
-            AlwaysAssert(near(positionAngle, 119.806997, 1e-7), AipsError);
+            AlwaysAssert(nearAbs(positionAngle, 119.81297, 1e-5), AipsError);
         }
         {
         	writeTestString(
@@ -206,23 +207,23 @@ int main() {
         	Vector<Quantity> flux;
         	compList.getFlux(flux,0);
         	// I stokes flux test
-        	AlwaysAssert(near(flux(0).getValue(), 60323.3212, 1e-5), AipsError);
+        	AlwaysAssert(near(flux(0).getValue(), 60319.8604, 1e-5), AipsError);
         	// Q stokes flux test
         	AlwaysAssert(flux(1).getValue() == 0, AipsError);
         	MDirection direction = compList.getRefDirection(0);
-        	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213372, 1e-5), AipsError);
-        	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.93593e-05, 1e-5), AipsError);
+        	AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(), 0.000213372, 1e-5), AipsError);
+        	AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), 1.9359058e-5, 1e-5), AipsError);
 
         	Vector<Double> parameters = compList.getShape(0)->parameters();
 
         	Double majorAxis = arcsecsPerRadian*parameters(0);
-        	AlwaysAssert(near(majorAxis, 23.545291, 1e-7), AipsError);
+        	AlwaysAssert(near(majorAxis, 23.545212, 1e-7), AipsError);
 
         	Double minorAxis = arcsecsPerRadian*parameters(1);
-        	AlwaysAssert(near(minorAxis, 18.866377, 1e-7), AipsError);
+        	AlwaysAssert(near(minorAxis, 18.864505, 1e-7), AipsError);
 
         	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
-        	AlwaysAssert(near(positionAngle, 119.806997, 1e-7), AipsError);
+        	AlwaysAssert(near(positionAngle, 119.81297, 1e-5), AipsError);
         }
         {
             // test fitter using an includepix (i=0) and excludepix (i=1) range with model with noise
