@@ -31,6 +31,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Slicer.h>
@@ -45,6 +46,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/LinearSearch.h>
 #include <casa/BasicSL/String.h>
+#include <measures/measures/Measures/Stokes.h>
 
 #include <casa/iostream.h>
 #include <casa/sstream.h>
@@ -371,6 +373,151 @@ WCBox WCBox::splitBox (const IPosition& axes) const
       pixelAxes(i) = itsPixelAxes(axis);
    }
    return WCBox (blc, trc, pixelAxes, itsCSys, absRel);
+}
+
+WCBox* WCBox::fromBoxString (const String& str, const CoordinateSystem& csys,
+                             String& error)
+{
+   WCBox* pBox = 0;
+   String box = str;
+
+// Define pixel units
+   unitInit();
+
+   UnitMap::putUser("pix", 1);
+
+   Int stInd = csys.findCoordinate(Coordinate::STOKES);
+   StokesCoordinate  stCoord(Vector<Int>(1, Stokes::I));
+   Int wSt=-1;
+   if (stInd>=0){
+      wSt= (csys.worldAxes(stInd))[0];
+      stCoord=csys.stokesCoordinate(stInd);
+   }
+
+
+   box.trim();
+   String type = box.before(" ");
+   type.trim();
+   box = box.after(" ");
+   box.trim();
+   String epd = box.before(" ");
+   Int start = 0;
+   Int end = 1;
+   Vector<String> coord(8);
+   for (Int i = 0; i < 8; i++) {
+      start = box.find('\'', start);
+      end = box.find('\'', start + 1);
+      String str = box.substr(start + 1, end - start - 1);
+      coord[i] = str;
+      start = end + 1;
+      //cout << i << " " << start << " " << str << endl;
+   }
+   //cout << type << " " << epd << " " << coord << endl;
+
+   QuantumHolder qh;
+   Vector<Quantum<Double> > blc(4);
+   Vector<Quantum<Double> > trc(4);
+   Vector<Int> pixelaxes(4);
+   Vector<Int> absRel(4);
+
+   pixelaxes[0] = 0;
+   absRel(0) = 1;
+   if (qh.fromString(error, coord[0]))
+      blc(0) = qh.asQuantumDouble();
+   if (error=="" && qh.fromString(error, coord[1]))
+      trc(0) = qh.asQuantumDouble();
+
+   pixelaxes[1] = 1;
+   absRel(1) = 1;
+   if (error=="" && qh.fromString(error, coord[2]))
+      blc(1) = qh.asQuantumDouble();
+   if (error=="" && qh.fromString(error, coord[3]))
+      trc(1) = qh.asQuantumDouble();
+
+   pixelaxes[2] = 2;
+   absRel(2) = 1;
+   if (error=="" && qh.fromString(error, coord[4].after(" ")))
+      blc(2) = qh.asQuantumDouble();
+   if (error=="" && qh.fromString(error, coord[5].after(" ")))
+      trc(2) = qh.asQuantumDouble();
+
+   pixelaxes[3] = 3;
+   absRel(3) = 1;
+   Int stpix=-1;
+   if (error=="" && stCoord.toPixel(stpix, Stokes::type(coord[6])))
+      blc(3) = Quantity(stpix, "pix");
+   else
+      error = "Could not convert the stokes to pix";
+
+   stpix = -1;
+   if (error=="" && stCoord.toPixel(stpix, Stokes::type(coord[7])))
+      trc(3) = Quantity(stpix, "pix");
+   else
+      error = "Could not convert the stokes to pix";
+
+   if (error=="") {
+      //cout << "blc: " << blc << " trc: " << trc << endl;
+      pBox = new WCBox(blc,trc,csys,absRel);
+      return pBox;
+   }
+
+   return pBox;
+}
+
+String WCBox::toBoxString() const
+{
+// Define pixel units
+
+   unitInit();
+
+   Int stInd = itsCSys.findCoordinate(Coordinate::STOKES);
+   StokesCoordinate stCoord(Vector<Int>(1, Stokes::I));
+   Int wSt=-1;
+   if (stInd>=0){
+      wSt= (itsCSys.worldAxes(stInd))[0];
+      stCoord=itsCSys.stokesCoordinate(stInd);
+   }
+   Int spInd = itsCSys.findCoordinate(Coordinate::SPECTRAL);
+   SpectralCoordinate spCoord;
+   Int wSp=-1;
+   if (spInd>=0){
+      wSp= (itsCSys.worldAxes(spInd))[0];
+      spCoord=itsCSys.spectralCoordinate(spInd);
+   }
+
+   const uInt nAxes = itsPixelAxes.nelements();
+
+   String ret = "worldbox J2000 ";
+   for (uInt j=0; j<nAxes; j++) {
+      uInt ax = -1;
+      for (uInt k=0; k<nAxes; k++) {
+         if (itsPixelAxes(k) == j) {
+            ax = k;
+            break;
+         }
+      }
+      if (wSt == ax) {
+         Stokes::StokesTypes tpblc;
+         Stokes::StokesTypes tptrc;
+         stCoord.toWorld(tpblc, Int(itsBlc(ax).getValue())); 
+         stCoord.toWorld(tptrc, Int(itsTrc(ax).getValue()));
+         ret += "['" + String::toString(Stokes::name(tpblc)) + 
+             "', '" + String::toString(Stokes::name(tptrc)) +
+             "'] ";
+      }
+      else if (wSp == ax) {
+         ret += "['TOPO " + String::toString(itsBlc(ax).getValue()) + 
+             itsBlc(ax).getUnit() + "', 'TOPO " + 
+             String::toString(itsTrc(ax).getValue()) +
+             itsTrc(ax).getUnit() + "'] ";
+      }
+      else
+         ret += "['" + String::toString(itsBlc(ax).getValue()) + 
+             itsBlc(ax).getUnit() + "', '" + 
+             String::toString(itsTrc(ax).getValue()) +
+             itsTrc(ax).getUnit() + "'] ";
+   }
+   return ret + "1\n";
 }
 
 TableRecord WCBox::toRecord(const String&) const

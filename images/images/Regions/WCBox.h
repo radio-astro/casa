@@ -363,6 +363,11 @@ public:
 
    // Return region type.  Returns the class name 
    virtual String type() const;
+
+   // Return boxit formant
+   String toBoxString() const;
+   static WCBox* fromBoxString(const String&, 
+                               const CoordinateSystem& cSys, String& err);
  
 
 private:
