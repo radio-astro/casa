@@ -34,6 +34,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/Containers/RecordField.h>
 #include <casa/Quanta/QuantumHolder.h>
+#include <casa/Quanta/Quantum.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Regions/ImageRegion.h>
@@ -42,6 +43,7 @@
 #include <images/Regions/WCCompound.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCPolygon.h>
+#include <images/Regions/RegionManager.h>
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/Attribute.h>
 #include <casa/IO/AipsIO.h>
@@ -81,7 +83,7 @@ FileBox::FileBox(QtDisplayPanel* qdp) {
 
   tGroup->setToolTip(
       "  1. display the image;\n"
-      "  2. assign a mouse button to rectangle or polygon;\n"
+      "  2. assign a mouse button to rectangle;\n"
       "  3. draw a box by pressing/clicking and dragging ;\n"
       "  4. size and shape by dragging the corner handle;\n"
       "  5. position by dragging the inside;\n"
@@ -356,6 +358,7 @@ void FileBox::activate(Record rcd) {
             break;
          }
       }
+      /*
       else if((wcreg->type())== "WCPolygon" &&  tool.contains("olygon")){
          TableRecord polyrec=wcreg->toRecord("");
          CoordinateSystem *coords;
@@ -401,6 +404,7 @@ void FileBox::activate(Record rcd) {
          }
 
       }
+      */
 
    }
    reDraw();
@@ -422,61 +426,92 @@ void FileBox::reShape(const QString& shape) {
 
 void FileBox::loadRegionFromFile() {
    QString sName = QFileDialog::getOpenFileName(this, 
-                                                tr("Open Region File"),
+                                                tr("Open Box File"),
                                                 ".",
-                                                tr("Regions (*.rgn)"));
+                                                tr("Boxes (*.box)"));
    //qDebug() << "loadRegion from" << sName;
    if (sName == "")
       return;
 
    String rName(sName.toStdString());
-   ImageRegion* reg;
-   TableRecord rec;
-   try {
-      //cout << "rName=" << rName << endl;
-      AipsIO os(rName, ByteIO::Old);
-      //os.open(rName);
-      os >> rec;
-      //os.close();
-      //cout << "infile region record:\n" << rec << endl;
-      reg = ImageRegion::fromRecord(rec, rName+".tbl");
+   ifstream listfile;
+   listfile.open(rName.data());
 
-      //WCUnion leUnion(unionRegions_p);
-      //const WCRegion* newUnion = new WCUnion(reg->asWCRegion(), leUnion);
-      //WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(newUnion);
-      //cout << "unfolded:" << unfolded->toRecord("") << endl;
-      //cout << "leUnion:" << leUnion.toRecord("") << endl;
+   if(!listfile.good()) {
+     QMessageBox::warning(this, "FILEBOX",
+           "Could not open the box file.\n"
+           "Please check pathname and directory\n" 
+           "permissions.");
+      return;
+   }
+   
+   QtDisplayData* qdd = 0;
+   List<QtDisplayData*> DDs = qdp_->registeredDDs();
+   ListIter<QtDisplayData*> qdds(DDs);
+   if (qdds.len() > 0) {
+      qdds.toEnd();
+      qdds--;
+      qdd = qdds.getRight();
+   }
+  
+   if (!qdd || !(qdd->imageInterface())){
+      return;
+   }
 
-      if (!reg)
-         return;
+   CoordinateSystem csys=(qdd->imageInterface())->coordinates();
 
-      PtrBlock<const WCRegion* > outRegPtrs ;
-      const WCRegion* rpt = &(reg->asWCRegion());
-      String cmt = rpt->comment();
-      //cout << "comment=" << cmt << endl;
-      unfoldIntoSimpleRegionPtrs(outRegPtrs, rpt);
+   //RegionManager rg(csys);
+   //UnitMap::putUser("pix", 1);
 
-      if (outRegPtrs.nelements() < 1) {
-         QMessageBox::warning(this, "FILEBOX", "The box file is empty.");
-      }
-      //cout << "number of boxes =" << outRegPtrs.nelements() << endl;
-      for (uInt m = 0; m < outRegPtrs.nelements(); m++) {
-         //if (m < 3) {
-         //   cout << "record " << m << ":" << endl;
-         //   cout << outRegPtrs[m]->toRecord("") << endl;
-         //}
-         uInt nreg=unionRegions_p.nelements();
+   Int vcount=1;
+   char vers[500];
+   while(!listfile.eof()) {
+      listfile.getline(vers,500,'\n');
+      if(!listfile.eof()) {
+         String box(vers);
+         String error = "";
+         try{
+            WCBox* worldbox = WCBox::fromBoxString(box, csys, error);
+            if (!worldbox)
+                continue;
+
+            uInt nreg = unionRegions_p.nelements();
+            unionRegions_p.resize(nreg + 1, True);
+            unionRegions_p[nreg] = new ImageRegion(worldbox);
+            vcount++;
+         }
+         catch(...) {
+            QMessageBox::warning(this, "FILEBOX",
+              "The box string is corrupted:\n"
+              + QString(box.c_str()));
+         }
+         
+         /*      
+         Vector<String> blc(4);
+         Vector<String> trc(4);
+         Vector<Int> pixelaxes(4);
+         String absrel = "abs";
+         blc(0)=coord(0); 
+         trc(0)=coord(1); 
+         blc(1)=coord(2); 
+         trc(1)=coord(3); 
+         blc(2)=coord(4).after("TOPO "); 
+         trc(2)=coord(5).after("TOPO "); 
+         blc(3)=coord(6); 
+         trc(3)=coord(7); 
+         Record *rec= rg.wbox(blc, trc, pixelaxes, csys, absrel, "");
+         uInt nreg = unionRegions_p.nelements();
          unionRegions_p.resize(nreg + 1, True);
-         WCRegion* regM = const_cast<WCRegion*>(outRegPtrs[m]);
-         regM->setComment(cmt);
-         unionRegions_p[nreg] = new const ImageRegion(regM);
-             //const_cast<WCRegion*>(outRegPtrs[m]));
+         unionRegions_p[nreg] = ImageRegion::fromRecord(TableRecord(*rec), "");
+         delete rec;
+         vcount++;
+         */
+         
       }
-    }
-    catch(...) {
-      cout << "Failed to read region record" << endl;
-    }
-
+   }
+   listfile.close();
+   cout << "\nnumber of boxes: " << vcount << endl;
+  
     if (cb == 0) {
        chan->setText("");
        corr->setText("");
@@ -500,44 +535,54 @@ void FileBox::saveRegionToFile() {
    //cout << "cb=" << cb << " zAxis=" << zAxis
    //     << " zIndex=" << zIndex << " pIndex=" << pIndex << endl;
    QString sName = QFileDialog::getSaveFileName(this, 
-                                                tr("Save Region File"),
+                                                tr("Save Box File"),
                                                 "./",
-                                                tr("Regions (*.rgn)"));
+                                                tr("Boxes (*.box)"));
    //qDebug() << "saveRegion to" << sName;
    if (sName != ""){
       QString ext = sName.section('.', -1).toLower();
       //qDebug() << ext;
-      if (ext != "rgn") { 
-         sName.append(".rgn");
+      if (ext != "box") { 
+         sName.append(".box");
       }
       //qDebug() << sName;
+      String rName(sName.toStdString());
     
-      String regname(sName.toStdString());
-      
       if (unionRegions_p.nelements() < 1){
          QMessageBox::warning(this, "FILEBOX", "There is no box to save.");
       }
       else {
-         WCUnion leUnion(unionRegions_p);
-         leUnion.setComment("chanExt:" +
-                   chan->text().toStdString() +
-                   "polExt:" +
-                   corr->text().toStdString());
-         //cout << "chan=" << chan->text().toStdString()
-         //     << " corr=" << corr->text().toStdString() << endl;
-         ImageRegion* reg = new ImageRegion(leUnion);
+         ofstream listfile;
+         listfile.open(rName.data());
 
-         try{
-            //AipsIO os(regname, ByteIO::NewNoReplace);
-            AipsIO os(regname, ByteIO::New);
-            os << reg->toRecord(regname+".tbl");
-         }
-         catch(...) {
+         if(!listfile.good()) {
             QMessageBox::warning(this, "FILEBOX",
-               "Could not create the region file.\n"
+               "Could not create the box file.\n"
                "Please check pathname and directory\n" 
                "permissions.");
+            return;
          }
+
+         uInt nReg = unionRegions_p.nelements();
+         for (uInt i = 0; i < nReg; i++) {
+            ImageRegion* reg = const_cast<ImageRegion*>(unionRegions_p[i]);
+            WCRegion* wcreg = const_cast<WCRegion*>(&(reg->asWCRegion()));
+            String cmt = ((WCBox*)wcreg)->toBoxString();
+            //cout << cmt << endl;
+       
+            /*
+            WCUnion leUnion(unionRegions_p);
+            leUnion.setComment("chanExt:" +
+                chan->text().toStdString() +
+                "polExt:" +
+                corr->text().toStdString());
+            //cout << "chan=" << chan->text().toStdString()
+            //     << " corr=" << corr->text().toStdString() << endl;
+            ImageRegion* reg = new ImageRegion(leUnion);
+            */
+            listfile << cmt;
+         }
+         listfile.close();
       }
    }
    if (cb == 0) {
@@ -765,6 +810,7 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
       theShapes->addShape(rect);
       //cout << "rect=" << rect->toRecord() << endl;
     }
+/*
     else if((wcreg->type())== "WCPolygon"){
       TableRecord polyrec=wcreg->toRecord("");
       CoordinateSystem *coords;
@@ -792,47 +838,47 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
         +error));
       }
       y = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
-      /*
-      Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
-      const RecordInterface& specRec0=blcrec.asRecord(spcInd);
-      const RecordInterface& specRec1=trcrec.asRecord(spcInd);
-      //cout << "spec0=" << specRec0 << endl;
-      //cout << "spec1=" << specRec1 << endl;
-      SpectralCoordinate spectralCoord =
-           coords->spectralCoordinate(spcInd);
+      ////
+      //Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
+      //const RecordInterface& specRec0=blcrec.asRecord(spcInd);
+      //const RecordInterface& specRec1=trcrec.asRecord(spcInd);
+      ////cout << "spec0=" << specRec0 << endl;
+      ////cout << "spec1=" << specRec1 << endl;
+      //SpectralCoordinate spectralCoord =
+      //     coords->spectralCoordinate(spcInd);
 
-      String error;
-      Vector<String> units(1); units = "Hz";
-      spectralCoord.setWorldAxisUnits(units);        
-      Vector<Double> spectralWorld(1);
-      Vector<Double> spectralPixel(1);
-      Vector<Int> chanRange(2);
+      //String error;
+      //Vector<String> units(1); units = "Hz";
+      //spectralCoord.setWorldAxisUnits(units);        
+      //Vector<Double> spectralWorld(1);
+      //Vector<Double> spectralPixel(1);
+      //Vector<Int> chanRange(2);
 
-      if (!h.fromRecord(error, specRec0)) {
-           throw (AipsError 
-            ("WCBox::fromRecord - could not recover trc because "+error));
-      }
-      Double hz1 = h.asQuantumDouble().getValue("Hz");
-      spectralWorld(0) = hz1;
-      spectralCoord.toPixel(spectralWorld, spectralPixel);
-      chanRange(0)  = (Int)spectralPixel(0);
+      //if (!h.fromRecord(error, specRec0)) {
+      //     throw (AipsError 
+      //      ("WCBox::fromRecord - could not recover trc because "+error));
+      //}
+      //Double hz1 = h.asQuantumDouble().getValue("Hz");
+      //spectralWorld(0) = hz1;
+      //spectralCoord.toPixel(spectralWorld, spectralPixel);
+      //chanRange(0)  = (Int)spectralPixel(0);
 
-      if (!h.fromRecord(error, specRec1)) {
-           throw (AipsError 
-            ("WCBox::fromRecord - could not recover trc because "+error));
-      }
-      Double hz2 = h.asQuantumDouble().getValue("Hz");
-      spectralWorld(0) = hz2;
-      spectralCoord.toPixel(spectralWorld, spectralPixel);
-      chanRange(1)  = (Int)spectralPixel(0);
+      //if (!h.fromRecord(error, specRec1)) {
+      //     throw (AipsError 
+      //      ("WCBox::fromRecord - could not recover trc because "+error));
+      //}
+      //Double hz2 = h.asQuantumDouble().getValue("Hz");
+      //spectralWorld(0) = hz2;
+      //spectralCoord.toPixel(spectralWorld, spectralPixel);
+      //chanRange(1)  = (Int)spectralPixel(0);
 
-      QString chans = QString::number(chanRange(0)) + 
-                      QString("~") +
-                      QString::number(chanRange(1));
-      //qDebug() << chans;
-      if (!planeAllowed(chans.toStdString(), ""))
-         return;
-      */
+      //QString chans = QString::number(chanRange(0)) + 
+      //                QString("~") +
+      //                QString::number(chanRange(1));
+      ////qDebug() << chans;
+      //if (!planeAllowed(chans.toStdString(), ""))
+      //   return;
+
       
       RSPolygon *poly= (cb == -1) ?
            new RSPolygon(y,x,dirType) : new RSPolygon(x,y,dirType);
@@ -840,6 +886,7 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
       theShapes->addShape(poly);
       //cout << "poly=" << poly->toRecord() << endl;
     }
+*/
     else if((wcreg->type()) == "WCUnion" ||(wcreg->type()) == "WCIntersection"){
       PtrBlock<const WCRegion*> regPtrs=
         (static_cast<const WCCompound* >(wcreg))->regions();
@@ -909,11 +956,13 @@ void FileBox::unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs,
       outRegPtrs.resize(nreg+1);
       outRegPtrs[nreg]=new WCBox(static_cast<const WCBox & >(*wcreg));
    }
+   /*
    else if((wcreg->type()) == "WCPolygon"){
       uInt nreg=outRegPtrs.nelements();
       outRegPtrs.resize(nreg+1);
       outRegPtrs[nreg]=new WCPolygon(static_cast<const WCPolygon & >(*wcreg));
    }
+   */
    else if((wcreg->type()) == "WCUnion" ||
            (wcreg->type()) == "WCIntersection" ){
       PtrBlock<const WCRegion*> regPtrs =

@@ -470,7 +470,10 @@ void MakeMask::loadRegionFromFile() {
          WCRegion* regM = const_cast<WCRegion*>(outRegPtrs[m]);
          regM->setComment(cmt);
          unionRegions_p[nreg] = new const ImageRegion(regM);
-             //const_cast<WCRegion*>(outRegPtrs[m]));
+         //if (m < 3)
+         //   cout << "ImageRegion=" << unionRegions_p[nreg]->toRecord("") 
+         //        << endl;
+         //const_cast<WCRegion*>(outRegPtrs[m]));
       }
     }
     catch(...) {
