@@ -408,11 +408,16 @@ class SubMS
   template<class M>
   void accumUnflgDataWS(Array<M>& data_toikit, const Array<Float>& unflgWtSpec,
                         const Array<M>& inData, const Array<Bool>& flag,
-                        Cube<M>& outData, const uInt orn);
+                        Matrix<M>& outData);
   template<class M>
   void accumUnflgData(Array<M>& data_toikit, const Vector<Float>& unflaggedwt,
                       const Array<M>& inData, const Array<Bool>& flag,
-                      Cube<M>& outData, const uInt orn);
+                      Matrix<M>& outData);
+
+  // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
+  // the output.  mapper must have ntok slots!
+  void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
+                     const Vector<MS::PredefinedColumns> colEnums); 
 
   // Returns whether or not all the elements of inNumChan_p are the
   // same, AND whether all the elements of nchan_p are the same.

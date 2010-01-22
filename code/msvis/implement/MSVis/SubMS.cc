@@ -709,18 +709,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     success = fillMainTable(datacols);
   }
   else{
-    if(!sameShape_p){
-      os << LogIO::WARN 
-         << "Time averaging of differing spw shapes is not handled yet."
-         << LogIO::POST;
-      os << LogIO::WARN
-         << "Work around: average differently shaped spws separately and then concatenate." 
-         << LogIO::POST;
-      return False;
-    }
-    else{
+    // if(!sameShape_p){
+    //   os << LogIO::WARN 
+    //      << "Time averaging of differing spw shapes is not handled yet."
+    //      << LogIO::POST;
+    //   os << LogIO::WARN
+    //      << "Work around: average differently shaped spws separately and then concatenate." 
+    //      << LogIO::POST;
+    //   return False;
+    // }
+    // else{
       fillAverMainTable(datacols);
-    }
+      //    }
   }
   return success;
 }
@@ -6085,6 +6085,13 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   ROArrayColumn<Complex> data[ntok];
   ROArrayColumn<Float> floatData;
 
+  // Must initialize these before doSpWeight.
+  for(uInt datacol = 0; datacol < ntok; ++datacol)
+    data[datacol].reference(right_column(mscIn_p, columnNames[datacol]));
+  if(doFloat)
+    floatData.reference(mscIn_p->floatData());
+  
+
   const ROArrayColumn<Float> inImagingWeight(mscIn_p->imagingWeight());
   Vector<Float> inImgWtsSpectrum;
 
@@ -6093,6 +6100,12 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   const ROScalarColumn<Double> inExposure(mscIn_p->exposure());
 
   ROArrayColumn<Float> wgtSpec;
+  const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
+                           mscIn_p->weightSpectrum().isDefined(0) &&
+                           mscIn_p->weightSpectrum().shape(0) ==
+                           data[0].shape(0);
+  if(doSpWeight)
+    wgtSpec.reference(mscIn_p->weightSpectrum());
     
   const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
   const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
@@ -6125,19 +6138,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
   const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
  
-  for(uInt datacol = 0; datacol < ntok; ++datacol)
-    data[datacol].reference(right_column(mscIn_p, columnNames[datacol]));
-  if(doFloat)
-    floatData.reference(mscIn_p->floatData());
-  
   os << LogIO::NORMAL << "Writing time averaged data of "
      << newTimeVal_p.nelements()<< " time slots" << LogIO::POST;
 
-  const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
-                           mscIn_p->weightSpectrum().isDefined(0) &&
-                           mscIn_p->weightSpectrum().shape(0) ==
-                           data[0].shape(0);
-  
   Vector<Double> outTime;
   outTime.resize(outNrow);
 
@@ -6150,16 +6153,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   outExposure.set(0.0);
 
   //Vector<Cube<Complex> > outData(ntok);
-  Cube<Complex> outData[ntok];
-  for(uInt datacol = 0; datacol < ntok; ++datacol){
-    outData[datacol].resize(npol_p[0], nchan_p[0], outNrow);
-    outData[datacol].set(0.0);
-  }
-  Cube<Float> outFloatData;
-  if(doFloat){
-    outFloatData.resize(npol_p[0], nchan_p[0], outNrow);
-    outFloatData.set(0.0);
-  }
+  Matrix<Complex> outData[ntok];
+  ArrayColumn<Complex> outDataCols[ntok];
+  getDataColMap(outDataCols, ntok, columnNames);
+  Matrix<Float>   outFloatData;
   
   Matrix<Float> outRowWeight(npol_p[0], outNrow);
   outRowWeight.set(0.0);
@@ -6169,8 +6166,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   if(doImgWts_p)
     outImagingWeight.set(0.0);
 
-  Cube<Bool> outFlag(npol_p[0], nchan_p[0], outNrow);
-  outFlag.set(True);
+  Matrix<Bool> outFlag(npol_p[0], nchan_p[0]);
 
   Vector<Int> outAnt1(outNrow);
   outAnt1.set(-1);
@@ -6205,12 +6201,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   Vector<Int> dataDesc(outNrow);
   dataDesc.set(-1);
 
-  Cube<Float> outSpWeight;
-  if(doSpWeight){
-    outSpWeight.resize(npol_p[0], nchan_p[0], outNrow);
-    outSpWeight.set(0.0);
-    wgtSpec.reference(mscIn_p->weightSpectrum());
-  }
+  Matrix<Float> outSpWeight;
 
   Double totrowwt;
 
@@ -6226,7 +6217,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
-  IPosition blc, trc, sliceShape;
+  IPosition blc(2, 0, chanStart_p[0]);
+  IPosition trc(2, npol_p[0] - 1, nchan_p[0] + chanStart_p[0] - 1);
+  IPosition sliceShape(trc - blc + 1);
+  IPosition oldsliceShape = sliceShape + 1; // Ensure mismatch on 1st iteration.
 
   // The real initialization is inside the loop - this just prevents a compiler warning.
   uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
@@ -6264,17 +6258,37 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         trc = IPosition(2, npol_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
         chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
 
-        IPosition sliceShape(trc - blc + 1);
-        if(doSpWeight)
-          unflgWtSpec.resize(sliceShape);
-        unflaggedwt.resize(npol_p[ddID]);
-        data_toikit.resize(sliceShape);
-        if(doFloat)
-          floatData_toikit.resize(sliceShape);
-        os << LogIO::DEBUG1
-           << "sliceShape = " << sliceShape
-           << LogIO::POST;
+        sliceShape = trc - blc + 1;
+        if(sliceShape != oldsliceShape){
+          os << LogIO::DEBUG1
+             << "sliceShape = " << sliceShape
+             << LogIO::POST;
+
+          // Refit the temp & output holders for this shape.
+          unflaggedwt.resize(npol_p[ddID]);
+          outFlag.resize(sliceShape);
+          data_toikit.resize(sliceShape);
+          for(uInt datacol = 0; datacol < ntok; ++datacol)
+            outData[datacol].resize(sliceShape);
+          if(doSpWeight){
+            unflgWtSpec.resize(sliceShape);
+            outSpWeight.resize(sliceShape);
+          }
+          if(doFloat){
+            floatData_toikit.resize(sliceShape);
+            outFloatData.resize(sliceShape);
+          }
+        }
       }
+
+      // Make any necessary initializations of the output holders for this orn.
+      outFlag.set(True);
+      for(uInt datacol = 0; datacol < ntok; ++datacol)
+        outData[datacol].set(0.0);
+      if(doFloat)
+        outFloatData.set(0.0);      
+      if(doSpWeight)
+        outSpWeight.set(0.0);
 
       // Iterate through mscIn_p's rows that belong to the slot.
       Double swv = 0.0; // Sum of the weighted visibilities.
@@ -6323,10 +6337,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           totslotwt += totrowwt;
         
           if(chanModification_p)
-            outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc,
-                                                                        trc);
+            outFlag *= flag(*toikit)(blc, trc);
           else
-            outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit);
+            outFlag *= flag(*toikit);
 
           if(doSpWeight){
             //    os << LogIO::DEBUG1
@@ -6338,7 +6351,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             //       << outSpWeight.xyPlane(orn)(blc)
             //       << LogIO::POST;
             
-            outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) + unflgWtSpec;
+            outSpWeight += unflgWtSpec;
             
             // os << LogIO::DEBUG1
             //    << "outSpWeight.xyPlane(orn)(blc) (after) = "
@@ -6351,21 +6364,21 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
               for(uInt datacol = 0; datacol < ntok; ++datacol)
                 accumUnflgDataWS(data_toikit, unflgWtSpec,
                                  data[datacol](*toikit)(blc, trc),
-                                 flag(*toikit)(blc, trc), outData[datacol], orn);
+                                 flag(*toikit)(blc, trc), outData[datacol]);
               if(doFloat)
                 accumUnflgDataWS(floatData_toikit, unflgWtSpec,
                                  floatData(*toikit)(blc, trc),
-                                 flag(*toikit)(blc, trc), outFloatData, orn);
+                                 flag(*toikit)(blc, trc), outFloatData);
             }
             else{
               for(uInt datacol = 0; datacol < ntok; ++datacol)
                 accumUnflgDataWS(data_toikit, unflgWtSpec,
                                  data[datacol](*toikit),
-                                 flag(*toikit), outData[datacol], orn);
+                                 flag(*toikit), outData[datacol]);
               if(doFloat)
                 accumUnflgDataWS(floatData_toikit, unflgWtSpec,
                                  floatData(*toikit), flag(*toikit),
-                                 outFloatData, orn);
+                                 outFloatData);
             }
           }
           else{
@@ -6373,21 +6386,20 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
               for(uInt datacol = 0; datacol < ntok; ++datacol)
                 accumUnflgData(data_toikit, unflaggedwt,
                                data[datacol](*toikit)(blc, trc),
-                               flag(*toikit)(blc, trc), outData[datacol], orn);
+                               flag(*toikit)(blc, trc), outData[datacol]);
               if(doFloat)
                 accumUnflgData(floatData_toikit, unflaggedwt,
                                floatData(*toikit)(blc, trc),
-                               flag(*toikit)(blc, trc), outFloatData, orn);
+                               flag(*toikit)(blc, trc), outFloatData);
             }
             else{
               for(uInt datacol = 0; datacol < ntok; ++datacol)
                 accumUnflgData(data_toikit, unflaggedwt,
                                data[datacol](*toikit),
-                               flag(*toikit), outData[datacol], orn);
+                               flag(*toikit), outData[datacol]);
               if(doFloat)
                 accumUnflgData(floatData_toikit, unflaggedwt,
-                               floatData(*toikit), flag(*toikit), outFloatData,
-                               orn);
+                               floatData(*toikit), flag(*toikit), outFloatData);
             }
           }
 
@@ -6439,11 +6451,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       slotv.clear();  // Free some memory.
       if(doSpWeight){
         Matrix<Float>::const_iterator oSpWtIter;
-        const Matrix<Float>::const_iterator oSpWtEnd(outSpWeight.xyPlane(orn).end());
+        const Matrix<Float>::const_iterator oSpWtEnd(outSpWeight.end());
           
         for(uInt datacol = 0; datacol < ntok; ++datacol){
-          oSpWtIter = outSpWeight.xyPlane(orn).begin();            
-          for(Matrix<Complex>::iterator oDIter = outData[datacol].xyPlane(orn).begin();
+          oSpWtIter = outSpWeight.begin();            
+          for(Matrix<Complex>::iterator oDIter = outData[datacol].begin();
               oSpWtIter != oSpWtEnd; ++oSpWtIter){
             if(*oSpWtIter != 0.0)
               *oDIter /= *oSpWtIter;
@@ -6461,11 +6473,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
             if(rowwtpol != 0.0){
               for(uInt c = 0; c < nchan; ++c)
-                outData[datacol](polind, c, orn) /= rowwtpol;
+                outData[datacol](polind, c) /= rowwtpol;
             }
             else{
               for(uInt c = 0; c < nchan; ++c)
-                outData[datacol](polind, c, orn) = 0.0;
+                outData[datacol](polind, c) = 0.0;
             }
           }
         }
@@ -6506,6 +6518,16 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       outArr[orn]     = inArr(slotv0);	        // Don't remap!
       dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
 
+      // Columns whose shape might vary with ddID must be filled on a
+      // row-by-row basis.
+      msc_p->flag().put(orn, outFlag);
+      for(uInt datacol = 0; datacol < ntok; ++datacol)
+        outDataCols[datacol].put(orn, outData[datacol]);
+      if(doFloat)
+        msc_p->floatData().put(orn, outFloatData);
+      if(doSpWeight)
+        msc_p->weightSpectrum().put(orn, outSpWeight);
+      
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.
   }
@@ -6516,8 +6538,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   msc_p->uvw().putColumn(outUVW);
   outUVW.resize();			// Free some memory
 
-  msc_p->flag().putColumn(outFlag);
-  outFlag.resize();
   msc_p->weight().putColumn(outRowWeight);
   outRowWeight.resize();
   msc_p->sigma().putColumn(outSigma);
@@ -6547,16 +6567,34 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   msc_p->time().putColumn(outTime);
   msc_p->timeCentroid().putColumn(outTC);
 
-  const Bool dataOnly = mustConvertToData(ntok, columnNames);
-  for(uInt datacol = 0; datacol < ntok; ++datacol)
-    putDataColumn(*msc_p, outData[datacol], columnNames[datacol], dataOnly);
-  if(doFloat)
-    msc_p->floatData().putColumn(outFloatData);
-
-  if(doSpWeight)
-    msc_p->weightSpectrum().putColumn(outSpWeight);
   return True;
 }
+
+void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
+                          const Vector<MS::PredefinedColumns> colEnums)
+{
+  // Set up a map from dataColumn indices to ArrayColumns in the output.
+  // mapper has to b    e a pointer (gasp!), not a Vector, because
+  // Vector<ArrayColumn<Complex> > mapper(ntok) would implicitly call
+  // .resize(), which uses =, which is banned for ArrayColumn.
+
+  if(mustConvertToData(ntok, colEnums)){
+    mapper[0].reference(msc_p->data());
+  }
+  else{
+    for(uInt i = 0; i < ntok; ++i){
+      if(colEnums[i] == MS::CORRECTED_DATA)
+        mapper[i].reference(msc_p->correctedData());
+      else if(colEnums[i] == MS::MODEL_DATA)
+        mapper[i].reference(msc_p->modelData());
+      else if(colEnums[i] == MS::LAG_DATA)
+        mapper[i].reference(msc_p->lagData());
+      else                                  // The putput default !=
+        mapper[i].reference(msc_p->data()); // the input default.
+    }
+  }
+}
+
 
 inline Bool SubMS::checkSpwShape()
 {
