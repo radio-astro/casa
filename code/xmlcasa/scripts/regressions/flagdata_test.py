@@ -1,5 +1,5 @@
 import shutil
-
+import unittest
 #
 # Test of flagdata modes
 #
@@ -14,67 +14,66 @@ def test_eq(result, total, flagged):
         raise Exception("%s flags set; %s expected" % (result['flagged'], flagged))
 
 
-default(flagdata)
+class test_case(unittest.TestCase):
+    def runTest(self):
 
-vis = 'flagdatatest.ms'
-if False:
-    # Do not use copytree because of
-    # http://bugs.python.org/issue1545
-    shutil.copytree(os.environ.get('CASAPATH').split()[0] +
-                    "/data/regression/flagdata/" + vis,
-                    vis)
-else:
-    os.system('cp -r ' + \
-              os.environ.get('CASAPATH').split()[0] +
-              "/data/regression/flagdata/" + vis + ' ' + vis)
+        default(flagdata)
 
-flagdata(vis=vis, unflag=true)
+        vis = 'flagdatatest.ms'
+
+        os.system('cp -r ' + \
+                  os.environ.get('CASAPATH').split()[0] +
+                  "/data/regression/flagdata/" + vis + ' ' + vis)
+
+        inp(flagdata)
+        flagdata(vis=vis, unflag=true)
 
 
+        print "Test of vector mode"
+        default(flagdata)
+        vis = 'flagdatatest.ms'
+        clipminmax=[0.0, 0.2]
+        antenna = ['1', '2']
+        clipcolumn = ['DATA', 'datA']
+
+        inp(flagdata) # broken, looks only at global parameters
+        flagdata(vis=vis, clipminmax=clipminmax, antenna=antenna, clipcolumn=clipcolumn)
+        test_eq(flagdata(vis=vis, mode='summary'), 2000700, 465398)
+        flagdata(vis=vis, unflag=true)
+
+        print "Test of flagmanager mode=list, flagbackup=True/False"
+        flagmanager(vis=vis, mode='list')
+        fg.open(vis)
+        if len(fg.getflagversionlist()) != 5:
+            raise Exception()
+        fg.done()
 
 
-print "Test of vector mode"
-default(flagdata)
-vis = 'flagdatatest.ms'
-clipminmax=[0.0, 0.2]
-antenna = ['1', '2']
-clipcolumn = ['DATA', 'datA']
+        flagdata(vis=vis, unflag=true, flagbackup=false)
+        flagmanager(vis=vis, mode='list')
+        fg.open(vis)
+        if len(fg.getflagversionlist()) != 5:
+            raise Exception()
+        fg.done()
 
-inp(flagdata)
-flagdata()
-test_eq(flagdata(vis=vis, mode='summary'), 2000700, 465398)
-flagdata(vis=vis, unflag=true)
+        flagdata(vis=vis, unflag=true, flagbackup=true)
+        flagmanager(vis=vis, mode='list')
+        fg.open(vis)
+        if len(fg.getflagversionlist()) != 6:
+            raise Exception()
+        fg.done()
 
+        print "Test of flagmanager mode=rename"
+        flagmanager(vis=vis, mode='rename', oldname='manualflag_3', versionname='Ha! The best version ever!', comment='This is a *much* better name')
+        flagmanager(vis=vis, mode='list')
+        fg.open(vis)
+        if len(fg.getflagversionlist()) != 6:
+            raise Exception()
+        fg.done()
 
+# Run the test class through PyUnit (this would be done by the unit test driver)
+unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_case))
 
-print "Test of flagmanager mode=list, flagbackup=True/False"
-flagmanager(vis=vis, mode='list')
-fg.open(vis)
-if len(fg.getflagversionlist()) != 5:
-    raise Exception()
-fg.done()
-
-flagdata(vis=vis, unflag=true, flagbackup=false)
-flagmanager(vis=vis, mode='list')
-fg.open(vis)
-if len(fg.getflagversionlist()) != 5:
-    raise Exception()
-fg.done()
-
-flagdata(vis=vis, unflag=true, flagbackup=true)
-flagmanager(vis=vis, mode='list')
-fg.open(vis)
-if len(fg.getflagversionlist()) != 6:
-    raise Exception()
-fg.done()
-
-print "Test of flagmanager mode=rename"
-flagmanager(vis=vis, mode='rename', oldname='manualflag_3', versionname='Ha! The best version ever!', comment='This is a *much* better name')
-flagmanager(vis=vis, mode='list')
-fg.open(vis)
-if len(fg.getflagversionlist()) != 6:
-    raise Exception()
-fg.done()
 
 
 print "Test of flagging statistics and queries"
