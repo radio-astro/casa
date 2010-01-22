@@ -58,7 +58,7 @@ using namespace asap;
 
 // tolerance for direction comparison (rad)
 #define TOL_OTF    1.0e-15
-#define TOL_POINT  9.6963e-5  // 20 arcsec
+#define TOL_POINT  2.9088821e-4  // 1 arcmin
 
 STMath::STMath(bool insitu) :
   insitu_(insitu)
@@ -1447,7 +1447,7 @@ CountedPtr<Scantable> STMath::dofold( const CountedPtr<Scantable> &sig,
     mjdColOut.put( i, acc.getTime() ) ;
     // change FREQ_ID to unshifted IF setting (only for APEX?)
     if ( choffset2 != 0.0 ) {
-      int freqid = fidColOut( 0 ) ; // assume single-IF data
+      uInt freqid = fidColOut( 0 ) ; // assume single-IF data
       double refpix, refval, increment ;
       out->frequencies().getEntry( refpix, refval, increment, freqid ) ;
       refval -= choffset * increment ;
@@ -2498,7 +2498,7 @@ CountedPtr< Scantable >
       Vector<uChar> flag = flagCol(i);
       Int lag0 = Int(spec.nelements()*abs(inc)/(frequency+width)+0.5);
       Int lag1 = Int(spec.nelements()*abs(inc)/(frequency-width)+0.5);
-      for (int k=0; k < flag.nelements(); ++k ) {
+      for (unsigned int k=0; k < flag.nelements(); ++k ) {
         if (flag[k] > 0) {
           spec[k] = 0.0;
         }
@@ -3403,6 +3403,88 @@ CountedPtr<Scantable> STMath::cwcal( const CountedPtr<Scantable>& s,
   }
 }
   
+CountedPtr<Scantable> STMath::almacal( const CountedPtr<Scantable>& s,
+                                       const String calmode )
+{
+  // frequency switch
+  if ( calmode == "fs" ) {
+    return almacalfs( s ) ;
+  }
+  else {
+    vector<bool> masks = s->getMask( 0 ) ;
+    
+    // off scan
+    STSelector sel = STSelector() ;
+    string taql = "SELECT FROM $1 WHERE SRCTYPE == 1" ;
+    sel.setTaQL( taql ) ;
+    s->setSelection( sel ) ;
+    // TODO 2010/01/08 TN
+    // Grouping by time should be needed before averaging.
+    // Each group must have own unique SCANNO (should be renumbered).
+    // See PIPELINE/SDCalibration.py
+    CountedPtr<Scantable> soff = getScantable( s, false ) ;
+    Table ttab = soff->table() ;
+    ROScalarColumn<Double> timeCol( ttab, "TIME" ) ;
+    uInt nrow = timeCol.nrow() ;
+    Vector<Double> timeSep( nrow - 1 ) ;
+    for ( uInt i = 0 ; i < nrow - 1 ; i++ ) {
+      timeSep[i] = timeCol(i+1) - timeCol(i) ;
+    }
+    ScalarColumn<Double> intervalCol( ttab, "INTERVAL" ) ;
+    Vector<Double> interval = intervalCol.getColumn() ;
+    interval /= 86400.0 ;
+    ScalarColumn<uInt> scanCol( ttab, "SCANNO" ) ;
+    vector<uInt> glist ;
+    for ( uInt i = 0 ; i < nrow - 1 ; i++ ) {
+      double gap = 2.0 * timeSep[i] / ( interval[i] + interval[i+1] ) ;
+      //cout << "gap[" << i << "]=" << setw(5) << gap << endl ;
+      if ( gap > 1.1 ) {
+        glist.push_back( i ) ;
+      }
+    }
+    Vector<uInt> gaplist( glist ) ;
+    //cout << "gaplist = " << gaplist << endl ;
+    uInt newid = 0 ;
+    for ( uInt i = 0 ; i < nrow ; i++ ) {
+      scanCol.put( i, newid ) ;
+      if ( i == gaplist[newid] ) {
+        newid++ ;
+      }
+    }
+    //cout << "new scancol = " << scanCol.getColumn() << endl ;
+    vector< CountedPtr<Scantable> > tmp( 1, soff ) ;
+    CountedPtr<Scantable> aoff = average( tmp, masks, "TINT", "SCAN" ) ;
+    //cout << "aoff.nrow = " << aoff->nrow() << endl ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // on scan
+    bool insitu = insitu_ ;
+    insitu_ = false ;
+    CountedPtr<Scantable> out = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    taql = "SELECT FROM $1 WHERE SRCTYPE == 0" ;
+    sel.setTaQL( taql ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( out->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // process each on scan
+    ArrayColumn<Float> tsysCol ;
+    tsysCol.attach( out->table(), "TSYS" ) ;
+    for ( int i = 0 ; i < out->nrow() ; i++ ) {
+      vector<float> sp = getCalibratedSpectra( out, aoff, i ) ;
+      out->setSpectrum( sp, i ) ;
+    }
+
+    // flux unit
+    out->setFluxUnit( "K" ) ;
+
+    return out ;
+  }
+}
+
 CountedPtr<Scantable> STMath::cwcalfs( const CountedPtr<Scantable>& s,
                                        const String antname )
 {
@@ -3766,7 +3848,7 @@ CountedPtr<Scantable> STMath::cwcalfs( const CountedPtr<Scantable>& s,
   ScalarColumn<uInt> refifnoCol ;
   ScalarColumn<uInt> sigfidCol ;
   ScalarColumn<uInt> reffidCol ;
-  uInt nchan = (uInt)ssig->nchan() ;
+  Int nchan = (Int)ssig->nchan() ;
   sigifnoCol.attach( sigtab, "IFNO" ) ;
   refifnoCol.attach( reftab, "IFNO" ) ;
   sigfidCol.attach( sigtab, "FREQ_ID" ) ;
@@ -3851,6 +3933,13 @@ CountedPtr<Scantable> STMath::cwcalfs( const CountedPtr<Scantable>& s,
   return out ;
 }
 
+CountedPtr<Scantable> STMath::almacalfs( const CountedPtr<Scantable>& s )
+{
+  CountedPtr<Scantable> out ;
+
+  return out ;
+}
+
 vector<float> STMath::getSpectrumFromTime( string reftime, 
                                            CountedPtr<Scantable>& s,
                                            string mode ) 
@@ -3863,7 +3952,7 @@ vector<float> STMath::getSpectrumFromTime( string reftime,
     return sp ;
   }
   else if ( s->nrow() == 1 ) {
-    os << "use row " << 0 << " (scanno = " << s->getScan( 0 ) << ")" << LogIO::POST ;
+    //os << "use row " << 0 << " (scanno = " << s->getScan( 0 ) << ")" << LogIO::POST ;
     return s->getSpectrum( 0 ) ; 
   }
   else {
@@ -3877,7 +3966,7 @@ vector<float> STMath::getSpectrumFromTime( string reftime,
         os << LogIO::WARN << "Failed to find a scan before reftime. return a spectrum just after the reftime." << LogIO::POST ;
         id = idx[1] ;
       }
-      os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+      //os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
       sp = s->getSpectrum( id ) ;
     }
     else if ( mode == "after" ) {
@@ -3889,7 +3978,7 @@ vector<float> STMath::getSpectrumFromTime( string reftime,
         os << LogIO::WARN << "Failed to find a scan after reftime. return a spectrum just before the reftime." << LogIO::POST ;
         id = idx[1] ;
       }
-      os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+      //os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
       sp = s->getSpectrum( id ) ;
     }
     else if ( mode == "nearest" ) {
@@ -3914,7 +4003,7 @@ vector<float> STMath::getSpectrumFromTime( string reftime,
           id = idx[0] ;
         }
       }
-      os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+      //os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
       sp = s->getSpectrum( id ) ;      
     }
     else if ( mode == "linear" ) {
@@ -3922,26 +4011,26 @@ vector<float> STMath::getSpectrumFromTime( string reftime,
         // use after
         os << LogIO::WARN << "Failed to interpolate. return a spectrum just after the reftime." << LogIO::POST ;
         int id = idx[1] ;
-        os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+        //os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
         sp = s->getSpectrum( id ) ;
       }
       else if ( idx[1] == -1 ) {
         // use before
         os << LogIO::WARN << "Failed to interpolate. return a spectrum just before the reftime." << LogIO::POST ;
         int id = idx[0] ;
-        os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+        //os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
         sp = s->getSpectrum( id ) ;
       }
       else if ( idx[0] == idx[1] ) {
         // use before
-        os << "No need to interporate." << LogIO::POST ;
+        //os << "No need to interporate." << LogIO::POST ;
         int id = idx[0] ;
-        os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+        //os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
         sp = s->getSpectrum( id ) ;
       }
       else {
         // do interpolation
-        os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
+        //os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
         double t0 = getMJD( s->getTime( idx[0] ) ) ;
         double t1 = getMJD( s->getTime( idx[1] ) ) ;
         double tref = getMJD( reftime ) ;
@@ -4037,7 +4126,7 @@ vector<float> STMath::getTcalFromTime( string reftime,
   }
   else if ( s->nrow() == 1 ) {
     uInt tcalid = s->getTcalId( 0 ) ;
-    os << "use row " << 0 << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+    //os << "use row " << 0 << " (tcalid = " << tcalid << ")" << LogIO::POST ;
     tcalTable.getEntry( time, tcalval, tcalid ) ;
     tcalval.tovector( tcal ) ;
     return tcal ;
@@ -4054,7 +4143,7 @@ vector<float> STMath::getTcalFromTime( string reftime,
         id = idx[1] ;
       }
       uInt tcalid = s->getTcalId( id ) ;
-      os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+      //os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
       tcalTable.getEntry( time, tcalval, tcalid ) ;
       tcalval.tovector( tcal ) ;
     }
@@ -4068,7 +4157,7 @@ vector<float> STMath::getTcalFromTime( string reftime,
         id = idx[1] ;
       }
       uInt tcalid = s->getTcalId( id ) ;
-      os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+      //os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
       tcalTable.getEntry( time, tcalval, tcalid ) ;
       tcalval.tovector( tcal ) ;
     }
@@ -4095,7 +4184,7 @@ vector<float> STMath::getTcalFromTime( string reftime,
         }
       }
       uInt tcalid = s->getTcalId( id ) ;
-      os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+      //os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
       tcalTable.getEntry( time, tcalval, tcalid ) ;
       tcalval.tovector( tcal ) ;
     }
@@ -4105,7 +4194,7 @@ vector<float> STMath::getTcalFromTime( string reftime,
         os << LogIO::WARN << "Failed to interpolate. return a spectrum just after the reftime." << LogIO::POST ;
         int id = idx[1] ;
         uInt tcalid = s->getTcalId( id ) ;
-        os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+        //os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
         tcalTable.getEntry( time, tcalval, tcalid ) ;
         tcalval.tovector( tcal ) ;
       }
@@ -4114,22 +4203,22 @@ vector<float> STMath::getTcalFromTime( string reftime,
         os << LogIO::WARN << "Failed to interpolate. return a spectrum just before the reftime." << LogIO::POST ;
         int id = idx[0] ;
         uInt tcalid = s->getTcalId( id ) ;
-        os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+        //os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
         tcalTable.getEntry( time, tcalval, tcalid ) ;
         tcalval.tovector( tcal ) ;
       }
       else if ( idx[0] == idx[1] ) {
         // use before
-        os << "No need to interporate." << LogIO::POST ;
+        //os << "No need to interporate." << LogIO::POST ;
         int id = idx[0] ;
         uInt tcalid = s->getTcalId( id ) ;
-        os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+        //os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
         tcalTable.getEntry( time, tcalval, tcalid ) ;
         tcalval.tovector( tcal ) ;
       }
       else {
         // do interpolation
-        os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
+        //os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
         double t0 = getMJD( s->getTime( idx[0] ) ) ;
         double t1 = getMJD( s->getTime( idx[1] ) ) ;
         double tref = getMJD( reftime ) ;
@@ -4169,7 +4258,7 @@ vector<float> STMath::getTsysFromTime( string reftime,
     return tsys ;
   }
   else if ( s->nrow() == 1 ) {
-    os << "use row " << 0 << LogIO::POST ;
+    //os << "use row " << 0 << LogIO::POST ;
     tsysval = tsysCol( 0 ) ;
     tsysval.tovector( tsys ) ;
     return tsys ;
@@ -4185,7 +4274,7 @@ vector<float> STMath::getTsysFromTime( string reftime,
         os << LogIO::WARN << "Failed to find a scan before reftime. return a spectrum just after the reftime." << LogIO::POST ;
         id = idx[1] ;
       }
-      os << "use row " << id << LogIO::POST ;
+      //os << "use row " << id << LogIO::POST ;
       tsysval = tsysCol( id ) ;
       tsysval.tovector( tsys ) ;
     }
@@ -4198,7 +4287,7 @@ vector<float> STMath::getTsysFromTime( string reftime,
         os << LogIO::WARN << "Failed to find a scan after reftime. return a spectrum just before the reftime." << LogIO::POST ;
         id = idx[1] ;
       }
-      os << "use row " << id << LogIO::POST ;
+      //os << "use row " << id << LogIO::POST ;
       tsysval = tsysCol( id ) ;
       tsysval.tovector( tsys ) ;
     }
@@ -4224,7 +4313,7 @@ vector<float> STMath::getTsysFromTime( string reftime,
           id = idx[0] ;
         }
       }
-      os << "use row " << id << LogIO::POST ;
+      //os << "use row " << id << LogIO::POST ;
       tsysval = tsysCol( id ) ;
       tsysval.tovector( tsys ) ;
     }
@@ -4233,7 +4322,7 @@ vector<float> STMath::getTsysFromTime( string reftime,
         // use after
         os << LogIO::WARN << "Failed to interpolate. return a spectrum just after the reftime." << LogIO::POST ;
         int id = idx[1] ;
-        os << "use row " << id << LogIO::POST ;
+        //os << "use row " << id << LogIO::POST ;
         tsysval = tsysCol( id ) ;
         tsysval.tovector( tsys ) ;
       }
@@ -4241,21 +4330,21 @@ vector<float> STMath::getTsysFromTime( string reftime,
         // use before
         os << LogIO::WARN << "Failed to interpolate. return a spectrum just before the reftime." << LogIO::POST ;
         int id = idx[0] ;
-        os << "use row " << id << LogIO::POST ;
+        //os << "use row " << id << LogIO::POST ;
         tsysval = tsysCol( id ) ;
         tsysval.tovector( tsys ) ;
       }
       else if ( idx[0] == idx[1] ) {
         // use before
-        os << "No need to interporate." << LogIO::POST ;
+        //os << "No need to interporate." << LogIO::POST ;
         int id = idx[0] ;
-        os << "use row " << id << LogIO::POST ;
+        //os << "use row " << id << LogIO::POST ;
         tsysval = tsysCol( id ) ;
         tsysval.tovector( tsys ) ;
       }
       else {
         // do interpolation
-        os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
+        //os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
         double t0 = getMJD( s->getTime( idx[0] ) ) ;
         double t1 = getMJD( s->getTime( idx[1] ) ) ;
         double tref = getMJD( reftime ) ;
@@ -4345,6 +4434,49 @@ vector<float> STMath::getCalibratedSpectra( CountedPtr<Scantable>& on,
   sky->unsetSelection() ;
   hot->unsetSelection() ;
   cold->unsetSelection() ;
+  off->unsetSelection() ;
+
+  return sp ;
+}
+
+vector<float> STMath::getCalibratedSpectra( CountedPtr<Scantable>& on,
+                                            CountedPtr<Scantable>& off,
+                                            int index ) 
+{
+  string reftime = on->getTime( index ) ;
+  vector<int> ii( 1, on->getIF( index ) ) ;
+  vector<int> ib( 1, on->getBeam( index ) ) ;
+  vector<int> ip( 1, on->getPol( index ) ) ;
+  vector<int> ic( 1, on->getScan( index ) ) ;
+  STSelector sel = STSelector() ;
+  sel.setIFs( ii ) ;
+  sel.setBeams( ib ) ;
+  sel.setPolarizations( ip ) ;
+  off->setSelection( sel ) ;
+  vector<float> spoff = getSpectrumFromTime( reftime, off, "linear" ) ;
+  vector<float> spec = on->getSpectrum( index ) ;
+  //vector<float> tcal = getTcalFromTime( reftime, sky, "linear" ) ;
+  //vector<float> tsys = on->getTsysVec( index ) ;
+  ArrayColumn<Float> tsysCol( on->table(), "TSYS" ) ;
+  Vector<Float> tsys = tsysCol( index ) ;
+  vector<float> sp( spec.size() ) ;
+  // ALMA Calibration
+  // 
+  // Ta* = Tsys * ( ON - OFF ) / OFF
+  //
+  // 2010/01/07 Takeshi Nakazato
+  unsigned int tsyssize = tsys.nelements() ;
+  unsigned int spsize = sp.size() ;
+  for ( unsigned int j = 0 ; j < sp.size() ; j++ ) {
+    float tscale = 0.0 ;
+    if ( tsyssize == spsize ) 
+      tscale = tsys[j] ;
+    else 
+      tscale = tsys[0] ;
+    float v = tscale * ( spec[j] - spoff[j] ) / spoff[j] ;
+    sp[j] = v ;
+  }
+  sel.reset() ;
   off->unsetSelection() ;
 
   return sp ;

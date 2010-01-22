@@ -871,14 +871,18 @@ def calibrate( scantab, scannos=[], calmode='none', verify=None ):
     elif ( calmode == 'ps' ):
         asaplog.push( 'Calibrating %s position-switched data.' % antname )
         print_log()
-        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+        if ( antname.find( 'APEX' ) != -1 ):
+            scal = apexcal( scantab, scannos, calmode, verify )
+        elif ( antname.find( 'ALMA' ) != -1 or antname.find( 'OSF' ) != -1 ):
             scal = almacal( scantab, scannos, calmode, verify )
         else:
             scal = calps( scantab, scannos=scannos, verify=verify )
     elif ( calmode == 'fs' or calmode == 'fsotf' ):
         asaplog.push( 'Calibrating %s frequency-switched data.' % antname )
         print_log()
-        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+        if ( antname.find( 'APEX' ) != -1 ):
+            scal = apexcal( scantab, scannos, calmode, verify )
+        elif ( antname.find( 'ALMA' ) != -1 or antname.find( 'OSF' ) != -1 ):
             scal = almacal( scantab, scannos, calmode, verify )
         else:
             scal = calfs( scantab, scannos=scannos, verify=verify )
@@ -892,9 +896,9 @@ def calibrate( scantab, scannos=[], calmode='none', verify=None ):
 
     return scal 
 
-def almacal( scantab, scannos=[], calmode='none', verify=False ):
+def apexcal( scantab, scannos=[], calmode='none', verify=False ):
     """
-    Calibrate APEX and ALMA data
+    Calibrate APEX data
 
     Parameters:
         scantab:       scantable
@@ -908,6 +912,23 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
     antname = scantab.get_antennaname()
     ssub = scantab.get_scan( scannos )
     scal = scantable( stm.cwcal( ssub, calmode, antname ) )
+    return scal
+
+def almacal( scantab, scannos=[], calmode='none', verify=False ):
+    """
+    Calibrate ALMA data
+
+    Parameters:
+        scantab:       scantable
+        scannos:       list of scan number
+        calmode:       calibration mode
+
+        verify:        verify calibration     
+    """
+    from asap._asap import stmath
+    stm = stmath()
+    ssub = scantab.get_scan( scannos )
+    scal = scantable( stm.almacal( ssub, calmode ) )
     return scal
 
 def splitant(filename, outprefix='',overwrite=False):
