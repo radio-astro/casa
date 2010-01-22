@@ -114,7 +114,7 @@ def fit_using_full_image():
         epsilon = 1e-5
         # I flux test
         got = clist['component0']['flux']['value'][0]
-        expected = 60340.7606
+        expected = 60291.7956
         if (not near(got, expected, epsilon)):
             success = False
             msgs += method + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
@@ -126,33 +126,34 @@ def fit_using_full_image():
             msgs += method + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
         # RA test
         got = clist['component0']['shape']['direction']['m0']['value']
-        expected = 0.000213381
-        if (not near(got, expected, epsilon)):
+        expected = 0.00021339
+        if (not near_abs(got, expected, epsilon)):
             success = False
             msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
         # Dec test
         got = clist['component0']['shape']['direction']['m1']['value']
-        expected = 1.93571e-05 
-        if (not near(got, expected, epsilon)):
+        expected = 1.935825e-5 
+        if (not near_abs(got, expected, epsilon)):
             success = False
             msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
         # Major axis test
         got = clist['component0']['shape']['majoraxis']['value']
-        expected = 23.546913 
-        epsilon = 1e-7
+        expected = 23.530022 
+        epsilon = 1e-6
         if (not near(got, expected, epsilon)):
             success = False
             msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
         # Minor axis test
         got = clist['component0']['shape']['minoraxis']['value']
-        expected = 18.876406  
+        expected = 18.862125  
         if (not near(got, expected, epsilon)):
             success = False
             msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
         # Position angle test
         got = clist['component0']['shape']['positionangle']['value']
-        expected = 119.897741 
-        if (not near(got, expected, epsilon)):
+        expected = 119.88185
+        epsilon = 1e-5 
+        if (not near_abs(got, expected, epsilon)):
             success = False
             msgs += method + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
     global passed
@@ -208,7 +209,7 @@ def fit_using_box():
             epsilon = 1e-5
             # I flux test
             got = clist['component0']['flux']['value'][0]
-            expected = 60323.3212
+            expected = 60319.8604
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += method + "I flux density test failure, got " + str(got) \
@@ -222,33 +223,34 @@ def fit_using_box():
                     + " expected " + str(expected) + "\n"
             # RA test
             got = clist['component0']['shape']['direction']['m0']['value']
-            expected = 0.000213372
-            if (not near(got, expected, epsilon)):
+            expected = 0.00021337
+            if (not near_abs(got, expected, epsilon)):
                 success = False
                 msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Dec test
             got = clist['component0']['shape']['direction']['m1']['value']
-            expected = 1.93593e-05
-            if (not near(got, expected, epsilon)):
+            expected = 1.935906e-05
+            if (not near_abs(got, expected, epsilon)):
                 success = False
                 msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Major axis test
             got = clist['component0']['shape']['majoraxis']['value']
-            expected = 23.545291
-            epsilon = 1e-7
+            expected = 23.545212
+            epsilon = 1e-6
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Minor axis test
             got = clist['component0']['shape']['minoraxis']['value']
-            expected = 18.866377
+            expected = 18.86450
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Position angle test
             got = clist['component0']['shape']['positionangle']['value']
-            expected = 119.806997
-            if (not near(got, expected, epsilon)):
+            expected = 119.81296
+            epsilon = 1e-5
+            if (not near_abs(got, expected, epsilon)):
                 success = False
                 msgs += method + "Position angle test failure, got " + str(got) \
                     + " expected " + str(expected) + "\n"
@@ -547,9 +549,9 @@ def test_logfile():
             method = test + "imfit: "
         res = code()
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 1):
             success = False
@@ -557,9 +559,9 @@ def test_logfile():
         #default, append
         res = code()
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 2):
             success = False
@@ -568,9 +570,9 @@ def test_logfile():
         # explicit append
         res = code(True)
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 3):
             success = False
@@ -578,9 +580,9 @@ def test_logfile():
         # overwrite
         res = code(False)
         if (not os.path.exists(logfile)):
-            passed = False
+            success = False
             msgs += method + "logfile was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
    
         if ( count_matches(logfile, "****** Fit performed") != 1):
             success = False
@@ -615,9 +617,9 @@ def test_newestimates():
         res = code()
 
         if (not os.path.exists(newestimates)):
-            passed = False
+            success = False
             msgs += method + "new estimates file was not written\n"
-            return {'success' : passed, 'error_msgs' : msgs}        
+            return {'success' : success, 'error_msgs' : msgs}        
  
         expected_sha = sha.sha(open(expected_new_estimates, 'r').read()).hexdigest()
 

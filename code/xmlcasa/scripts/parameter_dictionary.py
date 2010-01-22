@@ -831,6 +831,9 @@ class par(str):
                 default: 'get'; example: mode='put'
                 Options: 'get','put','summary','list','stats'
 
+        for immath:
+                default: 'evalexpr'
+                Options: 'evalexpr', 'poli', 'pola'
 		"""
 
 	@staticmethod
