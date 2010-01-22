@@ -94,6 +94,7 @@ namespace casa {
     asdmStateId_p(Tag()),
     asdmConfigDescriptionId_p(Tag()),
     asdmSBSummaryId_p(Tag()),
+    asdmExecBlockId_p(Tag()),
     // other maps
     asdmFeedId_p(-1)
   {
@@ -239,6 +240,15 @@ namespace casa {
       return False;
     }
 
+    // prepare the writing of binary data
+    if(!setDirectory(asdmfile)){
+       return False;
+    }
+
+    if(!writeMainAndScanAndSubScan(datacolumn)){ 
+      return False;
+    }
+
     // finish writing the ASDM non-binary data
     try{
       ASDM_p->toFile(asdmfile);
@@ -248,15 +258,6 @@ namespace casa {
 	 << LogIO::POST;      
       return False;
     }     
-
-    // now the binary data
-    if(!setDirectory(asdmfile)){
-       return False;
-    }
-
-    if(!writeMainBin(datacolumn)){
-      return False;
-    }
 
     return True;
 
@@ -297,378 +298,369 @@ namespace casa {
   }
 
 
-  Bool MS2ASDM::writeMainBinForOneDDId(const Int theDDId, const String& datacolumn){
+  Int MS2ASDM::writeMainBinForOneDDIdAndSubScan(const Int theDDId, const String& datacolumn, 
+						const uInt theScan, const uInt theSubScan,
+						const uInt startRow, const Double endTime,
+						const Tag eBlockId,
+						int& datasize, asdm::EntityRef& dataOid, 
+						vector< asdm::Tag >& stateIdV){
 
-    LogIO os(LogOrigin("MS2ASDM", "writeMainBinForOneDDId()"));
+    LogIO os(LogOrigin("MS2ASDM", "writeMainBinForOneDDIdAndSubScan()"));
+
+    // return values
+    Int numIntegrations = 0;
+    datasize = 0;
+    dataOid = EntityRef();
+    stateIdV.resize(0);
+
+    asdm::ExecBlockRow* eBlockRow = (ASDM_p->getExecBlock()).getRowByKey(eBlockId);
+    string eBlockUID = eBlockRow->getExecBlockUID().toString();
+    int eBlockNum = eBlockRow->getExecBlockNum();
 
     try{
 
-      // loop over MS main table rows
-     
       uInt nMainTabRows = ms_p.nrow();
 
-      unsigned int subscanNum = 1;
-      Int theScan = 0;
-      Bool haveState = True;
+      unsigned int subscanNum = theSubScan;
 
-      for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
+      uInt mainTabRow=startRow; 
+      if(mainTabRow>=nMainTabRows){
+	os << LogIO::SEVERE << "Internal error: startRow " << mainTabRow << " exceeds end of MS."
+	   << LogIO::POST;
+	return -1;
+      }
 
-	Int DDId = dataDescId()(mainTabRow);
+      Int DDId = dataDescId()(mainTabRow);
+      if(DDId != theDDId){ // skip all other Data Description Ids
+	os << LogIO::SEVERE << "Internal error: input parameters to this routine are inconsistent.\n"
+	   << " DDId in start row should be as given in input parameters ==" << theDDId << LogIO::POST;
+	return -1;
+      }
+      
+      os << LogIO::NORMAL << "Writing Main table entries for DataDescId " << DDId 
+	 << ", Scan number " << theScan << ", SubScan number " << theSubScan << LogIO::POST;
+      
+      //////////////////////
+      // Construct subscan == SDMDataObject
+      //  One subscan consists of all the data taken within subscanDuration seconds starting at the first 
+      //  timestamp of the MS main table.
+      
+      // Assume MS main table is sorted in time. 
+      
+      // Get first timestamp.
+      Double subScanStartTime = time()(mainTabRow);
+      Double subScanEndTime = time()(nMainTabRows-1); 
+      if(endTime < subScanEndTime){
+	subScanEndTime = endTime;
+      }
+      
+      // determine number of different timestamps in this subscan 
+      unsigned int numTimestampsCorr = 0;
+      unsigned int numTimestampsAuto = 0;
+      uInt i=mainTabRow;
+      while(i<nMainTabRows 
+	    && time()(i)<=subScanEndTime
+	    ){
+	DDId = dataDescId()(i);
 	if(DDId != theDDId){ // skip all other Data Description Ids
+	  i++;
 	  continue;
 	}
 	
-	if(scanNumber()(mainTabRow) != theScan){ // Scan number has changed
-	  theScan = scanNumber()(mainTabRow);
-	  // also reset the subscan number
-	  subscanNum = 1;
+	if(antenna1()(i)==antenna2()(i)){
+	  numTimestampsAuto++;
 	}
-
-	os << LogIO::NORMAL << "Writing Main table entries for DataDescId " << DDId 
-	   << ", Scan number " << theScan << LogIO::POST;
-
-	if(haveState && stateId()(mainTabRow)>=0){
-	  Int ssNum = state().subScan()(stateId()(mainTabRow)); // get the subscan number from the state table if available 
-	  if(ssNum>=0){
-	    //	    subscanNum == ssNum;
-	    os << LogIO::NORMAL << "Valid sub scan number available in MS state table (" << ssNum 
-	       << ") but use not yet implemented. Will use my own numbering." << LogIO::POST;
-	    haveState = False;	    
-	  }
-	  else{
-	    os << LogIO::WARN << "Invalid sub scan number in MS state table (" << ssNum 
-	       << "). Will use my own numbering." << LogIO::POST;
-	    haveState = False;
-	  }
+	else{
+	  numTimestampsCorr++;
 	}
-
-	//////////////////////
-	// Construct subscan == SDMDataObject
-	//  One subscan consists of all the data taken within subscanDuration seconds starting at the first 
-	//  timestamp of the MS main table.
+	i++;
+      } // end while
+	// correct subscan end time to actual value
+      subScanEndTime = time()(i-1) + interval()(i-1);
+      cout << " subscan number is " << subscanNum << endl;
+      cout << "  subscan number of timestamps with crosscorrelations is " << numTimestampsCorr << endl;
+      cout << "  subscan number of timestamps with autocorrelations is " << numTimestampsAuto << endl;
+      cout << "  subscan end time is " << subScanEndTime << endl;
       
-	// Assume MS main table is sorted in time. 
-	
-	// Get first timestamp.
-	Double subScanStartTime = time()(mainTabRow);
-	Double subScanEndTime = time()(nMainTabRows-1); // by default there is no time limit on subscans  
-	if(subscanDuration_p>0.){
-	  subScanEndTime = subScanStartTime + subscanDuration_p;
-	}
-
-	// determine number of different timestamps in this subscan 
-	unsigned int numTimestampsCorr = 0;
-	unsigned int numTimestampsAuto = 0;
-	uInt i=mainTabRow;
-	while(i<nMainTabRows 
-	      && scanNumber()(i)==theScan 
-	      && time()(i)<=subScanEndTime
-	      ){
+      // open disk file for subscan
+      String subscanFileName = asdmDir_p+"/ASDMBinary/"+String(getCurrentUidAsFileName());
+      cout << "  subscan filename is " << subscanFileName << endl;
+      dataOid = EntityRef(getCurrentUid());
+      
+      // make sure that this file doesn't exist yet
+      ofstream ofs(subscanFileName.c_str());
+      
+      // set up SDMDataObjectWriter
+      
+      SDMDataObjectWriter sdmdow(&ofs, getCurrentUid()); // use default title
+      
+      unsigned long long startTime = (unsigned long long) floor(subScanStartTime);
+      unsigned int execBlockNum = eBlockNum; // constant for all scans
+      unsigned int scanNum = theScan; // ASDM scan numbering starts at 1
+      if(scanNum == 0){
+	os << LogIO::WARN << "Scan Number is 0. Note that by convention scan numbers in ASDMs should start at 1." << LogIO::POST;
+      }
+      
+      // determine actual number of baselines and antennas
+      // assume that the first timestamp has complete information
+      // (at the same time also fill the stateId vector)
+      unsigned int numAutoCorrs = 0;
+      unsigned int numBaselines = 0;
+      unsigned int numAntennas = 0;
+      vector<Int> ant;
+      {
+	uInt i = mainTabRow;
+	Double thisTStamp = time()(i); 
+	while(i<nMainTabRows && time()(i)== thisTStamp){
+	  
 	  DDId = dataDescId()(i);
 	  if(DDId != theDDId){ // skip all other Data Description Ids
 	    i++;
 	    continue;
 	  }
-
-	  if(antenna1()(i)==antenna2()(i)){
-	    numTimestampsAuto++;
+	  
+	  if(antenna1()(i) == antenna2()(i)){
+	    numAutoCorrs++;
 	  }
 	  else{
-	    numTimestampsCorr++;
+	    numBaselines++;
+	  }
+	  
+	  Bool found = False;
+	  for(uInt j=0;j<ant.size();j++){
+	    if(antenna1()(i) == ant[j]){
+	      found = True;
+	      break;
+	    }
+	  }
+	  if(!found){
+	    ant.push_back(antenna1()(i));
+	    stateIdV.push_back( asdmStateId_p(stateId()(i)) );
+	  }
+	  found = False;
+	  for(uInt j=0;j<ant.size();j++){
+	    if(antenna2()(i) == ant[j]){
+	      found = True;
+	      break;
+	    }
+	  }
+	  if(!found){
+	    ant.push_back(antenna2()(i));
+	    stateIdV.push_back( asdmStateId_p(stateId()(i)) );
 	  }
 	  i++;
-	} // end while
-	subScanEndTime = time()(i-1);
-	cout << " subscan number is " << subscanNum << endl;
-	cout << "  subscan number of timestamps with crosscorrelations is " << numTimestampsCorr << endl;
-	cout << "  subscan number of timestamps with autocorrelations is " << numTimestampsAuto << endl;
-	cout << "  subscan end time is " << subScanEndTime << endl;
-
-	// open disk file for subscan
-	String subscanFileName = asdmDir_p+"/ASDMBinary/"+String(getCurrentUidAsFileName());
-	cout << "  subscan filename is " << subscanFileName << endl;
+	}
+      }
+      numAntennas = ant.size();
       
-	// make sure that this file doesn't exist yet
-	ofstream ofs(subscanFileName.c_str());
+      CorrelationMode correlationMode;
+      if(numAutoCorrs==0){
+	correlationMode = CorrelationModeMod::CROSS_ONLY;
+      }
+      else if(numBaselines>0){
+	correlationMode = CorrelationModeMod::CROSS_AND_AUTO;
+      }
+      else{
+	correlationMode = CorrelationModeMod::AUTO_ONLY;
+      }
+      // if datacolumn is FLOAT_DATA make correlation mode == AUTO as well!
       
-	// set up SDMDataObjectWriter
+      OptionalSpectralResolutionType spectralResolution = SpectralResolutionTypeMod::FULL_RESOLUTION; 
+      // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
+      os << LogIO::NORMAL << "    Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;      
       
-	SDMDataObjectWriter sdmdow(&ofs, getCurrentUid()); // use default title
+      vector< AtmPhaseCorrection >  apc;
+      vector< SDMDataObject::Baseband > basebands; // ???
+      
+      // construct spectral window and basedband vectors
+      
+      vector<SDMDataObject::SpectralWindow> spectralWindows;
+      
+      // for creating a Spectral Window
+      uInt PolId = dataDescription().polarizationId()(theDDId);
+      uInt numStokesMS = polarization().numCorr()(PolId);
 
-	unsigned long long startTime = (unsigned long long) floor(subScanStartTime);
-	unsigned int execBlockNum = 1; // constant for all scans
-	unsigned int scanNum = theScan; // ASDM scan numbering starts at 1
-	if(scanNum == 0){
-	  os << LogIO::WARN << "Scan Number is 0. Note that by convention scan numbers in ASDMs should start at 1." << LogIO::POST;
-	}
+      asdm::PolarizationRow* PR = (ASDM_p->getPolarization()).getRowByKey(asdmPolarizationId_p(PolId));
+      uInt numStokes = PR->getNumCorr();
+      Array<Int> corrT = polarization().corrType()(PolId);
+      vector<StokesParameter> crossPolProducts = PR->getCorrType();
 
-	// determine actual number of baselines and antennas
-	// assume that the first timestamp has complete information
-	unsigned int numAutoCorrs = 0;
-	unsigned int numBaselines = 0;
-	unsigned int numAntennas = 0;
-	vector<Int> ant;
-	{
-	  uInt i = mainTabRow;
-	  Double thisTStamp = time()(i); 
-	  while(i<nMainTabRows && time()(i)== thisTStamp){
-
-	    DDId = dataDescId()(i);
-	    if(DDId != theDDId){ // skip all other Data Description Ids
-	      i++;
-	      continue;
-	    }
-
-	    if(antenna1()(i) == antenna2()(i)){
-	      numAutoCorrs++;
-	    }
-	    else{
-	      numBaselines++;
-	    }
-
-	    Bool found = False;
-	    for(uInt j=0;j<ant.size();j++){
-	      if(antenna1()(i) == ant[j]){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      ant.push_back(antenna1()(i));
-	    }
-	    found = False;
-	    for(uInt j=0;j<ant.size();j++){
-	      if(antenna2()(i) == ant[j]){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      ant.push_back(antenna2()(i));
-	    }
-	    i++;
-	  }
-	}
-	numAntennas = ant.size();
-	if(numAntennas!=antenna().nrow()){
-	  os << LogIO::WARN << "    Number of antennas in ANTENNA table (" << antenna().nrow() 
-	     << ") is not the same as number of antennas present in MAIN table (" << ant.size()
-	     << ")." << LogIO::POST;      
-	}
-	if(numAntennas!=numAutoCorrs && numAutoCorrs>0){
-	  os << LogIO::WARN << "    Number of antennas in ANTENNA table (" << antenna().nrow() 
-	     << ") is not the same as number of autocorrelations present in MAIN table (" << ant.size()
-	     << ")." << LogIO::POST;      
-	}
-	else if(numAutoCorrs==0){
-	  os << LogIO::NORMAL << "    No autocorrelations present in MAIN table." << LogIO::POST;      
+      vector<StokesParameter> sdPolProduct;
+      float scaleFactor = 1.;
+      uInt spwId = dataDescription().spectralWindowId()(theDDId);
+      unsigned int numSpectralPoint = spectralWindow().numChan()(spwId);
+      unsigned int numBin = 1; // number of switch cycles
+      NetSideband sideband = CNetSideband::from_int(spectralWindow().netSideband()(spwId));
+      
+      SDMDataObject::SpectralWindow spw(crossPolProducts,
+					sdPolProduct,
+					scaleFactor,
+					numSpectralPoint,
+					numBin,
+					sideband);
+      
+      spectralWindows.push_back(spw);
+      
+      
+      SDMDataObject::Baseband bband(BasebandNameMod::NOBB, spectralWindows); // how to select name ???? -> Francois
+      // note: for ALMA only four basebands exist, not easy to find baseband for a given SPW
+      
+      basebands.push_back(bband);
+      
+      // construct binary parts for dataStruct
+      unsigned int bpFlagsSize = numSpectralPoint * numStokes * (numTimestampsCorr+numTimestampsAuto);
+      vector<AxisName> bpFlagsAxes;
+      bpFlagsAxes.push_back(AxisNameMod::SPP); /// order: inner part of loop should be last!!!!!!
+      bpFlagsAxes.push_back(AxisNameMod::POL);
+      SDMDataObject::BinaryPart bpFlags(bpFlagsSize, bpFlagsAxes);
+      cout << "FlagsSize " << bpFlagsSize << endl;
+      
+      unsigned int bpTimesSize = 0; // only needed for data blanking
+      //unsigned int bpTimesSize = numTimestampsCorr+numTimestampsAuto; 
+      vector<AxisName> bpTimesAxes;
+      bpTimesAxes.push_back(AxisNameMod::TIM);
+      SDMDataObject::BinaryPart bpActualTimes(bpTimesSize, bpTimesAxes);
+      cout << "TimesSize " << bpTimesSize << endl;
+      
+      unsigned int bpDurSize = 0; // only needed for data blanking
+      //	unsigned int bpDurSize = numTimestampsCorr+numTimestampsAuto;
+      vector<AxisName> bpDurAxes;
+      bpDurAxes.push_back(AxisNameMod::TIM);
+      SDMDataObject::BinaryPart bpActualDurations(bpDurSize, bpDurAxes);
+      cout << "DurSize " << bpDurSize << endl;
+      
+      unsigned int bpLagsSize = 0; // not filled for the moment (only useful if LAG_DATA column present) -> Francois 
+      vector<AxisName> bpLagsAxes;
+      bpLagsAxes.push_back(AxisNameMod::SPP); // ******
+      SDMDataObject::ZeroLagsBinaryPart bpZeroLags(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FXF); // how to determine?
+      cout << "LagsSize " << bpLagsSize << endl;
+      
+      unsigned int bpCrossSize = numSpectralPoint * numStokes * numTimestampsCorr * 2; // real + imag
+      vector<AxisName> bpCrossAxes;
+      bpCrossAxes.push_back(AxisNameMod::TIM);
+      bpCrossAxes.push_back(AxisNameMod::BAL);
+      bpCrossAxes.push_back(AxisNameMod::SPP); 
+      bpCrossAxes.push_back(AxisNameMod::POL);
+      SDMDataObject::BinaryPart bpCrossData(bpCrossSize, bpCrossAxes);
+      cout << "CrossSize " << bpCrossSize << endl;
+      
+      unsigned int bpAutoSize = numSpectralPoint * numStokes * numTimestampsAuto;
+      vector<AxisName> bpAutoAxes;
+      bpAutoAxes.push_back(AxisNameMod::TIM);
+      bpAutoAxes.push_back(AxisNameMod::ANT);
+      bpAutoAxes.push_back(AxisNameMod::SPP); 
+      bpAutoAxes.push_back(AxisNameMod::POL);
+      SDMDataObject::AutoDataBinaryPart bpAutoData(bpAutoSize, bpAutoAxes, False); // not normalised
+      cout << "AutoSize " << bpAutoSize << endl;
+      
+      SDMDataObject::DataStruct dataStruct( apc, basebands, bpFlags, bpActualTimes, bpActualDurations, 
+					    bpZeroLags, bpCrossData, bpAutoData);	 
+      
+      // Parameters of dataStruct:
+      //     	apc 	        a vector of AtmPhaseCorrection. If apc is not relevant pass an empty vector.
+      //     	basebands 	a vector of Baseband.
+      //     	flags 	        a BinaryPart object describing the flags. If flags is not relevant pass an 
+      //                      empty BinaryPart object.
+      //     	actualTimes 	a BinaryPart object describing the actual times. If actualTimes is not 
+      //                      relevant pass an empty BinaryPart object.
+      //     	actualDurations a BinaryPart object describing the actual durations. If actualDurations is 
+      //                      not relevant pass an empty BinaryPart object.
+      //     	zeroLags 	a ZeroLagsBinaryPart object describing the zero lags. If zeroLags is not 
+      //                      relevant pass an empty ZeroLagsBinaryPart object.
+      //     	crossData 	a BinaryPart object describing the cross data. If crossData is not relevant 
+      //                      pass an empty BinaryPart object.
+      //     	autoData 	an AutoDataBinaryPart object describing the auto data. If autoData is not 
+      //                      relevant pass an empty AutoDataBinaryPart object. 
+      
+      
+      // Write the global header.
+      sdmdow.corrDataHeader(startTime,
+			    eBlockUID,
+			    execBlockNum,
+			    scanNum,
+			    subscanNum,
+			    numAntennas,        
+			    correlationMode,    // the correlation mode.
+			    spectralResolution, // the spectral resolution.
+			    dataStruct);        // the description of the structure of the binary data.
+      
+      //////////////////////////////////////////////////////
+      // write the integrations until timestamp exceeds limit
+      unsigned int integrationNum = 1;
+      while(mainTabRow < nMainTabRows 
+	    && time()(mainTabRow)<=subScanEndTime){
+	
+	DDId = dataDescId()(mainTabRow);
+	if(DDId != theDDId){ // skip all other Data Description Ids
+	  mainTabRow++;
+	  continue;
 	}
 	
-
-	CorrelationMode correlationMode;
-	if(numAutoCorrs==0){
-	  correlationMode = CorrelationModeMod::CROSS_ONLY;
-	}
-	else if(numBaselines>0){
-	  correlationMode = CorrelationModeMod::CROSS_AND_AUTO;
-	}
-	else{
-	  correlationMode = CorrelationModeMod::AUTO_ONLY;
-	}
-	// if datacolumn is FLOAT_DATA make correlation mode == AUTO as well!
-
-	OptionalSpectralResolutionType spectralResolution = SpectralResolutionTypeMod::FULL_RESOLUTION; 
-	// alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
-	os << LogIO::NORMAL << "    Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;      
-
-	vector< AtmPhaseCorrection >  apc;
-	vector< SDMDataObject::Baseband > basebands; // ???
-
-	// construct spectral window and basedband vectors
-
-	vector<SDMDataObject::SpectralWindow> spectralWindows;
+	unsigned long long timev = (unsigned long long) floor((time()(mainTabRow))*1E9); // what units? nanoseconds
+	unsigned long long intervalv = (unsigned long long) floor(interval()(mainTabRow)*1E9);
+	vector< unsigned long > flags;
+	vector< long long > actualTimes;
+	vector< long long > actualDurations;
+	vector< float > zeroLags; // LAG_DATA, optional column, not used for the moment
+	vector< float > crossData;
+	// vector< short > crossData;
+	// vector< int > crossData; // standard case for ALMA
+	vector< float > autoData;	 
 	
-	// for creating a Spectral Window
-	vector<StokesParameter> crossPolProducts;
-	uInt PolId = dataDescription().polarizationId()(theDDId);
-	uInt numStokes = polarization().numCorr()(PolId);
-	Array<Int> corrT = polarization().corrType()(PolId);
-	// the following will be placed into a separate method
-	for(uInt i=0; i<numStokes && i<corrT.nelements(); i++){
-	  Stokes::StokesTypes t = Stokes::type(corrT(IPosition(1,i)));
-	  StokesParameter s = ASDMStokesParameter(t);
-	  crossPolProducts.push_back(s);
-	}
-	    
-	vector<StokesParameter> sdPolProduct;
-	float scaleFactor = 1.;
-	uInt spwId = dataDescription().spectralWindowId()(theDDId);
-	unsigned int numSpectralPoint = spectralWindow().numChan()(spwId);
-	unsigned int numBin = 1; // number of switch cycles
-	NetSideband sideband = CNetSideband::from_int(spectralWindow().netSideband()(spwId));
+	////////////////////////////////////////////////////////
+	// fill data, time, and flag vectors for this timestamp
+	Double theTStamp = time()(mainTabRow);
 	
-	SDMDataObject::SpectralWindow spw(crossPolProducts,
-					  sdPolProduct,
-					  scaleFactor,
-					  numSpectralPoint,
-					  numBin,
-					  sideband);
+	// SORT the data by baseline and antenna resp.!!!!!!!!!!!!
 	
-	spectralWindows.push_back(spw);
-
-	
-	SDMDataObject::Baseband bband(BasebandNameMod::NOBB, spectralWindows); // how to select name ???? -> Francois
-	// note: for ALMA only four basebands exist, not easy to find baseband for a given SPW
-
-	basebands.push_back(bband);
-
-	// construct binary parts for dataStruct
-	unsigned int bpFlagsSize = numSpectralPoint * numStokes * (numTimestampsCorr+numTimestampsAuto);
-	vector<AxisName> bpFlagsAxes;
-	bpFlagsAxes.push_back(AxisNameMod::SPP); /// order: inner part of loop should be last!!!!!!
-	bpFlagsAxes.push_back(AxisNameMod::POL);
-	SDMDataObject::BinaryPart bpFlags(bpFlagsSize, bpFlagsAxes);
-	cout << "FlagsSize " << bpFlagsSize << endl;
-
-	unsigned int bpTimesSize = 0; // only needed for data blanking
-	//unsigned int bpTimesSize = numTimestampsCorr+numTimestampsAuto; 
-	vector<AxisName> bpTimesAxes;
-	bpTimesAxes.push_back(AxisNameMod::TIM);
-	SDMDataObject::BinaryPart bpActualTimes(bpTimesSize, bpTimesAxes);
-	cout << "TimesSize " << bpTimesSize << endl;
-
-	unsigned int bpDurSize = 0; // only needed for data blanking
-	//	unsigned int bpDurSize = numTimestampsCorr+numTimestampsAuto;
-	vector<AxisName> bpDurAxes;
-	bpDurAxes.push_back(AxisNameMod::TIM);
-	SDMDataObject::BinaryPart bpActualDurations(bpDurSize, bpDurAxes);
-	cout << "DurSize " << bpDurSize << endl;
-
-	unsigned int bpLagsSize = 0; // not filled for the moment (only useful if LAG_DATA column present) -> Francois 
-	vector<AxisName> bpLagsAxes;
-	bpLagsAxes.push_back(AxisNameMod::SPP); // ******
-	SDMDataObject::ZeroLagsBinaryPart bpZeroLags(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FXF); // how to determine?
-	cout << "LagsSize " << bpLagsSize << endl;
-
-	unsigned int bpCrossSize = numSpectralPoint * numStokes * numTimestampsCorr * 2; // real + imag
-	vector<AxisName> bpCrossAxes;
-	bpCrossAxes.push_back(AxisNameMod::TIM);
-	bpCrossAxes.push_back(AxisNameMod::BAL);
-	bpCrossAxes.push_back(AxisNameMod::SPP); 
-	bpCrossAxes.push_back(AxisNameMod::POL);
-	SDMDataObject::BinaryPart bpCrossData(bpCrossSize, bpCrossAxes);
-	cout << "CrossSize " << bpCrossSize << endl;
-
-	unsigned int bpAutoSize = numSpectralPoint * numStokes * numTimestampsAuto;
-	vector<AxisName> bpAutoAxes;
-	bpAutoAxes.push_back(AxisNameMod::TIM);
-	bpAutoAxes.push_back(AxisNameMod::ANT);
-	bpAutoAxes.push_back(AxisNameMod::SPP); 
-	bpAutoAxes.push_back(AxisNameMod::POL);
-	SDMDataObject::AutoDataBinaryPart bpAutoData(bpAutoSize, bpAutoAxes, False); // not normalised
-	cout << "AutoSize " << bpAutoSize << endl;
-	
-	SDMDataObject::DataStruct dataStruct( apc, basebands, bpFlags, bpActualTimes, bpActualDurations, 
-					      bpZeroLags, bpCrossData, bpAutoData);	 
-
-	// Parameters of dataStruct:
-	//     	apc 	        a vector of AtmPhaseCorrection. If apc is not relevant pass an empty vector.
-	//     	basebands 	a vector of Baseband.
-	//     	flags 	        a BinaryPart object describing the flags. If flags is not relevant pass an 
-	//                      empty BinaryPart object.
-	//     	actualTimes 	a BinaryPart object describing the actual times. If actualTimes is not 
-        //                      relevant pass an empty BinaryPart object.
-	//     	actualDurations a BinaryPart object describing the actual durations. If actualDurations is 
-        //                      not relevant pass an empty BinaryPart object.
-	//     	zeroLags 	a ZeroLagsBinaryPart object describing the zero lags. If zeroLags is not 
-        //                      relevant pass an empty ZeroLagsBinaryPart object.
-	//     	crossData 	a BinaryPart object describing the cross data. If crossData is not relevant 
-        //                      pass an empty BinaryPart object.
-	//     	autoData 	an AutoDataBinaryPart object describing the auto data. If autoData is not 
-        //                      relevant pass an empty AutoDataBinaryPart object. 
-	
-	
-	// Write the global header.
-	sdmdow.corrDataHeader(startTime,
-			      getCurrentUid(), // execBlockUID
-			      execBlockNum,
-			      scanNum,
-			      subscanNum,
-			      numAntennas,        
-			      correlationMode,    // the correlation mode.
-			      spectralResolution, // the spectral resolution.
-			      dataStruct);        // the description of the structure of the binary data.
-	
-	//////////////////////////////////////////////////////
-	// write the integrations until timestamp exceeds limit
-	unsigned int integrationNum = 1;
 	while(mainTabRow < nMainTabRows 
-	      && scanNumber()(mainTabRow) == theScan 
-	      && time()(mainTabRow)<=subScanEndTime){
+	      && time()(mainTabRow)==theTStamp){
 	  
 	  DDId = dataDescId()(mainTabRow);
 	  if(DDId != theDDId){ // skip all other Data Description Ids
 	    mainTabRow++;
 	    continue;
 	  }
-
-	  unsigned long long timev = (unsigned long long) floor((time()(mainTabRow))*1E9); // what units? nanoseconds
-	  unsigned long long intervalv = (unsigned long long) floor(interval()(mainTabRow)*1E9);
-	  vector< unsigned long > flags;
-	  vector< long long > actualTimes;
-	  vector< long long > actualDurations;
-	  vector< float > zeroLags; // LAG_DATA, optional column, not used for the moment
-	  vector< float > crossData;
-	  // vector< short > crossData;
-	  // vector< int > crossData; // standard case for ALMA
-	  vector< float > autoData;	 
-
-	  ////////////////////////////////////////////////////////
-	  // fill data, time, and flag vectors for this timestamp
-	  Double theTStamp = time()(mainTabRow);
-
-	  // SORT the data by baseline and antenna resp.!!!!!!!!!!!!
-
-	  while(mainTabRow < nMainTabRows 
-	      && scanNumber()(mainTabRow) == theScan 
-	      && time()(mainTabRow)==theTStamp){
-
-	    DDId = dataDescId()(mainTabRow);
-	    if(DDId != theDDId){ // skip all other Data Description Ids
-	      mainTabRow++;
-	      continue;
-	    }
-
-	    Matrix<Complex> dat;
-	    Matrix<Bool> flagsm;
-	    if(datacolumn == "MODEL"){
-	      dat.reference(modelData()(mainTabRow));
-	    }
-	    else if(datacolumn == "CORRECTED"){
-	      dat.reference(correctedData()(mainTabRow));
-	    }
-	    else{
-	      dat.reference(data()(mainTabRow));
-	    }
-	    flagsm.reference(flag()(mainTabRow));
-
-	    if(antenna1()(mainTabRow) == antenna2()(mainTabRow)){
-	      Complex x;  
-	      float a;
-	      for(uInt i=0; i<numSpectralPoint; i++){
-		for(uInt j=0; j<numStokes; j++){
+	  
+	  Matrix<Complex> dat;
+	  Matrix<Bool> flagsm;
+	  if(datacolumn == "MODEL"){
+	    dat.reference(modelData()(mainTabRow));
+	  }
+	  else if(datacolumn == "CORRECTED"){
+	    dat.reference(correctedData()(mainTabRow));
+	  }
+	  else{
+	    dat.reference(data()(mainTabRow));
+	  }
+	  flagsm.reference(flag()(mainTabRow));
+	  
+	  if(antenna1()(mainTabRow) == antenna2()(mainTabRow)){
+	    Complex x;  
+	    float a;
+	    for(uInt i=0; i<numSpectralPoint; i++){
+	      for(uInt j=0; j<numStokesMS; j++){
+		if(skipCorr_p[j][PolId]){
+		  continue;
+		}
+		else{
 		  x = dat(j,i);
 		  a = x.real();
 		  autoData.push_back( a );
 		}
 	      }
 	    }
-	    else{
-	      Complex x;  
-	      float a,b;
-	      // int a,b;
-	      for(uInt i=0; i<numSpectralPoint; i++){
-		for(uInt j=0; j<numStokes; j++){
+	  }
+	  else{
+	    Complex x;  
+	    float a,b;
+	    // int a,b;
+	    for(uInt i=0; i<numSpectralPoint; i++){
+	      for(uInt j=0; j<numStokesMS; j++){
+		if(skipCorr_p[j][PolId]){
+		  continue;
+		}
+		else{
 		  x = dat(j,i);
 		  a = x.real();
 		  b = x.imag();
@@ -676,10 +668,15 @@ namespace casa {
 		  crossData.push_back( b );
 		}
 	      }
-	    }	
-	    unsigned long ul;
-	    for(uInt i=0; i<numSpectralPoint; i++){
-	      for(uInt j=0; j<numStokes; j++){
+	    }
+	  }	
+	  unsigned long ul;
+	  for(uInt i=0; i<numSpectralPoint; i++){
+	    for(uInt j=0; j<numStokes; j++){
+	      if(skipCorr_p[j][PolId]){
+		continue;
+	      }
+	      else{
 		if(flagRow()(mainTabRow)){
 		  ul = 1;
 		}
@@ -689,108 +686,83 @@ namespace casa {
 		flags.push_back( ul );
 	      }
 	    }
-	    // the following two lines only needed for data blanking
-	    //	    actualTimes.push_back((long long)floor(time()(mainTabRow))*1000.);
-	    //	    actualDurations.push_back((long long)floor(interval()(mainTabRow))*1000.);
-	    mainTabRow++;
-	  }// end while same timestamp
-	
-// 	  cout << "Sizes: " << endl;
-// 	  cout << "   flags " << flags.size() << endl;
-// 	  cout << "   actualTimes " << actualTimes.size() << endl;
-// 	  cout << "   actualDurations " << actualDurations.size() << endl;
-// 	  cout << "   zeroLags " << zeroLags.size() << endl;
-// 	  cout << "   crossData " << crossData.size() << endl;
-// 	  cout << "   autoData " << autoData.size() << endl;
-
-	  sdmdow.addIntegration(integrationNum,    // integration's index.
-				timev,              // midpoint
-				intervalv,          // time interval
-				flags,             // flags binary data 
-				actualTimes,       // actual times binary data      
-				actualDurations,   // actual durations binary data          
-				zeroLags,          // zero lags binary data                 
-				crossData,    // cross data (can be short or int)  
-				autoData);         // single dish data.                 
-	  integrationNum++;
-
-	  // (Note: subintegrations are used only for channel averaging to gain time res. by sacrificing spec. res.)
-
+	  }
+	  // the following two lines only needed for data blanking
+	  //	    actualTimes.push_back((long long)floor(time()(mainTabRow))*1000.);
+	  //	    actualDurations.push_back((long long)floor(interval()(mainTabRow))*1000.);
 	  mainTabRow++;
-	} // end while
+	}// end while same timestamp
+	
+	// 	  cout << "Sizes: " << endl;
+	// 	  cout << "   flags " << flags.size() << endl;
+	// 	  cout << "   actualTimes " << actualTimes.size() << endl;
+	// 	  cout << "   actualDurations " << actualDurations.size() << endl;
+	// 	  cout << "   zeroLags " << zeroLags.size() << endl;
+	// 	  cout << "   crossData " << crossData.size() << endl;
+	// 	  cout << "   autoData " << autoData.size() << endl;
+	
+	sdmdow.addIntegration(integrationNum,    // integration's index.
+			      timev,              // midpoint
+			      intervalv,          // time interval
+			      flags,             // flags binary data 
+			      actualTimes,       // actual times binary data      
+			      actualDurations,   // actual durations binary data          
+			      zeroLags,          // zero lags binary data                 
+			      crossData,    // cross data (can be short or int)  
+			      autoData);         // single dish data.                 
+	integrationNum++;
+	datasize += flags.size() * sizeof(unsigned long)
+	  + actualTimes.size() * sizeof( long long )
+	  + actualDurations.size() * sizeof( long long )
+	  + zeroLags.size() * sizeof( float )
+	  + crossData.size() * sizeof( float )
+	  + autoData.size() * sizeof( float );
+	numIntegrations++;
+	
+	// (Note: subintegrations are used only for channel averaging to gain time res. by sacrificing spec. res.)
+	
+	mainTabRow++;
+      } // end while
       
-	sdmdow.done();
-
-	ofs.close();
+      sdmdow.done();
       
-	// end write subscan
+      ofs.close();
       
-	// next subscan
-	subscanNum++;
-	incrementUid();
+      // end write subscan
+      
+      incrementUid();
             
-      } // end loop over main table rows
-      
     }
     catch(asdmbinaries::SDMDataObjectWriterException x){
       os << LogIO::SEVERE << "Error creating ASDM: " << x.getMessage()
 	 << LogIO::POST;      
-      return False;
+      return -1;
     }
     catch(asdmbinaries::SDMDataObjectException x){
       os << LogIO::SEVERE << "Error creating ASDM: " << x.getMessage()
 	 << LogIO::POST;      
-      return False;
+      return -1;
     }
     catch(AipsError y){
       os << LogIO::SEVERE << "Error creating ASDM: " << y.getMesg()
 	 << LogIO::POST;      
-      return False;
+      return -1;
     }      
     catch(std::string z){
       os << LogIO::SEVERE << "Error creating ASDM: " << z
 	 << LogIO::POST;      
-      return False;
+      return -1;
     }      
     catch(std::exception zz){
       os << LogIO::SEVERE << "Error creating ASDM: " << zz.what()
 	 << LogIO::POST;      
-      return False;
+      return -1;
     }      
+    
+    return numIntegrations;
 
-    return True;
-  } // end writeMainBinForOneDDId
+  } // end writeMainBinForOneDDIdAndSubScan
 
-
-  Bool MS2ASDM::writeMainBin(const String& datacolumn){
-
-    LogIO os(LogOrigin("MS2ASDM", "writeMainBin()"));
-
-    Bool rstat = True;
-
-    // check if datacolumn exists
-
-    if( (datacolumn == "CORRECTED" && !ms_p.tableDesc().isColumn("CORRECTED_DATA"))
-	|| (datacolumn == "MODEL" && !ms_p.tableDesc().isColumn("MODEL_DATA"))
-	|| (datacolumn == "DATA" && !ms_p.tableDesc().isColumn("DATA"))
-	){
-      os << LogIO::SEVERE << "Error: column " << datacolumn << " does not exist in "
-	 << ms_p.tableName() << LogIO::POST;      
-      return False;
-    }
-    else{
-      os << LogIO::NORMAL << "Using column " << datacolumn << "." << LogIO::POST;      
-    }      
-
-    for(uInt ddId=0; ddId<dataDescription().nrow(); ddId++){
-      if(!writeMainBinForOneDDId(ddId, datacolumn)){
-	rstat = False;
-	break;
-      }
-    }
-
-    return rstat;
-  } // end writeMainBin
 
   /////////////////////////////////////
   //   // Pattern for wrting a non-binary table:
@@ -1035,7 +1007,11 @@ namespace casa {
 
     asdm::PolarizationRow* tR = 0;
 
+    skipCorr_p.resize(0); 
+
     for(uInt irow=0; irow<polarization().nrow(); irow++){
+
+      vector< Bool > skipCorr;
 
       // parameters of the new row
 
@@ -1045,22 +1021,28 @@ namespace casa {
       Vector< Int > v; // aux. vector
       v.reference( polarization().corrType()(irow) );
       for(uInt i=0; i<v.nelements(); i++){
+	Bool skip = True;
 	Stokes::StokesTypes st = static_cast<Stokes::StokesTypes>(v[i]);
 	if(st == Stokes::LR){ // only add if RL is not also present
 	  if(!stokesTypePresent(v, Stokes::RL)){
 	    corrTypeV.push_back( ASDMStokesParameter( st ) );
+	    skip = False;
 	  }
 	}
 	else if(st == Stokes::YX){ // only add if XY is not also present
 	  if(!stokesTypePresent(v, Stokes::XY)){
 	    corrTypeV.push_back( ASDMStokesParameter( st ) );
+	    skip = False;
 	  }
 	}
 	else{
 	  corrTypeV.push_back( ASDMStokesParameter( st ) );
+	  skip = False;
 	}
+	skipCorr.push_back(skip);
       }
       int numCorr = corrTypeV.size(); 
+      skipCorr_p.push_back(skipCorr);
 
       // now read the just created corrTypeV and write the correlation products accordingly
       for(uInt i=0; i<corrTypeV.size(); i++){
@@ -2614,10 +2596,7 @@ namespace casa {
 
 	  tR2 = tT.add(tR);
 	  Tag newTag = tR2->getConfigDescriptionId();
-	  Double tStamp = time()(irow);
-	  if(!asdmConfigDescriptionId_p.isDefined(tStamp)){
-	    asdmConfigDescriptionId_p.define(tStamp, newTag); // memorize tag for every timestamp
-	  }
+	  asdmConfigDescriptionId_p.define(irow, newTag); // memorize tag for every row (to keep it simple)
 
 	  mainTabRow = irow;
 
@@ -2653,7 +2632,8 @@ namespace casa {
 
     SimpleOrderedMap <asdm::Tag, Double> execBlockStartTime(-1.); // map from SBSummaryID to current execblock start time
     SimpleOrderedMap <asdm::Tag, Double> execBlockEndTime(-1.); // map from SBSummaryID to current execblock start time
-    SimpleOrderedMap <asdm::Tag, asdm::ConfigDescriptionRow*> correspConfigDescRow(0); // map from SBSummaryID to the ConfigDescription row of current exec block
+    SimpleOrderedMap <asdm::Tag, asdm::ConfigDescriptionRow*> correspConfigDescRow(0); // map from SBSummaryID to the 
+                                                                             // ConfigDescription row of current exec block
     SimpleOrderedMap <asdm::Tag, Int> execBlockNumber(0); // map from SBSummaryID to current execblock number
     SimpleOrderedMap <asdm::Tag, Int> obsIdFromSBSum(-1); // map from SBSummaryID to current obs ID
     SimpleOrderedMap <asdm::Tag, Double> minBaseline(0.); // map from SBSummaryID to minimum baseline of current exec block
@@ -2746,7 +2726,7 @@ namespace casa {
       Tag sBSummaryTag = tR2->getSBSummaryId();
       if(tR2 != tR){ // adding the row led to the creation of a new tag
 	if(asdmSBSummaryId_p.isDefined(sbKey)){
-	  os << LogIO::WARN << "There is more than one scheduling block necessry for the obsid - spwid pair (" 
+	  os << LogIO::WARN << "There is more than one scheduling block necessary for the obsid - spwid pair (" 
 	     << obsId << ", " << spwId << ").\n This can presently not yet be handled properly." << LogIO::POST;
 	}
 	else{
@@ -2760,6 +2740,7 @@ namespace casa {
 
       // has the exec block been started already?
       if(execBlockStartTime.isDefined(sBSummaryTag)){ // yes
+
 	// continue accumulation of min and max baseline
 	Double baseLine = MVBaseline( (antenna().positionMeas()(antenna1()(mainTabRow))).getValue(),
 				      (antenna().positionMeas()(antenna2()(mainTabRow))).getValue()
@@ -2817,7 +2798,14 @@ namespace casa {
 			   baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, 
 			   aborted, numAntenna, antennaId, sBSummaryTag);
 	  
-	  tET.add(tER);
+	  asdm::ExecBlockRow* tER2;
+
+	  tER2 = tET.add(tER);
+	  if(tER2 != tER){
+	    os << LogIO::SEVERE << "Internal error: attempt to store duplicate exec block row." << LogIO::POST;
+	    return False;
+	  }
+	  asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
 
 	  // undefine the mapping for this Tag since the ExecBlock was completed
 	  execBlockStartTime.remove(sBSummaryTag);
@@ -2833,6 +2821,7 @@ namespace casa {
 	}
       } 
       else{// no, it has not been started, yet
+
 	execBlockStartTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s"));
 	execBlockEndTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s")+ intervalQuant()(mainTabRow).getValue("s")); // will be updated
 	Int oldNum = 0;
@@ -2845,7 +2834,7 @@ namespace casa {
 
 	obsIdFromSBSum.define(sBSummaryTag, obsId); // remember the obsId for this exec block
 
-	asdm::ConfigDescriptionRow* cDR = (ASDM_p->getConfigDescription()).getRowByKey(asdmConfigDescriptionId_p(time()(mainTabRow)));
+	asdm::ConfigDescriptionRow* cDR = (ASDM_p->getConfigDescription()).getRowByKey(asdmConfigDescriptionId_p(mainTabRow));
 	if(cDR == 0){
 	  os << LogIO::SEVERE << "Internal error: cannot find matching config description for MS main table row "
 	     << mainTabRow << LogIO::POST;
@@ -2905,7 +2894,14 @@ namespace casa {
 		       baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, 
 		       aborted, numAntenna, antennaId, sBSummaryTag);
       
-      tET.add(tER);
+      asdm::ExecBlockRow* tER2;
+      
+      tER2 = tET.add(tER);
+      if(tER2 != tER){
+	os << LogIO::SEVERE << "Internal error: attempt to store duplicate exec block row." << LogIO::POST;
+	return False;
+      }
+      asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
 
       // undefine the mapping for this Tag since the ExecBlock was completed
       execBlockStartTime.remove(sBSummaryTag); // need only remove from the map which is tested
@@ -2932,30 +2928,236 @@ namespace casa {
     
   }
 
-  Bool MS2ASDM::writeScan(){
-    LogIO os(LogOrigin("MS2ASDM", "writeScan()"));
-
+  Bool MS2ASDM::writeMainAndScanAndSubScan(const String& datacolumn){
+    LogIO os(LogOrigin("MS2ASDM", "writeMainAndScanAndSubScan()"));
+    
     Bool rstat = True;
+    
+    // check if datacolumn exists
+    
+    if( (datacolumn == "CORRECTED" && !ms_p.tableDesc().isColumn("CORRECTED_DATA"))
+	|| (datacolumn == "MODEL" && !ms_p.tableDesc().isColumn("MODEL_DATA"))
+	|| (datacolumn == "DATA" && !ms_p.tableDesc().isColumn("DATA"))
+	){
+      os << LogIO::SEVERE << "Error: column " << datacolumn << " does not exist in "
+	 << ms_p.tableName() << LogIO::POST;      
+      return False;
+    }
+    else{
+      os << LogIO::NORMAL << "Using column " << datacolumn << "." << LogIO::POST;      
+    }      
+    
+    asdm::MainTable& tT = ASDM_p->getMain();
+    asdm::MainRow* tR = 0;
+    
+    asdm::ScanTable& tST = ASDM_p->getScan();
+    asdm::ScanRow* tSR = 0;
+    
+    asdm::SubscanTable& tSST = ASDM_p->getSubscan();
+    asdm::SubscanRow* tSSR = 0;
+    
+    
+    // Scheme
+    // loop over main table
+    //   asdmExecBlockId_p(time()(mainTabRow) defined?
+    //   if so, a new exec block has started
+    //      is there a previous exec block?
+    //        if so, finish it
+    //      set up new exec block
+    //      set scanNumber to 1
+    //      set subscanNumber to 1
+    //   end if
+    //   while(scan not finished)
+    //      find all DDIds in the time between now and now+subscanduration or until Scan ends
+    //        and memorize their start rows
+    //      for each DDId found
+    //        Construct subscan == SDMDataObject
+    //           using the ConfigDescription table row asdmConfigDescriptionId_p(startRow)
+    //        and write it
+    //        write corresponding Main table row and subscan table row
+    //        subscanNumber++
+    //      end for
+    //      next mainTabRow
+    //      error if asdmExecBlockId_p(time()(mainTabRow) defined: 
+    //   end while
+    //   write scan table row
+    //   scanNumber++
+    // end loop (i.e. next main table row)  
+    
+    
+    ////////////////////////////////////////////////
+    // Prepare loop over main table
+    Double scanStart;
+    
+    Tag execBlockId = Tag();
+    int subscanNumber;
+    // parameters for the new Scan table row
+    int scanNumber;
+    ArrayTime scanStartTime;
+    ArrayTime scanEndTime;
+    int scanNumIntent;
+    int numSubScan;
+    vector< ScanIntentMod::ScanIntent > scanIntent;
+    vector< CalDataOriginMod::CalDataOrigin > scanCalDataType;
+    vector< bool > scanCalibrationOnLine;
+    bool scanFlagRow = False; // always false ???
+    
+    uInt nMainTabRows = ms_p.nrow();
+    for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
+      
+      Double rowTime = timeQuant()(mainTabRow).getValue("s");
+      
+      //   asdmExecBlockId_p(time()(mainTabRow) defined?
+      if(asdmExecBlockId_p.isDefined(time()(mainTabRow))){ // a new exec block has started
+	// is there a previous exec block?
+	if(execBlockId != Tag()){
+	  //  finish the old exec block
+	}
+	// set up new exec block
+	// parameters for the first scan
+	execBlockId = asdmExecBlockId_p(mainTabRow);
+	asdm::ExecBlockRow* EBR = (ASDM_p->getExecBlock()).getRowByKey(execBlockId);
+	scanNumber = 1; // ASDM scan numbering starts at 1
+        subscanNumber = 1; // dito for subscans
+	scanStart = rowTime;
+	scanStartTime = ASDMArrayTime( scanStart );
+	scanEndTime = EBR->getEndTime(); // preset to the end of the execblock
+	scanNumIntent = 0;
+	numSubScan = 0;
+	scanIntent.resize(0);
+	scanCalDataType.resize(0);
+	scanCalibrationOnLine.resize(0);
+	scanFlagRow = False;
+      } // end if a new exec block has started
+      else if(execBlockId == Tag()){
+	cout << "Encoutered main tab row " << mainTabRow << " which is not part of an execblock." << endl;
+	continue;
+      }
+      
+      // while(scan not finished)
+      while( mainTabRow<nMainTabRows && 
+	     (rowTime = timeQuant()(mainTabRow).getValue("s")) < MSTimeSecs(scanEndTime) ){ // presently one scan per exec block ???
+	
+	// parameters for the new SubScan table row
+	ArrayTime subScanStartTime = ASDMArrayTime(rowTime); 
+	ArrayTime subScanEndTime = ASDMArrayTime(rowTime + subscanDuration_p); 
+	if(subScanEndTime > scanEndTime){
+	  subScanEndTime = scanEndTime;
+	}
+	string fieldName = field().name()(fieldId()(mainTabRow)).c_str(); 
+	SubscanIntentMod::SubscanIntent subscanIntent = SubscanIntentMod::ON_SOURCE;
+	vector< int > numberSubintegration;
+	bool flagRow = False;
+	
+	// find all DDIds in the time between now and end of subscan
+	uInt irow = mainTabRow;
+	SimpleOrderedMap< Int, uInt > subScanStartRows(0);
+	while(irow<nMainTabRows &&
+	      ASDMArrayTime(timeQuant()(irow).getValue("s"))< subScanEndTime){
+	  Int ddId = dataDescId()(irow);
+	  if(!subScanStartRows.isDefined(ddId)){
+	    subScanStartRows.define(ddId, irow);    // memorize their start rows
+	  }
+	  irow++;
+	}
+	
+	// for each DDId found
+	for(uInt ddIndex=0; ddIndex < subScanStartRows.ndefined(); ddIndex++){
+	  // write subscan 
+	  Int theDDId = subScanStartRows.getKey(ddIndex);
+	  uInt startRow = subScanStartRows(theDDId);
+	  
+	  // parameters for the corresponding new Main table row
+	  ArrayTime mainTime = ASDMArrayTime(timeQuant()(startRow).getValue("s"));
+	  Tag configDescriptionId = asdmConfigDescriptionId_p(startRow);
+	  asdm::ConfigDescriptionRow* CDR = (ASDM_p->getConfigDescription()).getRowByKey(configDescriptionId);
+	  Tag fieldIdTag = asdmFieldId_p(fieldId()(startRow));
+	  int numAntenna = CDR->getNumAntenna();
+	  TimeSamplingMod::TimeSampling timeSampling = TimeSamplingMod::INTEGRATION;
+	  Interval interval = ASDMInterval(intervalQuant()(startRow).getValue("s"));
+	  int numIntegration; // to be set by the following method call
+	  int dataSize; // "
+	  EntityRef dataOid; // "
+	  vector< Tag > stateIdV; // "
+	  
+	  numIntegration = writeMainBinForOneDDIdAndSubScan(theDDId, datacolumn, 
+							    scanNumber, subscanNumber,
+							    startRow, MSTimeSecs(subScanEndTime),
+							    execBlockId,
+							    dataSize, dataOid, stateIdV);
+	  if(numIntegration<0){ // error!
+	    os << LogIO::SEVERE << "Error writing Subscan starting at main table row " 
+	       << startRow << LogIO::POST;
+	    return False;
+	  }
 
+	  for(uInt i=0; i<(uInt)numIntegration; i++){
+	    numberSubintegration.push_back(0); // no subintegrations for the moment, no channel averaging (???)
+	  }
+	  
+	  // end write subscan
+	  
+	  // write corresponding Main table row
+	  tR = tT.newRow(mainTime, configDescriptionId, fieldIdTag, numAntenna, timeSampling, interval, numIntegration, 
+			 scanNumber, subscanNumber, dataSize, dataOid, stateIdV, execBlockId);
+	  tT.add(tR);
+	  
+	  // write corresponding Subscan table row
+	  
+	  tSSR = tSST.newRow(execBlockId, scanNumber, subscanNumber, subScanStartTime, subScanEndTime, fieldName, subscanIntent, 
+			     numIntegration, numberSubintegration, flagRow);
+	  
+	  tSST.add(tSSR);
+	  
+	  subscanNumber++;
+	  numSubScan++;
+          
+	} // end loop over DD indices
+	// update mainTabRow
+	mainTabRow = irow;
+      } // end while scan continues
+      // scan finished
+      // complete and write scan table row	
+      scanEndTime = ArrayTime( timeQuant()(mainTabRow-1).getValue("s") + intervalQuant()(mainTabRow-1).getValue("s") );	  
+      scanNumIntent = 1; // hardwired (???)
+      for(uInt i=0; i<(uInt)scanNumIntent; i++){
+	scanIntent.push_back(ScanIntentMod::OBSERVE_TARGET); // hardwired for the moment (???)
+	scanCalDataType.push_back(CalDataOriginMod::FULL_RESOLUTION_CROSS); // hardwired for the moment (???)
+	scanCalibrationOnLine.push_back(False); // hardwired for the moment (???)
+      }
+
+      tSR = tST.newRow(execBlockId, scanNumber, scanStartTime, scanEndTime, scanNumIntent, numSubScan, scanIntent, 
+		       scanCalDataType, scanCalibrationOnLine, scanFlagRow);
+      
+      tST.add(tSR);
+      
+      scanNumber++;
+      
+    }//  end for
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Main table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    incrementUid();
+    
+    theUid = getCurrentUid();
+    ent = tST.getEntity();
+    ent.setEntityId(theUid);
+    tST.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Scan table " << getCurrentUid() << " with " << tST.size() << " rows ..." << LogIO::POST;
+    incrementUid();
+    
+    theUid = getCurrentUid();
+    ent = tSST.getEntity();
+    ent.setEntityId(theUid);
+    tSST.setEntity(ent);
+    os << LogIO::NORMAL << "Filled SubScan table " << getCurrentUid() << " with " << tSST.size() << " rows ..." << LogIO::POST;
+    incrementUid();
+    
     return rstat;
   }
-
-  Bool MS2ASDM::writeSubScan(){
-    LogIO os(LogOrigin("MS2ASDM", "writeSubScan()"));
-
-    Bool rstat = True;
-
-    return rstat;
-  }
-
-  Bool MS2ASDM::writeMain(){
-    LogIO os(LogOrigin("MS2ASDM", "writeMain()"));
-
-    Bool rstat = True;
-
-    return rstat;
-  }
-
 
   StokesParameterMod::StokesParameter MS2ASDM::ASDMStokesParameter( Stokes::StokesTypes s) {
     switch (s) {

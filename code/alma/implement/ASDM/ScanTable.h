@@ -444,7 +444,7 @@ public:
 	ScanRow* lookup(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow); 
 
 
-private:
+// private:
 
 	/**
 	 * Create a ScanTable.

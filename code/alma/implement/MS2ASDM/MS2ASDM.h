@@ -39,6 +39,7 @@
 #include <alma/ASDM/Length.h>
 #include <alma/ASDM/Temperature.h>
 #include <alma/ASDM/ArrayTimeInterval.h>
+#include <alma/ASDM/EntityRef.h>
 #include <alma/Enumerations/CStokesParameter.h>
 #include <alma/Enumerations/CAntennaType.h>
 #include <alma/Enumerations/CBasebandName.h>
@@ -123,6 +124,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // convert time in seconds to an array time
   ArrayTime ASDMArrayTime( const Double seconds ){ 
     return ArrayTime((long long) (floor(seconds*ArrayTime::unitsInASecond))); }
+
+  // convert array time to time in seconds
+  Double MSTimeSecs( const ArrayTime atime ){ 
+    return (Double) atime.get() / (Double)ArrayTime::unitsInASecond; }
 
   asdm::Interval ASDMInterval( const Double seconds ){ 
     return asdm::Interval((long) (floor(seconds*ArrayTime::unitsInASecond))); }
@@ -212,19 +217,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //    several ASDM subscans.
 
   Bool writeSBSummaryAndExecBlockStubs(); // "stubs" because these table will be completed later
-                             //  with information from the APDM
-  Bool writeScan();
+                                          //  with information from the APDM
+  Bool writeMainAndScanAndSubScan(const String& datacolumn);
 
-  Bool writeSubScan();
-
-  Bool writeMain();
-
-  // write the binary part of the ASDM main table
-  Bool writeMainBin(const String& datacolumn);
-
-  Bool writeMainBinForOneDDId(const Int dataDescId,
-			   const String& datacolumn);
-
+  // write the Main binary data for one DataDescId and one SubScan
+  // (return number of integrations written and set the last three parameters in the list)
+  Int writeMainBinForOneDDIdAndSubScan(const Int theDDId, const String& datacolumn, 
+				       const uInt theScan, const uInt theSubScan,
+				       const uInt startRow, const Double endTime,
+				       const asdm::Tag eBlockId,
+				       int& datasize, asdm::EntityRef& dataOid, 
+				       vector< asdm::Tag >& stateId);
+    
   // *** Aux. methods ***
 
   // check if vector corrT already contains a stokes type equivalent to st
@@ -266,9 +270,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmDataDescriptionId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmStateId_p;
-  SimpleOrderedMap <Double, asdm::Tag> asdmConfigDescriptionId_p; // maps from MS Main timestamps
+  SimpleOrderedMap <uInt, asdm::Tag> asdmConfigDescriptionId_p; // maps from MS Main rows
   SimpleOrderedMap <Int, asdm::Tag> asdmSBSummaryId_p; // maps from MS Observation Id + 10000*SpwId
+  SimpleOrderedMap <Double, asdm::Tag> asdmExecBlockId_p; // maps from MS Main timestamps 
   SimpleOrderedMap <Int, int> asdmFeedId_p; // ASDM feed id is not a Tag
+
+  vector< vector< Bool > > skipCorr_p; // skipCorr_p[j][PolId] indicates that correlation 
+                                       // product j for POLARIZATION_ID PolId should not 
+                                       // be written in the ASDM
 
 };
 
