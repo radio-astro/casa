@@ -80,49 +80,54 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         #setup for 'per channel' clean
         dochaniter=False
         if interactive and chaniter:
-            if veltype=="optical":
-                raise Exception, 'The chaniter=True interactive clean for optical velocity mode is not implemented yet.'
+        #    if veltype=="optical":
+        #        raise Exception, 'The chaniter=True interactive clean for optical velocity mode is not implemented yet.'
             if localnchan > 1:
                 dochaniter=True
+
+        # make a template cube for interactive chanter=T
+        if dochaniter:
+            #print "Now setup template cubes"
+            imset.makeTemplateCubes(imagename,outlierfile, field, spw, selectdata,
+                                    timerange, uvrange, antenna, scan, mode, facets, cfcache, 
+                                    interpolation, imagermode, localFTMachine, mosweight, 
+                                    localnchan, localstart, localwidth, outframe, veltype, imsize, cell, 
+                                    phasecenter, restfreq, stokes, weighting,
+                                    robust, uvtaper, outertaper, innertaper, modelimage, 
+                                    restoringbeam, calready, noise, npixels, padding)
 
         if dochaniter:
             nchaniter=localnchan
             finalimagename=imagename
             if type(finalimagename)==str:
                 finalimagename=[finalimagename]
+            imset.finalimages=finalimagename
+            # move the following to a helper func.
             # create a temporary directory to put channel images
-            tmpdir='_tmpimdir/'
-            tmppath=[]
-            for imname in finalimagename:
-                if os.path.dirname(imname)=='':
-                    #tmppath=tmpdir
-                    tmppath.append(tmpdir)
-                else:
-                    #tmppath=os.path.dirname(imname)+'/'+tmpdir
-                    tmppath.append(os.path.dirname(imname)+'/'+tmpdir)
-                if os.path.isdir(tmppath[-1]):
-                    os.system('rm -rf '+tmppath[-1])
-                os.mkdir(tmppath[-1])
-
-            #internally converted to frequency mode for mode='channel'
-            #to ensure correct frequency axis for output image
-            # put in helper function
-            if mode == 'channel':
-                freqs, finc = imset.getfreqs(localnchan, spw, localstart, localwidth)
-                mode = 'frequency'
+            (freqs,finc,newmode,tmppath)=imset.initChaniter(localnchan,spw,localstart,localwidth,finalimagename,mode)
+            mode=newmode
         else:
             nchaniter=1
             finalimagename=''
-
+         
         # loop over channels for per-channel clean
         for j in xrange(nchaniter):
             if dochaniter:
-                imset.maskimages={}
-                imagename=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(j)
-                           for indx, imn in enumerate(finalimagename)]
+#                imset.maskimages={}
+#                imagename=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(j)
+#                           for indx, imn in enumerate(finalimagename)]
+#
+#                print "Processing for channel %s starts..." % j
+#                casalog.post("Processing channel %s "% j)
+                chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
+                imagename=chaniterParms['imagename']
+                imnchan=chaniterParms['imnchan']
+                chanslice=chaniterParms['chanslice']
+                localwidth=chaniterParms['width']
+                imstart=chaniterParms['imstart']
+                visnchan=chaniterParms['visnchan']
+                visstart=chaniterParms['visstart']
 
-                print "Processing for channel %s starts..." % j
-                casalog.post("Processing channel %s "% j)
 
             # change to handle multifield masks
             maskimage=''
@@ -164,6 +169,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode, 
                                           multiscale, multifield, facets, nterms,
                                           'clark');
+
 
             ###PBCOR or not 
             sclt='SAULT'
@@ -251,8 +257,12 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 for k in range(len(imset.maskimages)):
                     maskimage.append(imset.maskimages[imset.imagelist[k]])
 
-            if imset.skipclean: # for chaniter=T, and if the channel is flagged.
-                imset.makeEmptyimages()
+            if dochaniter:
+                imset.checkpsf(chanslice)
+                if imset.skipclean: # for chaniter=T, and if the channel is flagged.
+                    imset.makeEmptyimages()
+                    casalog.post('No valid data, skip CLEANing this channel','WARN') 
+
             imCln.setoptions(ftmachine=localFTMachine,
                              wprojplanes=wprojplanes,
                              freqinterp=interpolation, padding=padding,
@@ -276,42 +286,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             #                 outputmodel=imagename+'.model')
             if modelimage != '' and modelimage != []:
                 if dochaniter:
-                    chanmodimg=[]
-                    if type(modelimage)==str:
-                        modelimage=[modelimage]
-                    for modimg in modelimage:
-                         if type(modimg)==list:
-                             chanmodimg=[]
-                             for img in modimg:
-                                 if os.path.dirname(img) != '':
-                                     chanmodimg.append(tmppath[0]
-                                                       + '_tmp.' +
-                                                       os.path.basename(img))
-                                 else:
-                                     chanmodimg.append(tmppath[0] +
-                                                       '_tmp.' + img)
-                                 imset.getchanimage(cubeimage=img,
-                                                    outim=chanmodimg[-1],
-                                                    chan=j)
-                             imset.convertmodelimage(modelimages=chanmodimg,
-                                 outputmodel=imset.imagelist.values()[0]+'.model')
-                             chanmodimg=[]
-                         else:
-                             if os.path.dirname(modimg) != '':
-                                 chanmodimg.append(tmppath[0] + '_tmp.' +
-                                                   os.path.basename(modimg))
-                             else:
-                                 chanmodimg.append(tmppath[0] + '_tmp.' +
-                                                   modimg)
-                             imset.getchanimage(cubeimage=modimg,
-                                                outim=chanmodimg[-1],chan=j)
-
-                             imset.convertmodelimage(modelimages=chanmodimg,
-                                    outputmodel=imset.imagelist.values()[0]+'.model')
-                         # clean up tempoarary channel model image
-                         for img in chanmodimg:
-                             if os.path.exists(img):
-                                 os.system('rm -rf ' + img)
+                    imset.defineChaniterModelimages(modelimage,j,tmppath)
                 else:
                     imset.convertmodelimage(modelimages=modelimage,
                                     outputmodel=imset.imagelist.values()[0]+'.model')
@@ -441,7 +416,11 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 if interactive:
                     for psfim in psfimage:
                         if not os.path.isdir(psfim):
-                            imCln.approximatepsf(psf=psfim)
+                            imCln.approximatepsf(psf=psfim) 
+            
+            if dochaniter:
+                imset.storeCubeImages(finalimagename,imset.imagelist,j,imagermode)
+                
         imCln.close()
         #
         # If MS-MFS was used, comput alpha (spectral index)
@@ -455,38 +434,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              namebeta=imset.imagelist[0]+'.restored.beta',
                              threshold=0.01)
 
-        if len(finalimagename)!=0:
-            imagext = ['.image','.model','.flux','.residual','.psf','.mask']
-            if imagermode=='mosaic':
-                imagext.append('.flux.pbcoverage')
-
-            for indx, imf in enumerate(finalimagename):
-                for imext in imagext:
-                    if os.path.isdir(tmppath[indx] + os.path.basename(imf)
-                                     + '.ch0' + imext):
-                        ia.imageconcat(outfile=imf+imext,
-                                       infiles=[tmppath[indx]+os.path.basename(imf)+'.ch'+
-                                                str(chno)+imext for chno in xrange(localnchan)],
-                                       relax=True, overwrite=True)
-                        ia.close()
-                        #os.system('rm -rf %s' % tmpdir+imf+'.ch*'+imext)
-                # concat text files
-                masktextf=open(imf+imagext[-1]+'.text','w')
-                for k in xrange(localnchan):
-                    if os.path.isfile(tmppath[indx] + os.path.basename(imf)
-                                      + '.ch' + str(k) + imagext[-1] + '.text'):
-                        masktextf.write(str(k)+'\n')
-                        shutil.copyfileobj(open(tmppath[indx] +
-                                                os.path.basename(imf) +
-                                                '.ch'+str(k)+imagext[-1] +
-                                                '.text'), masktextf)
-                masktextf.close()
-                #os.system('rm -rf %s' % tmppath[indx]+os.path.basename(imf)+'.ch*'+imext[-1]+'.text')
-            # clean up temp. directory
-            for k in range(len(finalimagename)):
-                if os.path.isdir(tmppath[k]):
-                    #print tmppath[k], " exists, removing..."
-                    os.system('rm -rf %s' % tmppath[k])
         if dochaniter:
             imset.imagelist=finalimagename
         presdir=os.path.realpath('.')
