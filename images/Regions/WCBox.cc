@@ -46,7 +46,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/LinearSearch.h>
 #include <casa/BasicSL/String.h>
-#include <measures/measures/Measures/Stokes.h>
+#include <measures/Measures/Stokes.h>
 
 #include <casa/iostream.h>
 #include <casa/sstream.h>
