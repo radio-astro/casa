@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SpectralElement.h 20628 2009-06-12 02:56:35Z gervandiepen $
+//# $Id: SpectralElement.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef COMPONENTS_SPECTRALELEMENT_H
 #define COMPONENTS_SPECTRALELEMENT_H

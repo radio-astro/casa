@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprDerNode.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprDerNode.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/ExprDerNode.h>
 #include <tables/Tables/Table.h>
@@ -97,13 +97,13 @@ TableExprNodeConstString::~TableExprNodeConstString()
 String TableExprNodeConstString::getString (const TableExprId&)
     { return value_p; }
 
-TableExprNodeConstRegex::TableExprNodeConstRegex (const Regex& val)
+TableExprNodeConstRegex::TableExprNodeConstRegex (const TaqlRegex& val)
 : TableExprNodeBinary (NTRegex, VTScalar, OtLiteral, Table()),
   value_p             (val)
 {}
 TableExprNodeConstRegex::~TableExprNodeConstRegex()
 {}
-Regex TableExprNodeConstRegex::getRegex (const TableExprId&)
+TaqlRegex TableExprNodeConstRegex::getRegex (const TableExprId&)
     { return value_p; }
 
 TableExprNodeConstDate::TableExprNodeConstDate (const MVTime& val)

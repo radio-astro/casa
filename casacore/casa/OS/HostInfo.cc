@@ -35,7 +35,7 @@
 #include <sys/utsname.h>
 
 // Time related includes
-#if defined(AIPS_SOLARIS) || defined(_AIX) || defined(AIPS_IRIX) || defined(AIPS_DARWIN) || defined(AIPS_CRAY_PGI)
+#if defined(AIPS_SOLARIS) || defined(_AIX) || defined(AIPS_IRIX) || defined(AIPS_DARWIN) || defined(AIPS_CRAY_PGI) || defined(AIPS_BSD)
 #include <sys/time.h>
 #elif defined(AIPS_OSF)
 #include <sys/timers.h>
@@ -87,7 +87,7 @@ Double HostInfo::secondsFrom1970()
     total += tp.tv_usec * 0.000001;
     return total;
 }
-#elif defined(AIPS_SOLARIS) || defined(_AIX) || defined(AIPS_IRIX) || defined(AIPS_DARWIN) || defined(AIPS_CRAY_PGI)
+#elif defined(AIPS_SOLARIS) || defined(_AIX) || defined(AIPS_IRIX) || defined(AIPS_DARWIN) || defined(AIPS_CRAY_PGI) || defined(AIPS_BSD)
 Double HostInfo::secondsFrom1970()
 {
     struct timeval  tp;
@@ -242,6 +242,13 @@ HOSTINFO_IMPLEMENT_MEMBERS
 
 #elif defined(__APPLE__)
 #include <casa/OS/HostInfoDarwin.h>
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+HOSTINFO_IMPLEMENT_MEMBERS
+} //# NAMESPACE CASA - END
+
+#elif defined(AIPS_BSD)
+#include <casa/OS/HostInfoBsd.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 HOSTINFO_IMPLEMENT_MEMBERS

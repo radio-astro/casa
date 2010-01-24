@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledColumnStMan.cc 19068 2005-11-11 14:54:40Z gvandiep $
+//# $Id: TiledColumnStMan.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/TiledColumnStMan.h>
 #include <tables/Tables/TSMColumn.h>

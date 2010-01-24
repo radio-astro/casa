@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMCube.h 20636 2009-06-16 05:36:26Z gervandiepen $
+//# $Id: TSMCube.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef TABLES_TSMCUBE_H
 #define TABLES_TSMCUBE_H

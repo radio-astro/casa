@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketFile.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: BucketFile.cc 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 
 //# Includes
@@ -38,7 +38,7 @@
 #include <errno.h>                // needed for errno
 #include <casa/string.h>          // needed for strerror
 
-#if defined(AIPS_DARWIN)
+#if defined(AIPS_DARWIN) || defined(AIPS_BSD)
 #undef trace3OPEN
 #define trace3OPEN open
 #undef trace2OPEN

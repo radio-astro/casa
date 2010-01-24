@@ -35,7 +35,7 @@
 **                        William LeFebvre  <lefebvre@dis.anl.gov>
 **                        Rainer Orth       <ro@techfak.uni-bielefeld.de>
 **
-** $Id: HostInfoDarwin.h 20699 2009-09-02 12:21:07Z gervandiepen $
+** $Id: HostInfoDarwin.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 **
 */
 

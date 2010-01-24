@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogTables.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: LogTables.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #if !defined (AIPS_MODULE_LOGTABLES_H)

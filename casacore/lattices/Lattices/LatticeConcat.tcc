@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeConcat.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: LatticeConcat.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 
 #include <lattices/Lattices/LatticeConcat.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Functionals.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: Functionals.h 20670 2009-07-10 01:43:43Z Malte.Marquarding $
 
 
 #ifndef SCIMATH_FUNCTIONALS_H

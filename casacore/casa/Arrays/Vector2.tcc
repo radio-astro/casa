@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Vector2.tcc 19863 2007-02-13 05:05:39Z Malte.Marquarding $
+//# $Id: Vector2.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Arrays/Vector.h>
 #include <casa/stdvector.h>

@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: TableGram.ll 20630 2009-06-12 04:14:37Z gervandiepen $
+    $Id: TableGram.ll 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -98,6 +98,8 @@ SELECT    [Ss][Ee][Ll][Ee][Cc][Tt]
 UPDATE    [Uu][Pp][Dd][Aa][Tt][Ee]
 INSERT    [Ii][Nn][Ss][Ee][Rr][Tt]
 DELETE    [Dd][Ee][Ll][Ee][Tt][Ee]
+COUNT     [Cc][Oo][Uu][Nn][Tt]
+GCOUNT    [Cc][Oo][Uu][Nn][Tt]{WHITE}"("{WHITE}"*"?{WHITE}")"
 CALC      [Cc][Aa][Ll][Cc]
 CREATETAB [Cc][Rr][Ee][Aa][Tt][Ee]{WHITE}[Tt][Aa][Bb][Ll][Ee]{WHITE1}
 DMINFO    [Dd][Mm][Ii][Nn][Ff][Oo]
@@ -149,8 +151,14 @@ PATT1     p\/[^/]+\/
 PATT2     p%[^%]+%
 PATT3     p#[^#]+#
 PATT      {PATT1}|{PATT2}|{PATT3}
+PATTEX    ({REGEX}|{FREGEX}|{PATT})i?
+DIST1     d\/[^/]+\/
+DIST2     d%[^%]+%
+DIST3     d#[^#]+#
+DISTOPT   [bi]*{INT}?[bi]*
+DISTEX    ({DIST1}|{DIST2}|{DIST3}){DISTOPT}
 OPERREX   "!"?"~"
-PATTREX   {OPERREX}{WHITE}({REGEX}|{FREGEX}|{PATT})i?
+PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 
 %%
  /* The command to be analyzed is:
@@ -217,6 +225,11 @@ PATTREX   {OPERREX}{WHITE}({REGEX}|{FREGEX}|{PATT})i?
             tableGramPosition() += yyleng;
 	    return DELETE;
 	  }
+{COUNT}   {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return COUNT;
+	  }
 {CALC}  {
             tableGramPosition() += yyleng;
 	    BEGIN(EXPRstate);
@@ -279,11 +292,13 @@ PATTREX   {OPERREX}{WHITE}({REGEX}|{FREGEX}|{PATT})i?
           }
 {GROUPBY} {
             tableGramPosition() += yyleng;
-            throw (TableInvExpr ("GROUPBY is not supported yet"));
+	    BEGIN(EXPRstate);
+	    return GROUPBY;
           }
 {HAVING}  {
             tableGramPosition() += yyleng;
-            throw (TableInvExpr ("HAVING is not supported yet"));
+	    BEGIN(EXPRstate);
+	    return HAVING;
           }
 {JOIN} {
             tableGramPosition() += yyleng;

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CompoundParam.h 20628 2009-06-12 02:56:35Z gervandiepen $
+//# $Id: CompoundParam.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef SCIMATH_COMPOUNDPARAM_H
 #define SCIMATH_COMPOUNDPARAM_H

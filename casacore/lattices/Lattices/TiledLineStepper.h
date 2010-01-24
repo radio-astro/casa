@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledLineStepper.h 20637 2009-06-16 05:36:59Z gervandiepen $
+//# $Id: TiledLineStepper.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef LATTICES_TILEDLINESTEPPER_H
 #define LATTICES_TILEDLINESTEPPER_H

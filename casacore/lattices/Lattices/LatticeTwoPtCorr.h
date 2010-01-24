@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeTwoPtCorr.h 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: LatticeTwoPtCorr.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef LATTICES_LATTICETWOPTCORR_H
 #define LATTICES_LATTICETWOPTCORR_H

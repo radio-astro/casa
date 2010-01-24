@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.h 19292 2006-02-28 14:10:26Z gvandiep $
+//# $Id: MemoryTable.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_MEMORYTABLE_H
 #define TABLES_MEMORYTABLE_H

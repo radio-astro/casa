@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSFieldIndex.cc 20459 2008-12-02 12:51:13Z gervandiepen $
 
 #include <ms/MeasurementSets/MSFieldIndex.h>
 #include <ms/MeasurementSets/MSSelectionError.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprLogicNodeArray.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprLogicNodeArray.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/ExprLogicNodeArray.h>
 #include <tables/Tables/TableError.h>
@@ -139,18 +139,15 @@ TableExprNodeArrayEQRegex::~TableExprNodeArrayEQRegex()
 {}
 Array<Bool> TableExprNodeArrayEQRegex::getArrayBool (const TableExprId& id)
 {
-    Bool deleteArr, deleteRes;
     Array<String> left = lnode_p->getArrayString(id);
-    const String* arr = left.getStorage (deleteArr);
     Array<Bool> result(left.shape());
-    Bool* res = result.getStorage (deleteRes);
-    Regex regex = rnode_p->getRegex(id);
-    uInt n = left.nelements();
-    for (uInt i=0; i<n; i++) {
-	res[i] = arr[i].matches(regex)  ?  True : False;
+    TaqlRegex regex = rnode_p->getRegex(id);
+    Array<String>::const_iterator liter = left.begin();
+    Array<Bool>::contiter riterend = result.cend();
+    for (Array<Bool>::contiter riter = result.cbegin();
+         riter != riterend; ++riter, ++liter) {
+      *riter = regex.match (*liter);
     }
-    left.freeStorage (arr, deleteArr);
-    result.putStorage (res, deleteRes);
     return result;
 }
 
@@ -277,18 +274,15 @@ TableExprNodeArrayNERegex::~TableExprNodeArrayNERegex()
 {}
 Array<Bool> TableExprNodeArrayNERegex::getArrayBool (const TableExprId& id)
 {
-    Bool deleteArr, deleteRes;
     Array<String> left = lnode_p->getArrayString(id);
-    const String* arr = left.getStorage (deleteArr);
     Array<Bool> result(left.shape());
-    Bool* res = result.getStorage (deleteRes);
-    Regex regex = rnode_p->getRegex(id);
-    uInt n = left.nelements();
-    for (uInt i=0; i<n; i++) {
-	res[i] = arr[i].matches(regex)  ?  False : True;
+    TaqlRegex regex = rnode_p->getRegex(id);
+    Array<String>::const_iterator liter = left.begin();
+    Array<Bool>::contiter riterend = result.cend();
+    for (Array<Bool>::contiter riter = result.cbegin();
+         riter != riterend; ++riter, ++liter) {
+      *riter = !regex.match (*liter);
     }
-    left.freeStorage (arr, deleteArr);
-    result.putStorage (res, deleteRes);
     return result;
 }
 

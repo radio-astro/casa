@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StManAipsIO.cc 20250 2008-02-23 14:58:08Z gervandiepen $
+//# $Id: StManAipsIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/StManAipsIO.h>
 #include <tables/Tables/StArrAipsIO.h>

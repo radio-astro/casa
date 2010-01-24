@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MPosition.h 20612 2009-06-05 05:39:45Z gervandiepen $
+//# $Id: MPosition.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #ifndef MEASURES_MPOSITION_H
 #define MEASURES_MPOSITION_H
@@ -69,16 +69,6 @@ template <class M> class ROScalarMeasColumn;
 // </synopsis>
 //
 // <example>
-//   // inRec is a RecordInterface (see GridFT::fromRecord()).
-//   Vector<Double> dirValue(3);
-//   String dirUnit;
-//   inRec.get("dirvalue", dirValue);
-//   inRec.get("dirunit", dirUnit);
-//   MVPosition dummyMVPos(dirValue(0), dirValue(1), dirValue(2));
-//   MPosition mLocation(dummyMVPos, MPosition::ITRF);
-//   ...
-//   dirValue = mLocation.get("m").getValue();
-//   dirUnit = mLocation.get("m").getUnit();
 // </example>
 //
 // <motivation>

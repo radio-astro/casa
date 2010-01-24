@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeHandler.h 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: TaQLNodeHandler.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_TAQLNODEHANDLER_H
 #define TABLES_TAQLNODEHANDLER_H
@@ -124,6 +124,7 @@ public:
   virtual TaQLNodeResult visitUpdateNode   (const TaQLUpdateNodeRep& node);
   virtual TaQLNodeResult visitInsertNode   (const TaQLInsertNodeRep& node);
   virtual TaQLNodeResult visitDeleteNode   (const TaQLDeleteNodeRep& node);
+  virtual TaQLNodeResult visitCountNode    (const TaQLCountNodeRep& node);
   virtual TaQLNodeResult visitCalcNode     (const TaQLCalcNodeRep& node);
   virtual TaQLNodeResult visitCreTabNode   (const TaQLCreTabNodeRep& node);
   virtual TaQLNodeResult visitColSpecNode  (const TaQLColSpecNodeRep& node);

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatScalarColumn.h 20238 2008-02-11 13:44:45Z gervandiepen $
+//# $Id: ConcatScalarColumn.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef TABLES_CONCATSCALARCOLUMN_H
 #define TABLES_CONCATSCALARCOLUMN_H

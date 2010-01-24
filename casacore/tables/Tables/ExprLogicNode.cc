@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprLogicNode.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprLogicNode.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/ExprLogicNode.h>
 #include <tables/Tables/ExprDerNode.h>
@@ -95,7 +95,7 @@ TableExprNodeEQRegex::~TableExprNodeEQRegex()
 {}
 Bool TableExprNodeEQRegex::getBool (const TableExprId& id)
 {
-    return lnode_p->getString(id).matches(rnode_p->getRegex(id));
+    return rnode_p->getRegex(id).match (lnode_p->getString(id));
 }
 
 TableExprNodeEQDate::TableExprNodeEQDate (const TableExprNodeRep& node)
@@ -166,7 +166,7 @@ TableExprNodeNERegex::~TableExprNodeNERegex()
 {}
 Bool TableExprNodeNERegex::getBool (const TableExprId& id)
 {
-    return ! lnode_p->getString(id).matches(rnode_p->getRegex(id));
+    return ! rnode_p->getRegex(id).match (lnode_p->getString(id));
 }
 
 TableExprNodeNEDate::TableExprNodeNEDate (const TableExprNodeRep& node)

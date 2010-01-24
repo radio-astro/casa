@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Time.cc 20625 2009-06-12 00:27:08Z gervandiepen $
+//# $Id: Time.cc 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 #include <casa/OS/Time.h>
 #include <casa/Exceptions/Error.h>
@@ -589,7 +589,7 @@ static Int isDST () {
 Int Time::timeZoneSeconds () {
   return isDST () ? -altzone : -timezone;
 }
-#elif defined(AIPS_OSF) || defined(AIPS_DARWIN)
+#elif defined(AIPS_OSF) || defined(AIPS_DARWIN) || defined(AIPS_BSD)
 Int Time::timeZoneSeconds () {
   time_t tim = time (NULL);
   struct tm *tm_info = localtime (&tim);

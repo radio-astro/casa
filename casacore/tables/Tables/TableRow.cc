@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRow.cc 19959 2007-02-28 03:23:27Z gervandiepen $
+//# $Id: TableRow.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <casa/aips.h>

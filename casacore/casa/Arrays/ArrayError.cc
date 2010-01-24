@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayError.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ArrayError.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 // .SUMMARY General, Indexing, and Conformace errors thrown by Array classes.
 

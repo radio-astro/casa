@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: File.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: File.cc 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 
 #include <casa/OS/Path.h>
@@ -50,7 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #   define _LARGEFILE64_SOURCE
 #  endif
 # endif
-#if defined(AIPS_DARWIN)
+#if defined(AIPS_DARWIN) || defined(AIPS_BSD)
 # define fileLSTAT lstat
 # define fileSTAT  stat
 #else

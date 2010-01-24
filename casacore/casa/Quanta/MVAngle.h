@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVAngle.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MVAngle.h 20794 2009-11-05 03:47:24Z Malte.Marquarding $
 
 #ifndef CASA_MVANGLE_H
 #define CASA_MVANGLE_H
@@ -388,7 +388,7 @@ class MVAngle {
 // Output/Input
 // <group name=output>
 ostream &operator<<(ostream &os, const MVAngle &meas);
-ostream &operator>>(ostream &is, MVAngle &meas);
+istream &operator>>(istream &is, MVAngle &meas);
 ostream &operator<<(ostream &os, const MVAngle::Format &form);
 // </group>
 

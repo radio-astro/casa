@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: PGPlotterInterface.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: PGPlotterInterface.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/System/PGPlotterInterface.h>
 #include <casa/Logging/LogIO.h>

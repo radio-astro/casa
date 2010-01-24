@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RegexBase.h 19763 2006-11-24 04:07:49Z gvandiep $
+//# $Id: RegexBase.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_REGEXBASE_H
 #define CASA_REGEXBASE_H

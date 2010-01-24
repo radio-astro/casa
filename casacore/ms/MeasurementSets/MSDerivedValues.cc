@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSDerivedValues.cc 20459 2008-12-02 12:51:13Z gervandiepen $
 
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>

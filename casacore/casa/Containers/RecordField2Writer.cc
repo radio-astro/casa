@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordField2Writer.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: RecordField2Writer.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Containers/RecordFieldWriter.h>
 #include <casa/Utilities/Assert.h>

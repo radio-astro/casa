@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVAngle.cc 20732 2009-09-25 10:11:45Z gervandiepen $
+//# $Id: MVAngle.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 //# Includes
 #include <casa/Quanta/MVAngle.h>
@@ -378,8 +378,7 @@ Bool MVAngle::read(Quantity &res, MUString &in, Bool chk) {
       tp = 0;
     } else {
       Char tc = 'm';
-      if (tp == 3)
-	tc = ':';
+      if (tp == 3) tc = ':';
       in.push();
       Double r1 = in.getuInt();
       if (in.tSkipOneCharNC(tc)) {
@@ -403,9 +402,9 @@ Bool MVAngle::read(Quantity &res, MUString &in, Bool chk) {
   }
 
   if (chk) {
+
     in.skipBlank();
-    if (!in.eos())
-      tp = 0;	     // incorrect
+    if (!in.eos()) tp = 0;	     // incorrect
   }
   switch (tp) {
 

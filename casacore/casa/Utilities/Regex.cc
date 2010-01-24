@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.cc 20698 2009-08-31 12:02:32Z gervandiepen $
+//# $Id: Regex.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 // Regex class implementation
 

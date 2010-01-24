@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeRep.h 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: TaQLNodeRep.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_TAQLNODEREP_H
 #define TABLES_TAQLNODEREP_H
@@ -108,6 +108,7 @@ public:
   #define TaQLNode_RecFld   char(25)
   #define TaQLNode_Unit     char(26)
   #define TaQLNode_Regex    char(27)
+  #define TaQLNode_Count    char(28)
   // </group>
 
   // Constructor for derived classes specifying the type.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.h 20605 2009-05-14 13:26:34Z gervandiepen $
+//# $Id: DataManager.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef TABLES_DATAMANAGER_H
 #define TABLES_DATAMANAGER_H

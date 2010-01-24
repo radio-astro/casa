@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Fitting.h 20508 2009-01-20 11:09:47Z gervandiepen $
+//# $Id: Fitting.h 20670 2009-07-10 01:43:43Z Malte.Marquarding $
 #ifndef SCIMATH_FITTING_H
 #define SCIMATH_FITTING_H
 

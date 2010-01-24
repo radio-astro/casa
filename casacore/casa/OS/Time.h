@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-//# $Id: Time.h 20625 2009-06-12 00:27:08Z gervandiepen $
+//# $Id: Time.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef CASA_TIME_H
 #define CASA_TIME_H

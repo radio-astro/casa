@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Euler.cc 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: Euler.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <casa/Utilities/Assert.h>

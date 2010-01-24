@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ForwardCol.cc 19588 2006-09-04 23:49:45Z gvandiep $
+//# $Id: ForwardCol.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <tables/Tables/ForwardCol.h>

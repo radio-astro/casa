@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Timer.h 20110 2007-08-22 08:09:30Z jcguzmantanaka $
+//# $Id: Timer.h 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 #ifndef CASA_TIMER_H
 #define CASA_TIMER_H
@@ -41,7 +41,7 @@ extern "C" {
 #include <time.h>
 }
 
-#elif defined(AIPS_SOLARIS) || defined(AIPS_IRIX) || defined(AIPS_OSF) || defined(__hpux__) || defined(AIPS_LINUX) || defined(AIPS_DARWIN)
+#elif defined(AIPS_SOLARIS) || defined(AIPS_IRIX) || defined(AIPS_OSF) || defined(__hpux__) || defined(AIPS_LINUX) || defined(AIPS_DARWIN) || defined(AIPS_BSD)
   #if defined(AIPS_CRAY_PGI)
     #include <sys/time.h>
     #include <sys/resource.h>
@@ -189,7 +189,7 @@ private:
 #if defined(DOS) || defined(MSDOS)
     clock_t usage0;
     timeb   real0;          //# elapsed real time at last mark
-#elif defined(AIPS_SOLARIS) || defined(AIPS_IRIX) || defined(AIPS_OSF) || defined(__hpux__) || defined(AIPS_LINUX) || defined(AIPS_DARWIN)
+#elif defined(AIPS_SOLARIS) || defined(AIPS_IRIX) || defined(AIPS_OSF) || defined(__hpux__) || defined(AIPS_LINUX) || defined(AIPS_DARWIN) || defined(AIPS_BSD)
   #if defined(AIPS_CRAY_PGI)
     //struct timeval usage0;
     rusage usage0;          //# rusage structure at last mark

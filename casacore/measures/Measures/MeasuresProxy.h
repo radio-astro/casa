@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasuresProxy.h 20651 2009-07-06 01:59:21Z Malte.Marquarding $
+//# $Id: MeasuresProxy.h 20821 2009-11-18 11:30:57Z Malte.Marquarding $
 
 #ifndef MEASURES_MEASURESPROXY_H
 #define MEASURES_MEASURESPROXY_H
@@ -68,7 +68,7 @@ public:
   Record alltyp(const Record& rec);
   Quantum<Vector<Double> > posangle(const Record& lrec, const Record& rrec);
   Quantum<Vector<Double> > separation(const Record& lrec, const Record& rrec);
-  Vector<Quantum<Vector<Double> > > uvw(const Record& mhrec);
+  Record uvw(const Record& mhrec);
   Record expand(const Record& mhrec);
 
 private:

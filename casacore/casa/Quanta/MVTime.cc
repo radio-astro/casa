@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVTime.cc 20579 2009-04-23 13:28:04Z wbrouw $
+//# $Id: MVTime.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 //# Includes
 #include <casa/Quanta/MVTime.h>

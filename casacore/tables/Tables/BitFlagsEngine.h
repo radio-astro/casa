@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BitFlagsEngine.h 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: BitFlagsEngine.h 20839 2009-12-01 10:15:16Z gervandiepen $
 
 #ifndef TABLES_BITFLAGSENGINE_H
 #define TABLES_BITFLAGSENGINE_H
@@ -35,7 +35,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // <summary> Non-templated Helper class to handle the mask. </summary>
-  // <visibility=local>
+  // <use visibility=local>
   class BFEngineMask
   {
   public:

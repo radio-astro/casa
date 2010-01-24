@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LoggerHolder.cc 20331 2008-06-06 10:25:29Z gervandiepen $
+//# $Id: LoggerHolder.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #include <tables/LogTables/LoggerHolder.h>

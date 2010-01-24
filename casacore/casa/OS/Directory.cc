@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Directory.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: Directory.cc 20750 2009-10-01 06:32:18Z Malte.Marquarding $
 
 // we NEED to include aips(env).h before using any AIPS_xyz defines
 #include <casa/OS/Directory.h>
@@ -41,7 +41,7 @@
     }
 #  endif
 #  define statfs statvfs
-#elif defined(AIPS_DARWIN)
+#elif defined(AIPS_DARWIN) || defined(AIPS_BSD)
 #include <sys/param.h>
 #include <sys/mount.h>
 #else

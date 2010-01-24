@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNodeArray.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprFuncNodeArray.cc 20794 2009-11-05 03:47:24Z Malte.Marquarding $
 
 #include <tables/Tables/ExprFuncNodeArray.h>
 #include <tables/Tables/TableError.h>
@@ -71,7 +71,7 @@ TableExprNodeRep* TableExprFuncNodeArray::fillNode
     // Fill child nodes as needed.
     TableExprFuncNode::fillChildNodes (&(thisNode->node_p), nodes, dtypeOper);
     // Set the resulting unit.
-    Double scale = TableExprFuncNode::fillUnits (thisNode, nodes,
+    Double scale = TableExprFuncNode::fillUnits (thisNode, thisNode->rwOperands(),
                                                  thisNode->funcType());
     thisNode->setScale (scale);
     // Some functions on a variable can already give a constant result.

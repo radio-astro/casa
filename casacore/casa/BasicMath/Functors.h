@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Functors.h 20598 2009-05-11 09:24:24Z gervandiepen $
+//# $Id: Functors.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #ifndef CASA_FUNCTORS_H
 #define CASA_FUNCTORS_H

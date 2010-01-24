@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QLogical.tcc 20053 2007-03-21 04:41:02Z Malte.Marquarding $
+//# $Id: QLogical.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <casa/Quanta/QLogical.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNodeArray.h 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprFuncNodeArray.h 20794 2009-11-05 03:47:24Z Malte.Marquarding $
 
 #ifndef TABLES_EXPRFUNCNODEARRAY_H
 #define TABLES_EXPRFUNCNODEARRAY_H
@@ -106,8 +106,10 @@ private:
 
     // Some functions to be used by TableExprNodeFuncArray.
     // <group>
-    PtrBlock<TableExprNodeRep*> operands()
+    const PtrBlock<TableExprNodeRep*>& operands() const
         { return node_p.operands(); }
+    PtrBlock<TableExprNodeRep*>& rwOperands()
+        { return node_p.rwOperands(); }
     TableExprFuncNode::FunctionType funcType() const
         { return node_p.funcType(); }
     NodeDataType argDataType() const

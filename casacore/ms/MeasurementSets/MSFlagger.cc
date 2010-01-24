@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFlagger.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: MSFlagger.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #include <ms/MeasurementSets/MSFlagger.h>
 

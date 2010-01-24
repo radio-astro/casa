@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BinarySearch.tcc 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: BinarySearch.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Utilities/BinarySearch.h>
 #include <casa/Exceptions/Error.h>

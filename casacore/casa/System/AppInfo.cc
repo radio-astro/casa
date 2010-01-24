@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AppInfo.cc 18763 2005-06-17 16:55:37Z ddebonis $
+//# $Id: AppInfo.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/System/AppInfo.h>
 

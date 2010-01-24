@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Param.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Param.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 // Param.C: implementation of a parameter (key,value,help,type,range,....)
 //          users typically do not use this class, it is merely

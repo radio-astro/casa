@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasurementSet.h 20726 2009-09-23 10:25:43Z gervandiepen $
+//# $Id: MeasurementSet.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef MS_MEASUREMENTSET_H
 #define MS_MEASUREMENTSET_H

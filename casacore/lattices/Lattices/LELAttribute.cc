@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELAttribute.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LELAttribute.cc 20815 2009-11-12 10:25:02Z gervandiepen $
 
 
 #include <lattices/Lattices/LELAttribute.h>
@@ -197,25 +197,25 @@ Int LELAttribute::compareCoord (const LELAttribute& other) const
   const IPosition& thisShape = shape();
   const IPosition& thatShape = other.shape();
   if (thisShape.nelements() != thatShape.nelements()) {
-    return 9;
+    return 8;
   }
   for (uInt i=0; i<thisShape.nelements(); i++) {
     if (thisShape(i) != thatShape(i)) {
       if (thisShape(i) == 1  &&  thatShape(i) > 1) {
 	// This is subset of that; check if not already the other way.
 	if (result == 1) {
-	  return 9;
+	  return 8;
 	}
 	result = -1;
       } else if (thisShape(i) > 1  &&  thatShape(i) == 1) {
 	// That is subset of this; check if not already the other way.
 	if (result == -1) {
-	  return 9;
+	  return 8;
 	}
 	result = 1;
       } else {
 	// Mismatching shapes
-	return 9;
+	return 8;
       }
     }
   }

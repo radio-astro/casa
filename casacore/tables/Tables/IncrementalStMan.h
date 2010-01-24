@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IncrementalStMan.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: IncrementalStMan.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef TABLES_INCREMENTALSTMAN_H
 #define TABLES_INCREMENTALSTMAN_H

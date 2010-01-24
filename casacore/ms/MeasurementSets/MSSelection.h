@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelection.h 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: MSSelection.h 20750 2009-10-01 06:32:18Z Malte.Marquarding $
 
 #ifndef MS_MSSELECTION_H
 #define MS_MSSELECTION_H
@@ -313,8 +313,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String arrayExpr_p;
     String timeExpr_p;
     String uvDistExpr_p;
-    String taqlExpr_p;
     String polnExpr_p;
+    String taqlExpr_p;
     // Priority
     Vector<Int> exprOrder_p;
     Vector<Int> antenna1IDs_p,antenna2IDs_p,fieldIDs_p, spwIDs_p, scanIDs_p, arrayIDs_p,

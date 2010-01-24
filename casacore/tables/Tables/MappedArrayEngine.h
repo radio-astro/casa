@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MappedArrayEngine.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MappedArrayEngine.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_MAPPEDARRAYENGINE_H
 #define TABLES_MAPPEDARRAYENGINE_H

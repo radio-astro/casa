@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: iosfwd.h 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: iosfwd.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_IOSFWD_H
 #define CASA_IOSFWD_H

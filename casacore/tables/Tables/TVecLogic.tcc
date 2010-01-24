@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecLogic.tcc 19858 2007-02-13 02:42:36Z Malte.Marquarding $
+//# $Id: TVecLogic.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/TVecLogic.h>
 #include <tables/Tables/TVec.h>

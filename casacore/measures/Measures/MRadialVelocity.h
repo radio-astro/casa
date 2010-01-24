@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MRadialVelocity.h 20612 2009-06-05 05:39:45Z gervandiepen $
+//# $Id: MRadialVelocity.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #ifndef MEASURES_MRADIALVELOCITY_H
 #define MEASURES_MRADIALVELOCITY_H

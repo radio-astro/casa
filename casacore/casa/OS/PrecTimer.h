@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PrecTimer.h 19279M 2008-08-12 20:31:15Z (local) $
+//# $Id: PrecTimer.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_PRECTIMER_H
 #define CASA_PRECTIMER_H

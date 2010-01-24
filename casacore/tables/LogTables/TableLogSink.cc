@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLogSink.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: TableLogSink.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <casa/Arrays/Vector.h>
 #include <tables/LogTables/TableLogSink.h>

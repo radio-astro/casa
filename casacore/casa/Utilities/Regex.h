@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.h 20698 2009-08-31 12:02:32Z gervandiepen $
+//# $Id: Regex.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef CASA_REGEX_H
 #define CASA_REGEX_H

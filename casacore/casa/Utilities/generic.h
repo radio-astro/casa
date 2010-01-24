@@ -16,7 +16,7 @@
 //# License along with this library; if not, write to the Free Software
 //# Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
-//# $Id: generic.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: generic.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_GENERIC_H
 #define CASA_GENERIC_H

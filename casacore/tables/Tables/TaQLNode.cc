@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNode.cc 20384 2008-08-13 05:53:00Z gervandiepen $
+//# $Id: TaQLNode.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 //# Includes
 #include <tables/Tables/TaQLNode.h>
@@ -160,6 +160,8 @@ TaQLNode TaQLNode::restoreNode (AipsIO& aio)
     return TaQLUnitNodeRep::restore (aio);
   case TaQLNode_Regex:
     return TaQLRegexNodeRep::restore (aio);
+  case TaQLNode_Count:
+    return TaQLCountNodeRep::restore (aio);
   default:
     throw AipsError ("TaQLNode::restoreNode - unknown node type");
   }

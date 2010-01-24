@@ -22,7 +22,7 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# $Id: SSMIndex.cc 20129 2007-10-11 06:56:36Z gervandiepen $   
+//# $Id: SSMIndex.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $   
 
 #include <tables/Tables/SSMIndex.h>
 #include <tables/Tables/SSMBase.h>

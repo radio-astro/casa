@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ProgressMeter.cc 20458 2008-12-02 12:49:56Z gervandiepen $
+//# $Id: ProgressMeter.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #include <time.h>
