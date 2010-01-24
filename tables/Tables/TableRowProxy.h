@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRowProxy.h 19623 2006-09-19 06:37:53Z gvandiep $
+//# $Id: TableRowProxy.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef TABLES_TABLEROWPROXY_H
 #define TABLES_TABLEROWPROXY_H

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Sort.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: Sort.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_SORT_H
 #define CASA_SORT_H

@@ -23,15 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.h 20728 2009-09-23 14:37:23Z gervandiepen $
+//# $Id: TableCopy.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_TABLECOPY_H
 #define TABLES_TABLECOPY_H
 
 
 //# Includes
+#include <tables/Tables/DataManInfo.h>
 #include <tables/Tables/Table.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Containers/Record.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -118,10 +120,6 @@ public:
   // Copy the table info block from input to output table.
   static void copyInfo (Table& out, const Table& in);
 
-  // Commented out because of the risk of copying over the wrong keywords in
-  // some tables.
-  //static void deepCopy(Table& out, const Table& in, Bool noRows);
-
   // Copy all subtables (in table and column keywords) from input to
   // output table.
   // Optionally the row contents are not copied.
@@ -139,11 +137,13 @@ public:
   // Replace TiledDataStMan by TiledShapeStMan in the DataManagerInfo record.
   // Since TiledShapeStMan does not support ID columns, they are
   // adjusted as well in tabDesc and dminfo.
-  static void adjustTSM (TableDesc& tabDesc, Record& dminfo);
+  static void adjustTSM (TableDesc& tabDesc, Record& dminfo)
+    { DataManInfo::adjustTSM (tabDesc, dminfo); }
 
   // Replace non-writable storage managers by StandardStMan. This is needed
   // for special storage managers like LofarStMan.
-  static Record adjustStMan (const Record& dminfo);
+  static Record adjustStMan (const Record& dminfo)
+    { return DataManInfo::adjustStMan (dminfo, "StandardStMan"); }
 
   // Set the data managers of the given column(s) to the given tiled storage
   // manager (normally TiledShapeStMan or TiledColumnStMan).
@@ -152,7 +152,9 @@ public:
   // The columns already having a tiled storage manager are not changed.
   static void setTiledStMan (Record& dminfo, const Vector<String>& columns,
                              const String& dmType, const String& dmName,
-                             const IPosition& defaultTileShape);
+                             const IPosition& defaultTileShape)
+    { DataManInfo::setTiledStMan (dminfo, columns, dmType, dmName,
+                                  defaultTileShape); }
 
   // Remove the columns from the dminfo record and return a vector with the
   // names of the columns actually removed.
@@ -161,11 +163,13 @@ public:
   // have to match, so "Tiled" matches all tiled storagemanagers.
   static Vector<String> removeDminfoColumns (Record& dminfo,
                                              const Vector<String>& columns,
-                                             const String& keepType= String());
+                                             const String& keepType= String())
+    { return DataManInfo::removeDminfoColumns (dminfo, columns, keepType); }
 
   // Adjust the data manager types and groups and the
   // hypercolumn definitions to the actual data manager info.
-  static void adjustDesc (TableDesc& tabDesc, const Record& dminfo);
+  static void adjustDesc (TableDesc& tabDesc, const Record& dminfo)
+    { DataManInfo::adjustDesc (tabDesc, dminfo); }
 };
 
 

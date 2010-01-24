@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogOrigin.cc 20259 2008-02-25 23:28:59Z gervandiepen $
+//# $Id: LogOrigin.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Logging/LogOrigin.h>
 

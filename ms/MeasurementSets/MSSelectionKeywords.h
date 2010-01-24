@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelectionKeywords.h 19196 2006-01-11 14:04:50Z gvandiep $
+//# $Id: MSSelectionKeywords.h 20838 2009-12-01 10:10:55Z gervandiepen $
 
 #ifndef MS_MSSELECTIONKEYWORDS_H
 #define MS_MSSELECTIONKEYWORDS_H
@@ -47,7 +47,7 @@ typedef MSSelectionKeywords MSS;
 // MSSelectionKeywords specifies selection keywords for the MeasurementSet
 // </summary>
 
-// <visibility=export>
+// <use visibility=export>
 
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>

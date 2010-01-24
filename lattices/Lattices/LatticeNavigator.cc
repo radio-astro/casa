@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeNavigator.cc 20637 2009-06-16 05:36:59Z gervandiepen $
+//# $Id: LatticeNavigator.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #include <lattices/Lattices/LatticeNavigator.h>
 #include <casa/Arrays/IPosition.h>

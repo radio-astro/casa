@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwParse.h 20628 2009-06-12 02:56:35Z gervandiepen $
+//# $Id: MSSpwParse.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef MS_MSSPWPARSE_H
 #define MS_MSSPWPARSE_H

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogSinkInterface.h 20259 2008-02-25 23:28:59Z gervandiepen $
+//# $Id: LogSinkInterface.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_LOGSINKINTERFACE_H
 #define CASA_LOGSINKINTERFACE_H

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarColumn.tcc 20025 2007-03-14 23:34:38Z gervandiepen $
+//# $Id: ScalarColumn.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/Table.h>

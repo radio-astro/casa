@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StringDistance.h 20705 2009-09-03 09:04:46Z gervandiepen $
+//# $Id: StringDistance.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef CASA_STRINGDISTANCE_H
 #define CASA_STRINGDISTANCE_H

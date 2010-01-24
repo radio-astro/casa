@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Convolver.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: Convolver.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <scimath/Mathematics/Convolver.h>
 #include <casa/Arrays/Vector.h>

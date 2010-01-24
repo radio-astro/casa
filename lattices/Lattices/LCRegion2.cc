@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCRegion2.cc 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: LCRegion2.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #include <lattices/Lattices/LCRegion.h>
 #include <lattices/Lattices/RegionType.h>

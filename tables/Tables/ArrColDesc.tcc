@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrColDesc.tcc 20238 2008-02-11 13:44:45Z gervandiepen $
+//# $Id: ArrColDesc.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ArrColData.h>

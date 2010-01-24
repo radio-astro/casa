@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FunctionalProxy.h 19660 2006-09-29 09:07:58Z mmarquar $
+//# $Id: FunctionalProxy.h 20824 2009-11-20 04:55:09Z Malte.Marquarding $
 
 #ifndef SCIMATH_FUNCTIONALSPROXY_H
 #define SCIMATH_FUNCTIONALSPROXY_H
@@ -46,13 +46,13 @@ public:
   virtual ~FunctionalProxy();
   Vector<Double> f(const Vector<Double>& val);
   Vector<Double> fdf(const Vector<Double>& val);
-  Vector<String> names();
   void add(const FunctionalProxy& func);
   Vector<DComplex> fc(const Vector<DComplex>& val);
   Vector<DComplex> fdfc(const Vector<Double>& val);
   void addc(const FunctionalProxy& func);
   Record asrecord();
   Int npar() const;
+  uInt ndim() const;
   void setparameters(const Vector<Double>& val);
   void setparametersc(const Vector<DComplex>& val);
   void setmasks(const Vector<Bool>& val);

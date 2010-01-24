@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: COWPtr.tcc 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: COWPtr.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Utilities/COWPtr.h>
 

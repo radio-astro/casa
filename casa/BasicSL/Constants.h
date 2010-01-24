@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Constants.h 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: Constants.h 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 #ifndef CASA_CONSTANTS_H
 #define CASA_CONSTANTS_H
@@ -37,7 +37,7 @@
 #endif
 
 #include <float.h>
-#if !defined(AIPS_DARWIN)
+#if !defined(AIPS_DARWIN) && !defined(AIPS_BSD)
 #include <values.h>
 #endif
 

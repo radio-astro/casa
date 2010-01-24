@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ObjectID2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ObjectID2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #include <casa/System/ObjectID.h>

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageRegrid.tcc 20699 2009-09-02 12:21:07Z gervandiepen $
+//# $Id: ImageRegrid.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <images/Images/ImageRegrid.h>
 

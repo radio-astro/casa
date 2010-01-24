@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableSyncData.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TableSyncData.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef TABLES_TABLESYNCDATA_H
 #define TABLES_TABLESYNCDATA_H

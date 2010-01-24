@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelection.cc 20754 2009-10-01 08:59:24Z gervandiepen $ 
+//# $Id: MSSelection.cc 20755 2009-10-01 09:50:00Z Malte.Marquarding $ 
 //----------------------------------------------------------------------------
 
 #include <ms/MeasurementSets/MSSelection.h>

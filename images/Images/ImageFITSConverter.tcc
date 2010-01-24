@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITSConverter.tcc 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: ImageFITSConverter.tcc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/PagedImage.h>
@@ -69,7 +69,7 @@ void ImageFITSConverterImpl<HDUType>::FITSToImage(ImageInterface<Float>*& pNewIm
 						  uInt memoryInMB,
 						  Bool zeroBlanks)
 {
-    LogIO os(LogOrigin("ImageFITSConverterImpl", "FITSToImage"));
+    LogIO os(LogOrigin("ImageFITSConverterImpl", "FITSToImage", WHERE));
 
 // Crack the header and get what we need out of it.  DOn't get tricked
 // by the fact that HDUType is referring to the template type, not
@@ -150,7 +150,7 @@ void ImageFITSConverterImpl<HDUType>::FITSToImage(ImageInterface<Float>*& pNewIm
     if (bitpix < 0 && isBlanked) {
 	if (blankVal != -1) {
 	    // Warn that we only deal with NaN blanked FP image HDU's.
-	    os << LogIO::WARN <<
+	    os << LogIO::WARN << WHERE <<
 		"For floating point images, BLANK may only be set to -1<n" <<
 		blankVal << " is invalid. Ignoring (but will pass through "
 		"NaN's."  << LogIO::POST;

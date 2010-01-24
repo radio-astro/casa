@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSMBase.h 20096 2007-06-14 05:27:30Z gervandiepen $
+//# $Id: MSMBase.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef TABLES_MSMBASE_H
 #define TABLES_MSMBASE_H

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.cc 20655 2009-07-06 14:10:44Z gervandiepen $
+//# $Id: BaseTable.cc 20839 2009-12-01 10:15:16Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/BaseTable.h>
@@ -457,7 +457,6 @@ void BaseTable::copy (const String& newName, int tableOption) const
 	//# Set user write permission after the copy.
 	prepareCopyRename (absNewName, tableOption);
 	Directory fileOld(name_p);
-//#//	fileOld.copy (absNewName, True, True);
 	fileOld.copy (absNewName);
         //# Renaming of subtables is not needed, because their names in
         //# the table directory (the ones copiued) are all relative.

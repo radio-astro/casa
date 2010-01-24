@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Cube.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: Cube.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_CUBE_H
 #define CASA_CUBE_H
@@ -235,7 +235,7 @@ public:
     // </group>
 
 
-    // Extract a plane of a cube. We could have xzPlane, etc also if that
+    // Extract a plane as a cube. We could have xzPlane, etc also if that
     // would be of use to anyone. Of course you could also use a Matrix
     // iterator on the cube.
     // <group>

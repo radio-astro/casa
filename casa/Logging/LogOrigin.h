@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogOrigin.h 20259 2008-02-25 23:28:59Z gervandiepen $
+//# $Id: LogOrigin.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_LOGORIGIN_H
 #define CASA_LOGORIGIN_H

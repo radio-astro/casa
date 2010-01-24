@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeDer.h 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: TaQLNodeDer.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_TAQLNODEDER_H
 #define TABLES_TAQLNODEDER_H
@@ -136,9 +136,11 @@ class TaQLRegexNodeRep: public TaQLNodeRep
 {
 public:
   explicit TaQLRegexNodeRep (const String& value);
-  TaQLRegexNodeRep (const String& value, Bool caseInsensitive, Bool negate)
+  TaQLRegexNodeRep (const String& value, Bool caseInsensitive, Bool negate,
+                    Bool ignoreBlanks, Int maxDistance)
     : TaQLNodeRep (TaQLNode_Regex),
-      itsValue(value), itsCaseInsensitive(caseInsensitive), itsNegate(negate) {}
+      itsValue(value), itsCaseInsensitive(caseInsensitive), itsNegate(negate),
+      itsIgnoreBlanks(ignoreBlanks), itsMaxDistance(maxDistance) {}
   virtual ~TaQLRegexNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void show (std::ostream& os) const;
@@ -148,6 +150,9 @@ public:
   String itsValue;
   Bool   itsCaseInsensitive;
   Bool   itsNegate;             //# True means !~
+  //# The following members are only used for distance.
+  Bool   itsIgnoreBlanks;
+  Int    itsMaxDistance;
 };
 
 
@@ -229,12 +234,10 @@ public:
 	     B_INDEX =15,
 	     B_DIVIDETRUNC=16,
 	     B_EQREGEX    =17,
-	     B_EQREGEXCI  =18,
-	     B_NEREGEX    =19,
-	     B_NEREGEXCI  =20,
-	     B_BITAND     =21,
-             B_BITXOR     =22,
-             B_BITOR      =23};
+	     B_NEREGEX    =18,
+	     B_BITAND     =19,
+             B_BITXOR     =20,
+             B_BITOR      =21};
   TaQLBinaryNodeRep (Type type, const TaQLNode& left, const TaQLNode& right)
     : TaQLNodeRep (TaQLNode_Binary),
       itsType(type), itsLeft(left), itsRight(right) {}
@@ -782,13 +785,7 @@ public:
 		     const TaQLNode& giving,
 		     Bool brackets=False,
 		     Bool noExecute=False,
-		     Bool fromExecute=False)
-    : TaQLNodeRep (TaQLNode_Select),
-      itsBrackets(brackets),
-      itsNoExecute(noExecute), itsFromExecute(fromExecute),
-      itsColumns(columns), itsTables(tables), itsJoin(join),
-      itsWhere(where), itsGroupby(groupby), itsHaving(having),
-      itsSort(sort), itsLimitOff(limitoff), itsGiving(giving) {}
+		     Bool fromExecute=False);
   virtual ~TaQLSelectNodeRep();
   void setBrackets()
     { itsBrackets = True; }
@@ -922,6 +919,39 @@ public:
   TaQLNode      itsWhere;
   TaQLNode      itsSort;
   TaQLNode      itsLimitOff;
+};
+
+
+// <summary>
+// Raw TaQL parse tree node defining a count command.
+// </summary>
+// <use visibility=local>
+// <reviewed reviewer="" date="" tests="tTaQLNode">
+// </reviewed>
+// <prerequisite>
+//# Classes you should understand before using this one.
+//   <li> <linkto class=TaQLNodeRep>TaQLNodeRep</linkto>
+// </prerequisite>
+// <synopsis> 
+// This class is a TaQLNodeRep holding the parts for a count command.
+// </synopsis> 
+
+class TaQLCountNodeRep: public TaQLNodeRep
+{
+public:
+  TaQLCountNodeRep (const TaQLNode& columns, const TaQLMultiNode& tables,
+                    const TaQLNode& where)
+    : TaQLNodeRep (TaQLNode_Count),
+      itsColumns(columns), itsTables(tables), itsWhere(where) {}
+  virtual ~TaQLCountNodeRep();
+  virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
+  virtual void show (std::ostream& os) const;
+  virtual void save (AipsIO& aio) const;
+  static TaQLCountNodeRep* restore (AipsIO& aio);
+
+  TaQLNode      itsColumns;
+  TaQLMultiNode itsTables;
+  TaQLNode      itsWhere;
 };
 
 

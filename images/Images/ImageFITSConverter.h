@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITSConverter.h 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: ImageFITSConverter.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 
 #ifndef IMAGES_IMAGEFITSCONVERTER_H

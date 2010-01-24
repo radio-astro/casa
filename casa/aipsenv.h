@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aipsenv.h 20145 2007-11-07 01:15:06Z Malte.Marquarding $
+//# $Id: aipsenv.h 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 // this file contains all the compiler specific defines
 
@@ -108,6 +108,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #if defined(__alpha)
 #define AIPS_ALPHA
 #define AIPS_64B
+#endif
+
+#if defined(AIPS_BSD)
+#undef AIPS_BSD
+#endif
+#if defined(__FreeBSD__)
+#define AIPS_BSD
+#define AIPS_NOLARGEFILE
 #endif
 
 #if defined(AIPS_LINUX)
@@ -207,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 
 // Add other platforms here
-#if (defined(AIPS_LINUX) || defined(AIPS_DARWIN))
+#if (defined(AIPS_LINUX) || defined(AIPS_DARWIN) || defined(AIPS_BSD))
 #if !defined(AIPS_AUTO_STL)
 #define AIPS_AUTO_STL
 #endif

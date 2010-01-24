@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaRecordColData.cc 18455 2005-03-14 06:59:58Z gvandiep $
+//# $Id: ScaRecordColData.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/ScaRecordColData.h>
 #include <tables/Tables/ScaRecordColDesc.h>

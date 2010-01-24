@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelUtil.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MSSelUtil.h 20838 2009-12-01 10:10:55Z gervandiepen $
 
 #ifndef MS_MSSELUTIL_H
 #define MS_MSSELUTIL_H
@@ -38,11 +38,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <summary> 
 // Helper class for MSFlagger with templated static function
 // </summary>
+// <use visibility=local>
 // <synopsis> 
 // Helper class for MSFlagger/DOms with templated static function to difference
 // data in one of two directions.
 // </synopsis> 
-//<visibility=local>
 
 template <class T> class MSSelUtil
 {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprDerNode.h 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprDerNode.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_EXPRDERNODE_H
 #define TABLES_EXPRDERNODE_H
@@ -33,7 +33,6 @@
 #include <tables/Tables/ExprNodeRep.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicMath/Random.h>
-#include <casa/Utilities/Regex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -211,7 +210,7 @@ private:
 
 
 // <summary>
-// Constant Regex in table select expression tree
+// Constant Regex or StringDistance in table select expression tree
 // </summary>
 
 // <use visibility=local>
@@ -233,11 +232,12 @@ private:
 class TableExprNodeConstRegex : public TableExprNodeBinary
 {
 public:
-    TableExprNodeConstRegex (const Regex& value);
+    TableExprNodeConstRegex (const TaqlRegex& value);
     ~TableExprNodeConstRegex();
-    Regex getRegex (const TableExprId& id);
+    TaqlRegex getRegex (const TableExprId& id);
 private:
-    Regex value_p;
+    TaqlRegex      value_p;
+    StringDistance dist_p;
 };
 
 

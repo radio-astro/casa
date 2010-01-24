@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Quantum2.cc 19862 2007-02-13 04:14:33Z gervandiepen $
+//# $Id: Quantum2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVAngle.h>

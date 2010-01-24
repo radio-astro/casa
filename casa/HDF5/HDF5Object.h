@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Object.h 20712 2009-09-03 14:36:23Z gervandiepen $
+//# $Id: HDF5Object.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef CASA_HDF5OBJECT_H
 #define CASA_HDF5OBJECT_H

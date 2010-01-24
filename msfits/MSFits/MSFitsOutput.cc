@@ -2099,8 +2099,7 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
     Double tim = weatherColumns.time()(i);
     *time = (tim - refTime) / C::day;
     *interval = weatherColumns.interval()(i) / C::day;
-    *antenna = (weatherColumns.antennaId()(i) == -1 ? 0: 
-				        antnums( weatherColumns.antennaId()(i) ));
+    *antenna = antnums( weatherColumns.antennaId()(i) );
     //read optional columns
     // default 0.0
     // temperature, dewpoint in MS should be kelvin but 
@@ -2112,7 +2111,8 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
       *temperature = 0.0;
     }
     if (hasPressure) {
-      *pressure = weatherColumns.pressure()(i);
+      //covert from Pa to mbar
+      *pressure = weatherColumns.pressure()(i)/100;
     }
     else {
       *pressure = 0.0;
@@ -2370,7 +2370,7 @@ void MSFitsOutput::handleAntNumbers(const MeasurementSet& ms,
     }
   }
 
-//    cout << "antnumbers = " << antnumbers << endl;
+  //  cout << "antnumbers = " << antnumbers << endl;
 
 }
 

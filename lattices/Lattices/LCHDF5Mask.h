@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCHDF5Mask.h 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: LCHDF5Mask.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #ifndef LATTICES_LCHDF5MASK_H
 #define LATTICES_LCHDF5MASK_H

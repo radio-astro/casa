@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MUString.h 20732 2009-09-25 10:11:45Z gervandiepen $
+//# $Id: MUString.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef CASA_MUSTRING_H
 #define CASA_MUSTRING_H

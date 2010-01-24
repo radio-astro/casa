@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasTable.cc 20699 2009-09-02 12:21:07Z gervandiepen $
+//# $Id: MeasTable.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 //# Includes
 #include <measures/Measures/MeasTable.h>
@@ -4805,13 +4805,11 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
   static Vector<Double> argArray[132];
   static Double factor = 0;
   static const Short MABER[130][6] = {
-    // Order:
-    //  Delta xdot       Delta ydot     Delta zdot
-    // sin,    cos,    sin,     cos,   sin,     cos
-    {	1,	0,	0,	-157,	0,	358},   // T
+    // Order: sin(x), cos(x), sin(y), cos(y), sin(z), cos(z)
+    {	1,	0,	0,	-157,	0,	358},
     {	715,	0,	0,	-656,	0,	-285},
     {	543,	0,	0,	-498,	0,	-216},
-    {	-72,	0,	0,	63,	0,	35},    // T
+    {	-72,	0,	0,	63,	0,	35},
     {	-60,	0,	0,	55,	0,	24},
     {	38,	0,	0,	-35,	0,	-15},
     {	0,	-31,	28,	0,	12,	0},
@@ -4824,15 +4822,15 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
     {	16,	0,	0,	15,	0,	6},
     {	0,	16,	14,	0,	6,	0},
     {	0,	16,	14,	0,	6,	0},
-    {	0,	12,	-11,	0,	-5,	0},
+    {	0,	12,	-1,	0,	-5,	0},
     {	-12,	0,	0,	11,	0,	5},
     {	11,	0,	0,	10,	0,	4},
     {	11,	0,	0,	-10,	0,	-4},
     {	-11,	0,	0,	-10,	0,	-4},	// 20
     {	-10,	0,	0,	-9,	0,	-4},
     {	-10,	0,	0,	9,	0,	4},
-    {	0,	8,	-8,	0,	-3,	0},
-    {	0,	8,	-8,	0,	-3,	0},
+    {	0,	0,	8,	-8,	0,	-3},
+    {	0,	0,	8,	-8,	0,	-3},
     {	-8,	0,	0,	7,	0,	3},
     {	-8,	0,	0,	-7,	0,	-3},
     {	0,	8,	7,	0,	3,	0},
@@ -4841,7 +4839,7 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
     {	0,	7,	6,	0,	3,	0},	// 30
     {	7,	0,	0,	6,	0,	3},
     {	0,	6,	-6,	0,	-3,	0},
-    {	-6,	0,	0,	6,	0,	3},
+    {	-6,	0,	6,	0,	3,	0},
     {	6,	0,	0,	-5,	0,	-2},
     {	-6,	0,	0,	5,	0,	2},
     {	0,	5,	5,	0,	2,	0},
@@ -4852,7 +4850,7 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
     {	0,	0,	0,	0,	0,	-2},
     {	0,	4,	4,	0,	2,	0},
     {	0,	-4,	-3,	0,	-1,	0},
-    {	0,	-4,	-3,	0,	-1,	0},     // T**2
+    {	0,	-4,	-3,	0,	-1,	0},
     {	0,	3,	3,	0,	1,	0},
     {	0,	3,	-3,	0,	-1,	0},
     {	0,	3,	3,	0,	1,	0},
@@ -4862,8 +4860,8 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
     {	3,	0,	0,	-3,	0,	-1},
     {	0,	-3,	-3,	0,	-1,	0},
     {	-3,	0,	0,	3,	0,	1},
-    {	-3,	0,	0,	2,	0,	1},     // T
-    {	0,	3,	2,	0,	1,	0},     // T**3
+    {	-3,	0,	0,	2,	0,	1},
+    {	0,	-3,	2,	0,	1,	0},
     {	-3,	0,	0,	2,	0,	1},
     {	3,	0,	0,	-2,	0,	-1},
     {	-3,	0,	0,	2,	0,	1},
@@ -4922,29 +4920,29 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
     {	0,	158,	152,	0,	48,	0},	// 110
     {	0,	159,	147,	0,	61,	0},
     {	34,	0,	0,	-31,	0,	-14},
-    {	0,	20,	18,	0,	8,	0},     // T
+    {	0,	20,	18,	0,	8,	0},
     {	-17,	0,	0,	16,	0,	7},
-    {	0,	12,	11,	0,	0,	4},
+    {	0,	12,	11,	0,	4,	0},
     {	11,	0,	0,	-10,	0,	-4},
     {	0,	9,	8,	0,	3,	0},
-    {	0,	8,	7,	0,	2,	0},
-    {	-5,	0,	0,	5,	0,	2},     // T
-    {	-5,	0,	0,	4,	0,	2},	// 120, T
-    {	0,	4,	3,	0,	2,	0},
+    {	0,	8,	7,	2,	0,	0},
+    {	-5,	0,	0,	5,	0,	2},
+    {	-5,	0,	0,	4,	0,	2},	// 120
+    {	0,	4,	3,	2,	0,	0},
     {	-3,	0,	0,	3,	0,	1},
     {	0,	3,	2,	0,	1,	0},
     {	-3,	0,	0,	5,	0,	-5},
     {	2,	0,	0,	-2,	0,	-1},
     {	-1,	0,	0,	0,	0,	1},
     {	0,	1,	1,	0,	0,	0},
-    {	0,	1,	1,	0,	0,	0},     // T
-    {	0,	-1,	0,	0,	0,	0},     // T
+    {	0,	1,	1,	0,	0,	0},
+    {	0,	-1,	0,	0,	0,	0},
   };
-  static const Short ABERT1T[10] = { // Includes ABERT2T and ABERT3T,
-    0,3,44,54,55,113,119,120,128,129 // which will end up as T**2 and
-  };                                 // T**3 respectively.
+  static const Short ABERT1T[10] = {
+    0,3,44,54,55,113,119,120,128,129
+  };
   static const Short ABERT2T[2] = {
-    44, 55
+    44,55
   };
   static const Short ABERT3T[1] = {
     55
@@ -4985,21 +4983,21 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
       k = ABERT1T[i];
       for (j=0; j<6; j++) {
 	argArray[k](j) = MABER[k][j] * factor * T;
-	argArray[k](j+6) = MABER[k][j] * factor;        // d/dT
+	argArray[k](j+6) = MABER[k][j] * factor;
       };
     };
-    for (i=0; i<1; i++) {	// get fundamental argument coefficients
+    for (i=0; i<2; i++) {	// get fundamental argument coefficients
       k = ABERT2T[i];
       for (j=0; j<6; j++) {
-	argArray[k](j) *= T;            // Already multiplied by T in ABERT1T
-	argArray[k](j+6) *= 2*T;        // d/dT
+	argArray[k](j) *= T;
+	argArray[k](j+6) *= 2*T;
       };
     };
     for (i=0; i<1; i++) {	// get fundamental argument coefficients
       k = ABERT3T[i];
       for (j=0; j<6; j++) {
-	argArray[k](j) *= T;        // Already multiplied by T**2 in ABERT2T
-	argArray[k](j+6) *= 1.5*T;  // d/dT: 1.5 * T * 2 * T = 3 * T**2
+	argArray[k](j) *= T;
+	argArray[k](j+6) *= 1.5*T;
       };
     };
   };
@@ -6265,10 +6263,10 @@ const Euler &MeasTable::polarMotion(Double ut) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("PolarMotion(Double)"),
 			   WHERE));
-//	os <<
-//	  String("No requested polar motion data available from IERS tables. "
-//		 "\nProceeding with probably less precision.") <<
-//	  LogIO::POST;
+	os <<
+	  String("No requested polar motion data available from IERS tables. "
+		 "\nProceeding with probably less precision.") <<
+	  LogIO::POST;
       };
     };
     res(0) *= -C::arcsec;
@@ -6437,7 +6435,7 @@ Double MeasTable::dUT1(Double utc) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("dUT1(Double)"),
 			   WHERE));
-	os << LogIO::NORMAL <<
+	os <<
 	  String("No requested dUT1 data available from IERS tables. "
 		 "\nProceeding with probably less precision.") <<
 	  LogIO::POST;

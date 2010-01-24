@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFlagger.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFlagger.h 20838 2009-12-01 10:10:55Z gervandiepen $
 
 #ifndef MS_MSFLAGGER_H
 #define MS_MSFLAGGER_H
@@ -43,7 +43,7 @@ class String;
 // MSFlagger specifies selections on a MeasurementSet
 // </summary>
 
-// <visibility=export>
+// <use visibility=export>
 
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>

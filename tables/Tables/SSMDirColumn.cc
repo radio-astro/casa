@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMDirColumn.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SSMDirColumn.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/SSMDirColumn.h>
 #include <tables/Tables/SSMStringHandler.h>

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordInterface.h 20427 2008-11-17 13:46:17Z gervandiepen $
+//# $Id: RecordInterface.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #ifndef CASA_RECORDINTERFACE_H

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: sstream.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: sstream.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_SSTREAM_H
 #define CASA_SSTREAM_H

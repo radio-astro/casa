@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: InterpolateArray1D.tcc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: InterpolateArray1D.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/Arrays/Vector.h>
@@ -201,7 +201,7 @@ void InterpolateArray1D<Domain,Range>::interpolatey(Cube<Range>& yout,
                                                    Bool goodIsTrue,
 						   Bool extrapolate)
 {
-const uInt ndim = yin.ndim();
+  const uInt ndim = yin.ndim();
   Int nxin=xin.nelements(), nxout=xout.nelements();
   IPosition yinShape=yin.shape();
   DebugAssert(nxin==yinShape(ndim-1),AipsError);
@@ -743,8 +743,8 @@ void InterpolateArray1D<Domain,Range>::interpolateyPtr(PtrBlock<Range*>& yout,
               h = i + j*na + k*na*nxout;
               Int xind1 = i + ind1*na + k*na*nb;
               Int xind2 = i + ind2*na + k*na*nb;
-              yout[h][0] = yin[xind1][0] + frac * (yin[xind2][0] - yin[xind1][0]);
-              youtFlags[h][0] = ( discard ? flag :
+             yout[h][0] = yin[xind1][0] + frac * (yin[xind2][0] - yin[xind1][0]);
+             youtFlags[h][0] = ( discard ? flag :
                                  yinFlags[xind1][0] || yinFlags[xind2][0]);
             }
           }

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AxesSpecifier.h 18291 2005-01-19 23:50:32Z nkilleen $
+//# $Id: AxesSpecifier.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_AXESSPECIFIER_H
 #define CASA_AXESSPECIFIER_H

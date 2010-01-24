@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RetypedArraySetGet.tcc 19858 2007-02-13 02:42:36Z Malte.Marquarding $
+//# $Id: RetypedArraySetGet.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <tables/Tables/RetypedArraySetGet.h>

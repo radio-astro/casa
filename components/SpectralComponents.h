@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#! ========================================================================
-//# $Id: SpectralComponents.h 18036 2004-11-09 21:04:42Z wyoung $
+//# $Id: SpectralComponents.h 20691 2009-07-14 03:13:54Z Malte.Marquarding $
 
 
 #if !defined (AIPS_MODULE_SPECTRALCOMPONENTS_H)

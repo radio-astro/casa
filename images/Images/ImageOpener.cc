@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageOpener.cc 20729 2009-09-24 11:15:26Z gervandiepen $
+//# $Id: ImageOpener.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 //
 
 #include <images/Images/ImageOpener.h>

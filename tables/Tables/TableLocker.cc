@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLocker.cc 19031 2005-10-26 14:22:40Z gvandiep $
+//# $Id: TableLocker.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #include <tables/Tables/TableLocker.h>

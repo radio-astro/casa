@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition2.cc 20705 2009-09-03 09:04:46Z gervandiepen $
+//# $Id: IPosition2.cc 20840 2009-12-07 08:52:26Z gervandiepen $
 
 //# This source file is not needed if you aren't interested in converting
 //# to and from Array<Int>, i.e. if you don't want IPosition's to depend
@@ -84,7 +84,7 @@ AipsIO& operator<< (AipsIO& aio, const IPosition& ip)
   Bool use32 = True;
   if (sizeof(ssize_t) > 4) {
     for (uInt i=0; i<ip.size_p; ++i) {
-      if (ip[i] >= ssize_t(32768)*65536) {
+      if (ip[i] > 2147483647) {
         use32 = False;
         break;
       }

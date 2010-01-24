@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataType.cc 18112 2004-12-05 13:26:40Z ddebonis $
+//# $Id: DataType.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Utilities/DataType.h>
 #include <casa/Utilities/Assert.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TabVecLogic.tcc 19960 2007-02-28 03:24:22Z gervandiepen $
+//# $Id: TabVecLogic.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/TabVecLogic.h>
 

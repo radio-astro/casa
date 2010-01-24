@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQMatrix.h 20628 2009-06-12 02:56:35Z gervandiepen $
+//# $Id: LSQMatrix.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef SCIMATH_LSQMATRIX_H
 #define SCIMATH_LSQMATRIX_H

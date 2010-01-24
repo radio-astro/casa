@@ -1,4 +1,3 @@
-//# TableParse.cc: Classes to hold results from table grammar parser
 //# Copyright (C) 1994,1995,1997,1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableParse.cc 20663 2009-07-07 07:33:13Z gervandiepen $
+//# $Id: TableParse.cc 20839 2009-12-01 10:15:16Z gervandiepen $
 
 #include <tables/Tables/TaQLNode.h>
 #include <tables/Tables/TaQLNodeHandler.h>
@@ -40,6 +39,8 @@
 #include <tables/Tables/TableColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/TableCopy.h>
+#include <tables/Tables/TableIter.h>
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
@@ -1313,6 +1314,18 @@ void TableParseSelect::handleInsert (TableParseSelect* sel)
   insSel_p = sel;
 }
 
+void TableParseSelect::handleCount()
+{
+  if (columnExpr_p.size() == 0) {
+    throw TableInvExpr ("No COUNT columns given");
+  }
+  for (uInt i=0; i<columnExpr_p.size(); i++) {
+    if (!columnExpr_p[i].isScalar()) {
+      throw TableInvExpr ("COUNT column " + columnNames_p[i] + " is not scalar");
+    }
+  }
+}
+
 //# Execute the updates.
 void TableParseSelect::doUpdate (Table& updTable, const Table& inTable)
 {
@@ -1738,6 +1751,37 @@ void TableParseSelect::doDelete (Table& table, const Table& sel)
   // Delete all those rows.
   Vector<uInt> rownrs = sel.rowNumbers (table);
   table.removeRow (rownrs);
+}
+
+
+//# Execute the counts.
+Table TableParseSelect::doCount (const Table& table)
+{
+  // First do the column projection.
+  Table intab = doProject(table);
+  // Create an empty memory table with the same description as the input table.
+  Table tab = TableCopy::makeEmptyMemoryTable ("", intab, True);
+  // Add the uInt _COUNT_ column.
+  ScalarColumnDesc<uInt> countDesc ("_COUNT_");
+  tab.addColumn (countDesc);
+  ScalarColumn<uInt> countCol(tab, "_COUNT_");
+  // Iterate for all columns through the input table.
+  Vector<String> colNames = intab.tableDesc().columnNames();
+  Block<String> bcolNames(colNames.size());
+  std::copy (colNames.begin(), colNames.end(), bcolNames.begin());
+  TableIterator iter (intab, bcolNames);
+  while (!iter.pastEnd()) {
+    Table tabfrom = iter.table();
+    // Add one row containing the column values.
+    uInt rownr = tab.nrow();
+    tab.addRow();
+    Table tabto = tab.project (bcolNames);
+    TableCopy::copyRows (tabto, tabfrom, rownr, 0, 1);
+    // Put the count.
+    countCol.put (rownr, tabfrom.nrow());
+    iter++;
+  }
+  return tab;
 }
 
 
@@ -2278,10 +2322,53 @@ void TableParseSelect::handleGiving (const TableExprNodeSet& set)
 }
 
 
-//# Execute all parts of the SELECT command.
+//# Execute all parts of a TaQL command doing some selection.
 void TableParseSelect::execute (Bool setInGiving,
 				Bool mustSelect, uInt maxRow)
 {
+  //# A selection query consists of:
+  //#  - SELECT to do projection
+  //#     can only refer to columns in FROM
+  //#     can contain aggregate functions
+  //#  - FROM to tell the tables to use
+  //#  - WHERE to select rows from tables
+  //#     can only refer to columns in FROM
+  //#  - GROUPBY to group result of WHERE
+  //#     can refer to columns in SELECT, FROM or expressions of FROM
+  //#     (in SQL92 only to columns in FROM), thus look in FROM first
+  //#  - HAVING to select groups
+  //#     aggregate functions of FROM
+  //#     or aggregate column in SELECT
+  //#     HAVING is possible without GROUPBY (-> one group only)
+  //#  - apply combination (UNION, INTERSECTION, DIFFERENCE)
+  //#     must have equal SELECT result (with equal column names)
+  //#  - ORDERBY to sort result of HAVING
+  //#     can refer to columns in SELECT, FROM, or expressions of FROM
+  //#      not FROM if combination used
+  //#     (in SQL92 only to columns in SELECT), thus look in SELECT first
+  //#  - LIMIT to skip latest results of ORDERBY
+  //#  - OFFSET to ignore first results of ORDERBY
+  //# If GROUPBY is given, SELECT can only contain aggregate or GROUPBY columns
+  //# Plan:
+  //#  - make columnlist of SELECT columns to make them known for parser
+  //#     thus there is a FROM and a SELECT columnlist (as TableDesc?)
+  //#  - execute WHERE and make reftable
+  //#  - if aggregates
+  //#      make temptable if GROUPBY or HAVING has non-FROM columns
+  //#      tableiter over GROUPBY columns (if any) and
+  //#       make temptable of aggregates in SELECT and possibly HAVING
+  //#        get expressions underneath the aggregate
+  //#      apply HAVING if needed
+  //#      apply SELECT
+  //#    else
+  //#      apply SELECT
+  //#  - order result
+  //#  - apply limit/offset
+  //# Note:
+  //# - if only COUNT(*) and no GROUPBY given, shortcut (result is nrows)
+  //#     there can be a HAVING though
+  //# - error if non-aggregate in SELECT if GROUPBY given
+
   //# Set limit if not given.
   if (limit_p == 0) {
     limit_p = maxRow;
@@ -2353,6 +2440,9 @@ void TableParseSelect::execute (Bool setInGiving,
     Table origTab = fromTables_p[0].table();
     doDelete (origTab, table);
     origTab.flush();
+    ///table = origTab;
+  } else if (commandType_p == PCOUNT) {
+    table = doCount (table);
   } else {
     //# Then do the projection.
     if (columnNames_p.nelements() > 0) {
@@ -2436,7 +2526,7 @@ TaQLResult tableCommand (const String& str,
     commandType = hrval.getString();
     TableExprNode expr = hrval.getExpr();
     if (! expr.isNull()) {
-      return TaQLResult(expr);            // result of CALC command
+      return TaQLResult(expr);                 // result of CALC command
     }
     //# Copy the possibly selected column names.
     if (hrval.getNames()) {

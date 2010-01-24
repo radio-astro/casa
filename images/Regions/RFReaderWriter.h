@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RFReaderWriter.h 20621 2009-06-11 13:50:56Z gervandiepen $
+//# $Id: RFReaderWriter.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef IMAGES_RFREADERWRITER_H
 #define IMAGES_RFREADERWRITER_H

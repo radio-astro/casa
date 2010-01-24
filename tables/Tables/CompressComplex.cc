@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CompressComplex.cc 18402 2005-02-15 15:29:33Z gvandiep $
+//# $Id: CompressComplex.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <tables/Tables/CompressComplex.h>

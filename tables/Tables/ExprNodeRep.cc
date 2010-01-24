@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRep.cc 20628 2009-06-12 02:56:35Z gervandiepen $
+//# $Id: ExprNodeRep.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/ExprNodeRep.h>
 #include <tables/Tables/ExprNode.h>
@@ -125,6 +125,11 @@ void TableExprNodeRep::setUnit (const Unit& unit)
 Double TableExprNodeRep::getUnitFactor() const
 {
     return 1.;
+}
+
+Bool TableExprNodeRep::isSingleValue() const
+{
+  return isConstant();
 }
 
 void TableExprNodeRep::replaceTablePtr (const Table& table)
@@ -244,10 +249,10 @@ String TableExprNodeRep::getString (const TableExprId&)
     TableExprNode::throwInvDT ("(getString not implemented)");
     return "";
 }
-Regex TableExprNodeRep::getRegex (const TableExprId&)
+TaqlRegex TableExprNodeRep::getRegex (const TableExprId&)
 {
     TableExprNode::throwInvDT ("(getRegex not implemented)");
-    return Regex("");
+    return TaqlRegex(Regex(String()));
 }
 MVTime TableExprNodeRep::getDate (const TableExprId&)
 {
@@ -623,6 +628,19 @@ void TableExprNodeBinary::show (ostream& os, uInt indent) const
     if (rnode_p != 0) {
 	rnode_p->show (os, indent+2);
     }
+}
+
+Bool TableExprNodeBinary::isSingleValue() const
+{
+  // If no children, it is a constant value.
+  if (! lnode_p) {
+    return True;
+  } else if (! rnode_p) {
+    // Unary node, thus return child value.
+    return lnode_p->isSingleValue();
+  }
+  // Binary; both children must be single.
+  return rnode_p->isSingleValue() && rnode_p->isSingleValue();
 }
 
 void TableExprNodeBinary::replaceTablePtr (const Table& table)

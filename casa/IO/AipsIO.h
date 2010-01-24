@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIO.h 20586 2009-05-06 11:53:12Z gervandiepen $
+//# $Id: AipsIO.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #ifndef CASA_AIPSIO_H
 #define CASA_AIPSIO_H

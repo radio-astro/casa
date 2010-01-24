@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QMath.tcc 20334 2008-06-09 11:04:11Z gervandiepen $
+//# $Id: QMath.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <casa/Exceptions/Error.h>

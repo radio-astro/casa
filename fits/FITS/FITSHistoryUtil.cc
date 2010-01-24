@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSHistoryUtil.cc 20723 2009-09-16 12:07:49Z gervandiepen $
+//# $Id: FITSHistoryUtil.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <fits/FITS/FITSHistoryUtil.h>
 

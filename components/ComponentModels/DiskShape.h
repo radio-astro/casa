@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DiskShape.h 20704 2009-09-03 08:53:52Z gervandiepen $
+//# $Id: DiskShape.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef COMPONENTS_DISKSHAPE_H
 #define COMPONENTS_DISKSHAPE_H

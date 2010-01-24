@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IBMConversion.h 20142 2007-11-06 22:35:21Z Malte.Marquarding $
+//# $Id: IBMConversion.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_IBMCONVERSION_H
 #define CASA_IBMCONVERSION_H

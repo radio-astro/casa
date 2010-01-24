@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StArrayFile.cc 18425 2005-02-21 10:54:45Z gvandiep $
+//# $Id: StArrayFile.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/StArrayFile.h>
 #include <casa/OS/RegularFile.h>

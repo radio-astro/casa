@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageDecomposer.h 20704 2009-09-03 08:53:52Z gervandiepen $
+//# $Id: ImageDecomposer.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef IMAGES_IMAGEDECOMPOSER_H
 #define IMAGES_IMAGEDECOMPOSER_H

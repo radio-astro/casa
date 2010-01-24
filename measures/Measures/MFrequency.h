@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MFrequency.h 20612 2009-06-05 05:39:45Z gervandiepen $
+//# $Id: MFrequency.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #ifndef MEASURES_MFREQUENCY_H
 #define MEASURES_MFREQUENCY_H

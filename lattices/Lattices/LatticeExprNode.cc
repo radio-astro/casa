@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeExprNode.cc 20699 2009-09-02 12:21:07Z gervandiepen $
+//# $Id: LatticeExprNode.cc 20815 2009-11-12 10:25:02Z gervandiepen $
 
 
 #include <lattices/Lattices/LatticeExprNode.h>
@@ -2316,8 +2316,10 @@ Int LatticeExprNode::makeEqualDim (LatticeExprNode& expr0,
     expr1 = cptr->makeExtendLattice (expr1,
 				     attr0.shape(),
 				     attr0.coordinates().coordinates());
-  } else if (result != 0) {
+  } else if (result == 9) {
     throw AipsError ("LatticeExprNode - coordinates of operands mismatch");
+  } else if (result != 0) {
+    throw AipsError ("LatticeExprNode - shapes of operands mismatch");
   }
   return result;
 }

@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: cregex.h 20606 2009-05-19 08:05:56Z gervandiepen $
+    $Id: cregex.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 */
 
 #ifndef CASA_CREGEX_H

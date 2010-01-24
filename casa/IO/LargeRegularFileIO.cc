@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LargeRegularFileIO.cc 20588 2009-05-06 11:55:42Z gervandiepen $
+//# $Id: LargeRegularFileIO.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #include <casa/aips.h>
 #include <casa/IO/LargeIOFuncDef.h>

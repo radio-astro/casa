@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ConvolveGridder.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: ConvolveGridder.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <casa/BasicSL/Constants.h>

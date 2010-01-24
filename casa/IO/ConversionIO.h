@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConversionIO.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ConversionIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_CONVERSIONIO_H
 #define CASA_CONVERSIONIO_H

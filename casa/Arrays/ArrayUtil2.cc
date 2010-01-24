@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayUtil2.cc 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: ArrayUtil2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# The include of Array.h before ArrayUtil.h is needed, otherwise
 //# gcc-4 complains (rightfully) about partialFuncHelper not being declared.

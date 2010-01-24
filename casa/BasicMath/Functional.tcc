@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Functional.tcc 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: Functional.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <casa/BasicMath/Functional.h>
