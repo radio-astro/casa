@@ -292,7 +292,15 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
                 elif ( len(stokesValues) > 0 and axes[3][0]!='' ):
                     blc[axes[3][0]]=mins[axes[3][0]]
                     trc[axes[3][0]]=maxs[axes[3][0]]
-        
+      
+                # <KLUDGE> (but then isn't all this code?) CAS-1910. I have no idea where this is supposed
+                # to go in the above, um, code so the best I can do is to put a check here and fix things
+                # the best as I can. At best, it won't break anything.
+                if (type(blc[1]) == int and trc[1] == ''):
+                    # we missed setting the trc[1] value above so just stick it in here
+                    trc[1] = coords[3]
+                # </KLUDGE>
+  
                 # Create a strings for the wbox command.
                 # For now we assume they are all pixel values, because
                 # this is all we allow.
