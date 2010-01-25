@@ -12,7 +12,8 @@ def generate(env):
     def DarwinDevSdk():
         import platform        
         devpath = { "4" : "/Developer/SDKs/MacOSX10.4u.sdk",
-                    "5" : "/Developer/SDKs/MacOSX10.5.sdk" }
+                    "5" : "/Developer/SDKs/MacOSX10.5.sdk",
+                    "6" : "/Developer/SDKs/MacOSX10.6.sdk" }
         version = platform.mac_ver()[0].split(".")
         if version[0] != '10' or int(version[1]) < 4:
             print "Only Mac OS X >= 10.4 is supported"
