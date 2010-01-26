@@ -292,8 +292,6 @@ protected:
   // Grid/degrid zero spacing points?
   Bool usezero_p;
 
-  //Use douple precision grid in gridding process
-  Bool useDoubleGrid_p;
   Cube<Complex> convFunc;
   Int convSampling;
   Int convSize;

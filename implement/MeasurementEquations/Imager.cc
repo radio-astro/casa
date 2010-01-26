@@ -821,7 +821,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     }
     imageNchan_p=1;
     Double finc=(fmax-fmin); 
-    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean, finc,
+    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean-finc/2.0, finc,
       					refChan, restFreq);
     os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Center frequency = "
@@ -950,7 +950,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
 
-      mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0), finc,
+      mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
 					  refChan, restFreq);
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO
@@ -1008,7 +1008,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       if(!MFrequency::getType(mfreqref, (MRadialVelocity::showType(mImageStart_p.getRef().getType()))))
 	mfreqref=freqFrame_p;
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
-      mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
+      mySpectral = new SpectralCoordinate(mfreqref, freqs(0)-(freqs(1)-freqs(0))/2.0,
 					  freqs(1)-freqs(0), refChan,
 					  restFreq);
      
@@ -1080,7 +1080,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	if(chanVelResolution==0.0)
 	  chanVelResolution=freqResolution(0);
 	mySpectral = new SpectralCoordinate(imfreqref,
-					    freqs(0),
+					    freqs(0)-chanVelResolution/2.0,
 					    chanVelResolution,
 					    refChan, restFreq);
       }
@@ -7484,6 +7484,13 @@ Bool Imager::createFTMachine()
   if(gvp_p) {delete gvp_p; gvp_p=0;}
   if(cft_p) {delete cft_p; cft_p=0;}
 
+  //For ftmachines that can use double precision gridders 
+  Bool useDoublePrecGrid=False;
+  //few channels use Double precision
+  //till we find a better algorithm to determine when to use Double prec gridding
+  if(imageNchan_p < 5)
+    useDoublePrecGrid=True;
+
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
   
   // This next line is only a guess
@@ -7590,11 +7597,7 @@ Bool Imager::createFTMachine()
 	 << "No of WProjection planes set too low for W projection - recommend at least 128"
 	 << LogIO::POST;
     }
-    Bool useDoublePrecGrid=False;
-    //few channels use Double precision
-    //till we find a better algorithm to determine when to use Double prec gridding
-    if(imageNchan_p < 5)
-      useDoublePrecGrid=True;
+    
     ft_p = new WProjectFT(wprojPlanes_p,  mLocation_p,
 			  cache_p/2, tile_p, True, padding_p, useDoublePrecGrid);
     AlwaysAssert(ft_p, AipsError);
@@ -7821,7 +7824,7 @@ Bool Imager::createFTMachine()
 	  << MDirection::showType(phaseCenter_p.getRefPtr()->getType());
       os << LogIO::NORMAL << String(oos)  << LogIO::POST; // Loglevel INFO
       ft_p = new GridFT(cache_p / 2, tile_p, gridfunction_p, mLocation_p,
-                        phaseCenter_p, padding);
+                        phaseCenter_p, padding, False, useDoublePrecGrid);
       
     }
     else {
@@ -7829,7 +7832,7 @@ Bool Imager::createFTMachine()
          << "Single facet Fourier transforms will use image center as tangent points"
 	 << LogIO::POST;
       ft_p = new GridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
-			padding);
+			padding, False, useDoublePrecGrid);
 
     }
     AlwaysAssert(ft_p, AipsError);
