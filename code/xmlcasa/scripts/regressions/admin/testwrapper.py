@@ -3,12 +3,14 @@
 
 import os
 import commands
-import unittest
 import sys
 import shutil
 import inspect
 import re
 import string
+import traceback
+import unittest
+#import nose
 
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
@@ -30,8 +32,9 @@ if not os.access(SCRIPT_REPOS, os.F_OK):
 class UnitTest:
     def __init__(self,testname=''):
         """Take the name of a test file (without .py), wrap it and run"""
-        if (testname == ''):
-            raise Exception, "Null test name"
+#        if (testname == ''):
+#            raise Exception, "Null test name"
+#            raise Error
         
         self.testname = testname
         self.test = testname+'.py'
@@ -39,10 +42,14 @@ class UnitTest:
         self.scriptdir = SCRIPT_REPOS       
         self.datadir = [DATA_DIR]
     
-    def runTest(self):
+    def runFuncTest(self):
         print '-------------- Unit Test for %s ---------------'%self.testname
-        
+        """Wrap and run a script using unittest and nose"""
         testscript = self.searchscript(self.testname)
+        
+        # avoid creating a _work directory
+        if (testscript == ""):
+            return
         
         # create a working directory
         self.cleanup()
@@ -57,7 +64,7 @@ class UnitTest:
         mytest = __import__(self.testname)
         reload(mytest)
         os.chdir(thisDir)
-      
+        
         #get the data
         dataFiles = mytest.data()
         
@@ -72,20 +79,65 @@ class UnitTest:
             if(os.path.isfile(file)):
                 shutil.copy(file, self.workdir+'/'+datafile)
 
-        #wrap the test and run it
+        # Wrap the test in a FunctionTestCase and return it
         os.chdir(self.workdir)       
         testcase = unittest.FunctionTestCase(mytest.run)
-        unittest.TextTestRunner(verbosity=2).run(testcase)
-        
-        os.chdir(thisDir)
+#        unittest.TextTestRunner(verbosity=2).run(testcase)
+#        nose.core.TextTestRunner(verbosity=2).run(testcase)
+        return testcase
+    
+#        os.chdir(thisDir)
        
+    def runTest(self):    
+        print '-------------- Unit Test for %s ---------------'%self.testname
+        """Run a unittest script using nose"""    
+        testscript = self.searchscript(self.testname)
+        
+        # create a working directory
+        self.cleanup()
+        self.createDir()
+        
+        # copy test to workdir
+        self.getTest(testscript, self.testname)
+        thisDir = os.getcwd()
+        os.chdir(self.workdir)       
+                
+        # import the test
+        mytest = __import__(self.testname)
+        reload(mytest)
+              
+        #Create a suite and run it.     
+#        suite = mytest.suite()
+#        nose.core.TextTestRunner(verbosity=2).run(suite)
+
+        # Return the tests of this test module
+        classes = mytest.suite()
+        tests = []
+        
+#        print classes
+        for c in classes:
+            for attr, value in c.__dict__.iteritems():
+#                print attr, " = ", value
+                if len(attr) >= len("test") and \
+                   attr[:len("test")] == "test":
+                    tests.append(c(attr))
+
+        return tests
+
+        
+        
+        # clean up
+        os.chdir(thisDir)
+#        self.cleanup()
+
 
     def cleanup(self):
+        # for safety, avoid removing the local directory
         if (self.workdir == '.'):
             self.workdir = '/tmp/utests'
         
         if os.path.isdir(self.workdir):
-            print 'Removing previous '+ self.workdir
+            print 'Cleaning up '+ self.workdir
             shutil.rmtree(self.workdir)
 
 
@@ -130,7 +182,7 @@ class UnitTest:
 
     def searchscript(self,  testname):
         """Search for the script"""
-        print "Searching for script %s in %s" %(testname,self.scriptdir)
+        print "Searching for script %s in %s" %(testname,self.scriptdir)                  
         scriptdir=self.scriptdir
         testName=string.lower(testname)
 
@@ -160,12 +212,15 @@ class UnitTest:
             #print scriptdir, scr, testname
             if (scr == testname + '.py'):
                 theScript = scr
-                numOfScript += 1             
-        if numOfScript == 0:
-            raise Exception("Could not find test %s" % testname)
+                numOfScript += 1  
+                      
+            if numOfScript == 0:
+                raise Exception, 'Could not find test %s' %testname       
+            
         if( numOfScript > 1) :
             print 'More than 1 scripts found for name '+testname
             print 'Using the following one '+ theScript
+            
         print "Found", theScript
         return theScript
 
@@ -177,8 +232,6 @@ class UnitTest:
         else:    
             shutil.copy(self.scriptdir+'/'+testnamek, \
                     self.workdir+'/')
-
-
 
 
 
