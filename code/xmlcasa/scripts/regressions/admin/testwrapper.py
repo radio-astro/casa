@@ -214,8 +214,8 @@ class UnitTest:
                 theScript = scr
                 numOfScript += 1  
                       
-            if numOfScript == 0:
-                raise Exception, 'Could not find test %s' %testname       
+        if numOfScript == 0:
+            raise Exception, 'Could not find test %s' %testname       
             
         if( numOfScript > 1) :
             print 'More than 1 scripts found for name '+testname
