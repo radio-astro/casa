@@ -32,8 +32,6 @@
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <msvis/MSVis/MSUVWGenerator.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
 
 // UVWMachine Does rotation, including B1950 <-> J2000, refocusing, and maybe
 // even SIN <-> (-)NCP reprojection of existing UVWs, but it does not generate
@@ -183,15 +181,6 @@ private:
   Bool getRestFreq(Vector<Double>& restFreq, const Int spw, const Int fldID);
   void setObsInfo(ObsInfo& obsinfo);
 
-  // 6/17/2009: Taken from Imager with a slight modification.  Besides the
-  // return type, in Imager.h's versions they were precluded from being
-  // static because they are declared virtual, and C++ currently doesn't
-  // allow static virtual functions.
-  //VisSet and resort 
-  //Ignore the result if you just want to create the SORTED_TABLE.
-  static VisSet makeVisSet(MeasurementSet& ms, Bool compress=False,
-                           Bool mosaicOrder=False);
-  
   void ok();
   void init();
 
