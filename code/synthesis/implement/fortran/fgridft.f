@@ -123,6 +123,101 @@ C rotate but we do want to reproject uvw
       return
       end
 C
+C     Single precision gridder
+      subroutine ggrids (uvw, dphase, values, nvispol, nvischan,
+     $   dopsf, flag, rflag, weight, nrow, rownum,
+     $   scale, offset, grid, nx, ny, npol, nchan, freq, c,
+     $   support, sampling, convFunc, chanmap, polmap, sumwt)
+
+      implicit none
+      integer nx, ny, npol, nchan, nvispol, nvischan, nrow
+      complex values(nvispol, nvischan, nrow)
+      complex grid(nx, ny, npol, nchan)
+      double precision uvw(3, nrow), freq(nvischan), c, scale(2),
+     $     offset(2)
+      double precision dphase(nrow), uvdist
+      complex phasor
+      integer flag(nvispol, nvischan, nrow)
+      integer rflag(nrow)
+      real weight(nvischan, nrow)
+      double precision sumwt(npol, nchan)
+      integer rownum
+      integer support, sampling
+      integer chanmap(nchan), polmap(npol)
+      integer dopsf
+
+      double complex nvalue
+
+      double precision convFunc(*)
+      double precision norm
+      double precision wt, wtx, wty
+
+      logical ogrid
+
+      double precision pos(2)
+      integer loc(2), off(2), iloc(2)
+      integer rbeg, rend
+      integer ix, iy, ipol, ichan
+      integer apol, achan, irow
+      
+      irow=rownum
+
+      if(irow.ge.0) then
+         rbeg=irow+1
+         rend=irow+1
+      else 
+         rbeg=1
+         rend=nrow
+      end if
+
+      do irow=rbeg, rend
+         if(rflag(irow).eq.0) then 
+         do ichan=1, nvischan
+            achan=chanmap(ichan)+1
+            if((achan.ge.1).and.(achan.le.nchan).and.
+C     $           (weight(ichan,irow).gt.0.0)) then
+     $           (weight(ichan,irow).ne.0.0)) then
+               call sgrid(uvw(1,irow), dphase(irow), freq(ichan), c, 
+     $              scale, offset, sampling, pos, loc, off, phasor)
+               if (ogrid(nx, ny, loc, support)) then
+                  do ipol=1, nvispol
+                     apol=polmap(ipol)+1
+                     if((flag(ipol,ichan,irow).ne.1).and.
+     $                    (apol.ge.1).and.(apol.le.npol)) then
+C If we are making a PSF then we don't want to phase
+C rotate but we do want to reproject uvw
+                        if(dopsf.eq.1) then
+                           nvalue=cmplx(weight(ichan,irow))
+                        else
+                           nvalue=weight(ichan,irow)*
+     $                        (values(ipol,ichan,irow)*phasor)
+                        end if
+                        norm=0.0
+                        do iy=-support,support
+                           iloc(2)=abs(sampling*iy+off(2))+1
+                           wty=convFunc(iloc(2))
+                           do ix=-support,support
+                              iloc(1)=abs(sampling*ix+off(1))+1
+                              wtx=convFunc(iloc(1))
+                              wt=wtx*wty
+                              grid(loc(1)+ix,loc(2)+iy,apol,achan)=
+     $                             grid(loc(1)+ix,loc(2)+iy,apol,achan)+
+     $                             nvalue*wt
+                              norm=norm+wt
+                           end do
+                        end do
+                        sumwt(apol,achan)=sumwt(apol,achan)+
+     $                       weight(ichan,irow)*norm
+                     end if
+                  end do
+               end if
+            end if
+         end do
+         end if
+      end do
+      return
+      end
+C
 C Degrid a number of visibility records
 C
       subroutine dgrid (uvw, dphase, values, nvispol, nvischan,

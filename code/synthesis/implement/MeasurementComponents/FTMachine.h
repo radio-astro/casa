@@ -211,6 +211,9 @@ public:
   //set  spw for cube that will be used;
   Bool setSpw(Vector<Int>& spw, Bool validFrame);
 
+  //return whether the ftmachine is using a double precision grid
+  virtual Bool doublePrecGrid();
+
   // To make sure no padding is used in certain gridders
   virtual void setNoPadding(Bool nopad){};
   
@@ -270,6 +273,8 @@ protected:
 
   Int lastFieldId_p;
   Int lastMSId_p;
+  //Use douple precision grid in gridding process
+  Bool useDoubleGrid_p;
 
   void initMaps(const VisBuffer& vb);
 
