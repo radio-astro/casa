@@ -1,4 +1,4 @@
-import report
+#import report
 import unittest
 
 class version_test(unittest.TestCase):
@@ -72,4 +72,4 @@ class version_test(unittest.TestCase):
         assert report.cmp_version(b, b) == 0
 
 def suite():
-    return unittest.makeSuite(version_test)
+    return [version_test]
