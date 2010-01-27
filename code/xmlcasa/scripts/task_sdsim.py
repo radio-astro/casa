@@ -100,9 +100,12 @@ def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, ref
 
             nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
                 
-            # find imcenter=average central point, and centralpointing
+            # find imcenter=average central point or direction (for single dish)
             # (to be used for phase center)
-            imcenter , offsets = util.average_direction(pointings)
+            if type(direction) == list:
+                imcenter , offsets = util.average_direction(pointings)
+            else:
+                imcenter = direction
 
             ## commenting out because sd obs don't need centralpointing
 #             minoff=1e10
@@ -303,7 +306,8 @@ def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, ref
         # XXX at least in xy (check channels later)        
         msg("predicting from "+modelimage4d,priority="warn")
         #sm.setoptions(gridfunction='pb', ftmachine='sd', cache=100000)
-        sm.setoptions(gridfunction='pb', ftmachine='sd', location=posobs, cache=100000)
+        #sm.setoptions(gridfunction='pb', ftmachine='sd', location=posobs, cache=100000)
+        sm.setoptions(gridfunction='pb', ftmachine=ftmachine, location=posobs, cache=100000)
         sm.predict(imagename=[modelimage4d])
         sm.done()
         sm.close()
@@ -428,7 +432,8 @@ def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, ref
         im.open(mstoimage)
         im.selectvis(nchan=nchan,start=0,step=1,spw=0)
         im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell,celly=cell,phasecenter=imcenter,nchan=nchan,start=0,step=1,spw=0)
-        im.setoptions(ftmachine='sd',gridfunction='pb')
+        #im.setoptions(ftmachine='sd',gridfunction='pb')
+        im.setoptions(ftmachine=ftmachine,gridfunction='pb')
         outimage=project+'.im'
         im.makeimage(type='singledish',image=outimage)
         im.close()
