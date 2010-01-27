@@ -64,8 +64,8 @@ def importasdm(asdm=None, vis=None, singledish=None, corr_mode=None, srt=None, t
                          os.system('rm -rf %s'%viso)
                          os.system('rm -rf %s.flagversions'%viso)
                    except Exception, instance:
-                      if type(instance) == ImportError and instance.message.find('asap') != -1:
-                         casalog.post(instance.message,'SEVERE')
+                      if type(instance) == ImportError and (str(instance)).find('asap') != -1:
+                         casalog.post(str(instance),'SEVERE')
                          casalog.post('You should build ASAP to be able to create single-dish data.','SEVERE')
                          if os.path.exists(viso):
                             os.system('rm -rf %s'%viso)

@@ -49,6 +49,6 @@ def sdlist(sdfile, scanaverage, listfile, overwrite):
             # DONE
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 

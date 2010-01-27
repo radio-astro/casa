@@ -430,7 +430,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 outimage.close()
 
         except Exception, instance:
-            casalog.post( instance.message, priority = 'ERROR' )
+            casalog.post( str(instance), priority = 'ERROR' )
             return
         finally:
             if os.path.exists( tmpmskname ):

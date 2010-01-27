@@ -80,7 +80,7 @@ def sdscale(sdfile, factor, scaletsys, outfile, overwrite):
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

@@ -143,7 +143,7 @@ def sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode
                 s.set_selection(sel)
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
             del sel
 
@@ -355,6 +355,6 @@ def sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority='ERROR' )
+                casalog.post( str(instance), priority='ERROR' )
                 return
 

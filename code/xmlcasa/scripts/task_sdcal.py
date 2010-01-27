@@ -152,7 +152,7 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

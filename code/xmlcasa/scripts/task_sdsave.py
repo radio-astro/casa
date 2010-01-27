@@ -83,7 +83,7 @@ def sdsave(sdfile, rowlist, scanlist, field, iflist, pollist, scanaverage, timea
             except Exception, instance:
                 #print '***Error***',instance
                 #print 'No output written.'
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 casalog.post( 'No output written.', priority = 'ERROR' )
                 return
    
@@ -144,7 +144,7 @@ def sdsave(sdfile, rowlist, scanlist, field, iflist, pollist, scanaverage, timea
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

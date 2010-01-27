@@ -234,7 +234,7 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
             # DONE
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

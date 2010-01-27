@@ -208,7 +208,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                 del sel
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 	    # Warning for multi-IF data
@@ -623,7 +623,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
         finally:
                 casalog.post('')

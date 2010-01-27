@@ -225,7 +225,7 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
                 s.set_selection(sel)
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
             del sel
 
@@ -421,7 +421,7 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 
