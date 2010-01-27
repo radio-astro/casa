@@ -984,3 +984,5 @@ if ipython:
 
     if vwrpid!=9999: os.kill(vwrpid,9)
     print "leaving casapy..."
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    os.killpg(os.getpgid(0), signal.SIGTERM)

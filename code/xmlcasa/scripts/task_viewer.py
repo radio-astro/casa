@@ -7,7 +7,7 @@ from taskinit import *
 from task_viewerconnection import viewerconnection
 from task_viewerconnection import dbus_connection
 
-def viewer(infile=None,displaytype=None,connection=None):
+def viewer(infile=None,displaytype=None):
 	""" The viewer will display images in raster, contour, vector or
 	marker form.  Images can be blinked, and movies are available
 	for spectral-line image cubes.  For measurement sets, many
@@ -69,29 +69,39 @@ def viewer(infile=None,displaytype=None,connection=None):
                       stacklevel=k
         myf=sys._getframe(stacklevel).f_globals
 
-
 	#Python script
-	viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
-	if (os.uname()[0]=='Darwin'):
-		if type(infile)==str: vwrpid=os.spawnvp(os.P_NOWAIT, viewer_path, [viewer_path, infile, displaytype])
-		if type(infile)==bool: vwrpid=os.spawnvp(os.P_NOWAIT, viewer_path, [viewer_path])
-        	#logpid=os.system('open -a casalogger.app casapy.log')
-	elif (os.uname()[0]=='Linux'):
-		if type(infile)==str: vwrpid=os.spawnlp(os.P_NOWAIT,viewer_path,viewer_path,infile,displaytype)
-        	if type(infile)==bool: vwrpid=os.spawnlp(os.P_NOWAIT,viewer_path,viewer_path)
+	use_tool = True
+	try:
+		if type(vi.cwd( )) == str:
+			use_tool = True
+		else:
+			use_tool = False
+	except:
+		use_tool = False
+
+	if use_tool:
+		panel = vi.panel("viewer")
+		data = None
+		if type(infile) == str:
+			if type(displaytype) == str:
+				data = vi.load( infile, displaytype, panel=panel )
+			else:
+				data = vi.load( infile, panel=panel )
 	else:
-        	print 'Unrecognized OS: No viewer available'
+		viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
+		args = [ viewer_path ]
 
-	tb.clearlocks()
-	myf['vwrpid'] = vwrpid
+		if type(infile) == str:
+			if type(displaytype) == str:
+				args += [ infile, displaytype ]
+			else:
+				args += [ infile ]
 
-	if connection and dbus_connection( ) != None:
-		tries = 0
-		result = viewerconnection( "viewer_" + str(vwrpid), False )
-		while result == None and tries < 11:
-			tries += 1
-			time.sleep(1)
-			result = viewerconnection( "viewer_" + str(vwrpid), False )
-		return result
+		if (os.uname()[0]=='Darwin'):
+			vwrpid=os.spawnvp( os.P_NOWAIT, viewer_path, args )
+		elif (os.uname()[0]=='Linux'):
+			vwrpid=os.spawnlp( os.P_NOWAIT, viewer_path, *args )
+		else:
+			print 'Unrecognized OS: No viewer available'
 
 	return None

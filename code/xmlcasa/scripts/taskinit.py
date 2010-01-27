@@ -1,4 +1,5 @@
 import casac
+import viewertool
 import inspect
 import sys
 import os
@@ -76,6 +77,10 @@ __taskinit_setlogfile(casalog)
 casalog.setglobal(True)
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
+
+# setup viewer tool
+vi = viewertool.viewertool( )
+ving = viewertool.viewertool( False )
 
 defaultsdir = {}
 defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/almadefaults.xml'
