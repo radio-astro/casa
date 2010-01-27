@@ -1407,7 +1407,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			inMsc.imagingWeight().isDefined(0));
     if (allCols && !inputImgWtsExist)
       {
-	LogIO os(LogOrigin("SubMS", "doWriteImgingWeight()"));
+	LogIO os(LogOrigin("SubMS", "doWriteImagingWeight()"));
 	os << LogIO::WARN 
 	   << "All data columns found, but not the IMAGING_WEIGHT column in the input MS. "
 	   << "This is strange.  Brace for unnatural results."
@@ -5524,8 +5524,13 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     Cube<Bool> inFlag;
     Cube<Float> inSpWeight;
     Matrix<Bool> chanFlag;
+
     Cube<Float> spWeight;
     Matrix<Float> inImgWts;
+    Matrix<Float> avgImgWts;
+    Float *oproxyImgWtsP;
+    Float *iproxyImgWtsP;
+    
     Cube<Bool> locflag;
 
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
@@ -5536,11 +5541,6 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	    rowsnow=vb.nRow();
 	    RefRows rowstoadd(rowsdone, rowsdone+rowsnow-1);
 	    //	    Cube<Bool> locflag(npol_p[spw], nchan_p[spw], rowsnow);
-	    Matrix<Float> avgImgWts(nchan_p[spw],rowsnow);
-	    inImgWts.reference(vb.imagingWeight());
-	    avgImgWts.set(0.0);
-	    Float *oproxyImgWtsP = avgImgWts.getStorage(idelete);
-	    Float *iproxyImgWtsP = inImgWts.getStorage(idelete);
 
             Cube<Complex> averdata(npol_p[spw], nchan_p[spw], rowsnow);
 		
@@ -5645,6 +5645,12 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	    //
 	    if (doImgWts_p)
 	      {
+                inImgWts.reference(vb.imagingWeight());
+                iproxyImgWtsP = inImgWts.getStorage(idelete);
+                avgImgWts.resize(nchan_p[spw], rowsnow);
+                avgImgWts.set(0.0);
+                oproxyImgWtsP = avgImgWts.getStorage(idelete);
+            
 		for(Int r=0; r < rowsnow; ++r)
 		  for(Int c=0; c < nchan_p[spw]; ++c)
 		    {
