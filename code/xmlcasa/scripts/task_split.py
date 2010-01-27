@@ -67,12 +67,17 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         #if(spw == ''):
         #    spw = '*'
         
-        if timebin in ('0s', '0'):
-            timebin = '-1s'
+        if(type(antenna) == list):
+            antenna = ', '.join([str(ant) for ant in antenna])
+
         ## Accept digits without units ...assume seconds
         timebin = qa.convert(qa.quantity(timebin), 's')['value']
         timebin = str(timebin) + 's'
-        if(type(width) == str):
+        
+        if timebin == '0s':
+            timebin = '-1s'
+            
+        if type(width) == str:
             try:
                 if(width.isdigit()):
                     width=[string.atoi(width)]
@@ -89,9 +94,47 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             except:
                 raise TypeError, 'parameter width is invalid..using 1'
 
-        if(type(antenna) == list):
-            antenna = ', '.join([str(ant) for ant in antenna])
+        do_chan_avg = spw.find('^') > -1     # '0:2~11^1' would be pointless.
+        if not do_chan_avg:                  # ...look in width.
+            if type(width) == int and width > 1:
+                do_chan_avg = True
+            elif hasattr(width, '__iter__'):
+                for w in width:
+                    if w > 1:
+                        do_chan_avg = True
+                        break
 
+        do_both_chan_and_time_avg = (do_chan_avg and
+                                     string.atof(timebin[:-1]) > 0.0)
+        if do_both_chan_and_time_avg:
+            # Do channel averaging first because it might be included in the spw
+            # string.
+            import tempfile
+            cavms = tempfile.mkdtemp(suffix=outputvis)
+
+            casalog.post('Channel averaging to ' + cavms)
+            ms.split(outputms=cavms,     field=field,
+                     spw=spw,            step=width,
+                     baseline=antenna,   subarray=array,
+                     timebin='',         time=timerange,
+                     whichcol=datacolumn,
+                     scan=scan,          uvrange=uvrange)
+            
+            # The selection was already made, so blank them before time averaging.
+            field = ''
+            spw = ''
+            width = [1]
+            antenna = ''
+            array = ''
+            timerange = ''
+            datacolumn = 'all'
+            scan = ''
+            uvrange = ''
+
+            ms.close()
+            ms.open(cavms)
+            casalog.post('Starting time averaging')
+            
         ms.split(outputms=outputvis, field=field,
                  spw=spw,            step=width,
                  baseline=antenna,   subarray=array,
@@ -99,6 +142,11 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                  whichcol=datacolumn,
                  scan=scan,          uvrange=uvrange)
         ms.close()
+
+        if do_both_chan_and_time_avg:
+            import shutil
+            shutil.rmtree(cavms)
+        
         #the history should go to splitted ms, not the source ms
         # Write history to output MS
         ms.open(outputvis, nomodify=False)

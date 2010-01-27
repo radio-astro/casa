@@ -469,15 +469,6 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True,
         outms = "%s_width%d.ms" % (troot, chanbin)
     try:
         # Do channel averaging.
-        if funnyshapes:
-            # writeDiffSpwShape() needs scratch columns.
-            tb.open(tms)
-            cns = tb.colnames()
-            tb.close()
-            if 'IMAGING_WEIGHT' not in cns:      # Yes, that's right.  Create
-                clearcal(vis=tms)                # cols just to destroy them.
-                casalog.post("Clearing tb locks")
-                tb.clearlocks()
         casalog.post("Channel averaging to " + outms)
         if datacolstr.lower() not in ['all', 'float_data', 'lag_data']:
             datacolstr = 'data'
