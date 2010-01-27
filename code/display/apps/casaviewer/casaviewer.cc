@@ -385,10 +385,10 @@ void launch_server( const char *origname, int numargs, char **args,
 	    fprintf( stderr, "trying to do the setpgrp...%d...\n", getpid() );
 	    perror( "setpgrp issue" );
 	}
-	if ( setsid( ) == -1 ) {
-	    fprintf( stderr, "trying to do the setsid...%d...\n", getpid() );
-	    perror( "setsid issue" );
-	}
+// 	if ( setsid( ) == -1 ) {
+// 	    fprintf( stderr, "trying to do the setsid...%d...\n", getpid() );
+// 	    perror( "setsid issue" );
+// 	}
 
 	char buffer[50];
 	sprintf( buffer,"%d", getpid() );

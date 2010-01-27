@@ -46,7 +46,7 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 
 // Constructors/Destructors //
 
-plotms::plotms() : itsWatcher_(*this) { }
+plotms::plotms() : itsWatcher_(this) { }
 
 plotms::~plotms() { closeApp(); }
 
@@ -361,7 +361,7 @@ void plotms::launchApp() {
                NULL);
         
     } else {
-	itsDBusName_ = to_string(QtDBusApp::dbusServiceName(PlotMSDBusApp::name( ),pid));
+	itsDBusName_ = to_string(dbusServiceName(PlotMSDBusApp::name( ),pid));
         
         // Wait for it to have launched...
         unsigned int slept = 0;

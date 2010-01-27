@@ -13,7 +13,7 @@ static const unsigned int LAUNCH_TOTAL_WAIT_US;
 class plotms_watcher : public CasapyWatcher {
 public:
     // Constructor which takes parent.
-    plotms_watcher(plotms& pl) : p(pl) { CasapyWatcher::registerWatcher(this); }
+    plotms_watcher(plotms *pl) : p(pl) { CasapyWatcher::registerWatcher(this); }
     
     // Destructor.
     ~plotms_watcher() { }
@@ -21,17 +21,17 @@ public:
     // Overrides casapy_watcher::logChanged().
     // <group>
     void logChanged(const String& sinkLocation) {
-        p.setLogFilename(sinkLocation); }
+        p->setLogFilename(sinkLocation); }
     void logChanged(LogMessage::Priority filterPriority) {
-        p.setLogFilter(LogMessage::toString(filterPriority).c_str()); }
+        p->setLogFilter(LogMessage::toString(filterPriority).c_str()); }
     // </group>
     
     // Overrides casapy_watcher::casapyClosing().
-    void casapyClosing() { p.closeApp(); }
+    void casapyClosing() { p->closeApp(); }
     
 private:
     // Plotms parent.
-    plotms& p;
+    plotms *p;
 };
 
 

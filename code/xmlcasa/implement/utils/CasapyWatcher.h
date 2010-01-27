@@ -90,7 +90,7 @@ private:
     };
     
     // All registered watchers.
-    static vector<CasapyWatcher*> WATCHERS;
+    static vector<CasapyWatcher*> *WATCHERS;
     
     // Used to detect when casapy is closing.
     static Singleton SINGLETON;

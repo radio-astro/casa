@@ -35,21 +35,31 @@
 
 namespace casa {
 
+  QtDBusApp::QtDBusApp( ) : service_name(0), object_name(0) { }
+
     QDBusConnection &QtDBusApp::connection( ) {
 	static QDBusConnection bus(QDBusConnection::sessionBus());
 	return bus;
     }
 
     QString QtDBusApp::dbusServiceName( const QString &name, const pid_t pid ) {
-	QString result(service_base);
-	QTextStream(&result) << name << "_" << pid;
-	return result;
+
+	if ( service_name )
+	    return *service_name;
+
+	service_name = new QString( );
+	QTextStream(service_name) << service_base << name << "_" << pid;
+	return *service_name;
     }
 
     QString QtDBusApp::dbusObjectName( const QString &name, const pid_t pid ) {
-	QString result(object_base);
-	QTextStream(&result) << name << "_" << pid;
-	return result;
+
+	if ( object_name )
+	    return *object_name;
+
+	object_name = new QString( );
+	QTextStream(object_name) << object_base << name << "_" << pid;
+	return *object_name;
     }
 
     QString QtDBusApp::serviceOwner( const QString &service ) {
@@ -92,22 +102,33 @@ namespace casa {
 	if ( object_name ) { delete object_name; }
     }
 
-    const QString &QtDBusApp::dbusServiceName( ) {
+    const QString &QtDBusApp::dbusServiceName( const QString &name ) {
 
 	if ( service_name )
 	    return *service_name;
 
 	service_name = new QString( );
-	QTextStream(service_name) << service_base << getName( ) << "_" << getpid( );
+
+	if ( name.size( ) > 0 )
+	    QTextStream(service_name) << service_base << name;
+	else
+	    QTextStream(service_name) << service_base << getName( ) << "_" << getpid( );
+
 	return *service_name;
     }
 
-    const QString &QtDBusApp::dbusObjectName( ) {
+    const QString &QtDBusApp::dbusObjectName( const QString &name ) {
+
 	if ( object_name )
 	    return *object_name;
 
 	object_name = new QString( );
-	QTextStream(object_name) << object_base << getName( ) << "_" << getpid( );
+
+	if ( name.size( ) > 0 )
+	    QTextStream(object_name) << object_base << name;
+	else
+	    QTextStream(object_name) << object_base << getName( ) << "_" << getpid( );
+
 	return *object_name;
     }
 
@@ -130,10 +151,13 @@ namespace casa {
 	}
 #endif
 	int rn = (int) random( );
-	while ( rn <= 0 || used_ids.find(rn) != used_ids.end() ) {
+	while ( rn <= 0 || rn == INT_MAX || rn == SHRT_MAX || rn == CHAR_MAX ||
+		std::find(used_ids.begin( ), used_ids.end( ), rn) != used_ids.end() ) {
+// 		used_ids.find(rn) != used_ids.end() ) {
 	    rn = (int) random( );
 	}
-	used_ids.insert(rn);
+// 	used_ids.insert(rn);
+	used_ids.push_back(rn);
 	return rn;
     }
 

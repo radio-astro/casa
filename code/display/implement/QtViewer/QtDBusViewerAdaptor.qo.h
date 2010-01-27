@@ -45,9 +45,10 @@ namespace casa {
 	Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.viewer")
 
     public:    
-	// Connects to the DBus server using the dbusName() method with the current
-	// process ID.  Returns whether the connection succeeded or not.
-	bool connectToDBus();
+	// Connects to the DBus server using the name provided (if non-null). Otherwise, the
+	// dbusName() method with the current process ID is used.  Returns a boolean which
+	// indicates whether the connection succeeded or not.
+	bool connectToDBus( const QString &dbus_name="" );
 
 	static const QString &name( );
 	const QString &getName( ) const { return name( ); }
