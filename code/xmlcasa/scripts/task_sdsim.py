@@ -1,27 +1,61 @@
-# Single dish observation simulator 
+# Single dish observation simulator
+# KS todo TP simulation for more than one antenae. what happens? 
 import os
 import asap as sd
 from taskinit import * 
 from simutil import *
 
-def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, tau0, verbose):
-
+#def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, tau0, verbose):
+def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, tau0, verbose):
 
     casalog.origin('sdsim')
+    if verbose: casalog.filter(level="DEBUG2")
 
     try:
-        # set up simulation utility
+
+        # this is the output desired bandwidth:
         bandwidth=qa.mul(qa.quantity(nchan), qa.quantity(chanwidth))
-        util=simutil(direction,startfreq=qa.quantity(startfreq), bandwidth=bandwidth, verbose=verbose)
+
+        # create the utility object:
+        util=simutil(direction,startfreq=qa.quantity(startfreq),
+                     bandwidth=bandwidth, verbose=verbose)
         msg=util.msg
 
         # file check 
         if not os.path.exists(modelimage):
             msg("modelimage '%s' is not found." % modelimage,priority="error")
 
+        nbands = 1
+        fband = 'band'+startfreq
         msfile = project+'.ms'
 
-        ### Start mod: 2010/01/20 kana ###
+
+        ##################################################################
+        # read antenna file:
+
+        stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
+        
+        ant=' '.join(' '.join(''.join(antenna.split()).split(',')).split(';'))
+        if ant=='' and nant==1: ant='0'
+        if ant=='' or len(ant.split(' ')) != 1 or ant.find('&') != -1:
+            raise ValueError, 'Select a antenna number.'
+        ant=int(ant)
+        if (ant > nant): raise ValueError, 'Invalid antenna ID.'
+        
+        stnx=[stnx[ant]]
+        stny=[stny[ant]]
+        stnz=[stnz[ant]]
+        stnd=[stnd[ant]]
+        padnames=[padnames[ant]]
+        antnames=[telescopename]
+        if nant > 1: antnames=[telescopename+('SD%02d'%ant)]
+        nant = 1
+        aveant=stnd
+
+        # (set back to simdata after calls to util -
+        #   there must be an automatic way to do this)
+        casalog.origin('simdata')
+
         ##################################################################
         # convert original model image to 4d shape:
 
@@ -29,9 +63,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
         # if cell="incell", this will be changed to an
         # actual value by simutil.image4d below
 
-
-        #if not ignorecoord:
-        if not modifymodel:
+        if not ignorecoord:
             # we are going to use the input coordinate system, so we
             # don't calculate pointings until we know the input pixel
             # size.
@@ -84,10 +116,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
 #             centralpointing=pointings[central]
             
             #epoch, ra, dec = util.direction_splitter(centralpointing)
-            if refdirection=="direction": 
-                epoch, ra, dec = util.direction_splitter(imcenter)
-            else:
-                epoch, ra, dec = util.direction_splitter(refdirection)
+            epoch, ra, dec = util.direction_splitter(imcenter)
             
 
         # truncate model image name to craete new images in current dir:
@@ -114,8 +143,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
         (ra,dec,in_cell,out_cell,
          nchan,startfreq,chanwidth,bandwidth,
          out_nstk) = util.image4d(modelimage,modelimage4d,
-                                  #inbright,ignorecoord,
-                                  inbright,modifymodel,
+                                  inbright,ignorecoord,
                                   ra,dec,
                                   in_cell,out_cell,
                                   nchan,startfreq,chanwidth,bandwidth,
@@ -174,9 +202,12 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             
                 
 
-        # find imcenter=average central point, and centralpointing
+        # find imcenter=average central point or direction (for single dish)
         # (to be used for phase center)
-        imcenter , offsets = util.average_direction(pointings)
+        if type(direction) == list:
+            imcenter , offsets = util.average_direction(pointings)
+        else:
+            imcenter = direction
 
         ## commenting out this part because sd obs don't need centralpointing
 #         minoff=1e10
@@ -207,32 +238,15 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
         if verbose: 
             for dir in pointings:
                 msg("   "+dir)
-        ### End mod ######################
 
 
-        nbands = 1
-        fband = 'band'+startfreq
-
-
-        # read antenna file:
-        stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
-        ant=' '.join(' '.join(''.join(antenna.split()).split(',')).split(';'))
-        if ant=='' and nant==1: ant='0'
-        if ant=='' or len(ant.split(' ')) != 1 or ant.find('&') != -1:
-            raise ValueError, 'Select a antenna number.'
-        ant=int(ant)
-        if (ant > nant): raise ValueError, 'Invalid antenna ID.'
-        stnx=[stnx[ant]]
-        stny=[stny[ant]]
-        stnz=[stnz[ant]]
-        stnd=[stnd[ant]]
-        padnames=[padnames[ant]]
-        antnames=[telescopename]
-        if nant > 1: antnames=[telescopename+('SD%02d'%ant)]
-        nant = 1
-        aveant=stnd
-
+        ##################################################################
         # set up observatory, feeds, etc:
+        # (has to be here since we may have changed nchan)
+        
+        if verbose:
+            msg("preparing empty measurement set",priority="warn")
+
         sm.open(msfile)
         posobs=me.observatory(telescopename)
         diam=stnd;
@@ -264,10 +278,12 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
         sm.settimes(integrationtime=integration, usehourangle=True, 
                     referencetime=reftime)
         totaltime=qa.mul(qa.quantity(integration),qa.quantity(nfld))
+        totalsec=qa.convert(qa.quantity(totaltime),'s')['value']
+        scansec=qa.convert(qa.quantity(integration),'s')['value']
         for k in range(0,nfld) :
+            sttime=-totalsec/2.0+scansec*k
+            endtime=sttime+scansec
             src=project+'_%d'%k
-            sttime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(integration),'s')['value']*k
-            endtime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(integration),'s')['value']*(k+1)
             # this only creates blank uv entries
             sm.observe(sourcename=src, spwname=fband,
                        starttime=qa.quantity(sttime, "s"),
@@ -275,28 +291,17 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
 
-        # set imcenter to the center of the mosaic;  this is used in clean
-        # as the phase center, which could be nonideal if there is no
-        # pointing exactly in the middle of the mosaic.
-        if type(direction) == list:
-            imcenter , discard = util.average_direction(direction)
-            msg("Using phasecenter " + imcenter)
-            if verbose:
-                print direction
-                for dir in direction:
-                    msg("   "+dir)
-        else:
-            imcenter = direction
+        msg("done setting up observations (blank visibilities)")
+        if verbose:
+            sm.summary()
+        
 
-        msg("done setting up observations",priority="warn")
-
-
+        ##################################################################
+        # do actual calculation of visibilities from the model image:
+        
         # image should now have 4 axes and same size as output
         # XXX at least in xy (check channels later)        
-
-        
-        # do actual calculation of visibilities from the model image:
-        if verbose: msg("predicting from "+modelimage4d)
+        msg("predicting from "+modelimage4d,priority="warn")
         #sm.setoptions(gridfunction='pb', ftmachine='sd', cache=100000)
         sm.setoptions(gridfunction='pb', ftmachine='sd', location=posobs, cache=100000)
         sm.predict(imagename=[modelimage4d])
@@ -368,7 +373,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
 
             noisymsfile = project + ".noisy.ms"
             noisymsroot = project + ".noisy"
-            msg('adding thermal noise to ' + noisymsfile,origin="noise")
+            msg('adding thermal noise to ' + noisymsfile,origin="noise",priority="warn")
 
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
 
@@ -385,7 +390,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             if os.path.exists(noisymsfile):
                 cu.removetable(noisymsfile)
             os.system("cp -r "+msfile+" "+noisymsfile)
-            # XXX check for and copy flagversions file as well
+            # RI todo check for and copy flagversions file as well
             
             sm.openfromms(noisymsfile);    # an existing MS
             sm.setdata(fieldid=range(0,nfld))

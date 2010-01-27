@@ -27,31 +27,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
 
-<!--
     <param type="bool" name="ignorecoord">
       <description>scale model coordinates to output parameters</description>
       <value>False</value>
-    </param>
--->
-    <param type="bool" name="modifymodel">
-      <description>modify model image WCS or flux scale</description>
-      <value>False</value>
-    </param>
-
-    <param type="string" name="refdirection" subparam='true'>
-       <description>reference direction (CRVAL): "J2000 19h00m00 -40d00m00" or "direction" or "header"</description>
-       <value>direction</value>
-    </param>
-
-    <param type="string" name="refpixel" subparam='true'>
-       <description>reference pixel (CRPIX): "[100,100]" or "center" or "header"</description>
-       <!--<value>header</value>-->
-       <value>center</value>
-    </param>
-
-    <param type="string" name="incell" subparam='true'>
-       <description>pixel size: "0.1arcsec" or "header"</description>
-       <value>header</value>
     </param>
 
     <param type="string" name="inbright">
@@ -234,15 +212,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--  CONSTRAINTS  -->    
     
     <constraints>
-      <when param="modifymodel">
-	<equals type="bool" value="False"/>
-	<equals type="bool" value="True">
-	  <default param="refdirection"><value type="string">direction</value></default>
-	  <default param="refpixel"><value type="string">center</value></default>
-	  <default param="incell"><value type="string">header</value></default>
-	</equals>
-      </when>
-
       <when param="noise_thermal">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
@@ -278,21 +247,9 @@ single dish simulation task (prototype):
     -------------------------------
     -- Input Model:
     modelimage -- Name of an image to simulate.
-    modifymodel -- Modify model image WCS or flux scale
+    ignorecoord -- ignore whatever is in the image header for coordinates
                 options: (bool) True,False
                 default: False 
-         >>> modifymodel expandable parameters
-                refdirection -- Reference direction of the model image. 
-                       options: (str) 'direction', 'header', or reference 
-                                direction, e.g., 'J2000 19h00m00 -40d00m00"'
-                       default: 'direction'
-                refpixcel -- Reference pixel in the model image. 
-                       options: (str) 'center', 'header' or reference pixel, 
-                                e.g. '[100,100]' 
-                       default: 'center'
-                incell -- Pixel size of the model image. 
-                       options: 'header' or pixel size, e.g. '0.1arcsec'
-                       default: 'header'
     inbright -- Peak surface brightness to scale input image 
                 in Jy/square arcsec.
                 options: 'default' or surface brightness in Jy/sq. 
