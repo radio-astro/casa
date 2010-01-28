@@ -77,7 +77,7 @@ public:
     
 private:
     // Static //
-    
+#if 0
     // Singleton class that is used to detect when casapy is closing.
     class Singleton {
     public:
@@ -88,12 +88,12 @@ private:
         // one static instance of the class.
         ~Singleton() { CasapyWatcher::casapyClosing_(); }
     };
-    
+#endif
     // All registered watchers.
     static vector<CasapyWatcher*> *WATCHERS;
     
     // Used to detect when casapy is closing.
-    static Singleton SINGLETON;
+/*     static Singleton SINGLETON; */
     
     
     // Called by the logger component when the sink location or filter priority

@@ -36,7 +36,7 @@ namespace casac {
 
 vector<CasapyWatcher*> *CasapyWatcher::WATCHERS = 0;
 
-CasapyWatcher::Singleton CasapyWatcher::SINGLETON = Singleton();
+// CasapyWatcher::Singleton CasapyWatcher::SINGLETON = Singleton();
 
 
 void CasapyWatcher::registerWatcher(CasapyWatcher* watcher) {
