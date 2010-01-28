@@ -78,8 +78,12 @@ static int make_it_a_dir( const char *path ) {
 
 //#include <display/QtViewer/QtApp.h>
 
+static pid_t launch_dbus_daemon( );
+
 int main( int argc, char **argv ) {
     // casa::QtApp::init(argc, argv);
+
+    pid_t dbus_pid = launch_dbus_daemon( );
 
     static const char file_separator = '/';
 
@@ -337,4 +341,63 @@ int main( int argc, char **argv ) {
     py.evalFile( "casapy.py" );
     // py.evalString("IPython.Shell.IPShell(user_ns=__ipython_namespace__).mainloop(1)");
 
+}
+
+pid_t launch_dbus_daemon( ) {
+
+    pid_t dbus_pid = 0;
+
+#if ! defined(__APPLE__)
+    char *dbus_session_bus_address = 0;
+    int address_pipe[2];
+    if ( pipe(address_pipe) < 0 ) {
+	perror( "dbus address pipe" );
+	exit(1);
+    }
+
+    dbus_pid = fork( );
+    if ( dbus_pid == 0 ) {
+	close(address_pipe[0]);
+	char buf[50];
+	sprintf( buf, "%d", address_pipe[1] );
+	execlp( "dbus-daemon", "casa-dbus-daemon", "--print-address", buf, "--session", (char*) 0 );
+	close(address_pipe[1]);
+	fprintf( stderr, "failed to launch dbus-daemon...%d...\n", getpid( ) );
+	exit(0);
+    }
+
+    close( address_pipe[1] );
+
+    fd_set read_set;
+    struct timeval wait_time = { 3, 0 };
+    FD_ZERO( &read_set );
+    FD_SET( address_pipe[0], &read_set );
+    int result = select( address_pipe[0] + 1, &read_set, 0, 0, &wait_time );
+    if ( result > 0 ) {
+	char session_bus[1024];
+	int nbytes = read( address_pipe[0], session_bus, sizeof(session_bus)-1 );
+	if ( nbytes > 0 ) {
+	    while ( nbytes >= 1 && isspace(session_bus[nbytes-1]) ) --nbytes;
+	    if ( nbytes <= 0 ) {
+		fprintf( stderr, "dbus address seems to be all whitespace\n" );
+	    } else {
+		session_bus[nbytes] = '\0';
+		dbus_session_bus_address = (char*) malloc( sizeof(char) * (nbytes+50) );
+		sprintf( dbus_session_bus_address, "DBUS_SESSION_BUS_ADDRESS=%s", session_bus );
+	    }
+	} else {
+	    fprintf( stderr, "failed to setup DBUS_SESSION_BUS_ADDRESS...%d...\n", getpid( ) );
+	}
+    } else {
+	fprintf( stderr, "failed to receive a reply from dbus-daemon...%d...\n", getpid( ) );
+    }
+
+    if ( dbus_session_bus_address ) {
+	putenv(dbus_session_bus_address);
+    } else {
+	fprintf( stderr, "non-gui viewer may be inoperable...%d...\n" );
+    }
+#endif
+
+    return dbus_pid;
 }

@@ -32,6 +32,8 @@
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <display/Display/StandAloneDisplayApp.h>
 	// (Configures pgplot for stand-alone Display Library apps).
 
@@ -276,7 +278,7 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	    casapy_start = true;
 	}
     }
-    
+
     char *orig_name = strdup(argv[0]);
     char *name = orig_name + strlen(orig_name) - 1;
     while ( name > orig_name && *name != '/' ) --name;
@@ -378,7 +380,7 @@ void launch_server( const char *origname, int numargs, char **args,
 #ifdef SIGTSTP
 	signal(SIGTSTP, SIG_IGN);
 #endif
-	
+
 	if ( fork( ) != 0 ) { exit(0); }
 
 	if ( setpgrp( ) == -1 ) {
@@ -399,13 +401,15 @@ void launch_server( const char *origname, int numargs, char **args,
 	fprintf( stderr, "start_manager_root( ) should not have returned...%d...\n", getpid() );
 	exit(1);
     }
-	
+
     char buffer[50];
     close(vio[1]);
     read( vio[0], buffer, 50 );
     manager_root_pid = (pid_t) atoi(buffer);
     close(vio[0]);
 
+    int child_root_status;
+    waitpid( child_root, &child_root_status, 0 );
     if ( persistent || ! casapy_start ) { exit(0); }
 
     // catch the exit signal, and signal the manager_root
@@ -462,6 +466,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display ) {
 
 	child_xvfb = fork( );
 	if ( ! child_xvfb ) {
+
 	    close(io[0]);
 	    // don't let ^C [from casapy] kill the viewer...
 // 	    signal(SIGINT,SIG_IGN);
@@ -487,14 +492,18 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display ) {
 	while ( 1 ) {
 	    FD_ZERO( &read_set );
 	    FD_SET( io[0], &read_set );
-	    int result = select( io[0] + 1, &read_set, 0, 0, &wait_time ); 
+	    int result = select( io[0] + 1, &read_set, 0, 0, &wait_time );
 	    if ( result > 0 ) {
 		char buffer[1024];
 		int nbytes = read( io[0], buffer, sizeof(buffer)-1 );
 		if ( nbytes > 0 ) {
 		    buffer[nbytes] = '\0';
-		    if ( strstr( buffer, "already active" ) ) {
+		    if ( strstr( buffer, "already active" ) ||
+			 strstr( buffer, "server already running" ) ||
+			 strstr( buffer, "SocketCreateListener() failed") ) {
 			failure = true;
+			int status;
+			waitpid(child_xvfb, &status, 0);
 			break;
 		    }
 		} else if ( nbytes == 0 ) {
