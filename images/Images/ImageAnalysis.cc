@@ -5685,11 +5685,20 @@ ImageRegion* ImageAnalysis::makeMaskRegion(const String& mask) const {
 		Block<LatticeExprNode> tempLattices;
 		String exprName;
 		//
+                String mas = mask;
+                Int pos = mas.find_last_of("/", 10000);
+                //cout << "pos=" << pos << endl;
+                String dir = "";
+                String im = mas.after(pos);
+                if (pos>0) 
+                   dir = mas.before(pos);
+                //cout << "dir=" << dir << " im=" << im << " pos=" << pos << endl;
 		PtrBlock<const ImageRegion*> tempRegs;
-		LatticeExprNode node = ImageExprParse::command(mask, tempLattices,
-				tempRegs);
+		LatticeExprNode node = ImageExprParse::command(im, tempLattices,
+				tempRegs, dir);
 		const WCLELMask maskRegion(node);
 		p = new ImageRegion(maskRegion);
+                //cout << "ImageAnalysis::makeMaskRegion ok" << endl;
 	}
 	return p;
 }
