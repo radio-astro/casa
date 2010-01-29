@@ -292,8 +292,15 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
     // the current scheme is to hard-wire a limited set of command line
     // parameters... should be reworked in the future.
     args = (char**) malloc(sizeof(char*)*(argc+2));
+
     numargs = 0;
-    args[numargs++] = name;
+    if ( name != orig_name ) {
+	args[numargs++] = strdup(name);
+	free(orig_name);
+    } else {
+	args[numargs++] = orig_name;
+    }
+    
 
     if ( initial_run && (without_gui || server_startup) ) {
 	// --nogui imples --server and for consistency, --server also forks child
