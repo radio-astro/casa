@@ -99,7 +99,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     robust, uvtaper, outertaper, innertaper, modelimage, 
                                     restoringbeam, calready, noise, npixels, padding)
 
-        if dochaniter:
             nchaniter=localnchan
             finalimagename=imagename
             if type(finalimagename)==str:
@@ -116,12 +115,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # loop over channels for per-channel clean
         for j in xrange(nchaniter):
             if dochaniter:
-#                imset.maskimages={}
-#                imagename=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(j)
-#                           for indx, imn in enumerate(finalimagename)]
-#
-#                print "Processing for channel %s starts..." % j
-#                casalog.post("Processing channel %s "% j)
                 chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
                 imagename=chaniterParms['imagename']
                 imnchan=chaniterParms['imnchan']
@@ -438,6 +431,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              threshold=0.01)
 
         if dochaniter:
+            imset.cleanupTempFiles(tmppath)
             imset.imagelist=finalimagename
         presdir=os.path.realpath('.')
         for k in range(len(imset.imagelist)):

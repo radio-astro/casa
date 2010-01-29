@@ -1503,6 +1503,14 @@ class cleanhelper:
                     outim=ia.newimagefromimage(cubeimagerootname+'.model',cubeimage)
             self.putchanimage(cubeimage, chanimage,chan)
 
+    def cleanupTempFiles(self,tmppath):
+        """
+        clean up temporary files created for chaniter=T clean
+        """
+        for dir in tmppath:
+            if os.path.exists(dir):
+               os.system('rm -rf '+dir)
+
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     """
