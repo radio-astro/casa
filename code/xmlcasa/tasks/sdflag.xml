@@ -14,7 +14,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
   <description>
-        ASAP SD spectral flagging task (based on the ALMATST5 recommendations):
+        ASAP SD spectral/row flagging task (based on the ALMATST5 recommendations):
 
         Task Version 2008-01-31 TT
 </description>
@@ -130,7 +130,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: [[1000,3000],[5000,7000]]
                 WARNING: if one or more rows are given in flagrow, 
                          this parameter is ignored
-        flagrow -- list of row numbers to apply flag/unflag (row-based)
+        flagrow -- list of row numbers to apply flag/unflag
                 default: [] (no row selection)
                 example: [0, 2, 3]
                 WARNING: this parameter is effective only when 
@@ -167,14 +167,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         DESCRIPTION:
 
         Task sdflag performs simple channel/row based flagging on spectra.
-        Channel based flagging and row based flagging can not be executed
+        Channel based flagging and row based flagging can not be executed 
         simultaneously: channel based flagging can be executed using the 
-        flag regions specified in maskflag if no row is given in flagrow,
-        whereas row based flagging is executed when one or more rows are
-        specified in flagrow.
-        This is not interactive flagging. If plotlevel&gt;=1, the task asks
-        you if you really apply the flags before it is actually written 
-        to the data with a plot indicating flagged regions.
+        flag regions specified in maskflag if no row is given in flagrow, 
+        whereas row based flagging is executed when one or more rows are 
+        specified in flagrow. This is not interactive flagging. 
+        If plotlevel&gt;=1, the task asks you if you really apply the 
+        flags before it is actually written to the data with a plot 
+        indicating flagged regions.
         The flags are not written to the current (input) datasets unless 
         outfile='none'.
         Please note that this task is still experimental.

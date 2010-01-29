@@ -275,7 +275,7 @@ single dish simulation task (prototype):
     integration --- Time interval for each integration
                 default: '10s'
     startfreq -- Frequency of first channel
-                default: '89MHz'
+                default: '89GHz'
     chanwidth -- Channel width
                 default: '10MHz'
     nchan -- number of channels (can be 1 for a continuum simulation)
