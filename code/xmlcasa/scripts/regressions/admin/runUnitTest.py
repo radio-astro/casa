@@ -13,6 +13,7 @@
 import os
 import sys
 import traceback
+sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
 from testwrapper import *
 import unittest
 import nose
