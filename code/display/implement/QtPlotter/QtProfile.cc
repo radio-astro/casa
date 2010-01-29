@@ -472,7 +472,7 @@ void QtProfile::writeText()
         return ;
     QTextStream ts(&file);
     
-    ts << "#title: Image profile - " << fileName << " " 
+    ts << "#t0itle: Image profile - " << fileName << " " 
        << region << "(" << position << ")\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
@@ -482,6 +482,17 @@ void QtProfile::writeText()
 
     for (uInt i = 0; i < z_xval.size(); i++) {
       ts << z_xval(i) << "    " << z_yval(i) << "\n";
+    }
+
+    int i = pc->getLineCount();
+    for (int k = 1; k < i; k++) {
+      ts << "\n";
+      ts << "# " << pc->getCurveName(k) << "\n";
+      CurveData data = *(pc->getCurveData(k));
+      int j = data.size() / 2;
+      for (int m = 0; m < j; m++) {
+         ts << data[2 * m] << " " << data[2 * m + 1] << "\n";
+      }
     }
    
     return ;
@@ -540,7 +551,7 @@ void QtProfile::changeCoordinateType(const QString &text) {
     ypos = "";
     position = QString("");
     te->setText(position);
-    pc->clearCurve(0);
+    pc->clearCurve();
 
     QString lbl = text;
     if (text.contains("freq")) lbl.append(" (GHz) " + QString(frameType_p.c_str()));
@@ -641,7 +652,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     lastY.resize(0);
     position = QString("");
     te->setText(position);
-    pc->clearCurve(0);
+    pc->clearCurve();
 }
 
 void QtProfile::wcChanged(const String c,
@@ -715,7 +726,8 @@ void QtProfile::wcChanged(const String c,
     //Get Profile Flux density v/s velocity
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
-				coordinate, coordinateType, 0, 0, 0, "", frameType_p);
+				coordinate, coordinateType, 
+                                0, 0, 0, "", frameType_p);
 
     // scale for better display
     // max absolute display numbers should be between 0.1 and 100.0
@@ -742,8 +754,12 @@ void QtProfile::wcChanged(const String c,
         for (uInt i = 0; i < z_yval.size(); i++) {
             z_yval(i) *= pow(10.,ordersOfM);
         }
+    }
+
+    if(ordersOfM!=0){
 	// correct unit string 
-	if(yUnit.startsWith("(")||yUnit.startsWith("[")||yUnit.startsWith("\"")){
+	if(yUnit.startsWith("(")||yUnit.startsWith("[")||
+           yUnit.startsWith("\"")){
 	    // express factor as number
 	    ostringstream oss;
 	    oss << -ordersOfM;
@@ -784,9 +800,11 @@ void QtProfile::wcChanged(const String c,
 	
     pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
 
-
     // plot the graph 
-    pc->plotPolyLine(z_xval, z_yval);
+    
+    pc->clearData();
+    pc->plotPolyLine(z_xval, z_yval, fileName);
+    //pc->addPolyLine(z_xval, z_yval * 0.5, "second Line");
 
     lastX.assign(xv);
     lastY.assign(yv);
@@ -822,7 +840,7 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
                    "click/press+drag the assigned button on\n"
                    "the image to get a image profile");
 
-       pc->clearCurve(0);
+       pc->clearCurve();
    }
      
    //cout << "cube=" << cube << endl;
