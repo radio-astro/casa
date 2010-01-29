@@ -7,7 +7,7 @@ import asap as sd
 import pylab as pl
 
 
-def sdmath(expr, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
+def sdmath(expr, varlist, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
 
         casalog.origin('sdmath')
 
@@ -18,6 +18,14 @@ def sdmath(expr, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, fi
         try:
             if expr=='':
                 raise Exception, 'expr is undefined'
+        
+            for key in varlist.keys():
+                    regex = re.compile( key )
+                    if isinstance( varlist[key], str ):
+                            expr = regex.sub( '\"%s\"' % varlist[key], expr )
+                    else:
+                            expr = regex.sub( "varlist['%s']" % key, expr )
+
             filenames = _sdmath_parse(expr)
 
             sel = sd.selector()
@@ -104,7 +112,8 @@ def _sdmath_parse( expr='' ):
         import re
         retValue=[]
         #p=re.compile(r'[\',\"]\w+[\',\"]')
-        p=re.compile(r'[\',\"]\w+[\.,\-,\w+]*[\',\"]')
+        #p=re.compile(r'[\',\"]\w+[\.,\-,\w+]*[\',\"]')
+        p=re.compile(r'(?!\[)[\',\"]\w+[\.,\-,\w+]*[\',\"](?!\])')
         fnames=p.findall(expr)
         p=re.compile('[\',\"]')
         for fname in fnames:
