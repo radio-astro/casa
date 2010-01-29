@@ -127,6 +127,7 @@ WCBox::WCBox(const Vector<Quantum<Double> >& blc,
    for (i=0; i<nAxes; i++) {
      addAxisDesc (makeAxisDesc (itsCSys, i));
    }
+   
 }
 
 
@@ -393,11 +394,22 @@ WCBox* WCBox::fromBoxString (const String& str, const CoordinateSystem& csys,
       wSt= (csys.worldAxes(stInd))[0];
       stCoord=csys.stokesCoordinate(stInd);
    }
+   //cout << "stInd=" << stInd << " wSt=" << wSt << endl;
+   Int spInd = csys.findCoordinate(Coordinate::SPECTRAL);
+   SpectralCoordinate spCoord;
+   Int wSp=-1;
+   if (spInd>=0){
+      wSp= (csys.worldAxes(spInd))[0];
+      spCoord=csys.spectralCoordinate(spInd);
+   }
+   //cout << "spInd=" << spInd << " wSp=" << wSp << endl;
 
 
    box.trim();
    String type = box.before(" ");
    type.trim();
+   if (!type.contains("worldbox"))
+      return pBox;
    box = box.after(" ");
    box.trim();
    String epd = box.before(" ");
@@ -435,29 +447,29 @@ WCBox* WCBox::fromBoxString (const String& str, const CoordinateSystem& csys,
       trc(1) = qh.asQuantumDouble();
 
    pixelaxes[2] = 2;
-   absRel(2) = 1;
+   absRel(wSp) = 1;
    if (error=="" && qh.fromString(error, coord[4].after(" ")))
-      blc(2) = qh.asQuantumDouble();
+      blc(wSp) = qh.asQuantumDouble();
    if (error=="" && qh.fromString(error, coord[5].after(" ")))
-      trc(2) = qh.asQuantumDouble();
+      trc(wSp) = qh.asQuantumDouble();
 
    pixelaxes[3] = 3;
-   absRel(3) = 1;
+   absRel(wSt) = 1;
    Int stpix=-1;
    if (error=="" && stCoord.toPixel(stpix, Stokes::type(coord[6])))
-      blc(3) = Quantity(stpix, "pix");
+      blc(wSt) = Quantity(stpix, "pix");
    else
       error = "Could not convert the stokes to pix";
 
    stpix = -1;
    if (error=="" && stCoord.toPixel(stpix, Stokes::type(coord[7])))
-      trc(3) = Quantity(stpix, "pix");
+      trc(wSt) = Quantity(stpix, "pix");
    else
       error = "Could not convert the stokes to pix";
 
    if (error=="") {
       //cout << "blc: " << blc << " trc: " << trc << endl;
-      pBox = new WCBox(blc,trc,csys,absRel);
+      pBox = new WCBox(blc,trc,pixelaxes,csys,absRel);
       return pBox;
    }
 
@@ -692,7 +704,92 @@ Bool WCBox::canExtend() const
     return True;
 }
 
+void WCBox::setChanExt (const Double chanStart, const Double chanEnd) {
+   Int spInd = itsCSys.findCoordinate(Coordinate::SPECTRAL);
+   SpectralCoordinate spCoord;
+   Int wSp=-1;
+   if (spInd>=0){
+      wSp= (itsCSys.worldAxes(spInd))[0];
+      spCoord=itsCSys.spectralCoordinate(spInd);
+   }
 
+   const uInt nAxes = itsPixelAxes.nelements();
+
+   Double a;
+   Double b;
+   if (wSp >= 0 & wSp < nAxes) {
+      if (spCoord.toWorld(a, chanStart) && spCoord.toWorld(b, chanEnd)) {
+         itsBlc(wSp).setValue(a);
+         itsTrc(wSp).setValue(b);
+      }
+   }
+
+}
+
+Bool WCBox::getChanExt (Double& chanStart, Double& chanEnd) {
+   
+   
+   Int spInd = itsCSys.findCoordinate(Coordinate::SPECTRAL);
+   SpectralCoordinate spCoord;
+   Int wSp=-1;
+   if (spInd>=0){
+      wSp= (itsCSys.worldAxes(spInd))[0];
+      spCoord=itsCSys.spectralCoordinate(spInd);
+   }
+   //cout << "getChanExt wSp=" << wSp << endl; 
+
+   const uInt nAxes = itsPixelAxes.nelements();
+
+   if (wSp >= 0 & wSp < nAxes) {
+        //cout << "hzVal=" << itsBlc(wSp).getValue() << endl; 
+        //cout << "hzVal=" << itsTrc(wSp).getValue() << endl; 
+        if (spCoord.toPixel(chanStart, itsBlc(wSp).getValue()) && 
+          spCoord.toPixel(chanEnd, itsTrc(wSp).getValue()))
+         return True;
+   }
+   
+
+   return False;
+}
+
+void WCBox::setPolExt (const Double polStart, const Double polEnd) {
+   Int stInd = itsCSys.findCoordinate(Coordinate::STOKES);
+   StokesCoordinate stCoord(Vector<Int>(1, Stokes::I));
+   Int wSt=-1;
+   if (stInd>=0){
+      wSt= (itsCSys.worldAxes(stInd))[0];
+      stCoord=itsCSys.stokesCoordinate(stInd);
+   }
+
+   const uInt nAxes = itsPixelAxes.nelements();
+
+   if (wSt >= 0 && wSt <= nAxes) {
+      itsBlc(wSt) = Quantity(polStart, "pix"); 
+      itsTrc(wSt) = Quantity(polEnd, "pix");
+   }
+
+}
+
+Bool WCBox::getPolExt (Double& polStart, Double& polEnd) {
+
+   Int stInd = itsCSys.findCoordinate(Coordinate::STOKES);
+   StokesCoordinate stCoord(Vector<Int>(1, Stokes::I));
+   Int wSt=-1;
+   if (stInd>=0){
+      wSt= (itsCSys.worldAxes(stInd))[0];
+      stCoord=itsCSys.stokesCoordinate(stInd);
+   }
+
+   const uInt nAxes = itsPixelAxes.nelements();
+
+   if (wSt >= 0 && wSt <= nAxes) {
+      polStart = Int(itsBlc(wSt).getValue()); 
+      polEnd = Int(itsTrc(wSt).getValue());
+      return True;
+   }
+   return False;
+
+}
 
 
 LCRegion* WCBox::doToLCRegion (const CoordinateSystem& cSys,
