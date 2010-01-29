@@ -69,6 +69,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
         localFTMachine = getFTMachine(gridmode, imagermode, mode, wprojplanes,
                                       ftmachine);
+
+        casalog.post("FTMachine used is  %s "%localFTMachine)
+        
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
             (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
