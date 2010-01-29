@@ -677,28 +677,29 @@ ms::statistics(const std::string& column,
 
                /* If FLAG_ROW is set, update flags */
                for (unsigned i = 0; i < flagrow_chunk.nelements(); i++) {
-                 if (flagrow_chunk(i)) {
-                   for (unsigned channel = 0; channel < (unsigned)flag_chunk.shape()(0); channel++) {
-                     for (unsigned pol = 0; pol < (unsigned)flag_chunk.shape()(1); pol++) {
-                       flag_chunk(i, channel, pol) = true;
-                     }
-                   }
-                 }
+                 if (flagrow_chunk(i))
+                   flag_chunk.xyPlane(i).set(true);
                }
 
                append<Bool>(flags, flags_length, nrow, flag_chunk, "FLAG");
-               append<Bool>(flagrows, flagrows_length, nrow, flagrow_chunk, "FLAG_ROW");
+               append<Bool>(flagrows, flagrows_length, nrow, flagrow_chunk,
+                            "FLAG_ROW");
              }
 
              if (column == "DATA" || column == "CORRECTED" || column == "MODEL") {
                  ROVisibilityIterator::DataColumn dc;
-                 if (column == "DATA") dc = ROVisibilityIterator::Observed;
-                 else if (column == "CORRECTED") dc = ROVisibilityIterator::Corrected;
-                 else dc = ROVisibilityIterator::Model;
+                 if(column == "DATA")
+                   dc = ROVisibilityIterator::Observed;
+                 else if(column == "CORRECTED")
+                   dc = ROVisibilityIterator::Corrected;
+                 else
+                   dc = ROVisibilityIterator::Model;
                  
-                 vi.visibility(static_cast<Cube<Complex>&>(data_complex_chunk), dc);
+                 vi.visibility(static_cast<Cube<Complex>&>(data_complex_chunk),
+                               dc);
                  
-                 append<Complex>(data_complex, length, nrow, data_complex_chunk, column);
+                 append<Complex>(data_complex, length, nrow, data_complex_chunk,
+                                 column);
              }
              else if (column == "UVW") {
                  Vector<RigidVector<Double, 3> > uvw;
