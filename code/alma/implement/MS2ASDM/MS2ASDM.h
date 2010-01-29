@@ -102,6 +102,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // get maximum duration of a subscan in seconds
   Double getSubScanDuration(){ return subscanDuration_p; }
 
+  // set maximum duration of a Scheduling Block in seconds, 0. == no time limit
+  void setSBDuration(const Double sBDuration = 1800.){
+    schedBlockDuration_p = sBDuration; }
+
+  // get maximum duration of a Scheduling Block in seconds
+  Double getSBDuration(){ return schedBlockDuration_p; }
+
   void setDataAPCorrected(const Bool isCorrected = True){
     dataIsAPCorrected_p = isCorrected; }
 
@@ -162,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 const String& archiveid="S0", 
 		 const String& rangeid="X1", 
 		 const Bool verbose=True,
-		 const Double subscanDuration = 24.*3600.,
+		 const Double maxSubscanDuration = 24.*3600.,
 		 const Bool msDataIsAPCorrected=True
 		 );
 
@@ -216,18 +223,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // 6) If an MS Scan is longer than subscanduration, it is split up into 
   //    several ASDM subscans.
 
-  Bool writeSBSummaryAndExecBlockStubs(); // "stubs" because these table will be completed later
+  Bool writeSBSummaryAndExecBlockStubs(); // "stubs" because these tables will be completed later
                                           //  with information from the APDM
   Bool writeMainAndScanAndSubScan(const String& datacolumn);
 
-  // write the Main binary data for one DataDescId and one SubScan
+  // write the Main binary data for one DataDescId/FieldId pair and one SubScan
   // (return number of integrations written and set the last three parameters in the list)
-  Int writeMainBinForOneDDIdAndSubScan(const Int theDDId, const String& datacolumn, 
-				       const uInt theScan, const uInt theSubScan,
-				       const uInt startRow, const Double endTime,
-				       const asdm::Tag eBlockId,
-				       int& datasize, asdm::EntityRef& dataOid, 
-				       vector< asdm::Tag >& stateId);
+  Int writeMainBinSubScanForOneDDIdFIdPair(const Int theDDId, const Int theFieldId, 
+					   const String& datacolumn, 
+					   const uInt theScan, const uInt theSubScan,
+					   const uInt startRow, const uInt endRow,
+					   const asdm::Tag eBlockId,
+					   int& datasize, asdm::EntityRef& dataOid, 
+					   vector< asdm::Tag >& stateId);
     
   // *** Aux. methods ***
 

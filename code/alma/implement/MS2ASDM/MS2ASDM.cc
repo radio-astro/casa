@@ -298,12 +298,13 @@ namespace casa {
   }
 
 
-  Int MS2ASDM::writeMainBinForOneDDIdAndSubScan(const Int theDDId, const String& datacolumn, 
-						const uInt theScan, const uInt theSubScan,
-						const uInt startRow, const Double endTime,
-						const Tag eBlockId,
-						int& datasize, asdm::EntityRef& dataOid, 
-						vector< asdm::Tag >& stateIdV){
+  Int MS2ASDM::writeMainBinSubScanForOneDDIdFIdPair(const Int theDDId, const Int theFieldId, 
+						    const String& datacolumn, 
+						    const uInt theScan, const uInt theSubScan,
+						    const uInt startRow, const uInt endRow,
+						    const Tag eBlockId,
+						    int& datasize, asdm::EntityRef& dataOid, 
+						    vector< asdm::Tag >& stateIdV){
 
     LogIO os(LogOrigin("MS2ASDM", "writeMainBinForOneDDIdAndSubScan()"));
 
@@ -316,6 +317,8 @@ namespace casa {
     asdm::ExecBlockRow* eBlockRow = (ASDM_p->getExecBlock()).getRowByKey(eBlockId);
     string eBlockUID = eBlockRow->getExecBlockUID().toString();
     int eBlockNum = eBlockRow->getExecBlockNum();
+
+    Bool warned=False; // use later to avoid repetitive warnings
 
     try{
 
@@ -331,38 +334,45 @@ namespace casa {
       }
 
       Int DDId = dataDescId()(mainTabRow);
-      if(DDId != theDDId){ // skip all other Data Description Ids
+      if(DDId != theDDId){ // check Data Description Id
 	os << LogIO::SEVERE << "Internal error: input parameters to this routine are inconsistent.\n"
 	   << " DDId in start row should be as given in input parameters ==" << theDDId << LogIO::POST;
 	return -1;
       }
       
+      Int FId = fieldId()(mainTabRow);
+      if(FId != theFieldId){ // check Field Id
+	os << LogIO::SEVERE << "Internal error: input parameters to this routine are inconsistent.\n"
+	   << " FieldId in start row should be as given in input parameters ==" << theFieldId << LogIO::POST;
+	return -1;
+      }
+
+
       os << LogIO::NORMAL << "Writing Main table entries for DataDescId " << DDId 
-	 << ", Scan number " << theScan << ", SubScan number " << theSubScan << LogIO::POST;
+	 << ", Field Id " << FId << ", Scan number " << theScan 
+	 << ", SubScan number " << theSubScan << LogIO::POST;
       
       //////////////////////
       // Construct subscan == SDMDataObject
-      //  One subscan consists of all the data taken within subscanDuration seconds starting at the first 
-      //  timestamp of the MS main table.
       
       // Assume MS main table is sorted in time. 
       
       // Get first timestamp.
       Double subScanStartTime = time()(mainTabRow);
-      Double subScanEndTime = time()(nMainTabRows-1); 
-      if(endTime < subScanEndTime){
-	subScanEndTime = endTime;
-      }
+      Double subScanEndTime = time()(endRow); 
       
       // determine number of different timestamps in this subscan 
       unsigned int numTimestampsCorr = 0;
       unsigned int numTimestampsAuto = 0;
-      uInt i=mainTabRow;
-      while(i<nMainTabRows 
-	    && time()(i)<=subScanEndTime
-	    ){
+      for(uInt i=mainTabRow; i<=endRow; i++){
+
 	DDId = dataDescId()(i);
 	if(DDId != theDDId){ // skip all other Data Description Ids
+	  i++;
+	  continue;
+	}
+	FId = fieldId()(i);
+	if(FId != theFieldId){ // skip all other Field Ids
 	  i++;
 	  continue;
 	}
@@ -373,10 +383,8 @@ namespace casa {
 	else{
 	  numTimestampsCorr++;
 	}
-	i++;
-      } // end while
-	// correct subscan end time to actual value
-      subScanEndTime = time()(i-1) + interval()(i-1);
+      } // end for
+
       cout << " subscan number is " << subscanNum << endl;
       cout << "  subscan number of timestamps with crosscorrelations is " << numTimestampsCorr << endl;
       cout << "  subscan number of timestamps with autocorrelations is " << numTimestampsAuto << endl;
@@ -397,8 +405,9 @@ namespace casa {
       unsigned long long startTime = (unsigned long long) floor(subScanStartTime);
       unsigned int execBlockNum = eBlockNum; // constant for all scans
       unsigned int scanNum = theScan; // ASDM scan numbering starts at 1
-      if(scanNum == 0){
+      if(scanNum == 0 && !warned){
 	os << LogIO::WARN << "Scan Number is 0. Note that by convention scan numbers in ASDMs should start at 1." << LogIO::POST;
+	warned = True;
       }
       
       // determine actual number of baselines and antennas
@@ -415,6 +424,11 @@ namespace casa {
 	  
 	  DDId = dataDescId()(i);
 	  if(DDId != theDDId){ // skip all other Data Description Ids
+	    i++;
+	    continue;
+	  }
+	  FId = fieldId()(i);
+	  if(FId != theFieldId){ // skip all other Field Ids
 	    i++;
 	    continue;
 	  }
@@ -465,9 +479,6 @@ namespace casa {
       }
       // if datacolumn is FLOAT_DATA make correlation mode == AUTO as well!
       
-      OptionalSpectralResolutionType spectralResolution = SpectralResolutionTypeMod::FULL_RESOLUTION; 
-      // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
-      os << LogIO::NORMAL << "    Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;      
       
       vector< AtmPhaseCorrection >  apc;
       vector< SDMDataObject::Baseband > basebands; // ???
@@ -489,6 +500,13 @@ namespace casa {
       float scaleFactor = 1.;
       uInt spwId = dataDescription().spectralWindowId()(theDDId);
       unsigned int numSpectralPoint = spectralWindow().numChan()(spwId);
+
+      OptionalSpectralResolutionType spectralResolution = SpectralResolutionTypeMod::FULL_RESOLUTION; 
+      if(numSpectralPoint<5){
+	spectralResolution = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
+	os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." << LogIO::POST;      
+      } 
+
       unsigned int numBin = 1; // number of switch cycles
       NetSideband sideband = CNetSideband::from_int(spectralWindow().netSideband()(spwId));
       
@@ -513,27 +531,27 @@ namespace casa {
       bpFlagsAxes.push_back(AxisNameMod::SPP); /// order: inner part of loop should be last!!!!!!
       bpFlagsAxes.push_back(AxisNameMod::POL);
       SDMDataObject::BinaryPart bpFlags(bpFlagsSize, bpFlagsAxes);
-      cout << "FlagsSize " << bpFlagsSize << endl;
+      //      cout << "FlagsSize " << bpFlagsSize << endl;
       
       unsigned int bpTimesSize = 0; // only needed for data blanking
       //unsigned int bpTimesSize = numTimestampsCorr+numTimestampsAuto; 
       vector<AxisName> bpTimesAxes;
       bpTimesAxes.push_back(AxisNameMod::TIM);
       SDMDataObject::BinaryPart bpActualTimes(bpTimesSize, bpTimesAxes);
-      cout << "TimesSize " << bpTimesSize << endl;
+      //      cout << "TimesSize " << bpTimesSize << endl;
       
       unsigned int bpDurSize = 0; // only needed for data blanking
       //	unsigned int bpDurSize = numTimestampsCorr+numTimestampsAuto;
       vector<AxisName> bpDurAxes;
       bpDurAxes.push_back(AxisNameMod::TIM);
       SDMDataObject::BinaryPart bpActualDurations(bpDurSize, bpDurAxes);
-      cout << "DurSize " << bpDurSize << endl;
+      //      cout << "DurSize " << bpDurSize << endl;
       
       unsigned int bpLagsSize = 0; // not filled for the moment (only useful if LAG_DATA column present) -> Francois 
       vector<AxisName> bpLagsAxes;
       bpLagsAxes.push_back(AxisNameMod::SPP); // ******
       SDMDataObject::ZeroLagsBinaryPart bpZeroLags(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FXF); // how to determine?
-      cout << "LagsSize " << bpLagsSize << endl;
+      //      cout << "LagsSize " << bpLagsSize << endl;
       
       unsigned int bpCrossSize = numSpectralPoint * numStokes * numTimestampsCorr * 2; // real + imag
       vector<AxisName> bpCrossAxes;
@@ -542,7 +560,7 @@ namespace casa {
       bpCrossAxes.push_back(AxisNameMod::SPP); 
       bpCrossAxes.push_back(AxisNameMod::POL);
       SDMDataObject::BinaryPart bpCrossData(bpCrossSize, bpCrossAxes);
-      cout << "CrossSize " << bpCrossSize << endl;
+      //      cout << "CrossSize " << bpCrossSize << endl;
       
       unsigned int bpAutoSize = numSpectralPoint * numStokes * numTimestampsAuto;
       vector<AxisName> bpAutoAxes;
@@ -551,7 +569,7 @@ namespace casa {
       bpAutoAxes.push_back(AxisNameMod::SPP); 
       bpAutoAxes.push_back(AxisNameMod::POL);
       SDMDataObject::AutoDataBinaryPart bpAutoData(bpAutoSize, bpAutoAxes, False); // not normalised
-      cout << "AutoSize " << bpAutoSize << endl;
+      //      cout << "AutoSize " << bpAutoSize << endl;
       
       SDMDataObject::DataStruct dataStruct( apc, basebands, bpFlags, bpActualTimes, bpActualDurations, 
 					    bpZeroLags, bpCrossData, bpAutoData);	 
@@ -587,12 +605,14 @@ namespace casa {
       //////////////////////////////////////////////////////
       // write the integrations until timestamp exceeds limit
       unsigned int integrationNum = 1;
-      while(mainTabRow < nMainTabRows 
-	    && time()(mainTabRow)<=subScanEndTime){
+      for(mainTabRow = startRow; mainTabRow <= endRow; mainTabRow++){
 	
 	DDId = dataDescId()(mainTabRow);
 	if(DDId != theDDId){ // skip all other Data Description Ids
-	  mainTabRow++;
+	  continue;
+	}
+	FId = fieldId()(mainTabRow);
+	if(FId != theFieldId){ // skip all other Field Ids
 	  continue;
 	}
 	
@@ -618,6 +638,11 @@ namespace casa {
 	  
 	  DDId = dataDescId()(mainTabRow);
 	  if(DDId != theDDId){ // skip all other Data Description Ids
+	    mainTabRow++;
+	    continue;
+	  }
+	  FId = fieldId()(mainTabRow);
+	  if(FId != theFieldId){ // skip all other Field Ids
 	    mainTabRow++;
 	    continue;
 	  }
@@ -721,8 +746,7 @@ namespace casa {
 	
 	// (Note: subintegrations are used only for channel averaging to gain time res. by sacrificing spec. res.)
 	
-	mainTabRow++;
-      } // end while
+      } // end for 
       
       sdmdow.done();
       
@@ -2639,6 +2663,8 @@ namespace casa {
     SimpleOrderedMap <asdm::Tag, Double> minBaseline(0.); // map from SBSummaryID to minimum baseline of current exec block
     SimpleOrderedMap <asdm::Tag, Double> maxBaseline(0.); // map from SBSummaryID to maximum baseline of current exec block
 
+    SimpleOrderedMap <Int, Int> firstFieldIdFromObsId(-1); // map from obsId to first field id (for the representative direction)
+
     // unfortunately, we have to loop over the main table to get the information
 
     // but beforehand we calculate the position of the array center for later reference
@@ -2647,7 +2673,8 @@ namespace casa {
     ROMSAntennaColumns ANTCols(anttable);
     ROScalarMeasColumn<MPosition> ANTPositionMeasCol = ANTCols.positionMeas(); 
     Int nAnt = 0;
-    Vector<Double> pos(3); pos=0;
+    Vector<Double> pos(3); 
+    pos=0;
     for (uInt i=0; i<anttable.nrow(); i++) {
       pos+=ANTPositionMeasCol(i).getValue().get();
       nAnt++;
@@ -2660,14 +2687,14 @@ namespace casa {
 	 << LogIO::POST;
       return False; 
     }
-
     MVPosition mObsPos = MVPosition(pos);
     Length siteAltitude = Length(mObsPos.getLength().getValue(unitASDMLength()));
     Angle siteLongitude = Angle(mObsPos.getLong("rad").getValue(unitASDMAngle()));
     Angle siteLatitude = Angle(mObsPos.getLat("rad").getValue(unitASDMAngle()));
 
     // loop over main table
-    for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
+    uInt nMainTabRows = ms_p.nrow();
+    for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
 
       // Step 1: determine SBSummary ID and fill SBSummary table row
       // (duplicate rows will automatically be taken care of by the row adding method)
@@ -2696,13 +2723,20 @@ namespace casa {
       int numberRepeats = 1;
       // limit the scheduling block duration (not the same as the observation duration)
       Double tolerance = 1.1;
-      if(durationSecs > schedBlockDuration_p * tolerance){
+      if(schedBlockDuration_p > 0. && durationSecs > schedBlockDuration_p * tolerance){
 	sbDuration = ASDMInterval(schedBlockDuration_p);
 	numberRepeats = (int) ceil(durationSecs/schedBlockDuration_p);
 	durationSecs = schedBlockDuration_p;
       }
       vector< Angle > centerDirection;
       Int fId = fieldId()(mainTabRow);
+      // an observation (and an SB) can have many fields. use the first one as representative direction
+      if(firstFieldIdFromObsId.isDefined(obsId)){
+	fId = firstFieldIdFromObsId(obsId);
+      }
+      else{
+	firstFieldIdFromObsId.define(obsId,fId);
+      } 
       MDirection theFieldDir = field().phaseDirMeas(fId, 0);
       centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
       centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
@@ -2713,7 +2747,7 @@ namespace casa {
       int numScienceGoal = 1;
       vector< string > scienceGoal;
       scienceGoal.push_back("science goal t.b.d.");
-      int numWeatherConstraint=1;
+      int numWeatherConstraint = 1;
       vector< string > weatherConstraint;
       weatherConstraint.push_back("weather constraint t.b.d.");
       
@@ -2816,14 +2850,14 @@ namespace casa {
 	  maxBaseline.remove(sBSummaryTag);
 	  
 	}
-	else{ // no, it is not complete
-	  continue;
-	}
+	//	else{ // no, it is not complete	 
+	//	}
       } 
       else{// no, it has not been started, yet
 
 	execBlockStartTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s"));
-	execBlockEndTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s")+ intervalQuant()(mainTabRow).getValue("s")); // will be updated
+	execBlockEndTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s")
+				+ intervalQuant()(mainTabRow).getValue("s")); // will be updated
 	Int oldNum = 0;
 	if(execBlockNumber.isDefined(sBSummaryTag)){ 
 	  // increment exec block number
@@ -2850,6 +2884,13 @@ namespace casa {
 	maxBaseline.define(sBSummaryTag, bLine);
       }
 
+      // skip rest of this timestamp
+      Double tStamp = time()(mainTabRow);
+      while(mainTabRow<nMainTabRows && time()(mainTabRow)==tStamp
+	    && dataDescId()(mainTabRow)==ddId){
+	mainTabRow++;
+      }
+      
     } // end loop over main table
 
     // are there pending exec blocks?
@@ -2971,11 +3012,14 @@ namespace casa {
     //      find all DDIds in the time between now and now+subscanduration or until Scan ends
     //        and memorize their start rows
     //      for each DDId found
-    //        Construct subscan == SDMDataObject
-    //           using the ConfigDescription table row asdmConfigDescriptionId_p(startRow)
-    //        and write it
-    //        write corresponding Main table row and subscan table row
-    //        subscanNumber++
+    //        find all FieldIds in the time between now and now+subscanduration or until Scan ends
+    //        for each FieldId
+    //           Construct subscan == SDMDataObject
+    //              using the ConfigDescription table row asdmConfigDescriptionId_p(startRow)
+    //           and write it
+    //           write corresponding Main table row and subscan table row
+    //           subscanNumber++
+    //        end for
     //      end for
     //      next mainTabRow
     //      error if asdmExecBlockId_p(time()(mainTabRow) defined: 
@@ -3039,79 +3083,110 @@ namespace casa {
 	     (rowTime = timeQuant()(mainTabRow).getValue("s")) < MSTimeSecs(scanEndTime) ){ // presently one scan per exec block ???
 	
 	// parameters for the new SubScan table row
-	ArrayTime subScanStartTime = ASDMArrayTime(rowTime); 
-	ArrayTime subScanEndTime = ASDMArrayTime(rowTime + subscanDuration_p); 
-	if(subScanEndTime > scanEndTime){
-	  subScanEndTime = scanEndTime;
+	Double subScanEnd = rowTime + subscanDuration_p; 
+	if(subScanEnd > MSTimeSecs(scanEndTime)){
+	  subScanEnd = MSTimeSecs(scanEndTime);
 	}
-	string fieldName = field().name()(fieldId()(mainTabRow)).c_str(); 
-	SubscanIntentMod::SubscanIntent subscanIntent = SubscanIntentMod::ON_SOURCE;
-	vector< int > numberSubintegration;
-	bool flagRow = False;
 	
 	// find all DDIds in the time between now and end of subscan
 	uInt irow = mainTabRow;
-	SimpleOrderedMap< Int, uInt > subScanStartRows(0);
+	SimpleOrderedMap< Int, uInt > subScanDDIdStartRows(0);
 	while(irow<nMainTabRows &&
-	      ASDMArrayTime(timeQuant()(irow).getValue("s"))< subScanEndTime){
+	      timeQuant()(irow).getValue("s") < subScanEnd){
 	  Int ddId = dataDescId()(irow);
-	  if(!subScanStartRows.isDefined(ddId)){
-	    subScanStartRows.define(ddId, irow);    // memorize their start rows
+	  if(!subScanDDIdStartRows.isDefined(ddId)){
+	    subScanDDIdStartRows.define(ddId, irow);    // memorize their start rows
 	  }
 	  irow++;
 	}
 	
 	// for each DDId found
-	for(uInt ddIndex=0; ddIndex < subScanStartRows.ndefined(); ddIndex++){
-	  // write subscan 
-	  Int theDDId = subScanStartRows.getKey(ddIndex);
-	  uInt startRow = subScanStartRows(theDDId);
-	  
-	  // parameters for the corresponding new Main table row
-	  ArrayTime mainTime = ASDMArrayTime(timeQuant()(startRow).getValue("s"));
-	  Tag configDescriptionId = asdmConfigDescriptionId_p(startRow);
-	  asdm::ConfigDescriptionRow* CDR = (ASDM_p->getConfigDescription()).getRowByKey(configDescriptionId);
-	  Tag fieldIdTag = asdmFieldId_p(fieldId()(startRow));
-	  int numAntenna = CDR->getNumAntenna();
-	  TimeSamplingMod::TimeSampling timeSampling = TimeSamplingMod::INTEGRATION;
-	  Interval interval = ASDMInterval(intervalQuant()(startRow).getValue("s"));
-	  int numIntegration; // to be set by the following method call
-	  int dataSize; // "
-	  EntityRef dataOid; // "
-	  vector< Tag > stateIdV; // "
-	  
-	  numIntegration = writeMainBinForOneDDIdAndSubScan(theDDId, datacolumn, 
-							    scanNumber, subscanNumber,
-							    startRow, MSTimeSecs(subScanEndTime),
-							    execBlockId,
-							    dataSize, dataOid, stateIdV);
-	  if(numIntegration<0){ // error!
-	    os << LogIO::SEVERE << "Error writing Subscan starting at main table row " 
-	       << startRow << LogIO::POST;
-	    return False;
-	  }
+	for(uInt ddIndex=0; ddIndex < subScanDDIdStartRows.ndefined(); ddIndex++){
+	  Int theDDId = subScanDDIdStartRows.getKey(ddIndex);
 
-	  for(uInt i=0; i<(uInt)numIntegration; i++){
-	    numberSubintegration.push_back(0); // no subintegrations for the moment, no channel averaging (???)
+	  // find all FieldIds in the time between now and now+subscanduration or until Scan ends	  
+	  uInt irow2 = mainTabRow;
+	  SimpleOrderedMap< Int, uInt > subScanStartRows(0);
+	  SimpleOrderedMap< Int, uInt > subScanEndRows(0);
+	  while(irow2<nMainTabRows &&
+		timeQuant()(irow2).getValue("s")< subScanEnd){
+	    Int ddId = dataDescId()(irow2);
+	    Int fId = fieldId()(irow2);
+	    if(ddId == theDDId){
+	      if(subScanEndRows.isDefined(fId)){
+		subScanEndRows.remove(fId);
+		subScanEndRows.define(fId, irow2);    // update end row
+	      }
+	      if(!subScanStartRows.isDefined(fId)){
+		subScanStartRows.define(fId, irow2);    // memorize their start rows
+		subScanEndRows.define(fId, irow2);    // and end rows
+	      }
+	    }
+	    irow++;
 	  }
+	  // for each FieldId
+	  for(uInt fIndex=0; fIndex < subScanStartRows.ndefined(); fIndex++){
+	    Int theFId = subScanStartRows.getKey(fIndex);
+	    uInt startRow = subScanStartRows(theFId);
+	    uInt endRow = subScanEndRows(theFId);
+	    // write subscan
+	    // parameters for the new SubScan table row
+	    ArrayTime subScanStartArrayTime = ASDMArrayTime(timeQuant()(startRow).getValue("s")); 
+	    ArrayTime subScanEndArrayTime = ASDMArrayTime(timeQuant()(endRow).getValue("s")); 
+	    string fieldName = field().name()(fieldId()(startRow)).c_str(); 
+	    SubscanIntentMod::SubscanIntent subscanIntent = SubscanIntentMod::ON_SOURCE;
+	    vector< int > numberSubintegration;
+	    bool flagRow = False;
+
+	    // parameters for the corresponding new Main table row
+	    ArrayTime mainTime = subScanStartArrayTime;
+	    Tag configDescriptionId = asdmConfigDescriptionId_p(startRow);
+	    asdm::ConfigDescriptionRow* CDR = (ASDM_p->getConfigDescription()).getRowByKey(configDescriptionId);
+	    Tag fieldIdTag = asdmFieldId_p(theFId);
+	    int numAntenna = CDR->getNumAntenna();
+	    TimeSamplingMod::TimeSampling timeSampling = TimeSamplingMod::INTEGRATION;
+	    Interval interval = ASDMInterval(timeQuant()(endRow).getValue("s") - timeQuant()(startRow).getValue("s")
+					     + intervalQuant()(endRow).getValue("s"));
+	    int numIntegration; // to be set by the following method call
+	    int dataSize; // to be set by the following method call
+	    EntityRef dataOid; // to be set by the following method call
+	    vector< Tag > stateIdV; // "
 	  
-	  // end write subscan
+	    numIntegration = writeMainBinSubScanForOneDDIdFIdPair(theDDId, theFId, 
+								  datacolumn, 
+								  scanNumber, subscanNumber,
+								  startRow, endRow,
+								  execBlockId,
+								  dataSize, dataOid, stateIdV);
+	    if(numIntegration<0){ // error!
+	      os << LogIO::SEVERE << "Error writing Subscan starting at main table row " 
+		 << startRow << LogIO::POST;
+	      return False;
+	    }
+
+	    for(uInt i=0; i<(uInt)numIntegration; i++){
+	      numberSubintegration.push_back(0); // no subintegrations for the moment, no channel averaging (???)
+	    }
 	  
-	  // write corresponding Main table row
-	  tR = tT.newRow(mainTime, configDescriptionId, fieldIdTag, numAntenna, timeSampling, interval, numIntegration, 
-			 scanNumber, subscanNumber, dataSize, dataOid, stateIdV, execBlockId);
-	  tT.add(tR);
+	    // end write subscan
 	  
-	  // write corresponding Subscan table row
+	    // write corresponding Main table row
+	    tR = tT.newRow(mainTime, configDescriptionId, fieldIdTag, numAntenna, timeSampling, interval, numIntegration, 
+			   scanNumber, subscanNumber, dataSize, dataOid, stateIdV, execBlockId);
+	    tT.add(tR);
 	  
-	  tSSR = tSST.newRow(execBlockId, scanNumber, subscanNumber, subScanStartTime, subScanEndTime, fieldName, subscanIntent, 
-			     numIntegration, numberSubintegration, flagRow);
-	  
-	  tSST.add(tSSR);
-	  
-	  subscanNumber++;
-	  numSubScan++;
-          
+	    // write corresponding Subscan table row
+	    
+	    tSSR = tSST.newRow(execBlockId, scanNumber, subscanNumber, subScanStartArrayTime, subScanEndArrayTime, 
+			       fieldName, subscanIntent, numIntegration, numberSubintegration, flagRow);
+	    
+	    tSST.add(tSSR);
+	    
+	    subscanNumber++;
+	    numSubScan++;
+
+	  } // end loop over Field indices         
+
 	} // end loop over DD indices
 	// update mainTabRow
 	mainTabRow = irow;
