@@ -537,16 +537,24 @@ namespace casa {
     		// NOTE fit components change here to their deconvolved counterparts
     		Quantity femaj = emaj/maj;
     		Quantity femin = emin/min;
-    		if (ImageUtilities::deconvolveFromBeam(maj, min, pa, *itsLog, beam)) {
-    			size << "    Component is a point source" << endl;
+    		Bool fitSuccess = False;
+    		Bool isPointSource = ImageUtilities::deconvolveFromBeam(maj, min, pa, fitSuccess, *itsLog, beam);
+    		if(fitSuccess) {
+    			if (isPointSource) {
+    				size << "    Component is a point source" << endl;
+    			}
+    			else {
+    				if (pa.getValue("deg") < 0) {
+    					pa += Quantity(180, "deg");
+    				}
+    				emaj *= femaj;
+    				emin *= femin;
+    				size << _gaussianToString(maj, min, pa, emaj, emin, epa);
+    			}
     		}
     		else {
-    			if (pa.getValue("deg") < 0) {
-    				pa += Quantity(180, "deg");
-    			}
-    			emaj *= femaj;
-    			emin *= femin;
-    			size << _gaussianToString(maj, min, pa, emaj, emin, epa);
+    			// I doubt this block will ever be entered, but just in case
+    			size << "    Deconvolved size could not be determined" << endl;
     		}
     	}
     	return size.str();

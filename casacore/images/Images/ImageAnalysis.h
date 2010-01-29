@@ -546,10 +546,13 @@ class ImageAnalysis
     Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
     // Deconvolve from beam
+    // return True if the deconvolved source is a point source, False otherwise
+    // The returned value of successFit is True if the deconvolution could be performed, False otherwise.
     casa::Bool
       deconvolveFromBeam(Quantity& majorFit,
                          Quantity& minorFit,
                          Quantity& paFit,
+                         Bool& successFit,
                          const Vector<Quantity>& beam);
  private:
     

@@ -331,10 +331,12 @@ SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
         // Adjust position angle to XY pixel frame  (pos +x -> +y)
         Vector<Double> p = ts.toPixel(dirCoord);
         // Deconvolve.
-        //  Bool isPointSource = deconvolveFromBeam(major, minor, paXYFrame, os, beam);
         Quantum<Double> paXYFrame(p(4), Unit("rad"));
         Quantum<Double> paXYFrame2(paXYFrame);
-        ImageUtilities::deconvolveFromBeam(major, minor, paXYFrame, os, beam2);
+        Bool fitSuccess;
+        // TODO atm we do not check for fit success, but probably should. fitSuccess is new
+        // and part of unrelated work.
+        ImageUtilities::deconvolveFromBeam(major, minor, paXYFrame, fitSuccess, os, beam2);
 
         // Account for frame change of position angle
         Quantum<Double> diff = paXYFrame2 - paXYFrame;
@@ -449,7 +451,7 @@ Bool ImageUtilities::deconvolveFromBeam(Quantity& majorFit, Quantity& minorFit,
 
 Bool ImageUtilities::deconvolveFromBeam(
     Quantum<Double>& majorFit, Quantum<Double>& minorFit,
-    Quantum<Double>& paFit, LogIO& os, const Vector<Quantum<Double> >& beam) {
+    Quantum<Double>& paFit, Bool& successFit, LogIO& os, const Vector<Quantum<Double> >& beam) {
     // moved from ImageAnalysis
 
     // The position angle of the component is measured in the frame
@@ -465,6 +467,7 @@ Bool ImageUtilities::deconvolveFromBeam(
         isPointSource = GaussianConvert::deconvolve(majorOut, minorOut, paOut,
                 majorFit, minorFit, paFit, beam(0), beam(1), beam(2));
     } catch (AipsError x) {
+    	successFit = False;
         os << LogIO::WARN << "Could not deconvolve beam from source - "
                 << x.getMesg() << endl;
         {
@@ -484,6 +487,7 @@ Bool ImageUtilities::deconvolveFromBeam(
     majorFit = majorOut;
     minorFit = minorOut;
     paFit = paOut;
+    successFit = True;
     return isPointSource;
 }
 
