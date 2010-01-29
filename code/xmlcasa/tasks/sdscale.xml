@@ -23,9 +23,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     <value></value>
     </param>
 
-    <param type="double" name="factor">
-	    <description>scaling factor</description>
-	    <value>1.0</value>
+    <param type="any" name="factor">
+	    <description>scaling factor (float or float list)</description>
+            <any type="variant" limittype="double doubleArray"/>
+	    <value type="double">1.0</value>
     </param>
 
     <param type="bool" name="scaletsys">
@@ -50,7 +51,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <example>
         Keyword arguments:
         sdfile -- name of input SD dataset
-        factor -- scaling factor
+        factor -- scaling factor. float or one dimensional float list.
                   default: 1 (no scaling)
         scaletsys -- scaling of associated Tsys
                     default: True
@@ -74,6 +75,14 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         is written to a new file with the same format as the input data 
         (Note: in case of the RPFITS format input data, it will be written 
         to SDFITS format).
+
+        The scaling factor, factor, accepts both scalar type and list 
+        type value. The list must be one or two dimensional. If factor is 
+        one dimensional, its length must coincide with a number of spectral 
+        channel. If factor is two dimensional, its shape must be 
+        (n, 1) or (n, m), where n is a number of spectrum, while m is a 
+        number of channel for each spcetum. m can be variable for each 
+        spectrum.
 
         WARNING for the GBT raw SDFITS format data as input:
         Currently, all SDtasks cannot handle GBT raw SDFITS format data
