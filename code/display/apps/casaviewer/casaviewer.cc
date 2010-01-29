@@ -99,6 +99,11 @@ int main( int argc, const char *argv[] ) {
 
 	QApplication qapp(numargs, args, true);
 
+	// if it's a server, stick around even if all windows are closed...
+	if ( server_startup ) {
+	    qapp.setQuitOnLastWindowClosed(false);
+	}
+
 	String	   filename    = "",
 		   displaytype = "",
 		   datatype    = "",
