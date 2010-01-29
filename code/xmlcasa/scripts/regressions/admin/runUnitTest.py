@@ -1,7 +1,8 @@
-
 import os
 import sys
-#sys.path.append('/Users/scastro/casadir/utests')
+
+sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
+
 from testwrapper import *
 import unittest
 #sys.path.append('/Library/Python/2.6/site-packages/nose-0.11.1-py2.6.egg')
