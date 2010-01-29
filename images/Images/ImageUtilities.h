@@ -252,9 +252,11 @@ public:
 
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
     // Deconvolve from beam
+    // Returns True if the deconvolved source is a point source, False otherwise.
+    // The returned value of successFit will be True if the deconvolved size could be determined, False otherwise.
     static casa::Bool deconvolveFromBeam(
         casa::Quantum<casa::Double>& majorFit, casa::Quantum<casa::Double>& minorFit,
-        casa::Quantum<casa::Double>& paFit, casa::LogIO& os,
+        casa::Quantum<casa::Double>& paFit, casa::Bool& successFit, casa::LogIO& os,
         const casa::Vector<casa::Quantum<casa::Double> >& beam
     );
 

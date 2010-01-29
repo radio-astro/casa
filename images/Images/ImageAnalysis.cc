@@ -5892,9 +5892,9 @@ void ImageAnalysis::set_cache(const IPosition &chunk_shape) const {
 
 // the public version of the function
 Bool ImageAnalysis::deconvolveFromBeam(Quantity& majorFit, Quantity& minorFit,
-		Quantity& paFit, const Vector<Quantity>& beam) {
+		Quantity& paFit, Bool& successFit, const Vector<Quantity>& beam) {
 
-	return ImageUtilities::deconvolveFromBeam(majorFit, minorFit, paFit, *itsLog, beam);
+	return ImageUtilities::deconvolveFromBeam(majorFit, minorFit, paFit, successFit, *itsLog, beam);
 
 }
 
