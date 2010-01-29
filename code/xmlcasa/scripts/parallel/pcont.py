@@ -233,7 +233,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     spwsel,startsel,nchansel=findchansel(msname, spwids, numcpu)
 
     out=range(numcpu)  
-    c.pgc('from  parallel_cont import *')
+    c.pgc('from  parallel.parallel_cont import *')
     spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
     fieldlaunch='"'+field+'"' if (type(field) == str) else str(field)
     pslaunch='"'+phasecenter+'"' if (type(phasecenter) == str) else str(phasecenter)
@@ -332,7 +332,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     time2=time.time()
     
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
-
+    c.stop_cluster()
 
 def pcube(msname=None, imagename='elimage', imsize=[1000, 1000], 
           pixsize=['1arcsec', '1arcsec'], phasecenter='', 
@@ -392,7 +392,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     numcpu=numcpu*len(hostnames)
 
     out=range(numcpu)  
-    c.pgc('from  parallel_cont import *')
+    c.pgc('from  parallel.parallel_cont import *')
     spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
     fieldlaunch='"'+field+'"' if (type(field) == str) else str(field)
     pslaunch='"'+phasecenter+'"' if (type(phasecenter) == str) else str(phasecenter)
@@ -407,8 +407,10 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     b=cleanhelper()
     donegetchan=np.array(range(nchan),dtype=bool)
     doneputchan=np.array(range(nchan),dtype=bool)
+    readyputchan=np.array(range(nchan), dtype=bool)
     donegetchan.setfield(False,bool)
     doneputchan.setfield(False,bool)
+    readyputchan.setfield(False, bool)
     chanind=np.array(range(numcpu), dtype=int)
     
     while(chancounter < nchan):
@@ -429,23 +431,30 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
             for k in range(nchan):
                 ###split the remaining channel image while the master is waiting
                 if(not donegetchan[k]):
-                    print 'retrieving model for chan ', k
                     b.getchanimage(model, imagename+str(k)+'.model', k)
                     donegetchan[k]=True
+                if(readyputchan[k] and (not doneputchan[k])):
+                    b.putchanimage(model, imagename+str(k)+'.model', k)
+                    b.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k)
+                    b.putchanimage(imagename+'.image', imagename+str(k)+'.image', k)
+                    doneputchan[k]=True
             overone=True
             for k in range(numcpu):
                 overone=(overone and c.check_job(out[k],False))
-                if(c.check_job(out[k],False) and (not doneputchan[chanind[k]])):
-                    b.putchanimage(model, imagename+str(chanind[k])+'.model', chanind[k])
-                    b.putchanimage(imagename+'.residual', imagename+str(chanind[k])+'.residual', chanind[k])
-                    b.putchanimage(imagename+'.image', imagename+str(chanind[k])+'.image', chanind[k])
-                    doneputchan[chanind[k]]=True
-                    
-                print 'k', k
+                if((chanind[k] > -1) and c.check_job(out[k],False) and 
+                   (not readyputchan[chanind[k]])):
+                    readyputchan[chanind[k]]=True
             over=overone
+    ##sweep the remainder channels in case they are missed
+    for k in range(nchan):
+         if(not doneputchan[k]):
+             b.putchanimage(model, imagename+str(k)+'.model', k)
+             b.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k)
+             b.putchanimage(imagename+'.image', imagename+str(k)+'.image', k)
+             doneputchan[k]=True
     time2=time.time()
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
-
+    c.stop_cluster()
 
 
  
