@@ -1,5 +1,4 @@
-""" Class to wrap a test to use with unittest framework.
-    The test needs to contain two functions: data() and run()"""
+""" Class to wrap a test to use with unittest framework."""
 
 import os
 import commands
@@ -10,8 +9,6 @@ import re
 import string
 import traceback
 import unittest
-#import nose
-
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 DATA_DIR = AIPS_DIR+'/data'
@@ -21,44 +18,41 @@ UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
 if not os.access(SCRIPT_REPOS, os.F_OK):
     if os.access(AIPS_DIR+'/lib64', os.F_OK):
         SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/regressions/'
-        UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
+        UTILS_DIR = SCRIPT_REPOS+'admin'
     elif os.access(AIPS_DIR+'/lib', os.F_OK):
         SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/regressions/'
-        UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
+        UTILS_DIR = SCRIPT_REPOS+'admin'
     else:            #Mac release
         SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
-        UTILS_DIR = AIPS_DIR+'/MacOS/'        
+        UTILS_DIR = SCRIPT_REPOS+'admin'        
+
+sys.path.append(UTILS_DIR)
 
 class UnitTest:
     def __init__(self,testname=''):
         """Take the name of a test file (without .py), wrap it and run"""
-#        if (testname == ''):
-#            raise Exception, "Null test name"
-#            raise Error
-        
         self.testname = testname
-        self.test = testname+'.py'
         self.workdir = testname+'_work'
         self.scriptdir = SCRIPT_REPOS       
         self.datadir = [DATA_DIR]
     
     def runFuncTest(self):
         print '-------------- Unit Test for %s ---------------'%self.testname
-        """Wrap and run a script using unittest and nose"""
-        testscript = self.searchscript(self.testname)
+        """Wrap a script using unittest"""
+        testscript = self.searchscript(self.testname, self.scriptdir)
         
         # avoid creating a _work directory
         if (testscript == ""):
             return
         
         # create a working directory
-        self.cleanup()
-        self.createDir()
+        self.cleanup(self.workdir)
+        self.createDir(self.workdir)
         
         # copy test to workdir
-        self.getTest(testscript, self.testname)
+        self.getTest(testscript, self.testname, self.scriptdir, self.workdir)
         thisDir = os.getcwd()
-        os.chdir(self.workdir)       
+        os.chdir(self.workdir)   
                 
         # import the test
         mytest = __import__(self.testname)
@@ -70,7 +64,7 @@ class UnitTest:
         
         print 'Searching for input data in %s'%(self.datadir)
         for datafile in dataFiles: 
-            file = self.locatedata(datafile)
+            file = self.locatedata(datafile, self.datadir)
             #if data already exist, remove them
             if(file != ''):
                 os.system('rm -rf '+ self.workdir+'/'+datafile)
@@ -82,23 +76,25 @@ class UnitTest:
         # Wrap the test in a FunctionTestCase and return it
         os.chdir(self.workdir)       
         testcase = unittest.FunctionTestCase(mytest.run)
-#        unittest.TextTestRunner(verbosity=2).run(testcase)
-#        nose.core.TextTestRunner(verbosity=2).run(testcase)
+
         return testcase
     
-#        os.chdir(thisDir)
        
     def runTest(self):    
         print '-------------- Unit Test for %s ---------------'%self.testname
-        """Run a unittest script using nose"""    
-        testscript = self.searchscript(self.testname)
+        """Set up a unit test script to run wit nose"""    
+        testscript = self.searchscript(self.testname, self.scriptdir)
+
+        # avoid creating a _work directory
+        if (testscript == ""):
+            return
         
         # create a working directory
-        self.cleanup()
-        self.createDir()
+        self.cleanup(self.workdir)
+        self.createDir(self.workdir)
         
         # copy test to workdir
-        self.getTest(testscript, self.testname)
+        self.getTest(testscript, self.testname,self.scriptdir, self.workdir)
         thisDir = os.getcwd()
         os.chdir(self.workdir)       
                 
@@ -106,10 +102,6 @@ class UnitTest:
         mytest = __import__(self.testname)
         reload(mytest)
               
-        #Create a suite and run it.     
-#        suite = mytest.suite()
-#        nose.core.TextTestRunner(verbosity=2).run(suite)
-
         # Return the tests of this test module
         classes = mytest.suite()
         tests = []
@@ -124,33 +116,27 @@ class UnitTest:
 
         return tests
 
-        
-        
-        # clean up
-        os.chdir(thisDir)
-#        self.cleanup()
 
-
-    def cleanup(self):
+    def cleanup(self,workdir):
         # for safety, avoid removing the local directory
-        if (self.workdir == '.'):
-            self.workdir = '/tmp/utests'
+        if (workdir == '.'):
+            workdir = '/tmp/utests'
         
-        if os.path.isdir(self.workdir):
-            print 'Cleaning up '+ self.workdir
-            shutil.rmtree(self.workdir)
+        if os.path.isdir(workdir):
+            print 'Cleaning up '+ workdir
+            shutil.rmtree(workdir)
 
 
-    def createDir(self):
+    def createDir(self, workdir):
         """Create a working directory"""
-        if os.access(self.workdir, os.F_OK) is False:
-            print self.workdir+' does not exist, creating it'
-            os.makedirs(self.workdir)
+        if os.access(workdir, os.F_OK) is False:
+            print workdir+' does not exist, creating it'
+            os.makedirs(workdir)
 
 
-    def locatedata(self, datafile):
+    def locatedata(self, datafile, datadir):
         
-        for repository in self.datadir :
+        for repository in datadir :
 
             #Skip hidden directories
             filter_hidden = ' | grep -vE "^\\."  | grep -vE "/\\."'
@@ -177,14 +163,15 @@ class UnitTest:
                 print 'Will use', retval
                 return retval
         raise Exception, 'Could not find datafile %s in the repository directories %s' \
-              % (datafile, self.datadir)
+              % (datafile, datadir)
  
 
-    def searchscript(self,  testname):
+    def searchscript(self, testname, scriptdir):
         """Search for the script"""
-        print "Searching for script %s in %s" %(testname,self.scriptdir)                  
-        scriptdir=self.scriptdir
-        testName=string.lower(testname)
+        print "Searching for script %s in %s" %(testname,scriptdir)                  
+#        scriptdir=self.scriptdir
+        TestName=string.lower(testname)
+#        print 'testname='+testname
 
         # search for DIR/tests/<name>.py
         if os.path.isdir(scriptdir+'/tests/'):
@@ -195,8 +182,9 @@ class UnitTest:
         theScript=''
         numOfScript=0
         for scr in allScripts :
+#            print 'scr='+scr
             #if(string.find(scr,testname)>=0):
-            if(scr == testname+'.py'):
+            if(scr == TestName+'.py'):
 #                print scr, testname
                 #if (self.ispythonscript(scr)):
                 theScript = 'tests/'+scr
@@ -209,31 +197,66 @@ class UnitTest:
             allScripts=[]
 #        print "allScripts = ", allScripts
         for scr in allScripts:
-            #print scriptdir, scr, testname
-            if (scr == testname + '.py'):
+#            print scriptdir, scr, testname
+            if (scr == TestName + '.py'):
                 theScript = scr
                 numOfScript += 1  
                       
         if numOfScript == 0:
-            raise Exception, 'Could not find test %s' %testname       
+            raise Exception, 'Could not find test %s' %TestName       
             
         if( numOfScript > 1) :
-            print 'More than 1 scripts found for name '+testname
+            print 'More than 1 scripts found for name '+TestName
             print 'Using the following one '+ theScript
             
         print "Found", theScript
         return theScript
 
-    def getTest(self, testnamek, testName):
-        #Copy the script to the working dir
+    def getTest(self, testnamek, testName, scriptdir, workdir):
+        print 'Copy the script to the working dir'
         if testnamek[0:6] == 'tests/':
-            shutil.copy(self.scriptdir+'/'+testnamek,
-                        self.workdir+'/'+testName+'.py')
+            shutil.copy(scriptdir+'/'+testnamek,
+                        workdir+'/'+testName+'.py')
         else:    
-            shutil.copy(self.scriptdir+'/'+testnamek, \
-                    self.workdir+'/')
+            shutil.copy(scriptdir+'/'+testnamek, \
+                    workdir+'/')
 
-
-
+class ExecTest(unittest.TestCase,UnitTest):
+    """Wraps scripts to run with execfile"""
+    
+    def setup(self):
+        self.workdir = self.testname+'_work'
+        self.scriptdir = SCRIPT_REPOS       
+        
+        self.testscript = self.searchscript(self.testname,self.scriptdir)
+        # avoid creating a _work directory
+        if (self.testscript == ""):
+            return
+        
+        # create a working directory
+        self.cleanup(self.workdir)
+        self.createDir(self.workdir)
+        
+        # copy test to workdir
+        self.getTest(self.testscript, self.testname, self.scriptdir, self.workdir)
+        thisDir = os.getcwd()
+        os.chdir(self.workdir)    
+           
+    def testrun(self):
+        #self.testname is defined in the calling function
+        # run self.setup before calling this function
+        """Run test with execfile"""
+        
+        # run the test
+        a=inspect.stack()
+        stacklevel=0
+        for k in range(len(a)):
+            if (string.find(a[k][1], 'ipython console') > 0):
+                stacklevel=k
+                break
+        gl=sys._getframe(stacklevel).f_globals
+        
+        execfile(self.testscript, gl)   
+        
 
         
