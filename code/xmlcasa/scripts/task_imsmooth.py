@@ -79,13 +79,13 @@ from taskinit import *
 from imregion import *
 
 
-def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask, outfile):
+def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans, stokes, mask, outfile):
     casalog.origin( 'imsmooth' )
     retValue = False
 
     # boxcar, tophat and user-defined kernel's are not supported
     # yet.
-    if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'boxc' ) ) ):
+    if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'box' ) ) ):
         casalog.post( 'Our deepest apologies gaussian kernels is the only'
                       +' type supported at this time.', 'SEVERE' )
         return retValue
@@ -157,16 +157,24 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
             # GAUSSIAN KERNEL
             casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
             ia.open( imagename )
+            if (targetres):
+                [major, minor, pa, dsuccess] = _get_parms_for_targetres(major, minor, pa)
+                if not dsuccess:
+                    ia.done()
+                    return False
+               
             casalog.post( "ia.convolve2d( major="+str(major)+", minor="\
                           +str(minor)+", outfile="+outfile+")", 'DEBUG2' )
             #retValue = ia.convolve2d( axes=[0,1], region=reg, major=major, \
             #                          minor=minor, outfile=outfile )
-            ia.convolve2d( axes=[0,1], region=reg, major=major, \
-                                         minor=minor, outfile=outfile )
+            ia.convolve2d(
+                axes=[0,1], region=reg, major=major,
+                minor=minor, pa=pa, outfile=outfile
+            )
             ia.done()
             retValue = True
 
-        elif (kernel.startswith( "boxc" ) ):
+        elif (kernel.startswith( "box" ) ):
             # BOXCAR KERNEL
             #
             # Until convolve2d supports boxcar we will need to
@@ -198,8 +206,62 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
         
     except Exception, instance:
         casalog.post( 'Something has gone wrong with the smoothing. Try, try again, and ye shall suceed', 'SEVERE' )
-        casalog.post( 'Exception thrown is: '+str(instance), 'NORMAL4' )
+        casalog.post( 'Exception thrown is: '+str(instance), 'SEVERE' )
         return False
 
     
     return retValue
+
+def _get_parms_for_targetres(major, minor, pa):
+    beam = ia.restoringbeam()
+    if (not beam):
+        casalog.post(
+            "targetres is True but input image does not have a restoring beam so I "
+                + "cannot calculate what gaussian parameters to use to convolve "
+                + "this image to reach the desired resolution. You can set the "
+                + "beam parameters via the ia.setrestoringbeam() method.",
+            "SEVERE"
+        )
+        return False
+              
+    bmaj = qa.tos(beam['major'])
+    bmin = qa.tos(beam['minor'])
+    bpa = qa.tos(beam['positionangle'])
+    dres = ia.deconvolvefrombeam(
+        beam=[bmaj, bmin, bpa], source=[major, minor, pa]
+    )
+    if not dres['fit']['success']:
+        casalog.post(
+            "targetres is True but the convolution parameters you have chosen are too "
+                + "small for this image's beam. The convolution parameters must be at "
+                + "least a bit larger than the current beam parameters. "
+                + "The current beam parameters are " + str(ia.restoringbeam()),
+                'SEVERE'
+        )
+        return [0,0,0,False]
+    major = qa.tos(dres['fit']['major'])
+    minor = qa.tos(dres['fit']['minor'])
+    pa = qa.tos(dres['fit']['pa'])
+    if (dres['return']):
+        # point source so this is likely not going to be a good fit
+        casalog.post(
+            "targetres is True but the convolution parameters you have chosen are too "
+                + "small for this image's beam. The convolution parameters must be at "
+                + "least a bit larger than the current beam parameters or in this case "
+                + "you may instead be able to set the position angle so it is more nearly "
+                + "equal to that of the position angle of the clean beam of the input "
+                + "image. The current beam parameters are " + str(ia.restoringbeam()),
+                'SEVERE'
+        )
+        return [0,0,0,False]
+        
+        
+    casalog.post(
+        "Using convolution parameters of major=" + major
+            + ", minor=" + minor + ", pa="
+            + pa + " to achieve desired resolution",
+        'WARN'
+    )
+    return [major, minor, pa, True]
+
+ 
