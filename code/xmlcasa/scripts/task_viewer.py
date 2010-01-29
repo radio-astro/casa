@@ -82,7 +82,7 @@ def viewer(infile=None,displaytype=None):
 	if use_tool:
 		panel = vi.panel("viewer")
 		data = None
-		if type(infile) == str:
+		if type(infile) == str and len(infile) > 0 :
 			if type(displaytype) == str:
 				data = vi.load( infile, displaytype, panel=panel )
 			else:
