@@ -43,17 +43,12 @@
 			<value>raster</value>
 		</param>
 
-		<param type="bool" name="connection">
-			<description> (Optional)  Return a connection object for the newly opened viewer.</description>
-			<value>False</value>
-		</param>
-
                 <constraints>
                 </constraints>
 	</input>
-<returns type="void"/>
+	<returns type="void"/>
 
-<example>
+	<example>
 
 	examples of usage:
 
@@ -85,6 +80,6 @@
 	        example:  viewer infile='my.ms'
 		obsolete: viewer infile='my.ms', filetype='ms'
 
- </example>
- </task>
- </casaxml>
+	</example>
+</task>
+</casaxml>
