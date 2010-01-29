@@ -75,6 +75,11 @@ class FileBox : public QWidget {
   void wcChanged(const String,
                  const Vector<Double>, const Vector<Double>);
 
+  virtual void closeEvent ( QCloseEvent * event );
+
+ signals:
+  void hideFileBox();
+
  protected slots:
 
   //load masks from a file
@@ -122,6 +127,8 @@ class FileBox : public QWidget {
         QtDisplayData* qdd, const ImageRegion* wcreg);
 
   bool planeAllowed(String, String);
+  bool chanAllowed(const Double, const Double);
+  bool polAllowed(const Double, const Double);
 
  private:
 

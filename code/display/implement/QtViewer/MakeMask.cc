@@ -69,11 +69,12 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
   pIndex = 0;
   zAxis = "Frequency";
  
-  setWindowTitle("File Region");
+  setWindowTitle("Region in File");
   QVBoxLayout *layout = new QVBoxLayout;
 
   setLayout(layout);
   setMinimumSize(210, 180);
+  setFixedSize(320, 180);
 
   tGroup = new QGroupBox;
   QGridLayout *tLayout = new QGridLayout;
@@ -82,32 +83,32 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
   tGroup->setToolTip(
       "  1. display the image;\n"
       "  2. assign a mouse button to rectangle or polygon;\n"
-      "  3. draw a box by pressing/clicking and dragging ;\n"
+      "  3. draw a region by pressing/clicking and dragging ;\n"
       "  4. size and shape by dragging the corner handle;\n"
       "  5. position by dragging the inside;\n"
-      "  6. record the box by double clicking inside (while handles on);\n"
-      "  7. cancel the box by double clicking outside (while handles on);\n"
-      "  8. delete the box by double clicking inside (while handles off). "
+      "  6. record the region by double clicking inside (while handles on);\n"
+      "  7. cancel the region by double clicking outside (while handles on);\n"
+      "  8. delete the region by double clicking inside (while handles off). "
   );
   
   load = new QPushButton("Load");
   tLayout->addWidget(load, 0, 0, 1, 3);
-  load->setToolTip("Load box(es) from a previously saved region file.");
+  load->setToolTip("Load region(s) from a previously saved region file.");
   connect(load, SIGNAL(clicked()), SLOT(loadRegionFromFile()));
 
   save = new QPushButton("Save");
   tLayout->addWidget(save, 0, 3, 1, 3);
-  save->setToolTip("Save box(es) to a region file.");
+  save->setToolTip("Save region(s) to a region file.");
   connect(save, SIGNAL(clicked()), SLOT(saveRegionToFile()));
 
   removeAll = new QPushButton("CleanUp");
   tLayout->addWidget(removeAll, 1, 0, 1, 2);
-  removeAll->setToolTip("Remove all box(es) from display.");
+  removeAll->setToolTip("Remove all regions from display.");
   connect(removeAll, SIGNAL(clicked()), SLOT(deleteAll()));
 
   showHide = new QPushButton("Hide");
   tLayout->addWidget(showHide, 1, 2, 1, 2);
-  showHide->setToolTip("Toggle box display on/off.");
+  showHide->setToolTip("Toggle region display on/off.");
   connect(showHide, SIGNAL(clicked()), SLOT(showHideAll()));
 
   color = new QComboBox;
@@ -118,20 +119,20 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
   color->addItem("White");
   color->addItem("Black");
   tLayout->addWidget(color, 1, 4, 1, 2);
-  color->setToolTip("Change box display color.");
+  color->setToolTip("Change region display color.");
   connect(color, SIGNAL(currentIndexChanged(const QString&)),
                  SLOT(colorAll(const QString&)));
 
   tLayout->addWidget(new QLabel("channels"), 2, 0, 1, 2);
   chan = new QLineEdit;
-  chan->setToolTip("Set the box extend channels, example: 1,5~10\n"
+  chan->setToolTip("Set the region extend channels, example: 1,5~10\n"
                    "Leave blank for 'all channels'");
   tLayout->addWidget(chan, 2, 2, 1, 4);
 
 
   tLayout->addWidget(new QLabel("Stokes"), 3, 0, 1, 2);
   corr = new QLineEdit;
-  corr->setToolTip("Set the box extend Stokes parameters, example: 0,2~3\n"
+  corr->setToolTip("Set the region extend Stokes parameters, example: 0,2~3\n"
                    "Leave blank for 'all Stokes'");
   tLayout->addWidget(corr, 3, 2, 1, 4);
 
@@ -256,6 +257,10 @@ void MakeMask::changeAxis(String xa, String ya, String za, int ha) {
    }
 
    reDraw();
+}
+void MakeMask::closeEvent(QCloseEvent* event) {
+   //qDebug() << "closeEvent";
+  emit hideRegionInFile();
 }
 
 void MakeMask::activate(Record rcd) {

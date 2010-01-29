@@ -71,11 +71,12 @@ FileBox::FileBox(QtDisplayPanel* qdp) {
   pIndex = 0;
   zAxis = "Frequency";
  
-  setWindowTitle("FILEBOX");
+  setWindowTitle("Box in FILE");
   QVBoxLayout *layout = new QVBoxLayout;
 
   setLayout(layout);
   setMinimumSize(210, 180);
+  setFixedSize(320, 180);
 
   tGroup = new QGroupBox;
   QGridLayout *tLayout = new QGridLayout;
@@ -94,12 +95,12 @@ FileBox::FileBox(QtDisplayPanel* qdp) {
   
   load = new QPushButton("Load");
   tLayout->addWidget(load, 0, 0, 1, 3);
-  load->setToolTip("Load box(es) from a previously saved region file.");
+  load->setToolTip("Load box(es) from a previously saved box file.");
   connect(load, SIGNAL(clicked()), SLOT(loadRegionFromFile()));
 
   save = new QPushButton("Save");
   tLayout->addWidget(save, 0, 3, 1, 3);
-  save->setToolTip("Save box(es) to a region file.");
+  save->setToolTip("Save box(es) to a box file.");
   connect(save, SIGNAL(clicked()), SLOT(saveRegionToFile()));
 
   removeAll = new QPushButton("CleanUp");
@@ -126,14 +127,14 @@ FileBox::FileBox(QtDisplayPanel* qdp) {
 
   tLayout->addWidget(new QLabel("channels"), 2, 0, 1, 2);
   chan = new QLineEdit;
-  chan->setToolTip("Set the box extend channels, example: 1,5~10\n"
+  chan->setToolTip("Set the box extend channels, example: 5~10\n"
                    "Leave blank for 'all channels'");
   tLayout->addWidget(chan, 2, 2, 1, 4);
 
 
   tLayout->addWidget(new QLabel("Stokes"), 3, 0, 1, 2);
   corr = new QLineEdit;
-  corr->setToolTip("Set the box extend Stokes parameters, example: 0,2~3\n"
+  corr->setToolTip("Set the box extend Stokes parameters, example: 0~2\n"
                    "Leave blank for 'all Stokes'");
   tLayout->addWidget(corr, 3, 2, 1, 4);
 
@@ -314,8 +315,8 @@ void FileBox::activate(Record rcd) {
       //cout << "chanExt=" << chan << endl;
       //cout << "polExt=" << pola << endl;
 
-      if (!planeAllowed(chan, pola))
-         continue;
+      //if (!planeAllowed(chan, pola))
+      //   continue;
 
       //cout << wcreg->type() << " " << tool << endl;
       if ((wcreg->type()) == "WCBox" && tool.contains("ectangle")){
@@ -438,7 +439,7 @@ void FileBox::loadRegionFromFile() {
    listfile.open(rName.data());
 
    if(!listfile.good()) {
-     QMessageBox::warning(this, "FILEBOX",
+     QMessageBox::warning(this, "Box in File",
            "Could not open the box file.\n"
            "Please check pathname and directory\n" 
            "permissions.");
@@ -463,7 +464,7 @@ void FileBox::loadRegionFromFile() {
    //RegionManager rg(csys);
    //UnitMap::putUser("pix", 1);
 
-   Int vcount=1;
+   Int vcount=0;
    char vers[500];
    while(!listfile.eof()) {
       listfile.getline(vers,500,'\n');
@@ -481,31 +482,11 @@ void FileBox::loadRegionFromFile() {
             vcount++;
          }
          catch(...) {
-            QMessageBox::warning(this, "FILEBOX",
-              "The box string is corrupted:\n"
-              + QString(box.c_str()));
+            //QMessageBox::warning(this, "Box in File",
+            //  "The box string is corrupted:\n"
+            //  + QString(box.c_str()));
          }
          
-         /*      
-         Vector<String> blc(4);
-         Vector<String> trc(4);
-         Vector<Int> pixelaxes(4);
-         String absrel = "abs";
-         blc(0)=coord(0); 
-         trc(0)=coord(1); 
-         blc(1)=coord(2); 
-         trc(1)=coord(3); 
-         blc(2)=coord(4).after("TOPO "); 
-         trc(2)=coord(5).after("TOPO "); 
-         blc(3)=coord(6); 
-         trc(3)=coord(7); 
-         Record *rec= rg.wbox(blc, trc, pixelaxes, csys, absrel, "");
-         uInt nreg = unionRegions_p.nelements();
-         unionRegions_p.resize(nreg + 1, True);
-         unionRegions_p[nreg] = ImageRegion::fromRecord(TableRecord(*rec), "");
-         delete rec;
-         vcount++;
-         */
          
       }
    }
@@ -549,14 +530,14 @@ void FileBox::saveRegionToFile() {
       String rName(sName.toStdString());
     
       if (unionRegions_p.nelements() < 1){
-         QMessageBox::warning(this, "FILEBOX", "There is no box to save.");
+         QMessageBox::warning(this, "Box in File", "There is no box to save.");
       }
       else {
          ofstream listfile;
          listfile.open(rName.data());
 
          if(!listfile.good()) {
-            QMessageBox::warning(this, "FILEBOX",
+            QMessageBox::warning(this, "Box in File",
                "Could not create the box file.\n"
                "Please check pathname and directory\n" 
                "permissions.");
@@ -567,19 +548,48 @@ void FileBox::saveRegionToFile() {
          for (uInt i = 0; i < nReg; i++) {
             ImageRegion* reg = const_cast<ImageRegion*>(unionRegions_p[i]);
             WCRegion* wcreg = const_cast<WCRegion*>(&(reg->asWCRegion()));
+
+            String cha = chan->text().toStdString(); 
+            String pol = corr->text().toStdString();
+            Int pos = cha.find(',');
+            if (pos > -1)
+               cha = cha.before(pos);
+            pos = pol.find(',');
+            if (pos > -1)
+               pol = pol.before(pos);
+            
+            Vector<String> chans(2); 
+            Vector<String> pols(2); 
+            if (cha.length() > 0) {
+               Int pos = cha.find('~');
+               if (pos > 0) {
+                  chans(0) = cha.before(pos);
+                  chans(1) = cha.after(pos);
+               }
+               else {
+                  chans(0) = cha;
+                  chans(1) = cha;
+               }
+               ((WCBox*)wcreg)->setChanExt(String::toDouble(chans(0)), 
+                                           String::toDouble(chans(1)));
+            }
+            if (pol.length() > 0) {
+               Int pos = pol.find('~');
+               if (pos > 0) {
+                  pols(0) = pol.before(pos);
+                  pols(1) = pol.after(pos);
+               }
+               else {
+                  pols(0) = pol;
+                  pols(1) = pol;
+               }
+               ((WCBox*)wcreg)->setPolExt(String::toDouble(pols(0)), 
+                                          String::toDouble(pols(1)));
+            }
+
             String cmt = ((WCBox*)wcreg)->toBoxString();
             //cout << cmt << endl;
        
-            /*
-            WCUnion leUnion(unionRegions_p);
-            leUnion.setComment("chanExt:" +
-                chan->text().toStdString() +
-                "polExt:" +
-                corr->text().toStdString());
-            //cout << "chan=" << chan->text().toStdString()
-            //     << " corr=" << corr->text().toStdString() << endl;
-            ImageRegion* reg = new ImageRegion(leUnion);
-            */
             listfile << cmt;
          }
          listfile.close();
@@ -667,6 +677,7 @@ RSComposite* FileBox::regionToShape(
               csys.findCoordinate(Coordinate::DIRECTION);
         MDirection::Types dirType = csys.
            directionCoordinate(dirInd).directionType(True);
+
         RSComposite *theShapes= new RSComposite(dirType);
         addRegionsToShape(theShapes, wcreg);
         theShapes->setLineColor(color->currentText().toStdString());
@@ -683,19 +694,61 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
                                         const WCRegion*& wcreg){
     //cout << "WCRegion->comment="
     //     << wcreg->comment() << endl;
-    String rest = wcreg->comment();
-    String chan = rest.before("polExt:");
-    chan = chan.after("chanExt:");
-    String pola = rest.after("polExt:");
+    //String rest = wcreg->comment();
+    //String chan = rest.before("polExt:");
+    //chan = chan.after("chanExt:");
+    //String pola = rest.after("polExt:");
     //cout << "chanExt=" << chan << endl;
     //cout << "polExt=" << pola << endl;
     //  cout << "aRegion\n\n" << endl;
     //  cout << wcreg->toRecord("") << endl;
 
-    if (!planeAllowed(chan, pola))
-       return;
+    //if (!planeAllowed(chan, pola))
+    //   return;
+
 
     if((wcreg->type()) == "WCBox"){
+      String chans;
+      String pols;
+
+      Double chblc;
+      Double chtrc;
+      //cout << "WCBox:" << ((WCBox*)wcreg)->toRecord("");
+      Bool ok = ((WCBox*)wcreg)->getChanExt(chblc, chtrc);
+      if (ok) {
+        //cout << "chblc=" << chblc << " chtrc=" << chtrc << endl;
+        if (chblc > -1 && chtrc > -1) {
+            chans = String::toString(chblc) + 
+                 String("~") +
+                 String::toString(chtrc);
+        }
+      }
+      else {
+        //cout << "could not get chan extension" << endl;
+        return;
+      }
+
+      Double poblc;
+      Double potrc;
+      //cout << "WCBox:" << ((WCBox*)wcreg)->toRecord("");
+      ok = ((WCBox*)wcreg)->getPolExt(poblc, potrc);
+      if (ok) {
+        //cout << "poblc=" << poblc << " potrc=" << potrc << endl;
+        if (poblc > -1 && potrc > -1) {
+            pols = String::toString(poblc) + 
+                 String("~") +
+                 String::toString(potrc);
+        }
+      }
+      else {
+        //cout << "could not get pol extension" << endl;
+        return;
+      }
+
+      //cout << "chans:" << chans << " pols:" << pols << endl;
+      if (!planeAllowed(chans, pols))
+         return;
+
       TableRecord boxrec=wcreg->toRecord("");
       const RecordInterface& blcrec=boxrec.asRecord("blc");
       const RecordInterface& trcrec=boxrec.asRecord("trc");
@@ -725,7 +778,7 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
         }
         trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
       }
-
+      /*
       Vector<Int> chanRange(2);
       Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
       //cout << "speInd=" << spcInd << endl;
@@ -771,16 +824,18 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
          }
          if (specRec1.asString("unit") == "pix") {
             chanRange(1) = (Int)h.asQuantumDouble().getValue("pix");
-            //cout << "pix_val_2=" << chanRange(1) << endl;
+            //cout << "======pix_val_2=" << chanRange(1) << endl;
          }
          else {
             Double hz2 = h.asQuantumDouble().getValue("Hz");
             spectralWorld(0) = hz2;
             spectralCoord.toPixel(spectralWorld, spectralPixel);
             chanRange(1)  = (Int)spectralPixel(0);
-            //cout << "hz_val_2=" << chanRange(1) << endl;
+            //cout << "------hz_val_2=" << chanRange(1) << endl;
          }
       }
+
+      //cout << "chanRange=" << chanRange(0) << " " << chanRange(1) << endl;
 
       QString chans = "";
       if (chanRange(0) > 0 && chanRange(1) > 0) {
@@ -792,9 +847,8 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
                  QString("~") +
                  QString::number(chanRange(1));
       }
-      //qDebug() << chans;
-      if (!planeAllowed(chans.toStdString(), ""))
-         return;
+      */
+
       
       double xw = fabs(trc(0)-blc(0));
       double xh = fabs(trc(1)-blc(1));
@@ -974,6 +1028,26 @@ void FileBox::unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs,
    }
 }
 
+bool FileBox::chanAllowed(const Double xa, const Double ya) {
+   int idx = zIndex;
+   if (zAxis == "Stokes") {
+      idx = pIndex;
+   }
+   if (xa <= idx && ya >= idx)
+      return True;
+   return False;
+}
+
+bool FileBox::polAllowed(const Double xa, const Double ya) {
+   int ipx = pIndex;
+   if (zAxis == "Stokes") {
+      ipx = zIndex;
+   }
+   if (xa <= ipx && ya >= ipx)
+      return True;
+   return False;
+}
+
 bool FileBox::planeAllowed(String xa, String ya) {
    xa.gsub(" ", "");
    ya.gsub(" ", "");
@@ -1082,6 +1156,11 @@ void FileBox::doIt() {
   }
   qDebug() << action->text() << "clicked";
 
+}
+
+void FileBox::closeEvent(QCloseEvent* event) {
+  //qDebug() << "closeEvent";
+  emit hideFileBox();
 }
 
   

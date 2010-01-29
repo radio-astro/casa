@@ -75,6 +75,11 @@ class MakeMask : public QWidget {
   void wcChanged(const String,
                  const Vector<Double>, const Vector<Double>);
 
+  virtual void closeEvent(QCloseEvent* event);
+
+ signals:
+  void hideRegionInFile();
+
  protected slots:
 
   //load masks from a file
