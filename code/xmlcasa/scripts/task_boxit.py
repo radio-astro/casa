@@ -140,7 +140,7 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
                 mask = fullmask[:,:,i2,i3].reshape(nx, ny)
             islands = []
             pos = numpy.unravel_index(mask.argmax(), mask.shape)
-            print pos
+            #print pos
             while(mask[pos]):
                 # found pixel in new island
                 island = {}
