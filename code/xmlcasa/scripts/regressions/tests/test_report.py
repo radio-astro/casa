@@ -1,4 +1,4 @@
-#import report
+import report
 import unittest
 
 class version_test(unittest.TestCase):
