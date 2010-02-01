@@ -140,7 +140,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
   Keyword arguments:
         expr -- Mathematical expression using scantables 
-        varlist -- Dictionary of variables in expr and their values
+        varlist -- Dictionary of variables in expr and their values.
+                   Keys must be coincide with variables used in expr.
+                   Values are substituted in each value in expr.
         fluxunit -- units for line flux
                 options: 'K','Jy',''
                 default: '' (keep current fluxunit)
