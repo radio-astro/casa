@@ -37,11 +37,13 @@ private:
 
 // Non-Static //
 
+// must forward declare & use a pointer because build system
+// does not allow extra include in plotms_cmpt.h...
+class plotms_app;
+plotms_app *app;
+
 // Casapy watcher.
 plotms_watcher itsWatcher_;
-
-// DBus name of the plotms application we're communicating with.
-String itsDBusName_;
 
 // Log parameters that are set before the application is launched.
 // <group>

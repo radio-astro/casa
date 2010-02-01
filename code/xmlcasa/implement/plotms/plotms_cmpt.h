@@ -20,8 +20,6 @@
 #include <xmlcasa/record.h>
 #include <xmlcasa/plotms/plotms_forward.h>
 
-#include <casaqt/QtUtilities/QtDBusApp.h>
-
 // put includes here
 
 namespace casac {
@@ -34,7 +32,7 @@ namespace casac {
  * @author
  * @version 
  **/
-class plotms : public QtDBusApp
+class plotms
 {
   private:
 
