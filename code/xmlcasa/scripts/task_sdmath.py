@@ -63,28 +63,56 @@ def sdmath(expr, varlist, fluxunit, telescopeparm, specunit, frame, doppler, sca
             scandic={} 
             for i in range(len(filenames)):
                skey='s'+str(i)
-               scandic[skey]=sd.scantable(filenames[i])
-               # apply set_fluxunit, selection
-               # if fluxunit is not given, use first spetral data's flux unit 
-               if fluxunit=='':
-                  fluxunit=scandic[skey].get_fluxunit()
-               scandic[skey].set_fluxunit(fluxunit)
-               if frame!='':
-                  scandic[skey].set_freqframe(frame)
-               if ( doppler != '' ):
-                    ddoppler=doppler.upper()
-                    scandic[skey].set_doppler(ddoppler)
-               try:
-                   #Apply the selection
-                   scandic[skey].set_selection(sel)
-               except Exception, instance:
-                   #print '***Error***',instance
-                   #print 'No output written.'
-                   casalog.post( str(instance), priority = 'ERROR' )
-                   casalog.post( 'No output written.', priority = 'ERROR' )
-                   return
-
-               
+               isfactor = None
+               # file type check
+               if os.path.isdir( filenames[i] ):
+                  isfactor = False
+               else:
+                  f = open( filenames[i] )
+                  line = f.readline().rstrip('\n')
+                  f.close()
+                  del f
+                  try:
+                     isfactor = True
+                     vtmp = float( line[0] )
+                     del line
+                  except ValueError, e:
+                     isfactor = False
+                     del line
+               if not isfactor:
+                  # scantable
+                  scandic[skey]=sd.scantable(filenames[i])
+                  # apply set_fluxunit, selection
+                  # if fluxunit is not given, use first spetral data's flux unit 
+                  if fluxunit=='':
+                     fluxunit=scandic[skey].get_fluxunit()
+                  scandic[skey].set_fluxunit(fluxunit)
+                  if frame!='':
+                     scandic[skey].set_freqframe(frame)
+                  if ( doppler != '' ):
+                     ddoppler=doppler.upper()
+                     scandic[skey].set_doppler(ddoppler)
+                  try:
+                     #Apply the selection
+                     scandic[skey].set_selection(sel)
+                  except Exception, instance:
+                     #print '***Error***',instance
+                     #print 'No output written.'
+                     casalog.post( str(instance), priority = 'ERROR' )
+                     casalog.post( 'No output written.', priority = 'ERROR' )
+                     return
+               elif isfactor:
+                  # variable
+                  f = open( filenames[i] )
+                  lines = f.readlines()
+                  f.close()
+                  del f
+                  for lin in range( len(lines) ):
+                     lines[lin] = lines[lin].rstrip('\n')
+                     lines[lin] = lines[lin].split()
+                     for ljn in range( len(lines[lin]) ):
+                        lines[lin][ljn] = float( lines[lin][ljn] )
+                  scandic[skey] = lines
                #regex=re.compile('[\',\"]')
                regex=re.compile('[\',\"]%s[\',\"]' % filenames[i])
                #expr=regex.sub('',expr)

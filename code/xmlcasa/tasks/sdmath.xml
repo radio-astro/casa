@@ -219,7 +219,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         must define varlist dictionary. Name of variables should be simple, 
         e.g. V0, V1, etc., to avoid unexpected error. Keys of varlist must 
         be name of variables that you used in the expression, and their 
-        values will be substituted for variables in the expression.
+        values will be substituted for variables in the expression. Allowed 
+        type for the value is numerical values, one- or two-dimensional lists 
+        (Python list or numpy.ndarray), and filename strings that indicate 
+        spectral data or ASCII text, which is space-separated list of 
+        numerical values consisting of adequate number of rows and columns.  
 
         The fluxunit, specunit, and frame can be set, otherwise, the current
         settings of the first spectral data in the expression are used.  
@@ -247,6 +251,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         varlist['V2']=1.0
         outfile='orion_cal.asap'
         sdmath()
+
+        # interpretation of ASCII file value for varlist
+        If the contents of input ASCII file is shown as, 
+
+           0.5 0.3 0.2
+           1.0 0.2 0.9
+
+        it is interpreted as a list [[0.5, 0.3, 0.2],[1.0, 0.2, 0.9]]. 
 
   </example>
 
