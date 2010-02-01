@@ -34,13 +34,22 @@ private:
     plotms *p;
 };
 
+class plotms_app : public QtDBusApp {
+public:
+  plotms_app( ) { }
+  const String &dbusName( ) const { return itsDBusName_; }
+  String &dbusName( ) { return itsDBusName_; }
+  // DBus name of the plotms application we're communicating with.
+  const QString &getName( ) const { return PlotMSDBusApp::name( ); }
+ private:
+  String itsDBusName_;
+};
 
 // Non-Static //
 
 // must forward declare & use a pointer because build system
 // does not allow extra include in plotms_cmpt.h...
-class plotms_app;
-plotms_app *app;
+plotms_app app;
 
 // Casapy watcher.
 plotms_watcher itsWatcher_;
