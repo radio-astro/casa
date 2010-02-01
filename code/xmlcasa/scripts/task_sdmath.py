@@ -113,7 +113,7 @@ def _sdmath_parse( expr='' ):
         retValue=[]
         #p=re.compile(r'[\',\"]\w+[\',\"]')
         #p=re.compile(r'[\',\"]\w+[\.,\-,\w+]*[\',\"]')
-        p=re.compile(r'(?!\[)[\',\"]\w+[\.,\-,\w+]*[\',\"](?!\])')
+        p=re.compile(r'(?!varlist\[)[\',\"]\w+[\.,\-,/,\w+]*[\',\"](?!\])')
         fnames=p.findall(expr)
         p=re.compile('[\',\"]')
         for fname in fnames:
