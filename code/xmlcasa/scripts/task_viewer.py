@@ -7,7 +7,7 @@ from taskinit import *
 from task_viewerconnection import viewerconnection
 from task_viewerconnection import dbus_connection
 
-def viewer(infile=None,displaytype=None):
+def viewer(infile=None,displaytype=None,gui=None):
 	""" The viewer will display images in raster, contour, vector or
 	marker form.  Images can be blinked, and movies are available
 	for spectral-line image cubes.  For measurement sets, many
@@ -70,23 +70,25 @@ def viewer(infile=None,displaytype=None):
         myf=sys._getframe(stacklevel).f_globals
 
 	#Python script
-	use_tool = True
-	try:
-		if type(vi.cwd( )) == str:
-			use_tool = True
-		else:
-			use_tool = False
-	except:
-		use_tool = False
+	vwr = vi
+	if type(gui) == bool and gui == False:
+		vwr = ving
 
-	if use_tool:
-		panel = vi.panel("viewer")
+	try:
+		if type(vwr.cwd( )) != str:
+			vwr = None
+	except:
+		vwr = None
+
+	if vwr != None:
+		panel = vwr.panel("viewer")
 		data = None
 		if type(infile) == str and len(infile) > 0 :
 			if type(displaytype) == str:
-				data = vi.load( infile, displaytype, panel=panel )
+				data = vwr.load( infile, displaytype, panel=panel )
 			else:
-				data = vi.load( infile, panel=panel )
+				data = vwr.load( infile, panel=panel )
+
 	else:
 		viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
 		args = [ viewer_path ]

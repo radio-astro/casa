@@ -43,6 +43,11 @@
 			<value>raster</value>
 		</param>
 
+		<param type="bool" name="gui">
+			<description> (Optional)  Display the panel in a GUI.</description>
+			<value>True</value>
+		</param>
+
                 <constraints>
                 </constraints>
 	</input>
