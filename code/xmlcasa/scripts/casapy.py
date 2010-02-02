@@ -212,6 +212,9 @@ if casa['flags'].has_key('--nolog') :
 if casa['flags'].has_key('--nologger') :
     deploylogger = False
 
+if casa['flags'].has_key('--nogui') :
+    deploylogger = False
+
 if deploylogger and (thelogfile != 'null') :
     casalogger( thelogfile)
 

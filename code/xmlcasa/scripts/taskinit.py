@@ -1,6 +1,7 @@
 import casac
 import viewertool
 import inspect
+import string
 import sys
 import os
 
@@ -19,6 +20,24 @@ def __taskinit_setlogfile( logger ) :
 	if myf.has_key('casa') and myf['casa'].has_key('files') and myf['casa']['files'].has_key('logfile') :
 		logger.setlogfile(myf['casa']['files']['logfile'])
 
+
+def __taskinit_argv( ) :
+	a=inspect.stack()
+	stacklevel=0    
+	for k in range(len(a)):
+		if (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+			stacklevel=k
+
+	myf=sys._getframe(stacklevel).f_globals
+
+	if myf.has_key('casa') and myf['casa'].has_key('flags') :
+		return myf['casa']['flags']
+	else:
+		return { }
+
+#
+##get the command line arguments
+argv = __taskinit_argv( )
 
 #
 ##allow globals for taskby default
@@ -79,8 +98,11 @@ attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
 
 # setup viewer tool
-vi = viewertool.viewertool( )
 ving = viewertool.viewertool( False )
+if argv.has_key('--nogui') :
+	vi = ving
+else:
+	vi = viewertool.viewertool( )
 
 defaultsdir = {}
 defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/almadefaults.xml'
