@@ -393,7 +393,16 @@ namespace casa {
       // open disk file for subscan
       String subscanFileName = asdmDir_p+"/ASDMBinary/"+String(getCurrentUidAsFileName());
       cout << "  subscan filename is " << subscanFileName << endl;
-      dataOid = EntityRef(getCurrentUid());
+      try{
+	dataOid = EntityRef(getCurrentUid(),"","ASDM","1"); 
+      }
+      catch(asdm::InvalidArgumentException x){
+	os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
+	   << "\" (intended for a BLOB) is not a valid Entity reference: " <<  x.getMessage()
+	   << LogIO::POST;      
+	return -1;
+      }
+	
       
       // make sure that this file doesn't exist yet
       ofstream ofs(subscanFileName.c_str());
@@ -2620,7 +2629,8 @@ namespace casa {
 
 	  tR2 = tT.add(tR);
 	  Tag newTag = tR2->getConfigDescriptionId();
-	  asdmConfigDescriptionId_p.define(irow, newTag); // memorize tag for every row (to keep it simple)
+	  asdmConfigDescriptionId_p.define(mainTabRow, newTag); // memorize tag for every row (to keep it simple)
+	  cout << "Defined conf desc id for main table row " << mainTabRow << endl;
 
 	  mainTabRow = irow;
 
@@ -2705,11 +2715,11 @@ namespace casa {
       Int ddId = dataDescId()(mainTabRow);
       Int spwId = dataDescription().spectralWindowId()(ddId);
       Int sbKey = obsId+10000*spwId;
-      String sbsUid("sbsummaryUID t.b.d. ");
+      String sbsUid("uid://SAFFEC0C0/X1/X1");
       sbsUid = sbsUid + String(sbKey);
-      EntityRef sbSummaryUID(sbsUid.c_str()); // will be filled later 
-      EntityRef projectUID("projectUID t.b.d."); // will be filled later ???
-      EntityRef obsUnitSetId("obsUnitSetId t.b.d."); // will be filled later ???
+      EntityRef sbSummaryUID(sbsUid, "", "ASDM", "1"); // will be filled later 
+      EntityRef projectUID("uid://SAFFEC0C0/X1/X2", "", "ASDM", "1"); // will be filled later ???
+      EntityRef obsUnitSetId("uid://SAFFEC0C0/X1/X3", "", "ASDM", "1"); // will be filled later ???
       double frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq()); 
       ReceiverBandMod::ReceiverBand frequencyBand; // get from frequency
       ReceiverSidebandMod::ReceiverSideband rSB;
@@ -2799,7 +2809,16 @@ namespace casa {
 	  ArrayTime startTime = ASDMArrayTime(execBlockStartTime(sBSummaryTag));
 	  ArrayTime endTime = ASDMArrayTime(endT);
 	  int execBlockNum = execBlockNumber(sBSummaryTag);
-	  EntityRef execBlockUID(getCurrentUid());
+	  EntityRef execBlockUID;
+	  try{
+	    execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", "1");
+	  }
+	  catch(asdm::InvalidArgumentException x){
+	    os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
+	       << "\" (intended for an exec block) is not a valid Entity reference: " <<  x.getMessage()
+	       << LogIO::POST;      
+	    return False;
+	  }
 	  incrementUid();
 	  EntityRef projectId = projectUID;
 	  string configName = "configName t.b.d."; // ???
@@ -2807,12 +2826,14 @@ namespace casa {
 	  string observerName = observation().observer()(obsId).c_str();
 	  string observingLog = "";
 	  Vector< String > sV;
-	  sV.reference(observation().log()(obsId)); // the observation log is an array of strings
-	  for(uInt i=0; i<sV.size(); i++){
-	    if(i>0){
-	      observingLog += "\n";
+	  if(observation().log().isDefined(obsId)){// log string array not empty
+	    sV.reference(observation().log()(obsId)); // the observation log is an array of strings
+	    for(uInt i=0; i<sV.size(); i++){
+	      if(i>0){
+		observingLog += "\n";
+	      }
+	      observingLog += string(sV[i].c_str());
 	    }
-	    observingLog += string(sV[i].c_str());
 	  }
 	  string sessionReference = "sessionReference t.b.d."; // ???
 	  EntityRef sbSummary = sbSummaryUID;
@@ -2867,10 +2888,15 @@ namespace casa {
 	execBlockNumber.define(sBSummaryTag, oldNum + 1); // sequential numbering starting at 1
 
 	obsIdFromSBSum.define(sBSummaryTag, obsId); // remember the obsId for this exec block
-
+	
+	if(!asdmConfigDescriptionId_p.isDefined(mainTabRow)){
+	  os << LogIO::SEVERE << "Internal error: undefined config description id for MS main table row "
+	     << mainTabRow << LogIO::POST;
+	  return False;
+	}  
 	asdm::ConfigDescriptionRow* cDR = (ASDM_p->getConfigDescription()).getRowByKey(asdmConfigDescriptionId_p(mainTabRow));
-	if(cDR == 0){
-	  os << LogIO::SEVERE << "Internal error: cannot find matching config description for MS main table row "
+	if(cDR ==0){
+	  os << LogIO::SEVERE << "Internal error: no row in ASDM ConfigDesc Table for ConfigDescriptionId stored for main table row "
 	     << mainTabRow << LogIO::POST;
 	  return False;
 	}
@@ -2902,7 +2928,16 @@ namespace casa {
       ArrayTime startTime = ASDMArrayTime(execBlockStartTime(sBSummaryTag));
       ArrayTime endTime = ASDMArrayTime(execBlockEndTime(sBSummaryTag));
       int execBlockNum = execBlockNumber(sBSummaryTag);
-      EntityRef execBlockUID(getCurrentUid());
+      EntityRef execBlockUID;
+      try{
+	execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", "1");
+      }
+      catch(asdm::InvalidArgumentException x){
+	os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
+	   << "\" (intended for an exec block) not a valid Entity reference: " <<  x.getMessage()
+	   << LogIO::POST;      
+	return False;
+      }
       incrementUid();
       EntityRef projectId = tR->getProjectUID();
       string configName = "configName t.b.d."; // ???
@@ -2910,12 +2945,14 @@ namespace casa {
       string observerName = observation().observer()(obsId).c_str();
       string observingLog = "";
       Vector< String > sV;
-      sV.reference(observation().log()(obsId)); // the observation log is an array of strings
-      for(uInt i=0; i<sV.size(); i++){
-	if(i>0){
-	  observingLog += "\n";
+      if(observation().log().isDefined(obsId)){ // string array column not empty
+	sV.reference(observation().log()(obsId)); // the observation log is an array of strings
+	for(uInt i=0; i<sV.size(); i++){
+	  if(i>0){
+	    observingLog += "\n";
+	  }
+	  observingLog += string(sV[i].c_str());
 	}
-	observingLog += string(sV[i].c_str());
       }
       string sessionReference = "sessionReference t.b.d."; // ???
       EntityRef sbSummary = tR->getSbSummaryUID();

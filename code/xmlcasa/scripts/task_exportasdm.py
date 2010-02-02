@@ -59,15 +59,16 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if not (datacolumn in allcols):
 			raise Exception, "Input MS does not contain datacolumn %s" % datacolumn
 
-		ssdur_secs = 24.*3600 # default is one day
+		ssdur_secs = 24.*3600 # default is one day, i.e. there will be only one subscan per scan
 		if not(subscanduration==""):
 			if (qa.canonical(subscanduration)['unit'].find('s') < 0):
-				raise TypeError, "subscanduation is not a valid time quantity: %s" % subscanduration
+				raise TypeError, "subscanduration is not a valid time quantity: %s" % subscanduration
 			else:
 				ssdur_secs = qa.canonical(subscanduration)['value']
 
-		execute_string='MS2asdm  --datacolumn \"' + datacolumn + '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid
+		execute_string='--datacolumn \"' + datacolumn + '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid
 		execute_string+= "\" --subscanduration " + str(ssdur_secs) + ' --logfile \"' + casalog.logfile() +'\"'
+		
 		if(not apcorrected):
 			execute_string= execute_string +' --apuncorrected'
 		if(verbose):
@@ -76,8 +77,11 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 			execute_string= execute_string +' --revision'
 
 		execute_string = execute_string + ' ' + vis + ' ' + asdm
+
+		execute_string = 'MS2asdm '+execute_string
+
 		casalog.post('Running the MS2asdm standalone invoked as:')
-		#print execute_string
+		print execute_string
 		casalog.post(execute_string)
         	rval = os.system(execute_string)
 

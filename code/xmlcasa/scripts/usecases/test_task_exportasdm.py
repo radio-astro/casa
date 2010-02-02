@@ -26,7 +26,54 @@ if(not os.path.exists(vis_f)):
 
 def verify_asdm(asdmname):
     print "Verifying asdm ", asdmname
-    
+    if(not os.path.exists(asdmname)):
+        print "asdm ", asdmname, " doesn't exist."
+        raise Exception
+    # test for the existence of all obligatory tables
+    allTables = [ "Antenna.xml",
+                  "ASDMBinary",
+                  "ASDM.xml",
+                 # "CalData.xml",
+                 # "CalDelay.xml",
+                 # "CalReduction.xml",
+                  "ConfigDescription.xml",
+                  "CorrelatorMode.xml",
+                  "DataDescription.xml",
+                  "ExecBlock.xml",
+                  "Feed.xml",
+                  "Field.xml",
+                  "FocusModel.xml",
+                  "Focus.xml",
+                  "Main.xml",
+                 # "Pointing.bin",
+                 # "PointingModel.xml",
+                  "Polarization.xml",
+                  "Processor.xml",
+                  "Receiver.xml",
+                  "SBSummary.xml",
+                  "Scan.xml",
+                  "Source.xml",
+                  "SpectralWindow.xml",
+                  "State.xml",
+                  "Station.xml",
+                  "Subscan.xml",
+                  "SwitchCycle.xml"
+                  ]
+    for fileName in allTables:
+        filePath = asdmname+'/'+fileName
+        if(not os.path.exists(filePath)):
+            print "ASDM table file ", filePath, " doesn't exist."
+            raise Exception
+        else:
+            # test if well formed
+            rval = os.system('xmllint --noout '+filePath)
+            if(rval !=0):
+                print "Table ", filePath, " is not a well formed XML document."
+
+    print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
+        
+
+# Test cases    
 
 keeptestlist = True
 
@@ -77,7 +124,8 @@ if (testnumber in testlist):
         print "small input MS, default output"
         rval = exportasdm(
             vis = 'myinput.ms',
-            asdm = 'exportasdm-output.asdm'
+            asdm = 'exportasdm-output.asdm',
+            archiveid="S1"
             )
         print "rval is ", rval
         if not rval:
@@ -101,7 +149,8 @@ if (testnumber in testlist):
         print "simulated input MS, default output"
         rval = exportasdm(
             vis = 'myinput.ms',
-            asdm = 'exportasdm-output.asdm'
+            asdm = 'exportasdm-output.asdm',
+            archiveid="S1"
             )
         print "rval is ", rval
         if not rval:
