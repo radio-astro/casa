@@ -70,6 +70,11 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
+    <method name="zoom">
+      <arg direction="in" type="i" name="level" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
     <method name="done">
       <arg direction="out" type="b" />
     </method>

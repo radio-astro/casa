@@ -482,6 +482,23 @@ namespace casa {
     }
 
 
+    QDBusVariant QtDBusViewerAdaptor::zoom( int level, int panel ) {
+	QtDisplayPanel *dp = findpanel( panel, false );
+	if ( ! dp ) {
+	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	}
+
+	if ( level == 0 )
+	    dp->unzoom( );
+	else if ( level < 0 )
+	    dp->zoomOut( abs(level) );
+	else
+	    dp->zoomIn( level );
+
+	return QDBusVariant(QVariant(true));
+    }
+
+
     QDBusVariant QtDBusViewerAdaptor::release( int panel ) {
 	if ( managed_windows.find( panel ) == managed_windows.end( ) ) {
 	    return QDBusVariant(QVariant("*error* could now find requested panel"));

@@ -71,7 +71,9 @@ namespace casa {
 	QDBusVariant hide( int panel );
 	QDBusVariant show( int panel );
 	QDBusVariant close( int panel );
+
 	QDBusVariant frame( int num=-1, int panel=0 );
+	QDBusVariant zoom( int level, int panel=0 );
 
 	// like "close()", but leaves the closing up to the user if the window is not hidden
 	QDBusVariant release( int panel );

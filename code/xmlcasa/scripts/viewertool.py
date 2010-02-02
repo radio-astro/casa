@@ -136,6 +136,25 @@ class viewertool(object):
 
         return bool(self.__state['proxy'].output( device, devicetype, panel, scale, dpi, format, orientation, media ))
 
+    def frame( self, num=-1, panel=0 ):
+        if type(num) != int or type(panel) != int:
+            raise Exception, "frame() takes (int,int); each argument is optional..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return int(self.__state['proxy'].frame( num, panel ))
+
+    def zoom( self, level, panel=0 ):
+        if type(level) != int or type(panel) != int:
+            raise Exception, "zoom() takes (int,int); each argument is optional..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return bool(self.__state['proxy'].zoom( level, panel ))
+    
+
     def keyinfo( self, key ):
         if type(key) != int:
             raise Exception, "keyinfo() takes a single int..."
