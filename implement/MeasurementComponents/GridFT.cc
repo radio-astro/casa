@@ -414,6 +414,9 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
+    else{
+      griddedData=Complex(0.0);
+    }
     //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
