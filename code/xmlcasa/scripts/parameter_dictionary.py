@@ -2883,3 +2883,22 @@ class par(str):
            
                         Not yet implemented.
                """
+
+        @staticmethod
+        def singledish():
+                """
+                singledish -- Set True to write data as single-dish format (Scantable)
+                              default: False
+                              task: importasdm
+                """
+
+        @staticmethod
+        def varlist():
+                """
+                varlist -- Dictionary of variables used in expr (mathematical
+                           expression) and their values. Keys must be coincide with
+                           variables used in expr. Values are substituted in each
+                           value in expr.
+                           default: {} (empty dictionary)
+                           task: sdmath
+                """
