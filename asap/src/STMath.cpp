@@ -503,6 +503,240 @@ CountedPtr< Scantable > STMath::unaryOperate( const CountedPtr< Scantable >& in,
   return out;
 }
 
+CountedPtr< Scantable > STMath::arrayOperate( const CountedPtr< Scantable >& in,
+                                              const std::vector<float> val,
+                                              const std::string& mode,
+                                              const std::string& opmode, 
+                                              bool tsys )
+{
+  CountedPtr< Scantable > out ;
+  if ( opmode == "channel" ) {
+    out = arrayOperateChannel( in, val, mode, tsys ) ;
+  }
+  else if ( opmode == "row" ) {
+    out = arrayOperateRow( in, val, mode, tsys ) ;
+  }
+  else {
+    throw( AipsError( "Unknown array operation mode." ) ) ;
+  }
+  return out ;
+}
+
+CountedPtr< Scantable > STMath::arrayOperateChannel( const CountedPtr< Scantable >& in,
+                                                     const std::vector<float> val,
+                                                     const std::string& mode,
+                                                     bool tsys )
+{
+  if ( val.size() == 1 ){
+    return unaryOperate( in, val[0], mode, tsys ) ;
+  }
+
+  // conformity of SPECTRA and TSYS
+  if ( tsys ) {
+    TableIterator titer(in->table(), "IFNO");
+    while ( !titer.pastEnd() ) {
+      ArrayColumn<Float> specCol( in->table(), "SPECTRA" ) ;
+      ArrayColumn<Float> tsysCol( in->table(), "TSYS" ) ;
+      Array<Float> spec = specCol.getColumn() ;
+      Array<Float> ts = tsysCol.getColumn() ;
+      if ( !spec.conform( ts ) ) {
+        throw( AipsError( "SPECTRA and TSYS must conform in shape if you want to apply operation on Tsys." ) ) ;
+      }
+      titer.next() ;
+    }
+  }
+
+  // check if all spectra in the scantable have the same number of channel
+  vector<uInt> nchans;
+  vector<uInt> ifnos = in->getIFNos() ;
+  for ( uInt i = 0 ; i < ifnos.size() ; i++ ) {
+    nchans.push_back( in->nchan( ifnos[i] ) ) ;
+  }
+  Vector<uInt> mchans( nchans ) ;
+  if ( anyNE( mchans, mchans[0] ) ) {
+    throw( AipsError("All spectra in the input scantable must have the same number of channel for vector operation." ) ) ;
+  }
+
+  // check if vector size is equal to nchan
+  Vector<Float> fact( val ) ;
+  if ( fact.nelements() != mchans[0] ) {
+    throw( AipsError("Vector size must be 1 or be same as number of channel.") ) ;
+  }
+
+  // check divided by zero
+  if ( ( mode == "DIV" ) && anyEQ( fact, (float)0.0 ) ) {
+    throw( AipsError("Divided by zero is not recommended." ) ) ;
+  }
+
+  CountedPtr< Scantable > out = getScantable(in, false);
+  Table& tab = out->table();
+  ArrayColumn<Float> specCol(tab,"SPECTRA");
+  ArrayColumn<Float> tsysCol(tab,"TSYS");
+  for (uInt i=0; i<tab.nrow(); ++i) {
+    Vector<Float> spec;
+    Vector<Float> ts;
+    specCol.get(i, spec);
+    tsysCol.get(i, ts);
+    if (mode == "MUL" || mode == "DIV") {
+      if (mode == "DIV") fact = (float)1.0 / fact;
+      spec *= fact;
+      specCol.put(i, spec);
+      if ( tsys ) {
+        ts *= fact;
+        tsysCol.put(i, ts);
+      }
+    } else if ( mode == "ADD"  || mode == "SUB") {
+      if (mode == "SUB") fact *= (float)-1.0 ;
+      spec += fact;
+      specCol.put(i, spec);
+      if ( tsys ) {
+        ts += fact;
+        tsysCol.put(i, ts);
+      }
+    }
+  }
+  return out;
+}
+
+CountedPtr< Scantable > STMath::arrayOperateRow( const CountedPtr< Scantable >& in,
+                                                 const std::vector<float> val,
+                                                 const std::string& mode,
+                                                 bool tsys )
+{
+  if ( val.size() == 1 ) {
+    return unaryOperate( in, val[0], mode, tsys ) ;
+  }
+
+  // conformity of SPECTRA and TSYS
+  if ( tsys ) {
+    TableIterator titer(in->table(), "IFNO");
+    while ( !titer.pastEnd() ) {
+      ArrayColumn<Float> specCol( in->table(), "SPECTRA" ) ;
+      ArrayColumn<Float> tsysCol( in->table(), "TSYS" ) ;
+      Array<Float> spec = specCol.getColumn() ;
+      Array<Float> ts = tsysCol.getColumn() ;
+      if ( !spec.conform( ts ) ) {
+        throw( AipsError( "SPECTRA and TSYS must conform in shape if you want to apply operation on Tsys." ) ) ;
+      }
+      titer.next() ;
+    }
+  }
+
+  // check if vector size is equal to nrow
+  Vector<Float> fact( val ) ;
+  if ( fact.nelements() != in->nrow() ) {
+    throw( AipsError("Vector size must be 1 or be same as number of row.") ) ;
+  }
+
+  // check divided by zero
+  if ( ( mode == "DIV" ) && anyEQ( fact, (float)0.0 ) ) {
+    throw( AipsError("Divided by zero is not recommended." ) ) ;
+  }
+
+  CountedPtr< Scantable > out = getScantable(in, false);
+  Table& tab = out->table();
+  ArrayColumn<Float> specCol(tab,"SPECTRA");
+  ArrayColumn<Float> tsysCol(tab,"TSYS");
+  if (mode == "DIV") fact = (float)1.0 / fact;
+  if (mode == "SUB") fact *= (float)-1.0 ;
+  for (uInt i=0; i<tab.nrow(); ++i) {
+    Vector<Float> spec;
+    Vector<Float> ts;
+    specCol.get(i, spec);
+    tsysCol.get(i, ts);
+    if (mode == "MUL" || mode == "DIV") {
+      spec *= fact[i];
+      specCol.put(i, spec);
+      if ( tsys ) {
+        ts *= fact[i];
+        tsysCol.put(i, ts);
+      }
+    } else if ( mode == "ADD"  || mode == "SUB") {
+      spec += fact[i];
+      specCol.put(i, spec);
+      if ( tsys ) {
+        ts += fact[i];
+        tsysCol.put(i, ts);
+      }
+    }
+  }
+  return out;
+}
+
+CountedPtr< Scantable > STMath::array2dOperate( const CountedPtr< Scantable >& in,
+                                                const std::vector< std::vector<float> > val,
+                                                const std::string& mode,
+                                                bool tsys )
+{
+  // conformity of SPECTRA and TSYS
+  if ( tsys ) {
+    TableIterator titer(in->table(), "IFNO");
+    while ( !titer.pastEnd() ) {
+      ArrayColumn<Float> specCol( in->table(), "SPECTRA" ) ;
+      ArrayColumn<Float> tsysCol( in->table(), "TSYS" ) ;
+      Array<Float> spec = specCol.getColumn() ;
+      Array<Float> ts = tsysCol.getColumn() ;
+      if ( !spec.conform( ts ) ) {
+        throw( AipsError( "SPECTRA and TSYS must conform in shape if you want to apply operation on Tsys." ) ) ;
+      }
+      titer.next() ;
+    }
+  }
+
+  // some checks 
+  vector<uInt> nchans;
+  for ( uInt i = 0 ; i < in->nrow() ; i++ ) {
+    nchans.push_back( (in->getSpectrum( i )).size() ) ;
+  }
+  //Vector<uInt> mchans( nchans ) ;
+  vector< Vector<Float> > facts ;
+  for ( uInt i = 0 ; i < nchans.size() ; i++ ) {
+    Vector<Float> tmp( val[i] ) ;
+    // check divided by zero
+    if ( ( mode == "DIV" ) && anyEQ( tmp, (float)0.0 ) ) {
+      throw( AipsError("Divided by zero is not recommended." ) ) ;
+    }
+    // conformity check
+    if ( tmp.nelements() != nchans[i] ) {
+      stringstream ss ;
+      ss << "Row " << i << ": Vector size must be same as number of channel." ;
+      throw( AipsError( ss.str() ) ) ;
+    }
+    facts.push_back( tmp ) ;
+  }
+
+
+  CountedPtr< Scantable > out = getScantable(in, false);
+  Table& tab = out->table();
+  ArrayColumn<Float> specCol(tab,"SPECTRA");
+  ArrayColumn<Float> tsysCol(tab,"TSYS");
+  for (uInt i=0; i<tab.nrow(); ++i) {
+    Vector<Float> fact = facts[i] ;
+    Vector<Float> spec;
+    Vector<Float> ts;
+    specCol.get(i, spec);
+    tsysCol.get(i, ts);
+    if (mode == "MUL" || mode == "DIV") {
+      if (mode == "DIV") fact = (float)1.0 / fact;
+      spec *= fact;
+      specCol.put(i, spec);
+      if ( tsys ) {
+        ts *= fact;
+        tsysCol.put(i, ts);
+      }
+    } else if ( mode == "ADD"  || mode == "SUB") {
+      if (mode == "SUB") fact *= (float)-1.0 ;
+      spec += fact;
+      specCol.put(i, spec);
+      if ( tsys ) {
+        ts += fact;
+        tsysCol.put(i, ts);
+      }
+    }
+  }
+  return out;
+}
+
 CountedPtr<Scantable> STMath::binaryOperate(const CountedPtr<Scantable>& left, 
 					    const CountedPtr<Scantable>& right, 
 					    const std::string& mode)

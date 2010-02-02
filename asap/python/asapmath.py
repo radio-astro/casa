@@ -1046,3 +1046,46 @@ def splitant(filename, outprefix='',overwrite=False):
     del tb, tb2
     os.system('rm -rf '+tmpms)
     return outfiles
+
+def _array2dOp( scan, value, mode="ADD", tsys=False ):
+    """
+    This function is workaround on the basic operation of scantable
+    with 2 dimensional float list.
+
+    scan:    scantable operand
+    value:   float list operand
+    mode:    operation mode (ADD, SUB, MUL, DIV)
+    tsys:    if True, operate tsys as well 
+    """
+    nrow = scan.nrow()
+    s = None
+    if len( value ) == 1:
+        from asap._asap import stmath
+        stm = stmath()
+        s = scantable( stm._arrayop( scan.copy(), value[0], mode, tsys ) )
+        del stm
+    elif len( value ) != nrow:
+        asaplog.push( 'len(value) must be 1 or conform to scan.nrow()' )
+        print_log( 'ERROR' )
+    else:
+        from asap._asap import stmath
+        stm = stmath()
+        # insitu must be True 
+        stm._setinsitu( True )
+        s = scan.copy()
+        sel = selector()
+        for irow in range( nrow ):
+            sel.set_rows( irow )
+            s.set_selection( sel )
+            if len( value[irow] ) == 1:
+                stm._unaryop( s, value[irow][0], mode, tsys )
+            else:
+                stm._arrayop( s, value[irow], mode, tsys, 'channel' )
+            s.set_selection()
+            sel.reset()
+        del sel
+        del stm
+    return s
+
+            
+            

@@ -449,7 +449,7 @@ class asaplotbase:
             except IOError, msg:
                 #print 'Failed to save %s: Error msg was\n\n%s' % (fname, err)
                 print_log()
-                asaplog.push('Failed to save %s: Error msg was\n\n%s' % (fname, msg.message))
+                asaplog.push('Failed to save %s: Error msg was\n\n%s' % (fname, str(msg)))
                 print_log( 'ERROR' )
                 return
         else:
