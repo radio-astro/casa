@@ -68,6 +68,9 @@ namespace casa {
 	dbus::variant close( int panel )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::close(panel) ); }
 
+	dbus::variant frame( int num=-1, int panel=0 )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::frame(num, panel) ); }
+
 	std::string cwd( const std::string &new_path = "" )
 			{ return edu::nrao::casa::viewer_proxy::cwd( new_path ); }
 	dbus::variant panel( const std::string &type="viewer" )

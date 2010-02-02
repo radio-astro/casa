@@ -71,6 +71,8 @@ namespace casa {
 	QDBusVariant hide( int panel );
 	QDBusVariant show( int panel );
 	QDBusVariant close( int panel );
+	QDBusVariant frame( int num=-1, int panel=0 );
+
 	// like "close()", but leaves the closing up to the user if the window is not hidden
 	QDBusVariant release( int panel );
 	//To change certain things so the panel 
@@ -166,7 +168,7 @@ namespace casa {
 
 	int get_id( QtDisplayPanel *, QtDisplayData *, const QString &path, const QString &type );
 	int get_id( QtDisplayPanel* );
-	QtDisplayPanel *findpanel( int );
+	QtDisplayPanel *findpanel( int key, bool create=true );
 
     protected:
 	void load_data( QtDisplayPanel *panel, int index );
