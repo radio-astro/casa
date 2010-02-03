@@ -249,6 +249,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   asdm::ASDM* ASDM_p; // the new ASDM
 
+  string asdmVersion_p; // the version of the new ASDM
+
   String baseUid_p;  // the part of the UID which is common to all elements of the ASDM,
                     // i.e. typically "uid://archiveid/rangeid/"
 

@@ -31,7 +31,6 @@ def verify_asdm(asdmname):
         raise Exception
     # test for the existence of all obligatory tables
     allTables = [ "Antenna.xml",
-                  "ASDMBinary",
                   "ASDM.xml",
                  # "CalData.xml",
                  # "CalDelay.xml",
@@ -42,8 +41,8 @@ def verify_asdm(asdmname):
                   "ExecBlock.xml",
                   "Feed.xml",
                   "Field.xml",
-                  "FocusModel.xml",
-                  "Focus.xml",
+                 #"FocusModel.xml",
+                 #"Focus.xml",
                   "Main.xml",
                  # "Pointing.bin",
                  # "PointingModel.xml",
@@ -72,6 +71,10 @@ def verify_asdm(asdmname):
 
     print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
         
+    if(not os.path.exists(asdmname+"/ASDMBinary")):
+        print "ASDM binary directory ", asdmname,"/ASDMBinary doesn't exist."
+        raise Exception
+
 
 # Test cases    
 

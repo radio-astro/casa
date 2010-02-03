@@ -99,6 +99,7 @@ namespace casa {
     asdmFeedId_p(-1)
   {
     ASDM_p = new ASDM();
+    asdmVersion_p = String((ASDM_p->getEntity()).getEntityVersion());
   }
   
   MS2ASDM::~MS2ASDM()
@@ -108,10 +109,13 @@ namespace casa {
   
   const String& MS2ASDM::showversion()
   {
-    ASDM* myASDM = new ASDM();
-    static String rstr;
-    rstr = String((myASDM->getEntity()).getEntityVersion());
-    delete myASDM;
+
+    static String rstr = String(asdmVersion_p);
+    if(rstr==""){
+      ASDM* myASDM = new ASDM();
+      rstr = String((myASDM->getEntity()).getEntityVersion());
+      delete myASDM;
+    }
     return rstr;
   }
   
@@ -326,21 +330,26 @@ namespace casa {
 
       unsigned int subscanNum = theSubScan;
 
-      uInt mainTabRow=startRow; 
-      if(mainTabRow>=nMainTabRows){
-	os << LogIO::SEVERE << "Internal error: startRow " << mainTabRow << " exceeds end of MS."
+      if(startRow>=nMainTabRows){
+	os << LogIO::SEVERE << "Internal error: startRow " << startRow << " exceeds end of MS."
 	   << LogIO::POST;
 	return -1;
       }
 
-      Int DDId = dataDescId()(mainTabRow);
+      if(endRow>=nMainTabRows){
+	os << LogIO::SEVERE << "Internal error: endRow " << endRow << " exceeds end of MS."
+	   << LogIO::POST;
+	return -1;
+      }
+
+      Int DDId = dataDescId()(startRow);
       if(DDId != theDDId){ // check Data Description Id
 	os << LogIO::SEVERE << "Internal error: input parameters to this routine are inconsistent.\n"
 	   << " DDId in start row should be as given in input parameters ==" << theDDId << LogIO::POST;
 	return -1;
       }
       
-      Int FId = fieldId()(mainTabRow);
+      Int FId = fieldId()(startRow);
       if(FId != theFieldId){ // check Field Id
 	os << LogIO::SEVERE << "Internal error: input parameters to this routine are inconsistent.\n"
 	   << " FieldId in start row should be as given in input parameters ==" << theFieldId << LogIO::POST;
@@ -358,22 +367,20 @@ namespace casa {
       // Assume MS main table is sorted in time. 
       
       // Get first timestamp.
-      Double subScanStartTime = time()(mainTabRow);
+      Double subScanStartTime = time()(startRow);
       Double subScanEndTime = time()(endRow); 
       
       // determine number of different timestamps in this subscan 
       unsigned int numTimestampsCorr = 0;
       unsigned int numTimestampsAuto = 0;
-      for(uInt i=mainTabRow; i<=endRow; i++){
+      for(uInt i=startRow; i<=endRow; i++){
 
 	DDId = dataDescId()(i);
 	if(DDId != theDDId){ // skip all other Data Description Ids
-	  i++;
 	  continue;
 	}
 	FId = fieldId()(i);
 	if(FId != theFieldId){ // skip all other Field Ids
-	  i++;
 	  continue;
 	}
 	
@@ -386,6 +393,8 @@ namespace casa {
       } // end for
 
       cout << " subscan number is " << subscanNum << endl;
+      cout << " DDId " << theDDId << " FId " << theFieldId << endl;
+      cout << " start row " << startRow << " end row " << endRow << endl;
       cout << "  subscan number of timestamps with crosscorrelations is " << numTimestampsCorr << endl;
       cout << "  subscan number of timestamps with autocorrelations is " << numTimestampsAuto << endl;
       cout << "  subscan end time is " << subScanEndTime << endl;
@@ -394,7 +403,7 @@ namespace casa {
       String subscanFileName = asdmDir_p+"/ASDMBinary/"+String(getCurrentUidAsFileName());
       cout << "  subscan filename is " << subscanFileName << endl;
       try{
-	dataOid = EntityRef(getCurrentUid(),"","ASDM","1"); 
+	dataOid = EntityRef(getCurrentUid(),"","ASDM",asdmVersion_p); 
       }
       catch(asdm::InvalidArgumentException x){
 	os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
@@ -403,7 +412,6 @@ namespace casa {
 	return -1;
       }
 	
-      
       // make sure that this file doesn't exist yet
       ofstream ofs(subscanFileName.c_str());
       
@@ -427,7 +435,7 @@ namespace casa {
       unsigned int numAntennas = 0;
       vector<Int> ant;
       {
-	uInt i = mainTabRow;
+	uInt i = startRow;
 	Double thisTStamp = time()(i); 
 	while(i<nMainTabRows && time()(i)== thisTStamp){
 	  
@@ -535,12 +543,13 @@ namespace casa {
       basebands.push_back(bband);
       
       // construct binary parts for dataStruct
-      unsigned int bpFlagsSize = numSpectralPoint * numStokes * (numTimestampsCorr+numTimestampsAuto);
+      unsigned int bpFlagsSize = numSpectralPoint * numStokes * (numBaselines+numAutoCorrs);
       vector<AxisName> bpFlagsAxes;
-      bpFlagsAxes.push_back(AxisNameMod::SPP); /// order: inner part of loop should be last!!!!!!
+      bpFlagsAxes.push_back(AxisNameMod::TIM); // order: inner part of loop should be last!!!!!!
+      bpFlagsAxes.push_back(AxisNameMod::SPP); 
       bpFlagsAxes.push_back(AxisNameMod::POL);
       SDMDataObject::BinaryPart bpFlags(bpFlagsSize, bpFlagsAxes);
-      //      cout << "FlagsSize " << bpFlagsSize << endl;
+      cout << "FlagsSize " << bpFlagsSize << " numStokes " << numStokes << endl;
       
       unsigned int bpTimesSize = 0; // only needed for data blanking
       //unsigned int bpTimesSize = numTimestampsCorr+numTimestampsAuto; 
@@ -559,10 +568,18 @@ namespace casa {
       unsigned int bpLagsSize = 0; // not filled for the moment (only useful if LAG_DATA column present) -> Francois 
       vector<AxisName> bpLagsAxes;
       bpLagsAxes.push_back(AxisNameMod::SPP); // ******
-      SDMDataObject::ZeroLagsBinaryPart bpZeroLags(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FXF); // how to determine?
+      SDMDataObject::ZeroLagsBinaryPart bpZeroLags(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FXF); // ALMA default
+      if(telName_p != "ALMA"){
+	if(telName_p == "ACA" || telName_p == "VLBA" || telName_p == "EVLA"){
+	  bpZeroLags = SDMDataObject::ZeroLagsBinaryPart(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FX);	  
+	}
+	else{
+	  bpZeroLags = SDMDataObject::ZeroLagsBinaryPart(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::XF);
+	}
+      }
       //      cout << "LagsSize " << bpLagsSize << endl;
       
-      unsigned int bpCrossSize = numSpectralPoint * numStokes * numTimestampsCorr * 2; // real + imag
+      unsigned int bpCrossSize = numSpectralPoint * numStokes * numBaselines * 2; // real + imag
       vector<AxisName> bpCrossAxes;
       bpCrossAxes.push_back(AxisNameMod::TIM);
       bpCrossAxes.push_back(AxisNameMod::BAL);
@@ -571,7 +588,7 @@ namespace casa {
       SDMDataObject::BinaryPart bpCrossData(bpCrossSize, bpCrossAxes);
       //      cout << "CrossSize " << bpCrossSize << endl;
       
-      unsigned int bpAutoSize = numSpectralPoint * numStokes * numTimestampsAuto;
+      unsigned int bpAutoSize = numSpectralPoint * numStokes * numAutoCorrs;
       vector<AxisName> bpAutoAxes;
       bpAutoAxes.push_back(AxisNameMod::TIM);
       bpAutoAxes.push_back(AxisNameMod::ANT);
@@ -614,14 +631,18 @@ namespace casa {
       //////////////////////////////////////////////////////
       // write the integrations until timestamp exceeds limit
       unsigned int integrationNum = 1;
-      for(mainTabRow = startRow; mainTabRow <= endRow; mainTabRow++){
+      uInt mainTabRow=startRow; 
+
+      while(mainTabRow <= endRow){
 	
 	DDId = dataDescId()(mainTabRow);
 	if(DDId != theDDId){ // skip all other Data Description Ids
+	  mainTabRow++;
 	  continue;
 	}
 	FId = fieldId()(mainTabRow);
 	if(FId != theFieldId){ // skip all other Field Ids
+	  mainTabRow++;
 	  continue;
 	}
 	
@@ -706,7 +727,7 @@ namespace casa {
 	  }	
 	  unsigned long ul;
 	  for(uInt i=0; i<numSpectralPoint; i++){
-	    for(uInt j=0; j<numStokes; j++){
+	    for(uInt j=0; j<numStokesMS; j++){
 	      if(skipCorr_p[j][PolId]){
 		continue;
 	      }
@@ -727,23 +748,24 @@ namespace casa {
 	  mainTabRow++;
 	}// end while same timestamp
 	
-	// 	  cout << "Sizes: " << endl;
-	// 	  cout << "   flags " << flags.size() << endl;
-	// 	  cout << "   actualTimes " << actualTimes.size() << endl;
-	// 	  cout << "   actualDurations " << actualDurations.size() << endl;
-	// 	  cout << "   zeroLags " << zeroLags.size() << endl;
-	// 	  cout << "   crossData " << crossData.size() << endl;
-	// 	  cout << "   autoData " << autoData.size() << endl;
+	cout << "Sizes: " << endl;
+	cout << "   flags " << flags.size() << endl;
+	cout << "   actualTimes " << actualTimes.size() << endl;
+	cout << "   actualDurations " << actualDurations.size() << endl;
+	cout << "   zeroLags " << zeroLags.size() << endl;
+	cout << "   crossData " << crossData.size() << endl;
+	cout << "   autoData " << autoData.size() << endl;
 	
 	sdmdow.addIntegration(integrationNum,    // integration's index.
-			      timev,              // midpoint
-			      intervalv,          // time interval
+			      timev,             // midpoint
+			      intervalv,         // time interval
 			      flags,             // flags binary data 
 			      actualTimes,       // actual times binary data      
 			      actualDurations,   // actual durations binary data          
 			      zeroLags,          // zero lags binary data                 
 			      crossData,    // cross data (can be short or int)  
-			      autoData);         // single dish data.                 
+			      autoData);         // single dish data.  
+
 	integrationNum++;
 	datasize += flags.size() * sizeof(unsigned long)
 	  + actualTimes.size() * sizeof( long long )
@@ -755,7 +777,7 @@ namespace casa {
 	
 	// (Note: subintegrations are used only for channel averaging to gain time res. by sacrificing spec. res.)
 	
-      } // end for 
+      } // end while 
       
       sdmdow.done();
       
@@ -1154,6 +1176,8 @@ namespace casa {
       } // end loop over corrTypeV
 
       tR = tT.newRow(numCorr, corrTypeV, corrProduct);
+
+      cout << "ASDM numCorr is " << numCorr << endl;
 
       bool flagRow = polarization().flagRow()(irow);
       tR->setFlagRow(flagRow);
@@ -2632,7 +2656,7 @@ namespace casa {
 	  asdmConfigDescriptionId_p.define(mainTabRow, newTag); // memorize tag for every row (to keep it simple)
 	  cout << "Defined conf desc id for main table row " << mainTabRow << endl;
 
-	  mainTabRow = irow;
+	  mainTabRow = irow-1;
 
 	} // end if proc id
 
@@ -2703,6 +2727,7 @@ namespace casa {
     Angle siteLatitude = Angle(mObsPos.getLat("rad").getValue(unitASDMAngle()));
 
     // loop over main table
+    Bool warned = False; // aux. var. to avoid warning repetition  
     uInt nMainTabRows = ms_p.nrow();
     for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
 
@@ -2716,10 +2741,12 @@ namespace casa {
       Int spwId = dataDescription().spectralWindowId()(ddId);
       Int sbKey = obsId+10000*spwId;
       String sbsUid("uid://SAFFEC0C0/X1/X1");
-      sbsUid = sbsUid + String(sbKey);
-      EntityRef sbSummaryUID(sbsUid, "", "ASDM", "1"); // will be filled later 
-      EntityRef projectUID("uid://SAFFEC0C0/X1/X2", "", "ASDM", "1"); // will be filled later ???
-      EntityRef obsUnitSetId("uid://SAFFEC0C0/X1/X3", "", "ASDM", "1"); // will be filled later ???
+      ostringstream oss;
+      oss << sbKey;
+      sbsUid = sbsUid + String(oss);
+      EntityRef sbSummaryUID(sbsUid.c_str(), "", "ASDM", asdmVersion_p); // will be reset later when linking the ASDM to an APDM 
+      EntityRef projectUID("uid://SAFFEC0C0/X1/X2", "", "ASDM", asdmVersion_p); // dto.
+      EntityRef obsUnitSetId("uid://SAFFEC0C0/X1/X3", "", "ASDM", asdmVersion_p); // dto. ???
       double frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq()); 
       ReceiverBandMod::ReceiverBand frequencyBand; // get from frequency
       ReceiverSidebandMod::ReceiverSideband rSB;
@@ -2729,6 +2756,23 @@ namespace casa {
       Vector< Quantum< Double > > tRange;
       tRange.reference(observation().timeRangeQuant()(obsId)); 
       Double durationSecs = tRange[1].getValue("s") - tRange[0].getValue("s"); 
+      if(durationSecs == 0){
+	if(!warned){
+	  os << LogIO::WARN << "Observation time range is zero length for obs ID "
+	     << obsId << " in MS Observation table.\n Will try to proceed ..."
+	     <<LogIO::POST;
+	  warned = True;
+	}
+	if((Int)observation().nrow()-1 == obsId){ // there is no next observation
+	  durationSecs = timeQuant()(nMainTabRows-1).getValue("s") + intervalQuant()(nMainTabRows-1).getValue("s")
+	    - tRange[0].getValue("s");
+	}
+	else{
+	  Vector< Quantum< Double > > tRange2;
+	  tRange2.reference(observation().timeRangeQuant()(obsId+1)); 
+	  durationSecs = tRange2[0].getValue("s") - tRange[0].getValue("s");
+	}
+      } 
       Interval sbDuration = ASDMInterval(durationSecs);
       int numberRepeats = 1;
       // limit the scheduling block duration (not the same as the observation duration)
@@ -2768,10 +2812,12 @@ namespace casa {
       asdm::SBSummaryRow* tR2 = 0;
       tR2 = tT.add(tR);
       Tag sBSummaryTag = tR2->getSBSummaryId();
-      if(tR2 != tR){ // adding the row led to the creation of a new tag
+      if(tR2 == tR){ // adding the row led to the creation of a new tag
+	cout << "New SBSummary tag created: " << tR2 << endl;
 	if(asdmSBSummaryId_p.isDefined(sbKey)){
 	  os << LogIO::WARN << "There is more than one scheduling block necessary for the obsid - spwid pair (" 
-	     << obsId << ", " << spwId << ").\n This can presently not yet be handled properly." << LogIO::POST;
+	     << obsId << ", " << spwId << ").\n This can presently not yet be handled properly.\n" 
+	     << "(MS Main table row " << mainTabRow << ")" << LogIO::POST;
 	}
 	else{
 	  asdmSBSummaryId_p.define(sbKey, sBSummaryTag);
@@ -2811,7 +2857,7 @@ namespace casa {
 	  int execBlockNum = execBlockNumber(sBSummaryTag);
 	  EntityRef execBlockUID;
 	  try{
-	    execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", "1");
+	    execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", asdmVersion_p);
 	  }
 	  catch(asdm::InvalidArgumentException x){
 	    os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
@@ -2912,11 +2958,12 @@ namespace casa {
 
       // skip rest of this timestamp
       Double tStamp = time()(mainTabRow);
-      while(mainTabRow<nMainTabRows && time()(mainTabRow)==tStamp
+      while(mainTabRow<nMainTabRows 
+	    && time()(mainTabRow)==tStamp
 	    && dataDescId()(mainTabRow)==ddId){
 	mainTabRow++;
       }
-      
+      mainTabRow--;// we are inside a for loop which will perform the last mainTabRow++ 
     } // end loop over main table
 
     // are there pending exec blocks?
@@ -2930,7 +2977,7 @@ namespace casa {
       int execBlockNum = execBlockNumber(sBSummaryTag);
       EntityRef execBlockUID;
       try{
-	execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", "1");
+	execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", asdmVersion_p);
       }
       catch(asdm::InvalidArgumentException x){
 	os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
@@ -3096,7 +3143,7 @@ namespace casa {
 	}
 	// set up new exec block
 	// parameters for the first scan
-	execBlockId = asdmExecBlockId_p(mainTabRow);
+	execBlockId = asdmExecBlockId_p(time()(mainTabRow));
 	asdm::ExecBlockRow* EBR = (ASDM_p->getExecBlock()).getRowByKey(execBlockId);
 	scanNumber = 1; // ASDM scan numbering starts at 1
         subscanNumber = 1; // dito for subscans
@@ -3159,7 +3206,7 @@ namespace casa {
 		subScanEndRows.define(fId, irow2);    // and end rows
 	      }
 	    }
-	    irow++;
+	    irow2++;
 	  }
 	  // for each FieldId
 	  for(uInt fIndex=0; fIndex < subScanStartRows.ndefined(); fIndex++){
@@ -3177,8 +3224,20 @@ namespace casa {
 
 	    // parameters for the corresponding new Main table row
 	    ArrayTime mainTime = subScanStartArrayTime;
+
+	    if(!asdmConfigDescriptionId_p.isDefined(startRow)){
+	      os << LogIO::SEVERE << "Internal error: undefined config description id for MS main table row "
+		 << startRow << LogIO::POST;
+	      return False;
+	    }  
 	    Tag configDescriptionId = asdmConfigDescriptionId_p(startRow);
 	    asdm::ConfigDescriptionRow* CDR = (ASDM_p->getConfigDescription()).getRowByKey(configDescriptionId);
+	    if(CDR ==0){
+	      os << LogIO::SEVERE << "Internal error: no row in ASDM ConfigDesc Table for ConfigDescriptionId stored for main table row "
+		 << startRow << LogIO::POST;
+	      return False;
+	    }
+
 	    Tag fieldIdTag = asdmFieldId_p(theFId);
 	    int numAntenna = CDR->getNumAntenna();
 	    TimeSamplingMod::TimeSampling timeSampling = TimeSamplingMod::INTEGRATION;
@@ -3227,10 +3286,12 @@ namespace casa {
 	} // end loop over DD indices
 	// update mainTabRow
 	mainTabRow = irow;
+	cout << "mainTabRow " << mainTabRow << endl;
       } // end while scan continues
       // scan finished
-      // complete and write scan table row	
-      scanEndTime = ArrayTime( timeQuant()(mainTabRow-1).getValue("s") + intervalQuant()(mainTabRow-1).getValue("s") );	  
+      // complete and write scan table row
+      mainTabRow--; // return to last row of the scan
+      scanEndTime = ArrayTime( timeQuant()(mainTabRow).getValue("s") + intervalQuant()(mainTabRow).getValue("s") );	  
       scanNumIntent = 1; // hardwired (???)
       for(uInt i=0; i<(uInt)scanNumIntent; i++){
 	scanIntent.push_back(ScanIntentMod::OBSERVE_TARGET); // hardwired for the moment (???)
