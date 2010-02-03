@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MemoryTable.cc 20859 2010-02-03 13:14:15Z gervandiepen $
 
 
 #include <tables/Tables/MemoryTable.h>
@@ -76,7 +76,8 @@ MemoryTable::MemoryTable (SetupNewTable& newtab, uInt nrrow, Bool initialize)
   //# Initialize the data managers.
   Table tab(this, False);
   nrrowToAdd_p = nrrow;
-  colSetPtr_p->initDataManagers (nrrow, False, tab);
+  colSetPtr_p->initDataManagers (nrrow, False,
+                                 TSMOption(TSMOption::Cache,0,0), tab);
   //# Initialize the columns if needed.
   if (initialize  &&  nrrow > 0) {
     colSetPtr_p->initialize (0, nrrow-1);
@@ -251,50 +252,55 @@ void MemoryTable::removeRow (uInt rownr)
   nrrow_p--;
 }
 
-void MemoryTable::addColumn (const ColumnDesc& columnDesc)
+void MemoryTable::addColumn (const ColumnDesc& columnDesc, Bool)
 {
   Table tab(this, False);
   ColumnDesc cold(columnDesc);
   // Make sure the MemoryStMan is used.
   cold.dataManagerType() = "MemoryStMan";
   cold.dataManagerGroup() = "MSMTAB";
-  colSetPtr_p->addColumn (cold, False, tab);
+  colSetPtr_p->addColumn (cold, False,
+                          TSMOption(TSMOption::Cache,0,0), tab);
 }
 void MemoryTable::addColumn (const ColumnDesc& columnDesc,
-			     const String& dataManager, Bool byName)
+			     const String& dataManager, Bool byName, Bool)
 {
   Table tab(this, False);
   if (byName) {
-    colSetPtr_p->addColumn (columnDesc, dataManager, byName, False, tab);
+    colSetPtr_p->addColumn (columnDesc, dataManager, byName, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   } else {
     // Make sure the MemoryStMan is used if no virtual engine is used.
     DataManager* dmptr = DataManager::getCtor(dataManager)
                                                 (dataManager, Record());
-    addColumn (columnDesc, *dmptr);
+    addColumn (columnDesc, *dmptr, False);
     delete dmptr;
   }
 }
 void MemoryTable::addColumn (const ColumnDesc& columnDesc,
-			     const DataManager& dataManager)
+			     const DataManager& dataManager, Bool)
 {
   Table tab(this, False);
   // Make sure the MemoryStMan is used if no virtual engine is used.
   if (dataManager.isStorageManager()) {
-    addColumn (columnDesc);
+    addColumn (columnDesc, False);
   } else {
-    colSetPtr_p->addColumn (columnDesc, dataManager, False, tab);
+    colSetPtr_p->addColumn (columnDesc, dataManager, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   }
 }
 void MemoryTable::addColumn (const TableDesc& tableDesc,
-			     const DataManager& dataManager)
+			     const DataManager& dataManager, Bool)
 {
   Table tab(this, False);
   // Make sure the MemoryStMan is used if no virtual engine is used.
   if (dataManager.isStorageManager()) {
     MemoryStMan stman(dataManager.dataManagerName());
-    colSetPtr_p->addColumn (tableDesc, stman, False, tab);
+    colSetPtr_p->addColumn (tableDesc, stman, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   } else {
-    colSetPtr_p->addColumn (tableDesc, dataManager, False, tab);
+    colSetPtr_p->addColumn (tableDesc, dataManager, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   }
 }
 

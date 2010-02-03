@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledColumnStMan.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TiledColumnStMan.cc 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #include <tables/Tables/TiledColumnStMan.h>
 #include <tables/Tables/TSMColumn.h>
@@ -131,7 +131,7 @@ void TiledColumnStMan::create (uInt nrrow)
     cubeShape.resize (nrdim_p);
     cubeShape(nrdim_p - 1) = 0;
     cubeSet_p.resize (1);
-    cubeSet_p[0] = new TSMCube (this, fileSet_p[0],
+    cubeSet_p[0] = makeTSMCube (fileSet_p[0],
 				cubeShape, tileShape_p, emptyRecord);
     // Add the rows for the given number of rows.
     addRow (nrrow);

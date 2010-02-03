@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tIPosition.cc 20338 2008-06-19 05:58:02Z gervandiepen $
+//# $Id: tIPosition.cc 20858 2010-02-03 13:08:35Z gervandiepen $
 
 //# Includes
 
@@ -407,6 +407,9 @@ int main()
     IPosition ip3(vi);
     AlwaysAssertExit(ip3(0) == 1 && ip3(1) == 2 && ip3(2) == 3 && ip3(3) == 4 &&
 		     ip3(4) == 5 && ip3(5) == 6);
+
+    AlwaysAssertExit(IPosition(3,1).allOne());
+    AlwaysAssertExit(! IPosition(3,0).allOne());
 }
 
 }
@@ -414,5 +417,3 @@ int main()
     cout << "OK\n";
     return 0;
 }
-
-
