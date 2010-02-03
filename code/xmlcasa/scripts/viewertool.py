@@ -49,7 +49,7 @@ class viewertool(object):
         a=inspect.stack()
         stacklevel=0
         for k in range(len(a)):
-           if (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+            if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
                       stacklevel=k
 
         myf=sys._getframe(stacklevel).f_globals
