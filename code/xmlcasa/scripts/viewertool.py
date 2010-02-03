@@ -28,7 +28,7 @@ class viewertool(object):
 
     __t = string.maketrans("abcdefghijklmnopqrstuvwxyz0123456789/*:%$#@!&()~+,.:;{}[]|\\\"'^","abcdefghijklmnopqrstuvwxyz0123456789__________________________")
 
-    def __init__( self, with_gui=True ):
+    def __init__( self, with_gui=True, pre_launch=False ):
 
         if type(with_gui) != bool:
             raise Exception, "the 'with_gui' parameter must be a boolean"
@@ -38,7 +38,9 @@ class viewertool(object):
         self.__state['gui'] = with_gui
         self.__state['launched'] = False
         self.__state['dbus name'] = "vtool_%s" % (base64.b64encode(os.urandom(16))).translate(self.__t,'=')
-        self.__launch( )
+
+        if pre_launch:
+            self.__launch( )
 
 
     def __launch( self ):

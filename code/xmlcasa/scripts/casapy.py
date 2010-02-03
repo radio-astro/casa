@@ -82,7 +82,8 @@ casa = { 'build': {
              'rc': homedir + '/.casa'
          },
          'flags': { },
-         'files': { }
+         'files': { },
+         'state' : { 'startup': True }
        }
 print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
@@ -968,6 +969,8 @@ casalog.version()
 ## warn when available memory is < 512M (clean throws and exception)
 if cu.hostinfo( )['memory']['available'] < 524288:
     casalog.post( 'available memory less than 512MB (with casarc settings)\n...some things will not run correctly', 'SEVERE' )
+
+casa['state']['startup'] = False
 
 import shutil
 if ipython:

@@ -21,23 +21,23 @@ def __taskinit_setlogfile( logger ) :
 		logger.setlogfile(myf['casa']['files']['logfile'])
 
 
-def __taskinit_argv( ) :
+def __taskinit_casa( ) :
 	a=inspect.stack()
-	stacklevel=0    
+	stacklevel=0
 	for k in range(len(a)):
-		if (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+		if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
 			stacklevel=k
 
 	myf=sys._getframe(stacklevel).f_globals
 
-	if myf.has_key('casa') and myf['casa'].has_key('flags') :
-		return myf['casa']['flags']
+	if myf.has_key('casa') :
+		return myf['casa']
 	else:
 		return { }
 
 #
-##get the command line arguments
-argv = __taskinit_argv( )
+##casa state...
+casa = __taskinit_casa( )
 
 #
 ##allow globals for taskby default
@@ -98,11 +98,11 @@ attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
 
 # setup viewer tool
-ving = viewertool.viewertool( False )
-if argv.has_key('--nogui') :
+ving = viewertool.viewertool( False, pre_launch=casa['state']['startup'] )
+if casa['flags'].has_key('--nogui') :
 	vi = ving
 else:
-	vi = viewertool.viewertool( )
+	vi = viewertool.viewertool( True, pre_launch=casa['state']['startup'] )
 
 defaultsdir = {}
 defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/almadefaults.xml'
