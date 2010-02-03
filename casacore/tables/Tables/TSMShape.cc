@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMShape.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TSMShape.cc 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #include <tables/Tables/TSMShape.h>
 #include <casa/Arrays/ArrayError.h>
@@ -64,27 +64,27 @@ TSMShape::~TSMShape()
 {}
 
 // Calculate the offset for a given position.
-uInt TSMShape::offset (const IPosition& position) const
+size_t TSMShape::offset (const IPosition& position) const
 {
     if (size_p != position.nelements()) {
 	throw (ArrayConformanceError(
                                "TSMShape::offset - shapes do not conform"));
     }
-    uInt off = 0;
+    size_t off = 0;
     for (uInt i=0; i<size_p; i++) {
 	off += position(i) * data_p(i);
     }
     return off;
 }
 
-uInt TSMShape::offset (const IPosition& position,
-		       const IPosition& origin) const
+size_t TSMShape::offset (const IPosition& position,
+                         const IPosition& origin) const
 {
     if (size_p != position.nelements()  ||  size_p != origin.nelements()) {
 	throw (ArrayConformanceError(
                                "TSMShape::offset - shapes do not conform"));
     }
-    uInt off = 0;
+    size_t off = 0;
     for (uInt i=0; i<size_p; i++) {
 	off += (position(i) - origin(i)) * data_p(i);
     }
@@ -92,7 +92,7 @@ uInt TSMShape::offset (const IPosition& position,
 }
 
 // Calculate the position for a given offset.
-IPosition TSMShape::position (uInt offset) const
+IPosition TSMShape::position (size_t offset) const
 {
     IPosition pos(size_p);
     if (size_p > 0) {
@@ -105,7 +105,7 @@ IPosition TSMShape::position (uInt offset) const
     return pos;
 }
 
-IPosition TSMShape::position (uInt offset, const IPosition& origin) const
+IPosition TSMShape::position (size_t offset, const IPosition& origin) const
 {
     if (size_p != origin.nelements()) {
 	throw (ArrayConformanceError(
