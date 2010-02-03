@@ -363,7 +363,7 @@ namespace casa {
 
 
       os << LogIO::NORMAL << "Writing Main table entries for DataDescId " << DDId 
-	 << ", Field Id " << FId << ", Scan number " << theScan 
+	 << ", Field Id " << FId << ", ExecBlock " << eBlockNum << ", Scan number " << theScan
 	 << ", SubScan number " << theSubScan << LogIO::POST;
       
       //////////////////////
@@ -1082,7 +1082,7 @@ namespace casa {
 	Double sInterval = source().intervalQuant()(irow).getValue("s");
 	if(sInterval > sTime){ // a very large value was set to express "always valid"
 	  sTime = timeQuant()(0).getValue("s");
-	  sInterval = sTime -  timeQuant()(ms_p.nrow()-1).getValue("s") 
+	  sInterval =  timeQuant()(ms_p.nrow()-1).getValue("s") -sTime 
 	    + intervalQuant()(ms_p.nrow()-1).getValue("s");
 	}
 
@@ -1100,22 +1100,28 @@ namespace casa {
 	string code = source().code()(irow).c_str();
 	vector< Angle > direction;
 	MDirection theSourceDir = source().directionMeas()(sId);
-	direction.push_back( theSourceDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
-	direction.push_back( theSourceDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
+	direction.push_back( Angle( theSourceDir.getAngle( unitASDMAngle() ).getValue()(0) ) ); // RA
+	direction.push_back( Angle( theSourceDir.getAngle( unitASDMAngle() ).getValue()(1) ) ); // DEC
 	
 	vector< AngularRate > properMotion;
 	if(!source().properMotionQuant().isNull()){
 	  Vector< Quantity > pMV;
 	  pMV.reference(source().properMotionQuant()(irow));
-	  properMotion.push_back( AngularRate( pMV[0].getValue(unitASDMAngularRate()) ) );
-	  properMotion.push_back( AngularRate( pMV[1].getValue(unitASDMAngularRate()) ) );
+	  try{
+	    properMotion.push_back( AngularRate( pMV[0].getValue(unitASDMAngularRate()) ) );
+	    properMotion.push_back( AngularRate( pMV[1].getValue(unitASDMAngularRate()) ) );
+	  }
+	  catch(AipsError x){
+	    os << LogIO::SEVERE << "Error accessing proper motion parameters in MS Source table row " << irow 
+	       << ":\n   " << x.getMesg() << LogIO::POST;
+	  }
 	}
 	else{ 
 	  properMotion.push_back( AngularRate( 0. ) );
 	  properMotion.push_back( AngularRate( 0. ) );
 	}	  
 	
-	string sourceName = source().name()(irow).c_str();
+	string sourceName = (source().name()(irow)).c_str();
 
 	tR = tT.newRow(timeInterval, spectralWindowId, code, direction, properMotion, sourceName);
     
@@ -1124,7 +1130,7 @@ namespace casa {
 	if(tR2 != tR){ // did not lead to the creation of a new tag
 	  os << LogIO::WARN << "Duplicate MS Source table row: " << irow << LogIO::POST;
 	}
-	else if(!asdmSourceId_p.isDefined(sId)){
+	if(!asdmSourceId_p.isDefined(sId)){
 	  int souId = tR2->getSourceId();
 	  asdmSourceId_p.define(sId, souId);
 	}
