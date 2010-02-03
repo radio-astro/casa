@@ -75,7 +75,7 @@ QtProfile::~QtProfile()
 QtProfile::QtProfile(ImageInterface<Float>* img, 
         const char *name, QWidget *parent)
         :QWidget(parent), //MWCCrosshairTool(),
-         pc(0), te(0), analysis(0), 
+         pc(0), te(0), analysis(0), over(0), 
          coordinate("world"), coordinateType(""),
          fileName(name), position(""), yUnit(""), yUnitPrefix(""), 
 	 xpos(""), ypos(""),
@@ -804,7 +804,28 @@ void QtProfile::wcChanged(const String c,
     
     pc->clearData();
     pc->plotPolyLine(z_xval, z_yval, fileName);
-    //pc->addPolyLine(z_xval, z_yval * 0.5, "second Line");
+
+    QHashIterator<QString, ImageAnalysis*> i(*over);
+    while (i.hasNext()) {
+      i.next();
+      //qDebug() << i.key() << ": " << i.value();
+      QString ky = i.key();
+      ImageAnalysis* ana = i.value();
+      Vector<Float> xval(100);
+      Vector<Float> yval(100);
+      ok=ana->getFreqProfile(xv, yv, xval, yval, 
+				coordinate, coordinateType, 
+                                0, 0, 0, "", frameType_p);
+      if (ok) {
+        if(ordersOfM!=0){
+          // correct display y axis values
+          for (uInt i = 0; i < z_yval.size(); i++) {
+            yval(i) *= pow(10.,ordersOfM);
+          }
+        }
+        pc->addPolyLine(xval, yval, ky);
+      }
+   }
 
     lastX.assign(xv);
     lastY.assign(yv);
@@ -847,5 +868,23 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
 
 }
 
+void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
+   if (over) {
+      delete over;
+      over = 0;
+   }
+   
+   over = new QHash<QString, ImageAnalysis*>();
+   QHashIterator<QString, ImageInterface<float>*> i(hash);
+   while (i.hasNext()) {
+      i.next();
+      //qDebug() << i.key() << ": " << i.value();
+      QString ky = i.key();
+      ImageAnalysis* ana = new ImageAnalysis(i.value());
+      (*over)[ky] = ana;
+      
+   }
+
 }
 
+}

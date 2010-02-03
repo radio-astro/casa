@@ -33,6 +33,7 @@
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
 #  include <QtGui>
+#include <QHash>
    //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
    //#   because they'll have Qt includes.
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
@@ -58,6 +59,8 @@ class QtDisplayData;
 class TrackBox;
 class QtRegionManager;
 class QtRegionShapeManager;
+
+template <class T> class ImageInterface;
 
 // <summary>
 // The main display window for the Qt version of the viewer.
@@ -133,6 +136,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual Bool restorePanelState(String filename);
  
  
+ signals:
+    void overlay(QHash<QString, ImageInterface<float>*>);
  protected slots:
   
 
