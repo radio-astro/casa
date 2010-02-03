@@ -36,6 +36,7 @@
 #include <alma/ASDM/Complex.h>
 #include <alma/ASDM/Frequency.h>
 #include <alma/ASDM/Angle.h>
+#include <alma/ASDM/AngularRate.h>
 #include <alma/ASDM/Length.h>
 #include <alma/ASDM/Temperature.h>
 #include <alma/ASDM/ArrayTimeInterval.h>
@@ -157,6 +158,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Unit unitASDMAngle(){ return Unit(String(asdm::Angle::unit())); }
 
+  Unit unitASDMAngularRate(){ return Unit(String(asdm::AngularRate::unit())); }
+
   Unit unitASDMLength(){ return Unit(String(asdm::Length::unit())); }
 
   Unit unitASDMTemp(){ return Unit(String(asdm::Temperature::unit())); }
@@ -186,6 +189,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool writeAntenna();
 
   Bool writeSpectralWindow();
+
+  Bool writeSource();
 
   Bool writePolarization();
 
@@ -284,6 +289,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Int, asdm::Tag> asdmSBSummaryId_p; // maps from MS Observation Id + 10000*SpwId
   SimpleOrderedMap <Double, asdm::Tag> asdmExecBlockId_p; // maps from MS Main timestamps 
   SimpleOrderedMap <Int, int> asdmFeedId_p; // ASDM feed id is not a Tag
+  SimpleOrderedMap <Int, int> asdmSourceId_p; // neither is the source id
 
   vector< vector< Bool > > skipCorr_p; // skipCorr_p[j][PolId] indicates that correlation 
                                        // product j for POLARIZATION_ID PolId should not 

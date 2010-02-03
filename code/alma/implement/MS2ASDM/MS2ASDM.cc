@@ -96,7 +96,8 @@ namespace casa {
     asdmSBSummaryId_p(Tag()),
     asdmExecBlockId_p(Tag()),
     // other maps
-    asdmFeedId_p(-1)
+    asdmFeedId_p(-1),
+    asdmSourceId_p(-1)
   {
     ASDM_p = new ASDM();
     asdmVersion_p = String((ASDM_p->getEntity()).getEntityVersion());
@@ -197,6 +198,10 @@ namespace casa {
     }
 
     if(!writeSpectralWindow()){
+      return False;
+    }
+
+    if(!writeSource()){
       return False;
     }
 
@@ -1054,6 +1059,90 @@ namespace casa {
     return rstat;
   }
 
+  Bool MS2ASDM::writeSource(){ // create asdm source table and fill source id map
+    LogIO os(LogOrigin("MS2ASDM", "writeSource()"));
+    
+    Bool rstat = True;
+    
+    asdm::SourceTable& tT = ASDM_p->getSource();
+    
+    asdm::SourceRow* tR = 0;
+    
+    if(source().isNull()){// the source table doesn't exist (it is optional)
+      os << LogIO::WARN << "MS Source table doesn't exist (it is optional). Cannot create ASDM Source table."
+	 << LogIO::POST;
+      rstat = True; // not an error
+    }
+    else {
+      for(uInt irow=0; irow<source().nrow(); irow++){
+
+	// parameters of the new row
+
+	Double sTime = source().timeQuant()(irow).getValue("s");
+	Double sInterval = source().intervalQuant()(irow).getValue("s");
+	if(sInterval > sTime){ // a very large value was set to express "always valid"
+	  sTime = timeQuant()(0).getValue("s");
+	  sInterval = sTime -  timeQuant()(ms_p.nrow()-1).getValue("s") 
+	    + intervalQuant()(ms_p.nrow()-1).getValue("s");
+	}
+
+	ArrayTimeInterval timeInterval( ASDMArrayTime(sTime),
+					ASDMInterval(sInterval) );
+	Int sId = source().spectralWindowId()(irow);
+	Tag spectralWindowId;
+	if(!asdmSpectralWindowId_p.isDefined(sId)){
+	  os << LogIO::SEVERE << "Undefined SPW id " << sId << " in MS Source table row "<< irow << LogIO::POST;
+	  return False;
+	}
+	else{
+	  spectralWindowId = asdmSpectralWindowId_p(sId);
+	}
+	string code = source().code()(irow).c_str();
+	vector< Angle > direction;
+	MDirection theSourceDir = source().directionMeas()(sId);
+	direction.push_back( theSourceDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
+	direction.push_back( theSourceDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
+	
+	vector< AngularRate > properMotion;
+	if(!source().properMotionQuant().isNull()){
+	  Vector< Quantity > pMV;
+	  pMV.reference(source().properMotionQuant()(irow));
+	  properMotion.push_back( AngularRate( pMV[0].getValue(unitASDMAngularRate()) ) );
+	  properMotion.push_back( AngularRate( pMV[1].getValue(unitASDMAngularRate()) ) );
+	}
+	else{ 
+	  properMotion.push_back( AngularRate( 0. ) );
+	  properMotion.push_back( AngularRate( 0. ) );
+	}	  
+	
+	string sourceName = source().name()(irow).c_str();
+
+	tR = tT.newRow(timeInterval, spectralWindowId, code, direction, properMotion, sourceName);
+    
+	asdm::SourceRow* tR2;
+	tR2 = tT.add(tR);
+	if(tR2 != tR){ // did not lead to the creation of a new tag
+	  os << LogIO::WARN << "Duplicate MS Source table row: " << irow << LogIO::POST;
+	}
+	else if(!asdmSourceId_p.isDefined(sId)){
+	  int souId = tR2->getSourceId();
+	  asdmSourceId_p.define(sId, souId);
+	}
+      } // end loop over source table
+    } // id if source table exists
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Source table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    incrementUid();
+    
+    return rstat;
+  }
+
+
+
   Bool MS2ASDM::writePolarization(){
     LogIO os(LogOrigin("MS2ASDM", "writePolarization()"));
 
@@ -1515,9 +1604,12 @@ namespace casa {
 
       tR->setTime(ASDMArrayTime(field().timeQuant()(irow).getValue("s")));
 
-      int sid = field().sourceId()(irow);
-      if(sid>=0){
-	tR->setSourceId(sid);
+      Int sId = field().sourceId()(irow);
+      if(asdmSourceId_p.isDefined(sId)){
+	tR->setSourceId(asdmSourceId_p(sId));	
+      }
+      else if(sId!=-1){ // -1 means "no source"
+	os << LogIO::WARN << "Undefined source id " << sId << " in MS field table row " << irow << LogIO::POST;
       }
 
       if(!field().ephemerisId().isNull()){
@@ -2791,7 +2883,7 @@ namespace casa {
       else{
 	firstFieldIdFromObsId.define(obsId,fId);
       } 
-      MDirection theFieldDir = field().phaseDirMeas(fId, 0);
+      MDirection theFieldDir = field().phaseDirMeas(fId,0);
       centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(0) ); // RA
       centerDirection.push_back( theFieldDir.getAngle( unitASDMAngle() ).getValue()(1) ); // DEC
       
