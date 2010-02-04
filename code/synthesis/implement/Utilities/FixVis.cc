@@ -18,8 +18,6 @@
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
-//#include <msvis/MSVis/VisSetUtil.h>
 #include <casa/BasicSL/String.h>	// for parseColumnNames()
 
 #include <casa/iostream.h>
@@ -553,7 +551,7 @@ Bool FixVis::makeSelection(const Int selectedField)
 {
   logSink() << LogOrigin("FixVis", "makeSelection()");
     
-  //VisSet/MSIter will check if SORTED_TABLE exists and resort if necessary.
+  //Vis/MSIter will check if SORTED_TABLE exists and resort if necessary.
   MSSelection thisSelection;
   if(selectedField >= 0 && nAllFields_p > 1){
     Vector<Int> wrapper;
@@ -863,9 +861,14 @@ void FixVis::processSelected(uInt numInSel)
               distances_p[numInSel] : 0.0);
   cImageImage.setMiscInfo(info);
   
-  VisSet vs(makeVisSet(mssel_p));
-  AlwaysAssert(&vs, AipsError);
-  ROVisIter& vi(vs.iter());	// Initialize the gradients
+  Block<Int> sort(0);
+  sort.resize(4);
+  sort[0] = MS::ARRAY_ID; 		    // use default sort order
+  sort[1] = MS::FIELD_ID;
+  sort[2] = MS::DATA_DESC_ID;
+  sort[3] = MS::TIME;
+
+  ROVisibilityIterator vi(mssel_p, sort);	// Initialize the gradients
 	  
   // Loop over all visibilities in the selected field.
   VisBuffer vb(vi);
@@ -888,7 +891,7 @@ void FixVis::processSelected(uInt numInSel)
       }
     }
   }
-  vs.flush();
+  //vs.flush();
 
   // Update HISTORY table
   LogSink localLogSink = LogSink(LogMessage::NORMAL, False);	  
@@ -954,26 +957,6 @@ void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type,
 
   // Immediately returns if not needed.
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-}
-
-VisSet FixVis::makeVisSet(MeasurementSet& ms, Bool compress, Bool mosaicOrder)
-{
-  Block<Int> sort(0);
-  sort.resize(4);
-  if(mosaicOrder){
-    sort[0] = MS::FIELD_ID;
-    sort[1] = MS::ARRAY_ID;
-  }
-  else{ 					// use default sort order
-    sort[0] = MS::ARRAY_ID;
-    sort[1] = MS::FIELD_ID;
-  }
-  sort[2] = MS::DATA_DESC_ID;
-  sort[3] = MS::TIME;
-
-  Matrix<Int> noselection;
-  Double timeInterval = 0;
-  return VisSet(ms, sort, noselection, timeInterval, compress);
 }
 
 void FixVis::ok() {

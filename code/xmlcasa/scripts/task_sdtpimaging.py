@@ -561,5 +561,5 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
 
         except Exception, instance:
             #print '***Error***',instance
-            casalog.post( instance.message, priority='ERROR' )
+            casalog.post( str(instance), priority='ERROR' )
             return

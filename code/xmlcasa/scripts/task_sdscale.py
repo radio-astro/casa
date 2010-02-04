@@ -50,6 +50,18 @@ def sdscale(sdfile, factor, scaletsys, outfile, overwrite):
                   #print "scaling factor is %s. No scaling" % factor
                   casalog.post( "scaling factor is %s. No scaling" % factor )
                   return
+            elif isinstance( factor, str ):
+                  casalog.post( 'read factor from \'%s\'' %factor )
+                  f = open( factor )
+                  lines = f.readlines()
+                  f.close()
+                  del f
+                  for i in range( len(lines) ):
+                          lines[i] = lines[i].rstrip('\n')
+                          lines[i] = lines[i].split()
+                          for j in range( len(lines[i]) ):
+                                  lines[i][j] = float( lines[i][j] )
+                  factor = lines
             #if outfile == 'none':
             #  s.scale(factor, scaletsys, True)
             #  s.save(sdfile, format, True)
@@ -80,7 +92,7 @@ def sdscale(sdfile, factor, scaletsys, outfile, overwrite):
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

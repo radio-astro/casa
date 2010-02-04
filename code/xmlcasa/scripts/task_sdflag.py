@@ -123,7 +123,7 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode
                 s.set_selection(sel)
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
             # flag mode
@@ -365,7 +365,7 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode
             # DONE
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
 
         finally:
                 casalog.post('')

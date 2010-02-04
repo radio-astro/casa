@@ -69,12 +69,12 @@ MakeRegion::MakeRegion(QtDisplayPanel* qdp) {
   pIndex = 0;
   zAxis = "Frequency";
  
-  setWindowTitle("Image Region");
+  setWindowTitle("Region in Image");
   QVBoxLayout *layout = new QVBoxLayout;
 
   setLayout(layout);
   setMinimumSize(210, 180);
-  resize(320, 180);
+  setFixedSize(320, 180);
 
   tGroup = new QGroupBox;
   QGridLayout *tLayout = new QGridLayout;
@@ -279,6 +279,11 @@ void MakeRegion::changeAxis(String xa, String ya, String za, int ha) {
    }
 
    reDraw();
+}
+
+void MakeRegion::closeEvent(QCloseEvent* event) {
+   //qDebug() << "closeEvent";
+  emit hideRegionInImage();
 }
 
 void MakeRegion::activate(Record rcd) {

@@ -753,7 +753,10 @@ atmosphere::getDryContOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	//// Start mod: 2010/01/29 kana ////
+	//chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
+	//// End mod ///////////////////////
       else
 	chan = nc;
       dryContOpacity = pRefractiveIndexProfile->getDryContOpacity(spwId,chan).get("neper");
@@ -779,7 +782,10 @@ atmosphere::getO2LinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	//// Start mod: 2010/01/29 kana ////
+	//chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
+	//// End mod ///////////////////////
       else
 	chan = nc;
       o2LinesOpacity = pRefractiveIndexProfile->getO2LinesOpacity(spwId,chan).get("neper");
@@ -805,7 +811,10 @@ atmosphere::getO3LinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	//// Start mod: 2010/01/29 kana ////
+	//chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
+	//// End mod ///////////////////////
       else
 	chan = nc;
       o3LinesOpacity = pRefractiveIndexProfile->getO3LinesOpacity(spwId,chan).get("neper");
@@ -831,7 +840,10 @@ atmosphere::getCOLinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	//// Start mod: 2010/01/29 kana ////
+	//chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
+	//// End mod ///////////////////////
       else
 	chan = nc;
       coLinesOpacity = pRefractiveIndexProfile->getCOLinesOpacity(spwId,chan).get("neper");
@@ -857,7 +869,10 @@ atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	//// Start mod: 2010/01/29 kana ////
+	//chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
+	//// End mod ///////////////////////
       else
 	chan = nc;
       n2oLinesOpacity = pRefractiveIndexProfile->getN2OLinesOpacity(spwId,chan).get("neper");
@@ -912,7 +927,10 @@ atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	//// Start mod: 2010/01/29 kana ////
+	//chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
+	//// End mod ///////////////////////
       else
 	chan = nc;
       h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(spwId,chan).get("neper");
@@ -938,7 +956,10 @@ atmosphere::getH2OContOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	//// Start mod: 2010/01/29 kana ////
+	//chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
+	//// End mod ///////////////////////
       else
 	chan = nc;
       h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(spwId,chan).get("neper");

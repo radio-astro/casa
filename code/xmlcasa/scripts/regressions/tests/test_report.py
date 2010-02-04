@@ -70,3 +70,6 @@ class version_test(unittest.TestCase):
         assert report.cmp_version(b, a) > 0
         assert report.cmp_version(a, a) == 0
         assert report.cmp_version(b, b) == 0
+
+def suite():
+    return [version_test]

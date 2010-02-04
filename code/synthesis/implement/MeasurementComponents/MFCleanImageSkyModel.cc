@@ -596,7 +596,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  if ( displayProgress_p ) {
 		    cleaner.setProgress( *progress_p );
 		  }
-		  cleaner.solve(eqn);
+		  cleaner.singleSolve(eqn, residu);
 		  iterations[model](chan*npolcube+ipol)=cleaner.numberIterations();
 		  maxIterations=(iterations[model](chan*npolcube+ipol)>maxIterations) ?
 		    iterations[model](chan*npolcube+ipol) : maxIterations;
@@ -620,7 +620,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  */	  
 		  /////
 		  //imageli.rwCursor()+=deltaimageli.cursor();
-		  eqn.residual(imageStepli.rwCursor(), cleaner);
+		  //eqn.residual(imageStepli.rwCursor(), cleaner);
 		  
 		  os << LogIO::NORMAL2 // Loglevel PROGRESS
                      <<"Finished Clark clean inner cycle " << LogIO::POST;
@@ -690,9 +690,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     Float finalabsmax=maxField(resmax, resmin);
     
-    os << LogIO::NORMAL1 << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
+    os << LogIO::NORMAL << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
     converged=(finalabsmax < 1.05 * threshold());
-    os << LogIO::NORMAL1; // Loglevel INFO
+    os << LogIO::NORMAL; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;

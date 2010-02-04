@@ -34,38 +34,54 @@ namespace casac {
 
 // Static //
 
-vector<CasapyWatcher*> CasapyWatcher::WATCHERS = vector<CasapyWatcher*>();
+vector<CasapyWatcher*> *CasapyWatcher::WATCHERS = 0;
 
-CasapyWatcher::Singleton CasapyWatcher::SINGLETON = Singleton();
+// CasapyWatcher::Singleton CasapyWatcher::SINGLETON = Singleton();
 
 
 void CasapyWatcher::registerWatcher(CasapyWatcher* watcher) {
-    if(watcher == NULL) return;
-    for(unsigned int i = 0; i < WATCHERS.size(); i++)
-        if(watcher == WATCHERS[i]) return;
-    WATCHERS.push_back(watcher);
+
+    if ( WATCHERS == 0 ) {
+	WATCHERS = new vector<CasapyWatcher*>();
+    }
+
+    if ( watcher == NULL ) return;
+
+    for ( unsigned int i = 0; i < WATCHERS->size(); i++ )
+	if ( watcher == (*WATCHERS)[i] ) return;
+
+    WATCHERS->push_back(watcher);
 }
 
 void CasapyWatcher::unregisterWatcher(CasapyWatcher* watcher) {
-    if(watcher == NULL) return;
-    for(unsigned int i = 0; i < WATCHERS.size(); i++) {
-        if(WATCHERS[i] == watcher) {
-            WATCHERS.erase(WATCHERS.begin() + i);
-            break;
+    if ( WATCHERS == 0 ) return;
+    if ( watcher == NULL ) return;
+    for ( unsigned int i = 0; i < WATCHERS->size(); i++ ) {
+	if ( (*WATCHERS)[i] == watcher ) {
+	    WATCHERS->erase(WATCHERS->begin() + i);
+	    break;
         }
     }
 }
 
 
 void CasapyWatcher::logChanged_(const String& sinkLocation) {
-    for(unsigned int i = 0; i < WATCHERS.size(); i++)
-        WATCHERS[i]->logChanged(sinkLocation); }
+    if ( WATCHERS == 0 ) return;
+    for ( unsigned int i = 0; i < WATCHERS->size(); i++ )
+	(*WATCHERS)[i]->logChanged(sinkLocation);
+}
+
 void CasapyWatcher::logChanged_(LogMessage::Priority filterPriority) {
-    for(unsigned int i = 0; i < WATCHERS.size(); i++)
-        WATCHERS[i]->logChanged(filterPriority); }
+    if ( WATCHERS == 0 ) return;
+    for ( unsigned int i = 0; i < WATCHERS->size(); i++ )
+	(*WATCHERS)[i]->logChanged(filterPriority);
+}
+
 void CasapyWatcher::casapyClosing_() {
-    for(unsigned int i = 0; i < WATCHERS.size(); i++)
-        WATCHERS[i]->casapyClosing(); }
+    if ( WATCHERS == 0 ) return;
+    for ( unsigned int i = 0; i < WATCHERS->size(); i++ )
+	(*WATCHERS)[i]->casapyClosing();
+}
 
 
 // Non-Static //

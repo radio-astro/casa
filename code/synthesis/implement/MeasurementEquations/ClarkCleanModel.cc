@@ -481,11 +481,12 @@ Bool ClarkCleanModel::singleSolve(ConvolutionEquation & eqn,
 				   numMinorIterations);
     maxNumPix = max(maxNumPix, numPix);
   }
+  /*
   else
     theLog << LogIO::WARN 
 	   << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
 	   << " and a maximum Residual of " << maxRes << LogIO::POST;
-
+  */
   setNumberIterations(numIterations);
   theMaxNumPix = maxNumPix;
   theMaxNumberMinorIterations = maxNumberMinorIterations;

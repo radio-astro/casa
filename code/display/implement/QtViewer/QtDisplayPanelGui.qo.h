@@ -51,6 +51,7 @@ class QtMouseToolBar;
 class QtCanvasManager;
 class QtAnnotatorGui;
 class MakeMask;
+class FileBox;
 class MakeRegion;
 class QtProfile;
 class QtDisplayData;
@@ -114,6 +115,9 @@ class QtDisplayPanelGui : public QtPanelBase,
 
   virtual void showAnnotatorPanel();
   virtual void hideAnnotatorPanel();
+
+  virtual void showFileBoxPanel();
+  virtual void hideFileBoxPanel();
 
   virtual void showMakeRegionPanel();
   virtual void hideMakeRegionPanel();
@@ -258,6 +262,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   QtCanvasManager* qcm_;	//# display panel options window.
   //QtAnnotatorGui* qap_;
   MakeMask* qap_;
+  FileBox* qfb_;
   MakeRegion* qmr_;
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
@@ -273,7 +278,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_, 
-	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_,
+	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_,
           *profileAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_; 
   
   QToolBar* mainToolBar_;

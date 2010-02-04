@@ -163,7 +163,8 @@ CORELIB += -lcasa_ms
 CORELIB += -lcasa_msfits
 CORELIB += -lcasa_tables
 CORELIB += -lcasa_scimath -lcasa_scimath_f
-CORELIB += -lcasa_measures -lcasa_measures_f
+#CORELIB += -lcasa_measures -lcasa_measures_f
+CORELIB += -lcasa_measures
 
 # PGPLOT (FORTRAN plotting package).
 PGPLOTROOT := /usr

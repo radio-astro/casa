@@ -987,10 +987,12 @@ image::deconvolvefrombeam(const ::casac::variant& source,
 
     }
 
-    Bool retval=itsImage->deconvolveFromBeam(sourceParam[0], sourceParam[1], 
-					     sourceParam[2], beamParam);
+	Bool success = False;
+    Bool retval=itsImage->deconvolveFromBeam(
+    	sourceParam[0], sourceParam[1],
+		sourceParam[2], success, beamParam
+	);
     
-
     casa::Record outrec1;
     casa::Record deconval;
     casa::Record tmprec;
@@ -1001,6 +1003,7 @@ image::deconvolvefrombeam(const ::casac::variant& source,
     deconval.defineRecord("minor", tmprec);
     QuantumHolder(sourceParam[2]).toRecord(error, tmprec);
     deconval.defineRecord("pa", tmprec);
+    deconval.define("success", success);
     outrec1.define("return", retval);
     outrec1.defineRecord("fit", deconval);
     rstat = fromRecord(outrec1);

@@ -406,7 +406,7 @@ public:
 	SubscanRow* lookup(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow); 
 
 
-private:
+// private:
 
 	/**
 	 * Create a SubscanTable.

@@ -42,11 +42,12 @@ const QString &QtViewer::name( ) {
     return name_;
 }
 
-QtViewer::QtViewer( bool is_server ) : QtViewerBase(), qdm_(0), qdo_(0), dbus_(NULL),
-				       autoDDOptionsShow(True)
+ QtViewer::QtViewer( bool is_server, const char *dbus_name ) : QtViewerBase(), qdm_(0), qdo_(0),
+							       dbus_(NULL), autoDDOptionsShow(True)
  {
 
   name_ = (is_server ? "view_server" : "viewer");
+  dbus_name_ = (dbus_name ? strdup(dbus_name) : 0);
 
   qInitResources_QtViewer();
 	// Makes QtViewer icons, etc. available via Qt resource system.
@@ -67,7 +68,7 @@ QtViewer::QtViewer( bool is_server ) : QtViewerBase(), qdm_(0), qdo_(0), dbus_(N
   qdo_ = new QtDataOptionsPanel(this);
 
   dbus_ = new QtDBusViewerAdaptor(this);
-  dbus_->connectToDBus();
+  dbus_->connectToDBus(dbus_name_);
 }
 
 

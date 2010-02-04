@@ -74,7 +74,7 @@ class QtViewer : public QtViewerBase {
 
  public:
   
-  QtViewer( bool is_server=false );
+  QtViewer( bool is_server=false, const char *dbus_name=0 );
   ~QtViewer();
   
   QtDataManager* dataMgr() { return qdm_;  }
@@ -125,6 +125,7 @@ class QtViewer : public QtViewerBase {
  
  private:
   static QString name_;
+  QString dbus_name_;
     
 };
 

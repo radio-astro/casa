@@ -82,7 +82,8 @@ casa = { 'build': {
              'rc': homedir + '/.casa'
          },
          'flags': { },
-         'files': { }
+         'files': { },
+         'state' : { 'startup': True }
        }
 print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
@@ -210,6 +211,9 @@ if casa['flags'].has_key('--nolog') :
     deploylogger = False
 
 if casa['flags'].has_key('--nologger') :
+    deploylogger = False
+
+if casa['flags'].has_key('--nogui') :
     deploylogger = False
 
 if deploylogger and (thelogfile != 'null') :
@@ -966,6 +970,8 @@ casalog.version()
 if cu.hostinfo( )['memory']['available'] < 524288:
     casalog.post( 'available memory less than 512MB (with casarc settings)\n...some things will not run correctly', 'SEVERE' )
 
+casa['state']['startup'] = False
+
 import shutil
 if ipython:
     ipshell.mainloop( )
@@ -984,3 +990,5 @@ if ipython:
 
     if vwrpid!=9999: os.kill(vwrpid,9)
     print "leaving casapy..."
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    os.killpg(os.getpgid(0), signal.SIGTERM)

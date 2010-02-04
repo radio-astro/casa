@@ -236,7 +236,7 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                 s.set_selection(sel)
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
             del sel
 
@@ -501,7 +501,7 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 ########################################

@@ -158,5 +158,5 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             
         except Exception, instance:
             #print '***Error***',instance
-            casalog.post( instance.message, priority = 'ERROR' )
+            casalog.post( str(instance), priority = 'ERROR' )
             return

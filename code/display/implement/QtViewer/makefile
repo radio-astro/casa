@@ -152,6 +152,7 @@ qt : ru
 	$(QT4ROOT)/bin/moc-qt4 -o QtLELEdit.moc.cc QtLELEdit.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o MakeMask.moc.cc MakeMask.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o MakeRegion.moc.cc MakeRegion.qo.h
+	$(QT4ROOT)/bin/moc-qt4 -o FileBox.moc.cc FileBox.qo.h
 
 qtclean :
 	rm -f *.ui.h *.qrc.cc *.moc.cc

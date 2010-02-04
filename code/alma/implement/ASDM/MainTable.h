@@ -445,7 +445,7 @@ public:
 	MainRow* lookup(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId); 
 
 
-private:
+// private:
 
 	/**
 	 * Create a MainTable.

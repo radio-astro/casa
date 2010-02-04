@@ -2,14 +2,16 @@ from taskinit import *
 import numpy
 import sys
 
-# Writes out regions above threshold to regionfile+'.rgn'
+# Writes out regions above threshold to regionfile+'.box'
 
-def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch, overwrite):
+def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsize, diag, boxstretch, overwrite):
 
     casalog.origin('boxit')
 
     if not(regionfile):
-        regionfile = imagename + '.rgn'
+        regionfile = imagename + '.box'
+    if not regionfile.endswith('.box'):
+        regionfile = regionfile + '.box'
 
     if not(overwrite):
         if(os.path.exists(regionfile)):
@@ -35,6 +37,7 @@ def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch,
     csys = ia.coordsys()
 
     shape = fullmask.shape
+
     nx = shape[0]
     ny = shape[1]
     n2 = n3 = 1
@@ -43,23 +46,101 @@ def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch,
     if len(shape)==4:
         n2 = shape[2]
         n3 = shape[3]
+    #print 'nx:', nx, 'ny:', ny, 'n2:', n2, 'n3:', n3
 
+    #casa generated images always 4d and in order of [ra, dec, stokes, freq]
+    #other images can be in the order of [ra, dec, freq, stokes]
+    nms = csys.names()
+    #axes=[]
+    #for i in xrange(len(nms)):
+    #   if nms[i]=='Right Ascension':
+    #      axes[0]=i
+    #   if nms[i]=='Declination':
+    #      axes[1]=i
+    #   if nms[i]=='Stokes'
+    #      axes[2]=i
+    #   if nms[i]=='Frequency':
+    #      axes[3]=i
+
+    chmax=n3
+    pomax=n2
+    chmin=0
+    pomin=0
+    if len(nms)==4 and nms[3]=='Stokes':
+       chmax=n2
+       pomax=n3
+
+    if chanrange:
+       print chanrange 
+       try:
+          if str.count(chanrange, '~') == 1:
+             ch1=int(str.split(chanrange, '~')[0])
+             ch2=int(str.split(chanrange, '~')[1])
+          else:
+             ch1=int(chanrange)
+             ch2=ch1
+          if ch1 > ch2 or ch1 < 0 or ch2 > chmax:
+             print 'invalid channel range'
+             return
+          if ch1>chmin:
+             chmin = ch1
+          if ch2<chmax:
+             chmax = ch2
+       except:
+          print 'bad format for chanrange'
+          return
+    #print 'chmin', chmin, 'chmax', chmax
+          
+    if polrange:
+       print polrange 
+       try:
+          if str.count(polrange, '~') == 1:
+             po1=int(str.split(polrange, '~')[0])
+             po2=int(str.split(polrange, '~')[1])
+          else:
+             po1=int(polrange)
+             po2=po1
+          if po1 > po2 or po1 < 0 or po2 > pomax:
+             print 'invalid stokes range'
+             return
+          if po1>pomin:
+             pomin = po1
+          if po2<pomax:
+             pomax = po2
+       except:
+          print 'bad format for polrange'
+          return
+    #print 'pomin', pomin, 'pomax', pomax
+          
+    n1=pomin
+    n2=pomax
+    n3=chmax
+    n4=chmin
+    if len(nms)==4 and nms[3]=='Stokes':
+       n1=chmin
+       n2=chmax
+       n3=pomax
+       n4=pomin
+    #print 'n1:', n1, 'n2:', n2, 'n4:', n4, 'n3:', n3
+    
     f = open(regionfile, 'w')
     totregions = 0
     outputmask = []
     if writemask:
         outputmask = ia.getchunk()
         outputmask.fill(False)
-    for i3 in xrange(n3):
-        for i2 in xrange(n2):
+
+    for i3 in xrange(n4, n3):
+        for i2 in xrange(n1, n2):
             regions = {}
             boxRecord = {}
             if len(shape)==2:
                 mask = fullmask
             if len(shape)==4:
-                mask = fullmask[:,:,i2,i3].reshape(shape[0], shape[1])
+                mask = fullmask[:,:,i2,i3].reshape(nx, ny)
             islands = []
             pos = numpy.unravel_index(mask.argmax(), mask.shape)
+            #print pos
             while(mask[pos]):
                 # found pixel in new island
                 island = {}
@@ -93,9 +174,8 @@ def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch,
                             outputmask[ii][jj][i2][i3] = True
                 blccoord = [box[0]-0.5, box[1]-0.5, i2, i3]
                 trccoord = [box[2]+0.5, box[3]+0.5, i2, i3]
-                # Honglin prefers world to pixel coords for viewer handling, but note that
-                # the toworld() calls are likely very expensive for many boxes. But then again,
-                # the box-finding algorithm itself seems pretty inefficient, but resource
+                # note that the toworld() calls are likely very expensive for many boxes. But then 
+                # again, the box-finding algorithm itself seems pretty inefficient, but resource
                 # constraints only permit a band aid fix at this time.
                 blc = ia.toworld(blccoord, 'm')['measure']
                 trc = ia.toworld(trccoord, 'm')['measure']

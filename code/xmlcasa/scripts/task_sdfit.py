@@ -119,7 +119,7 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                     s.set_selection(sel)
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
             del sel
 
@@ -584,7 +584,7 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
 
         except Exception, instance:
                 #print '***Error***', instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
         finally:

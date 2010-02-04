@@ -2,7 +2,7 @@ import casac
 import os
 import commands
 import math
-#import pdb
+import pdb
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -29,6 +29,7 @@ class cleanhelper:
         if((type(imtool) != str) and (len(vis) !=0)):
             self.initsinglems(imtool, vis, usescratch)
         self.maskimages={}
+        self.finalimages={}
         self.usescratch=usescratch
         self.dataspecframe='LSRK'
         self.usespecframe=''
@@ -203,27 +204,50 @@ class cleanhelper:
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
-            if(checkpsf):
+            # Moved the following to a seperate function
+            #if(checkpsf):
                 # make sure psf can be created
-                self.im.makeimage(type='psf', image=self.imagelist[n]+'.test.psf')
-                ia.open(self.imagelist[n]+'.test.psf')
-                imdata=ia.getchunk()
-                if self.skipclean:
-                    pass
-                elif imdata.sum()==0.0:
-                    self.skipclean=True
+                #self.im.makeimage(type='psf', image=self.imagelist[n]+'.test.psf')
+                #ia.open(self.imagelist[n]+'.test.psf')
+                #imdata=ia.getchunk()
+                #if self.skipclean:
+                #    pass
+                #elif imdata.sum()==0.0:
+                #    self.skipclean=True
+            #    print "checkpsf DONE"
+                
+    def checkpsf(self,chan):
+        """
+        a check to make sure selected channel plane is not entirely flagged
+        (for chinter=T interactive clean)
+        """
+        lerange=range(self.nimages)
+        lerange.reverse()
+        for n in lerange:
+            #self.getchanimage(self.finalimages[n]+'_template.psf',self.imagelist[n]+'.test.psf',chan)
+            self.getchanimage(self.finalimages[n]+'.psf',self.imagelist[n]+'.test.psf',chan)
+            ia.open(self.imagelist[n]+'.test.psf')
+            imdata=ia.getchunk()
+            if self.skipclean:
+                pass
+            elif imdata.sum()==0.0:
+                self.skipclean=True
 
     def makeEmptyimages(self):
         """
         Create empty images (0.0 pixel values) for 
         image, residual, psf
         must run after definemultiimages()
+        and it is assumed that definemultiimages creates 
+        empty images (self.imagelist). 
         """ 
         lerange=range(self.nimages)
         for n in lerange:
             os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.image')
             os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.residual')
             os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.psf')
+            os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.model')
+            os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.mask')
 
     
     def makemultifieldmask(self, maskobject=''):
@@ -604,6 +628,7 @@ class cleanhelper:
             if(qa.quantity(outertaper[0])['value'] > 0.0):    
                 self.im.filter(type='gaussian', bmaj=outertaper[0],
                                bmin=outertaper[1], bpa=outertaper[2])
+
     def setrestoringbeam(self, restoringbeam):
         if((restoringbeam == ['']) or (len(restoringbeam) ==0)):
             return
@@ -951,6 +976,28 @@ class cleanhelper:
         ia.close()
         return True
 
+    def putchanimage(self,cubimage,inim,chan):
+        """
+        put channel image back to a pre-exisiting cubeimage
+        """
+        ia.open(inim)
+        inimshape=ia.shape()
+        imdata=ia.getchunk()
+        immask=ia.getchunk(getmask=True)
+        ia.close()
+        blc=[0,0,inimshape[2]-1,chan]
+        trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan]
+        ia.open(cubimage)
+        cubeshape=ia.shape()
+        rg0=ia.setboxregion(blc=blc,trc=trc)
+        if inimshape[0:3]!=cubeshape[0:3]: 
+            return False
+        #ia.putchunk(pixels=imdata,blc=blc)
+        ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+        ia.close()
+        return True
+
+
     def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype,restf):
         """
         determine appropriate values for channelization
@@ -1037,8 +1084,7 @@ class cleanhelper:
                     loc_width=width
             (freqlist, finc)=self.getfreqs(nchan,spw,0,loc_width)
             ###use the bloody frame of the data to define the start for defaults
-            if(self.usespecframe==''):
-                self.usespecframe=self.dataspecframe
+            self.usespecframe=self.dataspecframe
             retnchan = len(freqlist)
         #    if(mode=='velocity' and nchan==-1):
         #       vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
@@ -1189,7 +1235,6 @@ class cleanhelper:
                      "LGROUP",
                      "CMB"]
         self.dataspecframe=elspecframe[spwframe[spw0]];
-        #if dummy; just wanted the data frame
         if(dummy):
             return freqlist, finc
         chanfreqs=chanfreqscol.transpose()
@@ -1237,6 +1282,234 @@ class cleanhelper:
             else:
                 freqlist.append(freqlist[-1]+finc) 
         return freqlist, finc
+
+    def initChaniter(self,nchan,spw,start,width,imagename,mode,tmpdir='_tmpimdir/'):
+        """
+        initialize for channel iteration in interactive clean
+        --- create a temporary directory, get frequencies for
+        mode='channel'
+        """
+        # create a temporary directory to put channel images
+        tmppath=[]
+        freqs=[]
+        finc=0
+        newmode=mode
+        for imname in imagename:
+            if os.path.dirname(imname)=='':
+                tmppath.append(tmpdir)
+            else:
+                tmppath.append(os.path.dirname(imname)+'/'+tmpdir)
+            # clean up old directory
+            if os.path.isdir(tmppath[-1]):
+                os.system('rm -rf '+tmppath[-1])
+            os.mkdir(tmppath[-1])
+        #internally converted to frequency mode for mode='channel'
+        #to ensure correct frequency axis for output image
+        # put in helper function
+        if mode == 'channel':
+            freqs, finc = self.getfreqs(nchan, spw, start, width)
+            newmode = 'frequency'
+        return freqs,finc,newmode,tmppath
+
+    def makeTemplateCubes(self, imagename,outlierfile, field, spw, selectdata, timerange,
+          uvrange, antenna, scan, mode, facets, cfcache, interpolation, 
+          imagermode, localFTMachine, mosweight, locnchan, locstart, locwidth, outframe,
+          veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
+          robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
+          calready, noise, npixels, padding):
+        """
+        make template cubes to be used for chaniter=T interactive clean
+        """
+        imageids=[]
+        imsizes=[]
+        phasecenters=[]
+        rootname=''
+        multifield=False
+
+        if len(outlierfile) != 0:
+            imsizes,phasecenters,imageids=self.readoutlier(outlierfile)
+            if type(imagename) == list:
+                rootname = imagename[0]
+            else:
+                rootname = imagename
+            if len(imageids) > 1:
+                multifield=True
+        else:
+            imsizes=imsize
+            phasecenters=phasecenter
+            #imageids=imagename+'_template'
+            imageids=imagename
+
+        # readoutlier need to be run first....
+        #pdb.set_trace() 
+        self.definemultiimages(rootname=rootname,imsizes=imsizes,cell=cell,
+                                stokes=stokes,mode=mode,
+                               spw=spw, nchan=locnchan, start=locstart,
+                               width=locwidth, restfreq=restfreq,
+                               field=field, phasecenters=phasecenters,
+                               names=imageids, facets=facets,
+                               outframe=outframe, veltype=veltype,
+                               makepbim=False, checkpsf=False)
+
+        self.datselweightfilter(field=field, spw=spw,
+                                 timerange=timerange, uvrange=uvrange,
+                                 antenna=antenna, scan=scan,
+                                 wgttype=weighting, robust=robust,
+                                 noise=noise, npixels=npixels,
+                                 mosweight=mosweight,
+                                 innertaper=innertaper,
+                                 outertaper=outertaper,
+                                 calready=calready, nchan=-1,
+                                 start=0, width=1)
+       
+        #localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode,
+        #                             multiscale, multifield, facets, nterms,
+        #                             'clark');
+
+        #localAlgorithm = 'clark'
+        #print "localAlogrithm=",localAlgorithm
+
+        #self.im.setoptions(ftmachine=localFTMachine,
+        #                     wprojplanes=wprojplanes,
+        #                     freqinterp=interpolation, padding=padding,
+        #                     cfcachedirname=cfcache, pastep=painc,
+        #                     epjtablename=epjtable,
+        #                     applypointingoffsets=False,
+        #                     dopbgriddingcorrections=True)
+        self.im.setoptions(ftmachine=localFTMachine,
+                             freqinterp=interpolation, padding=padding,
+                             cfcachedirname=cfcache)
+
+        modelimages=[]
+        restoredimage=[]
+        residualimage=[]
+        psfimage=[]
+        fluximage=[]
+        for k in range(len(self.imagelist)):
+            ia.open(self.imagelist[k])
+            if (modelimage =='' or modelimage==[]) and multifield:
+                ia.rename(self.imagelist[k]+'.model',overwrite=True)
+            else:
+                ia.remove(verbose=False)
+            ia.close()
+            modelimages.append(self.imagelist[k]+'.model')
+            restoredimage.append(self.imagelist[k]+'.image')
+            residualimage.append(self.imagelist[k]+'.residual')
+            psfimage.append(self.imagelist[k]+'.psf')
+            if(imagermode=='mosaic'):
+                fluximage.append(self.imagelist[k]+'.flux')
+
+        self.im.clean(algorithm='clark', niter=0,
+                   model=modelimages, residual=residualimage,
+                   image=restoredimage, psfimage=psfimage,
+                   mask='', interactive=False)
+
+
+    def setChaniterParms(self,finalimagename, spw,chan,start,width,freqs,finc,tmppath):
+        """
+        set parameters for channel by channel iterations
+        """
+        retparms={}
+        self.maskimages={}
+        retparms['imagename']=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(chan)
+                   for indx, imn in enumerate(finalimagename)]
+
+        print "Processing for channel %s starts..." % chan
+        self._casalog.post("Processing channel %s "% chan)
+
+        # Select only subset of vis data if possible.
+        # It does not work well for multi-spw so need
+        # to select with nchan=-1
+        retparms['imnchan']=1
+        retparms['chanslice']=chan
+        qat=qatool.create();
+        q = qat.quantity
+
+        if len(spw)==1:
+            if width>1:
+                visnchan=width
+            else:
+                visnchan=1
+        else:
+            visnchan=-1
+        retparms['visnchan']=visnchan
+        visstart=0
+
+        if type(start)==int:
+            # need to convert to frequencies
+            # to ensure correct frequencies in
+            # output images(especially for multi-spw)
+            # Use freq list instead
+            imstart=q(freqs[chan],'Hz')
+            width=q(finc,'Hz')
+        elif start.find('m/s')>0:
+            imstart=qat.add(q(start),qat.mul(chan,q(width)))
+        elif start.find('Hz')>0:
+            imstart=qat.add(q(start),qat.mul(chan,q(width)))
+        retparms['width']=width
+        retparms['imstart']=imstart
+        retparms['visstart']=visstart
+
+        #
+        return retparms
+
+    def defineChaniterModelimages(self,modeimage,chan,tmppath):
+        chanmodimg=[]
+        if type(modelimage)==str:
+            modelimage=[modelimage]
+        for modimg in modelimage:
+            if type(modimg)==list:
+                chanmodimg=[]
+                for img in modimg:
+                    if os.path.dirname(img) != '':
+                        chanmodimg.append(tmppath[0] + '_tmp.' +
+                                           os.path.basename(img))
+                    else:
+                        chanmodimg.append(tmppath[0] + '_tmp.' + img)
+                    self.getchanimage(cubeimage=img, outim=chanmodimg[-1], chan=chan)
+                self.convertmodelimage(modelimages=chanmodimg,
+                                        outputmodel=self.imagelist.values()[0]+'.model')
+                chanmodimg=[]
+            else:
+                if os.path.dirname(modimg) != '':
+                    chanmodimg.append(tmppath[0] + '_tmp.' + os.path.basename(modimg))
+                else:
+                    chanmodimg.append(tmppath[0] + '_tmp.' + modimg)
+                self.getchanimage(cubeimage=modimg, outim=chanmodimg[-1],chan=chan)
+
+                self.convertmodelimage(modelimages=chanmodimg,
+                                        outputmodel=self.imagelist.values()[0]+'.model')
+            # clean up tempoarary channel model image
+            for img in chanmodimg:
+                if os.path.exists(img):
+                    os.system('rm -rf ' + img)
+
+    def storeCubeImages(self,cubeimageroot,chanimageroot,chan,imagermode):
+        """
+        put channel images back into CubeImages
+        """
+        imagext = ['.image','.model','.flux','.residual','.psf','.mask']
+        if imagermode=='mosaic':
+            imagext.append('.flux.pbcoverage')
+        lerange=range(self.nimages)
+        for n in lerange:
+            cubeimagerootname=cubeimageroot[n]
+            chanimagerootname=chanimageroot[n]
+        for ext in imagext:
+            cubeimage=cubeimagerootname+ext
+            chanimage=chanimagerootname+ext
+            if not os.path.exists(cubeimage):
+                if os.path.exists(chanimage):
+                    outim=ia.newimagefromimage(cubeimagerootname+'.model',cubeimage)
+            self.putchanimage(cubeimage, chanimage,chan)
+
+    def cleanupTempFiles(self,tmppath):
+        """
+        clean up temporary files created for chaniter=T clean
+        """
+        for dir in tmppath:
+            if os.path.exists(dir):
+               os.system('rm -rf '+dir)
 
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):

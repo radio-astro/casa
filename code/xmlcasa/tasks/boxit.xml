@@ -37,6 +37,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="string" name="chanrange">
+    <description>Range of channel ids</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="polrange">
+    <description>Range of polarization ids</description>
+    <value></value>
+    </param>
+
     <param type="int" name="minsize">
     <description>Minimum number of pixels for a boxable island</description>
     <value>2</value>
@@ -82,6 +92,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: 0.0.
        maskname -- Optional output mask name.
                default: '' (do not write mask image)
+       chanrange -- Range of channel ids
+               default: '' (find boxes for all channels)
+               example: '5~7' (find boxes for channel 5,6,7
+       polrange -- Range of polarization ids
+               default: '' (find boxes for all polarizations)
+               example: '0~1' (find boxes for polarization 0,1
        minsize -- minimum size of island to get a box (in number of pixels)
                default: 2
        diag -- count diagonal connections as same island or not

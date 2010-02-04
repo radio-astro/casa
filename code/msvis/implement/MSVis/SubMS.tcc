@@ -165,7 +165,7 @@ template<class M>
 void SubMS::accumUnflgDataWS(Array<M>& data_toikit,
                              const Array<Float>& unflgWtSpec,
                              const Array<M>& inData, const Array<Bool>& flag,
-                             Cube<M>& outData, const uInt orn)
+                             Matrix<M>& outData)
 {
   data_toikit = inData * unflgWtSpec;
 
@@ -173,19 +173,19 @@ void SubMS::accumUnflgDataWS(Array<M>& data_toikit,
   // just in case some flagged NaNs or infinities snuck in there.
   data_toikit(flag) = 0.0;
               
-  outData.xyPlane(orn) = outData.xyPlane(orn) + data_toikit;
+  outData += data_toikit;
 }
 
 template<class M>
 void SubMS::accumUnflgData(Array<M>& data_toikit,
                            const Vector<Float>& unflaggedwt,
                            const Array<M>& inData, const Array<Bool>& flag,
-                           Cube<M>& outData, const uInt orn)
+                           Matrix<M>& outData)
 {
   data_toikit = inData;
   binOpExpandInPlace(data_toikit, unflaggedwt, Multiplies<M, Float>());
   data_toikit(flag) = 0.0;  // Do this AFTER the multiplication to catch NaNs.
-  outData.xyPlane(orn) = outData.xyPlane(orn) + data_toikit;
+  outData += data_toikit;
 }
 
 } //# NAMESPACE CASA - END

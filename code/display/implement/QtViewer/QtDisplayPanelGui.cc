@@ -32,6 +32,7 @@
 #include <display/QtViewer/QtCanvasManager.qo.h>
 #include <display/QtViewer/QtRegionManager.qo.h>
 #include <display/QtViewer/MakeMask.qo.h>
+#include <display/QtViewer/FileBox.qo.h>
 #include <display/QtViewer/MakeRegion.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtMouseToolBar.qo.h>
@@ -105,8 +106,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
                    dpMenu_->addAction(dpCloseAct_);
   
   tlMenu_        = menuBar()->addMenu("&Tools");
-   annotAct_     = tlMenu_->addAction("&File Box");
-   mkRgnAct_     = tlMenu_->addAction("&Image Region");
+   fboxAct_     = tlMenu_->addAction("&Box in File");
+   annotAct_     = tlMenu_->addAction("Region in &File");
+   mkRgnAct_     = tlMenu_->addAction("Region in &Image");
    //annotAct_->setEnabled(False);
 
    profileAct_   = tlMenu_->addAction("Spectral Profi&le");
@@ -463,6 +465,7 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
   connect(dpRstrAct_,  SIGNAL(triggered()),  SLOT(restorePanelState_()));
   connect(dpCloseAct_, SIGNAL(triggered()),  SLOT(close()));
   connect(dpQuitAct_,  SIGNAL(triggered()),  v_, SLOT(quit()));
+  connect(fboxAct_,    SIGNAL(triggered()),  SLOT(showFileBoxPanel()));
   connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
   connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
   connect(profileAct_, SIGNAL(triggered()),  SLOT(showImageProfile()));
@@ -685,7 +688,11 @@ void QtDisplayPanelGui::hideAllSubwindows() {
   hideCanvasManager();
   hideRegionManager();
   hideAnnotatorPanel();
-  hideImageProfile();  }
+  hideFileBoxPanel();
+  hideMakeRegionPanel();
+  hideImageProfile();  
+
+}
   
   
 
@@ -748,6 +755,42 @@ void QtDisplayPanelGui::hideShapeManager() {
   if(qsm_==0) return;
   qsm_->hide();  }
 
+void QtDisplayPanelGui::showFileBoxPanel() {
+
+  if (qfb_ == 0) 
+     qfb_ = new FileBox(qdp_);
+
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(qfb_,  SIGNAL(hideFileBox()),
+                          SLOT(hideFileBoxPanel()));
+           connect(pdd, 
+                   SIGNAL(axisChanged4(String, String, String, int)),
+                   qfb_, 
+                   SLOT(changeAxis(String, String, String, int)));
+        }
+      }
+  }
+  qfb_->showNormal();
+  qfb_->raise();  
+  annotAct_->setEnabled(False);
+  mkRgnAct_->setEnabled(False);
+
+}
+
+void QtDisplayPanelGui::hideFileBoxPanel() {
+  if (qfb_==0) 
+     return;
+  qfb_->hide();  
+  annotAct_->setEnabled(True);
+  mkRgnAct_->setEnabled(True);
+}
     
 void QtDisplayPanelGui::showAnnotatorPanel() {
 
@@ -762,6 +805,8 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(qap_,  SIGNAL(hideRegionInFile()),
+                          SLOT(hideAnnotatorPanel()));
            connect(pdd, 
                    SIGNAL(axisChanged4(String, String, String, int)),
                    qap_, 
@@ -771,13 +816,18 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
   }
   qap_->showNormal();
   qap_->raise();  
+  fboxAct_->setEnabled(False);
+  mkRgnAct_->setEnabled(False);
 
 }
 
 void QtDisplayPanelGui::hideAnnotatorPanel() {
+  //cout << "hide--------region in image" << endl;
   if (qap_==0) 
      return;
   qap_->hide();  
+  fboxAct_->setEnabled(True);
+  mkRgnAct_->setEnabled(True);
 }
 
 void QtDisplayPanelGui::showMakeRegionPanel() {
@@ -793,6 +843,8 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(qmr_,  SIGNAL(hideRegionInImage()),
+                          SLOT(hideMakeRegionPanel()));
            connect(pdd, 
                    SIGNAL(axisChanged4(String, String, String, int)),
                    qmr_, 
@@ -802,13 +854,18 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
   }
   qmr_->showNormal();
   qmr_->raise();  
+  fboxAct_->setEnabled(False);
+  annotAct_->setEnabled(False);
 
 }
 
 void QtDisplayPanelGui::hideMakeRegionPanel() {
+  //cout << "hide--------region in file" << endl;
   if (qmr_==0) 
      return;
   qmr_->hide();  
+  fboxAct_->setEnabled(True);
+  annotAct_->setEnabled(True);
 }
 
 void QtDisplayPanelGui::showImageProfile() {

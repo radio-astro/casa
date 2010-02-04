@@ -95,7 +95,7 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
             except Exception, instance:
                 #print '***Error***',instance
                 #print 'No output written.'
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 casalog.post( 'No output written.' )
                 return
 
@@ -165,7 +165,7 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 
