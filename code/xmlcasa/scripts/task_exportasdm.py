@@ -2,7 +2,8 @@ import os
 from taskinit import *
 
 def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=None,
-	       subscanduration=None, apcorrected=None, verbose=None, showversion=None):
+	       subscanduration=None, sbduration=None, apcorrected=None,
+	       verbose=None, showversion=None):
 	""" Convert a CASA visibility file (MS) into an ALMA Science Data Model.
                                           
 	Keyword arguments:
@@ -25,6 +26,9 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 	subscanduration -- maximum duration of a subscan in the output ASDM
 	          default: "24h"
 
+	sbduration -- maximum duration of a scheduling block in the output ASDM
+	          default: "2700s"
+
 	apcorrected -- If true, the data in column datacolumn should be regarded
 	          as having atmospheric phase correction, default: True
 
@@ -38,9 +42,9 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		casalog.origin('exportasdm')
 		parsummary = 'vis=\"'+str(vis)+'\", asdm=\"'+str(asdm)+'\", datacolumn=\"'+str(datacolumn)+'\",'
 		casalog.post(parsummary)
-		parsummary = 'archiveid=\"'+str(archiveid)+'\", rangeid=\"'+str(rangeid)+'\", subscanduration=\"'+str(subscanduration)+'\", apcorrected='+str(apcorrected)+'\",'
+		parsummary = 'archiveid=\"'+str(archiveid)+'\", rangeid=\"'+str(rangeid)+'\", subscanduration=\"'+str(subscanduration)+'\",'
 		casalog.post(parsummary)
-		parsummary = 'verbose='+str(verbose)+', showversion='+str(showversion)
+		parsummary = 'sbduration=\"'+str(sbduration)+'\", apcorrected='+str(apcorrected)+'\", verbose='+str(verbose)+', showversion='+str(showversion)
 		casalog.post(parsummary)
 
 		if not (type(vis)==str) or not (os.path.exists(vis)):
@@ -52,7 +56,7 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if os.path.exists(asdm):
 			raise Exception, "Output ASDM %s already exists - will not overwrite." % asdm
 
-		# determine parameters datacolumn
+		# determine parameter datacolumn
 		tb.open(vis)
 		allcols = tb.colnames()
 		tb.close()
@@ -66,23 +70,35 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 			else:
 				ssdur_secs = qa.canonical(subscanduration)['value']
 
-		execute_string='--datacolumn \"' + datacolumn + '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid
-		execute_string+= "\" --subscanduration " + str(ssdur_secs) + ' --logfile \"' + casalog.logfile() +'\"'
+		sbdur_secs = 2700. # default is 45 minutes
+		if not(sbduration==""):
+			if (qa.canonical(sbduration)['unit'].find('s') < 0):
+				raise TypeError, "sbduration is not a valid time quantity: %s" % sbduration
+			else:
+				sbdur_secs = qa.canonical(sbduration)['value']
+
+		execute_string=  '--datacolumn \"' + datacolumn 
+		execute_string+= '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid
+		execute_string+= '\" --subscanduration \"' + str(ssdur_secs)
+		execute_string+= '\" --schedblockduration \"' + str(sbdur_secs) 
+		execute_string+= '\" --logfile \"' + casalog.logfile() +'\"'
 		
 		if(not apcorrected):
-			execute_string= execute_string +' --apuncorrected'
+			execute_string+= ' --apuncorrected'
 		if(verbose):
-			execute_string= execute_string +' --verbose'
+			execute_string+= ' --verbose'
 		if(showversion):
-			execute_string= execute_string +' --revision'
+			execute_string+= ' --revision'
 
-		execute_string = execute_string + ' ' + vis + ' ' + asdm
+		execute_string += ' ' + vis + ' ' + asdm
 
 		execute_string = 'MS2asdm '+execute_string
 
-		casalog.post('Running the MS2asdm standalone invoked as:')
+		if(verbose):
+			casalog.post('Running MS2asdm standalone invoked as:')
+			casalog.post(execute_string)
 		print execute_string
-		casalog.post(execute_string)
+
         	rval = os.system(execute_string)
 
 		if(rval == 0):

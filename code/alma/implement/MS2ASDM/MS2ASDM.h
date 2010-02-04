@@ -86,6 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ~MS2ASDM();
   
   const String& showversion();
+
+  // set verbosity of the write methods
+  void setVerbosity(const uInt verbosity = 2){ // 0 = only warnings, 1 = most, 2 = everything
+    verbosity_p = verbosity; }
   
   void setBaseUid(const String& baseuid);
   
@@ -103,8 +107,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // get maximum duration of a subscan in seconds
   Double getSubScanDuration(){ return subscanDuration_p; }
 
-  // set maximum duration of a Scheduling Block in seconds, 0. == no time limit
-  void setSBDuration(const Double sBDuration = 1800.){
+  // set maximum duration of a Scheduling Block in seconds
+  void setSBDuration(const Double sBDuration = 2700.){ // 45 minutes
     schedBlockDuration_p = sBDuration; }
 
   // get maximum duration of a Scheduling Block in seconds
@@ -116,12 +120,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool dataIsAPCorrected(){ return dataIsAPCorrected_p; }
 
   void setObservatoryName(const String& telName){
-    telName_p = telName;
-  }
+    telName_p = telName; }
 
   void getObservatoryName( String& telName ){
-    telName = telName_p;
-  }
+    telName = telName_p; }
 
   // convert CASA Stokes to ASDM Stokes
   StokesParameterMod::StokesParameter ASDMStokesParameter( Stokes::StokesTypes s);
@@ -173,6 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 const String& rangeid="X1", 
 		 const Bool verbose=True,
 		 const Double maxSubscanDuration = 24.*3600.,
+		 const Double maxSchedBlockDuration = 2700.,
 		 const Bool msDataIsAPCorrected=True
 		 );
 
@@ -255,6 +258,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   asdm::ASDM* ASDM_p; // the new ASDM
 
   string asdmVersion_p; // the version of the new ASDM
+
+  uInt verbosity_p; // verbosity of the write methods
 
   String baseUid_p;  // the part of the UID which is common to all elements of the ASDM,
                     // i.e. typically "uid://archiveid/rangeid/"

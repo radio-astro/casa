@@ -81,7 +81,6 @@ namespace casa {
     runningId_p(0),
     currentUid_p("uid://X0/X0/X0"),
     telName_p(""),
-    schedBlockDuration_p(1800.), 
     // the Id to Tag maps
     asdmStationId_p(Tag()),
     asdmAntennaId_p(Tag()),
@@ -101,6 +100,10 @@ namespace casa {
   {
     ASDM_p = new ASDM();
     asdmVersion_p = String((ASDM_p->getEntity()).getEntityVersion());
+    setSBDuration(); // set to default values
+    setSubScanDuration(); 
+    setDataAPCorrected();
+    setVerbosity();
   }
   
   MS2ASDM::~MS2ASDM()
@@ -155,17 +158,13 @@ namespace casa {
 
   Bool MS2ASDM::writeASDM(const String& asdmfile, const String& datacolumn, 
 			  const String& archiveid, const String& rangeid, Bool verbose,
-			  const Double subscanDuration, const Bool msDataIsAPCorrected)
+			  const Double subscanDuration, const Double schedBlockDuration, 
+			  const Bool msDataIsAPCorrected)
   {
 
     LogIO os(LogOrigin("MS2ASDM", "writeASDM()"));
-    os << LogIO::NORMAL << "Converting " << ms_p.tableName() << " to ASDM " << asdmfile
-       << LogIO::POST;
-
 
     setBaseUid("uid://"+archiveid+"/"+rangeid+"/X");
-
-    cout << "Base uid is " << getBaseUid() << endl;
 
     if(!incrementUid()){// need to increment before first use
       os << LogIO::SEVERE << "Error generating UID"
@@ -173,8 +172,6 @@ namespace casa {
       return False;
     }
       
-    cout << " UID is " << getCurrentUid() << endl;
-
     // initialize observatory name
     if(observation().nrow()==0){
       os << LogIO::SEVERE << "MS Observation table is empty." << LogIO::POST;
@@ -183,9 +180,41 @@ namespace casa {
 
     setObservatoryName(observation().telescopeName()(0)); // get name of observatory from first row of observation table
 
+    if(subscanDuration<1.){
+      os << LogIO::SEVERE << "Input error: Unreasonably short sub scan duration limit: " << subscanDuration  
+	 << " seconds." << LogIO::POST;
+      return False;
+    }
+     
+    if(schedBlockDuration<60.){
+      os << LogIO::SEVERE << "Input error: Unreasonably short scheduling block duration limit: " << schedBlockDuration  
+	 << " seconds. (Should be >= 60 s)" << LogIO::POST;
+      return False;
+    }
+     
     setSubScanDuration(subscanDuration);
 
+    setSBDuration(schedBlockDuration);
+
     setDataAPCorrected(msDataIsAPCorrected);
+
+    if(verbose){
+      //      setVerbosity(1);
+      setVerbosity(2); // set to 1 before releasing
+    }
+    else{
+      setVerbosity(0);
+    }
+
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Converting " << ms_p.tableName() << " to ASDM " << asdmfile
+	 << LogIO::POST;
+    }
+
+    if(verbosity_p>1){
+      cout << "Base uid is " << getBaseUid() << endl;
+      cout << " UID is " << getCurrentUid() << endl;
+    }
 
     // write the ASDM tables
 
@@ -361,11 +390,12 @@ namespace casa {
 	return -1;
       }
 
+      if(verbosity_p>1){
+	os << LogIO::NORMAL << "Writing Main table entries for DataDescId " << DDId 
+	   << ", Field Id " << FId << ", ExecBlock " << eBlockNum << ", Scan number " << theScan
+	   << ", SubScan number " << theSubScan << LogIO::POST;
+      }
 
-      os << LogIO::NORMAL << "Writing Main table entries for DataDescId " << DDId 
-	 << ", Field Id " << FId << ", ExecBlock " << eBlockNum << ", Scan number " << theScan
-	 << ", SubScan number " << theSubScan << LogIO::POST;
-      
       //////////////////////
       // Construct subscan == SDMDataObject
       
@@ -397,16 +427,20 @@ namespace casa {
 	}
       } // end for
 
-      cout << " subscan number is " << subscanNum << endl;
-      cout << " DDId " << theDDId << " FId " << theFieldId << endl;
-      cout << " start row " << startRow << " end row " << endRow << endl;
-      cout << "  subscan number of timestamps with crosscorrelations is " << numTimestampsCorr << endl;
-      cout << "  subscan number of timestamps with autocorrelations is " << numTimestampsAuto << endl;
-      cout << "  subscan end time is " << subScanEndTime << endl;
+      if(verbosity_p>1){
+	cout << " subscan number is " << subscanNum << endl;
+	cout << " DDId " << theDDId << " FId " << theFieldId << endl;
+	cout << " start row " << startRow << " end row " << endRow << endl;
+	cout << "  subscan number of timestamps with crosscorrelations is " << numTimestampsCorr << endl;
+	cout << "  subscan number of timestamps with autocorrelations is " << numTimestampsAuto << endl;
+	cout << "  subscan end time is " << subScanEndTime << endl;
+      }
       
       // open disk file for subscan
       String subscanFileName = asdmDir_p+"/ASDMBinary/"+String(getCurrentUidAsFileName());
-      cout << "  subscan filename is " << subscanFileName << endl;
+      if(verbosity_p>1){
+	cout << "  subscan filename is " << subscanFileName << endl;
+      }
       try{
 	dataOid = EntityRef(getCurrentUid(),"","ASDM",asdmVersion_p); 
       }
@@ -526,7 +560,9 @@ namespace casa {
       OptionalSpectralResolutionType spectralResolution = SpectralResolutionTypeMod::FULL_RESOLUTION; 
       if(numSpectralPoint<5){
 	spectralResolution = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
-	os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." << LogIO::POST;      
+	if(verbosity_p>0){
+	  os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." << LogIO::POST;      
+	}
       } 
 
       unsigned int numBin = 1; // number of switch cycles
@@ -554,7 +590,9 @@ namespace casa {
       bpFlagsAxes.push_back(AxisNameMod::SPP); 
       bpFlagsAxes.push_back(AxisNameMod::POL);
       SDMDataObject::BinaryPart bpFlags(bpFlagsSize, bpFlagsAxes);
-      cout << "FlagsSize " << bpFlagsSize << " numStokes " << numStokes << endl;
+      if(verbosity_p>1){
+	cout << "FlagsSize " << bpFlagsSize << " numStokes " << numStokes << endl;
+      }
       
       unsigned int bpTimesSize = 0; // only needed for data blanking
       //unsigned int bpTimesSize = numTimestampsCorr+numTimestampsAuto; 
@@ -753,14 +791,16 @@ namespace casa {
 	  mainTabRow++;
 	}// end while same timestamp
 	
-	cout << "Sizes: " << endl;
-	cout << "   flags " << flags.size() << endl;
-	cout << "   actualTimes " << actualTimes.size() << endl;
-	cout << "   actualDurations " << actualDurations.size() << endl;
-	cout << "   zeroLags " << zeroLags.size() << endl;
-	cout << "   crossData " << crossData.size() << endl;
-	cout << "   autoData " << autoData.size() << endl;
-	
+	if(verbosity_p>1){
+	  cout << "Sizes: " << endl;
+	  cout << "   flags " << flags.size() << endl;
+	  cout << "   actualTimes " << actualTimes.size() << endl;
+	  cout << "   actualDurations " << actualDurations.size() << endl;
+	  cout << "   zeroLags " << zeroLags.size() << endl;
+	  cout << "   crossData " << crossData.size() << endl;
+	  cout << "   autoData " << autoData.size() << endl;
+	}
+
 	sdmdow.addIntegration(integrationNum,    // integration's index.
 			      timev,             // midpoint
 			      intervalv,         // time interval
@@ -843,7 +883,9 @@ namespace casa {
   //     Entity ent = tT.getEntity();
   //     ent.setEntityId(theUid);
   //     tT.setEntity(ent);
-  //     os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+  //     if(verbosity_p>0){
+  //       os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+  //     }
   //     incrementUid();
   
   //     return rstat;
@@ -898,7 +940,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -963,7 +1007,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1053,7 +1099,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled SpectralWindow table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled SpectralWindow table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1076,6 +1124,8 @@ namespace casa {
     else {
       for(uInt irow=0; irow<source().nrow(); irow++){
 
+	Int sId = source().sourceId()(irow);
+
 	// parameters of the new row
 
 	Double sTime = source().timeQuant()(irow).getValue("s");
@@ -1088,18 +1138,18 @@ namespace casa {
 
 	ArrayTimeInterval timeInterval( ASDMArrayTime(sTime),
 					ASDMInterval(sInterval) );
-	Int sId = source().spectralWindowId()(irow);
+	Int spwId = source().spectralWindowId()(irow);
 	Tag spectralWindowId;
-	if(!asdmSpectralWindowId_p.isDefined(sId)){
-	  os << LogIO::SEVERE << "Undefined SPW id " << sId << " in MS Source table row "<< irow << LogIO::POST;
+	if(!asdmSpectralWindowId_p.isDefined(spwId)){
+	  os << LogIO::SEVERE << "Undefined SPW id " << spwId << " in MS Source table row "<< irow << LogIO::POST;
 	  return False;
 	}
 	else{
-	  spectralWindowId = asdmSpectralWindowId_p(sId);
+	  spectralWindowId = asdmSpectralWindowId_p(spwId);
 	}
 	string code = source().code()(irow).c_str();
 	vector< Angle > direction;
-	MDirection theSourceDir = source().directionMeas()(sId);
+	MDirection theSourceDir = source().directionMeas()(irow);
 	direction.push_back( Angle( theSourceDir.getAngle( unitASDMAngle() ).getValue()(0) ) ); // RA
 	direction.push_back( Angle( theSourceDir.getAngle( unitASDMAngle() ).getValue()(1) ) ); // DEC
 	
@@ -1128,7 +1178,7 @@ namespace casa {
 	asdm::SourceRow* tR2;
 	tR2 = tT.add(tR);
 	if(tR2 != tR){ // did not lead to the creation of a new tag
-	  os << LogIO::WARN << "Duplicate MS Source table row: " << irow << LogIO::POST;
+	  os << LogIO::WARN << "Duplicate MS Source table row " << irow << ", source id " << sId << LogIO::POST;
 	}
 	if(!asdmSourceId_p.isDefined(sId)){
 	  int souId = tR2->getSourceId();
@@ -1141,7 +1191,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Source table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Source table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
     
     return rstat;
@@ -1272,7 +1324,7 @@ namespace casa {
 
       tR = tT.newRow(numCorr, corrTypeV, corrProduct);
 
-      cout << "ASDM numCorr is " << numCorr << endl;
+      //cout << "ASDM numCorr is " << numCorr << endl;
 
       bool flagRow = polarization().flagRow()(irow);
       tR->setFlagRow(flagRow);
@@ -1294,7 +1346,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Polarization table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Polarization table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1354,7 +1408,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled CorrelatorMode table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled CorrelatorMode table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1376,7 +1432,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled AlmaRadiometer table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled AlmaRadiometer table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1398,7 +1456,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Holography table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Holography table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1543,7 +1603,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Processor table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Processor table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1644,7 +1706,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Field table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Field table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1671,8 +1735,10 @@ namespace casa {
       // parameters for the new Recevier table row
       Tag spectralWindowId = SPWRows[irow]->getSpectralWindowId();
       if(!informed){
-	os << LogIO::NORMAL << "Taking validity time interval for all ASDM Receiver table entries from row 0 of MS Feed table." 
-	   << LogIO::POST;
+	if(verbosity_p>0){
+	  os << LogIO::NORMAL << "Taking validity time interval for all ASDM Receiver table entries from row 0 of MS Feed table." 
+	     << LogIO::POST;
+	}
 	informed = True;
       }
       asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(feed().timeQuant()(0).getValue("s")),
@@ -1697,7 +1763,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Receiver table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Receiver table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1869,7 +1937,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Feed table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Feed table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1926,7 +1996,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled DataDescription table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled DataDescription table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -1970,8 +2042,10 @@ namespace casa {
       Entity ent = tT.getEntity();
       ent.setEntityId(theUid);
       tT.setEntity(ent);
-      os << LogIO::NORMAL << "PHASE_ID column doesn't exist in MS Main table.\n Filled ASDM SwitchCycle table " 
-	 << getCurrentUid() << " with one dummy entry." << LogIO::POST;
+      if(verbosity_p>0){
+	os << LogIO::NORMAL << "PHASE_ID column doesn't exist in MS Main table.\n Filled ASDM SwitchCycle table " 
+	   << getCurrentUid() << " with one dummy entry." << LogIO::POST;
+      }
       incrementUid();
     }
     else{ // phaseId column exists
@@ -1995,7 +2069,7 @@ namespace casa {
 
     if(state().nrow()<1){ // State table not filled
 
-      os << LogIO::WARN << "MS State table doesn't exist. Creating ASDM State table with one on-source entry." 
+      os << LogIO::WARN << "MS State table is empty. Creating ASDM State table with one on-source entry." 
 	 << LogIO::POST;
      
       // parameters of the new row
@@ -2064,7 +2138,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled State table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled State table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -2082,7 +2158,7 @@ namespace casa {
     uInt nSysCalRows = sysCal().nrow();
 
     if(nSysCalRows<1){ // SysCal table not filled
-      os << LogIO::WARN << "MS SysCal table doesn't exist. Creating ASDM SysCal table with default entries." 
+      os << LogIO::WARN << "MS SysCal table doesn't exist or is empty. Creating ASDM SysCal table with default entries." 
 	 << LogIO::POST;
     
       // loop over the main table
@@ -2484,7 +2560,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled SysCal table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled SysCal table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -2507,7 +2585,7 @@ namespace casa {
 
     uInt nProcTabRows =  processor().nrow();
     if(nProcTabRows<1){ // processor table not filled, all data will have proc id == -1
-      os <<  LogIO::WARN << "MS contains empty Processor table. Will assume processor type is CORRELATOR." << LogIO::POST;
+      os <<  LogIO::WARN << "MS Processor table is empty. Will assume processor type is CORRELATOR." << LogIO::POST;
       nProcTabRows = 1;
     }
 
@@ -2520,7 +2598,9 @@ namespace casa {
 	procId  = -1;
       }
 
-      os << LogIO::NORMAL << "Processor Id: " << procId << LogIO::POST;
+      if(verbosity_p>0){
+	os << LogIO::NORMAL << "Processor Id: " << procId << LogIO::POST;
+      }
 
       asdm::ConfigDescriptionRow* tR = 0;
 
@@ -2538,7 +2618,9 @@ namespace casa {
 
       SpectralResolutionTypeMod::SpectralResolutionType spectralType = SpectralResolutionTypeMod::FULL_RESOLUTION; 
       // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
-      os << LogIO::NORMAL << "Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;       
+      if(verbosity_p>0){
+	os << LogIO::NORMAL << "Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;
+      }
 
 
       // loop over MS Main table
@@ -2752,7 +2834,9 @@ namespace casa {
 	  tR2 = tT.add(tR);
 	  Tag newTag = tR2->getConfigDescriptionId();
 	  asdmConfigDescriptionId_p.define(mainTabRow, newTag); // memorize tag for every row (to keep it simple)
-	  cout << "Defined conf desc id for main table row " << mainTabRow << endl;
+	  if(verbosity_p>1){
+	    cout << "Defined conf desc id for main table row " << mainTabRow << endl;
+	  }
 
 	  mainTabRow = irow-1;
 
@@ -2766,7 +2850,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " with " << tT.size() << " rows ... " << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " with " << tT.size() << " rows ... " << LogIO::POST;
+    }
     incrementUid();
 
     return rstat;
@@ -2854,7 +2940,7 @@ namespace casa {
       Vector< Quantum< Double > > tRange;
       tRange.reference(observation().timeRangeQuant()(obsId)); 
       Double durationSecs = tRange[1].getValue("s") - tRange[0].getValue("s"); 
-      if(durationSecs == 0){
+      if(durationSecs == 0){ // try to derive the sched block duration in a different way
 	if(!warned){
 	  os << LogIO::WARN << "Observation time range is zero length for obs ID "
 	     << obsId << " in MS Observation table.\n Will try to proceed ..."
@@ -2874,8 +2960,7 @@ namespace casa {
       Interval sbDuration = ASDMInterval(durationSecs);
       int numberRepeats = 1;
       // limit the scheduling block duration (not the same as the observation duration)
-      Double tolerance = 1.1;
-      if(schedBlockDuration_p > 0. && durationSecs > schedBlockDuration_p * tolerance){
+      if(durationSecs > schedBlockDuration_p){
 	sbDuration = ASDMInterval(schedBlockDuration_p);
 	numberRepeats = (int) ceil(durationSecs/schedBlockDuration_p);
 	durationSecs = schedBlockDuration_p;
@@ -2911,7 +2996,9 @@ namespace casa {
       tR2 = tT.add(tR);
       Tag sBSummaryTag = tR2->getSBSummaryId();
       if(tR2 == tR){ // adding the row led to the creation of a new tag
-	cout << "New SBSummary tag created: " << tR2 << endl;
+	if(verbosity_p>1){
+	  cout << "New SBSummary tag created: " << tR2 << endl;
+	}
 	if(asdmSBSummaryId_p.isDefined(sbKey)){
 	  os << LogIO::WARN << "There is more than one scheduling block necessary for the obsid - spwid pair (" 
 	     << obsId << ", " << spwId << ").\n This can presently not yet be handled properly.\n" 
@@ -3136,7 +3223,9 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled SBSummary table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled SBSummary table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
 
     // finish the ExecBlock table
@@ -3144,7 +3233,9 @@ namespace casa {
     ent = tET.getEntity();
     ent.setEntityId(theUid);
     tET.setEntity(ent);
-    os << LogIO::NORMAL << "Filled ExecBlock table " << getCurrentUid() << " with " << tET.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled ExecBlock table " << getCurrentUid() << " with " << tET.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
     
     return rstat;
@@ -3167,7 +3258,9 @@ namespace casa {
       return False;
     }
     else{
-      os << LogIO::NORMAL << "Using column " << datacolumn << "." << LogIO::POST;      
+      if(verbosity_p>0){
+	os << LogIO::NORMAL << "Using column " << datacolumn << "." << LogIO::POST;      
+      }
     }      
     
     asdm::MainTable& tT = ASDM_p->getMain();
@@ -3384,7 +3477,7 @@ namespace casa {
 	} // end loop over DD indices
 	// update mainTabRow
 	mainTabRow = irow;
-	cout << "mainTabRow " << mainTabRow << endl;
+	//cout << "mainTabRow " << mainTabRow << endl;
       } // end while scan continues
       // scan finished
       // complete and write scan table row
@@ -3410,21 +3503,27 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Main table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Main table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
     
     theUid = getCurrentUid();
     ent = tST.getEntity();
     ent.setEntityId(theUid);
     tST.setEntity(ent);
-    os << LogIO::NORMAL << "Filled Scan table " << getCurrentUid() << " with " << tST.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Scan table " << getCurrentUid() << " with " << tST.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
     
     theUid = getCurrentUid();
     ent = tSST.getEntity();
     ent.setEntityId(theUid);
     tSST.setEntity(ent);
-    os << LogIO::NORMAL << "Filled SubScan table " << getCurrentUid() << " with " << tSST.size() << " rows ..." << LogIO::POST;
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled SubScan table " << getCurrentUid() << " with " << tSST.size() << " rows ..." << LogIO::POST;
+    }
     incrementUid();
     
     return rstat;

@@ -90,6 +90,7 @@ int main(int argc, char *argv[]) {
   bool verbose = False;
   bool showversion = False;
   double subscanduration = 24.*3600.; // default is one day
+  double schedblockduration = 2700.; // default is 45 minutes
   bool apcorrected = True;
 
   boost::filesystem::path msPath;
@@ -109,7 +110,8 @@ int main(int argc, char *argv[]) {
     ("datacolumn,d", po::value<string>(), "specifies the datacolumn.")
     ("archiveid,a", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
     ("rangeid,g", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
-    ("subscanduration,s", po::value<double>(), "specifies the maximum duration of a subscan in the out put ASDM (seconds). Default: 86400")
+    ("subscanduration,s", po::value<double>(), "specifies the maximum duration of a subscan in the output ASDM (seconds). Default: 86400")
+    ("schedblockduration,s", po::value<double>(), "specifies the maximum duration of a scheduling block in the output ASDM (seconds). Default: 2700")
     ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
     ("apuncorrected,u", "the data given by datacolumn should be regarded as not having an atmospheric phase correction. Default: data is AP corrected.")
     ("verbose,v", "logs numerous informations as the filler is working.")
@@ -138,7 +140,7 @@ int main(int argc, char *argv[]) {
   
   po::notify(vm);
   
-  // Where do the log messages should go ?
+  // Where do the log messages go ?
   if (vm.count("logfile")) {
     //LogSinkInterface *theSink;
     ofs.open(vm["logfile"].as<string>().c_str(), ios_base::app);
@@ -167,6 +169,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("subscanduration")) {
     subscanduration = vm["subscanduration"].as< double >();
+  }
+
+  if (vm.count("schedblockduration")) {
+    schedblockduration = vm["schedblockduration"].as< double >();
   }
 
   if (vm.count("ms-directory")) {
@@ -198,7 +204,7 @@ int main(int argc, char *argv[]) {
       m2a = new MS2ASDM(*itsMS);
       info("Using ASDM version " + m2a->showversion());
       if (!m2a->writeASDM(asdmfile, datacolumn, archiveid, rangeid, verbose,
-			  subscanduration, apcorrected)) {
+			  subscanduration, schedblockduration, apcorrected)) {
 	delete m2a;
 	delete itsMS;
 	error("Conversion to ASDM failed.");
@@ -206,7 +212,6 @@ int main(int argc, char *argv[]) {
       delete m2a;
       delete itsMS;
     }
-    
   } catch (AipsError x) {
     if(m2a){
       delete m2a;

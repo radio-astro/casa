@@ -44,17 +44,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <description>maximum duration of a subscan in the output ASDM</description>
 	    <value>24h</value>
     </param>
-
+    <param type="string" name="sbduration">
+	    <description>maximum duration of a scheduling block (and therefore exec block) in the output ASDM</description>
+	    <value>2700s</value>
+    </param>
     <param type="bool" name="apcorrected">
-	    <description>data to be regarded as having atmospheric phase correction</description>
+	    <description>data to be marked as having atmospheric phase correction</description>
 	    <value>True</value>
     </param>
-
     <param type="bool" name="verbose">
 	    <description>produce log output</description>
 	    <value>True</value>
     </param>
-
     <param type="bool" name="showversion">
 	    <description>Report the version of ASDM class set being used</description>
 	    <value>True</value>
@@ -86,7 +87,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   subscanduration -- maximum duration of a subscan in the output ASDM
 	             default: "24h"
 
-  apcorrected -- If true, the data in column datacolumn should be regarded
+  sbduration -- maximum duration of a scheduling block in the output ASDM
+	             default: "2700s"
+
+  apcorrected -- If true, the data in column datacolumn will be marked
 	         as having atmospheric phase correction, default: True
 
   verbose     -- produce log output, default: True

@@ -128,7 +128,8 @@ if (testnumber in testlist):
         rval = exportasdm(
             vis = 'myinput.ms',
             asdm = 'exportasdm-output.asdm',
-            archiveid="S1"
+            archiveid="S1",
+            verbose=False
             )
         print "rval is ", rval
         if not rval:
