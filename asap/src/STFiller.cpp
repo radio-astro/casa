@@ -386,7 +386,7 @@ int asap::STFiller::read( )
     if (nBeam_ > 1 ) rb = pksrec.refBeam-1;
     *rbCol = rb;
     RecordFieldPtr<uInt> ifCol(rec, "IFNO");
-    //*ifCol = pksrec.IFno-ifOffset_- 1;
+    *ifCol = pksrec.IFno-ifOffset_- 1;
     uInt id;
     /// @todo this has to change when nchan isn't global anymore
     //id = table_->frequencies().addEntry(Double(header_->nchan/2),
@@ -401,7 +401,7 @@ int asap::STFiller::read( )
     }
     RecordFieldPtr<uInt> mfreqidCol(rec, "FREQ_ID");
     *mfreqidCol = id;
-    *ifCol = id;
+    //*ifCol = id;
 
     id = table_->molecules().addEntry(pksrec.restFreq);
     RecordFieldPtr<uInt> molidCol(rec, "MOLECULE_ID");
