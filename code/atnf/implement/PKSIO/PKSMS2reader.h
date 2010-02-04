@@ -64,6 +64,7 @@ class PKSMS2reader : public PKSreader
     //  Open the MS for reading.
     virtual Int open(
         const String msName,
+        const String antenna,
         Vector<Bool> &beams,
         Vector<Bool> &IFs,
         Vector<uInt> &nChan,
@@ -176,6 +177,9 @@ class PKSMS2reader : public PKSreader
     virtual void close(void);
 
   private:
+    Vector<String> splitAntennaSelectionString( const String s );
+    void setupAntennaList( const String s ) ;
+
     Bool   cHaveBaseLin, cHaveCalFctr, cHaveSrcVel, cHaveTsys, cHaveXCalFctr,
            cMSopen, cHaveTcal, cHaveDataCol, cALMA, cHaveSysCal, cHaveCorrectedDataCol;
     Int    cCycleNo, cIdx, cNRow, cScanNo;
@@ -186,6 +190,9 @@ class PKSMS2reader : public PKSreader
     String         cDirRef, cTelName;
     MeasurementSet cPKSMS;
     Table          cSysCalTab, tmptab, tmptab2;
+
+    //Vector<String> cAntenna;
+    Vector<Int> cAntId;
 
     ROScalarColumn<Int>     cScanNoCol;
     ROScalarColumn<Double>  cTimeCol;
