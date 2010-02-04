@@ -232,7 +232,7 @@ def rc_params():
         try: cval = converter(val)   # try to convert to proper type or raise
         except ValueError, msg:
             #print ('Bad val "%s" on line #%d\n\t"%s"\n\tin file "%s"\n\t%s' % (val, cnt, line, fname, msg))
-            asaplog.push('Bad val "%s" on line #%d\n\t"%s"\n\tin file "%s"\n\t%s' % (val, cnt, line, fname, msg.message))
+            asaplog.push('Bad val "%s" on line #%d\n\t"%s"\n\tin file "%s"\n\t%s' % (val, cnt, line, fname, str(msg)))
             print_log('WARN')
             continue
         else:
@@ -400,7 +400,7 @@ if rcParams['useplotter']:
         asaplog.post( "Matplotlib not installed. No plotting available")
         print_log('WARN')
 
-__date__ = '$Date: 2009-11-26 21:54:30 -0700 (Thu, 26 Nov 2009) $'.split()[1]
+__date__ = '$Date: 2010-01-26 17:43:10 -0700 (Tue, 26 Jan 2010) $'.split()[1]
 __version__  = '2.3.1 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '

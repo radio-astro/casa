@@ -177,7 +177,7 @@ class fitter:
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push(msg.message)
+                asaplog.push(str(msg))
                 print_log('ERROR')
             else:
                 raise

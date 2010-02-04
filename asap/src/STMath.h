@@ -118,6 +118,32 @@ public:
     unaryOperate( const casa::CountedPtr<Scantable>& in, float val,
                   const std::string& mode, bool tsys=false );
 
+  // array operation
+  casa::CountedPtr<Scantable>
+    arrayOperate( const casa::CountedPtr<Scantable>& in,
+                  const std::vector<float> val,
+                  const std::string& mode,
+                  const std::string& opmode="channel",  
+                  bool tsys=false );
+
+  // channel operation
+  casa::CountedPtr<Scantable>
+    arrayOperateChannel( const casa::CountedPtr<Scantable>& in, 
+                         const std::vector<float> val,
+                         const std::string& mode, bool tsys=false );
+
+  // row operation
+  casa::CountedPtr<Scantable>
+    arrayOperateRow( const casa::CountedPtr<Scantable>& in, 
+                     const std::vector<float> val,
+                     const std::string& mode, bool tsys=false );
+
+  // 2d array operation
+  casa::CountedPtr<Scantable>
+    array2dOperate( const casa::CountedPtr<Scantable>& in,
+                  const std::vector< std::vector<float> > val,
+                  const std::string& mode, bool tsys=false );
+
   casa::CountedPtr<Scantable>
     binaryOperate( const casa::CountedPtr<Scantable>& left, 
 		   const casa::CountedPtr<Scantable>& right, 
