@@ -96,7 +96,8 @@ namespace casa {
     asdmExecBlockId_p(Tag()),
     // other maps
     asdmFeedId_p(-1),
-    asdmSourceId_p(-1)
+    asdmSourceId_p(-1),
+    asdmPointingModelId_p(-1)
   {
     ASDM_p = new ASDM();
     asdmVersion_p = String((ASDM_p->getEntity()).getEntityVersion());
@@ -286,6 +287,14 @@ namespace casa {
     if(!writeMainAndScanAndSubScan(datacolumn)){ 
       return False;
     }
+
+    if(!writePointingModel()){
+      return False;
+    }
+
+    //    if(!writePointing()){
+    //      return False;
+    //    }
 
     // finish writing the ASDM non-binary data
     try{
@@ -1836,7 +1845,15 @@ namespace casa {
 	} 
 	focusReferenceV.push_back(afr);
 
-	polarizationTypesV.push_back(CPolarizationType::literal(polT[rnum].c_str()));
+	try{
+	  polarizationTypesV.push_back(CPolarizationType::literal(polT[rnum].c_str()));
+	}
+	catch(std::string z){
+	  os << LogIO::SEVERE << "Polarization type " << polT[rnum].c_str() << " for receptor " 
+	     << rnum << " in MS Feed table row  " << irow << " not defined in ASDM: " 
+	     << z << LogIO::POST;      
+	  return False;
+	}      	
 	
 	vector< asdm::Complex > apr;
 	for(uInt rnum2=0; rnum2<(uInt)numReceptor; rnum2++){
@@ -3309,13 +3326,13 @@ namespace casa {
     Double scanStart;
     
     Tag execBlockId = Tag();
-    int subscanNumber;
+    int subscanNumber = 0;
     // parameters for the new Scan table row
-    int scanNumber;
+    int scanNumber = 0;
     ArrayTime scanStartTime;
     ArrayTime scanEndTime;
-    int scanNumIntent;
-    int numSubScan;
+    int scanNumIntent = 0;
+    int numSubScan = 0;
     vector< ScanIntentMod::ScanIntent > scanIntent;
     vector< CalDataOriginMod::CalDataOrigin > scanCalDataType;
     vector< bool > scanCalibrationOnLine;
@@ -3528,6 +3545,85 @@ namespace casa {
     
     return rstat;
   }
+
+  Bool MS2ASDM::writePointingModel(){ // create asdm PointingModel table 
+    LogIO os(LogOrigin("MS2ASDM", "writePointingModel()"));
+    
+    Bool rstat = True;
+    
+    asdm::PointingModelTable& tT = ASDM_p->getPointingModel();
+    
+    asdm::PointingModelRow* tR = 0;
+    
+    asdm::FeedTable& tFT = ASDM_p->getFeed();
+    
+    vector< asdm::FeedRow * > feedRowV = tFT.get();
+
+    // loop over ASDM Feed table and create Pointing model rows for each
+    // receptor of each Feed table row 
+
+    for(uInt feedRow=0; feedRow<feedRowV.size(); feedRow++){
+      
+
+      uInt numRec = feedRowV[feedRow]->getNumReceptor();
+      vector< PolarizationTypeMod::PolarizationType > polTypeV = feedRowV[feedRow]->getPolarizationTypes();
+      vector< int > receivIdV = feedRowV[feedRow]->getReceiverId(); 
+
+      for(uInt iRec=0; iRec<numRec; iRec++){ // loop over all receptors
+
+	const vector< asdm::ReceiverRow * > recRowV = feedRowV[feedRow]->getReceivers(receivIdV[iRec]);
+	
+	// parameters for new PointingModel row
+
+	Tag antennaId = feedRowV[feedRow]->getAntennaId();
+	int numCoeff = 2; // seems to be the dummy value ???, to be confirmed
+	vector< string > coeffName;
+	coeffName.push_back("IA");
+	coeffName.push_back("IE");
+	vector< float > coeffVal;
+	coeffVal.push_back(0.);
+	coeffVal.push_back(0.);
+	PolarizationTypeMod::PolarizationType polarizationType;
+	try{
+	  polarizationType = polTypeV[iRec];
+	}
+	catch(std::string z){
+	  os << LogIO::SEVERE << "Internal error: invalid polarization type in Feed table row  " << z
+	     << LogIO::POST;      
+	  return False;
+	}      
+	  
+	ReceiverBandMod::ReceiverBand receiverBand = recRowV[0]->getFrequencyBand(); // take from the first receiver 
+	string assocNature = "NOT_SET";
+	int assocPointingModelId = -1;
+
+        tR = tT.newRow(antennaId, numCoeff, coeffName, coeffVal, polarizationType, 
+		       receiverBand, assocNature, assocPointingModelId);
+    
+	asdm::PointingModelRow* tR2;
+
+	tR2 = tT.add(tR);
+	if(!asdmPointingModelId_p.isDefined(antennaId)){
+	  asdmPointingModelId_p.define(antennaId, tR2->getPointingModelId() );
+	}
+
+      } // end loop over receptors
+
+    } // end loop over ASDM Feed table
+    
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled PointingModel table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
+    incrementUid();
+    
+    return rstat;
+  }
+
+
 
   StokesParameterMod::StokesParameter MS2ASDM::ASDMStokesParameter( Stokes::StokesTypes s) {
     switch (s) {

@@ -244,6 +244,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const asdm::Tag eBlockId,
 					   int& datasize, asdm::EntityRef& dataOid, 
 					   vector< asdm::Tag >& stateId);
+
+  Bool writePointingModel(); // write dummy pointing models
+
+  Bool writePointing();
     
   // *** Aux. methods ***
 
@@ -295,6 +299,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Double, asdm::Tag> asdmExecBlockId_p; // maps from MS Main timestamps 
   SimpleOrderedMap <Int, int> asdmFeedId_p; // ASDM feed id is not a Tag
   SimpleOrderedMap <Int, int> asdmSourceId_p; // neither is the source id
+  SimpleOrderedMap <asdm::Tag, int> asdmPointingModelId_p; // maps ASDM Antenna Id to dummy pointing model
 
   vector< vector< Bool > > skipCorr_p; // skipCorr_p[j][PolId] indicates that correlation 
                                        // product j for POLARIZATION_ID PolId should not 

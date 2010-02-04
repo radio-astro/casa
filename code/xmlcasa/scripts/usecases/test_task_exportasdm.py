@@ -44,8 +44,7 @@ def verify_asdm(asdmname):
                  #"FocusModel.xml",
                  #"Focus.xml",
                   "Main.xml",
-                 # "Pointing.bin",
-                 # "PointingModel.xml",
+                  "PointingModel.xml",
                   "Polarization.xml",
                   "Processor.xml",
                   "Receiver.xml",
@@ -58,23 +57,31 @@ def verify_asdm(asdmname):
                   "Subscan.xml",
                   "SwitchCycle.xml"
                   ]
+    isOK = True
     for fileName in allTables:
         filePath = asdmname+'/'+fileName
         if(not os.path.exists(filePath)):
             print "ASDM table file ", filePath, " doesn't exist."
-            raise Exception
+            isOK = False
         else:
             # test if well formed
             rval = os.system('xmllint --noout '+filePath)
             if(rval !=0):
                 print "Table ", filePath, " is not a well formed XML document."
+                isOK = False
 
     print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
         
     if(not os.path.exists(asdmname+"/ASDMBinary")):
         print "ASDM binary directory ", asdmname,"/ASDMBinary doesn't exist."
-        raise Exception
+        isOK = False
 
+    if(not os.path.exists(asdmname+"/Pointing.bin")):
+        print "ASDM binary file ", asdmname,"/Pointing.bin doesn't exist."
+        isOK = False
+
+    if (not isOK):
+        raise Exception
 
 # Test cases    
 
