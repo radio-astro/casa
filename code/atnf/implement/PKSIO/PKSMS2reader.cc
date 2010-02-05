@@ -41,6 +41,7 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/Utilities/Sort.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasRef.h>
@@ -103,7 +104,7 @@ Int PKSMS2reader::open(
     setupAntennaList( antenna ) ;
     if ( cAntId.size() > 1 ) {
       LogIO os( LogOrigin( "PKSMS2reader", "open()", WHERE ) ) ;
-      os << LogIO::WARN << "PKSMS2reader is not ready for multiple antenna selection. Use first antenna id." << LogIO::POST ;
+      os << LogIO::WARN << "PKSMS2reader is not ready for multiple antenna selection. Use first antenna id " << cAntId[0] << "."<< LogIO::POST ;
       Int tmp = cAntId[0] ;
       cAntId.resize( 1 ) ;
       cAntId[0] = tmp ;
@@ -1348,30 +1349,37 @@ void PKSMS2reader::setupAntennaList( const String s )
   Int nrow = antNames.nrow() ;
   Vector<String> antlist = splitAntennaSelectionString( s ) ;
   Int len = antlist.size() ;
-  //cAntenna.resize( len ) ;
-  cAntId.resize( len ) ;
-  //Regex re( "[:digit:]+" ) ;
+  Vector<Int> AntId( len ) ;
   Regex re( "[0-9]+" ) ;
   for ( Int i = 0 ; i < len ; i++ ) {
     if ( antlist[i].matches( re ) ) {
-      cAntId[i] = atoi( antlist[i].c_str() ) ;
-      //cAntenna[i] = antNames( cAntId[i] ) ;
-      if ( cAntId[i] >= nrow ) {
-        os << LogIO::SEVERE << "Antenna index out of range: " << cAntId[i] << LogIO::EXCEPTION ;
+      AntId[i] = atoi( antlist[i].c_str() ) ;
+      if ( AntId[i] >= nrow ) {
+        os << LogIO::SEVERE << "Antenna index out of range: " << AntId[i] << LogIO::EXCEPTION ;
       }
     }
     else {
-      //cAntenna[i] = antlist[i] ;
-      cAntId[i] = -1 ;
+      AntId[i] = -1 ;
       for ( uInt j = 0 ; j < antNames.nrow() ; j++ ) {
         if ( antlist[i] == antNames(j) ) {
-          cAntId[i] = j ;
+          AntId[i] = j ;
           break ;
         }
       }
-      if ( cAntId[i] == -1 ) {
+      if ( AntId[i] == -1 ) {
         os << LogIO::SEVERE << "Specified antenna name not found: " << antlist[i] << LogIO::EXCEPTION ;
       }
     }
   }
+  //cerr << "AntId = " << AntId << endl ;
+  vector<Int> uniqId ;
+  uniqId.push_back( AntId(0) ) ;
+  for ( uInt i = 1 ; i < AntId.size() ; i++ ) {
+    if ( count(uniqId.begin(),uniqId.end(),AntId[i]) == 0 ) {
+      uniqId.push_back( AntId[i] ) ;
+    }
+  }
+  Vector<Int> newAntId( uniqId ) ;
+  cAntId.assign( newAntId ) ;
+  //cerr << "cAntId = " << cAntId << endl ;
 }
