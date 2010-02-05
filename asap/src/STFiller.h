@@ -75,7 +75,7 @@ public:
    * @param whichBeam read a specific beam only (default -1 means all beams)
    * @exception AipsError Creation of PKSreader failed
    */
-  void open( const std::string& filename, int whichIF=-1, int whichBeam=-1, casa::Bool getPt=casa::False );
+  void open( const std::string& filename, const std::string& antenna, int whichIF=-1, int whichBeam=-1, casa::Bool getPt=casa::False );
 
   /**
    * detach from file and clean up pointers
