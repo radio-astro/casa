@@ -254,7 +254,7 @@ void VisSetUtil::WeightUniform(VisibilityIterator& vi,
 	          }
 			}
 	        else {
-	          vb.imagingWeight()(chn,row)=0.0;
+	          vb.imagingWeight()(chn,row)+=0.0;
 	          ndrop++;
 	        }
 	      }// end for pol
@@ -298,7 +298,7 @@ void VisSetUtil::WeightRadial(VisibilityIterator& vi, Double& sumwt) {
 	          sumwt+=vb.imagingWeight()(chn,row);
 	        }
 	        else {
-	          vb.imagingWeight()(chn,row)=0.0;
+	          vb.imagingWeight()(chn,row)+=0.0;
 			  ndrop++;
 	        }
 	      }//end for pol
