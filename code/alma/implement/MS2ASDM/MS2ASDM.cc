@@ -292,9 +292,9 @@ namespace casa {
       return False;
     }
 
-    //    if(!writePointing()){
-    //      return False;
-    //    }
+    if(!writePointing()){
+      return False;
+    }
 
     // finish writing the ASDM non-binary data
     try{
@@ -1137,16 +1137,7 @@ namespace casa {
 
 	// parameters of the new row
 
-	Double sTime = source().timeQuant()(irow).getValue("s");
-	Double sInterval = source().intervalQuant()(irow).getValue("s");
-	if(sInterval > sTime){ // a very large value was set to express "always valid"
-	  sTime = timeQuant()(0).getValue("s");
-	  sInterval =  timeQuant()(ms_p.nrow()-1).getValue("s") -sTime 
-	    + intervalQuant()(ms_p.nrow()-1).getValue("s");
-	}
-
-	ArrayTimeInterval timeInterval( ASDMArrayTime(sTime),
-					ASDMInterval(sInterval) );
+	ArrayTimeInterval timeInterval( ASDMTimeInterval(source().timeQuant()(irow), source().intervalQuant()(irow)) );
 	Int spwId = source().spectralWindowId()(irow);
 	Tag spectralWindowId;
 	if(!asdmSpectralWindowId_p.isDefined(spwId)){
@@ -1750,8 +1741,7 @@ namespace casa {
 	}
 	informed = True;
       }
-      asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(feed().timeQuant()(0).getValue("s")),
-					    ASDMInterval(feed().intervalQuant()(0).getValue("s")) ); 
+      asdm::ArrayTimeInterval timeInterval( ASDMTimeInterval(feed().timeQuant()(0), feed().intervalQuant()(0)) ); 
       string name = "unspec. frontend";
       ReceiverBandMod::ReceiverBand frequencyBand;
       ReceiverSidebandMod::ReceiverSideband receiverSideband;
@@ -1794,7 +1784,7 @@ namespace casa {
 
     for(uInt irow=0; irow<feed().nrow(); irow++){
 
-      // parameters of the new row
+      // parameters of the new feed row
       Tag antennaId;
       Int aid = feed().antennaId()(irow);
       if(asdmAntennaId_p.isDefined(aid)){
@@ -1804,8 +1794,7 @@ namespace casa {
 	os << LogIO::SEVERE << "Undefined antenna id " << aid << " in MS feed table row "<< irow << LogIO::POST;
 	return False;
       }
-      asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(feed().timeQuant()(irow).getValue("s")),
-					    ASDMInterval(feed().intervalQuant()(irow).getValue("s")) );
+      ArrayTimeInterval timeInterval( ASDMTimeInterval(feed().timeQuant()(irow), feed().intervalQuant()(irow)) );
       
       int numReceptor = feed().numReceptors()(irow);
 
@@ -2187,7 +2176,7 @@ namespace casa {
 	Int f2Id = feed2()(mainTabRow);
 	Int DDId = dataDescId()(mainTabRow);	
 	// get start time stamp
-	Double startTime = timeQuant()(mainTabRow).getValue("s");
+	Double startTime = timestampStartSecs(mainTabRow);
 	// create vectors of info for each antenna
 	vector< Int > aIdV;
 	vector< Int > SPWIdV;
@@ -2230,7 +2219,7 @@ namespace casa {
 	  irow++;
 	} // end while
 	// get end timestamp
-	Double endTime = timeQuant()(irow-1).getValue("s");
+	Double endTime = timestampEndSecs(irow-1);
 	// create ArrayTimeInterval
 	asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(startTime),
 					      ASDMInterval(endTime-startTime) );
@@ -2258,9 +2247,7 @@ namespace casa {
 	Int spwId = sysCal().spectralWindowId()(irow);
 	Tag spectralWindowId = asdmSpectralWindowId_p( spwId );
 	int feedId = sysCal().feedId()(irow);
-	Double tMidPoint = sysCal().timeQuant()(irow).getValue("s");
-	Double tInterval = sysCal().intervalQuant()(irow).getValue("s");
-	asdm::ArrayTimeInterval timeInterval( tMidPoint - tInterval/2., tInterval ); 
+	ArrayTimeInterval timeInterval( ASDMTimeInterval(sysCal().timeQuant()(irow), sysCal().intervalQuant()(irow)) );
 
 	uInt numReceptor = feed().numReceptors()(feedId); 
 	uInt nChan = spectralWindow().numChan()(spwId); 
@@ -2965,8 +2952,7 @@ namespace casa {
 	  warned = True;
 	}
 	if((Int)observation().nrow()-1 == obsId){ // there is no next observation
-	  durationSecs = timeQuant()(nMainTabRows-1).getValue("s") + intervalQuant()(nMainTabRows-1).getValue("s")
-	    - tRange[0].getValue("s");
+	  durationSecs = timestampEndSecs(nMainTabRows-1) - tRange[0].getValue("s");
 	}
 	else{
 	  Vector< Quantum< Double > > tRange2;
@@ -3047,7 +3033,7 @@ namespace casa {
 	}
 
 	// is the exec block complete?
-	Double endT = timeQuant()(mainTabRow).getValue("s") + intervalQuant()(mainTabRow).getValue("s");
+	Double endT = timestampEndSecs(mainTabRow);
 	execBlockEndTime.remove(sBSummaryTag);
 	execBlockEndTime.define(sBSummaryTag, endT);
 	if(endT - execBlockStartTime(sBSummaryTag) >= durationSecs){ // yes, it is complete
@@ -3124,9 +3110,8 @@ namespace casa {
       } 
       else{// no, it has not been started, yet
 
-	execBlockStartTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s"));
-	execBlockEndTime.define(sBSummaryTag, timeQuant()(mainTabRow).getValue("s")
-				+ intervalQuant()(mainTabRow).getValue("s")); // will be updated
+	execBlockStartTime.define(sBSummaryTag, timestampStartSecs(mainTabRow));
+	execBlockEndTime.define(sBSummaryTag, timestampEndSecs(mainTabRow)); // will be updated
 	Int oldNum = 0;
 	if(execBlockNumber.isDefined(sBSummaryTag)){ 
 	  // increment exec block number
@@ -3341,17 +3326,17 @@ namespace casa {
     uInt nMainTabRows = ms_p.nrow();
     for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
       
-      Double rowTime = timeQuant()(mainTabRow).getValue("s");
+      Double rowTime = timestampStartSecs(mainTabRow);
       
-      //   asdmExecBlockId_p(time()(mainTabRow) defined?
-      if(asdmExecBlockId_p.isDefined(time()(mainTabRow))){ // a new exec block has started
+      //   asdmExecBlockId_p defined for this timestamp?
+      if(asdmExecBlockId_p.isDefined(timestampStartSecs(mainTabRow))){ // a new exec block has started
 	// is there a previous exec block?
 	if(execBlockId != Tag()){
 	  //  finish the old exec block
 	}
 	// set up new exec block
 	// parameters for the first scan
-	execBlockId = asdmExecBlockId_p(time()(mainTabRow));
+	execBlockId = asdmExecBlockId_p(timestampStartSecs(mainTabRow));
 	asdm::ExecBlockRow* EBR = (ASDM_p->getExecBlock()).getRowByKey(execBlockId);
 	scanNumber = 1; // ASDM scan numbering starts at 1
         subscanNumber = 1; // dito for subscans
@@ -3372,7 +3357,7 @@ namespace casa {
       
       // while(scan not finished)
       while( mainTabRow<nMainTabRows && 
-	     (rowTime = timeQuant()(mainTabRow).getValue("s")) < MSTimeSecs(scanEndTime) ){ // presently one scan per exec block ???
+	     (rowTime = timestampStartSecs(mainTabRow)) < MSTimeSecs(scanEndTime) ){ // presently one scan per exec block ???
 	
 	// parameters for the new SubScan table row
 	Double subScanEnd = rowTime + subscanDuration_p; 
@@ -3384,7 +3369,7 @@ namespace casa {
 	uInt irow = mainTabRow;
 	SimpleOrderedMap< Int, uInt > subScanDDIdStartRows(0);
 	while(irow<nMainTabRows &&
-	      timeQuant()(irow).getValue("s") < subScanEnd){
+	      timestampStartSecs(irow) < subScanEnd){
 	  Int ddId = dataDescId()(irow);
 	  if(!subScanDDIdStartRows.isDefined(ddId)){
 	    subScanDDIdStartRows.define(ddId, irow);    // memorize their start rows
@@ -3401,7 +3386,7 @@ namespace casa {
 	  SimpleOrderedMap< Int, uInt > subScanStartRows(0);
 	  SimpleOrderedMap< Int, uInt > subScanEndRows(0);
 	  while(irow2<nMainTabRows &&
-		timeQuant()(irow2).getValue("s")< subScanEnd){
+		timestampStartSecs(irow2)< subScanEnd){
 	    Int ddId = dataDescId()(irow2);
 	    Int fId = fieldId()(irow2);
 	    if(ddId == theDDId){
@@ -3423,8 +3408,8 @@ namespace casa {
 	    uInt endRow = subScanEndRows(theFId);
 	    // write subscan
 	    // parameters for the new SubScan table row
-	    ArrayTime subScanStartArrayTime = ASDMArrayTime(timeQuant()(startRow).getValue("s")); 
-	    ArrayTime subScanEndArrayTime = ASDMArrayTime(timeQuant()(endRow).getValue("s")); 
+	    ArrayTime subScanStartArrayTime = ASDMArrayTime(timestampStartSecs(startRow)); 
+	    ArrayTime subScanEndArrayTime = ASDMArrayTime(timestampEndSecs(endRow)); 
 	    string fieldName = field().name()(fieldId()(startRow)).c_str(); 
 	    SubscanIntentMod::SubscanIntent subscanIntent = SubscanIntentMod::ON_SOURCE;
 	    vector< int > numberSubintegration;
@@ -3449,8 +3434,7 @@ namespace casa {
 	    Tag fieldIdTag = asdmFieldId_p(theFId);
 	    int numAntenna = CDR->getNumAntenna();
 	    TimeSamplingMod::TimeSampling timeSampling = TimeSamplingMod::INTEGRATION;
-	    Interval interval = ASDMInterval(timeQuant()(endRow).getValue("s") - timeQuant()(startRow).getValue("s")
-					     + intervalQuant()(endRow).getValue("s"));
+	    Interval interval = ASDMInterval(timestampEndSecs(endRow) - timestampStartSecs(startRow));
 	    int numIntegration; // to be set by the following method call
 	    int dataSize; // to be set by the following method call
 	    EntityRef dataOid; // to be set by the following method call
@@ -3499,7 +3483,7 @@ namespace casa {
       // scan finished
       // complete and write scan table row
       mainTabRow--; // return to last row of the scan
-      scanEndTime = ArrayTime( timeQuant()(mainTabRow).getValue("s") + intervalQuant()(mainTabRow).getValue("s") );	  
+      scanEndTime = ArrayTime( timestampEndSecs(mainTabRow) );	  
       scanNumIntent = 1; // hardwired (???)
       for(uInt i=0; i<(uInt)scanNumIntent; i++){
 	scanIntent.push_back(ScanIntentMod::OBSERVE_TARGET); // hardwired for the moment (???)
@@ -3623,7 +3607,291 @@ namespace casa {
     return rstat;
   }
 
+  Bool MS2ASDM::writePointing(){ // create asdm pointing table
+    LogIO os(LogOrigin("MS2ASDM", "writePointing()"));
+    
+    Bool rstat = True;
+    
+    asdm::PointingTable& tT = ASDM_p->getPointing();
+    
+    asdm::PointingRow* tR = 0;
 
+    uInt nPointingRows = pointing().nrow();
+   
+    if(nPointingRows==0){
+      os << LogIO::WARN << "MS Pointing table doesn't exist or is empty." << LogIO::POST;	
+      return True; // not an error
+    }
+
+    Bool warned = False; // aux. var. to avoid repetition of warnings
+
+    // loop over MS antenna table
+    for(Int aId=0; aId<(Int)antenna().nrow(); aId++){
+
+      if(!asdmAntennaId_p.isDefined(aId)){
+	os << LogIO::SEVERE << "Internal error: no tag defined for antenna id " 
+	   << aId << LogIO::POST;
+	return False;
+      }
+
+      uInt irow=0;
+      uInt totNumRows=0; // total of MS Pointing table rows for this antenna
+
+      while(irow<nPointingRows){
+
+	// find next pointing entry for this antenna in MS pointing table (== beginning of a new ASDM pointing table entry)
+	Int firstRow=-1;
+	while(irow<nPointingRows){
+	  if(pointing().antennaId()(irow) == aId){
+	    firstRow = irow;
+	    break;
+	  }
+	  irow++;
+	}
+
+	if(firstRow==-1){ // no further data for this antenna
+	  break;
+	}
+
+	uInt numRows=1; // number of rows with contiguous timestamps for this antenna 
+	
+	// parameters for the next pointing table row
+	Tag antennaId = asdmAntennaId_p(aId);
+	ArrayTimeInterval timeInterval( ASDMTimeInterval( pointing().timeQuant()(firstRow), pointing().intervalQuant()(firstRow)) );
+
+	bool pointingTracking = pointing().tracking()(firstRow);
+
+	bool usePolynomials = False;
+	int numTerm = 0; // to be updated later
+
+	if(pointing().numPoly()(firstRow)>0){
+	  usePolynomials = True;
+	  numTerm = pointing().numPoly()(irow)+1;
+	}
+
+	ArrayTime timeOrigin = ASDMArrayTime( pointing().timeOriginQuant()(firstRow).getValue("s") );
+	
+	vector< vector< Angle > > pointingDirection;
+	Vector< MDirection > dirV; // aux. vector to access array column
+	dirV.reference(pointing().directionMeasCol()(firstRow));
+	if(numTerm == 0){
+	  pointingDirection.push_back(ASDMAngleV(dirV[0]));
+	}
+	else{
+	  if(numTerm != (Int)dirV.size()){
+	    os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
+	       << ": numpoly + 1 should be == dimension of array DIRECTION." << LogIO::POST;	
+	    return False;
+	  }	    
+	  for(uInt i=0; i<(uInt)numTerm; i++){
+	    pointingDirection.push_back(ASDMAngleV(dirV[i]));
+	  }
+	}	     
+	
+	vector< vector< Angle > > encoder;
+	if(pointing().encoderMeas().isNull()){ // encoder column is optional in MS but not in ASDM
+	  if(numTerm == 0){
+	    // use pointing Direction instead
+	    if(!warned){
+	      os << LogIO::WARN << "No ENCODER column in MS Pointing table. Will use DIRECTION instead." 
+		 << LogIO::POST;	
+	      warned = True;
+	    }
+	    dirV.reference(pointing().directionMeasCol()(firstRow));
+	    encoder.push_back(ASDMAngleV(dirV[0]));
+	  }
+	  else{ // cannot use pointing direction because it contains only polynomial terms
+	    vector< Angle > angV;
+	    angV.push_back(Angle(0.));
+	    angV.push_back(Angle(0.));
+	    if(!warned){
+	      os << LogIO::WARN << "No ENCODER column in MS Pointing table. Will fill with zeros." 
+		 << LogIO::POST;	
+	      warned = True;
+	    }
+	    encoder.push_back(angV);
+	  }
+	}
+	else{
+	  encoder.push_back(ASDMAngleV(pointing().encoderMeas()(firstRow)));
+	}
+	
+	vector< vector< Angle > > target;
+	dirV.reference(pointing().targetMeasCol()(firstRow));
+	if(numTerm == 0){
+	  target.push_back(ASDMAngleV(dirV[0]));
+	}
+	else{
+	  if(numTerm != (Int)dirV.size()){
+	    os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
+	       << ": numpoly + 1 should be == dimension of array TARGET." << LogIO::POST;	
+	    return False;
+	  }	    
+	  for(uInt i=0; i<(uInt)numTerm; i++){
+	    target.push_back(ASDMAngleV(dirV[i]));
+	  }
+	}	     
+	
+	vector< vector< asdm::Angle > > offset;
+	// source offset column is optional in the MS but not in the ASDM
+	if(pointing().pointingOffsetMeasCol().isNull()){ // no MS source offset column 
+	  vector< Angle > angV;
+	  angV.push_back(Angle(0.));
+	  angV.push_back(Angle(0.));
+	  offset.push_back(angV);
+	  if(numTerm>0){
+	    for(uInt i=1; i<(uInt)numTerm; i++){
+	      offset.push_back(angV);
+	    }
+	  }
+	}
+	else{
+	  dirV.reference(pointing().pointingOffsetMeasCol()(firstRow));
+	  if(numTerm==0){
+	    offset.push_back(ASDMAngleV(dirV[0]));
+	  }
+	  else{
+	    if(numTerm != (Int)dirV.size()){
+	      os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
+		 << ": numpoly + 1 should be == dimension of array POINTING_OFFSET." << LogIO::POST;	
+	      return False;
+	    }	    
+	    for(uInt i=0; i<(uInt)numTerm; i++){
+	      offset.push_back(ASDMAngleV(dirV[i]));
+	    }
+	  }
+	}	
+	
+	vector< vector< Angle > > sourceOffset; // optional in the ASDM and in the MS
+	if(!pointing().sourceOffsetMeasCol().isNull()){ // sourceOffset column is present
+	  dirV.reference(pointing().sourceOffsetMeasCol()(firstRow));
+	  if(numTerm==0){
+	    sourceOffset.push_back(ASDMAngleV(dirV[0]));
+	  }
+	  else{
+	    if(numTerm != (Int)dirV.size()){
+	      os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
+		 << ": numpoly + 1 should be == dimension of array SOURCE_OFFSET." << LogIO::POST;	
+	      return False;
+	    }	    
+	    for(uInt i=0; i<(uInt)numTerm; i++){
+	      sourceOffset.push_back(ASDMAngleV(dirV[i]));
+	    }
+	  }
+	} 
+	
+	int pointingModelId = asdmPointingModelId_p(antennaId);
+
+	// check if there are more rows for this antenna with adjacent time intervals
+
+	Double endTime = pointing().time()(firstRow) + pointing().interval()(firstRow)/2.;
+
+	irow++;
+	
+	while(irow<nPointingRows && numTerm==0){ // while we find more adjacent rows and don't use polynomials
+
+	  if(pointing().antennaId()(irow) != aId){
+	    irow++;
+	    continue;
+	  }
+
+	  if( (endTime != pointing().time()(irow) - pointing().interval()(irow)/2.) // row irow is adjacent in time to previous row
+	      || pointingTracking != pointing().tracking()(irow) 
+	      || (usePolynomials == False && pointing().numPoly()(irow)>0)
+	      ){
+	    break; // there will be no further samples for this ASDM pointing table row
+	  }
+
+	  // found a scond pointing row for the antenna ID, now accumulate directions
+	  // until time ranges not contiguous or end of table
+
+	  numRows++;
+	  endTime = pointing().time()(irow) + pointing().interval()(irow)/2.;
+
+	  // update time interval
+	  timeInterval.setDuration( timeInterval.getDuration() + ASDMInterval(pointing().intervalQuant()(irow).getValue("s")) );
+
+	  dirV.reference(pointing().directionMeasCol()(irow));
+	  pointingDirection.push_back(ASDMAngleV(dirV[0]));
+	
+	  if(pointing().encoderMeas().isNull()){ // encoder column is optional
+	    // use pointing Direction instead
+	    encoder.push_back(ASDMAngleV(dirV[0]));
+	  }
+	  else{
+	    encoder.push_back(ASDMAngleV(pointing().encoderMeas()(irow)));
+	  }
+	
+	  dirV.reference(pointing().targetMeasCol()(irow));
+	  target.push_back(ASDMAngleV(dirV[0]));
+	
+	  if(pointing().pointingOffsetMeasCol().isNull()){ // source offset column is optional
+	    vector< Angle > angV;
+	    angV.push_back(Angle(0.));
+	    angV.push_back(Angle(0.));
+	    offset.push_back(angV);
+	  }
+	  else{
+	    dirV.reference(pointing().pointingOffsetMeasCol()(irow));
+	    offset.push_back(ASDMAngleV(dirV[0]));
+	  }	
+	
+	  if(!pointing().sourceOffsetMeasCol().isNull()){ // source offset column is optional
+	    dirV.reference(pointing().sourceOffsetMeasCol()(irow));
+	    sourceOffset.push_back(ASDMAngleV(dirV[0]));
+	  }	
+	
+	} // end while accumulating for started  entry
+
+	// finish the ASDM table row and add it to the table
+	int numSample = encoder.size(); 
+	if(!usePolynomials){
+	  numTerm = numSample;
+	}
+	
+	tR = tT.newRow(antennaId, timeInterval, numSample, encoder, pointingTracking, usePolynomials, timeOrigin, 
+		       numTerm, pointingDirection, target, offset, pointingModelId);
+	
+	if(sourceOffset.size()>0){
+	  tR->setSourceOffset(sourceOffset);
+	} 
+
+	asdm::PointingRow* tR2;
+	
+	tR2 = tT.add(tR);
+	if(tR2 != tR){// no new row was inserted
+	  os << LogIO::WARN << "Internal error: duplicate row in Pointing table for antenna id " 
+	     << aId << LogIO::POST;	
+	}
+	else{
+	  if(verbosity_p>0){
+	    os << LogIO::NORMAL << "Combined " << numRows 
+	       << " MS Pointing table rows into one ASDM Pointing table row for antenna id " 
+	       << aId << LogIO::POST;	
+	  }
+	}
+	totNumRows += numRows;
+	
+      } // end while rows left in pointing table
+      
+      if(totNumRows==0){
+	os << LogIO::WARN << "No MS Pointing table rows found for antenna id " 
+	    << aId << LogIO::POST;	
+      }	
+
+    } // end loop over antenna ids
+    
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    if(verbosity_p>0){
+      os << LogIO::NORMAL << "Filled Pointing table " << getCurrentUid() << " with " << tT.size() << " rows ..." << LogIO::POST;
+    }
+    incrementUid();
+    
+    return rstat;
+  }
 
   StokesParameterMod::StokesParameter MS2ASDM::ASDMStokesParameter( Stokes::StokesTypes s) {
     switch (s) {
@@ -3678,6 +3946,32 @@ namespace casa {
       return AntennaTypeMod::GROUND_BASED;
     }      
   } 
+
+  ArrayTimeInterval MS2ASDM::ASDMTimeInterval( const Quantity midpoint, const Quantity interval){
+    Double sTime = midpoint.getValue("s");  
+    Double sInterval = interval.getValue("s");
+    if(sInterval >= sTime){ // a very large value was set to express "always valid"
+      sTime = timeQuant()(0).getValue("s") - intervalQuant()(0).getValue("s")/2.;
+      sInterval =  timeQuant()(ms_p.nrow()-1).getValue("s") - sTime 
+	+ intervalQuant()(ms_p.nrow()-1).getValue("s")/2.;
+    }
+    else{ // still need to make sTime the interval start
+      sTime -= sInterval/2.;
+    } 
+    
+    ArrayTimeInterval timeInterval( ASDMArrayTime(sTime),
+				    ASDMInterval(sInterval) );
+    return timeInterval;
+  }
+
+  vector< Angle > MS2ASDM::ASDMAngleV(const MDirection mDir){
+    vector< Angle > angV;
+    angV.push_back( mDir.getAngle( unitASDMAngle() ).getValue()(0) ); 
+    angV.push_back( mDir.getAngle( unitASDMAngle() ).getValue()(1) ); 
+    return angV;
+  }
+    
+
 
   BasebandNameMod::BasebandName MS2ASDM::ASDMBBName( Int BBCNo ){
     switch(BBCNo){

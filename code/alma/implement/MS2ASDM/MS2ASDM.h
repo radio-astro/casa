@@ -142,6 +142,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   asdm::Interval ASDMInterval( const Double seconds ){ 
     return asdm::Interval((long) (floor(seconds*ArrayTime::unitsInASecond))); }
 
+  // convert MS style time interval to ASDM ArrayTimeInterval
+  asdm::ArrayTimeInterval ASDMTimeInterval( const Quantity midpoint, const Quantity interval);
+
+  // return start of MS main table timestamp (seconds)
+  Double timestampStartSecs(const uInt mainTabRow){
+    return timeQuant()(mainTabRow).getValue("s") - intervalQuant()(mainTabRow).getValue("s")/2.; }
+
+  // return start of MS main table timestamp (seconds)
+  Double timestampEndSecs(const uInt mainTabRow){
+    return timeQuant()(mainTabRow).getValue("s") + intervalQuant()(mainTabRow).getValue("s")/2.; }
+
+  // convert MDirection to a vector of Angles
+  vector< asdm::Angle > ASDMAngleV(const MDirection mDir);
+
   // convert a base band converter number to an ASDM base band name
   BasebandNameMod::BasebandName ASDMBBName( const Int bbcNo );
 

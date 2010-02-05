@@ -73,11 +73,11 @@ def verify_asdm(asdmname):
     print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
         
     if(not os.path.exists(asdmname+"/ASDMBinary")):
-        print "ASDM binary directory ", asdmname,"/ASDMBinary doesn't exist."
+        print "ASDM binary directory "+asdmname+"/ASDMBinary doesn't exist."
         isOK = False
 
     if(not os.path.exists(asdmname+"/Pointing.bin")):
-        print "ASDM binary file ", asdmname,"/Pointing.bin doesn't exist."
+        print "ASDM binary file "+asdmname+"/Pointing.bin doesn't exist."
         isOK = False
 
     if (not isOK):
@@ -136,7 +136,7 @@ if (testnumber in testlist):
             vis = 'myinput.ms',
             asdm = 'exportasdm-output.asdm',
             archiveid="S1",
-            verbose=False
+            verbose=True
             )
         print "rval is ", rval
         if not rval:
