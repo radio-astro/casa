@@ -1041,24 +1041,26 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   Bool CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi, 
 				     const CoordinateSystem& coords, 
 				     Int slice, Int nslice){
-
     //bypass this for now
     //
     // Enforce that all SPWs are in the same frequency frame.
     //
-    // If the MS is in LSRK frame, we can do data selection (since
-    // image is always in LSRK).
+    // If all the SPWs in the MS are in LSRK frame, we can do data
+    // selection (since image is always in LSRK).
     //
-    // If the MS is not in LSRK frame, for now, disable data selection
-    // since the mapping between image (in LSRK) and MS channels will
-    // be time variable.
+    // If not all SPWs in the MS are in the same frequency frame and
+    // in LSRK frame, for now, disable data selection since the
+    // mapping between image (in LSRK) and MS channels will be time
+    // variable.
     ROScalarMeasColumn<MFrequency> freqFrame=vi.msColumns().spectralWindow().refFrequencyMeas();
     uInt nrows=vi.msColumns().spectralWindow().nrow();
     String firstString = freqFrame(0).getRefString();
+    Bool allFramesSame=True;
     for (uInt i=0;i<nrows;i++)
       if (freqFrame(i).getRefString() != firstString)
-	throw(SynthesisError("All SPWs not in the same frequency frame"));
-    if (firstString != "LSRK")
+	{allFramesSame = False;break;}
+
+    if (!allFramesSame || (firstString!="LSRK"))
       return False;
 
     // Only one slice lets keep what the user selected
