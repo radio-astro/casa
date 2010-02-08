@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def importasdm(asdm=None, vis=None, singledish=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None):
+def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None):
 	""" Convert an ALMA Science Data Model observation into a CASA visibility file (MS)
 	The conversion of the ALMA SDM archive format into a measurement set.  This version
 	is under development and is geared to handling many spectral windows of different
@@ -55,22 +55,22 @@ def importasdm(asdm=None, vis=None, singledish=None, corr_mode=None, srt=None, t
                 if singledish:
                    casalog.post('temporary MS file: %s'%viso)
                    casalog.post('        ASAP file: %s'%vis)
+                   casalog.post(' selected antenna: %s'%antenna)
                    try:
                       from asap import scantable
-                      s = scantable(viso,average=False,getpt=True)
+                      s = scantable(viso,average=False,getpt=True,antenna=antenna)
                       s.save(vis,format='ASAP',overwrite=overwrite)
                       # remove intermediate products
                       if os.path.exists(viso):
                          os.system('rm -rf %s'%viso)
                          os.system('rm -rf %s.flagversions'%viso)
                    except Exception, instance:
+                      if os.path.exists(viso):
+                         os.system('rm -rf %s'%viso)
+                         os.system('rm -rf %s.flagversions'%viso)  
                       if type(instance) == ImportError and (str(instance)).find('asap') != -1:
                          casalog.post(str(instance),'SEVERE')
                          casalog.post('You should build ASAP to be able to create single-dish data.','SEVERE')
-                         if os.path.exists(viso):
-                            os.system('rm -rf %s'%viso)
-                            os.system('rm -rf %s.flagversions'%viso)
-                         
                       else:
                          raise Exception, instance
 	except Exception, instance:

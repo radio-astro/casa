@@ -7,7 +7,7 @@ import asap as sd
 import pylab as pl
 
 
-def sdmath(expr, varlist, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
+def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
 
         casalog.origin('sdmath')
 
@@ -81,7 +81,7 @@ def sdmath(expr, varlist, fluxunit, telescopeparm, specunit, frame, doppler, sca
                      del line
                if not isfactor:
                   # scantable
-                  scandic[skey]=sd.scantable(filenames[i])
+                  scandic[skey]=sd.scantable(filenames[i],average=False,antenna=antenna)
                   # apply set_fluxunit, selection
                   # if fluxunit is not given, use first spetral data's flux unit 
                   if fluxunit=='':

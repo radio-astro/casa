@@ -27,6 +27,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <value>False</value>
     </param>
 
+    <param type="any" name="antenna" subparam="true">
+            <description>antenna name or id</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="string" name="corr_mode" >
 	    <description>specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao, co, ac,or all separated by whitespaces is expected</description>
 	    <value>all</value>
@@ -86,6 +92,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>False</value>
     </param>
 
+    <constraints>
+            <when param="singledish">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="antenna"><value type="int">0</value></default>
+                </equals>
+            </when>
+    </constraints>
+
     </input>
 
   <returns type="void"/>
@@ -106,6 +121,9 @@ vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appe
 singledish   -- Set True to write data as single-dish format (Scantable)
                 default: False
 
+            &gt;&gt;&gt; singledish expandable parameter
+                 antenna -- antenna name or id.
+ 
 corr_mode -- correlation mode to be considered on input. Could
 	     be one or more of the following, ao, co, ac, or all
 	     default: all

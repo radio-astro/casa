@@ -5,7 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
+def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
 
 
         casalog.origin('sdbaseline')
@@ -38,7 +38,7 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,False)
+            s=sd.scantable(sdfile,average=False,antenna=antenna)
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data
                     #print "Initial Raw Scantable:"

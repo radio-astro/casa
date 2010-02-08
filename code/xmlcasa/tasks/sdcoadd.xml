@@ -26,6 +26,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="string" name="fluxunit">
 	    <description>units for line flux (K,Jy) (''=current)</description>
 	    <value></value>
@@ -129,6 +135,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
   Keyword arguments:
         sdfilelist -- list of names of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
         telescopeparm -- the telescope characteristics
 
                 options: (str) name or (list) list of gain info

@@ -27,6 +27,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     <value></value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="string" name="fluxunit">
 	    <description>units for line flux (K,Jy) (''=current)</description>
 	    <value></value>
@@ -193,6 +199,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <example>
         Keyword arguments:
         sdfile -- name of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: 'K','Jy',''
                 default: '' (keep current fluxunit)

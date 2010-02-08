@@ -26,6 +26,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="string" name="fluxunit">
             <description>units for line flux (K,Jy) (''=current)</description>
             <value></value>
@@ -191,6 +197,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: none - must input file name
                 example: 'mysd.asap'
                          See sdcal for allowed formats.
+        antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: (str) 'K','Jy',''
                 default: '' (keep current fluxunit)

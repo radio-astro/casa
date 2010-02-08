@@ -26,6 +26,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="bool" name="scanaverage">
             <description>average integs within scans (True,False) </description>
             <value>False</value>
@@ -124,6 +130,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	Keyword arguments:
         sdfile -- name of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
         scanaverage -- average integrations within scans
                 options: (bool) True,False
                 default: False

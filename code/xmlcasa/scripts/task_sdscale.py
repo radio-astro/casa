@@ -4,7 +4,7 @@ from taskinit import *
 
 import asap as sd
 
-def sdscale(sdfile, factor, scaletsys, outfile, overwrite):
+def sdscale(sdfile, antenna, factor, scaletsys, outfile, overwrite):
 
         casalog.origin('sdscale')
 
@@ -29,7 +29,7 @@ def sdscale(sdfile, factor, scaletsys, outfile, overwrite):
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,False)
+            s=sd.scantable(sdfile,average=False,antenna=antenna)
 
             #check the format of the sdfile
             if isinstance(sdfile, str):

@@ -31,6 +31,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value type="dict">{}</value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="string" name="fluxunit">
 	    <description>units for line flux (K,Jy) (''=current)</description>
 	    <value></value>
@@ -143,6 +149,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         varlist -- Dictionary of variables in expr and their values.
                    Keys must be coincide with variables used in expr.
                    Values are substituted in each value in expr.
+        antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: 'K','Jy',''
                 default: '' (keep current fluxunit)

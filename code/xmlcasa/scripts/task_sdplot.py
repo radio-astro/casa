@@ -5,7 +5,7 @@ import asap as sd
 import pylab as pl
 import Tkinter as Tk
 
-def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
+def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
 
         casalog.origin('sdplot')
 
@@ -35,7 +35,7 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                 isScantable=True
 
             #load the data without averaging
-            s=sd.scantable(sdfile,scanaverage)
+            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'

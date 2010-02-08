@@ -23,6 +23,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     <value></value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="any" name="factor">
 	    <description>scaling factor (float or float list)</description>
             <any type="variant" limittype="string double doubleArray"/>
@@ -51,6 +57,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <example>
         Keyword arguments:
         sdfile -- name of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
         factor -- scaling factor. float or one dimensional float list.
                   default: 1 (no scaling)
         scaletsys -- scaling of associated Tsys

@@ -26,6 +26,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="intArray" name="rowlist">
 	    <description>list of row numbers to process (e.g. [0,2,4,6])</description>
 	    <value></value>
@@ -131,6 +137,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
   Keyword arguments:
         sdfile -- name of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
         rowlist -- list of row numbers to process
                 default: [] (use all rows)
                 example: [0,2,4,6]
