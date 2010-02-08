@@ -201,7 +201,7 @@ namespace casa {
 
     if(verbose){
       //      setVerbosity(1);
-      setVerbosity(2); // set to 1 before releasing
+      setVerbosity(1); // set to 1 before releasing
     }
     else{
       setVerbosity(0);
@@ -434,7 +434,7 @@ namespace casa {
 	else{
 	  numTimestampsCorr++;
 	}
-      } // end for
+      } // end for i
 
       if(verbosity_p>1){
 	cout << " subscan number is " << subscanNum << endl;
@@ -714,35 +714,63 @@ namespace casa {
 	Double theTStamp = time()(mainTabRow);
 	
 	// SORT the data by baseline and antenna resp.!!!!!!!!!!!!
+
+	// create a list of the row numbers in this timestamp sorted by baseline
+	vector< uInt > rowsSorted;
+	{
+	  vector< uInt > rows;
+	  while(mainTabRow < nMainTabRows 
+		&& time()(mainTabRow)==theTStamp){
+	    DDId = dataDescId()(mainTabRow);
+	    if(DDId != theDDId){ // skip all other Data Description Ids
+	      mainTabRow++;
+	      continue;
+	    }
+	    FId = fieldId()(mainTabRow);
+	    if(FId != theFieldId){ // skip all other Field Ids
+	      mainTabRow++;
+	      continue;
+	    }
+	    rows.push_back(mainTabRow);
+	    mainTabRow++;
+	  }
+	  uInt nRows = rows.size();
+	  Int* bLine = new Int[nRows];
+	  for(uInt i=0; i<nRows; i++){
+	    bLine[i] = antenna1()(rows[i])*1000 + antenna2()(rows[i]);
+	  }	    
+	  Sort sort;
+	  sort.sortKey(bLine, TpInt);
+	  Vector<uInt> inx(nRows);
+	  sort.sort(inx, nRows);
+	  rowsSorted.resize(nRows);
+	  for(uInt i=0; i<nRows; i++){
+	    rowsSorted[i] = rows[inx(i)];
+	  }	  
+	  delete[] bLine;
+	}
 	
-	while(mainTabRow < nMainTabRows 
-	      && time()(mainTabRow)==theTStamp){
+	for(uInt ii=0; ii<rowsSorted.size(); ii++){
 	  
-	  DDId = dataDescId()(mainTabRow);
-	  if(DDId != theDDId){ // skip all other Data Description Ids
-	    mainTabRow++;
-	    continue;
-	  }
-	  FId = fieldId()(mainTabRow);
-	  if(FId != theFieldId){ // skip all other Field Ids
-	    mainTabRow++;
-	    continue;
-	  }
+	  uInt iRow = rowsSorted[ii];
+
+	  DDId = dataDescId()(iRow);
+	  FId = fieldId()(iRow);
 	  
 	  Matrix<Complex> dat;
 	  Matrix<Bool> flagsm;
 	  if(datacolumn == "MODEL"){
-	    dat.reference(modelData()(mainTabRow));
+	    dat.reference(modelData()(iRow));
 	  }
 	  else if(datacolumn == "CORRECTED"){
-	    dat.reference(correctedData()(mainTabRow));
+	    dat.reference(correctedData()(iRow));
 	  }
 	  else{
-	    dat.reference(data()(mainTabRow));
+	    dat.reference(data()(iRow));
 	  }
-	  flagsm.reference(flag()(mainTabRow));
+	  flagsm.reference(flag()(iRow));
 	  
-	  if(antenna1()(mainTabRow) == antenna2()(mainTabRow)){
+	  if(antenna1()(iRow) == antenna2()(iRow)){
 	    Complex x;  
 	    float a;
 	    for(uInt i=0; i<numSpectralPoint; i++){
@@ -784,7 +812,7 @@ namespace casa {
 		continue;
 	      }
 	      else{
-		if(flagRow()(mainTabRow)){
+		if(flagRow()(iRow)){
 		  ul = 1;
 		}
 		else{
@@ -795,10 +823,9 @@ namespace casa {
 	    }
 	  }
 	  // the following two lines only needed for data blanking
-	  //	    actualTimes.push_back((long long)floor(time()(mainTabRow))*1000.);
-	  //	    actualDurations.push_back((long long)floor(interval()(mainTabRow))*1000.);
-	  mainTabRow++;
-	}// end while same timestamp
+	  //	    actualTimes.push_back((long long)floor(time()(iRow))*1000.);
+	  //	    actualDurations.push_back((long long)floor(interval()(iRow))*1000.);
+	}// end loop over rows in this timestamp sorted by baseline
 	
 	if(verbosity_p>1){
 	  cout << "Sizes: " << endl;
@@ -1933,7 +1960,8 @@ namespace casa {
 
       // add the same row for the remaining SPW Ids in the vector accumulated above
       for(uint i=1; i<spwIdV.size(); i++){
-	tR->setSpectralWindowId(spwIdV[i]);
+	tR = tT.newRow(antennaId, spwIdV[i], timeInterval, numReceptor, beamOffsetV, focusReferenceV, 
+		     polarizationTypesV, polResponseV, receptorAngleV, receiverIdV);
 	tT.add(tR);	
       }	
 
@@ -2586,81 +2614,126 @@ namespace casa {
     asdm::SwitchCycleTable& swcT = ASDM_p->getSwitchCycle();
     vector< asdm::SwitchCycleRow * > swcRV = swcT.get();
     Tag swcTag = swcRV[0]->getSwitchCycleId(); // preliminary implementation: get tag from first (and only) row
-
+    
     uInt nProcTabRows =  processor().nrow();
-    if(nProcTabRows<1){ // processor table not filled, all data will have proc id == -1
+    Int dummyProcId = -1;
+    if(nProcTabRows<1){ // processor table not filled, all data should have proc id == -1
       os <<  LogIO::WARN << "MS Processor table is empty. Will assume processor type is CORRELATOR." << LogIO::POST;
       nProcTabRows = 1;
+      if(ms_p.nrow()>0 && processorId()(0)!=dummyProcId){
+	os <<  LogIO::WARN << "   Still, the MS Main table seems to refer to an existing processor id "
+	   << processorId()(0) << ". Will try to proceed ..." << LogIO::POST;
+	dummyProcId = processorId()(0); // accept other proc id (e.g. 0)
+      }
     }
 
     // loop over MS processor table (typically, this loop will only be executed once)
     for(uInt uprocId=0; uprocId<nProcTabRows; uprocId++){
-
+      
       Int procId = uprocId;
-
+      
       if(processor().nrow()<1){
-	procId  = -1;
+	procId = dummyProcId;
       }
-
+      
       if(verbosity_p>0){
 	os << LogIO::NORMAL << "Processor Id: " << procId << LogIO::POST;
       }
-
+      
       asdm::ConfigDescriptionRow* tR = 0;
-
+      
       Tag procIdTag;
       if(asdmProcessorId_p.isDefined(procId)){
 	procIdTag = asdmProcessorId_p(procId);
       }
       else{
-	os << LogIO::SEVERE << "Internal error: undefined mapping for processor id " << procId << LogIO::POST;
-	return False;
+	if(procId == dummyProcId && asdmProcessorId_p.isDefined(-1)){ // there is no MS Proc table and the main table is
+	  procIdTag = asdmProcessorId_p(-1);                          //   using wrong proc ids
+	}
+	else{
+	  os << LogIO::SEVERE << "Internal error: undefined mapping for processor id " << procId << LogIO::POST;
+	  return False;
+	}
       }
-
+      
       // get processor type from already existing ASDM processor table
       ProcessorTypeMod::ProcessorType processorType = procT.getRowByKey(procIdTag)->getProcessorType();
+      
+      // loop over data description table
+      for(Int iDDId=0; iDDId<(Int)dataDescription().nrow(); iDDId++){
 
-      SpectralResolutionTypeMod::SpectralResolutionType spectralType = SpectralResolutionTypeMod::FULL_RESOLUTION; 
-      // alternatives: BASEBAND_WIDE, CHANNEL_AVERAGE
-      if(verbosity_p>0){
-	os << LogIO::NORMAL << "Assuming data is of spectral resolution type \"FULL RESOLUTION\"." << LogIO::POST;
-      }
-
-
-      // loop over MS Main table
-      Tag previousTag = Tag();
-      uInt nMainTabRows = ms_p.nrow();
-      for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
-
-	vector<Int> msAntennaIdV;
-	vector<Int> msDDIdV;
-	vector<Int> msFeedIdV;
-
-	vector<Tag> antennaId;
-	vector<Tag> dataDId;
-	vector<int> feedId;
-	vector<Tag> switchCycleId;
-	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection> atmPhaseCorrection;
-	int numAntenna = 0;
-	int numDD = 0;
-	int numFeed = 0;
-	CorrelationModeMod::CorrelationMode correlationMode;
+	// find first row in main table with this proc ID and extract spectral type
+	SpectralResolutionTypeMod::SpectralResolutionType spectralType = SpectralResolutionTypeMod::FULL_RESOLUTION;
 	
-	// loop over MS main table and find for this proc id and timestamp
-	//  a) all used antennas
-	//  b) all used DD IDs
-	//  c) all used feed IDs
-	uInt numAutoCorrs = 0;
-	uInt numBaselines = 0;
+	uInt jrow=0;
+	uInt nMainTabRows = ms_p.nrow();	
+	while(jrow<nMainTabRows){
+	  if(processorId()(jrow)==procId && dataDescId()(jrow)==iDDId){
+	    break;
+	  }
+	  jrow++;
+	}
+	if(jrow>=nMainTabRows){ // DDId or processor not found
+	  break;
+	}
+	
+	if(!asdmDataDescriptionId_p.isDefined(iDDId)){
+	  os << LogIO::SEVERE << "Internal error: undefined mapping for data desc. id " << iDDId
+	     << " in main table row " << jrow << LogIO::POST;
+	  return False;
+	}
+	
+	uInt spwId = dataDescription().spectralWindowId()(iDDId);
+	if(spectralWindow().numChan()(spwId)<5){
+	  spectralType = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
+	  if(verbosity_p>0){
+	    os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." 
+	       << LogIO::POST;      
+	  }
+	}
+      
+	// loop over MS Main table
+	Tag previousTag = Tag();
+	for(uInt mainTabRow=jrow; mainTabRow<nMainTabRows; mainTabRow++){
 
-	if(processorId()(mainTabRow)==procId){
-
-	  //	  cout << "proc id " << procId << " used at main table row " << mainTabRow << endl;
-
+	  if(dataDescId()(mainTabRow)!=iDDId || processorId()(mainTabRow)!=procId){
+	    continue;
+	  }
+	  
+	  if(verbosity_p>2){
+	    cout << "proc id " << procId << " used at main table row " << mainTabRow << endl;
+	  } 
+	  
+	  vector<Int> msAntennaIdV;
+	  vector<Int> msDDIdV;
+	  msDDIdV.push_back(iDDId); // always just this one entry
+	  vector<Int> msFeedIdV;
+	  
+	  vector<Tag> antennaId;
+	  vector<Tag> dataDId;
+	  vector<int> feedId;
+	  vector<Tag> switchCycleId;
+	  vector<AtmPhaseCorrectionMod::AtmPhaseCorrection> atmPhaseCorrection;
+	  int numAntenna = 0;
+	  int numDD = 0;
+	  int numFeed = 0;
+	  CorrelationModeMod::CorrelationMode correlationMode;
+	  
+	  // loop over MS main table and find for this proc id, DDId, and timestamp
+	  //  a) all used antennas
+	  //  b) all used feed IDs
+	  uInt numAutoCorrs = 0;
+	  uInt numBaselines = 0;
+	  
 	  uInt irow = mainTabRow;
 	  Double thisTStamp = time()(irow); 
-
-	  while(time()(irow)==thisTStamp && irow<nMainTabRows){
+	  
+	  while(irow<nMainTabRows && time()(irow)==thisTStamp){
+	    
+	    if(dataDescId()(irow)!=iDDId || processorId()(irow)!=procId){
+	      irow++;
+	      continue;
+	    }
 	    
 	    // for the later determination of the correlation mode
 	    if(antenna1()(irow) == antenna2()(irow)){
@@ -2671,7 +2744,7 @@ namespace casa {
 	    }
 	    
 	    // antenna ids
-
+	    
 	    Int aId = antenna1()(irow); 
 	    Bool found = false;
 	    for(uInt j=0; j<msAntennaIdV.size(); j++){
@@ -2684,7 +2757,7 @@ namespace casa {
 	      msAntennaIdV.push_back(aId);
 	      if(!asdmAntennaId_p.isDefined(aId)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for antenna1 id " << aId 
-		   << " in main table row " << mainTabRow << LogIO::POST;
+		   << " in main table row " << irow << LogIO::POST;
 		return False;
 	      }
 	    }
@@ -2700,29 +2773,11 @@ namespace casa {
 	      msAntennaIdV.push_back(aId);
 	      if(!asdmAntennaId_p.isDefined(aId)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for antenna2 id " << aId 
-		   << " in main table row " << mainTabRow << LogIO::POST;
+		   << " in main table row " << irow << LogIO::POST;
 		return False;
 	      }
 	    }
-
 	    
-	    // DD IDs
-	    Int dDIdi = dataDescId()(irow);
-	    found = False;
-	    for(uInt j=0;j<msDDIdV.size();j++){
-	      if(dDIdi == msDDIdV[j]){
-		found = True;
-		break;
-	      }
-	    }
-	    if(!found){
-	      msDDIdV.push_back(dDIdi);
-	      if(!asdmDataDescriptionId_p.isDefined(dDIdi)){
-		os << LogIO::SEVERE << "Internal error: undefined mapping for data desc. id " << dDIdi
-		   << " in main table row " << mainTabRow << LogIO::POST;
-		return False;
-	      }
-	    } 
 	    
 	    // feed ids
 	    Int fIdi = feed1()(irow);
@@ -2737,7 +2792,7 @@ namespace casa {
 	      msFeedIdV.push_back(fIdi);
 	      if(!asdmFeedId_p.isDefined(fIdi)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for feed1 id " << fIdi
-		   << " in main table row " << mainTabRow << LogIO::POST;
+		   << " in main table row " << irow << LogIO::POST;
 		return False;
 	      }
 	    }
@@ -2753,33 +2808,32 @@ namespace casa {
 	      msFeedIdV.push_back(fIdi);
 	      if(!asdmFeedId_p.isDefined(fIdi)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for feed2 id " << fIdi
-		   << " in main table row " << mainTabRow << LogIO::POST;
+		   << " in main table row " << irow << LogIO::POST;
 		return False;
 	      }
 	    }
 	    
 	    irow++;
 	  } // end while
-
-	   // sort the  antenna ids before entering them into the ConfigDescription table
+	  
+	    // sort the  antenna ids before entering them into the ConfigDescription table
 	  std::sort(msAntennaIdV.begin(), msAntennaIdV.end());
 	  for(uInt i=0; i<msAntennaIdV.size(); i++){
 	    antennaId.push_back(asdmAntennaId_p(msAntennaIdV[i]));
 	  }
 	  numAntenna = antennaId.size();
-	   // sort the DD ids before entering them into the ConfigDescription table
-	  std::sort(msDDIdV.begin(), msDDIdV.end());
-	  for(uInt i=0; i<msDDIdV.size(); i++){
-	    dataDId.push_back(asdmDataDescriptionId_p(msDDIdV[i]));
-	  }
-	  numDD = dataDId.size();
+	  
+	  // (there is just one DDId per config description in this scheme)
+	  dataDId.push_back(asdmDataDescriptionId_p(msDDIdV[0]));
+	  numDD = 1;
+	  
 	  // sort the feed ids before entering them into the ConfigDescription table
 	  std::sort(msFeedIdV.begin(), msFeedIdV.end());
 	  for(uInt i=0; i<msFeedIdV.size(); i++){
 	    feedId.push_back(asdmFeedId_p(msFeedIdV[i]));
 	  }
 	  numFeed = feedId.size();
-
+	  
 	  if(numAutoCorrs==0){
 	    correlationMode = CorrelationModeMod::CROSS_ONLY;
 	  }
@@ -2792,16 +2846,16 @@ namespace casa {
 	  
 	  switchCycleId.push_back(swcTag); // switch cycle table will only be dummy ? -> Francois
 	  // dummy if PHASE_ID column doesn't exist in MS main
-          // PHASE_ID identifies bin in switch cycle
+	  // PHASE_ID identifies bin in switch cycle
 	  //   otherwise, e.g. PHASE_ID = 0 and 1 => numStep == 2
-
+	  
 	  if(dataIsAPCorrected()){
 	    atmPhaseCorrection.push_back(AtmPhaseCorrectionMod::AP_CORRECTED); 
 	  }
 	  else{
 	    atmPhaseCorrection.push_back(AtmPhaseCorrectionMod::AP_UNCORRECTED); 
 	  }	    
-    
+	  
 	  // create a new row with its mandatory attributes.
 	  tR = tT.newRow (numAntenna,
 			  numDD,
@@ -2834,19 +2888,19 @@ namespace casa {
 	  // add this row to to the config description table.
 	  //  note that this will check for uniqueness
 	  asdm::ConfigDescriptionRow* tR2 = 0;
-
+	  
 	  tR2 = tT.add(tR);
 	  Tag newTag = tR2->getConfigDescriptionId();
-	  asdmConfigDescriptionId_p.define(mainTabRow, newTag); // memorize tag for every row (to keep it simple)
+	  asdmConfigDescriptionId_p.define(mainTabRow, newTag); 
 	  if(verbosity_p>1){
 	    cout << "Defined conf desc id for main table row " << mainTabRow << endl;
 	  }
-
+	  
 	  mainTabRow = irow-1;
+	  
+	} // end loop over remainder of timestamp in MS main table 
 
-	} // end if proc id
-
-      } // end loop over MS main table
+      } // end loop over MS DD table
 
     } // end loop over MS processor table
 
@@ -2999,7 +3053,7 @@ namespace casa {
       tR2 = tT.add(tR);
       Tag sBSummaryTag = tR2->getSBSummaryId();
       if(tR2 == tR){ // adding the row led to the creation of a new tag
-	if(verbosity_p>1){
+	if(verbosity_p>2){
 	  cout << "New SBSummary tag created: " << tR2 << endl;
 	}
 	if(asdmSBSummaryId_p.isDefined(sbKey)){

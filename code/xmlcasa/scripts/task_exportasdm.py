@@ -77,6 +77,11 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 			else:
 				sbdur_secs = qa.canonical(sbduration)['value']
 
+		# create timesorted copy of the input ms
+		os.system('rm -rf '+vis+'-tsorted')
+		ms.open(vis)
+		ms.timesort(vis+'-tsorted')
+
 		execute_string=  '--datacolumn \"' + datacolumn 
 		execute_string+= '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid
 		execute_string+= '\" --subscanduration \"' + str(ssdur_secs)
@@ -90,7 +95,7 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if(showversion):
 			execute_string+= ' --revision'
 
-		execute_string += ' ' + vis + ' ' + asdm
+		execute_string += ' ' + vis + '-tsorted ' + asdm
 
 		execute_string = 'MS2asdm '+execute_string
 
@@ -100,6 +105,8 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		print execute_string
 
         	rval = os.system(execute_string)
+
+		os.system('rm -rf '+vis+'-tsorted')
 
 		if(rval == 0):
 			return True
