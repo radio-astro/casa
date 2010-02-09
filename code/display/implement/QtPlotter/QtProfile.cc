@@ -702,6 +702,8 @@ void QtProfile::wcChanged(const String c,
     //cout << "wcChanged: coordType=" << c 
     //     << " coordinate=" << coordinate << endl;
 
+    //cout << "coordinateType=" << coordinateType << endl;
+
     if (c != coordinate) {
        coordinate = c.chars();
        if (coordinate == "world")
@@ -860,23 +862,65 @@ void QtProfile::wcChanged(const String c,
             yval(i) *= pow(10.,ordersOfM);
           }
         }
+        Vector<Float> xRel(yval.size());
+        Vector<Float> yRel(yval.size());
+        Int count = 0;
         if (relative->isChecked()) {
           ky = ky+ "_rel.";
           for (uInt i = 0; i < yval.size(); i++) {
             uInt k = z_yval.size() - 1;
+            //cout << xval(i) << " - " << yval(i) << endl;
+            //cout << z_xval(0) << " + " << z_xval(k) << endl;
+            if (coordinateType.contains("elocity")) {
+            if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+              for (uInt j = 0; j < k; j++) {
+                //cout << z_xval(j) << " + " 
+                //     << z_yval(j) << endl;
+                if (xval(i) <= z_xval(j) && 
+                    xval(i) > z_xval(j + 1)) {
+                  float s = z_xval(j + 1) - z_xval(j);
+                  if (s != 0) {
+                    xRel(count) = xval(i);
+                    yRel(count)= yval(i) - 
+                               (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                                (z_yval(j + 1) - z_yval(j)));
+                    count++;
+                    //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                    //           (z_yval(j + 1) - z_yval(j)));
+
+                  }
+                  break;
+                }
+              }
+            }
+            }
+            else {
             if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
               for (uInt j = 0; j < k; j++) {
                 if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
                   float s = z_xval(j + 1) - z_xval(j);
-                  if (s != 0)
-                    yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
-                               (z_yval(j + 1) - z_yval(j)));
+                  if (s != 0) {
+                    xRel(count) = xval(i);
+                    yRel(count)= yval(i) - 
+                               (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                                (z_yval(j + 1) - z_yval(j)));
+                    count++;
+                    //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                    //           (z_yval(j + 1) - z_yval(j)));
+                  }
+                  break;
                 }
               }
             }
+            }
           }
+          xRel.resize(count, True);
+          yRel.resize(count, True);
+          pc->addPolyLine(xRel, yRel, ky);
         }
-        pc->addPolyLine(xval, yval, ky);
+        else {
+          pc->addPolyLine(xval, yval, ky);
+        }
       }
     }
 
