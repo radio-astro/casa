@@ -384,13 +384,13 @@ thistest_imrms=statistics['rms'][0]
 #src3mmmax=0.941    
 src3mmmax=0.14297   # channel average
 #src1mmmax=17.333
-src1mmmax=1.6692    # channel average
+src1mmmax=1.6675    # channel average
 #srchcomax=6.61811
 srchcomax=0.49629   # channel average
 #srcco21max=56.534
-srcco21max=3.0728   # channel average
-imgmax=0.0058886
-imgrms=0.00071212
+srcco21max=3.0625   # channel average
+imgmax=0.0063684
+imgrms=0.00060147
 
 #diff_cal=abs((calmax-thistest_cal)/calmax)
 diff_3mm=abs((src3mmmax-thistest_3mm)/src3mmmax)
