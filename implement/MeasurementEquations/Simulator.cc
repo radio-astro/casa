@@ -2613,15 +2613,21 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
     // Now create the VisSet
     if(vs_p) delete vs_p; vs_p=0;
     makeVisSet();
-    //Now assign the source direction to something selected or sensible
+    //Now assign the source directions to something selected or sensible
     {
       Int fieldsel=0;
-      if(fieldids.nelements() >0)	
-      // this may be causeing problems in summary()
-      //fieldsel=fieldids(0);
-	fieldsel=fieldids(fieldids.nelements()-1);
-      // RI TODO sim:setdata need nField=fieldids.nelements()?
-      sourceDirection_p[nField-1]=(vs_p->iter()).msColumns().field().phaseDirMeas(fieldsel); 
+      if(fieldids.nelements() >0) {
+	fieldsel=fieldids(0);
+	// RI TODO does sim:setdata need this?
+	nField=fieldids.nelements();
+	for (Int i=0;i<nField;i++) {
+	  // RI TODO check whether index in field column is just i or need
+	  // to search for fieldid  
+	  (vs_p->iter()).msColumns().field().name().get(i,sourceName_p[i]);
+	  sourceDirection_p[i]=(vs_p->iter()).msColumns().field().phaseDirMeas(i); 
+	  (vs_p->iter()).msColumns().field().code().get(i,calCode_p[i]);
+	}       
+      }
     }
     return True;
   } catch (AipsError x) {
