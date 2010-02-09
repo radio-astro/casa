@@ -5,183 +5,181 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
-<task type="function" name="simdata" category="simulation">
+<task type="function" name="simdata2" category="simulation">
 
-  <shortdescription>simulation task:</shortdescription>
+  <shortdescription>mosaic simulation task:</shortdescription>
   <description>
-    Simulate synthesis data. [alert] Parameters are expected to 
-    change as development continues through at least CASA 3.1 - be careful.
+    This task will simulate interferometric data.  
+    2010 version 2.0
     Please contact CASA helpdesk with questions.
   </description>
   
   <input>
-
+    
     <param type="string" name="project">
-      <description>root for output files</description>
+      <description>root for output file names</description>
       <value>sim</value>
     </param>
     
 
-<!--  SETUP  -->
 
-    <param type="string" name="complist">
-      <description>[optional] componentlist table to observe</description>
+
+
+
+    <param type="bool" name="setup">
+      <description>set up model sky and pointings</description>
+      <value>True</value>
+    </param>
+
+    <param type="string" name="modelimage" subparam='true'>
+      <description>input image name</description>
       <value></value>
     </param>
 
-    <param type="string" name="modelimage">
-      <description>model sky image name</description>
+    <param type="string" name="complist" subparam='true'>
+      <description>componentlist table to observe</description>
       <value></value>
     </param>
 
-    <param type="string" name="inbright">
+    <param type="bool" name="ignorecoord" subparam='true'>
+      <description>scale model coordinates to output parameters</description>
+      <value>False</value>
+    </param>
+
+    <param type="string" name="incell" subparam='true'>
+      <description>cell/pixel size [only used if ignorecoord=T]</description>
+      <value>0.1arcsec</value>
+    </param>
+    
+    <param type="string" name="inbright" subparam='true'>
        <description>set peak surface brightness in Jy/pixel or "unchanged"</description>
        <value>unchanged</value>
     </param>
 
-    <param type="bool" name="ignorecoord">
-      <description>change model coordinates</description>
-      <value>False</value>
-    </param>
 
-<!-- 
-    <param type="string" name="incell" subparam='true'>
-       <description>[only if ignorecoord=T] model image pixel size</description>
-       <value>''</value>
-    </param>
-    <param type="int" name="nchan">
-      <description>number of channels</description>
-      <value type="int">1</value>
-      <allowed kind="range"><value range="min">1</value></allowed>
-    </param>
--->
-
-    <param type="string" name="startfreq">
-      <description>[only if ignorecoord=T] frequency of first channel</description>
-      <value>89GHz</value>
-    </param>
-    
-    <param type="string" name="chanwidth">
-      <description>[only if ignorecoord=T] channel width</description>
-      <value>10MHz</value>
-    </param>
-    
-
-
-
-    <param type="string" name="refdate">
+    <param type="string" name="refdate" subparam="true">
       <description>center time/date of observation *see help</description>
       <value>2012/05/21/22:05:00</value>
     </param>
     
-    <param type="string" name="totaltime">
+    <param type="string" name="totaltime" subparam="true">
       <description>total time of observation</description>
       <value>7200s</value>
     </param>
     
-    <param type="string" name="integration">
+    <param type="string" name="integration" subparam="true">
       <description>integration (sampling) time</description>
       <value>10s</value>
     </param>
 
-    <param type="int" name="scanlength">
+    <param type="int" name="scanlength" subparam="true">
       <description>number of integrations per pointing in the mosaic</description>
       <value type="int">5</value>
     </param>
 
-    <param type="stringArray" name="direction">
+    <param type="stringArray" name="direction" subparam="true">
       <description>mosaic center, or list of pointings</description>
 <!-- eventually, put "header" to use modelimage ctr -->
       <value>J2000 19h00m00 -40d00m00</value>
     </param>
 
-    <param type="string" name="pointingspacing">
+    <param type="string" name="pointingspacing" subparam="true">
       <description>spacing in between beams in mosaic</description>
 <!-- allow "pb3,pb2," for fractions of the primary beam --> 
       <value>1arcmin</value>
     </param>
-    
-    <param type="stringArray" name="mosaicsize">
-      <description>angular size of desired area to map</description>
-      <value type="vector">
-	<value type="string">1.0arcmin</value>
-	<value type="string">1.0arcmin</value>
-      </value>
+
+
+    <param type="bool" name="plotfield" subparam="true">
+      <description>display the model sky and planned pointings</description>
+      <value>True</value>
     </param>
 
-    <param type="string" name="caldirection">
-      <description></description>
-      <value type="string"></value>
+
+
+
+
+
+<!--  predict _must_ read from a file  -->
+
+    <param type="bool" name="predict">
+      <description>calculate visibilites</description>
+      <value>True</value>
     </param>
 
-    <param type="string" name="calflux">
-      <description></description>
-      <value>1Jy</value>
+
+    <param type="string" name="ptgfile" subparam="true">
+      <description>list of pointing positions</description>
+      <value>"$project.ptg.txt"</value>
     </param>
 
-    <param type="string" name="checkinputs">
-      <description>graphically verify parameters [yes|no|only]</description>
-      <value>no</value>
-	<allowed kind="enum">
-	  <value>yes</value>
-	  <value>no</value>
-	  <value>only</value>
-	</allowed>
-    </param>
-            
-
-<!--  PREDICT  -->
-
-    <param type="string" name="antennalist" mustexist="true">
+    <param type="string" name="antennalist" mustexist="true" subparam="true">
       <description>antenna position file</description>
       <value>alma.out10.cfg</value>
     </param>
 
 
-<!--  PROCESS  -->
-
-    <param type="bool" name="noise_thermal">
-      <description>add thermal noise</description><value>True</value></param>    
-    <param type="string" name="noise_mode" subparam="true">
-      <description>tsys-atm: set PWV and use ATM library; tsys-manual: set t_sky and tau</description><value>tsys-atm</value></param>
-
-    <param type="double" name="user_pwv" subparam="true">
-      <description>Precipitable Water Vapor in mm</description><value>1.</value></param>
-
-    <param type="double" name="t_ground" subparam="true">
-      <description>ambient temperature</description><value>270.</value></param>
-    <param type="double" name="t_sky" subparam="true">
-       <description>atmospheric temperature</description><value>260.</value></param>	
-    <param type="double" name="tau0" subparam="true">
-      <description>zenith opacity</description><value>0.1</value></param>
-    
-    <param type="double" name="cross_pol">
-      <description>add polarization leakage of magnitude</description>
-      <value>0.</value></param>    
 
 
 
 
-<!-- IMAGE -->
+    <param type="any" name="relmargin">
+      <any type="variant" limittypes="double int"/>
+      <description>space btw. pointings and edge, relative to pointingspacing</description>
+      <value type="double">1.0</value>
+    </param>
 
-    <param type="string" name="cell">
-      <description>output cell/pixel size</description>
-      <value>0.1arcsec</value></param>
-    
     <param type="intArray" name="imsize">
-      <description>output image size in pixels (x,y) </description>
-      <value type="vector"><value>128</value><value>128</value></value></param>
+	    <description>output image size in pixels (x,y) </description>
+	    <value type="vector"><value>128</value><value>128</value></value>
+    </param>
+
+
+
+
+
+
+
+
+
+    
+
+    <param type="string" name="startfreq">
+      <description>frequency of first channel</description>
+      <value>89GHz</value>
+    </param>
+    
+    <!--    <param type="stringArray" name="chanwidth">   -->
+    <param type="string" name="chanwidth">
+      <description>channel width</description>
+      <value>10MHz</value>
+    </param>
+    
+    <param type="int" name="nchan">
+      <description>number of channels</description>
+      <value type="int">1</value>
+      <allowed kind="range"><value range="min">1</value></allowed>
+    </param>
+    
+    
+    
+
+
+
+<!--  IMAGE   -->    
+
+    <param type="int" name="niter">
+    <description>maximum number of iterations</description>
+    <value>500</value>
+    </param>
 
     <param type="double" name="threshold" units="mJy">
-      <description>flux level (+units) to stop cleaning</description>
-      <value>0.01</value></param>
-    
-    <param type="int" name="niter">
-      <description>maximum number of iterations</description>
-      <value>500</value></param>
+	    <description>flux level (+units) to stop cleaning</description>
+	    <value>0.01</value>
+    </param>
 
     <param type="string" name="psfmode">
-	    <description>minor cycle PSF calculation method </description>
+	    <description>method of PSF calculation to use during minor cycles</description>
 	    <value>clark</value>
 	    <allowed kind="enum">
 	      <value>none</value>
@@ -259,7 +257,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 
-<!--   DISPLAY  (will become analysis)  -->    
+<!--  NOISE  -->
+
+    <param type="bool" name="noise_thermal">
+      <description>add thermal noise</description><value>True</value></param>    
+    <param type="string" name="noise_mode" subparam="true">
+      <description>tsys-atm: set PWV and use ATM library; tsys-manual: set t_sky and tau</description><value>tsys-atm</value></param>
+
+    <param type="double" name="user_pwv" subparam="true">
+      <description>Precipitable Water Vapor in mm</description><value>1.</value></param>
+
+    <param type="double" name="t_ground" subparam="true">
+      <description>ambient temperature</description><value>270.</value></param>
+    <param type="double" name="t_sky" subparam="true">
+       <description>atmospheric temperature</description><value>260.</value></param>	
+    <param type="double" name="tau0" subparam="true">
+      <description>zenith opacity</description><value>0.1</value></param>
+    
+
+
+<!--   DISPLAY    -->    
     
     <param type="bool" name="fidelity">
       <description>Calculate fidelity images</description>
@@ -276,12 +293,40 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
-            
+
+
+
+        
+    
 <!--  CONSTRAINTS  -->    
     
     <constraints>
-      <!-- in simdata2, cell will get listed in setup for ignorecoord, 
-	   as well as in cleal -->
+      <when param="setup">
+	<equals type="bool" value="True">
+	  <default param="modelimage"><value>"$project.modelimage"</value></default>
+	  <default param="complist"><value>''</value></default>
+	  <default param="ignorecoord"><value>False</value></default>
+	  <default param="incell"><value>"0.1arcsec"</value></default>
+	  <default param="inbright"><value>"unchanged"</value></default>
+	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
+	  <default param="totaltime"><value>"7200s"</value></default>
+	  <default param="integation"><value type="string">10s</value></default>
+	  <default param="scanlength"><value>5</value></default>
+	  <default param="direction"><value type="string">J2000 19h00m00s -40d00m00s</value></default>
+	  <default param="pointingspacing"><value>"1arcmin"</value></default>
+	  <default param="plotfield"><value>True</value></default>
+	</equals>
+      </when>
+      <!--      -->
+      <when param="predict">
+	<equals type="bool" value="True">
+	  <default param="ptgfile"><value>"$project.ptg.txt"</value></default>
+	  <default param="antennalist"><value>'alma.out10.cfg'</value></default>
+	  <default param="modelimage"><value>"$project.modelimage"</value></default>
+	  <default param="complist"><value>''</value></default>	  
+	</equals>
+      </when>
+      <!--      -->
       <when param="noise_thermal">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">	  

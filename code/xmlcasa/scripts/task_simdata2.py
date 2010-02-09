@@ -15,120 +15,72 @@ from simutil import *
 import pylab as pl
 import pdb
 
-def simdata(
-    project=None, 
-#setup=None, 
-    complist=None, modelimage=None, inbright=None, ignorecoord=None,
-    # nchan=None, # removed - possible complist issues
-    startfreq=None, chanwidth=None,
-    refdate=None, totaltime=None, integration=None, 
-    scanlength=None, # will be removed
-    direction=None, pointingspacing=None, mosaicsize=None, # plotfield=None,
-    caldirection=None, calflux=None,
-    checkinputs=None, # will be removed
-#predict=None, 
-    antennalist=None, 
-#    ptgfile=None, plotuv=None, plotconfig=None,
-#process=None, 
-    noise_thermal=None, 
-    noise_mode=None, #will be removed
-    user_pwv=None, t_ground=None, t_sky=None, tau0=None, 
-    cross_pol=None,
-#image=None, 
-#    cleanmode=None,
-    cell=None, imsize=None, threshold=None, niter=None, 
-    # weighting=None, outertaper=None, stokes=None, 
-    psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, # will be removed
-#    plotimage=None, cleanresidual=None, 
-#analyze=None, 
-#    imagename=None, originalsky=None, convolvedsky=None, difference=None, 
-    fidelity=None, 
-    display=None, # will be removed
-#    plotpsf=None
-    verbose=None, async=False
-    ):
 
+def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, complist=None, antennalist=None, plotfield=None, predict=None, ptgfile=None, project=None, refdate=None, totaltime=None, integration=None, scanlength=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, noise_mode=None, user_pwv=None, t_ground=None, t_sky=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
 
 
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
 
+    # this is the output desired bandwidth:
+    bandwidth=qa.mul(qa.quantity(nchan),qa.quantity(chanwidth))
+
     # create the utility object:
-    util=simutil(direction)
+    util=simutil(direction,startfreq=qa.quantity(startfreq),
+                 bandwidth=bandwidth)
     if verbose: util.verbose=True
     msg=util.msg
     
+    msg("this task is a mockup for testing",priority="error")
+    return False
+
     if((not os.path.exists(modelimage)) and (not os.path.exists(complist))):
         msg("No sky input found.  At least one of modelimage or complist must be set.",priority="error")
         return
     
     try:
 
-        ##################################################################
-        # determine where the observation will occur:
-        nfld, pointings, etime = util.calc_pointings(pointingspacing,mosaicsize,direction)
-
-        # find imcenter - phase center
-        imcenter , offsets = util.average_direction(pointings)        
-        epoch, ra, dec = util.direction_splitter(imcenter)
-
-        # for clean
-        msg("phase center = " + imcenter)
-        if nfld==1:
-            imagermode=''
-            ftmachine="ft"        
-        else:
-            imagermode="mosaic"
-            ftmachine="ft"   # FOR CARMA/heterogeneous, has to be mosaic
-            if verbose: 
-                for dir in pointings:
-                    msg("   "+dir)
+        nbands = 1;    
+        fband  = 'band'+startfreq
+        msfile=project+'.ms'
 
         ##################################################################
-        # calibrator
-        calfluxjy=qa.convert(calflux,'Jy')['value']
-        # stupid XML:
-        if type(caldirection)==type([]): caldirection=caldirection[0]
-        if len(caldirection)<4: caldirection=""
-        if calfluxjy > 0 and caldirection != "":            
-            docalibrator=True
-            cl.done()
-            cl.addcomponent(flux=calfluxjy,dir=caldirection,label="phase calibrator")
-            # in principle, need reference freq - defaults to 0!
-            cl.rename(project+'.cal.cclist')
-            cl.done()
-        else:
-            docalibrator=False
+        # read antenna file:
 
-        #########################################################
-        # input cell size (only used in setup if ignorecoord=T)
+        stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
+        if stnx==False:
+            return
+        antnames=[]
+        for k in range(0,nant): antnames.append('A%02d'%k)
+        aveant=stnd.mean()
 
-        if cell=="incell":
-            if ignorecoord:
+        # (set back to simdata after calls to util -
+        #   there must be an automatic way to do this)
+        casalog.origin('simdata')
+
+
+
+
+
+
+        ##################################################################
+        # if needed, make a model image from the input clean component list
+        # (make it the desired 4d output shape)
+        # visibilities will be calculated from the component list - this
+        # image is just for display and fidelity
+
+        if (modelimage == ''):
+            
+            if cell=="incell":
                 msg("You can't use the input header for the pixel size if you don't have an input header!",priority="error")
                 return False
             else:
-                in_cell=qa.quantity('0arcsec')
-                in_cell=[in_cell,in_cell]
-        else:
-            if type(cell) == type([]):
-                in_cell =  map(qa.convert,cell,['arcsec','arcsec'])
-            else:
-                in_cell = qa.convert(cell,'arcsec')            
-                in_cell = [in_cell,in_cell]
-        
-
-        #####################
-        # create image from components - this is used in checkinputs, 
-        # and analysis, but not really for much else
-
-        if (modelimage == ''):
+                out_cell=qa.convert(cell,'arcsec')
+                
             # if we are going to create an image we need a shape:
             if imsize.__len__()==1:
                 imsize=[imsize,imsize]            
             out_nstk=stokes.__len__()
-            # RI TODO ***** need to find nchan from components?!!!
-            nchan=1
             out_shape=[imsize[0],imsize[1],out_nstk,nchan]
             
             if verbose: msg("creating an image from your clean components",origin="setup model")
@@ -142,7 +94,7 @@ def simdata(
             # use output cell size to create model image:
             # this is okay - if none of the clean components fit in the output
             # image, then the simulated image will be blank.  user error.
-            cell_rad=qa.convert(qa.quantity(in_cell),"rad")['value']
+            cell_rad=qa.convert(qa.quantity(out_cell),"rad")['value']
             cs.setincrement([cell_rad,cell_rad],'direction')
             #cs.setlineartransform('direction',pl.array([[-1,0],[0,1]]))
             cs.setreferencevalue([qa.convert(ra,'rad')['value']
@@ -159,9 +111,75 @@ def simdata(
             components_only=False
 
 
- 
-        ###########################################################
-        # convert original model image to 4d shape:        
+
+
+
+        ##################################################################
+        # convert original model image to 4d shape:
+
+        out_cell=cell
+        # if cell="incell", this will be changed to an
+        # actual value by simutil.image4d below
+
+
+        if not ignorecoord:
+            # we are going to use the input coordinate system, so we
+            # don't calculate pointings until we know the input pixel
+            # size.
+            # image4d will return in_cell and out_cell
+            in_cell='0arcsec'
+            ra=qa.quantity("0.deg")
+            dec=qa.quantity("0.deg")
+        else:
+            # if we're ignoreing coord, then we need to calculate where
+            # the pointings will be now, to move the model image there
+            
+            if cell=="incell":
+                msg("You can't use the input header for the pixel size and also ignore the input header information!",priority="error")
+                return False
+            else:
+                in_cell=qa.convert(cell,'arcsec')
+
+            if type(out_cell) == list:
+                cellx, celly = map(qa.quantity, out_cell)
+            else:
+                cellx = qa.quantity(out_cell)
+                celly = cellx
+
+            out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
+
+            if type(direction) == list:
+                # manually specified pointings            
+                nfld = direction.__len__()
+                if nfld > 1 :
+                    pointings = direction
+                    if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction",priority="warn")
+                else:
+                    # calculate pointings for the user 
+                    nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+            else:
+                # check here if "direction" is a filename, and load it in that case
+                # util.read_pointings(filename)
+                # calculate pointings for the user 
+                nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+            
+                
+            # find imcenter=average central point, and centralpointing
+            # (to be used for phase center)
+            imcenter , offsets = util.average_direction(pointings)
+
+            minoff=1e10
+            central=-1
+        
+            for i in range(nfld):
+                o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
+                if o<minoff:
+                    minoff=o
+                    central=i
+            centralpointing=pointings[central]
+            
+            epoch, ra, dec = util.direction_splitter(centralpointing)
+            
 
         # truncate model image name to craete new images in current dir:
         (modelimage_path,modelimage_local) = os.path.split(os.path.normpath(modelimage))
@@ -174,53 +192,102 @@ def simdata(
             modelimage_local=modelimage_local.replace(".fit","")
 
         # recast into 4d form
-        modelimage4d=project+"."+modelimage_local+'.coord'
+        modelimage4d=project+"."+modelimage_local+'.coord'        
         # need this filename whether or not we create the output image
-        modelregrid=project+"."+modelimage_local+".flat"
+        modelregrid=project+"."+modelimage_local+".flat"        
         # modelflat should be the moment zero of that
-        modelflat=project+"."+modelimage_local+".flat0"
+        modelflat=project+"."+modelimage_local+".flat0" 
 
-        (ra,dec,model_cell,nchan,startfreq,chanwidth,
-         model_stokes) = util.image4d(modelimage,modelimage4d,
-                                      inbright,ignorecoord,
-                                      ra,dec,in_cell,startfreq,chanwidth,
-                                      flatimage=modelflat)
-        # nchan freq etc used in predict
+        # this will get set by image4d if required
+        out_nstk=1
+
+        # *** ra is expected and returned in angular quantity/dict
+        (ra,dec,in_cell,out_cell,
+         nchan,startfreq,chanwidth,bandwidth,
+         out_nstk) = util.image4d(modelimage,modelimage4d,
+                                  inbright,ignorecoord,
+                                  ra,dec,
+                                  in_cell,out_cell,
+                                  nchan,startfreq,chanwidth,bandwidth,
+                                  out_nstk,
+                                  flatimage=modelflat)
+        
+        # (set back to simdata after calls to util)
         casalog.origin('simdata')
 
-        # out_cell will get used in clean
-        # in_cell was defined above from cell, and not overridden
-        if cell=="incell":
-            if ignorecoord:
-                print "you should not be here"
-            else:
-                out_cell=model_cell
-        else:
-            out_cell=in_cell
-        
-        # set startfeq and bandwidtg in util object after treating model image
-        bandwidth=qa.mul(qa.quantity(nchan),qa.quantity(chanwidth))
-        util.bandwidth=bandwidth
+        if verbose:
+            out_shape=[imsize[0],imsize[1],out_nstk,nchan]
+            msg("simulated image desired shape= %s" % out_shape,origin="setup model")
+            msg("simulated image desired center= %f %f" % (qa.convert(ra,"deg")['value'],qa.convert(dec,"deg")['value']),origin="setup model")
+
+
 
 
         ##################################################################
-        # read antenna file (goes to predict in simdata2)
+        # set imcenter to the center of the mosaic
+        # in clean, we also set to phase center; cleaning with no pointing
+        # at phase center causes issues
 
-        stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
-        if stnx==False:
-            return
-        antnames=[]
-        for k in range(0,nant): antnames.append('A%02d'%k)
-        aveant=stnd.mean()
+        if type(out_cell) == list:
+            cellx, celly = map(qa.quantity, out_cell)
+        else:
+            cellx = qa.quantity(out_cell)
+            celly = cellx
+        
+        out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
 
-        # (set back to simdata - there must be an automatic way to do this)
+        if type(direction) == list:
+            # manually specified pointings            
+            nfld = direction.__len__()
+            if nfld > 1 :
+                pointings = direction
+                if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction",priority="warn")
+            else:
+                # calculate pointings for the user 
+                nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+        else:
+            # check here if "direction" is a filename, and load it in that case
+            # util.read_pointings(filename)
+            # calculate pointings for the user 
+            nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
+            
+                
+
+        # find imcenter=average central point, and centralpointing
+        # (to be used for phase center)
+        imcenter , offsets = util.average_direction(pointings)
+
+        minoff=1e10
+        central=-1
+        
+        for i in range(nfld):
+            o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
+            if o<minoff:
+                minoff=o
+                central=i
+        centralpointing=pointings[central]
+            
+        # (set back to simdata after calls to util)
         casalog.origin('simdata')
+
+        if nfld==1:
+            imagermode=''
+            ftmachine="ft"
+            msg("phase center = " + centralpointing)
+        else:
+            imagermode="mosaic"
+            ftmachine="mosaic"
+            msg("mosaic center = " + imcenter + "; phase center = " + centralpointing)
+            if verbose: 
+                for dir in pointings:
+                    msg("   "+dir)
 
 
 
         ##################################################################
         # check inputs - need to add atmospheric window, better display of
         # where the actual observation block lies on the ephemeris window
+        # RI todo this should use modelflat
         
         if checkinputs=="yes" or checkinputs=="only":
             currfignum=0
@@ -228,10 +295,9 @@ def simdata(
             pl.ion()
             pl.clf()
             pl.subplot(121)
-#            model_min,model_max, model_rms = util.statim(modelimage,plot=display,incell=model_cell)
-            model_min,model_max, model_rms = util.statim(modelflat,plot=display,incell=model_cell)
+            model_min,model_max, model_rms = util.statim(modelimage,plot=display,incell=in_cell)
             lims=pl.xlim(),pl.ylim()
-            tt=pl.array(range(25))*pl.pi/12            
+            tt=pl.array(range(25))*pl.pi/12
             pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
             if max(max(lims)) > pb/2:
                 plotcolor='w'
@@ -251,11 +317,13 @@ def simdata(
             
             pl.subplot(224)
             util.plotants(stnx, stny, stnz, stnd, padnames)
+#            pl.plot(range(2),'o')
             ax=pl.gca()
             l=ax.get_xticklabels()
             pl.setp(l,fontsize="x-small")
             l=ax.get_yticklabels()
             pl.setp(l,fontsize="x-small")
+#            pl.xlabel("coming soon",fontsize="x-small")
             pl.xlabel(telescopename,fontsize="x-small")
             
             pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
@@ -268,7 +336,7 @@ def simdata(
                     pl.figure(currfignum+1)
                     pl.clf()
         else:
-            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=model_cell)
+            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=in_cell)
 
 
 
@@ -280,10 +348,6 @@ def simdata(
         if verbose:
             msg("preparing empty measurement set",priority="warn")
 
-        nbands = 1;    
-        fband  = 'band'+startfreq
-        msfile=project+'.ms'
-
         sm.open(msfile)
         posobs=me.observatory(telescopename)
         diam=stnd;
@@ -291,6 +355,8 @@ def simdata(
                  dishdiameter=diam.tolist(), 
                  mount=['alt-az'], antname=antnames, padname=padnames, 
                  coordsystem='global', referencelocation=posobs)
+        # sm.setspwindow now expects startfreq as argument
+        # midfreq=qa.add(qa.quantity(startfreq),qa.div(bandwidth,qa.quantity("2")))
         if str.upper(telescopename).find('VLA')>0:
             sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
                            freqresolution=chanwidth, nchannels=nchan, 
@@ -308,13 +374,7 @@ def simdata(
         for k in range(0,nfld):
             src=project+'_%d'%k
             sm.setfield(sourcename=src, sourcedirection=pointings[k],
-                    calcode="OBJ", distance='0m')
-            if k==0:
-                sourcefieldlist=src
-            else:
-                sourcefieldlist=sourcefieldlist+','+src
-        if docalibrator:
-            sm.setfield(sourcename="phase calibrator", sourcedirection=caldirection,calcode='C',distance='0m')
+                    calcode="C", distance='0m')
         reftime = me.epoch('TAI', refdate)
         sm.settimes(integrationtime=integration, usehourangle=True, 
                 referencetime=reftime)
@@ -330,20 +390,16 @@ def simdata(
             sttime=-totalsec/2.0+scansec*k
             endtime=sttime+scansec
             src=project+'_%d'%kfld
+#        for k in range(0,nfld) :
+#            sttime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*k
+#            endtime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*(k+1)
+#            src=project+'_%d'%k
             # this only creates blank uv entries
             sm.observe(sourcename=src, spwname=fband,
                    starttime=qa.quantity(sttime, "s"),
                    stoptime=qa.quantity(endtime, "s"));
             kfld=kfld+1
-            if kfld==nfld: 
-                if docalibrator:
-                    sttime=-totalsec/2.0+scansec*k
-                    endtime=sttime+scansec
-                    sm.observe(sourcename="phase calibrator", spwname=fband,
-                               starttime=qa.quantity(sttime, "s"),
-                               stoptime=qa.quantity(endtime, "s"));
-                kfld=kfld+1
-            if kfld > nfld: kfld=0
+            if kfld==nfld: kfld=0
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
 
@@ -512,110 +568,38 @@ def simdata(
             cleanmode="channel"
         
         # print clean inputs no matter what, so user can use them.
-        # and write a clean.last file
-        cleanlast=open("clean.last","write")
-        cleanlast.write('taskname            = "clean"\n')
-
         msg("clean inputs:",origin="deconvolve")
         cleanstr="clean(vis='"+mstoimage+"',imagename='"+image+"'"
         #+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',"
-        cleanlast.write('vis                 = "'+mstoimage+'"\n')
-        cleanlast.write('imagename           = "'+image+'"\n')
-        cleanlast.write('outlierfile         = ""\n')
-        if docalibrator:
-            cleanlast.write('field               = "'+sourcefieldlist+'"\n')
-        else:
-            cleanlast.write('field               = ""\n')
-        cleanlast.write('spw                 = ""\n')
-        cleanlast.write('selectdata          = False\n')
-        cleanlast.write('timerange           = ""\n')
-        cleanlast.write('uvrange             = ""\n')
-        cleanlast.write('antenna             = ""\n')
-        cleanlast.write('scan                = ""\n')
         if nchan>1:
             cleanstr=cleanstr+",mode='"+cleanmode+"',nchan="+str(nchan)
-            cleanlast.write('mode                = "'+cleanmode+'"\n')
-            cleanlast.write('nchan               = "'+str(nchan)+'"\n')
-        else:
-            cleanlast.write('mode                = "mfs"\n')
-            cleanlast.write('nchan               = -1\n')
-        cleanlast.write('gridmode                = ""\n')
-        cleanlast.write('wprojplanes             = 1\n')
-        cleanlast.write('facets                  = 1\n')
-        cleanlast.write('cfcache                 = "cfcache.dir"\n')
-        cleanlast.write('painc                   = 360.0\n')
-        cleanlast.write('epjtable                = ""\n')
-        cleanlast.write('interpolation           = "nearest"\n')
         cleanstr=cleanstr+",niter="+str(niter)
-        cleanlast.write('niter                   = '+str(niter)+'\n')
-        cleanlast.write('gain                    = 0.1\n')
         #+",gain=0.1,"
         cleanstr=cleanstr+",threshold='"+str(threshold)+"'"
-        cleanlast.write('threshold               = "'+str(threshold)+'"\n')
         if doclean and psfmode!="clark":
             cleanstr=cleanstr+",psfmode='"+psfmode+"'"
-        if doclean:
-            cleanlast.write('psfmode                 = "'+psfmode+'"\n')
         if imagermode != "":
             cleanstr=cleanstr+",imagermode='"+imagermode+"'"
-        cleanlast.write('imagermode              = "'+imagermode+'"\n')
         cleanstr=cleanstr+",ftmachine='"+ftmachine+"'"
-        cleanlast.write('ftmachine               = "'+ftmachine+'"\n')
-        cleanlast.write('mosweight               = False\n')
-        cleanlast.write('scaletype               = "SAULT"\n')
-        cleanlast.write('multiscale              = []\n')
-        cleanlast.write('negcomponent            = -1\n')
-        cleanlast.write('smallscalebias          = 0.6\n')
-        cleanlast.write('interactive             = False\n')
-        cleanlast.write('mask                    = []\n')
-        cleanlast.write('start                   = 0\n')
-        cleanlast.write('width                   = 1\n')
-        cleanlast.write('outframe                = ""\n')
-        cleanlast.write('veltype                 = "radio"\n')
         #",ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],start=0,width=1,"
-        cleanstr=cleanstr+",imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(imcenter)+"'"
-        cleanlast.write('imsize                  = '+str(imsize)+'\n');
-        cleanlast.write('cell                    = "'+str(cell)+'"\n');
-        cleanlast.write('phasecenter             = "'+str(imcenter)+'"\n');
-        cleanlast.write('restfreq                = ""\n');
+        cleanstr=cleanstr+",imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"'"
         #",restfreq=''"
         if stokes != "I":
             cleanstr=cleanstr+",stokes='"+stokes+"'"
-        cleanlast.write('stokes                  = "'+stokes+'"\n');
-        cleanlast.write('weighting               = "'+weighting+'"\n');
         if weighting != "natural":
             cleanstr=cleanstr+",weighting='"+weighting+"',robust="+str(robust)+",noise='"+str(noise)+"',npixels="+str(npixels)
-        cleanlast.write('robust                  = '+str(robust)+'\n');
-        cleanlast.write('uvtaper                 = '+str(uvtaper)+'\n');
         if uvtaper:
             cleanstr=cleanstr+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)
-        cleanlast.write('outertaper              = "'+str(outertaper)+'"\n');
-        cleanlast.write('innertaper              = "'+str(innertaper)+'"\n');
-        cleanlast.write('modelimage              = ""\n');
-        cleanlast.write("restoringbeam           = ['']\n");
-        cleanlast.write("pbcor                   = False\n");
-        cleanlast.write("minpb                   = 0.1\n");
-        cleanlast.write("calready                = True\n");
-        cleanlast.write('noise                   = "'+str(noise)+'"\n');
-        cleanlast.write('npixels                 = '+str(npixels)+'\n');
-        cleanlast.write('npercycle               = 100\n');
-        cleanlast.write('cyclefactor             = 1.5\n');
-        cleanlast.write('cyclespeedup            = -1\n');
-        cleanlast.write('nterms                  = 1\n');
-        cleanlast.write('reffreq                 = ""\n');
-        cleanlast.write('chaniter                = False\n');
         #+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,"        
         #+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
         cleanstr=cleanstr+")"
         msg(cleanstr,origin="deconvolve")
-        cleanlast.write("#"+cleanstr+"\n")
-        cleanlast.close()
 
         if doclean: 
             clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
                   niter=niter, threshold=threshold, selectdata=False,
                   psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
-                  imsize=imsize, cell=cell, phasecenter=imcenter,
+                  imsize=imsize, cell=cell, phasecenter=centralpointing,
                   stokes=stokes, weighting=weighting, robust=robust,
                   uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,
                   noise=noise, npixels=npixels)
@@ -664,6 +648,7 @@ def simdata(
                 foo.done()
                 po.done()
                 shutil.rmtree(outflat+".tmp")
+
             # be sure to get outflatcoordsys from outflat
             ia.open(outflat)
             outflatcoordsys=ia.coordsys()
@@ -717,17 +702,10 @@ def simdata(
             ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                           pa=beam['positionangle'],overwrite=True)
 
-            # imagecalc is interpreting outflat in Jy/pix - 
-            # the diff is v. negative.
-            # need to convert the clean image into Jy/pix.  
-            bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-            bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
-#            ia.open(outflat)
-#            ia.setbrightnessunit("Jy/pixel")
-#            ia.image
             # Make difference image.
             difference = project + '.diff.im'
-            ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
+            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
+            ia.done()
             # Get rms of difference image.
             ia.open(difference)
             diffstats = ia.statistics(robust = True)
@@ -765,10 +743,8 @@ def simdata(
             else:
                 pl.subplot(222)
         if doclean:
-            max_cleanim=[] # mutable so can be returned
-            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim)
-            # max_cleanim returned in outflat units i.e. Jy/bm > jy/pix
-            max_cleanim[0]/=bmarea
+            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display)
+
         # plot model image if exists
         if os.path.exists(modelimage) and display==True:
             if fidelity == True:
@@ -793,8 +769,8 @@ def simdata(
             
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
-                if display: pl.subplot(233)                
-                util.statim(project+".diff.im",plot=display,disprange=max_cleanim)
+                if display: pl.subplot(233)
+                util.statim(project+".diff.im",plot=display)
                 if display: pl.subplot(234)
                 fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display)
 
@@ -860,7 +836,7 @@ def simdata(
         # if not displaying still print stats:
         if doclean:
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-            bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
+            bmarea=bmarea/(out_cell['value'])**2 # bm area in pix
             msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
                 str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
             msg('Simulation max: '+str(sim_max)+" Jy/pix = "+

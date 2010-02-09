@@ -5,29 +5,130 @@ import asap as sd
 from taskinit import * 
 from simutil import *
 
-#def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, tau0, verbose):
-def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, tau0, verbose):
+#def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, tau0, verbose):
+
+
+def sdsim(
+    project=None, 
+#setup=None, 
+#    complist=None, 
+    modelimage=None, inbright=None, ignorecoord=None,
+    # nchan=None, # removed - possible complist issues
+    startfreq=None, chanwidth=None,
+    refdate=None, totaltime=None, integration=None, 
+    scanlength=None, # will be removed
+    direction=None, pointingspacing=None, mosaicsize=None, # plotfield=None,
+#    caldirection=None, calflux=None,
+#    checkinputs=None, # will be removed
+#predict=None, 
+    antennalist=None, 
+    antenna=None,
+#    ptgfile=None, plotuv=None, plotconfig=None,
+#process=None, 
+    noise_thermal=None, 
+    noise_mode=None, #will be removed
+    user_pwv=None, t_ground=None, t_sky=None, tau0=None, 
+#    cross_pol=None,
+#image=None, 
+#    cleanmode=None,
+    cell=None, imsize=None, threshold=None, niter=None, 
+#    weighting=None, outertaper=None, 
+     stokes=None, 
+#    psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, # will be removed
+#    plotimage=None, cleanresidual=None, 
+#analyze=None, 
+#    imagename=None, originalsky=None, convolvedsky=None, difference=None, 
+#    fidelity=None, 
+#    display=None, # will be removed
+#    plotpsf=None
+    verbose=None, async=False
+    ):
+
 
     casalog.origin('sdsim')
     if verbose: casalog.filter(level="DEBUG2")
 
     try:
 
-        # this is the output desired bandwidth:
-        bandwidth=qa.mul(qa.quantity(nchan), qa.quantity(chanwidth))
-
         # create the utility object:
         util=simutil(direction,startfreq=qa.quantity(startfreq),
-                     bandwidth=bandwidth, verbose=verbose)
+                     verbose=verbose)
         msg=util.msg
 
         # file check 
         if not os.path.exists(modelimage):
             msg("modelimage '%s' is not found." % modelimage,priority="error")
+            
+        ##################################################################
+        # determine where the observation will occur:
+        nfld, pointings, etime = util.calc_pointings(pointingspacing,mosaicsize,direction)
 
-        nbands = 1
-        fband = 'band'+startfreq
-        msfile = project+'.ms'
+        # find imcenter - phase center
+        imcenter , offsets = util.average_direction(pointings)        
+        epoch, ra, dec = util.direction_splitter(imcenter)
+
+        #########################################################
+        # input cell size (only used in setup if ignorecoord=T)
+
+        if cell=="incell":
+            if ignorecoord:
+                msg("You can't use the input header for the pixel size if you don't have an input header!",priority="error")
+                return False
+            else:
+                in_cell=qa.quantity('0arcsec')
+                in_cell=[in_cell,in_cell]
+        else:
+            if type(cell) == type([]):
+                in_cell =  map(qa.convert,cell,['arcsec','arcsec'])
+            else:
+                in_cell = qa.convert(cell,'arcsec')            
+                in_cell = [in_cell,in_cell]
+        
+
+        #####
+        # simulate from components here?
+
+        ###########################################################
+        # convert original model image to 4d shape:        
+
+        # truncate model image name to craete new images in current dir:
+        (modelimage_path,modelimage_local) = os.path.split(os.path.normpath(modelimage))
+        modelimage_local=modelimage_local.strip()
+        if modelimage_local.endswith(".fits"):
+            modelimage_local=modelimage_local.replace(".fits","")
+        if modelimage_local.endswith(".FITS"):
+            modelimage_local=modelimage_local.replace(".FITS","")
+        if modelimage_local.endswith(".fit"):
+            modelimage_local=modelimage_local.replace(".fit","")
+
+        # recast into 4d form
+        modelimage4d=project+"."+modelimage_local+'.coord'
+        # need this filename whether or not we create the output image
+        modelregrid=project+"."+modelimage_local+".flat"
+        # modelflat should be the moment zero of that
+        modelflat=project+"."+modelimage_local+".flat0"
+
+        (ra,dec,model_cell,nchan,startfreq,chanwidth,
+         model_stokes) = util.image4d(modelimage,modelimage4d,
+                                      inbright,ignorecoord,
+                                      ra,dec,in_cell,startfreq,chanwidth,
+                                      flatimage=modelflat)
+        # nchan freq etc used in predict
+        casalog.origin('simdata')
+
+        # out_cell will get used in clean
+        # in_cell was defined above from cell, and not overridden
+        if cell=="incell":
+            if ignorecoord:
+                print "you should not be here"
+            else:
+                out_cell=model_cell
+        else:
+            out_cell=in_cell
+        
+        # set startfeq and bandwidtg in util object after treating model image
+        bandwidth=qa.mul(qa.quantity(nchan),qa.quantity(chanwidth))
+        util.bandwidth=bandwidth
 
 
         ##################################################################
@@ -52,188 +153,11 @@ def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, ref
         nant = 1
         aveant=stnd
 
-        # (set back to simdata after calls to util -
-        #   there must be an automatic way to do this)
+        # (set back to simdata - there must be an automatic way to do this)
         casalog.origin('simdata')
 
-        ##################################################################
-        # convert original model image to 4d shape:
 
-        out_cell=cell
-        # if cell="incell", this will be changed to an
-        # actual value by simutil.image4d below
-
-        if not ignorecoord:
-            # we are going to use the input coordinate system, so we
-            # don't calculate pointings until we know the input pixel
-            # size.
-            # image4d will return in_cell and out_cell
-            in_cell='0arcsec'
-            ra=qa.quantity("0.deg")
-            dec=qa.quantity("0.deg")
-        else:
-            # if we're ignoreing coord, then we need to calculate where
-            # the pointings will be now, to move the model image there
-            
-            if cell=="incell":
-                msg("You can't use the input header for the pixel size and also ignore the input header information!",priority="error")
-                return False
-            else:
-                in_cell=qa.convert(cell,'arcsec')
-
-            if type(out_cell) == list:
-                cellx, celly = map(qa.quantity, out_cell)
-            else:
-                cellx = qa.quantity(out_cell)
-                celly = cellx
-
-            out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
-
-            # direction is always a list of strings (defined by .xml)
-            if len(direction) == 1: direction=direction[0]
-            if type(direction) == str:
-                # Assume direction as a filename and read lines if it exists
-                filename=os.path.expanduser(os.path.expandvars(direction))
-                if os.path.exists(filename):
-                    msg('Reading direction information from the file, %s' % filename)
-                    n, direction, time = util.read_pointings(filename)
-
-            nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-                
-            # find imcenter=average central point or direction (for single dish)
-            # (to be used for phase center)
-            if type(direction) == list:
-                imcenter , offsets = util.average_direction(pointings)
-            else:
-                imcenter = direction
-
-            ## commenting out because sd obs don't need centralpointing
-#             minoff=1e10
-#             central=-1
-        
-#             for i in range(nfld):
-#                 o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
-#                 if o<minoff:
-#                     minoff=o
-#                     central=i
-#             centralpointing=pointings[central]
-            
-            #epoch, ra, dec = util.direction_splitter(centralpointing)
-            epoch, ra, dec = util.direction_splitter(imcenter)
-            
-
-        # truncate model image name to craete new images in current dir:
-        (modelimage_path,modelimage_local) = os.path.split(os.path.normpath(modelimage))
-        modelimage_local=modelimage_local.strip()
-        if modelimage_local.endswith(".fits"):
-            modelimage_local=modelimage_local.replace(".fits","")
-        if modelimage_local.endswith(".FITS"):
-            modelimage_local=modelimage_local.replace(".FITS","")
-        if modelimage_local.endswith(".fit"):
-            modelimage_local=modelimage_local.replace(".fit","")
-
-        # recast into 4d form
-        modelimage4d=project+"."+modelimage_local+'.coord'        
-        # need this filename whether or not we create the output image
-        modelregrid=project+"."+modelimage_local+".flat"        
-        # modelflat should be the moment zero of that
-        modelflat=project+"."+modelimage_local+".flat0" 
-
-        # this will get set by image4d if required
-        out_nstk=1
-
-        # *** ra is expected and returned in angular quantity/dict
-        (ra,dec,in_cell,out_cell,
-         nchan,startfreq,chanwidth,bandwidth,
-         out_nstk) = util.image4d(modelimage,modelimage4d,
-                                  inbright,ignorecoord,
-                                  ra,dec,
-                                  in_cell,out_cell,
-                                  nchan,startfreq,chanwidth,bandwidth,
-                                  out_nstk,
-                                  flatimage=modelflat)
-        
-        # (set back to simdata after calls to util)
-        casalog.origin('simdata')
-
-        if verbose:
-            out_shape=[imsize[0],imsize[1],out_nstk,nchan]
-            msg("simulated image desired shape= %s" % out_shape,origin="setup model")
-            msg("simulated image desired center= %f %f" % (qa.convert(ra,"deg")['value'],qa.convert(dec,"deg")['value']),origin="setup model")
-
-
-
-
-        ##################################################################
-        # set imcenter to the center of the mosaic
-        # in clean, we also set to phase center; cleaning with no pointing
-        # at phase center causes issues
-
-        if type(out_cell) == list:
-            cellx, celly = map(qa.quantity, out_cell)
-        else:
-            cellx = qa.quantity(out_cell)
-            celly = cellx
-            
-        out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
-
-#         if type(direction) == list:
-#             # manually specified pointings            
-#             nfld = direction.__len__()
-#             if nfld > 1 :
-#                 pointings = direction
-#                 if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction")
-#             else:
-#                 # calculate pointings for the user 
-#                 nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-#         else:
-#             # check here if "direction" is a filename, and load it in that case
-#             # util.read_pointings(filename)
-#             # calculate pointings for the user 
-#             nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-
-        # direction is always a list of strings (defined by .xml)
-        if len(direction) == 1: direction=direction[0]
-        if type(direction) == str:
-            # Assume direction as a filename and read lines if it exists
-            filename=os.path.expanduser(os.path.expandvars(direction))
-            if os.path.exists(filename):
-                msg('Reading direction information from the file, %s' % filename)
-                n, direction, time = util.read_pointings(filename)
-
-        nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-            
-                
-
-        # find imcenter=average central point or direction (for single dish)
-        # (to be used for phase center)
-        if type(direction) == list:
-            imcenter , offsets = util.average_direction(pointings)
-        else:
-            imcenter = direction
-
-        ## commenting out this part because sd obs don't need centralpointing
-#         minoff=1e10
-#         central=-1
-        
-#         for i in range(nfld):
-#             o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
-#             if o<minoff:
-#                 minoff=o
-#                 central=i
-#         centralpointing=pointings[central]
-            
-        # (set back to simdata after calls to util)
-        casalog.origin('simdata')
-
-#         if nfld==1:
-#             imagermode=''
-#             ftmachine="ft"
-#             msg("phase center = " + centralpointing)
-#         else:
-#             imagermode="mosaic"
-#             ftmachine="mosaic"
-#             msg("mosaic center = " + imcenter + "; phase center = " + centralpointing)
+        # move this to "image" section?
         ## For single dish simulation
         imagermode=''
         ftmachine="sd"
@@ -249,6 +173,10 @@ def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, ref
         
         if verbose:
             msg("preparing empty measurement set",priority="warn")
+
+        nbands = 1
+        fband = 'band'+startfreq
+        msfile = project+'.ms'
 
         sm.open(msfile)
         posobs=me.observatory(telescopename)
@@ -398,7 +326,7 @@ def sdsim(modelimage, ignorecoord, inbright, antennalist, antenna,  project, ref
             
             sm.openfromms(noisymsfile);    # an existing MS
             sm.setdata(fieldid=range(0,nfld))
-            sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
+            #sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
             # SimACohCalc needs 2-temp formula not just t_atm
             #sm.setnoise(mode="calculate",table=noisymsroot,
             #            antefficiency=eta_a,correfficiency=eta_q,
