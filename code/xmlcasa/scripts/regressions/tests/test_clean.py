@@ -20,7 +20,7 @@ class clean_test(unittest.TestCase):
 #            pass
 #        else:
 #            shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
-#                            '/data/regression/smoothcal/'+self.msfile, self.msfile)
+#                            '/data/unittests/clean/'+self.msfile, self.msfile)
         shutil.copytree('/Users/scastro/casadir/utests/clean/data/'+self.msfile, self.msfile)
         
         
@@ -56,7 +56,7 @@ class clean_test(unittest.TestCase):
     def test5(self):
         """Test5: Wrong spw value"""
         output = 'cleantest5.im'
-        results = clean(vis=self.msfile,imagename=output,spw=10)
+        self.failUnlessRaises(Exception, clean(vis=self.msfile,imagename=output,spw=10))
         
     def test6(self):
         """Test6: Empty mode value"""
@@ -71,70 +71,74 @@ class clean_test(unittest.TestCase):
         self.assertFalse(results)
         
     def test8(self):
-        """Test8: Wrong niter type"""
+        """Test8: Test gridmode=widefield"""
         output = 'cleantest8.im'
+        results = clean(vis=self.msfile,imagename=output,gridmode='widefield')
+        self.assertEqual(results, None)
+ 
+    #FIXME: catch error
+    def test9(self):
+        """Test8: Test gridmode=aprojection"""
+        output = 'cleantest9.im'
+        self.failUnlessRaises(Exception, clean(vis=self.msfile,imagename=output,
+                                               gridmode='aprojection'))
+        pass
+                 
+    def test10(self):
+        """Test10: Wrong niter type"""
+        output = 'cleantest10.im'
         results = clean(vis=self.msfile,imagename=output,niter='1')
         self.assertFalse(results)
         
+    def test11(self):
+        """Test11: Unsupported psfmode"""
+        output = 'cleantest11.im'
+        results = clean(vis=self.msfile,imagename=output,psfmode='psf')
+        self.assertFalse(results)
+        
+    def test12(self):
+        """Test12: Test psfmode=clark"""
+        output = 'cleantest12.im'
+        results = clean(vis=self.msfile,imagename=output,psfmode='clark')
+        self.assertEqual(results, None)
        
- 
+    def test13(self):
+        """Test13: Test psfmode=hogbom"""
+        output = 'cleantest13.im'
+        results = clean(vis=self.msfile,imagename=output,psfmode='hogbom')
+        self.assertEqual(results, None)
+       
+    def test14(self):
+        """Test14: Test psfmode=clarkstokes"""
+        output = 'cleantest14.im'
+        results = clean(vis=self.msfile,imagename=output,psfmode='clarkstokes')
+        self.assertEqual(results, None)
+
+    def test15(self):
+        """Test15: Unsupported imagermode"""
+        output = 'cleantest15.im'
+        results = clean(vis=self.msfile,imagename=output,imagermode='clark')
+        self.assertFalse(results)
+
+    def test16(self):
+        """Test16: Test imagermode=csclean"""
+        output = 'cleantest16.im'
+        results = clean(vis=self.msfile,imagename=output,imagermode='csclean')
+        self.assertEqual(results, None)
+
+    def test17(self):
+        """Test17: Test imagermode=mosaic"""
+        output = 'cleantest17.im'
+        results = clean(vis=self.msfile,imagename=output,imagermode='mosaic')
+        self.assertEqual(results, None)
+
+#    FIXME: Catch exception
+    def test18(self):
+        """Test18: Zero value of imsize"""
+        output = 'cleantest18.im'
+        self.failUnlessRaises(Exception, clean(vis=self.msfile,imagename=output,imsize=0))
 
 
-#    def test_execution_failure(self):
-#        raise Exception("die")
-#
-#    def test_r_r_1(self):
-#        "test revision vs revision"
-#        a = "CASA Version 3.0.1 (r10006)"
-#        b = "CASA Version 3.0.1 (r9933)"
-#
-#        self.order(b, a)
-#
-#    def test_r_r_2(self):
-#        a = "CASA Version 3.0.1 (r9936)"
-#        b = "CASA Version 3.0.1 (r9933)"
-#
-#        self.order(b, a)
-#
-#    def test_r_r_3(self):
-#        a = "CASA Version 3.0.0 (r9888)"
-#        b = "CASA Version 3.0.1 (r9913)"
-#
-#        self.order(a, b)
-#
-#    def test_build_build_1(self):
-#        a = "CASA Version 2.4.0 (build #8115)"
-#        b = "CASA Version 2.4.0 (build #7782)"
-#
-#        self.order(b, a)
-#        
-#    def test_build_build_2(self):
-#        a = "CASA Version 2.4.0 (build #8115)"
-#        b = "CASA Version 3.0.0 (build #9684)"
-#
-#        self.order(a, b)
-#
-#    def test_build_r_1(self):
-#        a = "CASA Version 3.0.0 (r9886)"
-#        b = "CASA Version 3.0.0 (build #9684)"
-#
-#        self.order(b, a)
-#
-#    def test_build_r_2(self):
-#        a = "CASA Version 3.0.1 (r10006)"
-#        b = "CASA Version 3.0.0 (build #9684)"
-#
-#        self.order(b, a)
-#
-#
-#    def order(self, a, b):
-#        """Verify that the cmp_version function behaves
-#        as it should, given that a is earlier than b"""
-#        
-#        assert report.cmp_version(a, b) < 0
-#        assert report.cmp_version(b, a) > 0
-#        assert report.cmp_version(a, a) == 0
-#        assert report.cmp_version(b, b) == 0
 
 def suite():
     return [clean_test]
