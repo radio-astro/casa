@@ -65,12 +65,12 @@ namespace asdm {
 	
 	string Parser::trim(const string &s) {
 		unsigned int i = 0;
-		while (s.at(i) == ' ' && i < s.length())
+		while (i < s.length() && s.at(i) == ' ')
 			++i;
 		if (i == s.length())
 			return "";
 		unsigned int j = s.length() - 1;
-		while (s.at(j) == ' ' && j > i)
+		while (j > i && s.at(j) == ' ')
 			--j;
 		return substring(s,i,j + 1);
 		
