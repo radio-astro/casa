@@ -140,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return (Double) atime.get() / (Double)ArrayTime::unitsInASecond; }
 
   asdm::Interval ASDMInterval( const Double seconds ){ 
-    return asdm::Interval((long) (floor(seconds*ArrayTime::unitsInASecond))); }
+    return asdm::Interval((long long) (floor(seconds*ArrayTime::unitsInASecond))); }
 
   // convert MS style time interval to ASDM ArrayTimeInterval
   asdm::ArrayTimeInterval ASDMTimeInterval( const Quantity midpoint, const Quantity interval);

@@ -546,6 +546,12 @@ namespace casa {
       
       
       vector< AtmPhaseCorrection >  apc;
+      if(dataIsAPCorrected()){
+	apc.push_back(AtmPhaseCorrectionMod::AP_CORRECTED); 
+      }
+      else{
+	apc.push_back(AtmPhaseCorrectionMod::AP_UNCORRECTED); 
+      }	    
       vector< SDMDataObject::Baseband > basebands; // ???
       
       // construct spectral window and basedband vectors
@@ -1165,6 +1171,9 @@ namespace casa {
 	// parameters of the new row
 
 	ArrayTimeInterval timeInterval( ASDMTimeInterval(source().timeQuant()(irow), source().intervalQuant()(irow)) );
+	//cout << "in writeSource: timeInterval " << source().time()(irow) << ", " << source().interval()(irow) << endl;
+	//cout << "                timeInterval " << timeInterval.getStartInNanoSeconds() << ", " << timeInterval.getDurationInNanoSeconds() << endl;
+
 	Int spwId = source().spectralWindowId()(irow);
 	Tag spectralWindowId;
 	if(!asdmSpectralWindowId_p.isDefined(spwId)){
@@ -1658,9 +1667,9 @@ namespace casa {
       if(code=="" || code==" "){
 	code="-";
       }
-      int numPoly = field().numPoly()(irow);
-      if(numPoly>0){
-	os << LogIO::SEVERE << "Internal error: NUM_POLY > 0 not yet supported." << LogIO::POST;
+      int numPoly = field().numPoly()(irow) + 1; // MS give poly order, ASDM needs number of coefficients
+      if(numPoly>1){
+	os << LogIO::SEVERE << "Internal error: MS Field table with NUM_POLY > 0 not yet supported." << LogIO::POST;
 	return False;
       }
       Int numpol = 0;
@@ -1696,7 +1705,7 @@ namespace casa {
 	vector< Angle > dirV;
 	Quantity angle0(mdir(0,numpol), msAngUnit);
 	dirV.push_back(Angle(angle0.getValue(unitASDMAngle())));
-	Quantity angle1(mdir(0,numpol), msAngUnit);
+	Quantity angle1(mdir(1,numpol), msAngUnit);
 	dirV.push_back(Angle(angle1.getValue(unitASDMAngle())));
 	referenceDirV.push_back(dirV);
       }
@@ -2714,10 +2723,11 @@ namespace casa {
 	  vector<Int> msDDIdV;
 	  msDDIdV.push_back(iDDId); // always just this one entry
 	  vector<Int> msFeedIdV;
+	  vector<Int> msFeedKeyV;
 	  
 	  vector<Tag> antennaId;
 	  vector<Tag> dataDId;
-	  vector<int> feedId;
+	  vector<int> feedId; 
 	  vector<Tag> switchCycleId;
 	  vector<AtmPhaseCorrectionMod::AtmPhaseCorrection> atmPhaseCorrection;
 	  int numAntenna = 0;
@@ -2787,14 +2797,16 @@ namespace casa {
 	    
 	    // feed ids
 	    Int fIdi = feed1()(irow);
+	    Int fKeyi = fIdi + 10000*antenna1()(irow);
 	    found = False;	      
-	    for(uInt j=0;j<msFeedIdV.size();j++){
-	      if(fIdi == msFeedIdV[j]){
+	    for(uInt j=0;j<msFeedKeyV.size();j++){
+	      if(fKeyi == msFeedKeyV[j]){
 		found = True;
 		break;
 	      }
 	    }
 	    if(!found){
+	      msFeedKeyV.push_back(fKeyi);
 	      msFeedIdV.push_back(fIdi);
 	      if(!asdmFeedId_p.isDefined(fIdi)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for feed1 id " << fIdi
@@ -2803,14 +2815,16 @@ namespace casa {
 	      }
 	    }
 	    fIdi = feed2()(irow);
+	    fKeyi = fIdi + 10000*antenna2()(irow);
 	    found = False;	      
-	    for(uInt j=0;j<msFeedIdV.size();j++){
-	      if(fIdi == msFeedIdV[j]){
+	    for(uInt j=0;j<msFeedKeyV.size();j++){
+	      if(fKeyi == msFeedKeyV[j]){
 		found = True;
 		break;
 	      }
 	    }
 	    if(!found){
+	      msFeedKeyV.push_back(fKeyi);
 	      msFeedIdV.push_back(fIdi);
 	      if(!asdmFeedId_p.isDefined(fIdi)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for feed2 id " << fIdi
@@ -2839,6 +2853,9 @@ namespace casa {
 	    feedId.push_back(asdmFeedId_p(msFeedIdV[i]));
 	  }
 	  numFeed = feedId.size();
+	  if(numAntenna>1){
+	    numFeed = numFeed/numAntenna;
+	  }
 	  
 	  if(numAutoCorrs==0){
 	    correlationMode = CorrelationModeMod::CROSS_ONLY;
@@ -3185,7 +3202,7 @@ namespace casa {
 	for(uInt i=0; i<execBlockStartTime.ndefined(); i++){
 	  if(execBlockStartTime.getVal(i) == timestampStartSecs(mainTabRow)){
 	    os << LogIO::SEVERE << "Observation of different spectral windows at the same time and under the same observation ID is not supported."
-	     << "\n  Please split out the different spectral windows into individual MSs and process seperately." << LogIO::POST;
+	     << "\n  Please split out the different spectral windows into individual MSs and process separately." << LogIO::POST;
 	    return False;
 	  }
 	}
@@ -4041,10 +4058,9 @@ namespace casa {
   ArrayTimeInterval MS2ASDM::ASDMTimeInterval( const Quantity midpoint, const Quantity interval){
     Double sTime = midpoint.getValue("s");  
     Double sInterval = interval.getValue("s");
-    if(sInterval >= sTime){ // a very large value was set to express "always valid"
+    if(sInterval + sTime > timestampEndSecs(ms_p.nrow()-1) || sInterval==0.){ // a very large value or zero was set to express "always valid"
       sTime = timestampStartSecs(0);
       sInterval = timestampEndSecs(ms_p.nrow()-1) - sTime;
-      cout << "hello1" <, endl;
     }
     else{ // still need to make sTime the interval start
       sTime -= sInterval/2.;
@@ -4052,7 +4068,6 @@ namespace casa {
     
     ArrayTimeInterval timeInterval( ASDMArrayTime(sTime),
 				    ASDMInterval(sInterval) );
-    cout << sTime << ", " << sInterval << endl;
     return timeInterval;
   }
 
