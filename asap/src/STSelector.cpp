@@ -86,6 +86,11 @@ void asap::STSelector::setName( const std::string& sname )
   setTaQL(sql);
 }
 
+void STSelector::setTypes( const std::vector< int >& types )
+{
+  setint("SRCTYPE", types);
+}
+
 void STSelector::setint(const std::string& key, const std::vector< int >& val)
 {
   if ( val.size() > 0 ) {
@@ -257,6 +262,11 @@ std::vector< int > STSelector::getPols( ) const
 std::vector< int > asap::STSelector::getCycles( ) const
 {
   return getint("CYCLENO");
+}
+
+std::vector< int > asap::STSelector::getTypes( ) const
+{
+  return getint("SRCTYPE") ;
 }
 
 std::string asap::STSelector::print( )

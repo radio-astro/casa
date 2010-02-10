@@ -39,7 +39,7 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
-   CXXFLAGS +=-DAIPS_DARWIN -arch i386
+   CXXFLAGS +=-DAIPS_DARWIN
 endif
 
 # cfitsio
