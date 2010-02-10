@@ -71,11 +71,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Otherwise the old caching behaviour
     if (itsOption == TSMOption::Default) {
       itsOption = TSMOption::Cache;
+      /*
+//
+// Bad things are happening if the table is really large like with an evla 
+// measurementset so we're commenting out this default behavior for now
+// wky 10-feb-2010
+//
+
 #ifdef AIPS_64B
       if (!newTable) {
         itsOption = TSMOption::MMap;
       }
 #endif
+      
+*/
+
     }
   }
 
