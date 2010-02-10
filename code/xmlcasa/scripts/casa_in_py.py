@@ -147,7 +147,7 @@ from simdata2_pg import simdata2_pg as simdata2
 
 from importasdm_pg import importasdm_pg as importasdm
 from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
-from polcal_pg import polcal_pg as polcal
+#from polcal_pg import polcal_pg as polcal
 
 from clearcal_pg import clearcal_pg as clearcal
 from bandpass_pg import bandpass_pg as bandpass
@@ -175,7 +175,7 @@ from exportuvfits_pg import exportuvfits_pg as exportuvfits
 #from plotcal_pg import plotcal_pg as plotcal
 from flagmanager_pg import flagmanager_pg as flagmanager
 from specfit_pg import specfit_pg  as specfit
-from viewer_pg import viewer_pg as viewer
+#from viewer_pg import viewer_pg as viewer
 from exportfits_pg import exportfits_pg as exportfits
 from blcal_pg import blcal_pg as blcal
 from uvsub_pg import uvsub_pg as uvsub
