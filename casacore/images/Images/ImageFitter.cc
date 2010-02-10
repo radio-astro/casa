@@ -838,7 +838,7 @@ namespace casa {
     		if (log.isWritable()) {
     			if (logfileAppend) {
     				Int fd = open(logfileName.c_str(), O_RDWR | O_APPEND);
-    				FiledesIO fio(fd);
+    				FiledesIO fio(fd, logfileName.c_str());
     				fio.write(output.length(), output.c_str());
     				FiledesIO::close(fd);
 
@@ -848,7 +848,7 @@ namespace casa {
     			else {
     				if (log.canCreate()) {
     					Int fd = FiledesIO::create(logfileName.c_str());
-    					FiledesIO fio (fd);
+    					FiledesIO fio (fd, logfileName.c_str());
     					fio.write(output.length(), output.c_str());
     					FiledesIO::close(fd);
     					*itsLog << LogIO::NORMAL << "Overwrote file "
@@ -865,7 +865,7 @@ namespace casa {
     	else {
     		if (log.canCreate()) {
     			Int fd = FiledesIO::create(logfileName.c_str());
-    			FiledesIO fio (fd);
+    			FiledesIO fio (fd, logfileName.c_str());
     			fio.write(output.length(), output.c_str());
     			FiledesIO::close(fd);
     			*itsLog << LogIO::NORMAL << "Created log file "
@@ -891,7 +891,7 @@ namespace casa {
     	if(estimates.exists()) {
     		if (estimates.isWritable()) {
     			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
-    			FiledesIO fio(fd);
+    			FiledesIO fio(fd, logfileName.c_str());
     			fio.write(output.length(), output.c_str());
     			FiledesIO::close(fd);
     			*itsLog << LogIO::NORMAL << "Overwrote file "
@@ -906,7 +906,7 @@ namespace casa {
     	else {
     		if (estimates.canCreate()) {
     			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
-    			FiledesIO fio (fd);
+    			FiledesIO fio (fd, logfileName.c_str());
     			fio.write(output.length(), output.c_str());
     			FiledesIO::close(fd);
     			*itsLog << LogIO::NORMAL << "Created estimates file "

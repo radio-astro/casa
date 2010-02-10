@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MIRIADImage.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MIRIADImage.cc 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #include <images/Images/MIRIADImage.h>
 
@@ -435,7 +435,6 @@ void MIRIADImage::setup()
 
 void MIRIADImage::open()
 {
-   uInt maxCacheSize = 0;
    Bool writable = False;
    Bool canonical = True;    
    String iname = name_p + "/image";    // fails for very small miriad images !!
@@ -444,7 +443,7 @@ void MIRIADImage::open()
 
    pTiledFile_p = new TiledFileAccess(iname, fileOffset_p,
 				      shape_p.shape(), shape_p.tileShape(),
-                                      dataType_p, maxCacheSize,
+                                      dataType_p, TSMOption(),
 				      writable, canonical);
 
    // Shares the pTiledFile_p pointer. 
