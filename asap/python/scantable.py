@@ -11,7 +11,7 @@ class scantable(Scantable):
         The ASAP container for scans
     """
 
-    def __init__(self, filename, average=None, unit=None, getpt=None):
+    def __init__(self, filename, average=None, unit=None, getpt=None, antenna=None):
         """
         Create a scantable from a saved one or make a reference
         Parameters:
@@ -32,12 +32,30 @@ class scantable(Scantable):
             getpt:       for MeasurementSet input data only:
                          If True, all pointing data are filled.
                          The deafult is False, which makes time to load
-                         the MS data faster in some cases. 
+                         the MS data faster in some cases.
+            antenna:     Antenna selection. integer (id) or string (name
+                         or id).
         """
         if average is None:
             average = rcParams['scantable.autoaverage']
         if getpt is None:
             getpt = True
+        if antenna is None:
+            antenna = ''
+        elif type(antenna) == int:
+            antenna = '%s'%antenna
+        elif type(antenna) == list:
+            tmpstr = ''
+            for i in range( len(antenna) ):
+                if type(antenna[i]) == int: 
+                    tmpstr = tmpstr + ('%s,'%(antenna[i])) 
+                elif type(antenna[i]) == str:
+                    tmpstr=tmpstr+antenna[i]+','
+                else:
+                    asaplog.push('Bad antenna selection.')
+                    print_log('ERROR')
+                    return 
+            antenna = tmpstr.rstrip(',')
         varlist = vars()
         from asap._asap import stmath
         self._math = stmath( rcParams['insitu'] )
@@ -79,10 +97,10 @@ class scantable(Scantable):
                         else:
                             raise IOError(msg)
                 else:
-                    self._fill([filename], unit, average, getpt)
+                    self._fill([filename], unit, average, getpt, antenna)
             elif (isinstance(filename, list) or isinstance(filename, tuple)) \
                   and isinstance(filename[-1], str):
-                self._fill(filename, unit, average, getpt)
+                self._fill(filename, unit, average, getpt, antenna)
         self._add_history("scantable", varlist)
         print_log()
 
@@ -2163,7 +2181,7 @@ class scantable(Scantable):
         nchans = filter(lambda t: t > 0, nchans)
         return (sum(nchans)/len(nchans) == nchans[0])
 
-    def _fill(self, names, unit, average, getpt):
+    def _fill(self, names, unit, average, getpt, antenna):
         import os
         from asap._asap import stfiller
         first = True
@@ -2191,7 +2209,7 @@ class scantable(Scantable):
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
             print_log()
-            r._open(name, -1, -1, getpt)
+            r._open(name, antenna, -1, -1, getpt)
             r._read()
             if average:
                 tbl = self._math._average((tbl, ), (), 'NONE', 'SCAN')

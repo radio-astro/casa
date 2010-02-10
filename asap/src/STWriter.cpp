@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.cpp 1672 2010-01-08 01:16:09Z TakeshiNakazato $
+//# $Id: STWriter.cpp 1683 2010-02-04 05:38:46Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 
 #include <string>
@@ -188,7 +188,7 @@ Int STWriter::write(const CountedPtr<Scantable> in,
       pksrec.cycleNo = 1;
       while (!cycit.pastEnd() ) {
         Table ctable = cycit.table();
-        TableIterator ifit(ctable, "IFNO");
+        TableIterator ifit(ctable, "IFNO", TableIterator::Ascending, TableIterator::HeapSort);
         MDirection::ScalarColumn dirCol(ctable, "DIRECTION");
         pksrec.direction = dirCol(0).getAngle("rad").getValue();
         pksrec.IFno = 1;
