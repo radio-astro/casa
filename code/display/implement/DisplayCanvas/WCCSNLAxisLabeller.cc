@@ -580,6 +580,7 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
 // Get some other bits and pieces
 
   Vector<Double> refPixel = cSys.referencePixel();
+  //cout << "refPix=" << refPixel << endl;
   WCCSNLAxisLabellerRefPix[0] = refPixel[0];
   WCCSNLAxisLabellerRefPix[1] = refPixel[1];
 
