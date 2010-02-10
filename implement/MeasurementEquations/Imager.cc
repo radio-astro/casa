@@ -4206,7 +4206,10 @@ Bool Imager::makeimage(const String& type, const String& image,
     if(imageTileVol_p >0){
       tilex=ceil(sqrt(imageTileVol_p/min(4, cimageShape(2))/min(32, cimageShape(3))));
       if(tilex >0){
-	tilex=cimageShape(0)/Int(cimageShape(0)/tilex);
+	if(tilex > min(Int(cimageShape(0)), Int(cimageShape(1))))
+	  tilex=min(Int(cimageShape(0)), Int(cimageShape(1)));
+	else
+	  tilex=cimageShape(0)/Int(cimageShape(0)/tilex);
       }
       //Not too small in x-y tile
       if(tilex < 10)
@@ -7489,7 +7492,8 @@ Bool Imager::createFTMachine()
   //few channels use Double precision
   //till we find a better algorithm to determine when to use Double prec gridding
   if(imageNchan_p < 5)
-    useDoublePrecGrid=True;
+    //Force false for testing porpoise
+    useDoublePrecGrid=False;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
   
@@ -9027,7 +9031,10 @@ Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID)
   if(imageTileVol_p >0){
     tilex=ceil(sqrt(imageTileVol_p/min(4, npol_p)/min(32, imageNchan_p)));
     if(tilex >0){
-      tilex=nx_p/Int(nx_p/tilex);
+      if(tilex > min(nx_p, ny_p))
+	tilex=min(nx_p, ny_p);
+      else
+	tilex=nx_p/Int(nx_p/tilex);
     }    
     //Not too small in x-y tile
     if(tilex < 10)
