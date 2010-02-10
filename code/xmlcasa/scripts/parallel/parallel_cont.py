@@ -21,6 +21,7 @@ class imagecont():
         self.imageparamset=False
         self.robust=0.0
         self.weightnpix=0
+        self.imagetilevol=1000000
 
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
@@ -37,7 +38,7 @@ class imagecont():
 ####
         #imname=imname+'_%02d'%(j)
             im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
-            im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes)
+            im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol)
         #im.regionmask(mask='lala.mask', boxes=[[0, 0, 3599, 3599]])
         #im.setmfcontrol(cyclefactor=0.0)
         if(not self.imageparamset):
@@ -69,7 +70,7 @@ class imagecont():
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
-        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes)
+        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol)
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):

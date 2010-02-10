@@ -45,7 +45,7 @@ def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e1
         #return -1
         return -1, -1, -1
     endallchan=allfreq.size -1
-    while(maxfreq < allfreq[endallchan]):
+    while((maxfreq < allfreq[endallchan]) and (endallchan > 0)):
         endallchan=endallchan-1
     if(endallchan < (startallchan+1)):
         ##fail
@@ -339,7 +339,8 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark',
-          mode='channel', start=0, nchan=1, step=1, weight='natural',
+          mode='channel', start=0, nchan=1, step=1, weight='natural', 
+          imagetilevol=1000000,
           contclean=False):
 
     """
@@ -374,9 +375,15 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
         ##create the cube
         im.selectvis(vis=msname, spw=spw, field=field)
         im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
-                       phasecenter='', mode=mode, nchan=nchan, step=step, start=start)
+                       phasecenter='', mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start)
+        im.setoptions(imagetilevol=imagetilevol) 
         im.make(model)
         im.done()
+    ia.open(model)
+    fstart=ia.toworld([0,0,0,0],'n')['numeric'][3]
+    fstep=ia.toworld([0,0,0,1],'n')['numeric'][3]-fstart
+    fend=fstep*(nchan+1)+fstart
+    ia.done()
     os.system('rm -rf '+imagename+'.image')
     os.system('cp -r '+model+'  '+imagename+'.image')
     os.system('cp -r '+model+'  '+imagename+'.residual')
@@ -399,10 +406,11 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'")'
     print 'launch command', launchcomm
     c.pgc(launchcomm)
+    c.pgc('a.imagetilevol='+str(imagetilevol))
 
     chancounter=0
     ###spw and channel selection
-    spwsel,startsel,nchansel=findchansel(msname, spwids, nchan, continuum=False)
+    spwsel,startsel,nchansel=findchansel(msname, spwids, nchan, beginfreq=fstart, endfreq=fend, continuum=False)
     imnam='"%s"'%(imagename)
     b=cleanhelper()
     donegetchan=np.array(range(nchan),dtype=bool)
@@ -457,4 +465,17 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     c.stop_cluster()
 
 
- 
+    def pcubemultims(msnames=[], imagename='elimage', imsize=[1000, 1000], 
+          pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+          field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
+          hostnames=[], 
+          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark',
+          mode='channel', start=0, nchan=1, step=1, weight='natural', 
+          imagetilevol=1000000,
+          contclean=False):
+        if len(msnames)==0:
+            return
+        if (len(msnames) != len(hostnames)):
+            raise 'Number of MSs and hosts has to match for now' 
+            return
+        

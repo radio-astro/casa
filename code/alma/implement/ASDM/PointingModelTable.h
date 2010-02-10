@@ -374,7 +374,7 @@ public:
 	PointingModelRow* lookup(Tag antennaId, int numCoeff, vector<string > coeffName, vector<float > coeffVal, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, string assocNature, int assocPointingModelId); 
 
 
-private:
+// private:
 
 	/**
 	 * Create a PointingModelTable.

@@ -470,6 +470,35 @@ namespace casa {
 	return QDBusVariant(QVariant(true));
     }
 
+    QDBusVariant QtDBusViewerAdaptor::frame( int num, int panel ) {
+	QtDisplayPanel *dp = findpanel( panel, false );
+	if ( ! dp ) {
+	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	}
+
+	if ( num >= 0 ) { dp->goTo(num); }
+
+	return QDBusVariant(QVariant(dp->frame()));
+    }
+
+
+    QDBusVariant QtDBusViewerAdaptor::zoom( int level, int panel ) {
+	QtDisplayPanel *dp = findpanel( panel, false );
+	if ( ! dp ) {
+	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	}
+
+	if ( level == 0 )
+	    dp->unzoom( );
+	else if ( level < 0 )
+	    dp->zoomOut( abs(level) );
+	else
+	    dp->zoomIn( level );
+
+	return QDBusVariant(QVariant(true));
+    }
+
+
     QDBusVariant QtDBusViewerAdaptor::release( int panel ) {
 	if ( managed_windows.find( panel ) == managed_windows.end( ) ) {
 	    return QDBusVariant(QVariant("*error* could now find requested panel"));
@@ -519,7 +548,7 @@ namespace casa {
 	}
 
 
-	QtDisplayPanel *dp = findpanel( panel == 0 ? INT_MAX : panel );
+	QtDisplayPanel *dp = findpanel( panel );
 	if ( ! dp ) return false;
 
 	if ( suffix == "pdf" || suffix == "ps" || suffix == "eps" ) {
@@ -760,17 +789,23 @@ namespace casa {
 
     }
 
-    QtDisplayPanel *QtDBusViewerAdaptor::findpanel( int key ) {
+    QtDisplayPanel *QtDBusViewerAdaptor::findpanel( int key, bool create ) {
+
+	if ( key == 0 ) key = INT_MAX;
 
 	if ( managed_panels.find( key ) != managed_panels.end( ) )
 	    return managed_panels.find( key )->second->panel( );
 
 	if ( key == INT_MAX ) {
-	    QtDisplayPanelGui *dpg = viewer_->createDPG();
-	    QtDisplayPanel* dp = dpg->displayPanel( );
-	    managed_windows.insert(mainwinmap::value_type(INT_MAX, dpg));
-	    managed_panels.insert(panelmap::value_type(INT_MAX, new panel_desc(dp)));
-	    return dp;
+	    if ( create ) {
+		QtDisplayPanelGui *dpg = viewer_->createDPG();
+		QtDisplayPanel* dp = dpg->displayPanel( );
+		managed_windows.insert(mainwinmap::value_type(INT_MAX, dpg));
+		managed_panels.insert(panelmap::value_type(INT_MAX, new panel_desc(dp)));
+		return dp;
+	    } else {
+		return 0;
+	    }
 	}
 
 	QtDisplayPanel *result = 0;

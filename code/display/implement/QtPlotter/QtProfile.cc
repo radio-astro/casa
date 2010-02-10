@@ -75,7 +75,7 @@ QtProfile::~QtProfile()
 QtProfile::QtProfile(ImageInterface<Float>* img, 
         const char *name, QWidget *parent)
         :QWidget(parent), //MWCCrosshairTool(),
-         pc(0), te(0), analysis(0), 
+         pc(0), te(0), analysis(0), over(0), 
          coordinate("world"), coordinateType(""),
          fileName(name), position(""), yUnit(""), yUnitPrefix(""), 
 	 xpos(""), ypos(""),
@@ -157,6 +157,16 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     downButton->adjustSize();
     connect(downButton, SIGNAL(clicked()), this, SLOT(down()));
 
+    multiProf = new QCheckBox("Overlay", this);
+    multiProf->setCheckState(Qt::Checked);
+    connect(multiProf, SIGNAL(stateChanged(int)), 
+            this, SLOT(setMultiProfile(int)));
+
+    relative = new QCheckBox("Relative", this);
+    relative->setCheckState(Qt::Checked);
+    connect(relative, SIGNAL(stateChanged(int)), 
+            this, SLOT(setRelativeProfile(int)));
+
     autoScale = new QCheckBox("auto scale", this);
     autoScale->setCheckState(Qt::Checked);
     connect(autoScale, SIGNAL(stateChanged(int)), 
@@ -170,6 +180,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     buttonLayout->addWidget(downButton);    
     buttonLayout->addItem(new QSpacerItem(40, zoomInButton->height(),
          QSizePolicy::MinimumExpanding, QSizePolicy::Minimum));
+    buttonLayout->addWidget(multiProf);
+    buttonLayout->addWidget(relative);
     buttonLayout->addWidget(autoScale);
     buttonLayout->addWidget(writeButton);
     //buttonLayout->addWidget(printExpButton);
@@ -266,6 +278,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
 
     pc->setAutoScale(autoScale->checkState());
        
+    setMultiProfile(true);
 }
 
 MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
@@ -339,6 +352,30 @@ void QtProfile::zoomOut()
 void QtProfile::zoomIn()
 {
    pc->zoomIn();
+}
+
+void QtProfile::setMultiProfile(int st)
+{
+   //qDebug() << "multiple profile state change=" << st;  
+   relative->setChecked(false);
+   if (st) {
+      relative->setEnabled(true);
+   }
+   else {
+      relative->setEnabled(false);
+   }
+   if(lastX.nelements() > 0){
+      wcChanged(coordinate, lastX, lastY);
+   }
+
+}
+
+void QtProfile::setRelativeProfile(int st)
+{
+   //qDebug() << "relative profile state change=" << st;  
+   if(lastX.nelements() > 0){
+      wcChanged(coordinate, lastX, lastY);
+   }
 }
 
 void QtProfile::setAutoScale(int st)
@@ -472,7 +509,7 @@ void QtProfile::writeText()
         return ;
     QTextStream ts(&file);
     
-    ts << "#t0itle: Image profile - " << fileName << " " 
+    ts << "#title: Image profile - " << fileName << " " 
        << region << "(" << position << ")\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
@@ -665,6 +702,8 @@ void QtProfile::wcChanged(const String c,
     //cout << "wcChanged: coordType=" << c 
     //     << " coordinate=" << coordinate << endl;
 
+    //cout << "coordinateType=" << coordinateType << endl;
+
     if (c != coordinate) {
        coordinate = c.chars();
        if (coordinate == "world")
@@ -804,7 +843,86 @@ void QtProfile::wcChanged(const String c,
     
     pc->clearData();
     pc->plotPolyLine(z_xval, z_yval, fileName);
-    //pc->addPolyLine(z_xval, z_yval * 0.5, "second Line");
+
+    QHashIterator<QString, ImageAnalysis*> i(*over);
+    while (i.hasNext() && multiProf->isChecked()) {
+      i.next();
+      //qDebug() << i.key() << ": " << i.value();
+      QString ky = i.key();
+      ImageAnalysis* ana = i.value();
+      Vector<Float> xval(100);
+      Vector<Float> yval(100);
+      ok=ana->getFreqProfile(xv, yv, xval, yval, 
+				coordinate, coordinateType, 
+                                0, 0, 0, "", frameType_p);
+      if (ok) {
+        if(ordersOfM!=0){
+          // correct display y axis values
+          for (uInt i = 0; i < z_yval.size(); i++) {
+            yval(i) *= pow(10.,ordersOfM);
+          }
+        }
+        Vector<Float> xRel(yval.size());
+        Vector<Float> yRel(yval.size());
+        Int count = 0;
+        if (relative->isChecked()) {
+          ky = ky+ "_rel.";
+          for (uInt i = 0; i < yval.size(); i++) {
+            uInt k = z_yval.size() - 1;
+            //cout << xval(i) << " - " << yval(i) << endl;
+            //cout << z_xval(0) << " + " << z_xval(k) << endl;
+            if (coordinateType.contains("elocity")) {
+            if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+              for (uInt j = 0; j < k; j++) {
+                //cout << z_xval(j) << " + " 
+                //     << z_yval(j) << endl;
+                if (xval(i) <= z_xval(j) && 
+                    xval(i) > z_xval(j + 1)) {
+                  float s = z_xval(j + 1) - z_xval(j);
+                  if (s != 0) {
+                    xRel(count) = xval(i);
+                    yRel(count)= yval(i) - 
+                               (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                                (z_yval(j + 1) - z_yval(j)));
+                    count++;
+                    //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                    //           (z_yval(j + 1) - z_yval(j)));
+
+                  }
+                  break;
+                }
+              }
+            }
+            }
+            else {
+            if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
+              for (uInt j = 0; j < k; j++) {
+                if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
+                  float s = z_xval(j + 1) - z_xval(j);
+                  if (s != 0) {
+                    xRel(count) = xval(i);
+                    yRel(count)= yval(i) - 
+                               (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                                (z_yval(j + 1) - z_yval(j)));
+                    count++;
+                    //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                    //           (z_yval(j + 1) - z_yval(j)));
+                  }
+                  break;
+                }
+              }
+            }
+            }
+          }
+          xRel.resize(count, True);
+          yRel.resize(count, True);
+          pc->addPolyLine(xRel, yRel, ky);
+        }
+        else {
+          pc->addPolyLine(xval, yval, ky);
+        }
+      }
+    }
 
     lastX.assign(xv);
     lastY.assign(yv);
@@ -847,5 +965,23 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
 
 }
 
+void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
+   if (over) {
+      delete over;
+      over = 0;
+   }
+   
+   over = new QHash<QString, ImageAnalysis*>();
+   QHashIterator<QString, ImageInterface<float>*> i(hash);
+   while (i.hasNext()) {
+      i.next();
+      //qDebug() << i.key() << ": " << i.value();
+      QString ky = i.key();
+      ImageAnalysis* ana = new ImageAnalysis(i.value());
+      (*over)[ky] = ana;
+      
+   }
+
 }
 
+}

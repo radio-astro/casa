@@ -41,6 +41,7 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/Utilities/Sort.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasRef.h>
@@ -74,6 +75,7 @@ PKSMS2reader::~PKSMS2reader()
 
 Int PKSMS2reader::open(
         const String msName,
+        const String antenna, 
         Vector<Bool> &beams,
         Vector<Bool> &IFs,
         Vector<uInt> &nChan,
@@ -92,19 +94,50 @@ Int PKSMS2reader::open(
   }
 
   cPKSMS  = MeasurementSet(msName);
+
+  // data selection by antenna
+  if ( antenna.length() == 0 ) {
+    cAntId.resize( 1 ) ;
+    cAntId[0] = 0 ;
+  }
+  else {
+    setupAntennaList( antenna ) ;
+    if ( cAntId.size() > 1 ) {
+      LogIO os( LogOrigin( "PKSMS2reader", "open()", WHERE ) ) ;
+      os << LogIO::WARN << "PKSMS2reader is not ready for multiple antenna selection. Use first antenna id " << cAntId[0] << "."<< LogIO::POST ;
+      Int tmp = cAntId[0] ;
+      cAntId.resize( 1 ) ;
+      cAntId[0] = tmp ;
+    }
+    stringstream ss ;
+    ss << "SELECT FROM $1 WHERE ANTENNA1 == ANTENNA2 && ANTENNA1 IN [" ;
+    for ( uInt i = 0 ; i < cAntId.size() ; i++ ) {
+      ss << cAntId[i] ;
+      if ( i == cAntId.size()-1 ) {
+        ss << "]" ;
+      }
+      else {
+        ss << "," ;
+      }
+    }
+    string taql = ss.str() ;
+    //cerr << "taql = " << taql << endl ;
+    cPKSMS = MeasurementSet( tableCommand( taql, cPKSMS ) ) ;
+  }
+
   // taql access to the syscal table
   cHaveSysCal = False;
   if (cHaveSysCal=Table::isReadable(cPKSMS.sysCalTableName())) {
     cSysCalTab = Table(cPKSMS.sysCalTableName());
   } 
 
+  // Lock the table for read access.
+  cPKSMS.lock(False);
+
   cIdx    = 0;
   lastmjd = 0.0;
   cNRow   = cPKSMS.nrow();
   cMSopen = True;
-
-  // Lock the table for read access.
-  cPKSMS.lock(False);
 
   // Main MS table and subtable column access.
   ROMSMainColumns         msCols(cPKSMS);
@@ -326,11 +359,13 @@ Int PKSMS2reader::getHeader(
 
   // Antenna name and ITRF coordinates.
   ROMSAntennaColumns antennaCols(cPKSMS.antenna());
-  antName = antennaCols.name()(0);
+  //antName = antennaCols.name()(0);
+  antName = antennaCols.name()(cAntId[0]);
   if (cALMA) {
      antName = cTelName + "-" + antName;
   }
-  antPosition = antennaCols.position()(0);
+  //antPosition = antennaCols.position()(0);
+  antPosition = antennaCols.position()(cAntId[0]);
 
   // Observation type.
   if (cObsModeCol.nrow()) {
@@ -703,7 +738,8 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   }
 
   ROMSAntennaColumns antennaCols(cPKSMS.antenna());
-  String telescope = antennaCols.name()(0);
+  //String telescope = antennaCols.name()(0);
+  String telescope = antennaCols.name()(cAntId[0]);
   Bool cGBT = telescope.contains("GBT");
   //Bool cPM = telescope.contains("PM"); // ACA TP antenna
   //Bool cDV = telescope.contains("DV"); // VERTEX
@@ -875,7 +911,8 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   pksrec.beamNo  = ibeam + 1;
 
   //pointing/azel
-  MVPosition mvpos(antennaCols.position()(0));
+  //MVPosition mvpos(antennaCols.position()(0));
+  MVPosition mvpos(antennaCols.position()(cAntId[0]));
   MPosition mp(mvpos); 
   Quantum<Double> qt(time,"s");
   MVEpoch mvt(qt);
@@ -888,9 +925,12 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   if (cGetPointing) {
     //cerr << "get pointing data ...." << endl;
     Vector<Double> pTimes = cPointingTimeCol.getColumn();
+    ROScalarColumn<Int> pAntIdCol ;
+    pAntIdCol.attach( cPKSMS.pointing(), "ANTENNA_ID" ) ;
+    Vector<Int> antIds = pAntIdCol.getColumn() ;
     Int PtIdx=-1;
     for (PtIdx = pTimes.nelements()-1; PtIdx >= 0; PtIdx--) {
-      if (cPointingTimeCol(PtIdx) <= time) {
+      if ( (cPointingTimeCol(PtIdx) <= time) && antIds(PtIdx) == cAntId[0] ) {
         break;
       }
     }
@@ -1273,4 +1313,73 @@ void PKSMS2reader::close()
 {
   cPKSMS = MeasurementSet();
   cMSopen = False;
+}
+
+//-------------------------------------------------------- PKSMS2reader::splitAntenanSelectionString
+
+// split antenna selection string
+// delimiter is ','
+
+Vector<String> PKSMS2reader::splitAntennaSelectionString( const String s ) 
+{
+  Char delim = ',' ;
+  Int n = s.freq( delim ) + 1 ;
+  Vector<String> antlist ;
+  string sl[n] ;
+  Int numSubstr = split( s, sl, n, "," );
+  antlist.resize( numSubstr ) ;
+  for ( Int i = 0 ; i < numSubstr ; i++ ) {
+    antlist[i] = String( sl[i] ) ;
+    antlist[i].trim() ;
+  }
+  //cerr << "antlist = " << antlist << endl ;
+  return antlist ;
+}
+
+//-------------------------------------------------------- PKSMS2reader::setupAntennaList
+
+// Fill cAntenna and cAntId
+
+void PKSMS2reader::setupAntennaList( const String s ) 
+{
+  LogIO os( LogOrigin( "PKSMS2reader", "setupAntennaList()", WHERE ) ) ;
+  //cerr << "antenna specification: " << s << endl ;
+  ROMSAntennaColumns antennaCols(cPKSMS.antenna());
+  ROScalarColumn<String> antNames = antennaCols.name();
+  Int nrow = antNames.nrow() ;
+  Vector<String> antlist = splitAntennaSelectionString( s ) ;
+  Int len = antlist.size() ;
+  Vector<Int> AntId( len ) ;
+  Regex re( "[0-9]+" ) ;
+  for ( Int i = 0 ; i < len ; i++ ) {
+    if ( antlist[i].matches( re ) ) {
+      AntId[i] = atoi( antlist[i].c_str() ) ;
+      if ( AntId[i] >= nrow ) {
+        os << LogIO::SEVERE << "Antenna index out of range: " << AntId[i] << LogIO::EXCEPTION ;
+      }
+    }
+    else {
+      AntId[i] = -1 ;
+      for ( uInt j = 0 ; j < antNames.nrow() ; j++ ) {
+        if ( antlist[i] == antNames(j) ) {
+          AntId[i] = j ;
+          break ;
+        }
+      }
+      if ( AntId[i] == -1 ) {
+        os << LogIO::SEVERE << "Specified antenna name not found: " << antlist[i] << LogIO::EXCEPTION ;
+      }
+    }
+  }
+  //cerr << "AntId = " << AntId << endl ;
+  vector<Int> uniqId ;
+  uniqId.push_back( AntId(0) ) ;
+  for ( uInt i = 1 ; i < AntId.size() ; i++ ) {
+    if ( count(uniqId.begin(),uniqId.end(),AntId[i]) == 0 ) {
+      uniqId.push_back( AntId[i] ) ;
+    }
+  }
+  Vector<Int> newAntId( uniqId ) ;
+  cAntId.assign( newAntId ) ;
+  //cerr << "cAntId = " << cAntId << endl ;
 }

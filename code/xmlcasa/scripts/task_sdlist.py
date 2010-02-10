@@ -3,7 +3,7 @@ from taskinit import *
 
 import asap as sd
 
-def sdlist(sdfile, scanaverage, listfile, overwrite):
+def sdlist(sdfile, antenna, scanaverage, listfile, overwrite):
 
         casalog.origin('sdlist')
 
@@ -24,7 +24,7 @@ def sdlist(sdfile, scanaverage, listfile, overwrite):
 
 
             #load the data with or without averaging
-            s=sd.scantable(sdfile,scanaverage)
+            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
 
             sum = s._summary()
             

@@ -3,7 +3,7 @@ from taskinit import *
 
 import asap as sd
 
-def sdsave(sdfile, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
+def sdsave(sdfile, antenna, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
 
         casalog.origin('sdsave')
 
@@ -34,7 +34,7 @@ def sdsave(sdfile, rowlist, scanlist, field, iflist, pollist, scanaverage, timea
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,scanaverage)
+            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
 
 	    #Select rows
             sel = sd.selector()

@@ -592,7 +592,7 @@ public:
 	SourceRow* lookup(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName); 
 
 
-private:
+// private:
 
 	/**
 	 * Create a SourceTable.

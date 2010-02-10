@@ -871,13 +871,15 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
 void QtDisplayPanelGui::showImageProfile() {
 
     List<QtDisplayData*> rdds = qdp_->registeredDDs();
+    QHash<QString, ImageInterface<float>*> overlap;
     for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
          QtDisplayData* pdd = qdds.getRight();
          if(pdd != 0 && pdd->dataType() == "image") {
             
             ImageInterface<float>* img = pdd->imageInterface();
             PanelDisplay* ppd = qdp_->panelDisplay();
-            if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+            if (ppd != 0 && img != 0) {
+              if (ppd->isCSmaster(pdd->dd())) { 
 	      
 	      // pdd is a suitable QDD for profiling.
               
@@ -962,9 +964,18 @@ void QtDisplayPanelGui::showImageProfile() {
                   pdd->checkAxis();
               }
 	      
-	      break;
+	      //break;
+            }
+            else {
+               overlap[pdd->name().chars()] = img;
+            }
             }
          }
+    }
+    if (profile_) {
+       connect(this, SIGNAL(overlay(QHash<QString, ImageInterface<float>*>)),
+            profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
+       emit overlay(overlap);
     }
 }
 

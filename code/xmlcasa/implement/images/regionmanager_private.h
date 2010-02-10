@@ -3,6 +3,7 @@
 casa::LogIO *itsLog;
 casa::RegionManager *itsRegMan;
 casa::Bool itsIsSetup;
+casa::ImageRegion *unionRegion;
 
 
 // Helper method for doing unions, because the code

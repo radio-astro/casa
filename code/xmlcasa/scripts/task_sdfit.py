@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, overwrite, plotlevel):
+def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, overwrite, plotlevel):
 
 
         casalog.origin('sdfit')
@@ -25,7 +25,7 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                 raise Exception, s
 
             #load the data  without averaging
-            s=sd.scantable(sdfile,False)
+            s=sd.scantable(sdfile,average=False,antenna=antenna)
 
 
             # get telescope name

@@ -1359,19 +1359,19 @@ if benchmarking:
 #for 400x400 clean
 #new values for flat noise clean
 testdate = '2009-12-02 (STM)'
-testvers = 'CASA Version 3.0.0 Rev 9692'
-clean_image_max = 1.454770
-clean_offsrc_rms = 0.057324
-clean_offline_rms = 0.054325
-clean_momentzero_max = 165.231247
-clean_momentzero_rms = 15.065811
-clean_momentone_median = 420.62667847
-clean_momentone_planezero = 688.575012
-clean_momentone_planelast = 119.659264
+testvers = 'CASA Version 3.0.1 Rev 10130'
+clean_image_max = 1.465047 
+clean_offsrc_rms = 0.058497
+clean_offline_rms = 0.055416
+clean_momentzero_max = 163.726852
+clean_momentzero_rms = 15.206372
+clean_momentone_median = 428.326385
+clean_momentone_planezero = 696.702393
+clean_momentone_planelast = 127.786629
 vis_mean_cal = 194.915085
 vis_mean_src = 54.627020
-model_sum = 72.618549
-model_pbcor_sum = 64.304426
+model_sum = 71.171693
+model_pbcor_sum = 61.853749
 
 canonical = {}
 canonical['exist'] = True

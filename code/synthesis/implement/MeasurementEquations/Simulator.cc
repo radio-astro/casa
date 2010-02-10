@@ -2570,8 +2570,10 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
     //Now assign the source direction to something selected or sensible
     {
       Int fieldsel=0;
-      if(fieldids.nelements() >0)
-	fieldsel=fieldids(0);
+      if(fieldids.nelements() >0)	
+      // this may be causeing problems in summary()
+      //fieldsel=fieldids(0);
+	fieldsel=fieldids(fieldids.nelements()-1);
       // RI TODO sim:setdata need nField=fieldids.nelements()?
       sourceDirection_p[nField-1]=(vs_p->iter()).msColumns().field().phaseDirMeas(fieldsel); 
     }

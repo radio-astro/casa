@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode, outfile, outform, overwrite, plotlevel):
+def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
@@ -35,7 +35,7 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s = sd.scantable(sdfile,False)
+            s = sd.scantable(sdfile,average=False,antenna=antenna)
 
 
             #check the format of the infile

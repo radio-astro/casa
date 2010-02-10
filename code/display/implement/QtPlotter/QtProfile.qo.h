@@ -60,6 +60,8 @@
 #include <QComboBox>
 #include <map>
 #include <vector>
+#include <QHash>
+#include <QHashIterator>
 #include <graphics/X11/X_exit.h>
 
 inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
@@ -89,6 +91,8 @@ public slots:
     void down();
     void left();
     void right();
+    void setMultiProfile(int);
+    void setRelativeProfile(int);
     void setAutoScale(int);
     void changeCoordinate(const QString &text); 
     void changeFrame(const QString &text);
@@ -101,6 +105,7 @@ public slots:
                      const Vector<Double>, const Vector<Double>);
     void changeAxis(String, String, String);
 
+    void overplot(QHash<QString, ImageInterface<float>*>);
 signals:
     void hideProfile();
     void coordinateChange(const String&);
@@ -114,6 +119,8 @@ private:
     QToolButton *rightButton;
     QToolButton *upButton;
     QToolButton *downButton;
+    QCheckBox *multiProf;
+    QCheckBox *relative;
     QCheckBox *autoScale;
     
     QToolButton *printButton;
@@ -129,6 +136,7 @@ private:
     QComboBox *frameButton_p;
     
     ImageAnalysis* analysis;
+    QHash<QString, ImageAnalysis*> *over;
     String coordinate;
     String coordinateType;
     String frameType_p;

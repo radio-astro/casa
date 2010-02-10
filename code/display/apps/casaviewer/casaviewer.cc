@@ -43,6 +43,7 @@
 #include <display/QtViewer/QtApp.h>
 
 #include <unistd.h>
+#include <sys/stat.h>
 
 /*
 #include <graphics/X11/X_enter.h>
@@ -62,7 +63,8 @@ static void start_manager_root( const char *origname, int numargs, char **args,
 static void launch_server( const char *origname, int numargs, char **args,
 			   const char *dbusname, bool without_gui,
 			   bool persistent, bool casapy_start );
-static pid_t launch_xvfb( const char *name, pid_t pid, char *&display );
+static pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority );
+static int make_it_a_dir( const char *path );
 
 static void signal_manager_root( int sig ) {
     if ( manager_root_pid && ! sigterm_received ) {
@@ -329,8 +331,9 @@ void start_manager_root( const char *origname, int numargs, char **args, const c
 
     pid_t child_xvfb = 0;
     char *display = 0;
+    char *authority = 0;
     if ( without_gui ) {
-	child_xvfb = launch_xvfb( args[0], root_pid, display );
+	child_xvfb = launch_xvfb( args[0], root_pid, display, authority );
 	sleep(2);
     }
 
@@ -338,6 +341,9 @@ void start_manager_root( const char *origname, int numargs, char **args, const c
 
     if ( display ) {
 	putenv(display);
+    }
+    if ( authority ) {
+	putenv( authority );
     }
 
     char *new_name = (char*) malloc( sizeof(char)*(strlen(name)+25) );
@@ -431,11 +437,12 @@ void launch_server( const char *origname, int numargs, char **args,
 }
 
 
-pid_t launch_xvfb( const char *name, pid_t pid, char *&display ) {
+pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority ) {
     pid_t child_xvfb = 0;
     char *home = getenv("HOME");
 
     display = 0;
+    authority = 0;
 
 #ifdef Q_WS_X11
 #if defined(__APPLE___)
@@ -461,14 +468,17 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display ) {
 	exit(1);
     }
 
-    char *xvfb_name = (char*) malloc( sizeof(char)*(strlen(name)+35) );
+    char *xvfb_name = (char*) malloc( sizeof(char)*(strlen(name)+50) );
     sprintf( xvfb_name, "%d-%s-xvfb", pid, name );
 
-    char *xauthority = (char*) malloc( sizeof(char)*(strlen(home)+15) );
-    sprintf( xauthority, "%s/.Xauthority", home );
+    authority = (char*) malloc( sizeof(char)*(strlen(home)+160) );
+    sprintf( authority, "%s/.casa", home );
+    make_it_a_dir( authority );
+    sprintf( authority, "%s/.casa/xauthority", home );
 
-    int display_num=0;
-    for ( display_num=0; display_num < 10; ++display_num ) {
+    const int display_start=6;
+    int display_num;
+    for ( display_num=display_start; display_num < (display_start+10); ++display_num ) {
 
 	int io[2];
 	if ( pipe(io) < 0 ) {
@@ -491,7 +501,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display ) {
 	    sprintf( screen_arg, ":%d", display_num );
 
 	    execlp( "Xvfb", xvfb_name, screen_arg, "-screen", "0","2048x2048x24+32",
-		    "-auth", xauthority, (char*) 0 );
+		    "-auth", authority, (char*) 0 );
 	    fprintf( stderr, "exec of Xvfb should not have returned...%d...\n", getpid() );
 	    perror( "virtual frame buffer" );
 	    exit(1);
@@ -545,12 +555,45 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display ) {
     }
 
     char cmd[1024];
-    sprintf( cmd, "xauth add :%d MIT-MAGIC-COOKIE-1 %s", display_num, xauth );
+    sprintf( cmd, "xauth -f %s add :%d . %s", authority, display_num, xauth );
     int status = system( cmd );
     if ( status != 0 ) { perror( "xauth setup" ); }
 
     display = (char*) malloc( sizeof(char) * 50 );
     sprintf( display, "DISPLAY=localhost:%d.0", display_num );
+    sprintf( authority, "XAUTHORITY=%s/.casa/xauthority", home );
+
 #endif
     return child_xvfb;
+}
+
+//
+//  helper function to create ~/.casa/ipython/security
+//
+int make_it_a_dir( const char *path ) {
+    struct stat buf;
+    if ( stat( path, &buf ) == 0 ) {
+	if ( ! S_ISDIR(buf.st_mode) ) {
+	    char *savepath = (char*) malloc(sizeof(char) * (strlen(path) + 12));
+	    int count = 0;
+
+	    do {
+		count += 1;
+		sprintf( savepath, "%s_SAV%03d", path, count );
+	    } while ( stat( savepath, &buf ) == 0 );
+
+	    if ( rename( path, savepath ) != 0 ) {
+		return 1;
+	    }
+	    if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
+		return 1;
+	    }
+	    free(savepath);
+	}
+    } else {
+	if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
+	    return 1;
+	}
+    }
+    return 0;
 }

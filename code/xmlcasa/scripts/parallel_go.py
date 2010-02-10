@@ -1,13 +1,29 @@
 from IPython.kernel import client 
 from subprocess import *
 import os
+import sys
 import commands
 import string
 import atexit
 import time
 import types
+import inspect
 from math import *
 
+a=inspect.stack()
+stacklevel=0
+for k in range(len(a)):
+   if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+      stacklevel=k
+
+myf=sys._getframe(stacklevel).f_globals
+
+if myf.has_key('casa') :
+   casa = myf['casa']
+else:
+   casa = { }
+
+##scriptdir = '/home/casa-dev-08/dschieb/casapy-test-30.1.10182-001-64b/lib64/python2.5/'
 class cluster(object):
 
    "control cluster engines for parallel tasks"
@@ -381,8 +397,10 @@ class cluster(object):
 
       self.__engines=[]
       for i in fruit:
-         #print i
-         self.stop_node(i)
+         try:
+            self.stop_node(i)
+         except:
+            continue
 
       # shutdone controller
       self.__stop_controller()
@@ -415,6 +433,7 @@ class cluster(object):
      '''
      
      print 'initialize engines', i
+     self.__client.push({'casa': casa })
      self.__client.execute('import os', i)
      self.__client.execute('if os.path.isdir(work_dir):os.chdir(work_dir)\nelse:work_dir=os.environ["HOME"]', i)
      phome=''
@@ -458,6 +477,7 @@ class cluster(object):
         phome=dhome
 
      sdir='/CASASUBST/python_library_directory/'+'/'
+     ##sdir='/home/casa-dev-08/dschieb/casapy-test-30.1.10182-001-64b/lib64/python2.5/'
      self.__client.push(dict(phome=phome), i)
      self.__client.execute('import sys', i)
      #self.__client.execute('scriptdir=phome+"/python/2.5/"', i)

@@ -1,6 +1,8 @@
 
-""" Script to run unit tests from the command line as:"""
-"""    casapy --nologger --log2term -c runUnitTest.py"""
+""" Script to run unit tests from the command line as: """
+"""    casapy --nologger --log2term -c runUnitTest.py """
+"""    or """
+"""    casapy --nologger --log2term -c runUnitTest.py test_name """
 
 # There are two classes in testwrapper.py:
 # class UnitTest, methods: runTest(), runFuncTest()
@@ -16,11 +18,12 @@ import traceback
 sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
 from testwrapper import *
 import unittest
+sys.path.append('/Library/Python/2.6/site-packages/nose-0.11.1-py2.6.egg')
 import nose
 
 # List of tests to run
-E2E_TESTS = ['listcal_regression','testcube_regression']
-OLD_TESTS = ['plotants_test','accum_test']
+E2E_TESTS = []
+OLD_TESTS = []
 NEW_TESTS = ['test_report']
 
 
@@ -31,10 +34,10 @@ whichtests = 0  #all tests
 
 if sys.argv.__len__() == i+2:
     whichtests = 0
-#    testnames = ALL_TESTS
-else:
+    testnames = ALL_TESTS
+elif sys.argv.__len__() == i+3:
     whichtests = 1
-#    testnames = [sys.argv[i+2]]
+    testnames = [sys.argv[i+2]]
 
 PWD = os.getcwd()
 NOSE_XML = PWD+'/nosexml/'
@@ -103,7 +106,20 @@ if not whichtests:
             traceback.print_exc()
 
 else:
-    print "Run test testname. TBI"
+    print "Will run %s"%testnames
+    # At the moment it only supports new unit tests
+    try:
+        # Get a list of tests contained in the class
+        f = testnames[0]
+        tests = UnitTest(f).runTest()
+        xmlfile = xmldir+f+'.xml'
+        result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+                          suite=tests)
+        os.chdir(PWD)
+    except:
+        print "Exception: failed to run %s" %f
+        traceback.print_exc()
+        
     
     
     

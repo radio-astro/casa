@@ -200,15 +200,15 @@ f2_flux=105.4628
 #f3_max=1.67
 #f3_max=1.52
 f3_max=1.60     # 12/1/2009.  Are we converging?
-f3_flux=104.25
+f3_flux=81.45
 jc1_max=1.67
 #jc1_max=1.71
 #jc1_flux=168.87
-jc1_flux=224.1
+jc1_flux=212.11
 #jc2_max=1.68
 jc2_max=1.53
 #jc2_flux=67.27
-jc2_flux=147.7
+jc2_flux=127.87
 
 diff_f1=abs((f1_max-feather1_immax)/f1_max)
 diff_f1f=abs((f1_flux-feather1_flux)/f1_flux)
@@ -258,25 +258,26 @@ print >>logfile,'*********************************'
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
-if (diff_f1 < 0.05): print >>logfile,'* Passed Feather 1 image max test '
+status = {False: "! FAILED", True: "* Passed"}
+print >>logfile, status[diff_f1 < 0.05], 'Feather 1 image max test '
 print >>logfile,'*--  Feather 1: Image max '+str(feather1_immax)+','+str(f1_max)
-if (diff_f2 < 0.05): print >>logfile,'* Passed Feather 2 image max test'
+print >>logfile, status[diff_f2 < 0.05], 'Feather 2 image max test'
 print >>logfile,'*--  Feather 2: Image max '+str(feather2_immax)+','+str(f2_max)
-if (diff_f3 < 0.05): print >>logfile,'* Passed Feather 3 image max test'
+print >>logfile, status[diff_f3 < 0.05], 'Feather 3 image max test'
 print >>logfile,'*--  Feather 3: Image max '+str(feather3_immax)+','+str(f3_max)
-if (diff_jc1 < 0.05): print >>logfile,'* Passed Joint Deconvolution 1 image max test' 
+print >>logfile, status[diff_jc1 < 0.05], 'Joint Deconvolution 1 image max test' 
 print >>logfile,'*--  Joint Decon1: Image max '+str(jc1_immax)+','+str(jc1_max)
-if (diff_jc2 < 0.05): print >>logfile,'* Passed Joint Deconvolution 2 image max test'
+print >>logfile, status[diff_jc2 < 0.05], 'Joint Deconvolution 2 image max test'
 print >>logfile,'*--  Joint Decon2: Image max '+str(jc2_immax)+','+str(jc2_max)
-if (diff_f1f < 0.05): print >>logfile,'* Passed Feather 1 flux test '
+print >>logfile, status[diff_f1f < 0.05], 'Feather 1 flux test '
 print >>logfile,'*--  Feather 1: Flux '+str(feather1_flux)+','+str(f1_flux)
-if (diff_f2f < 0.05): print >>logfile,'* Passed Feather 2 flux test'
+print >>logfile, status[diff_f2f < 0.05], 'Feather 2 flux test'
 print >>logfile,'*--  Feather 2: Flux '+str(feather2_flux)+','+str(f2_flux)
-if (diff_f3f < 0.05): print >>logfile,'* Passed Feather 3 flux test'
+print >>logfile, status[diff_f3f < 0.05], 'Feather 3 flux test'
 print >>logfile,'*--  Feather 3: Flux '+str(feather3_flux)+','+str(f3_flux)
-if (diff_jc1f < 0.05): print >>logfile,'* Passed Joint Deconvolution flux test'
+print >>logfile, status[diff_jc1f < 0.05], 'Joint Deconvolution flux test'
 print >>logfile,'*--  Joint Decon1: Flux '+str(joint1_flux)+','+str(jc1_flux)
-if (diff_jc2f < 0.05): print >>logfile,'* Passed Joint Deconvolution flux test'
+print >>logfile, status[diff_jc2f < 0.05], 'Joint Deconvolution flux test'
 print >>logfile,'*--  Joint Decon2: Flux '+str(joint2_flux)+','+str(jc2_flux)
 
 if ((diff_f1<0.05) & (diff_f2<0.05) & (diff_f3<0.05) & (diff_jc1<0.05) & (diff_f1f<0.05) & (diff_f2f<0.05) & (diff_f3f<0.05) & (diff_jc1f<0.05)): 

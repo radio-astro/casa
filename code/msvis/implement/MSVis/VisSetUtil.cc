@@ -91,25 +91,33 @@ void VisSetUtil::WeightNatural(VisibilityIterator& vi, Double& sumwt) {
   VisBuffer vb(vi);
   
   sumwt=0.0;
-
+  Int ndrop=0;
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
     for (vi.origin();vi.more();vi++) {
       Int nRow=vb.nRow();
       Int nChan=vb.nChannel();
+      Int nPol=vb.nCorr();
       for (Int row=0; row<nRow; row++) {
-	for (Int chn=0; chn<nChan; chn++) {
-	  if( !vb.flag()(chn,row) ) {
-	    vb.imagingWeight()(chn,row)=vb.weight()(row);
-	    sumwt+=vb.imagingWeight()(chn,row);
-	  }
-	  else {
-	    vb.imagingWeight()(chn,row)=0.0;
-	  }
-	}
+	    for (Int chn=0; chn<nChan; chn++) {
+          for (Int pol=0; pol<nPol; pol++) {
+	        //if( !vb.flag()(chn,row) ) {
+			//include correlation(pol) based flag 
+	        if( !vb.flagCube()(pol,chn,row) ) {
+	          vb.imagingWeight()(chn,row)=vb.weight()(row);
+	          sumwt+=vb.imagingWeight()(chn,row);
+	        }
+	        else {
+	          vb.imagingWeight()(chn,row)+=0.0;
+		      ndrop++;
+	        }
+	      }
+        }
       }
       vi.setImagingWeight(vb.imagingWeight());
     }
   }
+  os << LogIO::DEBUG1 << "no. vis dropped = " << ndrop << LogIO::POST;
+
   if(sumwt<=0.0) {
     os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
   }
@@ -157,37 +165,42 @@ void VisSetUtil::WeightUniform(VisibilityIterator& vi,
     for (vi.origin();vi.more();vi++) {
       Int nRow=vb.nRow();
       Int nChan=vb.nChannel();
+      Int nPol=vb.nCorr();
       for (Int row=0; row<nRow; row++) {
-	for (Int chn=0; chn<nChan; chn++) {
-	  if(!vb.flag()(chn,row)) {
-	    Float f=vb.frequency()(chn)/C::c;
-	    u=vb.uvw()(row)(0)*f; 
-	    v=vb.uvw()(row)(1)*f;
-	    Int ucell=Int(uscale*u+uorigin);
-	    Int vcell=Int(vscale*v+vorigin);
-	    if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
-	      for (Int iv=-vBox;iv<=vBox;iv++) {
-		for (Int iu=-uBox;iu<=uBox;iu++) {
-		  gwt(ucell+iu,vcell+iv)+=vb.weight()(row);
-		  sumwt+=vb.weight()(row);
-		}
-	      }
-	    }
-	    ucell=Int(-uscale*u+uorigin);
-	    vcell=Int(-vscale*v+vorigin);
-	    if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
-	      for (Int iv=-vBox;iv<=vBox;iv++) {
-		for (Int iu=-uBox;iu<=uBox;iu++) {
-		  gwt(ucell+iu,vcell+iv)+=vb.weight()(row);
-		  sumwt+=vb.weight()(row);
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
+	    for (Int chn=0; chn<nChan; chn++) {
+	      for (Int pol=0; pol<nPol; pol++) {
+	        //if(!vb.flag()(chn,row)) {
+			//include correlation(pol) based flag 
+	        if(!vb.flagCube()(pol,chn,row)) {
+	          Float f=vb.frequency()(chn)/C::c;
+	          u=vb.uvw()(row)(0)*f; 
+	          v=vb.uvw()(row)(1)*f;
+	          Int ucell=Int(uscale*u+uorigin);
+	          Int vcell=Int(vscale*v+vorigin);
+	          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+	            for (Int iv=-vBox;iv<=vBox;iv++) {
+		          for (Int iu=-uBox;iu<=uBox;iu++) {
+		            gwt(ucell+iu,vcell+iv)+=vb.weight()(row);
+		            sumwt+=vb.weight()(row);
+		          }
+	            }
+	          }
+	          ucell=Int(-uscale*u+uorigin);
+	          vcell=Int(-vscale*v+vorigin);
+	          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+	            for (Int iv=-vBox;iv<=vBox;iv++) {
+		          for (Int iu=-uBox;iu<=uBox;iu++) {
+		            gwt(ucell+iu,vcell+iv)+=vb.weight()(row);
+		            sumwt+=vb.weight()(row);
+		          }
+	            }
+	          }
+	        }// end if (!vb.flagCube()...)
+	      }// end for pol
+		}// end for chn
+      }// end for row
+    }// end for vi++
+  }// end for vi.nextChunk()
   
   // We use the approximation that all statistical weights are equal to
   // calculate the average summed weights (over visibilities, not bins!)
@@ -201,7 +214,7 @@ void VisSetUtil::WeightUniform(VisibilityIterator& vi,
     Double sumlocwt = 0.;
     for(Int vgrid=0;vgrid<ny;vgrid++) {
       for(Int ugrid=0;ugrid<nx;ugrid++) {
-	if(gwt(ugrid, vgrid)>0.0) sumlocwt+=square(gwt(ugrid,vgrid));
+	    if(gwt(ugrid, vgrid)>0.0) sumlocwt+=square(gwt(ugrid,vgrid));
       }
     }
     f2 = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt);
@@ -218,36 +231,42 @@ void VisSetUtil::WeightUniform(VisibilityIterator& vi,
     f2 = 1.0;
     d2 = 0.0;
   }
-  
   Int ndrop=0;
   sumwt=0.0;
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
     for (vi.origin();vi.more();vi++) {
       for (Int row=0; row<vb.nRow(); row++) {
-	for (Int chn=0; chn<vb.nChannel(); chn++) {
-	  if (!vb.flag()(chn,row)) {
-	    Float f=vb.frequency()(chn)/C::c;
-	    u=vb.uvw()(row)(0)*f;
-	    v=vb.uvw()(row)(1)*f;
-	    Int ucell=Int(uscale*u+uorigin);
-	    Int vcell=Int(vscale*v+vorigin);
-	    vb.imagingWeight()(chn,row)=vb.weight()(row);
-	    if((ucell>0)&&(ucell<nx)&&(vcell>0)&&(vcell<ny)) {
-	      if(gwt(ucell,vcell)>0.0) {
-		vb.imagingWeight()(chn,row)/=gwt(ucell,vcell)*f2+d2;
-		sumwt+=vb.imagingWeight()(chn,row);
-	      }
-	    }
-	    else {
-	      vb.imagingWeight()(chn,row)=0.0;
-	      ndrop++;
-	    }
-	  }
-	}
-      }
+	    for (Int chn=0; chn<vb.nChannel(); chn++) {
+	      for (Int pol=0; pol<vb.nCorr(); pol++) {
+	        //if (!vb.flag()(chn,row)) {
+	        if (!vb.flagCube()(pol,chn,row)) {
+	          Float f=vb.frequency()(chn)/C::c;
+	          u=vb.uvw()(row)(0)*f;
+	          v=vb.uvw()(row)(1)*f;
+	          Int ucell=Int(uscale*u+uorigin);
+	          Int vcell=Int(vscale*v+vorigin);
+	          vb.imagingWeight()(chn,row)=vb.weight()(row);
+	          if((ucell>0)&&(ucell<nx)&&(vcell>0)&&(vcell<ny)) {
+	            if(gwt(ucell,vcell)>0.0) {
+		          vb.imagingWeight()(chn,row)/=gwt(ucell,vcell)*f2+d2;
+		          sumwt+=vb.imagingWeight()(chn,row);
+	            }
+	          }
+			}
+	        else {
+	          vb.imagingWeight()(chn,row)+=0.0;
+	          ndrop++;
+	        }
+	      }// end for pol
+	    }// end for chn
+	  }// end for row
+    }// end for vi++
       vi.setImagingWeight(vb.imagingWeight());
-    }
-  }
+
+    //} closure of the loop block at wrong place????
+
+  }// end for vi.nextChunk
+  os << LogIO::DEBUG1 << "no. vis dropped = " << ndrop << LogIO::POST;
   if(sumwt<=0.0) {
     os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
   }
@@ -261,29 +280,34 @@ void VisSetUtil::WeightRadial(VisibilityIterator& vi, Double& sumwt) {
   LogIO os(LogOrigin("VisSetUtil", "WeightRadial()", WHERE));
   
   sumwt=0.0;
-
+  Int ndrop=0;
   
   VisBuffer vb(vi);
   
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
     for (vi.origin();vi.more();vi++) {
       for (Int row=0; row<vb.nRow(); row++) {
-	for (Int chn=0; chn<vb.nChannel(); chn++) {
-	  Float f=vb.frequency()(chn)/C::c;
-	  if( !vb.flag()(chn,row) ) {
-	    vb.imagingWeight()(chn,row)=
-	      f*sqrt(square(vb.uvw()(row)(0))+square(vb.uvw()(row)(1)))
-	      * vb.weight()(row);
-	    sumwt+=vb.imagingWeight()(chn,row);
-	  }
-	  else {
-	    vb.imagingWeight()(chn,row)=0.0;
-	  }
-	}
-      }
+	    for (Int chn=0; chn<vb.nChannel(); chn++) {
+	      for (Int pol=0; pol<vb.nCorr(); pol++) {
+	        Float f=vb.frequency()(chn)/C::c;
+	        //if( !vb.flag()(chn,row) ) {
+	        if (!vb.flagCube()(pol,chn,row)) {
+	          vb.imagingWeight()(chn,row)=
+	          f*sqrt(square(vb.uvw()(row)(0))+square(vb.uvw()(row)(1)))
+	          * vb.weight()(row);
+	          sumwt+=vb.imagingWeight()(chn,row);
+	        }
+	        else {
+	          vb.imagingWeight()(chn,row)+=0.0;
+			  ndrop++;
+	        }
+	      }//end for pol
+	    }//end for chn
+      }//end for row
       vi.setImagingWeight(vb.imagingWeight());
     }
   }
+  os << LogIO::DEBUG1 << "no. vis dropped = " << ndrop << LogIO::POST;
   if(sumwt<=0.0) {
     os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
   }

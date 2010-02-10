@@ -449,7 +449,7 @@ inline istream & operator >> ( istream &i, AngularRate &x ) {
 	return i;
 }
 inline string AngularRate::unit() {
-	return string ("rad/sec");
+	return string ("rad/s");
 }
 } // End namespace asdm
 #endif /* AngularRate_CLASS */

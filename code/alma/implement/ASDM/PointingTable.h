@@ -467,7 +467,7 @@ public:
 	PointingRow* lookup(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId); 
 
 
-private:
+// private:
 
 	/**
 	 * Create a PointingTable.
