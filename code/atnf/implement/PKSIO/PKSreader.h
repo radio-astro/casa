@@ -34,6 +34,7 @@
 #define ATNF_PKSREADER_H
 
 #include <atnf/PKSIO/PKSrecord.h>
+#include <atnf/PKSIO/SrcType.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
