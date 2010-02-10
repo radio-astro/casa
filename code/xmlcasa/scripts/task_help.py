@@ -51,7 +51,6 @@ ___________________________________________________________________
 Help:
    help taskname          - Full help for task
    help par.parametername - Full help for parameter name
-   apropos string         - List tasks with string in their brief help.
    tasklist               - Task list organized by catagory
    taskhelp               - One line summary of available tasks
    toolhelp               - One line summary of available tools
