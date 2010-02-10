@@ -17,48 +17,48 @@ except ImportError, e:
 ##
 ## first set up CASAPATH
 ##
-if os.environ.has_key('CASAPATH') :
-    __casapath__ = os.environ['CASAPATH'].split(' ')[0]
-    if not os.path.exists(__casapath__ + "/data") :
-        raise RuntimeError, "CASAPATH environment variable is improperly set"
-else :
-    __casapath__ = casac.__file__
-    while __casapath__ and __casapath__ != "/" :
-        if os.path.exists( __casapath__ + "/data") :
-            break
-        __casapath__ = os.path.dirname(__casapath__)
-    if __casapath__ and __casapath__ != "/" :
-        os.environ['CASAPATH']=__casapath__ + " linux local host"
-    else :
-        raise RuntimeError, "CASAPATH environment variable must be set"
-
-##
-## next adjust the PYTHONPATH
-##
-if re.match( r'.*/\d+\.\d+\.\d+\w*-\d+$', __casapath__ ) :
-    for root, dirs, files in os.walk(os.path.dirname(__casapath__)):
-        if root.endswith("/numpy"):
-            sys.path.append(os.path.dirname(root))
-            break
-else:
-    for root, dirs, files in os.walk(__casapath__):
-        if root.endswith("/numpy"):
-            sys.path.append(os.path.dirname(root))
-            break
-
-##
-## next adjust PATH and LD_LIBRARY_PATH
-##
-for root, dirs, files in os.walk(__casapath__):
-    if root.endswith("/bin") and "casapyinfo" in files :
-        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casapyinfo --exec 'which ipcontroller'"))
-        if os.path.exists(__ipcontroller__) :
-            os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
-        else :
-            raise RuntimeError, "cannot configure CASA tasking system"
-        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
-        map(lambda x: sys.path.append(x),__ld_library_path__)
-        break
+#if os.environ.has_key('CASAPATH') :
+#    __casapath__ = os.environ['CASAPATH'].split(' ')[0]
+#    if not os.path.exists(__casapath__ + "/data") :
+#        raise RuntimeError, "CASAPATH environment variable is improperly set"
+#else :
+#    __casapath__ = casac.__file__
+#    while __casapath__ and __casapath__ != "/" :
+#        if os.path.exists( __casapath__ + "/data") :
+#            break
+#        __casapath__ = os.path.dirname(__casapath__)
+#    if __casapath__ and __casapath__ != "/" :
+#        os.environ['CASAPATH']=__casapath__ + " linux local host"
+#    else :
+#        raise RuntimeError, "CASAPATH environment variable must be set"
+#
+###
+### next adjust the PYTHONPATH
+###
+#if re.match( r'.*/\d+\.\d+\.\d+\w*-\d+$', __casapath__ ) :
+#    for root, dirs, files in os.walk(os.path.dirname(__casapath__)):
+#        if root.endswith("/numpy"):
+#            sys.path.append(os.path.dirname(root))
+#            break
+#else:
+#    for root, dirs, files in os.walk(__casapath__):
+#        if root.endswith("/numpy"):
+#            sys.path.append(os.path.dirname(root))
+#            break
+#
+###
+### next adjust PATH and LD_LIBRARY_PATH
+###
+#for root, dirs, files in os.walk(__casapath__):
+#    if root.endswith("/bin") and "casapyinfo" in files :
+#        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casapyinfo --exec 'which ipcontroller'"))
+#        if os.path.exists(__ipcontroller__) :
+#            os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
+#        else :
+#            raise RuntimeError, "cannot configure CASA tasking system"
+#        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
+#        map(lambda x: sys.path.append(x),__ld_library_path__)
+#        break
 
 #
 #from taskinit import *
