@@ -362,7 +362,7 @@ namespace casa {
     stateIdV.resize(0);
 
     asdm::ExecBlockRow* eBlockRow = (ASDM_p->getExecBlock()).getRowByKey(eBlockId);
-    string eBlockUID = eBlockRow->getExecBlockUID().toString();
+    string eBlockUID = eBlockRow->getExecBlockUID().getEntityId ().toString();
     int eBlockNum = eBlockRow->getExecBlockNum();
 
     Bool warned=False; // use later to avoid repetitive warnings
@@ -1175,6 +1175,9 @@ namespace casa {
 	  spectralWindowId = asdmSpectralWindowId_p(spwId);
 	}
 	string code = source().code()(irow).c_str();
+	if(code=="" || code==" "){
+	  code="-";
+	}
 	vector< Angle > direction;
 	MDirection theSourceDir = source().directionMeas()(irow);
 	direction.push_back( Angle( theSourceDir.getAngle( unitASDMAngle() ).getValue()(0) ) ); // RA
@@ -1652,6 +1655,9 @@ namespace casa {
       // parameters of the new row
       string fieldName = field().name()(irow).c_str();
       string code = field().code()(irow).c_str();
+      if(code=="" || code==" "){
+	code="-";
+      }
       int numPoly = field().numPoly()(irow);
       if(numPoly>0){
 	os << LogIO::SEVERE << "Internal error: NUM_POLY > 0 not yet supported." << LogIO::POST;
@@ -2971,6 +2977,7 @@ namespace casa {
     // loop over main table
     Bool warned = False; // aux. var. to avoid warning repetition  
     uInt nMainTabRows = ms_p.nrow();
+
     for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
 
       // Step 1: determine SBSummary ID and fill SBSummary table row
@@ -3090,6 +3097,9 @@ namespace casa {
 	Double endT = timestampEndSecs(mainTabRow);
 	execBlockEndTime.remove(sBSummaryTag);
 	execBlockEndTime.define(sBSummaryTag, endT);
+	if(verbosity_p>2){
+	  cout << "interval = " << endT - execBlockStartTime(sBSummaryTag) << ", duration == " <<  durationSecs << endl;
+	}
 	if(endT - execBlockStartTime(sBSummaryTag) >= durationSecs){ // yes, it is complete
 	  
 	  // parameters for a new row
@@ -3112,10 +3122,14 @@ namespace casa {
 	  string configName = "configName t.b.d."; // ???
 	  string telescopeName = telName_p;
 	  string observerName = observation().observer()(obsId).c_str();
-	  string observingLog = "";
+	  if(observerName==""){
+	    observerName = "unknown";
+	  }
+	  string observingLog = "log not filled";
 	  Vector< String > sV;
 	  if(observation().log().isDefined(obsId)){// log string array not empty
 	    sV.reference(observation().log()(obsId)); // the observation log is an array of strings
+	    observingLog = "";
 	    for(uInt i=0; i<sV.size(); i++){
 	      if(i>0){
 		observingLog += "\n";
@@ -3149,6 +3163,9 @@ namespace casa {
 	    return False;
 	  }
 	  asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
+	  if(verbosity_p>2){
+	    cout << "eblock id defined in loop 1 for time " << setprecision(9) << execBlockStartTime(sBSummaryTag) << endl;
+	  }
 
 	  // undefine the mapping for this Tag since the ExecBlock was completed
 	  execBlockStartTime.remove(sBSummaryTag);
@@ -3164,7 +3181,17 @@ namespace casa {
       } 
       else{// no, it has not been started, yet
 
+	// check if there is another exec block which started at the same time
+	for(uInt i=0; i<execBlockStartTime.ndefined(); i++){
+	  if(execBlockStartTime.getVal(i) == timestampStartSecs(mainTabRow)){
+	    os << LogIO::SEVERE << "Observation of different spectral windows at the same time and under the same observation ID is not supported."
+	     << "\n  Please split out the different spectral windows into individual MSs and process seperately." << LogIO::POST;
+	    return False;
+	  }
+	}
+
 	execBlockStartTime.define(sBSummaryTag, timestampStartSecs(mainTabRow));
+
 	execBlockEndTime.define(sBSummaryTag, timestampEndSecs(mainTabRow)); // will be updated
 	Int oldNum = 0;
 	if(execBlockNumber.isDefined(sBSummaryTag)){ 
@@ -3173,6 +3200,9 @@ namespace casa {
 	  execBlockNumber.remove(sBSummaryTag);
 	}
 	execBlockNumber.define(sBSummaryTag, oldNum + 1); // sequential numbering starting at 1
+	if(verbosity_p>2){
+	  cout << "eblock number " << oldNum + 1 << " defined for start time " << setprecision (9) << timestampStartSecs(mainTabRow) << endl;
+	}
 
 	obsIdFromSBSum.define(sBSummaryTag, obsId); // remember the obsId for this exec block
 	
@@ -3231,10 +3261,14 @@ namespace casa {
       string configName = "configName t.b.d."; // ???
       string telescopeName = telName_p;
       string observerName = observation().observer()(obsId).c_str();
-      string observingLog = "";
+      if(observerName==""){
+	observerName = "unknown";
+      }
+      string observingLog = "log not filled";
       Vector< String > sV;
       if(observation().log().isDefined(obsId)){ // string array column not empty
 	sV.reference(observation().log()(obsId)); // the observation log is an array of strings
+	observingLog = "";
 	for(uInt i=0; i<sV.size(); i++){
 	  if(i>0){
 	    observingLog += "\n";
@@ -3268,6 +3302,9 @@ namespace casa {
 	return False;
       }
       asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
+      if(verbosity_p>2){
+	cout << "eblock id defined in loop 2 for time " << setprecision(9) << execBlockStartTime(sBSummaryTag) << endl;
+      }
 
       // undefine the mapping for this Tag since the ExecBlock was completed
       execBlockStartTime.remove(sBSummaryTag); // need only remove from the map which is tested
@@ -3470,7 +3507,7 @@ namespace casa {
 	    bool flagRow = False;
 
 	    // parameters for the corresponding new Main table row
-	    ArrayTime mainTime = subScanStartArrayTime;
+	    ArrayTime mainTime = ASDMArrayTime((timestampStartSecs(startRow) + timestampEndSecs(endRow))/2.); // midpoint!
 
 	    if(!asdmConfigDescriptionId_p.isDefined(startRow)){
 	      os << LogIO::SEVERE << "Internal error: undefined config description id for MS main table row "
@@ -3488,7 +3525,7 @@ namespace casa {
 	    Tag fieldIdTag = asdmFieldId_p(theFId);
 	    int numAntenna = CDR->getNumAntenna();
 	    TimeSamplingMod::TimeSampling timeSampling = TimeSamplingMod::INTEGRATION;
-	    Interval interval = ASDMInterval(timestampEndSecs(endRow) - timestampStartSecs(startRow));
+	    Interval interval = ASDMInterval(intervalQuant()(startRow).getValue("s")); // data sampling interval
 	    int numIntegration; // to be set by the following method call
 	    int dataSize; // to be set by the following method call
 	    EntityRef dataOid; // to be set by the following method call
@@ -4005,9 +4042,9 @@ namespace casa {
     Double sTime = midpoint.getValue("s");  
     Double sInterval = interval.getValue("s");
     if(sInterval >= sTime){ // a very large value was set to express "always valid"
-      sTime = timeQuant()(0).getValue("s") - intervalQuant()(0).getValue("s")/2.;
-      sInterval =  timeQuant()(ms_p.nrow()-1).getValue("s") - sTime 
-	+ intervalQuant()(ms_p.nrow()-1).getValue("s")/2.;
+      sTime = timestampStartSecs(0);
+      sInterval = timestampEndSecs(ms_p.nrow()-1) - sTime;
+      cout << "hello1" <, endl;
     }
     else{ // still need to make sTime the interval start
       sTime -= sInterval/2.;
@@ -4015,6 +4052,7 @@ namespace casa {
     
     ArrayTimeInterval timeInterval( ASDMArrayTime(sTime),
 				    ASDMInterval(sInterval) );
+    cout << sTime << ", " << sInterval << endl;
     return timeInterval;
   }
 

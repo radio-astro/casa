@@ -136,7 +136,8 @@ if (testnumber in testlist):
             vis = 'myinput.ms',
             asdm = 'exportasdm-output.asdm',
             archiveid="S1",
-            verbose=True
+            verbose=True,
+            apcorrected=False
             )
         print "rval is ", rval
         if not rval:
@@ -186,7 +187,8 @@ if (testnumber in testlist):
         rval = exportasdm(
             vis = 'myinput.ms',
             asdm = 'exportasdm-output.asdm',
-            archiveid="S1"
+            archiveid="S1",
+            apcorrected=False
             )
         print "rval is ", rval
         if not rval:
@@ -207,18 +209,19 @@ if (testnumber in testlist):
     total += 1
     try:
         print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "real input MS, default output"
+        print "real input MS, MS has several SPWs observed in parallel - not supported, expected error"
         rval = exportasdm(
             vis = 'myinput.ms',
             asdm = 'exportasdm-output.asdm',
-            archiveid="S1"
+            archiveid="S1",
+            apcorrected=False
             )
         print "rval is ", rval
         if not rval:
-            raise Exception
-        omsname = "test"+str(testnumber)+'exportasdm-output.asdm'
-        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
-        verify_asdm(omsname, False)
+            print myname, ': *** Error as expected ***'   
+        else:
+            print "Failed ..."
+            failures +=1
     except:
         print myname, ': *** Unexpected error ***'   
         failures += 1
