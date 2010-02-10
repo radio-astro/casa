@@ -24,9 +24,9 @@ import nose
 # List of tests to run
 E2E_TESTS = []
 OLD_TESTS = []
-NEW_TESTS = ['test_report']
+NEW_TESTS = []
 
-
+# Get the tests to run
 i = sys.argv.index("-c")
 this_file = sys.argv[i+1]
 testnames = []
@@ -34,7 +34,6 @@ whichtests = 0  #all tests
 
 if sys.argv.__len__() == i+2:
     whichtests = 0
-    testnames = ALL_TESTS
 elif sys.argv.__len__() == i+3:
     whichtests = 1
     testnames = [sys.argv[i+2]]
@@ -55,19 +54,20 @@ else:
 
 if not whichtests:
     # Run new tests
-    testnames = NEW_TESTS
+    testnames = NEW_TESTS        
+
     for f in testnames:
         try:
             # Get a list of tests contained in the class
             tests = UnitTest(f).runTest()
             xmlfile = xmldir+f+'.xml'
-            result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+            result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
                               suite=tests)
             os.chdir(PWD)
         except:
+            os.chdir(PWD)
             print "Exception: failed to run %s" %f
             traceback.print_exc()
-
 
     # Run old tests
     testnames = OLD_TESTS
@@ -77,10 +77,11 @@ if not whichtests:
             # Get the testcase
             test = UnitTest(f).runFuncTest()
             xmlfile = xmldir+f+'.xml'
-            result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+            result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
                               suite=[test])
             os.chdir(PWD)
         except:
+            os.chdir(PWD)
             print "Exception: failed to run %s" %f
             traceback.print_exc()
 
@@ -98,10 +99,11 @@ if not whichtests:
             testcase.setup()
            
             xmlfile = xmldir+f+'.xml'
-            result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+            result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
                               suite=[testcase])
             os.chdir(PWD)
         except:
+            os.chdir(PWD)
             print "Exception: failed to run %s" %f
             traceback.print_exc()
 
@@ -113,14 +115,23 @@ else:
         f = testnames[0]
         tests = UnitTest(f).runTest()
         xmlfile = xmldir+f+'.xml'
-        result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+        result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile,], 
                           suite=tests)
+        
         os.chdir(PWD)
     except:
+        os.chdir(PWD)
         print "Exception: failed to run %s" %f
         traceback.print_exc()
         
     
     
     
-    
+
+
+
+
+
+
+
+
