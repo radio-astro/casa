@@ -12,6 +12,12 @@ import matplotlib
 import signal
 from asap_init import *
 
+##
+## ensure that we're the process group leader
+## of all processes that we fork...
+##
+os.setpgid(0,0)
+
 def termination_handler(signum, frame):
 
     # Switch off this handler in order to avoid

@@ -175,8 +175,11 @@ class cluster(object):
       from time import strftime
       timestamp=strftime("%Y%m%d%H%M%S")
       lfile=self.__ipythondir+'/log/casacontroller-'+timestamp+'-'
+      ffile=self.__ipythondir+'/security/casacontroller-engine-'+timestamp+'.furl'
+      efile=self.__ipythondir+'/security/casacontroller-mec-'+timestamp+'.furl'
+      tfile=self.__ipythondir+'/security/casacontroller-tc-'+timestamp+'.furl'
       cmd=commands.getoutput("which ipcontroller")
-      self.__controller=Popen([cmd, '--logfile='+lfile]).pid
+      self.__controller=Popen([cmd, '--engine-furl-file='+ffile, '--multiengine-furl-file='+efile, '--task-furl-file='+tfile, '--logfile='+lfile]).pid
       #print 'cmd=', cmd, 'pid=', self.__controller
       if (self.__controller==None):
          return False
@@ -190,6 +193,7 @@ class cluster(object):
       self.__write_stop_controller()
       
       info=self.__ipythondir+'/log/casacontroller-'+str(self.__timestamp)+'-'+str(self.__controller)+'.log'
+      meng=self.__ipythondir+'/security/casacontroller-mec-'+self.__timestamp+'.furl'
       #print 'info=', info
       for i in range(1, 15):
          #print os.path.exists(info)
@@ -198,7 +202,7 @@ class cluster(object):
          time.sleep(1)
          #print "wait", i 
 
-      self.__client=client.MultiEngineClient()
+      self.__client=client.MultiEngineClient(meng)
       #print "__client=", self.__client
 
       #self.__client.activate()
@@ -220,7 +224,7 @@ class cluster(object):
       cmd=commands.getoutput("which ipengine")
       ef.write('export contrid=%s\n' % self.__controller)
       ef.write('export stamp=%s\n' % self.__timestamp)
-      ef.write(cmd+' --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- &\n')
+      ef.write(cmd+' --furl-file='+self.__ipythondir+'/security/casacontroller-engine-'+self.__timestamp+'.furl --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- &\n')
       ef.close()
 
    def __write_stop_node(self):
@@ -232,7 +236,7 @@ class cluster(object):
       ef=open(self.__ipythondir+'/'+self.__stop_node_file, 'w')
       bash=commands.getoutput("which bash")
       ef.write('#!%s\n' % bash)
-      ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | awk '{print $2}' | xargs kill -TERM")
+      ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | grep "+self.__timestamp+" | awk '{print $2}' | xargs kill -TERM")
       ef.close()
 
    def __write_stop_controller(self):

@@ -53,6 +53,13 @@ class simutil:
         self.startfreq=startfreq
         self.bandwidth=bandwidth
         self.totaltime=totaltime
+        self.nplots=1
+        self.iplot=0
+
+#    def newplot(self,nplots=1):  #set up nplots, subwindow etc
+#    def nextplot: # advamce subwindow
+#    def endplot: # margins etc
+
 
     def msg(self, s, origin=None, priority=None):
         # ansi color codes:
@@ -93,8 +100,8 @@ class simutil:
 # helper function to plot an image (optionally), and calculate its statistics
 # we could move this to the utility object (should, to facilitate "restart" of fidelity etc calculation after ms creation"
 
-    def statim(self,image,plot=True,incell=None):
-        ia.open(image)
+    def statim(self,image,plot=True,incell=None,disprange=None):
+        ia.open(image)       
         imunit=ia.summary()['header']['unit']            
         if imunit == 'Jy/beam':
             # stupid for dirty image:
@@ -111,7 +118,7 @@ class simutil:
             toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
             toJypix=1.
         else:
-            self.msg("%s: unknown units" % image,origin="statim",priority="warn")
+            self.msg("%s: unknown units" % image,origin="statim")
             toJyarcsec=1.
             toJypix=1.
         stats=ia.statistics(robust=True)
@@ -147,8 +154,10 @@ class simutil:
             #    self.msg("WARN: image %s doesn't have square pixels" % image,origin="statim")
             pixsize=[xpix,ypix]
             if incell != None:
-                if type(incell)=='str':
+                if type(incell)==type(""):
                     incell=qa.quantity(incell)
+                if type(incell)==type([]): incell=qa.sqrt(qa.mul(incell[0],incell[1]))
+                #print incell
                 pixsize=qa.convert(incell,'arcsec')['value']+pl.zeros(2)
                 xpix=pixsize[0]
                 ypix=pixsize[1]
@@ -166,6 +175,15 @@ class simutil:
             while imhist['counts'][ii]>0.995*highcounts and ii>0: 
                 ii=ii-1
             highvalue=imhist['values'][ii]
+            if disprange != None:
+                if type(disprange)==type([]):
+                    n=len(disprange)
+                    if n>0:
+                        highvalue=disprange[n-1]
+                    else:
+                        disprange.append(highvalue)  # return highvalue
+                else:
+                    highvalue=disprange
             #
             pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue)
             ax=pl.gca()
@@ -185,21 +203,22 @@ class simutil:
 
 
 
-    def calc_pointings(self, spacing, imsize, direction=None, relmargin=0.5):
+    def calc_pointings(self, spacing, imsize, direction=None, relmargin=0.33):
         """
         If direction is a list, simply returns direction and the number of
         pointings in it.
         
         Otherwise, returns a hexagonally packed list of pointings separated by
-        spacing and fitting inside an image specified by direction, imsize and
-        cell, and the number of pointings.  The hexagonal packing starts with a
+        spacing and fitting inside an area specified by direction and imsize, 
+        as well as the number of pointings.  The hexagonal packing starts with a
         horizontal row centered on direction, and the other rows alternate
-        being horizontally offset by a half spacing.  All of the pointings will
-        be within a rectangle relmargin * spacing smaller than the image on all
-        sides.
+        being horizontally offset by a half spacing.  
         """
-        if type(imsize) != list:
+        # make imsize 2-dimensional:
+        if type(imsize) != type([]):
             imsize=[imsize,imsize]
+        if len(imsize) <2:
+            imsize=[imsize[0],imsize[0]]
         if direction==None:
             # if no direction is specified, use the object's direction
             direction=self.direction
@@ -207,25 +226,28 @@ class simutil:
             # if one is specified, use that to set the object's direction
             # do we really want to do this?
             self.direction=direction
-        if type(direction) == list:
-            if len(direction) >1:
-                return len(direction), direction, [0.]*len(direction)
-            else:
-                direction=direction[0]
-    
+
+        # direction is always a list of strings (defined by .xml)
+        if len(direction) >1:
+            if self.verbose: self.msg("You are inputing the precise pointings in 'direction' - if you want me to calculate a mosaic, give a single direction",priority="warn")
+            return len(direction), direction, [0.]*len(direction) #etime at end
+        else: direction=direction[0]
+
+        # now its either a filename or a single direction:
+        # do we need this string check?  maybe it could be a quantity?
+        #if type(direction) == str:
+        # Assume direction as a filename and read lines if it exists
+        filename=os.path.expanduser(os.path.expandvars(direction))
+        if os.path.exists(filename):
+            msg('Reading direction information from the file, %s' % filename)
+            return util.read_pointings(filename)
+        
+        # haveing elimiated other options, we need to calculate:
         epoch, centx, centy = self.direction_splitter()
 
         spacing  = qa.quantity(spacing)
         yspacing = qa.mul(0.866025404, spacing)
     
-        #if type(cell) == list:
-        #    cellx, celly = map(qa.quantity, cell)
-        #else:
-        #    cellx = qa.quantity(cell)
-        #    celly = cellx
-        #
-        #xsize = qa.mul(imsize[0], cellx)
-        #ysize = qa.mul(imsize[1], celly)
         xsize=qa.quantity(imsize[0])
         ysize=qa.quantity(imsize[1])
 
@@ -270,6 +292,7 @@ class simutil:
         self.msg("using %i generated pointing(s)" % len(pointings))
         self.pointings=pointings
         return len(pointings), pointings, [0.]*len(pointings)
+
 
 
     def read_pointings(self, filename):
@@ -335,7 +358,7 @@ class simutil:
     
 
     def average_direction(self, directions=None):
-        # XXX make deal with list of measures as well as list of strings
+        # RI TODP make deal with list of measures as well as list of strings
         """
         Returns the average of directions as a string, and relative offsets
         """
@@ -386,7 +409,7 @@ class simutil:
         """
         if direction == None:
             direction=self.direction
-        if type(direction) == list:
+        if type(direction) == type([]):
             direction=self.average_direction(direction)[0]
         dirl = direction.split()
         if len(dirl) == 3:
@@ -403,7 +426,7 @@ class simutil:
         """
         if direction == None:
             direction=self.direction
-        if type(direction) == list:
+        if type(direction) == type([]):
             direction=self.average_direction(direction)[0]            
         dirl = direction.split()
         if len(dirl) == 3:
@@ -1370,61 +1393,46 @@ class simutil:
     # fit modelimage into a 4 coordinate image defined by the parameters
     def image4d(self, inimage, outimage, 
                 inbright,ignorecoord,
-                ra,dec,in_cell,out_cell,  # these may be the same
-                nchan,startfreq,chanwidth,bandwidth,
-                out_nstk,
+                ra,dec,cell,startfreq,chanwidth, # only used if ignorecoord
                 flatimage=""):  # if nonzero, create mom -1 image named this
 
-        # call with out_cell set to user parameter "cell"
-        # out_cell may get changed if ignorecoord=F
-
-        # *** ra is expected and returned in angular quantity/dict
+        # *** ra,dec,cell,freq,width are expected to be quantities
 
         in_ia=ia.newimagefromfile(inimage)            
         in_shape=in_ia.shape()
         in_csys=in_ia.coordsys()
 
-
-        if not ignorecoord:
-            # model image pixel sizes
+        if ignorecoord:
+            if type(cell) == type([]):
+                model_cell =  map(qa.convert,cell,['arcsec','arcsec'])
+            else:
+                model_cell = qa.convert(cell,'arcsec')            
+                model_cell = [model_cell,model_cell]
+        else:
+            # get pixel size from model image CoordSys
             increments=in_csys.increment(type="direction")['numeric']
             incellx=qa.quantity(abs(increments[0]),in_csys.units(type="direction")[0])
             incelly=qa.quantity(abs(increments[1]),in_csys.units(type="direction")[1])
-            #incellx=qa.convert(incellx,'arcsec')['value']
-            #incelly=qa.convert(incelly,'arcsec')['value']
             xform=in_csys.lineartransform(type="direction")
             offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
             if offdiag > 1e-4:
                 self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
-            factor=pl.sqrt(abs(pl.det(xform)))
-            # stupid fix for not having Rob's quanta fix
-            if int(casalog.version().split()[4][1:5]) < 8000:
-                factor=str(factor)
-            incellx=qa.mul(incellx,factor)
-            incelly=qa.mul(incelly,factor)
-    
-            # warn if input pixels are not square
-            if (abs(incellx['value'])-abs(incelly['value']))/abs(incellx['value']) > 0.001 and not ignorecoord:
-                self.msg("input pixels are not square!",priority="warn",origin="setup model")
-                if self.verbose:
-                    self.msg("using cell = %s (not %s)" % (str(incellx),str(incelly)),origin="setup model")
-                else:
-                    self.msg("using cell = %s" % str(incellx),origin="setup model")
-            in_cell=qa.convert(incellx,'arcsec')
-            
+            incellx=qa.mul(incellx,abs(xform[0,0]))
+            incelly=qa.mul(incelly,abs(xform[1,1]))
 
-        if out_cell=="incell":
-            out_cell=in_cell
-        
-        out_cell=qa.convert(out_cell,'arcsec')
+#            # warn if input pixels are not square
+#            if (abs(incellx['value'])-abs(incelly['value']))/abs(incellx['value']) > 0.001 and not ignorecoord:
+#                self.msg("input pixels are not square!",priority="warn",origin="setup model")
+#                if self.verbose:
+#                    self.msg("using cell = %s (not %s)" % (str(incellx),str(incelly)),origin="setup model")
+#                else:
+#                    self.msg("using cell = %s" % str(incellx),origin="setup model")
+            model_cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
 
         if self.verbose:
-            self.msg("input model image shape= %s" % in_shape,origin="setup model")
-            self.msg("input model pixel size = %8.2e arcsec" % in_cell['value'],origin="setup model")
+            self.msg("model image shape= %s" % in_shape,origin="setup model")
+            self.msg("model pixel size = %8.2e x %8.2e arcsec" % (model_cell[0]['value'],model_cell[1]['value']),origin="setup model")
 
-
-
-                
 
 
         # deal with brightness scaling
@@ -1434,7 +1442,6 @@ class simutil:
             stats=in_ia.statistics()
             highvalue=stats['max']
             scalefactor=float(inbright)/highvalue.max()
-
 
 
         # check shape characteristics of the input;
@@ -1464,13 +1471,12 @@ class simutil:
             if self.verbose: self.msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")
             
             model_refdir='J2000 '+qa.formxxx(ra,format='hms')+" "+qa.formxxx(dec,format='dms')
-            model_cell=out_cell # in arcsec
             axmap[0]=0 # direction in first two pixel axes
             axmap[1]=1
             axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
             axassigned[1]=0
-            
-        else:            
+             
+        else:  # get model_refdir from CoordSys:
             if not in_dir['return']:
                 self.msg("You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",priority="error")
                 return False            
@@ -1484,36 +1490,31 @@ class simutil:
             dirax=in_dir['pixel']
             axmap[0]=dirax[0]
             axmap[1]=dirax[1]                    
-            model_cell=in_cell # in arcsec
             axassigned[dirax[0]]=0
             axassigned[dirax[1]]=0
             if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
 
         # if we only have 2d to start with:
         if in_nax==2:            
-            # then we can't make a cube (at least, it would be boring)
-            if nchan>1: 
-                self.msg("you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",priority="warn",origin="setup model")
-                nchan=1
+            nchan=1
             # add an extra axis to be Spectral:
             arr=arr.reshape([arr.shape[0],arr.shape[1],1])
             in_shape=arr.shape
             in_nax=in_shape.__len__() # which should be 3
-            if self.verbose: self.msg("Adding dummy spectral axis",origin="setup model")
+            if self.verbose: self.msg("Adding degenerate spectral axis",origin="setup model")
 
-        # we have at least 3 axes, either by design or by addition:
+        # we now have at least 3 axes, either by design or by addition:
         if ignorecoord:
             add_spectral_coord=True
             extra_axis=2
         else:
             if in_spc['return']:
-                if type(in_spc['pixel']) == int :
+                if type(in_spc['pixel']) == type(1) :
                     foo=in_spc['pixel']
                 else:
                     foo=in_spc['pixel'][0]
                     self.msg("you seem to have two spectral axes",priority="warn")
-                if arr.shape[foo]>1 and nchan==1:
-                    if self.verbose: self.msg("You will be flattening your spectral dimension",origin="setup model",priority="warn")
+                    nchan=arr.shape[foo]>1 
                 axmap[3]=foo
                 axassigned[foo]=3
                 model_restfreq=in_csys.restfrequency()
@@ -1526,21 +1527,19 @@ class simutil:
                 if self.verbose: self.msg("Spectral Coordinate %i parsed" % axmap[3],origin="setup model")                
             else:
                 # we're not ignoreing coord, but we have at least one extra axis
-                # if we have a valid stokes axis, but not a valid spectral axis:
+                # that isn't a spectral axis.                
                 if in_stk['return']:
+                    # we have a valid stokes axis:
                     axassigned[in_stk['pixel']]=2
                     axmap[2]=in_stk['pixel']
-                    # AND, if we only had 3 axes, need to add dummy spectral:
+                    # AND, if we only had 3 axes (this was the only extra one), 
+                    # we need to add a degenerate spectral:
                     if in_nax<4:
-                        # then we can't make a cube (at least, it would be boring)
-                        if nchan>1: 
-                            self.msg("you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",priority="warn",origin="setup model")
-                            nchan=1
-                        # add an extra axis to be Spectral:
+                        nchan=1
                         arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
                         in_shape=arr.shape
                         in_nax=in_shape.__len__() # which should be 4
-                        if self.verbose: self.msg("Adding dummy spectral axis",origin="setup model")
+                        if self.verbose: self.msg("Adding degenerate spectral axis",origin="setup model")
                         
                 # find first unused axis - probably at end, but just in case its not:
                 i=0
@@ -1556,21 +1555,10 @@ class simutil:
         if add_spectral_coord:
             axmap[3]=extra_axis
             axassigned[extra_axis]=3
-            if nchan>arr.shape[extra_axis]:
-                nchan=arr.shape[extra_axis]
-                self.msg("you are asking for more channels than you have - truncating output cube to %i channels (%s each)" % (nchan,str(chanwidth)),priority="warn",origin="setup model")
-            if arr.shape[extra_axis]>nchan:
-                # actually subsample someday:
-                self.msg("you are asking for fewer channels (%i) than the input cube - increasing nchan to %i (%s each) " % (nchan,arr.shape[extra_axis],str(chanwidth)),priority="warn",origin="setup model")
-                nchan=arr.shape[extra_axis]
-            if arr.shape[extra_axis]>1:
-                model_restfreq=startfreq
-                model_start=startfreq
-                model_step=chanwidth
-            else:
-                model_restfreq=startfreq
-                model_start=startfreq            
-                model_step=bandwidth
+            nchan=arr.shape[extra_axis]
+            model_restfreq=startfreq
+            model_start=startfreq
+            model_step=chanwidth  # user responsibility to have chanwidth=BW
             if self.verbose: self.msg("Adding Spectral Coordinate",origin="setup model")
 
 
@@ -1582,7 +1570,7 @@ class simutil:
             in_nax=in_shape.__len__() # which should be 4
             add_stokes_coord=True
             extra_axis=3
-            if self.verbose: self.msg("Adding dummy Stokes axis",origin="setup model")
+            if self.verbose: self.msg("Adding degenerate Stokes axis",origin="setup model")
             
         # we have at least 3 axes, either by design or by addition:
         if ignorecoord:
@@ -1595,7 +1583,7 @@ class simutil:
                 for i in range(model_stokes.__len__()-1):
                     foo=foo+model_stokes[i+1]
                 model_stokes=foo
-                if type(in_stk['pixel']) == int:
+                if type(in_stk['pixel']) == type(1):
                     foo=in_stk['pixel']
                 else:
                     foo=in_stk['pixel'][0]
@@ -1637,25 +1625,18 @@ class simutil:
                 self.msg("setting IQ Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model",priority="warn")
             if arr.shape[extra_axis]<=1:                    
                 model_stokes="I"
+            out_nstk=len(model_stokes)
 
         if self.verbose:
             self.msg("axis map for model image = %i %i %i %i" %
                      (axmap[0],axmap[1],axmap[2],axmap[3]),origin="setup model")
-            if model_stokes.__len__() > out_nstk:
-                self.msg("increasing number of stokes components in 4d image to match the input %s" % model_stokes)
-            if model_stokes.__len__() < out_nstk:
-                self.msg("decreasing number of stokes components in 4d image to match the input %s" % model_stokes)
-
-        out_nstk=model_stokes.__len__()
-        
-
 
         modelshape=[in_shape[axmap[0]], in_shape[axmap[1]],out_nstk,nchan]
         ia.fromshape(outimage,modelshape,overwrite=True)
         modelcsys=ia.coordsys()        
         modelcsys.setunits(['rad','rad','','Hz'])
-        modelcsys.setincrement([-1*qa.convert(model_cell,modelcsys.units()[0])['value'],
-                                qa.convert(model_cell,modelcsys.units()[1])['value']],
+        modelcsys.setincrement([-1*qa.convert(model_cell[0],modelcsys.units()[0])['value'],
+                                qa.convert(model_cell[1],modelcsys.units()[1])['value']],
                                 type="direction")
         # setting both increment and lintransform does bad things.
         #modelcsys.setlineartransform("direction",
@@ -1664,11 +1645,13 @@ class simutil:
         dirm=self.dir_s2m(model_refdir)
         raq=dirm['m0']        
         deq=dirm['m1']        
-        modelcsys.setreferencevalue([qa.convert(raq,modelcsys.units()[0])['value'],
-                                     qa.convert(deq,modelcsys.units()[1])['value']],
-                                    type="direction")
-        modelcsys.setreferencepixel([0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]],
-                                    "direction")
+        modelcsys.setreferencevalue(
+            [qa.convert(raq,modelcsys.units()[0])['value'],
+             qa.convert(deq,modelcsys.units()[1])['value']],
+            type="direction")
+        modelcsys.setreferencepixel(
+            [0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]],
+            "direction")
         modelcsys.setspectral(refcode="LSRK",restfreq=model_restfreq)
         modelcsys.setreferencevalue(model_start,type="spectral")
         modelcsys.setreferencepixel(0,type="spectral") # default is middle chan
@@ -1714,21 +1697,16 @@ class simutil:
         if self.verbose:
             self.msg("model array minmax= %e %e" % (arr.min(),arr.max()),origin="setup model")        
             self.msg("scaling model brightness by a factor of %f" % scalefactor,origin="setup model")
-            self.msg("simulated image desired channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
-            self.msg("simulated image desired pixel size = %8.2e arcsec" % out_cell['value'],origin="setup model")
+            self.msg("image channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
             if arr.nbytes > 5e7:
                 msg("your model is large - predicting visibilities may take a while.",priority="warn")
 
 
         ia.putchunk(arr*scalefactor)
         ia.close()
-
         in_ia.close()
 
         # coord image should now have correct Coordsys and shape
-
-#        if shrinkspectral:
-#            # we had more channels in the cube than requested in the output image.
 
 
         #####################################################################
@@ -1765,6 +1743,6 @@ class simutil:
                 po.done()
                 shutil.rmtree(flatimage+".tmp")
 
-        return ra,dec,in_cell,out_cell,nchan,startfreq,chanwidth,bandwidth,out_nstk
+        return ra,dec,model_cell,nchan,model_start,model_step,model_stokes
 
 

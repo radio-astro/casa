@@ -7,6 +7,51 @@ import os
 import pdb
 
 
+def getchanimage(inimage, outimage, chan, nchan=1):
+    """
+    create a slice of channels image from cubeimage
+    """
+    #pdb.set_trace()
+    ia.open(inimage)
+    modshape=ia.shape()
+    if (modshape[3]==1) or (chan > (modshape[3]-1)) :
+        return False
+    if((nchan+chan) < modshape[3]):
+        endchan= chan+nchan-1
+    else:
+        endchan=modshape[3]-1
+    blc=[0,0,modshape[2]-1,chan]
+    trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,endchan]
+    sbim=ia.subimage(outfile=outimage, region=rg.box(blc,trc), overwrite=True)
+    sbim.close()
+    ia.close()
+    return True
+
+def putchanimage(cubimage,inim,chan):
+    """
+    put channel image back to a pre-exisiting cubeimage
+    """
+    ia.open(inim)
+    inimshape=ia.shape()
+    imdata=ia.getchunk()
+    immask=ia.getchunk(getmask=True)
+    ia.close()
+    ia.open(cubimage)
+    cubeshape=ia.shape()
+    blc=[0,0,inimshape[2]-1,chan]
+    trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
+    if( not (cubeshape[3] > (chan+inimshape[3]-1))):
+        return False
+
+    rg0=ia.setboxregion(blc=blc,trc=trc)
+    if inimshape[0:3]!=cubeshape[0:3]: 
+        return False
+    #ia.putchunk(pixels=imdata,blc=blc)
+    ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+    ia.close()
+    return True
+
+
 
 def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, continuum=True):
     numproc=numpartition
@@ -341,7 +386,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark',
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
           imagetilevol=1000000,
-          contclean=False):
+          contclean=False, chanchunk=1):
 
     """
     msname= measurementset
@@ -362,6 +407,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     weight= type of weight to apply
     contclean = boolean ...if False the imagename.model is deleted if its on 
     disk otherwise clean will continue from previous run
+    chanchunk = number of channel to process at a go per process...careful i 
     """
     spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
     c=cluster()
@@ -409,25 +455,26 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     c.pgc('a.imagetilevol='+str(imagetilevol))
 
     chancounter=0
+    nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1
     ###spw and channel selection
-    spwsel,startsel,nchansel=findchansel(msname, spwids, nchan, beginfreq=fstart, endfreq=fend, continuum=False)
+    spwsel,startsel,nchansel=findchansel(msname, spwids, nchanchunk, beginfreq=fstart, endfreq=fend, continuum=False)
     imnam='"%s"'%(imagename)
-    b=cleanhelper()
-    donegetchan=np.array(range(nchan),dtype=bool)
-    doneputchan=np.array(range(nchan),dtype=bool)
-    readyputchan=np.array(range(nchan), dtype=bool)
+    donegetchan=np.array(range(nchanchunk),dtype=bool)
+    doneputchan=np.array(range(nchanchunk),dtype=bool)
+    readyputchan=np.array(range(nchanchunk), dtype=bool)
     donegetchan.setfield(False,bool)
     doneputchan.setfield(False,bool)
     readyputchan.setfield(False, bool)
     chanind=np.array(range(numcpu), dtype=int)
     
-    while(chancounter < nchan):
+    while(chancounter < nchanchunk):
         chanind.setfield(-1, int)
         for k in range(numcpu):
-            if(chancounter < nchan):
+            if(chancounter < nchanchunk):
                 chanind[k]=chancounter
                 if(not donegetchan[chancounter]):
-                    b.getchanimage(model, imagename+str(chancounter)+'.model', chancounter)
+                    getchanimage(model, imagename+str(chancounter)+'.model', 
+                                 chancounter*chanchunk, chanchunk)
                     donegetchan[chancounter]=True
                 runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", majcycle='+str(majorcycles)+')'
                 print 'command is ', runcomm
@@ -436,15 +483,15 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
         over=False
         while(not over):
             time.sleep(5)
-            for k in range(nchan):
+            for k in range(nchanchunk):
                 ###split the remaining channel image while the master is waiting
                 if(not donegetchan[k]):
-                    b.getchanimage(model, imagename+str(k)+'.model', k)
+                    getchanimage(model, imagename+str(k)+'.model', k*chanchunk, chanchunk)
                     donegetchan[k]=True
                 if(readyputchan[k] and (not doneputchan[k])):
-                    b.putchanimage(model, imagename+str(k)+'.model', k)
-                    b.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k)
-                    b.putchanimage(imagename+'.image', imagename+str(k)+'.image', k)
+                    putchanimage(model, imagename+str(k)+'.model', k*chanchunk)
+                    putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
+                    putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
                     doneputchan[k]=True
             overone=True
             for k in range(numcpu):
@@ -454,11 +501,11 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
                     readyputchan[chanind[k]]=True
             over=overone
     ##sweep the remainder channels in case they are missed
-    for k in range(nchan):
+    for k in range(nchanchunk):
          if(not doneputchan[k]):
-             b.putchanimage(model, imagename+str(k)+'.model', k)
-             b.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k)
-             b.putchanimage(imagename+'.image', imagename+str(k)+'.image', k)
+             putchanimage(model, imagename+str(k)+'.model', k*chanchunk)
+             putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
+             putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
              doneputchan[k]=True
     time2=time.time()
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
