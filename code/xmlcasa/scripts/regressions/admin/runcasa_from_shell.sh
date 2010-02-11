@@ -66,6 +66,7 @@ if [ "x$DISPLAY" == "x" ] ; then
     Xvfb :$display &> /dev/null &
     # Suppressing error messages is bad style(tm),
     # but this X server is really noisy!
+    pid_xvfb=$!
 
     export DISPLAY=":$display.0"
     echo "DISPLAY = $DISPLAY"
@@ -90,14 +91,21 @@ else
 fi
 
 cmd="casapy --nologger -c $command"
+cmd="/tmp/exe.sh"
 echo $cmd
-$cmd
+$cmd &
+pid=$!
+wait $pid
 echo "casapy returned $?"
 
+echo "Kill anything in process group $pid if it exists..."
+kill -s TERM -- -$pid
+sleep 2
+kill -s KILL -- -$pid
+
 if [ $started_xvfb != 0 ]; then
-    # We should cleanup the Xvfb server;
-    # but don't bother, it is handled by process_manager.pl
-    echo "Leave X server Xvfb :$display running..."
+    echo "Kill Xvfb :$display..."
+    kill -s TERM $pid_xvfb
 fi
 
 exit 0
