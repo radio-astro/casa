@@ -389,7 +389,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark',
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
           imagetilevol=1000000,
-          contclean=False, chanchunk=1, visinmem=False):
+          contclean=False, chanchunk=1, visinmem=False, painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir'):
 
     """
     msname= measurementset
@@ -413,6 +413,8 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     chanchunk = number of channel to process at a go per process...careful not to 
    go above total memory available
    visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
+=====parameters for pbwproject
+
     """
     spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
     c=cluster()
@@ -460,6 +462,12 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     ###set some common parameters
     c.pgc('a.imagetilevol='+str(imagetilevol))
     c.pgc('a.visInMem='+str(visinmem))
+    c.pgc('a.painc='+str(painc))
+    c.pgc('a.cfcache='+'"'+str(cfcache)+'"')
+#        self.pblimit=0.1
+#        self.dopbcorr=True
+#        self.applyoffsets=False
+
 
     chancounter=0
     nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1

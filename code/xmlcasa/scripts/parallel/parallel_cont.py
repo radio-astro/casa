@@ -23,6 +23,11 @@ class imagecont():
         self.weightnpix=0
         self.imagetilevol=1000000
         self.visInMem=False
+        self.painc=360.0
+        self.pblimit=0.1
+        self.dopbcorr=True
+        self.applyoffsets=False
+        self.cfcache='cfcache.dir'
 
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
@@ -39,7 +44,7 @@ class imagecont():
 ####
         #imname=imname+'_%02d'%(j)
             im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
-            im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol)
+            im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, pastep=self.painc, pblimit=self.pblimit, cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol)
         #im.regionmask(mask='lala.mask', boxes=[[0, 0, 3599, 3599]])
         #im.setmfcontrol(cyclefactor=0.0)
         if(not self.imageparamset):
