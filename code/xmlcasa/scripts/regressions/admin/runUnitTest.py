@@ -24,7 +24,7 @@ import nose
 # List of tests to run
 E2E_TESTS = []
 OLD_TESTS = []
-NEW_TESTS = []
+NEW_TESTS = ['test_report']
 
 # Get the tests to run
 i = sys.argv.index("-c")
