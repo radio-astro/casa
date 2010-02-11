@@ -34,7 +34,8 @@ SOURCE_DIR = os.environ["CASAPATH"].split()[0]
 known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 2.3.1 (build #6826)",
                   "CASA Version 2.4.0 (build #8115)",
-                  "CASA Version 3.0.0 (r9888)"]
+                  "CASA Version 3.0.0 (r9861)", # for Mac...
+                  "CASA Version 3.0.0 (r9888)"] # for Linux...
 
 exclude_host = []
 exclude_test = {}
@@ -74,8 +75,8 @@ def cmp_version(a, b):
         else:
             # Compare XYZ numerically in
             # "CASA Version 3.0.1 (rXYZ)"
-            a_int = a[n:len(a)-len(")")]
-            b_int = b[n:len(b)-len(")")]
+            a_int = int(a[n:len(a)-len(")")])
+            b_int = int(b[n:len(b)-len(")")])
             return cmp_std(a_int, b_int)
         
 
@@ -136,7 +137,7 @@ def selected_revisions(data):
     all_list = []
     for c in all:
         all_list.append(c)
-    all_list.sort(reverse=True)
+    all_list.sort(reverse=True, cmp=cmp_version)
 
     # The following code selects which versions to use,
     # with lower density as we go back in time.
@@ -200,7 +201,7 @@ def selected_revisions(data):
 
 class report:
     def __init__(self, reg_dir, report_dir, \
-                 revision, \
+                 revision='all', \
                  gen_plot=True,   # generate plots?
                  skull=''         # path to crash image
                  ):
@@ -288,7 +289,7 @@ class report:
         self.casas = []
         for c in casas_set:
             self.casas.append(c)
-        self.casas.sort(reverse=True)
+        self.casas.sort(reverse=True, cmp=cmp_version)
 
 
         # Get test short description (from latest log)
@@ -338,12 +339,11 @@ class report:
             for log in data:
                 host = log['host']
                 v = log['CASA']
-                #if v < self.casa_revision[host] and \
                 if cmp_version(v, self.global_latest) < 0 and \
                        (not latest2.has_key(host) or \
-                        cmp_version(v, latest2[host]) > 0:
+                        cmp_version(v, latest2[host])) > 0:
                     latest2[host] = v
-
+                    
             for host in self.casa_revision.keys():
                 if not latest2.has_key(host):
                     latest2[host] = self.casa_revision[host]
