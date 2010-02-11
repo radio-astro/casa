@@ -2,7 +2,7 @@ import re
 
 def update_spw(spw, spwmap=None):
     """Given an spw:chan selection string, return what it should be after
-       the spws have been remapped (i.e. by split).
+       the spws have been remapped (i.e. by split).  It does not change spw.
 
        If given, spwmap will be used as a dictionary from (string) input spw to
        (string) output spws.  Otherwise it will be freshly calculated.
