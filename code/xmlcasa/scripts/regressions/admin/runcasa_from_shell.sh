@@ -91,7 +91,6 @@ else
 fi
 
 cmd="casapy --nologger -c $command"
-cmd="/tmp/exe.sh"
 echo $cmd
 $cmd &
 pid=$!
