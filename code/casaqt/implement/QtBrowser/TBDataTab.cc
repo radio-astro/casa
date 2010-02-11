@@ -295,9 +295,9 @@ void TBDataTab::updateTable(ProgressHelper* pp) {
     
     // update table parameters
     QStringList cols;
-    vector<String> fields = table->getColumnHeaders();
-    for(unsigned int i = 0; i < fields.size(); i++)
-        cols << fields.at(i).c_str();
+    vector<String> colFields = table->getColumnHeaders();
+    for(unsigned int i = 0; i < colFields.size(); i++)
+        cols << colFields.at(i).c_str();
     
     tableWidget->setCurrentCell(-1, -1);
     tableWidget->clear();
@@ -320,7 +320,7 @@ void TBDataTab::updateTable(ProgressHelper* pp) {
     if(pp != NULL) pp->step(); 
     
     QStringList rows;
-    fields = table->getRowHeaders();
+    vector<String> fields = table->getRowHeaders();
     for(unsigned int i = 0; i < fields.size(); i++)
         rows << fields.at(i).c_str();
     tableWidget->setVerticalHeaderLabels(rows);
@@ -333,13 +333,20 @@ void TBDataTab::updateTable(ProgressHelper* pp) {
     for(int i = 0; i < table->getLoadedRows(); i++) {
         for(int j = 0; j < table->getNumFields(); j++) {
             TBData* val = table->dataAt(i, j);
-            String type = val->getType();
-            QTableWidgetItem* item = new TBDataItem(val);
-            if(TBConstants::typeIsArray(type) ||
-               TBConstants::typeIsTable(type) ||
-               type == TBConstants::TYPE_RECORD)
-                item->setFlags(item->flags() & (~Qt::ItemIsEditable));
-            tableWidget->setItem(i, j, item);
+	    if(!val){ // null pointer
+ 	      ostringstream oss;
+	      oss << "Error accessing data for field " 
+		  << colFields[j];
+	      ttabs->getBrowser()->displayError( oss.str() );
+	      val = TBData::create(String("[Access Error]"), TBConstants::TYPE_STRING);
+	    }
+	    String type = val->getType();
+	    QTableWidgetItem* item = new TBDataItem(val);
+	    if(TBConstants::typeIsArray(type) ||
+	       TBConstants::typeIsTable(type) ||
+	       type == TBConstants::TYPE_RECORD)
+	      item->setFlags(item->flags() & (~Qt::ItemIsEditable));
+	    tableWidget->setItem(i, j, item);
         }
         rowItems.push_back(tableWidget->item(i, 0));
         if(pp != NULL && (i % 10 == 0)) pp->step();
