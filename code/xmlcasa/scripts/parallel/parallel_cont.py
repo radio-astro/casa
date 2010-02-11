@@ -22,6 +22,7 @@ class imagecont():
         self.robust=0.0
         self.weightnpix=0
         self.imagetilevol=1000000
+        self.visInMem=False
 
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
@@ -32,7 +33,7 @@ class imagecont():
         #print 'spwstring', spwstring
         msname=origname
         if(not self.imageparamset):
-            im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=True)
+            im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
             #im.selectvis(vis=msname, field=field, spw=spwstring, datainmemory=True)
             im.weight('natural')
 ####
@@ -66,7 +67,7 @@ class imagecont():
 #        a=cleanhelper()
         imname=imroot+str(imchan)
  #       a.getchanimage(cubeimage=imroot+'.model', outim=imname+'.model', chan=imchan)
-        im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=False)
+        im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
