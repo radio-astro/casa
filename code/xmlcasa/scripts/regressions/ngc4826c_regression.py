@@ -280,7 +280,14 @@ print >>logfile,'*--  Joint Decon1: Flux '+str(joint1_flux)+','+str(jc1_flux)
 print >>logfile, status[diff_jc2f < 0.05], 'Joint Deconvolution flux test'
 print >>logfile,'*--  Joint Decon2: Flux '+str(joint2_flux)+','+str(jc2_flux)
 
-if ((diff_f1<0.05) & (diff_f2<0.05) & (diff_f3<0.05) & (diff_jc1<0.05) & (diff_f1f<0.05) & (diff_f2f<0.05) & (diff_f3f<0.05) & (diff_jc1f<0.05)): 
+if (diff_f1 < 0.05 and
+    diff_f2 < 0.05 and
+    diff_f3 <0.05 and
+    diff_jc1 < 0.05 and
+    diff_f1f < 0.05 and
+    diff_f2f < 0.05 and
+    diff_f3f < 0.05 and
+    diff_jc1f < 0.05): 
 	regstate=True
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for NGC4826'
