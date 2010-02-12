@@ -64,6 +64,7 @@ class cluster(object):
       self.__new_engs=[]
       #print 'ipythondir', self.__ipythondir
       #print 'HOME:', self.homepath
+      #atexit.register(self.stop_cluster)
       atexit.register(cluster.stop_cluster,self)
 
    def start_engine(self, node_name, num_engine, work_dir=None):
@@ -236,7 +237,11 @@ class cluster(object):
       ef=open(self.__ipythondir+'/'+self.__stop_node_file, 'w')
       bash=commands.getoutput("which bash")
       ef.write('#!%s\n' % bash)
-      ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | grep "+self.__timestamp+" | awk '{print $2}' | xargs kill -TERM")
+      #stop all engines started by me
+      #ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | awk '{print $2}' | xargs kill -TERM >/dev/null")
+
+      #stop all engines started by the current controller
+      ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | grep "+self.__timestamp+" | awk '{print $2}' | xargs kill -TERM>/dev/null")
       ef.close()
 
    def __write_stop_controller(self):
@@ -248,7 +253,7 @@ class cluster(object):
       ef=open(self.__ipythondir+'/'+self.__stop_controller_file, 'w')
       bash=commands.getoutput("which bash")
       ef.write('#!%s\n' % bash)
-      ef.write("ps -ef | grep `whoami` | grep ipcontroller | grep -v grep | awk '{print $2}' | xargs kill -TERM")
+      ef.write("ps -ef | grep `whoami` | grep ipcontroller | grep -v grep | awk '{print $2}' | xargs kill -TERM >/dev/null")
       ef.close()
 
    def __write_bashrc(self):
@@ -399,7 +404,11 @@ class cluster(object):
       except:
          pass
 
-      self.__controller=None
+      try:
+         self.__controller=None
+      except:
+         pass
+
       print "controller stopped"
       return True
 
@@ -423,11 +432,18 @@ class cluster(object):
             continue
 
       # shutdone controller
-      self.__stop_controller()
-      #self.__controller=None
+      try:
+         self.__stop_controller()
+      except:
+         pass
 
-      #self.__client=None
+      try:
+         self.activate()
+         self.__client=None
+      except:
+         pass
 
+      #print 'cluster shutdown'
 
    def wash_logs(self):
       '''Clean up the cluster log files.
