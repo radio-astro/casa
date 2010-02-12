@@ -82,7 +82,8 @@ casa = { 'build': {
          },
          'helpers': {
              'logger': 'casalogger',
-             'viewer': 'casaviewer'
+             'viewer': 'casaviewer',
+             'dbus': None
          },
          'dirs': {
              'rc': homedir + '/.casa'
@@ -91,6 +92,33 @@ casa = { 'build': {
          'files': { },
          'state' : { 'startup': True }
        }
+
+
+##
+## first try to find dbus launch script in likely system areas
+##
+for exe in ['dbus-daemon', 'dbus-daemon-1']:
+    for dir in ['/bin', '/usr/bin', '/opt/local/bin'] :
+        dd = dir + os.sep + exe
+        if os.path.exists(dd) and os.access(dd,os.X_OK) :
+            casa['helpers']['dbus'] = dd
+            break
+    if casa['helpers']['dbus'] is not None:
+        break
+
+##
+## next search through $PATH for dbus launch script
+##
+if casa['helpers']['dbus'] is None:
+    for exe in ['dbus-daemon', 'dbus-daemon-1']:
+        for dir in os.getenv('PATH').split(':') :
+            dd = dir + os.sep + exe
+            if os.path.exists(dd) and os.access(dd,os.X_OK) :
+                casa['helpers']['dbus'] = dd
+                break
+        if casa['helpers']['dbus'] is not None:
+            break
+
 print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
@@ -130,7 +158,6 @@ if os.uname()[0]=='Darwin' :
             casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
 
 
-
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## ensure default initialization occurs before this point...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -140,6 +167,43 @@ if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
     except:
         print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
         exit(1)
+
+if os.uname()[0] == 'Linux' :
+    if casa['helpers']['dbus'] is not None :
+
+        argv_0_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+        dbus_path = os.path.dirname(os.path.abspath(casa['helpers']['dbus']))
+        dbus_conf = None
+
+        if argv_0_path == dbus_path :
+            dbus_conf = dbus_path
+            while dbus_conf != '/' and not os.path.basename(dbus_conf).startswith("lib") :
+                dbus_conf = os.path.dirname(dbus_conf)
+            if os.path.basename(dbus_conf).startswith("lib"):
+                dbus_conf = os.path.dirname(dbus_conf) + "/etc/dbus/session.conf"
+            else:
+                dbus_conf = None
+
+        (r,w) = os.pipe( )
+
+        if os.fork( ) == 0 :
+            os.close(r)
+            args = [ 'casa-dbus-daemon' ]
+            args = args + ['--print-address', str(w)]
+            if dbus_conf is not None and os.path.exists(dbus_conf) :
+                args = args + ['--config-file',dbus_conf]
+            else:
+                args = args + ['--session']
+            os.execvp(casa['helpers']['dbus'],args)
+            sys.exit(1)
+        
+        os.close(w)
+        dbus_address = os.read(r,200)
+        dbus_address = dbus_address.strip( )
+        os.close(r)
+        if len(dbus_address) > 0 :
+            os.putenv('DBUS_SESSION_BUS_ADDRESS',dbus_address)
+
 
 ipythonenv  = casa['dirs']['rc'] + '/ipython'
 ipythonpath = casa['dirs']['rc'] + '/ipython'
