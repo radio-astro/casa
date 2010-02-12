@@ -603,46 +603,75 @@ void NewMSSimulator::initFields(const String& sourceName,
   MSColumns msc(*ms_p);
   MSFieldColumns& fieldc=msc.field();
   Int baseFieldID=fieldc.nrow();
+  MSSourceColumns& sourcec=msc.source();
+  Int baseSrcID=sourcec.nrow();
 
-  os << "Creating new field " << sourceName << ", ID "
-     << baseFieldID+1 << LogIO::POST;
+  const double forever=1.e30;
+
+  os << "Creating new field table row for " << sourceName << ", ID "
+     << baseFieldID << LogIO::POST;
+
+  if(!ms_p->source().isNull()){
+    os << "Creating new source table row for " << sourceName << ", ID "
+       << baseSrcID << LogIO::DEBUG1;
+  }
 
   ms_p->field().addRow(1); //SINGLE DISH CASE
   fieldc.name().put(baseFieldID, sourceName);
   fieldc.code().put(baseFieldID, calCode);
   fieldc.time().put(baseFieldID, 0.0);
   fieldc.numPoly().put(baseFieldID, 0);
-  fieldc.sourceId().put(baseFieldID,0);
+  fieldc.sourceId().put(baseFieldID, baseSrcID);
   Vector<MDirection> direction(1);
   direction(0)=sourceDirection;
   fieldc.delayDirMeasCol().put(baseFieldID,direction);
   fieldc.phaseDirMeasCol().put(baseFieldID,direction);
   fieldc.referenceDirMeasCol().put(baseFieldID,direction);
 
-  MSSourceColumns& sourcec=msc.source();
-  Int baseSrcID=sourcec.nrow();
-
-  os << "Creating new source " << sourceName << ", ID "
-     << baseSrcID+1 << LogIO::DEBUG1;
-
   ms_p->source().addRow(1); //SINGLE DISH CASE
   sourcec.name().put(baseSrcID, sourceName);
   sourcec.code().put(baseSrcID, calCode);
-  sourcec.time().put(baseSrcID, 0.0);
-  sourcec.sourceId().put(baseSrcID,0);
+  sourcec.timeMeas().put(baseSrcID, mRefTime_p);
+  sourcec.interval().put(baseSrcID, forever); 
+  sourcec.sourceId().put(baseSrcID, baseSrcID);
   sourcec.directionMeas().put(baseSrcID,sourceDirection);
   sourcec.spectralWindowId().put(baseSrcID,-1);
-  sourcec.properMotion().put(baseSrcID,Vector<Double>(1));
+  Vector<Double> pmV(2,0.);
+  sourcec.properMotion().put(baseSrcID,pmV);
+  sourcec.numLines().put(baseSrcID, 0);
+  sourcec.calibrationGroup().put(baseSrcID, 0);
+  if(!sourcec.sourceModel().isNull()){
+
+// The following commented out code is an example of how to insert component list tables into the sourceModel column 
+//     RecordDesc smRecDesc;
+//     smRecDesc.addField("model", TpTable);
+//     TableRecord sm(smRecDesc, RecordInterface::Variable);
+
+//     // create a dummy table to fill in 
+//     TableDesc td("", "1", TableDesc::Scratch); 
+//     SetupNewTable newtab("dummyModel", td, Table::New);
+//     Table tab(newtab);
+//     sm.defineTable("model", tab); 
+//     // Note: If there actually is a source model, it has to be a Table file on disk.
+//     // A table object for it has to be crated here and put into the TableRecord
+//     // instead of the "tab" above. DP
+//     sourcec.sourceModel().put(baseSrcID, sm);
+    
+    // but since we don't have models at the moment, I am removing this column
+    ms_p->source().removeColumn("SOURCE_MODEL");
+  }
+
   MSSpWindowColumns& spwc=msc.spectralWindow();
   if(spwc.nrow()>0) {
-    sourcec.spectralWindowId().put(baseSrcID,1); 
-    Vector<Double> freq(1);
-    spwc.refFrequency().get(0,freq(0));
-    sourcec.restFrequency().put(baseSrcID,freq); 
+    sourcec.numLines().put(baseSrcID, 1);
+    sourcec.spectralWindowId().put(baseSrcID,0);
+    Vector<Double> rfV(1, spwc.refFrequency()(0));
+    sourcec.restFrequency().put(baseSrcID, rfV);
+    Vector<String> tV(1,"X");
+    sourcec.transition().put(baseSrcID, tV);
+    Vector<Double> svV(1, 0.);
+    sourcec.sysvel().put(baseSrcID, svV); 
   }
-  
-
-  //directionMeas_p.setDescRefCode(ref);
 
 };
 
