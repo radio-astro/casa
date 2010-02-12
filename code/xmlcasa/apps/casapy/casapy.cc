@@ -42,6 +42,9 @@
 #include <casa/System/Aipsrc.h>
 
 
+static char *_find_executable( const char *, const char * );
+static char *find_executable( const char * );
+
 //
 //  helper function to create ~/.casa/ipython/security
 //
@@ -78,12 +81,9 @@ static int make_it_a_dir( const char *path ) {
 
 //#include <display/QtViewer/QtApp.h>
 
-static pid_t launch_dbus_daemon( );
+static pid_t launch_dbus_daemon( const char *argv_0 );
 
 int main( int argc, char **argv ) {
-    // casa::QtApp::init(argc, argv);
-
-    pid_t dbus_pid = launch_dbus_daemon( );
 
     static const char file_separator = '/';
 
@@ -343,16 +343,128 @@ int main( int argc, char **argv ) {
 
 }
 
-pid_t launch_dbus_daemon( ) {
+static char *_find_executable( const char *exe, const char *pathstart ) {
+    bool failure = true;
+    const char *pathptr = pathstart;
+    char *buf = (char*) malloc(sizeof(char)*(strlen(pathstart)+strlen(exe)+15));
+    for ( const char *path = pathptr; path; path = pathptr ) {
+	if ( pathptr = strchr (path, ':'), ! pathptr )
+	    strcpy (buf, path);
+	else {
+	    strncpy( buf, path, pathptr - path);
+	    buf[pathptr - path] = '\0';
+	    pathptr++;				/* skip : */
+	}
+	sprintf( &buf[strlen(buf)], "/%s", exe );
+
+	struct stat statbuf;
+	if (stat(buf, &statbuf) < 0)  {
+	    if (errno != ENOENT) {
+		break;
+	    }
+	} else {
+	    if ( S_ISREG (statbuf.st_mode) && ((S_IXUSR | S_IXGRP | S_IXOTH) & statbuf.st_mode) ) {
+		failure = false;
+		break;
+	    }
+	}
+    }
+    if ( failure ) {
+	free(buf);
+	return 0;
+    } else {
+	return buf;
+    }
+}
+
+char *find_executable( const char *exestart) {
+    char *found = 0;
+    const char *exeptr = exestart;
+    char *buf = (char*) malloc(sizeof(char)*(strlen(exestart)+2));
+    for (const char *exe = exeptr; exe; exe = exeptr) {
+	if ( exeptr = strchr (exe, ':'), ! exeptr )
+	    strcpy (buf, exe);
+	else {
+	    strncpy( buf, exe, exeptr - exe);
+	    buf[exeptr - exe] = '\0';
+	    exeptr++;					/* skip : */
+	}
+	if ( found = _find_executable( buf, "/bin:/usr/bin:/opt/local/bin" ) )
+	    break;
+    }
+    if ( ! found ) {
+	const char *path = getenv ("PATH");
+        if ( path != NULL ) {
+	    exeptr = exestart;
+	    for (const char *exe = exeptr; exe; exe = exeptr) {
+		if ( exeptr = strchr (exe, ':'), ! exeptr )
+		    strcpy (buf, exe);
+		else {
+		    strncpy( buf, exe, exeptr - exe);
+		    buf[exeptr - exe] = '\0';
+		    exeptr++;				/* skip : */
+		}
+		if ( found = _find_executable( buf, path ) )
+		    break;
+	    }
+	}
+    }
+
+    free( buf );
+    return found;
+}
+
+pid_t launch_dbus_daemon( const char *argv_0 ) {
 
     pid_t dbus_pid = 0;
 
 #if ! defined(__APPLE__)
+
+    bool bundled = false;
     char *dbus_session_bus_address = 0;
+
+    // try to locate the dbus-daemon startup
+    char *hint = find_executable("dbus-daemon:dbus-daemon-1");
+    if ( argv_0[0] == '/' && hint ) {
+	char *ptr = hint + strlen(hint) - 1;
+	while ( ptr > hint && *ptr != '/' ) --ptr;
+	if ( *ptr == '/' ) {
+	    *ptr = '\0';
+	    if ( ! strncmp( argv_0, hint, strlen(hint)) ) {
+		bundled = true;
+	    }
+	    *ptr = '/';
+	}
+    }
+
+
     int address_pipe[2];
     if ( pipe(address_pipe) < 0 ) {
 	perror( "dbus address pipe" );
 	exit(1);
+    }
+
+    char *config_file_path = 0;
+    struct stat statbuf;
+    if ( ! hint || stat(hint, &statbuf) < 0 ) {
+	fprintf( stderr, "could not launch 'dbus-daemon'...\n" );
+	exit(1);
+    }
+
+    if ( bundled ) {
+	char *off = strstr( hint, "/lib");
+	if ( off ) {
+	    config_file_path = (char*) malloc( sizeof(char)*(off - hint + 40) );
+	    strncpy( config_file_path, hint, off - hint );
+	    char *ptr = config_file_path + (off - hint);
+	    strcpy( ptr,"/etc/dbus/session.conf" );
+	    if ( stat( config_file_path, &statbuf ) < 0 ) {
+		// could do more searching, but if it is not in the (few) place(s) we
+		// expect,it is probably just best to let the chips fall where they may...
+		free( config_file_path );
+		config_file_path = 0;
+	    }
+	}
     }
 
     dbus_pid = fork( );
@@ -360,7 +472,20 @@ pid_t launch_dbus_daemon( ) {
 	close(address_pipe[0]);
 	char buf[50];
 	sprintf( buf, "%d", address_pipe[1] );
-	execlp( "dbus-daemon", "casa-dbus-daemon", "--print-address", buf, "--session", (char*) 0 );
+	char *args[10];
+	int count = 0;
+	args[count++] = strdup("casa-dbus-daemon");
+	args[count++] = strdup("--print-address");
+	args[count++] = buf;
+	if ( config_file_path ) {
+	    args[count++] = strdup("--config-file");
+	    args[count++] = config_file_path;
+	} else {
+	    args[count++] = strdup("--session");
+	}
+	args[count] = 0;
+
+	execvp( hint ? hint : "dbus-daemon", args );
 	close(address_pipe[1]);
 	fprintf( stderr, "failed to launch dbus-daemon...%d...\n", getpid( ) );
 	exit(0);
