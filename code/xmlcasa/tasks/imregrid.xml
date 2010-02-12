@@ -14,13 +14,13 @@ the same coordinate structure.
 </description>
 <input>
 	<param type="string" name="imagename" mustexist="true">
-		<description>Name of the image that needs to be regridded</description>
+		<description>Name of the source image</description>
 		<value></value>
 	</param>
 
 	<param type="any" name="template">
         <any type="variant"/>
-		<description>A dictionary or name of an image that provides the output shape and coordinate system</description>
+		<description>A dictionary, refcode, or name of an image that provides the output shape and coordinate system</description>
 		<value type="string">get</value>
 	</param>
 
@@ -36,6 +36,7 @@ the same coordinate structure.
 
         The new coordinate system is defined by the template parameter,
         which can be:
+          * a recognized reference code string (see below),
           * a {'csys': csys_record, 'shap': shape} dictionary,
           * 'get', which does not regrid but returns the template dictionary
             for imagename, suitable for modification and reuse, or
@@ -46,9 +47,12 @@ the same coordinate structure.
     	Keyword arguments:
     	imagename -- Name of the image that needs to be regridded
     		default: none; example: imagename='orion.image'
-    	template -- Dictionary or imagename defining the new shape and
-                coordinate system, or 'get' to return the template
-                dictionary for imagename.
+    	template -- Dictionary, reference code, or imagename defining the new
+                shape and coordinate system, or 'get' to return the template
+                dictionary for imagename.  Recognized reference codes are:
+                'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
+                'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
+                and 'SUPERGAL'.
     		default: 'get'; example: template='orion_j2000.im'
     	output -- Name for the regridded image
     		default: imagename + '.regridded'; example: imagename='orion_shifted.im'

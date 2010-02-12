@@ -1,4 +1,5 @@
 import os
+import shutil
 from taskinit import *
 
 def imregrid(imagename, template, output):
@@ -27,6 +28,38 @@ def imregrid(imagename, template, output):
                 ia.done()
                 tb.clearlocks()                        # Still needed?
                 return {'csys': csys, 'shap': shap}
+            elif template.upper() in ('J2000', 'B1950', 'B1950_VLA',
+                                      'GALACTIC', 'HADEC', 'AZEL',
+                                      'AZELSW', 'AZELNE', 'ECLIPTIC',
+                                      'MECLIPTIC', 'TECLIPTIC',
+                                      'SUPERGAL'):       
+                ia.open(imagename)
+                csys = ia.coordsys().torecord()
+                shap = ia.shape()
+                ia.done()
+                tb.clearlocks()                        # Still needed?
+
+                newrefcode = template.upper()
+                oldrefcode = csys['direction0']['system']
+                if oldrefcode == newrefcode:
+                    casalog.post(imagename + ' is already in ' + oldrefcode,
+                                 'INFO')
+                    casalog.post("...making a straight copy...", 'INFO')
+                    shutil.copytree(imagename, output)
+                    return True
+                    
+                casalog.post("Changing coordinate system from " + oldrefcode
+                             + " to " + newrefcode, 'INFO')
+                csys['direction0']['conversionSystem'] = newrefcode
+                csys['direction0']['system'] = newrefcode
+                refdir = me.direction(oldrefcode,
+                                      {'unit': 'rad',
+                                       'value': csys['direction0']['crval'][0]},
+                                      {'unit': 'rad',
+                                       'value': csys['direction0']['crval'][1]})
+                refdir = me.measure(refdir, newrefcode)
+                csys['direction0']['crval'][0] = refdir['m0']['value']
+                csys['direction0']['crval'][1] = refdir['m1']['value']
             else:                   # Don't use a template named 'get', people.
                 if not os.path.isdir(template) or not os.access(template,
                                                                 os.R_OK):
