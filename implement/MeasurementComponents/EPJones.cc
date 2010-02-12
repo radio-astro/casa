@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pointPar_(),
     ms_p(0), vs_p(&vs),
     maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
-    timer(), polMap_p(), tolerance_p(1e-12), gain_p(0.1), niter_p(500)
+    timer(), polMap_p(), tolerance_p(1e-12), gain_p(0.01), niter_p(500)
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pointPar_(),
     ms_p(&ms), vs_p(&vs),
     maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
-    timer(), polMap_p(), tolerance_p(1e-12), gain_p(0.1), niter_p(500)
+    timer(), polMap_p(), tolerance_p(1e-12), gain_p(0.01), niter_p(500)
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -153,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nFacets=1; Long cachesize=200000000;
     Float paInc=1.0; // 1 deg.
     String cfCacheDirName("tmpCFCache.dir");
-    Bool doPBCorr=False, applyPointingOffsets=True;
+    Bool doPBCorr=True, applyPointingOffsets=True;
     if (solve.isDefined("cfcache"))
       cfCacheDirName=solve.asString("cfcache");
     if (solve.isDefined("painc"))
@@ -793,6 +793,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Create the solver
     //
     SteepestDescentSolver sds(nPar(),polMap_p,niter_p,tolerance_p);
+    logSink() << LogOrigin("EPJones","selfSolve")
+	      << "Pol map = " << polMap_p << endl;
     sds.setGain(gain_p);
     //sds.setGain(1);
     //
