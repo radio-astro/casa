@@ -55,6 +55,7 @@ ngc1333                         gmoellen aoc.nrao.edu
 ngc2403                         gmoellen aoc.nrao.edu
 ngc4826redux                    kgolap aoc.nrao.edu
 ngc5921redux                    gmoellen aoc.nrao.edu
+ngc5921uvcontsub2               gmoellen aoc.nrao.edu
 ngc7538                         kgolap aoc.nrao.edu
 ori_ch3oh_regression            kana.sugi nao.ac.jp
 ori_ch3oh_task_regression       kana.sugi nao.ac.jp
