@@ -28,7 +28,7 @@ class imagecont():
         self.dopbcorr=True
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
-
+        self.epjtablename=''
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
         origname=msname
