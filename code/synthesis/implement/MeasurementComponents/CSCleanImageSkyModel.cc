@@ -135,16 +135,27 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 	}
 	++k;
       }
-      {
-        LatticeExprNode node = min(subPSF);
-        psfmin(model) = node.getFloat();
-      }
-      // 4 pixels:  pretty arbitrary, but only look for sidelobes
-      // outside the inner (2n+1) * (2n+1) square
-      // Changed the algorithm now..so that 4 is not used
+      // {
+      //   LatticeExprNode node = min(subPSF);
+      //   psfmin(model) = node.getFloat();
+      // }
+      // // 4 pixels:  pretty arbitrary, but only look for sidelobes
+      // // outside the inner (2n+1) * (2n+1) square
+      // // Changed the algorithm now..so that 4 is not used
+      // Int mainLobeSizeInPixels = (Int)(max(beam(0)[0]/incr[0],beam(0)[1]/incr[1]));
+      // //psfmaxouter(model) = maxOuter(subPSF, 4);  
+      // psfmaxouter(model) = maxOuter(subPSF, mainLobeSizeInPixels);  
+
+      //
+      // Since for CS-Clean anyway uses only a small fraction of the
+      // inner part of the PSF matter, find the PSF outer
+      // min/max. using only the inner quater of the PSF.
+      //
       Int mainLobeSizeInPixels = (Int)(max(beam(0)[0]/incr[0],beam(0)[1]/incr[1]));
-      //      psfmaxouter(model) = maxOuter(subPSF, 4);  
-      psfmaxouter(model) = maxOuter(subPSF, mainLobeSizeInPixels);  
+      Vector<Float> psfOuterMinMax(2);
+      psfOuterMinMax = outerMinMax(subPSF, mainLobeSizeInPixels);
+      psfmaxouter(model)=psfOuterMinMax(1);
+      psfmin(model) = psfOuterMinMax(0);
 
       os << "Model " << model+1 << ": Estimated size of the PSF mainlobe = " 
 	 << (Int)(beam(0)[0]/incr[0]+0.5) << " X " << (Int)(beam(0)[1]/incr[1] + 0.5) << " pixels" 
@@ -503,89 +514,29 @@ Float CSCleanImageSkyModel::maxField(Block<Vector<Float> >& imagemax,
 };
     
 
-Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter ) 
+Vector<Float> CSCleanImageSkyModel::outerMinMax(Lattice<Float> & lat, const uInt nCenter ) 
 {
-  /*
-  TempLattice<Float>  mask(lat.shape());
-  mask.set(1.0);
-
-  IPosition pos(4,0,0,0,0 );
-  uInt nxc = lat.shape()(0)/2;
-  uInt nyc = lat.shape()(1)/2;
-  for (uInt ix = -nCenter; ix < nCenter; ix++) {
-    for (uInt iy = -nCenter; iy < nCenter; iy++) {
-      pos(0) = nxc + ix;
-      pos(1) = nyc + iy;
-      mask.putAt( 0.0f, pos );       //   mask out the inner section
-    }
-  }
-  {
-    LatticeExpr<Float> exp = (lat * mask);
-    LatticeExprNode LEN = max( exp );
-    myMax = LEN.getFloat();
-  }
-  {
-    LatticeExpr<Float> exp = (lat * mask);
-    LatticeExprNode LEN = min( exp );
-    myMin = LEN.getFloat();
-  }
-
-  */
-
   Array<Float> arr = lat.get();
   IPosition pos( arr.shape() );
   uInt nx = lat.shape()(0);
   uInt ny = lat.shape()(1);
+  uInt innerx = lat.shape()(0)/4;
+  uInt innery = lat.shape()(1)/4;
   uInt nxc = 0;
   uInt nyc = 0;
   Float amax = 0.0;
-  Vector<Float> amax2;
-  /*
-  Int kounter=0;
-  Float amin=1e9;
-  Float amin2=1e9;
-  Bool toggle=False;
-  for (uInt ix = 0; ix < nx; ix++) {
-    for (uInt iy = 0; iy < ny; iy++) {
-      if(arr(IPosition(4, ix, iy, 0, 0)) < amin){
-	amin2=amin;
-	amin=arr(IPosition(4, ix, iy, 0, 0));
-	if(!toggle){
-	  ++kounter;
-	  amax2.resize(kounter, True);
-	  amax2[kounter-1]=fabs(amin);
-	  toggle=True;
-	}
-      }
-      if (arr(IPosition(4, ix, iy, 0, 0)) > amax) {
-	nxc = ix;
-	nyc = iy;
-	if(toggle){
-	  ++kounter;
-	  amax2.resize(kounter, True);
-	  amax2[kounter-1]=amax;
-	  toggle=False;
-	}
-	amax = arr(IPosition(4, ix, iy, 0, 0));
-      }
-    }
-  }
-  Float absMax=max(median(amax2), abs(amin));
-  return absMax;
-  */
-
+  Vector<Float> amax2,minMax(2);
   //
   // First locate the location of the peak
   //
-  for (uInt ix = 0; ix < nx; ix++) {
-    for (uInt iy = 0; iy < ny; iy++) {
-      if (arr(IPosition(4, ix, iy, 0, 0)) > amax) {
-	nxc = ix;
-	nyc = iy;
-	amax = arr(IPosition(4, ix, iy, 0, 0));
-      }
-    }
-  }
+  for (uInt ix = 0; ix < nx; ix++) 
+    for (uInt iy = 0; iy < ny; iy++) 
+      if (arr(IPosition(4, ix, iy, 0, 0)) > amax) 
+	{
+	  nxc = ix;
+	  nyc = iy;
+	  amax = arr(IPosition(4, ix, iy, 0, 0));
+	}
   //
   // Now exclude the mainlobe center on the location of the peak to
   // get the max. outer sidelobe.
@@ -597,9 +548,14 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
   uInt nxH = nxc + nCenter;
   uInt nyL = nyc - nCenter;
   uInt nyH = nyc + nCenter;
-    
-  for (uInt ix = 0; ix < nx; ix++) {
-    for (uInt iy = 0; iy < ny; iy++) {
+  uInt nx0 = nxc - innerx/2, nx1 = nxc + innerx/2;
+  uInt ny0 = nyc - innery/2, ny1 = nyc + innery/2;
+  
+  //
+  // Search only in the square with innerx and innery pixels on each side.
+  //
+  for (uInt ix = nx0; ix < nx1; ix++) {
+    for (uInt iy = ny0; iy < ny1; iy++) {
       if ( !(ix >= nxL && ix <= nxH &&  iy >= nyL && iy <= nyH) ) {
 	if (arr(IPosition(4, ix, iy, 0, 0)) > myMax) 
 	  myMax = arr(IPosition(4, ix, iy, 0, 0));
@@ -609,10 +565,11 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
     }
   }
 
-  Float absMax = max( abs(myMin), myMax );
-  return absMax;
-
-
+  // Float absMax = max( abs(myMin), myMax );
+  // return absMax;
+  minMax(0) = myMin;
+  minMax(1) = max( abs(myMin), myMax );
+  return minMax;
 };
 
 } //#End casa namespace

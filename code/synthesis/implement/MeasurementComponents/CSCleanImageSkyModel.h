@@ -97,7 +97,7 @@ protected:
   // Return the maximum absolute value per field
   Float maxField(Block<Vector<Float> >& imagemax, Block<Vector<Float> >& imagemin);
   // Return maximum abs outer sidelobe, more than nCenter pixels from the center
-  Float maxOuter(Lattice<Float> & lat, const uInt nCenter );
+  Vector<Float> outerMinMax(Lattice<Float> & lat, const uInt nCenter );
   // Pointer to the progress display object
   ClarkCleanProgress *progress_p;
 
