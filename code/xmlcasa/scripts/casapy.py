@@ -94,9 +94,11 @@ casa = { 'build': {
        }
 
 
-##
-## first try to find dbus launch script in likely system areas
-##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## setup dbus-daemon launch path...
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##     first try to find dbus launch script in likely system areas
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 for exe in ['dbus-daemon', 'dbus-daemon-1']:
     for dir in ['/bin', '/usr/bin', '/opt/local/bin'] :
         dd = dir + os.sep + exe
@@ -106,9 +108,9 @@ for exe in ['dbus-daemon', 'dbus-daemon-1']:
     if casa['helpers']['dbus'] is not None:
         break
 
-##
-## next search through $PATH for dbus launch script
-##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##     next search through $PATH for dbus launch script
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 if casa['helpers']['dbus'] is None:
     for exe in ['dbus-daemon', 'dbus-daemon-1']:
         for dir in os.getenv('PATH').split(':') :
@@ -168,6 +170,10 @@ if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
         print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
         exit(1)
 
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----                                                                            
+## on linux set up a dbus-daemon for casa because each                                                                                    
+## x-server (e.g. Xvfb) gets its own dbus session...                                                                                      
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----                                                                            
 if os.uname()[0] == 'Linux' :
     if casa['helpers']['dbus'] is not None :
 
