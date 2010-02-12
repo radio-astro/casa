@@ -297,6 +297,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                             // AtmPhaseCorrectionMod::AP_CORRECTED, false if it is
                             // AtmPhaseCorrectionMod::AP_UNCORRECTED
 
+  string asdmUID_p; // ASDM UID == container ID of all tables
+
   String asdmDir_p; // ASDM output directory name
 
   SimpleOrderedMap <String, asdm::Tag> asdmStationId_p;  

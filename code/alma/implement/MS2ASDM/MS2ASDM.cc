@@ -172,7 +172,19 @@ namespace casa {
 	 << LogIO::POST;      
       return False;
     }
+
+    // set the container UID of all tables == the UID of the ASDM
+    asdmUID_p = getCurrentUid().c_str();
+    Entity myEntity;
+    myEntity.setEntityId(EntityId(asdmUID_p));
+    myEntity.setEntityIdEncrypted("na");
+    myEntity.setEntityTypeName("ASDM");
+    myEntity.setEntityVersion(asdmVersion_p);
+    myEntity.setInstanceVersion("1");	
+    ASDM_p->setEntity(myEntity);
       
+    incrementUid();
+
     // initialize observatory name
     if(observation().nrow()==0){
       os << LogIO::SEVERE << "MS Observation table is empty." << LogIO::POST;
@@ -200,7 +212,6 @@ namespace casa {
     setDataAPCorrected(msDataIsAPCorrected);
 
     if(verbose){
-      //      setVerbosity(1);
       setVerbosity(1); // set to 1 before releasing
     }
     else{
@@ -208,13 +219,9 @@ namespace casa {
     }
 
     if(verbosity_p>0){
-      os << LogIO::NORMAL << "Converting " << ms_p.tableName() << " to ASDM " << asdmfile
+      os << LogIO::NORMAL << "Converting " << ms_p.tableName() << " to ASDM " << asdmfile << endl
+	 << "UID base is " << getBaseUid() << ", ASDM UID is " << asdmUID_p
 	 << LogIO::POST;
-    }
-
-    if(verbosity_p>1){
-      cout << "Base uid is " << getBaseUid() << endl;
-      cout << " UID is " << getCurrentUid() << endl;
     }
 
     // write the ASDM tables
@@ -366,6 +373,7 @@ namespace casa {
     int eBlockNum = eBlockRow->getExecBlockNum();
 
     Bool warned=False; // use later to avoid repetitive warnings
+    Bool warned2=False; // use later to avoid repetitive warnings
 
     try{
 
@@ -574,9 +582,13 @@ namespace casa {
 
       OptionalSpectralResolutionType spectralResolution = SpectralResolutionTypeMod::FULL_RESOLUTION; 
       if(numSpectralPoint<5){
-	spectralResolution = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
-	if(verbosity_p>0){
-	  os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." << LogIO::POST;      
+	//	spectralResolution = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
+	if(!warned2 && verbosity_p>1){
+	  //	  os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." << LogIO::POST;      
+	  //	}
+	  os << LogIO::NORMAL << " DDId " << theDDId << ": Less than 5 channels. Probably should use spectral resolution type \"CHANNEL_AVERAGE\"." 
+	     << endl << "    But this is not yet implemented. Assuming FULL_RESOLUTION." << LogIO::POST;      
+	  warned2 = True;
 	}
       } 
 
@@ -781,7 +793,7 @@ namespace casa {
 	    float a;
 	    for(uInt i=0; i<numSpectralPoint; i++){
 	      for(uInt j=0; j<numStokesMS; j++){
-		if(skipCorr_p[j][PolId]){
+		if(skipCorr_p[PolId][j]){
 		  continue;
 		}
 		else{
@@ -798,7 +810,7 @@ namespace casa {
 	    // int a,b;
 	    for(uInt i=0; i<numSpectralPoint; i++){
 	      for(uInt j=0; j<numStokesMS; j++){
-		if(skipCorr_p[j][PolId]){
+		if(skipCorr_p[PolId][j]){
 		  continue;
 		}
 		else{
@@ -814,7 +826,7 @@ namespace casa {
 	  unsigned long ul;
 	  for(uInt i=0; i<numSpectralPoint; i++){
 	    for(uInt j=0; j<numStokesMS; j++){
-	      if(skipCorr_p[j][PolId]){
+	      if(skipCorr_p[PolId][j]){
 		continue;
 	      }
 	      else{
@@ -2700,11 +2712,14 @@ namespace casa {
 	
 	uInt spwId = dataDescription().spectralWindowId()(iDDId);
 	if(spectralWindow().numChan()(spwId)<5){
-	  spectralType = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
-	  if(verbosity_p>0){
-	    os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." 
-	       << LogIO::POST;      
-	  }
+// 	  spectralType = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
+// 	  if(verbosity_p>0){
+// 	    os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." 
+// 	       << LogIO::POST;      
+// 	  }
+	  os << LogIO::WARN << "    Less than 5 channels. Probably should use spectral resolution type \"CHANNEL_AVERAGE\"." 
+	     << endl << "    But this is not yet implemented. Assuming FULL_RESOLUTION." << LogIO::POST;      
+
 	}
       
 	// loop over MS Main table
@@ -3124,13 +3139,13 @@ namespace casa {
 	  ArrayTime startTime = ASDMArrayTime(execBlockStartTime(sBSummaryTag));
 	  ArrayTime endTime = ASDMArrayTime(endT);
 	  int execBlockNum = execBlockNumber(sBSummaryTag);
-	  EntityRef execBlockUID;
+	  EntityRef execBlockUID; // to be filled with the EntityRef of the containing ASDM 
 	  try{
-	    execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", asdmVersion_p);
+	    execBlockUID = EntityRef(asdmUID_p, "", "ASDM", asdmVersion_p);
 	  }
 	  catch(asdm::InvalidArgumentException x){
 	    os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
-	       << "\" (intended for an exec block) is not a valid Entity reference: " <<  x.getMessage()
+	       << "\" (intended for the ASDM) is not a valid Entity reference: " <<  x.getMessage()
 	       << LogIO::POST;      
 	    return False;
 	  }
@@ -3263,9 +3278,9 @@ namespace casa {
       ArrayTime startTime = ASDMArrayTime(execBlockStartTime(sBSummaryTag));
       ArrayTime endTime = ASDMArrayTime(execBlockEndTime(sBSummaryTag));
       int execBlockNum = execBlockNumber(sBSummaryTag);
-      EntityRef execBlockUID;
+      EntityRef execBlockUID; // to be filled with the EntityRef of the containing ASDM 
       try{
-	execBlockUID = EntityRef(getCurrentUid(), "", "ASDM", asdmVersion_p);
+	execBlockUID = EntityRef(asdmUID_p, "", "ASDM", asdmVersion_p);
       }
       catch(asdm::InvalidArgumentException x){
 	os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
