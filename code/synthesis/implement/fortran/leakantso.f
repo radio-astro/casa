@@ -1,35 +1,33 @@
-C=======================================================================
-C     -*- FORTRAN -*-
-C     Copyright (C) 1999,2001,2002
-C     Associated Universities, Inc. Washington DC, USA.
-C     
-C     This library is free software; you can redistribute it and/or
-C     modify it under the terms of the GNU Library General Public
-C     License as published by the Free Software Foundation; either
-C     version 2 of the License, or (at your option) any later version.
-C     
-C     This library is distributed in the hope that it will be useful,
-C     but WITHOUT ANY WARRANTY; without even the implied warranty of
-C     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-C     GNU Library General Public License for more details.
-C     
-C     You should have received a copy of the GNU Library General Public
-C     License along with this library; if not, write to the Free
-C     Software Foundation, Inc., 675 Massachusetts Ave, Cambridge,
-C     MA 02139, USA.
-C     
-C     Correspondence concerning AIPS++ should be addressed as follows:
-C     Internet email: aips2-request@nrao.edu.
-C     Postal address: AIPS++ Project Office
-C     National Radio Astronomy Observatory
-C     520 Edgemont Road
-C     Charlottesville, VA 22903-2475 USA
-C     
-C     $Id: fpbwproj.f,v 1.13 2006/07/20 00:24:20 sbhatnag Exp $
-C-----------------------------------------------------------------------
-C
-C     The solver in this file implements the LeakAntsol algorithm from
-C     A&A, v.375, p.344-350 (2001).
+*=======================================================================
+*     -*- FORTRAN -*-
+*     Copyright (C) 1999,2001,2002
+*     Associated Universities, Inc. Washington DC, USA.
+*     
+*     This library is free software; you can redistribute it and/or
+*     modify it under the terms of the GNU Library General Public
+*     License as published by the Free Software Foundation; either
+*     version 2 of the License, or (at your option) any later version.
+*     
+*     This library is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Library General Public License for more details.
+*     
+*     You should have received a copy of the GNU Library General Public
+*     License along with this library; if not, write to the Free
+*     Software Foundation, Inc., 675 Massachusetts Ave, Cambridge,
+*     MA 02139, USA.
+*     
+*     Correspondence concerning AIPS++ should be addressed as follows:
+*     Internet email: aips2-request@nrao.edu.
+*     Postal address: AIPS++ Project Office
+*     National Radio Astronomy Observatory
+*     520 Edgemont Road
+*     Charlottesville, VA 22903-2475 USA
+*     
+*     $Id:$
+*-----------------------------------------------------------------------
+C     The LeakyAntsol algorithm (A&A, v.375, p.344-350 (2001)).
 C
 C     Modified calantso.FullArray.f file to include poln leakage terms.
 C
