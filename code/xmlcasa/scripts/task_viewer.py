@@ -80,6 +80,11 @@ def viewer(infile=None,displaytype=None,gui=None):
 	except:
 		vwr = None
 
+
+	##
+	## need to work out some bugs before moving viewer task back to using viewer tool...
+	##
+	vwr = None
 	if vwr != None:
 		panel = vwr.panel("viewer")
 		data = None
