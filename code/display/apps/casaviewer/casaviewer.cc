@@ -289,6 +289,7 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
     char *orig_name = strdup(argv[0]);
     char *name = orig_name + strlen(orig_name) - 1;
     while ( name > orig_name && *name != '/' ) --name;
+    if(*name == '/')++name;
 
     // pre-process the command line arguments (for now), it looks like
     // the current scheme is to hard-wire a limited set of command line
