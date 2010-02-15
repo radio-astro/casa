@@ -56,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class String;
 class QtDisplayData;
 class QtDisplayPanel;
-
+class QtDisplayPanelGui;
 
 class QtViewerBase : public QObject {
 
@@ -66,54 +66,17 @@ class QtViewerBase : public QObject {
 
  public:
   
-  QtViewerBase();
+  QtViewerBase( bool is_server=false );
   ~QtViewerBase();
   
+  bool server( ) const { return server_; }
   
-  // Create a new QtDD from given parameters, and add to internal DD list.
-  // (For now) QtViewerBase retains 'ownership' of the QtDisplayData; call
-  // removeDD(qdd) to delete it.
-  // Unless autoregister is set False, all open DisplayPanels will
-  // register the DD for display.
-  // Check return value for 0, or connect to the createDDFailed()
-  // signal, to handle failure.
-  QtDisplayData* createDD(String path, String dataType, String displayType,
-                          Bool autoRegister=True);
-   
-  // Removes the QDD from the list and deletes it (if it existed -- 
-  // Return value: whether qdd was in the list in the first place).
-  virtual Bool removeDD(QtDisplayData* qdd);
-  
-  // retrieve a copy of the current DD list.
-  List<QtDisplayData*> dds() { return qdds_;  }
-  
-  // return the number of user DDs.
-  Int nDDs() { return qdds_.len();  }
-  
-  // return a list of DDs that are registered on some panel.
-  List<QtDisplayData*> registeredDDs();
-  
-  // return a list of DDs that exist but are not registered on any panel.
-  List<QtDisplayData*> unregisteredDDs();
-  
-  // retrieve a DD with given name (0 if none).
-  QtDisplayData* dd(const String& name);
-  
-  // Check that a given DD is on the list.  Use qdd pointer or its name.
-  //<group>
-  Bool ddExists(QtDisplayData* qdd);
-  Bool ddExists(const String& name) { return dd(name)!=0;  }
-  //</group>
-  
-  // Latest error (in createDD, etc.) 
-  virtual String errMsg() { return errMsg_;  }
- 
-  // Return the common QtMouseToolState that all mouse tool users
+    // Return the common QtMouseToolState that all mouse tool users
   // should share.
   virtual QtMouseToolState* mouseBtns() { return &msbtns_;  }
   
   // The list of QtDisplayPanels that are not closed.
-  virtual List<QtDisplayPanel*> openDPs();
+  virtual List<QtDisplayPanelGui*> openDPs();
   
   // The number of open QtDisplayPanels.  (More efficient than the
   // equivalent openDPs().len(), if the number is all that's needed).
@@ -122,13 +85,8 @@ class QtViewerBase : public QObject {
   // Only to be used by QtDisplayPanels, to inform this class of
   // their creation.  (C++ should allow individual methods to be
   // 'friend'ed to outside classes...).
-  virtual void dpCreated(QtDisplayPanel* newDP);
+  virtual void dpCreated( QtDisplayPanelGui *newDP, QtDisplayPanel *panel );
  
-  // At least for now, colorbars can only be placed horizontally or
-  // vertically, identically for all display panels.
-  // This returns the current value.
-  Bool colorBarsVertical() { return colorBarsVertical_;  }
-
   // function to aid typing files of interest to the viewer.
   // Moved from QtDataManager to be available for non-gui use.
   // Returns user interface Strings like "Measurement Set".
@@ -184,8 +142,6 @@ class QtViewerBase : public QObject {
  
  public slots:
  
-  virtual void removeAllDDs();
-  
   // Hold/release of (canvas-draw) refresh of all QDPs.  (NB: does not
   // concern enabling of Qt Widgets).  Call to hold() must be matched to
   // later call of release(); they can be nested.  It is sometimes
@@ -204,26 +160,6 @@ class QtViewerBase : public QObject {
   // would cause their deletion (see, e.g., QtViewer::createDPG()).
   virtual void quit();
 
-  // At least for now, colorbars can only be placed horizontally or vertically,
-  // identically for all display panels.  This sets that state for everyone.
-  // Sends out colorBarOrientationChange signal when the state changes.
-  virtual void setColorBarOrientation(Bool vertical);    
- 
- signals:
- 
-  void createDDFailed(String errMsg, String path, String dataType, 
-		      String displayType);
-  
-  // The DD now exists, and is on QtViewerBase's list.
-  // autoregister tells DPs whether they are to register the DD.
-  void ddCreated(QtDisplayData*, Bool autoRegister);
-  
-  // The DD is no longer on QtViewerBase's list, but is not
-  // destroyed until after the signal.
-  void ddRemoved(QtDisplayData*);
-  
-  void colorBarOrientationChange();     
-  
  protected slots:
  
   // Connected by this class, (only) to QDPs' destroyed() signals
@@ -238,9 +174,8 @@ class QtViewerBase : public QObject {
     
  protected:
  
-  // Existing user-visible QDDs
-  List<QtDisplayData*> qdds_;
-  
+  bool server_;
+ 
   // Existing QtDisplayPanels (whether 'closed' or not, as long as
   // not deleted).  Unlike QDDs, QtViewerBase does not create or delete
   // QDPs, it just tries to keep track of them.  Note that by default,
@@ -249,22 +184,14 @@ class QtViewerBase : public QObject {
   // revive (show) a 'closed' QDP.  The publicly-available list openDPs()
   // shows only those which are not closed.  Minimized or covered
   // DPs are still considered 'open'.
-  List<QtDisplayPanel*> qdps_;
+  List<QtDisplayPanelGui*> qdps_;
   
-  
-  String errMsg_;
   
   // This should be the only place this object is ever created....
   // Holds mouse button assignment for the mouse tools, which is to
   // be the same on all mouse toolbars / display panels.
   QtMouseToolState msbtns_;
 
-  // At least for now, colorbars can only be placed horizontally or vertically,
-  // identically for all display panels.  Here is where that state is kept for
-  // everyone.
-  Bool colorBarsVertical_;  
-
-  
   // Translates IMAGE, RASTER, etc. into the names used internally
   // (e.g. "image", "raster").
   Vector<String> datatypeNames_, displaytypeNames_;
@@ -277,13 +204,6 @@ class QtViewerBase : public QObject {
  private:
   static bool qtviewer_app_exit;
  
- public: 
-  
-  // Intended for use only by QtDataManager (or other data dialogs such as for
-  // save-restore), to inform QtDisplayPanel of the directory currently
-  // selected for data retrieval, if any ("" if none).
-  String selectedDMDir;
-
 };
 
 

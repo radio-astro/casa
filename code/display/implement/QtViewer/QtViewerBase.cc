@@ -28,7 +28,7 @@
 
 #include <display/QtViewer/QtViewerBase.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
-#include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtApp.h>
 #include <tables/Tables/TableInfo.h>
 #include <display/QtAutoGui/QtXmlRecord.h>
@@ -41,14 +41,13 @@
 #include <graphics/X11/X_exit.h>
 
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtViewerBase::QtViewerBase() : qdds_(), qdps_(), errMsg_(), msbtns_(),
-			       colorBarsVertical_(True),
-			       datatypeNames_(N_DT+1),
-			       displaytypeNames_(N_DS+1),
-			       dataDisplaysAs_(N_DT+1) {
+QtViewerBase::QtViewerBase( bool is_server) :
+	qdps_(), msbtns_(), datatypeNames_(N_DT+1), server_(is_server), 
+	displaytypeNames_(N_DS+1), dataDisplaysAs_(N_DT+1) {
 
   // Initialize some (conceptually constant) data for datatype and
   // displaytype names, and for displaytypes which are valid for a
@@ -93,134 +92,24 @@ QtViewerBase::QtViewerBase() : qdds_(), qdps_(), errMsg_(), msbtns_(),
 }
 
 
-QtViewerBase::~QtViewerBase() {
-  removeAllDDs();  }
+QtViewerBase::~QtViewerBase() { }
   
 
-  
-
-// DD LIST MAINTENANCE  
-
-
-QtDisplayData* QtViewerBase::createDD(String path, String dataType,
-			       String displayType, Bool autoRegister) {
-
-  QtDisplayData* qdd = new QtDisplayData(this, path, dataType, displayType);
-  
-  if(qdd->isEmpty()) {
-    errMsg_ = qdd->errMsg();
-    emit createDDFailed(errMsg_, path, dataType, displayType);
-    return 0;  }
-    
-  // Be sure name is unique by adding numerical suffix if necessary.
-  
-  String name=qdd->name();
-  for(Int i=2; dd(name)!=0; i++) {
-    name=qdd->name() + " <" + String::toString(i) + ">";  }
-  qdd->setName(name);
-  
-  ListIter<QtDisplayData* > qdds(qdds_);
-  qdds.toEnd();
-  qdds.addRight(qdd);
-  
-  emit ddCreated(qdd, autoRegister);
-  
-  return qdd;  }
-
-    
-void QtViewerBase::removeAllDDs() {
-  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
-    QtDisplayData* qdd = qdds.getRight();
-    
-    qdds.removeRight();
-    emit ddRemoved(qdd);
-    qdd->done();
-    delete qdd;  }  }
-  
-    
-
-Bool QtViewerBase::removeDD(QtDisplayData* qdd) {
-  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-    if(qdd == qdds.getRight()) {
-    
-      qdds.removeRight();
-      emit ddRemoved(qdd);
-      qdd->done();
-      delete qdd;
-      return True;  }  }
-  
-  return False;  }
-      
-
-  
-Bool QtViewerBase::ddExists(QtDisplayData* qdd) {
-  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-    if(qdd == qdds.getRight()) return True;  }
-  return False;  }
-      
-
-  
-QtDisplayData* QtViewerBase::dd(const String& name) {
-  // retrieve DD with given name (0 if none).
-  QtDisplayData* qdd;
-  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-    if( (qdd=qdds.getRight())->name() == name ) return qdd;  }
-  return 0;  }
-
-  
-  
-List<QtDisplayData*> QtViewerBase::registeredDDs() {
-  // return a list of DDs that are registered on some panel.
-  List<QtDisplayData*> rDDs(qdds_);
-  List<QtDisplayPanel*> DPs(openDPs());
-  
-  for(ListIter<QtDisplayData*> rdds(rDDs); !rdds.atEnd();) {
-    QtDisplayData* dd = rdds.getRight();
-    Bool regd = False;
-    
-    for(ListIter<QtDisplayPanel*> dps(DPs); !dps.atEnd(); dps++) {
-      QtDisplayPanel* dp = dps.getRight();
-      if(dp->isRegistered(dd)) { regd = True; break;  }  }
-    
-    if(regd) rdds++;
-    else rdds.removeRight();  }
-  
-  return rDDs;  }
-
-  
-List<QtDisplayData*> QtViewerBase::unregisteredDDs(){
-  // return a list of DDs that exist but are not registered on any panel.
-  List<QtDisplayData*> uDDs(qdds_);
-  List<QtDisplayPanel*> DPs(openDPs());
-  
-  for(ListIter<QtDisplayData*> udds(uDDs); !udds.atEnd(); ) {
-    QtDisplayData* dd = udds.getRight();
-    Bool regd = False;
-    
-    for(ListIter<QtDisplayPanel*> dps(DPs); !dps.atEnd(); dps++) {
-      QtDisplayPanel* dp = dps.getRight();
-      if(dp->isRegistered(dd)) { regd = True; break;  }  }
-    
-    if(regd) udds.removeRight();
-    else udds++;  }
-  
-  return uDDs;  }
-  
-    
-  
-// DP LIST MAINTENANCE  
- 
- 
-void QtViewerBase::dpCreated(QtDisplayPanel* newDP) {
+void QtViewerBase::dpCreated( QtDisplayPanelGui *newDP, QtDisplayPanel *panel ) {
+  // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+  //    In the future (call sequence) newDP->displayPanel() will equal
+  //    panel, but because this function is called while constructing
+  //    newDP, both newDP and the panel must be passed in...
+  // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
   // Only to be used by QtDisplayPanels, to inform this class of
   // their creation.
-  ListIter<QtDisplayPanel*> qdps(qdps_);
+  ListIter<QtDisplayPanelGui*> qdps(qdps_);
   qdps.toEnd();
   qdps.addRight(newDP);				   // Put it on the list.
   connect( newDP, SIGNAL(destroyed(QObject*)),
                   SLOT(dpDestroyed_(QObject*)) );
 	   // (In case it's ever deleted).
-  connect( newDP, SIGNAL(dpHidden(QtDisplayPanel*)),
+  connect( panel, SIGNAL(dpHidden(QtDisplayPanel*)),
                   SLOT(dpHidden_(QtDisplayPanel*)), Qt::QueuedConnection);  }
 	   // (This will happen if the newDP is closed, even if not deleted.
 	   // Queued connection may not be necessary, but may be cleaner:
@@ -232,8 +121,8 @@ void QtViewerBase::dpDestroyed_(QObject* dying) {
   // Connected by this class, (only) to QDPs' destroyed() signals
   // (for maintenance of the list of existing QDPs).
   // (destroyed() is emitted just _before_ the QDP is deleted).
-  QtDisplayPanel* dyingDP = static_cast<QtDisplayPanel*>(dying);
-  for(ListIter<QtDisplayPanel*> qdps(qdps_); !qdps.atEnd(); ) {
+  QtDisplayPanelGui* dyingDP = static_cast<QtDisplayPanelGui*>(dying);
+  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); ) {
     if(dyingDP != qdps.getRight()) qdps++;
     else qdps.removeRight();  }  }	 // Remove from the list.
 
@@ -281,7 +170,7 @@ void QtViewerBase::dpHidden_(QtDisplayPanel* qdp) {
   
   // Quit when the last display panel is closed.
   
-  if(nOpenDPs() == 0)  quit();	// ('open' tested via isVisible() here too...)
+  if ( nOpenDPs() == 0 && ! server_ ) quit();	// ('open' tested via isVisible() here too...)
 	// 'quit' closes (hides) all viewer windows, which results in
 	// an an exit from the Qt loop, deactivating all Gui response.
 	// It does not in itself delete objects or exit the process,
@@ -290,20 +179,20 @@ void QtViewerBase::dpHidden_(QtDisplayPanel* qdp) {
 	// would  cause their deletion -- see, e.g., QtViewer::createDPG()).
 	// Alternatively, the loop might be restarted later with
 	// existing widgets intact (e.g. in interactive clean).
-  
-  else if(!qdp->isVisible()) qdp->unregisterAll();  }
+
+// <drs> - why would this be done... removing display data because the user hides the viewer?
+//else if(!qdp->isVisible()) qdp->unregisterAll();
 	// Remove DDs from a closed panel.
 	// Note: This is _not_ done if we are 'quitting', which may
 	// mean we will want to restart the Qt loop later (with the
 	// same panel in the same state...).
-  
-
+}
     
 
-List<QtDisplayPanel*> QtViewerBase::openDPs() {
+List<QtDisplayPanelGui*> QtViewerBase::openDPs() {
   // The list of QtDisplayPanels that are not closed.
-  List<QtDisplayPanel*> opendps(qdps_);
-  for(ListIter<QtDisplayPanel*> opndps(opendps); !opndps.atEnd(); ) {
+  List<QtDisplayPanelGui*> opendps(qdps_);
+  for(ListIter<QtDisplayPanelGui*> opndps(opendps); !opndps.atEnd(); ) {
     if(opndps.getRight()->isVisible()) opndps++;
     else opndps.removeRight();  }
   
@@ -314,7 +203,7 @@ List<QtDisplayPanel*> QtViewerBase::openDPs() {
 Int QtViewerBase::nOpenDPs() {
   // The number of open QtDisplayPanels.
   Int nOpen=0;
-  for(ListIter<QtDisplayPanel*> qdps(qdps_); !qdps.atEnd(); qdps++) {
+  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); qdps++) {
     if(qdps.getRight()->isVisible()) nOpen++;  }
   
   return nOpen;  }
@@ -327,36 +216,16 @@ void QtViewerBase::hold() {
   // later call of release().  It is sometimes efficient to wait until
   // several operations are complete and then redraw everything just once.
   
-  for(ListIter<QtDisplayPanel*> qdps(qdps_); !qdps.atEnd(); qdps++) {
-    qdps.getRight()->hold();  }  }
+  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); qdps++) {
+    qdps.getRight()->displayPanel()->hold();  }  }
 
     
     
 void QtViewerBase::release() {
-  for(ListIter<QtDisplayPanel*> qdps(qdps_); !qdps.atEnd(); qdps++) {
-    qdps.getRight()->release();  }  }
+  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); qdps++) {
+    qdps.getRight()->displayPanel()->release();  }  }
 
-
-    
   
-void QtViewerBase::setColorBarOrientation(Bool vertical) {    
-  // At least for now, colorbars can only be placed horizontally or vertically,
-  // identically for all display panels.  This sets that state for everyone.
-  // Sends out colorBarOrientationChange signal when the state changes.
-  
-  if(colorBarsVertical_ == vertical) return;	// (already there).
-  
-  colorBarsVertical_ = vertical;
-  
-  // Tell QDPs and QDDs to rearrange color bars as necessary.
-  
-  hold();	// (avoid unnecessary extra refreshes).
-  emit colorBarOrientationChange();
-  release();  }
- 
-
- 
-   
 String QtViewerBase::fileType(const String pathname) {
   // (static) function to aid typing files of interest to the viewer.
   // Moved from QtDataManager to be available for non-gui use.
@@ -588,7 +457,6 @@ void QtViewerBase::quit() {
   // objects or exit the process, although the driver program might 
   // do that.  Also, some of the panels may have WA_DeleteOnClose set,
   // which would cause their deletion (see, e.g., QtViewer::createDPG()).
-
   qtviewer_app_exit = true;
   QtApp::app()->closeAllWindows();  }
     

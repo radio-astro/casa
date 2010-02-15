@@ -28,6 +28,8 @@
 #include <casa/BasicSL/String.h>
 #include <display/QtViewer/QtViewerBase.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
+#include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayEvents/PCITFiddler.h>
@@ -54,10 +56,10 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtDisplayPanel::QtDisplayPanel(QtViewerBase* v, QWidget *parent) : 
+QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent) : 
 		QWidget(parent),
 
-		v_(v),
+		panel_(panel),
 		pd_(0), pc_(0),
 		qdds_(),
 		zoom_(0), panner_(0), crosshair_(0), rtregion_(0),
@@ -113,13 +115,13 @@ QtDisplayPanel::QtDisplayPanel(QtViewerBase* v, QWidget *parent) :
 
     
   
-  connect( v_, SIGNAL(ddCreated(QtDisplayData*, Bool)),
+  connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool)),
                  SLOT(ddCreated_(QtDisplayData*, Bool)) );
   
-  connect( v_, SIGNAL(ddRemoved(QtDisplayData*)),
+  connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
                  SLOT(ddRemoved_(QtDisplayData*)) );
 
-  connect( v_, SIGNAL(colorBarOrientationChange()),
+  connect( panel_, SIGNAL(colorBarOrientationChange()),
                  SLOT(reorientColorBars_()) );
 
   
@@ -167,7 +169,7 @@ QtDisplayPanel::QtDisplayPanel(QtViewerBase* v, QWidget *parent) :
 
   setFocusProxy(pc_);	// Shifts display panel focus to the pc.
   
-  v_->dpCreated(this);	// Inform supervisory object of DP creation.
+  panel_->viewer()->dpCreated( panel_, this ); // Inform supervisory object of DP creation.
 
 }
 
@@ -249,7 +251,7 @@ void QtDisplayPanel::setupMouseTools_() {
   connect( ptregion_, SIGNAL(echoClicked(Record)),
 		        SLOT(clicked(Record)) );
   
-  QtMouseToolState* mBtns = v_->mouseBtns();
+  QtMouseToolState* mBtns = panel_->viewer()->mouseBtns();
 	// Central storage for current active mouse button of each tool.
   
   connect( mBtns, SIGNAL(mouseBtnChg(String, Int)),
@@ -723,10 +725,10 @@ Bool QtDisplayPanel::isRegistered(String ddname) {
   return False;  }
     
 Bool QtDisplayPanel::isUnregistered(QtDisplayData* qdd) {
-  return !isRegistered(qdd) && v_->ddExists(qdd);  }
+  return !isRegistered(qdd) && panel_->ddExists(qdd);  }
 
 Bool QtDisplayPanel::isUnregistered(String ddname) {
-  return !isRegistered(ddname) && v_->ddExists(ddname);  }
+  return !isRegistered(ddname) && panel_->ddExists(ddname);  }
 
 
 
@@ -734,7 +736,7 @@ List<QtDisplayData*> QtDisplayPanel::unregisteredDDs() {
   // retrieve an (ordered) list of DDs (created on QtViewer) which
   // are _not_ currently registered.
   
-  List<QtDisplayData*> unregdDDs(v_->dds());
+  List<QtDisplayData*> unregdDDs(panel_->dds());
   
   for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); ) {
     if(isRegistered(udds.getRight())) udds.removeRight();
@@ -1125,7 +1127,7 @@ void QtDisplayPanel::updateColorBarDDLists_() {
 	
         ccbdds.removeRight();
 	cbdds.addRight(ccbdd);
-	if(v_->colorBarsVertical()) cbdds.toEnd();
+	if(panel_->colorBarsVertical()) cbdds.toEnd();
 	else                        cbdds.toStart();  }
 		// In the horizontal case, colorbars are added to the start
 		// of colorBarDDsToDisplay_ rather than to the end, reversing
@@ -1147,7 +1149,7 @@ Int QtDisplayPanel::marginb_(QtDisplayData* dd, Float shrink) {
   // the returned margin allowance may also be less than ideal...).
   // A helper routine, called (only) by arrangeColorBars_().
   
-  Bool vertical = v_->colorBarsVertical();
+  Bool vertical = panel_->colorBarsVertical();
   Float charsz = dd->colorBarLabelSpaceAdj();
 	// 'pgp character size' times a user-settable adjustment factor.
     
@@ -1224,7 +1226,7 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
   // color bar panels (according to whether colorbars are being placed
   // vertically or horizontally).
   
-  Bool vertical = v_->colorBarsVertical();
+  Bool vertical = panel_->colorBarsVertical();
 
   // field names for vertical bars  
   
@@ -1833,7 +1835,7 @@ String QtDisplayPanel::dpState(String restorefilename) {
 			//  and doesn't need to inherit from Record...)
   
   
-  QDomElement restoreElem = restoredoc.createElement(v_->cvRestoreID.chars());
+  QDomElement restoreElem = restoredoc.createElement(panel_->viewer()->cvRestoreID.chars());
   restoredoc.appendChild(restoreElem);
   restoreElem.setAttribute("version", "0");
   if(restorefilename!="") restoreElem.setAttribute("original-path",
@@ -1885,8 +1887,8 @@ String QtDisplayPanel::dpState(String restorefilename) {
 	  Vector<Float> shiftSlope, brtCont;
 	  dd->getCMShiftSlope(shiftSlope);
 	  dd->getCMBrtCont(brtCont);
-	  opt.setAttribute("shiftslope", v_->toString(shiftSlope).chars());
-	  opt.setAttribute("brtcont", v_->toString(brtCont).chars());  }
+	  opt.setAttribute("shiftslope", panel_->viewer()->toString(shiftSlope).chars());
+	  opt.setAttribute("brtcont", panel_->viewer()->toString(brtCont).chars());  }
 
         
 	// These option fields are not processed during restore at present;
@@ -1948,8 +1950,8 @@ String QtDisplayPanel::dpState(String restorefilename) {
     blc[0] = wc->linXMin(); blc[1] = wc->linYMin();
     trc[0] = wc->linXMax(); trc[1] = wc->linYMax();
 
-    zoom.setAttribute("blc", v_->toString(blc).chars());
-    zoom.setAttribute("trc", v_->toString(trc).chars());  }
+    zoom.setAttribute("blc", panel_->viewer()->toString(blc).chars());
+    zoom.setAttribute("trc", panel_->viewer()->toString(trc).chars());  }
 
   
   // Animation state.  Mode and current frame numbers, animation rate.
@@ -1984,7 +1986,7 @@ Bool QtDisplayPanel::setPanelState(QDomDocument& restoredoc,
   // to enable data files to be found by restorefile-relative location.
 
   QDomElement restoreElem = 
-              restoredoc.firstChildElement(v_->cvRestoreID.chars());
+              restoredoc.firstChildElement(panel_->viewer()->cvRestoreID.chars());
   if(restoreElem.isNull()) return False;
   
   QString origrestorefile = restoreElem.attribute("original-path");
@@ -2011,7 +2013,7 @@ Bool QtDisplayPanel::setPanelState(QDomDocument& restoredoc,
     // _any_ panel (not just this one) are eligible.
     // (That is the distinction between ViewerBase::unregisteredDDs() vs.
     // DisplayPanel::unregisteredDDs(), btw).
-    List<QtDisplayData*> exDDs = v_->unregisteredDDs();
+    List<QtDisplayData*> exDDs = panel_->unregisteredDDs();
     ListIter<QtDisplayData*> exdds(exDDs);
       
     
@@ -2088,8 +2090,8 @@ Bool QtDisplayPanel::setPanelState(QDomDocument& restoredoc,
 	  String shSl = cmopt.attribute("shiftslope", "#").toStdString(),
 	        brCnt = cmopt.attribute("brtcont",    "#").toStdString();
 
-	  if(shSl!="#")  dd->setCMShiftSlope(v_->toVectorF(shSl));
-	  if(brCnt!="#") dd->setCMBrtCont(v_->toVectorF(brCnt));  }  }
+	  if(shSl!="#")  dd->setCMShiftSlope(panel_->viewer()->toVectorF(shSl));
+	  if(brCnt!="#") dd->setCMBrtCont(panel_->viewer()->toVectorF(brCnt));  }  }
 
       catch(...) {  }   }  }
   
@@ -2126,8 +2128,8 @@ Bool QtDisplayPanel::setPanelState(QDomDocument& restoredoc,
          trcstr = zoom.attribute("trc").toStdString();
   
   Bool b_ok = False, t_ok=False;
-  Vector<Double> blc = v_->toVectorD(blcstr, &b_ok),
-		 trc = v_->toVectorD(trcstr, &t_ok);
+  Vector<Double> blc = panel_->viewer()->toVectorD(blcstr, &b_ok),
+		 trc = panel_->viewer()->toVectorD(trcstr, &t_ok);
   
   if(b_ok && t_ok  &&  blc.size()==2u && trc.size()==2u) {
     
@@ -2218,7 +2220,7 @@ Bool QtDisplayPanel::restorePanelState(String filename) {
   
   QDomDocument restoredoc;
   
-  if(!v_->isRestoreFile(filename, restoredoc)) return False;
+  if(!panel_->viewer()->isRestoreFile(filename, restoredoc)) return False;
   
   QFileInfo fi(filename.chars());
   QString restoredir = fi.dir().path();
@@ -2323,13 +2325,13 @@ Bool QtDisplayPanel::ddFileMatch_(String path, String dataType,
 				// any newly-created dd.
   
   if(dataType=="lel") {
-    dd = v_->createDD(path, dataType, displayType, noAutoReg);
+    dd = panel_->createDD(path, dataType, displayType, noAutoReg);
     return (dd!=0);  }	// We must find all data files in the exact location
 			// specified in lel string to reconstruct an lel dd.
 
   QFileInfo pathfi(path.chars());
   QString filename = pathfi.fileName();
-  QString dmDir = v_->selectedDMDir.chars();
+  QString dmDir = panel_->selectedDMDir.chars();
   
   QFileInfo testfi;	// (will hold representation of the 5
 			//  filepaths below, in succession).
@@ -2391,7 +2393,7 @@ Bool QtDisplayPanel::ddFileMatch_(String path, String dataType,
 
       String testpath = QDir::cleanPath(testfi.filePath()).toStdString();
       
-      dd = v_->createDD(testpath, dataType, displayType, noAutoReg);
+      dd = panel_->createDD(testpath, dataType, displayType, noAutoReg);
       
       if(dd!=0) return True;  }  }
 
@@ -2415,7 +2417,7 @@ String QtDisplayPanel::suggestedRestoreFilename() {
       String nm = fi.fileName().toStdString();
       if(nm!="") filename = nm;  }  }
   
-  return filename+"."+v_->cvRestoreFileExt;  }
+  return filename+"."+panel_->viewer()->cvRestoreFileExt;  }
   
 
   

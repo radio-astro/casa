@@ -40,22 +40,25 @@
 #include <display/QtPlotter/QtProfile.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDataManager.qo.h>
+#include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
-		   QtPanelBase(parent),
-		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0),
+		   QtPanelBase(parent), qdm_(0), qdo_(0), qfb_(0),
+		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
 		   qsm_(0), profile_(0), savedTool_(QtMouseToolNames::NONE),
-		   profileDD_(0)  {
+		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
+		   showdataoptionspanel_enter_count(0) {
     
   setWindowTitle("Viewer Display Panel");
   
   
-  qdp_ = new QtDisplayPanel(v_);
+  qdp_ = new QtDisplayPanel(this);
+//qdo_ = new QtDataOptionsPanel(this);
+
   
   setCentralWidget(qdp_);
   
@@ -151,7 +154,20 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 		     addToolBarBreak();
 		     addToolBar(/*Qt::LeftToolBarArea,*/ mouseToolBar_);
 
-  
+#if 0
+//   addToolBarBreak();
+  QToolBar *atb =  addToolBar("another toolbar");
+  QToolButton *atb_play = new QToolButton(atb);
+  atb->addWidget(atb_play);
+  const QIcon icon4 = QIcon(QString::fromUtf8(":/icons/Anim4_Play.png"));
+  atb_play->setIcon(icon4);
+  atb_play->setIconSize(QSize(22, 22));
+  atb_play->resize(QSize(36, 36));
+  atb_play->setCheckable(True);
+  atb_play->setEnabled(True);
+  connect(atb_play, SIGNAL(clicked()),           SLOT(fwdPlay_()));
+#endif
+
   // This tool bar is _public_; programmer can add custom interface to it.
   customToolBar    = addToolBar("Custom Toolbar");
 		     customToolBar->setObjectName("Custom Toolbar");
@@ -176,16 +192,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
    
    animWidget_     = new QFrame;	
                      animDockWidget_->setWidget(animWidget_);
-   
+
     Ui::QtAnimatorGui::setupUi(animWidget_);  
 	// creates/inserts animator controls into animWidget_.
 	// These widgets (e.g. frameSlider_) are protected members
 	// of Ui::QtAnimatorGui, accessible to this derived class.
 	// They are declared/defined in QtAnimatorGui.ui[.h].
    
-  
-  
- 
   
   trkgDockWidget_  = new QDockWidget();
 		     trkgDockWidget_->setObjectName("Position Tracking");
@@ -458,20 +471,20 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
     
   // Direct reactions to user interface.
     
-  connect(ddOpenAct_,  SIGNAL(triggered()),  v_, SLOT(showDataManager()));
+  connect(ddOpenAct_,  SIGNAL(triggered()),  SLOT(showDataManager()));
   connect(dpNewAct_,   SIGNAL(triggered()),  v_, SLOT(createDPG()));
   connect(dpOptsAct_,  SIGNAL(triggered()),  SLOT(showCanvasManager()));
   connect(dpSaveAct_,  SIGNAL(triggered()),  SLOT(savePanelState_()));
   connect(dpRstrAct_,  SIGNAL(triggered()),  SLOT(restorePanelState_()));
   connect(dpCloseAct_, SIGNAL(triggered()),  SLOT(close()));
-  connect(dpQuitAct_,  SIGNAL(triggered()),  v_, SLOT(quit()));
+  connect(dpQuitAct_,  SIGNAL(triggered()),  SLOT(quit()));
   connect(fboxAct_,    SIGNAL(triggered()),  SLOT(showFileBoxPanel()));
   connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
   connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
   connect(profileAct_, SIGNAL(triggered()),  SLOT(showImageProfile()));
   connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
-  connect(shpMgrAct_,  SIGNAL(triggered()), SLOT(showShapeManager()));
-  connect(ddAdjAct_,   SIGNAL(triggered()),  v_,SLOT(showDataOptionsPanel()));
+  connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
+  connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
   connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
   connect(unzoomAct_,  SIGNAL(triggered()),  qdp_, SLOT(unzoom()));
   connect(zoomInAct_,  SIGNAL(triggered()),  qdp_, SLOT(zoomIn()));
@@ -503,8 +516,8 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
   connect( qdp_, SIGNAL(trackingInfo(Record)),
                    SLOT(displayTrackingData_(Record)) );
   
-  connect( v_, SIGNAL(ddRemoved(QtDisplayData*)),
-                 SLOT(deleteTrackBox_(QtDisplayData*)) );
+  connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
+	   SLOT(deleteTrackBox_(QtDisplayData*)) );
     
     
     // From animator
@@ -542,15 +555,16 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
 }
 
 
-
-
 QtDisplayPanelGui::~QtDisplayPanelGui() {
+  removeAllDDs();  
   delete qdp_;	// (probably unnecessary because of Qt parenting...)
 		// (possibly wrong, for same reason?...).
 		// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
   if(qpm_!=0) delete qpm_;
   if(qrm_!=0) delete qrm_;
   if(qsm_!=0) delete qsm_;
+  if(qdm_!=0) delete qdm_;
+  if(qdo_!=0) delete qdo_;
 }
 
 bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
@@ -563,6 +577,120 @@ QVariant QtDisplayPanelGui::start_interact( const QVariant &, int ) {
 QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
     return QVariant(QString("*error* nothing implemented yet"));
 }
+
+//# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+//# DisplayData functionality brought down from QtViewerBase
+//# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+QtDisplayData* QtDisplayPanelGui::createDD(String path, String dataType,
+			       String displayType, Bool autoRegister) {
+
+  QtDisplayData* qdd = new QtDisplayData(this, path, dataType, displayType);
+  
+  if(qdd->isEmpty()) {
+    errMsg_ = qdd->errMsg();
+    emit createDDFailed(errMsg_, path, dataType, displayType);
+    return 0;  }
+    
+  // Be sure name is unique by adding numerical suffix if necessary.
+  
+  String name=qdd->name();
+  for(Int i=2; dd(name)!=0; i++) {
+    name=qdd->name() + " <" + String::toString(i) + ">";  }
+  qdd->setName(name);
+  
+  ListIter<QtDisplayData* > qdds(qdds_);
+  qdds.toEnd();
+  qdds.addRight(qdd);
+  
+  emit ddCreated(qdd, autoRegister);
+  
+  return qdd;  }
+
+void QtDisplayPanelGui::removeAllDDs() {
+  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
+    QtDisplayData* qdd = qdds.getRight();
+    
+    qdds.removeRight();
+    emit ddRemoved(qdd);
+    qdd->done();
+    delete qdd;  }  }
+  
+    
+
+Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
+  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+    if(qdd == qdds.getRight()) {
+    
+      qdds.removeRight();
+      emit ddRemoved(qdd);
+      qdd->done();
+      delete qdd;
+      return True;  }  }
+  
+  return False;  }
+      
+
+  
+Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
+  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+    if(qdd == qdds.getRight()) return True;  }
+  return False;  }
+      
+
+  
+QtDisplayData* QtDisplayPanelGui::dd(const String& name) {
+  // retrieve DD with given name (0 if none).
+  QtDisplayData* qdd;
+  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+    if( (qdd=qdds.getRight())->name() == name ) return qdd;  }
+  return 0;  }
+
+  
+  
+List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
+  // return a list of DDs that are registered on some panel.
+  List<QtDisplayData*> rDDs(qdds_);
+#if 0
+  List<QtDisplayPanelGui*> DPs(viewer()->openDPs());
+  
+  for(ListIter<QtDisplayData*> rdds(rDDs); !rdds.atEnd();) {
+    QtDisplayData* dd = rdds.getRight();
+    Bool regd = False;
+    
+    for(ListIter<QtDisplayPanel*> dps(DPs); !dps.atEnd(); dps++) {
+      QtDisplayPanel* dp = dps.getRight();
+      if(dp->isRegistered(dd)) { regd = True; break;  }  }
+    
+    if(regd) rdds++;
+    else rdds.removeRight();  }
+#endif
+  return rDDs;  }
+
+  
+List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs(){
+  // return a list of DDs that exist but are not registered on any panel.
+  List<QtDisplayData*> uDDs(qdds_);
+  List<QtDisplayPanelGui*> DPs(viewer()->openDPs());
+  
+  for(ListIter<QtDisplayData*> udds(uDDs); !udds.atEnd(); ) {
+    QtDisplayData* dd = udds.getRight();
+    Bool regd = False;
+    
+    for(ListIter<QtDisplayPanelGui*> dps(DPs); !dps.atEnd(); dps++) {
+      QtDisplayPanelGui* dp = dps.getRight();
+      if(dp->displayPanel()->isRegistered(dd)) { regd = True; break;  }  }
+    
+    if(regd) udds.removeRight();
+    else udds++;  }
+  
+  return uDDs;  }
+  
+//# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+//# DisplayData functionality brought down from QtViewerBase
+//# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
 void QtDisplayPanelGui:: addedData( QString type, QtDisplayData * ) { }
 
 // Animation slots.
@@ -691,11 +819,46 @@ void QtDisplayPanelGui::hideAllSubwindows() {
   hideFileBoxPanel();
   hideMakeRegionPanel();
   hideImageProfile();  
-
+  hideDataManager();
+  hideDataOptionsPanel();
 }
   
-  
+void QtDisplayPanelGui::showDataManager() {
+  if(qdm_==0) qdm_ = new QtDataManager(this);
+  qdm_->showNormal();
+  qdm_->raise();  }
 
+void QtDisplayPanelGui::hideDataManager() {
+  if(qdm_==0) return;
+  qdm_->hide();  }
+
+    
+void QtDisplayPanelGui::showDataOptionsPanel() {
+    //  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
+    // prevent infinate recursion, due to loop:
+    //		#1321 0x00e37264 in casa::QtDataOptionsPanel::createDDTab_ ()
+    //		#1322 0x00e375b9 in casa::QtDataOptionsPanel::QtDataOptionsPanel ()
+    //		#1323 0x00eda8bf in casa::QtDisplayPanelGui::showDataOptionsPanel ()
+    //		#1324 0x00e37264 in casa::QtDataOptionsPanel::createDDTab_ ()
+    //		#1325 0x00e375b9 in casa::QtDataOptionsPanel::QtDataOptionsPanel ()
+    //		#1326 0x00eda8bf in casa::QtDisplayPanelGui::showDataOptionsPanel ()
+    //  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
+    if ( showdataoptionspanel_enter_count == 0 ) {
+	++showdataoptionspanel_enter_count;
+	if(qdo_==0) qdo_ = new QtDataOptionsPanel(this);
+	if(qdo_!=0) {  // (should be True, barring exceptions above).
+	    qdo_->showNormal();
+	    qdo_->raise();
+	}
+	--showdataoptionspanel_enter_count;
+    }
+}
+
+void QtDisplayPanelGui::hideDataOptionsPanel() {
+  if(qdo_==0) return;
+  qdo_->hide();  }
+  
+  
 void QtDisplayPanelGui::showPrintManager() {
   if(qpm_==0) qpm_ = new QtViewerPrintGui(qdp_);
   qpm_->showNormal();	// (Magic formula to bring a window up,
@@ -1173,7 +1336,16 @@ void TrackBox::setTrackingHeight_() {
 
 // Etc.
   
+void QtDisplayPanelGui::quit( ) {
+  
+    emit closed( this );
 
+    if ( v_->server( ) ) {
+	close( );
+    } else {
+	v_->quit( );
+    }
+}
 
 void QtDisplayPanelGui::toggleAnimExtras_() {
 
@@ -1274,7 +1446,7 @@ void QtDisplayPanelGui::savePanelState_() {
   // Brings up dialog for saving display panel state: reg'd DDs, their
   // options, etc.  Triggered by dpSaveAct_.
   
-  QString         savedir = v_->selectedDMDir.chars();
+  QString         savedir = selectedDMDir.chars();
   if(savedir=="") savedir = QDir::currentPath();
   
   QString suggpath = savedir + "/" + qdp_->suggestedRestoreFilename().chars();
@@ -1303,7 +1475,7 @@ void QtDisplayPanelGui::restorePanelState_() {
   // Brings up dialog for restore file, attempts restore.
   // Triggered by dpRstrAct_.
 
-  QString            restoredir = v_->selectedDMDir.chars();
+  QString            restoredir = selectedDMDir.chars();
   if(restoredir=="") restoredir = QDir::currentPath();
   
   String filename = QFileDialog::getOpenFileName(
@@ -1341,8 +1513,8 @@ Bool QtDisplayPanelGui::syncDataDir_(String filename) {
   
   QString datadirname = datadir.path();
   
-  if(v_->dataMgr()!=0) v_->dataMgr()->updateDirectory(datadirname);
-  else v_->selectedDMDir = datadirname.toStdString();
+  if(dataMgr()!=0) dataMgr()->updateDirectory(datadirname);
+  else selectedDMDir = datadirname.toStdString();
   return True;  }
 
 
@@ -1575,10 +1747,24 @@ void QtDisplayPanelGui::ddCloseClicked_() {
   if(action==0) return;		// (shouldn't happen).
   QtDisplayData* dd = action->data().value<QtDisplayData*>();
 
-  v_->removeDD(dd);  }  
+  removeDD(dd);  }  
 
  
+void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {    
+  // At least for now, colorbars can only be placed horizontally or vertically,
+  // identically for all display panels.  This sets that state for everyone.
+  // Sends out colorBarOrientationChange signal when the state changes.
+  
+  if(colorBarsVertical_ == vertical) return;	// (already there).
+  
+  colorBarsVertical_ = vertical;
+  
+  // Tell QDPs and QDDs to rearrange color bars as necessary.
+  
+  v_->hold();	// (avoid unnecessary extra refreshes).
+  emit colorBarOrientationChange();
+  v_->release();  }
+ 
 
-} //# NAMESPACE CASA - END
 
-
+}

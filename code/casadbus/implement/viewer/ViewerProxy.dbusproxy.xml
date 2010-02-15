@@ -27,7 +27,7 @@
     </method>
     <method name="restore">
       <arg direction="in" type="s" name="path" />
-      <arg direction="in" type="b" name="new_window" />
+      <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
     <method name="cwd">

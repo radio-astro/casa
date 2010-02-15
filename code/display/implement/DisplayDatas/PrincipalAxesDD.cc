@@ -59,6 +59,8 @@
 #include <display/DisplayCanvas/WCCSNLAxisLabeller.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 
+
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructor
@@ -256,6 +258,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
   return showPosition(world, itsAbsolute, displayAxesOnly);
 }
 
+// <drs> - called to get state information for cursor tracking
 String PrincipalAxesDD::showPosition(const Vector<Double> &world,
 				     const Bool &showAbs,
 				     const Bool &displayAxesOnly) 

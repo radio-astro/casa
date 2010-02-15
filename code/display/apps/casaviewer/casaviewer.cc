@@ -215,16 +215,16 @@ int main( int argc, const char *argv[] ) {
 
 		if(tryDDcreate) {
 
-		    qdd = v->createDD(filename, datatype, displaytype);
+		    qdd = dpg->createDD(filename, datatype, displaytype);
 
 
-		    if(qdd==0)  cerr << v->errMsg() << endl;
+		    if(qdd==0)  cerr << dpg->errMsg() << endl;
 		}
 	    }
 
 	    dpg->show();
 
-	    if(v->nDDs()==0) v->showDataManager();
+	    if(dpg->nDDs()==0) dpg->showDataManager();
 
 	}
 
@@ -289,7 +289,7 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
     char *orig_name = strdup(argv[0]);
     char *name = orig_name + strlen(orig_name) - 1;
     while ( name > orig_name && *name != '/' ) --name;
-    if(*name == '/')++name;
+    if ( *name == '/' ) ++name;
 
     // pre-process the command line arguments (for now), it looks like
     // the current scheme is to hard-wire a limited set of command line

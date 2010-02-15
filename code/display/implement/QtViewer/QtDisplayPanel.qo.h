@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 class String;
-class QtViewerBase;
+class QtDisplayPanelGui;
 class QtDisplayData;
 class DisplayData;
 class PCITFiddler;
@@ -109,7 +109,7 @@ public:
     };
    
 
- QtDisplayPanel(QtViewerBase* v, QWidget* parent=0);
+ QtDisplayPanel(QtDisplayPanelGui* panel, QWidget* parent=0);
   ~QtDisplayPanel();
   
   // True if DD is on our list.  (It may _not_ be on viewer's list
@@ -144,7 +144,7 @@ public:
   virtual Record getOptions();    
   
   
-  QtViewerBase* viewer() { return v_;  }
+/*   QtViewerBase* viewer() { return v_;  } */
  
   // Return a QPixmap* with a copy of currently-displayed widget contents.
   // Caller is responsible for deleting.
@@ -721,7 +721,7 @@ public:
  protected:
  
   // central (unique) viewer object: for viewer-global state / methods.
-  QtViewerBase* v_;
+  QtDisplayPanelGui *panel_;
   
   // 'Main' panel of pc_, where qdds_ draw themselves.
   PanelDisplay* pd_;

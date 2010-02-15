@@ -57,7 +57,7 @@ namespace casa {
 
 	resize(700,900);
 	
-	v_->autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
+	autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
 	setStatsPrint(False);			// Turns off statistics printing.
 
 	QDockWidget *dock = new QDockWidget(this, Qt::Widget);
@@ -270,7 +270,7 @@ namespace casa {
 	if ( polyline_button ) polyline_button->setEnabled(false);
 
 	show( );
-	v_->autoDDOptionsShow = true;
+	autoDDOptionsShow = true;
     }
 
     QtCleanPanelGui::~QtCleanPanelGui() { }

@@ -49,7 +49,7 @@
  
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtViewer;
+class QtDisplayPanelGui;
 class QtDisplayPanel;
 
 
@@ -59,7 +59,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
 
  public:
   
-  QtDataManager(QtViewer* viewer=0, const char* name=0,
+  QtDataManager(QtDisplayPanelGui* panel=0, const char* name=0,
 		QWidget* parent=0 );
   ~QtDataManager();
   
@@ -117,7 +117,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
  private:
   
   QWidget *parent_;
-  QtViewer* viewer_;
+  QtDisplayPanelGui* panel_;
   QDir dir_;  
   
 };

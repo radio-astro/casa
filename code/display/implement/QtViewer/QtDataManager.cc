@@ -26,8 +26,9 @@
 //# $Id$
 
 
-#include <display/QtViewer/QtDataManager.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
+#include <display/QtViewer/QtDataManager.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableInfo.h>
 #include <casa/BasicSL/String.h>
@@ -51,12 +52,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-QtDataManager::QtDataManager(QtViewer* viewer,
+QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
 			     const char *name,
 			     QWidget *parent ) :
 	       QWidget(parent),
                parent_(parent),
-	       viewer_(viewer) {
+	       panel_(panel) {
   
   setWindowTitle(name);
   
@@ -128,7 +129,7 @@ QtDataManager::QtDataManager(QtViewer* viewer,
   // dirLineEdit_->setText(lastDir);
   
   dirLineEdit_->setText(dir_.currentPath());
-  viewer_->selectedDMDir = dirLineEdit_->text().toStdString();
+  panel_->selectedDMDir = dirLineEdit_->text().toStdString();
   
   
   buildDirTree();
@@ -165,7 +166,7 @@ QtDataManager::QtDataManager(QtViewer* viewer,
   connect(toolButton_,    SIGNAL(clicked(bool)),
 	  toolGroupBox_,  SLOT(setVisible(bool)));
 
-  connect(viewer_, SIGNAL(createDDFailed(String, String, String, String)),
+  connect(panel_, SIGNAL(createDDFailed(String, String, String, String)),
 		     SLOT(showDDCreateError_(String)));
   
   connect(lelEdit_, SIGNAL(gotFocus(QFocusEvent*)),  SLOT(lelGotFocus_()));
@@ -201,7 +202,7 @@ void QtDataManager::updateDirectory(QString str){
     dir_ = saved;  }
   dir_.makeAbsolute();
   dirLineEdit_->setText(dir_.cleanPath(dir_.path()));
-  viewer_->selectedDMDir = dirLineEdit_->text().toStdString();
+  panel_->selectedDMDir = dirLineEdit_->text().toStdString();
   buildDirTree();
 }
 
@@ -224,7 +225,7 @@ void QtDataManager::buildDirTree() {
     QString it = entryList.at(i);
     if (it.compare(".") > 0) {
       QString path = dir_.path() + "/" +  entryList.at(i);
-      QString type = viewer_->fileType(path.toStdString()).chars();
+      QString type = panel_->viewer( )->fileType(path.toStdString()).chars();
       int dType = uiDataType_[type];
       //cout << "path=" << path.toStdString()
       //     << "type=" << type.toStdString() << " dType:"<<dType<<endl
@@ -318,7 +319,7 @@ void QtDataManager::createButtonClicked() {
   
   QPushButton* button = dynamic_cast<QPushButton*>(sender());
   
-  if(viewer_==0 || button==0) return;
+  if(panel_==0 || button==0) return;
   
   String path, datatype, displaytype;
   
@@ -347,7 +348,7 @@ void QtDataManager::createButtonClicked() {
   if(path=="" || datatype=="" || displaytype=="") return;
     
 
-  viewer_->createDD(path, datatype, displaytype);
+  panel_->createDD(path, datatype, displaytype);
   
     
   if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
@@ -361,19 +362,19 @@ void QtDataManager::restoreToOld_() {
   // Restore viewer state to existing panel.
   // Use the first empty panel, or if none, the first panel.
   
-  List<QtDisplayPanel*> DPs = viewer_->openDPs();  
-  ListIter<QtDisplayPanel*> dps(DPs);
+  List<QtDisplayPanelGui*> DPs = panel_->viewer()->openDPs();  
+  ListIter<QtDisplayPanelGui*> dps(DPs);
   
   for(dps.toStart(); !dps.atEnd(); dps++) {
-    QtDisplayPanel* dp = dps.getRight();
-    if(dp->registeredDDs().len()==0) {
-      restoreTo_(dp);		// restore to first empty panel, if any...
+    QtDisplayPanelGui* dp = dps.getRight();
+    if(dp->displayPanel()->registeredDDs().len()==0) {
+      restoreTo_(dp->displayPanel());		// restore to first empty panel, if any...
       return;  }  }
   
   dps.toStart();
   if(!dps.atEnd()) {
-    QtDisplayPanel* dp = dps.getRight();
-    restoreTo_(dp);		// ...else, restore to first panel, if any...
+    QtDisplayPanelGui* dp = dps.getRight();
+    restoreTo_(dp->displayPanel());		// ...else, restore to first panel, if any...
     return;  }
      
   restoreToNew_();  }		// ...else, restore to a new panel.
@@ -385,16 +386,16 @@ void QtDataManager::restoreToOld_() {
 //      should try to find a way to make this available from QtViewer
 void QtDataManager::restoreToNew_() {
   // Create new display panel, restore viewer state to it.
-  viewer_->createDPG();
+  panel_->viewer()->createDPG();
   
-  List<QtDisplayPanel*> DPs = viewer_->openDPs();  
+  List<QtDisplayPanelGui*> DPs = panel_->viewer()->openDPs();  
   if(DPs.len()>0) {				// (Safety: should be True)
-    ListIter<QtDisplayPanel*> dps(DPs);
+    ListIter<QtDisplayPanelGui*> dps(DPs);
     dps.toEnd();
     dps--;					// Newly-created dp should be
-    QtDisplayPanel* dp = dps.getRight();	// the last one on the list.
+    QtDisplayPanelGui* dp = dps.getRight();	// the last one on the list.
     
-    restoreTo_(dp);  }  }
+    restoreTo_(dp->displayPanel());  }  }
 
 
   
