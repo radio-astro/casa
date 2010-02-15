@@ -70,7 +70,6 @@ class asapplotter:
             self._plotter = self._newplotter()
         self._plotter.hold()
         self._plotter.clear()
-        from asap import scantable
         if not self._data and not scan:
             msg = "Input is not a scantable"
             if rcParams['verbose']:
@@ -79,21 +78,7 @@ class asapplotter:
                 print_log( 'ERROR' )
                 return
             raise TypeError(msg)
-        if isinstance(scan, scantable):
-            if self._data is not None:
-                if scan != self._data:
-                    self._data = scan
-                    # reset
-                    self._reset()
-            else:
-                self._data = scan
-                self._reset()
-        # ranges become invalid when unit changes
-        if self._abcunit and self._abcunit != self._data.get_unit():
-            self._minmaxx = None
-            self._minmaxy = None
-            self._abcunit = self._data.get_unit()
-            self._datamask = None
+        if scan: self.set_data(scan,refresh=False)
         self._plot(self._data)
         if self._minmaxy is not None:
             self._plotter.set_limits(ylim=self._minmaxy)
@@ -151,7 +136,44 @@ class asapplotter:
         self._plotter.axes.set_autoscale_on(True)
     # end matplotlib.axes fowarding functions
 
-    def set_mode(self, stacking=None, panelling=None):
+    def set_data(self, scan, refresh=True):
+        """
+        Set a scantable to plot. 
+        Parameters:
+            scan:      a scantable
+            refresh:   True (default) or False. If True, the plot is
+                       replotted based on the new parameter setting(s). 
+                       Otherwise,the parameter(s) are set without replotting.
+        """
+        from asap import scantable
+        if isinstance(scan, scantable):
+            if self._data is not None:
+                if scan != self._data:
+                    self._data = scan
+                    # reset
+                    self._reset()
+            else:
+                self._data = scan
+                self._reset()
+        else:
+            msg = "Input is not a scantable"
+            if rcParams['verbose']:
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
+                return
+            raise TypeError(msg)
+
+        # ranges become invalid when unit changes
+        if self._abcunit and self._abcunit != self._data.get_unit():
+            self._minmaxx = None
+            self._minmaxy = None
+            self._abcunit = self._data.get_unit()
+            self._datamask = None
+        if refresh: self.plot()
+        
+
+    def set_mode(self, stacking=None, panelling=None, refresh=True):
         """
         Set the plots look and feel, i.e. what you want to see on the plot.
         Parameters:
@@ -159,6 +181,9 @@ class asapplotter:
                           as line colour overlays (default 'pol')
             panelling:    tell the plotter which variable to plot
                           across multiple panels (default 'scan'
+            refresh:      True (default) or False. If True, the plot is
+                          replotted based on the new parameter setting(s). 
+                          Otherwise,the parameter(s) are set without replotting.
         Note:
             Valid modes are:
                  'beam' 'Beam' 'b':     Beams
@@ -177,7 +202,7 @@ class asapplotter:
                 return
             else:
                 raise TypeError(msg)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
         return
 
     def set_panelling(self, what=None):
@@ -191,20 +216,23 @@ class asapplotter:
             return True
         return False
 
-    def set_layout(self,rows=None,cols=None):
+    def set_layout(self,rows=None,cols=None,refresh=True):
         """
         Set the multi-panel layout, i.e. how many rows and columns plots
         are visible.
         Parameters:
              rows:   The number of rows of plots
              cols:   The number of columns of plots
+             refresh:  True (default) or False. If True, the plot is
+                       replotted based on the new parameter setting(s). 
+                       Otherwise,the parameter(s) are set without replotting.
         Note:
              If no argument is given, the potter reverts to its auto-plot
              behaviour.
         """
         self._rows = rows
         self._cols = cols
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
         return
 
     def set_stacking(self, what=None):
@@ -218,11 +246,14 @@ class asapplotter:
             return True
         return False
 
-    def set_range(self,xstart=None,xend=None,ystart=None,yend=None):
+    def set_range(self,xstart=None,xend=None,ystart=None,yend=None,refresh=True):
         """
         Set the range of interest on the abcissa of the plot
         Parameters:
             [x,y]start,[x,y]end:  The start and end points of the 'zoom' window
+            refresh:  True (default) or False. If True, the plot is
+                      replotted based on the new parameter setting(s). 
+                      Otherwise,the parameter(s) are set without replotting.
         Note:
             These become non-sensical when the unit changes.
             use plotter.set_range() without parameters to reset
@@ -236,10 +267,10 @@ class asapplotter:
             self._minmaxy = None
         else:
             self._minmaxy = [ystart,yend]
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
         return
 
-    def set_legend(self, mp=None, fontsize = None, mode = 0):
+    def set_legend(self, mp=None, fontsize = None, mode = 0, refresh=True):
         """
         Specify a mapping for the legend instead of using the default
         indices:
@@ -263,6 +294,9 @@ class asapplotter:
                         8: lower center
                         9: upper center
                         10: center
+            refresh:    True (default) or False. If True, the plot is
+                        replotted based on the new parameter setting(s). 
+                        Otherwise,the parameter(s) are set without replotting.
 
         Example:
              If the data has two IFs/rest frequencies with index 0 and 1
@@ -277,14 +311,17 @@ class asapplotter:
         if isinstance(fontsize, int):
             from matplotlib import rc as rcp
             rcp('legend', fontsize=fontsize)
-        if self._data:
-            self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
         return
 
-    def set_title(self, title=None, fontsize=None):
+    def set_title(self, title=None, fontsize=None, refresh=True):
         """
         Set the title of the plot. If multiple panels are plotted,
         multiple titles have to be specified.
+        Parameters:
+            refresh:    True (default) or False. If True, the plot is
+                        replotted based on the new parameter setting(s). 
+                        Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
              plotter.set_title(["First Panel","Second Panel"])
@@ -293,16 +330,19 @@ class asapplotter:
         if isinstance(fontsize, int):
             from matplotlib import rc as rcp
             rcp('axes', titlesize=fontsize)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
         return
 
-    def set_ordinate(self, ordinate=None, fontsize=None):
+    def set_ordinate(self, ordinate=None, fontsize=None, refresh=True):
         """
         Set the y-axis label of the plot. If multiple panels are plotted,
         multiple labels have to be specified.
         Parameters:
             ordinate:    a list of ordinate labels. None (default) let
                          data determine the labels
+            refresh:     True (default) or False. If True, the plot is
+                         replotted based on the new parameter setting(s). 
+                         Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
              plotter.set_ordinate(["First Y-Axis","Second Y-Axis"])
@@ -312,16 +352,19 @@ class asapplotter:
             from matplotlib import rc as rcp
             rcp('axes', labelsize=fontsize)
             rcp('ytick', labelsize=fontsize)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
         return
 
-    def set_abcissa(self, abcissa=None, fontsize=None):
+    def set_abcissa(self, abcissa=None, fontsize=None, refresh=True):
         """
         Set the x-axis label of the plot. If multiple panels are plotted,
         multiple labels have to be specified.
         Parameters:
             abcissa:     a list of abcissa labels. None (default) let
                          data determine the labels
+            refresh:     True (default) or False. If True, the plot is
+                         replotted based on the new parameter setting(s). 
+                         Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
              plotter.set_ordinate(["First X-Axis","Second X-Axis"])
@@ -331,15 +374,18 @@ class asapplotter:
             from matplotlib import rc as rcp
             rcp('axes', labelsize=fontsize)
             rcp('xtick', labelsize=fontsize)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
         return
 
-    def set_colors(self, colmap):
+    def set_colors(self, colmap, refresh=True):
         """
         Set the colours to be used. The plotter will cycle through
         these colours when lines are overlaid (stacking mode).
         Parameters:
             colmap:     a list of colour names
+            refresh:    True (default) or False. If True, the plot is
+                        replotted based on the new parameter setting(s). 
+                        Otherwise,the parameter(s) are set without replotting.
         Example:
              plotter.set_colors("red green blue")
              # If for example four lines are overlaid e.g I Q U V
@@ -349,26 +395,29 @@ class asapplotter:
         if isinstance(colmap,str):
             colmap = colmap.split()
         self._plotter.palette(0, colormap=colmap)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
 
     # alias for english speakers
     set_colours = set_colors
 
-    def set_histogram(self, hist=True, linewidth=None):
+    def set_histogram(self, hist=True, linewidth=None, refresh=True):
         """
         Enable/Disable histogram-like plotting.
         Parameters:
             hist:        True (default) or False. The fisrt default
                          is taken from the .asaprc setting
                          plotter.histogram
+            refresh:     True (default) or False. If True, the plot is
+                         replotted based on the new parameter setting(s). 
+                         Otherwise,the parameter(s) are set without replotting.
         """
         self._hist = hist
         if isinstance(linewidth, float) or isinstance(linewidth, int):
             from matplotlib import rc as rcp
             rcp('lines', linewidth=linewidth)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
 
-    def set_linestyles(self, linestyles=None, linewidth=None):
+    def set_linestyles(self, linestyles=None, linewidth=None, refresh=True):
         """
         Set the linestyles to be used. The plotter will cycle through
         these linestyles when lines are overlaid (stacking mode) AND
@@ -378,7 +427,9 @@ class asapplotter:
                              'line', 'dashed', 'dotted', 'dashdot',
                              'dashdotdot' and 'dashdashdot' are
                              possible
-
+            refresh:         True (default) or False. If True, the plot is
+                             replotted based on the new parameter setting(s). 
+                             Otherwise,the parameter(s) are set without replotting.
         Example:
              plotter.set_colors("black")
              plotter.set_linestyles("line dashed dotted dashdot")
@@ -392,9 +443,9 @@ class asapplotter:
         if isinstance(linewidth, float) or isinstance(linewidth, int):
             from matplotlib import rc as rcp
             rcp('lines', linewidth=linewidth)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
 
-    def set_font(self, family=None, style=None, weight=None, size=None):
+    def set_font(self, family=None, style=None, weight=None, size=None, refresh=True):
         """
         Set font properties.
         Parameters:
@@ -403,6 +454,9 @@ class asapplotter:
             weight:    one of 'normal or 'bold'
             size:      the 'general' font size, individual elements can be adjusted
                        seperately
+            refresh:   True (default) or False. If True, the plot is
+                       replotted based on the new parameter setting(s). 
+                       Otherwise,the parameter(s) are set without replotting.
         """
         from matplotlib import rc as rcp
         if isinstance(family, str):
@@ -413,7 +467,7 @@ class asapplotter:
             rcp('font', weight=weight)
         if isinstance(size, float) or isinstance(size, int):
             rcp('font', size=size)
-        if self._data: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
 
     def plot_lines(self, linecat=None, doppler=0.0, deltachan=10, rotate=90.0,
                    location=None):
@@ -511,13 +565,16 @@ class asapplotter:
         return
 
 
-    def set_mask(self, mask=None, selection=None):
+    def set_mask(self, mask=None, selection=None, refresh=True):
         """
         Set a plotting mask for a specific polarization.
         This is useful for masking out "noise" Pangle outside a source.
         Parameters:
              mask:           a mask from scantable.create_mask
              selection:      the spectra to apply the mask to.
+             refresh:        True (default) or False. If True, the plot is
+                             replotted based on the new parameter setting(s). 
+                             Otherwise,the parameter(s) are set without replotting.
         Example:
              select = selector()
              select.setpolstrings("Pangle")
@@ -548,7 +605,7 @@ class asapplotter:
                                    't': [] }
         else:
             self._maskselection = None
-        self.plot(self._data)
+        if refresh: self.plot(self._data)
 
     def _slice_indeces(self, data):
         mn = self._minmaxx[0]
@@ -732,12 +789,19 @@ class asapplotter:
         scan.set_selection(savesel)
 
     def set_selection(self, selection=None, refresh=True):
+        """
+        Parameters:
+            selection:  a selector object (default unset the selection)
+            refresh:    True (default) or False. If True, the plot is
+                        replotted based on the new parameter setting(s). 
+                        Otherwise,the parameter(s) are set without replotting.
+        """
         self._selection = isinstance(selection,selector) and selection or selector()
         d0 = {'s': 'SCANNO', 'b': 'BEAMNO', 'i':'IFNO',
               'p': 'POLNO', 'c': 'CYCLENO', 't' : 'TIME' }
         order = [d0[self._panelling],d0[self._stacking]]
         self._selection.set_order(order)
-        if self._data and refresh: self.plot(self._data)
+        if refresh and self._data: self.plot(self._data)
 
     def _get_selected_n(self, scan):
         d1 = {'b': scan.getbeamnos, 's': scan.getscannos,

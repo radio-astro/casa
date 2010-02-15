@@ -44,6 +44,7 @@ public:
   void setPolFromStrings(const std::vector<std::string>& pols);
   void setCycles(const std::vector<int>& cycs);
   void setName(const std::string&);
+  void setTypes(const std::vector<int>& types);
   virtual void setTaQL(const std::string& taql);
 
   void setSortOrder(const std::vector<std::string>& order);
@@ -54,6 +55,7 @@ public:
   std::vector<int> getIFs() const;
   std::vector<int> getPols() const;
   std::vector<int> getCycles() const;
+  std::vector<int> getTypes() const;
   std::vector<std::string> getPolTypes() const;
   std::string getTaQL() const { return taql_; }
   std::vector<std::string> getSortOrder() const;

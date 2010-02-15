@@ -28,6 +28,7 @@ namespace asap {
         .def("_getpoltypes", &STSelector::getPolTypes)
         .def("_getscans", &STSelector::getScans)
         .def("_getcycles", &STSelector::getCycles)
+        .def("_gettypes", &STSelector::getTypes)
         .def("_gettaql", &STSelector::getTaQL)
         .def("_getorder", &STSelector::getSortOrder)
         .def("_reset", &STSelector::reset)
@@ -41,6 +42,7 @@ namespace asap {
         .def("_settaql", &STSelector::setTaQL)
         .def("_setorder", &STSelector::setSortOrder)
         .def("_setrows", &STSelector::setRows)
+        .def("_settypes", &STSelector::setTypes)
         .def("_empty", &STSelector::empty)
       ;
     };

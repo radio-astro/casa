@@ -43,6 +43,8 @@
 #include <scimath/Mathematics/Convolver.h>
 #include <scimath/Functionals/Polynomial.h>
 
+#include <atnf/PKSIO/SrcType.h>
+
 #include <casa/Logging/LogIO.h>
 #include <sstream>
 
@@ -818,8 +820,8 @@ CountedPtr< Scantable > STMath::autoQuotient( const CountedPtr< Scantable >& in,
   /// modes should be "nearest", "pair"
   // make this operation non insitu
   const Table& tin = in->table();
-  Table ons = tin(tin.col("SRCTYPE") == Int(0));
-  Table offs = tin(tin.col("SRCTYPE") == Int(1));
+  Table ons = tin(tin.col("SRCTYPE") == Int(SrcType::PSON));
+  Table offs = tin(tin.col("SRCTYPE") == Int(SrcType::PSOFF));
   if ( offs.nrow() == 0 )
     throw(AipsError("No 'off' scans present."));
   // put all "on" scans into output table
@@ -1202,9 +1204,10 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
 {
   setInsitu(false);
   STSelector sel;
-  std::vector<int> scan1, scan2, beams;
+  std::vector<int> scan1, scan2, beams, types;
   std::vector< vector<int> > scanpair;
-  std::vector<string> calstate;
+  //std::vector<string> calstate;
+  std::vector<int> calstate;
   String msg;
 
   CountedPtr< Scantable > s1b1on, s1b1off, s1b2on, s1b2off;
@@ -1251,8 +1254,10 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
   }
   scanpair.push_back(scan1);
   scanpair.push_back(scan2);
-  calstate.push_back("*calon");
-  calstate.push_back("*[^calon]");
+  //calstate.push_back("*calon");
+  //calstate.push_back("*[^calon]");
+  calstate.push_back(SrcType::NODCAL);
+  calstate.push_back(SrcType::NOD);
   CountedPtr< Scantable > ws = getScantable(s, false);
   uInt l=0;
   while ( l < sctables.size() ) {
@@ -1261,7 +1266,10 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
         for (uInt k=0; k < 2; k++) {
           sel.reset();
           sel.setScans(scanpair[i]);
-          sel.setName(calstate[k]);
+          //sel.setName(calstate[k]);
+          types.clear();
+          types.push_back(calstate[k]);
+          sel.setTypes(types);
           beams.clear();
           beams.push_back(j);
           sel.setBeams(beams);
@@ -1376,23 +1384,37 @@ CountedPtr< Scantable > STMath::dofs( const CountedPtr< Scantable >& s,
   CountedPtr< Scantable > sig, sigwcal, ref, refwcal;
   CountedPtr< Scantable > calsig, calref, out, out1, out2;
   Bool nofold=False;
+  vector<int> types ; 
 
   //split the data
-  sel.setName("*_fs");
+  //sel.setName("*_fs");
+  types.push_back( SrcType::FSON ) ;
+  sel.setTypes( types ) ;
   ws->setSelection(sel);
   sig = getScantable(ws,false);
   sel.reset();
-  sel.setName("*_fs_calon");
+  types.clear() ;
+  //sel.setName("*_fs_calon");
+  types.push_back( SrcType::FONCAL ) ;
+  sel.setTypes( types ) ;
   ws->setSelection(sel);
   sigwcal = getScantable(ws,false);
   sel.reset();
-  sel.setName("*_fsr");
+  types.clear() ;
+  //sel.setName("*_fsr");
+  types.push_back( SrcType::FSOFF ) ;
+  sel.setTypes( types ) ;
   ws->setSelection(sel);
   ref = getScantable(ws,false);
   sel.reset();
-  sel.setName("*_fsr_calon");
+  types.clear() ;
+  //sel.setName("*_fsr_calon");
+  types.push_back( SrcType::FOFFCAL ) ;
+  sel.setTypes( types ) ;
   ws->setSelection(sel);
   refwcal = getScantable(ws,false);
+  sel.reset() ;
+  types.clear() ;
 
   calsig = dototalpower(sigwcal, sig, tcal=tcal);
   calref = dototalpower(refwcal, ref, tcal=tcal);
@@ -3539,66 +3561,66 @@ CountedPtr<Scantable> STMath::cwcal( const CountedPtr<Scantable>& s,
     return cwcalfs( s, antname ) ;
   }
   else {
-    string skystr = "*_sky" ;
-    string hotstr = "*_hot" ;
-    string coldstr = "*_cold" ;
-    string onstr = "*_" ;
-    string offstr = "*_" ;
-    
-    if ( calmode == "ps" || calmode == "otf" ) {
-      onstr += "pson" ;
-      offstr += "psoff" ;
-    }
-    else if ( calmode == "wob" ) {
-      onstr += "wobon" ;
-      offstr += "woboff" ;
-    }
-    
     vector<bool> masks = s->getMask( 0 ) ;
-    
+    vector<int> types ;
+
     // sky scan
     STSelector sel = STSelector() ;
-    sel.setName( skystr ) ;
+    types.push_back( SrcType::SKY ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
     CountedPtr<Scantable> asky = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
 
     // hot scan
-    sel.setName( hotstr ) ;
+    types.push_back( SrcType::HOT ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
+    tmp.clear() ;
+    tmp.push_back( getScantable( s, false ) ) ;
     CountedPtr<Scantable> ahot = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // cold scan
-    sel.setName( coldstr ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> acold = average( tmp, masks, "TINT", "SCNAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
+    CountedPtr<Scantable> acold ;
+//     types.push_back( SrcType::COLD ) ;
+//     sel.setTypes( types ) ;
+//     s->setSelection( sel ) ;
+//     tmp.clear() ;
+//     tmp.push_back( getScantable( s, false ) ) ;
+//     CountedPtr<Scantable> acold = average( tmp, masks, "TINT", "SCNAN" ) ;
+//     s->unsetSelection() ;
+//     sel.reset() ;
+//     types.clear() ;
 
     // off scan
-    sel.setName( offstr ) ;
+    types.push_back( SrcType::PSOFF ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
+    tmp.clear() ;
+    tmp.push_back( getScantable( s, false ) ) ;
     CountedPtr<Scantable> aoff = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // on scan
     bool insitu = insitu_ ;
     insitu_ = false ;
     CountedPtr<Scantable> out = getScantable( s, true ) ;
     insitu_ = insitu ;
-    sel.setName( onstr ) ;
+    types.push_back( SrcType::PSON ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     TableCopy::copyRows( out->table(), s->table() ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // process each on scan
     ArrayColumn<Float> tsysCol ;
@@ -3621,15 +3643,6 @@ CountedPtr<Scantable> STMath::cwcal( const CountedPtr<Scantable>& s,
       sel.reset() ;
     }
 
-    // remove additional string from SRCNAME
-    ScalarColumn<String> srcnameCol ;
-    srcnameCol.attach( out->table(), "SRCNAME" ) ;
-    Vector<String> srcnames( srcnameCol.getColumn() ) ;
-    for ( uInt i = 0 ; i < srcnames.nelements() ; i++ ) {
-      srcnames[i] = srcnames[i].substr( 0, srcnames[i].find( onstr.substr(1,onstr.size()-1) ) ) ;
-    }
-    srcnameCol.putColumn( srcnames ) ;
-
     // flux unit
     out->setFluxUnit( "K" ) ;
 
@@ -3649,8 +3662,9 @@ CountedPtr<Scantable> STMath::almacal( const CountedPtr<Scantable>& s,
     
     // off scan
     STSelector sel = STSelector() ;
-    string taql = "SELECT FROM $1 WHERE SRCTYPE == 1" ;
-    sel.setTaQL( taql ) ;
+    vector<int> types ;
+    types.push_back( SrcType::PSOFF ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     // TODO 2010/01/08 TN
     // Grouping by time should be needed before averaging.
@@ -3691,18 +3705,20 @@ CountedPtr<Scantable> STMath::almacal( const CountedPtr<Scantable>& s,
     //cout << "aoff.nrow = " << aoff->nrow() << endl ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // on scan
     bool insitu = insitu_ ;
     insitu_ = false ;
     CountedPtr<Scantable> out = getScantable( s, true ) ;
     insitu_ = insitu ;
-    taql = "SELECT FROM $1 WHERE SRCTYPE == 0" ;
-    sel.setTaQL( taql ) ;
+    types.push_back( SrcType::PSON ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     TableCopy::copyRows( out->table(), s->table() ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // process each on scan
     ArrayColumn<Float> tsysCol ;
@@ -3722,331 +3738,296 @@ CountedPtr<Scantable> STMath::almacal( const CountedPtr<Scantable>& s,
 CountedPtr<Scantable> STMath::cwcalfs( const CountedPtr<Scantable>& s,
                                        const String antname )
 {
-  string skystr = "*_sky" ;
-  string skystr1 = "*_fslo_sky" ;
-  string skystr2 = "*_fshi_sky" ;
-  string hotstr = "*_hot" ;
-  string hotstr1 = "*_fslo_hot" ;
-  string hotstr2 = "*_fshi_hot" ;
-  string coldstr = "*_cold" ;
-  string coldstr1 = "*_fslo_cold" ;
-  string coldstr2 = "*_fshi_cold" ;
-  string offstr1 = "*_fslo_off" ;
-  string offstr2 = "*_fshi_off" ;
-  string sigstr = "*_" ;
-  string refstr = "*_" ;
+  vector<int> types ;
 
   // APEX calibration mode
   int apexcalmode = 1 ;
  
   if ( antname.find( "APEX" ) != string::npos ) {
-    sigstr += "fslo" ;
-    refstr += "fshi" ;    
-
     // check if off scan exists or not
     STSelector sel = STSelector() ;
-    sel.setName( offstr1 ) ;
+    //sel.setName( offstr1 ) ;
+    types.push_back( SrcType::FLOOFF ) ;
+    sel.setTypes( types ) ;
     try {
       s->setSelection( sel ) ;
     }
     catch ( AipsError &e ) {
       apexcalmode = 0 ;
     }
+    sel.reset() ;
   }
-  else {
-    sigstr += "fssig" ;
-    refstr += "fsref" ;
-  }
+  s->unsetSelection() ;
+  types.clear() ;
 
   vector<bool> masks = s->getMask( 0 ) ;
   CountedPtr<Scantable> ssig, sref ;
   CountedPtr<Scantable> out ;
 
-  if ( antname.find( "APEX" ) != string::npos && apexcalmode == 0 ) {
-    // APEX fs data without off scan
+  if ( antname.find( "APEX" ) != string::npos ) {
+    // APEX calibration
     // sky scan
     STSelector sel = STSelector() ;
-    sel.setName( skystr1 ) ;
+    types.push_back( SrcType::FLOSKY ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
     CountedPtr<Scantable> askylo = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
-    sel.setName( skystr2 ) ;
+    types.clear() ;
+    types.push_back( SrcType::FHISKY ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
+    tmp.clear() ;
+    tmp.push_back( getScantable( s, false ) ) ;
     CountedPtr<Scantable> askyhi = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // hot scan
-    sel.setName( hotstr1 ) ;
+    types.push_back( SrcType::FLOHOT ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
+    tmp.clear() ;
+    tmp.push_back( getScantable( s, false ) ) ;
     CountedPtr<Scantable> ahotlo = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
-    sel.setName( hotstr2 ) ;
+    types.clear() ;
+    types.push_back( SrcType::FHIHOT ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
+    tmp.clear() ;
+    tmp.push_back( getScantable( s, false ) ) ;
     CountedPtr<Scantable> ahothi = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // cold scan
-    sel.setName( coldstr1 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> acoldlo = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    sel.setName( coldstr2 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> acoldhi = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    
+    CountedPtr<Scantable> acoldlo, acoldhi ;
+//     types.push_back( SrcType::FLOCOLD ) ;
+//     sel.setTypes( types ) ;
+//     s->setSelection( sel ) ;
+//     tmp.clear() ;
+//     tmp.push_back( getScantable( s, false ) ) ;
+//     CountedPtr<Scantable> acoldlo = average( tmp, masks, "TINT", "SCAN" ) ;
+//     s->unsetSelection() ;
+//     sel.reset() ;
+//     types.clear() ;
+//     types.push_back( SrcType::FHICOLD ) ;
+//     sel.setTypes( types ) ;
+//     s->setSelection( sel ) ;
+//     tmp.clear() ;
+//     tmp.push_back( getScantable( s, false ) ) ;
+//     CountedPtr<Scantable> acoldhi = average( tmp, masks, "TINT", "SCAN" ) ;
+//     s->unsetSelection() ;
+//     sel.reset() ;
+//     types.clear() ;
+
     // ref scan
     bool insitu = insitu_ ;
     insitu_ = false ;
     sref = getScantable( s, true ) ;
     insitu_ = insitu ;
-    sel.setName( refstr ) ;
+    types.push_back( SrcType::FSLO ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     TableCopy::copyRows( sref->table(), s->table() ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // sig scan
     insitu_ = false ;
     ssig = getScantable( s, true ) ;
     insitu_ = insitu ;
-    sel.setName( sigstr ) ;
+    types.push_back( SrcType::FSHI ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     TableCopy::copyRows( ssig->table(), s->table() ) ;
     s->unsetSelection() ;
     sel.reset() ;  
-
-    // process each sig and ref scan
-    ArrayColumn<Float> tsysCollo ;
-    tsysCollo.attach( ssig->table(), "TSYS" ) ;
-    ArrayColumn<Float> tsysColhi ;
-    tsysColhi.attach( sref->table(), "TSYS" ) ;
-    for ( int i = 0 ; i < ssig->nrow() ; i++ ) {
-      vector< CountedPtr<Scantable> > sky( 2 ) ;
-      sky[0] = askylo ;
-      sky[1] = askyhi ;
-      vector< CountedPtr<Scantable> > hot( 2 ) ;
-      hot[0] = ahotlo ;
-      hot[1] = ahothi ;
-      vector< CountedPtr<Scantable> > cold( 2 ) ;
-      cold[0] = acoldlo ;
-      cold[1] = acoldhi ;
-      vector<float> sp = getFSCalibratedSpectra( ssig, sref, sky, hot, cold, i ) ;
-      ssig->setSpectrum( sp, i ) ;
-      string reftime = ssig->getTime( i ) ;
-      vector<int> ii( 1, ssig->getIF( i ) ) ;
-      vector<int> ib( 1, ssig->getBeam( i ) ) ;
-      vector<int> ip( 1, ssig->getPol( i ) ) ;
-      sel.setIFs( ii ) ;
-      sel.setBeams( ib ) ;
-      sel.setPolarizations( ip ) ;
-      askylo->setSelection( sel ) ;
-      vector<float> sptsys = getTsysFromTime( reftime, askylo, "linear" ) ;
-      const Vector<Float> Vtsyslo( sptsys ) ;
-      tsysCollo.put( i, Vtsyslo ) ;
-      askylo->unsetSelection() ;
-      sel.reset() ;
-      sky[0] = askyhi ;
-      sky[1] = askylo ;
-      hot[0] = ahothi ;
-      hot[1] = ahotlo ;
-      cold[0] = acoldhi ;
-      cold[1] = acoldlo ;
-      sp = getFSCalibratedSpectra( sref, ssig, sky, hot, cold, i ) ;
-      sref->setSpectrum( sp, i ) ;
-      reftime = sref->getTime( i ) ;
-      ii[0] = sref->getIF( i )  ;
-      ib[0] = sref->getBeam( i ) ;
-      ip[0] = sref->getPol( i ) ;
-      sel.setIFs( ii ) ;
-      sel.setBeams( ib ) ;
-      sel.setPolarizations( ip ) ;
-      askyhi->setSelection( sel ) ;    
-      sptsys = getTsysFromTime( reftime, askyhi, "linear" ) ;
-      const Vector<Float> Vtsyshi( sptsys ) ;
-      tsysColhi.put( i, Vtsyshi ) ;
-      askyhi->unsetSelection() ;
-      sel.reset() ;
+    types.clear() ;
+          
+    if ( apexcalmode == 0 ) {
+      // APEX fs data without off scan
+      // process each sig and ref scan
+      ArrayColumn<Float> tsysCollo ;
+      tsysCollo.attach( ssig->table(), "TSYS" ) ;
+      ArrayColumn<Float> tsysColhi ;
+      tsysColhi.attach( sref->table(), "TSYS" ) ;
+      for ( int i = 0 ; i < ssig->nrow() ; i++ ) {
+        vector< CountedPtr<Scantable> > sky( 2 ) ;
+        sky[0] = askylo ;
+        sky[1] = askyhi ;
+        vector< CountedPtr<Scantable> > hot( 2 ) ;
+        hot[0] = ahotlo ;
+        hot[1] = ahothi ;
+        vector< CountedPtr<Scantable> > cold( 2 ) ;
+        //cold[0] = acoldlo ;
+        //cold[1] = acoldhi ;
+        vector<float> sp = getFSCalibratedSpectra( ssig, sref, sky, hot, cold, i ) ;
+        ssig->setSpectrum( sp, i ) ;
+        string reftime = ssig->getTime( i ) ;
+        vector<int> ii( 1, ssig->getIF( i ) ) ;
+        vector<int> ib( 1, ssig->getBeam( i ) ) ;
+        vector<int> ip( 1, ssig->getPol( i ) ) ;
+        sel.setIFs( ii ) ;
+        sel.setBeams( ib ) ;
+        sel.setPolarizations( ip ) ;
+        askylo->setSelection( sel ) ;
+        vector<float> sptsys = getTsysFromTime( reftime, askylo, "linear" ) ;
+        const Vector<Float> Vtsyslo( sptsys ) ;
+        tsysCollo.put( i, Vtsyslo ) ;
+        askylo->unsetSelection() ;
+        sel.reset() ;
+        sky[0] = askyhi ;
+        sky[1] = askylo ;
+        hot[0] = ahothi ;
+        hot[1] = ahotlo ;
+        cold[0] = acoldhi ;
+        cold[1] = acoldlo ;
+        sp = getFSCalibratedSpectra( sref, ssig, sky, hot, cold, i ) ;
+        sref->setSpectrum( sp, i ) ;
+        reftime = sref->getTime( i ) ;
+        ii[0] = sref->getIF( i )  ;
+        ib[0] = sref->getBeam( i ) ;
+        ip[0] = sref->getPol( i ) ;
+        sel.setIFs( ii ) ;
+        sel.setBeams( ib ) ;
+        sel.setPolarizations( ip ) ;
+        askyhi->setSelection( sel ) ;    
+        sptsys = getTsysFromTime( reftime, askyhi, "linear" ) ;
+        const Vector<Float> Vtsyshi( sptsys ) ;
+        tsysColhi.put( i, Vtsyshi ) ;
+        askyhi->unsetSelection() ;
+        sel.reset() ;
+      }
     }
-
-  }
-  else if ( antname.find( "APEX" ) != string::npos && apexcalmode == 1 ) {
-    // APEX fs data with off scan
-    // sky scan
-    STSelector sel = STSelector() ;
-    sel.setName( skystr1 ) ;
-    s->setSelection( sel ) ;
-    vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
-    CountedPtr<Scantable> askylo = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    sel.setName( skystr2 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> askyhi = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    
-    // hot scan
-    sel.setName( hotstr1 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> ahotlo = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    sel.setName( hotstr2 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> ahothi = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    
-    // cold scan
-    sel.setName( coldstr1 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> acoldlo = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    sel.setName( coldstr2 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> acoldhi = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-
-    // off scan
-    sel.setName( offstr1 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> aofflo = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    sel.setName( offstr2 ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> aoffhi = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    
-    // ref scan
-    bool insitu = insitu_ ;
-    insitu_ = false ;
-    sref = getScantable( s, true ) ;
-    insitu_ = insitu ;
-    sel.setName( refstr ) ;
-    s->setSelection( sel ) ;
-    TableCopy::copyRows( sref->table(), s->table() ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-    
-    // sig scan
-    insitu_ = false ;
-    ssig = getScantable( s, true ) ;
-    insitu_ = insitu ;
-    sel.setName( sigstr ) ;
-    s->setSelection( sel ) ;
-    TableCopy::copyRows( ssig->table(), s->table() ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
-
-    // process each sig and ref scan
-    ArrayColumn<Float> tsysCollo ;
-    tsysCollo.attach( ssig->table(), "TSYS" ) ;
-    ArrayColumn<Float> tsysColhi ;
-    tsysColhi.attach( sref->table(), "TSYS" ) ;
-    for ( int i = 0 ; i < ssig->nrow() ; i++ ) {
-      vector<float> sp = getCalibratedSpectra( ssig, aofflo, askylo, ahotlo, acoldlo, i, antname ) ;
-      ssig->setSpectrum( sp, i ) ;
-      sp = getCalibratedSpectra( sref, aoffhi, askyhi, ahothi, acoldhi, i, antname ) ; 
-      string reftime = ssig->getTime( i ) ;
-      vector<int> ii( 1, ssig->getIF( i ) ) ;
-      vector<int> ib( 1, ssig->getBeam( i ) ) ;
-      vector<int> ip( 1, ssig->getPol( i ) ) ;
-      sel.setIFs( ii ) ;
-      sel.setBeams( ib ) ;
-      sel.setPolarizations( ip ) ;
-      askylo->setSelection( sel ) ;
-      vector<float> sptsys = getTsysFromTime( reftime, askylo, "linear" ) ;
-      const Vector<Float> Vtsyslo( sptsys ) ;
-      tsysCollo.put( i, Vtsyslo ) ;
-      askylo->unsetSelection() ;
+    else if ( apexcalmode == 1 ) {
+      // APEX fs data with off scan
+      // off scan
+      types.push_back( SrcType::FLOOFF ) ;
+      sel.setTypes( types ) ;
+      s->setSelection( sel ) ;
+      tmp.clear() ;
+      tmp.push_back( getScantable( s, false ) ) ;
+      CountedPtr<Scantable> aofflo = average( tmp, masks, "TINT", "SCAN" ) ;
+      s->unsetSelection() ;
       sel.reset() ;
-      sref->setSpectrum( sp, i ) ;
-      reftime = sref->getTime( i ) ;
-      ii[0] = sref->getIF( i )  ;
-      ib[0] = sref->getBeam( i ) ;
-      ip[0] = sref->getPol( i ) ;
-      sel.setIFs( ii ) ;
-      sel.setBeams( ib ) ;
-      sel.setPolarizations( ip ) ;
-      askyhi->setSelection( sel ) ;    
-      sptsys = getTsysFromTime( reftime, askyhi, "linear" ) ;
-      const Vector<Float> Vtsyshi( sptsys ) ;
-      tsysColhi.put( i, Vtsyshi ) ;
-      askyhi->unsetSelection() ;
+      types.clear() ;
+      types.push_back( SrcType::FHIOFF ) ;
+      sel.setTypes( types ) ;
+      s->setSelection( sel ) ;
+      tmp.clear() ;
+      tmp.push_back( getScantable( s, false ) ) ;
+      CountedPtr<Scantable> aoffhi = average( tmp, masks, "TINT", "SCAN" ) ;
+      s->unsetSelection() ;
       sel.reset() ;
+      types.clear() ;
+      
+      // process each sig and ref scan
+      ArrayColumn<Float> tsysCollo ;
+      tsysCollo.attach( ssig->table(), "TSYS" ) ;
+      ArrayColumn<Float> tsysColhi ;
+      tsysColhi.attach( sref->table(), "TSYS" ) ;
+      for ( int i = 0 ; i < ssig->nrow() ; i++ ) {
+        vector<float> sp = getCalibratedSpectra( ssig, aofflo, askylo, ahotlo, acoldlo, i, antname ) ;
+        ssig->setSpectrum( sp, i ) ;
+        sp = getCalibratedSpectra( sref, aoffhi, askyhi, ahothi, acoldhi, i, antname ) ; 
+        string reftime = ssig->getTime( i ) ;
+        vector<int> ii( 1, ssig->getIF( i ) ) ;
+        vector<int> ib( 1, ssig->getBeam( i ) ) ;
+        vector<int> ip( 1, ssig->getPol( i ) ) ;
+        sel.setIFs( ii ) ;
+        sel.setBeams( ib ) ;
+        sel.setPolarizations( ip ) ;
+        askylo->setSelection( sel ) ;
+        vector<float> sptsys = getTsysFromTime( reftime, askylo, "linear" ) ;
+        const Vector<Float> Vtsyslo( sptsys ) ;
+        tsysCollo.put( i, Vtsyslo ) ;
+        askylo->unsetSelection() ;
+        sel.reset() ;
+        sref->setSpectrum( sp, i ) ;
+        reftime = sref->getTime( i ) ;
+        ii[0] = sref->getIF( i )  ;
+        ib[0] = sref->getBeam( i ) ;
+        ip[0] = sref->getPol( i ) ;
+        sel.setIFs( ii ) ;
+        sel.setBeams( ib ) ;
+        sel.setPolarizations( ip ) ;
+        askyhi->setSelection( sel ) ;    
+        sptsys = getTsysFromTime( reftime, askyhi, "linear" ) ;
+        const Vector<Float> Vtsyshi( sptsys ) ;
+        tsysColhi.put( i, Vtsyshi ) ;
+        askyhi->unsetSelection() ;
+        sel.reset() ;
+      }
     }
   }
-  else if ( antname.find( "APEX" ) == string::npos ) {
+  else {
     // non-APEX fs data
     // sky scan
     STSelector sel = STSelector() ;
-    sel.setName( skystr ) ;
+    types.push_back( SrcType::SKY ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
     CountedPtr<Scantable> asky = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // hot scan
-    sel.setName( hotstr ) ;
+    types.push_back( SrcType::HOT ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
+    tmp.clear() ;
+    tmp.push_back( getScantable( s, false ) ) ;
     CountedPtr<Scantable> ahot = average( tmp, masks, "TINT", "SCAN" ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
 
-     // cold scan
-    sel.setName( coldstr ) ;
-    s->setSelection( sel ) ;
-    tmp[0] = getScantable( s, false ) ;
-    CountedPtr<Scantable> acold = average( tmp, masks, "TINT", "SCAN" ) ;
-    s->unsetSelection() ;
-    sel.reset() ;
+    // cold scan
+    CountedPtr<Scantable> acold ;
+//     types.push_back( SrcType::COLD ) ;
+//     sel.setTypes( types ) ;
+//     s->setSelection( sel ) ;
+//     tmp.clear() ;
+//     tmp.push_back( getScantable( s, false ) ) ;
+//     CountedPtr<Scantable> acold = average( tmp, masks, "TINT", "SCAN" ) ;
+//     s->unsetSelection() ;
+//     sel.reset() ;
+//     types.clear() ;
    
     // ref scan
     bool insitu = insitu_ ;
     insitu_ = false ;
     sref = getScantable( s, true ) ;
     insitu_ = insitu ;
-    sel.setName( refstr ) ;
+    types.push_back( SrcType::FSOFF ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     TableCopy::copyRows( sref->table(), s->table() ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
     
     // sig scan
     insitu_ = false ;
     ssig = getScantable( s, true ) ;
     insitu_ = insitu ;
-    sel.setName( sigstr ) ;
+    types.push_back( SrcType::FSON ) ;
+    sel.setTypes( types ) ;
     s->setSelection( sel ) ;
     TableCopy::copyRows( ssig->table(), s->table() ) ;
     s->unsetSelection() ;
     sel.reset() ;
+    types.clear() ;
 
     // process each sig and ref scan
     ArrayColumn<Float> tsysColsig ;
@@ -4140,14 +4121,6 @@ CountedPtr<Scantable> STMath::cwcalfs( const CountedPtr<Scantable>& s,
         else {
           tmp[i] = dofold( ssig, sref, doffset ) ;
         }
-        // remove additional string from SRCNAME
-        ScalarColumn<String> srcnameCol ;
-        srcnameCol.attach( tmp[i]->table(), "SRCNAME" ) ;
-        Vector<String> srcnames( srcnameCol.getColumn() ) ;
-        for ( uInt i = 0 ; i < srcnames.nelements() ; i++ ) {
-          srcnames[i] = srcnames[i].substr( 0, srcnames[i].find( sigstr.substr(1,sigstr.size()-1) ) ) ;
-        }
-        srcnameCol.putColumn( srcnames ) ;
         ssig->unsetSelection() ;
         sref->unsetSelection() ;
       }
@@ -4620,11 +4593,11 @@ vector<float> STMath::getCalibratedSpectra( CountedPtr<Scantable>& on,
   sel.setPolarizations( ip ) ;
   sky->setSelection( sel ) ;
   hot->setSelection( sel ) ;
-  cold->setSelection( sel ) ;
+  //cold->setSelection( sel ) ;
   off->setSelection( sel ) ;
   vector<float> spsky = getSpectrumFromTime( reftime, sky, "linear" ) ;
   vector<float> sphot = getSpectrumFromTime( reftime, hot, "linear" ) ;
-  vector<float> spcold = getSpectrumFromTime( reftime, cold, "linear" ) ;
+  //vector<float> spcold = getSpectrumFromTime( reftime, cold, "linear" ) ;
   vector<float> spoff = getSpectrumFromTime( reftime, off, "linear" ) ;
   vector<float> spec = on->getSpectrum( index ) ;
   vector<float> tcal = getTcalFromTime( reftime, sky, "linear" ) ;
@@ -4634,26 +4607,6 @@ vector<float> STMath::getCalibratedSpectra( CountedPtr<Scantable>& on,
     for ( unsigned int j = 0 ; j < tcal.size() ; j++ ) {
       float v = ( ( spec[j] - spoff[j] ) / spoff[j] )
         * ( spsky[j] / ( sphot[j] - spsky[j] ) ) * tcal[j] ;
-      sp[j] = v ;
-    }
-  }
-  else if ( antname.find( "ALMA" ) != string::npos ) {
-    // two-load calibration
-    // from equation 5 and 12 of ALMA memo 318 (Mangum 2000) 
-    //
-    // 2009/09/09 Takeshi Nakazato
-    for ( unsigned int j = 0 ; j < tcal.size() ; j++ ) {
-      // 
-      // in case that Tcal is assumed as signal gain
-      //
-      //float K = ( sphot[j] - spcold[j] ) / ( thot - tcold ) ;
-      //float v = ( spec[j] - spoff[j] ) * exp( tsig ) / ( K * tcal[j] * eta ) ; 
-      //
-      // in case that Tcal is defined as 
-      //
-      //    Tcal = ( K * Gs * eta_l * exp( - tau_s ) )^-1
-      // 
-      float v = tcal[j] * ( spec[j] - spsky[j] ) ;
       sp[j] = v ;
     }
   }
@@ -4667,7 +4620,7 @@ vector<float> STMath::getCalibratedSpectra( CountedPtr<Scantable>& on,
   sel.reset() ;
   sky->unsetSelection() ;
   hot->unsetSelection() ;
-  cold->unsetSelection() ;
+  //cold->unsetSelection() ;
   off->unsetSelection() ;
 
   return sp ;
@@ -4734,10 +4687,10 @@ vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
   sel.setPolarizations( ip ) ;
   sky->setSelection( sel ) ;
   hot->setSelection( sel ) ;
-  cold->setSelection( sel ) ;
+  //cold->setSelection( sel ) ;
   vector<float> spsky = getSpectrumFromTime( reftime, sky, "linear" ) ;
   vector<float> sphot = getSpectrumFromTime( reftime, hot, "linear" ) ;
-  vector<float> spcold = getSpectrumFromTime( reftime, cold, "linear" ) ;
+  //vector<float> spcold = getSpectrumFromTime( reftime, cold, "linear" ) ;
   vector<float> spref = ref->getSpectrum( index ) ;
   vector<float> spsig = sig->getSpectrum( index ) ;
   vector<float> tcal = getTcalFromTime( reftime, sky, "linear" ) ;
@@ -4749,7 +4702,7 @@ vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
   sel.reset() ;
   sky->unsetSelection() ;
   hot->unsetSelection() ;
-  cold->unsetSelection() ;
+  //cold->unsetSelection() ;
 
   return sp ;
 }
@@ -4772,10 +4725,10 @@ vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
   sel.setPolarizations( ip ) ;
   sky[0]->setSelection( sel ) ;
   hot[0]->setSelection( sel ) ;
-  cold[0]->setSelection( sel ) ;
+  //cold[0]->setSelection( sel ) ;
   vector<float> spskys = getSpectrumFromTime( reftime, sky[0], "linear" ) ;
   vector<float> sphots = getSpectrumFromTime( reftime, hot[0], "linear" ) ;
-  vector<float> spcolds = getSpectrumFromTime( reftime, cold[0], "linear" ) ;
+  //vector<float> spcolds = getSpectrumFromTime( reftime, cold[0], "linear" ) ;
   vector<float> tcals = getTcalFromTime( reftime, sky[0], "linear" ) ;
   sel.reset() ;
   ii[0] = ref->getIF( index ) ;
@@ -4784,10 +4737,10 @@ vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
   sel.setPolarizations( ip ) ;
   sky[1]->setSelection( sel ) ;
   hot[1]->setSelection( sel ) ;
-  cold[1]->setSelection( sel ) ;
+  //cold[1]->setSelection( sel ) ;
   vector<float> spskyr = getSpectrumFromTime( reftime, sky[1], "linear" ) ;
   vector<float> sphotr = getSpectrumFromTime( reftime, hot[1], "linear" ) ;
-  vector<float> spcoldr = getSpectrumFromTime( reftime, cold[1], "linear" ) ;
+  //vector<float> spcoldr = getSpectrumFromTime( reftime, cold[1], "linear" ) ;
   vector<float> tcalr = getTcalFromTime( reftime, sky[1], "linear" ) ;  
   vector<float> spref = ref->getSpectrum( index ) ;
   vector<float> spsig = sig->getSpectrum( index ) ;
@@ -4799,10 +4752,10 @@ vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
   sel.reset() ;
   sky[0]->unsetSelection() ;
   hot[0]->unsetSelection() ;
-  cold[0]->unsetSelection() ;
+  //cold[0]->unsetSelection() ;
   sky[1]->unsetSelection() ;
   hot[1]->unsetSelection() ;
-  cold[1]->unsetSelection() ;
+  //cold[1]->unsetSelection() ;
 
   return sp ;
 }

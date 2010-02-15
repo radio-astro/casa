@@ -39,7 +39,8 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
-   CXXFLAGS +=-DAIPS_DARWIN -arch i386
+   #CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
+   CXXFLAGS +=-DAIPS_DARWIN
 endif
 
 # cfitsio
@@ -133,6 +134,7 @@ PYOBJECTS := python_Scantable.o \
              python_STLineFinder.o \
              python_STFitEntry.o \
              python_STWriter.o \
+             python_SrcType.o \
              python_LineCatalog.o \
 	     python_asap.o
 
