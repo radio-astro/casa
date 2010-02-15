@@ -62,7 +62,8 @@ def sdsim(
             
         ##################################################################
         # determine where the observation will occur:
-        nfld, pointings, etime = util.calc_pointings(pointingspacing,mosaicsize,direction)
+        #nfld, pointings, etime = util.calc_pointings(pointingspacing,mosaicsize,direction)
+        nfld, pointings, etime = _calc_lattice_pointings(util,pointingspacing,mosaicsize,direction)
 
         # find imcenter - phase center
         imcenter , offsets = util.average_direction(pointings)        
@@ -378,3 +379,79 @@ def sdsim(
     except Exception, instance:
         print '***Error***', instance
         return
+
+
+##### Helper functions to calculate lattice gridding
+def _calc_lattice_pointings(util, spacing, imsize, direction=None, relmargin=0.33):
+    if type(imsize) != type([]):
+        imsize=[imsize,imsize]
+    if len(imsize) <2:
+        imsize=[imsize[0],imsize[0]]
+    if direction==None:
+        # if no direction is specified, use the object's direction
+        direction=util.direction
+    else:
+        # if one is specified, use that to set the object's direction
+        # do we really want to do this?
+        util.direction=direction
+
+    # direction is always a list of strings (defined by .xml)
+    if len(direction) >1:
+        if util.verbose: util.msg("You are inputing the precise pointings in 'direction' - if you want me to calculate a mosaic, give a single direction",priority="warn")
+        return len(direction), direction, [0.]*len(direction) #etime at end
+    else: direction=direction[0]
+
+    # now its either a filename or a single direction:
+    # do we need this string check?  maybe it could be a quantity?
+    #if type(direction) == str:
+    # Assume direction as a filename and read lines if it exists
+    filename=os.path.expanduser(os.path.expandvars(direction))
+    if os.path.exists(filename):
+        util.msg('Reading direction information from the file, %s' % filename)
+        return util.read_pointings(filename)
+        
+    epoch, centx, centy = util.direction_splitter()
+
+    spacing  = qa.quantity(spacing)
+    yspacing = spacing
+    
+    xsize=qa.quantity(imsize[0])
+    ### for lattice
+    ysize=qa.quantity(imsize[1])
+
+    ### for lattice
+    nrows = 1+ int(pl.floor(qa.convert(qa.div(ysize, yspacing), '')['value']
+                                - 2.0 * relmargin))
+
+    availcols = 1 + qa.convert(qa.div(xsize, spacing), '')['value'] \
+                - 2.0 * relmargin
+    ncols = int(pl.floor(availcols))
+
+
+    ### for lattice
+    ncolstomin = 0.5 * (ncols - 1)                           # O O O O
+    pointings = []                                           # O O O O
+
+    # Start from the top because in the Southern hemisphere it sets first.
+    y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
+    for row in xrange(0, nrows):         # xrange stops early.
+        xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
+        ystr = qa.formxxx(y, format='dms')
+
+        ### for lattice
+        xmin = qa.sub(centx, qa.mul(ncolstomin, xspacing))
+        stopcolp1 = ncols
+        
+        for col in xrange(0, stopcolp1):        # xrange stops early.
+            x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
+                           format='hms')
+            pointings.append("%s%s %s" % (epoch, x, ystr))
+        y = qa.sub(y, yspacing)
+    ####could not fit pointings then single pointing
+    if(len(pointings)==0):
+        pointings.append(direction)
+    util.msg("using %i generated pointing(s)" % len(pointings))
+    util.pointings=pointings
+    return len(pointings), pointings, [0.]*len(pointings)
+
+
