@@ -690,7 +690,7 @@ namespace casa {
 	      iter != managed_panels.end(); ++iter ) {
 	    iter->second->panel()->closeMainPanel( );
 	}
-	QtApp::app()->closeAllWindows();
+	QtApp::app()->quit();
 	return true;
     }
 

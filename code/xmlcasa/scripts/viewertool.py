@@ -195,7 +195,7 @@ class viewertool(object):
     def done( self ):
 
         if self.__state['proxy'] == None:
-            return
+            self.__connect( )
 
         result = self.__state['proxy'].done( )
         self.__state['proxy'] = None
