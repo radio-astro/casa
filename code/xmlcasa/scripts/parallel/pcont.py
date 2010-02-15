@@ -49,6 +49,7 @@ def putchanimage(cubimage,inim,chan):
     #ia.putchunk(pixels=imdata,blc=blc)
     ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
     ia.close()
+    ia.removefile(inim)
     return True
 
 
@@ -115,7 +116,7 @@ def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e1
         for uu in range(1):
             #####################
             for j in range(nspw):
-                print lowfreq, upfreq, np.min(freqs[j]), np.max(freqs[j])
+                #print lowfreq, upfreq, np.min(freqs[j]), np.max(freqs[j])
                 ind=np.argsort(freqs[j])
                 if((lowfreq > freqs[j][ind[channum[j]-1]]) or 
                         (upfreq < freqs[j][ind[0]])):
@@ -225,7 +226,9 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', 
-          contclean=False):
+          contclean=False, visinmem=False,
+          painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+          epjtablename=''):
 
     """
     msname= measurementset
@@ -245,6 +248,13 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     alg= string  possibilities are 'clark', 'hogbom', 'msclean'
     contclean = boolean ...if False the imagename.model is deleted if its on 
     disk otherwise clean will continue from previous run
+    visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
+    painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
+    cfcache = The disk cache directory for convolution functions
+    pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
+    dopbcorr = If true, correct for PB in the major cycles as well
+    applyoffsets = If true, apply antenna pointing offsets from the pointing table given by epjtablename 
+    epjtablename = Table containing antenna pointing offsets
     """
 
 
@@ -285,6 +295,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+')'
     print 'launch command', launchcomm
     c.pgc(launchcomm)
+    c.pgc('a.visInMem='+str(visinmem))
     tb.open(msname+"/SPECTRAL_WINDOW")
     freqs=tb.getcol('CHAN_FREQ')
     allfreq=freqs[:, spwids[0]]
@@ -386,7 +397,9 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark',
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
           imagetilevol=1000000,
-          contclean=False, chanchunk=1):
+          contclean=False, chanchunk=1, visinmem=False, 
+          painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+          epjtablename=''): 
 
     """
     msname= measurementset
@@ -407,8 +420,17 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     weight= type of weight to apply
     contclean = boolean ...if False the imagename.model is deleted if its on 
     disk otherwise clean will continue from previous run
-    chanchunk = number of channel to process at a go per process...careful i 
+    chanchunk = number of channel to process at a go per process...careful not to 
+   go above total memory available
+   visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
+    painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
+    cfcache = The disk cache directory for convolution functions
+    pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
+    dopbcorr = If true, correct for PB in the major cycles as well
+    applyoffsets = If true, apply antenna pointing offsets from the pointing table given by epjtablename 
+    epjtablename = Table containing antenna pointing offsets
     """
+
     spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
     c=cluster()
     hostname=os.getenv('HOSTNAME')
@@ -452,7 +474,15 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'")'
     print 'launch command', launchcomm
     c.pgc(launchcomm)
+    ###set some common parameters
     c.pgc('a.imagetilevol='+str(imagetilevol))
+    c.pgc('a.visInMem='+str(visinmem))
+    c.pgc('a.painc='+str(painc))
+    c.pgc('a.cfcache='+'"'+str(cfcache)+'"')
+    c.pgc('a.pblimit='+str(pblimit));
+    c.pgc('a.dopbcorr='+str(dopbcorr));
+    c.pgc('a.applyoffsets='+str(applyoffsets));
+    c.pgc('a.epjtablename='+str(epjtablename));
 
     chancounter=0
     nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1

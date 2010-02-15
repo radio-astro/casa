@@ -132,7 +132,8 @@ namespace casa{
 					    Int &convSize,
 					    Cube<Int> &convSupport, 
 					    Float convSampling,
-					    String nameQualifier)
+					    String nameQualifier,
+					    Bool savePA)
   {
     Int N=paList.nelements();
     if (Dir.length() == 0) return;
@@ -184,20 +185,23 @@ namespace casa{
 	    }
 	    delete ftdc; ftdc=0;
 	  }
-	IPosition s(3,wConvSize,1,N+1);
-	paList.resize(N+1,True);
-// 	XSup.resize(N+1,True); 
-// 	YSup.resize(N+1,True); 
-	XSup.resize(s,True);
-	YSup.resize(s,True);
-	Sampling.resize(N+1,True);
-	paList[N] = pa;
-	for(Int iw=0;iw<wConvSize;iw++)
+	if (savePA)
 	  {
-	    YSup(iw,0,N) = convSupport(iw,0,which);
-	    XSup(iw,0,N) = convSupport(iw,0,which);
+	    IPosition s(3,wConvSize,1,N+1);
+	    paList.resize(N+1,True);
+	    // 	XSup.resize(N+1,True); 
+	    // 	YSup.resize(N+1,True); 
+	    XSup.resize(s,True);
+	    YSup.resize(s,True);
+	    Sampling.resize(N+1,True);
+	    paList[N] = pa;
+	    for(Int iw=0;iw<wConvSize;iw++)
+	      {
+		YSup(iw,0,N) = convSupport(iw,0,which);
+		XSup(iw,0,N) = convSupport(iw,0,which);
+	      }
+	    Sampling[N]=convSampling;
 	  }
-	Sampling[N]=convSampling;
       }
     catch (AipsError& x)
       {
@@ -509,6 +513,7 @@ namespace casa{
 	ostringstream name;
 	//	name << Dir << "/CF" << iw << "_" << where;
 	name << Dir << prefix << iw << "_" << where;
+	//	cout << "CF File name = " << name.str() << endl;
 	try
 	  {
 	    PagedImage<Complex> tmp(name.str().c_str());

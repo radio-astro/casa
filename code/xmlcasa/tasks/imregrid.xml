@@ -14,37 +14,48 @@ the same coordinate structure.
 </description>
 <input>
 	<param type="string" name="imagename" mustexist="true">
-		<description>Name of the image that needs to be regridded</description>
+		<description>Name of the source image</description>
 		<value></value>
 	</param>
 
-	<param type="string" name="template" mustexist="true">
-		<description>Name of an image which is used as reference to provide shape and coordinate parameters of output image</description>
-		<value></value>
+	<param type="any" name="template">
+        <any type="variant"/>
+		<description>A dictionary, refcode, or name of an image that provides the output shape and coordinate system</description>
+		<value type="string">get</value>
 	</param>
 
 	<param type="string" name="output">
-		<description>Name of image which will store out put regridded image</description>
+		<description>Name for the regridded image</description>
 		<value></value>
 	</param>
 
 </input>
 <example>
 
-        imregrid: regrid an image onto a template image:
+        imregrid: regrid an image to a new coordinate system.
 
-        Imregrid will regrid an input image onto a template image
-        coordinate system.  The input and template images must have
-        the same coordinate structure.
-    
+        The new coordinate system is defined by the template parameter,
+        which can be:
+          * a recognized reference code string (see below),
+          * a {'csys': csys_record, 'shap': shape} dictionary,
+          * 'get', which does not regrid but returns the template dictionary
+            for imagename, suitable for modification and reuse, or
+          * the name of an image to get the coordinate system and shape
+            from.  The input and template images must have the same
+            coordinate structure.
+
     	Keyword arguments:
     	imagename -- Name of the image that needs to be regridded
     		default: none; example: imagename='orion.image'
-    	template -- Name of an image which is used as reference to
-    		provide shape and coordinate parameters of output image  
-    		default: none; example: imagename='orion_vla.im'
-    	output -- Name of image which will store out put regridded image
-    		default: imregrid_results.im; example: imagename='new_orion.im'
+    	template -- Dictionary, reference code, or imagename defining the new
+                shape and coordinate system, or 'get' to return the template
+                dictionary for imagename.  Recognized reference codes are:
+                'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
+                'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
+                and 'SUPERGAL'.
+    		default: 'get'; example: template='orion_j2000.im'
+    	output -- Name for the regridded image
+    		default: imagename + '.regridded'; example: imagename='orion_shifted.im'
         async -- Run task in a separate process (return CASA prompt)
                 default: False; example: async=True
 

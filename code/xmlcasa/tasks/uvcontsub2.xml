@@ -15,14 +15,19 @@ be generalized in the near future.   The data may be averaged
 in time to increase the signal to noise for each continuum
 estimate.  This fit represents a model of the continuum in 
 all channels.
-	
-The fitted continuum spectrum is subtracted from all channels 
-selected in spw, and the result (presumably only
-line emission) is stored in the	CORRECTED_DATA.  The
-continuum fit is stored in the MODEL_DATA.
 
-If desired, new MeasurementSets are generating containing
-the continuum and continuum-subtracted line data. 
+The fitted continuum spectrum is subtracted from all channels 
+selected in spw, and the result (presumably only line emission)
+is stored in the CORRECTED_DATA of a new MS (vis + '.contsub').
+The selected CORRECTED_DATA column of vis is copied to the DATA
+column of the new ms.
+
+If want_cont is True, the continuum fit is placed in the DATA
+column of a second new MS (vis + '.cont').  N.B. because the
+continuum model is necessarily a smoothed fit, images made with
+it are liable to have their field of view reduced in some
+strange way, and if possible should be compared with images
+made by excluding the line channels.
 
 </description>
 <input>
@@ -63,8 +68,8 @@ the continuum and continuum-subtracted line data.
 		<value></value>
 	</param>
 
-	<param type="bool" name="splitdata">
-		<description>Split out continuum, continuum-subtracted data</description>
+	<param type="bool" name="want_cont">
+		<description>Create vis + ".cont" to hold the continuum estimate.</description>
 		<value>False</value>
 	</param>
 
@@ -81,13 +86,18 @@ the continuum and continuum-subtracted line data.
         estimate.  This fit represents a model of the continuum in 
         all channels.
 	
-	The fitted continuum spectrum is subtracted from all channels 
-        selected in spw, and the result (presumably only
-	line emission) is stored in the	CORRECTED_DATA.  The
-	continuum fit is stored in the MODEL_DATA.
+        The fitted continuum spectrum is subtracted from all channels 
+        selected in spw, and the result (presumably only line emission)
+        is stored in the CORRECTED_DATA of a new MS (vis + '.contsub').
+        The selected CORRECTED_DATA column of vis is copied to the DATA
+        column of the new ms.
 
-        If desired, new MeasurementSets are generating containing
-        the continuum and continuum-subtracted line data. 
+        If want_cont is True, the continuum fit is placed in the DATA
+        column of a second new MS (vis + '.cont').  N.B. because the
+        continuum model is necessarily a smoothed fit, images made with
+        it are liable to have their field of view reduced in some
+        strange way, and if possible should be compared with images
+        made by excluding the line channels.
 
         The input MeasurementSet should have calibrated data in
         its DATA column.
@@ -125,10 +135,9 @@ the continuum and continuum-subtracted line data.
 		  each spw that had a continuum estimated
 	       Also, this specifies which spw/chan will be split
 	       out if splitdata=True.
-	splitdata -- Split out continuum and continuum subtracted line data
-		default: 'False'; example: splitdata=True
-		The continuum data will be placed in: vis.cont
-		The continuum subtracted data will be placed in: vis.contsub
+	want_cont -- Create vis + '.cont' to hold the continuum estimate.
+		default: 'False'; example: want_cont=True
+		The continuum estimate will be placed in: vis.cont
         async -- Run task in a separate process (return CASA prompt)
                 default: False; example: async=True
 

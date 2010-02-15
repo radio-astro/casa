@@ -35,8 +35,11 @@ class UnitTest:
         self.workdir = testname+'_work'
         self.scriptdir = SCRIPT_REPOS       
         self.datadir = [DATA_DIR]
-    
+        self.dataFiles = []
+
+        
     def runFuncTest(self):
+        # DEPRECATED, replaced by getFuncTest
         print '-------------- Unit Test for %s ---------------'%self.testname
         """Wrap a script using unittest"""
         testscript = self.searchscript(self.testname, self.scriptdir)
@@ -79,8 +82,59 @@ class UnitTest:
 
         return testcase
     
-       
+    def funcSetup(self):        
+        """Copy data files to local working directory"""
+        
+        dataFiles = self.dataFiles
+        print 'Searching for input data in %s'%(self.datadir)
+        for datafile in dataFiles: 
+            file = self.locatedata(datafile, self.datadir)
+            #if data already exist, remove them
+            if(file != ''):
+                os.system('rm -rf '+ self.workdir+'/'+datafile)
+            if(os.path.isdir(file)):
+                shutil.copytree(file, self.workdir+'/'+datafile)
+            if(os.path.isfile(file)):
+                shutil.copy(file, self.workdir+'/'+datafile)
+        
+    def funcTeardown(self):
+        """Remove data files from working directory"""
+        
+        dataFiles = self.dataFiles
+        for datafile in dataFiles:
+            file = self.workdir+'/'+datafile
+            os.system('rm -rf ' + file)
+        
+        self.dataFiles = []
+
+    def getFuncTest(self):
+        print '-------------- Unit Test for %s ---------------'%self.testname
+        """Wrap a script using unittest"""
+        testscript = self.searchscript(self.testname, self.scriptdir)
+        
+        # avoid creating a _work directory
+        if (testscript == ""):
+            return
+
+        # copy test to local directory
+        self.workdir = os.getcwd()
+        self.getTest(testscript, self.testname,self.scriptdir, self.workdir)
+
+        # import the test
+        mytest = __import__(self.testname)
+        reload(mytest)
+
+        #get the data
+        self.dataFiles = mytest.data()
+              
+        # Wrap the test, funcSetup and funcTeardown in a FunctionTestCase and return it
+        testcase = (unittest.FunctionTestCase(mytest.run,setUp=self.funcSetup,
+                                              tearDown=self.funcTeardown))
+        
+        return testcase
+
     def runTest(self):    
+                # DEPRECATED, replaced by getUnitTest
         print '-------------- Unit Test for %s ---------------'%self.testname
         """Set up a unit test script to run wit nose"""    
         testscript = self.searchscript(self.testname, self.scriptdir)
@@ -116,6 +170,37 @@ class UnitTest:
 
         return tests
 
+    def getUnitTest(self):
+        print '-------------- Unit Test for %s ---------------'%self.testname
+        """Set up a unit test script to run wit nose"""    
+        testscript = self.searchscript(self.testname, self.scriptdir)
+
+        # avoid creating a _work directory
+        if (testscript == ""):
+            return
+
+        # copy test to local directory
+        self.workdir = os.getcwd()
+        self.getTest(testscript, self.testname,self.scriptdir, self.workdir)
+
+        # import the test
+        mytest = __import__(self.testname)
+        reload(mytest)
+              
+        # Return the tests of this test module
+        classes = mytest.suite()
+        tests = []
+        
+#        print classes
+        for c in classes:
+            for attr, value in c.__dict__.iteritems():
+#                print attr, " = ", value
+                if len(attr) >= len("test") and \
+                   attr[:len("test")] == "test":
+                    tests.append(c(attr))
+
+        return tests
+        
 
     def cleanup(self,workdir):
         # for safety, avoid removing the local directory
@@ -220,6 +305,7 @@ class UnitTest:
         else:    
             shutil.copy(scriptdir+'/'+testnamek, \
                     workdir+'/')
+
 
 class ExecTest(unittest.TestCase,UnitTest):
     """Wraps scripts to run with execfile"""

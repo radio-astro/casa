@@ -779,16 +779,21 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
               &&!pksrec.srcName.contains("_fsr")) {
             // if Nod mode observation , append '_nod'
             if (obsMode1 == "Nod") {
-              pksrec.srcName.append("_nod");
+              //pksrec.srcName.append("_nod");
+              pksrec.srcType = SrcType::NOD ;
             } else if (obsMode1 == "OffOn") {
             // for GBT position switch observations (OffOn or OnOff) 
-              if (obsMode2 == "PSWITCHON") pksrec.srcName.append("_ps");
-              if (obsMode2 == "PSWITCHOFF") pksrec.srcName.append("_psr");
+              //if (obsMode2 == "PSWITCHON") pksrec.srcName.append("_ps");
+              //if (obsMode2 == "PSWITCHOFF") pksrec.srcName.append("_psr");
+              if (obsMode2 == "PSWITCHON") pksrec.srcType = SrcType::PSON ;
+              if (obsMode2 == "PSWITCHOFF") pksrec.srcType = SrcType::PSOFF ;
             } else {
               if (obsMode2 == "FSWITCH") {
               // for GBT frequency switch mode
-                if (sigState) pksrec.srcName.append("_fs");
-                if (refState) pksrec.srcName.append("_fsr");
+                //if (sigState) pksrec.srcName.append("_fs");
+                //if (refState) pksrec.srcName.append("_fsr");
+                if (sigState) pksrec.srcType = SrcType::FSON ;
+                if (refState) pksrec.srcType = SrcType::FSOFF ;
               }
             } 
           }
@@ -813,8 +818,8 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
           if (obsMode1 == "OBSERVE_TARGET") {
             //if (obsMode2 == "ON_SOURCE") pksrec.srcName.append("_pson");
             //if (obsMode2 == "OFF_SOURCE") pksrec.srcName.append("_psoff");
-            if (obsMode2 == "ON_SOURCE") pksrec.srcType = 0 ;
-            if (obsMode2 == "OFF_SOURCE") pksrec.srcType = 1 ;
+            if (obsMode2 == "ON_SOURCE") pksrec.srcType = SrcType::PSON ;
+            if (obsMode2 == "OFF_SOURCE") pksrec.srcType = SrcType::PSOFF ;
           } 
 	}
       } 
@@ -830,7 +835,19 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   }
   if (cGBT) {
     if (Cal > 0 && !pksrec.srcName.contains("_calon")) {
-      pksrec.srcName.append("_calon");
+      //pksrec.srcName.append("_calon");
+      if ( pksrec.srcType == SrcType::NOD )
+        pksrec.srcType = SrcType::NODCAL ;
+      else if ( pksrec.srcType == SrcType::PSON ) 
+        pksrec.srcType = SrcType::PONCAL ;
+      else if ( pksrec.srcType == SrcType::PSOFF )
+        pksrec.srcType = SrcType::POFFCAL ;
+      else if ( pksrec.srcType == SrcType::FSON )
+        pksrec.srcType = SrcType::FONCAL ;
+      else if ( pksrec.srcType == SrcType::FSOFF )
+        pksrec.srcType = SrcType::FOFFCAL ;
+      else
+        pksrec.srcName.append("_calon");
     }
   }
 

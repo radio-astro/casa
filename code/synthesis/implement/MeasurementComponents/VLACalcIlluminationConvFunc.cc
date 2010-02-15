@@ -185,6 +185,7 @@ namespace casa{
 						   const VisBuffer& vb,
 						   Bool doSquint, Int bandID)
   {
+    LogIO logIO(LogOrigin("VLACalcIlluminationConvFunc","regrid"));
     CoordinateSystem skyCoords(skyCS);
 
     Int index;
@@ -192,20 +193,32 @@ namespace casa{
     Float pa;
     if (bandID != -1) ap.band = (BeamCalcBandCode)bandID;
     AlwaysAssert(ap.band>=-1, AipsError);
-    {
-      Vector<Float> antPA = vb.feed_pa(timeValue);
-      pa = sum(antPA)/(antPA.nelements()-1);
-    }
-
+    // {
+    //   Vector<Float> antPA = vb.feed_pa(timeValue);
+    //   pa = sum(antPA)/(antPA.nelements()-1);
+    // }
+    //
+    pa = getPA(vb);
+    //
+    // Till we understand and fix the origin of 180 deg. flip in EVLA
+    // data, rotate the PA by 180 deg. only for EVLA.
+    //
+    String telescopeName=vb.msColumns().observation().telescopeName().getColumn()[0];
+    if (telescopeName == "EVLA") 
+      {
+	logIO << "Fixing PA computation for EVLA"  << LogIO::WARN;
+	pa += M_PI;
+      }
+    // pa=0.0;
+    // cerr << "************PA being set to zero!!!!**************" << endl;
     Float Freq;
     Vector<Double> chanFreq = vb.frequency();
 
     if (lastPA == pa)
       {
-	LogIO logIO;
-	logIO << LogOrigin("VLACalcIlluminationConvFunc","regrid") 
-	      << "Your CPU is being used to do computations for the same PA as for the previous call.  Report this!" 
-	      << LogIO::WARN;
+	//	LogIO logIO;
+	logIO << "Your CPU is being used to do computations for the same PA as for the previous call.  Report this!" 
+	      << LogIO::NORMAL1;
       }
     //    if (lastPA != pa)
       {
@@ -319,7 +332,7 @@ namespace casa{
 	
 	ap.aperture->setCoordinateInfo(uvCoords);
 
-	// if (doSquint==False)
+	// // if (doSquint==False)
 	//   {
 	//     String name("apperture.im");
 	//     storeImg(name,*(ap.aperture));
@@ -755,7 +768,6 @@ namespace casa{
 	else if ((freq >=100E6) && (freq <=300E6))
 	  return BeamCalc_VLA_4;
       }
-/*
     else 
       if (telescopeName=="EVLA")
       {
@@ -776,7 +788,6 @@ namespace casa{
 	else if ((freq >=4.0E9) && (freq <=50.0E9))
 	  return BeamCalc_EVLA_Q;
       }
-*/
     ostringstream mesg;
     mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";
     throw(SynthesisError(mesg.str()));

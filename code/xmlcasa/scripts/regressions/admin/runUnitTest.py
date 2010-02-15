@@ -22,29 +22,49 @@ sys.path.append('/Library/Python/2.6/site-packages/nose-0.11.1-py2.6.egg')
 import nose
 
 # List of tests to run
-E2E_TESTS = []
-OLD_TESTS = []
-NEW_TESTS = ['test_report']
+OLD_TESTS = ['accum_test','hanningsmooth_test','imfit_test']
+NEW_TESTS = ['test_report','test_clean']
 
-
+# Get the tests to run
 i = sys.argv.index("-c")
 this_file = sys.argv[i+1]
 testnames = []
 whichtests = 0  #all tests
 
-if sys.argv.__len__() == i+2:
-    whichtests = 0
-    testnames = ALL_TESTS
-elif sys.argv.__len__() == i+3:
-    whichtests = 1
-    testnames = [sys.argv[i+2]]
+la = [] + sys.argv
 
+if sys.argv.__len__() == i+2:
+    # Will run all tests
+    whichtests = 0
+elif sys.argv.__len__() > i+2:
+    # Will run specific tests
+    whichtests = 1
+    
+    while len(la) > 0:
+        elem = la.pop()
+        if elem == this_file:
+            break           
+        
+        testnames.append(elem)
+        
+# Directories
 PWD = os.getcwd()
-NOSE_XML = PWD+'/nosexml/'
+WDIR = PWD+'/nosedir/'
+
+# Create a working directory
+workdir = WDIR
+print 'Creating working directory '+ workdir
+if os.access(workdir, os.F_OK) is False:
+    os.makedirs(workdir)
+else:
+    shutil.rmtree(workdir)
+    os.makedirs(workdir)
+
+# Move to working dir
+os.chdir(workdir)
 
 # Create a directory for nose's xml files
-xmldir = NOSE_XML
-print ' Creating '+xmldir
+xmldir = WDIR+'xml/'
 if os.access(xmldir, os.F_OK) is False:
     os.makedirs(xmldir)
 else:
@@ -52,75 +72,80 @@ else:
     os.makedirs(xmldir)
 
 
-
+# RUN THE TESTS
 if not whichtests:
-    # Run new tests
-    testnames = NEW_TESTS
-    for f in testnames:
-        try:
-            # Get a list of tests contained in the class
-            tests = UnitTest(f).runTest()
-            xmlfile = xmldir+f+'.xml'
-            result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                              suite=tests)
-            os.chdir(PWD)
-        except:
-            print "Exception: failed to run %s" %f
-            traceback.print_exc()
-
-
-    # Run old tests
+    print "Starting unit tests for %s%s: " %(OLD_TESTS,NEW_TESTS)
+    
+    # Assemble the old tests       
     testnames = OLD_TESTS
+    list = []
     for f in testnames:
-        try:
-            os.chdir(PWD)
-            # Get the testcase
-            test = UnitTest(f).runFuncTest()
-            xmlfile = xmldir+f+'.xml'
-            result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                              suite=[test])
-            os.chdir(PWD)
-        except:
-            print "Exception: failed to run %s" %f
-            traceback.print_exc()
+        testcase = UnitTest(f).getFuncTest()
+        list = list+[testcase]
 
-
-    # Run e2e tests
-    testnames = E2E_TESTS
+    # Assemble the new tests
+    testnames = NEW_TESTS        
     for f in testnames:
-        try:
-            os.chdir(PWD)
-            # Create a testcase of an e2e test
-            testcase = ExecTest('testrun')
-            testcase.testname = f       
-            print '-------------- Unit Test for %s ---------------'%f
+        tests = UnitTest(f).getUnitTest()
+        list = list+tests
     
-            testcase.setup()
-           
-            xmlfile = xmldir+f+'.xml'
-            result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                              suite=[testcase])
-            os.chdir(PWD)
-        except:
-            print "Exception: failed to run %s" %f
-            traceback.print_exc()
-
-else:
-    print "Will run %s"%testnames
-    # At the moment it only supports new unit tests
+    # Run all tests and create a XML report
+    xmlfile = xmldir+'nose.xml'
     try:
-        # Get a list of tests contained in the class
-        f = testnames[0]
-        tests = UnitTest(f).runTest()
-        xmlfile = xmldir+f+'.xml'
-        result = nose.run(argv=[sys.argv[0],"--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                          suite=tests)
-        os.chdir(PWD)
+        result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+                              suite=list)
     except:
-        print "Exception: failed to run %s" %f
+        print "Exception: failed to run the test"
         traceback.print_exc()
+
+    os.chdir(PWD)
+    
+else:
+    # is this an old or new test?
+    old = []
+    new = []
+    for f in testnames:
+        if (OLD_TESTS.__contains__(f)):
+            old.append(f)
+        elif (NEW_TESTS.__contains__(f)):
+            new.append(f)
+        else:
+            print 'WARN: %s is not a valid test name'%f
         
+    if (len(old) == 0 and len(new) == 0):
+        raise Exception, 'Tests are not part of any list'
+            
+    print "Starting unit tests for %s: " %testnames
     
+    # Assemble the old tests
+    list = []    
+    for f in old:
+        testcase = UnitTest(f).getFuncTest()
+        list = list+[testcase]
     
-    
-    
+    # Assemble the new tests
+    for f in new:
+        tests = UnitTest(f).getUnitTest()
+        list = list+tests
+         
+    # Run the tests and create a XML report
+    xmlfile = xmldir+'nose.xml'
+    try:
+        result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+                              suite=list)
+    except:
+        print "Exception: failed to run the test"
+        traceback.print_exc()
+
+    os.chdir(PWD)
+
+        
+  
+
+
+
+
+
+
+
+

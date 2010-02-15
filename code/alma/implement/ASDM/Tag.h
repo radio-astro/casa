@@ -229,6 +229,13 @@ public:
 	bool operator < (const Tag& t) const;
 
 	/**
+	 * @return true if this->value > t.value
+	 * 
+	 * \note Note that the types of the Tags being compared is not taken into account.
+	 */
+	bool operator > (const Tag& t) const;
+
+	/**
 	 * Return true if and only if this Tag is null, i.e. if its TagType field is null.
 	 * @return true if and only if this Tag is null.
 	 */

@@ -129,6 +129,7 @@ class WCCSAxisLabeller : public WCAxisLabeller {
   Bool itsWorldAxisLabels;
   mutable Bool itsDoVelocity;
   Int itsZIndex;
+  Vector<Double> itsRefPixel;
 
   // Set spectral state onto given CS
   void setSpectralState(CoordinateSystem& cs) const;
