@@ -260,34 +260,34 @@ def sdsim(
         tb.flush()
         tb.close()
         
-        # modify SOURCE table information for ASAP
-        #nsrc=1
-        tb.open(tablename=msfile+'/FIELD',nomodify=True)
-        srcids=set(tb.getcol(columnname="SOURCE_ID"))
-        times=tb.getcol(columnname="TIME")
-        tb.close()
-
-        nsrc=len(srcids)
-        if nsrc > 1: raise Error, "More than 1 source!!!"
-        print 'opnening SOURCE subtable to modify'
-        tb.open(tablename=msfile+'/SOURCE',nomodify=False)
-        tb.addrows(nrow=nsrc)
-        print nsrc,'rows are added to SOURCE subtable'
-        tb.putcol(columnname='SOURCE_ID',value=range(nsrc),startrow=0,nrow=nsrc,rowincr=1)
-        #this need to be modified
-        tb.putcol(columnname='TIME',value=list(times[0:nsrc]),startrow=0,nrow=nsrc,rowincr=1)
-        tb.putcell(columnname='DIRECTION',rownr=0,thevalue=[0.,0.])
-        rec0=tb.getvarcol(columnname='DIRECTION',startrow=0,nrow=1)
-        if nsrc > 1: tb.putvarcol(columnname='DIRECTION',value=rec0,startrow=0,nrow=nsrc,rowincr=1)
-        #tb.putcol(columnname='PROPER_MOTION',value=[[0.,0.]]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
-        tb.putvarcol(columnname='PROPER_MOTION',value=rec0,startrow=0,nrow=nsrc,rowincr=1)
-        tb.putcol(columnname='CALIBRATION_GROUP',value=[0]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
-        tb.putcol(columnname='INTERVAL',value=[-1.]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
-        tb.putcol(columnname='NAME',value=[' ']*nsrc,startrow=0,nrow=nsrc,rowincr=1)
-        tb.putcol(columnname='NUM_LINES',value=[0]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
-        tb.putcol(columnname='SPECTRAL_WINDOW_ID',value=[-1]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
-        tb.flush()
-        tb.close()
+        ## modify SOURCE table information for ASAP
+        ##nsrc=1
+        #tb.open(tablename=msfile+'/FIELD',nomodify=True)
+        #srcids=set(tb.getcol(columnname="SOURCE_ID"))
+        #times=tb.getcol(columnname="TIME")
+        #tb.close()
+        #
+        #nsrc=len(srcids)
+        #if nsrc > 1: raise Error, "More than 1 source!!!"
+        #print 'opnening SOURCE subtable to modify'
+        #tb.open(tablename=msfile+'/SOURCE',nomodify=False)
+        #tb.addrows(nrow=nsrc)
+        #print nsrc,'rows are added to SOURCE subtable'
+        #tb.putcol(columnname='SOURCE_ID',value=range(nsrc),startrow=0,nrow=nsrc,rowincr=1)
+        ##this need to be modified
+        #tb.putcol(columnname='TIME',value=list(times[0:nsrc]),startrow=0,nrow=nsrc,rowincr=1)
+        #tb.putcell(columnname='DIRECTION',rownr=0,thevalue=[0.,0.])
+        #rec0=tb.getvarcol(columnname='DIRECTION',startrow=0,nrow=1)
+        #if nsrc > 1: tb.putvarcol(columnname='DIRECTION',value=rec0,startrow=0,nrow=nsrc,rowincr=1)
+        ##tb.putcol(columnname='PROPER_MOTION',value=[[0.,0.]]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
+        #tb.putvarcol(columnname='PROPER_MOTION',value=rec0,startrow=0,nrow=nsrc,rowincr=1)
+        #tb.putcol(columnname='CALIBRATION_GROUP',value=[0]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
+        #tb.putcol(columnname='INTERVAL',value=[-1.]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
+        #tb.putcol(columnname='NAME',value=[' ']*nsrc,startrow=0,nrow=nsrc,rowincr=1)
+        #tb.putcol(columnname='NUM_LINES',value=[0]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
+        #tb.putcol(columnname='SPECTRAL_WINDOW_ID',value=[-1]*nsrc,startrow=0,nrow=nsrc,rowincr=1)
+        #tb.flush()
+        #tb.close()
 
 
         msg('generation of measurement set ' + msfile + ' complete.')
