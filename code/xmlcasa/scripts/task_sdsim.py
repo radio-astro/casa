@@ -26,8 +26,9 @@ def sdsim(
 #    ptgfile=None, plotuv=None, plotconfig=None,
 #process=None, 
     noise_thermal=None, 
-    noise_mode=None, #will be removed
-    user_pwv=None, t_ground=None, t_sky=None, tau0=None, 
+#    noise_mode=None, #will be removed
+#    user_pwv=None, t_ground=None,
+    t_sky=None, tau0=None, 
 #    cross_pol=None,
 #image=None, 
 #    cleanmode=None,
@@ -335,7 +336,7 @@ def sdsim(
             sm.oldsetnoise(mode="calculate",table=noisymsroot,
                            antefficiency=eta_a,correfficiency=eta_q,
                            spillefficiency=eta_s,tau=tau0,trx=t_rx,
-                           tatmos=t_atm,tcmb=t_cmb)
+                           tatmos=t_sky,tcmb=t_cmb)
             # use ANoise version
             #sm.setnoise2(mode="calculate",table=noisymsroot,
             #             antefficiency=eta_a,correfficiency=eta_q,
