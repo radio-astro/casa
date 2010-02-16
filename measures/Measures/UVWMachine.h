@@ -135,7 +135,7 @@ template <class T> class Vector;
 //	// Conversion to J2000 is set by:
 //	UVWMachine uvm(MDirection::Ref(MDirection::J2000), indir);
 //	// The rotation matrix to go to new UVW is obtained by:
-//	RotMatrix rm(uvm.rotationUVM());
+//	RotMatrix rm(uvm.rotationUVW());
 //	// If an UVW specified:
 //	MVPosition uvw(-739.048461, -1939.10604, 1168.62562);
 //	// This can be converted by e.g.:
