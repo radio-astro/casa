@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, overwrite, plotlevel):
+def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, overwrite, plotlevel):
 
 
         casalog.origin('sdfit')
@@ -469,10 +469,14 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                     casalog.post( "Will fit %d components in %d regions" % (ncomps, numfit) )
 
                     if (numfit > 0):
-                            # Fit the line using numfit gaussians
+                            # Fit the line using numfit gaussians or lorentzians
                             # Assume the nfit list matches maskline
                             #f=sd.fitter()
-                            f.set_function(gauss=ncomps)
+			    if (fitfunc == 'lorentz'):
+				    f.set_function(lorentz=ncomps)
+			    else:
+				    f.set_function(gauss=ncomps)
+				    
                             if ( domask ):
                                     f.set_scan(s,linemask)
                             else:
@@ -488,7 +492,10 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                                             maxl = linemax[irow][i]
                                             fwhm = 0.7*abs( lineeqw[irow][i] )
                                             cenl = linecen[irow][i]
-                                            f.set_gauss_parameters(maxl, cenl, fwhm, component=n)
+					    if (fitfunc == 'lorentz'):
+						    f.set_lorentz_parameters(maxl, cenl, fwhm, component=n)
+					    else:
+						    f.set_gauss_parameters(maxl, cenl, fwhm, component=n)
                                             n = n + 1
                                         else:
                                             # cannot guess for multiple comps yet
@@ -571,8 +578,7 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
             if ( fitfile != '' ):
                     #f.store_fit(fitfile)
                     #print fitparams
-                    store_fit("gauss", fitfile, fitparams, s, overwrite)
-
+                    store_fit(fitfunc, fitfile, fitparams, s, overwrite)
                 
             # Final clean up
             del f

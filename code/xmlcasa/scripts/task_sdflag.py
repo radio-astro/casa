@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode, outfile, outform, overwrite, plotlevel):
+def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
@@ -144,22 +144,30 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             sn=list(scanns)
             nr=s.nrow()
 
-	    if (len(flagrow) == 0):
-                    #print "Number of scans to be flagged:", len(sn)
-                    #print "Number of spectra to be flagged:", nr
-                    casalog.post( "Number of spectra to be flagged: %d" % (nr) )
-
-                    if (len(maskflag) == 0):
-                            raise Exception, 'maskflag is undefined'
-
-                    masks = s.create_mask(maskflag)
-                    #print "Applying channel flagging..."
-                    casalog.post( "Applying channel flagging..." )
+	    if clip:
+		    casalog.post("Number of spectra to be flagged: %d" % (nr) )
+		    casalog.post("Applying clipping...")
 	    else:
-		    casalog.post( "Number of rows to be flagged: %d" % (len(flagrow)) )
-		    casalog.post( "Applying row flagging..." )
+		    if (len(flagrow) == 0):
+                            #print "Number of scans to be flagged:", len(sn)
+                            #print "Number of spectra to be flagged:", nr
+                            casalog.post( "Number of spectra to be flagged: %d" % (nr) )
+                            if (len(maskflag) == 0):
+		                    raise Exception, 'maskflag is undefined'
+                            masks = s.create_mask(maskflag)
+                            casalog.post( "Applying channel flagging..." )
+	            else:
+		            casalog.post( "Number of rows to be flagged: %d" % (len(flagrow)) )
+		            casalog.post( "Applying row flagging..." )
 		    
 
+	    dthres = uthres = None
+	    if isinstance(clipmaxmin, list):
+		    if (len(clipmaxmin) == 2):
+			    dthres = min(clipmaxmin)
+			    uthres = max(clipmaxmin)
+			    
+	    
             #sc=s.copy()
             # Plot final spectrum
             if nr < 3:
@@ -244,10 +252,14 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     #Apply flag
                     ans=raw_input("Apply %s (y/n)?: " % flgmode)
                     if ans.upper() == 'Y':
-		        if (len(flagrow) == 0):
-				s.flag(masks,unflag)
+		        if (clip):
+				if (uthres != None) and (dthres != None) and (uthres > dthres):
+					s.clip(uthres, dthres, clipoutside, unflag)
 			else:
-				s.flag_row(flagrow, unflag)
+				if (len(flagrow) == 0):
+					s.flag(masks,unflag)
+				else:
+					s.flag_row(flagrow, unflag)
                         params={}
                         if ( vars()['pols'] == [] ):
                                 params['pols']=list(s.getpolnos())
@@ -303,10 +315,14 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             else:
                     ans=raw_input("Apply %s (y/n)?: " % flgmode)
                     if ans.upper() == 'Y':
-			    if (len(flagrow) == 0):
-				    s.flag(masks,unflag)
+			    if clip:
+				    if (uthres != None) and (dthres != None) and (uthres > dthres):
+					    s.clip(uthres, dthres, clipoutside, unflag)
 			    else:
-				    s.flag_row(flagrow, unflag)
+				    if (len(flagrow) == 0):
+					    s.flag(masks,unflag)
+				    else:
+					    s.flag_row(flagrow, unflag)
                             params={}
                             if ( vars()['pols'] == [] ):
                                     params['pols']=list(s.getpolnos())
