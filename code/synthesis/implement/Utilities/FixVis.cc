@@ -254,7 +254,7 @@ void FixVis::convertFieldCols(MSFieldColumns& msfcs,
                               const Bool doAll3)
 {
   logSink() << LogOrigin("FixVis", "convertFieldCols");
-  // Unfortunately ArrayMeasColumn::doConvert() is private, which squashes the
+  // Unfortunately ArrayMeasColumn::doConvert() is private, which moots the
   // point of making a conversion machine here.
 //   Vector<MDirection> dummyV;
 //   dummyV.assign(pdc(0));
@@ -357,7 +357,7 @@ uInt FixVis::check_fields()
 }
 
 // Calculate the (u, v, w)s and store them in ms_p.
-Bool FixVis::calc_uvw(const String& refcode)
+Bool FixVis::calc_uvw(const String& refcode, const Bool reuse)
 {
   Bool retval = false;
   
@@ -374,6 +374,7 @@ Bool FixVis::calc_uvw(const String& refcode)
 
     // Get the PHASE_DIR reference frame type for the input ms.
     MSFieldColumns& msfcs(msc_p->field());
+    MDirection startDir = msfcs.phaseDirMeas(0);
     MDirection::Types startDirType = MDirection::castType(msfcs.phaseDirMeasCol().getMeasRef().getType());
     MDirection::Types wantedDirType;
     MDirection::getType(wantedDirType, refcode);
@@ -388,48 +389,61 @@ Bool FixVis::calc_uvw(const String& refcode)
       else
         convertFieldDirs(wantedDirType);
     }
-    
-    // This is just an enum!  Why can't Muvw just return it instead of
-    // filling out a reference?
-    Muvw::Types uvwtype;
-    MBaseline::Types bltype;
-    
-    try{
-      MBaseline::getType(bltype, refcode);
-      Muvw::getType(uvwtype, refcode);
-    }
-    catch(AipsError x){
-      logSink() << LogIO::SEVERE
-		<< "refcode \"" << refcode << "\" is not valid for baselines."
-		<< LogIO::POST;
-      return false;
+    else if(reuse){
+      logSink() << LogIO::NORMAL
+                << "The UVWs are already in the desired frame - leaving them as is."
+                << LogIO::POST;
+      return true;
     }
     
     try{
-      MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);
-      retval = uvwgen.make_uvws(FieldIds_p);
-
-      // Update HISTORY table
-      LogSink localLogSink = LogSink(LogMessage::NORMAL, False);
-      localLogSink.clearLocally();
-      LogIO os(LogOrigin("im", "calcuvw()", WHERE), localLogSink);
+      if(reuse){
+        const MDirection::Ref outref(wantedDirType);
+        
+        rotateUVW(startDir, outref);
+      }
+      else{
+        // This is just an enum!  Why can't Muvw just return it instead of
+        // filling out a reference?
+        Muvw::Types uvwtype;
+        MBaseline::Types bltype;
+    
+        try{
+          MBaseline::getType(bltype, refcode);
+          Muvw::getType(uvwtype, refcode);
+        }
+        catch(AipsError x){
+          logSink() << LogIO::SEVERE
+                    << "refcode \"" << refcode << "\" is not valid for baselines."
+                    << LogIO::POST;
+          return false;
+        }
       
-      os << "UVWs regenerated for field";
-      if(FieldIds_p.nelements() > 1)
-        os << "s";
-      os << " " << FieldIds_p
-        //<< ", proj=" << proj
-         << LogIO::POST;
-      ms_p.lock();
-      MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
-      mhh.addMessage(os);
-      ms_p.unlock();      
+       
+        MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);
+        retval = uvwgen.make_uvws(FieldIds_p);
+      }
+      
     }
     catch(AipsError x){
-      logSink() << LogIO::SEVERE
-		<< "Error " << x.getMesg() << " in MSUVWGenerator::uvwgen()."
-		<< LogIO::POST;
+      logSink() << LogIO::SEVERE << "Error " << x.getMesg() << LogIO::POST;
     }
+
+    // Update HISTORY table
+    LogSink localLogSink = LogSink(LogMessage::NORMAL, False);
+    localLogSink.clearLocally();
+    LogIO os(LogOrigin("im", "calc_uvw()", WHERE), localLogSink);
+    
+    os << "UVWs " << (reuse ? "converted" : "calculated") << " for field";
+    if(FieldIds_p.nelements() > 1)
+      os << "s";
+    os << " " << FieldIds_p
+      //<< ", proj=" << proj
+       << LogIO::POST;
+    ms_p.lock();
+    MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
+    mhh.addMessage(os);
+    ms_p.unlock();
   }
   else{
     logSink() << LogIO::SEVERE
@@ -437,6 +451,25 @@ Bool FixVis::calc_uvw(const String& refcode)
 	      << LogIO::POST;
   }
   return retval;
+}
+
+// Convert the UVW column to a new reference frame by rotating the old
+// baselines instead of calculating fresh ones.
+//
+// oldref must be supplied instead of extracted from msc_p->uvw(), because
+// the latter might be wrong (use the field direction).
+void FixVis::rotateUVW(const MDirection &indir, const MDirection::Ref& newref)
+{
+  ArrayColumn<Double>& UVWcol = msc_p->uvw();
+
+  // Setup a machine for converting a UVW vector from the old frame to
+  // uvwtype's frame
+  UVWMachine uvm(newref, indir);
+  RotMatrix rm(uvm.rotationUVW());
+
+  uInt nRows = UVWcol.nrow();
+  for(uInt row = 0; row < nRows; ++row)
+    UVWcol(row) = (rm * MVuvw(UVWcol(row))).getVector();
 }
 
 // Don't just calculate the (u, v, w)s, do everything and store them in ms_p.
@@ -923,7 +956,7 @@ void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type,
     chanMap = multiChanMap_p[vb.spectralWindow()];
   }
 
-  //No point in reading data if its not matching in frequency
+  //No point in reading data if it's not matching in frequency
   if(max(chanMap) == -1)
     return;
 
@@ -940,7 +973,6 @@ void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type,
     endRow   = row;
   }
 
-
   Matrix<Double> uvw(3, vb.uvw().nelements());
   uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());
@@ -953,7 +985,7 @@ void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type,
 // 	uvw(2, i) = vb.uvw()(i)(2);
 //   }
 
-  rotateUVW(uvw, dphase, vb);
+  FTMachine::rotateUVW(uvw, dphase, vb);
 
   // Immediately returns if not needed.
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);

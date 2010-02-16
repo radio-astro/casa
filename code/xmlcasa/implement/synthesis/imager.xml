@@ -292,6 +292,10 @@ mask.
        </description>
        <value></value>
      </param>
+     <param type="bool" name="reuse">
+       <description>Start from the UVWs in vis (True) or calculate them from the antenna positions?</description>
+       <value>true</value>
+     </param>
    </input>  
    <returns type="bool"/>
    <example>

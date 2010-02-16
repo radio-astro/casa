@@ -3,7 +3,7 @@ from vishead_util import *
 import re
 import shutil
 
-def fixvis(vis, outputvis, fldids=None, refcode=None
+def fixvis(vis, outputvis, fldids=None, refcode=None, reuse=True
            #, proj=None, ptcs=None
            ):
     proj=None
@@ -107,7 +107,7 @@ def fixvis(vis, outputvis, fldids=None, refcode=None
         # open vis read-only unless usescratch is set to True.
         im.open(vis, usescratch=True)
         
-        im.calcuvw(fldids, refcode)
+        im.calcuvw(fldids, refcode, reuse)
         im.close()
     except Exception, instance:
         casalog.post('*** Error *** ' + str(instance), 'SEVERE')
