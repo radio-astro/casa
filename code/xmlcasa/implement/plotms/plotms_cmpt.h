@@ -73,11 +73,17 @@ class plotms
 
     ::casac::record* getPlotMSSelection(const int plotIndex = 0);
 
-    void setPlotMSAveraging(const std::string& channel = "", const std::string& time = "", const bool scan = false, const bool field = false, const bool baseline = false, const bool antenna = false, const bool spw = false, const bool updateImmediately = true, const int plotIndex = 0);
+    void setPlotMSAveraging(const std::string& channel = "", const std::string& time = "", const bool scan = false, const bool field = false, const bool baseline = false, const bool antenna = false, const bool spw = false, const bool scalar = false, const bool updateImmediately = true, const int plotIndex = 0);
 
     void setPlotMSAveragingRec(const ::casac::record& averaging, const bool updateImmediately = true, const int plotIndex = 0);
 
     ::casac::record* getPlotMSAveraging(const int plotIndex = 0);
+
+    void setPlotMSTransformations(const std::string& freqframe = "", const std::string& veldef = "", const double restfreq = 0.0, const double xshift = 0.0, const double yshift = 0.0, const bool updateImmediately = true, const int plotIndex = 0);
+
+    void setPlotMSTransformationsRec(const ::casac::record& transformations, const bool updateImmediately = true, const int plotIndex = 0);
+
+    ::casac::record* getPlotMSTransformations(const int plotIndex = 0);
 
     void setPlotXAxis(const std::string& xAxis, const std::string& xDataColumn = "", const bool updateImmediately = true, const int plotIndex = 0);
 

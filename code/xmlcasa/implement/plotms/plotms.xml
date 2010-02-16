@@ -487,6 +487,11 @@ and/or show() is called.
       <description>spw averaging</description>
       <value>false</value>
     </param>
+
+    <param type="bool" name="scalar">
+      <description>Do scalar averaging instead of vector averaging</description>
+      <value>false</value>
+    </param>
     
     <param type="bool" name="updateImmediately">
       <description>whether to apply this change immediately, IF the window is currently shown</description>
@@ -558,6 +563,122 @@ Gets the MS averaging parameters for the plot at the given index as a record
   
   <returns type="record">
     <description>MS averaging parameters, in record form</description>
+  </returns>
+</method>
+
+
+<method type="function" name="setPlotMSTransformations">
+  <keyword>setPlotMSTransformations</keyword>
+  
+  <shortdescription>Sets the MS transformation parameters.</shortdescription>
+  
+  <description>
+Sets the MS transformation parameters for the plot at the given index, using
+individual values.  Supported transformations currently include frequency
+frame choices (TOPO,GEO,BARY,LSRK,LSRD), velocity definition choices (RADIO,
+OPTICAL,TRUE) and rest frequency, and phase center shift.  If
+updateImmediately is true, this change takes effect immediately IF the plotms
+window is currently shown; otherwise it will only be applied next time update()
+and/or show() is called.
+  </description>
+  
+  <input>
+    <param type="string" name="freqframe">
+      <description>Frequency frame in which to render frequencies and velocities</description>
+      <value />
+    </param>
+    
+    <param type="string" name="veldef">
+      <description>Velocity definition in which to render velocities</description>
+      <value />
+    </param>
+    
+    <param type="double" name="restfreq">
+      <description>Rest frequency (MHz) to use when calculating velocities</description>
+      <value>0.0</value>
+    </param>
+    
+    <param type="double" name="xshift">
+      <description>Phase center shift in horizontal direction (arcsec)</description>
+      <value>0.0</value>
+    </param>
+    
+
+    <param type="double" name="yshift">
+      <description>Phase center shift in vertical direction (arcsec)</description>
+      <value>0.0</value>
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
+
+<method type="function" name="setPlotMSTransformationsRec">
+  <keyword>setPlotMSTransformationsRec</keyword>
+  
+  <shortdescription>Sets the MS transformations parameters.</shortdescription>
+  
+  <description>
+Sets the MS transformations parameters for the plot at the given index, using a
+record (see PlotMSTransformations::toRecord()).  If updateImmediately is true, this
+change takes effect immediately IF the plotms window is currently shown;
+otherwise it will only be applied next time update() and/or show() is called.
+  </description>
+  
+  <input>
+    <param type="record" name="transformations">
+      <description>MS averaging parameters, in record form</description>
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
+
+<method type="function" name="getPlotMSTransformations">
+  <keyword>getPlotMSTransformations</keyword>
+  
+  <shortdescription>Gets the MS transformations parameters.</shortdescription>
+  
+  <description>
+Gets the MS transformations parameters for the plot at the given index as a record
+(see PlotMSTransformations::toRecord()).
+  </description>
+  
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>0</value>
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns type="record">
+    <description>MS transformations parameters, in record form</description>
   </returns>
 </method>
 

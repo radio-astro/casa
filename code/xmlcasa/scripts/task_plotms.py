@@ -198,7 +198,7 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
             avgchannel = avgtime = ''
             avgscan = avgfield = avgbaseline = avgantenna = avgspw = False
                         
-        pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, avgantenna, avgspw, False)
+        pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, avgantenna, avgspw, False, False)
         
         # Set flag extension
         pm.setFlagExtension(extendflag, extcorrelation, extchannel, extspw, extantenna, exttime, extscans, extfield)
