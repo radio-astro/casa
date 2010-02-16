@@ -1303,7 +1303,7 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogOrigin("ms", "cvel");
 
-    SubMS *sms = new SubMS(originalName);
+    SubMS *sms = new SubMS(originalName, Table::Update);
 
     *itsLog << LogIO::NORMAL << "Starting combination of spectral windows ..." << LogIO::POST;
 
