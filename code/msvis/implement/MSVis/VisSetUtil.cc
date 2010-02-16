@@ -260,10 +260,10 @@ void VisSetUtil::WeightUniform(VisibilityIterator& vi,
 	      }// end for pol
 	    }// end for chn
 	  }// end for row
-    }// end for vi++
+      
       vi.setImagingWeight(vb.imagingWeight());
 
-    //} closure of the loop block at wrong place????
+    } //end of vi++
 
   }// end for vi.nextChunk
   os << LogIO::DEBUG1 << "no. vis dropped = " << ndrop << LogIO::POST;
