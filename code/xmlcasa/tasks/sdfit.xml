@@ -88,6 +88,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
+    <param type="string" name="fitfunc">
+            <description>function for fitting</description>
+            <value>gauss</value>
+            <allowed kind="enum">
+                    <value>gauss</value>
+                    <value>lorentz</value>
+            </allowed>
+    </param>
+
     <param type="string" name="fitmode">
             <description>mode for fitting</description>
             <value>auto</value>
@@ -105,7 +114,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="intArray" name="nfit">
-            <description>list of number of gaussian lines to fit in in maskline region</description>
+            <description>list of number of gaussian/lorentzian lines to fit in in maskline region</description>
             <value></value>
     </param>
 
@@ -243,6 +252,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         pollist -- list of polarization id numbers to select
                 default: [] (use all polarizations)
                 example: [1]
+        fitfunc -- function for fitting
+                options: (str) 'gauss','lorentz'
+                default: 'gauss'
         fitmode -- mode for fitting
                 options: (str) 'list','auto','interact'
                 default: 'auto'
@@ -291,7 +303,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: False
                 example: invertmask=True, then will make one region that is
                          the exclusion of the maskline regions
-        nfit -- list of number of gaussian lines to fit in in maskline region
+        nfit -- list of number of gaussian/lorentzian lines to fit in in maskline region
                 default: 0 (no fitting)
                 example: nfit=[1] for single line in single region,
                          nfit=[2] for two lines in single region,
