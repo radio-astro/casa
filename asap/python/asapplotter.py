@@ -144,6 +144,10 @@ class asapplotter:
             refresh:   True (default) or False. If True, the plot is
                        replotted based on the new parameter setting(s). 
                        Otherwise,the parameter(s) are set without replotting.
+        Note:
+           The user specified masks and data selections will be reset
+           if a new scantable is set. This method should be called before
+           setting data selections (set_selection) and/or masks (set_mask). 
         """
         from asap import scantable
         if isinstance(scan, scantable):
@@ -152,6 +156,9 @@ class asapplotter:
                     self._data = scan
                     # reset
                     self._reset()
+                    msg = "A new scantable is set to the plotter. The masks and data selections are reset."
+                    asaplog.push( msg )
+                    print_log( 'INFO' )
             else:
                 self._data = scan
                 self._reset()

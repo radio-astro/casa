@@ -861,6 +861,27 @@ class scantable(Scantable):
             else: raise
         self._add_history("flag_row", varlist)
         
+    def clip(self, uthres=None, dthres=None, clipoutside=True, unflag=False):
+        """
+        Flag the selected data outside a specified range (in channel-base)
+        Parameters:
+            uthres:      upper threshold.
+            dthres:      lower threshold
+            clipoutside: True for flagging data outside the range [dthres:uthres].
+                         False for glagging data inside the range.
+            unflag     : if True, unflag the data.
+        """
+        varlist = vars()
+        try:
+            self._clip(uthres, dthres, clipoutside, unflag)
+        except RuntimeError, msg:
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(str(msg))
+                print_log('ERROR')
+                return
+            else: raise
+        self._add_history("clip", varlist)
         
     def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
         """
