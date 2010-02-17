@@ -8,22 +8,23 @@ import inspect
 import re
 import string
 import traceback
+import casac
 import unittest
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 DATA_DIR = AIPS_DIR+'/data'
 
-SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/regressions/'
+SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/tests/'
 UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
 if not os.access(SCRIPT_REPOS, os.F_OK):
     if os.access(AIPS_DIR+'/lib64', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/regressions/'
+        SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/tests/'
         UTILS_DIR = SCRIPT_REPOS+'admin'
     elif os.access(AIPS_DIR+'/lib', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/regressions/'
+        SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/tests/'
         UTILS_DIR = SCRIPT_REPOS+'admin'
     else:            #Mac release
-        SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
+        SCRIPT_REPOS = AIPS_DIR+'/Resources/python/tests/'
         UTILS_DIR = SCRIPT_REPOS+'admin'        
 
 sys.path.append(UTILS_DIR)
@@ -125,7 +126,10 @@ class UnitTest:
         reload(mytest)
 
         #get the data
-        self.dataFiles = mytest.data()
+        try:
+            self.dataFiles = mytest.data()
+        except:
+            print 'No data needed or found'
               
         # Wrap the test, funcSetup and funcTeardown in a FunctionTestCase and return it
         testcase = (unittest.FunctionTestCase(mytest.run,setUp=self.funcSetup,
@@ -258,22 +262,22 @@ class UnitTest:
         TestName=string.lower(testname)
 #        print 'testname='+testname
 
-        # search for DIR/tests/<name>.py
-        if os.path.isdir(scriptdir+'/tests/'):
-            allScripts=os.listdir(scriptdir+'/tests/')
-        else:
-            allScripts=[]
-#        print "allScripts = ", allScripts
+#        # search for DIR/tests/<name>.py
+#        if os.path.isdir(scriptdir+'/tests/'):
+#            allScripts=os.listdir(scriptdir+'/tests/')
+#        else:
+#            allScripts=[]
+##        print "allScripts = ", allScripts
         theScript=''
         numOfScript=0
-        for scr in allScripts :
-#            print 'scr='+scr
-            #if(string.find(scr,testname)>=0):
-            if(scr == TestName+'.py'):
-#                print scr, testname
-                #if (self.ispythonscript(scr)):
-                theScript = 'tests/'+scr
-                numOfScript +=1
+#        for scr in allScripts :
+##            print 'scr='+scr
+#            #if(string.find(scr,testname)>=0):
+#            if(scr == TestName+'.py'):
+##                print scr, testname
+#                #if (self.ispythonscript(scr)):
+#                theScript = 'tests/'+scr
+#                numOfScript +=1
 
         # search for DIR/<name>.py
         if os.path.isdir(scriptdir):
