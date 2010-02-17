@@ -1,59 +1,41 @@
-#if     !defined(ATM_HUMIDITY_H)
+#ifndef _ATM_HUMIDITY_H
+#define _ATM_HUMIDITY_H
+/*******************************************************************************
+ * ALMA - Atacama Large Millimiter Array
+ * (c) Institut de Radioastronomie Millimetrique, 2009
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ *
+ * "@(#) $Id: ATMHumidity.h,v 1.3 2009/04/01 16:29:46 dbroguie Exp $"
+ *
+ * who       when      what
+ * --------  --------  ----------------------------------------------
+ * pardo     24/03/09  created
+ */
 
-#include <string>
-
-namespace atm {
-  /*! \brief Defines humidity with units
-   *
-   *   This class defines the humidity with units. Default is proposed to be relative humidity (%), 
-   *   but many different ways are currently used. International system units would be kg/m**3 but 
-   *   the conversion to relative humidity needs the temperature. 
-   */
-  
-  class Humidity
-    {
-    public:
-      /** Default constructor */
-      Humidity();
-      /** A full constructor: Humidity in default units (proposed to be rel.hum. in %) */
-      Humidity(double humidity);
-      /** A full constructor: Humidity + units. Valig units are: % */
-      Humidity(double humidity, string units);
-      
-      ~Humidity();
-      
-      /* Accessor to get the value of relative humidity in % */
-      double get()const;
-      /* Accessor to get the value of relative humidity in % (the only implemented unit). If none of these implented units is given, the % value will be returned. */
-      double get(string units)const;
-      
-      
-      Humidity&  operator=(const Humidity &);
-      Humidity&  operator=(const double &);
-      Humidity   operator+(const Humidity &);
-      Humidity   operator-(const Humidity &);
-      Humidity   operator*(const double   &); // rhs scale factor 
-      Humidity   operator*(const float    &); // rhs scale factor 
-      Humidity   operator*(const int      &); // rhs scale factor
-      Humidity   operator/(const double   &); // rhs scale factor 
-      Humidity   operator/(const float    &); // rhs scale factor 
-      Humidity   operator/(const int      &); // rhs scale factor
-      
-      
-      bool      operator<  (const Humidity & rhs);
-      bool      operator>  (const Humidity & rhs);
-      bool      operator<= (const Humidity & rhs);
-      bool      operator>= (const Humidity & rhs);
-      bool      operator== (const Humidity & rhs);
-      bool      operator!= (const Humidity & rhs);
-      
-      
-    private:
-      double valueIS_;
-    };
-  
-}
-
-#define ATM_HUMIDITY_H
-
+#ifndef __cplusplus
+#error This is a C++ include file and cannot be used from plain C
 #endif
+
+#include "ATMPercent.h"
+
+namespace atm
+{
+
+typedef atm::Percent Humidity;
+
+} // namespace atm
+
+#endif /*!_ATM_HUMIDITY_H*/

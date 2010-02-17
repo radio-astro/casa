@@ -1,79 +1,97 @@
-using namespace std;
-#include <string>
+/*******************************************************************************
+ * ALMA - Atacama Large Millimiter Array
+ * (c) Institut de Radioastronomie Millimetrique, 2009
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ *
+ * "@(#) $Id: ATMOpacity.cpp,v 1.5 2010/01/12 17:03:12 dbroguie Exp $"
+ *
+ * who       when      what
+ * --------  --------  ----------------------------------------------
+ * pardo     24/03/09  created
+ */
+
+#include <stdio.h>
+
 #include "ATMOpacity.h"
 
-namespace atm {
-  
-  // Constructors
-  
-  Opacity::Opacity(){valueIS_=0.0;}
-  Opacity::Opacity(double opacity){valueIS_=opacity;}
-  Opacity::Opacity(double opacity, string units){valueIS_ = sput(opacity,units);}
-  Opacity::Opacity(const Opacity & a){valueIS_ = a.valueIS_;}
-  Opacity::~Opacity(){}
+using namespace std;
 
-  // Methodes de conversions
-  double Opacity::sget(double value, string units){
-    if(units=="db"||units=="DB"){
-      return value*4.34294482;
-    }else{
-      return value;
-    }
-  }
+namespace atm
+{
 
-  double Opacity::sput(double value, string units){
-    if(units=="db"||units=="DB"){
-      return value/4.34294482;
-    }else{
-      return value;
-    }
-  }
-
-
-  
-  // Accessors
-
-  string Opacity::get(string form, string units)const{
-    char myString[18];
-    //   if(form.length()==0)
-    sprintf( myString,"%f %s",
-	     get(units),
-	     units.c_str()); 
-    //     else
-    //       sprintf( myString,"%form %s",
-    // 	       get(units),
-    // 	       units);
-    
-    return string(myString);
-  } 
-
-  double Opacity::get(string units)const{      
-    return sget( valueIS_, units);
-  }
-
-  // Operators
-
-  
-  Opacity& Opacity::operator= (const Opacity & rhs){valueIS_=rhs.valueIS_; return *this;}
-  Opacity& Opacity::operator= (const double & rhs){valueIS_=rhs;          return *this;}
-  
-  Opacity  Opacity::operator+ (const Opacity & rhs){return Opacity(valueIS_+rhs.get());}
-  Opacity  Opacity::operator- (const Opacity & rhs){return Opacity(valueIS_-rhs.get());}
-  Opacity  Opacity::operator* (const double & scf){return Opacity(valueIS_*scf);}
-  Opacity  Opacity::operator* (const float  & scf){return Opacity(valueIS_*(double)scf);}
-  Opacity  Opacity::operator* (const int    & scf){return Opacity(valueIS_*(double)scf);}
-  Opacity  Opacity::operator/ (const double & scf){return Opacity(valueIS_/scf);}
-  Opacity  Opacity::operator/ (const float  & scf){return Opacity(valueIS_/(double)scf);}
-  Opacity  Opacity::operator/ (const int    & scf){return Opacity(valueIS_/(double)scf);}
-  Opacity  Opacity::operator/ (const unsigned int    & scf){return Opacity(valueIS_/(double)scf);}
-  
-  
-  bool    Opacity::operator< (const Opacity & rhs)const {return (valueIS_<rhs.get());}
-  bool    Opacity::operator> (const Opacity & rhs)const {return (valueIS_>rhs.get());}
-  bool    Opacity::operator<=(const Opacity & rhs)const {return (valueIS_<=rhs.get());}
-  bool    Opacity::operator>=(const Opacity & rhs)const {return (valueIS_>=rhs.get());}
-  bool    Opacity::operator==(const Opacity & rhs)const {return (valueIS_==rhs.get());}
-  bool    Opacity::operator!=(const Opacity & rhs)const {return (valueIS_!=rhs.get());}
-  
+Opacity::Opacity() :
+  valueIS_(0.0)
+{
 }
+
+Opacity::Opacity(double opacity) :
+  valueIS_(opacity)
+{
+}
+
+Opacity::Opacity(double opacity, const string &units)
+{
+  valueIS_ = sput(opacity, units);
+}
+
+Opacity::Opacity(const Opacity &opacity) :
+  valueIS_(opacity.valueIS_)
+{
+}
+
+Opacity::~Opacity()
+{
+}
+
+double Opacity::sget(double value, const string &units)
+{
+  if(units == "db" || units == "DB") {
+    return value * 4.34294482;
+  } else if(units == "np" || units == "NP" || units == "neper" || units == "NEPER"){
+    return value;
+  } else {
+    // Exception: Unknown unit, neper (np) used by default)
+    return value;
+  }
+}
+
+double Opacity::sput(double value, const string &units)
+{
+  if(units == "db" || units == "DB") {
+    return value / 4.34294482;
+  } else if(units == "np" || units == "NP" || units == "neper" || units == "NEPER") {
+    return value;
+  } else {
+    // Exception: Unknown unit, neper (np) used by default)
+    return value;
+  }
+}
+
+string Opacity::get(const string &form, const string &units) const
+{
+  char myString[18];
+  //   if(form.length()==0)
+  sprintf(myString, "%f %s", get(units), units.c_str());
+  //     else
+  //       sprintf( myString,"%form %s",
+  // 	       get(units),
+  // 	       units);
+
+  return string(myString);
+}
+
+} // namespace atm
 

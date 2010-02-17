@@ -1,88 +1,116 @@
-#if     !defined(ATM_OPACITY_H)
+#ifndef _ATM_OPACITY_H
+#define _ATM_OPACITY_H
+/*******************************************************************************
+ * ALMA - Atacama Large Millimiter Array
+ * (c) Institut de Radioastronomie Millimetrique, 2009
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ *
+ * "@(#) $Id: ATMOpacity.h,v 1.3 2009/05/04 21:30:54 dbroguie Exp $"
+ *
+ * who       when      what
+ * --------  --------  ----------------------------------------------
+ * pardo     24/03/09  created
+ */
+
+#ifndef __cplusplus
+#error This is a C++ include file and cannot be used from plain C
+#endif
 
 #include <string>
 
 using namespace std;
 
-namespace atm {
-  /*! \brief Class for opacities [no dimensions]
-   *
-   *   This class is defined for opacities. 
-   *   Default units are np (Transmission=exp(-opacity)).
-   */
-  class Opacity
-    {
-    public:
-      /** Default constructor: Opacity value set to 0 np */
-      Opacity();
-      /** A full constructor: value in default units (np) */
-      Opacity(double opacity);
-      /** A full constructor: value + units. Valid units are:  np [neper] [NP] [NEPER], db [DB]. */
-      Opacity(double opacity, string units);
-      /** Copy constructor */
-      Opacity (const Opacity &);
-      
-      ~Opacity();
-      
+namespace atm
+{
 
-      //@{ 
-      /** Accessor to get the numerical value of opacity (in np) */
-      double get()const{return valueIS_;}
-      /** Accessor to the opacity value in specified units. Implemented units are np [neper] [NP] [NEPER], db [DB].
-       *  If none of these implented units is given, the value in neper will be returned. */
-      double get(string units)const;
-      /** Accessor to the opacity in specified units as a formatted string.
-          Implemented units are np [neper] [NP] [NEPER], db [DB].
-          If none of these implented units is given, the value in neper will be returned. */
-      string get(string form, string units)const;
-      //@} 
+/*! \brief Class for opacities [no dimensions]
+ *
+ *   This class is defined for opacities.
+ *   Default units are np (Transmission=exp(-opacity)).
+ */
+class Opacity
+{
+public:
+  /** Default constructor: Opacity value set to 0 np */
+  Opacity();
+  /** A full constructor: value in default units (np) */
+  Opacity(double opacity);
+  /** A full constructor: value + units. Valid units are:  np [neper] [NP] [NEPER], db [DB]. */
+  Opacity(double opacity, const string &units);
+  /** Copy constructor */
+  Opacity (const Opacity &opacity);
 
-      
-      /** Operator "equal to a Opacity" in the class Opacity */
-      Opacity& operator=  (const Opacity &);
-      /** Operator "equal to a double converted to Opacity in m" in the class Opacity */
-      Opacity& operator=  (const double &);
-      /** Operator "addition of opacities" in the class Opacity */
-      Opacity  operator+  (const Opacity &);
-      /** Operator "substraction of opacities" in the class Opacity */
-      Opacity  operator-  (const Opacity &);
-      /** Operator "multiplication of an opacity by a double" in the class Opacity */
-      Opacity  operator*  (const double &);
-      /** Operator "multiplication of an opacity by a float" in the class Opacity */
-      Opacity  operator*  (const float  &);
-      /** Operator "multiplication of an opacity by an int" in the class Opacity */
-      Opacity  operator*  (const int    &); // rhs scale factor 
-      /** Operator "division of a opacity by an int" in the class Opacity */
-      Opacity  operator/  (const double &);
-      /** Operator "division of a opacity by a float" in the class Opacity */
-      Opacity  operator/  (const float  &);
-      /** Operator "division of a opacity by an int" in the class Opacity */
-      Opacity  operator/  (const int    &); // rhs scale factor 
-      /** Operator "division of a opacity by an unsigned int" in the class Opacity */
-      Opacity  operator/  (const unsigned int    &); // rhs scale factor 
-      
-      /** Operator "comparator < for two opacities" in the class Opacity */
-      bool    operator<  (const Opacity & rhs)const;
-      /** Operator "comparator > for two opacities" in the class Opacity */
-      bool    operator>  (const Opacity & rhs)const;
-      /** Operator "comparator <= for two opacities" in the class Opacity */
-      bool    operator<= (const Opacity & rhs)const;
-      /** Operator "comparator >= for two opacities" in the class Opacity */
-      bool    operator>= (const Opacity & rhs)const;
-      /** Operator "comparator == for two opacities" in the class Opacity */
-      bool    operator== (const Opacity & rhs)const;
-      /** Operator "comparator != for two opacities" in the class Opacity */
-      bool    operator!= (const Opacity & rhs)const;
-      
-    private:
-      double valueIS_;
-      static double sget(double value, string units);  
-      static double sput(double value, string units);  
-    };
-  
-}
+  /** Destructor */
+  virtual ~Opacity();
 
+  /** Accessor to get the numerical value of opacity (in np) */
+  double get() const { return valueIS_; }
+  /** Accessor to the opacity value in specified units. Implemented units are np [neper] [NP] [NEPER], db [DB].
+   *  If none of these implemented units is given, the value in neper will be returned. */
+  inline double get(const string &units) const { return sget(valueIS_, units); }
+  /** Accessor to the opacity in specified units as a formatted string.
+   *  Implemented units are np [neper] [NP] [NEPER], db [DB].
+   *  If none of these implemented units is given, the value in neper will be returned. */
+  string get(const string &form, const string &units)const;
 
-#define ATM_OPACITY_H
+  /** Operator "equal to a Opacity" */
+  inline Opacity& operator=(const Opacity &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
+  /** Operator "equal to a double converted to Opacity in m" */
+  inline Opacity& operator=(const double &rhs) { valueIS_ = rhs; return *this; }
+  /** Operator "addition of opacities" */
+  inline Opacity operator+(const Opacity &rhs) { return Opacity(valueIS_ + rhs.get()); }
+  /** Operator "substraction of opacities" */
+  inline Opacity operator-(const Opacity &rhs) { return Opacity(valueIS_ - rhs.get()); }
+  /** Operator "multiplication of an opacity by a double" */
+  inline Opacity operator*(double scf) { return Opacity(valueIS_ * scf); }
+  /** Operator "multiplication of an opacity by a float" */
+  inline Opacity operator*(float scf) { return Opacity(valueIS_ * (double) scf); }
+  /** Operator "multiplication of an opacity by an int" */
+  inline Opacity operator*(int scf) { return Opacity(valueIS_ * (double) scf); }
+  /** Operator "multiplication of an opacity by an unsigned int" */
+  inline Opacity operator*(unsigned int scf) { return Opacity(valueIS_ * (double) scf); }
+  /** Operator "division of a opacity by an int" */
+  inline Opacity operator/(double scf) { return Opacity(valueIS_ / scf); }
+  /** Operator "division of a opacity by a float" */
+  inline Opacity operator/(float scf) { return Opacity(valueIS_ / (double) scf); }
+  /** Operator "division of a opacity by an int" */
+  inline Opacity operator/(int scf) { return Opacity(valueIS_ / (double) scf); }
+  /** Operator "division of a opacity by an unsigned int" */
+  inline Opacity operator/(unsigned int scf) { return Opacity(valueIS_ / (double) scf); }
+  /** Operator "comparator < for two opacities" */
+  inline bool operator<(const Opacity &rhs) const { return (valueIS_ < rhs.get()); }
+  /** Operator "comparator > for two opacities" */
+  inline bool operator>(const Opacity &rhs) const { return (valueIS_ > rhs.get()); }
+  /** Operator "comparator <= for two opacities" */
+  inline bool operator<=(const Opacity &rhs) const { return (valueIS_ <= rhs.get()); }
+  /** Operator "comparator >= for two opacities" */
+  inline bool operator>=(const Opacity &rhs) const { return (valueIS_ >= rhs.get()); }
+  /** Operator "comparator == for two opacities" */
+  inline bool operator==(const Opacity &rhs) const { return (valueIS_ == rhs.get()); }
+  /** Operator "comparator != for two opacities" */
+  inline bool operator!=(const Opacity &rhs) const { return (valueIS_ != rhs.get()); }
 
-#endif
+private:
+  static double sget(double value, const string &units);
+  static double sput(double value, const string &units);
+
+private:
+  double valueIS_;
+}; // class Opacity
+
+} // namespace atm
+
+#endif /*!_ATM_OPACITY_H*/
