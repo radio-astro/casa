@@ -68,6 +68,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
     </param>
 
+    <param type="any" name="clipminmax" subparam="true">
+            <description>range of data that will NOT be flagged</description>
+            <any type="variant" limittypes="doubleArray doubleArrayArray"/>
+            <value type="doubleArray"></value>
+    </param>
+
+    <param type="any" name="clipoutside" subparam="true">
+            <description>clip outside the range, or within it</description>
+            <any type="variant" limittypes="bool boolArray"/>
+            <value type="bool">True</value>
+    </param>
+
     <param type="string" name="flagmode">
             <description>flag mode (flag,unflag,restore)</description>
             <value>flag</value>
@@ -104,18 +116,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="int" name="plotlevel">
             <description>control for plotting of results</description>
             <value>0</value>
-    </param>
-
-    <param type="any" name="clipminmax" subparam="true">
-            <description>range of data that will NOT be flagged</description>
-            <any type="variant" limittypes="doubleArray doubleArrayArray"/>
-            <value type="doubleArray"></value>
-    </param>
-
-    <param type="any" name="clipoutside" subparam="true">
-            <description>clip outside the range, or within it</description>
-            <any type="variant" limittypes="bool boolArray"/>
-            <value type="bool">True</value>
     </param>
 
     <constraints>
