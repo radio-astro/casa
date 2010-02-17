@@ -2,18 +2,24 @@
 # $Id:$
 # Test Name:                                                                #
 #    Regression Test Script for ASDM version 1.0 import to MS               #
+#    and the "inverse filler" task exportasdm 
 #                                                                           #
 # Rationale for Inclusion:                                                  #
-#    The conversion of ASDM to MS needs to be verified.                     #
+#    The conversion of ASDM to MS and back needs to be verified.            #
 #                                                                           # 
 # Features tested:                                                          #
 #    1) Is the import performed without raising exceptions                  #
 #    2) Do all expected tables exist                                        #
 #    3) Can the MS be opened                                                #
 #    4) Do the tables contain expected values                               #
+#    5) Is exportasdm performed without raising exceptions                  #
+#    6) Is the created ASDM well-formed (XML) and complete                  #
+#    7) Can the resulting ASDM be reimported without raising exceptions     #
+#    8) Does it have the same number of integrations as the original        #
 #                                                                           #
 # Input data:                                                               #
 #     one dataset for the filler of ASDM 1.0                                #
+#     one simulated MS dataset                                              #
 #                                                                           #
 #############################################################################
 
@@ -21,14 +27,23 @@ myname = 'asdmv1-import_regression'
 
 # default ASDM dataset name
 myasdm_dataset_name = 'uid___X5f_X18951_X1'
+myms_dataset_name = 'M51.ms'
 
 # get the dataset name from the wrapper if possible
 mydict = locals()
 if mydict.has_key("asdm_dataset_name"):
     myasdm_dataset_name = mydict["asdm_dataset_name"]
+if mydict.has_key("ms_dataset_name"):
+    myms_dataset_name = mydict["ms_dataset_name"]
 
 # name of the resulting MS
 msname = myasdm_dataset_name+'.ms'
+
+# name of the exported ASDM
+asdmname = myms_dataset_name+'.asdm'
+
+# name of the reimported MS
+reimp_msname = 'reimported-'+myms_dataset_name
 
 def checktable(thename, theexpectation):
     global msname, myname
@@ -64,6 +79,71 @@ def checktable(thename, theexpectation):
     tb.close()
     print myname, ": table ", thename, " as expected."
     return
+
+#########################
+
+def verify_asdm(asdmname, withPointing):
+    print "Verifying asdm ", asdmname
+    if(not os.path.exists(asdmname)):
+        print "asdm ", asdmname, " doesn't exist."
+        raise Exception
+    # test for the existence of all obligatory tables
+    allTables = [ "Antenna.xml",
+                  "ASDM.xml",
+                 # "CalData.xml",
+                 # "CalDelay.xml",
+                 # "CalReduction.xml",
+                  "ConfigDescription.xml",
+                  "CorrelatorMode.xml",
+                  "DataDescription.xml",
+                  "ExecBlock.xml",
+                  "Feed.xml",
+                  "Field.xml",
+                 #"FocusModel.xml",
+                 #"Focus.xml",
+                  "Main.xml",
+                  "PointingModel.xml",
+                  "Polarization.xml",
+                  "Processor.xml",
+                  "Receiver.xml",
+                  "SBSummary.xml",
+                  "Scan.xml",
+                  "Source.xml",
+                  "SpectralWindow.xml",
+                  "State.xml",
+                  "Station.xml",
+                  "Subscan.xml",
+                  "SwitchCycle.xml"
+                  ]
+    isOK = True
+    for fileName in allTables:
+        filePath = asdmname+'/'+fileName
+        if(not os.path.exists(filePath)):
+            print "ASDM table file ", filePath, " doesn't exist."
+            isOK = False
+        else:
+            # test if well formed
+            rval = os.system('xmllint --noout '+filePath)
+            if(rval !=0):
+                print "Table ", filePath, " is not a well formed XML document."
+                isOK = False
+
+    print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
+        
+    if(not os.path.exists(asdmname+"/ASDMBinary")):
+        print "ASDM binary directory "+asdmname+"/ASDMBinary doesn't exist."
+        isOK = False
+
+    if(withPointing and not os.path.exists(asdmname+"/Pointing.bin")):
+        print "ASDM binary file "+asdmname+"/Pointing.bin doesn't exist."
+        isOK = False
+
+    if (not isOK):
+        raise Exception
+
+
+###########################
+# beginning of actual test 
 
 try:
     importasdm(myasdm_dataset_name)
@@ -162,8 +242,50 @@ else:
                      ]
         checktable(name, expected)
         
-
-
+myvis = myms_dataset_name
+os.system('rm -rf exportasdm-output.asdm myinput.ms')
+os.system('cp -R ' + myvis + ' myinput.ms')
+default('exportasdm')
+try:
+    print "\n>>>> Test of exportasdm: input MS  is ", myvis
+    print "(a simulated input MS with pointing table)"
+    rval = exportasdm(
+        vis = 'myinput.ms',
+        asdm = 'exportasdm-output.asdm',
+        archiveid="S002",
+        apcorrected=False
+        )
+    print "rval is ", rval
+    if not rval:
+        raise Exception
+    os.system('rm -rf '+asdmname+'; mv exportasdm-output.asdm '+asdmname)
+    verify_asdm(asdmname, True)
+except:
+    print myname, ': *** Unexpected error exporting MS to ASDM, regression failed ***'   
+    raise
+    
+try:
+    print "Reimporting the created ASDM ...."
+    importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no')
+    print "Testing existence of reimported MS ...."
+    if(not os.path.exists(reimp_msname)):
+        print "MS ", reimp_msname, " doesn't exist."
+        raise Exception
+    print "Testing equivalence of the original and the reimported MS."
+    tb.open(myms_dataset_name)
+    nrowsorig = tb.nrows()
+    print "Original MS contains ", nrowsorig, "integrations."
+    tb.close()
+    tb.open(reimp_msname)
+    nrowsreimp = tb.nrows()
+    print "Reimported MS contains ", nrowsreimp, "integrations."
+    if(not nrowsreimp==nrowsorig):
+        print "Numbers of integrations disagree."
+        raise Exception
+except:
+    print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
+    raise
+    
         
         
     
