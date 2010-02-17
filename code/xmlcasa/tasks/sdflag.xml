@@ -120,11 +120,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <constraints>
             <when param="clip">
+                    <equals type="bool" value="False"/>
                     <equals type="bool" value="True">
                             <default param="clipminmax"><value type="doubleArray"></value></default>
                             <default param="clipoutside"><value type="bool">True</value></default>
                     </equals>
-                    <equals type="bool" value="False"/>
             </when>
     </constraints>
 
