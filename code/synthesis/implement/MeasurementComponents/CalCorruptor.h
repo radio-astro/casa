@@ -52,13 +52,10 @@ using namespace std;
 #include <ATMFrequency.h>
 #include <ATMWaterVaporRadiometer.h>
 #include <ATMWVRMeasurement.h>
-#include <ATMAtmosphereType.h>
-#include <ATMType.h>
 #include <ATMProfile.h>
 #include <ATMSpectralGrid.h>
 #include <ATMRefractiveIndex.h>
 #include <ATMSkyStatus.h>
-#include <ATMTypeName.h>
 #include <ATMAngle.h>
 #else
 //#ATM Not available; mimic the classes and functions used
