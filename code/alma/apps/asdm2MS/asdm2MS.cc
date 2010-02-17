@@ -2072,10 +2072,11 @@ int main(int argc, char *argv[]) {
 
   if (nPointing > 0) {
 
+
     // Check some assertions.
     //
     // All rows of ASDM-Pointing must have their attribute usePolynomials equal to false
-    // and their numTerm attribute equal to 1. Use the opportunity of this check
+    // and their numTerm attribute equal to numSample. Use the opportunity of this check
     // to compute the number of rows to be created in the MS-Pointing by summing
     // all the numSample attributes values.
     //
@@ -2087,14 +2088,18 @@ int main(int argc, char *argv[]) {
 	errstream << "Found usePolynomials equal to true at row #" << i <<". Can't go further"<<endl;
 	error(errstream.str());
       }
-
-      if (v[i]->getNumTerm() != 1) {
-	errstream.str("");
-	errstream << "Found numTerm equal to " << v[i]->getNumTerm() <<" at row #" << i <<" and I was expecting 1. Can't go further" << endl;
-	error(errstream.str());
+      
+      int nSamp = v[i]->getNumSample();
+      
+      if (v[i]->getNumTerm() != nSamp) {
+	infostream.str("");
+	infostream << "Found numTerm equal to " << v[i]->getNumTerm() <<" at row #" << i
+		   <<" and I was expecting " << nSamp << ". Will try to proceed." << endl;
+	info(infostream.str());
       }
+      
+      numMSPointingRows += nSamp;
 
-      numMSPointingRows += v[i]->getNumSample();
     }
 
     //
