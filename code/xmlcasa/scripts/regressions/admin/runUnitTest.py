@@ -17,11 +17,10 @@
 import os
 import sys
 import traceback
-sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
-from testwrapper import *
-import testwrapper
 import unittest
-sys.path.append('/Library/Python/2.6/site-packages/nose-0.11.1-py2.6.egg')
+sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
+import testwrapper
+from testwrapper import *
 import nose
 
 
@@ -31,7 +30,7 @@ OLD_TESTS = ['asdm-import','boxit_test','clearstat_test',
              'immoment_test','imregrid_test',
              'imsmooth_test','imval_test','plotants_test','smoothcal_test','vishead_test',
              'visstat_test']
-NEW_TESTS = ['test_listhistory','test_clean','test_report']
+NEW_TESTS = ['test_listhistory','test_clean','test_report','test_cvel','test_exportasdm']
 
 whichtests = 0
 
