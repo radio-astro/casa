@@ -31,7 +31,7 @@ def plotants(vis=None,figfile=''):
                   produces a png format file.
        """
        try:
-              if ((type(vis)==str) & (os.path.exists(vis))):
+              if type(vis) == str and os.path.isdir(vis):
                      mp.open(vis)
               else:
                      raise Exception, 'Visibility data set not found - please verify the name'
@@ -40,8 +40,12 @@ def plotants(vis=None,figfile=''):
               mp.reset()
               pl.axis('equal')
               pl.axis('scaled')
+              pl.ylabel('Y (m)')          # Replace mp's "X (m)".
+              pl.title(vis)
               if ( len(figfile) > 0 ) :
-                   mp.savefig( figfile );
+                   mp.savefig( figfile )
 
        except Exception, instance:
               print '*** Error ***',instance
+
+       mp.close()
