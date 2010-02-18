@@ -99,7 +99,8 @@ done
 
 verbose "generating `basename $OUTFILE` file ... "
 
-sed -i .bak -e s/^tasksum/mytasks/g ${INFOFILE}
+mv ${INFOFILE} ${INFOFILE}.bak
+sed -e s/^tasksum/mytasks/g ${INFOFILE}.bak >${INFOFILE}
 
 cat /dev/null > ${OUTFILE}
 echo "#" >> ${OUTFILE}
