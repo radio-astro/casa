@@ -265,11 +265,6 @@ private:
   // Increase the number of chunks
   void increaseChunks(Int nc=0);
 
-  // Log info about averaging setup (as interpretted by PlotMSCache; this
-  //  probably could be move up to PlotMSAveraging)
-  void reportAveMode();
-
-
   // Setup the VisIter
   void setUpVisIter(const String& msname,
 		    const PlotMSSelection& selection,
