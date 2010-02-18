@@ -29,15 +29,18 @@ Unit tests for task clean. It tests the following parameters:
 class clean_test(unittest.TestCase):
     
     # Input and output names
-    msfile = 'Itziar.ms'
+    msfile = 'ngc7538_ut.ms'
     res = None
     img = 'cleantest_im'
 
     def setUp(self):
         self.res = None
         default(clean)
-        shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
-                            '/data/regression/exportasdm/input/'+self.msfile, self.msfile)
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+            
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        shutil.copytree(datapath+self.msfile, self.msfile)
     
     def tearDown(self):
         if (os.path.exists(self.msfile)):
@@ -51,6 +54,10 @@ class clean_test(unittest.TestCase):
         ia.close()
         return px['value']['value']
         
+    def test0(self):
+        '''Test 0: Default values'''
+        self.res = clean()
+        self.assertFalse(self.res)
         
     def test1(self):
         """Test 1: Wrong input should return False"""
@@ -75,7 +82,7 @@ class clean_test(unittest.TestCase):
         
     def test5(self):
         """Test 5: Non-default field value"""
-        self.res = clean(vis=self.msfile,imagename=self.img,field='3~8')
+        self.res = clean(vis=self.msfile,imagename=self.img,field='0~1')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))           
         
@@ -120,16 +127,16 @@ class clean_test(unittest.TestCase):
         
     def test11(self):
         """Test 11: Non-default gridmode widefield"""
-        self.res = clean(vis=self.msfile,imagename=self.img,gridmode='widefield')
+        self.res = clean(vis=self.msfile,imagename=self.img,gridmode='widefield',imsize=[20])
         self.assertEqual(self.res, None) 
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
 
-    # FIXME: only works for EVLA data
-    def test11(self):
-        """Test 11: Non-default gridmode aprojection"""
-        self.res = clean(vis=self.msfile,imagename=self.img,gridmode='aprojection')
-        self.assertEqual(self.res, None) 
-        self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
+    # Takes too long!!!
+#    def test11(self):
+#        """Test 11: Non-default gridmode aprojection"""
+#        self.res = clean(vis=self.msfile,imagename=self.img,gridmode='aprojection',imsize=[10],niter=1)
+#        self.assertEqual(self.res, None) 
+#        self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
                      
     def test12(self):
         """Test 12: Wrong niter type"""
@@ -172,7 +179,7 @@ class clean_test(unittest.TestCase):
 
     def test19(self):
         '''Test 19: Non-default imagermode mosaic'''
-        self.res = clean(vis=self.msfile,imagename=self.img,imagermode='mosaic')
+        self.res = clean(vis=self.msfile,imagename=self.img,imagermode='mosaic',imsize=[20])
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
@@ -189,7 +196,7 @@ class clean_test(unittest.TestCase):
 
     def test22(self):
         """Test 22: Non-default cell values"""
-        self.res = clean(vis=self.msfile,imagename=self.img, cell=2.5)
+        self.res = clean(vis=self.msfile,imagename=self.img, cell=12.5)
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
@@ -198,10 +205,9 @@ class clean_test(unittest.TestCase):
         self.res = clean(vis=self.msfile,imagename=self.img, stokes='V')
         self.assertFalse(self.res)
         
-    # FIXME: why doesn't it work????
     def test24(self):
         """Test 24: Non-default Stokes parameter"""
-        self.res = clean(vis=self.msfile,imagename=self.img, stokes='XX')
+        self.res = clean(vis=self.msfile,imagename=self.img, stokes='LL')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
@@ -228,17 +234,10 @@ class clean_test(unittest.TestCase):
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
-        modes = ['uniform','briggs','superuniform','briggsabs','radial']
-        for m in modes:
-            out = self.img+'_'+m
-            self.res = clean(vis=self.msfile,imagename=out, weighting=m)
-            self.assertEqual(self.res, None, 'Failed for weighting = '+m)
-            self.assertTrue(os.path.exists(out+'.image'))
-
     def test25(self):
         '''Test 25: Non-default subparameters of selectdata'''
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>10:25:00',antenna='8')
+                         timerange='>11:30:00',antenna='VA12')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
@@ -252,11 +251,11 @@ class clean_test(unittest.TestCase):
         '''Test 27: Verify the value of pixel 50'''
         #run clean with some parameters
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>10:20:00',field='1~5',imsize=[100,100],niter=10)
+                         timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
         
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
-        ref = 0.031042417511343956
+        ref = 0.007161217276006937
         value = self.getpixval(self.img+'.image',50)
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-5)
@@ -265,7 +264,9 @@ class clean_test(unittest.TestCase):
 class clean_temp(unittest.TestCase):
     
     # Input and output names
-    msfile = 'Itziar.ms'
+#    msfile = 'Itziar.ms'
+#    msfile = 'ngc1333_ut.ms'
+    msfile = 'ngc7538_ut.ms'
     res = None
     img = 'cleantest_im'
 
@@ -277,7 +278,8 @@ class clean_temp(unittest.TestCase):
             
 #        shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
 #                            '/data/regression/exportasdm/input/'+self.msfile, self.msfile)
-        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/exportasdm/input/'
+#        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/exportasdm/input/'
+        datapath= '/Users/scastro/casadir/utests/clean/data/'
         os.system('cp -r '+datapath+self.msfile + ' .')
     
     def tearDown(self):
@@ -312,7 +314,7 @@ class clean_temp(unittest.TestCase):
     
 
 def suite():
-    return [clean_temp]
+    return [clean_test]
 
 #def run_suite():
 #    set = unittest.TestLoader().loadTestsFromTestCase(clean_test)
