@@ -17,10 +17,10 @@
 import os
 import sys
 import traceback
-sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
-from testwrapper import *
-import testwrapper
 import unittest
+sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
+import testwrapper
+from testwrapper import *
 import nose
 
 
@@ -30,7 +30,7 @@ OLD_TESTS = ['asdm-import','boxit_test','clearstat_test',
              'immoment_test','imregrid_test',
              'imsmooth_test','imval_test','plotants_test','smoothcal_test','vishead_test',
              'visstat_test']
-NEW_TESTS = ['test_listhistory','test_clean','test_report']
+NEW_TESTS = ['test_listhistory','test_clean','test_report','test_cvel','test_exportasdm']
 
 whichtests = 0
 
@@ -68,6 +68,7 @@ def main(testnames=[]):
     
     
     # RUN THE TESTS
+    
     if not whichtests:
         print "Starting unit tests for %s%s: " %(OLD_TESTS,NEW_TESTS)
         
@@ -75,15 +76,21 @@ def main(testnames=[]):
         testnames = OLD_TESTS
         list = []
         for f in testnames:
-            testcase = UnitTest(f).getFuncTest()
-            list = list+[testcase]
-    
+            try:
+                testcase = UnitTest(f).getFuncTest()
+                list = list+[testcase]
+            except:
+                traceback.print_exc()
+        
         # Assemble the new tests
         testnames = NEW_TESTS        
         for f in testnames:
-            tests = UnitTest(f).getUnitTest()
-            list = list+tests
-        
+            try:
+                tests = UnitTest(f).getUnitTest()
+                list = list+tests
+            except:
+                traceback.print_exc()
+                
         # Run all tests and create a XML report
         xmlfile = xmldir+'nose.xml'
         try:
@@ -112,19 +119,25 @@ def main(testnames=[]):
             os.chdir(PWD)
             raise Exception, 'Tests are not part of any list'
                 
-        print "Starting unit tests for %s: " %testnames
+        print "Starting unit tests for %s%s: " %(old,new)
         
         # Assemble the old tests
         list = []    
         for f in old:
-            testcase = UnitTest(f).getFuncTest()
-            list = list+[testcase]
-        
+            try:
+                testcase = UnitTest(f).getFuncTest()
+                list = list+[testcase]
+            except:
+                traceback.print_exc()
+                
         # Assemble the new tests
         for f in new:
-            tests = UnitTest(f).getUnitTest()
-            list = list+tests
-             
+            try:
+                tests = UnitTest(f).getUnitTest()
+                list = list+tests
+            except:
+                 traceback.print_exc()
+                 
         # Run the tests and create a XML report
         xmlfile = xmldir+'nose.xml'
         try:

@@ -3,16 +3,22 @@ import time
 from taskinit import *
 
 def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
-           ydatacolumn=None, selectdata=None, field=None, spw=None,
+           ydatacolumn=None,
+           selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
-           correlation=None, array=None, msselect=None, averagedata=None,
+           correlation=None, array=None, msselect=None,
+           averagedata=None,
            avgchannel=None, avgtime=None, avgscan=None, avgfield=None,
-           avgbaseline=None, avgantenna=None, avgspw=None, extendflag=None,
-           extcorrelation=None, extchannel=None, extspw=None, extantenna=None,
-           exttime=None, extscans=None, extfield=None, plotxycomp=None,
-           datacolumn=None, timebin=None, crossscans=None, crossbls=None,
-           width=None, extendcorr=None, extendchan=None, extendspw=None,
-           extendant=None, extendtime=None):
+           avgbaseline=None, avgantenna=None, avgspw=None, scalar=None,
+           transform=None,
+           freqframe=None,restfreq=None,veldef=None,shift=None,
+           extendflag=None,
+           extcorr=None, extchannel=None):
+
+# we'll add these later
+#           extspw=None, extantenna=None,
+#           exttime=None, extscans=None, extfield=None,
+
     """
     
             Task for plotting and interacting with visibility data.  A variety
@@ -86,7 +92,7 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
     extendflag -- have flagging extend to other data points?
                   default: False.
       &gt;&gt;&gt; extendflag expandable parameters
-        extcorrelation -- extend flags based on correlation?  blank = none.
+        extcorr -- extend flags based on correlation?  blank = none.
                           default: ''.
         extchannel -- extend flags based on channel?
                       default: False.
@@ -103,37 +109,6 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         extfield -- extend flags based on field?  only valid if time extension
                     is turned on.
                     default: False.
-    
-    plotxycomp -- use plotxy compliance parameters?  WARNING: if used,
-                  subparameters will override their corresponding plotms
-                  parameter values.
-                  default: False.
-      &gt;&gt;&gt; plotxycomp expandable parameters
-        datacolumn -- maps to xdatacolumn and ydatacolumn.
-                      default: 'data'.
-        timebin -- maps to avgtime.
-                   default: '0'.
-        crossscans -- maps to avgscan.
-                      default: False.
-        crossbls -- maps to avgbaseline.
-                    default: False.
-        width -- maps to avgchannel and/or avgspw.  'all' is ignored, 'allspw'
-                 sets avgspw to true, any other value is set for avgchannel.
-                 default: '1'.
-        extendcorr -- maps to extcorrelation.  'half' is mapped to 'poln-dep'.
-                      default: ''.
-        extendchan -- maps to extchannel.  '' means False, 'all' means True.
-                      default: ''.
-        extendspw -- maps to extspw.  '' means False, 'all' means True.
-                     default: ''.
-        extendant -- maps to extantenna.  '' means False, 'all' means True.
-                     default: ''.
-        extendtime -- maps to exttime and/or extscans and/or extfield.  ''
-                      means False for all, 'all' means True for exttime, 'scan'
-                      means True for exttime and extscans, 'field' means True
-                      for exttime and extfield.
-                      default: ''.
-    
     """
 
     try:
@@ -142,34 +117,13 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
             print 'ERROR: DISPLAY environment variable is not set!  Cannot open plotms.'
             return
         
-        # Check plotxy compliance parameters
-        if plotxycomp:
-            xdatacolumn = datacolumn
-            ydatacolumn = datacolumn
-            
-            avgtime = timebin
-            avgscan = crossscans
-            avgbaseline = crossbls
-            if width != 'all' and width != 'allspw': avgchannel = width
-            avgspw = width == 'allspw'
-            
-            extcorrelation = extendcorr
-            if(extcorrelation == 'half'): extcorrelation = 'poln-dep'
-                
-            extchannel = extendchan == 'all'
-            extspw = extendspw == 'all'
-            extantenna = extendant
-            
-            exttime = extendtime == 'all' or extendtime == 'scan' or extendtime == 'field'
-            extscan = extendtime == 'scan'
-            extfield = extendtime == 'field'
-        
         # Check synonyms
         synonyms = {}
         synonyms['timeinterval'] = synonyms['timeint'] = 'time_interval'
         synonyms['chan'] = 'channel'
         synonyms['freq'] = 'frequency'
-        synonyms['corr'] = 'correlation'
+        synonyms['vel'] = 'velocity'
+        synonyms['correlation'] = 'corr'
         synonyms['ant1'] = 'antenna1'
         synonyms['ant2'] = 'antenna2'
         synonyms['uvdistl'] = 'uvdist_l'
@@ -177,6 +131,9 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         synonyms['imaginary'] = 'imag'
         synonyms['ant'] = 'antenna'
         synonyms['parallacticangle'] = 'parang'
+        synonyms['hourangle'] = 'hourang'
+        synonyms['ant-hourangle'] = 'ant-hourang'
+        synonyms['ant-parallacticangle'] = 'ant-parang'
         
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
@@ -197,11 +154,26 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         if not averagedata:
             avgchannel = avgtime = ''
             avgscan = avgfield = avgbaseline = avgantenna = avgspw = False
-                        
-        pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, avgantenna, avgspw, False, False)
+            scalar = False
+            
+        pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, avgantenna, avgspw, scalar, False)
+
+        # Set transformations
+        if not transform:
+            freqframe=''
+            restfreq=0.0
+            veldef='RADIO'
+            shift=[0.0,0.0]
+        
+        pm.setPlotMSTransformations(freqframe,veldef,restfreq,shift[0],shift[1],False)
         
         # Set flag extension
-        pm.setFlagExtension(extendflag, extcorrelation, extchannel, extspw, extantenna, exttime, extscans, extfield)
+        # for now, some options here are not available:
+        # pm.setFlagExtension(extendflag, extcorrelation, extchannel, extspw, extantenna, exttime, extscans, extfield)
+        extcorrstr=''
+        if extcorr:
+            extcorrstr='all'
+        pm.setFlagExtension(extendflag, extcorrstr, extchannel)
         
         # Update and show
         pm.update()

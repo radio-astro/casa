@@ -43,11 +43,13 @@ PlotMSTransformationsWidget::PlotMSTransformationsWidget(QWidget* parent) :
   for (uInt i=MFrequency::LSRK;i<MFrequency::N_Types;++i)
     frame->addItem(MFrequency::showType(i).c_str());
 
-  for (uInt i=0;i<MDoppler::N_Types;++i)
-    velDef->addItem(MDoppler::showType(i).c_str());
-  //  velDef->addItem("RADIO");
-  //  velDef->addItem("OPTICAL");
-  //  velDef->addItem("RELATIVISTIC");
+  // Add supported veldefs (these are the most meaningful for _plotting_)
+  velDef->addItem("RADIO");
+  velDef->addItem("TRUE");
+  velDef->addItem("OPTICAL");
+  // someday we'll permit all types supported by MDoppler?
+  //  for (uInt i=0;i<MDoppler::N_Types;++i)
+  //    velDef->addItem(MDoppler::showType(i).c_str());
 
   // Connect widgets
   connect(frame, SIGNAL(currentIndexChanged(const QString&)),

@@ -157,6 +157,9 @@ public:
         return !(operator==(other)); }
     // </group>
     
+    // Print out a summary of the averaging state:
+    String summary() const;
+
 private:
     // Averaging field flags.
     map<Field, bool> itsFlags_;

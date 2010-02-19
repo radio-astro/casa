@@ -43,9 +43,10 @@ namespace casa {
 
 const PMS::Axis PlotMSCache::METADATA[] =
     { PMS::TIME, PMS::TIME_INTERVAL, PMS::FIELD, PMS::SPW, PMS::SCAN,
-      PMS::ANTENNA1, PMS::ANTENNA2, PMS::CHANNEL, PMS::CORR, PMS::FREQUENCY,
+      PMS::ANTENNA1, PMS::ANTENNA2, PMS::BASELINE, 
+      PMS::CHANNEL, PMS::CORR, PMS::FREQUENCY,
       PMS::FLAG, PMS::FLAG_ROW };
-const unsigned int PlotMSCache::N_METADATA = 12;
+const unsigned int PlotMSCache::N_METADATA = 13;
 
 bool PlotMSCache::axisIsMetaData(PMS::Axis axis) {
     for(unsigned int i = 0; i < N_METADATA; i++)
@@ -232,9 +233,8 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
   transformations_ = transformations;
 
   logLoad(transformations_.summary());
+  logLoad(averaging_.summary());
 
-  // Report on how we are averaging
-  reportAveMode();
 
   // Check if scr cols present
   Bool scrcolOk(False);
@@ -370,51 +370,6 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
 }
 
  
-void PlotMSCache::reportAveMode() {
-
-  stringstream ss;
-  
-  ss << "Averaging on:";
-  bool anyAveraging = false;
-  if(averaging_.spw()) { ss << " spw"; anyAveraging = true; }
-  if(averaging_.channel()) {
-      if(anyAveraging) ss << ",";
-      ss << " channel (";
-      double val = averaging_.channelValue();
-      if(val <= 0)
-          ss << "but with an ambiguous value of " << val
-             << ", so no channel averaging will occur";
-      else
-          ss << "with a value of " << val
-             << (val > 1 ? " channels" : ", i.e. full spw");
-      ss << ")";
-      anyAveraging = true;
-  }
-  if(averaging_.time()) {
-      if(anyAveraging) ss << ",";
-      ss << " time (with a value of " << averaging_.timeValue() << " seconds)";
-      if(averaging_.scan()) ss << ", scan";
-      if(averaging_.field()) ss << ", field";
-      anyAveraging = true;
-  }
-  if(averaging_.baseline()) {
-      if(anyAveraging) ss << ",";
-      ss << " baseline";
-      anyAveraging = true;
-  }
-  if(averaging_.antenna()) {
-      if(anyAveraging) ss << ",";
-      ss << " antenna";
-      anyAveraging = true;
-  }
-  
-  if(!anyAveraging) ss << " none";
-  ss << ".";
-  logLoad(ss.str());
-
-}
-
-
 void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
 			     const vector<PMS::Axis> loadAxes,
 			     const vector<PMS::DataColumn> loadData,

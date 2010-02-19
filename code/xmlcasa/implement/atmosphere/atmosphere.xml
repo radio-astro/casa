@@ -310,42 +310,6 @@ for i in range(at.getNumLayers()):
 </example>
    </method>
 
-   <method type="function" name="getAtmTypeHPT">
-   <shortdescription>Gets the altitude, pressure and temperature arrays that describe the behaviour above the tropopause.
-   </shortdescription>
-
-   <output>
-     <param type="double"  name="Hx" units="km">
-     <description>altitude array associated with Px/Tx behaviour above
-        the tropopause - Quantum with a vector value and length units
-        </description>
-     </param>
-
-     <param type="double"  name="Px" units="mbar">
-     <description>pressure array describing atmosphere behaviour above
-        the tropopause - Quantum with a vector value and pressure units
-        </description>
-     </param>
-
-     <param type="double"  name="Tx" units="K">
-     <description>temperature array describing atmosphere behaviour above
-        the tropopause - Quantum with a vector value and temperature units
-       </description>
-     </param>
-
-   </output>
-
-   <returns type="int">Returns array size.</returns>
-<example>
-\begin{verbatim}
-hpt= at.getAtmTypeHPT()
-n = hpt['return']
-for i in range(n):
-        print i, " hx: ", hpt['Hx'].value[i], " px: ", hpt['Px'].value[i], " tx: ", hpt['Tx'].value[i]
-\end{verbatim}
-</example>
-   </method>
-
  
    <method type="function" name="getGroundWH2O">
    <shortdescription>get the zenith column of water vapor</shortdescription>

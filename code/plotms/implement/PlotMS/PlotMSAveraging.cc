@@ -150,6 +150,54 @@ bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {
 }
 
 
+String PlotMSAveraging::summary() const {
+
+  stringstream ss;
+  ss.precision(6);
+
+  Bool anyAveraging=channel()||time()||baseline()||antenna()||spw();
+
+  ss << "Data Averaging: ";
+
+  ss << boolalpha;
+
+  if (anyAveraging) {
+
+    ss << endl;
+
+    ss << " Using" << (scalarAve() ? " SCALAR " : " VECTOR ") << "averaging." 
+       << endl;
+
+    if (channel()) {
+      ss << " Channel: ";
+      Double val = channelValue();
+      if (val <=0)
+	ss << "None.";
+      else
+	ss << val << (val > 1 ? " channels" : " (fraction of spw)");
+      ss << endl;
+    }
+    if (time()) {
+      ss << " Time: " << timeValue() << " seconds. ";
+      ss << " Scan: " << scan() << ";  Field: " << field() << endl;
+    }
+    if (baseline()) 
+      ss << " All Baselines: " << baseline() << endl;
+    if (antenna()) 
+      ss << " Per Antenna: " << antenna() << endl;
+    if (spw())
+      ss << " All Spectral Windows: " << spw() << endl;
+
+  }
+  else
+    ss << "None." << endl;
+
+  return ss.str();
+
+	
+}
+
+
 void PlotMSAveraging::setDefaults() {    
     vector<Field> f = fields();
     for(unsigned int i = 0; i < f.size(); i++) {

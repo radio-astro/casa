@@ -1005,7 +1005,7 @@ print ''
 # Pull the max from the cubestats dictionary
 # created above using imstat
 thistest_immax=cubestats['max'][0]
-oldtest_immax = 0.0685017
+oldtest_immax = 0.052414759993553162
 print ' Clean image max should be ',oldtest_immax
 print ' Found : Image Max = ',thistest_immax
 diff_immax = abs((oldtest_immax-thistest_immax)/oldtest_immax)
@@ -1014,7 +1014,7 @@ print ' Difference (fractional) = ',diff_immax
 print ''
 # Pull the rms from the cubestats dictionary
 thistest_imrms=cubestats['rms'][0]
-oldtest_imrms = 0.0020064469
+oldtest_imrms = 0.0020218724384903908
 print ' Clean image rms should be ',oldtest_imrms
 print ' Found : Image rms = ',thistest_imrms
 diff_imrms = abs((oldtest_imrms-thistest_imrms)/oldtest_imrms)
@@ -1023,7 +1023,7 @@ print ' Difference (fractional) = ',diff_imrms
 print ''
 # Pull the max from the momzerostats dictionary
 thistest_momzeromax=momzerostats['max'][0]
-oldtest_momzeromax = 1.985035
+oldtest_momzeromax = 1.40223777294
 print ' Moment 0 image max should be ',oldtest_momzeromax
 print ' Found : Moment 0 Max = ',thistest_momzeromax
 diff_momzeromax = abs((oldtest_momzeromax-thistest_momzeromax)/oldtest_momzeromax)
@@ -1032,7 +1032,7 @@ print ' Difference (fractional) = ',diff_momzeromax
 print ''
 # Pull the mean from the momonestats dictionary
 thistest_momoneavg=momonestats['mean'][0]
-oldtest_momoneavg = 1486.8473
+oldtest_momoneavg = 1479.77119646
 print ' Moment 1 image mean should be ',oldtest_momoneavg
 print ' Found : Moment 1 Mean = ',thistest_momoneavg
 diff_momoneavg = abs((oldtest_momoneavg-thistest_momoneavg)/oldtest_momoneavg)

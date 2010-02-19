@@ -253,7 +253,7 @@ void AtmosCorruptor::initAtm() {
   atm::Length  topAtm(  48.0,"km");   // Upper atm. boundary for calculations
   atm::Pressure Pstep(  10.0,"mb");   // Primary pressure step
   double PstepFact = 1.2; // Pressure step ratio between two consecutive layers
-  atm::Atmospheretype atmType = atm::tropical;
+  unsigned int atmType = 1;//atm::tropical;
   
   os << "Initializing ATM with Tground="<<T.get("K")<<"K, Pground="<<P.get("mbar")<<"mb, "<<H.get()<<"% humidity, altitude "<<Alt.get("m")<<"m and water scale height "<<WVL.get("m")<<"m"<<LogIO::POST;
 
@@ -286,7 +286,7 @@ void AtmosCorruptor::initAtm() {
   itsSkyStatus = new atm::SkyStatus(*itsRIP);
 
   os << "DispersiveWetPathLength = " 
-     << itsRIP->getDispersiveWetPathLength().get("micron") 
+     << itsRIP->getDispersiveH2OPathLength().get("micron") 
      << " microns at " 
      << fRefFreq()[0]/1e9 << " GHz; dryOpacity = " 
      << itsRIP->getDryOpacity(currSpw(),focusChan()).get() << LogIO::POST;
@@ -667,7 +667,7 @@ Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {
     // so a fractional pwv fluctuation turns into a fractional wet phase 
     // fluctuation
     Float deltapwv = (*screen_p)(ix+blown,iy);
-    delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
+    delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") 
       * deltapwv / 57.2958; // convert from deg to rad
         return Complex(cos(delay),sin(delay));
   } else {    
@@ -694,13 +694,13 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
     // fluctuation
       Float deltapwv = (*pwv_p[currAnt()])(curr_slot());
       // CHANINDEX
-      delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
+      delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad")
 	* deltapwv / 57.2958; // convert from deg to rad
       if (prtlev()>5) 
-	cout << itsRIP->getDispersiveWetPhaseDelay(0,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveWetPhaseDelay(1,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveWetPhaseDelay(2,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveWetPhaseDelay(3,ichan).get("rad") << endl;
+	cout << itsRIP->getDispersiveH2OPhaseDelay(0,ichan).get("rad") << " "
+	     << itsRIP->getDispersiveH2OPhaseDelay(1,ichan).get("rad") << " "
+	     << itsRIP->getDispersiveH2OPhaseDelay(2,ichan).get("rad") << " "
+	     << itsRIP->getDispersiveH2OPhaseDelay(3,ichan).get("rad") << endl;
     } else
       throw(AipsError("AtmosCorruptor internal error accessing pwv()"));  
     return Complex(cos(delay),sin(delay));

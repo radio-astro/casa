@@ -109,7 +109,7 @@ def viewer(infile=None,displaytype=None,frame=None,zoom=None,outfile=None,outsca
 				vwr.output(outfile,scale=scale,dpi=dpi,format=format,orientation=orientation,panel=panel)
 
 		# it makes no sense to leave a panel open with no way of interacting with it
-		if type(gui) == bool and gui:
+		if type(gui) == bool and not gui:
 			vwr.close(panel)
 
 	else:

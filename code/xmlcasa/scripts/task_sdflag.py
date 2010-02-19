@@ -162,37 +162,39 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 		    
 
 	    dthres = uthres = None
-	    if isinstance(clipmaxmin, list):
-		    if (len(clipmaxmin) == 2):
-			    dthres = min(clipmaxmin)
-			    uthres = max(clipmaxmin)
+	    if isinstance(clipminmax, list):
+		    if (len(clipminmax) == 2):
+			    dthres = min(clipminmax)
+			    uthres = max(clipminmax)
 			    
 	    
-            #sc=s.copy()
-            # Plot final spectrum
-            if nr < 3:
-                    nrow=1
-                    ncol=nr
-            elif nr < 5:
-                    nrow=2
-                    ncol=2
-            elif nr < 7:
-                    nrow=2
-                    ncol=3
-            elif nr < 10:
-                    nrow=3
-                    ncol=3
-            else:
-                    nrow=4
-                    ncol=4
-		    
-            #print "nrow,ncol=", nrow, ncol
-            casalog.post( "nrow,ncol= %d,%d" % (nrow, ncol) )
-            if nr >16:
-                    #print "Only first 16 spectra is plotted."
-                    casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
             #for row in range(ns):
             if ( abs(plotlevel) > 0 ):
+
+                    #sc=s.copy()
+		    # Plot final spectrum
+		    if nr < 3:
+			    nrow=1
+			    ncol=nr
+		    elif nr < 5:
+			    nrow=2
+			    ncol=2
+		    elif nr < 7:
+			    nrow=2
+			    ncol=3
+		    elif nr < 10:
+			    nrow=3
+			    ncol=3
+		    else:
+			    nrow=4
+			    ncol=4
+		    
+                    #print "nrow,ncol=", nrow, ncol
+		    casalog.post( "nrow,ncol= %d,%d" % (nrow, ncol) )
+		    if nr >16:
+                            #print "Only first 16 spectra is plotted."
+			    casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
+
                     if not myp or myp.is_dead:
                         if sd.rcParams['plotter.gui']:
                             from asap.asaplotgui import asaplotgui as asaplot
