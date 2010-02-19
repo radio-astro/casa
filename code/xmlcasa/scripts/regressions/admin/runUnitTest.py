@@ -1,6 +1,7 @@
 
 """ Script to run unit tests from the command line as: 
-    casapy [casa-options] -c runUnitTest.py testnames
+    casapy [casa-options] -c runUnitTest.py testname1 testname2...
+    casapy [casa-options] -c runUnitTest.py testname1[test_r,test23] testname2...
     casapy [casa-options] -c runUnitTest.py
     
     or from inside casapy:
@@ -33,6 +34,43 @@ OLD_TESTS = ['asdm-import','boxit_test','clearstat_test',
 NEW_TESTS = ['test_listhistory','test_clean','test_report','test_cvel','test_exportasdm']
 
 whichtests = 0
+
+def is_old(name):
+    '''Check if the test is old or new'''
+    if (OLD_TESTS.__contains__(name)):
+        return True
+    elif (NEW_TESTS.__contains__(name)):
+        return False
+    else:
+        print 'WARN: %s is not a valid test name'%name
+        return None
+
+def haslist(name):
+    '''Check if specific list of tests have been requested'''
+    n0 = name.rfind('[')
+    n1 = name.rfind(']')
+    if n0 == -1:
+        return False
+    return True
+
+def getname(testfile):
+    '''Get the test name from the command-line
+       Ex: from test_clean[test1], returns test_clean'''
+    n0 = testfile.rfind('[')
+    n1 = testfile.rfind(']')
+    if n0 != -1:
+        return testfile[:n0]
+
+def gettests(testfile):
+    '''Get the list of specific tests from the command-line
+       Ex: from test_clean[test1,test3] returns [test1,test3]'''
+    n0 = testfile.rfind('[')
+    n1 = testfile.rfind(']')
+    if n0 != -1:
+        temp = testfile[n0+1:n1]
+        tests = temp.split(',')
+        return tests
+    
 
 def main(testnames=[]):
     
@@ -68,7 +106,7 @@ def main(testnames=[]):
     
     
     # RUN THE TESTS
-    
+    '''Run all tests'''
     if not whichtests:
         print "Starting unit tests for %s%s: " %(OLD_TESTS,NEW_TESTS)
         
@@ -102,28 +140,36 @@ def main(testnames=[]):
             
         else:
             os.chdir(PWD)
-        
+    
     else:
-        # is this an old or new test?
-        old = []
-        new = []
+        '''Run specific tests'''
+        # is this an old or a new test?
+        oldlist = []
+        newlist = []
         for f in testnames:
-            if (OLD_TESTS.__contains__(f)):
-                old.append(f)
-            elif (NEW_TESTS.__contains__(f)):
-                new.append(f)
+            if not haslist(f):
+                if is_old(f):
+                    oldlist.append(f)
+                elif not is_old(f):
+                    newlist.append(f)
             else:
-                print 'WARN: %s is not a valid test name'%f
-            
-        if (len(old) == 0 and len(new) == 0):
+                # they are always new tests. check if they are in list anyway
+                ff = getname(f)
+                if not is_old(ff):
+                    newlist.append(f)
+                else:
+                    print 'Cannot find test '+ff
+                
+                
+        if (len(oldlist) == 0 and len(newlist) == 0):
             os.chdir(PWD)
             raise Exception, 'Tests are not part of any list'
                 
-        print "Starting unit tests for %s%s: " %(old,new)
+        print "Starting unit tests for %s%s: " %(oldlist,newlist)
         
         # Assemble the old tests
         list = []    
-        for f in old:
+        for f in oldlist:
             try:
                 testcase = UnitTest(f).getFuncTest()
                 list = list+[testcase]
@@ -131,12 +177,19 @@ def main(testnames=[]):
                 traceback.print_exc()
                 
         # Assemble the new tests
-        for f in new:
+        for f in newlist:
             try:
-                tests = UnitTest(f).getUnitTest()
-                list = list+tests
+                if haslist(f):
+                    file = getname(f)
+                    tests = gettests(f)
+                    testcases = UnitTest(file).getUnitTest(tests)
+                    list = list+testcases
+                else:
+                    testcases = UnitTest(f).getUnitTest()
+                    list = list+testcases
             except:
-                 traceback.print_exc()
+                traceback.print_exc()
+
                  
         # Run the tests and create a XML report
         xmlfile = xmldir+'nose.xml'

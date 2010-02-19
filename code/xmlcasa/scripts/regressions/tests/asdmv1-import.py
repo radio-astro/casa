@@ -7,9 +7,10 @@ import inspect
 
 # Short description
 def description():
-    return "Test of importasdm() task, ASDM to MS data conversion"
+    return "Test of the importasdm and exportasdm tasks, ASDM <-> MS data conversion"
 
-pass_on = { "asdm_dataset_name" : "uid___X5f_X18951_X1" }
+pass_on = { "asdm_dataset_name" : "uid___X5f_X18951_X1",
+            "ms_dataset_name" : "M51.ms" }
 
 a=inspect.stack()
 stacklevel=0
@@ -34,7 +35,7 @@ def run():
 
 def data():
     ### return the data files that are needed by the regression script
-    return [pass_on["asdm_dataset_name"]]
+    return [pass_on["asdm_dataset_name"], pass_on["ms_dataset_name"]]
 
 def doCopy():
     ### return a list of the same length as that returned by data()
@@ -43,4 +44,4 @@ def doCopy():
     ###   or 1 if the corresponding file should be really copied to
     ###   the work directory
 
-    return [0]
+    return [0,0]
