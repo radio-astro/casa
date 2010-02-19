@@ -100,11 +100,11 @@ SimpleSimulator::SimpleSimulator(SimObservations *obs, const String& msname)
 
     Int tileSize = 32;
     TiledShapeStMan tiledStMan1("TiledData",
-				IPosition(3,1,tileSize,16384/tileSize));
+				IPosition(3,1,tileSize,max(1, 4096/tileSize)));
     TiledShapeStMan tiledStMan1f("TiledFlag",
-				 IPosition(3,1,tileSize,16384/tileSize));
+				 IPosition(3,1,tileSize,max(1, 4096/tileSize)));
     TiledShapeStMan tiledStMan1fc("TiledFlagCategory",
-				  IPosition(4,1,tileSize,1,16384/tileSize));
+				  IPosition(4,1,tileSize,1,max(1, 4096/tileSize)));
     TiledColumnStMan tiledStMan3("TiledUVW", IPosition(2,3,1024));
     TiledShapeStMan tiledStMan4("TiledWgt", IPosition(2,1,1024));
     TiledShapeStMan tiledStMan5("TiledSigma", IPosition(2,1,1024));
