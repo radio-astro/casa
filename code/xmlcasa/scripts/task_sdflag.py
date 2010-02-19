@@ -152,9 +152,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                             #print "Number of scans to be flagged:", len(sn)
                             #print "Number of spectra to be flagged:", nr
                             casalog.post( "Number of spectra to be flagged: %d" % (nr) )
-                            if (len(maskflag) == 0):
-		                    raise Exception, 'maskflag is undefined'
-                            masks = s.create_mask(maskflag)
                             casalog.post( "Applying channel flagging..." )
 	            else:
 		            casalog.post( "Number of rows to be flagged: %d" % (len(flagrow)) )
@@ -170,6 +167,11 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 	    
             #for row in range(ns):
             if ( abs(plotlevel) > 0 ):
+		    if (len(flagrow) == 0) and (not clip):
+		            #channel flag
+                            if (len(maskflag) == 0):
+		                    raise Exception, 'maskflag is undefined'
+                            masks = s.create_mask(maskflag)
 
                     #sc=s.copy()
 		    # Plot final spectrum
@@ -189,10 +191,8 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 			    nrow=4
 			    ncol=4
 		    
-                    #print "nrow,ncol=", nrow, ncol
 		    casalog.post( "nrow,ncol= %d,%d" % (nrow, ncol) )
 		    if nr >16:
-                            #print "Only first 16 spectra is plotted."
 			    casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
 
                     if not myp or myp.is_dead:
@@ -219,8 +219,18 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                           myp.set_line(label='spec')
                         x = s._getabcissa(row)
                         y = s._getspectrum(row)
-                        oldmskarr = array(s._getmask(row))
-			if (len(flagrow) > 0):
+			
+			if s._getflagrow(row):
+				oldmskarr = array([False]*(s.nchan()))
+			else:
+				oldmskarr = array(s._getmask(row))
+				
+			if clip:
+			  if (uthres != None) and (dthres != None) and (uthres > dthres):
+			    masks = array(s._getclipmask(row, uthres, dthres, clipoutside, unflag))
+			  else:
+			    masks = [False]*(s.nchan())
+			elif (len(flagrow) > 0):
 			  found = False
 			  for i in range(0, len(flagrow)):
 			    if (row == flagrow[i]):
@@ -228,6 +238,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 			      break
 			  masks = [found and not(unflag)]*(s.nchan())
 			#marr = array(masks)
+			
 			marr = logical_not(array(masks))
 			allmsk = logical_and(marr,oldmskarr)
                         ym = ma.masked_array(y,mask=logical_not(allmsk))
