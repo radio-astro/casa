@@ -4597,7 +4597,7 @@ MsPlot::createSaQL(  const String& x, const String& y,
          } 
          else if (upcase(axis(i)).matches("YNORTH")) {
             curTaql[i] = String("POSITION[2]");
-            label[i] = String("X (m)");
+            label[i] = String("Y (m)");
       } 
       else if (!upcase(axis(i)).compare("AZIMUTH") || 
             !upcase(axis(i)).compare("ELEVATION") || 
@@ -5023,7 +5023,7 @@ MsPlot::getTaQL( const String& axisStr, const String& column,
       } 
       else if (upcase(axisStr).matches("YNORTH")) {
          retValue[0] = String("POSITION[2]");
-         label = String("X (m)");
+         label = String("Y (m)");
       } 
       else {
          String msg = String( "Unrecognized array plot axis " )

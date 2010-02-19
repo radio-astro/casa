@@ -40,7 +40,7 @@ def plotants(vis=None,figfile=''):
               mp.reset()
               pl.axis('equal')
               pl.axis('scaled')
-              pl.ylabel('Y (m)')          # Replace mp's "X (m)".
+              #pl.ylabel('Y (m)')          # Replace mp's "X (m)".
               pl.title(vis)
               if ( len(figfile) > 0 ) :
                    mp.savefig( figfile )

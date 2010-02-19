@@ -508,6 +508,8 @@ else:
 
 if (passlistcal): print "Passed listcal output test"
 else:             print "FAILED listcal output test"
+
+
 #
 #=====================================================================
 #
@@ -1008,7 +1010,7 @@ print ''
 # Pull the max from the cubestats dictionary
 # created above using imstat
 thistest_immax=cubestats['max'][0]
-oldtest_immax = 0.0685017
+oldtest_immax = 0.052414759993553162
 print ' Clean image max should be ',oldtest_immax
 print ' Found : Image Max = ',thistest_immax
 diff_immax = abs((oldtest_immax-thistest_immax)/oldtest_immax)
@@ -1181,7 +1183,7 @@ else:
             print >>logfile,'* Passed UVFITS max test'
         else:
             print >>logfile,'* FAILED UVFITS max test'
-        print >>logfile,'*  UVFITS MS max '+str(fitstest_immax)
+        print >>logfile,'*  UVFITS MS max '+str(fitstest_src)
     else:
         print >>logfile,'*                               *'
         print >>logfile,'* FAILED UVFITS existence test'
