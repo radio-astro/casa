@@ -148,9 +148,7 @@ def main(testnames=[]):
         newlist = []
         for f in testnames:
             if not haslist(f):
-                print 'HASLIST is false for '+f
                 if is_old(f):
-                    print 'Is old for '+f
                     oldlist.append(f)
                 elif not is_old(f):
                     newlist.append(f)
@@ -180,7 +178,6 @@ def main(testnames=[]):
                 
         # Assemble the new tests
         for f in newlist:
-            print f
             try:
                 if haslist(f):
                     file = getname(f)
