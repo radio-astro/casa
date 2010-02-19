@@ -239,8 +239,8 @@ class simutil:
         # Assume direction as a filename and read lines if it exists
         filename=os.path.expanduser(os.path.expandvars(direction))
         if os.path.exists(filename):
-            msg('Reading direction information from the file, %s' % filename)
-            return util.read_pointings(filename)
+            self.msg('Reading direction information from the file, %s' % filename)
+            return self.read_pointings(filename)
         
         # haveing elimiated other options, we need to calculate:
         epoch, centx, centy = self.direction_splitter()
@@ -260,7 +260,7 @@ class simutil:
 
         # By making the even rows shifted spacing/2 ahead, and possibly shorter,
         # the top and bottom rows (nrows odd), are guaranteed to be short.
-        if availcols - ncols >= 0.5:                                # O O O
+        if availcols - ncols >= 0.5:                            # O O O
             evencols = ncols                                    #  O O O
             ncolstomin = 0.5 * (ncols - 0.5)
         else:

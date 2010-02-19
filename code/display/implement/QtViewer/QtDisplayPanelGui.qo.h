@@ -59,6 +59,8 @@ class QtDisplayData;
 class TrackBox;
 class QtRegionManager;
 class QtRegionShapeManager;
+class QtDataManager;
+class QtDataOptionsPanel;
 
 template <class T> class ImageInterface;
 
@@ -78,6 +80,9 @@ class QtDisplayPanelGui : public QtPanelBase,
 
   QtDisplayPanelGui(QtViewer* v, QWidget* parent=0);
   ~QtDisplayPanelGui();
+
+  // access to our viewer
+  QtViewer *viewer( ) { return v_; }
   
   // access to graphics panel 'base'....
   QtDisplayPanel* displayPanel() { return qdp_;  }
@@ -93,6 +98,56 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual QVariant start_interact( const QVariant &input, int id );
   virtual QVariant setoptions( const QMap<QString,QVariant> &input, int id);
 
+  // At least for now, colorbars can only be placed horizontally or
+  // vertically, identically for all display panels.
+  // This returns the current value.
+  Bool colorBarsVertical() { return colorBarsVertical_;  }
+
+  //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+  //# DisplayData functionality brought down from QtViewerBase
+  //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+  // Create a new QtDD from given parameters, and add to internal DD list.
+  // (For now) QtViewerBase retains 'ownership' of the QtDisplayData; call
+  // removeDD(qdd) to delete it.
+  // Unless autoregister is set False, all open DisplayPanels will
+  // register the DD for display.
+  // Check return value for 0, or connect to the createDDFailed()
+  // signal, to handle failure.
+  QtDisplayData* createDD(String path, String dataType, String displayType,
+                          Bool autoRegister=True);
+   
+  // Removes the QDD from the list and deletes it (if it existed -- 
+  // Return value: whether qdd was in the list in the first place).
+  virtual Bool removeDD(QtDisplayData* qdd);
+  
+  // retrieve a copy of the current DD list.
+  List<QtDisplayData*> dds() { return qdds_;  }
+  
+  // return the number of user DDs.
+  Int nDDs() { return qdds_.len();  }
+  
+  // return a list of DDs that are registered on some panel.
+  List<QtDisplayData*> registeredDDs();
+  
+  // return a list of DDs that exist but are not registered on any panel.
+  List<QtDisplayData*> unregisteredDDs();
+  
+  // retrieve a DD with given name (0 if none).
+  QtDisplayData* dd(const String& name);
+  
+  // Check that a given DD is on the list.  Use qdd pointer or its name.
+  //<group>
+  Bool ddExists(QtDisplayData* qdd);
+  Bool ddExists(const String& name) { return dd(name)!=0;  }
+  //</group>
+  
+  // Latest error (in createDD, etc.) 
+  virtual String errMsg() { return errMsg_;  }
+ 
+  //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+  //# DisplayData functionality brought down from QtViewerBase
+  //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
   // the QtDBusViewerAdaptor can handle loading & registering data itself,
   // but to connect up extra functionality, the upper-level QtDisplayPanelGui
   // (or in the current case, the derived QtCleanPanelGui) would have to be
@@ -100,8 +155,23 @@ class QtDisplayPanelGui : public QtPanelBase,
   // callbacks for drawing regions...
   virtual void addedData( QString type, QtDisplayData * );
  
+  QtDataManager* dataMgr() { return qdm_;  }
+
  public slots:
  
+  // At least for now, colorbars can only be placed horizontally or vertically,
+  // identically for all display panels.  This sets that state for everyone.
+  // Sends out colorBarOrientationChange signal when the state changes.
+  virtual void setColorBarOrientation(Bool vertical);    
+ 
+  virtual void showDataManager();
+  virtual void hideDataManager();
+ 
+  virtual void showDataOptionsPanel();
+  virtual void hideDataOptionsPanel();
+  
+  virtual void removeAllDDs();
+  
   // Show/hide display panel's auxiliary windows.
   //<group>
   virtual void showPrintManager();
@@ -137,9 +207,27 @@ class QtDisplayPanelGui : public QtPanelBase,
  
  
  signals:
+ 
+    void colorBarOrientationChange();     
+  
     void overlay(QHash<QString, ImageInterface<float>*>);
+
+    void createDDFailed(String errMsg, String path, String dataType, 
+		      String displayType);
+  
+    // The DD now exists, and is on QtViewerBase's list.
+    // autoregister tells DPs whether they are to register the DD.
+    void ddCreated(QtDisplayData*, Bool autoRegister);
+  
+    // The DD is no longer on QtViewerBase's list, but is not
+    // destroyed until after the signal.
+    void ddRemoved(QtDisplayData*);
+
+    void closed( const QtDisplayPanelGui * );
+  
  protected slots:
   
+  virtual void quit( );
 
   //# overrides of base QMainWindow slots
   
@@ -229,6 +317,14 @@ class QtDisplayPanelGui : public QtPanelBase,
  
  protected:
     
+  // Existing user-visible QDDs
+  List<QtDisplayData*> qdds_;
+  String errMsg_;
+  
+  
+  QtDataManager* qdm_;		//# The window for loading data.
+  QtDataOptionsPanel* qdo_;	//# The window for controlling data display.
+
   // Keeps current data directory in sync between
   // DataManager window and save-restore dialogs.
   virtual Bool syncDataDir_(String filename);
@@ -260,6 +356,10 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   //# ----------------------------DATA----------------------------------
   
+  // At least for now, colorbars can only be placed horizontally or vertically,
+  // identically for all display panels.  Here is where that state is kept for
+  // everyone.
+  Bool colorBarsVertical_;  
   
   QtViewer* v_;		 	//# (Same viewer as qdp_'s)
   QtDisplayPanel* qdp_;  	//# Central Widget this window operates.
@@ -299,9 +399,23 @@ class QtDisplayPanelGui : public QtPanelBase,
   
      
  private:
-  
+  unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() {  }		// (not intended for use)  
     
+ public:
+ 
+  // True by default.  Set False to disable auto-raise of the Data
+  // Options panel whenever the first DD is created.
+  //# Users want to see this panel automatically when there are DDs
+  //# to tweak.  (Apps like clean can turn v_->autoOptionsRaise off,
+  //# if desired (yes, is is (gasp!) public data)).
+  Bool autoDDOptionsShow;
+ 
+  // Intended for use only by QtDataManager (or other data dialogs such as for
+  // save-restore), to inform QtDisplayPanel of the directory currently
+  // selected for data retrieval, if any ("" if none).
+  String selectedDMDir;
+
 };
 
 

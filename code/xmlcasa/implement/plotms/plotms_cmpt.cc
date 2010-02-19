@@ -200,9 +200,12 @@ record* plotms::getPlotMSSelection(const int plotIndex) {
     GETSINGLEPLOTREC(SELECTION) }
 
 void plotms::setPlotMSAveraging(const string& channel, const string& time,
-        const bool scan, const bool field, const bool baseline,
-        const bool antenna, const bool spw, const bool updateImmediately,
-        const int plotIndex) {
+				const bool scan, const bool field, 
+				const bool baseline,
+				const bool antenna, const bool spw, 
+				const bool scalar,
+				const bool updateImmediately,
+				const int plotIndex) {
     PlotMSAveraging avg;
     
     avg.setChannel(channel);
@@ -212,6 +215,7 @@ void plotms::setPlotMSAveraging(const string& channel, const string& time,
     avg.setBaseline(baseline);
     avg.setAntenna(antenna);
     avg.setSpw(spw);
+    avg.setScalarAve(scalar);
     
     setPlotMSAveraging_(avg, updateImmediately, plotIndex);
 }
@@ -229,6 +233,45 @@ void plotms::setPlotMSAveragingRec(const record& averaging,
 record* plotms::getPlotMSAveraging(const int plotIndex) {
     launchApp();
     GETSINGLEPLOTREC(AVERAGING) }
+
+void plotms::setPlotMSTransformations(const std::string& freqframe, 
+				      const std::string& veldef, 
+				      const double restfreq, 
+				      const double xshift, 
+				      const double yshift, 
+				      const bool updateImmediately, 
+				      const int plotIndex) {
+    PlotMSTransformations trans;
+    
+    trans.setFrame(freqframe);
+    trans.setVelDef(veldef);
+    trans.setRestFreq(restfreq);
+    trans.setXpcOffset(xshift);
+    trans.setYpcOffset(yshift);
+    
+    setPlotMSTransformations_(trans, updateImmediately, plotIndex);
+
+}
+
+void plotms::setPlotMSTransformationsRec(const record& transformations, 
+					 const bool updateImmediately, 
+					 const int plotIndex) {
+    Record* trans1 = toRecord(transformations);
+    PlotMSTransformations trans;
+    trans.fromRecord(*trans1);
+    delete trans1;
+    
+    setPlotMSTransformations_(trans, updateImmediately, plotIndex);
+}
+
+record* plotms::getPlotMSTransformations(const int plotIndex) {
+  launchApp();
+  GETSINGLEPLOTREC(TRANSFORMATIONS) }
+
+
+
+
+
 
 
 void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
@@ -412,6 +455,17 @@ void plotms::setPlotMSAveraging_(const PlotMSAveraging& averaging,
     launchApp();
     Record params;
     params.defineRecord(PlotMSDBusApp::PARAM_AVERAGING, averaging.toRecord());
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
+}
+
+void plotms::setPlotMSTransformations_(const PlotMSTransformations& trans,
+        const bool updateImmediately, const int plotIndex) {
+    launchApp();
+    Record params;
+    params.defineRecord(PlotMSDBusApp::PARAM_TRANSFORMATIONS, trans.toRecord());
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),

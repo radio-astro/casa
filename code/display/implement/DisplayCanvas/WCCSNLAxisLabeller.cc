@@ -37,6 +37,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <display/Display/State.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayCanvas/WCCSNLAxisLabeller.h>
@@ -787,7 +788,7 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
   }
 //
 
-  if (zLabelType() != "none") {
+  if ( zLabelType() != "none" && ! display::state::instance().fileOutputMode( ) ) {
 
     // store bgcolor
     Int bgcol;

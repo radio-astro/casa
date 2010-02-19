@@ -7,7 +7,7 @@ from taskinit import *
 from task_viewerconnection import viewerconnection
 from task_viewerconnection import dbus_connection
 
-def viewer(infile=None,displaytype=None,gui=None):
+def viewer(infile=None,displaytype=None,frame=None,zoom=None,outfile=None,outscale=None,outdpi=None,outformat=None,outlandscape=None,gui=None):
 	""" The viewer will display images in raster, contour, vector or
 	marker form.  Images can be blinked, and movies are available
 	for spectral-line image cubes.  For measurement sets, many
@@ -80,11 +80,6 @@ def viewer(infile=None,displaytype=None,gui=None):
 	except:
 		vwr = None
 
-
-	##
-	## need to work out some bugs before moving viewer task back to using viewer tool...
-	##
-	vwr = None
 	if vwr != None:
 		panel = vwr.panel("viewer")
 		data = None
@@ -93,6 +88,29 @@ def viewer(infile=None,displaytype=None,gui=None):
 				data = vwr.load( infile, displaytype, panel=panel )
 			else:
 				data = vwr.load( infile, panel=panel )
+
+			if type(frame) == int and frame > 0 :
+				vwr.frame(frame,panel=panel)
+			if type(zoom) == int and zoom != 1 :
+				vwr.zoom(zoom,panel=panel)
+			if type(outfile) == str and len(outfile) > 0 :
+				scale=1.0
+				if type(outscale) == float :
+					scale=outscale
+				dpi=300
+				if type(outdpi) == int :
+					dpi=outdpi
+				format="jpg"
+				if type(outformat) == str :
+					format=outformat
+				orientation="portrait"
+				if type(outlandscape) == bool and outlandscape :
+					orientation="landscape"
+				vwr.output(outfile,scale=scale,dpi=dpi,format=format,orientation=orientation,panel=panel)
+
+		# it makes no sense to leave a panel open with no way of interacting with it
+		if type(gui) == bool and gui:
+			vwr.close(panel)
 
 	else:
 		viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py

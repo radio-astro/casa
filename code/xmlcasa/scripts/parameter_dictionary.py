@@ -362,6 +362,14 @@ class par(str):
 		 default: Auto
 		 example: clearpanel='Current'
 		"""
+
+	@staticmethod
+	def clip():
+		"""
+		clip -- flag data that are outside a specified range
+                options: (bool)True,False
+                default: False
+		"""
 		
 	@staticmethod
 	def clipcolumn():
@@ -699,7 +707,15 @@ class par(str):
 		""" name of output file for fit result
 		    default: ''  (no output fit file)
 		    example: fitfile="myimage.fit"
-		"""		
+		"""
+
+	@staticmethod
+	def fitfunc():
+		"""
+		fitfunc -- function for fitting
+		options: 'gauss', 'lorentz'
+		default: 'gauss'
+		"""
 
 	@staticmethod
 	def fitmode():
@@ -779,7 +795,7 @@ class par(str):
 		example: [0,2,3]
 
 		This parameter is effective only when one or more row numbers
-		are given explicitly
+		are given explicitly and also clip=False
 		"""
 
 	@staticmethod
@@ -1234,8 +1250,8 @@ class par(str):
 		maskflag -- list of mask regions to apply flag/unflag
 		default: []  (entire spectrum)
 		example: [[1000,3000],[5000,7000]]
-		warning: if one or more rows are given in flagrow,
-		         this parameter is ignored
+		warning: if one or more rows are given in flagrow, or 
+		         clip=True, this parameter is ignored
 		"""
 
 	@staticmethod

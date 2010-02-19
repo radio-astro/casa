@@ -65,7 +65,7 @@ $(BINDBGD)/% : $(CODEDIR)/%.cc $(AIPSINST) \
 	      -L$(AIPSARCH)/libdbg \
 	      $(addprefix $(CODEDIR)/,$(AIPSIMPS)) $(DBGVERSO) \
 	      $(patsubst $(LIBDBGD)/lib%.$(SFXSHAR), -l%, $(DBGLIBS)) \
-	      $(MODULIBS) $(XTRNLIBS)
+	      $(MODULIBS) $(XTRNLIBS) $(DUMALIB)
 	-@ $(TIMER)
 	-@ $(RM) $(patsubst %.cc,$(TMPPCKGD)/%.o,$(<F) $(AIPSIMPS)) \
 	         $(addprefix $(TMPPCKGD)/, $(addsuffix cc, $(LEXYACC)))
@@ -84,7 +84,7 @@ $(BINOPTD)/% : $(CODEDIR)/%.cc $(AIPSINST) \
 	      -L$(AIPSARCH)/lib \
 	      $(addprefix $(CODEDIR)/,$(AIPSIMPS)) $(OPTVERSO) \
 	      $(patsubst $(LIBOPTD)/lib%.$(SFXSHAR), -l%, $(OPTLIBS)) \
-	      $(MODULIBS) $(XTRNLIBS)
+	      $(MODULIBS) $(XTRNLIBS) $(DUMALIB)
 	-@ $(TIMER)
 	-@ $(RM) $(patsubst %.cc,$(TMPPCKGD)/%.o,$(<F) $(AIPSIMPS)) \
 	         $(addprefix $(TMPPCKGD)/, $(addsuffix cc, $(LEXYACC)))

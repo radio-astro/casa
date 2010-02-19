@@ -135,6 +135,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="noise_thermal">
       <description>add thermal noise</description><value>True</value></param>    
+<!--
     <param type="string" name="noise_mode" subparam="true">
       <description>tsys-atm: set PWV and use ATM library; tsys-manual: set t_sky and tau</description><value>tsys-atm</value></param>
 
@@ -143,6 +144,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="double" name="t_ground" subparam="true">
       <description>ambient temperature</description><value>270.</value></param>
+-->
     <param type="double" name="t_sky" subparam="true">
        <description>atmospheric temperature</description><value>260.</value></param>	
     <param type="double" name="tau0" subparam="true">
@@ -203,9 +205,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <when param="noise_thermal">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">	  
+<!--
 	  <default param="noise_mode"><value>"tsys-atm"</value></default>
 	  <default param="user_pwv"><value>1.</value></default>
 	  <default param="t_ground"><value>269.</value></default>
+-->
 	  <default param="t_sky"><value>263.</value></default>
 	  <default param="tau0"><value>0.1</value></default>
 	</equals>

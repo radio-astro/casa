@@ -27,9 +27,8 @@
 //# $Id$
 #include <display/QtViewer/QtDBusViewerAdaptor.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
-#include <display/QtViewer/QtDataManager.qo.h>
-#include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
+
 
 extern int qInitResources_QtViewer();
 
@@ -42,9 +41,8 @@ const QString &QtViewer::name( ) {
     return name_;
 }
 
- QtViewer::QtViewer( bool is_server, const char *dbus_name ) : QtViewerBase(), qdm_(0), qdo_(0),
-							       dbus_(NULL), autoDDOptionsShow(True)
- {
+QtViewer::QtViewer( bool is_server, const char *dbus_name ) :
+	QtViewerBase(is_server), dbus_(NULL) {
 
   name_ = (is_server ? "view_server" : "viewer");
   dbus_name_ = (dbus_name ? strdup(dbus_name) : 0);
@@ -65,47 +63,15 @@ const QString &QtViewer::name( ) {
 	//   casa::qInitResources_QtViewer()     :-)   dk
 
   
-  qdo_ = new QtDataOptionsPanel(this);
-
   dbus_ = new QtDBusViewerAdaptor(this);
   dbus_->connectToDBus(dbus_name_);
 }
 
 
 QtViewer::~QtViewer() {
-  if(qdm_!=0) delete qdm_;
-  if(qdo_!=0) delete qdo_;
   // wonder if we need to delete dbus adaptor...
 }
   
-  
-void QtViewer::showDataManager() {
-  if(qdm_==0) qdm_ = new QtDataManager(this);
-  qdm_->showNormal();
-  qdm_->raise();  }
-
-void QtViewer::hideDataManager() {
-  if(qdm_==0) return;
-  qdm_->hide();  }
-
-    
-void QtViewer::showDataOptionsPanel() {
-  if(qdo_==0) qdo_ = new QtDataOptionsPanel(this);
-  if(qdo_!=0) {  // (should be True, barring exceptions above).
-    qdo_->showNormal();
-    qdo_->raise();  }  }
-
-  
-void QtViewer::hideDataOptionsPanel() {
-  if(qdo_==0) return;
-  qdo_->hide();  }
-  
-  
-void QtViewer::hideAllSubwindows() {
-  hideDataManager();
-  hideDataOptionsPanel();  }
-
-    
 QtDisplayPanelGui *QtViewer::createDPG() {
   // Create a main display panel Gui.
   //
@@ -128,7 +94,7 @@ QtDisplayPanelGui *QtViewer::createDPG() {
   return dpg; }
   
   
-void QtViewer::quit() {  hideAllSubwindows(); QtViewerBase::quit();  }
+void QtViewer::quit() { QtViewerBase::quit(); }
 
 
 } //# NAMESPACE CASA - END

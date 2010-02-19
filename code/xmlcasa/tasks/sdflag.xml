@@ -63,6 +63,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
+    <param type="bool" name="clip">
+            <description>flag data outside a specified range</description>
+            <value>False</value>
+    </param>
+
     <param type="string" name="flagmode">
             <description>flag mode (flag,unflag,restore)</description>
             <value>flag</value>
@@ -101,7 +106,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>0</value>
     </param>
 
+    <param type="any" name="clipminmax" subparam="true">
+            <description>range of data that will NOT be flagged</description>
+            <any type="variant" limittypes="doubleArray doubleArrayArray"/>
+            <value type="doubleArray"></value>
+    </param>
+
+    <param type="any" name="clipoutside" subparam="true">
+            <description>clip outside the range, or within it</description>
+            <any type="variant" limittypes="bool boolArray"/>
+            <value type="bool">True</value>
+    </param>
+
     <constraints>
+            <when param="clip">
+                    <equals type="bool" value="True">
+                            <default param="clipminmax"><value type="doubleArray"></value></default>
+                            <default param="clipoutside"><value type="bool">True</value></default>
+                    </equals>
+                    <equals type="bool" value="False"/>
+            </when>
     </constraints>
 
     </input>
@@ -135,13 +159,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         maskflag -- list of mask regions to apply flag/unflag 
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
-                WARNING: if one or more rows are given in flagrow, 
-                         this parameter is ignored
+                WARNING: if one or more rows are given in flagrow, or 
+                         clip=True, this parameter is ignored
         flagrow -- list of row numbers to apply flag/unflag
                 default: [] (no row selection)
                 example: [0, 2, 3]
                 WARNING: this parameter is effective only when 
-                         one or more row numbers are given explicitly
+                         one or more row numbers are given explicitly 
+                         and also clip=False
+        clip -- flag data that are outside a specified range
+                options: (bool)True,False
+                default: False
+             >>> clip expandable parameters
+                clipminmax -- range of data that will NOT be flagged
+                        default: [] means do not use clip option
+                        example: [0.0,1.5]
+                clipoutside -- clip OUTSIDE the range ?
+                        options: (bool)True,False
+                        default: True
+                        example: clipoutside=False means flag data WITHIN the range.
         flagmode -- flag mode
                 default: 'flag'
                 options: 'flag','unflag','restore'

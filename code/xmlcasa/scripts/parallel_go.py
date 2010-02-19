@@ -289,6 +289,10 @@ class cluster(object):
       
       '''
        
+      if type(engine_id).__name__ != 'int':
+         print 'engine id must be an integer'
+         return None 
+
       node_name=''
       procid=None
       for i in self.__engines:
@@ -328,6 +332,18 @@ class cluster(object):
       If a computer with the given name is in the current cluster, running this function will stop all the engines currently running on that node and remove the node and engines from the engine list. This function will not shutdown the computer.
      
       '''
+      if type(node_name).__name__ != 'str':
+         print 'node_name must be a string'
+         return None
+
+      #if self.__engines == []:
+      #   print 'there is no engines running'
+      #   return None
+
+      if self.get_nodes().count(node_name) == 0:
+         print 'there is no node by the name: ', node_name
+         return None
+
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
       dist=node_name+':'+self.__prefix+self.__stop_node_file
@@ -408,7 +424,7 @@ class cluster(object):
          elist.append(i[1])
       fruit=set(elist)
 
-      self.__engines=[]
+      #self.__engines=[]
       for i in fruit:
          try:
             self.stop_node(i)
@@ -521,10 +537,16 @@ class cluster(object):
       
       '''
       if self.__client is None:
-         pass
+         print 'there is no client'
+         return None
 
-      tobeinit=self.__client.pull('id')
-      #print tobeinit
+      try:
+         tobeinit=self.__client.pull('id')
+         #print tobeinit
+      except:
+         print "cluster not running"
+         return None
+         
 
       if len(tobeinit)>0:
          self.__init_nodes(tobeinit)
@@ -612,9 +634,13 @@ class cluster(object):
       Each working engine is a CASA instance and saves its own log. This function retrun the list of logs with their full path. One can view the log contents with casalogviewer.
 
       '''
-      #self.__client.pull(['work_dir', 'thelogfile'])
-      self.__client.execute('tmp=work_dir+"/"+thelogfile')
-      return self.__client.pull('tmp')
+      try:
+         #self.__client.pull(['work_dir', 'thelogfile'])
+         self.__client.execute('tmp=work_dir+"/"+thelogfile')
+         return self.__client.pull('tmp')
+      except:
+         print "cluster not running"
+         return None
 
    def read_casalogs(self):
       '''Read the casa log files.
@@ -624,9 +650,13 @@ class cluster(object):
       '''
       import os
       import string
-      files = string.join(self.get_casalogs(), ' ')
-      #print files
-      os.system("emacs "+files+ "&")
+      _logs = self.get_casalogs()
+      if _logs != None:
+         files = string.join(_logs, ' ')
+         #print files
+         os.system("emacs "+files+ "&")
+      else:
+         print "could not read casalogs"
 
    def pad_task_id(self, b='', task_id=[]):
       # pad task id (not engine id!)
@@ -951,7 +981,11 @@ class cluster(object):
 
       '''
       print "Hello CASA Controller"
-      return self.__client.execute('print "Hello CASA Node"')
+      
+      if self.get_engines() != []:
+         return self.__client.execute('print "Hello CASA Node"')
+      else:
+         return None
 
    def __set_cwds(self, clusterdir):
       '''Set current working dir for all engines
@@ -980,7 +1014,10 @@ class cluster(object):
 
 
       '''
-      return self.__client.get_ids()
+      try:
+         return self.__client.get_ids()
+      except:
+         return []
 
    def get_nodes(self):
       '''get hostnames for all available engines
@@ -1063,7 +1100,8 @@ class cluster(object):
 
 
       '''
-      return self.__client.get_result(i)
+      #this one is not very useful
+      return self.__client.get_result()[i]
 
    def activate(self):
       '''set the cluster to parallel execution mode
@@ -1087,8 +1125,9 @@ class cluster(object):
             if verbose:
                print "job '%s' done" % job
             return True
-      except:
-         print "could not get the status of job '%s'" % job
+      except e:
+         print e
+         #print "could not get the status of job '%s'" % job
          return False
 
    def howto(self):

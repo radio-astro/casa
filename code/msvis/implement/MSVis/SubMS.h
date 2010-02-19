@@ -93,7 +93,7 @@ class SubMS
 
  public:
 
-  SubMS(String& theMS);
+  SubMS(String& theMS, Table::TableOption option = Table::Old);
   
   // construct from an MS
   SubMS(MeasurementSet& ms);

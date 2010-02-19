@@ -362,16 +362,6 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
            mssel = new MeasurementSet(*itsMS);
          }
  
-
-      //==================================================   
-	 // Well this here be a work around until we get proper use of the cfitsio
-	 // routines by rewriting the underlying fits writer stuff.
-	 /*
-   Table::relinquishAutoLocks(True);
-   if(!fork()){
-      rstat = true;
-      try {
-      */
          if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
                                           inchan, iwidth, writesyscal,
                                           multisource, combinespw, writestation)) {
@@ -382,23 +372,6 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
 	 //Done...clear off the mssel
 	 if(mssel)
 	   delete mssel;
-	 /*
-      } catch (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-         rstat = False;
-      } catch (...) {
-         *itsLog << LogIO::SEVERE << "Unknown Exception Reported " << LogIO::POST;
-         rstat = False;
-      }
-      exit(rstat);
-   }
-   int dummy;
-   wait(&dummy);
-   if(dummy)
-      rstat=true;
-     } else {
-       rstat = False;
-     */
      }
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -408,6 +381,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
    Table::relinquishAutoLocks();
    return rstat;
 }
+
 
 bool
 ms::summary(::casac::record& header, const bool verbose)
@@ -1223,7 +1197,7 @@ ms::cvel(const std::string& mode,
     }
     if(!width.toString().empty()){ // channel width was set
       if(t_mode == "channel"){
-	t_width = abs(Double(atoi(width.toString().c_str())));
+	t_width = abs(atoi(width.toString().c_str()));
       }
       else if(t_mode == "channel_b"){
 	t_cwidth = abs(Double(atoi(width.toString().c_str())));
@@ -1329,7 +1303,7 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogOrigin("ms", "cvel");
 
-    SubMS *sms = new SubMS(originalName);
+    SubMS *sms = new SubMS(originalName, Table::Update);
 
     *itsLog << LogIO::NORMAL << "Starting combination of spectral windows ..." << LogIO::POST;
 

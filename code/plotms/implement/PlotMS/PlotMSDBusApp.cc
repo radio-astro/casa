@@ -57,6 +57,7 @@ const String PlotMSDBusApp::PARAM_HEIGHT = "height";
 const String PlotMSDBusApp::PARAM_PLOTINDEX = "plotIndex";
 const String PlotMSDBusApp::PARAM_PRIORITY = "priority";
 const String PlotMSDBusApp::PARAM_SELECTION = "selection";
+const String PlotMSDBusApp::PARAM_TRANSFORMATIONS = "transformations";
 const String PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY = "updateImmediately";
 const String PlotMSDBusApp::PARAM_WIDTH = "width";
 
@@ -234,6 +235,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(const String& methodName,
                 ret.defineRecord(PARAM_AVERAGING,
                         d->averaging().toRecord(true));
                 ret.defineRecord(PARAM_SELECTION, d->selection().toRecord());
+                ret.defineRecord(PARAM_TRANSFORMATIONS, d->transformations().toRecord());
             }
             
             if(c != NULL) {
@@ -279,6 +281,14 @@ void PlotMSDBusApp::dbusRunXmlMethod(const String& methodName,
             avg.fromRecord(parameters.asRecord(PARAM_AVERAGING));
             d->setAveraging(avg);
         }
+
+        if(parameters.isDefined(PARAM_TRANSFORMATIONS) &&
+           parameters.dataType(PARAM_TRANSFORMATIONS) == TpRecord) {
+            PlotMSTransformations trans = d->transformations();
+            trans.fromRecord(parameters.asRecord(PARAM_TRANSFORMATIONS));
+            d->setTransformations(trans);
+        }
+
         
         bool ok;
         PMS::Axis a;

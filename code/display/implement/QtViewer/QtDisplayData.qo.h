@@ -56,7 +56,7 @@ class QtDisplayPanel;
 class ImageRegion;
 class WorldCanvasHolder;
 class Colormap;
-class QtViewerBase;
+class QtDisplayPanelGui;
 class WedgeDD;
 
 class QtDisplayData : public QObject {
@@ -67,7 +67,7 @@ class QtDisplayData : public QObject {
 
  public:
   
-  QtDisplayData(QtViewerBase* v, String path, String dataType,
+  QtDisplayData(QtDisplayPanelGui *panel, String path, String dataType,
 				 String displayType);
   ~QtDisplayData();
   
@@ -78,6 +78,8 @@ class QtDisplayData : public QObject {
   virtual String path() { return path_;  }
   virtual String dataType() { return dataType_;  }
   virtual String displayType() { return displayType_;  }
+
+  String description( ) const;
   
   virtual String errMsg() { return errMsg_;  }
   
@@ -281,7 +283,7 @@ class QtDisplayData : public QObject {
  protected slots:
   
   // Set the color bar orientation option according to the master
-  // value stored in the QtViewerBase (v_->colorBarsVertical_).
+  // value stored in the QtViewerBase (panel_->viewer()->colorBarsVertical_).
   // Connected to QtViewerBase's colorBarOrientationChange() signal;
   // also called during initialization.
   virtual void setColorBarOrientation_();
@@ -325,10 +327,10 @@ class QtDisplayData : public QObject {
  private:
   
   // Not intended for use.
-  QtDisplayData() : v_(0), im_(0), cim_(0), dd_(0), clrMaps_(0) {  }
+  QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0), clrMaps_(0) {  }
 
   //# data
-  QtViewerBase* v_;
+  QtDisplayPanelGui *panel_;
   String path_, dataType_, displayType_;
   ImageInterface<Float>* im_;
   ImageInterface<Complex>* cim_;

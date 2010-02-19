@@ -75,8 +75,8 @@
 
 namespace casa {
   
-  SubMS::SubMS(String& theMS) :
-    ms_p(MeasurementSet(theMS, Table::Old)),
+  SubMS::SubMS(String& theMS, Table::TableOption option) :
+    ms_p(MeasurementSet(theMS, option)),
     mssel_p(ms_p),
     msc_p(NULL),
     mscIn_p(NULL),

@@ -60,6 +60,9 @@ class simulator
 
     bool observe(const std::string& sourcename = "", const std::string& spwname = "", const ::casac::variant& starttime = ::casac::initialize_variant("0s"), const ::casac::variant& stoptime = ::casac::initialize_variant("3600s"));
 
+    //    bool observemany(const std::vector<std::string>& sourcenames, const std::string& spwname, const std::vector<std::string>& starttimes, const ::casac::variant& stoptimes, const ::casac::variant& directions);
+    bool observemany(const std::vector<std::string>& sourcenames, const std::string& spwname, const std::vector<std::string>& starttimes, const std::vector<std::string>& stoptimes, const std::vector<std::string>& directions);
+
     bool setlimits(const double shadowlimit = 1e-6, const ::casac::variant& elevationlimit = ::casac::initialize_variant("10deg"));
 
     bool setauto(const double autocorrwt = 0.0);

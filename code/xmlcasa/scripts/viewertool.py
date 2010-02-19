@@ -108,14 +108,23 @@ class viewertool(object):
 
         return int(self.__state['proxy'].load( path, displaytype, panel ))
 
-    def restore( self, path, new_window=True ):
-        if type(path) != str or type(new_window) != bool:
-            raise Exception, "restore() takes a string and a boolean; only the first arg is required..."
+    def close( self, panel=0 ):
+        if type(panel) != int :
+            raise Exception, "close() takes one optional integer..."
 
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return int(self.__state['proxy'].restore( path, new_window ))
+        return bool(self.__state['proxy'].close( panel ))
+
+    def restore( self, path, panel=0 ):
+        if type(path) != str or type(panel) != int:
+            raise Exception, "restore() takes a string and an integer; only the first arg is required..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return int(self.__state['proxy'].restore( path, panel ))
 
     def cwd( self, new_path='' ):
         if type(new_path) != str:
@@ -155,7 +164,24 @@ class viewertool(object):
             self.__connect( )
 
         return bool(self.__state['proxy'].zoom( level, panel ))
-    
+
+    def hide( self, panel=0 ):
+        if type(panel) != int:
+            raise Exception, "hide() takes a single (int) panel identifier ..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return bool(self.__state['proxy'].hide(panel))
+
+    def show( self, panel=0 ):
+        if type(panel) != int:
+            raise Exception, "show() takes a single (int) panel identifier ..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return bool(self.__state['proxy'].show(panel))
 
     def keyinfo( self, key ):
         if type(key) != int:
@@ -169,7 +195,7 @@ class viewertool(object):
     def done( self ):
 
         if self.__state['proxy'] == None:
-            return
+            self.__connect( )
 
         result = self.__state['proxy'].done( )
         self.__state['proxy'] = None

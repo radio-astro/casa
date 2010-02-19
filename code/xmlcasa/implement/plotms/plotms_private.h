@@ -81,5 +81,9 @@ void setPlotMSSelection_(const PlotMSSelection& selection,
 void setPlotMSAveraging_(const PlotMSAveraging& averaging,
         const bool updateImmediately, const int plotIndex);
 
+// Helper method for setting the MS transformations.
+void setPlotMSTransformations_(const PlotMSTransformations& trans,
+        const bool updateImmediately, const int plotIndex);
+
 // Helper method for setting the flag extension.
 void setFlagging_(const PlotMSFlagging& flagging);

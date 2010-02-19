@@ -58,14 +58,14 @@ namespace casa {
 	dbus::variant unload( int data )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::unload(data) ); }
 
-	dbus::variant restore( const std::string &path, bool new_window = true )
-			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::restore(path,new_window) ); }
+	dbus::variant restore( const std::string &path, int panel=0 )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::restore(path,panel) ); }
 
-	dbus::variant hide( int panel )
+	dbus::variant hide( int panel=0 )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::hide(panel) ); }
-	dbus::variant show( int panel )
+	dbus::variant show( int panel=0 )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::show(panel) ); }
-	dbus::variant close( int panel )
+	dbus::variant close( int panel=0 )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::close(panel) ); }
 
 	dbus::variant frame( int num=-1, int panel=0 )

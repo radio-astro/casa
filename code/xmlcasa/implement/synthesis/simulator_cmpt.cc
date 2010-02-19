@@ -253,6 +253,63 @@ Bool rstat(False);
 
 }
 
+
+bool
+//simulator::observemany(const std::vector<string>& sourcenames, const std::string& spwname, const ::casac::variant& starttimes, const ::casac::variant& stoptimes, const ::casac::variant& directions)
+simulator::observemany(const std::vector<string>& sourcenames, const std::string& spwname, const std::vector<string>& starttimes, const std::vector<string>& stoptimes, const std::vector<string>& directions)
+{
+Bool rstat(False);
+  
+  try {
+  
+    if(itsSim !=0){
+      casa::String sspwname(spwname);
+      Vector<String> ssourcenames(toVectorString(sourcenames));
+//      Vector<String> ssourcenames();
+//     Vector<String> inFiles;
+//     if (infiles.type() == ::casac::variant::BOOLVEC) {
+//	inFiles.resize(0);      // unset
+//     } else if (infiles.type() == ::casac::variant::STRING) {
+//	sepCommaEmptyToVectorStrings(inFiles, infiles.toString());
+//     } else if (infiles.type() == ::casac::variant::STRINGVEC) {
+//	inFiles = toVectorString(infiles.toStringVec());
+//     } else {
+//	*itsLog << LogIO::WARN << "Unrecognized infiles datatype"
+//		<< LogIO::POST;
+//     }
+      Vector<String> sstarttimes(toVectorString(starttimes));
+      Vector<String> sstoptimes(toVectorString(stoptimes));
+      Vector<String> sdirections(toVectorString(directions));
+
+      uInt nptg=ssourcenames.nelements();
+      casa::Vector<casa::Quantity> qstarttimes(nptg);
+      casa::Vector<casa::Quantity> qstoptimes(nptg);
+      casa::Vector<casa::MDirection> mdirections(nptg);
+      MDirection mdir;
+      for (uInt i=0; i<nptg; i++) {
+	qstarttimes[i]=casaQuantity(sstarttimes[i]);
+	qstoptimes[i]=casaQuantity(sstoptimes[i]);
+	if (!casaMDirection(sdirections[i], mdir)){
+	  *itsLog << LogIO::SEVERE 
+		  << "Could not convert direction to a Direction Measure."
+		  << LogIO::POST;
+	}
+	mdirections[i]=mdir;
+      }
+      rstat=itsSim->observemany(ssourcenames, sspwname, qstarttimes, qstoptimes, mdirections);
+    }
+
+
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return rstat;
+
+}
+
 bool
 simulator::setlimits(const double shadowlimit, const ::casac::variant& elevationlimit)
 {
@@ -297,6 +354,7 @@ simulator::setauto(const double autocorrwt)
   return rstat;
   
 }
+
 
 bool
 simulator::setconfig(const std::string& telescopename, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, const std::vector<double>& dishdiameter, const std::vector<double>& offset, const std::vector<std::string>& mount, const std::vector<std::string>& antname, const std::vector<std::string>& padname, const std::string& coordsystem, const ::casac::variant& referencelocation)
