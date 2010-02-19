@@ -71,6 +71,7 @@
 #include <casa/iomanip.h>
 #include <functional>
 #include <set>
+#include <measures/Measures/MeasTable.h>
 
 
 namespace casa {
@@ -2995,6 +2996,40 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     MPosition mObsPos = ANTPositionMeasCol(0); // transfer reference frame
     mObsPos.set(MVPosition(pos)); // set coordinates
+
+    // but use a tabulated version if available (as in clean)
+    {
+      MPosition Xpos;
+      String Xobservatory;
+      ROMSObservationColumns XObsCols(ms_p.observation());
+      if (ms_p.observation().nrow() > 0) {
+	Xobservatory = XObsCols.telescopeName()(mainCols.observationId()(0));
+      }
+      if (Xobservatory.length() == 0 || 
+	  !MeasTable::Observatory(Xpos,Xobservatory)) {
+	// unknown observatory, use the above calculated centroid position
+	if(!writeTables){
+	  os << LogIO::NORMAL << "Unknown observatory. Determining observatory position for " << Xobservatory
+	     << " from antenna 0." << LogIO::POST;
+	    //	   << " from centroid of antenna positions." << LogIO::POST;
+	    //	Xpos=mObsPos;
+	}
+	Xpos=ANTPositionMeasCol(0);
+      }
+      else{
+	if(!writeTables){
+	  ostringstream oss;
+	  os << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
+	     << LogIO::POST;
+	  oss <<  "   " << Xpos;
+	  //    << endl << "  antenna 0:" << ANTPositionMeasCol(0);
+	  //	<< "  centroid of antenna positions:" << mObsPos;
+	  os << LogIO::NORMAL << oss.str() << LogIO::POST;
+	}
+      }
+      mObsPos = Xpos;
+    }
+    
     
     for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
     
@@ -3056,13 +3091,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	MDirection theFieldDir;
 	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
 	                                 // corresponding to theFieldId in the FIELD table)
-	  theFieldDir = FIELDCols.phaseDirMeas(theFieldId, 0);
+	  theFieldDir = FIELDCols.phaseDirMeasCol()(theFieldId)(IPosition(1,0));
 	}
 	else if(regridPhaseCenterFieldId==-1){ // use the given direction
 	  theFieldDir = regridPhaseCenter;
 	}
 	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
-	  theFieldDir = FIELDCols.phaseDirMeas(regridPhaseCenterFieldId, 0);
+	  theFieldDir = FIELDCols.phaseDirMeasCol()(regridPhaseCenterFieldId)(IPosition(1,0));
 	}
 	else{
 	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
