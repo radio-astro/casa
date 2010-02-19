@@ -1260,6 +1260,9 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
 
     // Added Nov 2009, following AIPS addition
     header.define("FRAME",posref);                   // FRAME
+    os << LogIO::NORMAL                              // Requested by CAS-437.
+       << "Using " << posref << " frame for antenna positions."
+       << LogIO::POST;
 
     // NOT in going aips
     // header.define("DATUTC", 0.0);
