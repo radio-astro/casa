@@ -1,94 +1,105 @@
-using namespace std;
-#include <string>
+/*******************************************************************************
+ * ALMA - Atacama Large Millimiter Array
+ * (c) Institut de Radioastronomie Millimetrique, 2009
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ *
+ * "@(#) $Id: ATMFrequency.cpp,v 1.4 2010/01/12 17:03:12 dbroguie Exp $"
+ *
+ * who       when      what
+ * --------  --------  ----------------------------------------------
+ * pardo     24/03/09  created
+ */
+
+#include <stdio.h>
+
 #include "ATMFrequency.h"
 
-namespace atm {
+using namespace std;
 
-  // Constructors
-  Frequency::Frequency(){valueIS_=0.0;}
-  Frequency::Frequency(double freq){valueIS_=freq;}
-  Frequency::Frequency(double freq, string units){valueIS_ = sput(freq,units);}
-  Frequency::Frequency(const Frequency & a){valueIS_ = a.valueIS_;}
-  Frequency::~Frequency(){}
-    
-  // Methodes de conversions
+namespace atm
+{
 
-    double Frequency::sget(double value, string units){  
-      if(units=="THz"||units=="THZ"){
-	return 1.0E-12*value;
-      }else if(units=="GHz"||units=="GHz"||units=="ghz"){
-	return 1.0E-9*value;
-      }else if(units=="MHz"||units=="MHZ"||units=="mhz"){
-	return 1.0E-6*value;
-      }else if(units=="kHz"||units=="KHZ"||units=="khz"){
-	return 1.0E-3*value;
-      }else if(units=="Hz"||units=="HZ"||units=="hz"){
-	return value;
-      }else{
-	return value;
-      }
-    } 
-  
-   double Frequency::sput(double freq, string units){
-     if(units=="THz"||units=="THZ"){
-       return 1.0E12*freq;
-     }else if(units=="GHz"||units=="GHZ"||units=="ghz"){
-       return 1.0E9*freq;
-     }else if(units=="MHz"||units=="MHZ"||units=="mhz"){
-       return 1.0E6*freq;
-     }else if(units=="kHz"||units=="KHZ"||units=="khz"){
-       return 1.0E3*freq;
-     }else if(units=="Hz"||units=="HZ"||units=="hz"){
-       return freq;
-     }else{
-       return freq;
-     }
-   } 
-
-  // Accessors
-
-
-  string Frequency::get(string form, string units)const{
-    char myString[18];
-    //   if(form.length()==0)
-    sprintf( myString,"%f %s",
-	     get(units),
-	     units.c_str()); 
-    //     else
-    //       sprintf( myString,"%form %s",
-    // 	       get(units),
-    // 	       units);
-    
-    return string(myString);
-  } 
-
-
-  double Frequency::get(string units)const{
-    return sget( valueIS_, units);
-  }
-
-  // Operators
-
-  Frequency& Frequency::operator= (const Frequency & rhs){valueIS_=rhs.valueIS_; return *this;}
-  Frequency& Frequency::operator= (const double & rhs){valueIS_=rhs;             return *this;}
-  
-  Frequency  Frequency::operator+ (const Frequency & rhs){return Frequency(valueIS_+rhs.get());}
-  Frequency  Frequency::operator- (const Frequency & rhs){return Frequency(valueIS_-rhs.get());}
-  Frequency  Frequency::operator* (const double & scf){return Frequency(valueIS_*scf);}
-  Frequency  Frequency::operator* (const float  & scf){return Frequency(valueIS_*(double)scf);}
-  Frequency  Frequency::operator* (const int    & scf){return Frequency(valueIS_*(double)scf);}
-  Frequency  Frequency::operator/ (const double & scf){return Frequency(valueIS_/scf);}
-  Frequency  Frequency::operator/ (const float  & scf){return Frequency(valueIS_/(double)scf);}
-  Frequency  Frequency::operator/ (const int    & scf){return Frequency(valueIS_/(double)scf);}
-  Frequency  Frequency::operator/ (const unsigned int    & scf){return Frequency(valueIS_/(double)scf);}
-  
-  bool    Frequency::operator< (const Frequency & rhs)const {return (valueIS_<rhs.get());}
-  bool    Frequency::operator> (const Frequency & rhs)const {return (valueIS_>rhs.get());}
-  bool    Frequency::operator<=(const Frequency & rhs)const {return (valueIS_<=rhs.get());}
-  bool    Frequency::operator>=(const Frequency & rhs)const {return (valueIS_>=rhs.get());}
-  bool    Frequency::operator==(const Frequency & rhs)const {return (valueIS_==rhs.get());}
-  bool    Frequency::operator!=(const Frequency & rhs)const {return (valueIS_!=rhs.get());}
-  
+Frequency::Frequency() :
+  valueIS_(0.0)
+{
 }
 
+Frequency::Frequency(double frequency) :
+  valueIS_(frequency)
+{
+}
 
+Frequency::Frequency(double frequency, const string &units)
+{
+  valueIS_ = sput(frequency, units);
+}
+
+Frequency::Frequency(const Frequency &frequency) :
+  valueIS_(frequency.valueIS_)
+{
+}
+
+Frequency::~Frequency()
+{
+}
+
+double Frequency::sget(double value, const string &units)
+{
+  if(units == "THz" || units == "THZ") {
+    return 1.0E-12 * value;
+  } else if(units == "GHz" || units == "GHz" || units == "ghz") {
+    return 1.0E-9 * value;
+  } else if(units == "MHz" || units == "MHZ" || units == "mhz") {
+    return 1.0E-6 * value;
+  } else if(units == "kHz" || units == "KHZ" || units == "khz") {
+    return 1.0E-3 * value;
+  } else if(units == "Hz" || units == "HZ" || units == "hz") {
+    return value;
+  } else {
+    return value;
+  }
+}
+double Frequency::sput(double freq, const string &units)
+{
+  if(units == "THz" || units == "THZ") {
+    return 1.0E12 * freq;
+  } else if(units == "GHz" || units == "GHZ" || units == "ghz") {
+    return 1.0E9 * freq;
+  } else if(units == "MHz" || units == "MHZ" || units == "mhz") {
+    return 1.0E6 * freq;
+  } else if(units == "kHz" || units == "KHZ" || units == "khz") {
+    return 1.0E3 * freq;
+  } else if(units == "Hz" || units == "HZ" || units == "hz") {
+    return freq;
+  } else {
+    return freq;
+  }
+}
+
+string Frequency::get(const string &form, const string &units) const
+{
+  char myString[18];
+  //   if(form.length()==0)
+  sprintf(myString, "%f %s", get(units), units.c_str());
+  //     else
+  //       sprintf( myString,"%form %s",
+  // 	       get(units),
+  // 	       units);
+
+  return string(myString);
+}
+
+}

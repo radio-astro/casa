@@ -1,45 +1,78 @@
-#include <math.h>
-
-using namespace std;
+/*******************************************************************************
+ * ALMA - Atacama Large Millimiter Array
+ * (c) Institut de Radioastronomie Millimetrique, 2009
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ *
+ * "@(#) $Id: ATMRefractiveIndex.cpp,v 1.6 2010/01/12 17:03:12 dbroguie Exp $"
+ *
+ * who       when      what
+ * --------  --------  ----------------------------------------------
+ * pardo     24/03/09  created
+ */
 
 #include "ATMRefractiveIndex.h"
 
-namespace atm {
+#include <stdio.h>
+#include <iostream>
+#include <math.h>
+#include <string>
+#include <vector>
 
-  // Constructors 
+using namespace std;
 
-  
+namespace atm
+{
+
+  // Constructors
+
+
   RefractiveIndex::RefractiveIndex(){ }
-  
+
   RefractiveIndex::~RefractiveIndex()
   {
     void rmRefractiveIndex();
   }
-  
+
   complex<double> RefractiveIndex::getRefractivity_o2(double temperature, double pressure, double wvpressure, double frequency){
 
     static const double abun_18o=0.0020439;
     static const double abun_17o=0.0003750;
     static const double o2_mixing_ratio=0.2092;
-    
-    return (mkSpecificRefractivity_16o16o(temperature,pressure,wvpressure,frequency)*(1.0-2.0*(abun_18o+abun_17o))*
-	    (1.0-exp(-1556.38*1.43/temperature))+
-	    mkSpecificRefractivity_16o16o_vib(temperature,pressure,wvpressure,frequency)*(1.0-2.0*(abun_18o+abun_17o))*
-	    exp(-1556.38*1.43/temperature)+
-	    mkSpecificRefractivity_16o18o(temperature,pressure,wvpressure,frequency)*2.0*abun_18o+
-	    //mkSpecificRefractivity_16o18o(temperature,pressure,wvpressure,frequency)*2.0*abun_17o)*
-	    mkSpecificRefractivity_16o17o(temperature,pressure,wvpressure,frequency)*2.0*abun_17o)*
+
+    complex<double> ccc = (mkSpecificRefractivity_16o16o(temperature,pressure,wvpressure,frequency)*(1.0-2.0*(abun_18o+abun_17o))*
+			   (1.0-exp(-1556.38*1.43/temperature))+
+			   mkSpecificRefractivity_16o16o_vib(temperature,pressure,wvpressure,frequency)*(1.0-2.0*(abun_18o+abun_17o))*
+			   exp(-1556.38*1.43/temperature)+
+			   mkSpecificRefractivity_16o18o(temperature,pressure,wvpressure,frequency)*2.0*abun_18o+
+			   mkSpecificRefractivity_16o17o(temperature,pressure,wvpressure,frequency)*2.0*abun_17o)*
       o2_mixing_ratio*pressure*100.0/(1.380662e-23*temperature);
+
+    //      if(frequency<143&&frequency>142.21){cout << "O2: " << frequency << "  " << ccc << "  " << pressure <<  endl;}
+
+    return ccc;
+
   }
 
   complex<double> RefractiveIndex::getRefractivity_h2o(double temperature, double pressure, double wvpressure, double frequency){
 
     static const double abun_18o=0.0020439;
     static const double abun_17o=0.0003750;
-    static const double o2_mixing_ratio=0.2092;
     static const double abun_D=0.000298444;
     static const double mmol_h2o=18.005059688;
-    
+
     return (mkSpecificRefractivity_hh16o(temperature,pressure,wvpressure,frequency)*(1-abun_18o-abun_17o-2.0*abun_D)*
 	    (1.0-exp(-2322.92/temperature))+
 	    mkSpecificRefractivity_hh16o_v2(temperature,pressure,wvpressure,frequency)*(1-abun_18o-abun_17o-2.0*abun_D)*
@@ -54,14 +87,16 @@ namespace atm {
 
     static const double abun_18o=0.0020439;
     static const double abun_17o=0.0003750;
-    
-    return (mkSpecificRefractivity_16o16o16o(temperature,pressure,frequency)+
-	    mkSpecificRefractivity_16o16o17o(temperature,pressure,frequency)*(2*abun_17o)+
-	    mkSpecificRefractivity_16o16o18o(temperature,pressure,frequency)*(2*abun_18o)+
-	    mkSpecificRefractivity_16o17o16o(temperature,pressure,frequency)*(abun_17o)+
-	    mkSpecificRefractivity_16o18o16o(temperature,pressure,frequency)*(abun_18o))
-	    /(1.0+3.0*(abun_18o+abun_17o));  // m^2
-    
+
+    complex<double> ccc =  (mkSpecificRefractivity_16o16o16o(temperature,pressure,frequency)+
+			    mkSpecificRefractivity_16o16o17o(temperature,pressure,frequency)*(2*abun_17o)+
+			    mkSpecificRefractivity_16o16o18o(temperature,pressure,frequency)*(2*abun_18o)+
+			    mkSpecificRefractivity_16o17o16o(temperature,pressure,frequency)*(abun_17o)+
+			    mkSpecificRefractivity_16o18o16o(temperature,pressure,frequency)*(abun_18o))
+      /(1.0+3.0*(abun_18o+abun_17o));  // m^2
+
+    return ccc;
+
 }
 
 
@@ -71,9 +106,9 @@ namespace atm {
     // temp = tt.get("K");
     double dv0;
     double dv;
-    
+
     dv0=dv0_lines*pr*pow((300/temp),texp_lines); // EN GHz
-    
+
     double beta_dop=4.30e-7*nu*pow((temp/mmol),0.5);
     if((dv0/beta_dop)<1.25){
       dv=0.535*dv0+pow((0.217*pow(dv0,2)+0.6931*pow(beta_dop,2)),0.5);   // "Atmospheric Remote Sensing", Janssen, pag. 59
@@ -85,7 +120,7 @@ namespace atm {
 
 
   double RefractiveIndex::linebroadening_o2(double nu, double temp, double pr, double eh2o, double mmol, double ensanche1, double ensanche2){
-    
+
     // pr = pp.get("mb");
     // eh2o = ph2o.get("mb");
     // temp = tt.get("K");
@@ -96,14 +131,14 @@ namespace atm {
     dv0=1e-3*ensanche1*((pr-eh2o)*pow(300/temp,ensanche2)+1.1*eh2o*300/temp);             // EN GHz
 
     double beta_dop=4.30e-7*nu*pow((temp/mmol),0.5);
-    
+
     if((dv0/beta_dop)<1.25){
       dv=0.535*dv0+pow((0.217*pow(dv0,2)+0.6931*pow(beta_dop,2)),0.5);   // "Atmospheric Remote Sensing", Janssen, pag. 59
       //      cout << pp.get("mb") << "mb: usando beta_dop" << endl;
     }else{
       dv=dv0;
     }
-    
+
     return dv;   // in GHz
 
   }
@@ -129,12 +164,12 @@ namespace atm {
     // temp = tt.get("K");
     double dv0;
     double dv;
-    
+
 
     if(ensanche2>0){
       dv0=1e-3*ensanche1*((pr-eh2o)*pow(300/temp,ensanche3)+ensanche2*eh2o*pow(300.0/temp,ensanche4));             // EN GHz
     }else{
-      dv0=1e-3*ensanche1*((pr-eh2o)*pow(300/temp,0.68)+4.50*eh2o*pow(300.0/temp,0.80));             // EN GHz      
+      dv0=1e-3*ensanche1*((pr-eh2o)*pow(300/temp,0.68)+4.50*eh2o*pow(300.0/temp,0.80));             // EN GHz
     }
 
     double beta_dop=3.58e-7*nu*pow((temp/mmol),0.5);
@@ -146,7 +181,7 @@ namespace atm {
       dv=dv0;
     }
 
-    //    cout << nu.get("GHz") << "  " << pr << "  " <<  eh2o << "  " << dv << endl; 
+    //    cout << nu.get("GHz") << "  " << pr << "  " <<  eh2o << "  " << dv << endl;
 
     return dv; // GHz
   }
@@ -182,16 +217,16 @@ namespace atm {
     double aa=dv2v2+vl2;
     double a1=aa-vvl;
     double a2=aa+vvl;
-    
-    double fv=((dv-(vl-v)*itf)/a1+(dv-(vl+v)*itf)/a2);	        //   ! line profile (imaginary) 
+
+    double fv=((dv-(vl-v)*itf)/a1+(dv-(vl+v)*itf)/a2);	        //   ! line profile (imaginary)
                                                                 //   !          in 1/frec units
     double frv=((vl-v+lf)/a1-(vl+v+lf)/a2);                     //   ! delay profile (real part)
-    
+
     return complex<double> (frv,fv)*(v/vl);                              // GHz^-1*GHz (no units)
 
   }
 
-  
+
   complex<double>  RefractiveIndex::mkSpecificRefractivity_n2o(double tt, double pp, double nu){
 
     // tt in K, pp in mb, nu in GHz
@@ -208,12 +243,12 @@ namespace atm {
 
     static const double el[39]={
       0.0,   1.2,   3.6,   7.3,  12.1,
-      18.1,  25.4,  33.7,  43.4,  54.3,  
-      66.3,  79.6,  94.0, 109.7, 126.6, 
-      144.7, 164.0, 184.5, 206.2, 229.1, 
-      253.2, 278.5, 305.0, 332.7, 361.7, 
-      391.8, 423.1, 455.7, 489.4, 524.3, 
-      560.5, 597.8, 636.4, 676.1, 717.1, 
+      18.1,  25.4,  33.7,  43.4,  54.3,
+      66.3,  79.6,  94.0, 109.7, 126.6,
+      144.7, 164.0, 184.5, 206.2, 229.1,
+      253.2, 278.5, 305.0, 332.7, 361.7,
+      391.8, 423.1, 455.7, 489.4, 524.3,
+      560.5, 597.8, 636.4, 676.1, 717.1,
       759.3, 802.6, 847.2, 893.0};
 
     static const double flin[39]={
@@ -226,7 +261,7 @@ namespace atm {
       0.310E+02,0.320E+02,0.330E+02,0.340E+02,0.350E+02,
       0.360E+02,0.370E+02,0.380E+02,0.390E+02};
 
-    static const int ifin1[500]={
+    static const unsigned int ifin1[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   3,   3,   3,   3,   3,   3,   3,
@@ -278,7 +313,7 @@ namespace atm {
       39,  39,  39,  39,  39,  39,  39,  39,  39,  39,
       39,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini1[500]={
+    static const unsigned int ini1[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   3,   3,   3,
@@ -330,7 +365,7 @@ namespace atm {
       39,  39,  39,  39,  39,  39,  39,  39,  39,  39,
       39,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ifin2[500]={
+    static const unsigned int ifin2[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   3,   3,   3,   3,   3,   3,
@@ -382,7 +417,7 @@ namespace atm {
       39,  39,  39,  39,  39,  39,  39,  39,  39,  39,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini2[500]={
+    static const unsigned int ini2[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   3,   3,   3,   3,
@@ -434,7 +469,7 @@ namespace atm {
       39,  39,  39,  39,  39,  39,  39,  39,  39,  39,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ifin3[500]={
+    static const unsigned int ifin3[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   3,   3,   3,   3,   3,
@@ -486,7 +521,7 @@ namespace atm {
       39,  39,  39,  39,  39,  39,  39,  39,  39,  39,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini3[500]={
+    static const unsigned int ini3[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   3,   3,   3,   3,   3,
@@ -540,7 +575,7 @@ namespace atm {
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.161;  //Debyes
     static const double mmol=44.0;
 
@@ -550,22 +585,22 @@ namespace atm {
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -585,27 +620,27 @@ namespace atm {
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening(fre[i],tt,pp,mmol,0.0025,0.76),0.0);
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i]; 
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i];
 
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
-	                                                                                                  // real part: delay in rad*cm^2    
+	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-	
+
       }
-     
+
     }
- 
+
   }
 
 
@@ -615,7 +650,7 @@ namespace atm {
     static const double flin[8] = {0.100E+01,0.200E+01,0.300E+01,0.400E+01,0.500E+01,0.600E+01,0.700E+01,0.800E+01};
     static const double el[8] = {0.0, 5.5,  16.6,  33.2,  55.3,83.0, 116.2, 154.9};
 
-    static const int ifin1[500] ={1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ifin1[500] ={1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -666,7 +701,7 @@ namespace atm {
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini1[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ini1[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -718,7 +753,7 @@ namespace atm {
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
 
-    static const int ifin2[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ifin2[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -769,7 +804,7 @@ namespace atm {
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini2[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ini2[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -820,7 +855,7 @@ namespace atm {
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ifin3[500]={ 1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ifin3[500]={ 1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -871,7 +906,7 @@ namespace atm {
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 			   0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini3[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ini3[500]={  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 			   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -924,7 +959,7 @@ namespace atm {
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.112;  //Debyes
     static const double mmol=28.0;
 
@@ -934,22 +969,22 @@ namespace atm {
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -969,50 +1004,59 @@ namespace atm {
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening(fre[i],tt,pp,mmol,0.0025,0.76),0.0);
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i]; 
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i];
 
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
-	                                                                                                  // real part: delay in rad*cm^2    
+	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-	
+
       }
-     
+
     }
- 
+
   }
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_cnth2o(double tt, double pp, double eh2o, double nu){
 
     //     cnth2o, empirical
 
-    
+
     double t300=300/tt;
     double eee=eh2o/1013.0;
     double ppp=(pp-eh2o)/1013.0;
-      
-    double cnth2o=0.0315*pow((nu/225),2)*(eee*ppp)*pow(t300,3);
-    
+
+    double cnth2o;
+
+    if(nu<900){
+      cnth2o=0.0315*pow((nu/225),2)*(eee*ppp)*pow(t300,3);
+    }else{
+      cnth2o=0.0315*pow((nu/225),1.8)*(eee*ppp)*pow(t300,3)-
+	0.0315*pow((900/225),1.8)*(eee*ppp)*pow(t300,3)+
+	0.0315*pow((900/225),2.0)*(eee*ppp)*pow(t300,3);
+    }
+
     double delayh2o=(4.163*t300+0.239)*eh2o*t300*nu*1.2008e-3/57.29578;
 		     //		     eh2o*pow(t300,2.5)*.791e-6*pow(nu.get("GHz"),2)*nu.get("GHz")*1.2008e-3/57.29578;
 
-    return complex<double> (delayh2o,cnth2o);       // (  rad m^-1 , m^-1 ) 
+    return complex<double> (delayh2o,cnth2o);       // (  rad m^-1 , m^-1 )
 
   }
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_cntdry(double tt, double pp, double eh2o, double nu){
 
     //     cntdry, empirical
+
 
     double t300=300/tt;
     double ppp=(pp-eh2o);
@@ -1024,14 +1068,30 @@ namespace atm {
 
 
     double cntair=(nsec1+0.85633*nsec2)*nu*0.1820/4.34e3;   // From fitting FTS data, JQSRT, Pardo et al. 2001
-      
-    double delaydry=(0.2588*ppp*t300-6.14e-5*ppp*pow(t300,2)*pow(nu,2)/(pow(nu,2)+pow(gamma0,2)))*nu*1.2008e-3/57.29578;
 
-    return complex<double> (delaydry,cntair);     // (  rad m^-1 , m^-1 ) 
+    double delaydry=(0.2588*ppp*t300
+		     -6.14e-5*ppp*pow(t300,2)*pow(nu,2)/(pow(nu,2)+pow(gamma0,2))
+		     )*nu*1.2008e-3/57.29578;
+
+
+//     double delaydry_deltap=(0.2588*(pp+1.0-eh2o)*t300
+// 			    -6.14e-5*(pp+1.0-eh2o)*pow(t300,2)*pow(nu,2)/(pow(nu,2)+pow(gamma0,2))
+// 		     )*nu*1.2008e-3/57.29578;
+
+//     double delaydry_deltat=(0.2588*ppp*(300/(tt+1.0))
+// 		     -6.14e-5*ppp*pow((300/(tt+1.0)),2)*pow(nu,2)/(pow(nu,2)+pow(gamma0,2))
+// 		     )*nu*1.2008e-3/57.29578;
+
+
+    //    cout << "tt=" << tt << " K" << " ppp=" << ppp << " mb" << " delaydry=" << delaydry << "  " << delaydry_deltap/delaydry << "  " << delaydry_deltat/delaydry << endl;
+
+
+
+    return complex<double> (delaydry,cntair);     // (  rad m^-1 , m^-1 )
 
   }
 
-      
+
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hh16o_v2(double tt, double pp, double eh2o, double nu){
 
@@ -1246,12 +1306,12 @@ namespace atm {
       {2.788,4.50,0.68,0.80},{2.001,4.50,0.68,0.80},{2.838,4.50,0.68,0.80},
       {1.808,4.50,0.68,0.80},{1.657,4.50,0.68,0.80},{1.172,4.50,0.68,0.80},
       {1.166,4.50,0.68,0.80},{1.423,4.50,0.68,0.80},{1.382,4.50,0.68,0.80},
-      {2.681,4.50,0.68,0.80},{1.418,4.50,0.68,0.80},{1.225,4.50,0.68,0.80}, 
+      {2.681,4.50,0.68,0.80},{1.418,4.50,0.68,0.80},{1.225,4.50,0.68,0.80},
       {1.252,4.50,0.68,0.80},{1.527,4.50,0.68,0.80},{2.524,4.50,0.68,0.80},
       {1.716,4.50,0.68,0.80},{2.424,4.50,0.68,0.80},{1.986,4.50,0.68,0.80},
       {2.368,4.50,0.68,0.80},{2.039,4.50,0.68,0.80},{3.096,4.50,0.68,0.80},
       {1.924,4.50,0.68,0.80},{2.933,4.50,0.68,0.80},{2.921,4.50,0.68,0.80},
-      {2.767,4.50,0.68,0.80},{2.518,4.50,0.68,0.80},{2.453,4.50,0.68,0.80}, 
+      {2.767,4.50,0.68,0.80},{2.518,4.50,0.68,0.80},{2.453,4.50,0.68,0.80},
       {2.397,4.50,0.68,0.80},{2.445,4.50,0.68,0.80},{2.442,4.50,0.68,0.80},
       {1.278,4.50,0.68,0.80},{1.326,4.50,0.68,0.80},{1.489,4.50,0.68,0.80},
       {1.648,4.50,0.68,0.80},{2.811,4.50,0.68,0.80},{2.877,4.50,0.68,0.80},
@@ -1311,7 +1371,7 @@ namespace atm {
       {1.477,4.50,0.68,0.80},{1.314,4.50,0.68,0.80},{1.110,4.50,0.68,0.80},
       {2.847,4.50,0.68,0.80},{ .912,4.50,0.68,0.80},{1.873,4.50,0.68,0.80},
       {2.560,4.50,0.68,0.80},{1.042,4.50,0.68,0.80},{1.938,4.50,0.68,0.80},
-      {2.513,4.50,0.68,0.80},{ .687,4.50,0.68,0.80},{ .669,4.50,0.68,0.80}, 
+      {2.513,4.50,0.68,0.80},{ .687,4.50,0.68,0.80},{ .669,4.50,0.68,0.80},
       {1.944,4.50,0.68,0.80},{1.320,4.50,0.68,0.80},{ .938,4.50,0.68,0.80},
       { .684,4.50,0.68,0.80},{ .758,4.50,0.68,0.80},{ .838,4.50,0.68,0.80},
       {1.444,4.50,0.68,0.80},{ .681,4.50,0.68,0.80},{2.625,4.50,0.68,0.80},
@@ -1329,7 +1389,7 @@ namespace atm {
       {1.145,4.50,0.68,0.80},{ .405,4.50,0.68,0.80},{ .400,4.50,0.68,0.80},
       {2.592,4.50,0.68,0.80},{1.190,4.50,0.68,0.80},{1.181,4.50,0.68,0.80},
       { .829,4.50,0.68,0.80},{2.850,4.50,0.68,0.80},{ .817,4.50,0.68,0.80},
-      {1.716,4.50,0.68,0.80},{2.388,4.50,0.68,0.80},{ .391,4.50,0.68,0.80}, 
+      {1.716,4.50,0.68,0.80},{2.388,4.50,0.68,0.80},{ .391,4.50,0.68,0.80},
       { .539,4.50,0.68,0.80},{1.255,4.50,0.68,0.80},{2.681,4.50,0.68,0.80},
       { .382,4.50,0.68,0.80},{ .666,4.50,0.68,0.80},{2.143,4.50,0.68,0.80},
       {2.175,4.50,0.68,0.80},{ .337,4.50,0.68,0.80},{ .334,4.50,0.68,0.80},
@@ -1429,7 +1489,7 @@ namespace atm {
       3.00,  3.00,  1.00,  3.00,  1.00};
 
 
-    static const int ifin1[800]={
+    static const unsigned int ifin1[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -1511,7 +1571,7 @@ namespace atm {
       44,  45,  45,  45,  45,  45,  45,  45,  45,  45,
       45,  45,  45,  45,  45,  45,  45,  45,  45,  45};
 
-    static const int ini1[800]={
+    static const unsigned int ini1[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -1593,7 +1653,7 @@ namespace atm {
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44,
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44};
 
-    static const int ifin2[800]={
+    static const unsigned int ifin2[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   2,
@@ -1675,7 +1735,7 @@ namespace atm {
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44,
       44,  45,  45,  45,  45,  45,  45,  45,  45,  45};
 
-    static const int ini2[800]={
+    static const unsigned int ini2[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -1757,7 +1817,7 @@ namespace atm {
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44,
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44};
 
-    static const int ifin3[800]={
+    static const unsigned int ifin3[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -1839,7 +1899,7 @@ namespace atm {
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44,
       44,  44,  44,  44,  45,  45,  45,  45,  45,  45};
 
-    static const int ini3[800]={
+    static const unsigned int ini3[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -1920,11 +1980,11 @@ namespace atm {
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44,
       44,  44,  44,  44,  44,  44,  44,  44,  44,  44,
       44,  44,  44,  44,  44,  44,  44,  45,  45,  45};
-      
+
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.82332;  //Debyes
 
     double q=0.034256116*pow(tt,1.5);    // Q(300 K)=178.120 JPL Line Catalog
@@ -1933,23 +1993,23 @@ namespace atm {
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
-  
+
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -1969,26 +2029,26 @@ namespace atm {
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening_water(fre[i],tt,pp,eh2o,ensanche[i][0],ensanche[i][1],ensanche[i][2],ensanche[i][3]),0.0);
 
-	  lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
+	  lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
 
           lshapeacum=lshapeacum+lshape;
-	  
-	}
-	
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    
 
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)  // (  rad m^2 , m^2 )  
-	
+	}
+
+	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
+	                                                                    // real part: delay in rad*cm^2
+
+	return lshapeacum*1e-4;    // to give it in SI units (m^2)  // (  rad m^2 , m^2 )
+
       }
-     
+
     }
- 
+
   }
 
 
@@ -2000,8 +2060,8 @@ namespace atm {
 				    325.152822,   380.197554,   390.188508,   437.365786,
 				    439.141666,   443.037657,   448.001261,   470.880416,
 				    474.688922,   488.491469,   503.499954,   504.414095,
-				    556.936071,   620.701223,   
-				    752.033047,      
+				    556.936071,   620.701223,
+				    752.033047,
 				    906.190476,   916.171369,   970.314874,   987.926855,
 				    1001.293579, 1074.447510, 1074.450439, 1097.364624, 1113.343506,
 				    1146.620850, 1153.125610, 1153.447754, 1158.324585, 1162.914429,
@@ -2109,8 +2169,8 @@ namespace atm {
 				    .90700E-01,  .12300E+00,  .65100E-01,  .88400E-01,
 				    .10100E+00,  .88400E-01,  .13200E+00,  .10200E+00,
 				    .11800E+00,  .35900E-01,  .78600E-01,  .78600E-01,
-				    .15000E+01,  .12200E+00,  
-				    .20700E+01,  
+				    .15000E+01,  .12200E+00,
+				    .20700E+01,
 				    .13200E+00,  .16300E+00,  .26400E+00,  .75600E+00,
 				    .8270E-01,  .6070E-01,  .6070E-01,  .2180E+01,  .1000E+01,
 				    .2470E-01,  .3020E+00,  .5130E-01,  .2830E+00,  .2540E+01,
@@ -2217,8 +2277,8 @@ namespace atm {
 				   454.4,     305.2,    2194.5,    1503.7,
 				   1067.7,    1503.7,    410.7,    1067.8,
 				   702.4,     843.9,    2006.9,    2007.0,
-				   34.3,     702.3,   
-				   100.8,    
+				   34.3,     702.3,
+				   100.8,
 				   1511.1,     410.9,     552.3,    53.5,
 				   4620.445, 3892.334, 3892.334,  196.834,    0.032,
 				   1070.771,  194.158, 2553.643,  878.209,  249.489,
@@ -2328,105 +2388,105 @@ namespace atm {
 					   {2.602,5.04,0.69,0.72},{1.612,3.98,0.61,0.43},{1.612,4.01,0.61,0.45},
 					   {3.210,4.11,0.69,1.00},{2.438,4.68,0.71,0.68},{3.060,4.09,0.68,0.84},
 					   {2.408,4.70,0.70,0.53},{2.670,4.78,0.70,0.78},{2.550,4.94,0.64,0.67},
-					   {2.985,4.55,0.68,0.90},  
+					   {2.985,4.55,0.68,0.90},
 					   {1.216},{ .823},{ .823},
 					   {2.877},{2.811},{2.273},
-					   {2.767},{1.702},{2.039}, 
+					   {2.767},{1.702},{2.039},
 					   {2.702},{1.418},{1.716},
 					   {1.527},{2.732},{1.225},
 					   {1.252},{2.794},{ .758},
 					   { .758},{1.867},{1.986},
-					   {2.445},{2.453},{1.092}, 
+					   {2.445},{2.453},{1.092},
 					   {1.095},{2.764},{2.442},
 					   { .994},{ .994},{2.397},
 					   {2.841},{2.773},{2.986},
 					   {2.897},{ .914},{ .914},
-					   {2.690},{2.072},{2.687}, 
+					   {2.690},{2.072},{2.687},
 					   {2.693},{ .838},{ .838},
 					   {2.664},{2.015},{1.758},
 					   {1.489},{2.078},{1.409},
 					   {2.619},{2.714},{1.278},
-					   {1.326},{1.648},{2.590}, 
+					   {1.326},{1.648},{2.590},
 					   {1.151},{1.160},{2.590},
 					   {2.770},{2.131},{2.942},
 					   {1.054},{1.057},{2.498},
 					   {2.664},{2.107},{2.563},
-					   {2.524},{2.450},{2.450}, 
+					   {2.524},{2.450},{2.450},
 					   { .965},{ .965},{2.181},
 					   {1.557},{2.427},{2.776},
 					   {2.359},{2.584},{2.397},
 					   {2.137},{1.708},{2.501},
-					   {2.270},{2.181},{1.062}, 
+					   {2.270},{2.181},{1.062},
 					   {1.471},{1.711},{2.302},
 					   {2.847},{1.281},{2.584},
 					   {2.302},{1.344},{1.145},
 					   {1.163},{2.894},{1.719},
-					   {1.048},{1.051},{2.172}, 
+					   {1.048},{1.051},{2.172},
 					   {2.101},{2.149},{2.314},
 					   {2.489},{2.616},{2.779},
 					   {2.684},{ .953},{ .953},
 					   {1.995},{2.270},{2.149},
-					   {2.069},{1.752},{2.477}, 
+					   {2.069},{1.752},{2.477},
 					   {2.320},{1.927},{1.669},
 					   {2.107},{2.595},{2.237},
 					   {1.980},{1.989},{2.051},
 					   {1.935},{2.039},{ .758},
-					   {2.332},{1.388},{1.332}, 
+					   {2.332},{1.388},{1.332},
 					   {1.971},{2.838},{1.731},
 					   {1.222},{1.779},{1.089},
 					   {1.107},{1.329},{1.657},
 					   {1.832},{ .983},{1.861},
-					   { .985},{2.288},{1.601}, 
+					   { .985},{2.288},{1.601},
 					   {1.850},{1.888},{1.666},
 					   {1.728},{2.075},{1.684},
 					   {2.163},{2.492},{1.782},
 					   {1.782},{1.642},{1.826},
-					   {2.184},{1.622},{1.847}, 
+					   {2.184},{1.622},{1.847},
 					   {1.758},{2.445},{2.797},
 					   {1.965},{ .542},{2.036},
 					   {1.859},{1.264},{1.663},
 					   {1.708},{1.752},{1.607},
-					   {1.737},{2.823},{ .962}, 
+					   {1.737},{2.823},{ .962},
 					   {2.486},{1.654},{1.429},
 					   {1.095},{1.400},{1.432},
 					   {1.533},{ .977},{1.921},
 					   {1.471},{1.009},{ .873},
-					   {1.367},{1.645},{ .876}, 
+					   {1.367},{1.645},{ .876},
 					   {1.672},{2.717},{1.492},
 					   {1.311},{2.255},{1.240},
 					   {1.347},{1.364},{1.814},
 					   {1.438},{1.604},{ .408},
-					   {1.216},{1.169},{2.483}, 
+					   {1.216},{1.169},{2.483},
 					   {1.036},{2.456},{1.734},
 					   {2.083},{1.225},{2.557},
 					   { .678},{1.666},{1.577},
 					   {1.554},{1.453},{1.492},
-					   {1.258},{1.462},{1.302}, 
+					   {1.258},{1.462},{1.302},
 					   {1.477},{1.293},{1.423},
 					   {1.314},{ .935},{1.539},
 					   {1.246},{1.240},{1.885},
 					   {1.110},{ .968},{ .829},
-					   {1.033},{2.350},{ .894}, 
+					   {1.033},{2.350},{ .894},
 					   { .912},{1.246},{1.065},
 					   { .926},{1.204},{1.421},
 					   { .977},{2.264},{ .764},
 					   {1.506},{2.267},{1.074},
-					   {1.391},{1.042},{2.560}, 
+					   {1.391},{1.042},{2.560},
 					   {1.281},{ .814},{1.684},
 					   { .491},{2.847},{ .657},
 					   {1.418},{1.278},{ .923},
 					   { .909},{ .802},{2.513},
-					   {1.341},{ .938},{ .684}, 
+					   {1.341},{ .938},{ .684},
 					   {1.057},{1.057},{1.350},
 					   { .985},{1.160},{1.204},
 					   {1.199},{ .838},{1.305},
 					   {1.270},{1.284},{1.302},
-					   { .808},{2.163},{ .678}, 
+					   { .808},{2.163},{ .678},
 					   { .681},{1.873},{ .574},
 					   { .592},{ .681},{ .787},
 					   { .917},{ .873},{2.625},
 					   { .527},{ .758},{ .938},
-					   { .956},{ .382},{ .811}, 
+					   { .956},{ .382},{ .811},
 					   {1.320},{ .530},{ .687},
 					   { .669},{ .870},{1.900},
 					   {1.938},{ .843},{2.104},
@@ -2510,7 +2570,7 @@ namespace atm {
 					   {1.219},{1.344},{1.335},
 					   { .255},{ .263}};
 
-    static const double gl[522] =       {3.00,1.00,  3.00,                          
+    static const double gl[522] =       {3.00,1.00,  3.00,
 					 1.00,3.00,1.00,1.00,
 					 3.00,3.00,3.00,1.00,
 					 1.00,1.00,3.00,1.00,
@@ -2618,7 +2678,7 @@ namespace atm {
 					 1.00,  3.00,  1.00,  3.00,  3.00,
 					 3.00,  1.00,  3.00,  1.00,  3.00};
 
-    static const int ifin1[800] = { 226, 226, 226, 226, 226, 227, 228, 228, 228, 228,
+    static const unsigned int ifin1[800] = { 226, 226, 226, 226, 226, 227, 228, 228, 228, 228,
 				    229, 229, 229, 229, 229, 229, 229, 229, 230, 230,
 				    230, 230, 230, 230, 230, 230, 230, 230, 230, 230,
 				    230, 230, 230, 230, 230, 230, 231, 231, 231, 231,
@@ -2699,7 +2759,7 @@ namespace atm {
 				    345, 345, 345, 345, 345, 346, 346, 346, 347, 347,
 				    347, 347, 348, 348, 348, 348, 348, 348, 348, 348};
 
-    static const int ini1[800]={   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ini1[800]={   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -2780,7 +2840,7 @@ namespace atm {
 				   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				   1,   1,   1,   1,   1,   1,   1,   1,   1,   1};
 
-    static const int ifin2[800]={  75,  75,  75,  75,  75,  75,  75,  75,  76,  76,
+    static const unsigned int ifin2[800]={  75,  75,  75,  75,  75,  75,  75,  75,  76,  76,
 				   76,  77,  77,  78,  78,  78,  78,  78,  78,  78,
 				   79,  79,  79,  79,  79,  79,  79,  79,  79,  79,
 				   79,  79,  79,  79,  79,  79,  79,  80,  80,  80,
@@ -2861,7 +2921,7 @@ namespace atm {
 				   169, 169, 169, 169, 169, 170, 170, 170, 170, 170,
 				   170, 170, 170, 170, 170, 170, 170, 170, 170, 170};
 
-    static const int ini2[800]= {   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ini2[800]= {   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -2942,7 +3002,7 @@ namespace atm {
 				    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				    1,   1,   1,   1,   1,   1,   1,   1,   1,   1};
 
-    static const int ifin3[800] = {   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ifin3[800] = {   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				      1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				      1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				      1,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -3023,7 +3083,7 @@ namespace atm {
 				      52,  53,  53,  53,  53,  53,  53,  53,  53,  53,
 				      53,  53,  53,  53,  53,  53,  53,  53,  53,  53};
 
-    static const int ini3[800] = {   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+    static const unsigned int ini3[800] = {   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				 1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				 1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 				 1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -3104,10 +3164,10 @@ namespace atm {
 				 52,  52,  52,  52,  52,  52,  52,  52,  52,  52,
 				 52,  53,  53,  53,  53,  53,  53,  53,  53,  53};
 
-  
+
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.855;  //Debyes
 
     double q=0.034278209*pow(tt,1.5);    // Q(300 K)=178.120 JPL Line Catalog
@@ -3116,24 +3176,28 @@ namespace atm {
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
-  
-    if(nu>999.9){
-      
-      return complex<double> (0.0,0.0);
-      
+
+
+    if(nu>1595.9){
+
+      ini=0;
+      ifin=521;
+
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
+	if(ini>2){ini=ini-2;}
+	if(ifin<520){ifin=ifin+2;}
       }else{
       	if(pp<300){
       	  ini=ini2[vp];
@@ -3147,38 +3211,46 @@ namespace atm {
       if(ini>0){ini=ini-1;}else{ifin=0;}
       if(ifin>0){ifin=ifin-1;}else{ifin=0;}
 
-      if(ifin==0||ifin<ini){
-
-	return complex<double> (0.0,0.0);
-
-      }else{
-	
-	for(unsigned int i=ini; i<ifin+1; i++){
-
-	  lshape=lineshape(nu,fre[i],linebroadening_water(fre[i],tt,pp,eh2o,ensanche[i][0],ensanche[i][1],ensanche[i][2],ensanche[i][3]),0.0);
-
-	  lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-
-          lshapeacum=lshapeacum+lshape;
-	  
-	}
-	
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    
-
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
-	
-      }
-     
     }
- 
+
+
+    if(ifin==0||ifin<ini){
+
+      return complex<double> (0.0,0.0);
+
+    }else{
+
+      //      cout << "nu=" << nu << " GHz: including lines from " << fre[ini] << " GHz to " << fre[ifin] << " GHz" << endl;
+
+
+      for(unsigned int i=ini; i<ifin+1; i++){
+
+	//  	for(unsigned int i=0; i<522; i++){
+
+	lshape=lineshape(nu,fre[i],linebroadening_water(fre[i],tt,pp,eh2o,ensanche[i][0],ensanche[i][1],ensanche[i][2],ensanche[i][3]),0.0);
+
+	lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
+	lshapeacum=lshapeacum+lshape;
+
+      }
+
+      lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
+      // real part: delay in rad*cm^2
+
+      return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+
+    }
+
+
+
   }
 
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hh17o(double tt, double pp, double eh2o, double nu){
 
 
-    static const double fre[16]={ 
+    static const double fre[16]={
       13.522059,194.001224,323.819514,385.783293,
       482.981450,481.712039,489.015848,469.795466,
       514.973492,507.838397,552.020778,658.391131,
@@ -3188,7 +3260,7 @@ namespace atm {
       3.,1.,1.,3.,1.,3.,3.,
       3.,1.,1.,3.,3.,1.,1.,1.,1.};
 
-    static const double flin[16]={ 
+    static const double flin[16]={
       .0548,.101,.088,.121,.0891,.0102,.0891,
       .132,.102,.119,1.5,.122,2.073,.164,.262,.760};
 
@@ -3200,7 +3272,7 @@ namespace atm {
     static const double dv0[16]={
       2.85,2.68,3.03,3.19,1.5,1.94,1.51,
       2.47,1.89,2.07,3.33,2.28,3.13,2.59,2.48,3.09};
-    
+
     static const double dvlm[16]={
       13.68,14.49,15.21,15.84,7.94,10.44,8.13,14.24,
       10.56,11.95,14.66,12.78,13.93,14.06,14.16,15.20};
@@ -3210,7 +3282,7 @@ namespace atm {
       .380,.38,.645,.6,.69,.676,.56,.66};
 
 
-    static const int ifin1[500]={
+    static const unsigned int ifin1[500]={
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -3262,7 +3334,7 @@ namespace atm {
       16,  16,  16,  16,  16,  16,  16,  16,  16,  16,
       16,  16,  16,  16,  16,  16,  16,  16,  16,  16};
 
-    static const int ini1[500]={
+    static const unsigned int ini1[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -3314,7 +3386,7 @@ namespace atm {
       14,  14,  14,  14,  14,  14,  14,  15,  15,  15,
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15};
 
-    static const int ifin2[500]={
+    static const unsigned int ifin2[500]={
       1,   1,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -3366,7 +3438,7 @@ namespace atm {
       15,  15,  15,  15,  15,  15,  15,  15,  15,  16,
       16,  16,  16,  16,  16,  16,  16,  16,  16,  16};
 
-    static const int ini2[500]={
+    static const unsigned int ini2[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -3418,7 +3490,7 @@ namespace atm {
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15,
       15,  15,  15,  15,  15,  15,  15,  15,  16,  16};
 
-    static const int ifin3[500]={
+    static const unsigned int ifin3[500]={
       1,   1,   1,   1,   1,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -3470,7 +3542,7 @@ namespace atm {
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15,
       15,  15,  16,  16,  16,  16,  16,   0,   0,   0};
 
-    static const int ini3[500]={
+    static const unsigned int ini3[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -3524,7 +3596,7 @@ namespace atm {
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.855;  //Debyes
 
     double q=0.034412578*pow(tt,1.5);   // Q(300 K)=178.813   JPL Line Catalog
@@ -3533,23 +3605,23 @@ namespace atm {
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
-  
+
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-      
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-      
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -3560,35 +3632,35 @@ namespace atm {
       	  ifin=ifin1[vp];
       	}
       }
-      
+
       if(ini>0){ini=ini-1;}else{ifin=0;}
       if(ifin>0){ifin=ifin-1;}else{ifin=0;}
 
-      
+
       if(ifin==0||ifin<ini){
-	
+
 	return complex<double> (0.0,0.0);
-	
+
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
-	  
+
 	  lshape=lineshape(nu,fre[i],linebroadening_hh18o_hh17o(tt,pp,eh2o,dv0[i],dvlm[i],temp_exp[i]),0.0);
-	  
-	  lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-	  
+
+	  lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    
+	                                                                    // real part: delay in rad*cm^2
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
-	
+
       }
-     
+
     }
- 
+
   }
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double pp, double eh2o, double nu){
@@ -3629,12 +3701,12 @@ namespace atm {
       837.3, 983.2, 537.7,   0.0, 537.7,1236.6,
       1024.2,1164.6, 216.1,  83.6};
 
-      static const double tr[58]={
+    /*      static const double tr[58]={
       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
       1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-      1,1,1,1,1,1};
-    
-    static const int ifin11[500]={
+      1,1,1,1,1,1}; */
+
+    static const unsigned int ifin11[500]={
       3,   4,   4,   4,   4,   4,   4,   4,   4,   4,
       4,   4,   4,   4,   4,   5,   5,   5,   5,   5,
       5,   5,   6,   6,   6,   6,   6,   6,   6,   6,
@@ -3686,7 +3758,7 @@ namespace atm {
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini11[500]={
+    static const unsigned int ini11[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   2,   2,   3,   3,   3,   3,   3,
       3,   4,   4,   4,   4,   4,   4,   4,   4,   4,
@@ -3738,7 +3810,7 @@ namespace atm {
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ifin21[500]={
+    static const unsigned int ifin21[500]={
       2,   2,   3,   3,   3,   3,   3,   3,   4,   4,
       4,   4,   4,   4,   4,   4,   4,   4,   4,   4,
       4,   4,   5,   5,   5,   5,   5,   5,   5,   6,
@@ -3790,7 +3862,7 @@ namespace atm {
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini21[500]={
+    static const unsigned int ini21[500]={
       1,   1,   1,   1,   1,   1,   2,   2,   3,   3,
       3,   3,   3,   3,   4,   4,   4,   4,   4,   4,
       4,   4,   4,   4,   4,   4,   4,   4,   5,   5,
@@ -3842,7 +3914,7 @@ namespace atm {
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ifin31[500]={
+    static const unsigned int ifin31[500]={
       1,   1,   2,   2,   3,   3,   3,   3,   3,   3,
       4,   4,   4,   4,   4,   4,   4,   4,   4,   4,
       4,   4,   4,   4,   5,   5,   5,   5,   5,   5,
@@ -3894,7 +3966,7 @@ namespace atm {
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini31[500]={
+    static const unsigned int ini31[500]={
       1,   1,   1,   1,   2,   2,   3,   3,   3,   3,
       3,   3,   4,   4,   4,   4,   4,   4,   4,   4,
       4,   4,   4,   4,   4,   4,   5,   5,   5,   5,
@@ -3946,7 +4018,7 @@ namespace atm {
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ifin12[500]={
+    static const unsigned int ifin12[500]={
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
       24,  25,  25,  25,  25,  25,  25,  25,  25,  25,
@@ -3997,8 +4069,8 @@ namespace atm {
       57,  57,  57,  57,  57,  57,  57,  57,  57,  57,
       57,  57,  58,  58,  58,  58,  58,  58,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   };
-    
-    static const int ini12[500]={
+
+    static const unsigned int ini12[500]={
       23,  23,  23,  23,  23,  23,  23,  23,  23,  23,
       23,  23,  23,  23,  23,  23,  23,  23,  23,  23,
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
@@ -4051,7 +4123,7 @@ namespace atm {
       57,  57,  57,  57,  57,  57,  57,  57,  57,  57};
 
 
-    static const int ifin22[500]={
+    static const unsigned int ifin22[500]={
       23,  23,  23,  23,  23,  23,  23,  24,  24,  24,
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
       24,  24,  24,  24,  24,  24,  24,  24,  25,  25,
@@ -4103,7 +4175,7 @@ namespace atm {
       57,  57,  57,  57,  57,  57,  57,  57,  57,  58,
       58,  58,  58,  58,  58,   0,   0,   0,   0,   0};
 
-    static const int ini22[500]={
+    static const unsigned int ini22[500]={
       23,  23,  23,  23,  23,  23,  23,  23,  23,  23,
       23,  23,  23,  24,  24,  24,  24,  24,  24,  24,
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
@@ -4155,7 +4227,7 @@ namespace atm {
       56,  56,  57,  57,  57,  57,  57,  57,  57,  57,
       57,  57,  57,  57,  57,  58,  58,  58,  58,  58};
 
-    static const int ifin32[500]={
+    static const unsigned int ifin32[500]={
       23,  23,  23,  23,  23,  23,  23,  23,  23,  24,
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
@@ -4207,7 +4279,7 @@ namespace atm {
       57,  57,  57,  57,  57,  57,  57,  57,  57,  57,
       57,  58,  58,  58,  58,  58,  58,   0,   0,   0};
 
-    static const int ini32[500]={
+    static const unsigned int ini32[500]={
       23,  23,  23,  23,  23,  23,  23,  23,  23,  23,
       23,  24,  24,  24,  24,  24,  24,  24,  24,  24,
       24,  24,  24,  24,  24,  24,  24,  24,  24,  24,
@@ -4260,7 +4332,7 @@ namespace atm {
       57,  57,  57,  58,  58,  58,  58,  58,  58,   0};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mua=0.657;  //Debyes
     static const double mub=1.732;  //Debyes
 
@@ -4270,25 +4342,25 @@ namespace atm {
     unsigned int ifin1, ifin2;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
-  
+
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-      
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-      
+
       if(pp<100){
-	ini1=ini31[vp]; 
+	ini1=ini31[vp];
 	ifin1=ifin31[vp];
-	ini2=ini32[vp]; 
+	ini2=ini32[vp];
 	ifin2=ifin32[vp];
       }else{
       	if(pp<300){
@@ -4303,58 +4375,58 @@ namespace atm {
       	  ifin2=ifin12[vp];
       	}
       }
-      
+
       if(ini1>0){ini1=ini1-1;}else{ifin1=0;}
       if(ifin1>0){ifin1=ifin1-1;}else{ifin1=0;}
       if(ini2>0){ini2=ini2-1;}else{ifin2=0;}
       if(ifin2>0){ifin2=ifin2-1;}else{ifin2=0;}
-      
+
 
       complex<double>  lshapeacum1(0.0,0.0);
 
       if(ifin1==0||ifin1<ini1){
-	
-	
+
+
       }else{
-	
+
 	for(unsigned int i=ini1; i<ifin1+1; i++){
-	  
+
 	  lshape=lineshape(nu,fre[i],0.003*pp*pow((300/tt),0.7),0.0);
-	  
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-	  
+
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
           lshapeacum1=lshapeacum1+lshape;
-	  
+
 	}
-	
+
 	lshapeacum1=lshapeacum1*(nu/pi)*(fac2fixed*pow(mua,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    	
+	                                                                    // real part: delay in rad*cm^2
       }
 
       complex<double>  lshapeacum2(0.0,0.0);
 
       if(ifin2==0||ifin2<ini2){
-	
-	
+
+
       }else{
-	
+
 	for(unsigned int i=ini2; i<ifin2+1; i++){
-	  
+
 	  lshape=lineshape(nu,fre[i],0.003*pp,0.0);
-	  
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-	  
+
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
           lshapeacum2=lshapeacum2+lshape;
-	  
+
 	}
-	
+
 	lshapeacum2=lshapeacum2*(nu/pi)*(fac2fixed*pow(mub,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    
+	                                                                    // real part: delay in rad*cm^2
       }
 
       return (lshapeacum1+lshapeacum2)*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-     
+
     }
 
   }
@@ -4394,7 +4466,7 @@ namespace atm {
       .626,.649,.619,.63,.29,.36,.332,.51,
       .380,.38,.645,.6,.69,.676,.66};
 
-    static const int ifin1[500]={
+    static const unsigned int ifin1[500]={
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -4446,7 +4518,7 @@ namespace atm {
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15,
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15};
 
-    static const int ini1[500]={
+    static const unsigned int ini1[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -4498,7 +4570,7 @@ namespace atm {
       14,  14,  14,  14,  14,  14,  14,  14,  14,  14,
       14,  14,  14,  14,  14,  15,  15,  15,  15,  15};
 
-    static const int ifin2[500]={
+    static const unsigned int ifin2[500]={
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -4550,7 +4622,7 @@ namespace atm {
       14,  14,  15,  15,  15,  15,  15,  15,  15,  15,
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15};
 
-    static const int ini2[500]={
+    static const unsigned int ini2[500]={
       1,   1,   1,   1,   1,   1,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -4602,7 +4674,7 @@ namespace atm {
       14,  14,  14,  14,  14,  14,  14,  14,  15,  15,
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15};
 
-    static const int ifin3[500]={   
+    static const unsigned int ifin3[500]={
       1,   1,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -4654,7 +4726,7 @@ namespace atm {
       14,  14,  14,  14,  15,  15,  15,  15,  15,  15,
       15,  15,  15,  15,  15,  15,  15,  15,  15,  15};
 
-    static const int ini3[500]={
+    static const unsigned int ini3[500]={
       1,   1,   1,   1,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
       2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -4709,7 +4781,7 @@ namespace atm {
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.855;  //Debyes
 
     double q=0.034571542*pow(tt,1.5);   // Q(300 K)=179.639   JPL Line Catalog
@@ -4718,23 +4790,23 @@ namespace atm {
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
-  
+
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-      
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-      
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -4745,74 +4817,74 @@ namespace atm {
       	  ifin=ifin1[vp];
       	}
       }
-      
+
       if(ini>0){ini=ini-1;}else{ifin=0;}
       if(ifin>0){ifin=ifin-1;}else{ifin=0;}
-      
+
       if(ifin==0||ifin<ini){
-	
+
 	return complex<double> (0.0,0.0);
-	
+
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
-	
+
 	  lshape=lineshape(nu,fre[i],linebroadening_hh18o_hh17o(tt,pp,eh2o,dv0[i],dvlm[i],temp_exp[i]),0.0);
-	  
-	  lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-	  
+
+	  lshape=lshape*flin[i]*gl[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    
+	                                                                    // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
-	
+
       }
-     
+
     }
- 
+
   }
 
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o_vib(double tt, double pp, double eh2o, double nu){
-    
+
     static const double fre[6]={363.717932,420.232268,482.757899,706.772490,765.423334,825.814211};
-    
+
     static const double flin[6]={.04800, .39245, .12804,  .04000,  .21283, .06343};
-    
+
     static const double el[6]={5.70,2.95,2.95,25.97,23.18,23.18};
-    
+
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
-    
+
     double q=0.72923*tt;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     double dv0=2.0;
-    
+
     if(nu>999.9){return complex<double> (0.0,0.0);}
-    
+
     for(unsigned int i=0; i<6; i++){
-      
+
       lshape=lineshape(nu,fre[i], linebroadening_o2(fre[i],tt,pp,eh2o,32.0,dv0,0.2),0.0);
-      
-      lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-      
+
+      lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
       lshapeacum=lshapeacum+lshape;
-      
+
     }
-    
+
     lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-                                                                        // real part: delay in rad*cm^2    
-    
-    return lshapeacum*1e-4;    // to give it in SI units (m^2)   
-    
-  }  
+                                                                        // real part: delay in rad*cm^2
+
+    return lshapeacum*1e-4;    // to give it in SI units (m^2)
+
+  }
 
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o17o(double tt, double pp, double eh2o, double nu){
@@ -4821,45 +4893,45 @@ namespace atm {
       239.89920,304.81682,412.53217,474.78769,356.03171,582.32937,
       643.33256,524.57590,751.19854,811.40203,692.64446,919.63186,
       979.23889,860.48018};
-    
+
     static const double flin[14]={
       .738E+00, .261E+00, .416E+00, .136E+00, .510E-01, .292E+00,
       .900E-01, .480E-01, .226E+00, .670E-01, .420E-01, .184E+00,
       .530E-01, .370E-01};
-    
+
     static const double el[14]={
       .000,     .000,    3.900,    3.900,    6.600,   11.900,
       11.900,   14.600,   23.900,   23.900,   26.700,   39.900,
       39.900,   42.800};
-    
-    
+
+
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
-    
-    double q=1.536568889*tt;   
+
+    double q=1.536568889*tt;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     double dv0=2.0;
-    
+
     if(nu>999.9){return complex<double> (0.0,0.0);}
-    
+
     for(unsigned int i=0; i<14; i++){
-      
+
       lshape=lineshape(nu,fre[i],linebroadening_o2(fre[i],tt,pp,eh2o,33.0,dv0,0.2),0.0);
-      
-      lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-      
+
+      lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
       lshapeacum=lshapeacum+lshape;
-      
+
     }
-    
+
     lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-    // real part: delay in rad*cm^2    
-    
+    // real part: delay in rad*cm^2
+
     return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
-    
+
   }
 
 
@@ -4882,35 +4954,35 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       38.900,   41.700,   61.300};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
-    
-    double q=1.536568889*tt;   
+
+    double q=1.536568889*tt;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     double dv0=2.0;
 
     if(nu>999.9){return complex<double> (0.0,0.0);}
 
     for(unsigned int i=0; i<15; i++){
-	  
+
       lshape=lineshape(nu,fre[i], linebroadening_o2(fre[i],tt,pp,eh2o,34.0,dv0,0.2),0.0);
 
-      lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-      
+      lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
       lshapeacum=lshapeacum+lshape;
-	  
+
     }
-	
+
     lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    
+	                                                                    // real part: delay in rad*cm^2
 
     return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
-	
+
   }
-     
- 
+
+
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o(double tt, double pp, double eh2o, double nu){
 
     static const double fre[55]={
@@ -4925,7 +4997,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       487.249381,715.393320,773.839669,834.145728,1061.124062,
       1120.715051,1179.879254,1406.372391,1466.807173,1525.131044,
       1751.254916,1812.405481,1870.017954,2095.777726,2157.577883};
-    
+
     static const double flin[55]={
       74.96623,70.96429,66.96212,62.95966,58.95686,
       54.95363,50.94989,46.94549,42.94023,38.93385,
@@ -5010,7 +5082,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       {1.900 ,  .2 ,  .0 ,  .0}};
 
 
-    static const int ifin1[800]={
+    static const unsigned int ifin1[800]={
       41,  41,  41,  41,  41,  41,  41,  41,  41,  41,
       41,  41,  41,  41,  41,  41,  41,  41,  41,  41,
       41,  41,  41,  41,  41,  41,  41,  41,  41,  41,
@@ -5092,7 +5164,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       53,  53,  53,  53,  53,  53,  53,  53,  53,  53,
       53,  53,  53,  53,  53,  53,  53,  53,  54,  54};
 
-    static const int ini1[800]={
+    static const unsigned int ini1[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -5174,7 +5246,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       45,  46,  46,  46,  46,  46,  46,  46,  46,  46,
       46,  46,  46,  46,  46,  46,  46,  46,  46,  46};
 
-    static const int ifin2[800]={
+    static const unsigned int ifin2[800]={
       37,  37,  37,  37,  37,  37,  37,  37,  37,  38,
       38,  38,  38,  38,  38,  38,  38,  38,  38,  38,
       38,  38,  38,  38,  38,  38,  38,  38,  38,  38,
@@ -5255,8 +5327,8 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       50,  50,  50,  50,  50,  50,  50,  50,  50,  50,
       50,  50,  50,  50,  50,  50,  50,  50,  50,  50,
       50,  50,  50,  50,  50,  50,  50,  50,  50,  50};
-    
-    static const int ini2[800]={
+
+    static const unsigned int ini2[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -5338,7 +5410,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       49,  49,  49,  50,  50,  50,  50,  50,  50,  50,
       50,  50,  50,  50,  50,  50,  50,  50,  50,  50};
 
-    static const int ifin3[800]={
+    static const unsigned int ifin3[800]={
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   2,   5,   9,  14,  17,
       21,  26,  29,  33,  37,  37,  37,  37,  37,  37,
@@ -5420,7 +5492,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
-    static const int ini3[800]={
+    static const unsigned int ini3[800]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -5503,32 +5575,32 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
-    
-    double q=0.72923*tt;   
+
+    double q=0.72923*tt;
     unsigned int vp;
     unsigned int ini;
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
-  
+
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-      
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-      
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -5539,40 +5611,42 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       	  ifin=ifin1[vp];
       	}
       }
-      
+
       if(ini<38&&fabs(fre[ini-1]-nu)>50){ini=38;}
 
       if(ini>0){ini=ini-1;}else{ifin=0;}
       if(ifin>0){ifin=ifin-1;}else{ifin=0;}
 
-      
+
       if(ifin==0||ifin<ini||(ini>0&&ifin==36)){
-	
+
 	return complex<double> (0.0,0.0);
-       
+
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
-	  
-	  lshape=lineshape(nu,fre[i], 
+
+	  lshape=lineshape(nu,fre[i],
 			   linebroadening_o2(fre[i],tt,pp,eh2o,32.0,ensanche[i][0],ensanche[i][1]),
 			   interf_o2(tt,pp,ensanche[i][2],ensanche[i][3]));
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt)); 
-	  
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*(1-exp(-0.047992745509*fre[i]/tt));
+
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
-	                                                                    // real part: delay in rad*cm^2    
+	                                                                    // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
-	
+
+
+
       }
-     
+
     }
- 
+
   }
 
 
@@ -6207,7 +6281,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				  1354.328, 1306.009, 1258.891, 1212.975, 1168.260};
 
 
-    static const int ifin1[800]={ 7,   8,  10,  11,  11,  11,  11,  12,  15,  18,
+    static const unsigned int ifin1[800]={ 7,   8,  10,  11,  11,  11,  11,  12,  15,  18,
 				  21,  22,  22,  23,  24,  25,  26,  29,  29,  29,
 				  30,  33,  34,  36,  38,  38,  40,  41,  43,  47,
 				  47,  47,  48,  51,  53,  54,  55,  55,  55,  55,
@@ -6288,7 +6362,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				  1040,1043,1046,1049,1055,1063,1078,1078,1079,1079,
 				  1079,1082,1082,1082,1082,1083,1084,1084,1085,1086};
 
-    static const int ini1[800]={ 1,   1,   1,   1,   1,   2,   4,   4,   4,   4,
+    static const unsigned int ini1[800]={ 1,   1,   1,   1,   1,   2,   4,   4,   4,   4,
 				 7,   8,  10,  11,  11,  11,  11,  12,  15,  18,
 				 21,  22,  22,  23,  24,  25,  26,  29,  29,  29,
 				 30,  33,  34,  36,  38,  38,  40,  41,  43,  47,
@@ -6369,7 +6443,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				 1028,1028,1028,1029,1031,1031,1031,1032,1034,1036,
 				 1040,1043,1046,1049,1055,1063,1078,1078,1079,1079};
 
-    static const int ifin2[800]={ 4,   4,   4,   5,   8,   8,  10,  11,  11,  11,
+    static const unsigned int ifin2[800]={ 4,   4,   4,   5,   8,   8,  10,  11,  11,  11,
 				  12,  15,  17,  18,  21,  22,  22,  24,  25,  25,
 				  28,  29,  29,  29,  33,  34,  35,  36,  38,  40,
 				  41,  42,  46,  47,  47,  48,  49,  52,  53,  55,
@@ -6450,7 +6524,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				  1031,1032,1034,1038,1042,1044,1047,1052,1058,1078,
 				  1078,1079,1079,1079,1080,1082,1082,1082,1082,1084};
 
-    static const int ini2[800]={ 1,   1,   3,   4,   4,   4,   5,   8,   8,  10,
+    static const unsigned int ini2[800]={ 1,   1,   3,   4,   4,   4,   5,   8,   8,  10,
 				 11,  11,  11,  12,  15,  17,  18,  21,  22,  22,
 				 24,  25,  25,  28,  29,  29,  29,  33,  34,  35,
 				 36,  38,  40,  41,  42,  46,  47,  47,  48,  49,
@@ -6531,7 +6605,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				 1029,1031,1031,1031,1032,1034,1038,1042,1044,1047,
 				 1052,1058,1078,1078,1079,1079,1079,1080,1082,1082};
 
-    static const int ifin3[800]={ 3,   4,   4,   4,   5,   8,   8,  10,  11,  11,
+    static const unsigned int ifin3[800]={ 3,   4,   4,   4,   5,   8,   8,  10,  11,  11,
 				  11,  12,  15,  17,  18,  21,  22,  22,  24,  25,
 				  25,  28,  29,  29,  29,  33,  34,  35,  36,  38,
 				  40,  41,  42,  46,  47,  47,  48,  49,  52,  53,
@@ -6612,7 +6686,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				  1031,1031,1032,1034,1038,1042,1044,1047,1052,1058,
 				  1078,1078,1079,1079,1079,1080,1082,1082,1082,1082};
 
-    static const int ini3[800]={ 1,   3,   4,   4,   4,   5,   8,   8,  10,  11,
+    static const unsigned int ini3[800]={ 1,   3,   4,   4,   4,   5,   8,   8,  10,  11,
 				 11,  11,  12,  15,  17,  18,  21,  22,  22,  24,
 				 25,  25,  28,  29,  29,  29,  33,  34,  35,  36,
 				 38,  40,  41,  42,  46,  47,  47,  48,  49,  52,
@@ -6692,11 +6766,11 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				 1024,1026,1027,1028,1028,1028,1028,1028,1028,1029,
 				 1031,1031,1031,1032,1034,1038,1042,1044,1047,1052,
 				 1058,1078,1078,1079,1079,1079,1080,1082,1082,1082};
-    
+
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=48.0;
 
@@ -6706,22 +6780,22 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -6741,27 +6815,29 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening(fre[i],tt,pp,mmol,0.0025,0.76),0.0);
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i]; 
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i];
 
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
-	                                                                                                  // real part: delay in rad*cm^2    
+
+	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q)  // imaginary part: absorption coefficient in cm^2
+	  *(0.047992745509/tt);                                                               // real part: delay in rad*cm^2
+
+
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-	
+
       }
-     
+
     }
- 
+
   }
 
 
@@ -7464,7 +7540,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       915.808, 1003.851,   95.041,   95.041,  372.623,  372.623,
       873.402,  959.183};
 
-    static const int ifin1[500]={
+    static const unsigned int ifin1[500]={
       5,   8,   9,  12,  15,  17,  19,  21,  24,  27,
         27,  30,  33,  36,  40,  45,  45,  48,  51,  52,
         56,  58,  61,  63,  67,  68,  70,  77,  79,  82,
@@ -7516,7 +7592,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1313,1319,1320,1321,1323,1329,1333,1337,1339,1340,
       1344,1347,1354,1358,1362,1365,1369,1375,1376,1376};
 
-    static const int ini1[500]={
+    static const unsigned int ini1[500]={
       1,   1,   1,   3,   5,   8,   9,  12,  15,  17,
       19,  21,  24,  27,  27,  30,  33,  36,  40,  45,
       45,  48,  51,  52,  56,  58,  61,  63,  67,  68,
@@ -7568,7 +7644,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1306,1307,1310,1311,1313,1319,1320,1321,1323,1329,
       1333,1337,1339,1340,1344,1347,1354,1358,1362,1365};
 
-    static const int ifin2[500]={
+    static const unsigned int ifin2[500]={
       3,   5,   8,   9,  12,  15,  16,  19,  21,  24,
       26,  27,  29,  32,  35,  39,  44,  45,  48,  50,
       52,  54,  57,  61,  63,  66,  68,  70,  74,  78,
@@ -7620,7 +7696,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1310,1313,1319,1320,1321,1322,1325,1330,1337,1338,
       1340,1343,1347,1351,1357,1361,1363,1368,1373,1376};
 
-    static const int ini2[500]={   
+    static const unsigned int ini2[500]={
       1,   3,   4,   6,   9,  10,  12,  15,  18,  20,
       23,  25,  27,  27,  30,  34,  36,  40,  45,  45,
       49,  52,  53,  56,  60,  61,  64,  68,  68,  73,
@@ -7672,7 +7748,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1307,1310,1311,1316,1320,1321,1321,1325,1329,1335,
       1337,1340,1341,1346,1348,1354,1359,1362,1368,1370};
 
-    static const int ifin3[500]={
+    static const unsigned int ifin3[500]={
       3,   4,   6,   9,  10,  12,  15,  18,  20,  23,
       25,  27,  27,  30,  34,  36,  40,  45,  45,  49,
       52,  53,  56,  60,  61,  64,  68,  68,  73,  77,
@@ -7724,7 +7800,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1310,1311,1316,1320,1321,1321,1325,1329,1335,1337,
       1340,1341,1346,1348,1354,1359,1362,1368,1370,1376};
 
-    static const int ini3[500]={
+    static const unsigned int ini3[500]={
       1,   3,   5,   8,   9,  12,  15,  16,  19,  21,
       24,  26,  27,  29,  32,  35,  39,  44,  45,  48,
       50,  52,  54,  57,  61,  63,  66,  68,  70,  74,
@@ -7777,7 +7853,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1338,1340,1343,1347,1351,1357,1361,1363,1368,1373};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=50.0;
 
@@ -7787,22 +7863,22 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -7822,25 +7898,25 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening(fre[i],tt,pp,mmol,0.0025,0.76),0.0);
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i]; 
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i];
 
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
-	                                                                                                  // real part: delay in rad*cm^2    
+	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-	
+
       }
-     
+
     }
 
   }
@@ -8539,7 +8615,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1174.224};
 
 
-    static const int ifin1[500]={
+    static const unsigned int ifin1[500]={
       9,   9,  13,  14,  14,  16,  17,  21,  22,  25,
         27,  30,  32,  37,  42,  45,  47,  49,  51,  55,
         57,  59,  61,  64,  65,  67,  72,  75,  76,  79,
@@ -8591,7 +8667,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1305,1309,1312,1315,1318,1319,1323,1324,1325,1327,
       1332,1336,1338,1341,1348,1352,1357,1363,1363,1363};
 
-    static const int ini1[500]={
+    static const unsigned int ini1[500]={
 	1,   1,   2,   4,   9,   9,  13,  14,  14,  16,
         17,  21,  22,  25,  27,  30,  32,  37,  42,  45,
         47,  49,  51,  55,  57,  59,  61,  64,  65,  67,
@@ -8643,7 +8719,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	1293,1297,1304,1305,1305,1309,1312,1315,1318,1319,
 	1323,1324,1325,1327,1332,1336,1338,1341,1348,1352};
 
-      static const int ifin2[500]={
+      static const unsigned int ifin2[500]={
 	4,   8,   9,  11,  13,  14,  16,  17,  20,  21,
         24,  27,  30,  32,  37,  41,  45,  47,  48,  50,
         55,  56,  59,  61,  63,  65,  67,  71,  74,  75,
@@ -8695,7 +8771,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	1305,1305,1309,1311,1315,1317,1319,1323,1324,1325,
 	1325,1332,1336,1338,1339,1347,1351,1354,1360,1363};
 
-      static const int ini2[500]={ 
+      static const unsigned int ini2[500]={
 	1,   2,   6,   9,   9,  13,  14,  15,  16,  18,
         21,  22,  25,  27,  30,  34,  39,  43,  46,  47,
         50,  54,  55,  58,  60,  61,  65,  66,  68,  73,
@@ -8747,7 +8823,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	1300,1304,1305,1306,1309,1313,1315,1318,1320,1323,
 	1325,1325,1330,1334,1336,1339,1342,1349,1352,1359};
 
-      static const int ifin3[500]={ 
+      static const unsigned int ifin3[500]={
 	2,   6,   9,   9,  13,  14,  15,  16,  18,  21,
         22,  25,  27,  30,  34,  39,  43,  46,  47,  50,
         54,  55,  58,  60,  61,  65,  66,  68,  73,  75,
@@ -8799,7 +8875,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	1304,1305,1306,1309,1313,1315,1318,1320,1323,1325,
 	1325,1330,1334,1336,1339,1342,1349,1352,1359,1363};
 
-      static const int ini3[500]={
+      static const unsigned int ini3[500]={
 	2,   4,   8,   9,  11,  13,  14,  16,  17,  20,
         21,  24,  27,  30,  32,  37,  41,  45,  47,  48,
         50,  55,  56,  59,  61,  63,  65,  67,  71,  74,
@@ -8852,7 +8928,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	1325,1325,1332,1336,1338,1339,1347,1351,1354,1360};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=49.0;
 
@@ -8862,22 +8938,22 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -8897,25 +8973,25 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening(fre[i],tt,pp,mmol,0.0025,0.76),0.0);
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i]; 
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i];
 
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
-	                                                                                                  // real part: delay in rad*cm^2    
+	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-	
+
       }
-     
+
     }
 
   }
@@ -9306,7 +9382,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       665.744, 1835.122,  244.115,  724.448, 1315.301, 1388.242,
       990.732, 1070.959,  109.429,  469.326,  985.287};
 
-    static const int ifin1[500]={
+    static const unsigned int ifin1[500]={
       3,   4,   5,   6,   6,   7,   9,  11,  12,  13,
       14,  18,  18,  21,  24,  27,  30,  30,  30,  30,
       31,  33,  34,  36,  38,  39,  41,  41,  43,  44,
@@ -9358,7 +9434,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       735, 737, 737, 738, 739, 741, 742, 743, 744, 747,
       748, 748, 748, 750, 750, 752, 753, 755, 755, 755};
 
-      static const int ini1[500]={
+      static const unsigned int ini1[500]={
 	1,   1,   1,   1,   3,   4,   5,   6,   6,   7,
 	9,  11,  12,  13,  14,  18,  18,  21,  24,  27,
         30,  30,  30,  30,  31,  33,  34,  36,  38,  39,
@@ -9410,7 +9486,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	733, 733, 733, 733, 735, 737, 737, 738, 739, 741,
 	742, 743, 744, 747, 748, 748, 748, 750, 750, 752};
 
-	static const int ifin2[500]={
+	static const unsigned int ifin2[500]={
 	  1,   2,   3,   5,   6,   6,   6,   8,  10,  12,
 	  13,  14,  18,  18,  20,  22,  25,  29,  30,  30,
 	  30,  30,  33,  33,  36,  38,  39,  41,  41,  42,
@@ -9462,7 +9538,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	  733, 733, 736, 737, 738, 739, 741, 742, 742, 744,
 	  747, 748, 748, 748, 749, 750, 752, 753, 753, 755};
 
-	  static const int ini2[500]={
+	  static const unsigned int ini2[500]={
 	    1,   1,   1,   3,   4,   5,   6,   6,   7,   9,
 	    12,  12,  14,  16,  18,  19,  21,  25,  29,  30,
 	    30,  30,  30,  31,  33,  34,  38,  39,  39,  41,
@@ -9514,7 +9590,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	    733, 733, 733, 735, 737, 738, 739, 739, 742, 742,
 	    743, 745, 747, 748, 748, 748, 750, 750, 752, 753};
 
-      static const int ifin3[500]={
+      static const unsigned int ifin3[500]={
 	1,   1,   3,   4,   5,   6,   6,   7,   9,  12,
         12,  14,  16,  18,  19,  21,  25,  29,  30,  30,
         30,  30,  31,  33,  34,  38,  39,  39,  41,  41,
@@ -9566,7 +9642,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	733, 733, 735, 737, 738, 739, 739, 742, 742, 743,
 	745, 747, 748, 748, 748, 750, 750, 752, 753, 755};
 
-      static const int ini3[500]={
+      static const unsigned int ini3[500]={
 	1,   1,   2,   3,   5,   6,   6,   6,   8,  10,
         12,  13,  14,  18,  18,  20,  22,  25,  29,  30,
         30,  30,  30,  33,  33,  36,  38,  39,  41,  41,
@@ -9621,7 +9697,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=50.0;
 
@@ -9631,22 +9707,22 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -9666,25 +9742,25 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening(fre[i],tt,pp,mmol,0.0025,0.76),0.0);
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i]; 
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i];
 
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
-	                                                                                                  // real part: delay in rad*cm^2    
+	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-	
+
       }
-     
+
     }
 
   }
@@ -9957,8 +10033,8 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       217.363,  201.659,  187.156,  173.854,  161.852,  150.951,
       141.350,  132.850,  553.341,  337.192, 1075.145,  589.961,
       245.365,  994.930};
-    
-    static const int ifin1[500]={
+
+    static const unsigned int ifin1[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   2,
@@ -10010,7 +10086,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       476, 478, 480, 481, 482, 484, 487, 491, 494, 503,
       515, 516, 516, 516, 516, 517, 517, 518, 518, 518};
 
-    static const int ini1[500]={
+    static const unsigned int ini1[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -10062,7 +10138,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       469, 470, 474, 476, 476, 478, 480, 481, 482, 484,
       487, 491, 494, 503, 515, 516, 516, 516, 516, 517};
 
-    static const int ifin2[500]={
+    static const unsigned int ifin2[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -10114,7 +10190,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       476, 476, 478, 479, 481, 482, 484, 487, 490, 493,
       500, 514, 516, 516, 516, 516, 517, 517, 518, 518};
 
-    static const int ini2[500]={
+    static const unsigned int ini2[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -10166,7 +10242,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       471, 474, 476, 477, 478, 480, 482, 482, 484, 487,
       492, 495, 506, 515, 516, 516, 516, 516, 517, 517};
 
-    static const int ifin3[500]={
+    static const unsigned int ifin3[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -10218,7 +10294,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       474, 476, 477, 478, 480, 482, 482, 484, 487, 492,
       495, 506, 515, 516, 516, 516, 516, 517, 517, 518};
 
-    static const int ini3[500]={
+    static const unsigned int ini3[500]={
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -10271,7 +10347,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       493, 500, 514, 516, 516, 516, 516, 517, 517, 518};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19 
+    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=49.0;
 
@@ -10281,22 +10357,22 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     unsigned int ifin;
     complex<double>  lshape;
     complex<double>  lshapeacum;
-    
+
     if(nu>999.9){
-      
+
       return complex<double> (0.0,0.0);
-      
+
     }else{
-            
+
       if(nu<1.0){
 	vp=0;
       }else{
 	vp = (int) round((nu+1.0)/2.0);
 	vp=vp-1;
       }
-        
+
       if(pp<100){
-	ini=ini3[vp]; 
+	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
       	if(pp<300){
@@ -10316,28 +10392,28 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	return complex<double> (0.0,0.0);
 
       }else{
-	
+
 	for(unsigned int i=ini; i<ifin+1; i++){
 
 	  lshape=lineshape(nu,fre[i],linebroadening(fre[i],tt,pp,mmol,0.0025,0.76),0.0);
 
-	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i]; 
+	  lshape=lshape*flin[i]*exp(-el[i]/tt)*fre[i];
 
           lshapeacum=lshapeacum+lshape;
-	  
+
 	}
-	
+
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
-	                                                                                                  // real part: delay in rad*cm^2    
+	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
-	
+
       }
-     
+
     }
 
   }
 
 
-}
+} // namespace atm
