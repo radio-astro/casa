@@ -70,7 +70,7 @@ while(<FILE>) {
     if (/^\S+$/) {
 	push @tests, $_;
     }
-    elsif (/^\S+\s+\S+$/) {
+    elsif (/^\S+\s+\S+\s+\S$/) {
 	@t = split;
 	push @tests, $t[0];
     }
