@@ -1377,6 +1377,9 @@ PlotLogMessage* PlotMSCache::flagRange(const PlotMSFlagging& flagging,
       // Set the flags in the MS
       flagInMS(flagging, flagchunk, flagindex, flag);
 
+
+      // Re-compute the axes ranges
+      computeRanges();
     }
 
     ss << (flag ? "FLAGGED " : "UNFLAGGED ") << nFound 
@@ -1995,7 +1998,7 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       ha0_(vbnum) = vb.hourang(vb.time()(0))*12/C::pi;  // in hours
       break;
     case PMS::PA0:
-      pa0_(vbnum) = vb.parang0(vb.time()(0));
+      pa0_(vbnum) = vb.parang0(vb.time()(0))*180.0/C::pi; // in degrees
       break;
 
     case PMS::ANTENNA: {
@@ -2012,7 +2015,7 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       break;
     }
     case PMS::PARANG:
-      *parang_[vbnum] = vb.feed_pa(vb.time()(0))*(180.0/C::pi);
+      *parang_[vbnum] = vb.feed_pa(vb.time()(0))*(180.0/C::pi);  // in degrees
       break;
 
     case PMS::ROW:
