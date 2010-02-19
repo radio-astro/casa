@@ -160,7 +160,7 @@ public:
 
   //# Member functions
   // Give name of function
-  virtual const String &name() const { static String x("gaussian1d");
+  virtual const String &name() const { static String x("lorentzian1d");
     return x; };
 
   // Get or set the peak height of the Lorentzian

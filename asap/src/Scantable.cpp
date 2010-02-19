@@ -707,7 +707,8 @@ void Scantable::clip(const Float uthres, const Float dthres, bool clipoutside, b
   for (uInt i=0; i<table_.nrow(); ++i) {
     Vector<Float> spcs = specCol_(i);
     Vector<uChar> flgs = flagsCol_(i);
-    if (spcs.nelements() != nchan()) {
+    uInt nchannel = nchan();
+    if (spcs.nelements() != nchannel) {
       throw(AipsError("Data has incorrect number of channels"));
     }
     uChar userflag = 1 << 7;
@@ -715,14 +716,14 @@ void Scantable::clip(const Float uthres, const Float dthres, bool clipoutside, b
       userflag = 0 << 7;
     }
     if (clipoutside) {
-      for (uInt j = 0; j < nchan(); ++j) {
+      for (uInt j = 0; j < nchannel; ++j) {
         Float spc = spcs(j);
         if ((spc >= uthres) || (spc <= dthres)) {
 	  flgs(j) = userflag;
 	}
       }
     } else {
-      for (uInt j = 0; j < nchan(); ++j) {
+      for (uInt j = 0; j < nchannel; ++j) {
         Float spc = spcs(j);
         if ((spc < uthres) && (spc > dthres)) {
 	  flgs(j) = userflag;

@@ -32,8 +32,8 @@
 #include <casa/aips.h>
 #include "Lorentzian1DParam.h"
 #include <scimath/Functionals/Function1D.h>
-//#include <scimath/Mathematics/AutoDiff.h>
-//#include <scimath/Mathematics/AutoDiffMath.h>
+#include <scimath/Mathematics/AutoDiff.h>
+#include <scimath/Mathematics/AutoDiffMath.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -175,10 +175,10 @@ public:
   // for deleting this pointer.
   // <group>
   virtual Function<T> *clone() const { return new Lorentzian1D<T>(*this); };
-//  virtual Function<typename FunctionTraits<T>::DiffType> *cloneAD() const {
-//    return new Lorentzian1D<typename FunctionTraits<T>::DiffType>(*this); };
-//  virtual Function<typename FunctionTraits<T>::BaseType> *cloneNonAD() const {
-//    return new Lorentzian1D<typename FunctionTraits<T>::BaseType>(*this); };
+  virtual Function<typename FunctionTraits<T>::DiffType> *cloneAD() const {
+    return new Lorentzian1D<typename FunctionTraits<T>::DiffType>(*this); };
+  virtual Function<typename FunctionTraits<T>::BaseType> *cloneNonAD() const {
+    return new Lorentzian1D<typename FunctionTraits<T>::BaseType>(*this); };
   // </group>
 
   //# Make members of parent classes known.
@@ -192,88 +192,89 @@ public:
 };
 
 
-//#define Lorentzian1D_PS Lorentzian1D
-//
-//// <summary> Partial specialization of Lorentzian1D for <src>AutoDiff</src>
-//// </summary>
-//
-//// <synopsis>
-//// <note role=warning> The name <src>Lorentzian1D_PS</src> is only for cxx2html
-//// documentation problems. Use <src>Lorentzian1D</src> in your code.</note>
-//// </synopsis>
-//
-//template <class T> class Lorentzian1D_PS<AutoDiff<T> > : 
-//public Lorentzian1DParam<AutoDiff<T> >
-//{
-//public:
-//  //# Constructors
-//  // Constructs one dimensional Lorentzians.
-//  // <group>
-//  Lorentzian1D_PS() : Lorentzian1DParam<AutoDiff<T> >() {};
-//  explicit Lorentzian1D_PS(const AutoDiff<T> &height) :
-//    Lorentzian1DParam<AutoDiff<T> >(height) {};
-//  Lorentzian1D_PS(const AutoDiff<T> &height, const AutoDiff<T> &center) :
-//    Lorentzian1DParam<AutoDiff<T> >(height, center) {};
-//  Lorentzian1D_PS(const AutoDiff<T> &height, const AutoDiff<T> &center,
-//		  const AutoDiff<T> &width) :
-//    Lorentzian1DParam<AutoDiff<T> >(height, center, width) {};
-//  // </group>
-//
-//  // Copy constructor (deep copy)
-//  // <group>
-//  Lorentzian1D_PS(const Lorentzian1D_PS &other) :
-//    Lorentzian1DParam<AutoDiff<T> >(other) {};
-//  template <class W>
-//  Lorentzian1D_PS(const Lorentzian1D_PS<W> &other) :
-//    Lorentzian1DParam<AutoDiff<T> >(other) {};
-//  // </group>
-//
-//  // Copy assignment (deep copy)
-//  Lorentzian1D_PS<AutoDiff<T> > &
-//    operator=(const Lorentzian1D_PS<AutoDiff<T> > &other) {
-//    Lorentzian1DParam<AutoDiff<T> >::operator=(other); return *this; };
-//    
-//  // Destructor
-//  virtual ~Lorentzian1D_PS() {};
-//
-//  //# Operators    
-//  // Evaluate the Lorentzian and its derivatives at <src>x</src>.
-//  // <group>
-//  virtual AutoDiff<T> eval(typename Function<AutoDiff<T> >::FunctionArg x) const;
-//  // </group>
-//
-//  //# Member functions
-//  // Return a copy of this object from the heap. The caller is responsible 
-//  // for deleting this pointer.
-//  // <group>
-//  virtual Function<AutoDiff<T> > *clone() const {
-//    return new Lorentzian1D<AutoDiff<T> >(*this); };
-//  virtual Function<typename FunctionTraits<AutoDiff<T> >::DiffType>
-//    *cloneAD() const {
-//    return new Lorentzian1D<typename FunctionTraits<AutoDiff<T> >::DiffType>
-//      (*this); };
-//  virtual Function<typename FunctionTraits<AutoDiff<T> >::BaseType>
-//    *cloneNonAD() const {
-//    return new Lorentzian1D<typename FunctionTraits<AutoDiff<T> >::BaseType>
-//      (*this); };
-//  // </group>
-//
-//  //# Make members of parent classes known.
-//protected:
-//  using Lorentzian1DParam<AutoDiff<T> >::param_p;
-//public:
-//  using Lorentzian1DParam<AutoDiff<T> >::HEIGHT;
-//  using Lorentzian1DParam<AutoDiff<T> >::CENTER;
-//  using Lorentzian1DParam<AutoDiff<T> >::WIDTH;
-//  using Lorentzian1DParam<AutoDiff<T> >::fwhm2int;
-//};
-//
-//#undef Lorentzian1D_PS
+#define Lorentzian1D_PS Lorentzian1D
+
+// <summary> Partial specialization of Lorentzian1D for <src>AutoDiff</src>
+// </summary>
+
+// <synopsis>
+// <note role=warning> The name <src>Lorentzian1D_PS</src> is only for cxx2html
+// documentation problems. Use <src>Lorentzian1D</src> in your code.</note>
+// </synopsis>
+
+template <class T> class Lorentzian1D_PS<AutoDiff<T> > : 
+public Lorentzian1DParam<AutoDiff<T> >
+{
+public:
+  //# Constructors
+  // Constructs one dimensional Lorentzians.
+  // <group>
+  Lorentzian1D_PS() : Lorentzian1DParam<AutoDiff<T> >() {};
+  explicit Lorentzian1D_PS(const AutoDiff<T> &height) :
+    Lorentzian1DParam<AutoDiff<T> >(height) {};
+  Lorentzian1D_PS(const AutoDiff<T> &height, const AutoDiff<T> &center) :
+    Lorentzian1DParam<AutoDiff<T> >(height, center) {};
+  Lorentzian1D_PS(const AutoDiff<T> &height, const AutoDiff<T> &center,
+		  const AutoDiff<T> &width) :
+    Lorentzian1DParam<AutoDiff<T> >(height, center, width) {};
+  // </group>
+
+  // Copy constructor (deep copy)
+  // <group>
+  Lorentzian1D_PS(const Lorentzian1D_PS &other) :
+    Lorentzian1DParam<AutoDiff<T> >(other) {};
+  template <class W>
+  Lorentzian1D_PS(const Lorentzian1D_PS<W> &other) :
+    Lorentzian1DParam<AutoDiff<T> >(other) {};
+  // </group>
+
+  // Copy assignment (deep copy)
+  Lorentzian1D_PS<AutoDiff<T> > &
+    operator=(const Lorentzian1D_PS<AutoDiff<T> > &other) {
+    Lorentzian1DParam<AutoDiff<T> >::operator=(other); return *this; };
+    
+  // Destructor
+  virtual ~Lorentzian1D_PS() {};
+
+  //# Operators    
+  // Evaluate the Lorentzian and its derivatives at <src>x</src>.
+  // <group>
+  virtual AutoDiff<T> eval(typename Function<AutoDiff<T> >::FunctionArg x) const;
+  // </group>
+
+  //# Member functions
+  // Return a copy of this object from the heap. The caller is responsible 
+  // for deleting this pointer.
+  // <group>
+  virtual Function<AutoDiff<T> > *clone() const {
+    return new Lorentzian1D<AutoDiff<T> >(*this); };
+  virtual Function<typename FunctionTraits<AutoDiff<T> >::DiffType>
+    *cloneAD() const {
+    return new Lorentzian1D<typename FunctionTraits<AutoDiff<T> >::DiffType>
+      (*this); };
+  virtual Function<typename FunctionTraits<AutoDiff<T> >::BaseType>
+    *cloneNonAD() const {
+    return new Lorentzian1D<typename FunctionTraits<AutoDiff<T> >::BaseType>
+      (*this); };
+  // </group>
+
+  //# Make members of parent classes known.
+protected:
+  using Lorentzian1DParam<AutoDiff<T> >::param_p;
+public:
+  using Lorentzian1DParam<AutoDiff<T> >::HEIGHT;
+  using Lorentzian1DParam<AutoDiff<T> >::CENTER;
+  using Lorentzian1DParam<AutoDiff<T> >::WIDTH;
+  using Lorentzian1DParam<AutoDiff<T> >::fwhm2int;
+};
+
+#undef Lorentzian1D_PS
 
 
 } //# NAMESPACE CASA - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include "Lorentzian1D.tcc"
+#include "Lorentzian1D2.tcc"
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
