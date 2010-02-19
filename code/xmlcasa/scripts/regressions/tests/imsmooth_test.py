@@ -113,8 +113,6 @@ import casac
 from tasks import *
 from taskinit import *
 
-
-targetres_im = "imsmooth_targetres.fits"
     
 ####################################################################
 # Incorrect inputs to parameters.  The parameters are:
@@ -1083,104 +1081,7 @@ def region_test():
     print "*** finishing " + str(retValue['success'])
     return retValue
 
-def targetres_test():
-    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-    casalog.post( "Starting imsmooth TARGETRES tests.", 'NORMAL2' )
-    ia.open(targetres_im)
-    input_beam = ia.restoringbeam()
-    ia.done()
-    imajor = qa.tos(input_beam['major'])
-    iminor = qa.tos(input_beam['minor'])
-    ipa = qa.tos(input_beam['positionangle'])
-    try:
-        # convolving gaussian too small
-        omajor = qa.tos(qa.sub(imajor, "1arcsec"))
-        ominor = qa.tos(qa.add(iminor, "1arcsec"))
-        opa = "0deg"
-        outfile = 'tr1.im'
-        results = imsmooth(
-            targetres_im, kernel='gauss', major=omajor,
-            minor=ominor, pa=opa, targetres=True, outfile=outfile
-        )
-        if (results):
-            retValue['success'] = False
-            retValue['error_msgs'] += "\ntargetres test 1: imsmooth returned true "\
-                + "when it should have returned false"
-    except Exception, err:
-        retValue['success'] = False
-        retValue['error_msgs'] += "\nError: Exception occurred for targetres test 1"\
 
-    try:
-        # convolving gaussian is small and not aligned along the clean beam pa so
-        # bad result still occurs
-        omajor = qa.tos(qa.add(imajor, "1arcsec"))
-        ominor = qa.tos(qa.add(iminor, "1arcsec"))
-        opa = "49deg"
-        outfile = 'tr2.im'
-        print "major " + omajor + " minor " + ominor + " pa " + opa
-        results = imsmooth(
-            targetres_im, kernel='gauss', major=omajor,
-            minor=ominor, pa=opa, targetres=True, outfile=outfile
-        )
-        if (results):
-            retValue['success'] = False
-            retValue['error_msgs'] += "\ntargetres test 2: imsmooth returned true "\
-                + "when it should have returned false"
-        
-    except Exception, err:
-        retValue['success'] = False
-        retValue['error_msgs'] += "\nError: Exception occurred for targetres test 2"\
-
-    try:
-        # convolving gaussian is big enough
-        omajor = qa.tos(qa.add(imajor, "2arcsec"))
-        ominor = qa.tos(qa.add(iminor, "2arcsec"))
-        opa = "49deg"
-        outfile = 'tr3.im'
-        print "major " + omajor + " minor " + ominor + " pa " + opa
-        results = imsmooth(
-            targetres_im, kernel='gauss', major=omajor,
-            minor=ominor, pa=opa, targetres=True, outfile=outfile
-        )
-        if (results):
-            ia.open(outfile)
-            mybeam = ia.restoringbeam()
-            ia.done()
-            if (not _near(mybeam['major'], omajor, 1e-5)):
-                retValue['success'] = False
-                retValue['error_msgs'] += "\ntargetres test 3: wrong major axis for "\
-                    + "restoring beam, got " + qa.tos(mybeam['major']) + " when it should "\
-                    + "have been " + omajor
-            if (not _near(mybeam['minor'], ominor, 1e-5)):
-                retValue['success'] = False
-                retValue['error_msgs'] += "\ntargetres test 3: wrong minor axis for "\
-                    + "restoring beam, got " + qa.tos(mybeam['minor']) + " when it should "\
-                    + "have been " + ominor
-            if (not _near(mybeam['positionangle'], opa, 1e-5)):
-                retValue['success'] = False
-                retValue['error_msgs'] += "\ntargetres test 3: wrong position angle for "\
-                    + "restoring beam, got " + qa.tos(mybeam['positionangle']) + " when it should "\
-                    + "have been " + opa
-                 
-        else:
-            retValue['success'] = False
-            retValue['error_msgs'] += "\ntargetres test 3: imsmooth returned false "\
-                + "when it should have returned true"
-        
-    except Exception, err:
-        retValue['success'] = False
-        retValue['error_msgs'] += "\nError: Exception occurred for targetres test 3"\
-
-    return retValue
-
-def _near(got, expected, tol):
-    return qa.le(
-        qa.div(
-            qa.abs(qa.sub(got, expected)),
-            expected
-        ),
-        tol
-    )
 
 ####################################################################
 # Methods for the automated CASA testing
@@ -1202,14 +1103,17 @@ def description():
            + "     1. g192_a2.image"
 
 def data():
-    return ['g192_a2.image', 'g192_a2.image-2.rgn', 'g192_a2.image.rgn', targetres_im ]
+    return ['g192_a2.image', 'g192_a2.image-2.rgn', 'g192_a2.image.rgn' ]
 
 
 def doCopy():
     #print "\n\nIn IMSMOOTH doCopy()\n\n"
-    return [1, 1, 1, 0 ]
+    return [1, 1, 1 ]
 
 def run():
+    test_list = [ 'input_test()', 'smooth_test()', \
+                  'region_test()' ]
+
     # This would be really, really, really, really nice to run in a loop
     # and use the eval() command to execute the various methods BUT for
     # some idiotic reason, which I do not know, when you do this. The
@@ -1222,7 +1126,6 @@ def run():
     testResults.append( input_test() )
     testResults.append( smooth_test() )
     testResults.append( region_test() )
-    testResults.append( targetres_test() )
     print "TEST RESULTS: ", testResults
 
     for results in testResults:

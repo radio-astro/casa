@@ -22,7 +22,7 @@ print sys.path
 import report
 
 try:
-    report.report(reg_dir, report_dir, gen_plot=gp, revision=rev, skull=admin_dir+'/skullnbones.jpg')
+    report.report(reg_dir, report_dir, gen_plot=gp, revision=rev)
 except:
     print "report execution failed"
     raise

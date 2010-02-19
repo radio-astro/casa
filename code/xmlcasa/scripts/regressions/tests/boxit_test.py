@@ -94,7 +94,7 @@ def basic_test():
     success = True
     test = "Basic boxit test to ensure correct region file is being written"
     global msgs, imagename
-    regionfile = 'boxit_basic.box'
+    regionfile = 'boxit_basic.reg'
     mask = 'boxit_basic.mask'
     boxit(imagename=imagename, threshold=.5, regionfile=regionfile, maskname=mask)
     if (not compare_region(exp_basic_rgn, regionfile)):
@@ -111,7 +111,7 @@ def minsize_test():
     success = True
     test = "Test of non-default minsize parameter"
     global msgs, imagename
-    regionfile = "boxit_minsize.box"
+    regionfile = "boxit_minsize.rgn"
     mask = "boxit_minsize.mask"
     boxit(imagename=imagename, threshold=.5, regionfile=regionfile, maskname=mask, minsize=10)
     if (not compare_region(exp_minsize_rgn, regionfile)):
@@ -128,7 +128,7 @@ def diag_test():
     success = True
     test = "Test of non-default diag parameter"
     global msgs, imagename
-    regionfile = 'boxit_diag.box'
+    regionfile = 'boxit_diag.rgn'
     mask = 'boxit_diag.mask'
     boxit(imagename=imagename, threshold=.5, regionfile=regionfile, maskname=mask, minsize=10, diag=True)
     if (not compare_region(exp_diag_rgn, regionfile)):
@@ -145,7 +145,7 @@ def boxstretch_test():
     success = True
     test = "Test of non-default boxstretch parameter"
     global msgs, imagename
-    regionfile = "boxit_boxtretch.box"
+    regionfile = "boxit_boxtretch.rgn"
     mask = "boxit_boxtretch.mask"
     boxit(imagename=imagename, threshold=.5, regionfile=regionfile, maskname=mask, boxstretch=5)
     if (not compare_region(exp_boxstretch_rgn, regionfile)):

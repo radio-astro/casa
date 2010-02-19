@@ -97,7 +97,7 @@ foreach $host (keys %dir) {
 		next;
 	    }
 
-            $unextracted_size = `gunzip -l result-*tar.gz | grep totals | awk '{print \$2}'`;
+            $unextracted_size = `gunzip -l result-*tar.gz | grep totals | awk '{print $2}'`;
             chomp($unextracted_size);
 
             if ($unextracted_size > 100*1024*1024) {
@@ -177,7 +177,7 @@ sub email_notify
 	chomp($type);
 	chomp($casa); $casa =~ s/\'//g;
 	chomp($host);
-	$email  = `cat $svn_path/$tests_file | grep -w "^$testid" | awk '{print \$2 \"\@\" \$3}'`;  $? == 0 or die $!;
+	$email  = `cat $svn_path/$tests_file | grep -w "^$testid" | awk '{print \$2}'`;  $? == 0 or die $!;
 	chomp($email);
 
 	if ($type ne "exec") {
@@ -206,7 +206,7 @@ sub email_notify
 	}
 	print FILE " failed on host $host using\n$casa.\n\n";
 	print FILE "Please check on\n";
-        print FILE "http://www.eso.org/~jmlarsen/ALMA/CASA_latest/test-report.html#$testid";
+        print FILE "http://www.eso.org/~jmlarsen/ALMA/CASA_latest/test-report.html";
 	if ($type eq "exec") {
 	    print FILE " and\nhttp://www.eso.org/~jmlarsen/ALMA/CASA/summary_$testid.html\n";
 	}

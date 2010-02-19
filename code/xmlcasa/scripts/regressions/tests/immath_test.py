@@ -104,8 +104,6 @@ import numpy
 from tasks import *
 from taskinit import *
 
-cas1910_im = 'CAS-1910.im'
-
 ################      HELPER FUNCTIONS      ###################
 
 # Retrieve the pixel value at a particular postion in an image.
@@ -1076,25 +1074,6 @@ def many_image_test():
         retValue['error_msgs'] += "\nSub image calculation threw an exception"
     return retValue
 
-
-# fixed setting trc brokenness with a kludge (as, given the state of the pre-existing code, was the best that could be done)
-def cas_1910_fix_test():
-    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-    try:
-        if (
-            not immath(
-                imagename=cas1910_im, outfile='cas-1910_out.im',
-                mode='evalexpr', expr='IM0*1',
-                box='708,1158,1006,1456'
-            )
-        ):
-            retValue['success'] = False
-            retValue['error_msgs'] += "\nimmath returned False for setting box correctly (CAS-1910)"
-    except:
-        retValue['success'] = False
-        retValue['error_msgs'] += "\nimmath threw exception for setting box correctly (CAS-1910)"
-    return retValue
-
 ####################################################################
 # Methods for the automated CASA testing
 ####################################################################
@@ -1129,12 +1108,12 @@ def data():
     return [
         'ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image',
         'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
-        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im', cas1910_im
+        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
     ]
 
 def doCopy():
     #print "\n\nIn IMMATH doCopy()\n\n"
-    return [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    return [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 def run():
     test_list = [ 'input_test()', 'math_test()', \
@@ -1154,7 +1133,6 @@ def run():
     testResults.append( expr_test() )
     testResults.append( pol_test( data() ) )
     testResults.append(many_image_test())
-    testResults.append(cas_1910_fix_test())
     print "TEST RESULTS: ", testResults
 
     for results in testResults:

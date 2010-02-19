@@ -37,5 +37,5 @@ def run():
 
 def data():
     ### return the data files that is needed by the regression script
-    return ['ngc1333.ms','ngc1333.gcal','ngc1333.ref.smoothed']
+    return ['N1333_1.UVFITS','3C147_Q.im','ngc1333.ref.smoothed']
 #    return []
