@@ -15,8 +15,8 @@ myatm = at.initAtmProfile(alt, tmp, pre, mxA, hum, wvl, dpr, dpm, h0, att)
 print myatm
 
 print
-print "Test: getStartupWaterContent()"
-w = at.getStartupWaterContent()
+print "Test: getGroundWH2O()"
+w = at.getGroundWH2O()
 print "Guessed water content: ", w.value, w.units
 
 print
