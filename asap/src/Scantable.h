@@ -243,6 +243,12 @@ public:
     { return (flagrowCol_(whichrow) > 0); }
 
   /**
+   * Flag the data outside a specified range (in a channel-based manner).
+   * (CAS-1807 Wataru Kawasaki)
+   */
+  void clip(const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag);
+
+  /**
    * Return a list of row numbers with respect to the original table.
    * @return a list of unsigned ints
    */

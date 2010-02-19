@@ -702,6 +702,38 @@ void Scantable::calculateAZEL()
   pushLog(String(oss));
 }
 
+void Scantable::clip(const Float uthres, const Float dthres, bool clipoutside, bool unflag)
+{
+  for (uInt i=0; i<table_.nrow(); ++i) {
+    Vector<Float> spcs = specCol_(i);
+    Vector<uChar> flgs = flagsCol_(i);
+    uInt nchannel = nchan();
+    if (spcs.nelements() != nchannel) {
+      throw(AipsError("Data has incorrect number of channels"));
+    }
+    uChar userflag = 1 << 7;
+    if (unflag) {
+      userflag = 0 << 7;
+    }
+    if (clipoutside) {
+      for (uInt j = 0; j < nchannel; ++j) {
+        Float spc = spcs(j);
+        if ((spc >= uthres) || (spc <= dthres)) {
+	  flgs(j) = userflag;
+	}
+      }
+    } else {
+      for (uInt j = 0; j < nchannel; ++j) {
+        Float spc = spcs(j);
+        if ((spc < uthres) && (spc > dthres)) {
+	  flgs(j) = userflag;
+	}
+      }
+    }
+    flagsCol_.put(i, flgs);
+  }
+}
+
 void Scantable::flag(const std::vector<bool>& msk, bool unflag)
 {
   std::vector<bool>::const_iterator it;

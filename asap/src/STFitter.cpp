@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STFitter.cpp 1616 2009-08-07 05:49:27Z TakeshiNakazato $
+//# $Id: STFitter.cpp 1700 2010-02-16 05:21:26Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -37,6 +37,7 @@
 #include <scimath/Functionals/CompiledFunction.h>
 #include <scimath/Functionals/CompoundFunction.h>
 #include <scimath/Functionals/Gaussian1D.h>
+#include "Lorentzian1D.h"
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/AutoDiff.h>
 #include <scimath/Mathematics/AutoDiffMath.h>
@@ -146,6 +147,12 @@ bool Fitter::setExpression(const std::string& expr, int ncomp)
   } else if (expr == "poly") {
     funcs_.resize(1);
     funcs_[0] = new Polynomial<Float>(ncomp);
+  } else if (expr == "lorentz") {
+    if (ncomp < 1) throw (AipsError("Need at least one lorentzian to fit."));
+    funcs_.resize(ncomp);
+    for (Int k=0; k<ncomp; ++k) {
+      funcs_[k] = new Lorentzian1D<Float>();
+    }
   } else {
     //cerr << " compiled functions not yet implemented" << endl;
     LogIO os( LogOrigin( "Fitter", "setExpression()", WHERE ) ) ;
@@ -229,6 +236,15 @@ bool Fitter::setParameters(std::vector<float> params)
             parameters_[i] = tmppar[i];
             (funcs_[0]->parameters())[i] =  tmppar[i];
         }
+    } else if (dynamic_cast<Lorentzian1D<Float>* >(funcs_[0]) != 0) {
+        uInt count = 0;
+        for (uInt j=0; j < funcs_.nelements(); ++j) {
+            for (uInt i=0; i < funcs_[j]->nparameters(); ++i) {
+                (funcs_[j]->parameters())[i] = tmppar[count];
+                parameters_[count] = tmppar[count];
+                ++count;
+            }
+        }
     }
     // reset
     if (params.size() == 0) {
@@ -261,6 +277,15 @@ bool Fitter::setFixedParameters(std::vector<bool> fixed)
         for (uInt i=0; i < funcs_[0]->nparameters(); ++i) {
             fixedpar_[i] = fixed[i];
             funcs_[0]->mask(i) =  !fixed[i];
+        }
+    } else if (dynamic_cast<Lorentzian1D<Float>* >(funcs_[0]) != 0) {
+      uInt count = 0;
+        for (uInt j=0; j < funcs_.nelements(); ++j) {
+            for (uInt i=0; i < funcs_[j]->nparameters(); ++i) {
+                funcs_[j]->mask(i) = !fixed[count];
+                fixedpar_[count] = fixed[count];
+                ++count;
+            }
         }
     }
     return true;

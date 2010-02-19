@@ -87,7 +87,7 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
   // check if OTF observation
   String obstype = in[0]->getHeader().obstype ;
   Double tol = 0.0 ;
-  if ( obstype.find( "OTF" ) != String::npos ) {
+  if ( (obstype.find( "OTF" ) != String::npos) || (obstype.find( "OBSERVE_TARGET" ) != String::npos) ) {
     tol = TOL_OTF ;
   }
   else {

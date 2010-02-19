@@ -113,6 +113,9 @@ public:
   bool getFlagRow(int whichrow=0) const
     { return table_->getFlagRow(whichrow); }
 
+  void clip(const casa::Float uthres, const casa::Float dthres, bool clipoutside=true, bool unflag=false)
+    { table_->clip(uthres, dthres, clipoutside, unflag); }
+
   std::string getSourceName(int whichrow=0) const
     { return table_->getSourceName(whichrow); }
 
