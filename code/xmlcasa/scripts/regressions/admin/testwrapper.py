@@ -37,51 +37,6 @@ class UnitTest:
         self.scriptdir = SCRIPT_REPOS       
         self.datadir = [DATA_DIR]
         self.dataFiles = []
-
-        
-    def runFuncTest(self):
-        # DEPRECATED, replaced by getFuncTest
-        print '-------------- Unit Test for %s ---------------'%self.testname
-        """Wrap a script using unittest"""
-        testscript = self.searchscript(self.testname, self.scriptdir)
-        
-        # avoid creating a _work directory
-        if (testscript == ""):
-            return
-        
-        # create a working directory
-        self.cleanup(self.workdir)
-        self.createDir(self.workdir)
-        
-        # copy test to workdir
-        self.getTest(testscript, self.testname, self.scriptdir, self.workdir)
-        thisDir = os.getcwd()
-        os.chdir(self.workdir)   
-                
-        # import the test
-        mytest = __import__(self.testname)
-        reload(mytest)
-        os.chdir(thisDir)
-        
-        #get the data
-        dataFiles = mytest.data()
-        
-        print 'Searching for input data in %s'%(self.datadir)
-        for datafile in dataFiles: 
-            file = self.locatedata(datafile, self.datadir)
-            #if data already exist, remove them
-            if(file != ''):
-                os.system('rm -rf '+ self.workdir+'/'+datafile)
-            if(os.path.isdir(file)):
-                shutil.copytree(file, self.workdir+'/'+datafile)
-            if(os.path.isfile(file)):
-                shutil.copy(file, self.workdir+'/'+datafile)
-
-        # Wrap the test in a FunctionTestCase and return it
-        os.chdir(self.workdir)       
-        testcase = unittest.FunctionTestCase(mytest.run)
-
-        return testcase
     
     def funcSetup(self):        
         """Copy data files to local working directory"""
@@ -137,46 +92,14 @@ class UnitTest:
         
         return testcase
 
-    def runTest(self):    
-                # DEPRECATED, replaced by getUnitTest
-        print '-------------- Unit Test for %s ---------------'%self.testname
+
+    def getUnitTest(self,list=[]):
         """Set up a unit test script to run wit nose"""    
-        testscript = self.searchscript(self.testname, self.scriptdir)
-
-        # avoid creating a _work directory
-        if (testscript == ""):
-            return
-        
-        # create a working directory
-        self.cleanup(self.workdir)
-        self.createDir(self.workdir)
-        
-        # copy test to workdir
-        self.getTest(testscript, self.testname,self.scriptdir, self.workdir)
-        thisDir = os.getcwd()
-        os.chdir(self.workdir)       
-                
-        # import the test
-        mytest = __import__(self.testname)
-        reload(mytest)
-              
-        # Return the tests of this test module
-        classes = mytest.suite()
-        tests = []
-        
-#        print classes
-        for c in classes:
-            for attr, value in c.__dict__.iteritems():
-#                print attr, " = ", value
-                if len(attr) >= len("test") and \
-                   attr[:len("test")] == "test":
-                    tests.append(c(attr))
-
-        return tests
-
-    def getUnitTest(self):
         print '-------------- Unit Test for %s ---------------'%self.testname
-        """Set up a unit test script to run wit nose"""    
+        if list:
+            print 'List of specific tests %s'%(list)
+            
+        # search for script in repository
         testscript = self.searchscript(self.testname, self.scriptdir)
 
         # avoid creating a _work directory
@@ -190,20 +113,47 @@ class UnitTest:
         # import the test
         mytest = __import__(self.testname)
         reload(mytest)
-              
-        # Return the tests of this test module
-        classes = mytest.suite()
-        tests = []
         
-#        print classes
+        # get the classes
+        classes = mytest.suite()
+        testlist = []
+
         for c in classes:
             for attr, value in c.__dict__.iteritems():
-#                print attr, " = ", value
-                if len(attr) >= len("test") and \
-                   attr[:len("test")] == "test":
-                    tests.append(c(attr))
-
-        return tests
+                if list:
+#                    print 'There is a list'
+                    for test in list:
+                        if test == attr:
+                            testlist.append(c(attr))
+                else:
+#                    print attr, " = ", value
+                    if len(attr) >= len("test") and \
+                        attr[:len("test")] == "test":
+                        testlist.append(c(attr))
+        
+        return testlist
+    
+        # Return the tests of this test module
+#        testlist = []
+#            if list:
+#                print "There is a list"
+#                for test in list:
+#                    print test
+#                    testcase = unittest.TestCase(myclass.test)
+#                    print testcase
+#                    testlist = testlist+[testcase]
+#                return testlist
+#            else:
+#                tests = []
+#            
+#    #        print classes
+#                for attr, value in c.__dict__.iteritems():
+#                    print attr, " = ", value
+#                    if len(attr) >= len("test") and \
+#                        attr[:len("test")] == "test":
+#                        tests.append(c(attr))
+    
+#        return tests
         
 
     def cleanup(self,workdir):
