@@ -235,6 +235,7 @@ public:
 	 */
 	bool operator > (const Tag& t) const;
 
+
 	/**
 	 * Return true if and only if this Tag is null, i.e. if its TagType field is null.
 	 * @return true if and only if this Tag is null.

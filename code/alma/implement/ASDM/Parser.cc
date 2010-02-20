@@ -63,17 +63,18 @@ namespace asdm {
 		return s.substr(a,(b - a));
 	}
 	
-	string Parser::trim(const string &s) {
+  	string Parser::trim(const string &s) {
 		unsigned int i = 0;
+		//while (s.at(i) == ' ' && i < s.length())
 		while (i < s.length() && s.at(i) == ' ')
 			++i;
 		if (i == s.length())
 			return "";
 		unsigned int j = s.length() - 1;
+		//while (s.at(j) == ' ' && j > i)
 		while (j > i && s.at(j) == ' ')
 			--j;
-		return substring(s,i,j + 1);
-		
+		return substring(s,i,j + 1);		
 	}
  
  	/**
@@ -138,10 +139,11 @@ namespace asdm {
 	string Parser::getString(const string &name, const string &tableName, const string &xmlDoc) 
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
+		/*
 		if (xmlField == "")
 			throw  ConversionException("Error: Missing field \"" + 
 					name + "\" or invalid syntax",tableName);
-
+		*/
 		return xmlField;
 	}
 

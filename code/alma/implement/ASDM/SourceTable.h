@@ -459,7 +459,46 @@ public:
 	 */
 	string getName() const;
 
+	/**
+	 * Return this table's Entity.
+	 */
+	Entity getEntity() const;
 
+	/**
+	 * Set this table's Entity.
+	 * @param e An entity. 
+	 */
+	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for Source (SourceTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
+
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a SourceTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a SourceTableIDL
+	 */
+	SourceTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a SourceTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(SourceTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -592,7 +631,7 @@ public:
 	SourceRow* lookup(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName); 
 
 
-// private:
+private:
 
 	/**
 	 * Create a SourceTable.
@@ -682,49 +721,9 @@ public:
 	void getByKeyNoAutoIncNoTime(vector <SourceRow*>& vin, vector <SourceRow*>& vout,  Tag spectralWindowId);
 	
 
-
-	/**
-	 * Return this table's Entity.
-	 */
-	Entity getEntity() const;
-
-	/**
-	 * Set this table's Entity.
-	 * @param e An entity. 
-	 */
-	void setEntity(Entity e);
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a SourceTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a SourceTableIDL
-	 */
-	SourceTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a SourceTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(SourceTableIDL x) ;
-#endif
-	
 	
 	void error() ; //throw(ConversionException);
 
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for Source (SourceTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to

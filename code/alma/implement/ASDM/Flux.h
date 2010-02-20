@@ -1,4 +1,4 @@
-//Flux.h generated on 'mer jan 13 11:28:27 CET 2010'. Edit at your own risk.
+//Flux.h generated on 'Thu Feb 04 10:20:05 CET 2010'. Edit at your own risk.
 /*
  * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
@@ -47,7 +47,7 @@ Flux operator * ( double , const Flux & );
 ostream & operator << ( ostream &, const Flux & );
 istream & operator >> ( istream &, Flux &);
 /**
- * The Flux class implements a quantity of flux in janskys. class implements a quantity of angle in radians.
+ * The Flux class implements a quantity of flux in janskys..
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
@@ -96,7 +96,7 @@ public:
 	 *
 	 * A constructor from a CORBA/IDL representation.
 	 * 
-	 * @param a cons ref to an IDLFlux.
+	 * @param idlFlux a cons ref to an IDLFlux.
 	 */
 	Flux(const IDLFlux & idlFlux);
 #endif
@@ -126,7 +126,7 @@ public:
 	 * @param st a reference to a StringTokenizer.
 	 * @return an Flux.
 	 */
-	static Flux getFlux(StringTokenizer &t) throw(NumberFormatException);
+	static Flux getFlux(StringTokenizer &st) throw(NumberFormatException);
 			
 	/**
 	 * Write the binary representation of this to an EndianOSStream .
@@ -164,7 +164,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of  Flux from an EndianISStream
 	 * and use the read value to set a vector of  Flux.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss a reference to the EndianISStream to be read
 	 * @return a vector of Flux
 	 */	 
 	 static vector<Flux> from1DBin(EndianISStream & eiss);
@@ -172,7 +172,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of vector of Flux from an EndianISStream
 	 * and use the read value to set a vector of  vector of Flux.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss the EndianISStream to be read
 	 * @return a vector of vector of Flux
 	 */	 
 	 static vector<vector<Flux> > from2DBin(EndianISStream & eiss);
@@ -210,12 +210,12 @@ public:
 	 * Operator multiply and assign.
 	 * @param x a value in double precision.
 	 */
-	Flux & operator *= (const double d);
+	Flux & operator *= (const double x);
 	/**
 	 * Operator divide and assign.
 	 * @param x a valye in double precision.
 	 */
-	Flux & operator /= (const double d);
+	Flux & operator /= (const double x);
 	/**
 	 * Addition operator.
 	 * @param x a const reference to a Flux.
@@ -225,17 +225,17 @@ public:
 	 * Substraction operator.
 	 * @param x a const reference to a Flux.
 	 */
-	Flux operator - (const Flux &) const;
+	Flux operator - (const Flux & x) const;
 	/**
 	 * Multiplication operator.
-	 * @param d a value in double precision.
+	 * @param x a value in double precision.
 	 */
-	Flux operator * (const double d) const;
+	Flux operator * (const double x) const;
 	/**
 	 * Division operator.
 	 * @param d a value in double precision.
 	 */
-	Flux operator / (const double) const;
+	Flux operator / (const double x) const;
 	/**
 	 * Comparison operator. Less-than.
 	 * @param x a const reference to a Flux.
@@ -245,22 +245,22 @@ public:
 	 * Comparison operator. Greater-than.
 	 * @param x a const reference to a Flux.
 	 */
-	bool operator > (const Flux &) const;
+	bool operator > (const Flux & x) const;
 	/**
 	 * Comparison operator. Less-than or equal.
 	 * @param x a const reference to a Flux.
 	 */	
-	bool operator <= (const Flux &) const;
+	bool operator <= (const Flux & x) const;
 	/**
 	 * Comparison operator. Greater-than or equal.
 	 * @param x a const reference to a Flux.
 	 */
-	bool operator >= (const Flux &) const;
+	bool operator >= (const Flux & x) const;
 	/**
 	 * Comparision operator. Equal-to.
 	 * @param x a const reference to a Flux.
 	 */
-	bool operator == (const Flux &) const;
+	bool operator == (const Flux & x) const;
 	/** 
 	 * Comparison method. Equality.
 	 * @param x a const reference to a Flux.
@@ -273,7 +273,7 @@ public:
 	bool operator != (const Flux & x) const;
 	/**
 	 * Comparison method. Test nullity.
-	 * @param x a const reference to a Flux.
+	 * @return a bool.
 	 */
 	bool isZero() const;
 	/**

@@ -305,7 +305,46 @@ public:
 	 */
 	string getName() const;
 
+	/**
+	 * Return this table's Entity.
+	 */
+	Entity getEntity() const;
 
+	/**
+	 * Set this table's Entity.
+	 * @param e An entity. 
+	 */
+	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for Pointing (PointingTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
+
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a PointingTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a PointingTableIDL
+	 */
+	PointingTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a PointingTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(PointingTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -467,7 +506,7 @@ public:
 	PointingRow* lookup(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId); 
 
 
-// private:
+private:
 
 	/**
 	 * Create a PointingTable.
@@ -555,49 +594,9 @@ public:
 	void getByKeyNoAutoIncNoTime(vector <PointingRow*>& vin, vector <PointingRow*>& vout,  Tag antennaId);
 	
 
-
-	/**
-	 * Return this table's Entity.
-	 */
-	Entity getEntity() const;
-
-	/**
-	 * Set this table's Entity.
-	 * @param e An entity. 
-	 */
-	void setEntity(Entity e);
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a PointingTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a PointingTableIDL
-	 */
-	PointingTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a PointingTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(PointingTableIDL x) ;
-#endif
-	
 	
 	void error() ; //throw(ConversionException);
 
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for Pointing (PointingTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to

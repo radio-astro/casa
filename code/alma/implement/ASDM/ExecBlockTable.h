@@ -393,7 +393,46 @@ public:
 	 */
 	string getName() const;
 
+	/**
+	 * Return this table's Entity.
+	 */
+	Entity getEntity() const;
 
+	/**
+	 * Set this table's Entity.
+	 * @param e An entity. 
+	 */
+	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for ExecBlock (ExecBlockTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
+
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a ExecBlockTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a ExecBlockTableIDL
+	 */
+	ExecBlockTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a ExecBlockTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(ExecBlockTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -584,7 +623,7 @@ public:
 	ExecBlockRow* lookup(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId); 
 
 
-// private:
+private:
 
 	/**
 	 * Create a ExecBlockTable.
@@ -643,49 +682,9 @@ public:
 			
 	vector<ExecBlockRow *> row;
 
-
-	/**
-	 * Return this table's Entity.
-	 */
-	Entity getEntity() const;
-
-	/**
-	 * Set this table's Entity.
-	 * @param e An entity. 
-	 */
-	void setEntity(Entity e);
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a ExecBlockTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a ExecBlockTableIDL
-	 */
-	ExecBlockTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a ExecBlockTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(ExecBlockTableIDL x) ;
-#endif
-	
 	
 	void error() ; //throw(ConversionException);
 
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for ExecBlock (ExecBlockTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to

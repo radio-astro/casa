@@ -1,4 +1,4 @@
-//AngularRate.h generated on 'mer jan 13 11:28:27 CET 2010'. Edit at your own risk.
+//AngularRate.h generated on 'Thu Feb 04 10:20:05 CET 2010'. Edit at your own risk.
 /*
  * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
@@ -47,7 +47,7 @@ AngularRate operator * ( double , const AngularRate & );
 ostream & operator << ( ostream &, const AngularRate & );
 istream & operator >> ( istream &, AngularRate &);
 /**
- * The AngularRate class implements a quantity of AngularRate in radians per second. class implements a quantity of angle in radians.
+ * The AngularRate class implements a quantity of AngularRate in radians per second..
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
@@ -96,7 +96,7 @@ public:
 	 *
 	 * A constructor from a CORBA/IDL representation.
 	 * 
-	 * @param a cons ref to an IDLAngularRate.
+	 * @param idlAngularRate a cons ref to an IDLAngularRate.
 	 */
 	AngularRate(const IDLAngularRate & idlAngularRate);
 #endif
@@ -126,7 +126,7 @@ public:
 	 * @param st a reference to a StringTokenizer.
 	 * @return an AngularRate.
 	 */
-	static AngularRate getAngularRate(StringTokenizer &t) throw(NumberFormatException);
+	static AngularRate getAngularRate(StringTokenizer &st) throw(NumberFormatException);
 			
 	/**
 	 * Write the binary representation of this to an EndianOSStream .
@@ -164,7 +164,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of  AngularRate from an EndianISStream
 	 * and use the read value to set a vector of  AngularRate.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss a reference to the EndianISStream to be read
 	 * @return a vector of AngularRate
 	 */	 
 	 static vector<AngularRate> from1DBin(EndianISStream & eiss);
@@ -172,7 +172,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of vector of AngularRate from an EndianISStream
 	 * and use the read value to set a vector of  vector of AngularRate.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss the EndianISStream to be read
 	 * @return a vector of vector of AngularRate
 	 */	 
 	 static vector<vector<AngularRate> > from2DBin(EndianISStream & eiss);
@@ -210,12 +210,12 @@ public:
 	 * Operator multiply and assign.
 	 * @param x a value in double precision.
 	 */
-	AngularRate & operator *= (const double d);
+	AngularRate & operator *= (const double x);
 	/**
 	 * Operator divide and assign.
 	 * @param x a valye in double precision.
 	 */
-	AngularRate & operator /= (const double d);
+	AngularRate & operator /= (const double x);
 	/**
 	 * Addition operator.
 	 * @param x a const reference to a AngularRate.
@@ -225,17 +225,17 @@ public:
 	 * Substraction operator.
 	 * @param x a const reference to a AngularRate.
 	 */
-	AngularRate operator - (const AngularRate &) const;
+	AngularRate operator - (const AngularRate & x) const;
 	/**
 	 * Multiplication operator.
-	 * @param d a value in double precision.
+	 * @param x a value in double precision.
 	 */
-	AngularRate operator * (const double d) const;
+	AngularRate operator * (const double x) const;
 	/**
 	 * Division operator.
 	 * @param d a value in double precision.
 	 */
-	AngularRate operator / (const double) const;
+	AngularRate operator / (const double x) const;
 	/**
 	 * Comparison operator. Less-than.
 	 * @param x a const reference to a AngularRate.
@@ -245,22 +245,22 @@ public:
 	 * Comparison operator. Greater-than.
 	 * @param x a const reference to a AngularRate.
 	 */
-	bool operator > (const AngularRate &) const;
+	bool operator > (const AngularRate & x) const;
 	/**
 	 * Comparison operator. Less-than or equal.
 	 * @param x a const reference to a AngularRate.
 	 */	
-	bool operator <= (const AngularRate &) const;
+	bool operator <= (const AngularRate & x) const;
 	/**
 	 * Comparison operator. Greater-than or equal.
 	 * @param x a const reference to a AngularRate.
 	 */
-	bool operator >= (const AngularRate &) const;
+	bool operator >= (const AngularRate & x) const;
 	/**
 	 * Comparision operator. Equal-to.
 	 * @param x a const reference to a AngularRate.
 	 */
-	bool operator == (const AngularRate &) const;
+	bool operator == (const AngularRate & x) const;
 	/** 
 	 * Comparison method. Equality.
 	 * @param x a const reference to a AngularRate.
@@ -273,7 +273,7 @@ public:
 	bool operator != (const AngularRate & x) const;
 	/**
 	 * Comparison method. Test nullity.
-	 * @param x a const reference to a AngularRate.
+	 * @return a bool.
 	 */
 	bool isZero() const;
 	/**

@@ -1,4 +1,4 @@
-//Length.h generated on 'mer jan 13 11:28:27 CET 2010'. Edit at your own risk.
+//Length.h generated on 'Thu Feb 04 10:20:05 CET 2010'. Edit at your own risk.
 /*
  * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
@@ -47,7 +47,7 @@ Length operator * ( double , const Length & );
 ostream & operator << ( ostream &, const Length & );
 istream & operator >> ( istream &, Length &);
 /**
- * The Length class implements a quantity of length in meters. class implements a quantity of angle in radians.
+ * The Length class implements a quantity of length in meters..
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
@@ -96,7 +96,7 @@ public:
 	 *
 	 * A constructor from a CORBA/IDL representation.
 	 * 
-	 * @param a cons ref to an IDLLength.
+	 * @param idlLength a cons ref to an IDLLength.
 	 */
 	Length(const IDLLength & idlLength);
 #endif
@@ -126,7 +126,7 @@ public:
 	 * @param st a reference to a StringTokenizer.
 	 * @return an Length.
 	 */
-	static Length getLength(StringTokenizer &t) throw(NumberFormatException);
+	static Length getLength(StringTokenizer &st) throw(NumberFormatException);
 			
 	/**
 	 * Write the binary representation of this to an EndianOSStream .
@@ -164,7 +164,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of  Length from an EndianISStream
 	 * and use the read value to set a vector of  Length.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss a reference to the EndianISStream to be read
 	 * @return a vector of Length
 	 */	 
 	 static vector<Length> from1DBin(EndianISStream & eiss);
@@ -172,7 +172,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of vector of Length from an EndianISStream
 	 * and use the read value to set a vector of  vector of Length.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss the EndianISStream to be read
 	 * @return a vector of vector of Length
 	 */	 
 	 static vector<vector<Length> > from2DBin(EndianISStream & eiss);
@@ -210,12 +210,12 @@ public:
 	 * Operator multiply and assign.
 	 * @param x a value in double precision.
 	 */
-	Length & operator *= (const double d);
+	Length & operator *= (const double x);
 	/**
 	 * Operator divide and assign.
 	 * @param x a valye in double precision.
 	 */
-	Length & operator /= (const double d);
+	Length & operator /= (const double x);
 	/**
 	 * Addition operator.
 	 * @param x a const reference to a Length.
@@ -225,17 +225,17 @@ public:
 	 * Substraction operator.
 	 * @param x a const reference to a Length.
 	 */
-	Length operator - (const Length &) const;
+	Length operator - (const Length & x) const;
 	/**
 	 * Multiplication operator.
-	 * @param d a value in double precision.
+	 * @param x a value in double precision.
 	 */
-	Length operator * (const double d) const;
+	Length operator * (const double x) const;
 	/**
 	 * Division operator.
 	 * @param d a value in double precision.
 	 */
-	Length operator / (const double) const;
+	Length operator / (const double x) const;
 	/**
 	 * Comparison operator. Less-than.
 	 * @param x a const reference to a Length.
@@ -245,22 +245,22 @@ public:
 	 * Comparison operator. Greater-than.
 	 * @param x a const reference to a Length.
 	 */
-	bool operator > (const Length &) const;
+	bool operator > (const Length & x) const;
 	/**
 	 * Comparison operator. Less-than or equal.
 	 * @param x a const reference to a Length.
 	 */	
-	bool operator <= (const Length &) const;
+	bool operator <= (const Length & x) const;
 	/**
 	 * Comparison operator. Greater-than or equal.
 	 * @param x a const reference to a Length.
 	 */
-	bool operator >= (const Length &) const;
+	bool operator >= (const Length & x) const;
 	/**
 	 * Comparision operator. Equal-to.
 	 * @param x a const reference to a Length.
 	 */
-	bool operator == (const Length &) const;
+	bool operator == (const Length & x) const;
 	/** 
 	 * Comparison method. Equality.
 	 * @param x a const reference to a Length.
@@ -273,7 +273,7 @@ public:
 	bool operator != (const Length & x) const;
 	/**
 	 * Comparison method. Test nullity.
-	 * @param x a const reference to a Length.
+	 * @return a bool.
 	 */
 	bool isZero() const;
 	/**

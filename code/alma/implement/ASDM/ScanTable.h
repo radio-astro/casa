@@ -304,7 +304,46 @@ public:
 	 */
 	string getName() const;
 
+	/**
+	 * Return this table's Entity.
+	 */
+	Entity getEntity() const;
 
+	/**
+	 * Set this table's Entity.
+	 * @param e An entity. 
+	 */
+	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for Scan (ScanTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
+
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a ScanTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a ScanTableIDL
+	 */
+	ScanTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a ScanTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(ScanTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -444,7 +483,7 @@ public:
 	ScanRow* lookup(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow); 
 
 
-// private:
+private:
 
 	/**
 	 * Create a ScanTable.
@@ -497,49 +536,9 @@ public:
 			
 	vector<ScanRow *> row;
 
-
-	/**
-	 * Return this table's Entity.
-	 */
-	Entity getEntity() const;
-
-	/**
-	 * Set this table's Entity.
-	 * @param e An entity. 
-	 */
-	void setEntity(Entity e);
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a ScanTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a ScanTableIDL
-	 */
-	ScanTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a ScanTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(ScanTableIDL x) ;
-#endif
-	
 	
 	void error() ; //throw(ConversionException);
 
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for Scan (ScanTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
