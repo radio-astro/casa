@@ -66,9 +66,7 @@ WCCSAxisLabeller::WCCSAxisLabeller() :
   Aipsrc::find(worldorpix,"display.axislabels.world","on");
   itsWorldAxisLabels = 
     !worldorpix.matches(Regex("[ \t]*(([nN]o)|([oO]ff)|([fF](alse)*))[ \t\n]*"));
-  itsRefPixel.resize(2);
-  itsRefPixel(0) = 1.;
-  itsRefPixel(1) = 1.;    
+    
 }
 
 WCCSAxisLabeller::~WCCSAxisLabeller() {
@@ -166,43 +164,6 @@ Bool WCCSAxisLabeller::setOptions(const Record &rec, Record &updatedOptions)
         localchange = True;
      }
   }
-
-  if (rec.size() == 1 && rec.name(0) == "refPix") {
-     //cout << "rec=" << rec << endl;
-     //cout << "------itsRefPix=" << itsRefPixel << endl;
-     //cout << "type=" << rec.type(0) << endl;
-     if (rec.type(0)==TpArrayInt) {
-        Vector<Int> inputRefPix;
-        if (readOptionRecord(inputRefPix, error, rec, "refPix")) {
-           //cout << "Int inputRefPix=" << inputRefPix << endl;
-           itsRefPixel(0) = Double(inputRefPix(0));
-           itsRefPixel(1) = Double(inputRefPix(1));
-           //cout << "======itsRefPix=" << itsRefPixel << endl;
-           localchange = True;
-        }
-     }
-     if (rec.type(0)==TpArrayDouble) {
-        Vector<Double> inputRefPix;
-        if (readOptionRecord(inputRefPix, error, rec, "refPix")) {
-           //cout << "Double inputRefPix=" << inputRefPix << endl;
-           itsRefPixel(0) = inputRefPix(0);
-           itsRefPixel(1) = inputRefPix(1);
-           //cout << "======itsRefPix=" << itsRefPixel << endl;
-           localchange = True;
-        }
-     }
-     if (rec.type(0)==TpArrayFloat) {
-        Vector<Float> inputRefPix;
-        if (readOptionRecord(inputRefPix, error, rec, "refPix")) {
-           //cout << "Float inputRefPix=" << inputRefPix << endl;
-           itsRefPixel(0) = Double(inputRefPix(0));
-           itsRefPixel(1) = Double(inputRefPix(1));
-           //cout << "======itsRefPix=" << itsRefPixel << endl;
-           localchange = True;
-        }
-     }
-  }
-
 //
   if (readOptionRecord(value, error, rec,  "axislabelpixelworld")) {
      Bool world = (value=="world");
@@ -266,19 +227,6 @@ Record WCCSAxisLabeller::getOptions() const
   absrel.define("allowunset", False);
   rec.defineRecord("axislabelabsrel", absrel);
 //
-  Record refPix;
-  refPix.define("context", "Axis_label_properties");
-  refPix.define("dlformat", "refPix");
-  refPix.define("listname", "Reference Pixel");
-  refPix.define("ptype", "array");
-  Vector<Int> refpix(2);
-  refpix(0) = -1;
-  refpix(1) = -1;
-  refPix.define("default",refpix);
-  refPix.define("value", itsRefPixel);
-  refPix.define("allowunset", True);
-  rec.defineRecord("refPix", refPix);
-
   Int after = -1;
   Int iD = itsCoordinateSystem.findCoordinate(Coordinate::DIRECTION, after);
   if (iD>=0) {
@@ -657,8 +605,6 @@ void WCCSAxisLabeller::setDirectionState (CoordinateSystem& cs) const
       MDirection::Types cSystem;
       MDirection::getType(cSystem, itsDirectionSystem);
       coord.setReferenceConversion(cSystem);
-      coord.setReferencePixel(itsRefPixel);
-      
 
 // Replace in CS
 
