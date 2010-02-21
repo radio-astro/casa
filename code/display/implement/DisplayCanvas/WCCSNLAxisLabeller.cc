@@ -37,7 +37,6 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <display/Display/State.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayCanvas/WCCSNLAxisLabeller.h>
@@ -581,7 +580,6 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
 // Get some other bits and pieces
 
   Vector<Double> refPixel = cSys.referencePixel();
-  //cout << "refPix=" << refPixel << endl;
   WCCSNLAxisLabellerRefPix[0] = refPixel[0];
   WCCSNLAxisLabellerRefPix[1] = refPixel[1];
 
@@ -788,7 +786,7 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
   }
 //
 
-  if ( zLabelType() != "none" && ! display::state::instance().fileOutputMode( ) ) {
+  if (zLabelType() != "none") {
 
     // store bgcolor
     Int bgcol;

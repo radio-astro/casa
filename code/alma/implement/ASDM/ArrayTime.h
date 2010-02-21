@@ -110,22 +110,109 @@ public:
 	static  ArrayTime sub(const ArrayTime &time, const Interval &interval) ;
 	static  ArrayTime getArrayTime(StringTokenizer &t) ;
 
-	ArrayTime(); 
+	/**
+	 * The nullary constructor.
+	 *
+	 * Builds an ArrayTime corresponding to the origin of time
+	 * i. e. 17 November 1858 00:00:00 UTC
+	 *
+	 */
+	ArrayTime();
+
+	/**
+	 *
+	 * Builds an ArrayTime out of the content of a string.
+	 *
+	 * If the string contains the textual representation of a double precision value then it will be considered as an MJD date.
+	 * If the strign contains the textual representation of an integer value then it will be considered as an interval of time
+	 * counted in nanoseconds since the 17 November 1858 00:00:00 UTC.
+	 *
+	 * @param s a const reference to a string.
+	 */
 	ArrayTime (const string &s); 
+
+	/**
+	 * The copy constructor.
+	 *
+	 * @param s a const reference to an ArrayTime.
+	 */
 	ArrayTime(const ArrayTime &t);
 #ifndef WITHOUT_ACS 
+	/**
+	 * Builds an ArrayTime from the CORBA/IDL representation of an ArrayTime.
+	 *
+	 * @param t a const reference to an IDLArrayTime.
+	 */
 	ArrayTime (const IDLArrayTime &t);
 #endif 
+
+	/**
+	 * Builds an ArrayTime from a triple (year, month, day).
+	 *
+	 * @param year a positive integer value,
+	 * @param month an integer in the range [1, 12],
+	 * @param day a value in double precision, whose integer value
+	 * must be in a valid range depending on the month.
+	 *
+	 * @throws InvalidArgumentException.
+	 */
 	ArrayTime(int year, int month, double day); 
+
+	/**
+	 * Build an ArrayTime from a sextuple (year, month, day, hour, minute, second.
+	 *
+	 * @param year a positive integer value,
+	 * @param month an integer in the range [1, 12],
+	 * @param day an integer in the usual range depending on the month,
+	 * @param hour an integer in the range [0, 23],
+	 * @param minute an integer value in the range [0, 59],
+	 * @param second a value in double precision whose integer part must be in the range [0, 59].
+	 *
+	 * @throws InvalidArgumentException.
+	 */
 	ArrayTime(int year, int month, int day, int hour, int minute, double second);
+
+	/**
+	 * Build an ArrayTime from an MJD date.
+	 *
+	 * @param modifieJulianDay a value in double precision.
+	 */
 	ArrayTime(double modifiedJulianDay);
+
+	/**
+	 * Build an ArrayTime from an MJD date.
+	 *
+	 * @param modifiedJulianDay an integer value to express the integer part of the MJD date,
+	 * @param secondsInADay a value in double precision to express the decimal part of the MJD date.
+	 */
 	ArrayTime(int modifiedJulianDay, double secondsInADay);
+
+	/**
+	 * Build an ArrayTime from a number of nanoseconds.
+	 *
+	 * @param nanoseconds a long long integer value to express a number of nanoseconds
+	 * since 17 November 1858 00:00:00 UTC.
+	 */
 	ArrayTime(long long nanoseconds); 
 
+	/**
+	 * Return the julian day.
+	 *
+	 *  @return a value in double precision expressing this in julian day.
+	 */
 	double getJD() const; 
+
+	/**
+	 * Return the modified julian day.
+	 *
+	 *  @return a value in double precision expressing this in modified julian day.
+	 */
 	double getMJD() const; 
+
+/*
 	double getJDI() const; 
 	double getMJDI() const; 
+*/
 
 #ifndef WITHOUT_ACS
 	IDLArrayTime toIDLArrayTime() const; 
@@ -226,8 +313,10 @@ private:
 
 };
 
+/*
 inline double ArrayTime::getJDI() const {return getJD();}
 inline double ArrayTime::getMJDI()const  {return getMJD();}
+*/
 } // End namespace asdm
 
 #endif /* ArrayTime_CLASS */

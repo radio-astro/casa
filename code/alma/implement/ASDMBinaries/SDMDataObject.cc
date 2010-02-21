@@ -935,8 +935,7 @@ namespace asdmbinaries {
   
     // execBlock...
     result << "<" << HeaderParser::EXECBLOCK << " " << HeaderParser::XLINKHREF << "=" << QUOTE(execBlockUID_) << "/>" << endl;
-    //result << "<" << HeaderParser::EXECBLOCK << " xlink:" << HeaderParser::XLINKHREF << "=" << QUOTE(execBlockUID_) << "/>" << endl;
-
+  
     // numAntenna
     TOXML(HeaderParser::NUMANTENNA, numAntenna_, result);
   

@@ -277,7 +277,46 @@ public:
 	 */
 	string getName() const;
 
+	/**
+	 * Return this table's Entity.
+	 */
+	Entity getEntity() const;
 
+	/**
+	 * Set this table's Entity.
+	 * @param e An entity. 
+	 */
+	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for Main (MainTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
+
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a MainTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a MainTableIDL
+	 */
+	MainTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a MainTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(MainTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -445,7 +484,7 @@ public:
 	MainRow* lookup(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId); 
 
 
-// private:
+private:
 
 	/**
 	 * Create a MainTable.
@@ -533,49 +572,9 @@ public:
 	void getByKeyNoAutoIncNoTime(vector <MainRow*>& vin, vector <MainRow*>& vout,  Tag configDescriptionId, Tag fieldId);
 	
 
-
-	/**
-	 * Return this table's Entity.
-	 */
-	Entity getEntity() const;
-
-	/**
-	 * Set this table's Entity.
-	 * @param e An entity. 
-	 */
-	void setEntity(Entity e);
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a MainTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a MainTableIDL
-	 */
-	MainTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a MainTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(MainTableIDL x) ;
-#endif
-	
 	
 	void error() ; //throw(ConversionException);
 
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for Main (MainTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to

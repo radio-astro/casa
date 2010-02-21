@@ -1460,6 +1460,8 @@ namespace sdmbin{
   }
 
   float DataDump::scaleFactor(unsigned int ndd){
+    bool coutest=false;
+    if (coutest) cout << "size of v_scaleFactor_ = " << v_scaleFactor_.size() << ", ndd = " << ndd << endl;
     return v_scaleFactor_.at(ndd);
   }
 

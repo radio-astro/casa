@@ -1,4 +1,4 @@
-//Speed.h generated on 'mer jan 13 11:28:27 CET 2010'. Edit at your own risk.
+//Speed.h generated on 'Thu Feb 04 10:20:05 CET 2010'. Edit at your own risk.
 /*
  * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
@@ -47,7 +47,7 @@ Speed operator * ( double , const Speed & );
 ostream & operator << ( ostream &, const Speed & );
 istream & operator >> ( istream &, Speed &);
 /**
- * The Speed class implements a quantity of speed in meters per second. class implements a quantity of angle in radians.
+ * The Speed class implements a quantity of speed in meters per second..
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
@@ -96,7 +96,7 @@ public:
 	 *
 	 * A constructor from a CORBA/IDL representation.
 	 * 
-	 * @param a cons ref to an IDLSpeed.
+	 * @param idlSpeed a cons ref to an IDLSpeed.
 	 */
 	Speed(const IDLSpeed & idlSpeed);
 #endif
@@ -126,7 +126,7 @@ public:
 	 * @param st a reference to a StringTokenizer.
 	 * @return an Speed.
 	 */
-	static Speed getSpeed(StringTokenizer &t) throw(NumberFormatException);
+	static Speed getSpeed(StringTokenizer &st) throw(NumberFormatException);
 			
 	/**
 	 * Write the binary representation of this to an EndianOSStream .
@@ -164,7 +164,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of  Speed from an EndianISStream
 	 * and use the read value to set a vector of  Speed.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss a reference to the EndianISStream to be read
 	 * @return a vector of Speed
 	 */	 
 	 static vector<Speed> from1DBin(EndianISStream & eiss);
@@ -172,7 +172,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of vector of Speed from an EndianISStream
 	 * and use the read value to set a vector of  vector of Speed.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss the EndianISStream to be read
 	 * @return a vector of vector of Speed
 	 */	 
 	 static vector<vector<Speed> > from2DBin(EndianISStream & eiss);
@@ -210,12 +210,12 @@ public:
 	 * Operator multiply and assign.
 	 * @param x a value in double precision.
 	 */
-	Speed & operator *= (const double d);
+	Speed & operator *= (const double x);
 	/**
 	 * Operator divide and assign.
 	 * @param x a valye in double precision.
 	 */
-	Speed & operator /= (const double d);
+	Speed & operator /= (const double x);
 	/**
 	 * Addition operator.
 	 * @param x a const reference to a Speed.
@@ -225,17 +225,17 @@ public:
 	 * Substraction operator.
 	 * @param x a const reference to a Speed.
 	 */
-	Speed operator - (const Speed &) const;
+	Speed operator - (const Speed & x) const;
 	/**
 	 * Multiplication operator.
-	 * @param d a value in double precision.
+	 * @param x a value in double precision.
 	 */
-	Speed operator * (const double d) const;
+	Speed operator * (const double x) const;
 	/**
 	 * Division operator.
 	 * @param d a value in double precision.
 	 */
-	Speed operator / (const double) const;
+	Speed operator / (const double x) const;
 	/**
 	 * Comparison operator. Less-than.
 	 * @param x a const reference to a Speed.
@@ -245,22 +245,22 @@ public:
 	 * Comparison operator. Greater-than.
 	 * @param x a const reference to a Speed.
 	 */
-	bool operator > (const Speed &) const;
+	bool operator > (const Speed & x) const;
 	/**
 	 * Comparison operator. Less-than or equal.
 	 * @param x a const reference to a Speed.
 	 */	
-	bool operator <= (const Speed &) const;
+	bool operator <= (const Speed & x) const;
 	/**
 	 * Comparison operator. Greater-than or equal.
 	 * @param x a const reference to a Speed.
 	 */
-	bool operator >= (const Speed &) const;
+	bool operator >= (const Speed & x) const;
 	/**
 	 * Comparision operator. Equal-to.
 	 * @param x a const reference to a Speed.
 	 */
-	bool operator == (const Speed &) const;
+	bool operator == (const Speed & x) const;
 	/** 
 	 * Comparison method. Equality.
 	 * @param x a const reference to a Speed.
@@ -273,7 +273,7 @@ public:
 	bool operator != (const Speed & x) const;
 	/**
 	 * Comparison method. Test nullity.
-	 * @param x a const reference to a Speed.
+	 * @return a bool.
 	 */
 	bool isZero() const;
 	/**

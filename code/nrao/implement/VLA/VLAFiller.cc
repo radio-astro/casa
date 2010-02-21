@@ -1555,11 +1555,7 @@ emptyMS(const Path& tableName, const Bool overwrite) {
 		     columnName(MeasurementSet::TIME_CENTROID), incrMan);
   }
   //Experimental tiledShapeStMan
-  //4 pol, 1024 channels
-  IPosition dataShape(2,4,1024);
-  //IPosition tileShape = MSTileLayout::tileShape(dataShape,0, "VLA");
-  //4 pol 100 channel 351 tiles
-  IPosition tileShape(3, 4, 100, 351);
+  IPosition tileShape(3, 4, 128, 16);
   // These columns contain the bulk of the data so save them in a tiled way
   {
     //TiledDataStMan dataMan(dataCol);

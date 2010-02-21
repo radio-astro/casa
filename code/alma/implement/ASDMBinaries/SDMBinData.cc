@@ -1159,18 +1159,26 @@ namespace sdmbin {
 		v_dataShape[2]=1;               // qapc being not an EnumSet (MS limitation for floatData column)
 		for(unsigned int nbi=0; nbi<numBin; nbi++){
 		  if(coutest){
-		    cout<<timeCentroidMJD<<endl;
+		    cout<<"timeCentroidMJD="<<timeCentroidMJD<<endl;
 		  }
 		  // the data and binary meta-data
-		  if(SDMBinData::syscal_)
+		  if (coutest) {
+		    cout << "nt = " << nt << endl;
+		    cout << "size of v_dataDump_ = " << v_dataDump_.size() << endl;
+		  }
+
+		  if(SDMBinData::syscal_) {
 		    msDataPtr_ = getCalibratedData( na1, nfe, na2, nfe,
 					  ndd,  nbi, v_napc,
 					  v_dataDump_[nt]->scaleFactor(ndd),
 					  vv_tsys[nt][scn]);
-		  else
+		  }
+		  else {
 		    msDataPtr_ = getData( na1, nfe, na2, nfe,
 					  ndd,  nbi, v_napc,
 					  v_dataDump_[nt]->scaleFactor(ndd));
+		  }
+
 		  msDataPtr_->timeCentroid  = 86400.*timeCentroidMJD; // default value would there be no bin actualTimes
 		  msDataPtr_->exposure      = exposure;               // default value would there be no bin actualDurations
 		  msDataPtr_->flag          = 0;                      // default value is "false"  would there be no bin flags
@@ -1437,7 +1445,7 @@ namespace sdmbin {
 			       float scaleFactor){
 
 
-    bool coutest = false;                                   // temporary: to check
+    bool coutest=false;                                   // temporary: to check
 
     if(coutest)cout<<"scaleFactor="<<scaleFactor<<endl;
 
@@ -1594,7 +1602,7 @@ namespace sdmbin {
 #if 1
     return 0;
 #else
-    bool coutest = false;                                   // temporary: to check
+    bool coutest=false;                                   // temporary: to check
 
     if(coutest)cout<<"scaleFactor="<<scaleFactor<<endl;
 
@@ -1890,6 +1898,7 @@ namespace sdmbin {
       if(coutest)cout<<"subscan="<<subscan<<" subscanNum="<<subscanNum<<endl;
       if(subscan!=subscanNum){
 	vector<CalDeviceRow*> v_calDev;
+	vector<CalDeviceRow*>* v_calDevPtr = 0;
 	CalDeviceTable&       calDevices       = datasetPtr_->getCalDevice();
 	DataDescriptionTable& dataDescriptions = datasetPtr_->getDataDescription();
 	for(unsigned int n_d=0; n_d<v_ddId.size(); n_d++)
@@ -1905,18 +1914,18 @@ namespace sdmbin {
 			     <<" feedId="<< v_feedId[n_f]
 			     <<" spwId=" << v_spwId[n_s].toString()
 			     <<endl;
-	      v_calDev = *calDevices.getByContext( v_antennaId[n_a],
-						   v_spwId[n_s],
-						   (int) v_feedId[n_f]);
 	      vvvv_calDevice[n_a][n_f][n_s] = v_calDev;
+	      if ( (v_calDevPtr = calDevices.getByContext( v_antennaId[n_a],
+							   v_spwId[n_s],
+							   (int) v_feedId[n_f])) != 0)
+		vvvv_calDevice[n_a][n_f][n_s] = *v_calDevPtr; 
 	    }
 	  }
 	}
       }
       int nt=-1;
       vector<CalDeviceRow*> v_ts=vvvv_calDevice[na][nfe][nspw];   // the time series
-      cout<<"timeOfDump="<<timeOfDump<<endl;
-      if(!v_ts.size())Error(FATAL,"empty temporal series ");
+      if(!v_ts.size())Error(FATAL,"The CalDevice is empty, I can't go further.");
       for(unsigned int n=0; n<v_ts.size(); n++){
 	if( nt==-1 && v_ts[n]->getTimeInterval().contains(timeOfDump) ){
 	  nt=n;
@@ -1925,7 +1934,7 @@ namespace sdmbin {
       }
       if(nt==-1)
 	Error( FATAL,
-	       "Fail to find the CalDevice row for na=%d nfe=%d nspw=%d at the given time of dump",
+	       "Failed to find the CalDevice row for na=%d nfe=%d nspw=%d at the given time of dump",
 	       na,nfe,nspw);
 
       CalDeviceRow*             caldevr      = vvvv_calDevice[na][nfe][nspw][nt];

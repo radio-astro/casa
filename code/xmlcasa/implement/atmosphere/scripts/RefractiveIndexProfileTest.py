@@ -16,7 +16,7 @@ print "Number of layers returned: ", at.getNumLayers()
 print myatm
 p = at.getProfile()
 print p['return']
-w = at.getStartupWaterContent()
+w = at.getGroundWH2O()
 print "First guess precipitable water vapor content: ", w.value, w.units
 print "(This value is estimated from the relative humidity at ground level and the water vapor scale height)"
 print
@@ -84,7 +84,7 @@ fW2 = quantity(0.008,'GHz')
 fR2 = quantity(0.002,'GHz')
 nc = at.addSpectralWindow(fC2,fW2,fR2)
 print "New spectral window has ", nc, " channels"
-w = at.getStartupWaterContent()
+w = at.getGroundWH2O()
 numSpw = at.getNumSpectralWindows()
 print "There are now ", numSpw, " spectral windows"
 print "Absorption profiles including this new spectral window.  Summary of results:"
