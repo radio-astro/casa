@@ -116,6 +116,9 @@ public:
   void clip(const casa::Float uthres, const casa::Float dthres, bool clipoutside=true, bool unflag=false)
     { table_->clip(uthres, dthres, clipoutside, unflag); }
 
+  std::vector<bool> getClipMask(int whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag) const
+    { return table_->getClipMask(whichrow, uthres, dthres, clipoutside, unflag); }
+
   std::string getSourceName(int whichrow=0) const
     { return table_->getSourceName(whichrow); }
 

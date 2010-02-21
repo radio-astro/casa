@@ -88,7 +88,8 @@ BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
-   LDFLAGS   := -bundle -arch i386
+   #LDFLAGS   := -bundle -arch i386
+   LDFLAGS   := -bundle
 endif
 
 
@@ -142,6 +143,8 @@ OBJECTS := $(CCOBJECTS) $(PYOBJECTS)
 
 HEADERS   := MathUtils.h \
              Logger.h \
+	     Lorentzian1D.h \
+	     Lorentzian1DParam.h \
              STAttr.h \
              STHeader.h \
              Scantable.h \
