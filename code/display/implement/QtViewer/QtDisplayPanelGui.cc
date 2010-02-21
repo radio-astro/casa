@@ -1714,7 +1714,7 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
     
     action = new QAction("Close All", ddCloseMenu_);
     ddCloseMenu_->addAction(action);
-    connect(action, SIGNAL(triggered()),  v_, SLOT(removeAllDDs()));  }  }
+    connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));  }  }
     
 
 
