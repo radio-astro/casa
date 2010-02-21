@@ -705,8 +705,30 @@ void Scantable::calculateAZEL()
 void Scantable::clip(const Float uthres, const Float dthres, bool clipoutside, bool unflag)
 {
   for (uInt i=0; i<table_.nrow(); ++i) {
-    Vector<Float> spcs = specCol_(i);
     Vector<uChar> flgs = flagsCol_(i);
+    srchChannelsToClip(i, uthres, dthres, clipoutside, unflag, flgs);
+    flagsCol_.put(i, flgs);
+  }
+}
+
+std::vector<bool> Scantable::getClipMask(int whichrow, const Float uthres, const Float dthres, bool clipoutside, bool unflag)
+{
+  Vector<uChar> flags;
+  flagsCol_.get(uInt(whichrow), flags);
+  srchChannelsToClip(uInt(whichrow), uthres, dthres, clipoutside, unflag, flags);
+  Vector<Bool> bflag(flags.shape());
+  convertArray(bflag, flags);
+  //bflag = !bflag;
+
+  std::vector<bool> mask;
+  bflag.tovector(mask);
+  return mask;
+}
+
+void Scantable::srchChannelsToClip(uInt whichrow, const Float uthres, const Float dthres, bool clipoutside, bool unflag,
+				   Vector<uChar> flgs)
+{
+    Vector<Float> spcs = specCol_(whichrow);
     uInt nchannel = nchan();
     if (spcs.nelements() != nchannel) {
       throw(AipsError("Data has incorrect number of channels"));
@@ -730,8 +752,6 @@ void Scantable::clip(const Float uthres, const Float dthres, bool clipoutside, b
 	}
       }
     }
-    flagsCol_.put(i, flgs);
-  }
 }
 
 void Scantable::flag(const std::vector<bool>& msk, bool unflag)
