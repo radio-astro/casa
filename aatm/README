@@ -47,11 +47,18 @@ Synchornising with the ALMA CVS Version
 ---------------------------------------
 
 
-rsync -r appcs:/home/bn204/d/almasw/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+rsync -r appcs:/home/bn204/d/almasw2/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
 
-rsync -r appcs:/home/bn204/d/almasw/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+rsync -r appcs:/home/bn204/d/almasw2/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
 
 rsync -r appcs:/home/bn204/d/almasw/TELCAL/TelCalResults/Libraries/ATM/test/ otest/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+
+
+new branch
+
+rsync -r appcs:/home/bn204/d/almasw-wvr-branch-0-3/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+
+rsync -r appcs:/home/bn204/d/almasw-wvr-branch-0-3/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
 
 
 

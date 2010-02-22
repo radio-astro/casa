@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMPressure.cpp,v 1.4 2009/09/10 16:22:17 dbroguie Exp $"
+ * "@(#) $Id: ATMPressure.cpp,v 1.5 2010/02/08 17:37:51 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,8 +26,7 @@
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 Pressure::Pressure() :
   valueIS_(0.0)
@@ -82,4 +81,4 @@ double Pressure::get(string const &units) const
 
 }
 
-} // namespace atm
+ATM_NAMESPACE_END

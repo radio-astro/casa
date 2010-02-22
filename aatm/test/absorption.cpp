@@ -20,45 +20,17 @@
 //
 
 #include <boost/program_options.hpp>
+#include <boost/format.hpp>
 
 #include "../config.h"
-#include "atmincludes.hpp"
+#include "cmdlineiface.hpp"
 
-
-typedef boost::shared_ptr<atm::AtmProfile> pAtmProf;
-
-pAtmProf
-simpleAOSAtmo(double ghum)
-{
-  using namespace atm;
-
-  Atmospheretype   atmType = tropical; // Atmospheric type (to reproduce behavior above the tropopause)
-  Temperature      T( 270.0,"K" );     // Ground temperature
-  Pressure         P( 560.0,"mb");     // Ground Pressure
-  Humidity         H(  ghum,"%" );     // Ground Relative Humidity (indication)
-  Length         Alt(  5000,"m" );     // Altitude of the site 
-  Length         WVL(   2.0,"km");     // Water vapor scale height
-  double         TLR=  -5.6      ;     // Tropospheric lapse rate (must be in K/km)
-  Length      topAtm(  48.0,"km");     // Upper atm. boundary for calculations
-  Pressure     Pstep(  10.0,"mb");     // Primary pressure step
-  double   PstepFact=         1.2;     // Pressure step ratio between two consecutive layers
-
-  return pAtmProf(new AtmProfile(Alt,
-				 P,
-				 T,
-				 TLR,
-				 H,
-				 WVL,
-				 Pstep,
-				 PstepFact,
-				 topAtm, 
-				 atmType));
-}
 
 void absorption(double freq,
-		double ghum)
+		double ghum,
+		const boost::program_options::variables_map &vm)
 {
-  pAtmProf atmo(simpleAOSAtmo(ghum));
+  pAtmProf atmo(simpleAOSAtmo(ghum,vm));
 
   atm::Frequency  afreq(freq,
 			"GHz");
@@ -81,16 +53,55 @@ void absorption(double freq,
 	   <<std::endl;
 }
 
+void absorption_fgrid(const boost::program_options::variables_map &vm)
+{
+  pAtmProf atmo(AOSAtmo_pwv(vm));
+  
+  const double fmin=vm["fmin"].as<double>();
+  const double fmax=vm["fmax"].as<double>();
+  const double fstep=vm["fstep"].as<double>();
+  const size_t nc=(fmax-fmin)/fstep;
+  const double pwv=vm["pwv"].as<double>();
+
+  atm::SpectralGrid grid(nc,
+			 0,
+			 atm::Frequency(fmin,
+					"GHz"),
+			 atm::Frequency(fstep,
+					"GHz"));
+
+  atm::RefractiveIndexProfile rip(grid,
+				  *atmo);
+  atm::SkyStatus ss(rip);
+  
+  std::cout<<"Freq"
+	   <<"\t"
+	   <<"Dry Opac"
+	   <<"\t\t"
+	   <<"Wet Opac"
+	   <<"\t\t"
+	   <<"Sky Brightness"
+	   <<std::endl;
+  
+  for(size_t i=0; i<nc; ++i)
+  {
+    std::cout<<boost::format("%g, \t%g, \t%g, \t%g") 
+      % grid.getChanFreq(i).get()
+      % rip.getDryOpacity(i).get()
+      % rip.getWetOpacity(i).get()
+      % ss.getTebbSky(i, atm::Length(pwv,"mm")).get()
+	     <<std::endl;
+  }
+}
+
 int main(int ac, char* av[])
 {   
   using namespace boost::program_options;
   
   options_description desc("Allowed options");
-  desc.add_options()
-    ("help", "Produce this help message")
-    ("freq", value<double>(), "Frequency at which to compute the dispersion (GHz)")
-    ("ghum", value<double>(), "Relative humidity at ground level (percent)")
-    ;
+
+  addStdOutputOptions(desc);  
+  addAtmoOptions(desc);
 
   variables_map vm;        
   store(parse_command_line(ac, av, desc), vm);
@@ -108,11 +119,24 @@ int main(int ac, char* av[])
 	     <<std::endl
 	     <<desc;
   }
+  else if (vm.count("ghum") && vm.count("pwv"))
+  {
+    std::cout<<"Can't specify both ghum and pwv"
+	     <<std::endl;
+  }
   else
   {
-    absorption(vm["freq"].as<double>(),
-	       vm["ghum"].as<double>()
-	       );
+    if(vm.count("fstep"))
+    {
+      absorption_fgrid(vm);
+    }
+    else
+    {
+      absorption(vm["freq"].as<double>(),
+		 vm["ghum"].as<double>(),
+		 vm
+		 );
+    }
   }
   
   return 0;

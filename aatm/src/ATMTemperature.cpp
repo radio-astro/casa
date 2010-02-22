@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMTemperature.cpp,v 1.4 2009/09/10 16:22:17 dbroguie Exp $"
+ * "@(#) $Id: ATMTemperature.cpp,v 1.6 2010/02/19 01:49:14 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -24,9 +24,9 @@
  */
 
 #include "ATMTemperature.h"
+#include "ATMCommon.h"
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 Temperature::Temperature() :
   valueIS_(0.0)
@@ -47,16 +47,11 @@ Temperature::Temperature(double temperature, const string &units)
   } else if(units == "C" || units == "c") {
     valueIS_ = temperature + 273.16;
   } else if(units == "F" || units == "f") {
-    //valueIS_ = (temperature-32.0)*(5./9.);
-    valueIS_ = (temperature-32.0)*(5./9.) + 273.16;
+    valueIS_ = (temperature-32.0)*(5./9.)+273.16;
   } else {
     // Exception: Unknown temperature unit. S.I. used (Kelvin)
     valueIS_ = temperature;
   }
-}
-
-Temperature::~Temperature()
-{
 }
 
 double Temperature::get(const string &units) const
@@ -68,12 +63,10 @@ double Temperature::get(const string &units) const
   } else if(units == "C" || units == "c") {
     return valueIS_ - 273.16;
   } else if(units == "F" || units == "f") {
-    //return valueIS_*(9./5.)+32.0;
-    return (valueIS_ - 273.16)*(9./5.) + 32.0;
+    return (valueIS_ - 273.16)*(9./5.)+32.0;
   } else {
     // Exception: Unknown temperature unit. S.I. used (Kelvin)
     return valueIS_;
   }
 }
-
-} // namespace atm
+ATM_NAMESPACE_END

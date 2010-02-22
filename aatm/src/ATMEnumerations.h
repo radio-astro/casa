@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMEnumerations.h,v 1.3 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMEnumerations.h,v 1.4.2.1 2010/02/19 15:00:11 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,11 +26,12 @@
  */
 
 #ifndef __cplusplus
-#error This is a C++ include file and cannot be used from plain C
+#error "This is a C++ include file and cannot be used from plain C"
 #endif
 
-namespace atm
-{
+#include "ATMCommon.h"
+
+ATM_NAMESPACE_BEGIN
 
 /** \file
  *  \brief Global enumeration objects
@@ -89,7 +90,7 @@ enum SidebandType{ NOTYPE=-1,      //!< Not relevant (no sideband)
                    TWOSB=2         //!< two sidebands (sideband separation)
 };
 
-
+ 
 /** \brief Defines the type of atmosphere
  *
  *  
@@ -107,14 +108,14 @@ enum SidebandType{ NOTYPE=-1,      //!< Not relevant (no sideband)
  */
 
 enum typeAtm_t { tropical=1, 
-		 midlatSummer, 
-		 midlatWinter, 
-		 subarcticSummer, 
-		 subarcticWinter, 
-		 typeATM_end 
+ 		 midlatSummer, 
+ 		 midlatWinter, 
+ 		 subarcticSummer, 
+ 		 subarcticWinter, 
+ 		 typeATM_end 
 };
 
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_ENUMERATION_H*/

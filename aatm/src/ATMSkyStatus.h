@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSkyStatus.h,v 1.6 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMSkyStatus.h,v 1.8 2010/02/19 01:47:19 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -29,16 +29,20 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include "ATMCommon.h"
+#include "ATMRefractiveIndexProfile.h"
 #include "ATMWaterVaporRadiometer.h"
 #include "ATMWVRMeasurement.h"
-#include "ATMRefractiveIndexProfile.h"
 
-#include <math.h>
+//#include <math.h>
 #include <string>
 #include <vector>
 
-namespace atm
-{
+using std::string;
+using std::vector;
+
+ATM_NAMESPACE_BEGIN
+
 /*! \brief From the layerThickness and layerTemperature arrays (from AtmProfile),
  *   the RefractiveIndexProfile array, and a brightness temperature measured to
  *   the sky at the corresponding frequency, this Class retrieves the water vapor
@@ -301,7 +305,11 @@ public:
   }
   /** Accesor to the Equivalent Blackbody Temperature in spectral window 0 and channel nc, for the currnet
    (user) Water Vapor Column, the current Air Mass, and perfect Sky Coupling to the sky */
-  Temperature getTebbSky(unsigned int nc)
+  Temperature getTebbSky(unsigned int nc)    // There was reported a bug at Launchpad: 
+                                             // that the result did not take into account 
+                                             // the actual column of water. But it is not true.
+                                             // The column of water is taken into account as 
+                                             // seen in the next accessor, that is referred by this one.       
   {
     unsigned int n = 0;
     return getTebbSky(n, nc);
@@ -532,6 +540,14 @@ public:
   Opacity getAverageN2OLinesOpacity(unsigned int spwid)
   {
     return RefractiveIndexProfile::getAverageN2OLinesOpacity(spwid);
+  }
+  Opacity getAverageNO2LinesOpacity(unsigned int spwid)
+  {
+    return RefractiveIndexProfile::getAverageNO2LinesOpacity(spwid);
+  }
+  Opacity getAverageSO2LinesOpacity(unsigned int spwid)
+  {
+    return RefractiveIndexProfile::getAverageSO2LinesOpacity(spwid);
   }
   Opacity getAverageCOLinesOpacity(unsigned int spwid)
   {
@@ -797,7 +813,9 @@ public:
     return getAverageO2LinesPathLength(spwid)
         + getAverageO3LinesPathLength(spwid)
         + getAverageN2OLinesPathLength(spwid)
-        + getAverageCOLinesPathLength(spwid);
+        + getAverageCOLinesPathLength(spwid)
+        + getAverageNO2LinesPathLength(spwid)
+        + getAverageSO2LinesPathLength(spwid);
   }
   Length getAverageDispersiveDryPathLength()
   {
@@ -1041,6 +1059,16 @@ public:
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
 
+  /* to implement in .cpp
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+                                      Percent signalGain,
+                                      Temperature tebb,
+                                      vector<double> spwId_filter,
+                                      double airmass,
+                                      double skycoupling,
+                                      Temperature tspill); */
+
+
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       Percent signalGain,
                                       vector<Temperature> v_tebb,
@@ -1048,6 +1076,7 @@ public:
                                       double airmass,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       Percent signalGain,
                                       vector<Temperature> v_tebb,
@@ -1055,99 +1084,84 @@ public:
                                       double airmass,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       Percent signalGain,
                                       vector<Temperature> v_tebb,
                                       double airmass,
                                       double skycoupling,
-                                      Temperature tspill);
+                                      Temperature tspill);  // equivalent eliminating the vectors already implemented, see below
 
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       vector<Temperature> v_tebb,
                                       double skycoupling,
-                                      Temperature tspill)
-  {
-    vector<double> spwId_filter;
-    for(unsigned int n = 0; n < v_numChan_[spwId]; n++) {
-      spwId_filter.push_back(1.0);
-    }
-    return WaterVaporRetrieval_fromTEBB(spwId,
-                                        v_tebb,
-                                        spwId_filter,
-                                        skycoupling,
-                                        tspill);
-  }
+                                      Temperature tspill);
 
-  Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId, vector<
-      vector<Temperature> > vv_tebb, vector<double> skycoupling, vector<
-      Temperature> tspill)
-  {
-    vector<vector<double> > spwId_filters;
-    vector<double> spwId_filter;
-    for(unsigned int i = 0; i < spwId.size(); i++) {
-      for(unsigned int n = 0; n < v_numChan_[spwId[i]]; n++) {
-        spwId_filter.push_back(1.0);
-      }
-      spwId_filters.push_back(spwId_filter);
-      spwId_filter.clear();
-    }
-    return WaterVaporRetrieval_fromTEBB(spwId,
-                                        vv_tebb,
-                                        spwId_filters,
-                                        skycoupling,
-                                        tspill);
-  }
+  Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId, 
+				      vector<vector<Temperature> > vv_tebb, 
+				      vector<double> skycoupling, 
+				      vector<Temperature> tspill);
 
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Temperature> v_tebb,
                                       vector<double> skycoupling,
-                                      vector<Temperature> tspill)
-  {
-    vector<vector<double> > spwId_filters;
-    vector<double> spwId_filter;
-    for(unsigned int i = 0; i < spwId.size(); i++) {
-      for(unsigned int n = 0; n < v_numChan_[spwId[i]]; n++) {
-        spwId_filter.push_back(1.0);
-      }
-      spwId_filters.push_back(spwId_filter);
-      spwId_filter.clear();
-    }
-    return WaterVaporRetrieval_fromTEBB(spwId,
-                                        v_tebb,
-                                        spwId_filters,
-                                        skycoupling,
-                                        tspill);
-  }
+                                      vector<Temperature> tspill);
+
+  /* to be implemented in the .cpp
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+                                      Temperature tebb,
+                                      double skycoupling,
+                                      Temperature tspill); */
 
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       vector<Temperature> v_tebb,
                                       vector<double> spwId_filter,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<vector<Temperature> > vv_tebb,
                                       vector<vector<double> > spwId_filters,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Temperature> v_tebb,
                                       vector<vector<double> > spwId_filters,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
 
+  /* to be implemented in the .cpp
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+                                      Temperature tebb,
+                                      vector<double> spwId_filters,
+                                      double skycoupling,
+                                      Temperature tspill); */
+
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       vector<Temperature> v_tebb,
                                       double airmass,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<vector<Temperature> > vv_tebb,
                                       double airmass,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
-  Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId, vector<
-      Temperature> v_tebb, double airmass, vector<double> skycoupling, vector<
-      Temperature> tspill);
+
+  Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId, 
+				      vector<Temperature> v_tebb, 
+				      double airmass, 
+				      vector<double> skycoupling, 
+				      vector<Temperature> tspill);
+
+  /* to be implemented in the .cpp
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId, 
+				      Temperature tebb, 
+				      double airmass, 
+				      double skycoupling, 
+				      Temperature tspill);  */
 
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       vector<Temperature> v_tebb,
@@ -1155,12 +1169,14 @@ public:
                                       double airmass,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<vector<Temperature> > vv_tebb,
                                       vector<vector<double> > spwId_filters,
                                       double airmass,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Temperature> v_tebb,
                                       vector<vector<double> > spwId_filters,
@@ -1168,21 +1184,38 @@ public:
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
 
+  /* to be implemented in the .cpp
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+                                      Temperature v_tebb,
+                                      vector<double> spwId_filter,
+                                      double airmass,
+                                      double skycoupling,
+                                      Temperature tspill);   */
+
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       Percent signalGain,
                                       vector<Temperature> v_tebb,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Percent> signalGain,
                                       vector<vector<Temperature> > vv_tebb,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Percent> signalGain,
                                       vector<Temperature> v_tebb,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
+
+  /* to be implemented in the .cpp
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+                                      Percent signalGain,
+                                      Temperature v_tebb,
+                                      double skycoupling,
+                                      Temperature tspill); */
 
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       Percent signalGain,
@@ -1190,12 +1223,14 @@ public:
                                       vector<double> spwId_filter,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Percent> signalGain,
                                       vector<vector<Temperature> > vv_tebb,
                                       vector<vector<double> > spwId_filters,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Percent> signalGain,
                                       vector<Temperature> v_tebb,
@@ -1203,36 +1238,60 @@ public:
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
 
+  /* to be implemented in the .cpp
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+                                      Percent signalGain,
+                                      Temperature v_tebb,
+                                      vector<double> spwId_filter,
+                                      double skycoupling,
+                                      Temperature tspill); */
+
   Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                       Percent signalGain,
                                       vector<Temperature> v_tebb,
                                       double airmass,
                                       double skycoupling,
                                       Temperature tspill);
+
   Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       vector<Percent> signalGain,
                                       vector<vector<Temperature> > vv_tebb,
                                       double airmass,
                                       vector<double> skycoupling,
                                       vector<Temperature> tspill);
-  Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId, vector<
-      Percent> signalGain, vector<Temperature> v_tebb, double airmass, vector<
-      double> skycoupling, vector<Temperature> tspill);
+
+  Length WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId, 
+				      vector<Percent> signalGain, 
+				      vector<Temperature> v_tebb, 
+				      double airmass, 
+				      vector<double> skycoupling, 
+				      vector<Temperature> tspill);
+
+  // implemented 17/9/09
+  Length WaterVaporRetrieval_fromTEBB(unsigned int spwId,      
+                                      Percent signalGain,
+                                      Temperature tebb,
+                                      double airmass,
+                                      double skycoupling,
+                                      Temperature tspill);
 
   double SkyCouplingRetrieval_fromTEBB(unsigned int spwId,
                                        vector<Temperature> v_tebb,
                                        double skycoupling,
                                        Temperature tspill);
+
   double SkyCouplingRetrieval_fromTEBB(unsigned int spwId,
                                        vector<Temperature> v_tebb,
                                        vector<double> spwId_filter,
                                        double skycoupling,
                                        Temperature tspill);
+
   double SkyCouplingRetrieval_fromTEBB(unsigned int spwId,
                                        vector<Temperature> v_tebb,
                                        double airmass,
                                        double skycoupling,
                                        Temperature tspill);
+
   double SkyCouplingRetrieval_fromTEBB(unsigned int spwId,
                                        vector<Temperature> v_tebb,
                                        vector<double> spwId_filter,
@@ -1480,6 +1539,7 @@ protected:
             double airmass,
             unsigned int spwId,
             unsigned int nc);
+
   double RT(double pfit_wh2o,
             double skycoupling,
             double tspill,
@@ -1574,44 +1634,8 @@ protected:
             double airmass,
             unsigned int spwid,
             vector<double> spwId_filter,
-            Percent signalgain)
-  {
-
-    double tebb_channel = 0.0;
-    double rtr;
-    double norm = 0.0;
-
-    for(unsigned int n = 0; n < v_numChan_[spwid]; n++) {
-      if(spwId_filter[n] > 0) {
-        norm = norm + spwId_filter[n];
-      }
-    }
-
-    if(norm == 0.0) {
-      return norm;
-    }
-
-    for(unsigned int n = 0; n < v_numChan_[spwid]; n++) {
-
-      if(spwId_filter[n] > 0) {
-
-        if(signalgain.get() < 1.0) {
-          rtr = RT(pfit_wh2o, skycoupling, tspill, airmass, spwid, n)
-              * signalgain.get() + RT(pfit_wh2o,
-                                      skycoupling,
-                                      tspill,
-                                      airmass,
-                                      getAssocSpwId(spwid)[0],
-                                      n) * (1.0 - signalgain.get());
-        } else {
-          rtr = RT(pfit_wh2o, skycoupling, tspill, airmass, spwid, n);
-        }
-        tebb_channel = tebb_channel + rtr * spwId_filter[n] / norm;
-      }
-    }
-
-    return tebb_channel;
-  }
+            Percent signalgain);
+  
 
 private:
 
@@ -1621,6 +1645,6 @@ private:
 
 }; // class SkyStatus
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_SKYSTATUS_H*/

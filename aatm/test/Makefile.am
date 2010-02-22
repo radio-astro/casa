@@ -18,13 +18,16 @@
 bin_PROGRAMS = SMATest dispersive absorption
 
 SMATest_SOURCES = SMATest.cpp
-dispersive_SOURCES = dispersive.cpp atmincludes.hpp
-absorption_SOURCES = absorption.cpp atmincludes.hpp
 
-LDADD=../src/libaatm.la -lboost_program_options
+GENFILES = cmdlineiface.cpp cmdlineiface.hpp atmincludes.hpp
+
+dispersive_SOURCES = dispersive.cpp $(GENFILES)
+absorption_SOURCES = absorption.cpp $(GENFILES)
+
+LDADD=../src/libaatm.la
 INCLUDES=-I../src
 
 EXTRA_DIST=data/SMA_17JUL2006_skydip1.dat
 
 AM_CPPFLAGS= -DBOOST_TEST_DYN_LINK ${BOOST_CPPFLAGS}
-AM_LDFLAGS=${BOOST_LDFLAGS}
+AM_LDFLAGS=  ${BOOST_LDFLAGS} ${BOOST_PROGRAM_OPTIONS_LIB} 

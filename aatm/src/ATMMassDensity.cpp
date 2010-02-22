@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMMassDensity.cpp,v 1.4 2009/09/10 16:22:17 dbroguie Exp $"
+ * "@(#) $Id: ATMMassDensity.cpp,v 1.6 2010/02/19 01:59:18 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -25,10 +25,7 @@
 
 #include "ATMMassDensity.h"
 
-using namespace std;
-
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 MassDensity::MassDensity() :
   valueIS_(0.0)
@@ -42,35 +39,33 @@ MassDensity::MassDensity(double massdensity) :
 
 MassDensity::MassDensity(double massdensity, const string &units)
 {
-  if(units == "gcm**-3" || units == "g cm**-3" || units == "GCM**-3" || units
-      == "G CM**-3" || units == "g/cm^3") {
+  if(units == "gcm**-3" || units == "g cm**-3" || units == "GCM**-3" ||
+     units == "G CM**-3" || units == "g/cm^3") {
     valueIS_ = 1.0E+3 * massdensity;
-  } else if(units == "gm**-3" || units == "g m**-3" || units == "GM**-3"
-      || units == "G M**-3" || units == "g/m^3") {
+  } else if(units == "gm**-3" || units == "g m**-3" || units == "GM**-3" ||
+      units == "G M**-3" || units == "g/m^3") {
     valueIS_ = 1.0E-3 * massdensity;
-  } else if(units == "kgm**-3" || units == "kg m**-3" || units == "KGM**-3"
-      || units == "KG M**-3" || units == "kg/m^3") {
+  } else if(units == "kgm**-3" || units == "kg m**-3" || units == "KGM**-3" ||
+      units == "KG M**-3" || units == "kg/m^3") {
     valueIS_ = massdensity;
   } else {
     // Exception: unknown number density unit. S.I. unit (kg m**-3) used by default.
     valueIS_ = massdensity;
   }
 }
+MassDensity::~MassDensity() { };
 
-MassDensity::~MassDensity()
-{
-}
 
 double MassDensity::get(const string &units) const
 {
-  if(units == "gcm**-3" || units == "g cm**-3" || units == "GCM**-3" || units
-      == "G CM**-3" || units == "g/cm^3") {
+  if(units == "gcm**-3" || units == "g cm**-3" || units == "GCM**-3" ||
+      units == "G CM**-3" || units == "g/cm^3") {
     return 1.0E-3 * valueIS_;
-  } else if(units == "gm**-3" || units == "g m**-3" || units == "GM**-3"
-      || units == "G M**-3" || units == "g/m^3") {
+  } else if(units == "gm**-3" || units == "g m**-3" || units == "GM**-3" ||
+      units == "G M**-3" || units == "g/m^3") {
     return 1.0E+3 * valueIS_;
-  } else if(units == "kgm**-3" || units == "kg m**-3" || units == "KGM**-3"
-      || units == "KG M**-3" || units == "kg/m^3") {
+  } else if(units == "kgm**-3" || units == "kg m**-3" || units == "KGM**-3" ||
+      units == "KG M**-3" || units == "kg/m^3") {
     return valueIS_;
   } else {
     // Exception: unknown number density unit. S.I. unit (kg m**-3) used by default.
@@ -78,4 +73,4 @@ double MassDensity::get(const string &units) const
   }
 }
 
-} // namespace atm
+ATM_NAMESPACE_END

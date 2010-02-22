@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMAngle.h,v 1.4 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMAngle.h,v 1.6 2010/02/19 01:10:07 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,15 +26,15 @@
  */
 
 #ifndef __cplusplus
-#error This is a C++ include file and cannot be used from plain C
+#error "This is a C++ include file and cannot be used from plain C"
 #endif
 
+#include "ATMCommon.h"
 #include <string>
 
-using namespace std;
+using std::string;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 /*! \brief Defines a Class for those parameters being angles.
  *
@@ -43,7 +43,7 @@ namespace atm
  */
 class Angle
 {
-public:
+ public:
   /** Default constructor */
   Angle();
   /** A full constructor: Angle value in default units (SI: radians) */
@@ -55,52 +55,52 @@ public:
   virtual ~Angle();
 
   /** Accessor to get the angle value in SI units (rad) */
-  inline double get() const { return valueIS_; }
+  double get() const { return valueIS_; }
   /** Accessor to the angle value in specified units. Implemented units are: deg [DEG], rad [RAD] [Rad].
    *  If none of these implemented units is given, the SI value will be returned. */
   double get(const string &units) const;
 
   /** Operator "equal to a Angle" */
-  inline Angle& operator=(const Angle &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
+  Angle& operator=(const Angle &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
   /** Operator "equal to a double converted to Angle in Hz" */
-  inline Angle& operator=(double rhs) { valueIS_=rhs; return *this; }
+  Angle& operator=(double rhs) { valueIS_=rhs; return *this; }
   /** Operator "addition of angles" */
-  inline Angle operator+(const Angle &rhs) { return Angle(valueIS_+rhs.get()); }
+  Angle operator+(const Angle &rhs) { return Angle(valueIS_+rhs.get()); }
   /** Operator "substraction of angles" */
-  inline Angle operator-(const Angle &rhs) { return Angle(valueIS_-rhs.get()); }
+  Angle operator-(const Angle &rhs) { return Angle(valueIS_-rhs.get()); }
   /** Operator "multiplication of a angle by a double" */
-  inline Angle operator*(double scf) { return Angle(valueIS_*scf); }
+  Angle operator*(double scf) { return Angle(valueIS_*scf); }
   /** Operator "multiplication of a angle by a float" */
-  inline Angle operator*(float scf) { return Angle(valueIS_*(double)scf); }
- /** Operator "multiplication of a angle by an int" */
-  inline Angle operator*(int scf) { return Angle(valueIS_*(double)scf); } // rhs scale factor
- /** Operator "multiplication of a angle by an unsigned int" */
-  inline Angle operator*(unsigned int scf) { return Angle(valueIS_*(double)scf); } // rhs scale factor
+  Angle operator*(float scf) { return Angle(valueIS_*(double)scf); }
+  /** Operator "multiplication of a angle by an int" */
+  Angle operator*(int scf) { return Angle(valueIS_*(double)scf); } // rhs scale factor
+  /** Operator "multiplication of a angle by an unsigned int" */
+  Angle operator*(unsigned int scf) { return Angle(valueIS_*(double)scf); } // rhs scale factor
   /** Operator "division of a angle by a double" */
-  inline Angle operator/(double scf) { return Angle(valueIS_/scf); }
+  Angle operator/(double scf) { return Angle(valueIS_/scf); }
   /** Operator "division of a angle by a float" */
-  inline Angle operator/(float scf) { return Angle(valueIS_/(double)scf); }
+  Angle operator/(float scf) { return Angle(valueIS_/(double)scf); }
   /** Operator "division of a angle by an int" */
-  inline Angle operator/(int scf) { return Angle(valueIS_/(double)scf); }
+  Angle operator/(int scf) { return Angle(valueIS_/(double)scf); }
   /** Operator "division of a angle by an unsigned int" */
-  inline Angle operator/(unsigned int scf) { return Angle(valueIS_/(double)scf); }
+  Angle operator/(unsigned int scf) { return Angle(valueIS_/(double)scf); }
   /** Operator "comparator < for two angles" */
-  inline bool operator<(const Angle & rhs) const  { return (valueIS_<rhs.get()); }
+  bool operator<(const Angle & rhs) const  { return (valueIS_<rhs.get()); }
   /** Operator "comparator > for two angles" */
-  inline bool operator>(const Angle & rhs) const  { return (valueIS_>rhs.get()); }
+  bool operator>(const Angle & rhs) const  { return (valueIS_>rhs.get()); }
   /** Operator "comparator <= for two angles" */
-  inline bool operator<=(const Angle & rhs) const  { return (valueIS_<=rhs.get()); }
+  bool operator<=(const Angle & rhs) const  { return (valueIS_<=rhs.get()); }
   /** Operator "comparator >= for two angles" */
-  inline bool operator>=(const Angle & rhs) const  { return (valueIS_>=rhs.get()); }
+  bool operator>=(const Angle & rhs) const  { return (valueIS_>=rhs.get()); }
   /** Operator "comparator == for two angles" */
-  inline bool operator==(const Angle & rhs) const  { return (valueIS_==rhs.get()); }
+  bool operator==(const Angle & rhs) const  { return (valueIS_==rhs.get()); }
   /** Operator "comparator != for two angles" */
-  inline bool operator!=(const Angle & rhs) const  { return (valueIS_!=rhs.get()); }
+  bool operator!=(const Angle & rhs) const  { return (valueIS_!=rhs.get()); }
 
-private:
+ private:
   double valueIS_;
 }; // class Angle
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_ANGLE_H*/

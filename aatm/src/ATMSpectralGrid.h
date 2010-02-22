@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.h,v 1.2 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMSpectralGrid.h,v 1.3 2010/02/08 17:37:52 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,17 +26,16 @@
  */
 
 #ifndef __cplusplus
-#error This is a C++ include file and cannot be used from plain C
+#error "This is a C++ include file and cannot be used from plain C"
 #endif
 
-#include "ATMFrequency.h"
+#include "ATMCommon.h"
 #include "ATMEnumerations.h"
-
+#include "ATMFrequency.h"
 #include <string>
 #include <vector>
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 /*!  \brief Spectral grid defined as a list of frequencies with basic complementary
  *          informations.
  *
@@ -480,6 +479,6 @@ inline bool SpectralGrid::operator ==(const SpectralGrid & a) const
   return equals;
 }; // class SpectralGrid
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_SPECTRALGRID_H*/

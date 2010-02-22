@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMNumberDensity.h,v 1.3 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMNumberDensity.h,v 1.5 2010/02/19 01:10:07 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,15 +26,15 @@
  */
 
 #ifndef __cplusplus
-#error This is a C++ include file and cannot be used from plain C
+#error "This is a C++ include file and cannot be used from plain C"
 #endif
 
+#include "ATMCommon.h"
 #include <string>
 
-using namespace std;
+using std::string;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 /*! \brief Number Density value with units
  *
@@ -44,7 +44,7 @@ namespace atm
  */
 class NumberDensity
 {
-public:
+ public:
   /** Default constructor */
   NumberDensity();
   /** A full constructor: Number Density value assumed by default to be in m**-3 (International System) */
@@ -57,34 +57,34 @@ public:
   virtual ~NumberDensity();
 
   /** Accessor to the numberdensity value in International System units (K) */
-  inline double get() const { return valueIS_; }
+  double get() const { return valueIS_; }
   /** Accessor to the numberdensity value in specified units. Valid units are K [k], mK [mk], and C [c] */
   double get(const string &units) const;
 
-  inline NumberDensity& operator=(const NumberDensity &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
-  inline NumberDensity& operator=(const double &rhs) { valueIS_ = rhs; return *this; }
-  inline NumberDensity operator+(const NumberDensity &rhs) { return NumberDensity(valueIS_ + rhs.get()); }
-  inline NumberDensity operator-(const NumberDensity &rhs) { return NumberDensity(valueIS_ - rhs.get()); }
-  inline NumberDensity operator*(double scf) { return NumberDensity(valueIS_ * scf); }
-  inline NumberDensity operator*(float scf) { return NumberDensity(valueIS_ * (double) scf); }
-  inline NumberDensity operator*(int scf) { return NumberDensity(valueIS_ * (double) scf); }
-  inline NumberDensity operator*(unsigned int scf) { return NumberDensity(valueIS_ * (double) scf); }
-  inline NumberDensity operator/(double scf) { return NumberDensity(valueIS_ / scf); }
-  inline NumberDensity operator/(float scf) { return NumberDensity(valueIS_ / (double) scf); }
-  inline NumberDensity operator/(int scf) { return NumberDensity(valueIS_ / (double) scf); }
-  inline NumberDensity operator/(unsigned int scf) { return NumberDensity(valueIS_ / (double) scf); }
-  inline bool operator<(const NumberDensity &rhs) const { return (valueIS_ < rhs.get()); }
-  inline bool operator>(const NumberDensity &rhs) const { return (valueIS_ > rhs.get()); }
-  inline bool operator<=(const NumberDensity &rhs) const { return (valueIS_ <= rhs.get()); }
-  inline bool operator>=(const NumberDensity &rhs) const { return (valueIS_ >= rhs.get()); }
-  inline bool operator==(const NumberDensity &rhs) const { return (valueIS_ == rhs.get()); }
-  inline bool operator!=(const NumberDensity &rhs) const { return (valueIS_ != rhs.get()); }
+  NumberDensity& operator=(const NumberDensity &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
+  NumberDensity& operator=(const double &rhs) { valueIS_ = rhs; return *this; }
+  NumberDensity operator+(const NumberDensity &rhs) { return NumberDensity(valueIS_ + rhs.get()); }
+  NumberDensity operator-(const NumberDensity &rhs) { return NumberDensity(valueIS_ - rhs.get()); }
+  NumberDensity operator*(double scf) { return NumberDensity(valueIS_ * scf); }
+  NumberDensity operator*(float scf) { return NumberDensity(valueIS_ * (double) scf); }
+  NumberDensity operator*(int scf) { return NumberDensity(valueIS_ * (double) scf); }
+  NumberDensity operator*(unsigned int scf) { return NumberDensity(valueIS_ * (double) scf); }
+  NumberDensity operator/(double scf) { return NumberDensity(valueIS_ / scf); }
+  NumberDensity operator/(float scf) { return NumberDensity(valueIS_ / (double) scf); }
+  NumberDensity operator/(int scf) { return NumberDensity(valueIS_ / (double) scf); }
+  NumberDensity operator/(unsigned int scf) { return NumberDensity(valueIS_ / (double) scf); }
+  bool operator<(const NumberDensity &rhs) const { return (valueIS_ < rhs.get()); }
+  bool operator>(const NumberDensity &rhs) const { return (valueIS_ > rhs.get()); }
+  bool operator<=(const NumberDensity &rhs) const { return (valueIS_ <= rhs.get()); }
+  bool operator>=(const NumberDensity &rhs) const { return (valueIS_ >= rhs.get()); }
+  bool operator==(const NumberDensity &rhs) const { return (valueIS_ == rhs.get()); }
+  bool operator!=(const NumberDensity &rhs) const { return (valueIS_ != rhs.get()); }
 
-private:
+ private:
   double valueIS_;
 }; // class NumberDensity
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_NUMBERDENSITY_H*/
 

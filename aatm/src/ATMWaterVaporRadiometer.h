@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMWaterVaporRadiometer.h,v 1.4 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMWaterVaporRadiometer.h,v 1.6 2010/02/19 01:37:49 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -29,15 +29,16 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include "ATMCommon.h"
 #include "ATMPercent.h"
 #include "ATMTemperature.h"
 
 #include <vector>
 
-using namespace std;
+using std::vector;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
+
 /*! \brief This is an axuliary class to SkyStatus that allows to identify the spectral windows
  *         that actually correspond to a dedicated water vapor radiometry system, and also to
  *         associate to those spectral windows some instrumental caracteristics such as the signal
@@ -150,7 +151,6 @@ private:
 
 }; // class WaterVaporRadiometer
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_WATERVAPORRADIOMETER_H*/
-
