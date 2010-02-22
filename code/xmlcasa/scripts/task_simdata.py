@@ -262,6 +262,7 @@ def simdata(
 #            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=model_cell)
             model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=in_cell)
 
+        casalog.origin('simdata')
 
 
 
@@ -270,7 +271,7 @@ def simdata(
         # (has to be here since we may have changed nchan)
         
         if verbose:
-            msg("preparing empty measurement set",priority="warn")
+            msg("preparing empty measurement set",origin="simdata",priority="warn")
 
         nbands = 1;    
         fband  = 'band'+startfreq
@@ -410,14 +411,11 @@ def simdata(
             
             sm.openfromms(noisymsfile);    # an existing MS
             sm.setdata();                # currently defaults to fld=0,spw=0
-            # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
-            # visibilities referenced to above atmosphere 
-            # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
+# use ANoise version
 #            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
 #                        antefficiency=eta_a,trx=t_rx,
 #                        tau=tau0,tatmos=t_sky,tcmb=t_cmb,
 #                        mode="calculate")
-# use ANoise version
             if noise_mode=="tsys-manual":
                 if verbose:
                     msg("sm.setnoise(spillefficiency="+str(eta_s)+
@@ -461,10 +459,6 @@ def simdata(
         #            gaincal_defaults()
         #            # make cal file to be modified
         #            gaincal(vis=msfile,caltable=noisycalfile,solint=-1)
-            
-
-
-
 
 
 
@@ -483,20 +477,20 @@ def simdata(
             mstoimage = msfile
 
         if fidelity == True and doclean == False:
-            msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",origin="deconvolve",priority="warn")
+            msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",priority="warn")
             fidelity=False
 
         if display == True and doclean == False:
-            msg("Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",origin="deconvolve",priority="warn")
+            msg("Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",priority="warn")
             display=False
 
         if doclean: 
             if niter == 0:
                 image=project+'.dirty'
-                msg("inverting to "+image,origin="deconvolve")
+                msg("inverting to "+image)
             else:
                 image=project+'.clean'
-                msg("cleaning to "+image,origin="deconvolve")
+                msg("cleaning to "+image)
         else:
             image=project+'.clean'
 
@@ -514,7 +508,7 @@ def simdata(
         cleanlast=open("clean.last","write")
         cleanlast.write('taskname            = "clean"\n')
 
-        msg("clean inputs:",origin="deconvolve")
+        msg("clean inputs:")
         cleanstr="clean(vis='"+mstoimage+"',imagename='"+image+"'"
         #+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',"
         cleanlast.write('vis                 = "'+mstoimage+'"\n')
@@ -605,7 +599,7 @@ def simdata(
         #+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,"        
         #+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
         cleanstr=cleanstr+")"
-        msg(cleanstr,origin="deconvolve",priority="warn")
+        msg(cleanstr,priority="warn")
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
 

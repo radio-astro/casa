@@ -30,7 +30,8 @@ complist="ghii.cl"
 ignorecoord=False
 antennalist=cfgdir+"alma.out05.cfg"
 direction="J2000 05h18m48.0s -68d42m00s"
-pointingspacing="3.4arcsec"
+#pointingspacing="3.4arcsec"
+pointingspacing="4.5arcsec"
 refdate="2012/06/21/03:25:00"
 totaltime="7200s"
 integration="10s"
@@ -46,8 +47,7 @@ relmargin=1.2
 stokes="I"
 verbose=True
 psfmode="clark"
-niter=0
-niter=50000
+niter=10000
 threshold="1mJy"
 weighting="briggs"
 robust=0.0
@@ -56,8 +56,8 @@ checkinputs="no"
 display=False
 fidelity=False
 
-display=True
-fidelity=True
+#display=True
+#fidelity=True
 
 inp()
 go()
@@ -74,22 +74,22 @@ hii_stats=ia.statistics()
 ia.close()
 
 # on ghii.clean.image
-refstats = { 'sum': 252.5, #'flux': 0.21939,
-             'max': 0.32986,
-             'min': -0.06691,
-             'rms': 0.0276,
-             'sigma': 0.0276 }
+refstats = { 'sum': 240.7, #'flux': 0.21939,
+             'max': 0.4655,
+             'min': -0.0495,
+             'rms': 0.0395,
+             'sigma': 0.0391 }
 
 ia.open(project + '.diff.im')
 hiidiff_stats=ia.statistics()
 ia.close()
 
 # on ghii.diff.im
-diffstats = {'sum': 65.86,
-             'max': 0.009,
-             'min': -0.003,
-             'rms': 0.002,
-             'sigma': 0.0011 }
+diffstats = {'sum': 66.7,
+             'max': 0.00884,
+             'min': -0.00391,
+             'rms': 0.00199,
+             'sigma': 0.00109 }
 
 ### tight 
 reftol   = {'sum':  1e-2,
@@ -117,9 +117,9 @@ rskes.sort()
 for ke in rskes:
     adiff=abs(hii_stats[ke][0] - refstats[ke])/abs(refstats[ke])
     if adiff < reftol[ke]:
-        print >> logfile, "* Passed %-5s test, got % -11.5g , expected % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
+        print >> logfile, "* Passed %-5s image test, got % -11.5g expected % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
     else:
-        print >> logfile, "* FAILED %-5s test, got % -11.5g instead of % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
+        print >> logfile, "* FAILED %-5s image test, got % -11.5g instead of % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
         regstate = False
 
 rskes = diffstats.keys()
@@ -127,9 +127,9 @@ rskes.sort()
 for ke in rskes:
     adiff=abs(hiidiff_stats[ke][0] - diffstats[ke])/abs(diffstats[ke])
     if adiff < reftol[ke]:
-        print >> logfile, "* Passed %-5s test, got % -11.5g , expected % -11.5g." % (ke, hiidiff_stats[ke][0], diffstats[ke])
+        print >> logfile, "* Passed %-5s  diff test, got % -11.5g expected % -11.5g." % (ke, hiidiff_stats[ke][0], diffstats[ke])
     else:
-        print >> logfile, "* FAILED %-5s test, got % -11.5g instead of % -11.5g." % (ke, hiidiff_stats[ke][0], diffstats[ke])
+        print >> logfile, "* FAILED %-5s  diff test, got % -11.5g instead of % -11.5g." % (ke, hiidiff_stats[ke][0], diffstats[ke])
         regstate = False
         
 
@@ -151,12 +151,11 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-## msfstat = os.stat('almasimmos_regression.ms')
-## print >>logfile,'* Breakdown:                           *'
-## print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
-## print >>logfile,'*  %s deconvolution with %d iterations took %8.3fs.' % (alg,
-##                                                                         niter,
-##                                                                         endTime - msfstat[8])
+msfstat = os.stat('ghii.ms')
+print >>logfile,'* Breakdown:                           *'
+print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
+print >>logfile,'*  deconvolution with %d iterations took %8.3fs.' % ( niter,
+                                                                       endTime - msfstat[8])
 print >>logfile,'*************************************'
     
 logfile.close()
