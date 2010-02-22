@@ -1,13 +1,3 @@
-# (partial) TODO list 
-# RI todo Find timerange when at least one of the inputs is up, limit the
-#       observing time to it, and warn or abort (printing the valid
-#       timerange) depending on how badly the user missed it.
-# RI todo look for antenna list in default repository also
-# RI todo allow user to report statistics in Jy/bm instead of Jy/pixel
-# RI todo Pad input image to a composite number of pixels on a side. 
-
-
-
 import os
 from clean import clean
 from taskinit import *
@@ -48,6 +38,8 @@ def simdata(
     verbose=None, async=False
     ):
 
+
+    # XXX for inbright=unchanged, need to scale input image to jy/pix
 
 
     casalog.origin('simdata')
@@ -228,7 +220,6 @@ def simdata(
             pl.ion()
             pl.clf()
             pl.subplot(121)
-#            model_min,model_max, model_rms = util.statim(modelimage,plot=display,incell=model_cell)
             model_min,model_max, model_rms = util.statim(modelflat,plot=display,incell=model_cell)
             lims=pl.xlim(),pl.ylim()
             tt=pl.array(range(25))*pl.pi/12            
@@ -268,7 +259,8 @@ def simdata(
                     pl.figure(currfignum+1)
                     pl.clf()
         else:
-            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=model_cell)
+#            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=model_cell)
+            model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=in_cell)
 
 
 
@@ -326,6 +318,7 @@ def simdata(
         # RI todo progress meter for simdata Sim::observe
         # print "calculating ";
         
+        mosaic_completed=False
         for k in range(0,nscan) :
             sttime=-totalsec/2.0+scansec*k
             endtime=sttime+scansec
@@ -343,9 +336,14 @@ def simdata(
                                starttime=qa.quantity(sttime, "s"),
                                stoptime=qa.quantity(endtime, "s"));
                 kfld=kfld+1
+                mosaic_completed=True
             if kfld > nfld: kfld=0
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
+        if not mosaic_completed:
+            msg("Not all pointings in the mosaic have been observed - check mosaic setup and exposure time parameters!",priority="error")
+            return
+
 
         msg("done setting up observations (blank visibilities)")
         if verbose:
@@ -573,9 +571,9 @@ def simdata(
         cleanlast.write('outframe                = ""\n')
         cleanlast.write('veltype                 = "radio"\n')
         #",ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],start=0,width=1,"
-        cleanstr=cleanstr+",imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(imcenter)+"'"
+        cleanstr=cleanstr+",imsize="+str(imsize)+",cell="+str(map(qa.tos,out_cell))+",phasecenter='"+str(imcenter)+"'"
         cleanlast.write('imsize                  = '+str(imsize)+'\n');
-        cleanlast.write('cell                    = "'+str(cell)+'"\n');
+        cleanlast.write('cell                    = '+str(map(qa.tos,out_cell))+'\n');
         cleanlast.write('phasecenter             = "'+str(imcenter)+'"\n');
         cleanlast.write('restfreq                = ""\n');
         #",restfreq=''"
@@ -607,7 +605,7 @@ def simdata(
         #+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,"        
         #+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
         cleanstr=cleanstr+")"
-        msg(cleanstr,origin="deconvolve")
+        msg(cleanstr,origin="deconvolve",priority="warn")
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
 
@@ -615,16 +613,13 @@ def simdata(
             clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
                   niter=niter, threshold=threshold, selectdata=False,
                   psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
-                  imsize=imsize, cell=cell, phasecenter=imcenter,
+                  imsize=imsize, cell=map(qa.tos,out_cell), phasecenter=imcenter,
                   stokes=stokes, weighting=weighting, robust=robust,
                   uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,
                   noise=noise, npixels=npixels)
         else:
             msg("(not actually cleaning or inverting, as requested by user)")
             image=project
-
-
-
 
 
 
@@ -672,11 +667,27 @@ def simdata(
     
             # regrid flat input to flat output shape, for convolution, etc
             ia.open(modelflat)
-            imrr = ia.regrid(outfile=modelregrid, overwrite=True,
+            ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
                              csys=outflatcoordsys.torecord(),shape=outflatshape)
+            # im.regrid assumes a surface brightness, or more accurately doesnt
+            # pay attention to units at all, so we now have to scale 
+            # by the pixel size to have the right values in jy/pixel, 
+            # which is what the immath assumes below.            
+            factor  = (qa.convert(out_cell[0],"arcsec")['value'])  
+            factor *= (qa.convert(out_cell[1],"arcsec")['value']) 
+            factor /= (qa.convert(model_cell[0],"arcsec")['value']) 
+            factor /= (qa.convert(model_cell[1],"arcsec")['value']) 
+
+            imrr = ia.imagecalc(modelregrid, 
+                                "'%s'*%g" % (modelregrid+'.tmp',factor), 
+                                overwrite = True)
+            shutil.rmtree(modelregrid+".tmp")
+            if verbose:
+                msg("scaling model by pixel area ratio %g" % factor)
 
             # add clean components and model image; 
             # it'll be convolved to restored beam in the fidelity calc below
+            # components are in jy/pix so should be added to the scaled iamge
             if (os.path.exists(complist)):
                 cl.open(complist)
                 imrr.modify(cl.torecord(),subtract=False)
@@ -722,6 +733,7 @@ def simdata(
             # need to convert the clean image into Jy/pix.  
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
             bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
+            msg("synthesized beam area in output pixels = %f" % bmarea)
 #            ia.open(outflat)
 #            ia.setbrightnessunit("Jy/pixel")
 #            ia.image
@@ -731,9 +743,13 @@ def simdata(
             # Get rms of difference image.
             ia.open(difference)
             diffstats = ia.statistics(robust = True)
-            ia.done()
-            maxdiff=diffstats['medabsdevmed']
+            maxdiff=diffstats['medabsdevmed']            
             if maxdiff!=maxdiff: maxdiff=0.
+            if type(maxdiff)!=type(0.):
+                if maxdiff.__len__()>0: 
+                    maxdiff=maxdiff[0]
+                else:
+                    maxdiff=0.
             # Make fidelity image.
             absdiff = project + '.absdiff.im'
             ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,

@@ -34,7 +34,8 @@ pointingspacing="3.4arcsec"
 refdate="2012/06/21/03:25:00"
 totaltime="7200s"
 integration="10s"
-scanlength=30 # not super-realistic but cuts down on execution time
+scanlength=10 # not super-realistic but cuts down on execution time
+mosaicsize="15arcsec"
 startfreq="650GHz"   
 chanwidth="4GHz" 
 nchan=1
@@ -46,14 +47,17 @@ stokes="I"
 verbose=True
 psfmode="clark"
 niter=0
+niter=50000
+threshold="1mJy"
 weighting="briggs"
 robust=0.0
 
 checkinputs="no"
 display=False
 fidelity=False
-#display=True
-#fidelity=True
+
+display=True
+fidelity=True
 
 inp()
 go()
@@ -65,38 +69,30 @@ endProc = time.clock()
 
 test_name = """simdata observation of 30 Doradus"""
 
-hii_im=ia.open(project + '.dirty.flat')
+ia.open(project + '.clean.image')
 hii_stats=ia.statistics()
 ia.close()
 
-refstats = { 'flux': 0.9403,
-             'max': 0.2845,
-             'min': -0.043,
-             'rms': 0.022,
-             'sigma': 0.022 }
-# 200909 pk flx changed - imager changed
-refstats = { 'flux': 0.96941,
-             'max': 0.2841,
-             'min': -0.043,
-             'rms': 0.022,
-             'sigma': 0.022 }
-
-# 20091025 pk flx changed again - imager changed again.
-refstats = { 'flux': 0.92547,
-             'max': 0.2841,
-             'min': -0.043,
-             'rms': 0.022,
-             'sigma': 0.022 }
-
-# 20091201 added a component
-refstats = { 'flux': 0.21939,
+# on ghii.clean.image
+refstats = { 'sum': 252.5, #'flux': 0.21939,
              'max': 0.32986,
              'min': -0.06691,
              'rms': 0.0276,
              'sigma': 0.0276 }
 
+ia.open(project + '.diff.im')
+hiidiff_stats=ia.statistics()
+ia.close()
+
+# on ghii.diff.im
+diffstats = {'sum': 65.86,
+             'max': 0.009,
+             'min': -0.003,
+             'rms': 0.002,
+             'sigma': 0.0011 }
+
 ### tight 
-reftol   = {'flux':  1e-1,
+reftol   = {'sum':  1e-2,
             'max':  1e-2,
             'min':  1e-2,
             'rms':  1e-2,
@@ -116,7 +112,6 @@ loghdr = """
 print >> logfile, loghdr
 
 regstate = True
-regstate = True
 rskes = refstats.keys()
 rskes.sort()
 for ke in rskes:
@@ -125,6 +120,16 @@ for ke in rskes:
         print >> logfile, "* Passed %-5s test, got % -11.5g , expected % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
     else:
         print >> logfile, "* FAILED %-5s test, got % -11.5g instead of % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
+        regstate = False
+
+rskes = diffstats.keys()
+rskes.sort()
+for ke in rskes:
+    adiff=abs(hiidiff_stats[ke][0] - diffstats[ke])/abs(diffstats[ke])
+    if adiff < reftol[ke]:
+        print >> logfile, "* Passed %-5s test, got % -11.5g , expected % -11.5g." % (ke, hiidiff_stats[ke][0], diffstats[ke])
+    else:
+        print >> logfile, "* FAILED %-5s test, got % -11.5g instead of % -11.5g." % (ke, hiidiff_stats[ke][0], diffstats[ke])
         regstate = False
         
 

@@ -1514,7 +1514,7 @@ class simutil:
                 else:
                     foo=in_spc['pixel'][0]
                     self.msg("you seem to have two spectral axes",priority="warn")
-                    nchan=arr.shape[foo]>1 
+                nchan=arr.shape[foo]                
                 axmap[3]=foo
                 axassigned[foo]=3
                 model_restfreq=in_csys.restfrequency()
@@ -1580,7 +1580,8 @@ class simutil:
             if in_stk['return']:
                 model_stokes=in_csys.stokes()
                 foo=model_stokes[0]
-                for i in range(model_stokes.__len__()-1):
+                out_nstk=model_stokes.__len__()
+                for i in range(out_nstk-1):
                     foo=foo+model_stokes[i+1]
                 model_stokes=foo
                 if type(in_stk['pixel']) == type(1):
