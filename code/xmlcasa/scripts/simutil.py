@@ -167,24 +167,25 @@ class simutil:
             if self.verbose: self.msg("plotting image with field size %f x %f arcsec" % (xextent,yextent),origin="statim")
             xextent=[xextent,-xextent]
             yextent=[-yextent,yextent]
-            # remove top .5% of pixels:
-            nbin=200
-            imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
-            ii=nbin-1
-            highcounts=imhist['counts'][ii]
-            while imhist['counts'][ii]>0.995*highcounts and ii>0: 
-                ii=ii-1
-            highvalue=imhist['values'][ii]
-            if disprange != None:
-                if type(disprange)==type([]):
-                    n=len(disprange)
-                    if n>0:
-                        highvalue=disprange[n-1]
-                    else:
-                        disprange.append(highvalue)  # return highvalue
+        # remove top .5% of pixels:
+        nbin=200
+        imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
+        ii=nbin-1
+        highcounts=imhist['counts'][ii]
+        while imhist['counts'][ii]>0.995*highcounts and ii>0: 
+            ii=ii-1
+        highvalue=imhist['values'][ii]
+        if disprange != None:
+            if type(disprange)==type([]):
+                n=len(disprange)
+                if n>0:
+                    highvalue=disprange[n-1]
                 else:
-                    highvalue=disprange
+                    disprange.append(highvalue)  # return highvalue
+            else:
+                highvalue=disprange
             #
+        if (plot):
             pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue)
             ax=pl.gca()
             l=ax.get_xticklabels()

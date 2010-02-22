@@ -318,8 +318,12 @@ def simdata(
         kfld=0
         # RI todo progress meter for simdata Sim::observe
         # print "calculating ";
+
+        if nscan<nfld:
+            msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
+            return
         
-        mosaic_completed=False
+        
         for k in range(0,nscan) :
             sttime=-totalsec/2.0+scansec*k
             endtime=sttime+scansec
@@ -336,14 +340,10 @@ def simdata(
                     sm.observe(sourcename="phase calibrator", spwname=fband,
                                starttime=qa.quantity(sttime, "s"),
                                stoptime=qa.quantity(endtime, "s"));
-                kfld=kfld+1
-                mosaic_completed=True
+                kfld=kfld+1                
             if kfld > nfld: kfld=0
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
-        if not mosaic_completed:
-            msg("Not all pointings in the mosaic have been observed - check mosaic setup and exposure time parameters!",priority="error")
-            return
 
 
         msg("done setting up observations (blank visibilities)")
@@ -712,7 +712,6 @@ def simdata(
         #####################################################################
         # fidelity  
 
-
         if os.path.exists(modelimage) and fidelity == True: 
             # from math import sqrt
             
@@ -753,6 +752,9 @@ def simdata(
             ia.done()
 
             msg("fidelity image calculated",origin="analysis")
+
+        else:
+            bmarea=1.
 
             # clean up moment zero maps if we don't need them anymore
 #            if nchan==1:

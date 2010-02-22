@@ -11,7 +11,10 @@ startProc = time.clock()
 
 print '--Running simdata of 30 Doradus--'
 # configs are in the repository
-repodir=os.getenv("CASAPATH").split(' ')[0]
+l=locals() 
+if not l.has_key("repodir"): 
+    repodir=os.getenv("CASAPATH").split(' ')[0]
+
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
@@ -52,12 +55,13 @@ threshold="1mJy"
 weighting="briggs"
 robust=0.0
 
-checkinputs="no"
-display=False
-fidelity=False
-
-#display=True
-#fidelity=True
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    checkinputs="yes"    
+else:
+    checkinputs="no"
+    display=False
+    fidelity=False
 
 inp()
 go()
