@@ -7,8 +7,8 @@ alt = quantity(5000,'m')
 h0  = quantity(2.0,'km')
 wvl = quantity(-5.6,'K/km')
 mxA = quantity(48,'km')
-dpr = quantity(10.0,'mbar')
-dpm = 1.2
+dpr = quantity(5.0,'mbar')
+dpm = 1.1
 att = 1
 myatm = at.initAtmProfile(alt, tmp, pre, mxA, hum, wvl, dpr, dpm, h0, att)
 print "Atmospheric type:   ", at.getBasicAtmParms()['atmType']
@@ -84,6 +84,7 @@ fW2 = quantity(0.008,'GHz')
 fR2 = quantity(0.002,'GHz')
 nc = at.addSpectralWindow(fC2,fW2,fR2)
 print "New spectral window has ", nc, " channels"
+#w = at.getStartupWaterContent()
 w = at.getGroundWH2O()
 numSpw = at.getNumSpectralWindows()
 print "There are now ", numSpw, " spectral windows"
