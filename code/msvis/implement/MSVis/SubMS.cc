@@ -3174,7 +3174,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	  transREF_FREQUENCY = freqTrans(oldREF_FREQUENCY);
 	  transTOTAL_BANDWIDTH = transNewXin[oldNUM_CHAN-1] +
-            transCHAN_WIDTH[oldNUM_CHAN-1] - transNewXin[0] + transCHAN_WIDTH[0];
+            transCHAN_WIDTH[oldNUM_CHAN-1]/2. - transNewXin[0] + transCHAN_WIDTH[0]/2.;
 	}
 	else {
 	  // just copy

@@ -133,7 +133,7 @@ namespace casa {
 	}
 
 	String datatype = viewer_->filetype(path.toStdString()).chars();
-	if ( datatype == "image" ) {
+	if ( datatype == "image" || datatype == "ms" ) {
 	    if ( displaytype == "raster"	||
 		 displaytype == "contour"	||
 		 displaytype == "vector"	||

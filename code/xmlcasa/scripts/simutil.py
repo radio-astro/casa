@@ -91,7 +91,7 @@ class simutil:
                         priority="INFO"
         bw="\x1b[0m"
         if origin==None:
-            origin="simutil"
+            origin="simdata"            
         if toterm:
             print clr+"["+origin+"] "+bw+s
         casalog.post(s,priority=priority,origin=origin)
@@ -167,24 +167,25 @@ class simutil:
             if self.verbose: self.msg("plotting image with field size %f x %f arcsec" % (xextent,yextent),origin="statim")
             xextent=[xextent,-xextent]
             yextent=[-yextent,yextent]
-            # remove top .5% of pixels:
-            nbin=200
-            imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
-            ii=nbin-1
-            highcounts=imhist['counts'][ii]
-            while imhist['counts'][ii]>0.995*highcounts and ii>0: 
-                ii=ii-1
-            highvalue=imhist['values'][ii]
-            if disprange != None:
-                if type(disprange)==type([]):
-                    n=len(disprange)
-                    if n>0:
-                        highvalue=disprange[n-1]
-                    else:
-                        disprange.append(highvalue)  # return highvalue
+        # remove top .5% of pixels:
+        nbin=200
+        imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
+        ii=nbin-1
+        highcounts=imhist['counts'][ii]
+        while imhist['counts'][ii]>0.995*highcounts and ii>0: 
+            ii=ii-1
+        highvalue=imhist['values'][ii]
+        if disprange != None:
+            if type(disprange)==type([]):
+                n=len(disprange)
+                if n>0:
+                    highvalue=disprange[n-1]
                 else:
-                    highvalue=disprange
+                    disprange.append(highvalue)  # return highvalue
+            else:
+                highvalue=disprange
             #
+        if (plot):
             pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue)
             ax=pl.gca()
             l=ax.get_xticklabels()
@@ -1514,7 +1515,7 @@ class simutil:
                 else:
                     foo=in_spc['pixel'][0]
                     self.msg("you seem to have two spectral axes",priority="warn")
-                    nchan=arr.shape[foo]>1 
+                nchan=arr.shape[foo]                
                 axmap[3]=foo
                 axassigned[foo]=3
                 model_restfreq=in_csys.restfrequency()
@@ -1580,7 +1581,8 @@ class simutil:
             if in_stk['return']:
                 model_stokes=in_csys.stokes()
                 foo=model_stokes[0]
-                for i in range(model_stokes.__len__()-1):
+                out_nstk=model_stokes.__len__()
+                for i in range(out_nstk-1):
                     foo=foo+model_stokes[i+1]
                 model_stokes=foo
                 if type(in_stk['pixel']) == type(1):

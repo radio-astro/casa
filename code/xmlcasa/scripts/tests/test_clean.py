@@ -253,6 +253,7 @@ class clean_test(unittest.TestCase):
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
                          timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
         
+        os.system('cp -r ' + self.img+'.image' + ' myimage.im')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         ref = 0.007161217276006937
@@ -260,63 +261,19 @@ class clean_test(unittest.TestCase):
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-5)
         
-
-class clean_temp(unittest.TestCase):
-    
-    # Input and output names
-#    msfile = 'Itziar.ms'
-#    msfile = 'ngc1333_ut.ms'
-    msfile = 'ngc7538_ut.ms'
-    res = None
-    img = 'cleantest_im'
-
-    def setUp(self):
-        self.res = None
-        default(clean)
-        if(os.path.exists(self.msfile)):
-            os.system('rm -rf ' + self.msfile)
-            
-#        shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
-#                            '/data/regression/exportasdm/input/'+self.msfile, self.msfile)
-#        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/exportasdm/input/'
-        datapath= '/Users/scastro/casadir/utests/clean/data/'
-        os.system('cp -r '+datapath+self.msfile + ' .')
-    
-    def tearDown(self):
-        if (os.path.exists(self.msfile)):
-            os.system('rm -rf ' + self.msfile)
-
-        os.system('rm -rf ' + self.img+'*')
-
-    def getpixval(self,img,pixel):
-        ia.open(img)
-        px = ia.pixelvalue(pixel)
-        ia.close()
-        return px['value']['value']
-
-    def test6(self):
-        """Test 6: Wrong spw value"""
-        self.res = clean(vis=self.msfile,imagename=self.img,spw='10')
+    def test28(self):
+        '''Test 28: Wrong type of phasecenter'''
+        self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=4.5)
         self.assertFalse(os.path.exists(self.img+'.image'))
-
-    def test25(self):
-        '''Test 25: Non-default subparameters of selectdata'''
-        self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>10:25:00',antenna='8')
-        self.assertEqual(self.res, None)
+        
+    def test29(self):
+        '''Test 29: Non-default value of phasecenter'''
+        self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=2)
         self.assertTrue(os.path.exists(self.img+'.image'))
-
-    def test26(self):
-        '''Test 26: Wrong antenna subparameter of selectdata'''
-        self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         antenna='88')
-        self.assertFalse(os.path.exists(self.img+'.image'))
+        
     
 
 def suite():
-    return [clean_test]
+    return [clean_test,clean_temp]
 
-#def run_suite():
-#    set = unittest.TestLoader().loadTestsFromTestCase(clean_test)
-#    unittest.TextTestRunner(verbosity=2).run(set)
 
