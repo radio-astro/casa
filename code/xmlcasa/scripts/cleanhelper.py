@@ -1009,7 +1009,9 @@ class cleanhelper:
         instartunit=''
         inwidthunit=''
         if(mode=='channel'):
-            ###for mode channel ignore the frame to use the data frame 
+            ###for mode channel ignore the frame to use the data frame
+            if(frame != ''):
+                self._casalog.post('Note: in channel mode, the outframe parameter is ignored.', 'WARN')
             frame=''
             if(type(start)!=int):
                 raise TypeError, "Wrong type for start parameter. Int is expected for the channel mode." 
@@ -1082,6 +1084,8 @@ class cleanhelper:
                     raise TypeError, "width parameter is not a valid frequency quantity "
                 else:
                     loc_width=width
+            if(loc_width==1 and frame != ''):
+                self._casalog.post('Note: in frequency and velocity mode, the default width is the original channel width\n  and is not converted to the output reference frame.', 'WARN')
             (freqlist, finc)=self.getfreqs(nchan,spw,0,loc_width)
             ###use the bloody frame of the data to define the start for defaults
             self.usespecframe=self.dataspecframe
@@ -1097,12 +1101,16 @@ class cleanhelper:
         #       retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
         else:
             if(width==''):
+                if(frame != ''):
+                    self._casalog.post('Note: in frequency and velocity mode, the default width is the original channel width\n  and is not converted to the output reference frame.', 'WARN')
                 (freqlist,finc)=self.getfreqs(nchan,spw,start,1)
             else:
                 if(mode=='velocity'):
                     loc_width=1
                 else:
                     loc_width=width
+                if(loc_width==1 and frame != ''):
+                    self._casalog.post('Note: in frequency and velocity mode, the default width is the original channel width\n  and is not converted to the output reference frame.', 'WARN')
                 (freqlist,finc)=self.getfreqs(nchan,spw,start,loc_width)
             ###at this stage it is safe to declare now that the user want the data frame
             if(self.usespecframe==''):
@@ -1252,13 +1260,15 @@ class cleanhelper:
         if(type(width)==int or type(width)==float):
             if(type(start)==int or type(start)==float):
                 finc=(chanfreqs1d[start+1]-chanfreqs1d[start])*width
+                # still need to convert to target reference frame!
             elif(type(start)==str):
                 if(qa.quantity(start)['unit'].find('Hz') > -1):
                    # assume called from setChannelization with local width=1
                    # for the default width(of clean task parameter)='' for
                    # velocity and frequency modes. This case set width to 
-                   # first channel width 
+                   # first channel width
                    finc=chanfreqs1d[1]-chanfreqs1d[0]
+                   # still need to convert to target reference frame!
         elif(type(width)==str):
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 finc=qa.convert(qa.quantity(width),'Hz')['value']
@@ -1271,9 +1281,11 @@ class cleanhelper:
                 raise TypeError, "Start parameter is outside the data range"
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 qnchan=qa.convert(qa.div(qa.quantity(bw,'Hz'),qa.quantity(width)))
-                loc_nchan=int(math.ceil(qnchan['value']))+1
+                #DP loc_nchan=int(math.ceil(qnchan['value']))+1
+                loc_nchan=int(round(qnchan['value']))+1
             else:
-                loc_nchan=int(math.ceil(bw/finc))+1
+                #DP loc_nchan=int(math.ceil(bw/finc))+1
+                loc_nchan=int(round(bw/finc))+1
         else:
             loc_nchan=nchan
         for i in range(int(loc_nchan)):
