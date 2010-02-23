@@ -100,7 +100,7 @@ casa = { 'build': {
 ##     first try to find dbus launch script in likely system areas
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ##
-##     for exe in ['dbus-daemon', 'dbus-daemon-1']:
+##   for exe in ['dbus-daemon', 'dbus-daemon-1']:
 ##
 ##  hosts which have dbus-daemon-1 but not dbus-daemon seem to have
 ##  a broken dbus-daemon-1...
@@ -118,7 +118,7 @@ for exe in ['dbus-daemon']:
 ##     next search through $PATH for dbus launch script
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 if casa['helpers']['dbus'] is None:
-    for exe in ['dbus-daemon', 'dbus-daemon-1']:
+    for exe in ['dbus-daemon']:
         for dir in os.getenv('PATH').split(':') :
             dd = dir + os.sep + exe
             if os.path.exists(dd) and os.access(dd,os.X_OK) :
@@ -176,10 +176,10 @@ if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
         print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
         exit(1)
 
-## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----                                                                            
-## on linux set up a dbus-daemon for casa because each                                                                                    
-## x-server (e.g. Xvfb) gets its own dbus session...                                                                                      
-## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----                                                                            
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## on linux set up a dbus-daemon for casa because each
+## x-server (e.g. Xvfb) gets its own dbus session...
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 if os.uname()[0] == 'Linux' :
     if casa['helpers']['dbus'] is not None :
 
