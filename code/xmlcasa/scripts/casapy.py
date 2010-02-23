@@ -99,7 +99,13 @@ casa = { 'build': {
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ##     first try to find dbus launch script in likely system areas
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-for exe in ['dbus-daemon', 'dbus-daemon-1']:
+##
+##     for exe in ['dbus-daemon', 'dbus-daemon-1']:
+##
+##  hosts which have dbus-daemon-1 but not dbus-daemon seem to have
+##  a broken dbus-daemon-1...
+##
+for exe in ['dbus-daemon']:
     for dir in ['/bin', '/usr/bin', '/opt/local/bin'] :
         dd = dir + os.sep + exe
         if os.path.exists(dd) and os.access(dd,os.X_OK) :
@@ -209,6 +215,7 @@ if os.uname()[0] == 'Linux' :
         os.close(r)
         if len(dbus_address) > 0 :
             os.putenv('DBUS_SESSION_BUS_ADDRESS',dbus_address)
+            os.environ['DBUS_SESSION_BUS_ADDRESS'] = dbus_address
 
 
 ipythonenv  = casa['dirs']['rc'] + '/ipython'
