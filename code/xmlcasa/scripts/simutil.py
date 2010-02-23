@@ -122,16 +122,19 @@ class simutil:
             toJyarcsec=1.
             toJypix=1.
         stats=ia.statistics(robust=True)
-        #im_max=stats['max']*toJyarcsec
-        #im_min=stats['min']*toJyarcsec
-        im_max=stats['max']*toJypix
         im_min=stats['min']*toJypix
+        if type(im_min)==type([]):
+            if len(im_min)<1: im_min=0.
+        im_max=stats['max']*toJypix
+        if type(im_max)==type([]):
+            if len(im_max)<1: im_max=1.
         imsize=ia.shape()[0:2]
         reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
         stats=ia.statistics(region=reg1)
         #im_rms=stats['rms']*toJyarcsec
         im_rms=stats['rms']*toJypix
-        if len(im_rms)==0: im_rms=0.
+        if type(im_rms)==type([]):
+            if len(im_rms)==0: im_rms=0.
         data_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
         data_array=pl.array(data_array)
         tdata_array=pl.transpose(data_array)
@@ -148,8 +151,8 @@ class simutil:
             if offdiag > 1e-4:
                 self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",origin="statim",priority="error")
             factor=pl.sqrt(abs(pl.det(xform)))
-            xpix=xpix*factor
-            ypix=ypix*factor
+            xpix=abs(xpix*factor)
+            ypix=abs(ypix*factor)
             #if abs(xpix-ypix)/(xpix+ypix) < 1e-4:
             #    self.msg("WARN: image %s doesn't have square pixels" % image,origin="statim")
             pixsize=[xpix,ypix]

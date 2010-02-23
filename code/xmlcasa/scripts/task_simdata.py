@@ -39,7 +39,7 @@ def simdata(
     ):
 
 
-    # XXX for inbright=unchanged, need to scale input image to jy/pix
+    # RI TODO for inbright=unchanged, need to scale input image to jy/pix
 
 
     casalog.origin('simdata')
@@ -220,7 +220,7 @@ def simdata(
             pl.ion()
             pl.clf()
             pl.subplot(121)
-            model_min,model_max, model_rms = util.statim(modelflat,plot=display,incell=model_cell)
+            model_min,model_max, model_rms = util.statim(modelflat,plot=True,incell=model_cell)
             lims=pl.xlim(),pl.ylim()
             tt=pl.array(range(25))*pl.pi/12            
             pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
@@ -603,7 +603,10 @@ def simdata(
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
 
-        if doclean: 
+        if doclean:
+            # clean insists on using an existing model if it's present
+            shutil.rmtree(image+".image")
+            shutil.rmtree(image+".model")
             clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
                   niter=niter, threshold=threshold, selectdata=False,
                   psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
@@ -706,7 +709,6 @@ def simdata(
             ia.open(image+".image")
             beam=ia.restoringbeam()
             ia.done()
-
 
 
         #####################################################################
@@ -842,7 +844,10 @@ def simdata(
                 ia.open(image+".psf")
                 beamcs=ia.coordsys()
                 beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                pixsize=(qa.convert(qa.quantity(cell),'arcsec')['value'])
+                if type(cell)==type([]):
+                    pixsize=(qa.convert(qa.quantity(cell[0]),'arcsec')['value'])
+                else:
+                    pixsize=(qa.convert(qa.quantity(cell),'arcsec')['value'])
                 xextent=imsize[0]*pixsize*0.5
                 xextent=[xextent,-xextent]
                 yextent=imsize[1]*pixsize*0.5
