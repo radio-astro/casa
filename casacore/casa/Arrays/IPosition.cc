@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.cc 20858 2010-02-03 13:08:35Z gervandiepen $
+//# $Id: IPosition.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/ArrayError.h>
@@ -648,6 +648,9 @@ IPosition min (const IPosition& left, const IPosition& right)
     return result;
 }
 
+// <thrown>
+//    <item> ArrayConformanceError
+// </thrown>
 Int64 IPosition::product() const
 {
     if (nelements() ==  0) {
@@ -655,19 +658,9 @@ Int64 IPosition::product() const
     }
     Int64 total = 1;
     for (uInt i=0; i<nelements(); i++) {
-	total *= data_p[i];
+	total *= (*this)[i];
     }
     return total;
-}
-
-Bool IPosition::allOne() const
-{
-    for (uInt i=0; i<nelements(); ++i) {
-        if (data_p[i] != 1) {
-            return False;
-        }
-    }
-    return True;
 }
 
 // <thrown>

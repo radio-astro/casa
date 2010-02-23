@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRep.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: ExprNodeRep.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_EXPRNODEREP_H
 #define TABLES_EXPRNODEREP_H
@@ -226,9 +226,6 @@ public:
     // It is the case for a reduction value or constant value.
     // By default it is if the value is constant.
     virtual Bool isSingleValue() const;
-
-    // Is the expression a column aggregate function?
-    /// virtual Bool isAggregate() const;
 
     // Get a scalar value for this node in the given row.
     // The appropriate functions are implemented in the derived classes and

@@ -23,12 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledFileHelper.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledFileHelper.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #include <tables/Tables/TiledFileHelper.h>
 #include <tables/Tables/TSMFile.h>
-#include <tables/Tables/TSMOption.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TableError.h>
 #include <casa/Arrays/Vector.h>
@@ -39,18 +38,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 TiledFileHelper::TiledFileHelper (const String& fileName,
 				  const IPosition& shape,
 				  DataType dtype,
-                                  const TSMOption& tsmOption,
+				  uInt maximumCacheSize,
 				  Bool writable,
 				  Bool bigEndian)
-  : TiledStMan ("TiledFileHelper",
-                std::max(0, tsmOption.maxCacheSizeMB()) * 1024*1024)
+: TiledStMan ("TiledFileHelper", maximumCacheSize)
 {
-  // TSM is used on an existing file. So set optional default accordingly.
-  TSMOption tsmOpt(tsmOption);
-  tsmOpt.fillOption (False);
-  // Set info in parent TiledStMan object.
   setEndian (bigEndian);
-  setTsmOption (tsmOpt);
   switch (dtype) {
   case TpBool:
     itsDesc.addColumn (ArrayColumnDesc<Bool> ("DATA", shape,
@@ -85,7 +78,7 @@ TiledFileHelper::TiledFileHelper (const String& fileName,
   }
   createDirArrColumn ("DATA", dtype, "");
   TiledStMan::setup(0);
-  fileSet_p[0] = new TSMFile (fileName, writable, tsmOpt);
+  fileSet_p[0] = new TSMFile (fileName, writable);
 }
 
 TiledFileHelper::~TiledFileHelper()

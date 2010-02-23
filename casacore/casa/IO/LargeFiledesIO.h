@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LargeFiledesIO.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: LargeFiledesIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_LARGEFILEDESIO_H
 #define CASA_LARGEFILEDESIO_H
@@ -93,17 +93,14 @@ public:
     LargeFiledesIO();
 
     // Construct from the given file descriptor.
-    // The file name is only used in possible error messages.
-    explicit LargeFiledesIO (int fd, const String& fileName);
+    explicit LargeFiledesIO (int fd);
 
     // Attach to the given file descriptor.
-    // An exception is thrown if it is not in a detached state.
-    // The file name is only used in error messages.
-    void attach (int fd, const String& fileName);
+    void attach (int fd);
 
     // The destructor does not close the file.
     ~LargeFiledesIO();
-
+    
     // Write the number of bytes.
     virtual void write (uInt size, const void* buf);
 
@@ -128,8 +125,7 @@ public:
     virtual Bool isSeekable() const;
 
     // Get the file name of the file attached.
-    const String& fileName() const
-      { return itsFileName; }
+    virtual String fileName() const;
 
     // Some static convenience functions for file create/open/close.
     // <group>
@@ -141,11 +137,7 @@ public:
 
 
 protected:
-    // Get the file descriptor.
-    int fd() const
-      { return itsFile; }
-
-    // Detach from the file descriptor. It is not closed.
+    // Detach the FILE. Close it when it is owned.
     void detach();
 
     // Determine if the file descriptor is readable and/or writable.
@@ -159,11 +151,11 @@ protected:
     virtual Int64 doSeek (Int64 offset, ByteIO::SeekOption);
 
 private:
-    Bool   itsSeekable;
-    Bool   itsReadable;
-    Bool   itsWritable;
-    int    itsFile;
-    String itsFileName;
+    Bool        itsOwner;
+    Bool        itsSeekable;
+    Bool        itsReadable;
+    Bool        itsWritable;
+    int         itsFile;
 
     // Copy constructor, should not be used.
     LargeFiledesIO (const LargeFiledesIO& that);

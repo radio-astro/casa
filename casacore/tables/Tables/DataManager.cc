@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: DataManager.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 
 //# Includes
@@ -56,13 +56,14 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 DataManager::DataManager()
-: nrcol_p       (0),
-  seqnr_p       (0),
-  asBigEndian_p (False),
-  tsmOption_p   (TSMOption::Buffer, 0, 0),
-  clone_p       (0)
+: nrcol_p (0),
+  seqnr_p (0),
+  clone_p (0)
 {
     table_p = new Table;
+    if (table_p == 0) {
+	throw (AllocError ("DataManager::DataManager", 1));
+    }
 }
 
 DataManager::~DataManager()

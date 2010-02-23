@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnSet.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: ColumnSet.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #ifndef TABLES_COLUMNSET_H
 #define TABLES_COLUMNSET_H
@@ -42,7 +42,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SetupNewTable;
 class Table;
 class TableDesc;
-class TSMOption;
 class BaseTable;
 class TableAttr;
 class ColumnDesc;
@@ -122,9 +121,7 @@ public:
     // It creates the data manager column objects for each column
     // and it allows the data managers to link themselves to the
     // Table object and to initialize themselves.
-    void initDataManagers (uInt nrrow, Bool bigEndian,
-                           const TSMOption& tsmOption,
-                           Table& tab);
+    void initDataManagers (uInt nrrow, Bool bigEndian, Table& tab);
 
     // Link the ColumnSet object to the BaseTable object.
     void linkToTable (BaseTable* baseTableObject);
@@ -181,16 +178,16 @@ public:
     // The default implementation throws an "invalid operation" exception.
     // <group>
     void addColumn (const ColumnDesc& columnDesc,
-		    Bool bigEndian, const TSMOption& tsmOption, Table& tab);
+		    Bool bigEndian, Table& tab);
     void addColumn (const ColumnDesc& columnDesc,
 		    const String& dataManager, Bool byName,
-		    Bool bigEndian, const TSMOption& tsmOption, Table& tab);
+		    Bool bigEndian, Table& tab);
     void addColumn (const ColumnDesc& columnDesc,
 		    const DataManager& dataManager,
-		    Bool bigEndian, const TSMOption& tsmOption, Table& tab);
+		    Bool bigEndian, Table& tab);
     void addColumn (const TableDesc& tableDesc,
 		    const DataManager& dataManager,
-		    Bool bigEndian, const TSMOption& tsmOption, Table& tab);
+		    Bool bigEndian, Table& tab);
     // </group>
 
     // Get nr of rows.
@@ -216,8 +213,7 @@ public:
     // This function gets called when an existing table is read back.
     // It returns the number of rows in case a data manager thinks there are
     // more. That is in particular used by LofarStMan.
-    uInt getFile (AipsIO&, Table& tab, uInt nrrow, Bool bigEndian,
-                  const TSMOption& tsmOption);
+    uInt getFile (AipsIO&, Table& tab, uInt nrrow, Bool bigEndian);
 
     // Set the table to being changed.
     void setTableChanged();
@@ -280,7 +276,8 @@ private:
 			       Bool doTthrow=True) const;
 
     // Do the actual addition of a column.
-    void doAddColumn (const ColumnDesc& columnDesc, DataManager* dataManPtr);
+    void doAddColumn (const ColumnDesc& columnDesc, DataManager* dataManPtr,
+		      Bool bigEndian);
 
     // Check if columns to be removed can be removed.
     // It returns a map of DataManager* telling how many columns for

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ISMBase.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: ISMBase.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 #include <tables/Tables/ISMBase.h>
@@ -279,7 +279,7 @@ void ISMBase::readIndex()
 {
     file_p->seek (0);
     // Use the file indicated by the fd from the BucketFile object.
-    FiledesIO fio (file_p->fd(), file_p->name());
+    FiledesIO fio (file_p->fd());
     TypeIO* tio;
     // It is stored in canonical or local format.
     if (asBigEndian()) {
@@ -335,7 +335,7 @@ void ISMBase::writeIndex()
     // Write a few items at the beginning of the file.
     file_p->seek (0);
     // Use the file indicated by the fd from the BucketFile object.
-    FiledesIO fio (file_p->fd(), file_p->name());
+    FiledesIO fio (file_p->fd());
     TypeIO* tio;
     // Store it in canonical or local format.
     if (asBigEndian()) {

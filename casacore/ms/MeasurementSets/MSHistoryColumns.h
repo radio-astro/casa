@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSHistoryColumns.h 20855 2010-01-28 13:35:00Z gervandiepen $
+//# $Id: MSHistoryColumns.h 19944 2007-02-27 11:14:34Z Malte.Marquarding $
 
 #ifndef MS_MSHISTORYCOLUMNS_H
 #define MS_MSHISTORYCOLUMNS_H
@@ -159,11 +159,6 @@ private:
 // for every predefined column. Access to non-predefined columns will still
 // have to be done with explicit declarations.
 // See <linkto class=MSColumns> MSColumns</linkto> for an example.
-//
-// Note by GvD 28-Jan-2010:
-// According to note 229 the OBJECTID column should contain Strings.
-// It is, however, defined as Int. It has to be left as such, otherwise older
-// MeasurementSets cannot be read anymore.
 // </synopsis>
 //
 // <motivation>

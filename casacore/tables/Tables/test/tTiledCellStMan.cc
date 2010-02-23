@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTiledCellStMan.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tTiledCellStMan.cc 18093 2004-11-30 17:51:10Z ddebonis $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -50,22 +50,22 @@
 // The results are written to stdout. The script executing this program,
 // compares the results with the reference output file.
 
-void writeFixed(const TSMOption&);
-void readTable(const TSMOption&);
-void writeVar(const TSMOption&);
-void writeFixVar(const TSMOption&);
-void writeNoHyper(const TSMOption&);
+void writeFixed();
+void readTable();
+void writeVar();
+void writeFixVar();
+void writeNoHyper();
 
 int main () {
     try {
-        writeFixed(TSMOption::Cache);
-	readTable(TSMOption::Cache);
-	writeVar(TSMOption::Buffer);
-	readTable(TSMOption::MMap);
-	writeFixVar(TSMOption::Cache);
-	readTable(TSMOption::Buffer);
-	writeNoHyper(TSMOption::MMap);
-	readTable(TSMOption::Cache);
+	writeFixed();
+	readTable();
+	writeVar();
+	readTable();
+	writeFixVar();
+	readTable();
+	writeNoHyper();
+	readTable();
     } catch (AipsError x) {
 	cout << "Caught an exception: " << x.getMesg() << endl;
 	return 1;
@@ -74,7 +74,7 @@ int main () {
 }
 
 // First build a description.
-void writeFixed(const TSMOption& tsmOpt)
+void writeFixed()
 {
     // Build the table description.
     TableDesc td ("", "1", TableDesc::Scratch);
@@ -96,7 +96,7 @@ void writeFixed(const TSMOption& tsmOpt)
     newtab.setShapeColumn ("Freq", IPosition(1,25));
     newtab.setShapeColumn ("Data", IPosition(2,16,25));
     newtab.bindAll (sm1);
-    Table table(newtab, 0, False, Table::LittleEndian, tsmOpt);
+    Table table(newtab);
 
     Vector<float> freqValues(25);
     Vector<float> polValues(16);
@@ -144,9 +144,9 @@ void writeFixed(const TSMOption& tsmOpt)
     }
 }
 
-void readTable(const TSMOption& tsmOpt)
+void readTable()
 {
-    Table table("tTiledCellStMan_tmp.data", Table::Old, tsmOpt);
+    Table table("tTiledCellStMan_tmp.data");
     ROArrayColumn<float> freq (table, "Freq");
     ROArrayColumn<float> pol (table, "Pol");
     ROArrayColumn<float> data (table, "Data");
@@ -180,7 +180,7 @@ void readTable(const TSMOption& tsmOpt)
     }
 }
 
-void writeVar(const TSMOption& tsmOpt)
+void writeVar()
 {
     // Build the table description.
     TableDesc td ("", "1", TableDesc::Scratch);
@@ -198,7 +198,7 @@ void writeVar(const TSMOption& tsmOpt)
     // Create a storage manager for it.
     TiledCellStMan sm1 ("TSMExample", IPosition(2,5,6));
     newtab.bindAll (sm1);
-    Table table(newtab, 0, False, Table::BigEndian, tsmOpt);
+    Table table(newtab);
 
     Vector<float> freqValues(25);
     Vector<float> polValues(16);
@@ -233,7 +233,7 @@ void writeVar(const TSMOption& tsmOpt)
     }
 }
 
-void writeFixVar(const TSMOption& tsmOpt)
+void writeFixVar()
 {
     // Build the table description.
     TableDesc td ("", "1", TableDesc::Scratch);
@@ -252,7 +252,7 @@ void writeFixVar(const TSMOption& tsmOpt)
     // Create a storage manager for it.
     TiledCellStMan sm1 ("TSMExample", IPosition(2,5,6));
     newtab.bindAll (sm1);
-    Table table(newtab, 0, False, Table::LocalEndian, tsmOpt);
+    Table table(newtab);
 
     Vector<float> freqValues(25);
     Vector<float> polValues(16);
@@ -287,7 +287,7 @@ void writeFixVar(const TSMOption& tsmOpt)
     }
 }
 
-void writeNoHyper(const TSMOption& tsmOpt)
+void writeNoHyper()
 {
     // Build the table description.
     TableDesc td ("", "1", TableDesc::Scratch);
@@ -306,7 +306,7 @@ void writeNoHyper(const TSMOption& tsmOpt)
     newtab.setShapeColumn ("Data", IPosition(2,16,25));
     newtab.bindColumn ("Data", sm1);
     newtab.bindColumn ("Weight", sm1);
-    Table table(newtab, 0, False, Table::AipsrcEndian, tsmOpt);
+    Table table(newtab);
 
     Vector<float> freqValues(25);
     Vector<float> polValues(16);

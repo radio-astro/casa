@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPosIter.cc 20857 2010-02-03 13:06:09Z gervandiepen $
+//# $Id: ArrayPosIter.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #include <casa/Arrays/ArrayPosIter.h>
 #include <casa/Arrays/ArrayError.h>
@@ -62,7 +62,7 @@ ArrayPositionIterator::ArrayPositionIterator(const IPosition &shape,
 // <thrown>
 //     <item> ArrayIteratorError
 // </thrown>
-void ArrayPositionIterator::setup(uInt byDim)
+void ArrayPositionIterator::setup(uint byDim)
 {
     if (byDim > ndim()) {
 	throw(ArrayIteratorError("ArrayPositionIterator::ArrayPositionIterator"

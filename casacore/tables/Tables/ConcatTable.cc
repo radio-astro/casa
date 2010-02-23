@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatTable.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: ConcatTable.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/ConcatTable.h>
 #include <tables/Tables/ConcatColumn.h>
@@ -42,8 +42,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   ConcatTable::ConcatTable (AipsIO& ios, const String& name, uInt nrrow,
-			    int option, const TableLock& lockOptions,
-                            const TSMOption& tsmOption)
+			    int option, const TableLock& lockOptions)
     : BaseTable (name, option, nrrow),
       colMap_p  (static_cast<ConcatColumn*>(0)),
       changed_p (False)
@@ -53,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // At the end it is reset. In this way nothing is written if
     // an exception is thrown during initialization.
     noWrite_p = True;
-    getConcat (ios, option, lockOptions, tsmOption);
+    getConcat (ios, option, lockOptions);
     noWrite_p = False;
   }
 
@@ -92,8 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ConcatTable::ConcatTable (const Block<String>& tableNames,
 			    const Block<String>& subTables,
 			    int option,
-			    const TableLock& lockOptions,
-                            const TSMOption& tsmOption)
+			    const TableLock& lockOptions)
     : BaseTable       ("", Table::Scratch, 0),
       subTableNames_p (subTables),
       colMap_p        (static_cast<ConcatColumn*>(0)),
@@ -103,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (tableNames.nelements() == 0) {
       throw TableError("ConcatTable: at least one table has to be given");
     }
-    openTables (tableNames, option, lockOptions, tsmOption);
+    openTables (tableNames, option, lockOptions);
     initialize();
     //# The initial table info is a copy of the original.
     tableInfo() = baseTabPtr_p[0]->tableInfo();
@@ -241,8 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //# Read a concatenate table from a file and open the associated tables.
   void ConcatTable::getConcat (AipsIO& ios, int option,
-			       const TableLock& lockOptions,
-                               const TSMOption& tsmOption)
+			       const TableLock& lockOptions)
   {
     //# Open the file, read name and type of root and read object data.
     uInt nrtab;
@@ -257,15 +254,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     ios >> subTableNames_p;
     ios.getend();
-    openTables (rootNames, option, lockOptions, tsmOption);
+    openTables (rootNames, option, lockOptions);
     initialize();
     //# Read the TableInfo object.
     getTableInfo();
   }
 
   void ConcatTable::openTables (const Block<String>& tableNames, Int option,
-				const TableLock& lockOptions,
-                                const TSMOption& tsmOption)
+				const TableLock& lockOptions)
   {
     //# Open the tables referenced to.
     baseTabPtr_p.resize (tableNames.nelements());
@@ -274,9 +270,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt i=0; i<tableNames.nelements(); ++i) {
       Table tab;
       if (option == Table::Old) {
-	tab = Table(tableNames[i], lockOptions, Table::Old, tsmOption);
+	tab = Table(tableNames[i], lockOptions, Table::Old);
       } else {
-        tab = Table(tableNames[i], lockOptions, Table::Update, tsmOption);
+	tab = Table(tableNames[i], lockOptions, Table::Update);
       }
       baseTabPtr_p[i] = tab.baseTablePtr();
       //# Link to referenced table, otherwise it will be destructed.
@@ -434,68 +430,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return colMap_p(name);
   }
     
-
-void ConcatTable::checkAddColumn (const String& name, Bool addToParent)
-{
-  if (! isWritable()) {
-    throw TableInvOper ("Table::addColumn; table is not writable");
-  }
-  if (tdescPtr_p->isColumn(name)) {
-    throw TableInvOper ("Table::addColumn; column " + name + " already exists");
-  }
-  if (!addToParent) {
-    throw TableInvOper ("ConcatTable::addColumn; column " + name +
-                        " does not exist in parent table, but must not be added"
-                        " (addToParent=False)");
-  }
-}
-
-
-void ConcatTable::addColumn (const ColumnDesc& columnDesc, Bool addToParent)
-{
-  checkAddColumn (columnDesc.name(), addToParent);
-  for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
-    baseTabPtr_p[i]->addColumn (columnDesc, addToParent);
-  }
-  tdescPtr_p->addColumn (columnDesc);
-}
-void ConcatTable::addColumn (const ColumnDesc& columnDesc,
-                             const String& dataManager, Bool byName,
-                             Bool addToParent)
-{
-  checkAddColumn (columnDesc.name(), addToParent);
-  for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
-    baseTabPtr_p[i]->addColumn (columnDesc, dataManager, byName, addToParent); 
-  }
-  tdescPtr_p->addColumn (columnDesc);
-}
-void ConcatTable::addColumn (const ColumnDesc& columnDesc,
-                             const DataManager& dataManager,
-                             Bool addToParent)
-{
-  checkAddColumn (columnDesc.name(), addToParent);
-  for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
-    baseTabPtr_p[i]->addColumn (columnDesc,dataManager, addToParent);
-  }
-  tdescPtr_p->addColumn (columnDesc);
-}
-void ConcatTable::addColumn (const TableDesc& tableDesc,
-                             const DataManager& dataManager,
-                             Bool addToParent)
-{
-  // First check if all columns exist and can be added or not.
-  // Collect all columns to be added to the parent.
-  for (uInt i=0; i<tableDesc.ncolumn(); ++i) {
-    checkAddColumn (tableDesc[i].name(), addToParent);
-  }
-  // Add to the parents.
-  for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
-    baseTabPtr_p[i]->addColumn (tableDesc, dataManager, addToParent);
-  }
-  for (uInt i=0; i<tableDesc.ncolumn(); ++i) {
-    tdescPtr_p->addColumn (tableDesc[i]);
-  }
-}
 
   //# Rows and columns cannot be removed and renamed.
   Bool ConcatTable::canRemoveRow() const

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FiledesIO.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: FiledesIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_FILEDESIO_H
 #define CASA_FILEDESIO_H
@@ -91,13 +91,10 @@ public:
     FiledesIO();
 
     // Construct from the given file descriptor.
-    // The file name is only used in possible error messages.
-    explicit FiledesIO (int fd, const String& fileName);
+    explicit FiledesIO (int fd);
 
     // Attach to the given file descriptor.
-    // An exception is thrown if it is not in a detached state.
-    // The file name is only used in error messages.
-    void attach (int fd, const String& fileName);
+    void attach (int fd);
 
     // The destructor does not close the file.
     ~FiledesIO();
@@ -126,8 +123,7 @@ public:
     virtual Bool isSeekable() const;
 
     // Get the file name of the file attached.
-    const String& fileName() const
-      { return itsFileName; }
+    virtual String fileName() const;
 
     // Some static convenience functions for file create/open/close.
     // <group>
@@ -139,11 +135,7 @@ public:
 
 
 protected:
-    // Get the file descriptor.
-    int fd() const
-      { return itsFile; }
-
-    // Detach from the file descriptor. It is not closed.
+    // Detach the FILE. Close it when it is owned.
     void detach();
 
     // Determine if the file descriptor is readable and/or writable.
@@ -157,11 +149,10 @@ protected:
     virtual Int64 doSeek (Int64 offset, ByteIO::SeekOption);
 
 private:
-    Bool   itsSeekable;
-    Bool   itsReadable;
-    Bool   itsWritable;
-    int    itsFile;
-    String itsFileName;
+    Bool        itsSeekable;
+    Bool        itsReadable;
+    Bool        itsWritable;
+    int         itsFile;
 
     // Copy constructor, should not be used.
     FiledesIO (const FiledesIO& that);

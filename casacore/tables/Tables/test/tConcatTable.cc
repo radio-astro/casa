@@ -23,10 +23,9 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tConcatTable.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tConcatTable.cc 20632 2009-06-14 12:16:13Z gervandiepen $
 
 #include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -251,11 +250,6 @@ void doIt (const Table& tab)
   }
   ROScalarColumn<Int> expr2ab(expr2tab, "ab");
   cout << expr2ab.getColumn() << endl;
-  // Add a column.
-  Table tabrw(tab);
-  tabrw.reopenRW();
-  tabrw.addColumn (ScalarColumnDesc<Int>("newcol"));
-  AlwaysAssertExit (tab.tableDesc().isColumn ("newcol"));
 }
 
 void doIt1 (const String& tableName)

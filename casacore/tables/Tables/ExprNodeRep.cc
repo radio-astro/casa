@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRep.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: ExprNodeRep.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/ExprNodeRep.h>
 #include <tables/Tables/ExprNode.h>
@@ -632,7 +632,7 @@ void TableExprNodeBinary::show (ostream& os, uInt indent) const
 
 Bool TableExprNodeBinary::isSingleValue() const
 {
-  // If no children, it is a constant single value.
+  // If no children, it is a constant value.
   if (! lnode_p) {
     return True;
   } else if (! rnode_p) {

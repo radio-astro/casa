@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMDataColumn.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TSMDataColumn.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Includes
 #include <tables/Tables/TSMDataColumn.h>
@@ -35,7 +35,6 @@
 #include <casa/Arrays/Slicer.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/ValType.h>
-#include <casa/OS/HostInfo.h>
 #include <casa/BasicSL/String.h>
 #include <casa/string.h>
 #include <casa/iostream.h>
@@ -52,14 +51,11 @@ TSMDataColumn::TSMDataColumn (const TSMColumn& column)
 	readFunc_p  = &Conversion::bitToBool;
 	writeFunc_p = &Conversion::boolToBit;
 	tilePixelSize_p = 0;
-        mustConvert_p   = True;
     }else{
         Bool asBigEndian = stmanPtr_p->asBigEndian();
 	ValType::getCanonicalFunc (dt, readFunc_p, writeFunc_p,
 				   convPixelSize_p, asBigEndian);
 	tilePixelSize_p = ValType::getCanonicalSize (dt, asBigEndian);
-        mustConvert_p = localPixelSize_p > 1  &&
-                        asBigEndian != HostInfo::bigEndian();
     }
 }
 
@@ -187,7 +183,7 @@ void TSMDataColumn::accessCell (uInt rownr, const void* dataPtr,
 	}
     }
     hypercube->accessSection (start, end, (char*)dataPtr, colnr_p,
-			      localPixelSize_p, tilePixelSize_p, writeFlag);
+			      localPixelSize_p, writeFlag);
 }
 
 void TSMDataColumn::accessCellSlice (uInt rownr, const Slicer& ns,
@@ -231,7 +227,7 @@ void TSMDataColumn::accessCellSlice (uInt rownr, const Slicer& ns,
     }
     hypercube->accessStrided (start, end, stride,
 			      (char*)dataPtr, colnr_p,
-			      localPixelSize_p, tilePixelSize_p, writeFlag);
+			      localPixelSize_p, writeFlag);
 }
 
 void TSMDataColumn::accessColumn (const void* dataPtr, Bool writeFlag)
@@ -248,7 +244,7 @@ void TSMDataColumn::accessColumn (const void* dataPtr, Bool writeFlag)
 	hypercube->setLastColAccess (TSMCube::ColumnAccess);
     }
     hypercube->accessSection (start, end, (char*)dataPtr, colnr_p,
-			      localPixelSize_p, tilePixelSize_p, writeFlag);
+			      localPixelSize_p, writeFlag);
 }
 
 void TSMDataColumn::accessColumnSlice (const Slicer& ns,
@@ -300,7 +296,7 @@ void TSMDataColumn::accessColumnSlice (const Slicer& ns,
     }
     hypercube->accessStrided (start, end, stride,
 			      (char*)dataPtr, colnr_p,
-			      localPixelSize_p, tilePixelSize_p, writeFlag);
+			      localPixelSize_p, writeFlag);
 }
 
 
@@ -473,7 +469,7 @@ void TSMDataColumn::accessFullCells (TSMCube* hypercube,
     }
   }
   hypercube->accessStrided (start, end, incr, dataPtr, colnr_p,
-			    localPixelSize_p, tilePixelSize_p, writeFlag);
+			    localPixelSize_p, writeFlag);
 }
 
 void TSMDataColumn::accessSlicedCells (TSMCube* hypercube,
@@ -511,7 +507,7 @@ void TSMDataColumn::accessSlicedCells (TSMCube* hypercube,
     }
   }
   hypercube->accessStrided (start, end, incr, dataPtr, colnr_p,
-			    localPixelSize_p, tilePixelSize_p, writeFlag);
+			    localPixelSize_p, writeFlag);
 }
 
 

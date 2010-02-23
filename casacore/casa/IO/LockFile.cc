@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LockFile.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: LockFile.cc 20794 2009-11-05 03:47:24Z Malte.Marquarding $
 
 
 #include <casa/IO/LockFile.h>
@@ -126,7 +126,7 @@ LockFile::LockFile (const String& fileName, double inspectInterval,
     } else {
         itsUseLocker = FileLocker (fd, 4*seqnr+1, 1);
     }
-    itsFileIO = new FiledesIO (fd, itsName);
+    itsFileIO = new FiledesIO (fd);
     itsCanIO  = new CanonicalIO (itsFileIO);
     // Set the file to in use by acquiring a read lock.
     itsUseLocker.acquire (FileLocker::Read, 1);

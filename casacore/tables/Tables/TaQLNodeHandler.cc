@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeHandler.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TaQLNodeHandler.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/TaQLNodeHandler.h>
 #include <tables/Tables/TableError.h>
@@ -796,7 +796,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       topStack()->addTable (res.getInt(), res.getString(), res.getTable(),
 			    res.getAlias(), itsTempTables, itsStack);
     }
-    //# Possibly let handleColumns also add a table (for selected columns)
   }
 
   void TaQLNodeHandler::handleWhere (const TaQLNode& node)

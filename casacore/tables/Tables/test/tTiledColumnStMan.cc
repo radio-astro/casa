@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTiledColumnStMan.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tTiledColumnStMan.cc 18093 2004-11-30 17:51:10Z ddebonis $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -56,18 +56,16 @@
 // The results are written to stdout. The script executing this program,
 // compares the results with the reference output file.
 
-void writeFixed(const TSMOption&);
-void readTable(const TSMOption&, Bool readKeys);
-void writeNoHyper(const TSMOption&);
+void writeFixed();
+void readTable(Bool readKeys);
+void writeNoHyper();
 
 int main () {
     try {
-        writeFixed(TSMOption::Cache);
-	readTable(TSMOption::MMap, True);
-	writeNoHyper(TSMOption::MMap);
-	readTable(TSMOption::Buffer, False);
-        writeFixed(TSMOption::Buffer);
-	readTable(TSMOption::Cache, False);
+	writeFixed();
+	readTable(True);
+	writeNoHyper();
+	readTable(False);
     } catch (AipsError x) {
 	cout << "Caught an exception: " << x.getMesg() << endl;
 	return 1;
@@ -76,7 +74,7 @@ int main () {
 }
 
 // First build a description.
-void writeFixed(const TSMOption& tsmOpt)
+void writeFixed()
 {
     // Build the table description.
     TableDesc td ("", "1", TableDesc::Scratch);
@@ -99,7 +97,7 @@ void writeFixed(const TSMOption& tsmOpt)
     newtab.setShapeColumn ("Freq", IPosition(1,20));
     newtab.setShapeColumn ("Data", IPosition(2,16,20));
     newtab.bindAll (sm1);
-    Table table(newtab, 0, False, Table::LittleEndian, tsmOpt);
+    Table table(newtab);
 
     Vector<float> freqValues(20);
     Vector<float> polValues(16);
@@ -162,9 +160,9 @@ void writeFixed(const TSMOption& tsmOpt)
     AlwaysAssertExit (accessor.getCacheSize(0) == accessor.cacheSize(2));
 }
 
-void readTable (const TSMOption& tsmOpt, Bool readKeys)
+void readTable (Bool readKeys)
 {
-  Table table("tTiledColumnStMan_tmp.data", Table::Old, tsmOpt);
+    Table table("tTiledColumnStMan_tmp.data");
     ROTiledStManAccessor accessor (table, "TSMExample");
     ROArrayColumn<float> freq (table, "Freq");
     ROArrayColumn<float> pol (table, "Pol");
@@ -357,7 +355,7 @@ void readTable (const TSMOption& tsmOpt, Bool readKeys)
 }
 
 // First build a description.
-void writeNoHyper(const TSMOption& tsmOpt)
+void writeNoHyper()
 {
     // Build the table description.
     TableDesc td ("", "1", TableDesc::Scratch);
@@ -377,7 +375,7 @@ void writeNoHyper(const TSMOption& tsmOpt)
     newtab.setShapeColumn ("Data", IPosition(2,16,20));
     newtab.bindColumn ("Data", sm1);
     newtab.bindColumn ("Weight", sm1);
-    Table table(newtab, 0, False, Table::BigEndian, tsmOpt);
+    Table table(newtab);
 
     Vector<float> freqValues(20);
     Vector<float> polValues(16);

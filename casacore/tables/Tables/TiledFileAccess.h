@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledFileAccess.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledFileAccess.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef TABLES_TILEDFILEACCESS_H
 #define TABLES_TILEDFILEACCESS_H
@@ -31,7 +31,6 @@
 
 //# Includes
 #include <tables/Tables/TSMCube.h>
-#include <tables/Tables/TSMOption.h>
 #include <casa/Utilities/DataType.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -94,19 +93,16 @@ public:
   // Create a TiledFileAccess object.
   // The data is assumed to be in local canonical format
   // (thus big endian on e.g. SUN and little endian on e.g. PC).
-  // The TSMOption determines how the file is accessed.
   TiledFileAccess (const String& fileName, Int64 fileOffset,
 		   const IPosition& shape, const IPosition& tileShape,
-		   DataType dataType, 
-                   const TSMOption& = TSMOption(),
+		   DataType dataType, uInt maximumCacheSize=0,
 		   Bool writable=False);
 
   // Create a TiledFileAccess object.
   // The endian format of the data is explicitly given.
   TiledFileAccess (const String& fileName, Int64 fileOffset,
 		   const IPosition& shape, const IPosition& tileShape,
-		   DataType dataType,
-                   const TSMOption&,
+		   DataType dataType, uInt maximumCacheSize,
 		   Bool writable, Bool bigEndian);
 
   ~TiledFileAccess();

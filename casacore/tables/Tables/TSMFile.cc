@@ -23,12 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMFile.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TSMFile.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 
 //# Includes
 #include <tables/Tables/TSMFile.h>
-#include <tables/Tables/TSMOption.h>
 #include <tables/Tables/TiledStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/DataManError.h>
@@ -37,8 +36,8 @@
 #include <casa/stdio.h>		// for sprintf
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-TSMFile::TSMFile (const TiledStMan* stman, uInt fileSequenceNr,
-                  const TSMOption& tsmOpt)
+
+TSMFile::TSMFile (const TiledStMan* stman, uInt fileSequenceNr)
 : fileSeqnr_p (fileSequenceNr),
   file_p      (0),
   length_p    (0)
@@ -47,31 +46,19 @@ TSMFile::TSMFile (const TiledStMan* stman, uInt fileSequenceNr,
     char strc[8];
     sprintf (strc, "_TSM%i", fileSeqnr_p);
     String fileName = stman->fileName() + strc;
-    Bool mapOpt = tsmOpt.option() == TSMOption::MMap;
-    uInt bufSize = 0;
-    if (tsmOpt.option() == TSMOption::Buffer) {
-      bufSize = tsmOpt.bufferSize();
-    }
-    file_p = new BucketFile (fileName, bufSize, mapOpt);
+    file_p = new BucketFile (fileName);
 }
 
-TSMFile::TSMFile (const String& fileName, Bool writable,
-                  const TSMOption& tsmOpt)
+TSMFile::TSMFile (const String& fileName, Bool writable)
 : fileSeqnr_p (0),
   file_p      (0),
   length_p    (0)
 {
     // Create the file.
-    Bool mapOpt = tsmOpt.option() == TSMOption::MMap;
-    uInt bufSize = 0;
-    if (tsmOpt.option() == TSMOption::Buffer) {
-      bufSize = tsmOpt.bufferSize();
-    }
-    file_p = new BucketFile (fileName, writable, bufSize, mapOpt);
+    file_p = new BucketFile (fileName, writable);
 }
 
-TSMFile::TSMFile (const TiledStMan* stman, AipsIO& ios, uInt seqnr,
-                  const TSMOption& tsmOpt)
+TSMFile::TSMFile (const TiledStMan* stman, AipsIO& ios, uInt seqnr)
 : file_p (0)
 {
     getObject (ios);
@@ -81,19 +68,14 @@ TSMFile::TSMFile (const TiledStMan* stman, AipsIO& ios, uInt seqnr,
     char strc[8];
     sprintf (strc, "_TSM%i", fileSeqnr_p);
     String fileName = stman->fileName() + strc;
-    Bool mapOpt = tsmOpt.option() == TSMOption::MMap;
-    uInt bufSize = 0;
-    if (tsmOpt.option() == TSMOption::Buffer) {
-      bufSize = tsmOpt.bufferSize();
-    }
-    file_p = new BucketFile (fileName, stman->table().isWritable(),
-                             bufSize, mapOpt);
+    file_p = new BucketFile (fileName, stman->table().isWritable());
 }
 
 TSMFile::~TSMFile()
 {
     delete file_p;
 }
+
 
 void TSMFile::putObject (AipsIO& ios) const
 {

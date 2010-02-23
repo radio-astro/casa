@@ -162,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   String stripWhite(const String& str, Bool onlyends)
   {
-    //if ((str == "" ) || (str.length() <=0)) return str;
+    if ((str == "" ) || (str.length() <=0)) return str;
     Int j0,j1;
     j0=0;j1=str.length()-1;
     if (onlyends)

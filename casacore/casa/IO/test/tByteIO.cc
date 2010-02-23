@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tByteIO.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tByteIO.cc 18093 2004-11-30 17:51:10Z ddebonis $
 
 #include <casa/aips.h>
 #include <casa/IO/FiledesIO.h>
@@ -273,7 +273,7 @@ int main()
 	} else {
 	    cout << "readonly" << endl;
 	}
-	FiledesIO file4 (fd, "");
+	FiledesIO file4 (fd);
 	doIt (file4);
 	close (fd);
 
@@ -286,7 +286,7 @@ int main()
 	} else {
 	    cout << "readonly" << endl;
 	}
-	FiledesIO file5 (fd1, "");
+	FiledesIO file5 (fd1);
 	checkValues (file5, 100);
 	close (fd1);
 
@@ -299,7 +299,7 @@ int main()
 	} else {
 	    cout << "readonly" << endl;
 	}
-	FiledesIO file6 (fd2, "");
+	FiledesIO file6 (fd2);
 	close (fd2);
     } catch (AipsError x) {
 	cout << "Caught an exception: " << x.getMesg() << endl;

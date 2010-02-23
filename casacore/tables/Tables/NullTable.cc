@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NullTable.cc 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: NullTable.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/NullTable.h>
 #include <tables/Tables/Table.h>
@@ -186,25 +186,25 @@ DataManager* NullTable::findDataManager (const String&) const
   return 0;
 }
 
-void NullTable::addColumn (const ColumnDesc&, Bool)
+void NullTable::addColumn (const ColumnDesc&)
 {
   throwError ("addColumn");
 }
 
 void NullTable::addColumn (const ColumnDesc&,
-			   const String&, Bool, Bool)
+			   const String&, Bool)
 {
   throwError ("addColumn");
 }
 
 void NullTable::addColumn (const ColumnDesc&,
-			   const DataManager&, Bool)
+			   const DataManager&)
 {
   throwError ("addColumn");
 }
 
 void NullTable::addColumn (const TableDesc& ,
-			   const DataManager&, Bool)
+			   const DataManager&)
 {
   throwError ("addColumn");
 }

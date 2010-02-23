@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegularFile.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: RegularFile.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 
 #include <casa/Exceptions.h>
@@ -168,8 +168,8 @@ void RegularFile::manualCopy (const String& source, const String& target)
 {
     int infd (FiledesIO::open (source.chars()));
     int outfd (FiledesIO::create (target.chars()));
-    FiledesIO in (infd, source);
-    FiledesIO out (outfd, target);
+    FiledesIO in (infd);
+    FiledesIO out (outfd);
     char buf[32768];
     int nrc = in.read (sizeof(buf), buf, False);
     while (true) {

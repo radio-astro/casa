@@ -23,17 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketFile.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: BucketFile.cc 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 
 //# Includes
 #include <casa/IO/LargeIOFuncDef.h>
 #include <casa/IO/BucketFile.h>
-#include <casa/IO/MMapfdIO.h>
-#include <casa/IO/LargeFilebufIO.h>
 #include <casa/OS/Path.h>
 #include <casa/OS/DOos.h>
-#include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -52,15 +49,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-BucketFile::BucketFile (const String& fileName,
-                        uInt bufSizeFile, Bool mappedFile)
-: name_p         (Path(fileName).expandedName()),
-  isWritable_p   (True),
-  isMapped_p     (mappedFile),
-  bufSize_p      (bufSizeFile),
-  fd_p           (-1),
-  mappedFile_p   (0),
-  bufferedFile_p (0)
+BucketFile::BucketFile (const String& fileName)
+: name_p       (Path(fileName).expandedName()),
+  isWritable_p (True),
+  fd_p         (-1)
 {
     // Create the file.
     fd_p = ::trace3OPEN ((Char *)name_p.chars(), O_RDWR | O_CREAT | O_TRUNC, 0644);
@@ -68,18 +60,12 @@ BucketFile::BucketFile (const String& fileName,
 	throw (AipsError ("BucketFile: create error on file " + name_p +
 			  ": " + strerror(errno)));
     }
-    createMapBuf();
 }
 
-BucketFile::BucketFile (const String& fileName, Bool isWritable,
-                        uInt bufSizeFile, Bool mappedFile)
-: name_p         (Path(fileName).expandedName()),
-  isWritable_p   (isWritable),
-  isMapped_p     (mappedFile),
-  bufSize_p      (bufSizeFile),
-  fd_p           (-1),
-  mappedFile_p   (0),
-  bufferedFile_p (0)
+BucketFile::BucketFile (const String& fileName, Bool isWritable)
+: name_p       (Path(fileName).expandedName()),
+  isWritable_p (isWritable),
+  fd_p         (-1)
 {}
 
 BucketFile::~BucketFile()
@@ -91,7 +77,6 @@ BucketFile::~BucketFile()
 void BucketFile::close()
 {
     if (fd_p >= 0) {
-        deleteMapBuf();
 	::traceCLOSE (fd_p);
 	fd_p = -1;
     }
@@ -110,28 +95,9 @@ void BucketFile::open()
 	    throw (AipsError ("BucketFile: open error on file " + name_p +
 			      ": " + strerror(errno)));
 	}
-        createMapBuf();
     }
 }
 
-void BucketFile::createMapBuf()
-{
-    deleteMapBuf();
-    if (isMapped_p) {
-        mappedFile_p = new MMapfdIO (fd_p, name_p);
-    }
-    if (bufSize_p > 0) {
-        bufferedFile_p = new LargeFilebufIO (fd_p, bufSize_p);
-    }
-}
-
-void BucketFile::deleteMapBuf()
-{
-    delete mappedFile_p;
-    mappedFile_p = 0;
-    delete bufferedFile_p;
-    bufferedFile_p = 0;
-}
 
 void BucketFile::remove()
 {
@@ -162,10 +128,8 @@ void BucketFile::setRW()
 	    throw (AipsError ("BucketFile: reopenRW error on file " + name_p +
 			      ": " + strerror(errno)));
 	}
-        deleteMapBuf();
 	::traceCLOSE (fd_p);
 	fd_p = fd;
-        createMapBuf();
     }
     isWritable_p = True;
 }
@@ -190,20 +154,10 @@ uInt BucketFile::write (const void* buffer, uInt length)
 }
 
 void BucketFile::seek (Int64 offset) const
-{
-    AlwaysAssert (bufferedFile_p == 0, AipsError);
-    ::traceLSEEK (fd_p, offset, SEEK_SET);
-}
+    { ::traceLSEEK (fd_p, offset, SEEK_SET); }
 
 Int64 BucketFile::fileSize () const
-{
-    // If a buffered file is used, seek in there. Otherwise its internal
-    // offset is wrong.
-    if (bufferedFile_p != 0) {
-        return bufferedFile_p->seek (0, ByteIO::End);
-    }
-    return ::traceLSEEK (fd_p, 0, SEEK_END);
-}
+    { return ::traceLSEEK (fd_p, 0, SEEK_END); }
 
 } //# NAMESPACE CASA - END
 

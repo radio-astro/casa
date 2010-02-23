@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMDataColumn.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TSMDataColumn.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef TABLES_TSMDATACOLUMN_H
 #define TABLES_TSMDATACOLUMN_H
@@ -524,18 +524,6 @@ public:
     // (I.e. convert from local to external format).
     void writeTile (void* to, const void* from, uInt nrPixels);
 
-    // Get the function to convert from external to local format
-    // (or vice-versa if <src>writeFlag=True</src>).
-    Conversion::ValueFunction* getConvertFunction (Bool writeFlag) const
-      { return writeFlag ?  writeFunc_p : readFunc_p; }
-
-    // Get nr of elements in a value to convert (usually 1, but 2 for Complex).
-    size_t getNrConvert() const
-      { return convPixelSize_p; }
-
-    // Does a conversion (byte swap) needs to be done?
-    Bool isConversionNeeded() const
-      { return mustConvert_p; }
 
 private:
     // The (canonical) size of a pixel in a tile.
@@ -545,8 +533,6 @@ private:
     // The multiplication factor for a conversion operation.
     // This is the pixel size when a memcpy can be used, otherwise it is 1.
     uInt convPixelSize_p;
-    // Is a conversion necessary?
-    Bool mustConvert_p;
     // The column sequence number.
     uInt colnr_p;
     // The conversion function needed when reading.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.h 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: MemoryTable.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_MEMORYTABLE_H
 #define TABLES_MEMORYTABLE_H
@@ -185,17 +185,14 @@ public:
 
   // Add a column to the table.
   // If the DataManager is not a virtual engine, MemoryStMan will be used.
-  // The last Bool argument is not used in MemoryTable, but can be used in
-  // other classes derived from BaseTable.
   // <group>
-  virtual void addColumn (const ColumnDesc& columnDesc, Bool addToParent);
+  virtual void addColumn (const ColumnDesc& columnDesc);
   virtual void addColumn (const ColumnDesc& columnDesc,
-			  const String& dataManager, Bool byName,
-                          Bool addToParent);
+			  const String& dataManager, Bool byName);
   virtual void addColumn (const ColumnDesc& columnDesc,
-			  const DataManager& dataManager, Bool addToParent);
+			  const DataManager& dataManager);
   virtual void addColumn (const TableDesc& tableDesc,
-			  const DataManager& dataManager, Bool addToParent);
+			  const DataManager& dataManager);
   // </group>
 
   // Test if columns can be removed (yes).

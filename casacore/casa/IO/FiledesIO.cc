@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FiledesIO.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: FiledesIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/aips.h>
 #include <casa/IO/FiledesIO.h>
@@ -58,10 +58,10 @@ FiledesIO::FiledesIO()
   itsFile     (-1)
 {}
 
-FiledesIO::FiledesIO (int fd, const String& fileName)
+FiledesIO::FiledesIO (int fd)
 : itsFile  (-1)
 {
-  attach (fd, fileName);
+    attach (fd);
 }
 
 FiledesIO::~FiledesIO()
@@ -70,11 +70,10 @@ FiledesIO::~FiledesIO()
 }
 
 
-void FiledesIO::attach (int fd, const String& fileName)
+void FiledesIO::attach (int fd)
 {
     AlwaysAssert (itsFile == -1, AipsError);
-    itsFile     = fd;
-    itsFileName = fileName;
+    itsFile = fd;
     fillRWFlags (fd);
     fillSeekable();
 }
@@ -105,16 +104,21 @@ void FiledesIO::fillSeekable()
 }
 
 
+String FiledesIO::fileName() const
+{
+    return "";
+}
+
+
 void FiledesIO::write (uInt size, const void* buf)
 {
     // Throw an exception if not writable.
     if (!itsWritable) {
-	throw AipsError ("FiledesIO " + itsFileName
-                         + "is not writable");
+	throw (AipsError ("FiledesIO object is not writable"));
     }
     if (::traceWRITE(itsFile, (Char *)buf, size) != Int(size)) {
-	throw AipsError ("FiledesIO: write error in "
-                         + itsFileName + ": " + strerror(errno));
+	throw (AipsError (String("FiledesIO: write error: ")
+			  + strerror(errno)));
     }
 }
 
@@ -122,22 +126,19 @@ Int FiledesIO::read (uInt size, void* buf, Bool throwException)
 {
   // Throw an exception if not readable.
   if (!itsReadable) {
-    throw AipsError ("FiledesIO::read " + itsFileName
-                     + " - is not readable");
+    throw (AipsError ("FiledesIO::read - descriptor is not readable"));
   }
   Int bytesRead = ::traceREAD (itsFile, (Char *)buf, size);
   if (bytesRead > Int(size)) { // Should never be executed
-    throw AipsError ("FiledesIO::read " + itsFileName
-                     + " - read returned a bad value");
+    throw (AipsError ("FiledesIO::read - read returned a bad value"));
   }
   if (bytesRead != Int(size) && throwException == True) {
     if (bytesRead < 0) {
-      throw AipsError ("FiledesIO::read " + itsFileName +
-                       " - error returned by system call: " + 
-                       strerror(errno));
+      throw (AipsError (String("FiledesIO::read - "
+			       " error returned by system call: ") + 
+			strerror(errno)));
     } else if (bytesRead < Int(size)) {
-      throw AipsError ("FiledesIO::read " + itsFileName +
-                       " - incorrect number of bytes read");
+      throw (AipsError ("FiledesIO::read - incorrect number of bytes read"));
     }
   }
   return bytesRead;
@@ -192,8 +193,8 @@ int FiledesIO::create (const Char* name, int mode)
 {
     int fd = ::trace3OPEN ((Char *)name, O_RDWR | O_CREAT | O_TRUNC, mode);
     if (fd == -1) {
-      throw AipsError ("FiledesIO: file " + String(name) +
-                       " could not be created: " + strerror(errno));
+	throw (AipsError ("FiledesIO: file " + String(name) +
+			  " could not be created: " + strerror(errno)));
     }
     return fd;
 }
@@ -206,17 +207,18 @@ int FiledesIO::open (const Char* name, Bool writable, Bool throwExcp)
 	fd = ::trace2OPEN ((Char *)name, O_RDONLY);
     }
     if (throwExcp  &&  fd == -1) {
-	throw AipsError ("FiledesIO: file " + String(name) +
-                         " could not be opened: " + strerror(errno));
+	throw (AipsError ("FiledesIO: file " + String(name) +
+			  " could not be opened: " + strerror(errno)));
     }
     return fd;
 }
 void FiledesIO::close (int fd)
 {
     if (::traceCLOSE (fd)  == -1) {
-	throw AipsError (String("FiledesIO: file could not be closed: ")
-                         + strerror(errno));
+	throw (AipsError (String("FiledesIO: file could not be closed: ")
+			  + strerror(errno)));
     }
 }
 
 } //# NAMESPACE CASA - END
+

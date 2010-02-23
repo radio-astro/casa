@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: PlainTable.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #ifndef TABLES_PLAINTABLE_H
 #define TABLES_PLAINTABLE_H
@@ -35,7 +35,6 @@
 #include <tables/Tables/TableCache.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableSyncData.h>
-#include <tables/Tables/TSMOption.h>
 #include <casa/IO/AipsIO.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -91,15 +90,14 @@ public:
     // all storage managers. The given number of rows is stored in
     // the table and initialized if the flag is set.
     PlainTable (SetupNewTable&, uInt nrrow, Bool initialize,
-		const TableLock& lockOptions, int endianFormat,
-                const TSMOption& tsmOption);
+		const TableLock& lockOptions, int endianFormat);
 
     // Construct the object for an existing table.
     // It opens the table file, reads the table control information
     // and creates and initializes the required storage managers.
     PlainTable (AipsIO&, uInt version, const String& name, const String& type,
 		uInt nrrow, int option, const TableLock& lockOptions,
-		const TSMOption& tsmOption, Bool addToCache, uInt locknr);
+		Bool addToCache, uInt locknr);
 
     // The destructor flushes (i.e. writes) the table if it is opened
     // for output and not marked for delete.
@@ -208,16 +206,15 @@ public:
     virtual void removeRow (uInt rownr);
 
     // Add a column to the table.
-    // The last Bool argument is not used in PlainTable, but can be used in
-    // other classes derived from BaseTable.
+    // The default implementation throws an "invalid operation" exception.
     // <group>
-    virtual void addColumn (const ColumnDesc& columnDesc, Bool);
+    virtual void addColumn (const ColumnDesc& columnDesc);
     virtual void addColumn (const ColumnDesc& columnDesc,
-			    const String& dataManager, Bool byName, Bool);
+			    const String& dataManager, Bool byName);
     virtual void addColumn (const ColumnDesc& columnDesc,
-			    const DataManager& dataManager, Bool);
+			    const DataManager& dataManager);
     virtual void addColumn (const TableDesc& tableDesc,
-			    const DataManager& dataManager, Bool);
+			    const DataManager& dataManager);
     // </group>
 
     // Test if columns can be removed.
@@ -291,7 +288,6 @@ private:
     TableSyncData  lockSync_p;         //# table synchronization
     Bool           bigEndian_p;        //# True  = big endian canonical
                                        //# False = little endian canonical
-    TSMOption      tsmOption_p;
 };
 
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLargeFileIO.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tLargeFileIO.cc 20329 2008-06-06 07:59:22Z gervandiepen $
 
 #include <casa/IO/LargeFiledesIO.h>
 #include <casa/OS/Timer.h>
@@ -77,7 +77,7 @@ int main (int argc, const char* argv[])
     if (mode >= 0) {
       Timer timer;
       int fd = LargeFiledesIO::create("tLargeFileIO_tmp.dat2");
-      LargeFiledesIO file2 (fd, "");
+      LargeFiledesIO file2 (fd);
       timer.mark();
       for (i=0; i<nr; i++) {
 	buf[0] = i;
@@ -91,7 +91,7 @@ int main (int argc, const char* argv[])
     }
     if (mode <= 0) {
       Timer timer;
-      LargeFiledesIO file2 (LargeFiledesIO::open ("tLargeFileIO_tmp.dat2"), "");
+      LargeFiledesIO file2 (LargeFiledesIO::open ("tLargeFileIO_tmp.dat2"));
       timer.mark();
       for (i=0; i<nr; i++) {
 	file2.read (tleng, buf);

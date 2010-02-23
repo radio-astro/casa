@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: RefTable.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <tables/Tables/RefTable.h>
 #include <tables/Tables/RefColumn.h>
@@ -44,7 +44,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 RefTable::RefTable (AipsIO& ios, const String& name, uInt nrrow, int opt,
-		    const TableLock& lockOptions, const TSMOption& tsmOption)
+		    const TableLock& lockOptions)
 : BaseTable    (name, opt, nrrow),
   rowStorage_p (0),              // initially empty vector of rownrs
   nameMap_p    (""),
@@ -56,7 +56,7 @@ RefTable::RefTable (AipsIO& ios, const String& name, uInt nrrow, int opt,
     // At the end it is reset. In this way nothing is written if
     // an exception is thrown during initialization.
     noWrite_p = True;
-    getRef (ios, opt, lockOptions, tsmOption);
+    getRef (ios, opt, lockOptions);
     noWrite_p = False;
 }
 
@@ -295,8 +295,7 @@ void RefTable::writeRefTable (Bool)
 }
 
 //# Read a reference table from a file and read the associated table.
-void RefTable::getRef (AipsIO& ios, int opt, const TableLock& lockOptions,
-                       const TSMOption& tsmOption)
+void RefTable::getRef (AipsIO& ios, int opt, const TableLock& lockOptions)
 {
     //# Open the file, read name and type of root and read object data.
     String rootName;
@@ -323,9 +322,9 @@ void RefTable::getRef (AipsIO& ios, int opt, const TableLock& lockOptions,
     //# we can do to make sure the referenced rows are still the same.
     Table tab;
     if (opt == Table::Old) {
-        tab = Table(rootName, lockOptions, Table::Old, tsmOption);
+	tab = Table(rootName, lockOptions, Table::Old);
     }else{
-        tab = Table(rootName, lockOptions, Table::Update, tsmOption);
+	tab = Table(rootName, lockOptions, Table::Update);
     }
     baseTabPtr_p = tab.baseTablePtr();
     if (rootNrow > baseTabPtr_p->nrow()) {
@@ -444,23 +443,6 @@ void RefTable::makeRefCol()
 	const ColumnDesc& cd = tdescPtr_p->columnDesc(i);
 	colMap_p.define (cd.name(), cd.makeRefColumn
 	     (this, baseTabPtr_p->getColumn(nameMap_p(cd.name()))));
-    }
-}
-
-//# Add column to this object for an addColumn.
-void RefTable::addRefCol (const ColumnDesc& columnDesc)
-{
-    ColumnDesc& cd = tdescPtr_p->addColumn (columnDesc);
-    nameMap_p.define (cd.name(), cd.name());
-    // Use cd (and not columnDesc) because underneath a pointer to its
-    // BaseColumnDesc which is disastrous for the temporary columnDesc.
-    colMap_p.define (cd.name(), cd.makeRefColumn
-                     (this, baseTabPtr_p->getColumn(nameMap_p(cd.name()))));
-}
-void RefTable::addRefCol (const TableDesc& tdesc)
-{
-    for (uInt i=0; i<tdesc.ncolumn(); i++) {
-        addRefCol (tdesc[i]);
     }
 }
 
@@ -653,69 +635,6 @@ Vector<uInt> RefTable::rowNumbers () const
     return vec(Slice(0, nrrow_p));
 }
 
-
-Bool RefTable::checkAddColumn (const String& name, Bool addToParent)
-{
-  if (! isWritable()) {
-    throw TableInvOper ("Table::addColumn; table is not writable");
-  }
-  if (tdescPtr_p->isColumn(name)) {
-    throw TableInvOper ("Table::addColumn; column " + name + " already exists");
-  }
-  if (baseTabPtr_p->tableDesc().isColumn(name)) {
-    return False;
-  }
-  if (!addToParent) {
-    throw TableInvOper ("RefTable::addColumn; column " + name +
-                        " does not exist in parent table, but must not be added"
-                        " (addToParent=False)");
-  }
-  return True;
-}
-
-void RefTable::addColumn (const ColumnDesc& columnDesc, Bool addToParent)
-{
-  if (checkAddColumn (columnDesc.name(), addToParent)) {
-    baseTabPtr_p->addColumn (columnDesc, addToParent);
-  }
-  addRefCol (columnDesc);
-}
-void RefTable::addColumn (const ColumnDesc& columnDesc,
-                          const String& dataManager, Bool byName,
-                          Bool addToParent)
-{
-  if (checkAddColumn (columnDesc.name(), addToParent)) {
-    baseTabPtr_p->addColumn (columnDesc, dataManager, byName, addToParent); 
-  }
-  addRefCol (columnDesc);
-}
-void RefTable::addColumn (const ColumnDesc& columnDesc,
-                          const DataManager& dataManager,
-                          Bool addToParent)
-{
-  if (checkAddColumn (columnDesc.name(), addToParent)) {
-    baseTabPtr_p->addColumn (columnDesc,dataManager, addToParent);
-  }
-  addRefCol (columnDesc);
-}
-void RefTable::addColumn (const TableDesc& tableDesc,
-                          const DataManager& dataManager,
-                          Bool addToParent)
-{
-  // First check if all columns exist and can be added or not.
-  // Collect all columns to be added to the parent.
-  TableDesc addTabDesc;
-  for (uInt i=0; i<tableDesc.ncolumn(); ++i) {
-    if (checkAddColumn (tableDesc[i].name(), addToParent)) {
-      addTabDesc.addColumn (tableDesc[i]);
-    }
-  }
-  // Add to the parent if needed.
-  if (addTabDesc.ncolumn() > 0) {
-    baseTabPtr_p->addColumn (addTabDesc, dataManager, addToParent);
-  }
-  addRefCol (tableDesc);
-}
 
 //# Rows and columns can be removed and renamed.
 Bool RefTable::canRemoveRow() const
