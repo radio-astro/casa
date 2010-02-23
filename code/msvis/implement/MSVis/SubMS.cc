@@ -2111,7 +2111,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	//    otherwise the center channel is the lower edge of the new center channel
 	Int startChan;
 	Double tnumChan = regridBandwidthChan/regridChanWidthChan;
-	if((Int)tnumChan/2 != tnumChan/2.){
+	if((Int)tnumChan % 2 != 0 ){
           // odd multiple 
 	  startChan = regridCenterChan-regridChanWidthChan/2;
 	}
@@ -2216,7 +2216,23 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  regridCenterVel = vrad(regridCenterF,regridVeloRestfrq);
 	  centerIsStart = False;
 	}
-	if(regridBandwidth > 0.){
+	if(nchan>0){
+	  if(regridChanWidth > 0.){
+	    Double chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
+						   regridVeloRestfrq);
+	    regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
+	  }
+	  else{ // take channel width from first channel
+	    regridChanWidthF = transCHAN_WIDTH[0];
+	  }
+	  regridBandwidthF = nchan*regridChanWidthF;
+	  // can convert start to center
+	  if(centerIsStart){
+	    regridCenterF = regridCenterF + regridBandwidthF/2.;
+	    centerIsStart = False;
+	  }
+	}
+	else if(regridBandwidth > 0.){
 	  // can convert start to center
 	  if(centerIsStart){
 	    regridCenterVel = regridCenter - regridBandwidth/2.;
@@ -2226,11 +2242,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  Double bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth/2.,
                                               regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
-	}
-	if(regridChanWidth > 0.){
-	  Double chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
-                                                 regridVeloRestfrq);
-	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
+	
+	  if(regridChanWidth > 0.){
+	    Double chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
+						   regridVeloRestfrq);
+	    regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
+	  }
 	}
 
       }
@@ -2255,7 +2272,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  regridCenterVel = regridCenter;
 	}
 	else{ // center was not specified
-	  regridCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
+	  regridCenterF = (transNewXin[0]-transCHAN_WIDTH[0]+transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1])/2.;
 	  regridCenterVel = vopt(regridCenterF,regridVeloRestfrq);
 	  centerIsStart = False;
 	}
@@ -2387,17 +2404,31 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       if(regridCenterF < 0.){ //  means "not set"
 	// keep regrid center as it is in the data
-	theRegridCenterF = (transNewXin[0] + transNewXin[oldNUM_CHAN-1])/2.;
+	theRegridCenterF = (transNewXin[0] - transCHAN_WIDTH[0]/2. 
+			    + transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.)/2.;
 	centerIsStart = False;
       }
       else { // regridCenterF was set
 	// keep center in limits
 	theRegridCenterF = regridCenterF;
 	if(theRegridCenterF > transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
-	  theRegridCenterF = transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
+	  oss << "Requested center of SPW " << theRegridCenterF << " Hz is larger than maximum possible value";
+	  oss << "\n  by " << theRegridCenterF - (transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.) << " Hz";
+	  message = oss.str();
+	  return False;  
 	}
 	else if(theRegridCenterF < transNewXin[0]-transCHAN_WIDTH[0]/2.){
-	  theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
+	  Double diff = (transNewXin[0]-transCHAN_WIDTH[0]/2.) - theRegridCenterF;
+	  // cope with numerical accuracy problems
+	  if(diff>1.){
+	    oss << "Requested center of SPW " << theRegridCenterF << " Hz is smaller than minimum possible value";
+	    oss << "\n  by " << diff << " Hz";
+	    message = oss.str();
+	    return False;
+	  }  
+	  else{
+	    theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
+	  }
 	}
       }
       if(regridBandwidthF<=0.|| nchan!=0){ // "not set" or use nchan instead
@@ -2436,13 +2467,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
            transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
 	  theRegridBWF = (transNewXin[oldNUM_CHAN-1] +
                           transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF)*2.;
-	  oss << " *** Defined new spectral window exceeds upper end of original window." << endl
-	      << " Shrinking it to maximum possible size keeping defined center (may reduce number of channels)." << endl;
+	  oss << " *** Defined new spectral window exceeds upper end of original window." << endl;
+	  message = oss.str();
+	  return False;  
 	}
 	if(theRegridCenterF - theRegridBWF/2. < transNewXin[0] - transCHAN_WIDTH[0]/2.){
 	  theRegridBWF = (theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)*2.;
-	  oss << " *** Defined new spectral window exceeds lower end of original window." << endl
-	      << " Shrinking it to maximum possible size keeping defined center (may reduce number of channels)." << endl;
+	  oss << " *** Defined new spectral window exceeds lower end of original window." << endl;
+	  message = oss.str();
+	  return False;  
 	}
       }
       if(regridChanWidthF <= 0.){ // "not set"
@@ -2460,21 +2493,32 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	theCentralChanWidthF = regridChanWidthF;
 	if(theCentralChanWidthF>theRegridBWF){ // too large => make a single channel
 	  theCentralChanWidthF = theRegridBWF;
-	  oss << " *** Requested new channel width exceeds defined SPW width. Shrinking to maximum size." << endl;
+	  oss << " *** Requested new channel width exceeds defined SPW width." << endl
+	      << "     Crating a single channel with the defined SPW width." << endl;
 	}
 	else{ // check if too small
 	  // determine smallest channel width
 	  Double smallestChanWidth = 1E30;
+	  Int ii = 0;
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    if(transCHAN_WIDTH[i] < smallestChanWidth){ 
 	      smallestChanWidth = transCHAN_WIDTH[i];
+	      ii = i;
 	    }
 	  }
-	  if(theCentralChanWidthF < smallestChanWidth){
-	    // too small => make as small as the smallest channel
-	    theCentralChanWidthF = smallestChanWidth;
-	    oss << " *** Requested new channel width is smaller than smallest original channel width." << endl
-		<< " Increasing channel width to minimum possible size." << endl;
+	  if(theCentralChanWidthF < smallestChanWidth - 1.){ // 1 Hz tolerance to cope with numerical accuracy problems
+	    oss << " *** Requested new channel width is smaller than smallest original channel width" << endl;
+	    oss << "     which is " << smallestChanWidth << " Hz" << endl;
+	    if(regridQuant == "vrad"){
+	      oss << "     or " << (vrad(transNewXin[ii],regridVeloRestfrq) 
+				    - vrad(transNewXin[ii]+transCHAN_WIDTH[ii]/2.,regridVeloRestfrq)) * 2. << " m/s";
+	    }
+	    if(regridQuant == "vopt"){
+	      oss << "     or " << (vopt(transNewXin[ii],regridVeloRestfrq) 
+				    - vopt(transNewXin[ii]+transCHAN_WIDTH[ii]/2.,regridVeloRestfrq)) * 2. << " m/s";
+	    }
+	    message = oss.str();
+	    return False;  
 	  }
 	  else { // input channel width was OK, memorize
 	    theChanWidthX = regridChanWidth;
@@ -2517,7 +2561,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         //    new channel width,
 	//    otherwise the center channel is the lower edge of the new center channel
 	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
-	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
+	if((Int)tnumChan % 2 != 0 ){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2606,7 +2650,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
 	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
-	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
+	if((Int)tnumChan % 2 != 0 ){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2689,7 +2733,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         //    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center channel
 	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
-	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
+	if((Int) tnumChan % 2 != 0){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2744,7 +2788,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
 	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
-	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
+	if((Int)tnumChan % 2 != 0){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -3009,25 +3053,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  !MeasTable::Observatory(Xpos,Xobservatory)) {
 	// unknown observatory, use the above calculated centroid position
 	if(!writeTables){
-	  os << LogIO::NORMAL << "Unknown observatory. Determining observatory position for " << Xobservatory
-	     << " from antenna 0." << LogIO::POST;
-	    //	   << " from centroid of antenna positions." << LogIO::POST;
-	    //	Xpos=mObsPos;
+	  os << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
+	     << "\". Determining observatory position from antenna 0." << LogIO::POST;
 	}
-	Xpos=ANTPositionMeasCol(0);
+	Xpos=MPosition::Convert(ANTPositionMeasCol(0), MPosition::ITRF)();
       }
       else{
 	if(!writeTables){
-	  ostringstream oss;
 	  os << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
 	     << LogIO::POST;
-	  oss <<  "   " << Xpos;
-	  //    << endl << "  antenna 0:" << ANTPositionMeasCol(0);
-	  //	<< "  centroid of antenna positions:" << mObsPos;
-	  os << LogIO::NORMAL << oss.str() << LogIO::POST;
+	  Xpos=MPosition::Convert(Xpos, MPosition::ITRF)();
 	}
       }
       mObsPos = Xpos;
+      if(!writeTables){
+	ostringstream oss;
+	oss <<  "   " << mObsPos << " (ITRF)";
+	os << LogIO::NORMAL << oss.str() << LogIO::POST;
+      }
     }
     
     
@@ -3312,7 +3355,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				 )
 	       ){ // there was an error
 	      os << LogIO::SEVERE << message << LogIO::POST;
-	      return False;
+	      throw(AipsError("Regridding failed."));
+	      //return False;
 	    }
 	    
 	    // we have a useful set of channel boundaries
@@ -3341,7 +3385,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    
 	    // trivial definition of the bandwidth
 	    newTOTAL_BANDWIDTH = newChanHiBound[newNUM_CHAN-1]-newChanLoBound[0];
-	    
+
 // 	    // effective bandwidth needs to be interpolated in quadrature
 // 	    Vector<Double> newEffBWSquared(newNUM_CHAN);
 // 	    Vector<Double> oldEffBWSquared(oldEFFECTIVE_BW);
