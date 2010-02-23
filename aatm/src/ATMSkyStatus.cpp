@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSkyStatus.cpp,v 1.8 2009/09/10 16:22:17 dbroguie Exp $"
+ * "@(#) $Id: ATMSkyStatus.cpp,v 1.10 2010/02/19 01:55:49 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -27,13 +27,8 @@
 
 #include <iostream>
 #include <math.h>
-#include <string>
-#include <vector>
 
-using namespace std;
-
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 // Constructors
 
@@ -215,7 +210,7 @@ SkyStatus::SkyStatus(RefractiveIndexProfile refractiveIndexProfile,
 
 SkyStatus::SkyStatus(const SkyStatus & a)
 {
-  //   cout<<"Enter RefractiveIndexProfile copy constructor version Fri May 20 00:59:47 CEST 2005"<<endl;
+     cout <<"Enter RefractiveIndexProfile copy constructor version Fri May 20 00:59:47 CEST 2005"<<endl;
 
   // level AtmProfile
 
@@ -250,7 +245,8 @@ SkyStatus::SkyStatus(const SkyStatus & a)
   v_layerCO_.reserve(numLayer_);
   v_layerO3_.reserve(numLayer_);
   v_layerN2O_.reserve(numLayer_);
-  
+  v_layerNO2_.reserve(numLayer_);
+  v_layerSO2_.reserve(numLayer_);
   for(unsigned int n = 0; n < numLayer_; n++) {
     v_layerThickness_.push_back(a.v_layerThickness_[n]);
     v_layerTemperature_.push_back(a.v_layerTemperature_[n]);
@@ -261,6 +257,8 @@ SkyStatus::SkyStatus(const SkyStatus & a)
     v_layerCO_.push_back(a.v_layerCO_[n]);
     v_layerO3_.push_back(a.v_layerO3_[n]);
     v_layerN2O_.push_back(a.v_layerN2O_[n]);
+    v_layerNO2_.push_back(a.v_layerNO2_[n]);
+    v_layerSO2_.push_back(a.v_layerSO2_[n]);
   }
 
   // level Spectral Grid
@@ -292,6 +290,8 @@ SkyStatus::SkyStatus(const SkyStatus & a)
   vv_N_O3LinesPtr_.reserve(a.v_chanFreq_.size());
   vv_N_COLinesPtr_.reserve(a.v_chanFreq_.size());
   vv_N_N2OLinesPtr_.reserve(a.v_chanFreq_.size());
+  vv_N_NO2LinesPtr_.reserve(a.v_chanFreq_.size());
+  vv_N_SO2LinesPtr_.reserve(a.v_chanFreq_.size());
 
   vector<complex<double> >* v_N_H2OLinesPtr;
   vector<complex<double> >* v_N_H2OContPtr;
@@ -300,6 +300,8 @@ SkyStatus::SkyStatus(const SkyStatus & a)
   vector<complex<double> >* v_N_O3LinesPtr;
   vector<complex<double> >* v_N_COLinesPtr;
   vector<complex<double> >* v_N_N2OLinesPtr;
+  vector<complex<double> >* v_N_NO2LinesPtr;
+  vector<complex<double> >* v_N_SO2LinesPtr;
 
   for(unsigned int nc = 0; nc < v_chanFreq_.size(); nc++) {
 
@@ -317,6 +319,10 @@ SkyStatus::SkyStatus(const SkyStatus & a)
     v_N_COLinesPtr->reserve(numLayer_);
     v_N_N2OLinesPtr = new vector<complex<double> > ;
     v_N_N2OLinesPtr->reserve(numLayer_);
+    v_N_NO2LinesPtr = new vector<complex<double> > ;
+    v_N_NO2LinesPtr->reserve(numLayer_);
+    v_N_SO2LinesPtr = new vector<complex<double> > ;
+    v_N_SO2LinesPtr->reserve(numLayer_);
 
     for(unsigned int n = 0; n < numLayer_; n++) {
 
@@ -329,6 +335,8 @@ SkyStatus::SkyStatus(const SkyStatus & a)
       v_N_O3LinesPtr->push_back(a.vv_N_O3LinesPtr_[nc]->at(n));
       v_N_COLinesPtr->push_back(a.vv_N_COLinesPtr_[nc]->at(n));
       v_N_N2OLinesPtr->push_back(a.vv_N_N2OLinesPtr_[nc]->at(n));
+      v_N_NO2LinesPtr->push_back(a.vv_N_NO2LinesPtr_[nc]->at(n));
+      v_N_SO2LinesPtr->push_back(a.vv_N_SO2LinesPtr_[nc]->at(n));
 
     }
 
@@ -339,6 +347,8 @@ SkyStatus::SkyStatus(const SkyStatus & a)
     vv_N_O3LinesPtr_.push_back(v_N_O3LinesPtr);
     vv_N_COLinesPtr_.push_back(v_N_COLinesPtr);
     vv_N_N2OLinesPtr_.push_back(v_N_N2OLinesPtr);
+    vv_N_NO2LinesPtr_.push_back(v_N_NO2LinesPtr);
+    vv_N_SO2LinesPtr_.push_back(v_N_SO2LinesPtr);
 
   }
 
@@ -947,6 +957,65 @@ Length SkyStatus::WaterVaporRetrieval_fromFTS(unsigned int spwId,
   }
 }
 
+  Length SkyStatus::WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
+                                      vector<Temperature> v_tebb,
+                                      vector<double> skycoupling,
+                                      vector<Temperature> tspill)
+  {
+    vector<vector<double> > spwId_filters;
+    vector<double> spwId_filter;
+    for(unsigned int i = 0; i < spwId.size(); i++) {
+      for(unsigned int n = 0; n < v_numChan_[spwId[i]]; n++) {
+        spwId_filter.push_back(1.0);
+      }
+      spwId_filters.push_back(spwId_filter);
+      spwId_filter.clear();
+    }
+    return WaterVaporRetrieval_fromTEBB(spwId,
+                                        v_tebb,
+                                        spwId_filters,
+                                        skycoupling,
+                                        tspill);
+  }
+
+  Length SkyStatus::WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+                                      vector<Temperature> v_tebb,
+                                      double skycoupling,
+                                      Temperature tspill)
+  {
+    vector<double> spwId_filter;
+    for(unsigned int n = 0; n < v_numChan_[spwId]; n++) {
+      spwId_filter.push_back(1.0);
+    }
+    return WaterVaporRetrieval_fromTEBB(spwId,
+                                        v_tebb,
+                                        spwId_filter,
+                                        skycoupling,
+                                        tspill);
+  }
+
+
+  Length SkyStatus::WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId, 
+						 vector< vector<Temperature> > vv_tebb, 
+						 vector<double> skycoupling, 
+						 vector<Temperature> tspill)
+  {
+    vector<vector<double> > spwId_filters;
+    vector<double> spwId_filter;
+    for(unsigned int i = 0; i < spwId.size(); i++) {
+      for(unsigned int n = 0; n < v_numChan_[spwId[i]]; n++) {
+        spwId_filter.push_back(1.0);
+      }
+      spwId_filters.push_back(spwId_filter);
+      spwId_filter.clear();
+    }
+    return WaterVaporRetrieval_fromTEBB(spwId,
+                                        vv_tebb,
+                                        spwId_filters,
+                                        skycoupling,
+                                        tspill);
+  }
+
 Length SkyStatus::WaterVaporRetrieval_fromTEBB(unsigned int spwId,
                                                Percent signalGain,
                                                vector<Temperature> v_tebb,
@@ -1216,6 +1285,29 @@ Length SkyStatus::WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                       skycoupling,
                                       tspill);
 }
+
+  Length SkyStatus::WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+						 Percent signalGain,
+						 Temperature tebb,
+						 double airmass,
+						 double skycoupling,
+						 Temperature tspill)
+  {
+    vector<unsigned int> spwIdv;  
+    vector<Percent> signalGainv;
+    vector<Temperature> tebbv;
+    vector<double> skycouplingv;
+    vector<Temperature> tspillv;
+    spwIdv.push_back(spwId);  
+    signalGainv.push_back(signalGain);
+    tebbv.push_back(tebb);
+    skycouplingv.push_back(skycoupling);
+    tspillv.push_back(tspill);
+    return WaterVaporRetrieval_fromTEBB(spwIdv,signalGainv,tebbv,airmass,skycouplingv,tspillv);
+  }
+
+
+
 Length SkyStatus::WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                                vector<Percent> signalGain,
                                                vector<Temperature> v_tebb,
@@ -1360,6 +1452,14 @@ Length SkyStatus::WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                         skycoupling,
                                         tspill);
 }
+  
+  Length SkyStatus::WaterVaporRetrieval_fromTEBB(unsigned int spwId,
+						 Percent signalGain,
+						 Temperature tebb,
+						 double airmass,
+						 double skycoupling,
+						 Temperature tspill);
+  
 Length SkyStatus::WaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
                                                vector<Percent> signalGain,
                                                vector<Temperature> v_tebb,
@@ -1795,13 +1895,16 @@ Length SkyStatus::mkWaterVaporRetrieval_fromTEBB(vector<unsigned int> spwId,
 
     for(unsigned int j = 0; j < spwId.size(); j++) {
 
+
       f1 = RT(pfit_wh2o,
-              skycoupling[j],
-              tspill[j].get("K"),
-              airm,
-              spwId[j],
-              spwId_filter[j],
-              signalGain[j]);
+	      skycoupling[j],
+	      tspill[j].get("K"),
+	      airm,
+	      spwId[j],
+	      spwId_filter[j],
+	      signalGain[j]);    // if signalGain[j] < 1.0 then there is an image side 
+                                 // band and it is correctly taken into account in RT
+
       v_tebb_fit[j] = Temperature(f1, "K");
 
       psave = pfit_wh2o;
@@ -2268,6 +2371,54 @@ double SkyStatus::mkSkyCouplingRetrieval_fromTEBB(unsigned int spwId,
 
 }
 
+  double SkyStatus::RT(double pfit_wh2o,
+		       double skycoupling,
+		       double tspill,
+		       double airmass,
+		       unsigned int spwid,
+		       vector<double> spwId_filter,
+		       Percent signalgain)
+  {
+    
+    double tebb_channel = 0.0;
+    double rtr;
+    double norm = 0.0;
+    
+    for(unsigned int n = 0; n < v_numChan_[spwid]; n++) {
+      if(spwId_filter[n] > 0) {
+        norm = norm + spwId_filter[n];
+      }
+    }
+
+    if(norm == 0.0) {
+      return norm;
+    }
+
+    for(unsigned int n = 0; n < v_numChan_[spwid]; n++) {
+
+      if(spwId_filter[n] > 0) {
+
+        if(signalgain.get() < 1.0) {
+          rtr = RT(pfit_wh2o, skycoupling, tspill, airmass, spwid, n)
+              * signalgain.get() + RT(pfit_wh2o,
+                                      skycoupling,
+                                      tspill,
+                                      airmass,
+                                      getAssocSpwId(spwid)[0],
+                                      n) * (1.0 - signalgain.get());
+        } else {
+          rtr = RT(pfit_wh2o, skycoupling, tspill, airmass, spwid, n);
+        }
+        tebb_channel = tebb_channel + rtr * spwId_filter[n] / norm;
+      }
+    }
+
+    return tebb_channel;
+  }
+
+
+
+
 double SkyStatus::RT(double pfit_wh2o,
                      double skycoupling,
                      double tspill,
@@ -2358,7 +2509,6 @@ double SkyStatus::getAverageNonDispersiveDryPathLength_GroundTemperatureDerivati
 
 double SkyStatus::getAverageDispersiveDryPathLength_GroundPressureDerivative(unsigned int spwid)
 {
-  
   Pressure ref = getGroundPressure();
   Length a = RefractiveIndexProfile::getAverageDispersiveDryPathLength(spwid);
   // scanf("%d",&e);
@@ -2619,7 +2769,6 @@ void SkyStatus::updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData
                                           unsigned int n,
                                           unsigned int m)
 {
-
   double pfit;
   double deltaa = 0.02;
   double sig_fit = -999.0;
@@ -2696,7 +2845,6 @@ void SkyStatus::updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData
                                             RadiometerData,
                                             n,
                                             m);
-
     chisqr = chisqr + res * res;
 
     if(fabs(chisq1 - chisqr) > 0.001) {
@@ -2764,6 +2912,5 @@ void SkyStatus::rmSkyStatus()
   /* CODE À ÉCRIRE */
 
 }
-
-} // namespace atm
+ATM_NAMESPACE_END
 

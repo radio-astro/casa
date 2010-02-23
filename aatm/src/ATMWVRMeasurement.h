@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMWVRMeasurement.h,v 1.5 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMWVRMeasurement.h,v 1.7 2010/02/19 01:11:14 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,20 +26,20 @@
  */
 
 #ifndef __cplusplus
-#error This is a C++ include file and cannot be used from plain C
+#error "This is a C++ include file and cannot be used from plain C"
 #endif
 
-#include "ATMTemperature.h"
-#include "ATMLength.h"
 #include "ATMAngle.h"
-
+#include "ATMCommon.h"
+#include "ATMLength.h"
+#include "ATMTemperature.h"
 #include <vector>
 #include <math.h>
 
-using namespace std;
+using std::vector;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
+
 /*! \brief This is an auxiliary class that allows to create objects corresponding
  *        to measurements (and their analysis) of a multichannel water vapor radiometer system.
  */
@@ -65,23 +65,23 @@ public:
   virtual ~WVRMeasurement();
 
   /** Accessor to elevation */
-  inline Angle getElevation() const { return elevation_; }
+  Angle getElevation() const { return elevation_; }
   /** Accessor to air mass */
-  inline double getAirMass() const { return 1.0 / sin(elevation_.get()); }
+   double getAirMass() const { return 1.0 / sin(elevation_.get()); }
   /** Accessor to measured sky brightness temperature */
-  inline vector<Temperature> getmeasuredSkyBrightness() const { return v_measuredSkyBrightness_; }
+   vector<Temperature> getmeasuredSkyBrightness() const { return v_measuredSkyBrightness_; }
   /** Accessor to fitted sky brightness temperatures */
-  inline vector<Temperature> getfittedSkyBrightness() const { return v_fittedSkyBrightness_; }
+   vector<Temperature> getfittedSkyBrightness() const { return v_fittedSkyBrightness_; }
   /** Setter of fitted sky brightness temperatures */
-  inline void setfittedSkyBrightness(const vector<Temperature> &a) { v_fittedSkyBrightness_ = a; }
+   void setfittedSkyBrightness(const vector<Temperature> &a) { v_fittedSkyBrightness_ = a; }
   /** Accessor to retrieved water vapor column */
-  inline Length getretrievedWaterVaporColumn() const { return retrievedWaterVaporColumn_; }
+   Length getretrievedWaterVaporColumn() const { return retrievedWaterVaporColumn_; }
   /** Setter of retrieved water vapor column */
-  inline void setretrievedWaterVaporColumn(const Length &a) { retrievedWaterVaporColumn_ = a; }
+   void setretrievedWaterVaporColumn(const Length &a) { retrievedWaterVaporColumn_ = a; }
   /** Accessor to sigma of the fit (in K) */
-  inline Temperature getSigmaFit() const { return sigma_fittedSkyBrightness_; }
+   Temperature getSigmaFit() const { return sigma_fittedSkyBrightness_; }
   /** Setter of sigma of the fit (in K) */
-  inline void setSigmaFit(const Temperature &a) { sigma_fittedSkyBrightness_ = a; }
+   void setSigmaFit(const Temperature &a) { sigma_fittedSkyBrightness_ = a; }
 
 protected:
   Angle elevation_;
@@ -91,6 +91,6 @@ protected:
   Temperature sigma_fittedSkyBrightness_; // !< Sigma on the fitted sky brightness temperatures (average sigma over the WVR channels for each event).
 }; // class WVRMeasurement
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_WVRMEASUREMENT_H*/

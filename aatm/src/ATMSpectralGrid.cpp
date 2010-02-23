@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.cpp,v 1.9 2010/01/12 10:45:51 dbroguie Exp $"
+ * "@(#) $Id: ATMSpectralGrid.cpp,v 1.10 2010/02/08 17:37:51 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -33,8 +33,7 @@
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 // public methods:
 // constructors
@@ -785,5 +784,5 @@ double SpectralGrid::getLoFrequency(unsigned int spwId)
   return v_loFreq_[spwId];
 }
 
-} // namespace atm
+ATM_NAMESPACE_END
 

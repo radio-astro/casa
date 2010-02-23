@@ -16,7 +16,7 @@
 * License along with this library; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 *
-* "@(#) $Id: ATMInverseLength.cpp,v 1.5 2010/01/12 17:03:12 dbroguie Exp $"
+* "@(#) $Id: ATMInverseLength.cpp,v 1.6 2010/02/08 17:37:51 jroche Exp $"
 *
 * who       when      what
 * --------  --------  ----------------------------------------------
@@ -28,8 +28,7 @@
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 InverseLength::InverseLength() :
   valueIS_(0.0)
@@ -102,4 +101,4 @@ string InverseLength::get(const string &form, const string &units) const
   return string(myString);
 }
 
-} // namespace atm
+ATM_NAMESPACE_END

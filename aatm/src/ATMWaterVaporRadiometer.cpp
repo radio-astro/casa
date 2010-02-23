@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMWaterVaporRadiometer.cpp,v 1.3 2009/05/04 21:31:19 dbroguie Exp $"
+ * "@(#) $Id: ATMWaterVaporRadiometer.cpp,v 1.5 2010/02/19 02:05:08 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -32,8 +32,7 @@
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 WaterVaporRadiometer::WaterVaporRadiometer(vector<unsigned int> IdChannels)
 {
@@ -271,5 +270,4 @@ WaterVaporRadiometer::~WaterVaporRadiometer()
 {
 }
 
-} // namespace atm
-
+ATM_NAMESPACE_END

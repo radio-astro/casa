@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMPressure.h,v 1.3 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMPressure.h,v 1.5 2010/02/19 01:10:07 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,15 +26,15 @@
  */
 
 #ifndef __cplusplus
-#error This is a C++ include file and cannot be used from plain C
+#error "This is a C++ include file and cannot be used from plain C"
 #endif
 
+#include "ATMCommon.h"
 #include <string>
 
-using namespace std;
+using std::string;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 /*! \brief Defines pressure with units
  *
  *   This class defines physical parameters having units of Pressure.
@@ -60,30 +60,30 @@ public:
    * If none of these implemented units is given, the SI value will be returned. */
   double get(const string &units) const;
 
-  inline Pressure& operator=(const Pressure &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
-  inline Pressure& operator=(double rhs) { valueIS_ = rhs; return *this; }
-  inline Pressure operator+(const Pressure &rhs) { return Pressure(valueIS_ + rhs.get()); }
-  inline Pressure operator-(const Pressure &rhs) { return Pressure(valueIS_ - rhs.get()); }
-  inline Pressure operator*(double scf) { return Pressure(valueIS_ * scf); }
-  inline Pressure operator*(float scf) { return Pressure(valueIS_ * (double) scf); }
-  inline Pressure operator*(int scf) { return Pressure(valueIS_ * (double) scf); }
-  inline Pressure operator*(unsigned int scf) { return Pressure(valueIS_ * (double) scf); }
-  inline Pressure operator/(double scf) { return Pressure(valueIS_ / scf); }
-  inline Pressure operator/(float scf) { return Pressure(valueIS_ / (double) scf); }
-  inline Pressure operator/(int scf) { return Pressure(valueIS_ / (double) scf); }
-  inline Pressure operator/(unsigned int scf) { return Pressure(valueIS_ / (double) scf); }
-  inline bool operator<(const Pressure &rhs) const { return (valueIS_ < rhs.get()); }
-  inline bool operator>(const Pressure &rhs) const { return (valueIS_ > rhs.get()); }
-  inline bool operator<=(const Pressure &rhs) const { return (valueIS_ <= rhs.get()); }
-  inline bool operator>=(const Pressure &rhs) const { return (valueIS_ >= rhs.get()); }
-  inline bool operator==(const Pressure &rhs) const { return (valueIS_ == rhs.get()); }
-  inline bool operator!=(const Pressure &rhs) const { return (valueIS_ != rhs.get()); }
+   Pressure& operator=(const Pressure &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
+   Pressure& operator=(double rhs) { valueIS_ = rhs; return *this; }
+   Pressure operator+(const Pressure &rhs) { return Pressure(valueIS_ + rhs.get()); }
+   Pressure operator-(const Pressure &rhs) { return Pressure(valueIS_ - rhs.get()); }
+   Pressure operator*(double scf) { return Pressure(valueIS_ * scf); }
+   Pressure operator*(float scf) { return Pressure(valueIS_ * (double) scf); }
+   Pressure operator*(int scf) { return Pressure(valueIS_ * (double) scf); }
+   Pressure operator*(unsigned int scf) { return Pressure(valueIS_ * (double) scf); }
+   Pressure operator/(double scf) { return Pressure(valueIS_ / scf); }
+   Pressure operator/(float scf) { return Pressure(valueIS_ / (double) scf); }
+   Pressure operator/(int scf) { return Pressure(valueIS_ / (double) scf); }
+   Pressure operator/(unsigned int scf) { return Pressure(valueIS_ / (double) scf); }
+   bool operator<(const Pressure &rhs) const { return (valueIS_ < rhs.get()); }
+   bool operator>(const Pressure &rhs) const { return (valueIS_ > rhs.get()); }
+   bool operator<=(const Pressure &rhs) const { return (valueIS_ <= rhs.get()); }
+   bool operator>=(const Pressure &rhs) const { return (valueIS_ >= rhs.get()); }
+   bool operator==(const Pressure &rhs) const { return (valueIS_ == rhs.get()); }
+   bool operator!=(const Pressure &rhs) const { return (valueIS_ != rhs.get()); }
 
 private:
   double valueIS_;
 }; // class Pressure
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_PRESSURE_H*/
 

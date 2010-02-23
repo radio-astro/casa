@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMWVRMeasurement.cpp,v 1.3 2009/05/04 21:31:19 dbroguie Exp $"
+ * "@(#) $Id: ATMWVRMeasurement.cpp,v 1.5 2010/02/19 02:07:58 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -30,8 +30,7 @@
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 WVRMeasurement::WVRMeasurement()
 {
@@ -65,5 +64,4 @@ WVRMeasurement::~WVRMeasurement()
 {
 }
 
-} // namespace atm
-
+ATM_NAMESPACE_END

@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMAngle.cpp,v 1.3 2009/05/04 21:31:19 dbroguie Exp $"
+ * "@(#) $Id: ATMAngle.cpp,v 1.4 2010/02/08 17:37:52 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -27,8 +27,7 @@
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 Angle::Angle() :
   valueIS_(0.0)
@@ -66,5 +65,4 @@ double Angle::get(const string &units) const
   }
 }
 
-} // namespace atm
-
+ATM_NAMESPACE_END

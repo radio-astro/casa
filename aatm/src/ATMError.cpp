@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMError.cpp,v 1.3 2010/01/12 17:03:12 dbroguie Exp $"
+ * "@(#) $Id: ATMError.cpp,v 1.4 2010/02/08 17:37:52 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -30,8 +30,7 @@
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 ErrorLevel Error::acceptableErrorLevel = SERIOUS; // default level to stop a process
 ErrorLevel Error::errlev_ = NOERROR;
@@ -157,4 +156,4 @@ void Error::printMessage(const string &message)
   }
 }
 
-} // namespace atm
+ATM_NAMESPACE_END

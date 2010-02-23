@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMRefractiveIndex.h,v 1.3 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMRefractiveIndex.h,v 1.5 2010/02/19 01:42:24 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -29,12 +29,12 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include "ATMCommon.h"
 #include <complex>
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
 /*! \brief RefractiveIndex allows to extract absorption and Phase coefficient(s) at
  *  a given frequency and P/T/gas densities.
@@ -442,6 +442,96 @@ public:
         * numberdensity;
   }
 
+
+
+
+ /** This returns a complex<double> that is the  Meaningful Specific Refractivity (see \ref definitions) of
+   \f$NO_2\f$ \f$v=0\f$\cdot \f$(rad\cdot m^2,m^2)\f$
+   [Input parameters are of type double: temperature (K), pressure (mb), water vapor partial pressure (mb)
+   and frequency (GHz)] */
+  inline complex<double> getMeaningfulSpecificRefractivity_no2(double temperature,
+                                                               double pressure,
+                                                               double frequency)
+  {
+    return mkSpecificRefractivity_no2(temperature, pressure, frequency);
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with
+   units \f$(rad\cdot m^{2},m^{2})\f$  */
+  inline complex<double> getSpecificRefractivity_no2(double temperature,
+                                                     double pressure,
+                                                     double frequency)
+  {
+    return mkSpecificRefractivity_no2(temperature, pressure, frequency);
+  }
+  /** This returns a complex<double> that is the  Meaningful Refractivity (see \ref definitions) of
+   \f$NO_2\f$ \f$v=0\f$\cdot \f$(rad\cdot m^{-1},m^{-1})\f$
+   [Input parameters are of type double: temperature (K), pressure (mb), water vapor partial pressure (mb),
+   frequency (GHz), and \f$N_2O\f$ number density (\f$ m^{-3} \f$)] */
+  inline complex<double> getMeaningfulRefractivity_no2(double temperature,
+                                                       double pressure,
+                                                       double frequency,
+                                                       double numberdensity)
+  {
+    return mkSpecificRefractivity_no2(temperature, pressure, frequency)
+        * numberdensity;
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with units
+   \f$(rad\cdot m^{-1},m^{-1})\f$  */
+  inline complex<double> getRefractivity_no2(double temperature,
+                                             double pressure,
+                                             double frequency,
+                                             double numberdensity)
+  {
+    return mkSpecificRefractivity_no2(temperature, pressure, frequency)
+        * numberdensity;
+  }
+
+
+
+
+/** This returns a complex<double> that is the  Meaningful Specific Refractivity (see \ref definitions) of
+   \f$SO_2\f$ \f$v=0\f$\cdot \f$(rad\cdot m^2,m^2)\f$
+   [Input parameters are of type double: temperature (K), pressure (mb), water vapor partial pressure (mb)
+   and frequency (GHz)] */
+  inline complex<double> getMeaningfulSpecificRefractivity_so2(double temperature,
+                                                               double pressure,
+                                                               double frequency)
+  {
+    return mkSpecificRefractivity_so2(temperature, pressure, frequency);
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with
+   units \f$(rad\cdot m^{2},m^{2})\f$  */
+  inline complex<double> getSpecificRefractivity_so2(double temperature,
+                                                     double pressure,
+                                                     double frequency)
+  {
+    return mkSpecificRefractivity_so2(temperature, pressure, frequency);
+  }
+  /** This returns a complex<double> that is the  Meaningful Refractivity (see \ref definitions) of
+   \f$SO_2\f$ \f$v=0\f$\cdot \f$(rad\cdot m^{-1},m^{-1})\f$
+   [Input parameters are of type double: temperature (K), pressure (mb), water vapor partial pressure (mb),
+   frequency (GHz), and \f$N_2O\f$ number density (\f$ m^{-3} \f$)] */
+  inline complex<double> getMeaningfulRefractivity_so2(double temperature,
+                                                       double pressure,
+                                                       double frequency,
+                                                       double numberdensity)
+  {
+    return mkSpecificRefractivity_so2(temperature, pressure, frequency)
+        * numberdensity;
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with units
+   \f$(rad\cdot m^{-1},m^{-1})\f$  */
+  inline complex<double> getRefractivity_so2(double temperature,
+                                             double pressure,
+                                             double frequency,
+                                             double numberdensity)
+  {
+    return mkSpecificRefractivity_so2(temperature, pressure, frequency)
+        * numberdensity;
+  }
+
+
+
   inline complex<double> getMeaningfulSpecificRefractivity_cnth2o(double temperature,
                                                                   double pressure,
                                                                   double wvpressure,
@@ -539,10 +629,18 @@ public:
                                       frequency);
   }
 
+
+
+
+
+
+
+
   /** This returns a complex<double> that is the  Meaningful Specific Refractivity (see \ref definitions) of
    \f$O_{3}\f$ \f$v=0\f$ \f$(rad\cdot m^2,m^2)\f$
    [Input parameters are of type double: temperature (K), pressure (mb),
    and frequency (GHz)] */
+
   inline complex<double> getMeaningfulSpecificRefractivity_16o16o16o(double temperature,
                                                                      double pressure,
                                                                      double frequency)
@@ -579,6 +677,153 @@ public:
     return mkSpecificRefractivity_16o16o16o(temperature, pressure, frequency)
         * numberdensity;
   }
+
+
+
+
+
+
+  /** This returns a complex<double> that is the  Meaningful Specific Refractivity (see \ref definitions) of
+   \f$O_{3}\f$ \f$2=1\f$ \f$(rad\cdot m^2,m^2)\f$
+   [Input parameters are of type double: temperature (K), pressure (mb),
+   and frequency (GHz)] */
+
+  inline complex<double> getMeaningfulSpecificRefractivity_16o16o16o_v2(double temperature,
+                                                                     double pressure,
+                                                                     double frequency)
+  {
+    return mkSpecificRefractivity_16o16o16o_v2(temperature, pressure, frequency);
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with units
+   \f$(rad\cdot m^{2},m^{2})\f$  */
+  inline complex<double> getSpecificRefractivity_16o16o16o_v2(double temperature,
+                                                           double pressure,
+                                                           double frequency)
+  {
+    return mkSpecificRefractivity_16o16o16o_v2(temperature, pressure, frequency);
+  }
+  /** This returns a complex<double> that is the  Meaningful Refractivity (see \ref definitions) of
+   \f$O_{3}\f$ \f$v2=1\f$ \f$(rad\cdot m^{-1},m^{-1})\f$
+   [Input parameters are of type double: temperature (K), pressure (mb),
+   frequency (GHz), and \f$O_{3}\f$ \f$v=0\f$ number density (\f$ m^{-3}\f$)] */
+  inline complex<double> getMeaningfulRefractivity_16o16o16o_v2(double temperature,
+                                                             double pressure,
+                                                             double frequency,
+                                                             double numberdensity)
+  {
+    return mkSpecificRefractivity_16o16o16o_v2(temperature, pressure, frequency)
+        * numberdensity;
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with
+   units \f$(rad\cdot m^{-1},m^{-1})\f$  */
+  inline complex<double> getRefractivity_16o16o16o_v2(double temperature,
+                                                   double pressure,
+                                                   double frequency,
+                                                   double numberdensity)
+  {
+    return mkSpecificRefractivity_16o16o16o_v2(temperature, pressure, frequency)
+        * numberdensity;
+  }
+
+
+
+
+
+  /** This returns a complex<double> that is the  Meaningful Specific Refractivity (see \ref definitions) of
+   \f$O_{3}\f$ \f$v1=1\f$ \f$(rad\cdot m^2,m^2)\f$
+   [Input parameters are of type double: temperature (K), pressure (mb),
+   and frequency (GHz)] */
+
+  inline complex<double> getMeaningfulSpecificRefractivity_16o16o16o_v1(double temperature,
+                                                                     double pressure,
+                                                                     double frequency)
+  {
+    return mkSpecificRefractivity_16o16o16o_v1(temperature, pressure, frequency);
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with units
+   \f$(rad\cdot m^{2},m^{2})\f$  */
+  inline complex<double> getSpecificRefractivity_16o16o16o_v1(double temperature,
+                                                           double pressure,
+                                                           double frequency)
+  {
+    return mkSpecificRefractivity_16o16o16o_v1(temperature, pressure, frequency);
+  }
+  /** This returns a complex<double> that is the  Meaningful Refractivity (see \ref definitions) of
+   \f$O_{3}\f$ \f$v1=1\f$ \f$(rad\cdot m^{-1},m^{-1})\f$
+   [Input parameters are of type double: temperature (K), pressure (mb),
+   frequency (GHz), and \f$O_{3}\f$ \f$v=0\f$ number density (\f$ m^{-3}\f$)] */
+  inline complex<double> getMeaningfulRefractivity_16o16o16o_v1(double temperature,
+                                                             double pressure,
+                                                             double frequency,
+                                                             double numberdensity)
+  {
+    return mkSpecificRefractivity_16o16o16o_v1(temperature, pressure, frequency)
+        * numberdensity;
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with
+   units \f$(rad\cdot m^{-1},m^{-1})\f$  */
+  inline complex<double> getRefractivity_16o16o16o_v1(double temperature,
+                                                   double pressure,
+                                                   double frequency,
+                                                   double numberdensity)
+  {
+    return mkSpecificRefractivity_16o16o16o_v1(temperature, pressure, frequency)
+        * numberdensity;
+  }
+
+
+
+
+
+  /** This returns a complex<double> that is the  Meaningful Specific Refractivity (see \ref definitions) of
+   \f$O_{3}\f$ \f$3=1\f$ \f$(rad\cdot m^2,m^2)\f$
+   [Input parameters are of type double: temperature (K), pressure (mb),
+   and frequency (GHz)] */
+
+  inline complex<double> getMeaningfulSpecificRefractivity_16o16o16o_v3(double temperature,
+                                                                     double pressure,
+                                                                     double frequency)
+  {
+    return mkSpecificRefractivity_16o16o16o_v3(temperature, pressure, frequency);
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with units
+   \f$(rad\cdot m^{2},m^{2})\f$  */
+  inline complex<double> getSpecificRefractivity_16o16o16o_v3(double temperature,
+                                                           double pressure,
+                                                           double frequency)
+  {
+    return mkSpecificRefractivity_16o16o16o_v3(temperature, pressure, frequency);
+  }
+  /** This returns a complex<double> that is the  Meaningful Refractivity (see \ref definitions) of
+   \f$O_{3}\f$ \f$v3=1\f$ \f$(rad\cdot m^{-1},m^{-1})\f$
+   [Input parameters are of type double: temperature (K), pressure (mb),
+   frequency (GHz), and \f$O_{3}\f$ \f$v=0\f$ number density (\f$ m^{-3}\f$)] */
+  inline complex<double> getMeaningfulRefractivity_16o16o16o_v3(double temperature,
+                                                             double pressure,
+                                                             double frequency,
+                                                             double numberdensity)
+  {
+    return mkSpecificRefractivity_16o16o16o_v3(temperature, pressure, frequency)
+        * numberdensity;
+  }
+  /** Same as the previous one but omitting "Meaningful" from the function's name. It returns a complex with
+   units \f$(rad\cdot m^{-1},m^{-1})\f$  */
+  inline complex<double> getRefractivity_16o16o16o_v3(double temperature,
+                                                   double pressure,
+                                                   double frequency,
+                                                   double numberdensity)
+  {
+    return mkSpecificRefractivity_16o16o16o_v3(temperature, pressure, frequency)
+        * numberdensity;
+  }
+
+
+
+
+
+
+
+
 
   /** This returns a complex<double> that is the  Meaningful Specific Refractivity (see \ref definitions) of
    \f$^{16}O^{16}O^{18}O\f$ \f$v=0\f$ \f$(rad\cdot m^2,m^2)\f$
@@ -769,6 +1014,12 @@ private:
   complex<double> mkSpecificRefractivity_n2o(double temperature,
                                              double pressure,
                                              double frequency);
+  complex<double> mkSpecificRefractivity_no2(double temperature,
+                                             double pressure,
+                                             double frequency);
+  complex<double> mkSpecificRefractivity_so2(double temperature,
+                                             double pressure,
+                                             double frequency);
   complex<double> mkSpecificRefractivity_cnth2o(double temperature,
                                                 double pressure,
                                                 double wvpressure,
@@ -798,6 +1049,15 @@ private:
                                              double wvpressure,
                                              double frequency);
   complex<double> mkSpecificRefractivity_16o16o16o(double temperature,
+                                                   double pressure,
+                                                   double frequency);
+  complex<double> mkSpecificRefractivity_16o16o16o_v2(double temperature,
+                                                   double pressure,
+                                                   double frequency);
+  complex<double> mkSpecificRefractivity_16o16o16o_v1(double temperature,
+                                                   double pressure,
+                                                   double frequency);
+  complex<double> mkSpecificRefractivity_16o16o16o_v3(double temperature,
                                                    double pressure,
                                                    double frequency);
   complex<double> mkSpecificRefractivity_16o16o18o(double temperature,
@@ -851,6 +1111,6 @@ private:
 
 }; // class RefractiveIndex
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_REFRACTIVEINDEX_H*/

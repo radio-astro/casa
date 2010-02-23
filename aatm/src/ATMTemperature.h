@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMTemperature.h,v 1.4 2009/09/10 16:21:29 dbroguie Exp $"
+ * "@(#) $Id: ATMTemperature.h,v 1.6 2010/02/19 01:49:14 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -29,12 +29,13 @@
 #error This is a C++ include file and cannot be used from plain C
 #endif
 
+#include "ATMCommon.h"
 #include <string>
 
-using namespace std;
+using std::string;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
+
 
 /*! \brief Temperature value with units
  *
@@ -49,44 +50,44 @@ public:
   Temperature();
   /** A full constructor: Temperature value assumed by default to be in K (International System) */
   Temperature(double temperature);
-  /** A full constructor: Temperature value + unit. Valid units are K [k], mK [mk], C [c], and F [f].
+  /** A full constructor: Temperature value + unit. Valid units are K [k], mK [mk], and C [c].
    *  If none of these implemented units is given, the SI value will be returned. */
   Temperature(double temperature, const string &units);
 
   /** Destructor */
-  ~Temperature();
+  virtual ~Temperature() {};
 
   //@{
   /** Accessor to the temperature value in International System units (K) */
-  inline double get() const { return valueIS_; }
-  /** Accessor to the temperature value in specified units. Valid units are K [k], mK [mk], C [c], and F [f] */
+  double get() const { return valueIS_; }
+  /** Accessor to the temperature value in specified units. Valid units are K [k], mK [mk], and C [c] */
   double get(const string &units) const;
   //@}
 
-  inline Temperature& operator=(const Temperature &rhs){ if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
-  inline Temperature& operator=(double rhs) { valueIS_ = rhs; return *this; }
-  inline Temperature operator+(const Temperature &rhs) { return Temperature(valueIS_ + rhs.get()); }
-  inline Temperature operator-(const Temperature &rhs) { return Temperature(valueIS_ - rhs.get()); }
-  inline Temperature operator*(double scf) { return Temperature(valueIS_ * scf); }
-  inline Temperature operator*(float scf) { return Temperature(valueIS_ * (double) scf); }
-  inline Temperature operator*(int scf) { return Temperature(valueIS_ * (double) scf); }
-  inline Temperature operator*(unsigned int scf) { return Temperature(valueIS_ * (double) scf); }
-  inline Temperature operator/(double scf) { return Temperature(valueIS_ / scf); }
-  inline Temperature operator/(float scf) { return Temperature(valueIS_ / (double) scf); }
-  inline Temperature operator/(int scf) { return Temperature(valueIS_ / (double) scf); }
-  inline Temperature operator/(unsigned int scf) { return Temperature(valueIS_ / (double) scf); }
-  inline bool operator<(const Temperature &rhs) const { return (valueIS_ < rhs.get()); }
-  inline bool operator>(const Temperature &rhs) const { return (valueIS_ > rhs.get()); }
-  inline bool operator<=(const Temperature &rhs) const { return (valueIS_ <= rhs.get()); }
-  inline bool operator>=(const Temperature &rhs) const { return (valueIS_ >= rhs.get()); }
-  inline bool operator==(const Temperature &rhs) const { return (valueIS_ == rhs.get()); }
-  inline bool operator!=(const Temperature &rhs) const { return (valueIS_ != rhs.get()); }
+  Temperature& operator=(const Temperature &rhs){ if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }
+  Temperature& operator=(double rhs) { valueIS_ = rhs; return *this; }
+  Temperature operator+(const Temperature &rhs) { return Temperature(valueIS_ + rhs.get()); }
+  Temperature operator-(const Temperature &rhs) { return Temperature(valueIS_ - rhs.get()); }
+  Temperature operator*(double scf) { return Temperature(valueIS_ * scf); }
+  Temperature operator*(float scf) { return Temperature(valueIS_ * (double) scf); }
+  Temperature operator*(int scf) { return Temperature(valueIS_ * (double) scf); }
+  Temperature operator*(unsigned int scf) { return Temperature(valueIS_ * (double) scf); }
+  Temperature operator/(double scf) { return Temperature(valueIS_ / scf); }
+  Temperature operator/(float scf) { return Temperature(valueIS_ / (double) scf); }
+  Temperature operator/(int scf) { return Temperature(valueIS_ / (double) scf); }
+  Temperature operator/(unsigned int scf) { return Temperature(valueIS_ / (double) scf); }
+  bool operator<(const Temperature &rhs) const { return (valueIS_ < rhs.get()); }
+  bool operator>(const Temperature &rhs) const { return (valueIS_ > rhs.get()); }
+  bool operator<=(const Temperature &rhs) const { return (valueIS_ <= rhs.get()); }
+  bool operator>=(const Temperature &rhs) const { return (valueIS_ >= rhs.get()); }
+  bool operator==(const Temperature &rhs) const { return (valueIS_ == rhs.get()); }
+  bool operator!=(const Temperature &rhs) const { return (valueIS_ != rhs.get()); }
 
 private:
   double valueIS_;
 }; // class Temperature
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 #endif /*!_ATM_TEMPERATURE_H*/
 

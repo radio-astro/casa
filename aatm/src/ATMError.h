@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMError.h,v 1.2 2009/05/04 21:30:54 dbroguie Exp $"
+ * "@(#) $Id: ATMError.h,v 1.3 2010/02/08 17:37:52 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -26,16 +26,16 @@
  */
 
 #ifndef __cplusplus
-#error This is a C++ include file and cannot be used from plain C
+#error "This is a C++ include file and cannot be used from plain C"
 #endif
 
+#include "ATMCommon.h"
 #include <string>
 #include <stdarg.h>
 
 using namespace std;
 
-namespace atm
-{
+ATM_NAMESPACE_BEGIN
 
   /** Definition of the sequence of error levels sorted by ascending severity.
  */
@@ -131,7 +131,7 @@ private:
   string errorLog; //!< Error log (TBD)
 }; // class Error
 
-} // namespace atm
+ATM_NAMESPACE_END
 
 /** \page testError Example showing how to use the class Error
 
