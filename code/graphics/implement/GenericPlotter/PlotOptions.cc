@@ -511,9 +511,13 @@ vector<pair<PlotAxis, PlotAxis> > PlotAxesStack::stackAxes() const {
 
 void PlotAxesStack::setBase(const PlotRegion& base, PlotAxis xAxis,
         PlotAxis yAxis) {
+
+    m_stack.resize(0); // so next line sets element zero!
     m_stack.resize(1, base);
+    m_axes.resize(0);  // so next line sets element zero!
     m_axes.resize(1, pair<PlotAxis, PlotAxis>(xAxis, yAxis));
     m_stackIndex = 0;
+
 }
 
 void PlotAxesStack::addRegion(const PlotRegion& region, PlotAxis xAxis,
@@ -578,6 +582,29 @@ PlotRegion PlotAxesStack::moveAndReturn(int delta) {
     move(delta);
     return currentRegion();
 }
+
+  /*
+void PlotAxesStack::summary() {
+
+  cout << "Stack listing ";
+    
+  if (size()>0) {
+    cout << "(" << size() << "):" << endl;
+    
+    for (uint i=0;i<size();++i)
+      cout << i << " " 
+	   << stack()[i].left() << " "
+	   << stack()[i].right()  << " "
+	   << stack()[i].bottom()  << " "
+	   << stack()[i].top() << " "
+	   << endl;
+  }
+  else
+    cout << "(none)" << endl;
+
+}
+
+  */
 
 
 void PlotAxesStack::shrinkStacks(unsigned int n) {
