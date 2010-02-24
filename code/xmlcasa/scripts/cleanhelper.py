@@ -1229,7 +1229,7 @@ class cleanhelper:
         else:
             spw0=spwinds[0]
         tb.open(self.vis+'/SPECTRAL_WINDOW')
-        chanfreqscol=tb.getcol('CHAN_FREQ')
+        chanfreqscol=tb.getvarcol('CHAN_FREQ')
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
         # assume spw[0]  
@@ -1245,8 +1245,9 @@ class cleanhelper:
         self.dataspecframe=elspecframe[spwframe[spw0]];
         if(dummy):
             return freqlist, finc
-        chanfreqs=chanfreqscol.transpose()
-        chanfreqs1d=chanfreqs[spw0:].flatten() 
+        #DP extract array from dictionary returned by getvarcol
+        chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
+        chanfreqs1d=chanfreqs[0].flatten() 
             
         if(type(start)==int or type(start)==float):
             if(start > len(chanfreqs1d)):
