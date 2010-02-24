@@ -1261,6 +1261,7 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     // Added Nov 2009, following AIPS addition
     header.define("FRAME",posref);                   // FRAME
 
+
     // NOT in going aips
     // header.define("DATUTC", 0.0);
     // header.define("P_REFANT", 15);
@@ -2099,7 +2100,9 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
     Double tim = weatherColumns.time()(i);
     *time = (tim - refTime) / C::day;
     *interval = weatherColumns.interval()(i) / C::day;
-    *antenna = antnums( weatherColumns.antennaId()(i) );
+    //*antenna = antnums( weatherColumns.antennaId()(i) );
+    *antenna = (weatherColumns.antennaId()(i) == -1 ? 0: 
+				        antnums( weatherColumns.antennaId()(i) ));
     //read optional columns
     // default 0.0
     // temperature, dewpoint in MS should be kelvin but 
