@@ -10,6 +10,11 @@
  * @version 
  ***/
 
+// The version of ATM library which this code is based on.
+#ifndef ATM_VERSION
+#define ATM_VERSION "0.3.0"
+#endif
+
 #ifndef _atmosphere_cmpt__H__
 #define _atmosphere_cmpt__H__
 #ifndef _atmosphere_cnpt__H__
