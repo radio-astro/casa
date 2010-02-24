@@ -23,7 +23,7 @@ def simdata(
     noise_thermal=None, 
     noise_mode=None, #will be removed
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, 
-    cross_pol=None,
+#    cross_pol=None,
 #image=None, 
 #    cleanmode=None,
     cell=None, imsize=None, threshold=None, niter=None, 
@@ -404,14 +404,17 @@ def simdata(
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
 
+            sm.done() # simulator hangs onto previous versions of the MS
             if os.path.exists(noisymsfile):
-                cu.removetable(noisymsfile)
-            os.system("cp -r "+msfile+" "+noisymsfile)
-            # RI todo check for and copy flagversions file as well
-            
-            sm.openfromms(noisymsfile);    # an existing MS
-            sm.setdata();                # currently defaults to fld=0,spw=0
-# use ANoise version
+                shutil.rmtree(noisymsfile)                
+            shutil.copytree(msfile,noisymsfile)
+            if sm.name()!='':
+                msg("table persistence error on %s" % sm.name(),priority="error")
+                return
+
+            sm.openfromms(noisymsfile)    # an existing MS
+            sm.setdata()                # currently defaults to fld=0,spw=0
+# use ANoise version - deprecated but required for AC / SD
 #            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
 #                        antefficiency=eta_a,trx=t_rx,
 #                        tau=tau0,tatmos=t_sky,tcmb=t_cmb,
@@ -605,8 +608,8 @@ def simdata(
 
         if doclean:
             # clean insists on using an existing model if it's present
-            shutil.rmtree(image+".image")
-            shutil.rmtree(image+".model")
+            if os.path.exists(image+".image"): shutil.rmtree(image+".image")
+            if os.path.exists(image+".model"): shutil.rmtree(image+".model")
             clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
                   niter=niter, threshold=threshold, selectdata=False,
                   psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
