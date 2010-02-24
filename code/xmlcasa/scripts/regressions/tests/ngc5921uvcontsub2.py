@@ -25,7 +25,7 @@ def run():
         raise Exception, 'regstate = False'
 
 ###return the images that will be templated and compared in future runs
-    return ['ngc5921_regression/ngc5921.clean.image']
+    return ['ngc5921uvcontsub2/ngc5921.clean.image']
 
 def data():
     ### return the data files that is needed by the regression script

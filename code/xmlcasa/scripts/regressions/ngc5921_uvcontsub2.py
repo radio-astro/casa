@@ -102,7 +102,7 @@ import listing
 benchmarking = True
 
 # Run exportuvfits asynchronously (twice)?
-export_asynchronously = False
+export_asynchronously = True
 
 # 
 # Set up some useful variables
@@ -114,7 +114,7 @@ pathname=os.environ.get('CASAPATH').split()[0]
 fitsdata=pathname+'/data/regression/ngc5921/ngc5921.fits'
 
 # The testdir where all output files will be kept
-testdir='ngc5921_regression'
+testdir='ngc5921uvcontsub2'
 
 # The prefix to use for all output files.
 prefix=testdir+"/"+'ngc5921'

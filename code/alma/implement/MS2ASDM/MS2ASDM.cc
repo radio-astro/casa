@@ -59,6 +59,7 @@
 #include <tables/Tables/TiledShapeStMan.h>
 #include <tables/Tables/TiledDataStMan.h>
 #include <tables/Tables/TiledStManAccessor.h>
+#include <measures/Measures/MeasTable.h>
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 
@@ -2983,28 +2984,36 @@ namespace casa {
 
     // but beforehand we calculate the position of the array center for later reference
 
-    MSAntenna anttable = ms_p.antenna();
-    ROMSAntennaColumns ANTCols(anttable);
-    ROScalarMeasColumn<MPosition> ANTPositionMeasCol = ANTCols.positionMeas(); 
-    Int nAnt = 0;
-    Vector<Double> pos(3); 
-    pos=0;
-    for (uInt i=0; i<anttable.nrow(); i++) {
-      pos+=ANTPositionMeasCol(i).getValue().get();
-      nAnt++;
+    MPosition pos;
+    {
+      MPosition Xpos;
+      String Xobservatory;
+      if (observation().nrow() > 0) {
+	Xobservatory = observation().telescopeName()(observationId()(0));
+      }
+      if (Xobservatory.length() == 0 || 
+	  !MeasTable::Observatory(Xpos,Xobservatory)) {
+	// unknown observatory, use the above calculated centroid position
+	os << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
+	   << "\". Determining observatory position from antenna 0." << LogIO::POST;
+	Xpos=MPosition::Convert(antenna().positionMeas()(0), MPosition::WGS84)();
+      }
+      else{
+	os << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
+	   << LogIO::POST;
+	Xpos=MPosition::Convert(Xpos, MPosition::WGS84)();
+      }
+      pos = Xpos;
+      ostringstream oss;
+      oss <<  "   " << pos << " (WGS84)";
+      os << LogIO::NORMAL << oss.str() << LogIO::POST;
     }
-    if(nAnt>0){
-      pos /= Double(nAnt);
-    }
-    else {
-      os << LogIO::SEVERE << "No antennas in this MS. Cannot proceed ..." 
-	 << LogIO::POST;
-      return False; 
-    }
-    MVPosition mObsPos = MVPosition(pos);
-    Length siteAltitude = Length(mObsPos.getLength().getValue(unitASDMLength()));
-    Angle siteLongitude = Angle(mObsPos.getLong("rad").getValue(unitASDMAngle()));
-    Angle siteLatitude = Angle(mObsPos.getLat("rad").getValue(unitASDMAngle()));
+
+    MVPosition mObsPos = pos.getValue();
+    Vector<Double> hlonlat = mObsPos.get(); // get three-vector of height, lon, lat  in m, rad, rad
+    Length siteAltitude = Length(hlonlat(0));
+    Angle siteLongitude = Angle(hlonlat(1));
+    Angle siteLatitude = Angle(hlonlat(2));
 
     // loop over main table
     Bool warned = False; // aux. var. to avoid warning repetition  
@@ -3987,7 +3996,7 @@ namespace casa {
 	     << aId << LogIO::POST;	
 	}
 	else{
-	  if(verbosity_p>0){
+	  if(verbosity_p>1){
 	    os << LogIO::NORMAL << "Combined " << numRows 
 	       << " MS Pointing table rows into one ASDM Pointing table row for antenna id " 
 	       << aId << LogIO::POST;	

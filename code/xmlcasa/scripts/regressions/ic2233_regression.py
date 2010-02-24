@@ -63,8 +63,12 @@ def ic2233_reg():
 # StokesIPeak          = 0.86240315;
 # StokesIRMS           = 0.00138986;
 
-StokesIPeak          = 0.86264914  
-StokesIRMS           = 0.00138987
+# The following was changed to new values on Feb 23, 2010
+# StokesIPeak          = 0.86264914  
+# StokesIRMS           = 0.00138987
+
+StokesIPeak          = 0.8555392
+StokesIRMS           = 0.00137654
 
 StokesIPeakPosWorld = '08:20:22.869, +44.40.38.993'; #J2000
 StokesIPeakPos      = [942,1130,0,0]; #Pixels
@@ -79,8 +83,13 @@ StokesIPeakPos      = [942,1130,0,0]; #Pixels
 # StokesVPeak         = 0.00061063;  # Jy/beam
 # StokesVRMS          = 5.08003759e-05;  # Jy/beam
 
-StokesVPeak         = 0.00061679   # Jy/beam
-StokesVRMS          = 5.06523975e-05 # Jy/beam
+# The following was changed to new values on Feb 23, 2010
+# StokesVPeak         = 0.00061679   # Jy/beam
+# StokesVRMS          = 5.06523975e-05 # Jy/beam
+
+StokesVPeak         = 0.00066234   # Jy/beam
+StokesVRMS          = 5.26905496e-05 # Jy/beam
+
 StokesVPeakPosWorld = '08:11:29.219, +45.48.26.199'; #J2000
 StokesVPeakPos      = [1415,1008,1,0]; #Pixels
 #
