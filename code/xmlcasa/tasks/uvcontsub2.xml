@@ -18,37 +18,39 @@ all channels.
 
 The fitted continuum spectrum is subtracted from all channels 
 selected in spw, and the result (presumably only line emission)
-is stored in the CORRECTED_DATA of a new MS (vis + '.contsub').
+is stored in the CORRECTED_DATA of a <em>new</em> MS (vis + ".contsub").
 The selected CORRECTED_DATA column of vis is copied to the DATA
 column of the new ms.
 
 If want_cont is True, the continuum fit is placed in the DATA
-column of a second new MS (vis + '.cont').  N.B. because the
+column of a second new MS (vis + ".cont").  N.B. because the
 continuum model is necessarily a smoothed fit, images made with
 it are liable to have their field of view reduced in some
 strange way, and if possible should be compared with images
-made by excluding the line channels.
+made by excluding the line channels.  A copy of the continuum
+estimate is always placed in the MODEL_DATA column of vis + ".cont"
+regardless of want_cont.
 
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Name of input visibility file</description>
+		<description>Name of input MS.  Output goes to vis + ".contsub"</description>
 		<value></value>
 	</param>
 
         <param type="any" name="field">
-                <description>Select field using field id(s) or field name(s)</description>
+                <description>Select field(s) using id(s) or name(s)</description>
 		<any type="variant" limittypes="string stringArray int intArray"/>
                 <value type="string"></value>
         </param>
 
 	<param type="string" name="fitspw">
-		<description>Spectral window/channel selection for fitting the continuum</description>
+		<description>Spectral window:channel selection for fitting the continuum</description>
 		<value></value>
 	</param>
 
         <param type="string" name="combine">
-                <description>Data axes which to combine for the continuum estimation (spw, scan, and/or field)</description>
+                <description>Data axes to combine for the continuum estimation (spw, scan, and/or field)</description>
                 <value></value>
         </param>
 
@@ -88,7 +90,7 @@ made by excluding the line channels.
 	
         The fitted continuum spectrum is subtracted from all channels 
         selected in spw, and the result (presumably only line emission)
-        is stored in the CORRECTED_DATA of a new MS (vis + '.contsub').
+        is stored in the CORRECTED_DATA of a <em>new</em> MS (vis + ".contsub").
         The selected CORRECTED_DATA column of vis is copied to the DATA
         column of the new ms.
 
@@ -97,10 +99,13 @@ made by excluding the line channels.
         continuum model is necessarily a smoothed fit, images made with
         it are liable to have their field of view reduced in some
         strange way, and if possible should be compared with images
-        made by excluding the line channels.
+        made by excluding the line channels.  A copy of the continuum
+        estimate is always placed in the MODEL_DATA column of vis + '.cont'
+        regardless of want_cont.
+
 
         The input MeasurementSet should have calibrated data in
-        its DATA column.
+        its CORRECTED_DATA column.
 
 	Keyword arguments:
 	vis -- Name of input visibility file
