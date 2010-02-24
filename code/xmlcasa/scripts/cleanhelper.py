@@ -3,6 +3,7 @@ import os
 import commands
 import math
 import pdb
+import numpy
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -1246,8 +1247,20 @@ class cleanhelper:
         if(dummy):
             return freqlist, finc
         #DP extract array from dictionary returned by getvarcol
-        chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
-        chanfreqs1d=chanfreqs[0].flatten() 
+        print 'hello1'
+        chanfreqs1dx = numpy.array([])
+        print type(chanfreqs1dx)
+        if(spwinds==-1):
+            chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
+            chanfreqs1dx = chanfreqs[0]
+            print type(chanfreqs1dx)
+        else:
+            chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()            
+            chanfreqs1dx=chanfreqs[0]
+            for ispw in range(1,len(spwinds)):
+                chanfreqs=chanfreqscol['r'+str(spwinds[ispw]+1)].transpose()            
+                chanfreqs1dx = numpy.concatenate((chanfreqs1dx, chanfreqs[0]))
+        chanfreqs1d = chanfreqs1dx.flatten()        
             
         if(type(start)==int or type(start)==float):
             if(start > len(chanfreqs1d)):
