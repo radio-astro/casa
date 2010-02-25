@@ -116,14 +116,19 @@ namespace casa {
         Record estimatesRecord;
         estimates.toRecord(errmsg, estimatesRecord);
 
-        results = myImage.fitsky(
-            residPixels, residMask, converged,
-            inputStats, residStats, chiSquared,
-            regionRecord, chan, stokesString, mask,
-            models, estimatesRecord, fixed,
-            includePixelRange, excludePixelRange,
-            fit, deconvolve, list, residual, model
-        );
+		try {
+        	results = myImage.fitsky(
+            	residPixels, residMask, converged,
+            	inputStats, residStats, chiSquared,
+            	regionRecord, chan, stokesString, mask,
+            	models, estimatesRecord, fixed,
+            	includePixelRange, excludePixelRange,
+            	fit, deconvolve, list, residual, model
+        	);
+		}
+		catch (AipsError) {
+			converged = false;
+		}
 
         fitDone = True;
         fitConverged = converged;
