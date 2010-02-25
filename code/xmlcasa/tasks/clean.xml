@@ -753,7 +753,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'nearest'  HOWEVER, 'linear' is generally recommended
-               outframe -- For mode='velocity' or 'frequency' velocity
+               outframe -- For mode='velocity', 'frequency', or 'channel':  velocity
                  reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
                           'LGROUP','CMB'
