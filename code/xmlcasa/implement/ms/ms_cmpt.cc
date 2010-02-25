@@ -1379,15 +1379,16 @@ ms::cvel(const std::string& mode,
       Int totNumChan = cw.size();
       
       Bool isEquidistant = True;
-      for(Int i=0; i< totNumChan; i++){
-	if(cw(i)-cw(0)>1.){
+      for(Int i=0; i<totNumChan; i++){
+	if(abs(cw(i)-cw(0))>0.1){
 	  isEquidistant = False;
 	}
       }
       Double minWidth = min(cw);
       Double maxWidth = max(cw);
-      
+
       ostringstream oss;
+      
       if(isEquidistant){
 	oss <<  "Final spectral window has " << totNumChan 
 	    << " channels of width " << scientific << setprecision(6) << setw(6) << cw(0) << " Hz";
@@ -1397,13 +1398,21 @@ ms::cvel(const std::string& mode,
 	    << " channels of varying width: minimum width = " << scientific << setprecision(6) << setw(6) << minWidth 
 	    << " Hz, maximum width = " << scientific << setprecision(6) << setw(6) << maxWidth << " Hz";
       }
-      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+      oss << endl;
       if(totNumChan > 1){
-	*itsLog << LogIO::NORMAL  << "First channel center = " << cf(0) 
-		<< " Hz, last channel center = " << cf(totNumChan-1) << " Hz" << LogIO::POST;
+	oss << "First channel center = " << setprecision(9) << setw(9) << cf(0) 
+	    << " Hz, last channel center = " << setprecision(9) << setw(9) << cf(totNumChan-1) << " Hz";
       }
       else{
-	*itsLog << LogIO::NORMAL << "First channel center = " << cf(0) << " Hz" << LogIO::POST;
+	oss << "Channel center = " << setprecision(9) << setw(9) << cf(0) << " Hz";
+      }
+      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+
+      for(Int i=0; i<totNumChan-1; i++){
+	if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>0.1 ){
+	  *itsLog << LogIO::WARN << "Internal error: Center of channel i " << i <<  " is off nominal center by " 
+		  << ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz" << LogIO::POST;
+	}
       }
     } 
     
