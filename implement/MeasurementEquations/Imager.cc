@@ -950,7 +950,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
 
-      mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
+	  //in order to outframe to work need to set here original freq frame
+      //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
+      mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)-finc/2.0, finc,
 					  refChan, restFreq);
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO
