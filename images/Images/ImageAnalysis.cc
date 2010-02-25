@@ -4558,6 +4558,7 @@ Record ImageAnalysis::restoringbeam() {
 			rstat = iRec.asRecord("restoringbeam");
 		}
 	}
+	cout << iRec << endl;
 	return rstat;
 }
 
@@ -4811,10 +4812,7 @@ Bool ImageAnalysis::setrestoringbeam(const Quantity& major,
 		String error;
 		Record rec2;
 		rec2.defineRecord("restoringbeam", rec);
-		if (!ii.fromRecord(error, rec2)) {
-			*itsLog << error << LogIO::EXCEPTION;
-		}
-		//
+		ii.setRestoringBeam(rec2);
 	} else { //NEED WAY TO SPECIFY UNSET PA
 		if (major.getValue() != 0 && minor.getValue() != 0) {
 			ii.setRestoringBeam(major, minor, pa);
