@@ -375,7 +375,7 @@ for frame in frames_to_do:
 # Analysis
 
 passed = True
-tolerance = 0.0021
+tolerance = 0.0038
 numpoints = 0.
 avdev = 0.
 problems = 0
