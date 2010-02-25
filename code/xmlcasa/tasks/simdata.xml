@@ -154,11 +154,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <description>atmospheric temperature</description><value>260.</value></param>	
     <param type="double" name="tau0" subparam="true">
       <description>zenith opacity</description><value>0.1</value></param>
-    
+
+<!--    
     <param type="double" name="cross_pol">
       <description>add polarization leakage of magnitude</description>
       <value>0.</value></param>    
-
+-->
 
 
 

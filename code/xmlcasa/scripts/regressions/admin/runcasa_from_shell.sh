@@ -90,7 +90,7 @@ else
     echo "DISPLAY = $DISPLAY"
 fi
 
-cmd="casapy --nologger -c $command"
+cmd="casapy --nogui -c $command"
 echo $cmd
 $cmd &
 pid=$!

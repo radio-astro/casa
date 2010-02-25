@@ -3,6 +3,7 @@ import os
 import commands
 import math
 import pdb
+import numpy
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -1229,7 +1230,7 @@ class cleanhelper:
         else:
             spw0=spwinds[0]
         tb.open(self.vis+'/SPECTRAL_WINDOW')
-        chanfreqscol=tb.getcol('CHAN_FREQ')
+        chanfreqscol=tb.getvarcol('CHAN_FREQ')
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
         # assume spw[0]  
@@ -1245,8 +1246,21 @@ class cleanhelper:
         self.dataspecframe=elspecframe[spwframe[spw0]];
         if(dummy):
             return freqlist, finc
-        chanfreqs=chanfreqscol.transpose()
-        chanfreqs1d=chanfreqs[spw0:].flatten() 
+        #DP extract array from dictionary returned by getvarcol
+        print 'hello1'
+        chanfreqs1dx = numpy.array([])
+        print type(chanfreqs1dx)
+        if(spwinds==-1):
+            chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
+            chanfreqs1dx = chanfreqs[0]
+            print type(chanfreqs1dx)
+        else:
+            chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()            
+            chanfreqs1dx=chanfreqs[0]
+            for ispw in range(1,len(spwinds)):
+                chanfreqs=chanfreqscol['r'+str(spwinds[ispw]+1)].transpose()            
+                chanfreqs1dx = numpy.concatenate((chanfreqs1dx, chanfreqs[0]))
+        chanfreqs1d = chanfreqs1dx.flatten()        
             
         if(type(start)==int or type(start)==float):
             if(start > len(chanfreqs1d)):

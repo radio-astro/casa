@@ -1489,9 +1489,6 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
 
   Vector<Int> slotidx(vs.numberSpw(),-1);
 
-
-  ve.state();
-
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
