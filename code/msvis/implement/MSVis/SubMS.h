@@ -249,12 +249,12 @@ class SubMS
 
   // the following inline convenience methods for regridSpw bypass the whole CASA measure system
   // because when they are used, they can assume that the frame stays the same and the units are OK
-  Double vrad(const Double freq, const Double rest){ return (C::c * (1. - freq/rest)); };
-  Double vopt(const Double freq, const Double rest){ return (C::c *(rest/freq - 1.)); };
-  Double lambda(const Double freq){ return (C::c/freq); };
-  Double freq_from_vrad(const Double vrad, const Double rest){ return (rest * (1. - vrad/C::c)); };
-  Double freq_from_vopt(const Double vopt, const Double rest){ return (rest / (1. + vopt/C::c)); };
-  Double freq_from_lambda(const Double lambda){ return (C::c/lambda); };
+  lDouble vrad(const lDouble freq, const lDouble rest){ return (C::c * (1. - freq/rest)); };
+  lDouble vopt(const lDouble freq, const lDouble rest){ return (C::c *(rest/freq - 1.)); };
+  lDouble lambda(const lDouble freq){ return (C::c/freq); };
+  lDouble freq_from_vrad(const lDouble vrad, const lDouble rest){ return (rest * (1. - vrad/C::c)); };
+  lDouble freq_from_vopt(const lDouble vopt, const lDouble rest){ return (rest / (1. + vopt/C::c)); };
+  lDouble freq_from_lambda(const lDouble lambda){ return (C::c/lambda); };
   
   // Support method for regridSpw():
   // results in the column oldName being renamed to newName, and a new column which is an empty copy of 

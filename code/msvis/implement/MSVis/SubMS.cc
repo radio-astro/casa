@@ -2004,7 +2004,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       if(regridCenter<-1E30){ // not set
 	// find channel center closest to center of bandwidth
-	Double BWCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
+	lDouble BWCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
 	for(Int i=0; i<oldNUM_CHAN; i++){
 	  if(transNewXin[i] >= BWCenterF){
 	    regridCenterChan = i;
@@ -2110,7 +2110,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         //    new channel width 
 	//    otherwise the center channel is the lower edge of the new center channel
 	Int startChan;
-	Double tnumChan = regridBandwidthChan/regridChanWidthChan;
+	lDouble tnumChan = regridBandwidthChan/regridChanWidthChan;
 	if((Int)tnumChan % 2 != 0 ){
           // odd multiple 
 	  startChan = regridCenterChan-regridChanWidthChan/2;
@@ -2187,9 +2187,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     }
     else { // we operate on real numbers /////////////////
       // first transform them to frequencies
-      Double regridCenterF = -1.; // initialize as "not set"
-      Double regridBandwidthF = -1.;
-      Double regridChanWidthF = -1.;
+      lDouble regridCenterF = -1.; // initialize as "not set"
+      lDouble regridBandwidthF = -1.;
+      lDouble regridChanWidthF = -1.;
 
       if(regridQuant=="vrad"){ ///////////////
 	// radio velocity ...
@@ -2204,9 +2204,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  message = oss.str();
 	  return False;
 	}	  
-	Double regridCenterVel; 
+	lDouble regridCenterVel; 
 	if(regridCenter>-C::c){
           // (we deal with invalid values later)
+	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
+	    regridCenter += regridChanWidth/2.;
+	  }
+
 	  regridCenterF = freq_from_vrad(regridCenter,regridVeloRestfrq);
 
 	  regridCenterVel = regridCenter;
@@ -2218,7 +2222,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(nchan>0){
 	  if(regridChanWidth > 0.){
-	    Double chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
+	    lDouble chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
 						   regridVeloRestfrq);
 	    regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
 	  }
@@ -2239,12 +2243,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    regridCenterF = freq_from_vrad(regridCenterVel,regridVeloRestfrq);
 	    centerIsStart = False;
 	  }
-	  Double bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth/2.,
+	  lDouble bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth/2.,
                                               regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
 	
 	  if(regridChanWidth > 0.){
-	    Double chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
+	    lDouble chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
 						   regridVeloRestfrq);
 	    regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
 	  }
@@ -2265,8 +2269,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  message = oss.str();
 	  return False;
 	}
-	Double regridCenterVel; 
+	lDouble regridCenterVel; 
 	if(regridCenter > -C::c){
+	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
+	    regridCenter += regridChanWidth/2.;
+	  }
           // (we deal with invalid values later)
 	  regridCenterF = freq_from_vopt(regridCenter,regridVeloRestfrq);
 	  regridCenterVel = regridCenter;
@@ -2277,8 +2284,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  centerIsStart = False;
 	}
 	if(nchan>0){
-	  Double cw;
-	  Double divbytwo = 0.5;
+	  lDouble cw;
+	  lDouble divbytwo = 0.5;
 	  if(centerIsStart){
 	    divbytwo = 1.;
 	  }
@@ -2286,16 +2293,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    cw = regridChanWidth;
 	  }
 	  else{ // determine channel width from first channel
-	    Double upEdge = vopt(transNewXin[0]-transCHAN_WIDTH[0],regridVeloRestfrq);
-	    Double loEdge = vopt(transNewXin[0]+transCHAN_WIDTH[0],regridVeloRestfrq);
+	    lDouble upEdge = vopt(transNewXin[0]-transCHAN_WIDTH[0],regridVeloRestfrq);
+	    lDouble loEdge = vopt(transNewXin[0]+transCHAN_WIDTH[0],regridVeloRestfrq);
 	    cw = abs(upEdge-loEdge); 
 	  }
-	  Double bwUpperEndF = freq_from_vopt(regridCenterVel - (Double)nchan*cw*divbytwo,
+	  lDouble bwUpperEndF = freq_from_vopt(regridCenterVel - (lDouble)nchan*cw*divbytwo,
 					 regridVeloRestfrq);
 	  regridBandwidthF = (bwUpperEndF-regridCenterF)/divbytwo; 
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterVel = regridCenterVel - (Double)nchan*cw/2.;
+	    regridCenterVel = regridCenterVel - (lDouble)nchan*cw/2.;
 	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
 	    centerIsStart = False;
 	  }
@@ -2308,17 +2315,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
 	    centerIsStart = False;
 	  }
-	  Double bwUpperEndF =  freq_from_vopt(regridCenterVel - regridBandwidth/2.,
+	  lDouble bwUpperEndF =  freq_from_vopt(regridCenterVel - regridBandwidth/2.,
                                                regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF- regridCenterF); 
 	}
 	if(regridChanWidth > 0.){
-	  Double chanUpperEdgeF = freq_from_vopt(regridCenterVel - regridChanWidth/2.,
+	  lDouble chanUpperEdgeF = freq_from_vopt(regridCenterVel - regridChanWidth/2.,
                                                  regridVeloRestfrq);
 	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
 	}
       } 
       else if(regridQuant=="freq"){ ////////////////////////
+	if(width>0){ // width parameter overrides regridChanWidth
+	  regridChanWidth = width*transCHAN_WIDTH[0];
+	}
 	if(start>=0){
 	  Int firstChan = start;
 	  if(start >= (Int)transNewXin.size()){
@@ -2329,17 +2339,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  regridCenter = transNewXin[firstChan]-transCHAN_WIDTH[firstChan]/2.;
 	  centerIsStart = True;
 	}
+	else{
+	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
+	    regridCenter -= regridChanWidth/2.;
+	  }
+	}
 	regridCenterF = regridCenter;
 	regridBandwidthF = regridBandwidth;
-	if(width>0){ // width parameter overrides regridChanWidth
-	  regridChanWidth = width*transCHAN_WIDTH[0];
-	}
 	regridChanWidthF = regridChanWidth;
       }
       else if(regridQuant=="wave"){ ///////////////////////
 	// wavelength ...
-	Double regridCenterWav; 
+	lDouble regridCenterWav; 
 	if(regridCenter > 0.){
+	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
+	    regridCenter += regridChanWidth/2.;
+	  }
 	  regridCenterF = freq_from_lambda(regridCenter); 
 	  regridCenterWav = regridCenter;
 	}
@@ -2349,8 +2364,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  centerIsStart = False;
 	}
 	if(nchan>0){
-	  Double cw;
-	  Double divbytwo = 0.5;
+	  lDouble cw;
+	  lDouble divbytwo = 0.5;
 	  if(centerIsStart){
 	    divbytwo = 1.;
 	  }
@@ -2358,15 +2373,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    cw = regridChanWidth;
 	  }
 	  else{ // determine channel width from first channel
-	    Double upEdge = lambda(transNewXin[0]-transCHAN_WIDTH[0]);
-	    Double loEdge = lambda(transNewXin[0]+transCHAN_WIDTH[0]);
+	    lDouble upEdge = lambda(transNewXin[0]-transCHAN_WIDTH[0]);
+	    lDouble loEdge = lambda(transNewXin[0]+transCHAN_WIDTH[0]);
 	    cw = abs(upEdge-loEdge); 
 	  }
-	  Double bwUpperEndF = freq_from_lambda(regridCenterWav - (Double)nchan*cw*divbytwo);
+	  lDouble bwUpperEndF = freq_from_lambda(regridCenterWav - (lDouble)nchan*cw*divbytwo);
 	  regridBandwidthF = (bwUpperEndF-regridCenterF)/divbytwo; 
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterWav = regridCenterWav - (Double)nchan*cw/2.;
+	    regridCenterWav = regridCenterWav - (lDouble)nchan*cw/2.;
 	    regridCenterF = freq_from_lambda(regridCenterWav);
 	    centerIsStart = False;
 	  }
@@ -2379,11 +2394,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    regridCenterF = freq_from_lambda(regridCenterWav);
 	    centerIsStart = False;
 	  }
-	  Double bwUpperEndF =  lambda(regridCenterWav - regridBandwidth/2.);
+	  lDouble bwUpperEndF =  lambda(regridCenterWav - regridBandwidth/2.);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
 	}
 	if(regridChanWidth>0. && regridChanWidth/2.< regridCenterWav){
-	  Double chanUpperEdgeF =  lambda(regridCenterWav - regridChanWidth/2.);
+	  lDouble chanUpperEdgeF =  lambda(regridCenterWav - regridChanWidth/2.);
 	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
 	}
       }
@@ -2395,12 +2410,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // (transformation of regrid parameters to frequencies completed)
       
       // then determine the actually possible parameters
-      Double theRegridCenterF;
-      Double theRegridBWF;
-      Double theCentralChanWidthF;
+      lDouble theRegridCenterF;
+      lDouble theRegridBWF;
+      lDouble theCentralChanWidthF;
       
       // for vrad and vopt also need to keep this adjusted value
-      Double theChanWidthX = -1.;
+      lDouble theChanWidthX = -1.;
 
       if(regridCenterF < 0.){ //  means "not set"
 	// keep regrid center as it is in the data
@@ -2418,7 +2433,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  return False;  
 	}
 	else if(theRegridCenterF < transNewXin[0]-transCHAN_WIDTH[0]/2.){
-	  Double diff = (transNewXin[0]-transCHAN_WIDTH[0]/2.) - theRegridCenterF;
+	  lDouble diff = (transNewXin[0]-transCHAN_WIDTH[0]/2.) - theRegridCenterF;
 	  // cope with numerical accuracy problems
 	  if(diff>1.){
 	    oss << "Requested center of SPW " << theRegridCenterF << " Hz is smaller than minimum possible value";
@@ -2498,7 +2513,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	else{ // check if too small
 	  // determine smallest channel width
-	  Double smallestChanWidth = 1E30;
+	  lDouble smallestChanWidth = 1E30;
 	  Int ii = 0;
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    if(transCHAN_WIDTH[i] < smallestChanWidth){ 
@@ -2533,34 +2548,34 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       
       // now calculate newChanLoBound, and newChanHiBound from
       // theRegridCenterF, theRegridBWF, theCentralChanWidthF
-      vector<Double> loFBup; // the lower bounds for the new channels 
+      vector<lDouble> loFBup; // the lower bounds for the new channels 
                              // starting from the central channel going up
-      vector<Double> hiFBup; // the lower bounds for the new channels 
+      vector<lDouble> hiFBup; // the lower bounds for the new channels 
 	                     // starting from the central channel going up
-      vector<Double> loFBdown; // the lower bounds for the new channels
+      vector<lDouble> loFBdown; // the lower bounds for the new channels
                                // starting from the central channel going down
-      vector<Double> hiFBdown; // the lower bounds for the new channels
+      vector<lDouble> hiFBdown; // the lower bounds for the new channels
                                // starting from the central channel going down
       
-      Double edgeTolerance = theCentralChanWidthF*0.01; // needed to avoid numerical accuracy problems
+      lDouble edgeTolerance = theCentralChanWidthF*0.01; // needed to avoid numerical accuracy problems
 
       if(regridQuant=="vrad"){
 	// regridding in radio velocity ...
 	
 	// create freq boundaries equidistant and contiguous in radio velocity
-	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
-	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
-	Double upperEndV = vrad(upperEndF,regridVeloRestfrq);
-	Double lowerEndV = vrad(lowerEndF,regridVeloRestfrq);
-	Double velLo;
-	Double velHi;
+	lDouble upperEndF = theRegridCenterF + theRegridBWF/2.;
+	lDouble lowerEndF = theRegridCenterF - theRegridBWF/2.;
+	lDouble upperEndV = vrad(upperEndF,regridVeloRestfrq);
+	lDouble lowerEndV = vrad(lowerEndF,regridVeloRestfrq);
+	lDouble velLo;
+	lDouble velHi;
 
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
         //    new channel width,
 	//    otherwise the center channel is the lower edge of the new center channel
-	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
+	lDouble tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((Int)tnumChan % 2 != 0 ){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2588,7 +2603,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	velHi = velLo - theChanWidthX; // vrad goes down as freq goes up!
 	while(upperEndV - theChanWidthX/10. < velHi){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
-	  Double freqHi = freq_from_vrad(velHi,regridVeloRestfrq);
+	  lDouble freqHi = freq_from_vrad(velHi,regridVeloRestfrq);
 	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
@@ -2614,7 +2629,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	velLo = velHi + theChanWidthX; // vrad goes up as freq goes down!
 	while(velLo < lowerEndV + theChanWidthX/10.){ // (preventing accuracy problems)  
 	  // calc frequency of the lower end (in freq) of the next channel
-	  Double freqLo = freq_from_vrad(velLo,regridVeloRestfrq);
+	  lDouble freqLo = freq_from_vrad(velLo,regridVeloRestfrq);
 	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
@@ -2637,19 +2652,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// regridding in optical velocity ...
 	
 	// create freq boundaries equidistant and contiguous in optical velocity
-	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
-	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
-	Double upperEndV = vopt(upperEndF,regridVeloRestfrq);
-	Double lowerEndV = vopt(lowerEndF,regridVeloRestfrq);
-	Double velLo;
-	Double velHi;
+	lDouble upperEndF = theRegridCenterF + theRegridBWF/2.;
+	lDouble lowerEndF = theRegridCenterF - theRegridBWF/2.;
+	lDouble upperEndV = vopt(upperEndF,regridVeloRestfrq);
+	lDouble lowerEndV = vopt(lowerEndF,regridVeloRestfrq);
+	lDouble velLo;
+	lDouble velHi;
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
 	//    new channel width,
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
-	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
+	lDouble tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((Int)tnumChan % 2 != 0 ){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2676,7 +2691,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	velHi = velLo - theChanWidthX; // vopt goes down as freq goes up!
 	while(upperEndV - velHi < theChanWidthX/10.){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
-	  Double freqHi = freq_from_vopt(velHi,regridVeloRestfrq);
+	  lDouble freqHi = freq_from_vopt(velHi,regridVeloRestfrq);
 	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
@@ -2702,7 +2717,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	velLo = velHi + theChanWidthX; // vopt goes up as freq goes down!
 	while(velLo - lowerEndV < theChanWidthX/10.){ // (preventing accuracy problems)  
 	  // calc frequency of the lower end (in freq) of the next channel
-	  Double freqLo = freq_from_vopt(velLo,regridVeloRestfrq);
+	  lDouble freqLo = freq_from_vopt(velLo,regridVeloRestfrq);
 	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
@@ -2725,14 +2740,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// regridding in frequency  ...
 	
 	// create freq boundaries equidistant and contiguous in frequency
-	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
-	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
+	lDouble upperEndF = theRegridCenterF + theRegridBWF/2.;
+	lDouble lowerEndF = theRegridCenterF - theRegridBWF/2.;
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
         //    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center channel
-	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
+	lDouble tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((Int) tnumChan % 2 != 0){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2749,7 +2764,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	while(hiFBup.back()< upperEndF+edgeTolerance){
 	  // calc frequency of the upper end of the next channel
-	  Double freqHi = hiFBup.back() + theCentralChanWidthF;
+	  lDouble freqHi = hiFBup.back() + theCentralChanWidthF;
 	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
@@ -2761,7 +2776,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	while(loFBdown.back() > lowerEndF-edgeTolerance){
 	  // calc frequency of the lower end of the next channel
-	  Double freqLo = loFBdown.back() - theCentralChanWidthF;
+	  lDouble freqLo = loFBdown.back() - theCentralChanWidthF;
 	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
@@ -2775,19 +2790,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// regridding in wavelength  ...
 	
 	// create freq boundaries equidistant and contiguous in wavelength
-	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
-	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
-	Double upperEndL = lambda(upperEndF);
-	Double lowerEndL = lambda(lowerEndF);
-	Double lambdaLo;
-	Double lambdaHi;
+	lDouble upperEndF = theRegridCenterF + theRegridBWF/2.;
+	lDouble lowerEndF = theRegridCenterF - theRegridBWF/2.;
+	lDouble upperEndL = lambda(upperEndF);
+	lDouble lowerEndL = lambda(lowerEndF);
+	lDouble lambdaLo;
+	lDouble lambdaHi;
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
 	//    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
-	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
+	lDouble tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((Int)tnumChan % 2 != 0){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2813,7 +2828,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	lambdaHi = lambdaLo - theChanWidthX; // lambda goes down as freq goes up!
 	while(upperEndL - lambdaHi < theChanWidthX/10.){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
-	  Double freqHi = freq_from_lambda(lambdaHi);
+	  lDouble freqHi = freq_from_lambda(lambdaHi);
 	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
@@ -2840,7 +2855,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	lambdaLo = lambdaHi + theChanWidthX; // lambda goes up as freq goes down!
 	while(lambdaLo - lowerEndL < theChanWidthX/10.){  // (preventing accuracy problems) 
 	  // calc frequency of the lower end (in freq) of the next channel
-	  Double freqLo = freq_from_lambda(lambdaLo);
+	  lDouble freqLo = freq_from_lambda(lambdaLo);
 	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
