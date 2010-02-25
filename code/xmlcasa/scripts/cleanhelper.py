@@ -1247,13 +1247,10 @@ class cleanhelper:
         if(dummy):
             return freqlist, finc
         #DP extract array from dictionary returned by getvarcol
-        print 'hello1'
         chanfreqs1dx = numpy.array([])
-        print type(chanfreqs1dx)
         if(spwinds==-1):
             chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
             chanfreqs1dx = chanfreqs[0]
-            print type(chanfreqs1dx)
         else:
             chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()            
             chanfreqs1dx=chanfreqs[0]
