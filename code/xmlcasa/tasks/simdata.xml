@@ -87,6 +87,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="int" name="scanlength">
       <description>number of integrations per pointing in the mosaic</description>
       <value type="int">5</value>
+      <allowed kind="range"><value range="min">1</value></allowed>
     </param>
 
     <param type="stringArray" name="direction">
@@ -146,19 +147,29 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>tsys-atm: set PWV and use ATM library; tsys-manual: set t_sky and tau</description><value>tsys-atm</value></param>
 
     <param type="double" name="user_pwv" subparam="true">
-      <description>Precipitable Water Vapor in mm</description><value>1.</value></param>
+      <description>Precipitable Water Vapor in mm</description><value>1.</value>
+       <allowed kind="range"><value range="min">0</value></allowed>
+    </param>
 
     <param type="double" name="t_ground" subparam="true">
-      <description>ambient temperature</description><value>270.</value></param>
+      <description>ambient temperature</description><value>270.</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
+    </param>
     <param type="double" name="t_sky" subparam="true">
-       <description>atmospheric temperature</description><value>260.</value></param>	
+       <description>atmospheric temperature</description><value>260.</value>
+       <allowed kind="range"><value range="min">0</value></allowed>
+    </param>	
     <param type="double" name="tau0" subparam="true">
-      <description>zenith opacity</description><value>0.1</value></param>
-
-<!--    
+      <description>zenith opacity</description><value>0.1</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
+    </param>
+    
+<!--
     <param type="double" name="cross_pol">
       <description>add polarization leakage of magnitude</description>
-      <value>0.</value></param>    
+      <value>0.</value>
+       <allowed kind="range"><value range="min">0</value></allowed>
+    </param>    
 -->
 
 
@@ -171,7 +182,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
     <param type="intArray" name="imsize">
       <description>output image size in pixels (x,y) </description>
-      <value type="vector"><value>128</value><value>128</value></value></param>
+      <value type="vector"><value>128</value><value>128</value></value>
+      <allowed kind="range">
+        <value><value range="min">1</value><value range="min">1</value></value>
+      </allowed>
+    </param>
 
     <param type="double" name="threshold" units="mJy">
       <description>flux level (+units) to stop cleaning</description>
@@ -179,7 +194,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
     <param type="int" name="niter">
       <description>maximum number of iterations</description>
-      <value>500</value></param>
+      <value>500</value>
+       <allowed kind="range"><value range="min">0</value></allowed>
+    </param>
 
     <param type="string" name="psfmode">
 	    <description>minor cycle PSF calculation method </description>
@@ -233,11 +250,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="double" name="noise" units="Jy" subparam='true'>
 	    <description>noise parameter for briggsabs mode weighting</description>
 	    <value>0.0</value>
+            <allowed kind="range"><value range="min">0</value></allowed>
     </param>
 
     <param type="int" name="npixels" subparam='true'>
 	    <description>number of pixels for superuniform or briggs weighting</description>
 	    <value>0</value>
+            <allowed kind="range"><value range="min">0</value></allowed>
     </param>
 
     <param type="string" name="stokes">

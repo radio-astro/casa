@@ -83,6 +83,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="int" name="scanlength">
       <description>number of integrations per pointing in the mosaic</description>
       <value type="int">5</value>
+      <allowed kind="range"><value range="min">1</value></allowed>
     </param>
 
     <param type="stringArray" name="direction">
@@ -146,9 +147,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>ambient temperature</description><value>270.</value></param>
 -->
     <param type="double" name="t_sky" subparam="true">
-       <description>atmospheric temperature</description><value>260.</value></param>	
+       <description>atmospheric temperature</description><value>260.</value>
+       <allowed kind="range"><value range="min">0</value></allowed>
+    </param>	
     <param type="double" name="tau0" subparam="true">
-      <description>zenith opacity</description><value>0.1</value></param>
+      <description>zenith opacity</description><value>0.1</value>
+      <allowed kind="range"><value range="min">0</value></allowed>
+     </param>
+
 <!--    
     <param type="double" name="cross_pol">
       <description>add polarization leakage of magnitude</description>
@@ -167,8 +173,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
 
     <param type="intArray" name="imsize">
-	    <description>output image size in pixels (x,y) </description>
-	    <value type="vector"><value>128</value><value>128</value></value>
+      <description>output image size in pixels (x,y) </description>
+      <value type="vector"><value>128</value><value>128</value></value>
+      <allowed kind="range">
+        <value><value range="min">1</value><value range="min">1</value></value>
+      </allowed>
     </param>
 
     <param type="string" name="stokes">
@@ -215,7 +224,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</equals>
       </when>
    </constraints>
-    
+
     
     
   </input>
@@ -233,13 +242,13 @@ single dish simulation task (prototype):
     -------------------------------
     -- Input Model:
     modelimage -- Name of an image to simulate.
-    ignorecoord -- ignore whatever is in the image header for coordinates
-                options: (bool) True,False
-                default: False 
     inbright -- Peak surface brightness to scale input image 
                 in Jy/square arcsec.
                 options: 'default' or surface brightness in Jy/sq. 
                 default: 'default'
+    ignorecoord -- ignore whatever is in the image header for coordinates
+                options: (bool) True,False
+                default: False 
     antennalist -- Name of ascii file containing antenna positions.
                 each row has x y z coordinates and antenna diameter; 
                 header lines are required to specify the observatory name
@@ -255,31 +264,30 @@ single dish simulation task (prototype):
     project -- Name of project simulated; created ms and images will
                 start with this string. 
                 default: 'simsd'.
-    refdate -- Central time of simulated observation. 
-                default: '2012/05/21/22:05:00'
-                [alpha] ** observations are centered at the nearest transit **
-    integration --- Time interval for each integration
-                default: '10s'
     startfreq -- Frequency of first channel
                 default: '89GHz'
     chanwidth -- Channel width
                 default: '10MHz'
-    nchan -- number of channels (can be 1 for a continuum simulation)
-                options: (int)
-                default: 1
+    refdate -- Central time of simulated observation. 
+                default: '2012/05/21/22:05:00'
+                [alpha] ** observations are centered at the nearest transit **
+    totaltime --- total time of observation e.g '7200s'
+    integration --- Time interval for each integration
+                default: '10s'
+    scanlength --- number of integrations per pointing
+                default: 5
     direction -- image center direction
-                * can optionally be a list of pointings, which will override
-                pointingspacing.  Otherwise sdsim will hexagonally
-                pack the input image with pointings.  When direction is a
+                * can optionally be a list of pointings or 
+                a filename which stores a list of pointings, which will 
+                override pointingspacing.
+                Otherwise sdsim will automatically calculates pointings
+                in regular lattice grid.  When direction is a
                 list, the centroid of direction will be used as the center.
                 default: ['J2000 19h00m00 -40d00m00']
     pointingspacing-- spacing in between beams
                 default: '1arcmin'        
-    relmargin -- how close pointing centers may approach the edge of the
-                output image, as a fraction of pointingspacing.
-                * ignored if direction is a list.
-                options: (float)
-                default: 1.0
+    mosaicsize --- angular size of desired area to map
+                default: ['1.0arcmin', '1.0arcmin']
     cell -- output cell/pixel size
                 default: '0.1arcsec'
     imsize -- output image size in pixels (x,y)
@@ -294,12 +302,43 @@ single dish simulation task (prototype):
                 default: False
                 * [alpha] currently only knows about ALMA receivers 
          >>> noise_thermal expandable parameters
-                t_atm -- atmospheric temperature in K 
+                t_sky -- atmospheric temperature in K 
                        default: 260.0
                 tau0 -- zenith opacity at observing frequency
                        default: 0.1
 
 
+
+    -------------------------------
+    How to specify a model image:
+    -------------------------------
+    * sdsim requires a CASA or fits image. If you merely have a grid of 
+      numbers, you will need to write them out as fits or write a CASA script to
+      read them in and use the ia tool to create an image and insert the data.
+    
+    * sdsim does NOT require a coordinate system in the header. If the
+      coordinate information is incomplete, missing, or you would like to
+      override it, set "ignorecoord=True".  sdsim will then assume that the
+      axes of your input correspond to RA, Dec, and (optionally) frequency and
+      (optionally) Stokes parameter.  It will assume that the spatial pixel
+      size equals the output parameter "cell", the center of the image is in
+      the (average of the) output parameter "direction", the spectral reference
+      frequency and starting frequency equal the output parameter "startfreq",
+      and the channel width equals the output parameter "chanwidth".  
+
+
+    -------------------------------
+    Output produced:
+    -------------------------------
+    $project.$modelimage.coord = input image recast into 4d image
+    $project.$modelimage.flat  = input image regridded to size, moment zero
+        image if the input was a cube.
+    $project.ms = synthesized visibilities
+    $project.noisy.ms = visibilities with noise added 
+      ** if noise is requested, then the noisy visibilities will be 
+         used to create the synthsized image.
+    $project.im = output image created from $project.noisy.ms (if exists) or
+                  $project.ms. 
 </example>
 </task>
 </casaxml>
