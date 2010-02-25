@@ -468,6 +468,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			</default>
 			<default param="width"><value>1</value></default>
 			<default param="interpolation"><value type="string">nearest</value></default>
+		    <default param="outframe"><value type="string"></value></default>
+			    <description>Velocity reference frame of output image; \'\' =input</description>
 		</equals>
 	        <equals value="velocity">
 			<default param="nchan"><value>-1</value></default>

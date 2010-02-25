@@ -1011,9 +1011,9 @@ class cleanhelper:
         inwidthunit=''
         if(mode=='channel'):
             ###for mode channel ignore the frame to use the data frame
-            if(frame != ''):
-                self._casalog.post('Note: in channel mode, the outframe parameter is ignored.', 'WARN')
-            frame=''
+            #if(frame != ''):
+            #    self._casalog.post('Note: in channel mode, the outframe parameter is ignored.', 'WARN')
+            #frame=''
             if(type(start)!=int):
                 raise TypeError, "Wrong type for start parameter. Int is expected for the channel mode." 
             if(type(width)!=int):
