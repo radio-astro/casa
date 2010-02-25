@@ -821,7 +821,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     }
     imageNchan_p=1;
     Double finc=(fmax-fmin); 
-    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean-finc/2.0, finc,
+    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean//-finc/2.0
+					, finc,
       					refChan, restFreq);
     os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Center frequency = "
@@ -952,7 +953,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 
 	  //in order to outframe to work need to set here original freq frame
       //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
-      mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)-finc/2.0, finc,
+      mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)//-finc/2.0
+					  , finc,
 					  refChan, restFreq);
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO
@@ -1010,8 +1012,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       if(!MFrequency::getType(mfreqref, (MRadialVelocity::showType(mImageStart_p.getRef().getType()))))
 	mfreqref=freqFrame_p;
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
-      mySpectral = new SpectralCoordinate(mfreqref, freqs(0)-(freqs(1)-freqs(0))/2.0,
-					  freqs(1)-freqs(0), refChan,
+      mySpectral = new SpectralCoordinate(mfreqref, freqs(0)//-(freqs(1)-freqs(0))/2.0
+					  , freqs(1)-freqs(0), refChan,
 					  restFreq);
      
       {
@@ -1082,7 +1084,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	if(chanVelResolution==0.0)
 	  chanVelResolution=freqResolution(0);
 	mySpectral = new SpectralCoordinate(imfreqref,
-					    freqs(0)-chanVelResolution/2.0,
+					    freqs(0)//-chanVelResolution/2.0,
+					    ,
 					    chanVelResolution,
 					    refChan, restFreq);
       }
