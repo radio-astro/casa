@@ -844,7 +844,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    Options: 'ft' (standard interferometric gridding), 'sd'
                    (standard single dish), 
                    and 'mosaic' (grid using PB as convolution function).
-                   default: 'mosaic'; example: ftmachine='ft'
+                   default: 'mosaic'; 
                    ONLY if imagermode='mosaic' is chosen and
                    ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA)
                    possible using the right convolution of primary beams for
