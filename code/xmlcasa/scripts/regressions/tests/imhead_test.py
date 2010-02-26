@@ -353,23 +353,28 @@ def set_get_test( input_file='' ):
     val   = None
     newval= None
     try:
-        val=imhead( input_file, 'get', 'object' )
-        imhead( input_file, 'put', 'object', 'theCoolObject' )
-        newval=imhead( input_file, 'get', 'object' )
+        val = imhead( input_file, 'get', 'object' )
+        testval = 'theCoolObject'
+        imhead( input_file, 'put', 'object', testval )
+        newval = imhead( input_file, 'get', 'object' )
+        got = imhead( input_file, 'get', 'object' )
+        if (got['value'] != testval):
+            retValue['success'] = False
+            retValue['error_msgs'] += "\nError: set/get object value failed in to set new value"
+
         if ( val != None ):
             imhead( input_file, 'put', 'object', val['value'] )
     except:
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-          +"\nError: set/get object value failed in image "+input_file
+        retValue['success'] = False
+        retValue['error_msgs'] += "\nError: set/get object value failed in image " + input_file
     else:
         if ( val!=None and val == newval ) :
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
+            retValue['success'] = False
+            retValue['error_msgs'] += \
                  +"\nError: Get/Set object failed"\
-                 +"\n       Original value: "+str(val)\
-                 +"\n       Current value:  "+str(newval)\
-                 +"\n       Expected value: 'theCoolObject'"
+                 +"\n       Original value: " + str(val)\
+                 +"\n       Current value:  " + str(newval)\
+                 +"\n       Expected value: " + str(val)
 
     #######  IMTYPE  #############
     val   = None
