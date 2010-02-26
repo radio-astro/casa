@@ -1206,13 +1206,16 @@ void LatticePADisplayData<T>::SetUpBeamData_() {
 	      0., 1.,  .02,  .1, .1, "Beam_Ellipse");
 
         
-    hasBeam_ = True;  }   // (Setup completed successfully; we
-			  //  should be able to draw the beam).
+    // The major and minor axes must both be positive
+    if ( majoraxis_ <= 0.0 || minoraxis_ <= 0.0 )
+      hasBeam_ = False;
+    else	
+      hasBeam_ = True;		// (Setup completed successfully; we
+				//  should be able to draw the beam).
 
-  
-  catch (...) {  }  }	// (Usually just means some beam fields were
-			// not found; hasBeam_ will remain False).
-
+  } catch (...) {  }		// (Usually just means some beam fields were
+				// not found; hasBeam_ will remain False).
+}
 
 
 template<class T>

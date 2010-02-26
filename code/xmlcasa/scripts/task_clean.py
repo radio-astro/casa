@@ -21,7 +21,12 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     applyoffsets=False;
     pbgridcorrect=True;
     reffreqVal=1.4e9;
-    padding=1.0;
+    padding=1.2;
+    #
+    # While the following condition is irrelavent due to the change in
+    # the previous line, I (SB) am leaving it here till after some of
+    # us discuss this change more carefully. (Feb. 25, 2010).
+    #
     if (facets > 1):
         padding=1.2;
 
@@ -265,7 +270,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              cfcachedirname=cfcache, pastep=painc,
                              epjtablename=epjtable,
                              applypointingoffsets=applyoffsets,
-                             dopbgriddingcorrections=pbgridcorrect)
+                             dopbgriddingcorrections=pbgridcorrect);
 
             if (mode=='mfs') and (nterms > 1):
                 imCln.settaylorterms(ntaylorterms=nterms,

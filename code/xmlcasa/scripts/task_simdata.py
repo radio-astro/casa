@@ -64,18 +64,11 @@ def simdata(
         imcenter , offsets = util.average_direction(pointings)        
         epoch, ra, dec = util.direction_splitter(imcenter)
 
-        # for clean
         msg("phase center = " + imcenter)
-        if nfld==1:
-            imagermode=''
-            ftmachine="ft"        
-        else:
-            imagermode="mosaic"
-            ftmachine="ft"   # FOR CARMA/heterogeneous, has to be mosaic
-            if verbose: 
-                for dir in pointings:
-                    msg("   "+dir)
-
+        if nfld>1 and verbose:
+            for dir in pointings:
+                msg("   "+dir)
+ 
         ##################################################################
         # calibrator
         calfluxjy=qa.convert(calflux,'Jy')['value']
@@ -116,10 +109,11 @@ def simdata(
 
         if (modelimage == ''):
             # if we are going to create an image we need a shape:
+            # RI TODO set from mosaicsize instead of imsize
             if imsize.__len__()==1:
                 imsize=[imsize,imsize]            
             out_nstk=stokes.__len__()
-            # RI TODO ***** need to find nchan from components?!!!
+            # RI TODO find nchan from components
             nchan=1
             out_shape=[imsize[0],imsize[1],out_nstk,nchan]
             
@@ -505,6 +499,37 @@ def simdata(
             cleanmode="mfs"
         else:
             cleanmode="channel"
+
+        # for clean
+        if nfld==1:
+            imagermode=''
+            ftmachine="ft"        
+        else:
+            imagermode="mosaic"
+            ftmachine="mosaic"   
+
+# if paddig is implemented the pad amount in pixels needs to be preserved and 
+# passed to statim, which needs to zoom to the original size, _and_ use the 
+# original size for the rms calculation. 
+#            # is image large enough?
+#            cleanimsize=[qa.mul(out_cell[0],imsize[0]),qa.mul(out_cell[1],imsize[1])]
+#           if type(mosaicsize)!=type([]):
+#               mosaicsize=[mosaicsize,mosaicsize]
+#           else:
+#               if len(mosaicsize)==1:
+#                   mosaicsize=[mosaicsize[0],mosaicsize[0]]
+#           xmosas=qa.convert(mosaicsize[0],"arcsec")['value']
+#           xclnas=qa.convert(cleanimsize[0],"arcsec")['value']
+#           spcas=qa.convert(pointingspacing,"arcsec")['value']
+#           if xclnas<(xmosas+spcas)*2:
+#               imsize[0]=int(round(((xmosas+spcas)*2)/(qa.convert(out_cell[0],"arcsec")['value'])))
+#               xnewas=qa.convert(qa.mul(out_cell[0],imsize[0]),"arcsec")['value']
+#               msg("Your image size of %g arcsec is not very large - I will pad it to %g arcsec to avoid FFT aliasing effects." %(xclnas,xnewas),priority="warn")
+#           ymosas=qa.convert(mosaicsize[1],"arcsec")['value']
+#           yclnas=qa.convert(cleanimsize[1],"arcsec")['value']
+#           if yclnas<(ymosas+spcas)*2:
+#               imsize[1]=int(round(((ymosas+spcas)*2)/(qa.convert(out_cell[1],"arcsec")['value'])))
+
         
         # print clean inputs no matter what, so user can use them.
         # and write a clean.last file
@@ -513,7 +538,6 @@ def simdata(
 
         msg("clean inputs:")
         cleanstr="clean(vis='"+mstoimage+"',imagename='"+image+"'"
-        #+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',"
         cleanlast.write('vis                 = "'+mstoimage+'"\n')
         cleanlast.write('imagename           = "'+image+'"\n')
         cleanlast.write('outlierfile         = ""\n')
@@ -544,7 +568,6 @@ def simdata(
         cleanstr=cleanstr+",niter="+str(niter)
         cleanlast.write('niter                   = '+str(niter)+'\n')
         cleanlast.write('gain                    = 0.1\n')
-        #+",gain=0.1,"
         cleanstr=cleanstr+",threshold='"+str(threshold)+"'"
         cleanlast.write('threshold               = "'+str(threshold)+'"\n')
         if doclean and psfmode!="clark":
@@ -567,13 +590,11 @@ def simdata(
         cleanlast.write('width                   = 1\n')
         cleanlast.write('outframe                = ""\n')
         cleanlast.write('veltype                 = "radio"\n')
-        #",ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],start=0,width=1,"
         cleanstr=cleanstr+",imsize="+str(imsize)+",cell="+str(map(qa.tos,out_cell))+",phasecenter='"+str(imcenter)+"'"
         cleanlast.write('imsize                  = '+str(imsize)+'\n');
         cleanlast.write('cell                    = '+str(map(qa.tos,out_cell))+'\n');
         cleanlast.write('phasecenter             = "'+str(imcenter)+'"\n');
         cleanlast.write('restfreq                = ""\n');
-        #",restfreq=''"
         if stokes != "I":
             cleanstr=cleanstr+",stokes='"+stokes+"'"
         cleanlast.write('stokes                  = "'+stokes+'"\n');
@@ -713,7 +734,6 @@ def simdata(
             beam=ia.restoringbeam()
             ia.done()
 
-
         #####################################################################
         # fidelity  
 
@@ -728,13 +748,9 @@ def simdata(
 
             # imagecalc is interpreting outflat in Jy/pix - 
             # the diff is v. negative.
-            # need to convert the clean image into Jy/pix.  
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
             bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
             msg("synthesized beam area in output pixels = %f" % bmarea)
-#            ia.open(outflat)
-#            ia.setbrightnessunit("Jy/pixel")
-#            ia.image
             # Make difference image.
             difference = project + '.diff.im'
             ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
@@ -764,7 +780,6 @@ def simdata(
             # clean up moment zero maps if we don't need them anymore
 #            if nchan==1:
 #                sh.rmtree(outflat) 
-
 
 
 

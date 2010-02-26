@@ -468,6 +468,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			</default>
 			<default param="width"><value>1</value></default>
 			<default param="interpolation"><value type="string">nearest</value></default>
+		    <default param="outframe"><value type="string"></value></default>
+			    <description>Velocity reference frame of output image; \'\' =input</description>
 		</equals>
 	        <equals value="velocity">
 			<default param="nchan"><value>-1</value></default>
@@ -751,7 +753,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'nearest'  HOWEVER, 'linear' is generally recommended
-               outframe -- For mode='velocity' or 'frequency' velocity
+               outframe -- For mode='velocity', 'frequency', or 'channel':  velocity
                  reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
                           'LGROUP','CMB'
@@ -842,7 +844,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    Options: 'ft' (standard interferometric gridding), 'sd'
                    (standard single dish), 
                    and 'mosaic' (grid using PB as convolution function).
-                   default: 'mosaic'; example: ftmachine='ft'
+                   default: 'mosaic'; 
                    ONLY if imagermode='mosaic' is chosen and
                    ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA)
                    possible using the right convolution of primary beams for

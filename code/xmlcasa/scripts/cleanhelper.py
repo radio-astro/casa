@@ -1011,9 +1011,9 @@ class cleanhelper:
         inwidthunit=''
         if(mode=='channel'):
             ###for mode channel ignore the frame to use the data frame
-            if(frame != ''):
-                self._casalog.post('Note: in channel mode, the outframe parameter is ignored.', 'WARN')
-            frame=''
+            #if(frame != ''):
+            #    self._casalog.post('Note: in channel mode, the outframe parameter is ignored.', 'WARN')
+            #frame=''
             if(type(start)!=int):
                 raise TypeError, "Wrong type for start parameter. Int is expected for the channel mode." 
             if(type(width)!=int):
@@ -1247,13 +1247,10 @@ class cleanhelper:
         if(dummy):
             return freqlist, finc
         #DP extract array from dictionary returned by getvarcol
-        print 'hello1'
         chanfreqs1dx = numpy.array([])
-        print type(chanfreqs1dx)
         if(spwinds==-1):
             chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
             chanfreqs1dx = chanfreqs[0]
-            print type(chanfreqs1dx)
         else:
             chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()            
             chanfreqs1dx=chanfreqs[0]

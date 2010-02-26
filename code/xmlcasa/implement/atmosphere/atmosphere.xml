@@ -1115,11 +1115,11 @@ print "Total H2O Cont Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
 </method>
 
    <method type="function" name="getDryOpacitySpec">
-   <shortdescription>get the integrated Dry optical depth on each channel of a band</shortdescription>
+   <shortdescription>get the integrated Dry optical depth along the atmospheric path on each channel of a band</shortdescription>
    
 <description>
 
-Get the integrated Dry optical depth on each channel in a band.
+Get the integrated Dry optical depth along the atmospheric path on each channel in a band.
 
 </description>
 
@@ -1161,11 +1161,11 @@ Out[3]:
 </method>
 
    <method type="function" name="getWetOpacitySpec">
-   <shortdescription>get the integrated Wet optical depth on each channel of a band</shortdescription>
+   <shortdescription>get the integrated Wet optical depth along the atmospheric path on each channel of a band</shortdescription>
    
 <description>
 
-Get the integrated optical Wet depth on each channel in a band.
+Get the integrated optical Wet depth along the atmospheric path on each channel in a band.
 
 </description>
 

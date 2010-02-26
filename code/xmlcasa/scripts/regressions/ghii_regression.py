@@ -43,25 +43,25 @@ mosaicsize="15arcsec"
 startfreq="650GHz"   
 chanwidth="4GHz" 
 nchan=1
-cell="0.075arcsec" 
+cell="0.05arcsec" 
 inbright=".1"
-imsize=[200,200]
-relmargin=1.2
+imsize=[300,300]
 stokes="I"
 verbose=True
-psfmode="clark"
-niter=10000
-threshold="1mJy"
+niter=5000
+threshold="0.1mJy"
 weighting="briggs"
 robust=0.0
+
+fidelity=True  # need this or won't create diff image
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
     checkinputs="yes"    
+    verbose=True
 else:
     checkinputs="no"
     display=False
-    fidelity=False
 
 inp()
 go()

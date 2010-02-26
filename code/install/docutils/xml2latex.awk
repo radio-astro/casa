@@ -17,10 +17,14 @@ BEGIN { verbatimFlag = 0
     theText = gsub("&lt;","<", $0)
     mathEnv = 0
    }else{
+    if(match($0,/\$.*[^\$]/)!= 0){
+	    gsub(/\$/,"\\\$",$0)
+    }
     theText = gsub("$&gt;$","$>$", $0)
     theText = gsub("&gt;","$>$", $0)
     theText = gsub("$&lt;$","$<$", $0)
     theText = gsub("&lt;","$<$", $0)
+    theText = gsub("&amp;","\\\\\\&", $0)
     #Escape those _'s that haven't been escaped, hoping to miss the math environs though!
     if(match($0,"[^\\\\]\\\^")!= 0) gsub("\\\^","\\^",$0)
     if(match($0,"[^\\\\]_")!= 0) gsub("_","\\_",$0)
