@@ -213,7 +213,7 @@ void FTMachine::initMaps(const VisBuffer& vb) {
     imageFreq_p.resize(chanNumbre);
     Vector<Double> tempStorFreq(chanNumbre);
     indgen(pixindex);
-    pixindex=pixindex+1.0; // pixel coordinates start at 1
+    //    pixindex=pixindex+1.0; 
     for (Int ll=0; ll< chanNumbre; ++ll){
       if( !spectralCoord_p.toWorld(tempStorFreq(ll), pixindex(ll))){
 	logIO() << "Cannot get imageFreq " << LogIO::EXCEPTION;
@@ -966,7 +966,7 @@ Bool FTMachine::matchChannel(const Int& spw,
   for (Int chan=0;chan<nvischan;chan++) {
     f(0)=lsrFreq[chan];
     if(spectralCoord_p.toPixel(c, f)) {
-      Int pixel=Int(floor(c(0)-1.0)); // pixel coordinates start at 1  
+      Int pixel=Int(floor(c(0))); 
       //cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
       if(pixel>-1&&pixel<nchan) {
 	chanMap(chan)=pixel;
