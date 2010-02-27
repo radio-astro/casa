@@ -517,10 +517,14 @@ void MSLister::listData(const int pageRows,
     char cfill = cout.fill(' '); // fill character for terminal output  
 
     Bool prompt=True;
-    // REDIRECT OUTPUT TO FILE
-    ofstream file;
-    streambuf* sbuf = cout.rdbuf();
-    if(listfile!="") { // non-interactive
+
+    // Default myout as a synonym for cout.  (iostream makes it next to
+    // impossible to declare a non-initialized ostream, or set the rdbuf of
+    // an ofstream.)
+    ostream myout(cout.rdbuf());
+
+    ofstream file;        // Optional output file.
+    if(listfile != "") { // non-interactive -> redirect output to file.
       //prompt = False;
   
       // Guard against trampling existing file
@@ -534,8 +538,8 @@ void MSLister::listData(const int pageRows,
         cout << "Writing output to file: " << listfile << endl;
   
       file.open(listfile.data());
-      cout.rdbuf(file.rdbuf());
-    }
+      myout.rdbuf(file.rdbuf());   // DON'T redirect cout to file!
+    }                              // The user will press Ctrl-C!
 
     logStream_p << LogIO::DEBUG1 << "Begin: MSLister::listData" << LogIO::POST;
   
@@ -557,7 +561,7 @@ void MSLister::listData(const int pageRows,
     // setting
     //getRanges(*pMSSel_p);
     
-    //cout << "pMSSel_p.nrows=" << pMSSel_p->nrow() << endl;
+    //myout << "pMSSel_p.nrows=" << pMSSel_p->nrow() << endl;
 
 /////////////////////////////////////////////////////
 //////read whole ms into mem is not practical, slow and waste memory
@@ -567,400 +571,396 @@ void MSLister::listData(const int pageRows,
     sort[1] = MS::ANTENNA2;
     Double timeInterval = 300; // 5 minutes
     MSIter msIter(*pMSSel_p, sort, timeInterval);
-    for (msIter.origin(); msIter.more(); msIter++) {
+    for (msIter.origin(); msIter.more(); msIter++){
 
-    MS splitMS = msIter.table();
-    //cout << "splitMS.nrow()=" << splitMS.nrow() << endl;
+      MS splitMS = msIter.table();
+      //myout << "splitMS.nrow()=" << splitMS.nrow() << endl;
 
-    getRanges(splitMS);
+      getRanges(splitMS);
 
-    // UNCOMMENT TO: PRINT RECORD OF RANGES (Records can be written to ostreams, but not to LogIO.)
-    // cout << "ranges_p = " << endl << ranges_p << endl; 
+      // UNCOMMENT TO: PRINT RECORD OF RANGES (Records can be written to ostreams, but not to LogIO.)
+      // myout << "ranges_p = " << endl << ranges_p << endl; 
  
-    // From here on, all MS access should go through mss_p.
+      // From here on, all MS access should go through mss_p.
   
-    // TURN ALL THIS DATA GATHERING INTO ITS OWN FUNCTION
+      // TURN ALL THIS DATA GATHERING INTO ITS OWN FUNCTION
     
-    // Initialise the MSSelector object.  By default, initSelection() takes all
-    // polarizations and the first spectral channel.
-    mss_p.setMS(splitMS);
-    //logStream_p << LogIO::DEBUG1 << "mss_p.setMS(*pMSSel_p) finished" << LogIO::POST;
-    mss_p.initSelection();
-    //logStream_p << LogIO::DEBUG1 << "mss_p.initSelection() finished" << LogIO::POST;
+      // Initialise the MSSelector object.  By default, initSelection() takes all
+      // polarizations and the first spectral channel.
+      mss_p.setMS(splitMS);
+      //logStream_p << LogIO::DEBUG1 << "mss_p.setMS(*pMSSel_p) finished" << LogIO::POST;
+      mss_p.initSelection();
+      //logStream_p << LogIO::DEBUG1 << "mss_p.initSelection() finished" << LogIO::POST;
       
-    // Now extract the selected data Record.  Note that mss_p is the *selected*
-    // data, and mss_p.getData() is an implicit Record object
-    //logStream_p << LogIO::DEBUG2 << "Getting data from mss_p" << LogIO::POST;
-    dataRecords_p = mss_p.getData(items_p,False);
-    //logStream_p << LogIO::DEBUG2 << "Done getting data from mss_p" << LogIO::POST;
+      // Now extract the selected data Record.  Note that mss_p is the *selected*
+      // data, and mss_p.getData() is an implicit Record object
+      //logStream_p << LogIO::DEBUG2 << "Getting data from mss_p" << LogIO::POST;
+      dataRecords_p = mss_p.getData(items_p,False);
+      //logStream_p << LogIO::DEBUG2 << "Done getting data from mss_p" << LogIO::POST;
  
-    // Construct arrays for the Record items.  
-    //  The V-float declaration
-    //  appears to be necessary (instead of V-double) despite the get()
-    //  function's claim to do type promotion.
-    Vector <Double>       rowTime,uvdist;
-    Vector <Int>          datadescid;
-    Vector <Int>          ant1,ant2,spwinid,fieldid;
-    Array <Bool>          flag;
-    Array <Float>         ampl,phase;
-    Array <Float>         weight;
-    Array <Double>         uvw;
+      // Construct arrays for the Record items.  
+      //  The V-float declaration
+      //  appears to be necessary (instead of V-double) despite the get()
+      //  function's claim to do type promotion.
+      Vector <Double>       rowTime,uvdist;
+      Vector <Int>          datadescid;
+      Vector <Int>          ant1,ant2,spwinid,fieldid;
+      Array <Bool>          flag;
+      Array <Float>         ampl,phase;
+      Array <Float>         weight;
+      Array <Double>         uvw;
   
-    //cout << "type=" << dataRecords_p.type(dataRecords_p.fieldNumber("uvw")) << endl;
-    // Fill the arrays.
-    rowTime = dataRecords_p.asArrayDouble(RecordFieldId("time"));
-    // ACQUIRE ANTENNA NAME VECTORS
-    //  antenna 1
-    if (dataRecords_p.isDefined("antenna1")) {
-      ant1 = dataRecords_p.asArrayInt(RecordFieldId("antenna1"));
-    } else if (dataRecords_p.isDefined("ant1")) {
-      ant1 = dataRecords_p.asArrayInt(RecordFieldId("ant1"));
-    } else {
-      logStream_p << LogIO::SEVERE << "antenna1 isn't defined" << LogIO::POST;
-      return;
-    }
-    //  antenna 2
-    if (dataRecords_p.isDefined("antenna2")) {
-      ant2 = dataRecords_p.asArrayInt(RecordFieldId("antenna2"));
-    } else if (dataRecords_p.isDefined("ant2")) {
-      ant2 = dataRecords_p.asArrayInt(RecordFieldId("ant2"));
-    } else {
-      logStream_p << LogIO::SEVERE << "antenna2 isn't defined" << LogIO::POST;
-      return;
-    }
+      //myout << "type=" << dataRecords_p.type(dataRecords_p.fieldNumber("uvw")) << endl;
+      // Fill the arrays.
+      rowTime = dataRecords_p.asArrayDouble(RecordFieldId("time"));
+      // ACQUIRE ANTENNA NAME VECTORS
+      //  antenna 1
+      if (dataRecords_p.isDefined("antenna1")) {
+        ant1 = dataRecords_p.asArrayInt(RecordFieldId("antenna1"));
+      } else if (dataRecords_p.isDefined("ant1")) {
+        ant1 = dataRecords_p.asArrayInt(RecordFieldId("ant1"));
+      } else {
+        logStream_p << LogIO::SEVERE << "antenna1 isn't defined" << LogIO::POST;
+        return;
+      }
+      //  antenna 2
+      if (dataRecords_p.isDefined("antenna2")) {
+        ant2 = dataRecords_p.asArrayInt(RecordFieldId("antenna2"));
+      } else if (dataRecords_p.isDefined("ant2")) {
+        ant2 = dataRecords_p.asArrayInt(RecordFieldId("ant2"));
+      } else {
+        logStream_p << LogIO::SEVERE << "antenna2 isn't defined" << LogIO::POST;
+        return;
+      }
     
-    // Convert antenna ID Vectors to antenna name Vectors
-    Int ant1Length; 
-    ant1.shape(ant1Length); // Get length of ant1
-    Vector<String> antennaNames; // Hold name for each antenna
-    Vector<String> antNames1(ant1Length); // Antenna names for the ID's held in ant1
-    Vector<String> antNames2(ant1Length); // Antenna names for the ID's held in ant2
-    ROMSAntennaColumns antCol(pMS_p->antenna());
-    antennaNames = antCol.name().getColumn();
-    for (Int i=0; i<ant1Length; i++) {
-      antNames1(i) = antennaNames(ant1(i));
-      antNames2(i) = antennaNames(ant2(i));
-    }
-    // logStream_p << LogIO::DEBUG2 << "ant1 = " << ant1 << LogIO::POST;
-    // logStream_p << LogIO::DEBUG2 << "ant2 = " << ant2 << LogIO::POST;
-    // logStream_p << LogIO::DEBUG2 << "antNames " << ant1 << LogIO::POST;
-    // logStream_p << LogIO::DEBUG2 << "ant1 = " << ant1 << LogIO::POST;
+      // Convert antenna ID Vectors to antenna name Vectors
+      Int ant1Length; 
+      ant1.shape(ant1Length); // Get length of ant1
+      Vector<String> antennaNames; // Hold name for each antenna
+      Vector<String> antNames1(ant1Length); // Antenna names for the ID's held in ant1
+      Vector<String> antNames2(ant1Length); // Antenna names for the ID's held in ant2
+      ROMSAntennaColumns antCol(pMS_p->antenna());
+      antennaNames = antCol.name().getColumn();
+      for (Int i=0; i<ant1Length; i++) {
+        antNames1(i) = antennaNames(ant1(i));
+        antNames2(i) = antennaNames(ant2(i));
+      }
+      // logStream_p << LogIO::DEBUG2 << "ant1 = " << ant1 << LogIO::POST;
+      // logStream_p << LogIO::DEBUG2 << "ant2 = " << ant2 << LogIO::POST;
+      // logStream_p << LogIO::DEBUG2 << "antNames " << ant1 << LogIO::POST;
+      // logStream_p << LogIO::DEBUG2 << "ant1 = " << ant1 << LogIO::POST;
 
-    //logStream_p << LogIO::DEBUG2 << "Ant1-Ant2" << LogIO::POST;
-    //for (Int i=0; i<10 && i<ant1Length; i++) {
-    //  logStream_p << LogIO::DEBUG2 << antNames1(i) << "-" 
-    //                               << antNames2(i) << LogIO::POST;
-    //}                               
+      //logStream_p << LogIO::DEBUG2 << "Ant1-Ant2" << LogIO::POST;
+      //for (Int i=0; i<10 && i<ant1Length; i++) {
+      //  logStream_p << LogIO::DEBUG2 << antNames1(i) << "-" 
+      //                               << antNames2(i) << LogIO::POST;
+      //}                               
 
-    //  flag, uvdist, datadescid, fieldid
-    flag = dataRecords_p.asArrayBool(RecordFieldId("flag"));
-    uvdist = dataRecords_p.asArrayDouble(RecordFieldId("uvdist"));
-    datadescid = dataRecords_p.asArrayInt(RecordFieldId("data_desc_id"));
-    fieldid = dataRecords_p.asArrayInt(RecordFieldId("field_id"));
-    uvw = dataRecords_p.asArrayDouble(RecordFieldId("uvw"));
-    //  dataColSel(0) (the data identified by this variable)
-    if (dataRecords_p.isDefined(dataColSel(0))) {
-      ampl = dataRecords_p.asArrayFloat(RecordFieldId(dataColSel(0)));
-    } else {
-      logStream_p << LogIO::SEVERE << "Column " << dataColSel(0) 
-                << " (for amplitude) isn't defined." << LogIO::POST;
-      return;
-    }
-    //  dataColSel(1) (the data identified by this variable)
-    if (dataRecords_p.isDefined(dataColSel(1))) {
-      phase = dataRecords_p.asArrayFloat(RecordFieldId(dataColSel(1)));
-    } else {
-      logStream_p << LogIO::SEVERE << "Column " << dataColSel(1) 
-                << " (for phase) isn't defined." << LogIO::POST;
-      return;
-    }
-    //  weight
-    weight = dataRecords_p.asArrayFloat(RecordFieldId("weight"));
+      //  flag, uvdist, datadescid, fieldid
+      flag = dataRecords_p.asArrayBool(RecordFieldId("flag"));
+      uvdist = dataRecords_p.asArrayDouble(RecordFieldId("uvdist"));
+      datadescid = dataRecords_p.asArrayInt(RecordFieldId("data_desc_id"));
+      fieldid = dataRecords_p.asArrayInt(RecordFieldId("field_id"));
+      uvw = dataRecords_p.asArrayDouble(RecordFieldId("uvw"));
+      //  dataColSel(0) (the data identified by this variable)
+      if (dataRecords_p.isDefined(dataColSel(0))) {
+        ampl = dataRecords_p.asArrayFloat(RecordFieldId(dataColSel(0)));
+      } else {
+        logStream_p << LogIO::SEVERE << "Column " << dataColSel(0) 
+                    << " (for amplitude) isn't defined." << LogIO::POST;
+        return;
+      }
+      //  dataColSel(1) (the data identified by this variable)
+      if (dataRecords_p.isDefined(dataColSel(1))) {
+        phase = dataRecords_p.asArrayFloat(RecordFieldId(dataColSel(1)));
+      } else {
+        logStream_p << LogIO::SEVERE << "Column " << dataColSel(1) 
+                    << " (for phase) isn't defined." << LogIO::POST;
+        return;
+      }
+      //  weight
+      weight = dataRecords_p.asArrayFloat(RecordFieldId("weight"));
   
-    // Number of rows that will be listed
-    Int nTableRows = rowTime.nelements();
+      // Number of rows that will be listed
+      Int nTableRows = rowTime.nelements();
   
-    spwinid.resize(nTableRows);
+      spwinid.resize(nTableRows);
     
-    // Convert units of some params:
-    rowTime = rowTime/C::day;        // time now in days
-    phase = phase/C::degree;   // phase now in degrees
-    // For each row: translate Data Description IDs to Spectral Window IDs
-    // This must be done before column widths can be calculated, before
-    // data can be written.
-    for (Int tableRow=0;tableRow<nTableRows;tableRow++) {
-      // Translate data_desc_id to spwid:  
-      spwinid(tableRow)=spwins_p(datadescid(tableRow));
-      // Change uvdist to wavelengths as function of spwinid:
-      //  Note that uv-distance data selection uses meters as the default unit.
-      uvdist(tableRow) = uvdist(tableRow)/(C::c/freqs_p(spwinid(tableRow)));  
-    }    
+      // Convert units of some params:
+      rowTime = rowTime/C::day;        // time now in days
+      phase = phase/C::degree;   // phase now in degrees
+      // For each row: translate Data Description IDs to Spectral Window IDs
+      // This must be done before column widths can be calculated, before
+      // data can be written.
+      for (Int tableRow=0;tableRow<nTableRows;tableRow++) {
+        // Translate data_desc_id to spwid:  
+        spwinid(tableRow)=spwins_p(datadescid(tableRow));
+        // Change uvdist to wavelengths as function of spwinid:
+        //  Note that uv-distance data selection uses meters as the default unit.
+        uvdist(tableRow) = uvdist(tableRow)/(C::c/freqs_p(spwinid(tableRow)));  
+      }    
   
-    // Add or adjust ranges_p to non-zero absolutes for non-index and/or 
-    // converted values (so we can use ranges_p for field width and 
-    // precision setting):
+      // Add or adjust ranges_p to non-zero absolutes for non-index and/or 
+      // converted values (so we can use ranges_p for field width and 
+      // precision setting):
   
-    //logStream_p << LogIO::DEBUG2 << "Beginning to fill record ranges_p" << LogIO::POST;
-    //logStream_p << LogIO::DEBUG2 << "  Setting uvdist min and max values" << LogIO::POST;
-    Vector<Double> uvminmax(2);
-    uvminmax(0)=min(uvdist);
-    uvminmax(1)=max(uvdist);
-    ranges_p.define("uvdist",uvminmax);
+      //logStream_p << LogIO::DEBUG2 << "Beginning to fill record ranges_p" << LogIO::POST;
+      //logStream_p << LogIO::DEBUG2 << "  Setting uvdist min and max values" << LogIO::POST;
+      Vector<Double> uvminmax(2);
+      uvminmax(0)=min(uvdist);
+      uvminmax(1)=max(uvdist);
+      ranges_p.define("uvdist",uvminmax);
     
-    //logStream_p << LogIO::DEBUG2 << "  Setting data amplitude min and max values" << LogIO::POST;    
-    Vector<Float> amplminmax(2);
-    amplminmax(0)=min(ampl(ampl>0.0f));
-    amplminmax(1)=max(ampl);
-    ranges_p.define(dataColSel(0),amplminmax);
+      //logStream_p << LogIO::DEBUG2 << "  Setting data amplitude min and max values" << LogIO::POST;    
+      Vector<Float> amplminmax(2);
+      amplminmax(0)=min(ampl(ampl>0.0f));
+      amplminmax(1)=max(ampl);
+      ranges_p.define(dataColSel(0),amplminmax);
   
-    // Find the range of phase.  Take care to avoid creating a 0-element
-    //  MaskedArray, if all elements of phase are 0.0f.  A 0-element
-    //  array will crash function min.
-    //logStream_p << LogIO::DEBUG2 << "  Setting data phase min and max values" << LogIO::POST;
-    Vector<Float> phminmax(2);
-    phminmax(0) = min(abs(phase));
-    phminmax(1) = max(abs(phase));
-    if(phminmax(0) == phminmax(1)) 
-        { cout << "All selected data has PHASE = " << phminmax(0) << endl; }
+      // Find the range of phase.  Take care to avoid creating a 0-element
+      //  MaskedArray, if all elements of phase are 0.0f.  A 0-element
+      //  array will crash function min.
+      //logStream_p << LogIO::DEBUG2 << "  Setting data phase min and max values" << LogIO::POST;
+      Vector<Float> phminmax(2);
+      phminmax(0) = min(abs(phase));
+      phminmax(1) = max(abs(phase));
+      if(phminmax(0) == phminmax(1)) 
+        { myout << "All selected data has PHASE = " << phminmax(0) << endl; }
 
-// HERE LIES CODE THAT I THINK IS NO LONGER NEEDED!  For some reason, when the mins and maxs
-// were originally computed, the author looked only at the data not equal to 0.0.  I don't think
-// this is necessary.  We shall see!..
-//
-//    MaskedArray<float> maPhase(phase, (phase!=0.0f));
-//    cout << "phase = " << endl << phase << endl;
-//    cout << "maPhase.nelements() = " << maPhase.nelements() << endl;
-//    cout << "phase(phase!=0.0f).nelements() = " << phase(phase!=0.0f).nelements() << endl;
-//    cout << "abs(phase(phase!=0.0f)).nelements() = " << abs(phase(phase!=0.0f)).nelements() << endl;
-//    cout << "min(abs(phase(phase!=0.0f))) = " << min(abs(phase(phase!=0.0f))) << endl;
-//    cout << "min(phase(phase!=0.0f)) = " << min(phase(phase!=0.0f)) << endl;
-//    if (maPhase.nelementsValid() != 0) {
-//      logStream_p << LogIO::DEBUG2 << "maPhase contains at least 1 element" << LogIO::POST;
-//      // logStream_p << LogIO::DEBUG2 << "phase = " << phase << LogIO::POST;
-//      // CANNOT BE DONE cout << "phase(phase !=0.0f) = " << phase(phase!=0.0f);      
-//      // CANNOT BE DONE cout << "maPhase = " << maPhase << endl;
-//      phminmax(0)=min(abs(phase(phase!=0.0f)));
-//      cout << "phminmax(0) = " << phminmax(0) << endl;
-//      phminmax(1)=max(phase);
-//      cout << "phminmax(1) = " << phminmax(1) << endl;
-//    } else { 
-//      phminmax(0) = 0.0f; 
-//      phminmax(1) = 0.0f; 
-//      logStream_p << LogIO::NORMAL1 << "All selected data has phase = 0.0" << LogIO::POST;
-//      cout << "All selected data has phase = 0.0" << endl;
-//    }
-    ranges_p.define(dataColSel(1),phminmax);
+      // HERE LIES CODE THAT I THINK IS NO LONGER NEEDED!  For some reason, when the mins and maxs
+      // were originally computed, the author looked only at the data not equal to 0.0.  I don't think
+      // this is necessary.  We shall see!..
+      //
+      //    MaskedArray<float> maPhase(phase, (phase!=0.0f));
+      //    myout << "phase = " << endl << phase << endl;
+      //    myout << "maPhase.nelements() = " << maPhase.nelements() << endl;
+      //    myout << "phase(phase!=0.0f).nelements() = " << phase(phase!=0.0f).nelements() << endl;
+      //    myout << "abs(phase(phase!=0.0f)).nelements() = " << abs(phase(phase!=0.0f)).nelements() << endl;
+      //    myout << "min(abs(phase(phase!=0.0f))) = " << min(abs(phase(phase!=0.0f))) << endl;
+      //    myout << "min(phase(phase!=0.0f)) = " << min(phase(phase!=0.0f)) << endl;
+      //    if (maPhase.nelementsValid() != 0) {
+      //      logStream_p << LogIO::DEBUG2 << "maPhase contains at least 1 element" << LogIO::POST;
+      //      // logStream_p << LogIO::DEBUG2 << "phase = " << phase << LogIO::POST;
+      //      // CANNOT BE DONE myout << "phase(phase !=0.0f) = " << phase(phase!=0.0f);      
+      //      // CANNOT BE DONE myout << "maPhase = " << maPhase << endl;
+      //      phminmax(0)=min(abs(phase(phase!=0.0f)));
+      //      myout << "phminmax(0) = " << phminmax(0) << endl;
+      //      phminmax(1)=max(phase);
+      //      myout << "phminmax(1) = " << phminmax(1) << endl;
+      //    } else { 
+      //      phminmax(0) = 0.0f; 
+      //      phminmax(1) = 0.0f; 
+      //      logStream_p << LogIO::NORMAL1 << "All selected data has phase = 0.0" << LogIO::POST;
+      //      myout << "All selected data has phase = 0.0" << endl;
+      //    }
+      ranges_p.define(dataColSel(1),phminmax);
   
-    //logStream_p << LogIO::DEBUG2 << "Setting the weight min and max." << LogIO::POST;
-    Vector<Float> wtminmax(2);
-    wtminmax(0)=min(abs(weight));
-    wtminmax(1)=max(abs(weight));
-    if(wtminmax(0) == wtminmax(1)) 
-        { cout << "All selected data has WEIGHT = " << wtminmax(0) << endl; }
-    ranges_p.define("weight",wtminmax);
+      //logStream_p << LogIO::DEBUG2 << "Setting the weight min and max." << LogIO::POST;
+      Vector<Float> wtminmax(2);
+      wtminmax(0)=min(abs(weight));
+      wtminmax(1)=max(abs(weight));
+      if(wtminmax(0) == wtminmax(1)) 
+        myout << "WEIGHT: " << wtminmax[0] << endl;
+      ranges_p.define("weight",wtminmax);
 
-    //logStream_p << LogIO::DEBUG2 << "Setting the uvw min and max." << LogIO::POST;
-    Vector<Float> uvwminmax(2);
-    uvwminmax(0)=min(abs(uvw));
-    uvwminmax(1)=max(abs(uvw));
-    if(uvwminmax(0) == uvwminmax(1)) 
-        { cout << "All selected data has UVW = " << uvwminmax(0) << endl; }
-    ranges_p.define("uvw",uvwminmax);
+      //logStream_p << LogIO::DEBUG2 << "Setting the uvw min and max." << LogIO::POST;
+      Vector<Float> uvwminmax(2);
+      uvwminmax(0)=min(abs(uvw));
+      uvwminmax(1)=max(abs(uvw));
+      //if(uvwminmax(0) == uvwminmax(1)) 
+      //  { myout << "All selected data has UVW = " << uvwminmax(0) << endl; }
+      ranges_p.define("uvw",uvwminmax);
   
-    // Records currently only support output to stdio, not to LogIO!
-    //cout << "Printing out the Record ranges_p:" << endl
-    //     << ranges_p << endl;
-    //logStream_p << LogIO::DEBUG2 << "Setting flags for output:" << LogIO::POST;
+      // Records currently only support output to stdio, not to LogIO!
+      //myout << "Printing out the Record ranges_p:" << endl
+      //     << ranges_p << endl;
+      //logStream_p << LogIO::DEBUG2 << "Setting flags for output:" << LogIO::POST;
   
-    // TURN THIS FLAG SETTING INTO A NEW FUNCTION
-    // Make flags for showing index columns.
-    //  Test to see if more than one value is present
-    //  in the data column.
-    //  If the array consists of only 1 value, ranges_p will have only 1
-    //  element, and the boolean value will be set to false!
-    if (ranges_p.asArrayInt(RecordFieldId("field_id")).nelements() > 1) {
-      doFld_p = True;
-    } else {
-      doFld_p = False;
-      //logStream_p << LogIO::NORMAL << "All selected data has FIELD = "
-      //            << fieldid(0) << LogIO::POST;
-      cout << "All selected data has FIELD = " << fieldid(0) << endl;
-    }
-    // doSpW_p = (ranges_p.asArrayInt(RecordFieldId("data_desc_id")).nelements() > 1);
-    if (ranges_p.asArrayInt(RecordFieldId("data_desc_id")).nelements() > 1) {
-      doSpW_p = True;
-    } else {
-      doSpW_p = False;
-      //logStream_p << LogIO::NORMAL << "All selected data has SPW = "
-      //          << datadescid(0) << LogIO::POST;
-      cout << "All selected data has SPW = " << datadescid(0) << endl;
-    }
-    if (multiChan_p) {
-      doChn_p = True; // Output a CHANNEL column
-    } else {
-      doChn_p = False;
-      //logStream_p << LogIO::NORMAL << "All selected data has CHANNEL = "
-      //            << chanList_p(0,1) << LogIO::POST;
-      cout << "All selected data has CHANNEL = " << chanList_p(0,1) << endl;
-    }
+      // TURN THIS FLAG SETTING INTO A NEW FUNCTION
+      // Make flags for showing index columns.
+      //  Test to see if more than one value is present
+      //  in the data column.
+      //  If the array consists of only 1 value, ranges_p will have only 1
+      //  element, and the boolean value will be set to false!
+      if (ranges_p.asArrayInt(RecordFieldId("field_id")).nelements() > 1) {
+        doFld_p = True;
+      } else {
+        doFld_p = False;
+        //logStream_p << LogIO::NORMAL << "All selected data has FIELD = "
+        //            << fieldid(0) << LogIO::POST;
+        myout << "FIELD: " << fieldid[0] << endl;
+      }
+      // doSpW_p = (ranges_p.asArrayInt(RecordFieldId("data_desc_id")).nelements() > 1);
+      if (ranges_p.asArrayInt(RecordFieldId("data_desc_id")).nelements() > 1) {
+        doSpW_p = True;
+      } else {
+        doSpW_p = False;
+        //logStream_p << LogIO::NORMAL << "All selected data has SPW = "
+        //          << datadescid(0) << LogIO::POST;
+        myout << "SPW: " << datadescid[0] << endl;
+      }
+      if (multiChan_p) {
+        doChn_p = True; // Output a CHANNEL column
+      } else {
+        doChn_p = False;
+        //logStream_p << LogIO::NORMAL << "All selected data has CHANNEL = "
+        //            << chanList_p(0,1) << LogIO::POST;
+        myout << "CHANNEL: " << chanList_p(0, 1) << endl;
+      }
   
-    // logStream_p << LogIO::DEBUG2 << "Fld id : " << ranges_p.get("field_id") << endl
-    //           << "SpW id : " << ranges_p.get("spectral_window_id") << LogIO::POST;
+      // logStream_p << LogIO::DEBUG2 << "Fld id : " << ranges_p.get("field_id") << endl
+      //           << "SpW id : " << ranges_p.get("spectral_window_id") << LogIO::POST;
   
-    // From this point on, don't change scaling in list arrays, since the
-    // field sizes are determined directly from the data.
+      // From this point on, don't change scaling in list arrays, since the
+      // field sizes are determined directly from the data.
       logStream_p << LogIO::DEBUG1 
-                << "Minumum uvdist   = " << min(uvdist) << endl
-                << "Maximum uvdist   = " << max(uvdist) << endl
-                << "Minumum uvw   = " << min(uvw) << endl
-                << "Maximum uvw   = " << max(uvw) << endl
-                << "Minumum amp      = " << min(ampl) << endl
-                << "Maximum amp      = " << max(ampl) << endl
-                << "Minumum phase    = " << min(abs(phase)) << endl
-                << "Maximum phase    = " << max(abs(phase)) << endl
-                << "Minumum weight   = " << min(weight) << endl
-                << "Maximum weight   = " << max(weight) << LogIO::POST;
+                  << "(Min, max) uvdist: " << uvminmax[0] << ", " << uvminmax[1] << endl
+                  << "(Min, max) uvw:    " << uvwminmax[0] << ", " << uvwminmax[1] << endl
+                  << "(Min, max) amp:    " << amplminmax[0] << ", " << amplminmax[1] << endl
+                  << "(Min, max) phase:  " << phminmax[0] << ", " << phminmax[1] << endl
+                  << "(Min, max) weight: " << wtminmax[0] << ", " << wtminmax[1] 
+                  << LogIO::POST;
   
-    // Set order of magnitude and precision (for field width setting):
-    // If prec*_p < 0, then enforce >=0 (detect minimum decimal places to show is NYI)
-    // If prec*_p > 0, then increment o*_p to provide space for decimal
+      // Set order of magnitude and precision (for field width setting):
+      // If prec*_p < 0, then enforce >=0 (detect minimum decimal places to show is NYI)
+      // If prec*_p > 0, then increment o*_p to provide space for decimal
   
-    oTime_p = 2; // this is space for 2 :'s in time  
-    if ( precTime_p < 0 ) precTime_p = 7; // hh:mm:ss.s
-    if ( precTime_p > 0 ) oTime_p++; // add space for decimal
+      oTime_p = 2; // this is space for 2 :'s in time  
+      if ( precTime_p < 0 ) precTime_p = 7; // hh:mm:ss.s
+      if ( precTime_p > 0 ) oTime_p++; // add space for decimal
   
-    oUVDist_p = (uInt)max(1,(Int)rint(log10(max(uvdist))+0.5)); // order
-    if ( precUVDist_p < 0 ) precUVDist_p = 0;
-    if ( precUVDist_p > 0 ) oUVDist_p++;  // add space for decimal
+      oUVDist_p = (uInt)max(1,(Int)rint(log10(max(uvdist))+0.5)); // order
+      if ( precUVDist_p < 0 ) precUVDist_p = 0;
+      if ( precUVDist_p > 0 ) oUVDist_p++;  // add space for decimal
   
-    oUVW_p = (uInt)max(1,(Int)rint(log10(max(uvw))+0.5)); // order
-    if ( precUVW_p < 0 ) precUVW_p = 0;
-    if ( precUVW_p > 0 ) oUVW_p++;  // add space for decimal
-                         oUVW_p++;  // add space for sign
+      oUVW_p = (uInt)max(1,(Int)rint(log10(max(uvw))+0.5)); // order
+      if ( precUVW_p < 0 ) precUVW_p = 0;
+      if ( precUVW_p > 0 ) oUVW_p++;  // add space for decimal
+      oUVW_p++;  // add space for sign
 
-    oAmpl_p = (uInt)max(1,(Int)rint(log10(max(ampl))+0.5)); 
-    if ( precAmpl_p < 0 ) precAmpl_p = 3;  // mJy
-    if ( precAmpl_p > 0 ) oAmpl_p++;  // add space for decimal
+      oAmpl_p = (uInt)max(1,(Int)rint(log10(max(ampl))+0.5)); 
+      if ( precAmpl_p < 0 ) precAmpl_p = 3;  // mJy
+      if ( precAmpl_p > 0 ) oAmpl_p++;  // add space for decimal
   
-    oPhase_p = (uInt)max(1,(Int)rint(abs(log10(max(phase))+0.5)));
-    if(min(phase) < 0) { oPhase_p+=2; } // add space for sign and column border
-    else { oPhase_p++; } // add space for column border
-    //oPhase_p = 3;  // 100s of degs 
-    if ( precPhase_p < 0 ) precPhase_p = 0; 
-    if ( precPhase_p > 0 ) oPhase_p++; // add space for decimal
+      oPhase_p = (uInt)max(1,(Int)rint(abs(log10(max(phase))+0.5)));
+      if(min(phase) < 0) { oPhase_p+=2; } // add space for sign and column border
+      else { oPhase_p++; } // add space for column border
+      //oPhase_p = 3;  // 100s of degs 
+      if ( precPhase_p < 0 ) precPhase_p = 0; 
+      if ( precPhase_p > 0 ) oPhase_p++; // add space for decimal
   
-    oWeight_p = (uInt)max(1,(Int)rint(log10(max(weight))+0.5));  // order
-    if ( precWeight_p < 0 ) precWeight_p = 0;
-    if ( precWeight_p > 0 ) oWeight_p++;  // add space for decimal
+      oWeight_p = (uInt)max(1,(Int)rint(log10(max(weight))+0.5));  // order
+      if ( precWeight_p < 0 ) precWeight_p = 0;
+      if ( precWeight_p > 0 ) oWeight_p++;  // add space for decimal
   
-    // Set field widths.
+      // Set field widths.
 
-    // Use function to set width of baseline column: Ant1-Ant2
-    wAnt1_p = columnWidth(antNames1);
-    wAnt2_p = columnWidth(antNames2);
+      // Use function to set width of baseline column: Ant1-Ant2
+      wAnt1_p = columnWidth(antNames1);
+      wAnt2_p = columnWidth(antNames2);
     
-    wFlag_p = 2; // the flag is always 1 character
-    if (doFld_p) wFld_p    = (uInt)rint(log10((float)max(fieldid))+0.5);
-    if (doSpW_p) wSpW_p    = (uInt)rint(log10((float)max(spwinid))+0.5);
-    if (doChn_p) wChn_p    = 3;
+      wFlag_p = 2; // the flag is always 1 character
+      if (doFld_p) wFld_p    = (uInt)rint(log10((float)max(fieldid))+0.5);
+      if (doSpW_p) wSpW_p    = (uInt)rint(log10((float)max(spwinid))+0.5);
+      if (doChn_p) wChn_p    = 3;
   
   
-    //   The field width for non-index columns is given by the  
-    //    sum of the order and precision:
-    wTime_p   = oTime_p + precTime_p;
-    wUVDist_p = oUVDist_p + precUVDist_p;  
-    wUVW_p = oUVW_p + precUVW_p;
-    wAmpl_p   = oAmpl_p + precAmpl_p;  
-    wPhase_p  = oPhase_p + precPhase_p;  
-    wWeight_p = oWeight_p + precWeight_p;
+      //   The field width for non-index columns is given by the  
+      //    sum of the order and precision:
+      wTime_p   = oTime_p + precTime_p;
+      wUVDist_p = oUVDist_p + precUVDist_p;  
+      wUVW_p = oUVW_p + precUVW_p;
+      wAmpl_p   = oAmpl_p + precAmpl_p;  
+      wPhase_p  = oPhase_p + precPhase_p;  
+      wWeight_p = oWeight_p + precWeight_p;
   
-    // Enforce minimum field widths,
-    // add leading space so columns nicely separated,
-    // and accumulate wTotal_p:
-    wTotal_p = 0;  // initialize 
-    // wAnt_p    = max(wAnt_p,   (uInt)2);
-    wAnt1_p++; // add leading space to separate from previous column
-    wIntrf_p  = wAnt1_p+1+wAnt2_p;                             wTotal_p+=wIntrf_p;
-    if (doFld_p) { wFld_p = max(wFld_p,(uInt)3);  wFld_p++;    wTotal_p+=wFld_p; }
-    if (doSpW_p) { wSpW_p = max(wSpW_p,(uInt)3);  wSpW_p++;    wTotal_p+=wSpW_p;}
-    if (doChn_p) { wChn_p = max(wChn_p,(uInt)3);  wChn_p++;    wTotal_p+=wChn_p;}
+      // Enforce minimum field widths,
+      // add leading space so columns nicely separated,
+      // and accumulate wTotal_p:
+      wTotal_p = 0;  // initialize 
+      // wAnt_p    = max(wAnt_p,   (uInt)2);
+      wAnt1_p++; // add leading space to separate from previous column
+      wIntrf_p  = wAnt1_p+1+wAnt2_p;                             wTotal_p+=wIntrf_p;
+      if (doFld_p) { wFld_p = max(wFld_p,(uInt)3);  wFld_p++;    wTotal_p+=wFld_p; }
+      if (doSpW_p) { wSpW_p = max(wSpW_p,(uInt)3);  wSpW_p++;    wTotal_p+=wSpW_p;}
+      if (doChn_p) { wChn_p = max(wChn_p,(uInt)3);  wChn_p++;    wTotal_p+=wChn_p;}
   
-    wTime_p   = max(wTime_p,  (uInt)12);
-    wUVDist_p = max(wUVDist_p,(uInt)6);           wUVDist_p++; wTotal_p+=wUVDist_p;
-    wAmpl_p   = max(wAmpl_p,  (uInt)4);           wAmpl_p++; 
-    wPhase_p  = max(wPhase_p, (uInt)4); 
-    wWeight_p = max(wWeight_p,(uInt)3);           wWeight_p++;
+      wTime_p   = max(wTime_p,  (uInt)12);
+      wUVDist_p = max(wUVDist_p,(uInt)6);           wUVDist_p++; wTotal_p+=wUVDist_p;
+      wAmpl_p   = max(wAmpl_p,  (uInt)4);           wAmpl_p++; 
+      wPhase_p  = max(wPhase_p, (uInt)4); 
+      wWeight_p = max(wWeight_p,(uInt)3);           wWeight_p++;
   
-    wVis_p = wAmpl_p+wPhase_p+wWeight_p+wFlag_p;
-    wTotal_p+=wTime_p+nIndexPols_p*wVis_p+1;
-    wUVW_p = max(wUVW_p, (uInt)4);               wUVW_p++; wTotal_p+=3*wUVW_p;
+      wVis_p = wAmpl_p+wPhase_p+wWeight_p+wFlag_p;
+      wTotal_p+=wTime_p+nIndexPols_p*wVis_p+1;
+      wUVW_p = max(wUVW_p, (uInt)4);               wUVW_p++; wTotal_p+=3*wUVW_p;
   
-    // Make column-ated header rule according to total and field widths
+      // Make column-ated header rule according to total and field widths
   
-    // replicate does not work if the first parameter is "-", but it does for '-'.
-    // Bug report here: https://bugs.aoc.nrao.edu/browse/CAS-511
-    String hSeparator=replicate('-',wTotal_p+1);
-    //cout << "wTotal_p=" << wTotal_p << endl;
-    //cout << "hSeparator.length=" << hSeparator.size() << endl;
-    uInt colPos=0;
-    colPos+=wTime_p;   hSeparator[colPos]='|';
-    colPos+=wIntrf_p;  hSeparator[colPos]='|';
-    colPos+=wUVDist_p; hSeparator[colPos]='|';
-    if (doFld_p) {colPos+=wFld_p;hSeparator[colPos]='|';}
-    if (doSpW_p) {colPos+=wSpW_p;hSeparator[colPos]='|';}
-    if (doChn_p) {colPos+=wChn_p;hSeparator[colPos]='|';}
-    colPos++;
-    for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
-      colPos+=wVis_p;
-      hSeparator[colPos]='|';
-    }
-    colPos+=wUVW_p; hSeparator[colPos]='|';
-    colPos+=wUVW_p; hSeparator[colPos]='|';
-    colPos+=wUVW_p; hSeparator[colPos]='|';
-    //cout << "wTotal_p=" << wTotal_p << " colPos=" << colPos << endl;
-    //cout << "hSeparator.length=" << hSeparator.size() << endl;
-    //hSeparator.resize(colPos, True);
+      // replicate does not work if the first parameter is "-", but it does for '-'.
+      // Bug report here: https://bugs.aoc.nrao.edu/browse/CAS-511
+      String hSeparator=replicate('-',wTotal_p+1);
+      //myout << "wTotal_p=" << wTotal_p << endl;
+      //myout << "hSeparator.length=" << hSeparator.size() << endl;
+      uInt colPos=0;
+      colPos+=wTime_p;   hSeparator[colPos]='|';
+      colPos+=wIntrf_p;  hSeparator[colPos]='|';
+      colPos+=wUVDist_p; hSeparator[colPos]='|';
+      if (doFld_p) {colPos+=wFld_p;hSeparator[colPos]='|';}
+      if (doSpW_p) {colPos+=wSpW_p;hSeparator[colPos]='|';}
+      if (doChn_p) {colPos+=wChn_p;hSeparator[colPos]='|';}
+      colPos++;
+      for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
+        colPos+=wVis_p;
+        hSeparator[colPos]='|';
+      }
+      colPos+=wUVW_p; hSeparator[colPos]='|';
+      colPos+=wUVW_p; hSeparator[colPos]='|';
+      colPos+=wUVW_p; hSeparator[colPos]='|';
+      //myout << "wTotal_p=" << wTotal_p << " colPos=" << colPos << endl;
+      //myout << "hSeparator.length=" << hSeparator.size() << endl;
+      //hSeparator.resize(colPos, True);
 
   
-    Vector<String> flagSym(2);
-    flagSym(0) = " ";
-    flagSym(1) = "F";
+      Vector<String> flagSym(2);
+      flagSym(0) = " ";
+      flagSym(1) = "F";
   
-    // Finally print the records out, one per line.
+      // Finally print the records out, one per line.
  
-    // Output something about the number of channels being listed.
-    // But what exactly to say, since number of channels can vary between
-    // spws?
-    //logStream_p << LogIO::NORMAL << "Listing " << rowTime.nelements()
-    //          << " data records satisfying selection criteria, " << endl
-    //          << "for each of " << npols_p << " polarisation(s) and " << (chanList_p(0,2)+1)
-    //          << " spectral channel(s)." << LogIO::POST;
+      // Output something about the number of channels being listed.
+      // But what exactly to say, since number of channels can vary between
+      // spws?
+      //logStream_p << LogIO::NORMAL << "Listing " << rowTime.nelements()
+      //          << " data records satisfying selection criteria, " << endl
+      //          << "for each of " << npols_p << " polarisation(s) and " << (chanList_p(0,2)+1)
+      //          << " spectral channel(s)." << LogIO::POST;
   
-    Int countPageRow=0;
+      Int countPageRow=0;
   
-    //cout << "pageRows=" << pageRows << endl;
-    if(pageRows == 0) { // Do not paginate; print header only once.
-      listColumnHeader();
-      cout << hSeparator << endl;
-    }
+      //myout << "pageRows=" << pageRows << endl;
+      if(pageRows == 0) { // Do not paginate; print header only once.
+        listColumnHeader(myout);
+        myout << hSeparator << endl;
+      }
 
   
-    // // Sort the data prior to writing
-    // //  this was not working; disabled for now.
-    // Sort sort;
-    // sort.sortKey(&rowTime, TpDouble);
-    // sort.sortKey(&antNames1, TpString );
-    // sort.sortKey(&antNames2, TpString );
-    // Vector<uInt> sortIndex;
-    // sort.sort(sortIndex,rowTime.nelements());
-    // // logStream_p << LogIO::DEBUG1 << "numRecords = " << numRecords 
-    // //             << LogIO::POST;
+      // // Sort the data prior to writing
+      // //  this was not working; disabled for now.
+      // Sort sort;
+      // sort.sortKey(&rowTime, TpDouble);
+      // sort.sortKey(&antNames1, TpString );
+      // sort.sortKey(&antNames2, TpString );
+      // Vector<uInt> sortIndex;
+      // sort.sort(sortIndex,rowTime.nelements());
+      // // logStream_p << LogIO::DEBUG1 << "numRecords = " << numRecords 
+      // //             << LogIO::POST;
     
-    // WRITE THE DATA
-/* The data is written by looping through the selected MS. For each row of the 
- * MS, the SPW is determine and each of the channels selected for that SPW 
- * is accessed.
- */ 
+      // WRITE THE DATA
+      /* The data is written by looping through the selected MS. For each row of the 
+       * MS, the SPW is determine and each of the channels selected for that SPW 
+       * is accessed.
+       */ 
 
       const uInt spwRows = chanList_p.nrow(); // Rows of spws in chanList_p
       //logStream_p << LogIO::DEBUG1 << "spwRows (rows in chanList_p) = " << spwRows << LogIO::POST;
@@ -968,122 +968,118 @@ void MSLister::listData(const int pageRows,
       // Loop through the rows of the MS. (not rows of MSLister::listData output)
       Bool endOutput=False;
       for (Int tableRow=0; tableRow<nTableRows; tableRow++) {
-          date_p = MVTime(rowTime(tableRow)).string(MVTime::YMD_ONLY);
+        date_p = MVTime(rowTime(tableRow)).string(MVTime::YMD_ONLY);
           
-          // The spectral window ID for this row of the MS is 'spwinid(tableRow)'.
+        // The spectral window ID for this row of the MS is 'spwinid(tableRow)'.
           
-          for (uInt rowCL = 0; rowCL < spwRows; rowCL++) if (chanList_p(rowCL,0) == spwinid(tableRow)) {
-          // 'rowCL' is the present row of the 'chanList_p' Matrix.
-          // chanList_p(rowCL,0) is the SpwID of the current MS row.
+        for (uInt rowCL = 0; rowCL < spwRows; rowCL++) if (chanList_p(rowCL,0) == spwinid(tableRow)) {
+            // 'rowCL' is the present row of the 'chanList_p' Matrix.
+            // chanList_p(rowCL,0) is the SpwID of the current MS row.
               
-              for (Int ichan =chanList_p(rowCL,1);   // Step through channels
-                       ichan<=chanList_p(rowCL,2);
-                       ichan+= max(chanList_p(rowCL,3),1) ) { 
-                  // If page length reached, or new day, then paginate
-                  if (pageRows // require pageRows > 0 for pagination
-                      && (countPageRow/pageRows)*pageRows == countPageRow 
-                          //|| date_p != lastdate_p
-                      ) {
-                      // query the user, if we are interactive
-                      if (listfile == "" &&  prompt && countPageRow != 0) {
-                          string contStr;
-                          cout << "Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: ";
-                          getline(cin,contStr);
-                          if ( (contStr.compare(0,1,"q") == 0) or
-                              (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
-                          if ( (contStr.compare(0,1,"a") == 0) or
-                              (contStr.compare(0,1,"A") == 0) ) { 
-                              prompt = !prompt; 
-                          }
-                      }
-                      if (endOutput) {break;} // break out of if block
-                      //if (prompt) {
-                         listColumnHeader();
-                         cout << hSeparator << endl;
-                      //}
+            for (Int ichan =chanList_p(rowCL,1);   // Step through channels
+                 ichan<=chanList_p(rowCL,2);
+                 ichan+= max(chanList_p(rowCL,3),1) ) { 
+              // If page length reached, or new day, then paginate
+              if (pageRows // require pageRows > 0 for pagination
+                  && (countPageRow/pageRows)*pageRows == countPageRow 
+                  //|| date_p != lastdate_p
+                  ) {
+                // query the user, if we are interactive
+                if (listfile == "" &&  prompt && countPageRow != 0) {
+                  string contStr;
+                  myout << "Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: ";
+                  getline(cin,contStr);
+                  if ( (contStr.compare(0,1,"q") == 0) or
+                       (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
+                  if ( (contStr.compare(0,1,"a") == 0) or
+                       (contStr.compare(0,1,"A") == 0) ) { 
+                    prompt = !prompt; 
                   }
-                  lastdate_p = date_p;
-                  if (endOutput) {break;} // break out of chan loop
+                }
+                if (endOutput) {break;} // break out of if block
+                //if (prompt) {
+                listColumnHeader(myout);
+                myout << hSeparator << endl;
+                //}
+              }
+              lastdate_p = date_p;
+              if (endOutput) {break;} // break out of chan loop
                   
-                  countPageRow++;
+              countPageRow++;
                   
-                  cout.setf(ios::fixed, ios::floatfield);
-                  cout.setf(ios::right, ios::adjustfield);
+              myout.setf(ios::fixed, ios::floatfield);
+              myout.setf(ios::right, ios::adjustfield);
                   
-                  cout.width(wTime_p);   cout << MVTime(rowTime(tableRow)).string(MVTime::TIME,precTime_p);
-                  cout.width(wAnt1_p);   cout << antNames1(tableRow);
-                  cout << "-";
-                  cout.width(wAnt2_p);   cout << antNames2(tableRow);
-                  cout.precision(precUVDist_p);
-                  cout.width(wUVDist_p);cout << uvdist(tableRow);
-                  // For the output to agree with listobs, do not add 1 to fieldid and spwinid.
-                  if (doFld_p) {cout.width(wFld_p);   cout << fieldid(tableRow);}
-                  if (doSpW_p) {cout.width(wSpW_p);   cout << spwinid(tableRow);}
-                  if (doChn_p) {cout.width(wChn_p);   cout << ichan;}
-                  cout << ":";
-                  for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
-                      cout.precision(precAmpl_p);
-                      cout.width(wAmpl_p);     cout << ampl(IPosition(3,indexPols_p(ipol),ichan,tableRow));
-                      cout.precision(precPhase_p);
-                      cout.width(wPhase_p);    cout << phase(IPosition(3,indexPols_p(ipol),ichan,tableRow));
-                      cout.precision(precWeight_p);
-                      cout.width(wWeight_p);   cout << weight(IPosition(2,indexPols_p(ipol),tableRow));
-                      cout.setf(ios::right); cout.width(2);
-                      cout << flagSym(flag(IPosition(3,indexPols_p(ipol),ichan,tableRow)));
-                      // Print all loop indices; useful for debugging these loops.
-                      // cout << "ipol= " << ipol << " ichan= " << ichan << " rowCL= " << rowCL << " tableRow= " << tableRow;
-                  } // pol loop
-                  for (uInt u = 0; u < 3; u++) {
-                     cout.precision(precUVW_p);
-                     cout.width(wUVW_p);cout << uvw(IPosition(2, u, tableRow));
-                  }
-                  cout << endl;
-              } // chan loop
-              if (endOutput) {break;} // break out of spw loop
+              myout.width(wTime_p);   myout << MVTime(rowTime(tableRow)).string(MVTime::TIME,precTime_p);
+              myout.width(wAnt1_p);   myout << antNames1(tableRow);
+              myout << "-";
+              myout.width(wAnt2_p);   myout << antNames2(tableRow);
+              myout.precision(precUVDist_p);
+              myout.width(wUVDist_p);myout << uvdist(tableRow);
+              // For the output to agree with listobs, do not add 1 to fieldid and spwinid.
+              if (doFld_p) {myout.width(wFld_p);   myout << fieldid(tableRow);}
+              if (doSpW_p) {myout.width(wSpW_p);   myout << spwinid(tableRow);}
+              if (doChn_p) {myout.width(wChn_p);   myout << ichan;}
+              myout << ":";
+              for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
+                myout.precision(precAmpl_p);
+                myout.width(wAmpl_p);     myout << ampl(IPosition(3,indexPols_p(ipol),ichan,tableRow));
+                myout.precision(precPhase_p);
+                myout.width(wPhase_p);    myout << phase(IPosition(3,indexPols_p(ipol),ichan,tableRow));
+                myout.precision(precWeight_p);
+                myout.width(wWeight_p);   myout << weight(IPosition(2,indexPols_p(ipol),tableRow));
+                myout.setf(ios::right); myout.width(2);
+                myout << flagSym(flag(IPosition(3,indexPols_p(ipol),ichan,tableRow)));
+                // Print all loop indices; useful for debugging these loops.
+                // myout << "ipol= " << ipol << " ichan= " << ichan << " rowCL= " << rowCL << " tableRow= " << tableRow;
+              } // pol loop
+              for (uInt u = 0; u < 3; u++) {
+                myout.precision(precUVW_p);
+                myout.width(wUVW_p);myout << uvw(IPosition(2, u, tableRow));
+              }
+              myout << endl;
+            } // chan loop
+            if (endOutput) {break;} // break out of spw loop
               
           } // spw loop
-          if (endOutput) {break;} // break out of row loop
+        if (endOutput) {break;} // break out of row loop
       } // row loop
       if (endOutput) {break;} // break out of msIter 
-         cout << hSeparator << endl;
+      myout << hSeparator << endl;
       if (listfile == "") {
-         string contStr;
-         cout << "Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: ";
-         getline(cin,contStr);
-         if ( (contStr.compare(0,1,"q") == 0) or
-            (contStr.compare(0,1,"Q") == 0) ) { break; }
-         if ( (contStr.compare(0,1,"a") == 0) or
-            (contStr.compare(0,1,"A") == 0) ) { prompt = !prompt; }
+        string contStr;
+        myout << "Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: ";
+        getline(cin,contStr);
+        if ( (contStr.compare(0,1,"q") == 0) or
+             (contStr.compare(0,1,"Q") == 0) ) { break; }
+        if ( (contStr.compare(0,1,"a") == 0) or
+             (contStr.compare(0,1,"A") == 0) ) { prompt = !prompt; }
       }
       
       // Post it
       logStream_p.post();
-
-     }
+    }                                   // end of MsIter loop.
 ////////////////////////////////////
       
+    if(listfile != "")
+      file.close();
       
-      // RESTORE COUT (if redirected to file)
-      if(listfile!="")
-          cout.rdbuf(sbuf);
-      
-      cout.fill(cfill);
+    cout.fill(cfill);
 
-      logStream_p << LogIO::DEBUG1 << "End: MSLister::listData" 
-                  << LogIO::POST;
-
-
+    logStream_p << LogIO::DEBUG1 << "End: MSLister::listData" 
+                << LogIO::POST;
   } // end try
-    catch(AipsError x){
-        logStream_p << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-        << LogIO::POST;
-        throw(AipsError("Error in MSLister::listData"));
-    }
+  catch(AipsError x){
+    logStream_p << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+                << LogIO::POST;
+    throw(AipsError("Error in MSLister::listData"));
+  }
 } // end listData
     
-void MSLister::listColumnHeader() {
+void MSLister::listColumnHeader(ostream& cout) {
 
-  logStream_p << LogIO::DEBUG1 << "Begin: MSLister::listColumnHeader" << LogIO::POST;
+  logStream_p << LogIO::DEBUG1
+              << "Begin: MSLister::listColumnHeader" << LogIO::POST;
   
   // Write the column headers
 
