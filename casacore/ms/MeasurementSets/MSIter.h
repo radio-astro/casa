@@ -78,16 +78,14 @@ private:
 // </etymology>
 //
 // <synopsis> 
-// An MSIter is a class to traverse a MeasurementSet in various orders.
-// It automatically adds four predefined sort columns to your selection
-// of sort columns (see constructor) so that it
-// can keep track of changes in frequency or polarization setup, 
-// field position and sub-array. Note that this can cause iterations
-// to occur in a different way from what you would expect, see examples below.
-// MSIter implements iteration by time interval
-// for the use of e.g., calibration tasks that want to calculate solutions over
-// some interval of time. You can iteratate over multiple MeasurementSets
-// with this class
+// An MSIter is a class to traverse a MeasurementSet in various orders.  It
+// automatically adds four predefined sort columns to your selection of sort
+// columns (see constructor) so that it can keep track of changes in frequency
+// or polarization setup, field position and sub-array.  Note that this can
+// cause iterations to occur in a different way from what you would expect, see
+// examples below.  MSIter implements iteration by time interval for the use of
+// e.g., calibration tasks that want to calculate solutions over some interval
+// of time.  You can iterate over multiple MeasurementSets with this class.
 // </synopsis> 
 //
 // <example>
