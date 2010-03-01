@@ -20,26 +20,18 @@ Unit tests for task smoothcal. It tests the following parameters:
 class smoothcal_test(unittest.TestCase):
     
     # Input and output names
-    msfile = 'ngc1333_ut1.ms'
-    gcal = 'ngc1333.gcal'
-    ref = 'ngc1333.ref.smoothed'
+    msfile = 'ngc1333_ut.ms'
+    gcal = 'ngc1333_ut.gcal'
+    ref = 'ngc1333_ut.ref'
     res = None
     out = 'smoothcal_test'
 
     def setUp(self):
         self.res = None
         default(smoothcal)
-#        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/smoothcal/'
-        datapath='/Users/scastro/casadir/utests/smoothcal/data/'
-#        if (os.path.exists(self.msfile)):            
-#            os.system('rm -rf ' + self.msfile)
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/smoothcal/'
         shutil.copytree(datapath+self.msfile, self.msfile)
-#        if (os.path.exists(self.gcal)):            
-#            os.system('rm -rf ' + self.gcal)
         shutil.copytree(datapath+self.gcal, self.gcal)
-#        if (os.path.exists(self.ref)):            
-        datapath='/Users/scastro/casadir/utests/smoothcal/data/'
-#            os.system('rm -rf ' + self.ref)
         shutil.copytree(datapath+self.ref, self.ref)
     
     def tearDown(self):
