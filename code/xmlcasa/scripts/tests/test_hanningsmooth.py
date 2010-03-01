@@ -8,9 +8,11 @@ import unittest
 
 '''
 Unit tests for task hanningsmooth. It tests the following parameters:
-    vis:           wrong and correct values
+    vis:   wrong and correct values
+    vis:   check that output column is created
     
-    Other tests: check the values of column smoothed GAIN against reference.
+    Other tests: check that theoretical and calculated values of column CORRECTED_DATA 
+                 are the same.
 '''
 class hanningsmooth_test(unittest.TestCase):
     
@@ -22,10 +24,7 @@ class hanningsmooth_test(unittest.TestCase):
     def setUp(self):
         self.res = None
         default(hanningsmooth)
-#        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/hanningsmooth/'
-        datapath='/opt/casa/data/regression/unittest/hanningsmooth/'
-#        if (os.path.exists(self.msfile)):            
-#            os.system('rm -rf ' + self.msfile)
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/hanningsmooth/'
         shutil.copytree(datapath+self.msfile, self.msfile)
     
     def tearDown(self):
