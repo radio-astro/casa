@@ -8,9 +8,9 @@ from odict import odict
 import asap as sd
 from asap._asap import Scantable
 import pylab as pl
-from sdaverage_cli import sdaverage_cli as sdaverage
-from sdsmooth_cli import sdsmooth_cli as sdsmooth 
-from sdbaseline_cli import sdbaseline_cli as sdbaseline 
+from sdaverage import sdaverage
+from sdsmooth import sdsmooth
+from sdbaseline import sdbaseline
 
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, interactive, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
@@ -112,7 +112,7 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             casalog.post( "" )
             casalog.post( "*** sdsmooth stage ***" )
             if kernel != 'none':
-              sdsmooth.defaults()
+              #sdsmooth.defaults()
               tmpoutfile = sdsmoothout 
               #sdsmooth(sdfile=tmpsdfile, kernel=kernel, kwidth=kwidth, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
               sdsmooth(sdfile=tmpsdfile, antenna=antenna, kernel=kernel, kwidth=kwidth, verify=verifysm, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
@@ -131,7 +131,7 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             casalog.post( "*** sdbaseline stage ***")
             if blmode != 'none':
               tmpoutfile = sdbaselineout
-              sdbaseline.defaults()
+              #sdbaseline.defaults()
 #              sdbaseline(sdfile=tmpsdfile, blmode=blmode,blpoly=blpoly,interactive=interactive,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
               sdbaseline(sdfile=tmpsdfile, antenna=antenna, blmode=blmode,blpoly=blpoly,verify=verifybl,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:

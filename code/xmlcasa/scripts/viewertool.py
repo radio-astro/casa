@@ -56,7 +56,27 @@ class viewertool(object):
 
         myf=sys._getframe(stacklevel).f_globals
 
-	viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
+        viewer_path = None
+        if myf.has_key('casa') and myf['casa'].has_key('helpers') and myf['casa']['helpers'].has_key('viewer'):
+            viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
+            if len(os.path.dirname(viewer_path)) == 0:
+                for dir in os.getenv('PATH').split(':') :
+                    dd = dir + os.sep + viewer_path
+                    if os.path.exists(dd) and os.access(dd,os.X_OK) :
+                        viewer_path = dd
+                        break
+        else:
+            for exe in ['casaviewer']:
+                for dir in os.getenv('PATH').split(':') :
+                    dd = dir + os.sep + exe
+                    if os.path.exists(dd) and os.access(dd,os.X_OK) :
+                        viewer_path = dd
+                        break
+                if viewer_path is not None:
+                    break
+
+        if viewer_path == None or not os.access(viewer_path,os.X_OK):
+            raise RuntimeError("cannot find casa viewer executable")
 
         args = [ viewer_path, "--casapy" ]
         if self.__state['gui']:
