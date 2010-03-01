@@ -5085,15 +5085,12 @@ Bool ImageAnalysis::statistics(
 	if (ok2)
 		retval.define(RecordFieldId("flux"), fluxDensity);
 
-	//
 	retval.define(RecordFieldId("blc"), blc.asVector());
 	retval.define(RecordFieldId("blcf"), blcf);
 
-	//
 	retval.define(RecordFieldId("trc"), trc.asVector());
 	retval.define(RecordFieldId("trcf"), trcf);
 
-	//
 	String tmp;
 	IPosition minPos, maxPos;
 	if (pStatistics_p->getMinMaxPos(minPos, maxPos)) {
@@ -5133,13 +5130,12 @@ Bool ImageAnalysis::statistics(
 	}
 
 	if (list || !pgdevice.empty()) {
-		if (!pStatistics_p->display()) {
+		if (!pStatistics_p->display(&blc)) {
 			*itsLog << pStatistics_p->errorMessage() << LogIO::EXCEPTION;
 		}
 	}
 	pStatistics_p->closePlotting();
 
-	//
 	return True;
 }
 

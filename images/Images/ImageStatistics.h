@@ -160,9 +160,13 @@ private:
    virtual Bool listStats (Bool hasBeam, const IPosition& dPos,
                            const Matrix<AccumType>& ord);
 
-   virtual void displayStats( AccumType nPts, AccumType sum, AccumType median,
-           AccumType medAbsDevMed, AccumType quartile, AccumType sumSq, AccumType mean,
-           AccumType var, AccumType rms, AccumType sigma, AccumType dMin, AccumType dMax );
+   virtual void displayStats(
+		   AccumType nPts, AccumType sum, AccumType median,
+           AccumType medAbsDevMed, AccumType quartile,
+           AccumType sumSq, AccumType mean, AccumType var,
+           AccumType rms, AccumType sigma, AccumType dMin,
+           AccumType dMax, const IPosition* const blc = NULL
+   );
 
 
   //# Make members of parent class known.
