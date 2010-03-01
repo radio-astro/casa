@@ -346,10 +346,12 @@ Bool ImageStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 }
 
 template <class T>
-void ImageStatistics<T>::displayStats( AccumType nPts, AccumType sum, AccumType median, 
-	AccumType medAbsDevMed, AccumType quartile, AccumType sumSq, AccumType mean, 
-	AccumType var, AccumType rms, AccumType sigma, AccumType dMin, AccumType dMax )
-{
+void ImageStatistics<T>::displayStats(
+	AccumType nPts, AccumType sum, AccumType median,
+	AccumType medAbsDevMed, AccumType quartile, AccumType sumSq,
+	AccumType mean, AccumType var, AccumType rms, AccumType sigma,
+	AccumType dMin, AccumType dMax, const IPosition* const blc
+) {
     if ( ! doList_p ) {
 	// Nothing to display, listing data is turned off.
 	return;
@@ -391,12 +393,19 @@ void ImageStatistics<T>::displayStats( AccumType nPts, AccumType sum, AccumType 
 	os_p << "         -- flux density [flux]:     " << sum/beamArea << " Jy" << LogIO::POST;
     }
     
+    IPosition myMaxPos = maxPos_p;
+    IPosition myMinPos = minPos_p;
+    if (blc != NULL) {
+    	myMaxPos += *blc;
+    	myMinPos += *blc;
+    }
+
     if (LattStatsSpecialize::hasSomePoints(nPts)) {
 	os_p << "         -- number of points [npts]:                " << nPts << LogIO::POST;
 	os_p << "         -- maximum value [max]:                    " << dMax << LogIO::POST;
 	os_p << "         -- minimum value [min]:                    " << dMin << LogIO::POST;
-	os_p << "         -- position of max value (pixel) [maxpos]: " << maxPos_p << LogIO::POST;
-	os_p << "         -- position of min value (pixel) [minpos]: " << minPos_p << LogIO::POST;
+	os_p << "         -- position of max value (pixel) [maxpos]: " << myMaxPos << LogIO::POST;
+	os_p << "         -- position of min value (pixel) [minpos]: " << myMinPos << LogIO::POST;
 	os_p << "         -- position of max value (world) [maxposf]: " << maxPosString << LogIO::POST;
 	os_p << "         -- position of min value (world) [maxposf]: " << minPosString << LogIO::POST;
 	os_p << "         -- Sum of pixel values [sum]:               " << sum << LogIO::POST;
