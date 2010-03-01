@@ -631,9 +631,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		else{
 		  stop=False;
 		}
-		os << LogIO::NORMAL2 << "Clean used " // Loglevel PROGRESS
+                // Upped to NORMAL per CAS-2017.
+		os << LogIO::NORMAL << "Clean used " // Loglevel PROGRESS
                    << iterations[model](chan*npolcube+ipol) << " iterations" 
-		   << " to approach a threshold of " << cycleThreshold
+		   << " to approach a threshhold of " << cycleThreshold
 		   << LogIO::POST; 
 	      }
 	    }
@@ -641,7 +642,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	  else {
 	    os << LogIO::NORMAL1 // Loglevel INFO
                << "No need to clean model " << model
-               << ": peak residual below threshold"
+               << ": peak residual below threshhold"
                << LogIO::POST;
 	  }
 	}
