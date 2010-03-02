@@ -108,7 +108,13 @@ class __viewer_class(object):
 					vwr = viewertool.viewertool( False, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
 					self.local_ving = vwr
 
-		if vwr != None:
+		if vwr != None :
+			##
+			## (1) save current *viewer*server* path
+			## (2) have viewer() task follow casapy/python's cwd
+			old_path = vwr.cwd( )
+			vwr.cwd(os.path.abspath(os.curdir))
+
 			panel = vwr.panel("viewer")
 			data = None
 			if type(infile) == str and len(infile) > 0 :
@@ -139,6 +145,9 @@ class __viewer_class(object):
 			# it makes no sense to leave a panel open with no way of interacting with it
 			if type(gui) == bool and not gui:
 				vwr.close(panel)
+
+			## (3) restore original path
+			vwr.cwd(old_path)
 
 		else:
 			viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
