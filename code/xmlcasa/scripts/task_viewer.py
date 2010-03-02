@@ -102,7 +102,11 @@ class __viewer_class(object):
 					vwr = viewertool.viewertool( True, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
 					self.local_vi = vwr
 			else:
-				raise Exception, "launching GUIless apparatus from viewer() task is not supported"
+				if self.local_ving is not None:
+					vwr = self.local_ving
+				else:
+					vwr = viewertool.viewertool( False, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
+					self.local_ving = vwr
 
 		if vwr != None:
 			panel = vwr.panel("viewer")
