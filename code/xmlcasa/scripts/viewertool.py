@@ -57,7 +57,8 @@ class viewertool(object):
         myf=sys._getframe(stacklevel).f_globals
 
         viewer_path = None
-        if myf.has_key('casa') and myf['casa'].has_key('helpers') and myf['casa']['helpers'].has_key('viewer'):
+        if type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == dict and myf['casa'].has_key('helpers') \
+                and type(myf['casa']['helpers']) == dict and myf['casa']['helpers'].has_key('viewer'):
             viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
             if len(os.path.dirname(viewer_path)) == 0:
                 for dir in os.getenv('PATH').split(':') :
@@ -65,6 +66,7 @@ class viewertool(object):
                     if os.path.exists(dd) and os.access(dd,os.X_OK) :
                         viewer_path = dd
                         break
+            args = [ viewer_path, "--casapy" ]
         else:
             for exe in ['casaviewer']:
                 for dir in os.getenv('PATH').split(':') :
@@ -74,11 +76,11 @@ class viewertool(object):
                         break
                 if viewer_path is not None:
                     break
+            args = [ viewer_path ]
 
         if viewer_path == None or not os.access(viewer_path,os.X_OK):
             raise RuntimeError("cannot find casa viewer executable")
 
-        args = [ viewer_path, "--casapy" ]
         if self.__state['gui']:
             args += [ '--server=' + self.__state['dbus name'] ]
         else:
