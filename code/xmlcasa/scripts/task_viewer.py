@@ -70,10 +70,11 @@ class __viewer_class(object):
 
 		"""
 		a=inspect.stack()
-		stacklevel=0    
+		stacklevel=0
 		for k in range(len(a)):
-			if (string.find(a[k][1], 'ipython console') > 0):
+			if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
 				stacklevel=k
+
 		myf=sys._getframe(stacklevel).f_globals
 
 		#Python script
@@ -98,10 +99,10 @@ class __viewer_class(object):
 				if self.local_vi is not None:
 					vwr = self.local_vi
 				else:
-					vwr = viewertool.viewertool( True, True )
+					vwr = viewertool.viewertool( True, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
 					self.local_vi = vwr
 			else:
-				print "launching GUIless apparatus from viewer() task is not yet supported"
+				raise Exception, "launching GUIless apparatus from viewer() task is not supported"
 
 		if vwr != None:
 			panel = vwr.panel("viewer")

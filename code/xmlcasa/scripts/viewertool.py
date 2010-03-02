@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import base64
@@ -23,12 +24,35 @@ except:
 def dbus_connection( ):
     return bus
 
+
+def seqselect(test, list):  
+    """ 
+    Select the elements from a sequence that 
+    satisfy the given test function 
+    - compare The test function should have following 
+    signature def test(item): and must return a boolean 
+    - list The List from which element need to be selected 
+    """  
+    selected = [ ]
+    for item in list:  
+        if test(item) == True:  
+            selected.append(item)
+    return selected  
+
+
 class viewertool(object):
     "manage task engines"
 
     __t = string.maketrans("abcdefghijklmnopqrstuvwxyz0123456789/*:%$#@!&()~+,.:;{}[]|\\\"'^","abcdefghijklmnopqrstuvwxyz0123456789__________________________")
 
-    def __init__( self, with_gui=True, pre_launch=False ):
+    ###
+    ### 'use_existing' defaults to false because:
+    ###    o  for linux a new dbus session daemon is started for each casapy
+    ###    o  for osx it would result in multiple casapy sessions using the same viewer
+    ###    o  for casa.py included into python it makes sense to avoid a new viewer
+    ###             appearing (and sticking around) for each include
+    ###
+    def __init__( self, with_gui=True, pre_launch=False, use_existing=False ):
 
         if type(with_gui) != bool:
             raise Exception, "the 'with_gui' parameter must be a boolean"
@@ -37,13 +61,37 @@ class viewertool(object):
         self.__state['proxy'] = None
         self.__state['gui'] = with_gui
         self.__state['launched'] = False
-        self.__state['dbus name'] = "vtool_%s" % (base64.b64encode(os.urandom(16))).translate(self.__t,'=')
+        self.__state['dbus name'] = None
+
+        if type(with_gui) == bool and with_gui == False:
+            basename = "vtoolng"
+        else:
+            basename = "vtool"
+
+        ## for viewer used from plain python, see if a viewer is already available on dbus first...
+        bus = dbus_connection( )
+        if bus != None and type(use_existing) == bool and use_existing == True :
+            candidates = seqselect(lambda x: x.startswith('edu.nrao.casa.%s_' % (basename)),map(str,bus.list_names( )))
+            if len( candidates ) > 0 :
+                candidate = candidates[0]
+                p = re.compile('[^\.]+')
+                segments = p.findall(candidate)
+                if len(segments) == 4 :
+                    self.__state['dbus name'] = segments[3]
+                    self.__state['launched'] = True
+
+        if self.__state['dbus name'] == None:
+            self.__state['dbus name'] = "%s_%s" % (basename, (base64.b64encode(os.urandom(16))).translate(self.__t,'='))
 
         if pre_launch:
             self.__launch( )
 
 
     def __launch( self ):
+
+        ## if we've already launched the viewer
+        if type(self.__state['launched']) == bool and self.__state['launched'] == True:
+            return
 
         if dbus_connection( ) == None:
             raise Exception, "dbus is not available; cannot script the viewer"
