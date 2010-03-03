@@ -2296,7 +2296,6 @@ ComponentList ImageAnalysis::fitsky(
 	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
     }
 
-
     Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 	SubImage<Float> subImageTmp(*pImage_p, slice, False);
 
@@ -2319,6 +2318,8 @@ ComponentList ImageAnalysis::fitsky(
 
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
+
+
 	Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
 	Array<Float> pixels = subImage.get(True);
@@ -2374,6 +2375,7 @@ ComponentList ImageAnalysis::fitsky(
 	}
 
 	// Add models
+
 	Vector<String> modelTypes(models.copy());
 	for (uInt i = 0; i < nModels; i++) {
 		// If we ask to fit a POINT component, that really means a
@@ -2444,6 +2446,7 @@ ComponentList ImageAnalysis::fitsky(
 	fitter.residual(residPixels, modelPixels, pixels);
 	chiSquared = fitter.chiSquared();
 	// Convert units of solution from pixel units to physical units
+
 	Vector<SkyComponent> result(nModels);
 	Double facToJy;
 	for (uInt i = 0; i < models.nelements(); i++) {
@@ -2464,21 +2467,29 @@ ComponentList ImageAnalysis::fitsky(
 		cl.add(result(i));
 	}
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
-	residStats = _fitskyWriteResidualAndGetStats(subImage, residPixels, residImageName);
+
+	// CAS-1966 keep degenerate axes
+	SubImage<Float> subImage2 = makeSubImage(
+		pRegionRegion, pMaskRegion, subImageTmp,
+		*(ImageRegion::tweakedRegionRecord(&region)),
+		mask, list, *itsLog, False, AxesSpecifier(True)
+	);
+	residStats = _fitskyWriteResidualAndGetStats(subImage2, residPixels, residImageName);
 
 
 	// PagedImage<Float> residImage(residImageName);
-	ImageMetaData subImageMD(subImage);
+	ImageMetaData subImageMD(subImage2);
 	Vector<Int> inputDirectionAxes = subImageMD.directionAxesNumbers();
 	Record reg;
-	ImageAnalysis(&subImage).statistics(
-		inputStats, inputDirectionAxes, reg, "", Vector<String>(0), Vector<Float>(0), Vector<Float>(0)
+	ImageAnalysis(&subImage2).statistics(
+		inputStats, inputDirectionAxes, reg, "", Vector<String>(0),
+		Vector<Float>(0), Vector<Float>(0)
 	);
 
     if (! modelImageName.empty()) {
         // construct the model image, copying pattern from ImageProxy
     	ImageUtilities::writeImage(
-    		subImage.shape(), subImage.coordinates(),
+    		subImage2.shape(), subImage2.coordinates(),
     		modelImageName, modelPixels, *itsLog
     	);
     }
@@ -4558,7 +4569,6 @@ Record ImageAnalysis::restoringbeam() {
 			rstat = iRec.asRecord("restoringbeam");
 		}
 	}
-	cout << iRec << endl;
 	return rstat;
 }
 
@@ -5075,15 +5085,12 @@ Bool ImageAnalysis::statistics(
 	if (ok2)
 		retval.define(RecordFieldId("flux"), fluxDensity);
 
-	//
 	retval.define(RecordFieldId("blc"), blc.asVector());
 	retval.define(RecordFieldId("blcf"), blcf);
 
-	//
 	retval.define(RecordFieldId("trc"), trc.asVector());
 	retval.define(RecordFieldId("trcf"), trcf);
 
-	//
 	String tmp;
 	IPosition minPos, maxPos;
 	if (pStatistics_p->getMinMaxPos(minPos, maxPos)) {
@@ -5123,13 +5130,12 @@ Bool ImageAnalysis::statistics(
 	}
 
 	if (list || !pgdevice.empty()) {
-		if (!pStatistics_p->display()) {
+		if (!pStatistics_p->display(&blc)) {
 			*itsLog << pStatistics_p->errorMessage() << LogIO::EXCEPTION;
 		}
 	}
 	pStatistics_p->closePlotting();
 
-	//
 	return True;
 }
 
@@ -5356,7 +5362,6 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 					&& cSys.nCoordinates() > 1) {
 				// Stokes axis exists and its not the only one
 				Vector<String> cNames = cSys.worldAxisNames();
-				//cout << "cNames = " << cNames << endl;
 				keepAxes = IPosition(cNames.size() - 1);
 				uInt j = 0;
 				for (uInt i = 0; i < cNames.size(); i++) {
@@ -5366,7 +5371,6 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 					}
 				}
 			}
-			//cout << "keepAxes = " << keepAxes << endl;
 			//else: nothing to drop
 		}
 	}
@@ -5685,18 +5689,15 @@ ImageRegion* ImageAnalysis::makeMaskRegion(const String& mask) const {
 		//
                 String mas = mask;
                 Int pos = mas.find_last_of("/", 10000);
-                //cout << "pos=" << pos << endl;
                 String dir = "";
                 String im = mas.after(pos);
                 if (pos>0) 
                    dir = mas.before(pos);
-                //cout << "dir=" << dir << " im=" << im << " pos=" << pos << endl;
 		PtrBlock<const ImageRegion*> tempRegs;
 		LatticeExprNode node = ImageExprParse::command(im, tempLattices,
 				tempRegs, dir);
 		const WCLELMask maskRegion(node);
 		p = new ImageRegion(maskRegion);
-                //cout << "ImageAnalysis::makeMaskRegion ok" << endl;
 	}
 	return p;
 }
