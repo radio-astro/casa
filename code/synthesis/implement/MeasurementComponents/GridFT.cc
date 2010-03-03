@@ -408,13 +408,14 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData2.resize(gridShape);
-    griddedData.resize(gridShape);
+    // griddedData2.resize(gridShape);
+    // griddedData.resize(gridShape);
     if(useDoubleGrid_p){
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
     else{
+      griddedData.resize(gridShape);
       griddedData=Complex(0.0);
     }
     //iimage.get(griddedData, False);
@@ -423,7 +424,6 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
     lattice=arrayLattice;
   }
   //AlwaysAssert(lattice, AipsError);
-
 }
 
 
@@ -584,7 +584,6 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
 
 
-
   Bool iswgtCopy;
   const Float *wgtStorage;
   wgtStorage=elWeight.getStorage(iswgtCopy);
@@ -656,7 +655,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	  dphase.getStorage(del),
 	  datStorage,
 	  &s[0],
-	    &s[1],
+	  &s[1],
 	  &idopsf,
 	  flags.getStorage(del),
 	  rowFlags.getStorage(del),
@@ -686,7 +685,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   dphase.getStorage(del),
 	   datStorage,
 	   &s[0],
-	    &s[1],
+	   &s[1],
 	   &idopsf,
 	   flags.getStorage(del),
 	   rowFlags.getStorage(del),

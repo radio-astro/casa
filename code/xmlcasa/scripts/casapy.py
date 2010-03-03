@@ -315,13 +315,7 @@ from parameter_check import *
 ####################
 def go(taskname=None):
     """ Execute taskname: """
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel=k
-            break
-    myf=sys._getframe(stacklevel).f_globals
+    myf = sys._getframe(len(inspect.stack())-1).f_globals
     if taskname==None: taskname=myf['taskname']
     oldtaskname=myf['taskname']
     #myf['taskname']=taskname
@@ -424,11 +418,6 @@ def readboxfile(boxfile):
 
 def inp(taskname=None):
     try:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
         myf=sys._getframe(len(inspect.stack())-1).f_globals
         if((taskname==None) and (not myf.has_key('taskname'))):
             print 'No task name defined for inputs display'
@@ -469,13 +458,7 @@ def update_params(func, printtext=True, ipython_globals=None):
     from odict import odict
 
     if ipython_globals == None:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+        myf=sys._getframe(len(inspect.stack())-1).f_globals
     else:
         myf=ipython_globals
 
@@ -749,12 +732,7 @@ def print_params_col(param=None, value=None, comment='', colorparam=None,
     print parampart + valpart + commentpart
 
 def __set_default_parameters(b):
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel=k
-    myf=sys._getframe(stacklevel).f_globals
+    myf=sys._getframe(len(inspect.stack())-1).f_globals
     a=b
     elkey=a.keys()
     for k in range(len(a)):
@@ -804,13 +782,7 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
 
     try:
         if ipython_globals == None:
-            a=inspect.stack()
-            stacklevel=0
-            for k in range(len(a)):
-                if (string.find(a[k][1], 'ipython console') > 0):
-                    stacklevel=k
-                    break
-            myf=sys._getframe(stacklevel).f_globals
+	    myf = sys._getframe(len(inspect.stack())-1).f_globals
         else:
             myf=ipython_globals
 
@@ -885,13 +857,7 @@ def default(taskname=None):
     """
 
     try:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+	myf = sys._getframe(len(inspect.stack())-1).f_globals
         if taskname==None: taskname=myf['taskname']
         myf['taskname']=taskname
         if type(taskname)!=str:
@@ -920,13 +886,7 @@ def taskparamgui(useGlobals=True):
     import paramgui
 
     if useGlobals:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0) or (string.find(a[k][1], '<string>') >= 0):
-                stacklevel=k
-                break
-        paramgui.setGlobals(sys._getframe(stacklevel).f_globals)
+        paramgui.setGlobals(sys._getframe(len(inspect.stack())-1).f_globals)
     else:
         paramgui.setGlobals({})
 
