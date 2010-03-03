@@ -210,11 +210,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         DESCRIPTION:
 
         Task sdflag performs simple channel/row based flagging on spectra.
-        Channel based flagging and row based flagging can not be executed 
-        simultaneously: channel based flagging can be executed using the 
-        flag regions specified in maskflag if no row is given in flagrow, 
-        whereas row based flagging is executed when one or more rows are 
-        specified in flagrow. This is not interactive flagging. 
+        Currently, the available ways of flagging include: (1) channel 
+        based flagging by specifying regions in channel, (2) channel 
+        based flagging by specifying a range of spectral value, and (3) 
+        row based flagging by specifying a list of row numbers. 
+        These three ways of flagging can not be executed simultaneously. 
+        The first one (channel based) can be executed by giving flag 
+        regions in maskflag, no row in flagrow (=[]), and setting 
+        clip=False. The second one (channel based intensity clipping) 
+        can run when you set clip=True and specify a range in clipminmax 
+        (the values given in maskflag and flagrow are ignored). The third 
+        one (row based flagging) is executed when one or more rows are 
+        specified in flagrow and clip is set False. This is not 
+        interactive flagging. 
         If plotlevel&gt;=1, the task asks you if you really apply the 
         flags before it is actually written to the data with a plot 
         indicating flagged regions.

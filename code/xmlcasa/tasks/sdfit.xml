@@ -347,6 +347,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         be handled, but we recommend that you use scanlist, field, iflist, 
         and pollist to give a single selection for each fit.
 
+        Currently, you can choose Gaussian or Lorentzian profile as a 
+        fitting model. 
+
         For complicated spectra, sdfit does not do a good job of
         "auto-guessing" the starting model for the fit.  We recommend
         you use sd.fitter in the toolkit which has more options, such
