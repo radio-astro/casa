@@ -399,7 +399,6 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
 
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
-            	print (inspect.getlineno(inspect.currentframe()))
             	ia.open(outfile)
                 csys=ia.coordsys()
                 if isTPol:
@@ -437,6 +436,8 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     # specified a region or mask information.
     subImages=[]
     casalog.post( "SUBIMAGES: "+str(subImages), 'DEBUG2' )
+    file_map = {}
+
     for i in range( 0,len( filenames ) ):
         casalog.post( 'Creating tmp image for file '+str(i), 'DEBUG2')
         # Get the region information
@@ -472,6 +473,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             ia.open( filenames[i] )
             tmpFile=tmpFilePrefix+str(i)
             ia.subimage( region=reg, mask=mask, outfile=tmpFile )
+            file_map[filenames[i]] = tmpFile
             subImages.append( tmpFile )
             ia.done()
             casalog.post( 'Created temporary image '+tmpFile+' from '+\
@@ -492,27 +494,35 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             return False
     # Make sure no problems happened
 
+
     if ( len(filenames) != len(subImages) ) :
         #raise Exception, 'Unable to create subimages for all image names given'
         casalog.post( 'Unable to create subimages for all image names given',\
                       'SEVERE' )
         return False
     
+    # because real file names also have to be mapped to a corresponding subimage, CAS-1830
+    for k in file_map.keys():
+        # we require actual image names to be in quotes when used in the expression
+        varnames.extend(["'" + k + "'", '"' + k + '"'])
+        subImages.extend(2 * [file_map[k]])
+
+    
     # Put the subimage names into the expression
     try:
             expr = _immath_expr_from_varnames(expr, varnames, subImages)
     except Exception, e:
-        casalog.post( 'Unable to construct pixel expression aborting immath.'
-                      'SEVERE' )
-        casalog.post( 'Exception occured during expression construction\n'\
-                     +str(e), 'DEBUG2' )
+        casalog.post(
+            "Unable to construct pixel expression aborting immath: " + str(e),
+            'SEVERE'
+        )
+        return False
     casalog.post( 'Will evaluate expression of subimages: '+expr, 'DEBUG1' )
 
     try:
         # Do the calculation
         ia.imagecalc(pixels=expr, outfile=outfile )
 
-                
         # modify stokes type for polarization intensity image
         if (  mode=="poli" ):                
             csys=retValue.coordsys()
@@ -606,7 +616,6 @@ def _immath_expr_from_varnames(expr, varnames, filenames):
 
         tmpvars.sort()
         tmpvars.reverse()
-
         for varname in tmpvars:
                 expr = expr.replace(varname, '"' + tmpfiles[varname] + '"')
         return(expr)
