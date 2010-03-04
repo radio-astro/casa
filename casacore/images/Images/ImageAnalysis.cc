@@ -4919,11 +4919,23 @@ Bool ImageAnalysis::statistics(
 		trc = sl.end();
 	}
 
-	//
-	String blcf, trcf;
+	// for precision
 	CoordinateSystem cSys = pImage_p->coordinates();
-	blcf = CoordinateUtil::formatCoordinate(blc, cSys);
-	trcf = CoordinateUtil::formatCoordinate(trc, cSys);
+	DirectionCoordinate dirCoord = cSys.directionCoordinate(0);
+	Vector<String> dirUnits = dirCoord.worldAxisUnits();
+	Vector<Double> dirIncs = dirCoord.increment();
+	Int precis = -1;
+	dirCoord.directionType();
+	for (uInt i=0; i< dirUnits.size(); i++) {
+		Quantity inc(dirIncs[i], dirUnits[i]);
+		inc.convert("s");
+		Int newPrecis = abs(int(floor(log10(inc.getValue()))));
+		precis = (newPrecis > 2 && newPrecis > precis) ? newPrecis : precis;
+	}
+
+	String blcf, trcf;
+	blcf = CoordinateUtil::formatCoordinate(blc, cSys, precis);
+	trcf = CoordinateUtil::formatCoordinate(trc, cSys, precis);
 	if (list) {
 		// Only write to the logger if the user wants it displayed.
 		*itsLog << LogOrigin("ImageAnalysis", "statistics") << LogIO::NORMAL;
@@ -4947,7 +4959,6 @@ Bool ImageAnalysis::statistics(
 			forceNewStorage = True;
 	}
 
-	//
 	if (forceNewStorage) {
 		delete pStatistics_p;
 		pStatistics_p = 0;
@@ -5034,7 +5045,6 @@ Bool ImageAnalysis::statistics(
 	Array<Double> rms, fluxDensity, med, medAbsDevMed, quartile;
 	Bool ok = True;
 
-	//
 	Bool trobust(robust);
 	if (!trobust) {
 		for (uInt i = 0; i < statsToPlot.nelements(); i++) {
@@ -5067,7 +5077,6 @@ Bool ImageAnalysis::statistics(
 		*itsLog << pStatistics_p->errorMessage() << LogIO::EXCEPTION;
 	}
 	Bool ok2 = pStatistics_p->getStatistic(fluxDensity, LatticeStatsBase::FLUX);
-	//
 	Record retval;
 	retval.define(RecordFieldId("npts"), npts);
 	retval.define(RecordFieldId("sum"), sum);
@@ -5096,12 +5105,10 @@ Bool ImageAnalysis::statistics(
 	if (pStatistics_p->getMinMaxPos(minPos, maxPos)) {
 		if (minPos.nelements() > 0 && maxPos.nelements() > 0) {
 			retval.define(RecordFieldId("minpos"), (blc + minPos).asVector());
-			tmp = CoordinateUtil::formatCoordinate(blc + minPos, cSys);
+			tmp = CoordinateUtil::formatCoordinate(blc + minPos, cSys, precis);
 			retval.define(RecordFieldId("minposf"), tmp);
-
-			//
 			retval.define(RecordFieldId("maxpos"), (blc + maxPos).asVector());
-			tmp = CoordinateUtil::formatCoordinate(blc + maxPos, cSys);
+			tmp = CoordinateUtil::formatCoordinate(blc + maxPos, cSys, precis);
 			retval.define(RecordFieldId("maxposf"), tmp);
 		}
 	}
