@@ -2034,7 +2034,7 @@ void ImageRegrid<T>::checkAxes(IPosition& outPixelAxes,
       Coordinate::Type type = outCoords.type(outCoordinate);
 
       if (type==Coordinate::STOKES) {
-         os << LogIO::INFO << "The Stokes axis cannot be regridded "
+         os << LogIO::POST << "The Stokes axis cannot be regridded "
 	   "- removing from list" << endl;
       } else {
          Bool ok = True;
