@@ -782,25 +782,27 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     for (Int i=0;i<nspw;++i) {
       Int spw=spectralwindowids_p(i);
       Vector<Double> chanFreq=msc.spectralWindow().chanFreq()(spw); 
-      Vector<Double> freqResolution=msc.spectralWindow().chanWidth()(spw); 
+      Vector<Double> freqResolution = msc.spectralWindow().chanWidth()(spw); 
       
       if(dataMode_p=="none"){
       
-
 	if(i==0) {
-	  fmin=min(chanFreq-abs(freqResolution));
-	  fmax=max(chanFreq+abs(freqResolution));
+	  fmin=min(chanFreq-abs(0.5*freqResolution));
+	  fmax=max(chanFreq+abs(0.5*freqResolution));
 	}
 	else {
-	  fmin=min(fmin,min(chanFreq-abs(freqResolution)));
-	  fmax=max(fmax,max(chanFreq+abs(freqResolution)));
+	  fmin=min(fmin,min(chanFreq-abs(0.5*freqResolution)));
+	  fmax=max(fmax,max(chanFreq+abs(0.5*freqResolution)));
 	}
       }
       else if(dataMode_p=="channel"){
+	// This needs some careful thought about roundoff - it is likely 
+	// still adding an extra half-channel at top and bottom but 
+	// if the freqResolution is nonlinear, there are subtleties
 	Int lastchan=dataStart_p[i]+ dataNchan_p[i]*dataStep_p[i];
         for(Int k=dataStart_p[i] ; k < lastchan ;  k+=dataStep_p[i]){
-	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*dataStep_p[i]));
-	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*dataStep_p[i]));
+	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(dataStep_p[i]-0.5)));
+	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(dataStep_p[i]-0.5)));
         }
       }
       else{

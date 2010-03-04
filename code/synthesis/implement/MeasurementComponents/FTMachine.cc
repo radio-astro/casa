@@ -966,7 +966,7 @@ Bool FTMachine::matchChannel(const Int& spw,
   for (Int chan=0;chan<nvischan;chan++) {
     f(0)=lsrFreq[chan];
     if(spectralCoord_p.toPixel(c, f)) {
-      Int pixel=Int(floor(c(0)));
+      Int pixel=Int(floor(c(0))+0.5);  // round to chan freq at chan center 
       //cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
       if(pixel>-1&&pixel<nchan) {
 	chanMap(chan)=pixel;
