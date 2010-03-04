@@ -1231,6 +1231,7 @@ class cleanhelper:
             spw0=spwinds[0]
         tb.open(self.vis+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
+        chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
         # assume spw[0]  
@@ -1248,17 +1249,19 @@ class cleanhelper:
             return freqlist, finc
         #DP extract array from dictionary returned by getvarcol
         chanfreqs1dx = numpy.array([])
-        if(spwinds==-1):
-            chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
-            chanfreqs1dx = chanfreqs[0]
-        else:
-            chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()            
-            chanfreqs1dx=chanfreqs[0]
+        chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
+        chanfreqs1dx = chanfreqs[0]
+        if(spwinds!=-1):
             for ispw in range(1,len(spwinds)):
                 chanfreqs=chanfreqscol['r'+str(spwinds[ispw]+1)].transpose()            
                 chanfreqs1dx = numpy.concatenate((chanfreqs1dx, chanfreqs[0]))
         chanfreqs1d = chanfreqs1dx.flatten()        
-            
+        #RI this is woefully inadequate assuming the first chan's width
+        #applies to everything selected, but we're going to replace all
+        #this with MSSelect..
+        chanwids=chanwidcol['r'+str(spw0+1)].transpose()
+        chanfreqwidth=chanwids[0][0]
+        
         if(type(start)==int or type(start)==float):
             if(start > len(chanfreqs1d)):
                 raise TypeError, "Start channel is outside the data range"
@@ -1270,7 +1273,8 @@ class cleanhelper:
                 raise TypeError, "Unrecognized start parameter"
         if(type(width)==int or type(width)==float):
             if(type(start)==int or type(start)==float):
-                finc=(chanfreqs1d[start+1]-chanfreqs1d[start])*width
+                #finc=(chanfreqs1d[start+1]-chanfreqs1d[start])*width
+                finc=(chanfreqwidth)*width
                 # still need to convert to target reference frame!
             elif(type(start)==str):
                 if(qa.quantity(start)['unit'].find('Hz') > -1):

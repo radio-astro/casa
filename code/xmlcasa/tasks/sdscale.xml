@@ -58,7 +58,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         Keyword arguments:
         sdfile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
-        factor -- scaling factor. float or one dimensional float list.
+        factor -- scaling factor. float or one- or two-dimensional float list.
                   default: 1 (no scaling)
         scaletsys -- scaling of associated Tsys
                     default: True

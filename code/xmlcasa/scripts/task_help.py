@@ -54,7 +54,7 @@ def toolhelp():
 
 def tasklist():
     """ List tasks, organized by catagory """
-    print 'Available tasks, organized by category: \n'
+    print 'Available tasks, organized by category (experimental tasks in parenthesis): \n'
     print 'Import/Export       Information   Data Editing  Display/Plotting'
     print '-------------       -----------   ------------  ----------------'
     print 'importvla           imhead        concat        clearplot'
@@ -84,7 +84,7 @@ def tasklist():
     print '                    polcal                                  '
     print '                    setjy                                   '
     print '                    smoothcal                               '
-    print '                    (fringecal                              '
+    print '                    (fringecal)                             '
     print '                    (peel)                                  '
     print '                                                            '
     print '                                                            '
