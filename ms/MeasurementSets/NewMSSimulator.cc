@@ -611,10 +611,10 @@ void NewMSSimulator::initFields(const String& sourceName,
   os << "Creating new field table row for " << sourceName << ", ID "
      << baseFieldID << LogIO::POST;
 
-  if(!ms_p->source().isNull()){
-    os << "Creating new source table row for " << sourceName << ", ID "
-       << baseSrcID << LogIO::DEBUG1;
-  }
+//  if(!ms_p->source().isNull()){
+//    os << "Creating new source table row for " << sourceName << ", ID "
+//       << baseSrcID << LogIO::DEBUG1;
+//  }
 
   ms_p->field().addRow(1); //SINGLE DISH CASE
   fieldc.name().put(baseFieldID, sourceName);
