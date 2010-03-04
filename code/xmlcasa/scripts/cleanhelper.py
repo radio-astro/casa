@@ -1140,12 +1140,16 @@ class cleanhelper:
                 retwidth = self.qatostring(qa.convert(str(finc)+'Hz',inwidthunit))
              
         elif(mode=='velocity'):
-            #convert back to velocities
-            retstart = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
+            #convert back to velocities (take max freq for min vel )
+            if start=='':
+                retstart = self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf)
+            else:
+                retstart = self.convertvf(start,frame,field,restf)
             if(width==''):
-                w1 = self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)
-                w0 = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
-                retwidth=str(qa.quantity(qa.sub(qa.quantity(w1),qa.quantity(w0)))['value'])+'m/s'
+                # width should be determined from last freq channels
+                v1 = self.convertvf(str(freqlist[-2])+'Hz',frame,field,restf)
+                v0 = self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf)
+                retwidth=str(qa.quantity(qa.sub(qa.quantity(v1),qa.quantity(v0)))['value'])+'m/s'
             else:
                 retwidth=width
         else:
