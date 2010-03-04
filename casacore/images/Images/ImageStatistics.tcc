@@ -156,10 +156,10 @@ Bool ImageStatistics<T>::setNewImage(const ImageInterface<T>& image)
 
 template <class T>
 Bool ImageStatistics<T>::getBeamArea (Double& beamArea) const
-//
+
 // Get beam volume if present.  ALl this beamy stuff should go to
 // a class called GaussianBeam and be used by GaussianCOnvert as well
-//
+
 {
    beamArea = -1.0;
    ImageInfo ii = pInImage_p->imageInfo();
@@ -167,21 +167,23 @@ Bool ImageStatistics<T>::getBeamArea (Double& beamArea) const
    CoordinateSystem cSys = pInImage_p->coordinates();
    String imageUnits = pInImage_p->units().getName();
    imageUnits.upcase();
-//
+
    Int afterCoord = -1;   
    Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
-   if (beam.nelements()==3 && dC!=-1 && imageUnits==String("JY/BEAM")) {
+   // use contains() not == so moment maps are dealt with nicely
+   if (beam.nelements()==3 && dC!=-1 && imageUnits.contains("JY/BEAM")) {
       DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
       Vector<String> units(2);
-      units(0) = "rad"; units(1) = "rad";
+      units(0) = units(1) = "rad";
       dCoord.setWorldAxisUnits(units);
       Vector<Double> deltas = dCoord.increment();
-//
+
       Double major = beam(0).getValue(Unit("rad"));
       Double minor = beam(1).getValue(Unit("rad"));
-      beamArea = 1.1331 * major * minor / abs(deltas(0) * deltas(1));
+      beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
       return True;
-   } else {
+   }
+   else {
       return False;
    }
 }
