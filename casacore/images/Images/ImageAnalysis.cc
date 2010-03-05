@@ -4946,7 +4946,7 @@ Bool ImageAnalysis::statistics(
 				<< LogIO::POST;
 		*itsLog << "         -- bottom-left corner (world) [blcf]: " << blcf
 				<< LogIO::POST;
-		*itsLog << "         -- top-right corner( world) [trcf]:   " << trcf
+		*itsLog << "         -- top-right corner (world) [trcf]:   " << trcf
 				<< LogIO::POST;
 
 	}
@@ -5007,6 +5007,9 @@ Bool ImageAnalysis::statistics(
 			}
 		}
 	}
+
+	pStatistics_p->setPrecision(precis);
+	pStatistics_p->setBlc(blc);
 
 	// Assign old regions to current regions
 	delete pOldStatsRegionRegion_p;
@@ -5137,7 +5140,7 @@ Bool ImageAnalysis::statistics(
 	}
 
 	if (list || !pgdevice.empty()) {
-		if (!pStatistics_p->display(&blc)) {
+		if (!pStatistics_p->display()) {
 			*itsLog << pStatistics_p->errorMessage() << LogIO::EXCEPTION;
 		}
 	}
