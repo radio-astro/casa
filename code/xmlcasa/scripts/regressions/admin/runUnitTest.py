@@ -133,7 +133,7 @@ def main(testnames=[]):
         # Run all tests and create a XML report
         xmlfile = xmldir+'nose.xml'
         try:
-            result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
                                   suite=list)
         except:
             print "Exception: failed to run the test"
@@ -197,7 +197,7 @@ def main(testnames=[]):
         # Run the tests and create a XML report
         xmlfile = xmldir+'nose.xml'
         try:
-            result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
                                   suite=list)
         except:
             print "Exception: failed to run the test"
