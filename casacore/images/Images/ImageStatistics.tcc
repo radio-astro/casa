@@ -358,86 +358,106 @@ Bool ImageStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 
 template <class T>
 void ImageStatistics<T>::displayStats(
-	AccumType nPts, AccumType sum, AccumType median,
-	AccumType medAbsDevMed, AccumType quartile, AccumType sumSq,
-	AccumType mean, AccumType var, AccumType rms, AccumType sigma,
-	AccumType dMin, AccumType dMax
+		AccumType nPts, AccumType sum, AccumType median,
+		AccumType medAbsDevMed, AccumType quartile, AccumType sumSq,
+		AccumType mean, AccumType var, AccumType rms, AccumType sigma,
+		AccumType dMin, AccumType dMax
 ) {
-    if ( ! doList_p ) {
-	// Nothing to display, listing data is turned off.
-	return;
-    }
-    
+	if ( ! doList_p ) {
+		// Nothing to display, listing data is turned off.
+		return;
+	}
 
-    // Get beam
-    Double beamArea;
-    Bool hasBeam = getBeamArea(beamArea);
 
-    // Find world coordinates of min and max. We list pixel coordinates
-    // of min/max relative to the start of the parent lattice
-    //if (!fixedMinMax_p) {
+	// Get beam
+	Double beamArea;
+	Bool hasBeam = getBeamArea(beamArea);
 
-    CoordinateSystem cSys(pInImage_p->coordinates());
-    String minPosString = CoordinateUtil::formatCoordinate (minPos_p, cSys, precision_);
-    String maxPosString = CoordinateUtil::formatCoordinate (maxPos_p, cSys, precision_);
+	// Find world coordinates of min and max. We list pixel coordinates
+	// of min/max relative to the start of the parent lattice
+	//if (!fixedMinMax_p) {
+
+	CoordinateSystem cSys(pInImage_p->coordinates());
+	String minPosString = CoordinateUtil::formatCoordinate (minPos_p, cSys, precision_);
+	String maxPosString = CoordinateUtil::formatCoordinate (maxPos_p, cSys, precision_);
 	//}
-    
 
-    // Have to convert LogIO object to ostream before can apply
-    // the manipulators.  Also formatting Complex numbers with
-    // the setw manipulator fails, so I go to a lot of trouble
-    // with ostringstreams (which are useable only once).
-    const Int oPrec = 6;
-    Int oWidth = 14;
-    T* dummy = 0;
-    DataType type = whatType(dummy);
-    if (type==TpComplex) {
-	oWidth = 32;
-    }
-    setStream(os_p.output(), oPrec);
-    
-    ///////////////////////////////////////////////////////////////////////
-    //                 Do Values Section
-    ///////////////////////////////////////////////////////////////////////
-    os_p << "Values --- " << LogIO::POST;
-    if ( hasBeam ) {
-	os_p << "         -- flux density [flux]:     " << sum/beamArea << " Jy" << LogIO::POST;
-    }
-    
-    IPosition myMaxPos = maxPos_p;
-    IPosition myMinPos = minPos_p;
-    myMaxPos += blc_;
-    myMinPos += blc_;
 
-    if (LattStatsSpecialize::hasSomePoints(nPts)) {
-	os_p << "         -- number of points [npts]:                " << nPts << LogIO::POST;
-	os_p << "         -- maximum value [max]:                    " << dMax << LogIO::POST;
-	os_p << "         -- minimum value [min]:                    " << dMin << LogIO::POST;
-	os_p << "         -- position of max value (pixel) [maxpos]: " << myMaxPos << LogIO::POST;
-	os_p << "         -- position of min value (pixel) [minpos]: " << myMinPos << LogIO::POST;
-	os_p << "         -- position of max value (world) [maxposf]: " << maxPosString << LogIO::POST;
-	os_p << "         -- position of min value (world) [maxposf]: " << minPosString << LogIO::POST;
-	os_p << "         -- Sum of pixel values [sum]:               " << sum << LogIO::POST;
-	os_p << "         -- Sum of squared pixel values [sumsq]:     " << sumSq << LogIO::POST;
-    }
-    
-    
+	// Have to convert LogIO object to ostream before can apply
+	// the manipulators.  Also formatting Complex numbers with
+	// the setw manipulator fails, so I go to a lot of trouble
+	// with ostringstreams (which are useable only once).
+	const Int oPrec = 6;
+	Int oWidth = 14;
+	T* dummy = 0;
+	DataType type = whatType(dummy);
+	if (type==TpComplex) {
+		oWidth = 32;
+	}
+	setStream(os_p.output(), oPrec);
 
-    ///////////////////////////////////////////////////////////////////////
-    //                 Do Statistical Section
-    ///////////////////////////////////////////////////////////////////////
-    os_p << "\nStatistics --- " << LogIO::POST;
-    if (LattStatsSpecialize::hasSomePoints(nPts)) {
-	os_p << "        -- Mean of the pixel values [mean]:         " << mean << LogIO::POST;
-	os_p << "        -- Variance of the pixel values :           " << var << LogIO::POST;
-	os_p << "        -- Standard deviation of the Mean [sigma]:  " << sigma << LogIO::POST;
-	os_p << "        -- Root mean square [rms]:                  " << rms << LogIO::POST;
-	os_p << "        -- Median of the pixel values [median]:     " << median << LogIO::POST;
-	os_p << "        -- Median of the deviations [medabsdevmed]: " << medAbsDevMed << LogIO::POST;
-	os_p << "        -- Quartile [quartile]:                     " << quartile << LogIO::POST;
-    } else {
-	os_p << LogIO::WARN << "No valid points found " << LogIO::POST;
-    }
+	Unit bunit = pInImage_p->units();
+	String sbunit = bunit.getName();
+	Quantity uSquared(1, bunit);
+	uSquared *= uSquared;
+	String bunitSquared = uSquared.getUnit();
+
+	///////////////////////////////////////////////////////////////////////
+	//                 Do Values Section
+	///////////////////////////////////////////////////////////////////////
+	os_p << "Values --- " << LogIO::POST;
+	if ( hasBeam ) {
+		// normalisation of units with "beam" in them is not (well) implemented, so brute force it
+		Int iBeam = sbunit.find("/beam");
+		String fUnit = (iBeam >= 0)
+			? sbunit.substr(0, iBeam) + sbunit.substr(iBeam+5)
+			: "Jy";
+		os_p << "         -- flux density [flux]:     " << sum/beamArea
+			<< " " << fUnit << LogIO::POST;
+	}
+
+	IPosition myMaxPos = maxPos_p;
+	IPosition myMinPos = minPos_p;
+	myMaxPos += blc_;
+	myMinPos += blc_;
+
+	if (LattStatsSpecialize::hasSomePoints(nPts)) {
+		os_p << "         -- number of points [npts]:                " << nPts << LogIO::POST;
+		os_p << "         -- maximum value [max]:                    " << dMax << " " << sbunit << LogIO::POST;
+		os_p << "         -- minimum value [min]:                    " << dMin << " " << sbunit << LogIO::POST;
+		os_p << "         -- position of max value (pixel) [maxpos]: " << myMaxPos << LogIO::POST;
+		os_p << "         -- position of min value (pixel) [minpos]: " << myMinPos << LogIO::POST;
+		os_p << "         -- position of max value (world) [maxposf]: " << maxPosString << LogIO::POST;
+		os_p << "         -- position of min value (world) [maxposf]: " << minPosString << LogIO::POST;
+		os_p << "         -- Sum of pixel values [sum]:               " << sum << " " << sbunit << LogIO::POST;
+		os_p << "         -- Sum of squared pixel values [sumsq]:     " << sumSq
+				<< " " << bunitSquared << LogIO::POST;
+	}
+
+
+
+	///////////////////////////////////////////////////////////////////////
+	//                 Do Statistical Section
+	///////////////////////////////////////////////////////////////////////
+	os_p << "\nStatistics --- " << LogIO::POST;
+	if (LattStatsSpecialize::hasSomePoints(nPts)) {
+		os_p << "        -- Mean of the pixel values [mean]:         " << mean << " "
+				<< sbunit << LogIO::POST;
+		os_p << "        -- Variance of the pixel values :           " << var << " "
+				<< sbunit << LogIO::POST;
+		os_p << "        -- Standard deviation of the Mean [sigma]:  " << sigma << " "
+				<< sbunit <<  LogIO::POST;
+		os_p << "        -- Root mean square [rms]:                  " << rms << " "
+				<< sbunit << LogIO::POST;
+		os_p << "        -- Median of the pixel values [median]:     " << median <<
+				" " << sbunit << LogIO::POST;
+		os_p << "        -- Median of the deviations [medabsdevmed]: " << medAbsDevMed
+				<< " " << sbunit << LogIO::POST;
+		os_p << "        -- Quartile [quartile]:                     " << quartile << " " <<
+				sbunit <<LogIO::POST;
+	} else {
+		os_p << LogIO::WARN << "No valid points found " << LogIO::POST;
+	}
 }
 
 
