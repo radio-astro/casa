@@ -65,11 +65,14 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 // Constructor
 //
 : LatticeStatistics<T>(image, os, showProgress, forceDisk),
-  pInImage_p(0)
+  pInImage_p(0), precision_(-1)
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
    }
+   IPosition blc(image.coordinates().nPixelAxes(), 0);
+   setBlc(blc);
+
 }
 
 
@@ -81,11 +84,13 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 // Constructor
 //
 : LatticeStatistics<T>(image, showProgress, forceDisk),
-  pInImage_p(0)
+  pInImage_p(0), precision_(-1)
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
    }
+   IPosition blc(image.coordinates().nPixelAxes(), 0);
+   setBlc(blc);
 }
 
 
@@ -99,6 +104,8 @@ ImageStatistics<T>::ImageStatistics(const ImageStatistics<T> &other)
 {
    if (pInImage_p!=0) delete pInImage_p;
    pInImage_p = other.pInImage_p->cloneII();
+   other.setBlc(blc_);
+   other.setPrecision(precision_);
 }
 
 
@@ -113,6 +120,8 @@ ImageStatistics<T> &ImageStatistics<T>::operator=(const ImageStatistics<T> &othe
 //
       if (pInImage_p!=0) delete pInImage_p;
       pInImage_p = other.pInImage_p->cloneII();
+      precision_ = other.getPrecision();
+      blc_ = other.getBlc();
    }
    return *this;
 }
@@ -352,7 +361,7 @@ void ImageStatistics<T>::displayStats(
 	AccumType nPts, AccumType sum, AccumType median,
 	AccumType medAbsDevMed, AccumType quartile, AccumType sumSq,
 	AccumType mean, AccumType var, AccumType rms, AccumType sigma,
-	AccumType dMin, AccumType dMax, const IPosition* const blc
+	AccumType dMin, AccumType dMax
 ) {
     if ( ! doList_p ) {
 	// Nothing to display, listing data is turned off.
@@ -369,8 +378,8 @@ void ImageStatistics<T>::displayStats(
     //if (!fixedMinMax_p) {
 
     CoordinateSystem cSys(pInImage_p->coordinates());
-    String minPosString = CoordinateUtil::formatCoordinate (minPos_p, cSys);
-    String maxPosString = CoordinateUtil::formatCoordinate (maxPos_p, cSys);
+    String minPosString = CoordinateUtil::formatCoordinate (minPos_p, cSys, precision_);
+    String maxPosString = CoordinateUtil::formatCoordinate (maxPos_p, cSys, precision_);
 	//}
     
 
@@ -397,10 +406,8 @@ void ImageStatistics<T>::displayStats(
     
     IPosition myMaxPos = maxPos_p;
     IPosition myMinPos = minPos_p;
-    if (blc != NULL) {
-    	myMaxPos += *blc;
-    	myMinPos += *blc;
-    }
+    myMaxPos += blc_;
+    myMinPos += blc_;
 
     if (LattStatsSpecialize::hasSomePoints(nPts)) {
 	os_p << "         -- number of points [npts]:                " << nPts << LogIO::POST;
@@ -433,6 +440,26 @@ void ImageStatistics<T>::displayStats(
     }
 }
 
+
+template <class T>
+void ImageStatistics<T>::setPrecision(Int precision) {
+	precision_ = precision;
+}
+
+template <class T>
+void ImageStatistics<T>::setBlc(const IPosition& blc) {
+	blc_ = blc;
+}
+
+template <class T>
+IPosition ImageStatistics<T>::getBlc() const {
+	return blc_;
+}
+
+template <class T>
+Int ImageStatistics<T>::getPrecision() const {
+	return precision_;
+}
 
 template <class T>
 void ImageStatistics<T>::getLabels(String& hLabel, String& xLabel, const IPosition& dPos) const
