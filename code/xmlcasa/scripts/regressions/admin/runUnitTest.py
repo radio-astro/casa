@@ -32,7 +32,8 @@ OLD_TESTS = ['asdm-import','boxit_test',
              'imsmooth_test','imval_test','vishead_test',
              'visstat_test']
 NEW_TESTS = ['test_listhistory','test_clean','test_report','test_cvel','test_exportasdm',
-             'test_plotants','test_smoothcal','test_hanningsmooth','test_clearstat']
+             'test_plotants','test_smoothcal','test_hanningsmooth','test_clearstat',
+             'test_imstat']
 
 whichtests = 0
 
@@ -43,7 +44,6 @@ def is_old(name):
     elif (NEW_TESTS.__contains__(name)):
         return False
     else:
-        print 'WARN: %s is not a valid test name'%name
         return None
 
 def haslist(name):
@@ -151,8 +151,10 @@ def main(testnames=[]):
             if not haslist(f):
                 if is_old(f):
                     oldlist.append(f)
-                elif not is_old(f):
+                elif is_old(f)==False:
                     newlist.append(f)
+                else:
+                    print 'WARN: %s is not a valid test name'%f
             else:
                 # they are always new tests. check if they are in list anyway
                 ff = getname(f)
