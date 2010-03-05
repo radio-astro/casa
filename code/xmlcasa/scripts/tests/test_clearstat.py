@@ -24,7 +24,7 @@ class clearstat_test(unittest.TestCase):
     
     def setUp(self):
         self.res = None
-        default(clean)
+        default('clearstat')
         if (not os.path.exists(self.msfile)):            
             datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/ic2233/'
             shutil.copytree(datapath+self.msfile, self.msfile)
