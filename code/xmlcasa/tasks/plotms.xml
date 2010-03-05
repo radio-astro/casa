@@ -273,9 +273,9 @@ MS Data Transformation Parameters
       </allowed>
     </param>
 
-   <param type="double" name="restfreq" subparam="true">
-       <description>Rest frequency (MHz) to use for velocity conversions </description>
-       <value>0.0</value>
+   <param type="string" name="restfreq" subparam="true">
+       <description>Rest frequency to use for velocity conversions </description>
+       <value></value>
     </param>
 
     <param type="string" name="veldef" subparam="true">
@@ -624,7 +624,7 @@ Constraints
     <when param="transform">
       <equals type="bool" value="True">
         <default param="freqframe"><value type="string" /></default>
-        <default param="restfreq"><value type="double">0.0</value></default>
+        <default param="restfreq"><value type="string"></value></default>
         <default param="veldef"><value type="string">RADIO</value></default>
         <default param="shift"><value type="doubleArray"><value>0.0</value><value>0.0</value></value></default>
       </equals>
@@ -746,7 +746,8 @@ Constraints
                  default: ''  (unspecified: will use frame in which data were taken)
                  options: TOPO, GEO, BARY, LSRK, LSRD
         restfreq -- the rest frequency to use in velocity conversions (MHz)
-                 default: 0.0 (use spw central frequency and show relative velocity)
+                 default: '' (use spw central frequency and show relative velocity)
+                 example: '22235.08MHz'
         veldef -- the velocity definition to use
                  default: 'RADIO'
                  options: 'RADIO','OPT','TRUE'

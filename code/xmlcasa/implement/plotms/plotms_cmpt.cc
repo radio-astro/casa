@@ -236,7 +236,7 @@ record* plotms::getPlotMSAveraging(const int plotIndex) {
 
 void plotms::setPlotMSTransformations(const std::string& freqframe, 
 				      const std::string& veldef, 
-				      const double restfreq, 
+				      const ::casac::variant& restfreq, 
 				      const double xshift, 
 				      const double yshift, 
 				      const bool updateImmediately, 
@@ -245,7 +245,8 @@ void plotms::setPlotMSTransformations(const std::string& freqframe,
     
     trans.setFrame(freqframe);
     trans.setVelDef(veldef);
-    trans.setRestFreq(restfreq);
+    casa::Quantity restFreq= casaQuantity(restfreq);
+    trans.setRestFreq(restFreq);
     trans.setXpcOffset(xshift);
     trans.setYpcOffset(yshift);
     
