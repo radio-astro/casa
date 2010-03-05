@@ -278,8 +278,8 @@ public:
 // Display the statistics by listing and/or plotting them.  If you don't call
 // this function then you won't see anything !  A return value of <src>False</src>
 // indicates an invalid plotting device, or that the internal state of the class is bad.
-   // The optional blc value indicates the offsets for the max and min pos in pixels (CAS-1523)
-   Bool display (const IPosition* const blc = NULL);
+
+   Bool display();
 
 // CLose plotter
    void closePlotting();
@@ -420,13 +420,12 @@ private:
    Bool doneFullMinMax_p;
 
 // Summarize the statistics found over the entire lattice
-   virtual void summStats(const IPosition* const blc = NULL);
+   virtual void summStats();
 
 	   virtual void displayStats(
 		   AccumType nPts, AccumType sum, AccumType median,
 		   AccumType medAbsDevMed, AccumType quartile, AccumType sumSq, AccumType mean,
-		   AccumType var, AccumType rms, AccumType sigma, AccumType dMin, AccumType dMax,
-		   const IPosition* const blc = NULL
+		   AccumType var, AccumType rms, AccumType sigma, AccumType dMin, AccumType dMax
 	   );
 
 // Calculate statistic from storage lattice and return in an array

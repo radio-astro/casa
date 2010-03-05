@@ -1204,11 +1204,11 @@ void LatticeStatistics<T>::minMax (Bool& none,
 
 
 template <class T>
-Bool LatticeStatistics<T>::display(const IPosition* const blc)
-// 
+Bool LatticeStatistics<T>::display()
+
 // This function displays (plotting and listing) the requested
 // statistics as a function of the display axes
-//
+
 {
    if (!goodParameterStatus_p) {
      return False;
@@ -1241,7 +1241,7 @@ Bool LatticeStatistics<T>::display(const IPosition* const blc)
 // If we don't have any display axes just summarise the lattice statistics
 
    if (displayAxes_p.nelements() == 0) {
-     summStats (blc);
+     summStats ();
      
      return True;
    }
@@ -2341,7 +2341,7 @@ IPosition LatticeStatistics<T>::statsSliceShape () const
 
 
 template <class T>
-void LatticeStatistics<T>::summStats (const IPosition* const blc)
+void LatticeStatistics<T>::summStats ()
 // 
 // List the summary of the statistics to the logger in the
 // case that the statistics storage lattice is 1D only
@@ -2385,7 +2385,10 @@ void LatticeStatistics<T>::summStats (const IPosition* const blc)
 
    // Do this check so that we only print the stats when we have values.   
    if (LattStatsSpecialize::hasSomePoints(nPts)) 
-       displayStats( nPts, sum, median, medAbsDevMed, quartile, sumSq, mean, var, rms, sigma, dMin, dMax, blc );
+	   displayStats(
+           nPts, sum, median, medAbsDevMed, quartile, sumSq,
+    	   mean, var, rms, sigma, dMin, dMax
+       );
    
 }
    
@@ -2395,8 +2398,8 @@ void LatticeStatistics<T>::displayStats (
     AccumType medAbsDevMed, AccumType quartile,
     AccumType /*sumSq*/, AccumType mean,
     AccumType var, AccumType rms, AccumType sigma,
-    AccumType dMin, AccumType dMax, const IPosition* const blc)
-{
+    AccumType dMin, AccumType dMax
+) {
 
 // Get beam
 
