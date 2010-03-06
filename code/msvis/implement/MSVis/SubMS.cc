@@ -1395,8 +1395,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       if (!ms_p.tableDesc().isColumn(MS::columnName(colNames[i])))
 	{
 	  ostringstream ostr;
-	  ostr << "Desired column (" << colNames[i] << ") not found in the input MS ("
-	       << ms_p.tableName() << ").";
+	  ostr << "Desired column (" << MS::columnName(colNames[i])
+               << ") not found in the input MS (" << ms_p.tableName() << ").";
 	  throw(AipsError(ostr.str()));
 	}
   }
@@ -4948,8 +4948,8 @@ const Vector<MS::PredefinedColumns>& SubMS::parseColumnNames(String col,
     }
     else if(!doAny){
       ostringstream ostr;
-      ostr << "Desired column (" << wanted[i] << ") not found in the input MS ("
-           << msref.tableName() << ").";
+      ostr << "Desired column (" << MS::columnName(wanted[i])
+           << ") not found in the input MS (" << msref.tableName() << ").";
       throw(AipsError(ostr.str()));
     }
   }
