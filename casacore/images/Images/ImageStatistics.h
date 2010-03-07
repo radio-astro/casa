@@ -134,12 +134,22 @@ public:
 // image had an invalid type or that the internal state of the class is bad.
    Bool setNewImage (const ImageInterface<T>& image);
 
+   void setPrecision(Int precision);
+
+   void setBlc(const IPosition& blc);
+
+   IPosition getBlc() const;
+
+   Int getPrecision() const;
+
 private:
 
 // Data
 
    LogIO os_p;
    const ImageInterface<T>* pInImage_p;
+   IPosition blc_;
+   Int precision_;
 
 // Virtual functions.  See LatticeStatistics for more information
 // about these, or see the implementation.
@@ -165,7 +175,7 @@ private:
            AccumType medAbsDevMed, AccumType quartile,
            AccumType sumSq, AccumType mean, AccumType var,
            AccumType rms, AccumType sigma, AccumType dMin,
-           AccumType dMax, const IPosition* const blc = NULL
+           AccumType dMax
    );
 
 
