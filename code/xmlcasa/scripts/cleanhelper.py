@@ -829,7 +829,7 @@ class cleanhelper:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
                         splitline2=splitline[0].split()
-                        print "splitline2=",splitline2
+                        #print "splitline2=",splitline2
                         if (len(splitline2)<6):
                             ##circles
                             if(int(splitline2[1]) <0):
@@ -1030,7 +1030,6 @@ class cleanhelper:
                         width=''
                 else:      
                     raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
-                #raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
 
         ####use the frame defined by user
         if(frame != ''):
@@ -1060,8 +1059,14 @@ class cleanhelper:
             # keep original unit
             if(qa.quantity(start)['unit'].find('m/s') > -1):
                 instartunit=qa.quantity(start)['unit']
+            else:
+                if start!='': 
+                    raise TypeError, "Unrecognized unit for start parameter in velocity mode"
             if(qa.quantity(width)['unit'].find('m/s') > -1):
                 inwidthunit=qa.quantity(start)['unit']
+            else:
+                if width!='':
+                    raise TypeError, "Unrecognized unit for width parameter in velocity mode"
             if((start=='' or width=='') or nchan==-1):
                 if(veltype!='radio'):
                     raise TypeError, "Currently default nchan, start and width for velocity mode work with the default veltype(='radio') only "
@@ -1072,8 +1077,14 @@ class cleanhelper:
             # keep original unit
             if(qa.quantity(start)['unit'].find('Hz') > -1):
                 instartunit=qa.quantity(start)['unit']
+            else:
+                if start!='': 
+                    raise TypeError, "Unrecognized unit for start parameter in frequency mode"
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 inwidthunit=qa.quantity(width)['unit']
+            else:
+                if width!='': 
+                    raise TypeError, "Unrecognized unit for width parameter in frequency mode"
         # deal with frequency or velocity mode
         if(start==''):
             if(width==''):
@@ -1104,7 +1115,11 @@ class cleanhelper:
             if(width==''):
                 if(frame != ''):
                     self._casalog.post('Note: in frequency and velocity mode, the default width is the original channel width\n  and is not converted to the output reference frame.', 'WARN')
-                (freqlist,finc)=self.getfreqs(nchan,spw,start,1)
+                # need be done in a better way... 
+                if(mode=='velocity'):
+                    (freqlist,finc)=self.getfreqs(nchan,spw,start,-1)
+                else: 
+                    (freqlist,finc)=self.getfreqs(nchan,spw,start,1)
             else:
                 if(mode=='velocity'):
                     loc_width=1
@@ -1117,15 +1132,6 @@ class cleanhelper:
             if(self.usespecframe==''):
                 self.usespecframe=self.dataspecframe
             retnchan = len(freqlist)
-        if(mode=='velocity' and nchan==-1):
-            vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf) 
-            vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field,restf) 
-            if(width==''):
-                vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)))
-            else:
-                vwidth=qa.convert(width,'m/s')
-            vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
-            retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
 
         if(mode=='frequency'):
             # returned values are in Hz
@@ -1140,17 +1146,39 @@ class cleanhelper:
                 retwidth = self.qatostring(qa.convert(str(finc)+'Hz',inwidthunit))
              
         elif(mode=='velocity'):
-            #convert back to velocities
-            retstart = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
-            if(width==''):
-                w1 = self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)
-                w0 = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
-                retwidth=str(qa.quantity(qa.sub(qa.quantity(w1),qa.quantity(w0)))['value'])+'m/s'
+            #convert back to velocities (take max freq for min vel )
+            if start=='':
+                retstart = self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf)
             else:
-                retwidth=width
+                retstart = self.convertvf(start,frame,field,restf)
+
+            if nchan ==-1:
+            # re-caluculate nchan
+                if retnchan > 1:
+                    vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf) 
+                    vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field,restf) 
+                    if(width==''):
+                        vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)))
+                    else:
+                        vwidth=qa.convert(width,'m/s')
+                    vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
+                else:
+                    vwidth=qa.quantity(str(finc)+'m/s')
+                    vrange=vwidth
+                retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
+                retwidth=vwidth
+
+            else:
+                if(width==''):
+                    # width should be determined from last freq channels
+                    v1 = self.convertvf(str(freqlist[-2])+'Hz',frame,field,restf)
+                    v0 = self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf)
+                    retwidth=str(qa.quantity(qa.sub(qa.quantity(v1),qa.quantity(v0)))['value'])+'m/s'
+                else:
+                    retwidth=width
         else:
             raise TypeError, "Specified mode is not support"
- 
+
         return retnchan, retstart, retwidth
 
     def qatostring(self,q):
@@ -1211,6 +1239,7 @@ class cleanhelper:
     def getfreqs(self,nchan,spw,start,width, dummy=False):
         """
         returns a list of frequencies to be used in output clean image
+        if width = -1, start is actually end (max) freq 
         """
         #pdb.set_trace()
         freqlist=[]
@@ -1281,15 +1310,22 @@ class cleanhelper:
                    # assume called from setChannelization with local width=1
                    # for the default width(of clean task parameter)='' for
                    # velocity and frequency modes. This case set width to 
-                   # first channel width
-                   finc=chanfreqs1d[1]-chanfreqs1d[0]
+                   # first channel width (for freq) and last one (for vel) 
+                   if width==-1:
+                       finc=chanfreqs1d[-1]-chanfreqs1d[-2]
+                   else:
+                       finc=chanfreqs1d[1]-chanfreqs1d[0]
+
                    # still need to convert to target reference frame!
         elif(type(width)==str):
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 finc=qa.convert(qa.quantity(width),'Hz')['value']
         if(nchan ==-1):
-            if(qa.quantity(start)['unit'].find('Hz') > -1): 
-                bw=chanfreqs1d[-1]-startf
+            if(qa.quantity(start)['unit'].find('Hz') > -1):
+                if width==-1: # must be in velocity order (i.e. startf is max)
+                    bw=startf-chanfreqs1d[0]
+                else:
+                    bw=chanfreqs1d[-1]-startf
             else:
                 bw=chanfreqs1d[-1]-chanfreqs1d[start]
             if(bw < 0):

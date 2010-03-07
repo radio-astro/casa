@@ -8,9 +8,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
         casalog.origin('sdflag')
 
-        ###
-        ### Now the actual task code
-        ###
         try:
             myp=None
             if sdfile=='':
@@ -50,9 +47,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
 
             if ( abs(plotlevel) > 1 ):
-                    # print summary of input data
-                    #print "Initial Scantable:"
-                    #print s
                     casalog.post( "Initial Scantable:" )
                     casalog.post( s._summary() )
                     casalog.post( '--------------------------------------------------------------------------------' )
@@ -122,7 +116,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                 #Apply the selection
                 s.set_selection(sel)
             except Exception, instance:
-                #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
 
@@ -165,13 +158,14 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 			    uthres = max(clipminmax)
 			    
 	    
+	    if (len(flagrow) == 0) and (not clip):
+	            #channel flag
+		    if (len(maskflag) == 0):
+			    raise Exception, 'maskflag is undefined'
+		    masks = s.create_mask(maskflag)
+
             #for row in range(ns):
             if ( abs(plotlevel) > 0 ):
-		    if (len(flagrow) == 0) and (not clip):
-		            #channel flag
-                            if (len(maskflag) == 0):
-		                    raise Exception, 'maskflag is undefined'
-                            masks = s.create_mask(maskflag)
 
                     #sc=s.copy()
 		    # Plot final spectrum
@@ -382,7 +376,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             s.set_unit(unit_in) 
             s.save(spefile,outform,overwrite)
             if outform!='ASCII':
-                    #print "Wrote output "+outform+" file "+spefile
                     casalog.post( "Wrote output "+outform+" file "+spefile )
             #if outfile!= 'none' or ( outfile=='none' and outform!='ASAP') :
             #        print "Wrote output "+outform+" file "+spefile
@@ -391,23 +384,15 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             # Clean up scantable
             del s
 
-            # DONE
         except Exception, instance:
-                #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
-
         finally:
                 casalog.post('')
 
 
 
-### show_flag_history
 def show_flag_history( scan ):
         hist=scan._gethistory()
-        #print ''
-        #print '--------------------------------------------------'
-        #print 'History of channel flagging:'
-        #print '--------------------------------------------------'
         casalog.post( '' )
         casalog.post( '--------------------------------------------------' )
         casalog.post( 'History of channel flagging:' )
@@ -442,13 +427,11 @@ def show_flag_history( scan ):
                         out+='MODE=\''+mode+'\' '
                         out+='MASK='+maskflag
                         out+='\n'
-                        #print out
+
                         casalog.post( out )
-        #print '--------------------------------------------------'
         casalog.post( '--------------------------------------------------' )
 
 
-### restore_flag
 def restore_flag( scan ):
         masks=[]
         for irow in xrange(scan.nrow()):
@@ -470,7 +453,7 @@ def restore_flag( scan ):
                         mask.append([nu,i])
                 out='SCAN[%d] IF[%d] POL[%d]: ' %(scan.getscan(irow), scan.getif(irow), scan.getpol(irow))
                 out+='Current mask is '
-                #print out, mask
+
                 casalog.post( out+str(mask) )
 
                 masks.append(mask)

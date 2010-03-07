@@ -26,12 +26,14 @@ import nose
 
 
 # List of tests to run
-OLD_TESTS = ['asdm-import','boxit_test','clearstat_test',
-             'hanningsmooth_test','imcontsub_test','imfit_test','imhead_test','immath_test',
+OLD_TESTS = ['asdm-import','boxit_test',
+             'imcontsub_test','imfit_test','imhead_test','immath_test',
              'immoment_test','imregrid_test',
-             'imsmooth_test','imval_test','plotants_test','smoothcal_test','vishead_test',
+             'imsmooth_test','imval_test','vishead_test',
              'visstat_test']
-NEW_TESTS = ['test_listhistory','test_clean','test_report','test_cvel','test_exportasdm']
+NEW_TESTS = ['test_listhistory','test_clean','test_report','test_cvel','test_exportasdm',
+             'test_plotants','test_smoothcal','test_hanningsmooth','test_clearstat',
+             'test_imstat']
 
 whichtests = 0
 
@@ -42,7 +44,6 @@ def is_old(name):
     elif (NEW_TESTS.__contains__(name)):
         return False
     else:
-        print 'WARN: %s is not a valid test name'%name
         return None
 
 def haslist(name):
@@ -132,7 +133,7 @@ def main(testnames=[]):
         # Run all tests and create a XML report
         xmlfile = xmldir+'nose.xml'
         try:
-            result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
                                   suite=list)
         except:
             print "Exception: failed to run the test"
@@ -150,8 +151,10 @@ def main(testnames=[]):
             if not haslist(f):
                 if is_old(f):
                     oldlist.append(f)
-                elif not is_old(f):
+                elif is_old(f)==False:
                     newlist.append(f)
+                else:
+                    print 'WARN: %s is not a valid test name'%f
             else:
                 # they are always new tests. check if they are in list anyway
                 ff = getname(f)
@@ -194,7 +197,7 @@ def main(testnames=[]):
         # Run the tests and create a XML report
         xmlfile = xmldir+'nose.xml'
         try:
-            result = nose.run(argv=[sys.argv[0],"-d","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
                                   suite=list)
         except:
             print "Exception: failed to run the test"

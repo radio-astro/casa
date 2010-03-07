@@ -161,7 +161,7 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         # Set transformations
         if not transform:
             freqframe=''
-            restfreq=0.0
+            restfreq=''
             veldef='RADIO'
             shift=[0.0,0.0]
         

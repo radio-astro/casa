@@ -5014,7 +5014,7 @@ Bool Imager::clean(const String& algorithm,
     }
     this->writeHistory(os);
     try{
-    { // write data processing history into image logtable
+     // write data processing history into image logtable
       LoggerHolder imagelog (False);
       LogSink& sink = imagelog.sink();
       LogOrigin lor( String("imager"), String("clean()") );
@@ -5022,23 +5022,24 @@ Bool Imager::clean(const String& algorithm,
       sink.postLocally(msg);
       
       ROMSHistoryColumns msHis(ms_p->history());
+      const ROScalarColumn<Double> &time_col = msHis.time();
+      const ROScalarColumn<String> &origin_col = msHis.origin();
+      const ROArrayColumn<String> &cli_col = msHis.cliCommand();
+      const ROScalarColumn<String> &message_col = msHis.message();
       if (msHis.nrow()>0) {
 	ostringstream oos;
-	uInt nmessages = msHis.time().nrow();
-	Vector<Double> time = ((msHis.time()).getColumn());
-	for (uInt i=0; i < nmessages; ++i) {
-	  String tmp=frmtTime(time(i));
+	uInt nmessages = time_col.nrow();
+	for (uInt i=0; i < nmessages; i++) {
+	  String tmp=frmtTime(time_col(i));
 	  oos << tmp
-	      << "  HISTORY " << (msHis.origin())(i);
-	  
-	  oos << " " << (msHis.cliCommand())(i) << " ";
-	  oos << (msHis.message())(i)
+	      << "  HISTORY " << origin_col(i);
+	  oos << " " << cli_col(i) << " ";
+	  oos << message_col(i)
 	      << endl;
 	}
-	String historyline(oos);
-	sink.postLocally(msg.message(historyline));
+	// String historyline(oos);
+	sink.postLocally(msg.message(oos.str()));
       }
-      
       for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
 	if(Table::isWritable(image(thismodel))){
 	  PagedImage<Float> restoredImage(image(thismodel),
@@ -5050,7 +5051,6 @@ Bool Imager::clean(const String& algorithm,
 	}
       }
       
-    }
     }catch(exception& x){
       
       os << LogIO::WARN << "Caught exception: " << x.what()
