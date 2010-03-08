@@ -35,6 +35,9 @@ class plotants_test(unittest.TestCase):
             os.system('rm -rf ' + self.msfile)
 
         os.system('rm -rf ' + self.fig)
+        # Switch GUI back on
+        tp.setgui(gui=True)
+
         
     def test0(self):
        '''Test 0: Default parameters'''
