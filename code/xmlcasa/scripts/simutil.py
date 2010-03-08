@@ -232,10 +232,12 @@ class simutil:
             self.direction=direction
 
         # direction is always a list of strings (defined by .xml)
-        if len(direction) >1:
-            if self.verbose: self.msg("You are inputing the precise pointings in 'direction' - if you want me to calculate a mosaic, give a single direction",priority="warn")
-            return len(direction), direction, [0.]*len(direction) #etime at end
-        else: direction=direction[0]
+        if type(direction)==type([]):
+            if len(direction) > 1:
+                if self.verbose: self.msg("You are inputing the precise pointings in 'direction' - if you want me to calculate a mosaic, give a single direction",priority="warn")
+                return len(direction), direction, [0.]*len(direction) #etime at end
+            else: direction=direction[0]        
+
 
         # now its either a filename or a single direction:
         # do we need this string check?  maybe it could be a quantity?
