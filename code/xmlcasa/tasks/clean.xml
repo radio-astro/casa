@@ -365,7 +365,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--========================================================= -->
     <param type="double" name="minpb">
 	    <description>Minimum PB level to use</description>
-	    <value>0.1</value>
+	    <value>0.2</value>
     </param>
 <!--========================================================= -->
     <param type="bool" name="calready">
@@ -1057,7 +1057,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  	       default: pbcor=False; output un-corrected image 
  	       example: pbcor=True; output pb-corrected image (masked outside
                         minpb) 
-       minpb -- Minimum PB level to use default=0.1;
+       minpb -- Minimum PB level to use default=0.2;
                The flux image is used to determine this
 	       except for the case of mosaic with ftmachine='mosaic'
 	       where the flux.pbcoverage image is used.
