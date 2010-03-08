@@ -830,10 +830,10 @@ void MSSummary::listHistory (LogIO& os) const
   else {
     uInt nmessages = msHis.time().nrow();
     os << "History table entries: " << nmessages << endl << LogIO::POST;
-    Vector<Double> theTimes((msHis.time()).getColumn());
-    Vector<String> messOrigin((msHis.origin()).getColumn());
-    Vector<String> messString((msHis.message()).getColumn());
-    Vector<String> messPriority((msHis.priority()).getColumn());
+    const ROScalarColumn<Double> &theTimes((msHis.time()));
+    const ROScalarColumn<String> &messOrigin((msHis.origin()));
+    const ROScalarColumn<String> &messString((msHis.message()));
+    const ROScalarColumn<String> &messPriority((msHis.priority()));
     for (uInt i=0 ; i < nmessages; i++) {
       Quantity tmpq(theTimes(i), "s");
       MVTime mvtime(tmpq);
