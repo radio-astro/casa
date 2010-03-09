@@ -187,6 +187,15 @@ class viewertool(object):
 
         return bool(self.__state['proxy'].close( panel ))
 
+    def popup( self, what, panel=0 ):
+        if type(what) != str or type(panel) != int :
+            raise Exception, "popup() takes a string followed by one optional integer..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return bool(self.__state['proxy'].popup( what, panel ))
+
     def restore( self, path, panel=0 ):
         if type(path) != str or type(panel) != int:
             raise Exception, "restore() takes a string and an integer; only the first arg is required..."
