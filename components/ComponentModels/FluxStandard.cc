@@ -84,8 +84,8 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
   // *** 3C286 ***
 
   if (sourceName.contains("3C286") || sourceName.contains("1328+307") || 
-      sourceName.contains("1331+305")) {
-
+      sourceName.contains("1331+305") ||
+      sourceName.contains("J1331+3030")) { // Jhhmm+ddmm, CAS-2020
     found = True;
     switch (itsFluxScale) {
     case BAARS: {
@@ -110,8 +110,9 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
     // *** 3C48 ***
 
   } else if (sourceName.contains("3C48") || sourceName.contains("0134+329") 
-	     || sourceName.contains("0137+331")) {
-
+	     || sourceName.contains("0137+331")      // Together these match
+                                                     // 33d09m35s for dd.d or
+             || sourceName.contains("J0137+3309")) { // ddmm with a margin.
     found = True;
     switch (itsFluxScale) {
     case BAARS: {
@@ -136,7 +137,8 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
     // *** 3C147 ***
 
   } else if (sourceName.contains("3C147") || sourceName.contains("0538+498")
-	     || sourceName.contains("0542+498")) {
+	     || sourceName.contains("0542+498")
+             || sourceName.contains("J0542+4951")) { // Jhhmm+ddmm, CAS-2020
 
     found = True;
     switch (itsFluxScale) {
@@ -162,7 +164,8 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
     // *** 3C138 ***
 
   } else if (sourceName.contains("3C138") || sourceName.contains("0518+165") 
-	     || sourceName.contains("0521+166")) {
+	     || sourceName.contains("0521+166")
+             || sourceName.contains("J0521+1638")) { // Jhhmm+ddmm, CAS-2020
 
     found = True;
     switch (itsFluxScale) {
@@ -216,7 +219,8 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
     // *** 3C295 ***
 
   } else if (sourceName.contains("3C295") || sourceName.contains("1409+524")
-	     || sourceName.contains("1411+522")) {
+	     || sourceName.contains("1411+522")
+             || sourceName.contains("J1411+5212")) { // Jhhmm+ddmm, CAS-2020
 
     found = True;
     switch (itsFluxScale) {
