@@ -36,7 +36,7 @@
   <tr valign="middle">
     <td width="50%"  height="5" align="left" bgcolor="#cccccc" valign="top">
 <a class="navig" href="http://www.nrao.edu/">NRAO Home</a> &gt;
-<a class="navig" href="../casa.html" >CASA</a> &gt;
+<a class="navig" href="http://casa.nrao.edu/" >CASA</a> &gt;
 CASADOCUMENT <!-- If I was clever I could turn this into the right value for the doc -->
 <!-- Start of nrao-nav2menu1.html -->
                 <!-- NAVIGATION ITEMS GO HERE -->

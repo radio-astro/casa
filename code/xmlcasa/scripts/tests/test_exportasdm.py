@@ -40,7 +40,13 @@ class exportasdm_test(unittest.TestCase):
         default(exportasdm)
 
     def tearDown(self):
-        os.system('rm -rf exportasdm-output.asdm myinput.ms')
+        os.system('rm -rf myinput.ms')
+        os.system('rm -rf ' + self.vis_b)
+        os.system('rm -rf ' + self.vis_d)
+        os.system('rm -rf ' + self.vis_e)
+        os.system('rm -rf ' + self.vis_f)
+        os.system('rm -rf ' + self.vis_g)
+        os.system('rm -rf ' + self.out)
 
 
     def verify_asdm(self,asdmname, withPointing):
