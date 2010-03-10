@@ -86,216 +86,242 @@ if benchmarking:
     startTime = time.time()
     startProc = time.clock()
 
-#
-#=====================================================================
-#
-# Import the data from FITS to MS
-#
-print '--Importuvfits--'
-taskname = 'importuvfits'
-default(taskname)
-fitsfile = fitsdata
-vis=tmpfile
-antnamescheme = 'new'
-importuvfits()
+try:
+    #
+    #=====================================================================
+    #
+    # Import the data from FITS to MS
+    #
+    print '--Importuvfits--'
+    taskname = 'importuvfits'
+    default(taskname)
+    fitsfile = fitsdata
+    vis=tmpfile
+    antnamescheme = 'new'
+    importuvfits()
+    
+    # Record import time
+    if benchmarking:
+        importtime = time.time()
+    
+    #
+    #=====================================================================
+    #
+    # List data to check
+    #
+    #  2 IF's, Field 1,2,3 = 3C219, 3C219NE, 3C219SW
+    #          Field 0 = 0917+449 main calibrator
+    #          Field 4 = 3C286 flux/pol calibrator
+    
+    print '--Listobs--'
+    listobs(vis=tmpfile)
+    
+    #
+    #=====================================================================
+    #
+    #  Change data equinox to J2000
+    #
+    
+    print '--Fixvis--'
+    taskname = 'fixvis'
+    default (taskname)
+    vis = tmpfile
+    outputvis = msfile
+    refcode = 'J2000'
+    fixvis()
+    
+    #
+    #=====================================================================
+    #
+    #  Compare equinox before and after
+    
+    print '--Vishead--'
+    taskname = 'vishead'
+    default (vishead)
+    mode = 'list'
+    listitems = []
+    vis = tmpfile
+    a=vishead()
+    vis = msfile
+    b=vishead()
+    print "original equinox: ", a['ptcs'][1]['MEASINFO']['Ref']
+    print "     new equinox: ", b['ptcs'][1]['MEASINFO']['Ref']
+    
+    
+    #
+    #=====================================================================
+    #
+    #  Normal clean Image field 1 (3C219)
+    
+    print '--Clean 1-field, 1 scale--'
+    taskname = 'clean'
+    default(taskname)
+    vis = msfile
+    imagename = testdir+'D-1scale'
+    field = '1'
+    niter = 4000
+    imsize = 512
+    cell = '2arcsec'
+    mask = rgnmask
+    weighting = 'briggs'
+    robust = 0.5
+    pbcor = T
+    restoringbeam = ['9arcsec']
+    threshold = '0.4mJy'
+    clean()
+    
+    #
+    #=====================================================================
+    #
+    #  Multi-scale Image field 1 (3C219)
+    #
+    
+    print '--Clean 1-field, multi-scale--'
+    taskname = 'clean'
+    default(taskname)
+    vis = msfile
+    imagename = testdir+'D-3scale'
+    field = '1'
+    niter = 2000
+    imsize = 512
+    multiscale = [0,5,15]
+    cell = '2arcsec'
+    mask = rgnmask
+    weighting = 'briggs'
+    robust = 0.5
+    pbcor = T
+    restoringbeam = ['9arcsec']
+    threshold = '0.4mJy'
+    clean()
+    
+    #
+    #=====================================================================
+    #
+    #  Mosaic on fields 1,2,3
+    # 3C219+3C219NE+3C219SW
+    #
+    
+    print '--Clean 3-field mosaic, 1 scale--'
+    taskname = 'clean'
+    default(taskname)
+    vis = msfile
+    imagename = testdir+'D-1scale_mos'
+    phasecenter = '1'
+    field = '1,2,3'
+    niter = 4000
+    imsize = 512
+    imagermode = 'mosaic'
+    cell = '2arcsec'
+    mask = rgnmask
+    weighting = 'briggs'
+    robust = 0.5
+    restoringbeam = ['9arcsec']
+    pbcor = T
+    threshold = '0.4mJy'
+    clean()
+    
+    #
+    #=====================================================================
+    #
+    #  Multi-scale mosaic
+    #
+    
+    print '--Clean 3-field mosaic, multi-scale--'
+    taskname = 'clean'
+    default(taskname)
+    vis = msfile
+    imagename = testdir+'D-3scale_mos'
+    imagermode = 'mosaic'
+    phasecenter = '1'
+    field = '1,2,3'
+    niter = 4000
+    imsize = 512
+    multiscale = [0,5,15]
+    imagermode = 'mosaic'
+    cell = '2arcsec'
+    mask = rgnmask
+    weighting = 'briggs'
+    robust = 0.5
+    restoringbeam = ['9arcsec']
+    pbcor = T
+    threshold = '0.4mJy'
+    clean()
+    
+    #
+    #=====================================================================
+    #
+    #  Make difference images of multi-scale
+    #
+    
+    print '--Immath--'
+    taskname = 'immath'
+    default (taskname)
+    imagename = [testdir+'D-3scale.image',testdir+'D-3scale_mos.image']
+    mode = 'evalexpr'
+    outfile = testdir+'DIFF1.image'
+    expr = ' (IM0 - IM1)'
+    immath()
+    
+    #
+    #=====================================================================
+    #
+    #  Min/max of difference images in source region
+    #
+    
+    taskname = 'imstat'
+    default (taskname)
+    #region = rgnmask
+    box = '200,200,300,300'
+    imagename = testdir+'DIFF1.image'
+    a1=imstat()
+    
+    #
+    #=====================================================================
+    #
+    #  Make difference images of single-scale
+    #
+    
+    taskname = 'immath'
+    default (taskname)
+    imagename = [testdir+'D-1scale.image',testdir+'D-3scale.image']
+    mode = 'evalexpr'
+    outfile = testdir+'DIFF2.image'
+    expr = ' (IM0 - IM1)'
+    immath()
+    
+    #
+    #=====================================================================
+    #
+    #  Min/max of difference images in source region
+    #
+    
+    taskname = 'imstat'
+    default (taskname)
+    #region = rgnmask
+    box = '200,200,300,300'
+    imagename = testdir+'DIFF2.image'
+    a2=imstat()
+    
+    # Do regressions tests
+    # Reference values:
+    ref1_rms=0.0005
+    ref2_rms=0.0002
 
-# Record import time
-if benchmarking:
-    importtime = time.time()
-
-#
-#=====================================================================
-#
-# List data to check
-#
-#  2 IF's, Field 1,2,3 = 3C219, 3C219NE, 3C219SW
-#          Field 0 = 0917+449 main calibrator
-#          Field 4 = 3C286 flux/pol calibrator
-
-print '--Listobs--'
-listobs(vis=tmpfile)
-
-#
-#=====================================================================
-#
-#  Change data equinox to J2000
-#
-
-print '--Fixvis--'
-taskname = 'fixvis'
-default (taskname)
-vis = tmpfile
-outputvis = msfile
-refcode = 'J2000'
-fixvis()
-
-#
-#=====================================================================
-#
-#  Compare equinox before and after
-
-print '--Vishead--'
-taskname = 'vishead'
-default (vishead)
-mode = 'list'
-listitems = []
-vis = tmpfile
-a=vishead()
-vis = msfile
-b=vishead()
-print "original equinox: ", a['ptcs'][1]['MEASINFO']['Ref']
-print "     new equinox: ", b['ptcs'][1]['MEASINFO']['Ref']
-
-
-#
-#=====================================================================
-#
-#  Normal clean Image field 1 (3C219)
-
-print '--Clean 1-field, 1 scale--'
-taskname = 'clean'
-default(taskname)
-vis = msfile
-imagename = testdir+'D-1scale'
-field = '1'
-niter = 4000
-imsize = 512
-cell = '2arcsec'
-mask = rgnmask
-weighting = 'briggs'
-robust = 0.5
-pbcor = T
-restoringbeam = ['9arcsec']
-threshold = '0.4mJy'
-clean()
-
-#
-#=====================================================================
-#
-#  Multi-scale Image field 1 (3C219)
-#
-
-print '--Clean 1-field, multi-scale--'
-taskname = 'clean'
-default(taskname)
-vis = msfile
-imagename = testdir+'D-3scale'
-field = '1'
-niter = 2000
-imsize = 512
-multiscale = [0,5,15]
-cell = '2arcsec'
-mask = rgnmask
-weighting = 'briggs'
-robust = 0.5
-pbcor = T
-restoringbeam = ['9arcsec']
-threshold = '0.4mJy'
-clean()
-
-#
-#=====================================================================
-#
-#  Mosaic on fields 1,2,3
-# 3C219+3C219NE+3C219SW
-#
-
-print '--Clean 3-field mosaic, 1 scale--'
-taskname = 'clean'
-default(taskname)
-vis = msfile
-imagename = testdir+'D-1scale_mos'
-phasecenter = '1'
-field = '1,2,3'
-niter = 4000
-imsize = 512
-imagermode = 'mosaic'
-cell = '2arcsec'
-mask = rgnmask
-weighting = 'briggs'
-robust = 0.5
-restoringbeam = ['9arcsec']
-pbcor = T
-threshold = '0.4mJy'
-clean()
-
-#
-#=====================================================================
-#
-#  Multi-scale mosaic
-#
-
-print '--Clean 3-field mosaic, multi-scale--'
-taskname = 'clean'
-default(taskname)
-vis = msfile
-imagename = testdir+'D-3scale_mos'
-imagermode = 'mosaic'
-phasecenter = '1'
-field = '1,2,3'
-niter = 4000
-imsize = 512
-multiscale = [0,5,15]
-imagermode = 'mosaic'
-cell = '2arcsec'
-mask = rgnmask
-weighting = 'briggs'
-robust = 0.5
-restoringbeam = ['9arcsec']
-pbcor = T
-threshold = '0.4mJy'
-clean()
-
-#
-#=====================================================================
-#
-#  Make difference images
-#
-
-print '--Immath--'
-taskname = 'immath'
-default (taskname)
-imagename = [testdir+'D-3scale.image',testdir+'D-3scale_mos.image']
-mode = 'evalexpr'
-outfile = testdir+'DIFF1.image'
-expr = ' (IM0 - IM1)'
-immath()
-
-#
-#=====================================================================
-#
-#  Min/max of difference images in source region
-#
-
-taskname = 'imstat'
-default (taskname)
-region = rgnmask
-imagename = testdir+'DIFF1.image'
-a=imstat()
-print "difference between D-3scale.image and D-3scale_mos.image"
-print "diff:  rms = ",a['rms'][0],";  minimum= ",a['min'][0],": maximum= ",a['max'][0]    
-
-taskname = 'immath'
-default (taskname)
-imagename = [testdir+'D-1scale.image',testdir+'D-3scale.image']
-mode = 'evalexpr'
-outfile = testdir+'DIFF2.image'
-expr = ' (IM0 - IM1)'
-immath()
-
-#
-#=====================================================================
-#
-#  Min/max of difference images in source region
-#
-
-taskname = 'imstat'
-default (taskname)
-region = rgnmask
-imagename = testdir+'DIFF2.image'
-a=imstat()
-print "difference between D-1scale.image and D-1scale_moz.image"
-print "diff:  rms = ",a['rms'][0],";  minimum= ",a['min'][0],": maximum= ",a['max'][0]    
-
+    print "difference between D-3scale.image and D-3scale_mos.image"
+    print "diff:  rms = ",a1['rms'][0],";  minimum= ",a1['min'][0],": maximum= ",a1['max'][0]    
+    print "difference between D-1scale.image and D-1scale_mos.image"
+    print "diff:  rms = ",a2['rms'][0],";  minimum= ",a2['min'][0],": maximum= ",a2['max'][0]    
+    
+    if((abs(ref1_rms-a1['rms']) > 0.0001) or (abs(ref2_rms-a2['rms']) > 0.0001)):
+        print abs(ref1_rms-a1['rms'])
+        print abs(ref2_rms-a2['rms'])
+        regstate=False
+        raise Exception, 'Absolute differences are larger than 1e-04.'
+    else:
+        print 'Regression tests passed'
+        
+    
+except Exception, instance:
+    print >> sys.stderr, "Regression test failed for 3C219D, instance = ", instance
 
 #  End of 3C219D regression
