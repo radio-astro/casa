@@ -185,6 +185,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	psfmaxouter(model) << endl;
       if(abs(psfmin(model))>maxSidelobe) maxSidelobe=abs(psfmin(model));
       if(psfmaxouter(model) > maxSidelobe) maxSidelobe= psfmaxouter(model );
+      //      os << "     : PSFPatch = " << psfpatch << LogIO::POST;
     }
   }
   os << LogIO::POST;
@@ -411,6 +412,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	    iterations[model].resize(nchan);
 	  else
 	    iterations[model].resize(nchan*npol);
+	  iterations[model].resize(nchan*npol);
 	  iterations[model]=0;
 	}
 	  
@@ -632,6 +634,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  stop=False;
 		}
                 // Upped to NORMAL per CAS-2017.
+		// cerr << model << " " << chan << " " << npolcube << " " << ipol 
+		//      << " " << iterations.nelements() 
+		//      << " " << iterations[0].shape()
+		//      << endl;
 		os << LogIO::NORMAL << "Clean used " // Loglevel PROGRESS
                    << iterations[model](chan*npolcube+ipol) << " iterations" 
 		   << " to approach a threshhold of " << cycleThreshold
