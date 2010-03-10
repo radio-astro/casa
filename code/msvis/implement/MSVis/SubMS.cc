@@ -41,6 +41,8 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
+//#include <casa/OS/Memory.h>              // Can be commented out along with
+//                                         // Memory:: calls.
 #include <casa/Containers/Record.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -5254,10 +5256,20 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     
   Double timeBin=timeBin_p;
 
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Before fillAntIndexer(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   //// fill time and timecentroid and antennas
   nant_p = fillAntIndexer(mscIn_p, antIndexer_p);
   if(nant_p < 1)
     return False;
+
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Before numOfTimeBins(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
 
   //Int numBaselines=numOfBaselines(ant1, ant2, False);
   Int numTimeBins = numOfTimeBins(timeBin);  // Sets up remappers as a side-effect.
@@ -5267,12 +5279,22 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
        << "Number of time bins is < 1: time averaging bin size is not > 0"
        << LogIO::POST;
 
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Before msOut_p.addRow(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   msOut_p.addRow(numOutRows_p, True);
         
   //    relabelIDs();
 
   msc_p->interval().fillColumn(timeBin);
-    
+
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "After numOfTimeBins(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   //things to be taken care in fillTimeAverData...
   // flagRow		ScanNumber	uvw		weight		
   // sigma		ant1		ant2		time
@@ -6344,8 +6366,18 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   // Iterate through timebins.
   uInt orn = 0; 		      // row number in output.
   // Guarantee oldDDID != ddID on 1st iteration.
+
   Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
+  // Float oldMemUse = -1.0;
   for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
+    // Float memUse = Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0);
+    // if(memUse != oldMemUse){
+    //   oldMemUse = memUse;
+    //   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+    //      << "tbn " << tbn << ": " << memUse << " MB"
+    //      << LogIO::POST;
+    // }
+    
     // Iterate through slots.
     for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
         slotit != bin_slots_p[tbn].end(); ++slotit){
@@ -6373,8 +6405,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         sliceShape = trc - blc + 1;
         if(sliceShape != oldsliceShape){
           os << LogIO::DEBUG1
-             << "sliceShape = " << sliceShape
+             << "sliceShape = " << sliceShape << " (was: " << oldsliceShape << ")"
              << LogIO::POST;
+          oldsliceShape = sliceShape;
 
           // Refit the temp & output holders for this shape.
           unflaggedwt.resize(npol_p[ddID]);
@@ -6645,6 +6678,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   }
   os << LogIO::NORMAL << "Data binned." << LogIO::POST; 
 
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   bin_slots_p.resize(0);           // Free some memory
 
   msc_p->uvw().putColumn(outUVW);
@@ -6659,6 +6696,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
     msc_p->imagingWeight().putColumn(outImagingWeight);
     outImagingWeight.resize();
   }
+
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "memory after putting ImagingWt: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
 
   msc_p->antenna1().putColumn(outAnt1);
   msc_p->antenna2().putColumn(outAnt2);
@@ -6678,6 +6719,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   msc_p->stateId().putColumn(outState);
   msc_p->time().putColumn(outTime);
   msc_p->timeCentroid().putColumn(outTC);
+
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "memory after putting TC: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
 
   return True;
 }
