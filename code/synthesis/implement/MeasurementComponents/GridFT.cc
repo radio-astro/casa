@@ -939,7 +939,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       for(lix.reset();!lix.atEnd();lix++) {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
-	if(weights(pol, chan)>0.0) {
+	if(weights(pol, chan)!=0.0) {
 	  gridder->correctX1D(correction, lix.position()(1));
 	  lix.rwVectorCursor()/=correction;
 	  if(normalize) {
