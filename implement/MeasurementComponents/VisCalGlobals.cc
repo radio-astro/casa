@@ -128,6 +128,12 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="X" || uptype=="X MUELLER")
     return new XMueller(vs);
 
+  else if (uptype=="XJ" || uptype=="X JONES")
+    return new XJones(vs);
+
+  else if (uptype=="XF" || uptype=="XF JONES")
+    return new XfJones(vs);
+
   else if (uptype=="K" || uptype=="K JONES")
     return new KJones(vs);
 
