@@ -27,7 +27,8 @@ Unit tests for task clean. It tests the following parameters:
     Other tests: check the value of a pixel.
 '''
 class clean_test(unittest.TestCase):
-    
+    print '-------------- Unit Tests of clean_test ---------------'
+
     # Input and output names
     msfile = 'ngc7538_ut.ms'
     res = None
@@ -54,79 +55,79 @@ class clean_test(unittest.TestCase):
         ia.close()
         return px['value']['value']
         
-    def test0(self):
-        '''Test 0: Default values'''
+    def test1(self):
+        '''Test 1: Default values'''
         self.res = clean()
         self.assertFalse(self.res)
         
-    def test1(self):
-        """Test 1: Wrong input should return False"""
+    def test2(self):
+        """Test 2: Wrong input should return False"""
         msfile = 'badfilename'
         self.res = clean(vis=msfile, imagename=self.img)
         self.assertFalse(self.res)
         
-    def test2(self):
-        """Test 2: Good input should return None"""
+    def test3(self):
+        """Test 3: Good input should return None"""
         self.res = clean(vis=self.msfile,imagename=self.img)
         self.assertEqual(self.res,None)
         
-    def test3(self):
-        """Test 3: Check if output exists"""
+    def test4(self):
+        """Test 4: Check if output exists"""
         self.res = clean(vis=self.msfile,imagename=self.img)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
-    def test4(self):
-        """Test 4: Wrong field type"""
+    def test5(self):
+        """Test 5: Wrong field type"""
         self.res = clean(vis=self.msfile,imagename=self.img,field=0)
         self.assertFalse(self.res)
         
-    def test5(self):
-        """Test 5: Non-default field value"""
+    def test6(self):
+        """Test 6: Non-default field value"""
         self.res = clean(vis=self.msfile,imagename=self.img,field='0~1')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))           
         
-    def test6(self):
-        """Test 6: Wrong spw value"""
+    def test7(self):
+        """Test 7: Wrong spw value"""
         self.res = clean(vis=self.msfile,imagename=self.img,spw='10')
         self.assertFalse(os.path.exists(self.img+'.image'))
        
-    def test7(self):
-        """Test 7: Non-default spw value"""
+    def test8(self):
+        """Test 8: Non-default spw value"""
         self.res = clean(vis=self.msfile,imagename=self.img,spw='0')
         self.assertTrue(os.path.exists(self.img+'.image'))
 
-    def test8(self):
-        """Test 8: Empty mode value"""
+    def test9(self):
+        """Test 9: Empty mode value"""
         self.res = clean(vis=self.msfile,imagename=self.img,mode='')
         self.assertFalse(self.res)
 
     # FIXME: CHANGE SUBPARAMETERS FOR DIFFERENT MODES
-    def test9(self):
-        """Test 9: Non-default mode channel"""
+    def test10(self):
+        """Test 10: Non-default mode channel"""
         self.res = clean(vis=self.msfile,imagename=self.img,mode='channel')
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
 
-    def test10(self):
-        """Test 10: Non-default mode velocity"""
+    def test11(self):
+        """Test 11: Non-default mode velocity"""
         self.res = clean(vis=self.msfile,imagename=self.img,mode='velocity')
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
         
-    def test11(self):
-        """Test 11: Non-default mode frequency"""
+    def test12(self):
+        """Test 12: Non-default mode frequency"""
         self.res = clean(vis=self.msfile,imagename=self.img,mode='frequency')
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
         
-    def test10(self):
-        """Test 10: Unsupported gridmode"""
+    def test13(self):
+        """Test 13: Unsupported gridmode"""
         self.res = clean(vis=self.msfile,imagename=self.img,gridmode='grid')
         self.assertFalse(self.res)
         
-    def test11(self):
-        """Test 11: Non-default gridmode widefield"""
+    def test14(self):
+        """Test 14: Non-default gridmode widefield"""
         self.res = clean(vis=self.msfile,imagename=self.img,gridmode='widefield',imsize=[20])
         self.assertEqual(self.res, None) 
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
@@ -138,117 +139,117 @@ class clean_test(unittest.TestCase):
 #        self.assertEqual(self.res, None) 
 #        self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
                      
-    def test12(self):
-        """Test 12: Wrong niter type"""
+    def test15(self):
+        """Test 15: Wrong niter type"""
         self.res = clean(vis=self.msfile,imagename=self.img,niter='1')
         self.assertFalse(self.res)
         
-    def test13(self):
-        """Test 13: Non-default niter values"""
+    def test16(self):
+        """Test 16: Non-default niter values"""
         for n in range(10,400,50):
             self.res = clean(vis=self.msfile,imagename=self.img,niter=n)
             self.assertEqual(self.res,None,'Failed for niter = %s' %n)
     
-    def test14(self):
-        """Test 14: Unsupported psfmode"""
+    def test17(self):
+        """Test 17: Unsupported psfmode"""
         self.res = clean(vis=self.msfile,imagename=self.img,psfmode='psf')
         self.assertFalse(self.res)
         
-    def test15(self):
-        """Test 15: Non-default psfmode hogbom"""
+    def test18(self):
+        """Test 18: Non-default psfmode hogbom"""
         self.res = clean(vis=self.msfile,imagename=self.img,psfmode='hogbom')
         self.assertEqual(self.res, None)            
         self.assertTrue(os.path.exists(self.img+'.image'))
         
-    def test16(self):
-        """Test 16: Non-default psfmode clarkstokes"""
+    def test19(self):
+        """Test 19: Non-default psfmode clarkstokes"""
         self.res = clean(vis=self.msfile,imagename=self.img,psfmode='clarkstokes')
         self.assertEqual(self.res, None)            
         self.assertTrue(os.path.exists(self.img+'.image'))
       
-    def test17(self):
-        """Test 17: Unsupported imagermode"""
+    def test20(self):
+        """Test 20: Unsupported imagermode"""
         self.res = clean(vis=self.msfile,imagename=self.img,imagermode='clark')
         self.assertFalse(self.res)      
 
-    def test18(self):
-        '''Test 18: Non-default imagermode csclean'''
+    def test21(self):
+        '''Test 21: Non-default imagermode csclean'''
         self.res = clean(vis=self.msfile,imagename=self.img,imagermode='csclean')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
-    def test19(self):
-        '''Test 19: Non-default imagermode mosaic'''
+    def test22(self):
+        '''Test 22: Non-default imagermode mosaic'''
         self.res = clean(vis=self.msfile,imagename=self.img,imagermode='mosaic',imsize=[20])
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
-    def test20(self):
-        """Test 20: Zero value of imsize"""
+    def test23(self):
+        """Test 23: Zero value of imsize"""
         self.res = clean(vis=self.msfile,imagename=self.img,imsize=0)
         self.assertFalse(os.path.exists(self.img+'.image'))
 
-    def test21(self):
-        '''Test 21: Non-default imsize values'''
+    def test24(self):
+        '''Test 24: Non-default imsize values'''
         self.res = clean(vis=self.msfile,imagename=self.img,imsize=[80,80])
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist' %self.img)
 
-    def test22(self):
-        """Test 22: Non-default cell values"""
+    def test25(self):
+        """Test 25: Non-default cell values"""
         self.res = clean(vis=self.msfile,imagename=self.img, cell=12.5)
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
-    def test23(self):
-        """Test 23: Unsupported Stokes parameter"""
+    def test26(self):
+        """Test 26: Unsupported Stokes parameter"""
         self.res = clean(vis=self.msfile,imagename=self.img, stokes='V')
         self.assertFalse(self.res)
         
-    def test24(self):
-        """Test 24: Non-default Stokes parameter"""
+    def test27(self):
+        """Test 27: Non-default Stokes parameter"""
         self.res = clean(vis=self.msfile,imagename=self.img, stokes='LL')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
-    def test25(self):
-        '''Test 25: Unsupported weighting mode'''
+    def test28(self):
+        '''Test 28: Unsupported weighting mode'''
         self.res = clean(vis=self.msfile,imagename=self.img, weighting='median')
         self.assertFalse(self.res)
         
-    def test24(self):
-        '''Test 24: Non-default weighting uniform'''
+    def test29(self):
+        '''Test 29: Non-default weighting uniform'''
         self.res = clean(vis=self.msfile,imagename=self.img, weighting='uniform')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
-    def test24(self):
-        '''Test 24: Non-default weighting briggs'''
+    def test30(self):
+        '''Test 30: Non-default weighting briggs'''
         self.res = clean(vis=self.msfile,imagename=self.img, weighting='briggs')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
-    def test24(self):
-        '''Test 24: Non-default weighting radial'''
+    def test31(self):
+        '''Test 31: Non-default weighting radial'''
         self.res = clean(vis=self.msfile,imagename=self.img, weighting='radial')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
-    def test25(self):
-        '''Test 25: Non-default subparameters of selectdata'''
+    def test32(self):
+        '''Test 32: Non-default subparameters of selectdata'''
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
                          timerange='>11:30:00',antenna='VA12')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
-    def test26(self):
-        '''Test 26: Wrong antenna subparameter of selectdata'''
+    def test33(self):
+        '''Test 33: Wrong antenna subparameter of selectdata'''
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
                          antenna='88')
         self.assertFalse(os.path.exists(self.img+'.image'))
 
-    def test27(self):
-        '''Test 27: Verify the value of pixel 50'''
+    def test34(self):
+        '''Test 34: Verify the value of pixel 50'''
         #run clean with some parameters
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
                          timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
@@ -261,19 +262,19 @@ class clean_test(unittest.TestCase):
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-5)
         
-    def test28(self):
-        '''Test 28: Wrong type of phasecenter'''
+    def test35(self):
+        '''Test 35: Wrong type of phasecenter'''
         self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=4.5)
         self.assertFalse(os.path.exists(self.img+'.image'))
         
-    def test29(self):
-        '''Test 29: Non-default value of phasecenter'''
+    def test36(self):
+        '''Test 36: Non-default value of phasecenter'''
         self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=2)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
     
 
 def suite():
-    return [clean_test,clean_temp]
+    return [clean_test]
 
 

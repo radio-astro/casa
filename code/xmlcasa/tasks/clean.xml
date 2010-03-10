@@ -43,7 +43,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="field">
       <description>Field Name or id</description>
-      <value></value>
+     <value></value>
     </param>
 
     <param type="any" name="spw">
@@ -649,19 +649,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  field='3C286,3C295'; field named 3C286 and 3C295
                  field = '3,4C*'; field id 3, all names starting with 4C
        spw -- Select spectral window/channels
-               (Channel selection is not implemented yet for this task)
                NOTE: channels de-selected here will contain all zeros if
-               selected by the parameter mode subparameters    
+               selected by the parameter mode subparameters.    
+               Channel selection behaves differently in clean (e.g. The multiple
+               ranges are not supported yet).
                default: ''=all spectral windows and channels
                  spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+                 spw='0:5~61'; spw 0, channels 5 to 61
+                 spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
                  <!-- COMMENTED OUT UNTIL PROPER PARSING OF CHANNEL SELECTION
                  IS IMPLEMENTED -->
-                 <!--spw='0:5~61'; spw 0, channels 5 to 61
-                  -->
-                 spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
+				 <!--need to  check if these work--> 
                  <!--spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
 				   channels 3 to 45.
                  spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+				 -->
+			     <!-- multiple ranges do not work for 3.0.1
                  spw='0:0~10;15~60'; spectral window 0 with channels 
 				    0-10,15-60
                  spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
@@ -765,20 +768,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  NOTE: the viewer always defaults to displaying the 'radio'
                    frame, but that can be changed in the position tracking
                    pull down.
-           mode='channel' examples:
+           mode='mfs' examples:
                spw = '0,1'; mode = 'mfs'
                   will produce one image made from all channels in spw 
  		       0 and 1
-               <!--spw='0:5~28^2'; mode = 'mfs'
+               spw='0:5~28^2'; mode = 'mfs'
                   will produce one image made with channels 
  		       (5,7,9,...,25,27)
-                -->
+
+           mode='channel' examples:
                spw = '0'; mode = 'channel': nchan=3; start=5; width=4
                   will produce an image with 3 output planes
                   plane 1 contains data from channels (5+6+7+8)
                   plane 2 contains data from channels (9+10+11+12)
                   plane 3 contains data from channels (13+14+15+16)
-               <!--spw = '0:0~63^3'; mode='channel'; nchan=21; start = 0; 
+               spw = '0:0~63^3'; mode='channel'; nchan=21; start = 0; 
  		   width = 1
                   will produce an image with 20 output planes
                   Plane 1 contains data from channel 0
@@ -790,7 +794,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   plane 1 contains channels (5,7)
                   plane 2 contains channels (13,15)
                   plane 3 contains channels (21,23)
-                -->
 
        psfmode -- method of PSF calculation to use during minor cycles:
                default: 'clark': Options: 'clark','clarkstokes', 'hogbom'

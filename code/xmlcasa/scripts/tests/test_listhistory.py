@@ -16,6 +16,9 @@ class listhistory_test(unittest.TestCase):
     def setUp(self):
         self.res = None
         default(listhistory)
+        
+        if(os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
 
         shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
                             '/data/regression/exportasdm/input/'+self.msfile, self.msfile)

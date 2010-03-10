@@ -25,6 +25,11 @@ class clearstat_test(unittest.TestCase):
     def setUp(self):
         self.res = None
         default('clearstat')
+        
+        if(os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+        if(os.path.exists(self.img)):
+            os.system('rm -rf ' + self.img)
             
         shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
                             '/data/regression/exportasdm/input/'+self.msfile, self.msfile)

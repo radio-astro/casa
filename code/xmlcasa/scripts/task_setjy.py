@@ -6,10 +6,10 @@ def setjy(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=N
 
        The task places the model visibility amp and phase associated
        with a specified clean components image into the model column
-       of the data set.  The simplest way to to enter the flux density
+       of the data set.  The simplest way is to enter the flux density
        (I,Q,U,V) explicitly.
 
-       Models are available for 3C48, 3C138, 3C286 between
+       Models are available for 3C48, 3C138, and 3C286 between
        1.4 and 43 GHz.  3C147 is available above 13 GHz.  These models
        are scaled to the precise frequency of the data.  Only I models are
        presently available.
@@ -32,7 +32,7 @@ def setjy(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=N
                 otherwise, it is assumed a field name
               field='0~2'; field ids 0,1,2
               field='0,4,5~7'; field ids 0,4,5,6,7
-              field='3C286,3C295'; field named 3C286 adn 3C295
+              field='3C286,3C295'; fields named 3C286 and 3C295
               field = '3,4C*'; field id 3, all names starting with 4C
        spw -- Select spectral window/channels
               default: ''=all spectral windows and channels
