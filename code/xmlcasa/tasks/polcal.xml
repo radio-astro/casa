@@ -107,6 +107,8 @@ calibrations can be applied on the fly.
 			<value>D+QU</value>
 			<value>Df+QU</value>
 			<value>X</value>
+			<value>Xf</value>
+			<value>Xj</value>
 		</allowed>
 	</param>
 
