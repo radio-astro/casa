@@ -255,7 +255,7 @@ class runTest:
                     self.result_common['description'] = "'" + short_description + "'", "test short description"
 
                 # Figure out data repository version
-                (errorcode, datasvnr) = commands.getstatusoutput('cd '+DATA_REPOS[0]+' && svnversion')
+                (errorcode, datasvnr) = commands.getstatusoutput('cd '+DATA_REPOS[0]+' && svnversion 2>&1 | grep -ivw warning')
                 if errorcode != 0 or datasvnr == "exported":
                     # If that didn't work, look at ./version in the toplevel dir
                     (errorcode, datasvnr) = commands.getstatusoutput( \

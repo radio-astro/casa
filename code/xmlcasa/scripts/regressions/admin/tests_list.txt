@@ -18,6 +18,7 @@ b1608                           nelias nrao.edu
 boxit_test                      dmehring nrao.edu
 calstat_test                    jmlarsen eso.org
 cleanhelper_test                remy virginia.edu
+cleanchan_test                  remy virginia.edu
 clearstat_test                  scastro eso.org
 coordsystest_regression         dpetry eso.org
 cvel_test                       dpetry eso.org
