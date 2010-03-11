@@ -1,0 +1,39 @@
+add_definitions( ${atnf_DEFINITIONS} )
+include_directories( ${atnf_INCLUDE_DIRS} )
+
+# Dynamic library
+add_library( atnf
+  implement/Atoms/Servo_clnt.cc
+  implement/Atoms/Servo_xdr.cc
+  implement/PKSIO/ASTEDataset.cc
+  implement/PKSIO/ASTEFXDataset.cc
+  implement/PKSIO/ASTEFXReader.cc
+  implement/PKSIO/ASTEReader.cc
+  implement/PKSIO/FITSreader.cc
+  implement/PKSIO/MBFITSreader.cc
+  implement/PKSIO/MBrecord.cc
+  implement/PKSIO/NRO45FITSReader.cc
+  implement/PKSIO/NRO45Reader.cc
+  implement/PKSIO/NRODataset.cc
+  implement/PKSIO/NROFITSDataset.cc
+  implement/PKSIO/NROOTFDataset.cc
+  implement/PKSIO/NROReader.cc
+  implement/PKSIO/PKSFITSreader.cc
+  implement/PKSIO/PKSMBrecord.cc
+  implement/PKSIO/PKSMS2reader.cc
+  implement/PKSIO/PKSMS2writer.cc
+  implement/PKSIO/PKSreader.cc
+  implement/PKSIO/PKSSDwriter.cc
+  implement/PKSIO/SDFITSreader.cc
+  implement/PKSIO/SDFITSwriter.cc
+  implement/pks/pks_maths.cc
+ )
+
+target_link_libraries( atnf ${atnf_LINK_TO} )
+
+set_target_properties( atnf PROPERTIES SOVERSION ${CASA_API_VERSION} )
+
+install( TARGETS atnf LIBRARY DESTINATION lib )
+
+# Executables
+# Unit tests
