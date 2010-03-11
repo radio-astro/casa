@@ -1365,7 +1365,6 @@ class cleanhelper:
         parameters when default values are used
         for mode='velocity' or 'frequency' or 'channel'
         """
-        debug=True
 
         # first parse spw parameter:
 
@@ -1475,7 +1474,6 @@ class cleanhelper:
         chanfreqs1d = chanfreqs1dx.flatten()        
 
                 
-        #pdb.set_trace()
         # now we have a list of the selected channel freqs in the data, 
         # and we can start to parse start/width/nchan in a mode-dependent way:
 
@@ -1489,8 +1487,7 @@ class cleanhelper:
         # if start is float or int, will interpret as channel index.  otherwise
         # otherwise convert start/width from vel to freq, save original units.
         # do the conversion in the USER-SPECIFIED outframe 
-        # XXX if frame='', convertvf will use LSRK - is that right or should we use dataspecframe?
-        # CHANGED: use dataspecframe instead 
+        # if frame='', convertvf will use dataspecframe
  
         if type(start)==str:  
             instartunit=qa.quantity(start)['unit']            
@@ -1510,7 +1507,6 @@ class cleanhelper:
                     tmprestf=self.convertvf(0,frame,field,restf,veltype=veltype)
                 locwidth=self.qatostring(qa.sub(self.convertvf(width,frame,field,restf,veltype=veltype),tmprestf))
                 
-
         # now locstart and locwidth are either strings in freq, or numbers = chan indices, or ""
 
         # next, convert chan indices into freqs, and convert string/quantities into numbers in Hz:
@@ -1522,7 +1518,11 @@ class cleanhelper:
             if locstart>=len(chanfreqs0) or locstart<0:
                 raise TypeError, "Start channel is outside the first spw"
             if type(locstart)==int:
-                fstart = chanfreqs0[locstart]
+                # GAAAH - in noninteractive mode, default start=0 instead of "" that it should be!!!
+                if mode=="velocity" and locstart==0:
+                    fstart = chanfreqs1d[-1]
+                else:
+                    fstart = chanfreqs0[locstart]
             else:
                 raise TypeError, "clean cannot use a fractional start channel at this time.  If you intended a start frequency or velocity please set start as a string with units"
         elif(type(locstart)==str):
