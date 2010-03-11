@@ -124,6 +124,7 @@ class UnitTest:
         testlist = []
 
         for c in classes:
+            print c
             for attr, value in c.__dict__.iteritems():
                 if list:
 #                    print 'There is a list'
@@ -132,10 +133,12 @@ class UnitTest:
                             testlist.append(c(attr))
                 else:
 #                    print attr, " = ", value
-                    if len(attr) >= len("test") and \
-                        attr[:len("test")] == "test":
+                   if len(attr) >= len("test") and \
+                        attr.rfind('test') != -1 :
+#                        attr[:len("test")] == "test" : \
                         testlist.append(c(attr))
-        
+            
+        print testlist
         return testlist
             
 
