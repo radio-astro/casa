@@ -1788,11 +1788,23 @@ class cleanhelper:
             os.mkdir(tmppath[-1])
         #internally converted to frequency mode for mode='channel'
         #to ensure correct frequency axis for output image
-        # put in helper function
+        #if mode == 'channel':
+        #    freqs, finc = self.getfreqs(nchan, spw, start, width)
+        #    newmode = 'frequency'
         if mode == 'channel':
-            freqs, finc = self.getfreqs(nchan, spw, start, width)
+            # get spectral axis info from the dirty image
+            ia.open(imagename[0]+'.image')
+            imcsys=ia.coordsys().torecord()
+            ia.close()
+            cdelt=imcsys['spectral2']['wcs']['cdelt']
+            crval=imcsys['spectral2']['wcs']['crval']
+            for i in range(nchan):
+                if i==0: freqs.append(crval)
+                freqs.append(freqs[-1]+cdelt)
+            finc = cdelt
             newmode = 'frequency'
         return freqs,finc,newmode,tmppath
+
 
     def makeTemplateCubes(self, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, mode, facets, cfcache, interpolation, 
@@ -1922,7 +1934,7 @@ class cleanhelper:
             # need to convert to frequencies
             # to ensure correct frequencies in
             # output images(especially for multi-spw)
-            # Use freq list instead
+            # Use freq list instead generated in initChaniter
             imstart=q(freqs[chan],'Hz')
             width=q(finc,'Hz')
         elif start.find('m/s')>0:
