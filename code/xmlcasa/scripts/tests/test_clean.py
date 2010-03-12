@@ -109,11 +109,12 @@ class clean_test(unittest.TestCase):
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
 
-    def test11(self):
-        """Test 11: Non-default mode velocity"""
-        self.res = clean(vis=self.msfile,imagename=self.img,mode='velocity')
-        self.assertEqual(self.res,None)
-        self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
+# DOES NOT WORK WITH THESE DATA
+#    def test11(self):
+#        """Test 11: Non-default mode velocity"""
+#        self.res = clean(vis=self.msfile,imagename=self.img,mode='velocity')
+#        self.assertEqual(self.res,None)
+#        self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
         
     def test12(self):
         """Test 12: Non-default mode frequency"""
@@ -208,7 +209,7 @@ class clean_test(unittest.TestCase):
         
     def test27(self):
         """Test 27: Non-default Stokes parameter"""
-        self.res = clean(vis=self.msfile,imagename=self.img, stokes='LL')
+        self.res = clean(vis=self.msfile,imagename=self.img, stokes='RR')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
