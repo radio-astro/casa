@@ -1,3 +1,23 @@
+#
+# CASA - Common Astronomy Software Applications
+# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+#
+# This file is part of CASA.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 cmake_minimum_required( VERSION 2.8 )
 
 # Define compiler paths on OSX 10.5. This must be done before defining the project()
@@ -14,7 +34,10 @@ if( CMAKE_Fortran_COMPILER STREQUAL CMAKE_Fortran_COMPILER-NOTFOUND )
   message( FATAL_ERROR "Could not find fortran compiler. Please check!" )
 endif()
 
-set( CASA_API_VERSION "3.0.1" )
+set( CASA_MAJOR_VERSION 3 )
+set( CASA_MINOR_VERSION 0 )
+set( CASA_PATCH_VERSION 1 )
+set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
 include( CASA )
 
@@ -96,7 +119,7 @@ if( NOT CMAKE_CXX_FLAGS )
 endif()
 
 if( EXISTS ${CMAKE_SOURCE_DIR}/../aipshosts )
-  message( WARNING "Found ${CMAKE_SOURCE_DIR}/../aipshosts. You should probably delete this file and let CMake determine the name of the installation directory." )
+  message( WARNING "Found ${CMAKE_SOURCE_DIR}/../aipshosts. You should probably delete this file, and the name of the installation directory will be automatically set (to \"${arch}\") based on this machine's architecture." )
   execute_process( COMMAND uname -n
                    COMMAND awk -F. "{print $1}"
                    OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -634,13 +657,6 @@ execute_process( COMMAND
   ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^URL:\\s+//) { print; } }"
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE SVNURL
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-execute_process( COMMAND
-  ${PERL_EXECUTABLE} -e "open(VERSION, '< VERSION'); $_ = <VERSION>; s/^(\\d+?)(\\d)\\.(\\d+).*/$1.$2.$3/; print;"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE CASAVERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 

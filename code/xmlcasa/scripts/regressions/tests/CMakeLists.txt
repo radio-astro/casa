@@ -28,6 +28,7 @@ casa_add_python( xmlcasa_regressions_tests_python python/${PYTHONV}/regressions/
   imsmooth_test.py
   imval_test.py
   l02d.py
+  leo2pt_test.py
   listhistory_regression.py
   ngc1333.py
   ngc2403.py

@@ -1,4 +1,26 @@
+#
+# CASA - Common Astronomy Software Applications
+# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+#
+# This file is part of CASA.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
+#
+# Print the contents of one or more CMake variables
+#
 macro( dump )
   foreach( _a ${ARGN} )
     message( STATUS "${_a} = ${${_a}}" )
@@ -9,22 +31,19 @@ endmacro()
 # Setup definitions and include directories for this module,
 # and create a dynamic library
 #
-#    casa_add_library( module source1 [source2 ...] )
-#
 
-macro( casa_add_library mod )
+macro( casa_add_library module )
 
-  add_definitions( ${${mod}_DEFINITIONS} )
+  add_definitions( ${${module}_DEFINITIONS} )
+  include_directories( ${${module}_INCLUDE_DIRS} )
 
-  include_directories( ${${mod}_INCLUDE_DIRS} )
+  add_library( ${module} ${ARGN} )
 
-  add_library( ${mod} ${ARGN} )
+  target_link_libraries( ${module} ${${module}_LINK_TO} )
 
-  target_link_libraries( ${mod} ${${mod}_LINK_TO} )
+  set_target_properties( ${module} PROPERTIES SOVERSION ${CASA_API_VERSION} )
 
-  set_target_properties( ${mod} PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-  install( TARGETS ${mod} LIBRARY DESTINATION lib )
+  install( TARGETS ${module} LIBRARY DESTINATION lib )
 
 endmacro()
 
@@ -48,7 +67,7 @@ macro( casa_add_module module )
   set( ${module}_DEFINITIONS "" )
 
   if( NOT EXISTS ${CMAKE_SOURCE_DIR}/include/${module} )
-    execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink ../${module}/implement ${module} 
+    execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink ../${module}/implement ${module}
                      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include )
   endif()
 
@@ -184,7 +203,7 @@ MACRO( casa_add_python _target _install_dir )
           -e 's|/CASASUBST/build_time|${BUILDTIME}|'
           -e 's|/CASASUBST/subversion_revision|${SVNREVISION}|'
           -e 's|/CASASUBST/subversion_url|${SVNURL}|'
-          -e 's|/CASASUBST/casa_version|${CASAVERSION}|'
+          -e 's|/CASASUBST/casa_version|${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}|'
           -e 's|/CASASUBST/casa_build|${CASABUILD}|'
           ${_infile} > ${_outfile} 
       DEPENDS ${_infile} 
