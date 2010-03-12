@@ -158,12 +158,17 @@ class SubMS
 
 
   //Method to make the subMS
-
-  //TileShape of size 1 can have 2 values [0], and [1] ...these are used in to determine the tileshape
-  //by using MSTileLayout 
-  //Otherwise it has to be a vector size 3  e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351 rows.
+  //
+  //TileShape of size 1 can have 2 values [0], and [1] ...these are used in to
+  //determine the tileshape by using MSTileLayout. Otherwise it has to be a
+  //vector size 3 e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351
+  //rows.
+  //
+  // ignorables sets ignorables_p.  (Columns to ignore while time averaging.)
+  //
   Bool makeSubMS(String& submsname, String& whichDataCol,
-                 const Vector<Int>& tileShape=Vector<Int>(1, 0));
+                 const Vector<Int>& tileShape=Vector<Int>(1, 0),
+                 const String& ignorables="");
 
   //Method to make a scratch subMS and even in memory if posssible
   //Useful if temporary subselection/averaging is necessary
@@ -383,8 +388,19 @@ class SubMS
                          Cube<Bool>& outflag, const Bool writeToDataCol);
 
   // return the number of unique antennas selected
-  //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2, Bool includeAutoCorr=False);
-  // Number of time bins to average into from selected data
+  //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
+  //                   Bool includeAutoCorr=False);
+
+  // Figure out which bins each row (slot) will go in, and return the
+  // number of bins (-1 on failure).
+  //
+  // Normally the bins are automatically separated by changes in any data
+  // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
+  // allowed to span (ignore) changes in certain descriptors.  An example is
+  // scan # in WSRT MSes; it goes up with each integration, defeating time
+  // averaging!  (sub)array(_ID), scan #, and state ID can be ignored by
+  // setting ignorables_p.
+  //
   Int numOfTimeBins(const Double timeBin);
 
   // Used in a couple of places to estimate how much memory to grab.
@@ -457,6 +473,9 @@ class SubMS
   String scanString_p, uvrangeString_p, taqlString_p;
   String timeRange_p, arrayExpr_p;
   uInt nant_p;
+  String ignorables_p;          // Should time averaging not split bins by
+                                // (sub)array(_ID), scan #, and/or state ID?
+                                // Must be lowercase at all times.
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;

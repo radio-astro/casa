@@ -2466,13 +2466,18 @@ for i in range(len(tcoord)):
      <description>If true, step will be used to average channels.  Otherwise it will be used to skip channels.</description>
      <value>true</value>
      </param>
+
+     <param type="string" direction="in" name="ignorables">
+     <description>Columns (array, scan, and/or state) to ignore when time averaging.</description>
+     <value></value>
+     </param>
   </input>
   <returns type="bool"/>
 
   <description>
-    This function splits out part of the MS into a new MS. Spectral
-    averaging is available on splitting. More transformations
-    are in the works (like time averaging). 
+    This function splits out part of the MS into a new MS. Time and
+    channel averaging can be performed in the process (but not in
+    the same call).
     
     When splitting multiple spectral windows, the parameters {\tt
     nchan, start, step} can be vectors, so that each spectral window
@@ -2481,13 +2486,12 @@ for i in range(len(tcoord)):
     parameters means that it will be replicated for all the spectral
     windows selected.
     
-   
   </description>
   <example>
   
   \begin{verbatim}
       
-  ms.open("multiwin.ms", nomodify=False)
+  ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
   \end{verbatim}
@@ -2499,7 +2503,7 @@ for i in range(len(tcoord)):
 
  \begin{verbatim}
       
-  ms.open("multiwin.ms", nomodify=False)
+  ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
  \end{verbatim}
@@ -2511,7 +2515,7 @@ at channel 0 and averaging every 5.
 
 \begin{verbatim}
       
-  ms.open("multiwin.ms", nomodify=False)
+  ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10,10,30,40],
            start=[0,4,9,9], step=[1,10,5,2], whichcol='CORRECTED_DATA') 
 \end{verbatim}
@@ -2525,7 +2529,20 @@ averaging, of the input spwid 0. The second output spectral window
 will consists of 10 channels and is formed by picking 100 channels
 from spwid 1 of the input data, starting at channel 4, and every
 10 channels to make one output channel.
-   
+
+\begin{verbatim}     
+  ms.open("WSRT.ms")
+  ms.split('subms.ms', timebin='20s', whichcol='all', ignorables='scan')
+  ms.close()
+\end{verbatim}
+
+This example averages a WSRT MS into 20s bins, selecting whichever of
+DATA, MODEL_DATA, CORRECTED_DATA, or FLOAT_DATA, or LAG_DATA is present.
+Normally the bins would not cross scans, but in this MS the scan number
+goes up with each integration, making it redundant enough with time that
+it would defeat any time averaging.  Therefore the SCAN column is
+ignored for setting the bins.
+
   </example>
 </method>
 

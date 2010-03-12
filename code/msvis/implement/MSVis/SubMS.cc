@@ -93,7 +93,8 @@ namespace casa {
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    nant_p(0)
+    nant_p(0),
+    ignorables_p("")
   {
   }
   
@@ -112,7 +113,8 @@ namespace casa {
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    nant_p(0)
+    nant_p(0),
+    ignorables_p("")
   {
   }
   
@@ -507,7 +509,7 @@ namespace casa {
   
   
   Bool SubMS::makeSubMS(String& msname, String& colname,
-                        const Vector<Int>& tileShape)
+                        const Vector<Int>& tileShape, const String& ignorables)
   {
     LogIO os(LogOrigin("SubMS", "makeSubMS()"));
     try{
@@ -553,6 +555,8 @@ namespace casa {
                              colNamesTok, 0);
       }
       
+      ignorables_p = ignorables;
+
       msOut_p= *outpointer;
       msc_p=new MSColumns(msOut_p);
       
@@ -6052,6 +6056,15 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
 
   Int SubMS::numOfTimeBins(const Double timeBin)
   {
+    // Figure out which bins each row (slot) will go in, and return the
+    // number of bins (-1 on failure).
+    //
+    // Normally the bins are automatically separated by changes in any data
+    // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
+    // allowed to span (ignore) changes in certain descriptors.  An example is 
+    // scan # in WSRT MSes; it goes up with each integration, defeating time
+    // averaging!
+    //
     if(timeBin > 0.0){
       Int numrows = mssel_p.nrow();
       const Vector<Int>&    ant1         = mscIn_p->antenna1().getColumn();
@@ -6060,10 +6073,29 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       const Vector<Double>& intervalRows = mscIn_p->interval().getColumn();
       const Vector<Int>&    datDesc      = mscIn_p->dataDescId().getColumn();
       const Vector<Int>&    fieldId      = mscIn_p->fieldId().getColumn();
-      const Vector<Int>&    arrayIDs     = mscIn_p->arrayId().getColumn();
-      const Vector<Int>&    scan         = mscIn_p->scanNumber().getColumn();
-      const Vector<Int>&    state        = mscIn_p->stateId().getColumn();
-      const Vector<Bool>&   rowFlag      = mscIn_p->flagRow().getColumn();
+
+      Bool ignore_array = false;    
+      Bool ignore_scan  = false;    // The most likely thing to ignore,
+                                    // esp. for WSRT MSes.
+      Bool ignore_state = false;
+      Vector<Int> zeroes;                  // The dummy values for ignored quantities.
+      if(ignorables_p != ""){              // Ignore something
+        zeroes.resize(ant1.nelements());   // Dummy vector of nrows zeroes.
+        ignore_array = ignorables_p.contains("arr"); // Pirate talk for "array".
+        ignore_scan  = ignorables_p.contains("scan");
+        ignore_state = ignorables_p.contains("state");
+      }
+
+      const Vector<Int>& arrayIDs = ignore_array ? 
+                                    zeroes : mscIn_p->arrayId().getColumn();
+
+      const Vector<Int>& scan = ignore_array ? zeroes :
+                                mscIn_p->scanNumber().getColumn();
+
+      const Vector<Int>& state = ignore_array ? zeroes :
+                                 mscIn_p->stateId().getColumn();
+
+      const Vector<Bool>& rowFlag = mscIn_p->flagRow().getColumn();
 
       //std::set<Int> slotSet;
       
@@ -6072,9 +6104,19 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       newTimeVal_p.resize(numrows);
       bin_slots_p.resize(numrows);
 
-      make_map(arrayIDs, arrayRemapper_p);
-      make_map(scan,     scanRemapper_p);  // This map is only implicitly used.
-      make_map(state,    stateRemapper_p);
+      if(ignore_array)
+        arrayRemapper_p.resize(1);         // 0 -> 0
+      else
+        make_map(arrayIDs, arrayRemapper_p);
+      if(ignore_scan)
+        scanRemapper_p.resize(1);         // 0 -> 0
+      else
+        make_map(scan,     scanRemapper_p);  // This map is only implicitly
+                                             // used.
+      if(ignore_state)
+        stateRemapper_p.resize(1);         // 0 -> 0
+      else
+        make_map(state,    stateRemapper_p);
 
       Int numBin = 0;
 
@@ -6368,7 +6410,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   // Guarantee oldDDID != ddID on 1st iteration.
 
   Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
-  // Float oldMemUse = -1.0;
+  //Float oldMemUse = -1.0;
   for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
     // Float memUse = Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0);
     // if(memUse != oldMemUse){
@@ -6698,7 +6740,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   }
 
   // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "memory after putting ImagingWt: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << "memory after putting ImagingWt: "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
   //    << LogIO::POST;
 
   msc_p->antenna1().putColumn(outAnt1);
@@ -6721,7 +6764,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   msc_p->timeCentroid().putColumn(outTC);
 
   // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "memory after putting TC: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << "memory after putting TC: "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
   //    << LogIO::POST;
 
   return True;
@@ -6731,7 +6775,7 @@ void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
                           const Vector<MS::PredefinedColumns> colEnums)
 {
   // Set up a map from dataColumn indices to ArrayColumns in the output.
-  // mapper has to b    e a pointer (gasp!), not a Vector, because
+  // mapper has to be a pointer (gasp!), not a Vector, because
   // Vector<ArrayColumn<Complex> > mapper(ntok) would implicitly call
   // .resize(), which uses =, which is banned for ArrayColumn.
 
@@ -6746,7 +6790,7 @@ void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
         mapper[i].reference(msc_p->modelData());
       else if(colEnums[i] == MS::LAG_DATA)
         mapper[i].reference(msc_p->lagData());
-      else                                  // The putput default !=
+      else                                  // The output default !=
         mapper[i].reference(msc_p->data()); // the input default.
     }
   }

@@ -97,6 +97,19 @@ channels of the input data set and time averaging is also available.
 		<description>select data by baseline length</description>
 		<value></value>
 	</param>
+
+	<param type="any" name="ignorables" subparam="true">
+		<description>Let time bins ignore changes in array, scan, and/or state</description>
+		<any type="variant" limittypes="string stringArray"/>
+		<value type="string"></value>
+	</param>
+        <constraints>
+	  <when param="timebin">
+            <notequals type="string" value="0s">
+              <default param="ignorables"><value>""</value></default>
+            </notequals>
+          </when>
+        </constraints>
 </input>
 <example>
 
@@ -187,6 +200,17 @@ channels of the input data set and time averaging is also available.
             uvrange='0~1000km'; uvrange in kilometers
 	scan -- Scan number range
             default: ''=all
+        ignorables -- Let time bins ignore boundaries in array, scan, and/or
+                      state.
+                      default = '' (separate time bins by all of the above)
+                      ignorables = 'scan': Can be useful when the scan number
+                                           goes up with each integration,
+                                           as in many WSRT MSes.
+                      ignorables = ['array', 'state']: disregard array and state
+                                                       IDs when time averaging.
+                      ignorables = 'state,subarr': Same as above.  ignorables
+                                                   matches on 'arr', 'scan', and
+                                                   'state'.
 
 </example> 
 </task>

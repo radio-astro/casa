@@ -76,10 +76,23 @@ def tget(task=None, savefile=''):
 		execfile(savefile)
 		# Put the task parameters back into the global namespace
                 f=zip(myf[task].__call__.func_code.co_varnames,myf[task].__call__.func_defaults)
-                for j in range(len(f)):
-                        k=f[j][0]
-			if k != 'self' :
-                           myf[k] = eval(k)
+                missing_ks = []
+                for j in f:
+                        k = j[0]
+			if k != 'self':
+                                try:
+                                        myf[k] = eval(k)
+                                except NameError:
+                                        missing_ks.append(k)
+                if missing_ks:
+                        print "Did not find a saved value for",
+                        if len(missing_ks) > 1:
+                                print ', '.join(missing_ks[:-1]),
+                                print 'or', missing_ks[-1]
+                        else:
+                                print missing_ks[0]
+                        print "The set of task parameters has probably changed"
+                        print "since", savefile, "was written."
 		print "Restored parameters from file "+savefile
         except TypeError, e:
                 print "tget --error: ", e
