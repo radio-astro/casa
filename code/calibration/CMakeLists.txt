@@ -18,11 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_definitions( ${calibration_DEFINITIONS} )
-include_directories( ${calibration_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( calibration
+casa_add_library( calibration
   implement/CalTables/BJonesDesc.cc
   implement/CalTables/BJonesMBuf.cc
   implement/CalTables/BJonesMCol.cc
@@ -87,23 +83,7 @@ add_library( calibration
   implement/CalTables/VisJonesMCol.cc
   implement/CalTables/VisJonesMRec.cc
   implement/CalTables/VisJonesTable.cc
- )
+   )
 
-target_link_libraries( calibration ${calibration_LINK_TO} )
-
-set_target_properties( calibration PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS calibration LIBRARY DESTINATION lib )
-
-# Executables
-# Unit tests
-add_executable( tCalInterpolation EXCLUDE_FROM_ALL implement/CalTables/test/tCalInterpolation.cc )
-target_link_libraries( tCalInterpolation calibration )
-add_test( tCalInterpolation ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tCalInterpolation )
-add_dependencies( check tCalInterpolation )
-
-add_executable( tCalIntpMatch EXCLUDE_FROM_ALL implement/CalTables/test/tCalIntpMatch.cc )
-target_link_libraries( tCalIntpMatch calibration )
-add_test( tCalIntpMatch ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tCalIntpMatch )
-add_dependencies( check tCalIntpMatch )
-
+casa_add_assay( calibration implement/CalTables/test/tCalInterpolation.cc )
+casa_add_assay( calibration implement/CalTables/test/tCalIntpMatch.cc )

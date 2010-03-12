@@ -30,11 +30,7 @@ add_custom_command( OUTPUT version.cc
       || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
 )
 
-add_definitions( ${xmlcasa_DEFINITIONS} )
-include_directories( ${xmlcasa_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( xmlcasa
+casa_add_library( xmlcasa
   implement/alma/asdm2msfillertask_cmpt.cc
   implement/atmosphere/atmosphere_cmpt.cc
   implement/calibrater/calplot_cmpt.cc
@@ -84,62 +80,14 @@ add_library( xmlcasa
   implement/xerces/asdmCasaSaxHandler.cc
   implement/xerces/asdmCasaXMLUtil.cc
   implement/xerces/stdcasaXMLUtil.cc
- 
-version.cc)
+  version.cc
+  )
 
-target_link_libraries( xmlcasa ${xmlcasa_LINK_TO} )
-
-set_target_properties( xmlcasa PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS xmlcasa LIBRARY DESTINATION lib )
-
-# Executables
-add_executable( casaparamgui
-apps/casaparamgui/casaparamgui.cc)
-target_link_libraries( casaparamgui xmlcasa )
-
-install( TARGETS casaparamgui RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casaparamgui RUNTIME DESTINATION apps/casaparamgui.app/Contents/MacOS )
-endif()
-add_executable( casapy
-apps/casapy/casapy.cc)
-target_link_libraries( casapy xmlcasa )
-
-install( TARGETS casapy RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casapy RUNTIME DESTINATION apps/casapy.app/Contents/MacOS )
-endif()
-add_executable( harvestrn
-apps/harvestrn/harvestrn.cc)
-target_link_libraries( harvestrn xmlcasa )
-
-install( TARGETS harvestrn RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS harvestrn RUNTIME DESTINATION apps/harvestrn.app/Contents/MacOS )
-endif()
-add_executable( harvestrr
-apps/harvestrr/harvestrr.cc)
-target_link_libraries( harvestrr xmlcasa )
-
-install( TARGETS harvestrr RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS harvestrr RUNTIME DESTINATION apps/harvestrr.app/Contents/MacOS )
-endif()
-# Unit tests
-add_executable( tXMLToRecord EXCLUDE_FROM_ALL implement/xerces/test/tXMLToRecord.cc )
-target_link_libraries( tXMLToRecord xmlcasa )
-add_test( tXMLToRecord ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tXMLToRecord )
-add_dependencies( check tXMLToRecord )
-
-#
-# Python
-#
-
+casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
+casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
+casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
+casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
+casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 casa_add_python( xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
   scripts/assignmentFilter.py
@@ -275,10 +223,6 @@ casa_add_python( xmlcasa_python python/${PYTHONV}
   scripts/viewertool.py
   scripts/vishead_util.py )
 
-#
-# XML tasks
-#
-
 casa_add_tasks( xmlcasa_tasks 
   tasks/accum.xml
   tasks/applycal.xml
@@ -372,11 +316,7 @@ casa_add_tasks( xmlcasa_tasks
   tasks/visstat.xml
   tasks/widefield.xml )
 
-#
-# XML tools
-#
-
-casa_tool( tool_idl tool_sources 
+casa_add_tools( tools_idl tools_sources 
   implement/alma/asdm2msfillertask.xml
   implement/atmosphere/atmosphere.xml
   implement/calibrater/calplot.xml
@@ -409,56 +349,32 @@ casa_tool( tool_idl tool_sources
   implement/utils/dbus.xml
   implement/utils/utils.xml )
 
-#
-# IDL
-#
-
+# Handle source IDLs
 set( outputs_idl "" )
 casa_idl( outputs_idl idl/casatypes.idl Quantity)
 casa_idl( outputs_idl idl/complex.idl complex )
 casa_idl( outputs_idl idl/basicVecs.idl IntAry IntVec StringAry StringVec DoubleAry DoubleVec BoolAry BoolVec ComplexAry ComplexVec shape_type )
 
-
-casa_binding( binding_sources ${CMAKE_CURRENT_SOURCE_DIR}/idl/casatypes.idl ${CMAKE_CURRENT_SOURCE_DIR}/idl/complex.idl ${CMAKE_CURRENT_SOURCE_DIR}/idl/basicVecs.idl ${tool_idl} )
+casa_pybinding( casac_sources ${CMAKE_CURRENT_SOURCE_DIR}/idl/casatypes.idl ${CMAKE_CURRENT_SOURCE_DIR}/idl/complex.idl ${CMAKE_CURRENT_SOURCE_DIR}/idl/basicVecs.idl ${tools_idl} )
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/impl)
 # for generated C++ bindings
 
-add_definitions( -pthread -fno-strict-aliasing -DNDEBUG ) # gcc specific
-add_library( casac MODULE ${tool_sources} ${outputs_idl} ${binding_sources}  )
+add_definitions( -pthread -fno-strict-aliasing -DNDEBUG ) # may or may not be necessary for compiling python modules
 
-set_target_properties( casac PROPERTIES PREFIX "" )
+casa_add_pymodule( casac ${tools_sources} ${outputs_idl} ${casac_sources} )
+casa_add_pymodule( paramgui apps/module_paramgui/paramgui_python.cc )
+casa_add_pymodule( interrupt modules/interrupt/interrupt_python.cc )
 
-
-target_link_libraries( casac xmlcasa ${xmlcasa_LINK_TO} )
-
-
-# This is for dependency generation to work
-add_custom_target( idl SOURCES ${tool_idl} )
+# Make sure that all IDLs are up to date before considering casac
+# This has the desired effects that
+# - Dependencies of the C++ sources are calculated after the IDLs are created
+# - When ccmtools is invoked, all the required IDL (which may not be explicit
+#   cmake dependencies for the ccmtools command) exist.
+add_custom_target( idl SOURCES ${tools_idl} )
 add_dependencies( casac idl )
 
-#
-#
-# Other modules 
-#
-#
-add_library( paramgui MODULE apps/module_paramgui/paramgui_python.cc )
-set_target_properties( paramgui PROPERTIES PREFIX "" )
-target_link_libraries( paramgui xmlcasa ${xmlcasa_LINK_TO} )
-add_library( interrupt MODULE modules/interrupt/interrupt_python.cc )
-set_target_properties( interrupt PROPERTIES PREFIX "" )
-target_link_libraries( interrupt xmlcasa ${xmlcasa_LINK_TO} )
-install( TARGETS casac interrupt paramgui LIBRARY DESTINATION python/${PYTHONV} )
-
-
-
 add_subdirectory( scripts/regressions )
-
-
 add_subdirectory( scripts/regressions/tests )
-
-
 add_subdirectory( scripts/usecases )
-
-
 add_subdirectory( scripts/demos )

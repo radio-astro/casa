@@ -48,6 +48,47 @@ macro( casa_add_library module )
 endmacro()
 
 #
+# casa_add_executable( module name source1 [source2...] )
+#
+#     Add an executable, and define the install rules.
+#
+macro( casa_add_executable module name )
+
+  set( _sources ${ARGN} )
+
+  add_executable( ${name} ${_sources} )
+  
+  target_link_libraries( ${name} ${module} )
+
+  install( TARGETS ${name} RUNTIME DESTINATION bin )
+
+  if( APPLE )
+    # On Mac, things are installed here too.
+    install( TARGETS ${name} RUNTIME DESTINATION apps/${name}.app/Contents/MacOS )
+  endif()
+
+endmacro()
+
+
+#
+# casa_add_assay( module source )
+#
+#      Add an assay unit test. The name of the test will be the basename of
+#      of the source file.
+#
+macro( casa_add_assay module source )
+
+  get_filename_component( _tname ${source} NAME_WE )
+
+  add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
+  target_link_libraries( ${_tname} ${module} )
+  add_test( ${_tname} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
+  add_dependencies( check ${_tname} )
+
+endmacro()
+
+
+#
 # Add a CASA subdirectory (module)
 #
 #  The following variables are set
@@ -167,7 +208,10 @@ endmacro()
 
 
 #
-# casa_add_python( target_name installation_directory )
+# casa_add_python( target_name
+#                  installation_directory 
+#                  source1 [source2 ...]
+#                )
 #
 # Creates target for python files
 #
@@ -226,6 +270,13 @@ endmacro()
 
 #
 #  Rules for handling task XML
+#
+#     casa_add_tasks( target
+#                     source1.xml [source2.xml ...] )
+#
+#  - Generates python bindings
+#  - Generates tasks.py taskinfo.py
+#  - Defines install rules
 #
 
 macro( casa_add_tasks _target )
@@ -314,10 +365,10 @@ endmacro()
 
 
 #
-#   casa_add_ccmtools( INPUT input1 [input2 ...]
-#                      OUTPUT output1 [output2 ...]
-#                      OPTIONS option1 [option2 ...] 
-#                      DEPENDS depend1 [depend2 ...] )
+#   casa_ccmtools( INPUT input1 [input2 ...]
+#                  OUTPUT output1 [output2 ...]
+#                  OPTIONS option1 [option2 ...] 
+#                  DEPENDS depend1 [depend2 ...] )
 #
 #  There are a few issues involved with invoking ccmtools.
 #  The solution to these are factored out in this macro.
@@ -329,15 +380,16 @@ endmacro()
 #    before invoking ccmtools
 #  - ccmtools always returns zero, even in case of error. In
 #    order for the build system to check if the invocation was
-#    successful it is checked that all output files exist after
+#    successful, it is checked that all output files exist after
 #    running ccmtools
-#  - implicit dependencies to IDL files.
+#  - implicit dependencies from the generated C++ to IDL files
+#    (which include each other).
 #    The option IMPLICIT_DEPENDS traces the dependencies
 #    from the output C++ to indirect IDL files included by
 #    the direct dependency. Note, in CMake 2.8 this works only
 #    for the Makefile backend.
 
-macro( casa_add_ccmtools )
+macro( casa_ccmtools )
   # Careful!: variable names have global scope.
   # The names must not conflict with 'temporary' 
   # variables used in the caller macro. This is
@@ -427,13 +479,17 @@ endmacro()
 #
 #  Rules for handling tool XML
 #
+#        casa_add_tools( out_idl out_sources
+#                        tool1.xml [tool2.xml ...]
+#                      )
+#
 #  out_idl: generated IDL
 #  out_sources: generated .cc and .h files
 #
 
-macro( casa_tool out_idl out_sources )
-  set( _xmls ${ARGN} )
+macro( casa_add_tools out_idl out_sources )
 
+  set( _xmls ${ARGN} )
 
   foreach( _x ${_xmls} )
     
@@ -479,7 +535,7 @@ macro( casa_tool out_idl out_sources )
       impl/${_base}Home_entry.h
       )
 
-    casa_add_ccmtools(
+    casa_ccmtools(
       INPUT ${_idl}
       OUTPUT ${_outputs}
       OPTIONS c++local c++python
@@ -498,12 +554,15 @@ endmacro()
 #
 #  Rules for handling source IDL
 #
+#       casa_idl( outfiles input
+#                 prefix1 [prefix2 ...] )
+#
 #  outfiles: list of generated C++ sources
 #  input   : source IDL
-#  *       : expected output files
+#  prefix* : basename of output C++ sources
 #
 
-macro( CASA_idl outfiles input )
+macro( casa_idl outfiles input )
 
     set( _types ${ARGN} )  # Created output files
 
@@ -519,7 +578,7 @@ macro( CASA_idl outfiles input )
 
     endforeach()
      
-    casa_add_ccmtools(
+    casa_ccmtools(
       INPUT ${_idl}
       OUTPUT ${_outputs}
       OPTIONS c++local c++python
@@ -531,56 +590,81 @@ macro( CASA_idl outfiles input )
 endmacro( CASA_idl )
 
 
-macro( casa_binding outfiles )
+#
+#  casa_pybinding( outfiles
+#                  source1.idl [source2.idl] )
+#
+#  outfiles: generated casac_python.* C++ files
+#  source* : input IDLs
+#
+
+macro( casa_pybinding outfiles )
 
   set( _idls ${ARGN} )
 
   # Avoid name clashing between the casac_python.*
-  # created here and elsewhere by 
-  # putting them in a subdirectory
+  # created here and elsewhere (by other ccmtools invocations) by 
+  # using a different output directory
   set( ${outfiles} 
-    binding/Python_Converter/casac_python.cc
-    binding/Python_Converter/casac_python.h
+    pybinding/Python_Converter/casac_python.cc
+    pybinding/Python_Converter/casac_python.h
     )
 
-  casa_add_ccmtools(
+  casa_ccmtools(
     INPUT ${_idls}
     OUTPUT ${${outfiles}}
     OPTIONS c++local c++python
-    --output=${CMAKE_CURRENT_BINARY_DIR}/binding
+    --output=${CMAKE_CURRENT_BINARY_DIR}/pybinding
     )
-    # You would think that here is missing a
-    # DEPENDS ${_idl}, but in fact the output does not
-    # depend on the content of the input files, and therefore
-    # do *not* need to be regenerated whenever an input file
-    # changes (which takes much time). The output only depends
-    # on the input filenames.
-    #
-    # on the other hand, running this command without idl existing is also bad...
+    # You would think that here is missing a DEPENDS ${_idls},
+    # but in fact the output does not depend on the content of the
+    # input files, and therefore does *not* need to be regenerated 
+    # whenever an input file changes (which takes much time). The
+    # output only depends on the input filenames.
 
-endmacro( casa_binding )
+endmacro()
+
+#
+#   casa_add_pymodule( name source1 [source2 ...] )
+#
+# Creates a python module. 
+# The module is always linked to xmlcasa and ${xmlcasa_LINK_TO}.
+#
+
+macro( casa_add_pymodule name )
+
+  set( _sources ${ARGN} )
+
+  add_library( ${name} MODULE ${_sources} )
+  set_target_properties( ${name} PROPERTIES PREFIX "" )
+  target_link_libraries( ${name} xmlcasa ${xmlcasa_LINK_TO} )
+  install( TARGETS ${name} LIBRARY DESTINATION python/${PYTHONV} )
+
+endmacro()
 
 
 #
-# Define a macro to define how to generate .h from .xml DBUS
+# How to generate .h from .xml for DBUS
 #
 
-MACRO(CASA_ADD_DBUS_INTERFACE _header _interface)
-    GET_FILENAME_COMPONENT(_infile ${_interface} ABSOLUTE)
-    GET_FILENAME_COMPONENT(_out_path ${_header} PATH)
+macro( casa_add_dbus_interface _header _interface)
+    get_filename_component(_infile ${_interface} ABSOLUTE)
+    get_filename_component(_out_path ${_header} PATH)
 
     # The output directory needs to exist, 
     # or dbus-xml2cpp will silently fail
-    ADD_CUSTOM_COMMAND(OUTPUT ${_header}
-        COMMAND mkdir -p ${_out_path}
-        COMMAND ${DBUS_dbusxx-xml2cpp_EXECUTABLE} ${_infile} --proxy=${_header}
-        DEPENDS ${_infile})
-
-ENDMACRO(CASA_ADD_DBUS_INTERFACE)
+    add_custom_command( 
+      OUTPUT ${_header}
+      COMMAND mkdir -p ${_out_path}
+      COMMAND ${DBUS_dbusxx-xml2cpp_EXECUTABLE} ${_infile} --proxy=${_header}
+      DEPENDS ${_infile}
+      )
+endmacro()
 
 
 # Generate .ui.h files from .ui
-# The builtin CMAKE macro uses a different naming convention
+# The same as CMAKE's built-in macro, but using a different naming convention
+# for the generated file
 #
 MACRO (CASA_QT4_WRAP_UI outfiles )
   QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
@@ -592,7 +676,6 @@ MACRO (CASA_QT4_WRAP_UI outfiles )
 
     string(REGEX REPLACE "^implement/" "" _path ${_path})
 
-#    SET(outfile ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.ui.h)
     SET(outfile ${CMAKE_CURRENT_BINARY_DIR}/${_path}/${outfile}.ui.h)
 
     GET_FILENAME_COMPONENT(_path ${outfile} PATH)
@@ -605,9 +688,6 @@ MACRO (CASA_QT4_WRAP_UI outfiles )
     SET(${outfiles} ${${outfiles}} ${outfile})
   ENDFOREACH (it)
 ENDMACRO (CASA_QT4_WRAP_UI)
-
-
-
 
 #
 # Create .qrc.cc from .qrc
@@ -645,17 +725,13 @@ MACRO (CASA_QT4_ADD_RESOURCES outfiles )
   
 ENDMACRO (CASA_QT4_ADD_RESOURCES)
 
-
-
-
-
 #
-#  casa_check_version( error p actual desired )
+#  casa_check_version( error p actual [EXACT] desired )
 #
 #        error : output error message, or empty if ok
 #            p : package name
 #       actual : given version number
-#      desired : nominal version number
+#      desired : nominal version number(s)
 #
 # If each major/minor/micro number uses integer comparison, then
 #

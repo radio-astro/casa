@@ -20,7 +20,8 @@
 
 include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
-qt4_wrap_cpp( outfiles
+
+qt4_wrap_cpp( outfiles_qoh
   implement/Actions/PlotMSCacheThread.qo.h
   implement/Actions/PlotMSDrawThread.qo.h
   implement/Actions/PlotMSExportThread.qo.h
@@ -47,8 +48,8 @@ qt4_wrap_cpp( outfiles
   implement/GuiTabs/PlotMSTab.qo.h
   implement/GuiTabs/PlotMSToolsTab.qo.h
   implement/GuiTabs/PlotMSTransformationsTab.qo.h
+  )
 
-)
 casa_qt4_wrap_ui( outfiles_ui
   implement/Gui/PlotMSAveragingWidget.ui
   implement/Gui/PlotMSAxisWidget.ui
@@ -69,17 +70,15 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/GuiTabs/PlotMSPlotTab.ui
   implement/GuiTabs/PlotMSToolsTab.ui
   implement/GuiTabs/PlotMSTransformationsTab.ui
-)
-casa_qt4_add_resources( outfile implement/Gui/PlotMSPlotter.qrc OPTIONS -name Gui )
-set( outfiles_qrc ${outfiles_qrc} ${outfile} )
-add_definitions( ${plotms_DEFINITIONS} )
+  )
+
+casa_qt4_add_resources( outfiles_qrc implement/Gui/PlotMSPlotter.qrc OPTIONS -name Gui )
+
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/implement/Gui ) 
 # because the generated code contain relative paths to the source tree
 
-include_directories( ${plotms_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( plotms
+casa_add_library( plotms
+  ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
   implement/Actions/PlotMSAction.cc
   implement/Actions/PlotMSCacheThread.cc
   implement/Actions/PlotMSDrawThread.cc
@@ -130,23 +129,6 @@ add_library( plotms
   implement/Plots/PlotMSPlotParameterGroups.cc
   implement/Plots/PlotMSPlotParameters.cc
   implement/Plots/PlotMSSinglePlot.cc
-${outfiles} ${outfiles_ui} ${outfiles_qrc}
-)
+  )
 
-target_link_libraries( plotms ${plotms_LINK_TO} )
-
-set_target_properties( plotms PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS plotms LIBRARY DESTINATION lib )
-
-# Executables
-add_executable( casaplotms
-apps/casaplotms/casaplotms.cc)
-target_link_libraries( casaplotms plotms )
-
-install( TARGETS casaplotms RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casaplotms RUNTIME DESTINATION apps/casaplotms.app/Contents/MacOS )
-endif()
-# Unit tests
+casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )

@@ -18,11 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_definitions( ${flagging_DEFINITIONS} )
-include_directories( ${flagging_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( flagging
+casa_add_library( flagging
   implement/Flagging/DDMapper.cc
   implement/Flagging/ExtendFlagger.cc
   implement/Flagging/Flagger.cc
@@ -42,23 +38,7 @@ add_library( flagging
   implement/Flagging/RFFlagCube.cc
   implement/Flagging/RFRowClipper.cc
   implement/MSPlot/MsPlot.cc
- )
+   )
 
-target_link_libraries( flagging ${flagging_LINK_TO} )
-
-set_target_properties( flagging PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS flagging LIBRARY DESTINATION lib )
-
-# Executables
-# Unit tests
-add_executable( tAutoflag EXCLUDE_FROM_ALL implement/Flagging/test/tAutoflag.cc )
-target_link_libraries( tAutoflag flagging )
-add_test( tAutoflag ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tAutoflag )
-add_dependencies( check tAutoflag )
-
-add_executable( tRFASelector EXCLUDE_FROM_ALL implement/Flagging/test/tRFASelector.cc )
-target_link_libraries( tRFASelector flagging )
-add_test( tRFASelector ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tRFASelector )
-add_dependencies( check tRFASelector )
-
+casa_add_assay( flagging implement/Flagging/test/tAutoflag.cc )
+casa_add_assay( flagging implement/Flagging/test/tRFASelector.cc )

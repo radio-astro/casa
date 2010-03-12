@@ -20,7 +20,8 @@
 
 include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
-qt4_wrap_cpp( outfiles
+
+qt4_wrap_cpp( outfiles_qoh
   implement/QtAutoGui/QtAutoGui.qo.h
   implement/QtAutoGui/QtGuiEntry.qo.h
   implement/QtPlotter/QtCanvas.qo.h
@@ -54,8 +55,8 @@ qt4_wrap_cpp( outfiles
   implement/RegionShapes/QtRegionShapeManager.qo.h
   implement/RegionShapes/QtSingleRegionShape.qo.h
   implement/RegionShapes/RSUtils.qo.h
+  )
 
-)
 casa_qt4_wrap_ui( outfiles_ui
   implement/QtAutoGui/adjustmentBottom.ui
   implement/QtAutoGui/checkButtonItem.ui
@@ -79,19 +80,17 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/RegionShapes/QtRSFileLoader.ui
   implement/RegionShapes/QtRSFileSaver.ui
   implement/RegionShapes/QtSingleRegionShape.ui
-)
-casa_qt4_add_resources( outfile implement/QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
-set( outfiles_qrc ${outfiles_qrc} ${outfile} )
-casa_qt4_add_resources( outfile implement/QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
-set( outfiles_qrc ${outfiles_qrc} ${outfile} )
-casa_qt4_add_resources( outfile implement/QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
-set( outfiles_qrc ${outfiles_qrc} ${outfile} )
-add_definitions( ${display_DEFINITIONS} )
-include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code
-include_directories( ${display_INCLUDE_DIRS} )
+  )
 
-# Dynamic library
-add_library( display
+casa_qt4_add_resources( outfiles_qrc implement/QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
+casa_qt4_add_resources( outfiles_qrc implement/QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
+casa_qt4_add_resources( outfiles_qrc implement/QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
+
+
+include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code
+
+casa_add_library( display
+  ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
   implement/Display/AttributeBuffer.cc
   implement/Display/Attribute.cc
   implement/Display/AttValBase.cc
@@ -306,87 +305,17 @@ add_library( display
   implement/RegionShapes/RSUtils.cc
   implement/RegionShapes/XMLFileReaderWriter.cc
   implement/Utilities/DisplayOptions.cc
-${outfiles} ${outfiles_ui} ${outfiles_qrc}
-)
+  )
 
-target_link_libraries( display ${display_LINK_TO} )
-
-set_target_properties( display PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS display LIBRARY DESTINATION lib )
-
-# Executables
-add_executable( casaplotter
-apps/casaplotter/casaplotter.cc)
-target_link_libraries( casaplotter display )
-
-install( TARGETS casaplotter RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casaplotter RUNTIME DESTINATION apps/casaplotter.app/Contents/MacOS )
-endif()
-add_executable( casaviewer
-apps/casaviewer/casaviewer.cc)
-target_link_libraries( casaviewer display )
-
-install( TARGETS casaviewer RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casaviewer RUNTIME DESTINATION apps/casaviewer.app/Contents/MacOS )
-endif()
-# Unit tests
-add_executable( tDisplayEvent EXCLUDE_FROM_ALL implement/DisplayEvents/test/tDisplayEvent.cc )
-target_link_libraries( tDisplayEvent display )
-add_test( tDisplayEvent ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tDisplayEvent )
-add_dependencies( check tDisplayEvent )
-
-add_executable( tDisplayTool EXCLUDE_FROM_ALL implement/DisplayEvents/test/tDisplayTool.cc )
-target_link_libraries( tDisplayTool display )
-add_test( tDisplayTool ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tDisplayTool )
-add_dependencies( check tDisplayTool )
-
-add_executable( dGLDemo EXCLUDE_FROM_ALL implement/Display/test/dGLDemo.cc )
-target_link_libraries( dGLDemo display )
-add_test( dGLDemo ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/dGLDemo )
-add_dependencies( check dGLDemo )
-
-add_executable( dPSLatticeAsRaster EXCLUDE_FROM_ALL implement/Display/test/dPSLatticeAsRaster.cc )
-target_link_libraries( dPSLatticeAsRaster display )
-add_test( dPSLatticeAsRaster ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/dPSLatticeAsRaster )
-add_dependencies( check dPSLatticeAsRaster )
-
-add_executable( dPSWorldCanvasApp EXCLUDE_FROM_ALL implement/Display/test/dPSWorldCanvasApp.cc )
-target_link_libraries( dPSWorldCanvasApp display )
-add_test( dPSWorldCanvasApp ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/dPSWorldCanvasApp )
-add_dependencies( check dPSWorldCanvasApp )
-
-add_executable( tAttribute EXCLUDE_FROM_ALL implement/Display/test/tAttribute.cc )
-target_link_libraries( tAttribute display )
-add_test( tAttribute ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tAttribute )
-add_dependencies( check tAttribute )
-
-add_executable( tAttVal EXCLUDE_FROM_ALL implement/Display/test/tAttVal.cc )
-target_link_libraries( tAttVal display )
-add_test( tAttVal ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tAttVal )
-add_dependencies( check tAttVal )
-
-add_executable( tAttValPoi EXCLUDE_FROM_ALL implement/Display/test/tAttValPoi.cc )
-target_link_libraries( tAttValPoi display )
-add_test( tAttValPoi ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tAttValPoi )
-add_dependencies( check tAttValPoi )
-
-add_executable( dQtDataManager EXCLUDE_FROM_ALL implement/QtViewer/test/dQtDataManager.cc )
-target_link_libraries( dQtDataManager display )
-add_test( dQtDataManager ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/dQtDataManager )
-add_dependencies( check dQtDataManager )
-
-add_executable( dRegionFile EXCLUDE_FROM_ALL implement/QtViewer/test/dRegionFile.cc )
-target_link_libraries( dRegionFile display )
-add_test( dRegionFile ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/dRegionFile )
-add_dependencies( check dRegionFile )
-
-add_executable( tDisplayOptions EXCLUDE_FROM_ALL implement/Utilities/test/tDisplayOptions.cc )
-target_link_libraries( tDisplayOptions display )
-add_test( tDisplayOptions ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tDisplayOptions )
-add_dependencies( check tDisplayOptions )
-
+casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )
+casa_add_executable( display casaviewer apps/casaviewer/casaviewer.cc )
+casa_add_assay( display implement/DisplayEvents/test/tDisplayEvent.cc )
+casa_add_assay( display implement/DisplayEvents/test/tDisplayTool.cc )
+casa_add_assay( display implement/Display/test/dGLDemo.cc )
+casa_add_assay( display implement/Display/test/dPSLatticeAsRaster.cc )
+casa_add_assay( display implement/Display/test/dPSWorldCanvasApp.cc )
+casa_add_assay( display implement/Display/test/tAttribute.cc )
+casa_add_assay( display implement/Display/test/tAttVal.cc )
+casa_add_assay( display implement/Display/test/tAttValPoi.cc )
+casa_add_assay( display implement/QtViewer/test/dQtDataManager.cc )
+casa_add_assay( display implement/Utilities/test/tDisplayOptions.cc )

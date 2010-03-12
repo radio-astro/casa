@@ -20,7 +20,8 @@
 
 include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
-qt4_wrap_cpp( outfiles
+
+qt4_wrap_cpp( outfiles_qoh
   implement/QtBrowser/QCloseableWidget.qo.h
   implement/QtBrowser/QProgressPanel.qo.h
   implement/QtBrowser/TBBrowser.qo.h
@@ -76,8 +77,8 @@ qt4_wrap_cpp( outfiles
   implement/QwtPlotter/QPPlotItem.qo.h
   implement/QwtPlotter/QPPlotter.qo.h
   implement/QwtPlotter/QPTool.qo.h
+  )
 
-)
 casa_qt4_wrap_ui( outfiles_ui
   implement/QtBrowser/QCloseableWidget.ui
   implement/QtBrowser/QProgressPanel.ui
@@ -118,18 +119,14 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtUtilities/QtProgressCompactWidget.ui
   implement/QtUtilities/QtProgressWidget.ui
   implement/QwtPlotter/QPPlotter.ui
-)
-casa_qt4_add_resources( outfile implement/QtBrowser/actions.qrc OPTIONS -name QtBrowser )
-set( outfiles_qrc ${outfiles_qrc} ${outfile} )
-casa_qt4_add_resources( outfile implement/QtFileCatalog/filecatalog.qrc OPTIONS -name QtFileCatalog )
-set( outfiles_qrc ${outfiles_qrc} ${outfile} )
-casa_qt4_add_resources( outfile implement/QtLogger/logviewer.qrc OPTIONS -name QtLogger )
-set( outfiles_qrc ${outfiles_qrc} ${outfile} )
-add_definitions( ${casaqt_DEFINITIONS} )
-include_directories( ${casaqt_INCLUDE_DIRS} )
+  )
 
-# Dynamic library
-add_library( casaqt
+casa_qt4_add_resources( outfiles_qrc implement/QtBrowser/actions.qrc OPTIONS -name QtBrowser )
+casa_qt4_add_resources( outfiles_qrc implement/QtFileCatalog/filecatalog.qrc OPTIONS -name QtFileCatalog )
+casa_qt4_add_resources( outfiles_qrc implement/QtLogger/logviewer.qrc OPTIONS -name QtLogger )
+
+casa_add_library( casaqt
+  ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
   implement/PlotterImplementations/PlotterImplementations.cc
   implement/QtBrowser/QCloseableWidget.cc
   implement/QtBrowser/QProgressPanel.cc
@@ -216,90 +213,15 @@ add_library( casaqt
   implement/QwtPlotter/QPScatterPlot.cc
   implement/QwtPlotter/QPShape.cc
   implement/QwtPlotter/QPTool.cc
-${outfiles} ${outfiles_ui} ${outfiles_qrc}
-)
+  )
 
-target_link_libraries( casaqt ${casaqt_LINK_TO} )
+casa_add_executable( casaqt casafilecatalog apps/casafilecatalog/casafilecatalog.cc )
+casa_add_executable( casaqt casalogger apps/casalogger/casalogger.cc )
+casa_add_executable( casaqt casapictureviewer apps/casapictureviewer/casapictureviewer.cc )
+casa_add_executable( casaqt casaplotserver apps/casaplotserver/casaplotserver.cc )
+casa_add_executable( casaqt casaprogresstimer apps/casaprogresstimer/casaprogresstimer.cc )
+casa_add_executable( casaqt qcasabrowser apps/qcasabrowser/qcasabrowser.cc )
+casa_add_executable( casaqt qwtplottertest apps/qwtplottertest/qwtplottertest.cc )
 
-set_target_properties( casaqt PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS casaqt LIBRARY DESTINATION lib )
-
-# Executables
-add_executable( casafilecatalog
-apps/casafilecatalog/casafilecatalog.cc)
-target_link_libraries( casafilecatalog casaqt )
-
-install( TARGETS casafilecatalog RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casafilecatalog RUNTIME DESTINATION apps/casafilecatalog.app/Contents/MacOS )
-endif()
-add_executable( casalogger
-apps/casalogger/casalogger.cc)
-target_link_libraries( casalogger casaqt )
-
-install( TARGETS casalogger RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casalogger RUNTIME DESTINATION apps/casalogger.app/Contents/MacOS )
-endif()
-add_executable( casapictureviewer
-apps/casapictureviewer/casapictureviewer.cc)
-target_link_libraries( casapictureviewer casaqt )
-
-install( TARGETS casapictureviewer RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casapictureviewer RUNTIME DESTINATION apps/casapictureviewer.app/Contents/MacOS )
-endif()
-add_executable( casaplotserver
-apps/casaplotserver/casaplotserver.cc)
-target_link_libraries( casaplotserver casaqt )
-
-install( TARGETS casaplotserver RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casaplotserver RUNTIME DESTINATION apps/casaplotserver.app/Contents/MacOS )
-endif()
-add_executable( casaprogresstimer
-apps/casaprogresstimer/casaprogresstimer.cc)
-target_link_libraries( casaprogresstimer casaqt )
-
-install( TARGETS casaprogresstimer RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS casaprogresstimer RUNTIME DESTINATION apps/casaprogresstimer.app/Contents/MacOS )
-endif()
-add_executable( qcasabrowser
-apps/qcasabrowser/qcasabrowser.cc)
-target_link_libraries( qcasabrowser casaqt )
-
-install( TARGETS qcasabrowser RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS qcasabrowser RUNTIME DESTINATION apps/qcasabrowser.app/Contents/MacOS )
-endif()
-add_executable( qwtplottertest
-apps/qwtplottertest/qwtplottertest.cc)
-target_link_libraries( qwtplottertest casaqt )
-
-install( TARGETS qwtplottertest RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS qwtplottertest RUNTIME DESTINATION apps/qwtplottertest.app/Contents/MacOS )
-endif()
 install( PROGRAMS apps/qcasabrowser/casabrowser DESTINATION bin )
-# Unit tests
-add_executable( tProgressMeter EXCLUDE_FROM_ALL implement/QtProgressMeter/test/tProgressMeter.cc )
-target_link_libraries( tProgressMeter casaqt )
-add_test( tProgressMeter ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tProgressMeter )
-add_dependencies( check tProgressMeter )
-
-#
-# XML tools
-#
-
-casa_tool( tool_idl tool_sources 
-  implement/QtBrowser/help/help.xml )
-
+casa_add_assay( casaqt implement/QtProgressMeter/test/tProgressMeter.cc )

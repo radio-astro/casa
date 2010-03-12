@@ -18,11 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_definitions( ${atnf_DEFINITIONS} )
-include_directories( ${atnf_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( atnf
+casa_add_library( atnf
   implement/Atoms/Servo_clnt.cc
   implement/Atoms/Servo_xdr.cc
   implement/PKSIO/ASTEDataset.cc
@@ -47,13 +43,5 @@ add_library( atnf
   implement/PKSIO/SDFITSreader.cc
   implement/PKSIO/SDFITSwriter.cc
   implement/pks/pks_maths.cc
- )
+   )
 
-target_link_libraries( atnf ${atnf_LINK_TO} )
-
-set_target_properties( atnf PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS atnf LIBRARY DESTINATION lib )
-
-# Executables
-# Unit tests

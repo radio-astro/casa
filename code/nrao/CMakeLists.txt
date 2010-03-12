@@ -18,11 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_definitions( ${nrao_DEFINITIONS} )
-include_directories( ${nrao_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( nrao
+casa_add_library( nrao
   implement/FITS/GBTACSTable.cc
   implement/FITS/GBTAntennaFile.cc
   implement/FITS/GBTBackendTable.cc
@@ -109,38 +105,10 @@ add_library( nrao
   implement/VLA/VLASubarrayFilter.cc
   implement/VLA/VLATapeInput.cc
   implement/VLA/VLATimeFilter.cc
- )
+   )
 
-target_link_libraries( nrao ${nrao_LINK_TO} )
-
-set_target_properties( nrao PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS nrao LIBRARY DESTINATION lib )
-
-# Executables
-# Unit tests
-add_executable( dVLAArchiveInput EXCLUDE_FROM_ALL implement/VLA/test/dVLAArchiveInput.cc )
-target_link_libraries( dVLAArchiveInput nrao )
-add_test( dVLAArchiveInput ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/dVLAArchiveInput )
-add_dependencies( check dVLAArchiveInput )
-
-add_executable( tVLABuffer EXCLUDE_FROM_ALL implement/VLA/test/tVLABuffer.cc )
-target_link_libraries( tVLABuffer nrao )
-add_test( tVLABuffer ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tVLABuffer )
-add_dependencies( check tVLABuffer )
-
-add_executable( tVLADiskInput EXCLUDE_FROM_ALL implement/VLA/test/tVLADiskInput.cc )
-target_link_libraries( tVLADiskInput nrao )
-add_test( tVLADiskInput ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tVLADiskInput )
-add_dependencies( check tVLADiskInput )
-
-add_executable( tVLALogicalRecord EXCLUDE_FROM_ALL implement/VLA/test/tVLALogicalRecord.cc )
-target_link_libraries( tVLALogicalRecord nrao )
-add_test( tVLALogicalRecord ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tVLALogicalRecord )
-add_dependencies( check tVLALogicalRecord )
-
-add_executable( tVLATapeInput EXCLUDE_FROM_ALL implement/VLA/test/tVLATapeInput.cc )
-target_link_libraries( tVLATapeInput nrao )
-add_test( tVLATapeInput ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tVLATapeInput )
-add_dependencies( check tVLATapeInput )
-
+casa_add_assay( nrao implement/VLA/test/dVLAArchiveInput.cc )
+casa_add_assay( nrao implement/VLA/test/tVLABuffer.cc )
+casa_add_assay( nrao implement/VLA/test/tVLADiskInput.cc )
+casa_add_assay( nrao implement/VLA/test/tVLALogicalRecord.cc )
+casa_add_assay( nrao implement/VLA/test/tVLATapeInput.cc )

@@ -21,15 +21,11 @@
 add_definitions( -DWITHOUT_ACS )
 
 if( APPLE )
-set( CMAKE_CXX_FLAGS
+  set( CMAKE_CXX_FLAGS
      "${CMAKE_CXX_FLAGS} -march=i586" )
 endif()
 
-add_definitions( ${alma_DEFINITIONS} )
-include_directories( ${alma_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( alma
+casa_add_library( alma
   implement/ASDM/AlmaRadiometerRow.cc
   implement/ASDM/AlmaRadiometerTable.cc
   implement/ASDM/Angle.cc
@@ -328,37 +324,15 @@ add_library( alma
   implement/Enumtcl/WindowFunction.cc
   implement/Enumtcl/WVRMethod.cc
   implement/MS2ASDM/MS2ASDM.cc
- )
+   )
 
-target_link_libraries( alma ${alma_LINK_TO} )
-
-set_target_properties( alma PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS alma LIBRARY DESTINATION lib )
-
-# Executables
-add_executable( asdm2MS
-apps/asdm2MS/asdm2MS.cc
-apps/asdm2MS/ASDM2MSFiller.cc
-apps/asdm2MS/ASDMTableBase.cc
-apps/asdm2MS/ASDMTables.cc
-apps/asdm2MS/ASDMVerbatimFiller.cc
-apps/asdm2MS/Name2Table.cc
-apps/asdm2MS/UvwCoords.cc)
-target_link_libraries( asdm2MS alma )
-
-install( TARGETS asdm2MS RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS asdm2MS RUNTIME DESTINATION apps/asdm2MS.app/Contents/MacOS )
-endif()
-add_executable( MS2asdm
-apps/MS2asdm/MS2asdm.cc)
-target_link_libraries( MS2asdm alma )
-
-install( TARGETS MS2asdm RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS MS2asdm RUNTIME DESTINATION apps/MS2asdm.app/Contents/MacOS )
-endif()
-# Unit tests
+casa_add_executable( alma asdm2MS 
+  apps/asdm2MS/asdm2MS.cc
+  apps/asdm2MS/ASDM2MSFiller.cc
+  apps/asdm2MS/ASDMTableBase.cc
+  apps/asdm2MS/ASDMTables.cc
+  apps/asdm2MS/ASDMVerbatimFiller.cc
+  apps/asdm2MS/Name2Table.cc
+  apps/asdm2MS/UvwCoords.cc
+  )
+casa_add_executable( alma MS2asdm apps/MS2asdm/MS2asdm.cc )

@@ -21,15 +21,11 @@
 add_definitions( -DWITHOUT_ACS )
 
 if( APPLE )
-set( CMAKE_CXX_FLAGS
+  set( CMAKE_CXX_FLAGS
      "${CMAKE_CXX_FLAGS} -march=i586" )
 endif()
 
-add_definitions( ${oldalma_DEFINITIONS} )
-include_directories( ${oldalma_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( oldalma
+casa_add_library( oldalma
   implement/ASDM/AlmaRadiometerRow.cc
   implement/ASDM/AlmaRadiometerTable.cc
   implement/ASDM/Angle.cc
@@ -298,24 +294,10 @@ add_library( oldalma
   implement/Enumtcl/TimeSampling.cc
   implement/Enumtcl/WindowFunction.cc
   implement/Enumtcl/WVRMethod.cc
- )
+   )
 
-target_link_libraries( oldalma ${oldalma_LINK_TO} )
-
-set_target_properties( oldalma PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS oldalma LIBRARY DESTINATION lib )
-
-# Executables
-add_executable( oldasdm2MS
-apps/oldasdm2MS/ASDM2MSFiller.cc
-apps/oldasdm2MS/oldasdm2MS.cc
-apps/oldasdm2MS/UvwCoords.cc)
-target_link_libraries( oldasdm2MS oldalma )
-
-install( TARGETS oldasdm2MS RUNTIME DESTINATION bin )
-
-if( APPLE )
-  install( TARGETS oldasdm2MS RUNTIME DESTINATION apps/oldasdm2MS.app/Contents/MacOS )
-endif()
-# Unit tests
+casa_add_executable( oldalma oldasdm2MS 
+  apps/oldasdm2MS/ASDM2MSFiller.cc
+  apps/oldasdm2MS/oldasdm2MS.cc
+  apps/oldasdm2MS/UvwCoords.cc
+  )

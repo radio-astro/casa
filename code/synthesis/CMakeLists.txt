@@ -18,11 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_definitions( ${synthesis_DEFINITIONS} )
-include_directories( ${synthesis_INCLUDE_DIRS} )
-
-# Dynamic library
-add_library( synthesis
+casa_add_library( synthesis
   implement/DataSampling/DataSampling.cc
   implement/DataSampling/ImageDataSampling.cc
   implement/DataSampling/PixonProcessor.cc
@@ -147,103 +143,23 @@ add_library( synthesis
   implement/fortran/fpbmos.f
   implement/fortran/fpbwproj.f
   implement/fortran/leakantso.f
-  implement/fortran/wprojgrid.f)
+  implement/fortran/wprojgrid.f  )
 
-target_link_libraries( synthesis ${synthesis_LINK_TO} )
-
-set_target_properties( synthesis PROPERTIES SOVERSION ${CASA_API_VERSION} )
-
-install( TARGETS synthesis LIBRARY DESTINATION lib )
-
-# Executables
-# Unit tests
-add_executable( tPixonProcessor EXCLUDE_FROM_ALL implement/DataSampling/test/tPixonProcessor.cc )
-target_link_libraries( tPixonProcessor synthesis )
-add_test( tPixonProcessor ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tPixonProcessor )
-add_dependencies( check tPixonProcessor )
-
-add_executable( tIDL EXCLUDE_FROM_ALL implement/IDL/test/tIDL.cc )
-target_link_libraries( tIDL synthesis )
-add_test( tIDL ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tIDL )
-add_dependencies( check tIDL )
-
-add_executable( tAlgoPClark EXCLUDE_FROM_ALL implement/MeasurementComponents/test/tAlgoPClark.cc )
-target_link_libraries( tAlgoPClark synthesis )
-add_test( tAlgoPClark ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tAlgoPClark )
-add_dependencies( check tAlgoPClark )
-
-add_executable( tBeamSquint EXCLUDE_FROM_ALL implement/MeasurementComponents/test/tBeamSquint.cc )
-target_link_libraries( tBeamSquint synthesis )
-add_test( tBeamSquint ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tBeamSquint )
-add_dependencies( check tBeamSquint )
-
-add_executable( tCalibrater EXCLUDE_FROM_ALL implement/MeasurementComponents/test/tCalibrater.cc )
-target_link_libraries( tCalibrater synthesis )
-add_test( tCalibrater ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tCalibrater )
-add_dependencies( check tCalibrater )
-
-add_executable( tPBMath EXCLUDE_FROM_ALL implement/MeasurementComponents/test/tPBMath.cc )
-target_link_libraries( tPBMath synthesis )
-add_test( tPBMath ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tPBMath )
-add_dependencies( check tPBMath )
-
-add_executable( tPBTable EXCLUDE_FROM_ALL implement/MeasurementComponents/test/tPBTable.cc )
-target_link_libraries( tPBTable synthesis )
-add_test( tPBTable ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tPBTable )
-add_dependencies( check tPBTable )
-
-add_executable( tVPSkyJones EXCLUDE_FROM_ALL implement/MeasurementComponents/test/tVPSkyJones.cc )
-target_link_libraries( tVPSkyJones synthesis )
-add_test( tVPSkyJones ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tVPSkyJones )
-add_dependencies( check tVPSkyJones )
-
-add_executable( dCEMemModel EXCLUDE_FROM_ALL implement/MeasurementEquations/test/dCEMemModel.cc )
-target_link_libraries( dCEMemModel synthesis )
-add_test( dCEMemModel ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/dCEMemModel )
-add_dependencies( check dCEMemModel )
-
-add_executable( tCCList EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tCCList.cc )
-target_link_libraries( tCCList synthesis )
-add_test( tCCList ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tCCList )
-add_dependencies( check tCCList )
-
-add_executable( tCEMemModel EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tCEMemModel.cc )
-target_link_libraries( tCEMemModel synthesis )
-add_test( tCEMemModel ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tCEMemModel )
-add_dependencies( check tCEMemModel )
-
-add_executable( tClarkCleanLatModel EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tClarkCleanLatModel.cc )
-target_link_libraries( tClarkCleanLatModel synthesis )
-add_test( tClarkCleanLatModel ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tClarkCleanLatModel )
-add_dependencies( check tClarkCleanLatModel )
-
-add_executable( tClarkCleanModel EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tClarkCleanModel.cc )
-target_link_libraries( tClarkCleanModel synthesis )
-add_test( tClarkCleanModel ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tClarkCleanModel )
-add_dependencies( check tClarkCleanModel )
-
-add_executable( tConvolutionEquation EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tConvolutionEquation.cc )
-target_link_libraries( tConvolutionEquation synthesis )
-add_test( tConvolutionEquation ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tConvolutionEquation )
-add_dependencies( check tConvolutionEquation )
-
-add_executable( tImager EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tImager.cc )
-target_link_libraries( tImager synthesis )
-add_test( tImager ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tImager )
-add_dependencies( check tImager )
-
-add_executable( tIncCEMemModel EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tIncCEMemModel.cc )
-target_link_libraries( tIncCEMemModel synthesis )
-add_test( tIncCEMemModel ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tIncCEMemModel )
-add_dependencies( check tIncCEMemModel )
-
-add_executable( tLatConvEquation EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tLatConvEquation.cc )
-target_link_libraries( tLatConvEquation synthesis )
-add_test( tLatConvEquation ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tLatConvEquation )
-add_dependencies( check tLatConvEquation )
-
-add_executable( tStokesUtil EXCLUDE_FROM_ALL implement/MeasurementEquations/test/tStokesUtil.cc )
-target_link_libraries( tStokesUtil synthesis )
-add_test( tStokesUtil ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/tStokesUtil )
-add_dependencies( check tStokesUtil )
-
+casa_add_assay( synthesis implement/DataSampling/test/tPixonProcessor.cc )
+casa_add_assay( synthesis implement/IDL/test/tIDL.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tAlgoPClark.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tBeamSquint.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tCalibrater.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tPBMath.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tPBTable.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tVPSkyJones.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/dCEMemModel.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tCCList.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tCEMemModel.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tClarkCleanLatModel.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tClarkCleanModel.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tConvolutionEquation.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tImager.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tIncCEMemModel.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tLatConvEquation.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tStokesUtil.cc )
