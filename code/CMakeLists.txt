@@ -20,6 +20,12 @@
 
 cmake_minimum_required( VERSION 2.8 )
 
+set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
+include( config )
+include( ui )
+include( target )
+include( CASA )
+
 # Define compiler paths on OSX 10.5. This must be done before defining the project()
 if( APPLE AND EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
     set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
@@ -38,8 +44,6 @@ set( CASA_MAJOR_VERSION 3 )
 set( CASA_MINOR_VERSION 0 )
 set( CASA_PATCH_VERSION 1 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
-set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
-include( CASA )
 
 dump( CMAKE_HOST_SYSTEM_NAME
   CMAKE_HOST_SYSTEM
