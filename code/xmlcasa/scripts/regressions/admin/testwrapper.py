@@ -132,10 +132,11 @@ class UnitTest:
                             testlist.append(c(attr))
                 else:
 #                    print attr, " = ", value
-                    if len(attr) >= len("test") and \
-                        attr[:len("test")] == "test":
+                   if len(attr) >= len("test") and \
+                        attr.rfind('test') != -1 :
+#                        attr[:len("test")] == "test" : \
                         testlist.append(c(attr))
-        
+            
         return testlist
             
 

@@ -9,6 +9,7 @@
 #       2nd+3rd columns = email notification
 
 3C129                           gmoellen aoc.nrao.edu
+3C219D_test                     scastro eso.org
 accum_test                      scastro eso.org
 asdm-import                     dpetry eso.org
 asdmv1-import                   dpetry eso.org
