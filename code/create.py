@@ -43,7 +43,8 @@ os.chdir("..")
 for mod in modules:
 
     os.chdir(mod)
-    cml = open("./CMakeLists.txt", "w")
+    os.system("cp /tmp/gpl.txt ./CMakeLists.txt")
+    cml = open("./CMakeLists.txt", "a")
 
     if mod in ["alma", "oldalma"]:
         cml.write("add_definitions( -DWITHOUT_ACS )\n\n")
@@ -83,7 +84,7 @@ for mod in modules:
         exe_sources = []
     
     test_sources = commands.getoutput(
-        'find implement -name \\*.cc | sort | grep -w test | grep -v test.dMultichannelRaster.cc | grep -v test.dRGBTestPattern.cc | grep -v test.dRGBWCRaster.cc | grep -v test.dPanelDisplay.cc | grep -v test.dQtPlotter.cc | grep -v test.tArrayAsRaster.cc | grep -v test.dLatticeAsRaster.cc | grep -v test.dNBody.cc | grep -v test.tTblAsRaster.cc | grep -v test.dProfile2dDD.cc | grep -v test.tTblAsXY.cc | grep -v test.tTblAsContour.cc | grep -v test.tArrayAndDrawing.cc | grep -v test.dLatticeAsVector.cc | grep -v test.tApplicator.cc | grep -v test.tcal_cmpt2.cc | grep -v test.tcal_cmpt.cc | grep -v test.AtmosphereTest.cc'
+        'find implement -name \\*.cc | sort | grep -w test | grep -v test.dMultichannelRaster.cc | grep -v test.dRGBTestPattern.cc | grep -v test.dRGBWCRaster.cc | grep -v test.dPanelDisplay.cc | grep -v test.dQtPlotter.cc | grep -v test.tArrayAsRaster.cc | grep -v test.dLatticeAsRaster.cc | grep -v test.dNBody.cc | grep -v test.tTblAsRaster.cc | grep -v test.dProfile2dDD.cc | grep -v test.tTblAsXY.cc | grep -v test.tTblAsContour.cc | grep -v test.tArrayAndDrawing.cc | grep -v test.dLatticeAsVector.cc | grep -v test.tApplicator.cc | grep -v test.tcal_cmpt2.cc | grep -v test.tcal_cmpt.cc | grep -v test.AtmosphereTest.cc | grep -v test.tFlagRow.cc'
         ).split()
 
     qo_h_sources = commands.getoutput(
@@ -109,9 +110,17 @@ for mod in modules:
     if mod == 'xmlcasa':
         # QT_USE_FILE also calls add_definitions, therefore do not call it at the highest level
         # necessary?? cml.write("include( ${QT_USE_FILE} )\n")
-        cml.write("add_custom_command( OUTPUT version.cc COMMAND " + \
-        "${CMAKE_SOURCE_DIR}/install/doover > version.cc || ${PERL_EXECUTABLE} -e 'unlink(\\\"version.cc\\\")\\; exit 1\\;' " + \
-        "DEPENDS ${CMAKE_SOURCE_DIR}/VERSION )\n")
+        cml.write("add_custom_command( OUTPUT version.cc\n")
+        cml.write("  COMMAND \n")
+        cml.write("  sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'\n")
+        cml.write("      -e 's|MINOR|${CASA_MINOR_VERSION}|'\n")
+        cml.write("      -e 's|PATCH|${CASA_PATCH_VERSION}|'\n")
+        cml.write("      -e 's|REVISION|${SVNREVISION}|'\n")
+        cml.write("      -e 's|DATE|${BUILDTIME}|'\n")
+        cml.write("      -e 's|INFO||'\n")
+        cml.write("      ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > version.cc\n")
+        cml.write("      || ${PERL_EXECUTABLE} -e 'unlink(\"version.cc\")\; exit 1\;'\n")
+        cml.write(")\n\n")
 
     if 'QT4' in deps[mod]:
         cml.write("include( ${QT_USE_FILE} )\n")
