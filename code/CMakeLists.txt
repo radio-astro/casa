@@ -53,7 +53,7 @@ dump( CMAKE_HOST_SYSTEM_NAME
   CMAKE_GENERATOR )
 
 # Test driver which requires that test programs are up-to-date
-# before running (the built-in "test" does not).
+# before running. (The built-in "test" does not.)
 add_custom_target( check ${CMAKE_CTEST_COMMAND} )
 enable_testing()
 set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
@@ -298,6 +298,7 @@ casa_find( WCSLIB
 
 # pgsbox is a Fortran library. Since we are using the C++ linker,
 # the Fortran runtime libraries must be explicitly linked in.
+# There must be a better way of doing this...
 if( APPLE )
   if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
     set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} ${casa_packages}/lib/gcc42/libgfortran.dylib )
@@ -306,9 +307,15 @@ elseif( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
   if( EXISTS /usr/lib64/libg2c.so.0 )
     set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib64/libg2c.so.0 )
   endif()
+  if( EXISTS /usr/lib64/libgfortran.so.1 )
+    set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib64/libgfortran.so.1 )
+  endif()
 else()
   if( EXISTS /usr/lib/libg2c.so.0 )
     set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib/libg2c.so.0 )
+  endif()
+  if( EXISTS /usr/lib/libgfortran.so.1 )
+    set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib/libgfortran.so.1 )
   endif()
 endif()
 
