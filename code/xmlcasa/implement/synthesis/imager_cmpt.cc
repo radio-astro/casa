@@ -864,23 +864,24 @@ imager::plotvis(const std::string& type, const int increment)
    return rstat;
 }
 
-bool
-imager::plotweights(const bool gridded, const int increment)
-{
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-        rstat = itsImager->plotweights(gridded, increment);
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	 RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
-}
+// bool
+// imager::plotweights(const bool gridded, const int increment)
+// {
+//    Bool rstat(False);
+//    if(hasValidMS_p){
+//       try {
+//         // Has a tendency to dump core.  Add to plotms, replace with
+//         // something else, or fix.
+//         rstat = itsImager->plotweights(gridded, increment);
+//       } catch  (AipsError x) {
+//          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+// 	 RETHROW(x);
+//       }
+//    } else {
+//       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+//    }
+//    return rstat;
+// }
 
 bool
 imager::regionmask(const std::string& mask, const ::casac::record& region, 

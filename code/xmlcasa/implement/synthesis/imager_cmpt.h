@@ -106,7 +106,8 @@ class imager
 
     bool plotvis(const std::string& type = "all", const int increment = 1);
 
-    bool plotweights(const bool gridded = false, const int increment = 1);
+  // Dumps core 2/3 of the time.  Fix, add to plotms or replace with something else.
+  // bool plotweights(const bool gridded = false, const int increment = 1);
 
     bool regionmask(const std::string& mask = "", const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& boxes = ::casac::initialize_variant(""), const ::casac::variant& circles = ::casac::initialize_variant(""), const double value = 1.0);
 

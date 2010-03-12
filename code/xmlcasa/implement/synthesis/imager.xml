@@ -1230,7 +1230,9 @@ lowres='casa.sd');
 Apply visibility tapering to emphasize certain scale structures.  The
 imaging tapers are applied to a Table column called IMAGING\_WEIGHT,
 which may be plotted using 
-<link anchor="imager:imager.plotweights.function">plotweights</link>. In addition, this column
+tb and pl.
+<!-- <link anchor="imager:imager.plotweights.function">plotweights</link>. -->
+In addition, this column
 may be accessed directly using either the <link anchor="table">table</link>
 or <link anchor="ms">ms</link> modules. Note that the taper is multiplicative and
 so the weights must be calculated first using
@@ -2411,7 +2413,7 @@ im.plotvis(increment=10)
 </comments>
 </method>
 
- 
+<!-- Dumps core 2/3 of the time.
    <method type="function" name="plotweights">
    <shortdescription>Plot the visibility weights as a function of u-v radius</shortdescription>
    
@@ -2446,7 +2448,7 @@ im.plotweights(gridded=True,increment=10)
 <comments>
 </comments>
 </method>
-
+-->
  
    <method type="function" name="regionmask">
    <shortdescription>Construct a mask image from a region</shortdescription>
@@ -4325,9 +4327,10 @@ im.uvrange(0, 4000.0)
 <description>
 Apply visibility weighting to correct for the local density of
 sampling in the uv plane. The imaging weights are written into a Table
-column called IMAGING\_WEIGHT, which may be plotted using 
-<link anchor="imager:imager.plotweights.function">plotweights</link>. In addition this
-columns may be accessed directly using either the
+column called IMAGING\_WEIGHT, which may be plotted using
+<link anchor="table">tb</link> and pl.
+<!-- <link anchor="imager:imager.plotweights.function">plotweights</link>. -->
+The column may also be directly accessed using either the
 <link anchor="table">table</link> or <link anchor="ms">ms</link> modules.
 
 To correct for visibility sampling effects, natural, uniform (the
