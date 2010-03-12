@@ -1429,10 +1429,8 @@ class cleanhelper:
         # start accumulating channels:
         if chaninds!=-1:
             chanind0=chaninds[0]
-            if chanind0[0]>1:
-                raise Exception, 'clean can not yet accept chan averaging in spw parameter '+spw
         else:
-            chanind0=[1,0,len(chanfreqs0)-1,1]
+            chanind0=[0,0,len(chanfreqs0)-1,1]
         
         chanfreqs1dx = numpy.array(chanfreqs0[chanind0[1]])
         for ci in range(chanind0[1],chanind0[2]+1,chanind0[3])[1:]:
