@@ -98,12 +98,15 @@ attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
 
 # setup viewer tool
-if casa.has_key('state') and casa['state'].has_key('startup') :
+try : 
+   if casa.has_key('state') and casa['state'].has_key('startup') :
 	ving = viewertool.viewertool( False, pre_launch=casa['state']['startup'] )
 	if casa['flags'].has_key('--nogui') :
 		vi = ving
 	else:
 		vi = viewertool.viewertool( True, pre_launch=casa['state']['startup'] )
+except :
+	print "Unable to start viewer, maybe no dbus available?"
 
 defaultsdir = {}
 defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/almadefaults.xml'

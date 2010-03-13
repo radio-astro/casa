@@ -187,38 +187,41 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             if(imagermode=='mosaic'):
                 imCln.setvp(dovp=True)
 
+            # This is redundant, already taken care by setChaniterParm
+            # -- need to clean up after 3.0.1 release
             # Select only subset of vis data if possible.
             # It does not work well for multi-spw so need
             # to select with nchan=-1
-            if dochaniter:
-                imnchan=1
-                chanslice=j
-                qat=qatool.create();
-                q = qat.quantity
+            #if dochaniter:
+            #    imnchan=1
+            #    chanslice=j
+            #    qat=qatool.create();
+            #    q = qat.quantity
 
-                if len(spw)==1:
-                    if localwidth>1:
-                        visnchan=localwidth
-                    else:
-                        visnchan=1
-                else:
-                    visnchan=-1
+            #    if len(spw)==1:
+            #        if localwidth>1:
+            #            visnchan=localwidth
+            #        else:
+            #            visnchan=1
+            #    else:
+            #        visnchan=-1
                 #visstart=imstart
-                visstart=0
+            #    visstart=0
 
-                if type(localstart)==int:
+            #    if type(localstart)==int:
                     # need to convert to frequencies
                     # to ensure correct frequencies in
                     # output images(especially for multi-spw)
                     # Use freq list instead
-                    imstart=imset.qatostring(q(freqs[j],'Hz'))
-                    localwidth=imset.qatostring(q(finc,'Hz'))
-                elif localstart.find('m/s')>0:
-                    imstart=imset.qatostring(qat.add(q(localstart),qat.mul(j,q(localwidth))))
-                elif localstart.find('Hz')>0:
-                    imstart=imset.qatostring(qat.add(q(localstart),qat.mul(j,q(localwidth))))
+            #        imstart=imset.qatostring(q(freqs[j],'Hz'))
+            #        localwidth=imset.qatostring(q(finc,'Hz'))
+            #    elif localstart.find('m/s')>0:
+            #        imstart=imset.qatostring(qat.add(q(localstart),qat.mul(j,q(localwidth))))
+            #    elif localstart.find('Hz')>0:
+            #        imstart=imset.qatostring(qat.add(q(localstart),qat.mul(j,q(localwidth))))
 
-            else:
+            # else:
+            if not dochaniter:
                 imnchan=localnchan
                 chanslice=-1
                 imstart=localstart

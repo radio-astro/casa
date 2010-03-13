@@ -3,7 +3,7 @@ import string
 from taskinit import *
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
-          timebin, timerange, scan, array, uvrange):
+          timebin, timerange, scan, array, uvrange, ignorables):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -45,6 +45,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              default '' (all).
     uvrange -- uv distance range to select.
                default '' (all).
+    ignorables -- Data descriptors that time averaging can ignore:
+                  array, scan, and/or state
+                  Default '' (none)
     """
 
     #Python script
@@ -94,6 +97,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             except:
                 raise TypeError, 'parameter width is invalid..using 1'
 
+        if hasattr(ignorables, '__iter__'):
+            ignorables = ', '.join(ignorables)
+
         do_chan_avg = spw.find('^') > -1     # '0:2~11^1' would be pointless.
         if not do_chan_avg:                  # ...look in width.
             if type(width) == int and width > 1:
@@ -134,21 +140,21 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             ms.close()
             ms.open(cavms)
             casalog.post('Starting time averaging')
-            
-        ms.split(outputms=outputvis, field=field,
-                 spw=spw,            step=width,
-                 baseline=antenna,   subarray=array,
-                 timebin=timebin,    time=timerange,
+
+        ms.split(outputms=outputvis,  field=field,
+                 spw=spw,             step=width,
+                 baseline=antenna,    subarray=array,
+                 timebin=timebin,     time=timerange,
                  whichcol=datacolumn,
-                 scan=scan,          uvrange=uvrange)
+                 scan=scan,           uvrange=uvrange,
+                 ignorables=ignorables)
         ms.close()
 
         if do_both_chan_and_time_avg:
             import shutil
             shutil.rmtree(cavms)
         
-        #the history should go to splitted ms, not the source ms
-        # Write history to output MS
+        # Write history to output MS, not the input ms.
         ms.open(outputvis, nomodify=False)
         ms.writehistory(message='taskname=split', origin='split')
         ms.writehistory(message='vis         = "'+str(vis)+'"',
@@ -166,6 +172,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         ms.writehistory(message='timerange   = "'+str(timerange)+'"',
                         origin='split')
         ms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
+                        origin='split')
+        ms.writehistory(message='ignorables  = "'+str(ignorables)+'"',
                         origin='split')
         ms.close()
 
