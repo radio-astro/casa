@@ -5834,6 +5834,9 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "ft()", WHERE));
+
+  if (useModelCol_p == False)
+    os << LogIO::WARN << "Please start the imager tool with \"usescratch=true\" when using Imager::ft" << LogIO::EXCEPTION;
   
   this->lock();
   try {
