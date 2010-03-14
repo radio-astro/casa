@@ -189,16 +189,16 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 
   while((absmax>=threshold())&& (maxIterations<numberIterations()) &&!stop) {
 
-    os << LogIO::NORMAL2 << "*** Starting major cycle " << cycle + 1 
+    os << LogIO::NORMAL << "*** Starting major cycle " << cycle + 1 
        << LogIO::POST;  // Loglevel PROGRESS
     cycle++;
 
     // Make the residual images. We do an incremental update
     // for cycles after the first one. If we have only one
     // model then we use convolutions to speed the processing
-    os << LogIO::NORMAL2         // Loglevel PROGRESS
-       << "Starting major cycle : making residual images for all fields"
-       << LogIO::POST;
+    //os << LogIO::NORMAL2         // Loglevel PROGRESS
+    //   << "Starting major cycle : making residual images for all fields"
+    //   << LogIO::POST;
     if(modified_p) {
       Bool incremental(cycle>1);
       if (incremental&&(itsSubAlgorithm == "fast")) {
@@ -247,7 +247,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
       if (fudge > 0.8) fudge = 0.8;   // painfully slow!
 
       cycleThreshold=max(threshold(), fudge * absmax);
-      os << LogIO::NORMAL1         // Loglevel INFO
+      os << LogIO::NORMAL         // Loglevel INFO
          << "Maximum residual = " << absmax << ", cleaning down to "
 	 << cycleThreshold << LogIO::POST;
       
@@ -287,7 +287,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 	    // Now clean each channel
 	    for (Int chan=0;chan<nchan;++chan) {
 	      if(nchan>1) {
-		os << LogIO::NORMAL2         // Loglevel PROGRESS
+		os << LogIO::NORMAL         // Loglevel PROGRESS
                    <<"Processing channel number "<<chan<<" of "<<nchan 
                    << " channels" <<LogIO::POST;
 	      }
