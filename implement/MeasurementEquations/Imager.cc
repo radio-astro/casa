@@ -4211,7 +4211,9 @@ Bool Imager::makeimage(const String& type, const String& image,
     IPosition cimageShape(imageshape());
     Int tilex=32;
     if(imageTileVol_p >0){
-      tilex=ceil(sqrt(imageTileVol_p/min(4, cimageShape(2))/min(32, cimageShape(3))));
+      tilex=static_cast<Int>(ceil(sqrt(imageTileVol_p/min(4,
+                                                          cimageShape(2))/min(32,
+                                                                              cimageShape(3)))));
       if(tilex >0){
 	if(tilex > min(Int(cimageShape(0)), Int(cimageShape(1))))
 	  tilex=min(Int(cimageShape(0)), Int(cimageShape(1)));
@@ -7174,8 +7176,8 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
      
       
-      Float umax=Float(nx_p/2)/uscale;
-      Float vmax=Float(ny_p/2)/vscale;
+      //Float umax=Float(nx_p/2)/uscale;
+      //Float vmax=Float(ny_p/2)/vscale;
 
 
       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
@@ -7189,7 +7191,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 
       gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
       IPosition shape = gwt.shape( );
-      bool deleteit = false;
+      //bool deleteit = false;
       std::vector<double> data(shape[0] * shape[1]);
       int off = 0;
       for ( int column=0; column < shape[1]; ++column ) {
@@ -9039,7 +9041,7 @@ Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID)
 
   Int tilex=32;
   if(imageTileVol_p >0){
-    tilex=ceil(sqrt(imageTileVol_p/min(4, npol_p)/min(32, imageNchan_p)));
+    tilex=static_cast<Int>(ceil(sqrt(imageTileVol_p/min(4, npol_p)/min(32, imageNchan_p))));
     if(tilex >0){
       if(tilex > min(nx_p, ny_p))
 	tilex=min(nx_p, ny_p);

@@ -212,7 +212,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   Bool stop=False;
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
 
-    os << LogIO::NORMAL2    // Loglevel PROGRESS
+    os << LogIO::NORMAL    // Loglevel PROGRESS
        << "*** Starting major cycle " << cycle+1 << LogIO::POST;
     cycle++;
 
