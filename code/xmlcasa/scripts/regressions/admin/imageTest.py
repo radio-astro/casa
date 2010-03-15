@@ -156,7 +156,7 @@ class ImageTest:
         self.show(dat)
         a={'return':{}}
         try:
-            a=self.imTool.fitcomponents(region=reg)
+            a=self.imTool.fitsky(region=reg)
         except:
             ###lets limit the region and try again
             blc=[int(0.45*shp[0]),int(0.45*shp[1]) ,plane,0]
@@ -165,7 +165,7 @@ class ImageTest:
             dat=self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
             self.show(dat)
             try:
-                a=self.imTool.fitcomponents(region=reg)
+                a=self.imTool.fitsky(region=reg)
             except:
                 a={'return':{}, 'pixels':[]}
         body2=[]
