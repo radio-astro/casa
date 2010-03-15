@@ -40,5 +40,5 @@ casa_add_library( flagging
   implement/MSPlot/MsPlot.cc
    )
 
-casa_add_assay( flagging implement/Flagging/test/tAutoflag.cc )
-casa_add_assay( flagging implement/Flagging/test/tRFASelector.cc )
+casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
+casa_add_test( flagging implement/Flagging/test/tRFASelector.cc )

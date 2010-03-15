@@ -204,7 +204,10 @@ for mod in modules:
         if tname not in ["dDBusViewerProxy",
                          "tFlagger",
                          "tMsPlot"]:
-            cml.write('casa_add_assay( %s %s )\n' % (mod, t))
+            if mod == "flagging":
+                cml.write('casa_add_test( %s %s )\n' % (mod, t))
+            else:
+                cml.write('casa_add_assay( %s %s )\n' % (mod, t))
 
 
 
@@ -258,7 +261,9 @@ for mod in modules:
                   ("scripts/demos",             "python/${PYTHONV}/regressions", "xmlcasa_demos")]:
 
             cml.write('add_subdirectory( %s )\n' % d[0])
-            cmlr = open(d[0]+"/CMakeLists.txt", "w")
+
+            os.system("cp /tmp/gpl.txt " + d[0]+"/CMakeLists.txt")
+            cmlr = open(d[0]+"/CMakeLists.txt", "a")
             cmlr.write('casa_add_python( %s_python %s\n' % (d[2], d[1]))
             
             sources = commands.getoutput(

@@ -64,6 +64,23 @@ macro( casa_add_executable module name )
 
 endmacro()
 
+#
+# casa_add_test( module source )
+#
+#      Add a unit test. The name of the test will be the basename of
+#      of the source file.
+#
+macro( casa_add_test module source )
+
+  get_filename_component( _tname ${source} NAME_WE )
+
+  add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
+  target_link_libraries( ${_tname} ${module} )
+  add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
+  add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
+  add_dependencies( check ${_tname} )
+
+endmacro()
 
 #
 # casa_add_assay( module source )
@@ -77,8 +94,7 @@ macro( casa_add_assay module source )
 
   add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
   target_link_libraries( ${_tname} ${module} )
-  #add_test( ${_tname} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
-  add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
+  add_test( ${_tname} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
   add_dependencies( check ${_tname} )
 
 endmacro()
