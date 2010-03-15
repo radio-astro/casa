@@ -130,7 +130,9 @@ macro( casa_add_module module )
   foreach( _dep ${_dependencies} )
 
     if( NOT DEFINED ${_dep}_INCLUDE_DIRS AND NOT DEFINED ${_dep}_LIBRARIES )
-      message( FATAL_ERROR "${_dep} is listed as dependency for ${module}, but both ${_dep}_INCLUDE_DIRS and ${_dep}_LIBRARIES are undefined!" )
+      if( NOT _dep STREQUAL DL )  # the dl libraries may be empty on Mac
+        message( FATAL_ERROR "${_dep} is listed as dependency for ${module}, but both ${_dep}_INCLUDE_DIRS and ${_dep}_LIBRARIES are undefined!" )
+      endif()
     endif()
     
     # INCLUDE_DIRS 
@@ -208,10 +210,7 @@ macro( casa_add_module module )
 
   endforeach()
 
-  #dump( ${module}_DEFINITIONS )
-  #message("Set ${module}_INCLUDE_DIRS to ${${module}_INCLUDE_DIRS}" )
-  #message("Set ${module}_DEFINITIONS to ${${module}_DEFINITIONS}" )
-  #message("Set ${module}_LINK_TO to ${${module}_LINK_TO}" )
+  #dump( ${module}_DEFINITIONS ${module}_INCLUDE_DIRS ${module}_LINK_TO )
 
   add_subdirectory( ${module} )
 
