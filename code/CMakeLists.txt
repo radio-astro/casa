@@ -629,7 +629,7 @@ endforeach()
 file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   "# This file exists only for ASAP\n"
   PYTHONVER=${PYTHONV}\n
-  COREINCD = ${CASACORE_ROOT_DIR}/include/casacore\n
+  COREINCD = ${CASACORE_casa/aips.h}\n
   CORELIB = ${_cc}\n
   WCSLIBLIBD = .\n
   WCSLIBLIB = ${WCSLIB_wcs}\n
