@@ -92,10 +92,14 @@ namespace casa {
     agents_p = NULL;
     agentCount_p=0;
     opts_p = NULL;
-    
+
     logSink_p = LogSink(LogMessage::NORMAL, False);
     
     nant = 0;
+    nifr = 0;
+    nfeed = 0;
+    nfeedcorr = 0;
+
     setdata_p = False;
     selectdata_p = False;
     // setupAgentDefaults();
@@ -128,8 +132,8 @@ namespace casa {
     quack_agent_exists = false;
   }
   
-    Flagger::~Flagger ()
-    {
+  Flagger::~Flagger ()
+  {
 	/*
 	  jmlarsen: Eh? The following code is probably a bug
 	  (it closes the MS when the length() is 0)
