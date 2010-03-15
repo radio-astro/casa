@@ -656,6 +656,15 @@ protected:
 	      const MDirection&,
 	      const Quantity&);
 
+  // Helper func for printing clean's restoring beam to the logger.  May find
+  // the restoring beam as a side effect, so sm_p can't be const.
+  void printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun=true);
+
+  // Helper func for createFTMachine().  Returns phaseCenter_p as a String,
+  // *assuming* it is set.  It does not check!
+  String tangentPoint();
+  
+
   Bool assertDefinedImageParameters() const;
  // Virtual methods to set the ImageSkyModel and SkyEquation.
   // This allows derived class pimager to set parallelized
