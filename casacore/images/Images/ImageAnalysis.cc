@@ -2572,6 +2572,7 @@ void ImageAnalysis::_setFitSkyIncludeExclude(
     const Stokes::StokesTypes& stokes, const Float minVal, const Float maxVal,
     Fit2D& fitter 
 ) const {
+    *itsLog << LogOrigin("ImageAnalysis", "ImageAnalysis::_setFitSkyIncludeExclude");
 	Bool doInclude = (includepix.nelements() > 0);
 	Bool doExclude = (excludepix.nelements() > 0);
 	if (doInclude && doExclude) {
