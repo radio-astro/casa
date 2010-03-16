@@ -143,7 +143,7 @@ Bool MeasIERS::initMeas(MeasIERS::Files which) {
 			 String("initMeas(MeasIERS::Files)"),
 			 WHERE));
       os << LogIO::NORMAL3 << 
-	String("High precision reference frame table ") + tp[which] + " not available") << 
+	String("High precision reference frame table ") + tp[which] + " not available" << 
       LogIO::POST;
       return False;
     };
