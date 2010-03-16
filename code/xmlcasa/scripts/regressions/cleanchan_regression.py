@@ -90,14 +90,14 @@ del dat
 fit_ms = 1665657.7
 
 # PLOT
-f=cf['r1']
-f=f.flatten()
-
-pl.ion()
-pl.clf()
-pl.plot(f,spec/4.6,label='ms')
-pl.plot(f,spec/4.6,'mo',label='ms')
-pl.xlim([1665640000,1665675000])
+#f=cf['r1']
+#f=f.flatten()
+#
+#pl.ion()
+#pl.clf()
+#pl.plot(f,spec/4.6,label='ms')
+#pl.plot(f,spec/4.6,'mo',label='ms')
+#pl.xlim([1665640000,1665675000])
 
 
 
@@ -308,12 +308,12 @@ for i in range(len(sname)):
         print >> logfile, fmt % sname[i], "%15.7f %11.7f %10.7f %10.7f %4i %16.7f %16.7f" % stats[i]
 
 
-from matplotlib.font_manager import fontManager, FontProperties
-font= FontProperties(size='x-small')
-pl.legend(prop=font,loc=2)
-pl.xlim([1665632000, 1665675000])
-pl.ylim([-5,100])
-pl.savefig( rt + datestring + ".png")
+#from matplotlib.font_manager import fontManager, FontProperties
+#font= FontProperties(size='x-small')
+#pl.legend(prop=font,loc=2)
+#pl.xlim([1665632000, 1665675000])
+#pl.ylim([-5,100])
+#pl.savefig( rt + datestring + ".png")
 
 
 # print stats w/chans as pixel fractions relative to MS:
