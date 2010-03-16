@@ -4,7 +4,7 @@ usage: python report.py testresult_dir report_dir revision generate_plot
 
 testresult_dir: database top directory
 report_dir: output directory
-revision: 'latest' for latest stable only, or 'all'
+revision: 'latest' for latest test-branch only, or 'all'
 generate_plot: boolean, generates png plots iff true
 
 expected format of logfiles:
@@ -181,7 +181,7 @@ def selected_revisions(data):
         else:
             print "Drop", all_list[c]
 
-    # And always use, too, the latest version on the stable branch
+    # And always use, too, the latest version on the test branch
     stable_versions = []
     for log in data:
         host = log['host']
@@ -192,9 +192,9 @@ def selected_revisions(data):
     if len(stable_versions) > 0:
         stable_versions.sort(reverse=True, cmp=cmp_version)
         selected.add(stable_versions[0])
-        print "Use latest on stable: ", stable_versions[0]
+        print "Use latest on test branch: ", stable_versions[0]
     else:
-        print "No tests on stable"
+        print "No tests on test branch"
 
     return selected
     
@@ -428,7 +428,7 @@ class report:
                     raise Exception, "Could not parse revision number '%s'" \
                           % (latest_on_stable)
 
-            fd.write('<br><h2>Revision '+revision+' only, stable branch only</h2>')
+            fd.write('<br><h2>Revision '+revision+' only, test branch only</h2>')
             fd.write('<hr>')
 
             # Filter out all other versions
@@ -573,7 +573,7 @@ class report:
         if len(self.hosts_devel) > 0:
             fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>test</td>')
         fd.write('</tr>')
         
         fd.write('<TR><TD></TD>')
@@ -661,7 +661,7 @@ class report:
         if len(self.hosts_devel) > 0:
             fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>test</td>')
         fd.write('</tr>')
         
         for host in self.hosts:
@@ -692,7 +692,7 @@ class report:
 
             fd.write('</td>')
             
-        fd.write('<TD><b>Stable summary</b></TD>')
+        fd.write('<TD><b>Test branch summary</b></TD>')
         fd.write('</TR>\n')    
 
         subtests_list = {}
@@ -906,7 +906,7 @@ class report:
         if host in self.hosts_devel:
             branch = "active"
         else:
-            branch = "stable"
+            branch = "test"
 
         coords = ' title="' + branch + ': ' + test + ' \\ '+host+'"'
         
