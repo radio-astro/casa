@@ -937,7 +937,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	 << imageStart_p << " stepped by " << imageStep_p << LogIO::POST;
       freqs.resize(imageNchan_p);
       for (Int chan=0;chan<imageNchan_p;chan++) {
-	freqs(chan)=chanFreq(Int(imageStart_p)+Int(Float(chan+0.5)*Float(imageStep_p)-0.5));
+	freqs(chan)=chanFreq(Int(imageStart_p)+Int(Float(chan)*Float(imageStep_p)));
       }
       // Use this next line when non-linear working
       //    mySpectral = new SpectralCoordinate(obsFreqRef, freqs,
