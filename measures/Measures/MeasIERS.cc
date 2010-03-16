@@ -97,10 +97,8 @@ Bool MeasIERS::get(Double &returnValue,
 	LogIO os(LogOrigin("MeasIERS",
 			   String("fillMeas(MeasIERS::Files, Double)"),
 			   WHERE));
-	os << LogIO::NORMAL << 
-	  String("Requested JD ") << date << String(" is outside "
-		 "the IERS table data range."
-		 "\nCalculations will proceed with less precision") << 
+	os << LogIO::NORMAL3 << 
+	  String("High precision reference frame information not available for requested JD ") << date <<
 	  LogIO::POST;
       };
       return False;
@@ -144,10 +142,9 @@ Bool MeasIERS::initMeas(MeasIERS::Files which) {
       LogIO os(LogOrigin("MeasIERS",
 			 String("initMeas(MeasIERS::Files)"),
 			 WHERE));
-      os <<
-	String("Cannot read IERS table ") + tp[which] +
-	  "\nCalculations will proceed with lower precision" << 
-	LogIO::POST;
+      os << LogIO::NORMAL3 << 
+	String("High precision reference frame table ") + tp[which] + " not available") << 
+      LogIO::POST;
       return False;
     };
     MeasIERS::openNote(&MeasIERS::closeMeas);

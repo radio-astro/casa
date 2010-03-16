@@ -3971,9 +3971,8 @@ Double MeasTable::dPsiEps(uInt which, Double T) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("dPsiEps(uInt, Double)"),
 			   WHERE));
-	os <<
-	  String("No requested nutation data available from IERS tables. "
-		 "\nProceeding with probably less precision.") <<
+	os << LogIO::NORMAL3 << 
+	  String("High precision nutation information not available.") 
 	  LogIO::POST;
       };
     };
@@ -3986,9 +3985,8 @@ Double MeasTable::dPsiEps(uInt which, Double T) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("dPsiEps(uInt, Double)"),
 			   WHERE));
-	os <<
-	  String("No requested nutation data available from IERS tables. "
-		 "\nProceeding with probably less precision.") <<
+	os << LogIO::NORMAL3 << 
+	  String("High precision nutation information not available.") 
 	  LogIO::POST;
       };
     };
@@ -6263,9 +6261,8 @@ const Euler &MeasTable::polarMotion(Double ut) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("PolarMotion(Double)"),
 			   WHERE));
-	os <<
-	  String("No requested polar motion data available from IERS tables. "
-		 "\nProceeding with probably less precision.") <<
+	os << LogIO::NORMAL3 << 
+	  String("High precision polar motion information not available.") 
 	  LogIO::POST;
       };
     };
@@ -6435,9 +6432,8 @@ Double MeasTable::dUT1(Double utc) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("dUT1(Double)"),
 			   WHERE));
-	os <<
-	  String("No requested dUT1 data available from IERS tables. "
-		 "\nProceeding with probably less precision.") <<
+	os << LogIO::NORMAL3 << 
+	  String("High precision dUT1 information not available.") 
 	  LogIO::POST;
       };
     };
