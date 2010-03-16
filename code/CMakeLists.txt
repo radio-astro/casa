@@ -329,6 +329,8 @@ casa_find( LAPACK
 	   LIBS lapack )
 
 # CASACore
+# - Some header files exported by CASACore include WCSLIB headers
+# - CASACore header files declare symbols which are defined in LAPACK
 casa_find( CASACORE
            VERSION 8.1
            INCLUDES casa/aips.h
@@ -346,7 +348,7 @@ casa_find( CASACORE
                 casa_scimath
                 casa_scimath_f
                 casa_tables 
-           DEPENDS CFITSIO LAPACK )
+           DEPENDS LAPACK CFITSIO WCSLIB )
               
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
   -DCASA_USECASAPATH
