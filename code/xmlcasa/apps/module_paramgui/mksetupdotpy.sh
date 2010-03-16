@@ -34,9 +34,9 @@ fi
   then
      if [ "$SETUPEXTRALINK" = "" ]; then
         if [ "$XTRNLIBS_rpath" = "" ]; then
-            SETUPEXTRALINK="'-Xlinker', '-rpath', '-Xlinker', '$PYTHONLIBD', '$CCMTOOLSLIBD/libCCM_Local_HomeFinder.a', '$CCMTOOLSLIBD/libWX_Utils_types.a'"
+            SETUPEXTRALINK="'-Xlinker', '-rpath', '-Xlinker', '$PYTHONLIBD'"
         else
-            SETUPEXTRALINK="'$XTRNLIBS_rpath', '$CCMTOOLSLIBD/libCCM_Local_HomeFinder.a', '$CCMTOOLSLIBD/libWX_Utils_types.a'"
+            SETUPEXTRALINK="'$XTRNLIBS_rpath'"
         fi
      fi
   fi
@@ -89,7 +89,7 @@ fi
 if [ "$SETUPPYTHONLIB" != "" ]; then
 echo "$SETUPPYTHONLIB," >> $SETUPDOTPY
 fi
-echo "                           'CCM_Python', 'CCM_Local_HomeFinder', 'WX_Utils_error', 'WX_Utils_code', 'WX_Utils_types', 'c', 'm' ]," >> $SETUPDOTPY
+echo "                           'ccmtools_local', 'c', 'm' ]," >> $SETUPDOTPY
 echo "               extra_compile_args = [" >> $SETUPDOTPY
 for i in $DEFINES2
 do

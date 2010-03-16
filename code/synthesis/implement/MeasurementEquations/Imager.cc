@@ -823,7 +823,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     }
     imageNchan_p=1;
     Double finc=(fmax-fmin); 
-    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean-finc/2.0, finc,
+    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean//-finc/2.0
+					, finc,
       					refChan, restFreq);
     os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Center frequency = "
@@ -952,7 +953,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
 
-      mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
+	  //in order to outframe to work need to set here original freq frame
+      //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
+      mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)//-finc/2.0
+					  , finc,
 					  refChan, restFreq);
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO
@@ -1010,8 +1014,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       if(!MFrequency::getType(mfreqref, (MRadialVelocity::showType(mImageStart_p.getRef().getType()))))
 	mfreqref=freqFrame_p;
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
-      mySpectral = new SpectralCoordinate(mfreqref, freqs(0)-(freqs(1)-freqs(0))/2.0,
-					  freqs(1)-freqs(0), refChan,
+      mySpectral = new SpectralCoordinate(mfreqref, freqs(0)//-(freqs(1)-freqs(0))/2.0
+					  , freqs(1)-freqs(0), refChan,
 					  restFreq);
      
       {
@@ -1082,7 +1086,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	if(chanVelResolution==0.0)
 	  chanVelResolution=freqResolution(0);
 	mySpectral = new SpectralCoordinate(imfreqref,
-					    freqs(0)-chanVelResolution/2.0,
+					    freqs(0)//-chanVelResolution/2.0,
+					    ,
 					    chanVelResolution,
 					    refChan, restFreq);
       }
@@ -4206,7 +4211,9 @@ Bool Imager::makeimage(const String& type, const String& image,
     IPosition cimageShape(imageshape());
     Int tilex=32;
     if(imageTileVol_p >0){
-      tilex=ceil(sqrt(imageTileVol_p/min(4, cimageShape(2))/min(32, cimageShape(3))));
+      tilex=static_cast<Int>(ceil(sqrt(imageTileVol_p/min(4,
+                                                          cimageShape(2))/min(32,
+                                                                              cimageShape(3)))));
       if(tilex >0){
 	if(tilex > min(Int(cimageShape(0)), Int(cimageShape(1))))
 	  tilex=min(Int(cimageShape(0)), Int(cimageShape(1)));
@@ -5829,6 +5836,9 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "ft()", WHERE));
+
+  if (useModelCol_p == False)
+    os << LogIO::WARN << "Please start the imager tool with \"usescratch=true\" when using Imager::ft" << LogIO::EXCEPTION;
   
   this->lock();
   try {
@@ -7166,8 +7176,8 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
      
       
-      Float umax=Float(nx_p/2)/uscale;
-      Float vmax=Float(ny_p/2)/vscale;
+      //Float umax=Float(nx_p/2)/uscale;
+      //Float vmax=Float(ny_p/2)/vscale;
 
 
       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
@@ -7181,7 +7191,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 
       gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
       IPosition shape = gwt.shape( );
-      bool deleteit = false;
+      //bool deleteit = false;
       std::vector<double> data(shape[0] * shape[1]);
       int off = 0;
       for ( int column=0; column < shape[1]; ++column ) {
@@ -9031,7 +9041,7 @@ Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID)
 
   Int tilex=32;
   if(imageTileVol_p >0){
-    tilex=ceil(sqrt(imageTileVol_p/min(4, npol_p)/min(32, imageNchan_p)));
+    tilex=static_cast<Int>(ceil(sqrt(imageTileVol_p/min(4, npol_p)/min(32, imageNchan_p))));
     if(tilex >0){
       if(tilex > min(nx_p, ny_p))
 	tilex=min(nx_p, ny_p);

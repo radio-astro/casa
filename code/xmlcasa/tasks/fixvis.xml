@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="fixvis" category="data editing, utility" visibility="experimental">
 
-<shortdescription>Recalculates (u, v, w)<!--  and Changes Phase Center. --></shortdescription>
+<shortdescription>Recalculates or converts (u, v, w)<!--  and Changes Phase Center. --></shortdescription>
 <description>
      This corrects visibilities, and/or their (u, v, w) positions, for various
      effects that can be calculated without fitting a model to the data.
@@ -47,6 +47,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Reference frame to use for outputvis.  WARNING: clean and the im tool ignore the reference frame claimed by the UVW column (it is often mislabelled as ITRF when it is really J2000) and instead assume the (u, v, w)s are in the same frame as the phase tracking center.  fixvis does not yet force the UVW column and field centers to use the same reference frame!  Blank = use the phase tracking frame of vis.</description>
         <value></value>
         <example>refcode = 'B1950_VLA'</example>
+    </param>
+    <param type="bool" name="reuse">
+      <description>Start from the UVWs in vis (True) or calculate them from the antenna positions?</description>
+      <value>True</value>
     </param>
 <!--     <param type="string" name="proj">
         <description>Projection code to use for the output.</description>
@@ -107,6 +111,16 @@ refcode   --- Reference frame to use for the generated (u, v, w)s,
               MS.  fixvis does not yet force the UVWs and fields to use the
               same frame!
 
+reuse     --- If True, start from the UVWs in vis, e.g. rotate them for an
+              equinox conversion.  Otherwise, freshly calculate them from
+              the antenna positions.
+
+              Set to True if you think fixvis will produce more accurate UVWs
+              than the ones in vis.  (Depends on when and where the observation
+              was made and/or filled.)
+
+              Default: True
+
 <!-- proj       Projection code to use for the output.  A list of codes can be
               gotten from 'csys = cs.newcoordsys(True);csys.projection('all');csys.done()'
               Cannot be changed when only some of the fields are selected.
@@ -118,7 +132,7 @@ refcode   --- Reference frame to use for the generated (u, v, w)s,
 <!-- <example> -->
 Example:
 
-fixvis(vis='my.ms', outputvis='myrefocused.ms', 'J2000')
+fixvis(vis='my.ms', outputvis='myrefocused.ms', refcode='J2000', reuse=False)
 
 </example>
 

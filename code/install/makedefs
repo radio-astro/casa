@@ -377,7 +377,7 @@ PYTHONDEFS = -DAIPSROOT=\"$(AIPSROOT)\" -DAIPSARCH=\"$(word 2, $(CASAPATH))\" -D
 CCMTOOLSROOT := /usr/lib/casapy
 CCMTOOLSINCD = $(CCMTOOLSROOT)/include
 CCMTOOLSLIBD = $(CCMTOOLSROOT)/lib
-CCMTOOLSLIB := -lCCM_Python -lWX_Utils_error -lWX_Utils_code -lWX_Utils_types 
+CCMTOOLSLIB := -lccmtools_local
 CCMTOOLSFLAGS := -Xms1024M -Xmx1024M
 CCMTOOLSBIND = $(CCMTOOLSROOT)/bin
 

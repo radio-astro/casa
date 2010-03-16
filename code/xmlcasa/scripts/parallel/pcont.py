@@ -294,8 +294,16 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     pslaunch='"'+phasecenter+'"' if (type(phasecenter) == str) else str(phasecenter)
     launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+')'
     print 'launch command', launchcomm
-    c.pgc(launchcomm)
-    c.pgc('a.visInMem='+str(visinmem))
+    c.pgc(launchcomm);
+    c.pgc('a.visInMem='+str(visinmem));
+    c.pgc('a.painc='+str(painc));
+    c.pgc('a.cfcache='+'"'+str(cfcache)+'"');
+    c.pgc('a.pblimit='+str(pblimit));
+    c.pgc('a.dopbcorr='+str(dopbcorr));
+    c.pgc('a.applyoffsets='+str(applyoffsets));
+    c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
+
+
     tb.open(msname+"/SPECTRAL_WINDOW")
     freqs=tb.getcol('CHAN_FREQ')
     allfreq=freqs[:, spwids[0]]
@@ -317,6 +325,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     tb.done()
     ###define image names
     imlist=[]
+    cfcachelist=[]
     for k in range(numcpu):
         substr='spw'
         for u in range(len(spwsel[k])):
@@ -325,6 +334,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             else:
                 substr=substr+'_spw_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
         imlist.append(substr)
+        cfcachelist.append(cfcache+'_'+str(k));
     #####
     ##continue clean or not
     if(contclean and os.path.exists(model)):
@@ -334,6 +344,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
+            c.pgc('a.cfcache='+'"'+str(cfcachelist[k])+'"');
             runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel[k])+', numchan='+str(nchansel[k])+', field="'+str(field)+'", spw='+str(spwsel[k])+', freq='+freq+', band='+band+', imname='+imnam+')'
             print 'command is ', runcomm
             out[k]=c.odo(runcomm,k)

@@ -147,7 +147,8 @@ imager::boxmask(const std::string& mask, const std::vector<int>& blc, const std:
     return rstat;
 }
 
-bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
+bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode, 
+                     const bool reuse)
 {
   Bool rstat(false);
   try {
@@ -167,7 +168,7 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
     *itsLog << LogIO::NORMAL2 << "FixVis created" << LogIO::POST;
     //visfixer.setField(m1toBlankCStr_(fields));
     visfixer.setFields(fields);
-    rstat = visfixer.calc_uvw(String(refcode));
+    rstat = visfixer.calc_uvw(String(refcode), reuse);
     *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;
   }
   catch (AipsError x) {

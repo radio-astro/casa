@@ -125,8 +125,12 @@ public:
   // done), but negative distances are accepted!
   void setDistances(const Vector<Double>& distances);
 
-// Calculate the (u, v, w)s and store them in ms_p.
-  Bool calc_uvw(const String& refcode);
+  // Calculate the (u, v, w)s and store them in ms_p.
+  Bool calc_uvw(const String& refcode, const Bool reuse=true);
+
+  // Convert the UVW column to a new reference frame by rotating the old
+  // baselines instead of calculating fresh ones.
+  void rotateUVW(const MDirection &indir, const MDirection::Ref& newref);
 
   // For things like rotation, differential aberration correction, etc., when
   // there already is a UVW column, using FTMachine.  Returns true if _any_
