@@ -324,13 +324,18 @@ else()
 endif()
 
 
+# BLAS
+casa_find( BLAS
+           LIBS blas )
+
 # LAPACK
 casa_find( LAPACK
-	   LIBS lapack )
+           LIBS lapack 
+           DEPENDS BLAS)
 
 # CASACore
 # - Some header files exported by CASACore include WCSLIB headers
-# - CASACore header files declare symbols which are defined in LAPACK
+# - CASACore header files declare symbols which are defined in LAPACK and BLAS
 casa_find( CASACORE
            VERSION 8.1
            INCLUDES casa/aips.h
