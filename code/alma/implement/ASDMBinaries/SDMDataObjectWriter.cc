@@ -191,7 +191,7 @@ namespace asdmbinaries {
   
   void SDMDataObjectWriter::addTPSubscan(unsigned long long time,
 					 unsigned long long interval,
-					 const vector<unsigned long>& flags,
+					 const vector<unsigned int>& flags,
 					 const vector<long long>& actualTimes,
 					 const vector<long long>& actualDurations,
 					 const vector<float>& autoData){
@@ -228,7 +228,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputln("Content-Location: " + tpDataSubset.projectPath() + "flags.bin");
       outputln();
-      outputln<unsigned long>(flags);
+      outputln<unsigned int>(flags);
     }
     
     if (actualTimes.size() != 0) {
@@ -363,7 +363,7 @@ namespace asdmbinaries {
 				   unsigned long long interval,
 
 				   const vector<AxisName>& flagsAxes,
-				   const vector<unsigned long>& flags,
+				   const vector<unsigned int>& flags,
 				   const vector<AxisName>& actualTimesAxes,
 				   const vector<long long>& actualTimes,
 				   const vector<AxisName>& actualDurationsAxes,
@@ -438,7 +438,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputln("Content-Location: " + tpDataSubset.projectPath() + "flags.bin");
       outputln();
-      outputln<unsigned long>(flags);
+      outputln<unsigned int>(flags);
     }
     
     if (actualTimes.size() != 0) {
@@ -504,7 +504,7 @@ namespace asdmbinaries {
 				     unsigned long long 	time,
 				     unsigned long long 	interval,
 				     const vector<float>& 	wvrData,
-				     const vector<unsigned long>& flags) {
+				     const vector<unsigned int>& flags) {
     checkState(T_WVRDATA, "wvrData");
 
     //
@@ -596,7 +596,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputln("Content-Location: " + wvrDataSubset.projectPath() + "flags.bin");
       outputln();
-      outputln<unsigned long int>(flags);
+      outputln<unsigned int>(flags);
     }
     
     outputln("--"+MIMEBOUNDARY_2);
@@ -658,7 +658,7 @@ namespace asdmbinaries {
 				    unsigned int subintegrationNum,
 				    unsigned long long time,
 				    unsigned long long interval,
-				    const vector<unsigned long>& flags,
+				    const vector<unsigned int>& flags,
 				    const vector<long long>& actualTimes,
 				    const vector<long long>& actualDurations,
 				    const vector<float>& zeroLags,
@@ -745,7 +745,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputlnLocation("flags", sdmDataSubset);
       outputln();
-      outputln<unsigned long>(flags);
+      outputln<unsigned int>(flags);
     }
     
 
@@ -870,7 +870,7 @@ namespace asdmbinaries {
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
 					   unsigned long long time,
 					   unsigned long long interval,
-					   const vector<unsigned long>& flags,
+					   const vector<unsigned int>& flags,
 					   const vector<long long>& actualTimes,
 					   const vector<long long>& actualDurations,
 					   const vector<float>& zeroLags,
@@ -899,7 +899,7 @@ namespace asdmbinaries {
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
 					   unsigned long long time,
 					   unsigned long long interval,
-					   const vector<unsigned long>& flags,
+					   const vector<unsigned int>& flags,
 					   const vector<long long>& actualTimes,
 					   const vector<long long>& actualDurations,
 					   const vector<float>& zeroLags,
@@ -926,7 +926,7 @@ namespace asdmbinaries {
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
 					   unsigned long long time,
 					   unsigned long long interval,
-					   const vector<unsigned long>& flags,
+					   const vector<unsigned int>& flags,
 					   const vector<long long>& actualTimes,
 					   const vector<long long>& actualDurations,
 					   const vector<float>& zeroLags,
@@ -954,7 +954,7 @@ namespace asdmbinaries {
 					      unsigned int subIntegrationNum,
 					      unsigned long long time,
 					      unsigned long long interval,
-					      const vector<unsigned long>& flags,
+					      const vector<unsigned int>& flags,
 					      const vector<long long>& actualTimes,
 					      const vector<long long>& actualDurations,
 					      const vector<float>& zeroLags,
@@ -982,7 +982,7 @@ namespace asdmbinaries {
 					      unsigned int subIntegrationNum,
 					      unsigned long long time,
 					      unsigned long long interval,
-					      const vector<unsigned long>& flags,
+					      const vector<unsigned int>& flags,
 					      const vector<long long>& actualTimes,
 					      const vector<long long>& actualDurations,
 					      const vector<float>& zeroLags,
@@ -1010,7 +1010,7 @@ namespace asdmbinaries {
 					      unsigned int subIntegrationNum,
 					      unsigned long long time,
 					      unsigned long long interval,
-					      const vector<unsigned long>& flags,
+					      const vector<unsigned int>& flags,
 					      const vector<long long>& actualTimes,
 					      const vector<long long>& actualDurations,
 					      const vector<float>& zeroLags,
