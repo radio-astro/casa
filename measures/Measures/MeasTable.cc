@@ -3972,7 +3972,7 @@ Double MeasTable::dPsiEps(uInt which, Double T) {
 			   String("dPsiEps(uInt, Double)"),
 			   WHERE));
 	os << LogIO::NORMAL3 << 
-	  String("High precision nutation information not available.") 
+	  String("High precision nutation information not available.") <<
 	  LogIO::POST;
       };
     };
@@ -3986,7 +3986,7 @@ Double MeasTable::dPsiEps(uInt which, Double T) {
 			   String("dPsiEps(uInt, Double)"),
 			   WHERE));
 	os << LogIO::NORMAL3 << 
-	  String("High precision nutation information not available.") 
+	  String("High precision nutation information not available.") <<
 	  LogIO::POST;
       };
     };
@@ -6262,7 +6262,7 @@ const Euler &MeasTable::polarMotion(Double ut) {
 			   String("PolarMotion(Double)"),
 			   WHERE));
 	os << LogIO::NORMAL3 << 
-	  String("High precision polar motion information not available.") 
+	  String("High precision polar motion information not available.") <<
 	  LogIO::POST;
       };
     };
@@ -6433,7 +6433,7 @@ Double MeasTable::dUT1(Double utc) {
 			   String("dUT1(Double)"),
 			   WHERE));
 	os << LogIO::NORMAL3 << 
-	  String("High precision dUT1 information not available.") 
+	  String("High precision dUT1 information not available.") <<
 	  LogIO::POST;
       };
     };
