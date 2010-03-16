@@ -176,7 +176,8 @@ tests=[
 
 
 # a subset for the plot
-toplot=['avel','fel','chan','freq','fr.5']
+#toplot=['avel','fel','chan','freq','fr.5']
+toplot=[]
 
 if pyonly:
     from cleanhelper import *
@@ -242,7 +243,7 @@ for te in tests:
     else:
         try:
             if not analonly:
-                print 'Running clean for mode=%s'%te['mode']
+                print 'Running clean for name=%s, mode=%s'%(te['name'],te['mode'])
                 clean(vis=rt+'.ms',
                       imagename=rt+'_'+te['name'],
                       cell="6arcsec",imsize=[n,n],
