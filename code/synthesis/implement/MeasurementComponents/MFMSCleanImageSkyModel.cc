@@ -287,7 +287,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	// Only process solveable models
 	if(isSolveable(model)) {
 	  
-	  os << LogIO::NORMAL2    // Loglevel PROGRESS
+	  os << LogIO::NORMAL    // Loglevel PROGRESS
              << "Processing model " << model+1 << LogIO::POST;
 	  
 	  // If mask exists, use it;
