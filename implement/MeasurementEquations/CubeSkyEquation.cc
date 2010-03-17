@@ -472,14 +472,12 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 	    psfSub.copyData( (LatticeExpr<Float>) 
 			     (iif(ggSSub > (0.0), 
 				  (gSSub/planeMax),0.0)));
-	    
 	  }
 	  else{
 	    psfSub.set(0.0);
 	  }
 	}
       }
-      
       //
     }
    
@@ -488,8 +486,6 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
       PagedImage<Float> thisScreen(psfs[model]->shape(), psfs[model]->coordinates(), String("ELPSF).psf"));
 	LatticeExpr<Float> le(*psfs[model]);
 	thisScreen.copyData(le);
-	
-
       } 
     */
     LatticeExprNode maxPSF=max(*psfs[model]);
@@ -501,25 +497,21 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     if(maxpsf > 0.0 ){
       LatticeExpr<Float> len((*psfs[model])/maxpsf);
       psfs[model]->copyData(len);
-    
     }
     else{
       if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-        os  << "PSF calculation resulted in a PSF with a peak  being 0 or lesser." << LogIO::POST;
+        os << "PSF calculation resulted in a PSF with its peak being 0 or less." << LogIO::POST;
       }
       else{
-	throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with a peak  being 0 or lesser !"));
+	throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
       }
-
     }
   }
 
-
-  isPSFWork_p=False; // resseting this flag so that subsequent calculation uses
+  isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
   // the right SkyJones correction;
-  
-
 }
+
 void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);

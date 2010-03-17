@@ -4975,8 +4975,6 @@ Bool Imager::clean(const String& algorithm,
                                                          // log window.
     }
 
-    printbeam(sm_p, os, firstrun);
-
 #ifdef PABLO_IO
     traceEvent(1,"Starting Deconvolution",23);
 #endif
@@ -8662,15 +8660,14 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	    return False;
 	  }
 
+          os << LogIO::NORMAL // Too contentious for DEBUG1
+             << "Selecting ";
           if(nch > 1)
-            os << LogIO::DEBUG1
-               << "Selecting " << nch << " channels, starting at "
-               << dataStart[i]  << ", stepped by " << dataStep[i]
-               << ", for spw " << spwid << LogIO::POST;
+            os << nch << " channels, starting at "
+               << dataStart[i]  << ", stepped by " << dataStep[i] << ",";
           else
-            os << LogIO::DEBUG1
-               << "Selecting channel " << dataStart[i]
-               << " for spw " << spwid << LogIO::POST;
+            os << "channel " << dataStart[i];
+          os << " for spw " << spwid << LogIO::POST;
 	  rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
 				     Int(dataStep[i]), spwid);
 	  dataNchan[i]=nch;
