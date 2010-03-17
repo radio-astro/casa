@@ -352,7 +352,7 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
 
   // Find the peaks of the convolved Psfs
   Vector<T> maxPsfConvScales(nScalesToClean);
-  if(nScalesToClean > 1)           [151, 151, 1, 1]
+  if(nScalesToClean > 1)
     os << LogIO::NORMAL << "Scale   Peak location    Peak value" << LogIO::POST;
   for (scale=0;scale<nScalesToClean;scale++) {
     IPosition positionPeakPsfConvScales(model.shape().nelements(), 0);
