@@ -56,6 +56,10 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define MEMFACTOR 8.0
+#if !(defined (AIPS_64B))
+#  undef  MEMFACTOR
+#  define MEMFACTOR 16.0
+#endif
 
 ImageSkyModel::ImageSkyModel(const Int maxNumModels) :
   maxnmodels_p(maxNumModels), 
