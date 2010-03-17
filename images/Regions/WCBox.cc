@@ -48,6 +48,7 @@
 #include <casa/BasicSL/String.h>
 #include <measures/Measures/Stokes.h>
 
+#include <casa/iomanip.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
@@ -434,8 +435,10 @@ WCBox* WCBox::fromBoxString (const String& str, const CoordinateSystem& csys,
 
    pixelaxes[0] = 0;
    absRel(0) = 1;
-   if (qh.fromString(error, coord[0]))
+   if (qh.fromString(error, coord[0])) {
       blc(0) = qh.asQuantumDouble();
+      //cout << "|" << coord[0] << "|" << std::setprecision(15) << blc(0) << endl;
+   }
    if (error=="" && qh.fromString(error, coord[1]))
       trc(0) = qh.asQuantumDouble();
 
@@ -468,7 +471,8 @@ WCBox* WCBox::fromBoxString (const String& str, const CoordinateSystem& csys,
       error = "Could not convert the stokes to pix";
 
    if (error=="") {
-      //cout << "blc: " << blc << " trc: " << trc << endl;
+      //cout << "blc: " << std::setw(16) << blc 
+      //     << " trc: " << std::setw(16) << trc << endl;
       pBox = new WCBox(blc,trc,pixelaxes,csys,absRel);
       return pBox;
    }
@@ -523,11 +527,28 @@ String WCBox::toBoxString() const
              String::toString(itsTrc(ax).getValue()) +
              itsTrc(ax).getUnit() + "'] ";
       }
-      else
-         ret += "['" + String::toString(itsBlc(ax).getValue()) + 
+      else {
+            
+         ostringstream tr;
+         tr.precision(15);
+         //tr.width(18);
+         tr << itsTrc(ax).getValue(); 
+         String a = tr.str();
+         ostringstream bl;
+         bl.precision(15);
+         //bl.width(18);
+         bl << itsBlc(ax).getValue(); 
+         String b = bl.str();
+         ret += "['" + b + 
              itsBlc(ax).getUnit() + "', '" + 
-             String::toString(itsTrc(ax).getValue()) +
+             a +
              itsTrc(ax).getUnit() + "'] ";
+
+         //ret += "['" + String::toString(itsBlc(ax).getValue()) + 
+         //    itsBlc(ax).getUnit() + "', '" + 
+         //    String::toString(itsTrc(ax).getValue()) +
+         //    itsTrc(ax).getUnit() + "'] ";
+      }
    }
    return ret + "1\n";
 }
