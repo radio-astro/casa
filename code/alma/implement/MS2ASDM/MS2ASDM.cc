@@ -719,7 +719,7 @@ namespace casa {
 	
 	unsigned long long timev = (unsigned long long) floor((time()(mainTabRow))*1E9); // what units? nanoseconds
 	unsigned long long intervalv = (unsigned long long) floor(interval()(mainTabRow)*1E9);
-	vector< unsigned long > flags;
+	vector< unsigned int > flags;
 	vector< long long > actualTimes;
 	vector< long long > actualDurations;
 	vector< float > zeroLags; // LAG_DATA, optional column, not used for the moment
@@ -824,7 +824,7 @@ namespace casa {
 	      }
 	    }
 	  }	
-	  unsigned long ul;
+	  unsigned int ul;
 	  for(uInt i=0; i<numSpectralPoint; i++){
 	    for(uInt j=0; j<numStokesMS; j++){
 	      if(skipCorr_p[PolId][j]){
@@ -867,7 +867,7 @@ namespace casa {
 			      autoData);         // single dish data.  
 
 	integrationNum++;
-	datasize += flags.size() * sizeof(unsigned long)
+	datasize += flags.size() * sizeof(unsigned int)
 	  + actualTimes.size() * sizeof( long long )
 	  + actualDurations.size() * sizeof( long long )
 	  + zeroLags.size() * sizeof( float )
