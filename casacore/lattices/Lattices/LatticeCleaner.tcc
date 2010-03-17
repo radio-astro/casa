@@ -321,22 +321,22 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
 
   Int nScalesToClean=itsNscales;
   if (itsCleanType==CleanEnums::HOGBOM) {
-    os << "Hogbom Clean algorithm" << LogIO::POST;
+    os << LogIO::NORMAL1 << "Using the Hogbom clean algorithm" << LogIO::POST;
     nScalesToClean=1;
   }
   else if (itsCleanType==CleanEnums::MULTISCALE) {
     if (nScalesToClean==1) {
-      os << "Multi-scale Clean with only one scale" << LogIO::POST;
+      os << LogIO::NORMAL1 << "Using multi-scale clean with only one scale" << LogIO::POST;
     }
     else {
-      os << "Multi-scale Clean algorithm" << LogIO::POST;
+      os << LogIO::NORMAL1 << "Using the multi-scale clean algorithm" << LogIO::POST;
     }
   }
 
   Int scale;
   Vector<T> scaleBias(nScalesToClean);
   if (nScalesToClean > 1) {
-    os << "Scale biases =";
+    os << LogIO::NORMAL1 << "Scale biases =";
     for (scale=0;scale<nScalesToClean;scale++) {
       scaleBias(scale) = 1 - itsSmallScaleBias *
 	itsScaleSizes(scale)/itsScaleSizes(nScalesToClean-1);
@@ -352,18 +352,22 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
 
   // Find the peaks of the convolved Psfs
   Vector<T> maxPsfConvScales(nScalesToClean);
+  if(nScalesToClean > 1)           [151, 151, 1, 1]
+    os << LogIO::NORMAL << "Scale   Peak location    Peak value" << LogIO::POST;
   for (scale=0;scale<nScalesToClean;scale++) {
     IPosition positionPeakPsfConvScales(model.shape().nelements(), 0);
 
     findMaxAbsLattice(*itsPsfConvScales[scale], maxPsfConvScales(scale),
 		      positionPeakPsfConvScales);
     if(nScalesToClean==1) {
-      os << "Peak of PSF " << maxPsfConvScales(scale)
+      os << LogIO::NORMAL << "Peak of PSF: " << maxPsfConvScales(scale)
 	 << " at "   << positionPeakPsfConvScales+1 << LogIO::POST;
     }
     else {
-      os << "Scale " << scale+1 << ", peak of PSF " << maxPsfConvScales(scale)
-	 << " at "   << positionPeakPsfConvScales+1 << LogIO::POST;
+      os << LogIO::NORMAL
+         << "  " << scale+1 << "    " << positionPeakPsfConvScales+1
+         << "  " << maxPsfConvScales(scale)
+         << LogIO::POST;
     }
     if ( maxPsfConvScales(scale) < 0.0) {
       os << "As Peak of PSF is negative, you should setscales again with a smaller scale size" 
@@ -379,9 +383,13 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
   if(itsMask){
     os << "Cleaning using given mask" << LogIO::POST;
     if (itsMaskThreshold<0) {
-        os << "Mask thresholding is not used, values are interpreted as weights"<<LogIO::POST;
+        os << LogIO::NORMAL
+           << "Mask thresholding is not used, values are interpreted as weights"
+           <<LogIO::POST;
     } else {
-        os << "Mask values above "<<itsMaskThreshold<<" are interpreted as pixels to clean"<<LogIO::POST;
+        os << LogIO::NORMAL
+           << "Cleaning pixels with mask values above " << itsMaskThreshold
+           << LogIO::POST;
     }
 
     
@@ -432,10 +440,11 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
   }
   else {
     if (itsIgnoreCenterBox) {
-      os << "Cleaning entire image as per MF/WF" << LogIO::POST;
+      os << LogIO::NORMAL << "Cleaning entire image" << LogIO::POST;
+      os << LogIO::NORMAL1 << "as per MF/WF" << LogIO::POST; // ???
     }
     else {
-      os << "Cleaning inner quarter of image" << LogIO::POST;
+      os << "Cleaning inner quarter of the image" << LogIO::POST;
       for (Int i=0;i<Int(model.shape().nelements());i++) {
 	blcDirty(i)=model.shape()(i)/4;
 	trcDirty(i)=blcDirty(i)+model.shape()(i)/2-1;
@@ -622,9 +631,11 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
   }
   // End of iteration
 
+  os << LogIO::NORMAL << "Scale  Total flux density" << LogIO::POST;
   for (scale=0;scale<nScalesToClean;scale++) {
-    os << "Scale " << scale+1 << ", total flux = "
-       << totalFluxScale(scale) << LogIO::POST;
+    os << LogIO::NORMAL
+       << "  " << scale+1 << "    " << totalFluxScale(scale)
+       << LogIO::POST;
   }
 
   if(itsMask) {
