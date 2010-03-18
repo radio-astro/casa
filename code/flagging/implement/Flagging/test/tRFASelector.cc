@@ -18,15 +18,19 @@ MeasurementSet create_ms()
     MS::addColumnToDesc(simpleDesc, MS::DATA, 2);
     const Vector<String> coordCols(0);
     const Vector<String> idCols(0);
-    String colData;
-    colData = MS::columnName(MS::DATA);
     simpleDesc.defineHypercolumn("TiledData", 
-                                 3, stringToVector(colData),
+                                 3, stringToVector(MS::columnName(MS::DATA)),
                                  coordCols, idCols);
+    simpleDesc.defineHypercolumn("TiledFlag", 
+                                 3, stringToVector(MS::columnName(MS::FLAG)));
+
     TiledShapeStMan dataStMan("TiledData", IPosition(3, 1, 1, 100));
+    TiledShapeStMan flagStMan("TiledFlag", IPosition(3, 1, 1, 100));
+
 
     SetupNewTable newTab("simpleTab", simpleDesc, Table::New);
-    newTab.bindColumn(colData, dataStMan);
+    newTab.bindColumn(MS::columnName(MS::DATA), dataStMan);
+    newTab.bindColumn(MS::columnName(MS::FLAG), flagStMan);
 
     // Create MS
     MeasurementSet ms(newTab);
@@ -39,13 +43,18 @@ MeasurementSet create_ms()
     ms.addRow();
     ms.addRow();
 
-    // MAIN - DATA
+    // MAIN - DATA, FLAG
     {
-        ArrayColumn<Complex> data(ms, colData);
+        ArrayColumn<Complex> data(ms, MS::columnName(MS::DATA));
+        ArrayColumn<Bool>    flag(ms, MS::columnName(MS::FLAG));
         Matrix<Complex> visibility(2, 63);
+        Matrix<Bool> flags(2, 63);
         data.put(0, visibility);
         data.put(1, visibility);
         data.put(2, visibility);
+        flag.put(0, flags);
+        flag.put(1, flags);
+        flag.put(2, flags);
     }
 
     // MAIN - FEED1
@@ -141,9 +150,46 @@ MeasurementSet create_ms()
 
     // SPECTRAL_WINDOW
     {
+        crow = ms.spectralWindow().nrow();
         ms.spectralWindow().addRow();
-    }
-    
+
+        MSSpWindowColumns msspwinCol(ms.spectralWindow());
+
+        unsigned num_chan = 63;
+        Vector<Double> chanFreq(num_chan);
+        Vector<Double> chanWidth(num_chan);
+        Vector<Double> effectiveBW(num_chan);
+        Vector<Double> resolution(num_chan);
+  
+        double f0 = 1444404;
+        double df = 10000;
+
+        msspwinCol.numChan().put(crow, num_chan);
+        msspwinCol.name().put(crow, String("a sprectral window"));
+        msspwinCol.refFrequency().put(crow, f0);
+  
+        for (unsigned i=0; i < num_chan; i++) {
+            chanFreq(i)    = f0 + i * df;//chan_freq_[i];
+            chanWidth(i)   = df; //chan_width_[i];
+            effectiveBW(i) = df; //effective_bw_[i];
+            resolution(i)  = 1000*1000; //resolution_[i];
+        }
+
+        msspwinCol.chanFreq().put(crow, chanFreq);
+        msspwinCol.chanWidth().put(crow, chanWidth);
+        msspwinCol.effectiveBW().put(crow, effectiveBW);
+        msspwinCol.resolution().put(crow, resolution);
+        msspwinCol.measFreqRef().put(crow, f0);
+        msspwinCol.totalBandwidth().put(crow, num_chan * df);
+        msspwinCol.netSideband().put(crow, 1);
+        //if (bbc_no_ >= 0) msspwinCol.bbcNo().put(crow, bbc_no_);
+        msspwinCol.ifConvChain().put(crow, 0);
+        msspwinCol.freqGroup().put(crow, 0);
+        msspwinCol.freqGroupName().put(crow, "A frequency group");
+
+        msspwinCol.flagRow().put(crow, False);
+        
+    }    
 
     return ms;
 }
@@ -180,17 +226,19 @@ int run()
 
 
     RFChunkStats chunk(vi, vb, flagger, pgp_screen, pgp_report);
-
+    
     cout << "Parameters are " << parm  << endl;
+
 
     RFASelector s(chunk, parm); 
     
     cout << "Created RFASelector" << endl;
     
-    // test parseMinMax
+    /*
+     *   test parseMinMax
+     */
 
-    // empty record
-    cout << "Calling parseMinMax with: " << vmin << ", " << vmax << ", " << spec << ", " << f0 << endl;
+    // cout << "Calling parseMinMax with: " << vmin << ", " << vmax << ", " << spec << ", " << f0 << endl;
     assert( !s.fortestingonly_parseMinMax( vmin, vmax, spec, f0) );
 
     // longer record
@@ -213,12 +261,12 @@ int run()
 
     spec.defineRecord("clip", clip);
 
-    cout << "Calling parseMinMax with: " << vmin << ", " << vmax << ", " << clip << ", " << f0 << endl;
+    // cout << "Calling parseMinMax with: " << vmin << ", " << vmax << ", " << clip << ", " << f0 << endl;
 
     assert( s.fortestingonly_parseMinMax( vmin, vmax, clip, f0) );
 
-    cout << "vmin: " << vmin << endl;
-    cout << "vmax: " << vmax << endl;
+    //cout << "vmin: " << vmin << endl;
+    //cout << "vmax: " << vmax << endl;
 
     Double epsilon(0.001);
 
@@ -227,9 +275,31 @@ int run()
 
     // test parseClipField
     Bool c = True;
-    cout << "Calling parseClipField with: " << spec << ", " << c << endl;
+    // cout << "Calling parseClipField with: " << spec << ", " << c << endl;
 
     s.fortestingonly_parseClipField(clip, c);
+
+
+
+    /*
+     *  Test Flagger
+     */
+
+    cout << "Run flagger..." << endl;
+
+    bool trial = false;
+    bool reset = false;
+
+    string baseline = "!5";
+    flagger.setdata("", "", "", "", "",
+                    baseline, "", "", ""); 
+    
+    cout << "setmanualflags..." << endl;
+    Vector<Double> cliprange(2);
+    flagger.setmanualflags(false, false, "", cliprange, "",
+                           false, false);
+    cout << "run..." << endl;
+    flagger.run(trial, reset);
 
     return 0;
 }
@@ -239,15 +309,4 @@ int run()
 int main ()
 {
     run();
-    try{
-        run();
-    }
-    catch (AipsError &x) {
-        cerr << x.getMesg() << endl;
-        throw;
-    }
-    catch (...) {
-        cerr << "Unknown exception caught!" << endl;
-        throw;
-    }
 }
