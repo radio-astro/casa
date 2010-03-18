@@ -708,19 +708,21 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
 
 
     if((wcreg->type()) == "WCBox"){
-      String chans;
-      String pols;
+      String chans="0~0";
+      String pols="0~0";
 
       Double chblc;
       Double chtrc;
       //cout << "WCBox:" << ((WCBox*)wcreg)->toRecord("");
       Bool ok = ((WCBox*)wcreg)->getChanExt(chblc, chtrc);
       if (ok) {
-        //cout << "chblc=" << chblc << " chtrc=" << chtrc << endl;
+        //cout << "chblc=" << chblc << " chtrc=" << chtrc 
+        //     << " Int(chblc)=" << Int(chblc)
+        //     << " Int(chtrc)=" << Int(chtrc) << endl;
         if (chblc > -1 && chtrc > -1) {
-            chans = String::toString(chblc) + 
+            chans = String::toString(Int(chblc)) + 
                  String("~") +
-                 String::toString(chtrc);
+                 String::toString(Int(chtrc));
         }
       }
       else {
@@ -735,9 +737,9 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
       if (ok) {
         //cout << "poblc=" << poblc << " potrc=" << potrc << endl;
         if (poblc > -1 && potrc > -1) {
-            pols = String::toString(poblc) + 
+            pols = String::toString(Int(poblc)) + 
                  String("~") +
-                 String::toString(potrc);
+                 String::toString(Int(potrc));
         }
       }
       else {
@@ -994,6 +996,7 @@ void FileBox::newRegion_(String imgFilename) {
 
 void FileBox::drawRegion(Record mousereg, 
                           WorldCanvasHolder *wch){
+    //cout << "drawRegion" << endl;
 }
 
 WCUnion* FileBox::unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg){
