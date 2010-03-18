@@ -777,11 +777,11 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
   // DATA - out
   RecordFieldPtr< Array<Float> > odata(writer.row(), "data");
 
-  //  cout << "output data shape = " 
-    //       << writer.row().asArrayFloat(writer.row().fieldNumber("data")).shape() << " "
-  //       << writer.row().asArrayFloat("data").shape() << " "
-  //       << writer.row().asArrayFloat(writer.row().fieldNumber("data")).data() << " "
-  //       << endl;
+  os << LogIO::DEBUG1 << "output data shape = " 
+     << writer.row().asArrayFloat(writer.row().fieldNumber("data")).shape() << " "
+     << writer.row().asArrayFloat("data").shape() << " "
+     << writer.row().asArrayFloat(writer.row().fieldNumber("data")).data() << " "
+     << LogIO::POST;
 
   RecordFieldPtr<Float> ouu(writer.row(), "u");
   RecordFieldPtr<Float> ovv(writer.row(), "v");
@@ -855,6 +855,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
   ROScalarColumn<Double> inexposure;
   if (asMultiSource) {
     infieldid.attach (sortTable, MS::columnName(MS::FIELD_ID));
+    // Why is exposure only done for multisource files?
     inexposure.attach (sortTable, MS::columnName(MS::EXPOSURE));
   }
 
@@ -866,6 +867,16 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
       os << LogIO::WARN << "WEIGHT_SPECTRUM is ignored (incorrect shape)"
 	 << LogIO::POST;
     }
+  }
+
+  Vector<Int> expectedDDIDs;
+  if(combineSpw){
+    // Prepare a list of the expected DDIDs as a function of rownr % nif.
+    // If inspwinid(rownr) != expectedDDIDs[rownr % nif], something has gone
+    // wrong (probably combinespw && multiple tunings, CAS-2048).
+    expectedDDIDs.resize(nif);
+    for(uInt i = 0; i < nif; ++i)
+      expectedDDIDs[i] = inspwinid(i);
   }
 
   Vector<Int> antnumbers;
@@ -887,6 +898,19 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     for (uInt m=0; m<nif; m++) {
       rownr++;
 
+      if(combineSpw && inspwinid(rownr) != expectedDDIDs[rownr % nif]){
+        os << LogIO::SEVERE
+           << "A DATA_DESC_ID appeared out of the expected order."
+           << LogIO::POST;
+        os << LogIO::SEVERE
+           << "MSes with multiple tunings (i.e. spw varies with time) cannot be"
+           << LogIO::POST;
+        os << LogIO::SEVERE
+           << "exported with combinespw.  Export each tuning separately."
+           << LogIO::POST;
+        return 0;
+      }
+      
       // DATA matrix
       indata.get(rownr, indatatmp);
       // FLAG_ROW
