@@ -400,7 +400,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="int" name="nterms" subparam="true">
-	    <description>Number of terms used to model the sky frequency dependence</description>
+	    <description>Number of terms used to model the sky frequency dependence (Note: nterms>1 is under development)</description>
 	    <value>1</value>
     </param>
 <!--========================================================= -->
@@ -731,7 +731,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                equivalent to assuming no frequency dependence.
                nterms=2 is equivalent to the Sault-Wieringa algorithm
                (AandAS, 1994) reffreq is the reference frequency about
-               which the Taylor expansion is done.
+               which the Taylor expansion is done. ** Note that the 
+               software implementation of the algorithm for nterms>1 
+               is still experimental and will be fully available in a 
+               later release. **
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
                nchan -- Total number of channels in the output image.
