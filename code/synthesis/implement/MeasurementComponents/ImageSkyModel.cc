@@ -56,6 +56,10 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define MEMFACTOR 8.0
+#if !(defined (AIPS_64B))
+#  undef  MEMFACTOR
+#  define MEMFACTOR 16.0
+#endif
 
 ImageSkyModel::ImageSkyModel(const Int maxNumModels) :
   maxnmodels_p(maxNumModels), 
@@ -214,11 +218,18 @@ void ImageSkyModel::makeApproxPSFs(SkyEquation& se) {
     }
     se.makeApproxPSF(psf_p);
     for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
-      beam(thismodel)=0.0;
+      beam(thismodel) = 0.0;
       if(!StokesImageUtil::FitGaussianPSF(PSF(thismodel),
 					  beam(thismodel))) {
 	os << "Beam fit failed: using default" << LogIO::POST;
       }
+      if(nmodels_p > 1)
+        os  << LogIO::NORMAL << "Model " << thismodel+1 << ": ";  // Loglevel INFO
+      os << LogIO::NORMAL                     // Loglevel INFO
+         << "bmaj: " << abs(beam(thismodel)[0])
+         << "\", bmin: " << abs(beam(thismodel)[1])
+         << "\", bpa: " << beam(thismodel)[2] << " deg"
+         << LogIO::POST;
     }
   }
   donePSF_p=True;
