@@ -72,7 +72,9 @@ import os
 import casac
 from tasks import *
 from taskinit import *
+import re
 import sha
+import shutil
 from __main__ import *
 
 imagename = 'R1046_boxit' 
@@ -158,6 +160,25 @@ def boxstretch_test():
     passed &= success
     return {'success' : success, 'error_msgs' : msgs}
 
+def CAS_2059_test():
+    test = "CAS-2059: confirm imagename can contain dashes"
+    success = True
+    global msgs, imagename
+    myimagename = "I+am-a*weird*name"
+    shutil.copytree(imagename, myimagename)
+    regionfile = 'boxit_basic_2.box'
+    mask = 'boxit_basic_2.mask'
+    boxit(imagename=myimagename, threshold=.5, regionfile=regionfile, maskname=mask)
+    if (not compare_region(exp_basic_rgn, regionfile)):
+        success = False
+        msgs += test + ": region file not correctly written" 
+    if (not compare_mask(exp_basic_mask, mask, 'basic_mask_diff_2')):
+        success = False
+        msgs += test + ": mask  not correctly written"
+    global passed
+    passed &= success
+    return {'success' : success, 'error_msgs' : msgs}
+ 
 
 def compare_region(expected_region_file, got_region_file):
     # sha1 test for now, not great since regions can be permuted, but works for now
@@ -203,6 +224,7 @@ def run():
     testResults.append(minsize_test())
     testResults.append(diag_test())
     testResults.append(boxstretch_test())
+    testResults.append(CAS_2059_test())
 
     print "PASSED: ", passed
     print "*** ERROR MES: ", msgs
