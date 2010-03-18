@@ -736,13 +736,33 @@ void WCBox::setChanExt (const Double chanStart, const Double chanEnd) {
 
    const uInt nAxes = itsPixelAxes.nelements();
 
+   //simplest
+   //if (wSp >= 0 && wSp <= nAxes) {
+   //   itsBlc(wSp) = Quantity(chanStart, "pix"); 
+   //   itsTrc(wSp) = Quantity(chanEnd, "pix");
+   //}
+
+   //equavilent
+   //if (wSp >= 0 & wSp < nAxes) {
+   //   itsBlc(wSp).setValue(Int(chanStart));
+   //   itsBlc(wSp).setUnit("pix");
+   //   itsTrc(wSp).setValue(Int(chanEnd));
+   //   itsTrc(wSp).setUnit("pix");
+   //}
+      
+   //of couse, can change to use freq 
    Double a;
    Double b;
    if (wSp >= 0 & wSp < nAxes) {
-      if (spCoord.toWorld(a, chanStart) && spCoord.toWorld(b, chanEnd)) {
+      
+      if (spCoord.toWorld(a, chanStart) && 
+          spCoord.toWorld(b, chanEnd)) {
+         itsBlc(wSp).setUnit("s-1");
          itsBlc(wSp).setValue(a);
+         itsTrc(wSp).setUnit("s-1");
          itsTrc(wSp).setValue(b);
       }
+      
    }
 
 }
@@ -762,11 +782,21 @@ Bool WCBox::getChanExt (Double& chanStart, Double& chanEnd) {
    const uInt nAxes = itsPixelAxes.nelements();
 
    if (wSp >= 0 & wSp < nAxes) {
-        //cout << "hzVal=" << itsBlc(wSp).getValue() << endl; 
-        //cout << "hzVal=" << itsTrc(wSp).getValue() << endl; 
-        if (spCoord.toPixel(chanStart, itsBlc(wSp).getValue()) && 
-          spCoord.toPixel(chanEnd, itsTrc(wSp).getValue()))
-         return True;
+        //cout << "blc=" << itsBlc(wSp).getValue() 
+        //     << " " << itsBlc(wSp).getUnit() << endl; 
+        //cout << "trc=" << itsTrc(wSp).getValue()
+        //     << " " << itsTrc(wSp).getUnit() << endl; 
+        chanStart=itsBlc(wSp).getValue();
+        if (itsBlc(wSp).getUnit() != "pix") { 
+            if (!spCoord.toPixel(chanStart, itsBlc(wSp).getValue()))
+               chanStart=0; // or should return false?
+        } 
+        chanEnd=itsTrc(wSp).getValue();
+        if (itsTrc(wSp).getUnit() != "pix") { 
+            if (!spCoord.toPixel(chanEnd, itsTrc(wSp).getValue()))
+               chanEnd=0;   // or should return false?
+        }
+        return True;
    }
    
 
