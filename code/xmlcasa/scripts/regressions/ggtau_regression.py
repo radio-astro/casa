@@ -160,8 +160,8 @@ splitsrctime=time.time()
 print '--Image continuum (3mm)--'
 default('clean')
 clean(vis='ggtau.3mm.split.ms',imagename='ggtau.3mm',
-      psfmode='clark',niter=100,gain=0.1,mode='channel',
-      nchan=1,start=2,width=58,spw=0,field='0',stokes='I',
+      psfmode='clark',niter=100,gain=0.1,mode='mfs',
+      spw='0:2~59',field='0',stokes='I',
       weighting='briggs',robust=0.5,
       cell=[0.2,0.2],imsize=[256,256])
 image3mmtime=time.time()
@@ -270,7 +270,11 @@ splitsrc1mmtime=time.time()
 print '--Image 1mm continuum--'
 ## Get a first image the target source in 1 mm continuum emission:
 default('clean')
-clean(vis='ggtau.1mm.split.ms',imagename='ggtau.1mm',psfmode='clark',niter=100,gain=0.1, mode='channel', nchan=1,start=3,width=58,spw=[0,1,2],field='0',stokes='I',weighting='briggs',robust=0.5,cell=[0.1,0.1],imsize=[256,256])
+clean(vis='ggtau.1mm.split.ms',imagename='ggtau.1mm',
+      psfmode='clark',niter=100,gain=0.1,
+      mode='mfs', 
+      spw='0,1,2:3~59',field='0',stokes='I',
+      weighting='briggs',robust=0.5,cell=[0.1,0.1],imsize=[256,256])
 image1mmtime=time.time()
 
 # 3mm HCO+(1-0) line calibration
@@ -303,7 +307,7 @@ hcocaltime=time.time()
 print 'Image HCO--'
 default('clean')
 clean(vis='ggtau.hco.split.ms',imagename='ggtau.hco',
-      psfmode='clark',niter=100,gain=0.1,nchan=14,start=74,width=4,
+      psfmode='clark',niter=100,gain=0.1,nchan=14,start=75,width=4,
       spw=0,field='0',stokes='I',
       weighting='briggs',robust=0.5,cell=[0.2,0.2],imsize=[256,256],mode='channel')
    ### Emission in central channels is barely visible (too weak to image
@@ -338,7 +342,7 @@ cocaltime=time.time()
 print '--Image CO--'
 default('clean')
 clean(vis='ggtau.co.split.ms',imagename='ggtau.co',
-      psfmode='clark',niter=100,gain=0.1,nchan=14,start=91,width=4,
+      psfmode='clark',niter=100,gain=0.1,nchan=14,start=92,width=4,
       spw=0,field='0',stokes='I',
       weighting='briggs',robust=0.5,cell=[0.1,0.1],imsize=[256,256])
    ### Emission is too weak to image with only 1 day of data.

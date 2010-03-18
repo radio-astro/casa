@@ -153,7 +153,7 @@ clean(vis='nrao150.3mm.split.ms',imagename='nrao150.3mm',
 default('clean')
 clean(vis='h121.co10.split.ms',imagename='h121.co10',
       psfmode='clark',niter=1000,gain=0.1,threshold=20.,
-      nchan=80,start=0,width=3,spw=0,
+      nchan=80,start=1,width=3,spw=0,
       field='0',stokes='I',
       weighting='briggs',robust=2.,
       cell=[0.5,0.5],imsize=[128,128],mode='channel')
@@ -293,7 +293,7 @@ clean(vis='0224b.3mm.split.ms',imagename='0224b.3mm',
 default('clean')
 clean(vis='h121b.co10.split.ms',imagename='h121b.co10',
       psfmode='clark',niter=1000,gain=0.1,threshold=20.,
-      nchan=80,start=0,width=3,
+      nchan=80,start=1,width=3,
       spw=0,field='0',stokes='I',
       weighting='briggs',robust=2.,
       cell=[1.,1.],imsize=[64,64],mode='channel')
@@ -320,7 +320,7 @@ clean(vis='h121.3mm.concat.ms',imagename='h121all.3mm',
       cell=[1.,1.],imsize=[64,64],mode='mfs')
 default('clean')
 clean(vis='h121.co10.concat.ms',imagename='h121c.co10',
-      psfmode='clark',niter=100,gain=0.1,nchan=80,start=0,width=3,
+      psfmode='clark',niter=100,gain=0.1,nchan=80,start=1,width=3,
       spw=0,field='0',stokes='I',
       weighting='briggs',robust=.5,
       cell=[0.2,0.2],imsize=[256,256],mode='channel')
