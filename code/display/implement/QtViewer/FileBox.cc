@@ -289,13 +289,15 @@ void FileBox::activate(Record rcd) {
             //Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
             //MDirection::Types dirType=csys.directionCoordinate(dirInd)
             //                      .directionType(True);
-            wx(0) = Quantity(wld(0), units(0)).getValue(RegionShape::UNIT);
-            wx(1) = Quantity(wld(1), units(1)).getValue(RegionShape::UNIT);
+            //wx(0) = Quantity(wld(0), units(0)).getValue(RegionShape::UNIT);
+            //wx(1) = Quantity(wld(1), units(1)).getValue(RegionShape::UNIT);
+            wx(0) = Quantity(wld(0), units(0)).getValue("rad");
+            wx(1) = Quantity(wld(1), units(1)).getValue("rad");
          }
       }
    }
    //cout << "wx=" << wx << endl;
-   if (wx(0) == -1000 && wx(0) == -1000)
+   if (wx(0) == -1000 && wx(1) == -1000)
       return;
  
    uInt nreg = unionRegions_p.nelements();
@@ -321,6 +323,7 @@ void FileBox::activate(Record rcd) {
       //cout << wcreg->type() << " " << tool << endl;
       if ((wcreg->type()) == "WCBox" && tool.contains("ectangle")){
          TableRecord boxrec=wcreg->toRecord("");
+         //cout << "boxrec=" << boxrec << endl;
          const RecordInterface& blcrec=boxrec.asRecord("blc");
          const RecordInterface& trcrec=boxrec.asRecord("trc");
          CoordinateSystem *coords;
@@ -336,21 +339,30 @@ void FileBox::activate(Record rcd) {
          for (Int j=dirInd; j <= dirInd+1; ++j){
             const RecordInterface& subRec0=blcrec.asRecord(j);
             const RecordInterface& subRec1=trcrec.asRecord(j);
+            //cout << "subRec0=" << subRec0 
+            //     << " subRec1=" << subRec1 << endl;
             String error;
             if (!h.fromRecord(error, subRec0)) {
                 throw (AipsError 
                (String("WCBox::fromRecord - could not recover blc because ") +
                 error));
             }
-            blc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+            //blc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+            blc(j-dirInd)=h.asQuantumDouble().getValue("rad");
             if (!h.fromRecord(error, subRec1)) {
                 throw (AipsError 
                 (String("WCBox::fromRecord - could not recover trc because ") + 
                 error));
             }
-            trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+            //trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+            trc(j-dirInd)=h.asQuantumDouble().getValue("rad");
          }
          
+         if (blc(0) < 0) blc(0) += 2 * 3.1415926535897932;
+         if (trc(0) < 0) trc(0) += 2 * 3.1415926535897932;
+         //cout << "activate rect:" << blc << " " << trc << endl; 
+         //cout << "wx:" << wx << endl; 
+
          if (trc(0) <= wx(0) && wx(0) <= blc(0) &&
              blc(1) <= wx(1) && wx(1) <= trc(1)) {
             //cout << "activate rect:" << blc << " " << trc << endl; 
@@ -648,8 +660,14 @@ void FileBox::reDraw() {
    
    qdp_->hold();
    qdp_->panelDisplay()->removeDisplayData(*regData);
+   //if (regData) {
+   //    delete regData;
+   //    regData=0;
+   //}
 
    //qDebug() << "showHide=" << showHide->text();
+   //cout << "elem=" << unionRegions_p.nelements() << endl;
+   
    if (unionRegions_p.nelements() > 0 &&
       showHide->text() == "Hide" && cb != 0) {
       WCUnion leUnion(unionRegions_p);
@@ -660,6 +678,7 @@ void FileBox::reDraw() {
 
       qdp_->panelDisplay()->addDisplayData(*regData);
    }
+   
    qdp_->release();
 
 }
@@ -682,7 +701,6 @@ RSComposite* FileBox::regionToShape(
         addRegionsToShape(theShapes, wcreg);
         theShapes->setLineColor(color->currentText().toStdString());
         theShapes->setLineWidth(1);
-
         return theShapes;
      }
      else {
@@ -1147,7 +1165,7 @@ void FileBox::pPlaneChanged(){
       //zIndex = qdd->dd()->activeZIndex();
    //  pIndex = 0;
    //}
-   cout << "pchanged" << endl;
+   //cout << "pchanged" << endl;
    pIndex = 0;
    reDraw();
 }
