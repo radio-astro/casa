@@ -333,8 +333,8 @@ void FileBox::activate(Record rcd) {
          //MDirection::Types dirType=coords->
          //    directionCoordinate(dirInd).directionType(True);
          //Assuming x, y axes are dirInd and dirInd+1
-         Vector<Double> blc(2);
-         Vector<Double> trc(2);
+         Vector<Double> blc(3);
+         Vector<Double> trc(3);
          QuantumHolder h;
          for (Int j=dirInd; j <= dirInd+1; ++j){
             const RecordInterface& subRec0=blcrec.asRecord(j);
@@ -363,12 +363,35 @@ void FileBox::activate(Record rcd) {
          //cout << "activate rect:" << blc << " " << trc << endl; 
          //cout << "wx:" << wx << endl; 
 
+         /*
+         Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
+         const RecordInterface& subRec0=blcrec.asRecord(j);
+         const RecordInterface& subRec1=trcrec.asRecord(j);
+         //cout << "subRec0=" << subRec0 
+         //     << " subRec1=" << subRec1 << endl;
+         String error = "";
+         if (h.fromRecord(error, subRec0)) {
+            blc(2)=h.asQuantumDouble().getValue("s-1");
+         }
+         if (error == "" && h.fromRecord(error, subRec1)) {
+            trc(2)=h.asQuantumDouble().getValue("s-1");
+         }
+         if (itsBlc(wSp).getUnit() != "pix") {
+            if (!spCoord.toPixel(chanStart, itsBlc(wSp).getValue()))
+               chanStart=0; // or should return false?
+         }
+         */
+
+         Bool ok = ((WCBox*)wcreg)->getChanExt(blc(2), trc(2));
+
          if (trc(0) <= wx(0) && wx(0) <= blc(0) &&
              blc(1) <= wx(1) && wx(1) <= trc(1)) {
             //cout << "activate rect:" << blc << " " << trc << endl; 
-            //active = true;
-            unionRegions_p.remove(k, True);
-            break;
+            if (ok && zIndex >= Int(blc(2)) && 
+                      zIndex <= Int(trc(2))) { 
+               unionRegions_p.remove(k, True);
+               break;
+            }
          }
       }
       /*
