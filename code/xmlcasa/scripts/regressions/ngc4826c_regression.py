@@ -60,7 +60,7 @@ print '--Feather cube - create synth image--'
 #    NRAO 12m OTF cube: NGC4826.12motf.chan.fits
 default('clean')
 clean(vis='n4826_both.ms', imagename='mosaic',
-      nchan=30, start=46, width=4, spw='0~2',
+      nchan=30, start=47, width=4, spw='0~2',
       field='0~6',
       cell=[1., 1.], imsize=[256, 256],
       stokes='I',
@@ -91,7 +91,7 @@ print '--Single Dish as Model--'
 #    NRAO 12m OTF cube: n4826_t12mchan.im
 default('clean')
 clean(vis='n4826_both.ms', imagename='n4826_tjoint1',
-      nchan=30, start=46, width=4, spw='0~2',
+      nchan=30, start=47, width=4, spw='0~2',
       field='0~6',
       cell=[1., 1.], imsize=[256, 256],
       stokes='I',
@@ -136,7 +136,7 @@ default('clean')
 ##### Mosaic the interferometer data...use model from obtain from deconvolve
 ##### SD image as starting model
 clean(vis='n4826_both.ms', imagename='n4826_tjoint2',
-      nchan=30, start=46, width=4, spw='0~2',
+      nchan=30, start=47, width=4, spw='0~2',
       field='0~6',
       cell=[1., 1.], imsize=[256, 256],
       stokes='I',
@@ -197,22 +197,31 @@ f1_max=153.3498 # < 12/1/2009
 f1_flux=1523.515 # < 12/1/2009
 f2_max=1.8816 # < 12/1/2009
 f2_flux=105.4628 # < 12/1/2009
+
 #f3_max=1.67
 #f3_max=1.52
-#f3_max=1.60     # 12/1/2009.  Are we converging?
-f3_max=1.6825   # 3/17/2010
+f3_max=1.60     # 12/1/2009.  Are we converging?
+#f3_max=1.6825   # 3/17/2010
+
 # f3_flux=81.45 # < 12/1/2009
-f3_flux=110.44684 # 3/17/2010
+#f3_flux=110.44684 # 3/17/2010
+f3_flux=99.4 # 3/19/2010     (adjusted clean's start by +1)
+
 jc1_max=1.67 # < 12/1/2009
 #jc1_max=1.71
+
 #jc1_flux=168.87
 #jc1_flux=212.11 # < 12/1/2009
-jc1_flux=223.033 # 3/17/2010
+#jc1_flux=223.033 # 3/17/2010
+jc1_flux=224.495 # 3/19/2010 (adjusted clean's start by +1)
+
 #jc2_max=1.68
 jc2_max=1.53 # < 12/1/2009
+
 #jc2_flux=67.27
 #jc2_flux=127.87 # < 12/1/2009
-jc2_flux=144.9498 # 3/17/2010
+#jc2_flux=144.9498 # 3/17/2010
+jc2_flux=145.09 # 3/19/2010  (adjusted clean's start by +1)
 
 diff_f1=abs((f1_max-feather1_immax)/f1_max)
 diff_f1f=abs((f1_flux-feather1_flux)/f1_flux)
