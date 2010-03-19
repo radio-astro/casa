@@ -1064,7 +1064,7 @@ Int PlotCal::multiTables(const Table& tablein,
     tabSel_p=tab_p;
    
     String subType[2];
-    split(tab_p.tableInfo().subType(), subType, 1, String(" "));
+    split(tab_p.tableInfo().subType(), subType, 2, String(" "));
  
     if(subType[0].contains("G")){
       if (tab_p.tableInfo().subType()=="GSPLINE")
@@ -1094,7 +1094,7 @@ Int PlotCal::multiTables(const Table& tablein,
       calType_p="K";
     } 
     else if(subType[0].contains("X")){
-      if (subType[0].contains("Jones"))
+      if (subType[1].contains("Jones"))
 	// We support the new style (X, Xf Jones)
 	calType_p="X";
       else
