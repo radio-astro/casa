@@ -106,7 +106,7 @@ casa = { 'build': {
 ##  a broken dbus-daemon-1...
 ##
 for exe in ['dbus-daemon']:
-    for dir in ['/bin', '/usr/bin', '/opt/local/bin'] :
+    for dir in ['/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
         dd = dir + os.sep + exe
         if os.path.exists(dd) and os.access(dd,os.X_OK) :
             casa['helpers']['dbus'] = dd

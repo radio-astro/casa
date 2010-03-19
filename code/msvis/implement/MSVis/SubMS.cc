@@ -6337,10 +6337,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   Matrix<Float> outRowWeight(npol_p[0], outNrow);
   outRowWeight.set(0.0);
 
-  Matrix<Float> outImagingWeight(doImgWts_p ? nchan_p[0] : 0,
-				 doImgWts_p ? outNrow    : 0);
-  if(doImgWts_p)
-    outImagingWeight.set(0.0);
+  Vector<Float> outImagingWeight;  // Gets resized + initialized later.
 
   Matrix<Bool> outFlag(npol_p[0], nchan_p[0]);
 
@@ -6388,8 +6385,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   outSigma.set(0.0);
 
   const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
-  os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
-  os << LogIO::NORMAL2 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
+  //os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
+  os << LogIO::DEBUG1 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
   //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
@@ -6401,6 +6398,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   // The real initialization is inside the loop - this just prevents a compiler warning.
   uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
   Array<Float> unflgWtSpec;
+  Vector<Float> unflgImgWts;
   Array<Complex> data_toikit;
   Array<Float> floatData_toikit;
   Vector<Float> unflaggedwt;
@@ -6440,6 +6438,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           ddID = 0;
         }
       
+        // Note the lack of polStart_p[ddID] - this is not set up to select by
+        // polarization, or even correlation.
         blc = IPosition(2, 0, chanStart_p[ddID]);
         trc = IPosition(2, npol_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
         chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
@@ -6457,13 +6457,17 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           data_toikit.resize(sliceShape);
           for(uInt datacol = 0; datacol < ntok; ++datacol)
             outData[datacol].resize(sliceShape);
+          if(doFloat){
+            floatData_toikit.resize(sliceShape);
+            outFloatData.resize(sliceShape);
+          }
           if(doSpWeight){
             unflgWtSpec.resize(sliceShape);
             outSpWeight.resize(sliceShape);
           }
-          if(doFloat){
-            floatData_toikit.resize(sliceShape);
-            outFloatData.resize(sliceShape);
+          if(doImgWts_p){
+            unflgImgWts.resize(nchan_p[ddID]);
+            outImagingWeight.resize(nchan_p[ddID]);
           }
         }
       }
@@ -6476,6 +6480,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         outFloatData.set(0.0);      
       if(doSpWeight)
         outSpWeight.set(0.0);
+      if(doImgWts_p)
+        outImagingWeight.set(0.0);
 
       // Iterate through mscIn_p's rows that belong to the slot.
       Double swv = 0.0; // Sum of the weighted visibilities.
@@ -6589,6 +6595,21 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
                                floatData(*toikit), flag(*toikit), outFloatData);
             }
           }
+          
+          if(doImgWts_p){
+            for(Int c = 0; c < nchan_p[ddID]; ++c){
+              Bool unflagged = false;
+                  
+              for(Int polind = 0; polind < npol_p[ddID]; ++polind){
+                if(!flag(*toikit)(IPosition(2, polind, chanStart_p[ddID] + c))){
+                  unflagged = true;
+                  break;
+                }
+              }
+              unflgImgWts[c] = unflagged ? inImagingWeight(*toikit)(IPosition(1, chanStart_p[ddID] + c)) : 0.0;
+            }
+          }
+
 
           Double wv = 0.0;
           Array<Complex>::const_iterator dataEnd = data_toikit.end();
@@ -6606,15 +6627,13 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           outExposure[orn] += totrowwt * inExposure(*toikit);
         
           if(doImgWts_p){
-            inImagingWeight.get(*toikit, inImgWtsSpectrum);
-          
-            for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
-              outImagingWeight(c, orn) += totrowwt * inImgWtsSpectrum[c];
+            for(Int c = 0; c < nchan_p[ddID]; ++c)
+              outImagingWeight[c] += totrowwt * unflgImgWts[c];
           }
         }
       } // End of loop through the slot's rows.
 
-      // If there were no weights > 0, plop in a reasonable values just for
+      // If there were no weights > 0, plop in reasonable values just for
       // appearance's sake.
       if(swv <= 0.0)
         outUVW.column(orn) = inUVW(slotv0);
@@ -6623,14 +6642,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       //totslotwt = sum(outRowWeight.column(orn));  // Uncomment for debugging
       if(totslotwt > 0.0){
         outExposure[orn] *= slotv.size() / totslotwt;
-        if(doImgWts_p){
-          for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
-            outImagingWeight(c, orn) /= totslotwt;
-        }
       }
       else{
         // outExposure[orn] = 0.0;      // Already is.
-        // outImagingWeight(c, orn) = 0.0;  // Ditto.
         outTC[orn] = inTC(slotv0);      // Looks better than 1858.
         outRowFlag[orn] = true;
       }
@@ -6649,6 +6663,18 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             ++oDIter;
           }
         }
+        if(doImgWts_p){
+          uInt npol = outRowWeight.column(orn).nelements();          
+          uInt nchan = chanStop - chanStart_p[ddID];
+
+          for(uInt c = 0; c < nchan; ++c){
+            Float totchanwt = 0.0;
+            for(uInt polind = 0; polind < npol; ++polind)
+              totchanwt += outSpWeight(polind, c);
+            if(totchanwt > 0.0)
+              outImagingWeight[c] /= totchanwt;
+          }
+        }        
       }
       else{
         uInt npol  = outRowWeight.column(orn).nelements();
@@ -6667,6 +6693,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
                 outData[datacol](polind, c) = 0.0;
             }
           }
+        }
+        if(doImgWts_p){
+          if(totslotwt > 0.0)
+            for(uInt c = 0; c < nchan; ++c)
+              outImagingWeight[c] /= totslotwt;
         }
       }
 
@@ -6714,6 +6745,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         msc_p->floatData().put(orn, outFloatData);
       if(doSpWeight)
         msc_p->weightSpectrum().put(orn, outSpWeight);
+      if(doImgWts_p)
+        msc_p->imagingWeight().put(orn, outImagingWeight);
       
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.
@@ -6733,11 +6766,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   outRowWeight.resize();
   msc_p->sigma().putColumn(outSigma);
   outSigma.resize();
-
-  if(doImgWts_p){
-    msc_p->imagingWeight().putColumn(outImagingWeight);
-    outImagingWeight.resize();
-  }
 
   // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
   //    << "memory after putting ImagingWt: "

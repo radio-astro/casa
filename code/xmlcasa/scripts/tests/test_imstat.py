@@ -26,7 +26,10 @@ class imstat_test(unittest.TestCase):
         default(clean)
         self.datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/imstat/'
     
-    #def tearDown(self):
+    def tearDown(self):
+        for dir in [self.moment, self.s150, self.s15, self.s0_015, self.s0_0015, self.s0_00015]:
+            if (os.path.exists(dir)):
+                shutil.rmtree(dir)
 
     def test001(self):
         """Test 1: verify moment maps can have flux densities computed in statistics"""
@@ -104,6 +107,13 @@ class imstat_test(unittest.TestCase):
         self.assertTrue(stats['maxposf'] == '15:22:00.000040, +05.04.00.000450, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:22:00.001285, +05.03.59.997600, I, 1.41332e+09Hz')
         self.assertTrue(stats['trcf'] == '15:21:59.998725, +05.04.00.019050, I, 1.41332e+09Hz')
+
+    def test007(self):
+        """ Test 7: test that box parameter can have spaces, CAS-2050 """
+        shutil.copytree(self.datapath+self.s0_00015, self.s0_00015)
+        box = '0, 0,  1 ,   1'
+        stats = imstat(imagename=self.s0_00015, box=box)
+        self.assertTrue(stats['npts'] == 4) 
 
 def suite():
     return [imstat_test]

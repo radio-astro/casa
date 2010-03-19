@@ -85,7 +85,7 @@ def imstat(imagename=None,region=None,box=None,chans=None,stokes=None):
 	    return retValue
 		
 	except Exception, instance:
-	    casalog.post( str('*** Error ***'+str(instance), 'SEVERE' ))
+	    casalog.post( '*** Error ***'+str(instance), 'SEVERE' )
 	    return 
 	
 	return retValue

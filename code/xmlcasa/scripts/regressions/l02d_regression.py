@@ -654,7 +654,7 @@ clean(vis='l02d.1mmcont.split.ms',imagename='l02d.1mmcont',
 #image target source in 3mm c34s (2-1) line
 default('clean')
 clean(vis='l02d.c34s.split.ms',imagename='l02d.c34s',
-      psfmode='clark',niter=1000,gain=0.1,nchan=160,start=19,width=3,
+      psfmode='clark',niter=1000,gain=0.1,nchan=160,start=20,width=3,
       spw='0',field='0',stokes='I',
       weighting='natural',
       cell=[0.6,0.6],imsize=[128,128],mode='channel',threshold=25.)
@@ -662,7 +662,7 @@ clean(vis='l02d.c34s.split.ms',imagename='l02d.c34s',
 #image target source in 3mm ch3oh 
 default('clean')
 clean(vis='l02d.ch3oh.split.ms',imagename='l02d.ch3oh',
-      psfmode='clark',niter=1000,gain=0.1,nchan=160,start=19,width=3,
+      psfmode='clark',niter=1000,gain=0.1,nchan=160,start=20,width=3,
       spw='0',field='0',stokes='I',
       weighting='natural',
       cell=[0.6,0.6],imsize=[128,128],mode='channel',threshold=18.)
@@ -731,22 +731,22 @@ logfile=open(outfile,'w')
 
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
-if (diff_3mm<0.05): print >>logfile,'* Passed 3mm max amplitude test '
-print >>logfile,'--3mm max amp '+str(thistest_3mm)
+if (diff_3mm<0.05): print >>logfile,'* Passed 3mm max amplitude test: '
+print >>logfile,'--3mm max amp '+str(thistest_3mm)+'  ('+str(src3mm)+', '+str(100*diff_3mm)+'%)'
 if (diff_1mm<0.05): print >>logfile,'* Passed 1mm max amplitude test '
-print >>logfile,'--1mm max amp '+str(thistest_1mm)
+print >>logfile,'--1mm max amp '+str(thistest_1mm)+'  ('+str(src1mm)+', '+str(100*diff_1mm)+'%)'
 if (diff_ch3oh<0.05): print >>logfile,'* Passed CH3OH max amplitude test '
-print >>logfile,'--CH3OH max amp '+str(thistest_ch3oh)
+print >>logfile,'--CH3OH max amp '+str(thistest_ch3oh)+'  ('+str(srcch3oh)+', '+str(100*diff_ch3oh)+'%)'
 if (diff_c34s<0.05): print >>logfile,'* Passed C34S max amplitude test '
-print >>logfile,'--C34S max amp '+str(thistest_c34s)
+print >>logfile,'--C34S max amp '+str(thistest_c34s)+'  ('+str(srcc34s)+', '+str(100*diff_c34s)+'%)'
 if (diff_im3mm<0.05): print >>logfile,'* Passed image (3mm) max test'
-print >>logfile,'--Image max (3mm) '+str(cont3mmmax)
+print >>logfile,'--Image max (3mm) '+str(cont3mmmax)+'  ('+str(im3mm)+', '+str(100*diff_im3mm)+'%)'
 if (diff_im1mm<0.05): print >>logfile,'* Passed image (1mm) max test'
-print >>logfile,'--Image max (1mm) '+str(cont1mmmax)
+print >>logfile,'--Image max (1mm) '+str(cont1mmmax)+'  ('+str(im1mm)+', '+str(100*diff_im1mm)+'%)'
 if (diff_imch3oh<0.05): print >>logfile,'* Passed image (ch3oh) max test'
-print >>logfile,'--Image max (CH3OH) '+str(ch3ohmax)
+print >>logfile,'--Image max (CH3OH) '+str(ch3ohmax)+'  ('+str(imch3oh)+', '+str(100*diff_imch3oh)+'%)'
 if (diff_imc34s<0.05): print >>logfile,'* Passed image (c34s) max test'
-print >>logfile,'--Image max (C34S) '+str(c34smax)
+print >>logfile,'--Image max (C34S) '+str(c34smax)+'  ('+str(imc34s)+', '+str(100*diff_imc34s)+'%)'
 
 
 if ((diff_3mm<0.05) & (diff_1mm<0.05) & (diff_ch3oh<0.05) & (diff_ch3oh<0.05) & (diff_im1mm<0.05) & (diff_im3mm<0.05) & (diff_imch3oh < 0.05) & (diff_imc34s<0.05)):

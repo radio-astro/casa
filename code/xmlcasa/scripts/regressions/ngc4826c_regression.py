@@ -193,22 +193,26 @@ joint2_flux=jc2_stats['flux'][0]
 #the noise at the edges; should do stats on central region (soon)
 ###these numbers are really fragile to minor changes...like the total flux
 ### makes no sense at all. better crieria needed
-f1_max=153.3498
-f1_flux=1523.515
-f2_max=1.8816
-f2_flux=105.4628
+f1_max=153.3498 # < 12/1/2009
+f1_flux=1523.515 # < 12/1/2009
+f2_max=1.8816 # < 12/1/2009
+f2_flux=105.4628 # < 12/1/2009
 #f3_max=1.67
 #f3_max=1.52
-f3_max=1.60     # 12/1/2009.  Are we converging?
-f3_flux=81.45
-jc1_max=1.67
+#f3_max=1.60     # 12/1/2009.  Are we converging?
+f3_max=1.6825   # 3/17/2010
+# f3_flux=81.45 # < 12/1/2009
+f3_flux=110.44684 # 3/17/2010
+jc1_max=1.67 # < 12/1/2009
 #jc1_max=1.71
 #jc1_flux=168.87
-jc1_flux=212.11
+#jc1_flux=212.11 # < 12/1/2009
+jc1_flux=223.033 # 3/17/2010
 #jc2_max=1.68
-jc2_max=1.53
+jc2_max=1.53 # < 12/1/2009
 #jc2_flux=67.27
-jc2_flux=127.87
+#jc2_flux=127.87 # < 12/1/2009
+jc2_flux=144.9498 # 3/17/2010
 
 diff_f1=abs((f1_max-feather1_immax)/f1_max)
 diff_f1f=abs((f1_flux-feather1_flux)/f1_flux)
