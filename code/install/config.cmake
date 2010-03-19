@@ -232,8 +232,8 @@ macro( casa_find package )
     else()
       set( _hints
         ${_includes_hints}
-        ${casa_packages}/include
 	${CMAKE_INSTALL_PREFIX}/include
+        ${casa_packages}/include
         /usr/local/include
         /usr/include
        )
@@ -386,8 +386,8 @@ macro( casa_find package )
     else()
       set( _hints
         ${_libs_hints}
-        ${casa_packages}/lib
 	${CMAKE_INSTALL_PREFIX}/lib
+        ${casa_packages}/lib
         /usr/local/lib
         /usr/lib
         )
