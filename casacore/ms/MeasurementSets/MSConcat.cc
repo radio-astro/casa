@@ -403,6 +403,9 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     ROTableVector<Int> ScanTabVectOther(otherScan);
     Int minScanOther = min(ScanTabVectOther);
     defaultScanOffset = maxScanThis + 1 - minScanOther;
+    if(defaultScanOffset<0){
+      defaultScanOffset=0;
+    }
   }
  
   // MAIN
@@ -1209,6 +1212,8 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
 				    const MSPolarization& otherPol,
 				    const MSDataDescription& otherDD) {
 
+  LogIO os(LogOrigin("MSConcat", "copySpwAndPol"));
+
   const uInt nDDs = otherDD.nrow();
   Block<uInt> ddMap(nDDs);
   
@@ -1251,6 +1256,11 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
     DebugAssert(otherSpwCols.numChan()(otherSpwId) > 0, AipsError);    
 
     Vector<Double> otherFreqs = otherSpwCols.chanFreq()(otherSpwId);
+
+    if(otherSpwCols.totalBandwidthQuant()(otherSpwId).getValue(Unit("Hz"))<=0.){
+      os << LogIO::WARN << "Negative or zero total bandwidth in SPW " << otherSpwId << " of MS to be appended." << LogIO::POST;
+    }
+
     *newSpwPtr = spwCols.matchSpw(otherSpwCols.refFrequencyMeas()(otherSpwId),
 				  static_cast<uInt>(otherSpwCols.numChan()(otherSpwId)),
 				  otherSpwCols.totalBandwidthQuant()(otherSpwId),
