@@ -3522,7 +3522,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
 	    Int foundRow = -1;
 	    for(int i=0; i<nextSourceRow; i++){
-	      if(SOURCEsourceIdCol(i) == theSOURCEId && SOURCESPWIdCol(i)==theSPWId){
+	      if(SOURCEsourceIdCol(i) == theSOURCEId && (SOURCESPWIdCol(i)==theSPWId || SOURCESPWIdCol(i)==-1)){
 		foundRow = i;
 		break;
 	      }

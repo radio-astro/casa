@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="importevla" category="import/export" visibility="experimental">
+
+  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file</shortdescription>
+
+  <input>
+
+    <param type="string" name="asdm" kind="asdm" mustexist="true">
+          <description>Name of input asdm directory (on disk)</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="vis" kind="ms">
+          <description>Root name of the ms to be created. Note the .ms is NOT added </description>
+          <value></value>
+    </param>
+
+    <param type="bool" name="singledish">
+          <description>Set true to output single-dish data format </description>
+          <value>False</value>
+    </param>
+
+    <param type="any" name="antenna" subparam="true">
+            <description>antenna name or id</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="corr_mode" >
+	    <description>specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao, co, ac,or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="srt" >
+	    <description>specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of fr, ca, bw, or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="time_sampling" >
+	    <description>specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of i, si, or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="ocorr_mode" >
+	    <description>output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
+	    <value>ca</value>
+	    <allowed kind="enum">
+	       <value>co</value>
+	       <value>ao</value>
+	       <value>ca</value>
+	    </allowed>
+    </param>
+    <param type="bool" name="compression">
+	    <description>Flag for turning on data compression</description>
+	    <value>False</value>
+    </param>
+
+    <param type="string" name="asis">
+	    <description>Creates verbatim copies of the ASDMtables in the ouput measurement set.  Value given must be a string of table names separated by spaces; A * wildcard is allowed.</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="wvr_corrected_data">
+	    <description> Specifies which values are considerd in the SDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are: no, for uncorrected data (default), yes, for the corrected data, and both, for for corrected and uncorrected data. Note if both is selected two measurement sets are created, one with uncorrected data and the other with corrected data.  </description>
+	    <value>no</value>
+	    <allowed>
+	    <value>no</value>
+	    <value>yes</value>
+	    <value>both</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="verbose">
+	    <description>Output lots of information while the filler is working</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+	    <description>Over write an existing MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="showversion">
+	    <description>Report the version of asdm2MS being used</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="applyflags">
+	    <description>Apply SDM flags to MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="double" name="tbuff" subparam="true">
+            <description>time padding buffer (seconds)</description>
+            <value>1.0</value>
+    </param> 
+
+    <constraints>
+            <when param="singledish">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="antenna"><value type="int">0</value></default>
+                </equals>
+            </when>
+
+            <when param="applyflags">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="tbuff"><value type="double">1.0</value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS)
+This version is under development and is geared to handling EVLA specific flag and
+system files, and is otherwise identical to importasdm.
+				          
+Keyword arguments:
+asdm -- Name of input SDM file (directory)
+        default: none; example: asdm='ExecBlock3'
+
+vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
+             default: none
+
+singledish   -- Set True to write data as single-dish format (Scantable)
+                default: False
+
+            &gt;&gt;&gt; singledish expandable parameter
+                 antenna -- antenna name or id.
+ 
+corr_mode -- correlation mode to be considered on input. Could
+	     be one or more of the following, ao, co, ac, or all
+	     default: all
+
+srt       -- spectral resolution type. Could be one or more of
+	     the following, fr, ca, bw, or all
+	     default: all
+
+time_sampling -- specifies the time sampling, INTEGRATION and/or
+                 SUBINTEGRAION. could be one or more of the following
+                 i, si, or all.
+		 default: all
+
+ocorr_mode    -- output data for correlation mode AUTO_ONLY 
+                 (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+		 default: ca
+		 
+
+compression  -- produces comrpressed columns in the resulting measurement set.
+                default: False
+
+
+asis         --  creates verbatim copies of the ASDM tables in 
+                 the output measurement set. The value given to
+		 this option must be a list of table names separated
+		 by space characters; the wildcard character '*' is 
+                 allowed in table names.
+
+wvr_corrected_data -- specifies wich values are considered in the 
+                      ASDM binary data to fill the DATA column in 
+                      the MAIN table of the MS. Expected values for 
+                      this option are 'no' for the uncorrected data 
+                      (this is the default), 'yes' for the corrected
+                      data and 'both' for corrected and uncorrected 
+                      data. In the latter case, two measurement sets
+                      are created, one containing the uncorrected 
+                      data and the other one, whose name is suffixed
+                      by '-wvr-corrected', containing the corrected 
+                      data.
+
+
+verbose     -- produce log output as asdm2MS is being run
+
+showversion -- report the version of the asdm2MS being used.
+
+EVLA-specific parameters:
+-------------------------
+
+applyflags -- apply the online flags from the SDM Flag.xml table to the MS
+
+            &gt;&gt;&gt; applyflags expandable parameter
+                 tbuff -- (float) time padding buffer (seconds, default=1.0)
+ 
+            Examples:
+
+                 importevla(asdm='CLowTest_000',ocorr_mode='co')
+
+                     Produces MS CLowTest_000.ms w/o autocorrelations.
+                     You will find the Antenna.xml and Flag.xml in the
+                     MS directory (e.g. for later use).
+
+                 importevla(asdm='CLowTest_000',applyflags=True)
+
+                     Produces MS CLowTest_000.ms including the
+                     Antenna.xml and Flag.xml tables.  Will also flag
+                     the data using the on-line flags in the Flag.xml
+                     table.
+
+                 importevla(asdm='CLowTest_000',applyflags=True,tbuff=2.0)
+
+                     As above, but uses a more conservative 2sec buffer
+                     before the start and after the end timeranges.
+ 
+  </example>
+
+</task>
+
+</casaxml>
