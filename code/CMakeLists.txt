@@ -118,6 +118,8 @@ else()
   message( WARNING "Unsupported system: ${CMAKE_SYSTEM_NAME}" )
 endif()
 
+set( CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} )
+
 if( NOT CMAKE_CXX_FLAGS )
   set( CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" )
 endif()
@@ -331,7 +333,7 @@ casa_find( BLAS
 # LAPACK
 casa_find( LAPACK
            LIBS lapack 
-           DEPENDS BLAS)
+           DEPENDS BLAS )
 
 # CASACore
 # - Some header files exported by CASACore include WCSLIB headers
@@ -409,7 +411,6 @@ if( APPLE )
         set( pyroot ${casa_packages}/lib/Python.framework/Versions/${PYTHONV} )
     else()
        set( pyroot ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
-#       set( pyroot /Library/Frameworks/Python.framework/Versions/${PYTHONV} )
     endif()
 else()
     set( pyroot ${casa_packages} )
@@ -491,7 +492,6 @@ IF (NOT WIN32)
 ENDIF (NOT WIN32)
 
 # CCMTools
-
 file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
       "import sys\n"
       "print 'Successfully launched IPython from C++.'\n" 
@@ -500,8 +500,7 @@ file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
 casa_find( CCMTOOLS
   VERSION 0.5.5
   DEPENDS PYTHON
-  INCLUDES CCM/CCMContainer.h
-           CCM_Local/HomeFinder.h
+  INCLUDES CCM_Local/HomeFinder.h
            CCM_Python/BasicTypes.h
            CCM_Python/Py.h
            WX/Utils/error.h
@@ -554,7 +553,8 @@ casa_find( QWT
     ${casa_packages}/qwt-5.2.0/include
     ${casa_packages}/qwt-5.2.1-svn/include
   LIBS qwt
-  LIBS_HINTS ${casa_packages}/qwt-5.2.0/lib ${casa_packages}/qwt-5.2.1-svn/lib
+  LIBS_HINTS ${casa_packages}/qwt-5.2.0/lib 
+             ${casa_packages}/qwt-5.2.1-svn/lib
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )
 
