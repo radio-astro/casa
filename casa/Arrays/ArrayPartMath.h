@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPartMath.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayPartMath.h 20868 2010-03-08 07:50:40Z gervandiepen $
 
 #ifndef CASA_ARRAYPARTMATH_H
 #define CASA_ARRAYPARTMATH_H
@@ -68,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Array<Double> data(...);
 // Array<Double> means = partialMeans (data, IPosition(2,0,1));
 // </srcblock>
-// This example calculates the mean of each plan in the data array.
+// This example calculates the mean of each plane in the data array.
 // </example>
 //
 // <example>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManInfo.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: DataManInfo.h 20861 2010-02-11 12:27:48Z gervandiepen $
 
 #ifndef TABLES_DATAMANINFO_H
 #define TABLES_DATAMANINFO_H
@@ -45,7 +45,7 @@ class Record;
 
 // <use visibility=export>
 
-// <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="">
+// <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="tTableCopy.cc">
 // </reviewed>
 
 // <prerequisite>

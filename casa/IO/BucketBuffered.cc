@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketBuffered.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: BucketBuffered.cc 20869 2010-03-19 08:31:45Z gervandiepen $
 
 //# Includes
 #include <casa/IO/BucketBuffered.h>
@@ -31,6 +31,7 @@
 #include <casa/IO/FilebufIO.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
+#include <cstring>   //# for memset
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

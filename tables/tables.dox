@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tables.dox 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: tables.dox 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 namespace casa {
 
@@ -33,10 +33,6 @@ namespace casa {
 // <ul>
 //  <li> <a href="group__Tables__module.html">Tables</a>:
 //   data base like tables with an advanced query language (TaQL).
-//  <li> <a href="group__DataMan__module.html">DataMan</a>:
-//   data managers to store/retrieve table data or calculating them on the fly.
-//  <li> <a href="group__TaQL__module.html">TaQL</a>:
-//   Table Query Language and classes for direct queries.
 //  <li> <a href="group__TablePlot__module.html">TablePlot</a>:
 //   plot table columns or expressions of them.
 //  <li> <a href="group__LogTables__module.html">LogTables</a>:
