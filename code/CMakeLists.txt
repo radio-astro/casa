@@ -26,6 +26,11 @@ include( ui )
 include( target )
 include( CASA )
 
+set( CASA_MAJOR_VERSION 3 )
+set( CASA_MINOR_VERSION 0 )
+set( CASA_PATCH_VERSION 1 )
+set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
+
 # Define compiler paths on OSX 10.5. This must be done before defining the project()
 if( APPLE AND EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
     set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
@@ -40,10 +45,18 @@ if( CMAKE_Fortran_COMPILER STREQUAL CMAKE_Fortran_COMPILER-NOTFOUND )
   message( FATAL_ERROR "Could not find fortran compiler. Please check!" )
 endif()
 
-set( CASA_MAJOR_VERSION 3 )
-set( CASA_MINOR_VERSION 0 )
-set( CASA_PATCH_VERSION 1 )
-set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
+#
+# Build options
+#
+
+# Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
+if( NOT CMAKE_BUILD_TYPE )
+  set( CMAKE_BUILD_TYPE RelWithDebInfo )
+endif()
+
+if( CMAKE_BUILD_TYPE STREQUAL Debug )
+  add_definitions( -DAIPS_DEBUG )
+endif()
 
 dump( CMAKE_HOST_SYSTEM_NAME
   CMAKE_HOST_SYSTEM
@@ -54,28 +67,21 @@ dump( CMAKE_HOST_SYSTEM_NAME
   CMAKE_SYSTEM
   CMAKE_SYSTEM_PROCESSOR
   CMAKE_SYSTEM_VERSION 
-  CMAKE_GENERATOR )
-
-# Test driver which requires that test programs are up-to-date
-# before running. (The built-in "test" does not.)
-add_custom_target( check ${CMAKE_CTEST_COMMAND} )
-enable_testing()
-set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
-
-#
-# Build options
-#
-
-# Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
-if( NOT CMAKE_BUILD_TYPE )
-  set( CMAKE_BUILD_TYPE RelWithDebInfo )
-endif()
+  CMAKE_GENERATOR 
+  CMAKE_BUILD_TYPE )
 
 set( BUILD_SHARED_LIBS ON )
 
 set( DEFAULT_CXX_FLAGS 
      "-pipe -Wall -Wno-non-template-friend -Wcast-align -Wno-comment"
      )
+
+
+# Test driver which requires that test programs are up-to-date
+# before running. (The built-in "test" does not.)
+add_custom_target( check ${CMAKE_CTEST_COMMAND} )
+enable_testing()
+set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 
 #
 # Define paths for development packages.
@@ -372,6 +378,7 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux )
 endif()
 
 
+
 # Python
 #
 # Using different versions of Python depending on platform!
@@ -496,6 +503,19 @@ file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
       "import sys\n"
       "print 'Successfully launched IPython from C++.'\n" 
       "sys.exit(0)\n")
+#
+# The names of CCMTools libraries changed.
+# Need to support both naming conventions, until the new
+# version is universally available. (This implementation
+# would be cleaner if CCM exported a version number.)
+#
+if( EXISTS ${casa_packages}/lib/libCCM_Python.so OR
+    EXISTS ${casa_packages}/lib64/libCCM_Python.so OR
+    EXISTS ${casa_packages}/lib/libCCM_Python.dylib )
+  set( _ccmtools_libs CCM_Python CCM_Local_HomeFinder WX_Utils_error WX_Utils_code WX_Utils_types )
+else()
+  set( _ccmtools_libs ccmtools_local )
+endif()
 
 casa_find( CCMTOOLS
   VERSION 0.5.5
@@ -505,11 +525,7 @@ casa_find( CCMTOOLS
            CCM_Python/Py.h
            WX/Utils/error.h
            WX/Utils/type.h
-  LIBS CCM_Python
-       CCM_Local_HomeFinder
-       WX_Utils_error
-       WX_Utils_code
-       WX_Utils_types
+  LIBS ${_ccmtools_libs}
   PROGRAMS ccmtools
   PROG_VERSION "--version" 
   EXTRA_TEST " 
