@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FitGaussian.tcc 20629 2009-06-12 03:41:09Z gervandiepen $
+//# $Id: FitGaussian.tcc 20766 2009-10-06 00:52:29Z Malte.Marquarding $
 
 #include <scimath/Fitting/FitGaussian.h>
 
@@ -255,17 +255,17 @@ Matrix<T> FitGaussian<T>::fit(const Matrix<T>& pos, const Vector<T>& f,
 
   //If there are not enough data points, fix some parameters to the estimate
 
-  if (itsNGaussians <= pos.nrow())
+  if (itsNGaussians >= pos.nrow())
   {
     for (uInt p = 1; p < ngpars; p++) {
       for (uInt g = 0; g < itsNGaussians; g++) {
-        mask(g,p) = 1;
+        mask(g,p) = 0;
       }
     }
-    if (itsNGaussians < pos.nrow()) {
+    if (itsNGaussians > pos.nrow()) {
       uInt g = 0;
       while (countFreeParameters() > pos.nrow()) {
-        mask(g,0) = 1;
+        mask(g,0) = 0;
         g++;
       }
     }
