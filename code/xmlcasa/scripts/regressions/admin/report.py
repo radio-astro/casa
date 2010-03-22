@@ -215,7 +215,7 @@ class report:
         data = self.read_log(result_dir, revision)
 
         if len(data) == 0:
-            raise Exception, "No test log files found in %s, cannot determine CASA version" % result_dir
+            raise Exception, "No matching test log files found in %s, cannot determine CASA version" % result_dir
 
         if revision == 'all':
             # Select only some revisions (in order to reduce length of historical report)
@@ -678,6 +678,8 @@ class report:
             self.dump_host(fd, host, extended)
 
             if extended:
+                if not os.path.isdir(reg_dir + '/Log'):
+                    raise Exception, "Missing directory: " + reg_dir + '/Log'
                 latest_metalog = commands.getoutput('/bin/ls -1tr ' + reg_dir + '/Log/ | grep -E "\-'+host+'.log$" | tail -1')
                 if len(latest_metalog) > len('.log'):
                     shutil.copyfile(reg_dir + '/Log/' + latest_metalog, \
@@ -802,7 +804,7 @@ class report:
                                     summary_subtest,
                                     summary_host,
                                     data, fd, reg_dir, report_dir,
-                                    extended)
+                                    extended, revision)
 
                 self.dump_td_start(fd, \
                                    summary_subtest['pass'], \
@@ -879,7 +881,7 @@ class report:
     def dump_entry(self, test, subtest, host, \
                    summary_subtest, summary_host, \
                    data, fd, reg_dir, report_dir, \
-                   extended):
+                   extended, revision):
 
         result_dir = reg_dir + '/Result'
 
@@ -1117,11 +1119,19 @@ class report:
 
             # If there's no log[] entry produced, and if the session log
             # doesn't say "casapy returned 0", then the session must have crashed
+            #
+            # The version of the session log matches if either
+            # - no version string is found, or
+            # - we're reporting all revision, or
+            # - the revision number can be grep'ed from the session log
+            #
             
             framework_log = reg_dir + '/Log/run-' + test + '-' + host + '.log'
             if subtest[1] == 'exec' and \
                    os.path.isfile(framework_log) and \
-                   os.system('grep >/dev/null "casapy returned 0" ' + framework_log) != 0:
+                   os.system('grep >/dev/null "casapy returned 0" ' + framework_log) != 0 and \
+                   (os.system('grep CASA.version ' + framework_log) != 0 or revision == 'all' or
+                    os.system('grep -w r' + revision + ' ' + framework_log) == 0):
                         self.dump_td_start(fd,
                                            0,
                                            1,
