@@ -408,14 +408,12 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
-    // griddedData2.resize(gridShape);
-    // griddedData.resize(gridShape);
+    griddedData.resize(gridShape);
     if(useDoubleGrid_p){
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
     else{
-      griddedData.resize(gridShape);
       griddedData=Complex(0.0);
     }
     //iimage.get(griddedData, False);
