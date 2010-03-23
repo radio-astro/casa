@@ -7522,8 +7522,7 @@ Bool Imager::createFTMachine()
   //few channels use Double precision
   //till we find a better algorithm to determine when to use Double prec gridding
   if(imageNchan_p < 5)
-    //Force false for testing porpoise
-    useDoublePrecGrid=False;
+    useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
   
