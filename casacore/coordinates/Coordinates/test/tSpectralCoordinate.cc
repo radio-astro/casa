@@ -376,9 +376,11 @@ int main()
             Double val = 0.0;
             String str = lc.format(unit, Coordinate::FIXED, val, 0, True, True, 4);
             if (str != String("0.0000")) {
+	       cerr << str << endl;
                throw(AipsError("Failed format test 4"));
             }
             if (unit != nativeUnit) {
+	       cerr << unit << " " << nativeUnit << endl;
                throw(AipsError("Failed format test 4"));
             }
          }
