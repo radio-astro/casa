@@ -4626,6 +4626,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    }
 		  }
 		}
+		for(uInt k=0; k<nCorrelators; k++){
+		  if(numNominal(k)>0. && numNominal(k)<averageN[i]-1){ // there are channels right on this frequency
+		    // and there are at least two more not on this frequency.
+		    // In order to make cvel's output agree with the interpolation done in clean,
+		    //  need to reduce the weight of the channels right on the frequency. 
+		    if(averageChanFrac[i][j]==1.){ // this is one of them
+		      averageChanFrac[i][j] = 0.1;
+		      modNorm(k) -= 0.9; // correct norm
+		    }
+		  }
+		}
 	      }
 	    }
 
@@ -4643,17 +4654,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
 
                       // renormalize for the case of missing SPW coverage
-		      if(numNominal(k)>0.){ // there are channels right on this frequency
-			if(averageChanFrac[i][j]==1.){ // this is one of them
-			  weight = 1./numNominal(k);
-			}
-			else{
-			  weight = 0.;
-			}
-		      }
-		      else { // need to interpolate
-			weight = averageChanFrac[i][j] / modNorm(k);
-		      }
+		      weight = averageChanFrac[i][j] / modNorm(k);
 
 		      if(CORRECTED_DATAColIsOK){
 			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
