@@ -53,6 +53,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/BasicSL/Constants.h>
 
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/ConvolutionEquation.h>
@@ -191,6 +192,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   os << LogIO::POST;
 	
   Float absmax=threshold();
+  Float oldabsmax=C::flt_max;
   Float cycleThreshold=0.0;
   Block< Vector<Int> > iterations(numberOfModels());
   Int maxIterations=0;
@@ -199,6 +201,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   // Loop over major cycles
   Int cycle=0;
   Bool stop=False;
+  Bool diverging=False;
 
   if (displayProgress_p) {
     progress_p = new ClarkCleanProgress( pgplotter_p );
@@ -314,7 +317,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     
   Float maxggS=0.0;
 
-  while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
+  while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop && !diverging) {
     os << LogIO::NORMAL
        << "*** Starting major cycle " << cycle
        << LogIO::POST; // Loglevel PROGRESS
@@ -373,6 +376,15 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     }
 
     absmax=maxField(resmax, resmin);
+    if(cycle >1){
+      if(absmax < oldabsmax)
+	oldabsmax=absmax;
+      else{
+	diverging=True;
+	os << LogIO::WARN 
+         << "Clean not converging   "  << LogIO::POST;
+      }
+    }
 
     os << LogIO::NORMAL1; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
@@ -387,7 +399,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
          << "Reached stopping peak residual = " << absmax << LogIO::POST;
       stop=True;
     }
-    else {
+    else if(!diverging) {
+      
     
       // Calculate the threshold for this cycle. Add a safety factor
       // This will be fixed someday by an option for an increasing threshold
@@ -508,7 +521,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  for (Int ix=0;ix<nx;ix++) {
 		    for (Int pol=0;pol<npolcube;pol++) {
 		      //resid(ix,iy,pol)*=weight(ix,iy,pol);
-		      if(weight(ix,iy,pol)>0.0001) {
+		      if(weight(ix,iy,pol)>0.01) {
 			wmask(ix,iy)=1.0;
 		      }
 		    }
@@ -585,7 +598,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  // residual image and psf and then clean it
 		  ConvolutionEquation eqn(psfli.matrixCursor(),
 					  residu);
-		  deltaimageli.rwCursor()=Float(0.0);
+		  deltaimageli.rwCursor().set(Float(0.0));
 		  ClarkCleanModel cleaner(deltaimageli.rwCursor());
 		  cleaner.setMask(wmask);
 		  cleaner.setGain(gain());
@@ -609,22 +622,6 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  modified_p=True;
 		  
 		  cleaner.getModel(deltaimageli.rwCursor());
-		  /////Need to go
-		  /*
-		  Cube<Float> step(deltaimageli.rwCursor().nonDegenerate(3));
-		  for (Int iy=0;iy<ny;iy++) {
-		    for (Int ix=0;ix<nx;ix++) {
-		      for (Int pol=0;pol<npol;pol++) {
-			if(weight(ix,iy,pol)>0.0) {
-			  step(ix,iy,pol)/=weight(ix,iy,pol);
-			}
-		      }
-		    }
-		  }
-		  
-		  deltaimageli.rwCursor()=step.addDegenerate(1);
-		  */	  
-		  /////
 		  //imageli.rwCursor()+=deltaimageli.cursor();
 		  //eqn.residual(imageStepli.rwCursor(), cleaner);
 		  
