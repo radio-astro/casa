@@ -6447,6 +6447,8 @@ Bool Imager::clone(const String& imageName, const String& newImageName)
     PagedImage<Float> newImage(TiledShape(oldImage.shape(), 
 					  oldImage.niceCursorShape()), oldImage.coordinates(),
 			       newImageName);
+    newImage.set(0.0);
+    newImage.table().flush(True, True);
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
