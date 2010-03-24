@@ -1468,9 +1468,11 @@ class cleanhelper:
         chanNfreqwidth=chanwidsN[0][chanindi[2]]
 
 
-        # flatten and sort:
+        # flatten:
         chanfreqs1d = chanfreqs1dx.flatten()        
-
+        # despite what I was told, flatten() does not sort.
+        chanfreqs1d.sort()
+        chanfreqs0.sort()
                 
         # now we have a list of the selected channel freqs in the data, 
         # and we can start to parse start/width/nchan in a mode-dependent way:
@@ -1557,7 +1559,7 @@ class cleanhelper:
                 locwidth=1
                 
             # if more than one channel, use the difference between 0 and 1 as the default width, 
-            # except in vel mode we'll use the last width of the last spw selected 
+            # except in vel mode we'll use the last (highest freq) width of the last spw selected 
             if mode=="velocity":
                 if len(chanfreqs1d)>1:
                     defchanwidth = chanfreqs1d[-2]-chanfreqs1d[-1]  # negative inc
@@ -1575,7 +1577,6 @@ class cleanhelper:
                 # in freq or chan mode, a width of "2" means 2 chans, positive increment in freq.
                     
             self._casalog.post('default chan width = %f' % defchanwidth, 'DEBUG')
-            #print 'default chan width = %f' % defchanwidth
             finc=defchanwidth*locwidth
             # XXX still need to convert to target reference frame!
             
@@ -1600,7 +1601,7 @@ class cleanhelper:
             # width was being used to calculate the output chan width, then part of the 
             # last chan may be cut off.
             nchan = int(round(bw/abs(finc)))+1   # XXX could argue for ceil here
-
+        
         # sanity checks:
         fend = fstart + finc*(nchan-1) 
         if fend >= (chanfreqs1d[-1]+abs(finc)):
