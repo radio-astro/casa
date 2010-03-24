@@ -360,9 +360,9 @@ ia.close()
 srca=3.182
 srcb=3.203
 coa=0.4728
-cob=0.3933
-coc=0.4140
-contmax=0.00751
+cob=0.4043
+coc=0.3145
+contmax=0.00962
 
 diff_3mma=abs((srca-thistest_3mm)/srca)
 diff_3mmb=abs((srcb-thistest_3mmb)/srcb)
