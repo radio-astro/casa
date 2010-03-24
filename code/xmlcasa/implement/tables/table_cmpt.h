@@ -184,6 +184,8 @@ class table
 
     ::casac::record* getcoldesc(const std::string& columnname);
 
+    std::vector<std::string> showcache(const bool verbose=true);
+
     bool ok();
 
     bool clearlocks();

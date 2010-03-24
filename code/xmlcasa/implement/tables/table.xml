@@ -3060,5 +3060,25 @@ Failure (returning F) is a sign of a bug.
   </example>
 </method>
 
+<method type="function" name="showcache">
+   <shortdescription>show the contents of the table cache</shortdescription>
+   
+<description>
+Show the contents of the table cache.
+</description>
+<input>
+	<param type="bool" name="verbose">
+	<value>true</value>
+	</param>
+</input>
+<returns type="stringArray"/>
+
+<example>
+tb.showcache()
+</example>
+
+</method>
+
+
 </tool>
 </casaxml>
