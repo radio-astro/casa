@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMCube.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TSMCube.cc 20873 2010-03-24 13:49:03Z gervandiepen $
 
 
 //# Includes
@@ -280,7 +280,7 @@ void TSMCube::setShape (const IPosition& cubeShape, const IPosition& tileShape)
     // Calculate the various variables.
     setup();
     // Create the cache and extend the file.
-    ///    makeCache();
+    makeCache();
     filePtr_p->extend (nrTiles_p * bucketSize_p);
     // Initialize the coordinate columns (as far as needed).
     stmanPtr_p->initCoordinates (this);
