@@ -710,8 +710,8 @@ src1mm=2.4931
 #srcch3oh=406.771
 srcch3oh=440.0
 srcc34s=311.370
-im3mm=0.0194
-im1mm=0.164
+im3mm=0.02400
+im1mm=0.2226
 imch3oh=0.433
 imc34s=0.155
 
