@@ -102,11 +102,15 @@ cleanonly_imstats = copy.deepcopy(cvel_imstats)
 #  So we combine the spws in the input dataset beforehand.
 # Also: clean needs write access to the input MS, so we need a local copy anyway.
 
-cvel(
-    vis = dataset_name_orig,
-    outputvis = 'input.ms'
-    )
-dataset_name = 'input.ms'
+#cvel(
+#    vis = dataset_name_orig,
+#    outputvis = 'input.ms'
+#    )
+#dataset_name = 'input.ms'
+#clean_inputvis_local_copy = 'input.ms'
+dataset_name = dataset_name_orig
+os.system('cp -RL '+dataset_name_orig+' input.ms')
+os.system('chmod -R u+w input.ms')
 clean_inputvis_local_copy = 'input.ms'
 
 
@@ -120,7 +124,6 @@ clean_inputvis_local_copy = 'input.ms'
 
 # in order to shorten the test, leave out LSRD, GALACTO, and LGROUP
 frames_to_do = ['TOPO', 'LSRK', 'BARY', 'CMB']
-
 
 for frame in frames_to_do:
     
@@ -380,7 +383,7 @@ for frame in frames_to_do:
 # Analysis
 
 passed = True
-tolerance = 0.0011
+tolerance = 0.001
 numpoints = 0.
 avdev = 0.
 maxdev = 0.

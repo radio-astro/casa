@@ -6447,6 +6447,8 @@ Bool Imager::clone(const String& imageName, const String& newImageName)
     PagedImage<Float> newImage(TiledShape(oldImage.shape(), 
 					  oldImage.niceCursorShape()), oldImage.coordinates(),
 			       newImageName);
+    newImage.set(0.0);
+    newImage.table().flush(True, True);
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
@@ -7522,8 +7524,7 @@ Bool Imager::createFTMachine()
   //few channels use Double precision
   //till we find a better algorithm to determine when to use Double prec gridding
   if(imageNchan_p < 5)
-    //Force false for testing porpoise
-    useDoublePrecGrid=False;
+    useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
   
