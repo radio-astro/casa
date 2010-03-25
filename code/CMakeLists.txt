@@ -161,6 +161,22 @@ set( CMAKE_INSTALL_PREFIX ${_casaroot}/${arch} )
 dump( CMAKE_INSTALL_PREFIX )
 
 #
+# Target for creating the documentation
+#
+find_package( Doxygen )
+if( DOXYGEN_FOUND )
+
+  execute_process( COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/../doc )
+
+  add_custom_target( docdoxy
+    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/install/docutils/doxygen.cfg 
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+else()
+  message( STATUS "Doxygen was not found. Disabling target 'docdoxy'." )
+endif()
+
+#
 # Create casainit.sh
 # The environment defined here is not needed at build time, but at runtime.
 # The definitions are architecture dependent, hence put them in
@@ -345,8 +361,9 @@ casa_find( LAPACK
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
 casa_find( CASACORE
-           VERSION 8.1
+           VERSION 0.0.1
            INCLUDES casa/aips.h
+                    casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
            INCLUDES_HINTS ${CMAKE_INSTALL_PREFIX}/include/casacore
            LIBS casa_casa
@@ -361,6 +378,8 @@ casa_find( CASACORE
                 casa_scimath
                 casa_scimath_f
                 casa_tables 
+           CPP_VERSION CASACORE_VERSION
+           RUN_VERSION "casa::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB )
               
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
@@ -760,3 +779,6 @@ add_dependencies( inst
           asdm2MS
           oldalma
           oldasdm2MS )
+
+
+
