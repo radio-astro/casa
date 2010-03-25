@@ -25,7 +25,6 @@ l=locals()
 if not l.has_key("analonly"): 
     analonly=False
 if not analonly:
-    print "foobar"
     os.system("rm -rf "+rt+"*")
 
 startTime = time.time()
@@ -87,7 +86,7 @@ fit_ms=fit_ms / 1e3
 
 del dat
 # manually set the line center - the above doesn't work well because of the blended lines
-fit_ms = 1665657.7
+fit_ms = 1665658.566
 
 # PLOT
 #f=cf['r1']
@@ -109,6 +108,7 @@ else:
     stats=[(ch0_ms,del_ms,wid_ms,del2_ms,nch_ms,chn_ms,fit_ms)]
 
 # and the name of the test associated with each row
+lname=['ms']
 sname=['ms']
 
 
@@ -277,15 +277,16 @@ for te in tests:
         except:
             st=(reffreq_ms,0,0,0,-1,reffreq_ms,reffreq_ms)
     stats.append(st)
-    sname.append(te['desc'])
+    lname.append(te['desc'])
+    sname.append(te['name'])
 
 
 
 
 # max name len
 lth=0
-for i in range(len(sname)):
-    lth0=len(sname[i])
+for i in range(len(lname)):
+    lth0=len(lname[i])
     if lth0>lth:
         lth=lth0
 fmt="%-"+str(lth)+"s"
@@ -300,12 +301,12 @@ else:
 # print "regular" stats:
 # print yo % " "
 print >> logfile, yo % " "
-for i in range(len(sname)):
+for i in range(len(lname)):
     if pyonly:
         #print fmt % sname[i], "%4i %20s %20s" % stats[i]
-        print >> logfile, fmt % sname[i], "%4i %20s %20s" % stats[i]
+        print >> logfile, fmt % lname[i], "%4i %20s %20s" % stats[i]
     else:
-        print >> logfile, fmt % sname[i], "%15.7f %11.7f %10.7f %10.7f %4i %16.7f %16.7f" % stats[i]
+        print >> logfile, fmt % lname[i], "%15.7f %11.7f %10.7f %10.7f %4i %16.7f %16.7f" % stats[i]
 
 
 #from matplotlib.font_manager import fontManager, FontProperties
@@ -323,9 +324,9 @@ if pyonly:
     del imCln
     regstate=True
     # print ms values:
-    print fmt % sname[0], "%4i %20s %20s" % stats[0]
+    print fmt % lname[0], "%4i %20s %20s" % stats[0]
     # ms goes from ch0_ms to chn_ms in freq.
-    for i in range(1,len(sname)):
+    for i in range(1,len(lname)):
         if stats[i][0]>0:
             if tests[i-1]['mode']=='velocity':
                 if tests[i-1].has_key('veltype'):
@@ -354,26 +355,26 @@ if pyonly:
                     w = qa.convert(stats[i][2],'kHz')['value']
                 else:
                     f0=ch0_ms + wid_ms*stats[i][1]
-                    w=wid_ms*stats[i][2]    
-            print fmt % sname[i], "%4i ch %15f %16fkHz" % (stats[i][0], (f0-ch0_ms)/wid_ms, w)
-            print >> logfile, fmt % sname[i], "%4i ch %15f %16fkHz" % (stats[i][0], (f0-ch0_ms)/wid_ms, w)
+                    w=wid_ms*stats[i][2]
+            print fmt % lname[i], "%4i ch %15f %16fkHz" % (stats[i][0], (f0-ch0_ms)/wid_ms, w)
+            print >> logfile, fmt % lname[i], "%4i ch %15f %16fkHz" % (stats[i][0], (f0-ch0_ms)/wid_ms, w)
         else:
-            print fmt % sname[i], " FAIL"
-            print >> logfile, fmt % sname[i], " FAIL"    
+            print fmt % lname[i], " FAIL"
+            print >> logfile, fmt % lname[i], " FAIL"    
 else:
-    print fmt % sname[0], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % stats[0]
-    print >> logfile, fmt % sname[0], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % stats[0]
-    for i in range(1,len(sname)):
+    print fmt % lname[0], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % stats[0]
+    print >> logfile, fmt % lname[0], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % stats[0]
+    for i in range(1,len(lname)):
         foo = pl.array(stats[i])
         if stats[i][4]>0:
             foo[0] = (foo[0]-ch0_ms)/wid_ms
             foo[5] = (foo[5]-ch0_ms)/wid_ms
             foo[6] = (foo[6]-fit_ms)/wid_ms
-            print fmt % sname[i], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % (foo[0],foo[1],foo[2],foo[3],foo[4],foo[5],foo[6])
-            print >> logfile, fmt % sname[i], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % (foo[0],foo[1],foo[2],foo[3],foo[4],foo[5],foo[6])
+            print fmt % lname[i], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % (foo[0],foo[1],foo[2],foo[3],foo[4],foo[5],foo[6])
+            print >> logfile, fmt % lname[i], "%15.7f %10.7f %10.7f %10.7f %4i %16.7f %16.7f" % (foo[0],foo[1],foo[2],foo[3],foo[4],foo[5],foo[6])
         else:
-            print fmt % sname[i], " FAIL"
-            print >> logfile, fmt % sname[i], " FAIL"
+            print fmt % lname[i], " FAIL"
+            print >> logfile, fmt % lname[i], " FAIL"
         
         
 # regress
@@ -381,16 +382,19 @@ else:
 
 # test everything against ms assumed to be first stat
 # tolerance
-    tol=0.01
+    tol=0.005
 
     tests=['ch0','ch0-ch1','width','chn-ch(n-1)','nchan','chn','fit']
-    for run in range(1,len(sname)-1):
+    for run in range(1,len(lname)-1):
         for te in range(len(tests)):
             adiff=abs(stats[run][te]-stats[0][te])/stats[0][te]
+            if tests[te]=='width' or tests[te]=='ch0-ch1' or tests[te]=='chn-ch(n-1)':
+                if sname[run]=='nvel' or sname[run]=='frm':
+                    adiff=abs(-stats[run][te]-stats[0][te])/stats[0][te]
             if adiff < tol:
-                print >> logfile, "* Passed %-10s test, got %-11.5g expected %-11.5g" % (te,stats[run][te],stats[0][te])
+                print >> logfile, "* Passed %10s %-10s test, got %-11.5g expected %-11.5g" % (sname[run],tests[te],stats[run][te],stats[0][te])
             else:
-                print >> logfile, "* FAILED %-10s test, got %-11.5g expected %-11.5g " % (te,stats[run][te],stats[0][te])
+                print >> logfile, "* FAILED %10s %-10s test, got %-11.5g expected %-11.5g " % (sname[run],tests[te],stats[run][te],stats[0][te])
                 regstate = False
 
 
@@ -418,5 +422,6 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
 
 
 logfile.close()
+
 						    
-print '--Finished clean chan/spw--'
+print '--Finished clean chan/spw, written to '+outfile+' --'
