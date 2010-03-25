@@ -882,12 +882,14 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   Vector<Int> scanlist=thisSelection.getScanList();
   Vector<Int> antenna1list=thisSelection.getAntenna1List();
   Vector<Int> antenna2list=thisSelection.getAntenna2List();
-  Matrix<Int>  chanlist=thisSelection.getChanList();
+  Matrix<Int> chanlist=thisSelection.getChanList();
+  Matrix<Int> baselinelist=thisSelection.getBaselineList();
   retval.define("spw", spwlist);
   retval.define("field", fieldlist);
   retval.define("scan",scanlist);
   retval.define("antenna1", antenna1list);
   retval.define("antenna2", antenna2list);
+  retval.define("baselines",baselinelist);
   retval.define("channel", chanlist);
   return retval;
 
