@@ -95,6 +95,7 @@ endmacro()
 #     <package>_LIBRARIES
 #     <package>_DEFINITIONS
 #     <package>_<program>_EXECUTABLE   for each program
+#     <package>_VERSION   (if version info is available)
 #
 #      INCLUDES: Header file names to search for
 #
@@ -363,6 +364,7 @@ macro( casa_find package )
           endif()
           else()
             message( STATUS "Checking that ${package} compile version ${_version_txt} -- found ${_run_out} -- ok" )
+            set( ${package}_VERSION ${_run_out} CACHE STRING "${package} version" FORCE )
           endif()
         endif()
         # end header version check
@@ -526,6 +528,8 @@ macro( casa_find package )
           endif()
         else()
           message( STATUS "Checking that ${package} runtime version ${_version_txt} -- found ${_run_out} -- ok" )
+          set( ${package}_VERSION ${_run_out} CACHE STRING "${package} version" FORCE )
+          # runtime version takes precedence over compile time version
         endif()
       endif()
       # end runtime version check

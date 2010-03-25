@@ -150,7 +150,7 @@ clean(vis='src.split.ms',imagename='tmosaicb',
        spw='0,1,2',field='0,1,2,3,4,5,6',
        cell=[1.,1.],imsize=[256,256],
        stokes='I',mode='channel',
-       psfmode='clark',imagermode='mosaic', ftmachine='mosaic', niter=300,scaletype='SAULT', pbcor=False, minpb=0.01,cyclefactor=0.01)
+       psfmode='clark',imagermode='mosaic', ftmachine='mosaic', niter=300,scaletype='SAULT', pbcor=False, minpb=0.01,cyclefactor=1.0, calready=False)
 imagesrc1time=time.time()
 ## Write image to a fits file:
 ##
@@ -264,7 +264,7 @@ clean(vis='srca.split.ms',imagename='tmosaica',
        spw='0~2',field='0~6',
        cell=[1.,1.],imsize=[256,256],
        stokes='I',mode='channel',
-       psfmode='clark',niter=300,imagermode='mosaic', ftmachine='mosaic',scaletype='SAULT',cyclefactor=3)
+       psfmode='clark',niter=300,imagermode='mosaic', ftmachine='mosaic',scaletype='SAULT',cyclefactor=3, calready=False)
 ###################################################
 ## Write image to a fits file:
 ##
@@ -290,7 +290,7 @@ clean(vis='n4826_tboth.ms',imagename='tmosaic',
 	 cell=[1.,1.],imsize=[256,256],
 	 stokes='I',mode='channel',
 	 psfmode='clark',niter=500,imagermode='mosaic',ftmachine='mosaic',scaletype='SAULT',
-	 cyclefactor=3)
+	 cyclefactor=3, calready=False)
 
 ia.open(infile='tmosaic.image');
 ia.moments(outfile='n4826_tmom0.im',
@@ -356,17 +356,17 @@ calmean22=10.51
 srcmean22=111.52
 calmax22=3.0459
 #srcmax22=1.54
-srcmax22=1.407
+srcmax22=1.632
 calmean16=4.3269
-srcmean16=156.992
-srcmax16=1.39
+srcmean16=147.43
+srcmax16=1.584
 calmax16=1.43
 #srcmean=156.9898
 srcmean=147.43
 #immax=151.4
 immax=168.18
 #imrms=14.96
-imrms=11.77
+imrms=13.08
 
 # old (pre-minsnr=2)
 #calmean22=17.99

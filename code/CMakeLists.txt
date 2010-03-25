@@ -581,6 +581,10 @@ casa_find( XERCES
   LIBS xerces-c
   CPP_VERSION XERCES_FULLVERSIONDOT 
   RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" )
+if( XERCES_VERSION VERSION_EQUAL   3.0 OR
+    XERCES_VERSION VERSION_GREATER 3.0 )
+  message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
+endif()
 
 # Boost
 if( APPLE )
@@ -609,7 +613,6 @@ casa_find( RPFITS
   VERSION 2.11
   INCLUDES RPFITS.h
   LIBS rpfits
-  DEFINITIONS ${defs}
   RUN_VERSION names_.rpfitsversion
   DEPENDS RPFITS_FORTRAN 
 )
