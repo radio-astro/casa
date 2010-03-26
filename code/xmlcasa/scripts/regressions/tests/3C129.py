@@ -26,7 +26,8 @@ def run():
     if not gl['regstate']:
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
-    return ['3C129BC.clean.image', 'at166B.3c129.image', 'at166C.3c129.image']
+#    return ['3C129BC.clean.image', 'at166B.3c129.image', 'at166C.3c129.image']
+    return ['3C129BC.core.I']
 
 def data():
     ### return the data files that is needed by the regression script

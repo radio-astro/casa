@@ -581,6 +581,14 @@ immath(stokes='V', outfile='3C129BC.V', mode='evalexpr', expr='\'3C129BC.clean.i
 # Form poln intensity and pos ang 
 immath(stokes='', outfile='3C129BC.P', mode='poli', imagename=['3C129BC.Q','3C129BC.U'], sigma='0.0mJy/beam'); 
 immath(stokes='', outfile='3C129BC.X', mode='pola', imagename=['3C129BC.Q','3C129BC.U'], sigma='0.0mJy/beam'); 
+
+
+#=====================================================================
+# Extract center of I image for testing
+
+ia.open('3C129BC.I')
+ia.subimage(outfile='3C129BC.core.I',region=rg.box([1010,1040,0,0],[1025,1055,0,0]))
+ia.close()
  
 #=====================================================================
 # Complex Linear Polarization 
