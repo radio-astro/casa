@@ -229,13 +229,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="any" name="start" subparam="true">
-	    <description>First channel to use</description>
+	    <description>start of output spectral dimension</description>
 	    <any type="variant"/>
-	    <value type="int">0</value>
+	    <value type="string">""</value>
     </param>
 <!--========================================================= -->
     <param type="any" name="width" subparam="true">
-	    <description>Number of input channels to average</description>
+	    <description>width of output spectral channels</description>
 	    <any type="variant"/>
 	    <value type="int">1</value>
     </param>
@@ -457,48 +457,53 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               </equals>
 	    </when>
 	    <when param="mode">
-		<equals value="mfs">
-			<default param="nterms"><value>1</value></default>
-			<default param="reffreq"><value type="string"></value></default>
-		</equals>
-		<equals value="channel">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value>0</value>
-			    <description>First channel to use (0=first channel specified in spw)</description>
-			</default>
-			<default param="width"><value>1</value></default>
-			<default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value></default>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-		</equals>
-	        <equals value="velocity">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value type="string"></value>
-			    <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in spw)</description>
-		    </default>
-		    <default param="width"><value type="string"></value>
-			    <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in spw)</description>
-		    </default>
-		    <default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-                    </default>
-		    <default param="veltype"><value type="string">radio</value>
-			    <description>Velocity definition of output image</description>
-                    </default>
-	        </equals>
-	        <equals value="frequency">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value type="string"></value>
-			    <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in spw)</description>
-		    </default>
-		    <default param="width"><value type="string"></value>
-			    <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in spw)</description>
-		    </default>
-		    <default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value></default>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-	        </equals>
+	      <equals value="mfs">
+		<default param="nterms"><value>1</value></default>
+		<default param="reffreq"><value type="string"></value></default>
+	      </equals>
+	      <equals value="channel">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value>""</value>
+		  <description>Begin the output cube at the frequency of this channel in the MS</description>
+		  <!--
+		     <description>first channel to use (0=first channel in first SpW of the MS)</description>
+		     -->
+		</default>
+		<default param="width"><value>1</value>
+                  <description>Width of output channel relative to MS channel (# to average)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value></default>
+		<description>Velocity reference frame of output image; \'\' =input</description>
+	      </equals>
+	      <equals value="velocity">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in first SpW of MS)</description>
+		</default>
+		<default param="width"><value type="string"></value>
+		  <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value>
+		  <description>Velocity reference frame of output image; \'\' =input</description>
+                </default>
+		<default param="veltype"><value type="string">radio</value>
+		  <description>Velocity definition of output image</description>
+                </default>
+	      </equals>
+	      <equals value="frequency">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in first SpW of MS)</description>
+		</default>
+		<default param="width"><value type="string"></value>
+		  <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value></default>
+		<description>Velocity reference frame of output image; \'\' =input</description>
+	      </equals>
 	    </when>
 	    
 	    <when param="weighting">
@@ -657,13 +662,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                  spw='0:5~61'; spw 0, channels 5 to 61
                  spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
+                 spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
+				    channels 3 to 45.
+                 spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
                  <!-- COMMENTED OUT UNTIL PROPER PARSING OF CHANNEL SELECTION
                  IS IMPLEMENTED -->
-				 <!--need to  check if these work--> 
-                 <!--spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
-				   channels 3 to 45.
-                 spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-				 -->
 			     <!-- multiple ranges do not work for 3.0.1
                  spw='0:0~10;15~60'; spectral window 0 with channels 
 				    0-10,15-60
@@ -738,14 +741,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
                nchan -- Total number of channels in the output image.
-                 default: -1; all channels, all spws. Example: nchan=100. It 
-                 is often easiest to leave nchan at the default value. 
-                 Note, with the default if there is overlap in the spws, you 
-                 may get some extra channels filled with zeros at the end.  
-                 Channels de-selected with spw parameter will be filled with 
-                 zeros if selected here.
+                 Example: nchan=100. 
+                 Default: -1; Automatically selects enough channels to cover 
+                 data selected by 'spw' and consistent with 'start' and 'width'. 
+	         It is often easiest to leave nchan at the default value. 
                start -- First channel, velocity, or frequency. 
-                 For mode='channel'; default=0; e.g. the first input channel; 
+                 For mode='channel'; This selects the channel index number 
+                 from the MS (0 based) that you want to correspond to the first 
+                 channel of the output cube. The output cube will be in frequency 
+                 space with the first channel having the frequency of the
+                 MS channel selected by start.  start=0 refers to the first 
+                 channel in the first selected spw, even if that channel 
+                 is de-selected in the spw parameter. Channels de-selected by 
+                 the spw parameter will be filled with zeros if included by
+                 the start parameter. For example, spw=3~8:3~100 and start=2
+                 will produce a cube that starts on the third channel (recall 0
+                 based) of spw index 3, and the first channel will be blank.
                  example:start=5
                  For mode='velocity' or 'frequency': default=''; 
                  starts at first input channel of first input spw
@@ -754,7 +765,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  For mode='channel', default=1; &gt;1 indicates channel averaging
                  example: width=4.
                  For mode=' 'velocity' or 'frequency', default=''; width of
-                   first input channel, otherwise must give units
+                   first input channel, or more precisely, the difference 
+                   in frequencies between the first two selected channels. 
+                   (for example if channels 1 and 3 are selected with spw, 
+                    then the default width will be the difference between their
+                    frequencies, and not the width of channel 1)
+                   When not using the default, one must give units
                  examples: width='1.0km/s', or width='24.2kHz'.
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.

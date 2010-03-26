@@ -65,7 +65,7 @@ class cleanhelper:
         elif ((type(cell)==str) or (type(cell)==int) or (type(cell)==float)):
             cell=[cell, cell]
         elif (type(cell) != list):
-            raise TypeError, "parameter cell is not understood"
+            raise TypeError, "parameter cell %s is not understood" % str(cell)
         cellx=qa.quantity(cell[0], 'arcsec')
         celly=qa.quantity(cell[1], 'arcsec')
         if(cellx['unit']==''):
@@ -79,31 +79,31 @@ class cleanhelper:
         elif(type(imsize)==int):
             imsize=[imsize, imsize]
         elif(type(imsize) != list):
-            raise TypeError, "parameter imsize is not understood"
+            raise TypeError, "parameter imsize %s is not understood" % str(imsize)
             
 	elstart=start
         if(mode=='frequency'):
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('Hz') < 0):
-                raise TypeError, "start parameter is not a valid frequency quantity "
+                raise TypeError, "start parameter %s is not a valid frequency quantity " % str(start)
             ###make sure we respect outframe
             if(self.usespecframe != ''):
                 elstart=me.frequency(self.usespecframe, start)
             if(qa.quantity(width)['unit'].find('Hz') < 0):
-                raise TypeError, "width parameter is not a valid frequency quantity "	
+                raise TypeError, "width parameter %s is not a valid frequency quantity " % str(width)	
         elif(mode=='velocity'): 
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('m/s') < 0):
-                raise TypeError, "start parameter is not a valid velocity quantity "
+                raise TypeError, "start parameter %s is not a valid velocity quantity " % str(start)
             ###make sure we respect outframe
             if(self.usespecframe != ''):
                 elstart=me.radialvelocity(self.usespecframe, start)
             if(qa.quantity(width)['unit'].find('m/s') < 0):
-                raise TypeError, "width parameter is not a valid velocity quantity "	
+                raise TypeError, "width parameter %s is not a valid velocity quantity " % str(width)	
         else:
             if((type(width) != int) or 
                (type(start) != int)):
-                raise TypeError, "start, width have to be integers with mode %s" %mode
+                raise TypeError, "start (%s), width (%s) have to be integers with mode %s" % (str(start),str(width),mode)
 
         #####understand phasecenter
         if(type(phasecenter)==str):
@@ -1470,7 +1470,7 @@ class cleanhelper:
 
         # flatten:
         chanfreqs1d = chanfreqs1dx.flatten()        
-        # despite what I was told, flatten() does not sort.
+        # flatten() does not sort.
         chanfreqs1d.sort()
         chanfreqs0.sort()
                 
@@ -1478,6 +1478,10 @@ class cleanhelper:
         # and we can start to parse start/width/nchan in a mode-dependent way:
 
 
+        # noninteractive clean(mode="freq") passes start=0 as default.
+        if mode!="channel" and start==0:
+            start=""
+ 
         # copy these params - we may change them
         locstart=start
         locwidth=width
@@ -1488,7 +1492,7 @@ class cleanhelper:
         # otherwise convert start/width from vel to freq, save original units.
         # do the conversion in the USER-SPECIFIED outframe 
         # if frame='', convertvf will use dataspecframe
- 
+
         if type(start)==str:  
             instartunit=qa.quantity(start)['unit']            
             if(qa.quantity(start)['unit'].find('m/s') > -1):                
@@ -1518,7 +1522,7 @@ class cleanhelper:
             if locstart>=len(chanfreqs0) or locstart<0:
                 raise TypeError, "Start channel is outside the first spw"
             if type(locstart)==int:
-                # GAAAH - in noninteractive mode, default start=0 instead of "" that it should be!!!
+                # in noninteractive mode, default start=0 instead of ""
                 if mode=="velocity" and locstart==0:
                     fstart = chanfreqs1d[-1]
                 else:
@@ -1601,7 +1605,7 @@ class cleanhelper:
             # width was being used to calculate the output chan width, then part of the 
             # last chan may be cut off.
             nchan = int(round(bw/abs(finc)))+1   # XXX could argue for ceil here
-        
+
         # sanity checks:
         fend = fstart + finc*(nchan-1) 
         if fend >= (chanfreqs1d[-1]+abs(finc)):
@@ -1629,7 +1633,10 @@ class cleanhelper:
             # XXX depending on how this gets used, we probably needs checks here to convert
             # from quantity strings to channel indices.  Check for strange behaviour.
             if start=="":
-                retstart=0
+                # here, we can make the default start be the first *selected* channel
+                retstart = chanind0[1]
+                # or we can make it be zero:
+                # retstart=0
             else:
                 retstart=start
             if width=="":
