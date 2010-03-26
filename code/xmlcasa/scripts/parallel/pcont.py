@@ -272,6 +272,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
     os.system('rm -rf '+'tempmodel')
     if(not contclean):
+        print "Removing ", model, 'and', imagename+'.image'
         os.system('rm -rf '+model)
         os.system('rm -rf '+imagename+'.image')
     ###num of cpu per node
@@ -283,7 +284,6 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     print 'output will be in directory', owd
     for hostname in hostnames:
         c.start_engine(hostname,numcpu,owd)
-    pdb.set_trace()
     numcpu=numcpu*len(hostnames)
     ###spw and channel selection
     spwsel,startsel,nchansel=findchansel(msname, spwids, numcpu)
@@ -344,7 +344,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
-            #c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
+            c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
             runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel[k])+', numchan='+str(nchansel[k])+', field="'+str(field)+'", spw='+str(spwsel[k])+', freq='+freq+', band='+band+', imname='+imnam+')'
             print 'command is ', runcomm
             out[k]=c.odo(runcomm,k)
