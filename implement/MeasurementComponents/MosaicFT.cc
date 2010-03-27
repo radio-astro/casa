@@ -178,6 +178,8 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 						     "SF");
     }
     freqInterpMethod_p=other.freqInterpMethod_p;
+	spwChanSelFlag_p.resize();
+	spwChanSelFlag_p=other.spwChanSelFlag_p;
 
   };
   return *this;
