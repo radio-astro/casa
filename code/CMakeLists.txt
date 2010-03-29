@@ -778,7 +778,11 @@ add_dependencies( inst
           alma
           asdm2MS
           oldalma
-          oldasdm2MS )
+          oldasdm2MS 
+	  MS2asdm
+	  harvestrn
+	  harvestrr
+	  )
 
 
 
