@@ -38,7 +38,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         antenna=''
         scan=''
 
-    
+    # handle mode='mfs' explicitly
+    if (mode=='mfs'):
+        start=0
+
     try:
         if nterms > 1:
             print '***WARNING: Multi-term MFS imaging algorithm is new and under active development.  Use it on a shared risk basis.'
