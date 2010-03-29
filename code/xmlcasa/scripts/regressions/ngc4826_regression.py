@@ -400,29 +400,30 @@ outfile='n4826.'+datestring+'.log'
 logfile=open(outfile,'w')
 
 print >>logfile,'********** Regression ***********'
-print >>logfile,'*                               *'
-if (diff_cal22apr<0.08): print >>logfile,'* Passed cal mean amp (22apr)'
-print >>logfile,'--Cal mean amp (22apr) '+str(thistest_cal_22apr)+','+str(calmean22)
-if (diff_src22apr<0.08): print >>logfile,'* Passed src mean amp (22apr)'
-print >>logfile,'--Src mean amp (22apr) '+str(thistest_src_22apr)+','+str(srcmean22)
-if (diff_calmax22<0.08): print >>logfile,'* Passed cal image max (22apr)'
-print >>logfile,'--Image max (cal;22apr) '+str(im_calmax22)+','+str(calmax22)
-if (diff_srcmax22<0.08): print >>logfile,'* Passed src image max (22apr)'
-print >>logfile,'--Image max (src;22apr): '+str(im_srcmax22)+','+str(srcmax22)
-if (diff_cal16apr<0.08): print >>logfile,'* Passed cal mean amp (16apr)'
-print >>logfile,'--Cal mean amp (16apr) '+str(thistest_cal_16apr)+','+str(calmean16)
-if (diff_src16apr<0.08): print >>logfile,'* Passed src mean amp (16apr)'
-print >>logfile,'--Src mean amp (16apr) '+str(thistest_src_16apr)+','+str(srcmean16)
-if (diff_calmax16<0.08): print >>logfile,'* Passed cal image max (16apr)'
-print >>logfile,'--Image max (cal;16apr): '+str(im_calmax16)+','+str(calmax16)
-if (diff_srcmax16<0.08): print >>logfile,'* Passed src image max (16apr)'
-print >>logfile,'--Image max (src;16apr): '+str(im_srcmax16)+','+str(srcmax16)
-if (diff_src<0.08): print >>logfile,'* Passed src mean amplitude test'
-print >>logfile,'--Src mean amp '+str(thistest_src)+','+str(srcmean)
-if (diff_immax<0.08): print >>logfile,'* Passed image max test'
-print >>logfile,'--Image max '+str(thistest_immax)+','+str(immax)
-if (diff_imrms<0.08): print >>logfile,'* Passed image rms test'
-print >>logfile,'--Image rms '+str(thistest_imrms)+','+str(imrms)
+print >>logfile,'* (Values: got, then expected)  *'
+statstrs = {True: 'Passed', False: 'FAILED'}
+print >>logfile, '*', statstrs[diff_cal22apr<0.08], 'cal mean amp (22apr)'
+print >>logfile,'--Cal mean amp (22apr) '+str(thistest_cal_22apr)+', '+str(calmean22)
+print >>logfile, '*', statstrs[diff_src22apr<0.08], 'src mean amp (22apr)'
+print >>logfile,'--Src mean amp (22apr) '+str(thistest_src_22apr)+', '+str(srcmean22)
+print >>logfile, '*', statstrs[diff_calmax22<0.08], 'cal image max (22apr)'
+print >>logfile,'--Image max (cal;22apr) '+str(im_calmax22)+', '+str(calmax22)
+print >>logfile, '*', statstrs[diff_srcmax22<0.08], 'src image max (22apr)'
+print >>logfile,'--Image max (src;22apr): '+str(im_srcmax22)+', '+str(srcmax22)
+print >>logfile, '*', statstrs[diff_cal16apr<0.08], 'cal mean amp (16apr)'
+print >>logfile,'--Cal mean amp (16apr) '+str(thistest_cal_16apr)+', '+str(calmean16)
+print >>logfile, '*', statstrs[diff_src16apr<0.08], 'src mean amp (16apr)'
+print >>logfile,'--Src mean amp (16apr) '+str(thistest_src_16apr)+', '+str(srcmean16)
+print >>logfile, '*', statstrs[diff_calmax16<0.08], 'cal image max (16apr)'
+print >>logfile,'--Image max (cal;16apr): '+str(im_calmax16)+', '+str(calmax16)
+print >>logfile, '*', statstrs[diff_srcmax16<0.08], 'src image max (16apr)'
+print >>logfile,'--Image max (src;16apr): '+str(im_srcmax16)+', '+str(srcmax16)
+print >>logfile, '*', statstrs[diff_src<0.08], 'src mean amplitude test'
+print >>logfile,'--Src mean amp '+str(thistest_src)+', '+str(srcmean)
+print >>logfile, '*', statstrs[diff_immax<0.08], 'image max test'
+print >>logfile,'--Image max '+str(thistest_immax)+', '+str(immax)
+print >>logfile, '*', statstrs[diff_imrms<0.08], 'image rms test'
+print >>logfile,'--Image rms '+str(thistest_imrms)+', '+str(imrms)
 
 if ((diff_cal22apr<0.08) & (diff_src22apr<0.08) & (diff_cal16apr<0.08) & (diff_src16apr<0.08) &(diff_src<0.08) & (diff_immax<0.08) & (diff_imrms<0.08)):
 	regstate=True
