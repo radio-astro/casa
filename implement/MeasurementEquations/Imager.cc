@@ -2237,7 +2237,6 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       Int prvspwid=-1;
       for (uInt i=0;i<nrow;i++) {
         Vector<Int> sel = chansels.row(i);
-        cerr<<"chansel row:"<<sel<<endl;
         Int spwid = sel[0];
 		if (spwid != prvspwid){
 			nselspw++;
