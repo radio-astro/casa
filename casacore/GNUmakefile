@@ -654,7 +654,7 @@ endif
 ###
 components: coordinates tables $(COMPONENTSLNK_PATH)
 
-$(COMPONENTSLIB_PATH): $(LASTVERSION) $(COORDINATESLIB_PATH) $(TABLESLIB_PATH) $(COMPONENTSLIB) $(COMPONENTSINC)
+$(COMPONENTSLIB_PATH): $(LASTVERSION) $(COORDINATESLNK_PATH) $(TABLESLNK_PATH) $(COMPONENTSLIB) $(COMPONENTSINC)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),components)
 	@$(call orphan-headers,$(INCDIR),components)
@@ -670,7 +670,7 @@ endif
 ###
 coordinates: measures fits $(COORDINATESLNK_PATH)
 
-$(COORDINATESLIB_PATH): $(LASTVERSION) $(MEASURESLIB_PATH) $(FITSLIB_PATH) $(COORDINATESLIB) $(COORDINATESINC)
+$(COORDINATESLIB_PATH): $(LASTVERSION) $(MEASURESLNK_PATH) $(FITSLNK_PATH) $(COORDINATESLIB) $(COORDINATESINC)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),coordinates)
 	@$(call orphan-headers,$(INCDIR),coordinates)
@@ -686,7 +686,7 @@ endif
 ###
 lattices: scimath $(LATTICESLNK_PATH) 
 
-$(LATTICESLIB_PATH): $(LASTVERSION) $(SCIMATHFLIB_PATH) $(LATTICESLIB) $(LATTICESINC)
+$(LATTICESLIB_PATH): $(LASTVERSION) $(SCIMATHFLNK_PATH) $(TABLESLNK_PATH) $(LATTICESLIB) $(LATTICESINC)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),lattices)
 	@$(call orphan-headers,$(INCDIR),lattices)
@@ -702,7 +702,7 @@ endif
 ###
 images: components lattices fits mirlib $(IMAGESLNK_PATH)
 
-$(IMAGESLIB_PATH): $(LASTVERSION) $(COMPONENTSLIB_PATH) $(LATTICESLIB_PATH) $(FITSLIB_PATH) $(MIRLIB_PATH) $(IMAGESLIB) $(IMAGESINC)
+$(IMAGESLIB_PATH): $(LASTVERSION) $(COMPONENTSLNK_PATH) $(LATTICESLNK_PATH) $(FITSLNK_PATH) $(MIRLNK_PATH) $(IMAGESLIB) $(IMAGESINC)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),images)
 	@$(call orphan-headers,$(INCDIR),images)
@@ -718,7 +718,7 @@ endif
 ###
 tables: casa $(TABLESLNK_PATH)
 
-$(TABLESLIB_PATH): $(LASTVERSION) $(CASALIB_PATH) $(TABLESLIB) $(TABLESINC)
+$(TABLESLIB_PATH): $(LASTVERSION) $(CASALNK_PATH)  $(SCIMATHLNK_PATH) $(TABLESLIB) $(TABLESINC)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),tables)
 	@$(call orphan-headers,$(INCDIR),tables)
@@ -745,7 +745,7 @@ ifeq "$(os)" "linux"
 	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads $(FC_LIB)
 endif
 
-$(SCIMATHFLIB_PATH): $(SCIMATHFLIB)
+$(SCIMATHFLIB_PATH): $(SCIMATHFLIB) $(CASALNK_PATH)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),scimath)
 ifeq "$(os)" "darwin"
@@ -772,7 +772,7 @@ ifeq "$(os)" "linux"
 	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
 
-$(MEASURESFLIB_PATH):  $(MEASURESFLIB)
+$(MEASURESFLIB_PATH):  $(MEASURESFLIB) $(SCIMATHLNK_PATH) $(TABLESLNK_PATH)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),measures)
 ifeq "$(os)" "darwin"
@@ -804,7 +804,7 @@ endif
 ###
 fits: scimath tables $(FITSLNK_PATH)
 
-$(FITSLIB_PATH): $(LASTVERSION) $(SCIMATHLNK_PATH) $(TABLESLNK_PATH) $(FITSLIB) $(FITSINC)
+$(FITSLIB_PATH): $(LASTVERSION) $(SCIMATHLNK_PATH) $(TABLESLNK_PATH) $(LATTICESLNK_PATH) $(FITSLIB) $(FITSINC)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),fits)
 	@$(call orphan-headers,$(INCDIR),fits)
