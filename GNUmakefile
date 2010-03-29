@@ -804,7 +804,7 @@ endif
 ###
 fits: scimath tables $(FITSLNK_PATH)
 
-$(FITSLIB_PATH): $(LASTVERSION) $(SCIMATHLNK_PATH) $(TABLESLNK_PATH) $(LATTICESLNK_PATH) $(FITSLIB) $(FITSINC)
+$(FITSLIB_PATH): $(LASTVERSION) $(SCIMATHLNK_PATH) $(TABLESLNK_PATH) $(MEASURESLNK_PATH) $(MEASURESFLNK_PATH) $(FITSLIB) $(FITSINC)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),fits)
 	@$(call orphan-headers,$(INCDIR),fits)
