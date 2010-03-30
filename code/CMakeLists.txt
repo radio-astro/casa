@@ -325,13 +325,49 @@ set( X11_INCLUDE_DIRS ${X11_INCLUDE_DIR} )
 
 #X11LIB   := -lXt -lXmu -lX11 -lXext
 
+
+# Since we are using the C++ linker, the Fortran runtime libraries must be explicitly
+# linked in.
+
+if( NOT FORTRAN_LIBRARIES )
+
+  message( STATUS "Looking for Fortran runtime libraries" )
+  set( _try  ${CMAKE_BINARY_DIR}/try_fortran.cc )
+  file( WRITE ${_try}
+    "int main() { return 0; }\n"
+    )
+  
+  try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
+    CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lgfortran"
+    )
+  try_compile( _have_g2c ${CMAKE_BINARY_DIR} ${_try}
+    CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lg2c"
+    )
+ 
+  if( _have_gfortran )
+    set( FORTRAN_LIBRARIES -lgfortran 
+      CACHE STRING "Fortran library linker option" FORCE )
+    message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
+  elseif( _have_g2c )
+    set( FORTRAN_LIBRARIES -lg2c
+      CACHE STRING "Fortran library linker option" FORCE )
+    message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
+  else()
+    set( FORTRAN_LIBRARIES ""
+      CACHE STRING "Fortran library linker option" FORCE )
+    message( STATUS "Looking for Fortran runtime libraries -- <none>" )
+    # Not a fatal error because it might work, if all Fortran dependencies were
+    # already linked statically to the Fortran runtime...
+  endif()
+endif()
+
 # PGPLOT (FORTRAN plotting package).
 # depends on X11
 casa_find( PGPLOT
   VERSION 5.3.1
   INCLUDES cpgplot.h
   LIBS pgplot cpgplot
-  DEPENDS X11 )
+  DEPENDS X11 FORTRAN )
 
 # WCSLIB
 casa_find( WCSLIB
@@ -342,29 +378,6 @@ casa_find( WCSLIB
   CPP_VERSION WCSLIB_VERSION
   DEFINITIONS -DSIGNBIT 
   DEPENDS PGPLOT )
-
-# pgsbox is a Fortran library. Since we are using the C++ linker,
-# the Fortran runtime libraries must be explicitly linked in.
-# There must be a better way of doing this...
-if( APPLE )
-  if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-    set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} ${casa_packages}/lib/gcc42/libgfortran.dylib )
-  endif()
-elseif( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-  if( EXISTS /usr/lib64/libg2c.so.0 )
-    set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib64/libg2c.so.0 )
-  endif()
-  if( EXISTS /usr/lib64/libgfortran.so.1 )
-    set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib64/libgfortran.so.1 )
-  endif()
-else()
-  if( EXISTS /usr/lib/libg2c.so.0 )
-    set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib/libg2c.so.0 )
-  endif()
-  if( EXISTS /usr/lib/libgfortran.so.1 )
-    set( WCSLIB_LIBRARIES ${WCSLIB_LIBRARIES} /usr/lib/libgfortran.so.1 )
-  endif()
-endif()
 
 
 # BLAS
@@ -641,20 +654,12 @@ if( NOT Boost_FOUND )
 endif()
 
 # RPFITS (Fortran)
-# On OSX 10.6 only, libgfortran needs to be linked in.
-set( RPFITS_FORTRAN_LIBRARIES "" )
-set( RPFITS_FORTRAN_INCLUDE_DIRS /usr/include )
-if( APPLE )
-  if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
-    set( RPFITS_FORTRAN_LIBRARIES -lgfortran )
-  endif()
-endif()
 casa_find( RPFITS
   VERSION 2.11
   INCLUDES RPFITS.h
   LIBS rpfits
   RUN_VERSION names_.rpfitsversion
-  DEPENDS RPFITS_FORTRAN 
+  DEPENDS FORTRAN 
 )
 
 # Readline
