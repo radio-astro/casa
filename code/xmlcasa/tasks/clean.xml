@@ -231,7 +231,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="any" name="start" subparam="true">
 	    <description>start of output spectral dimension</description>
 	    <any type="variant"/>
-	    <value type="string">""</value>
+	    <value type="int">0</value>
     </param>
 <!--========================================================= -->
     <param type="any" name="width" subparam="true">
@@ -463,7 +463,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	      </equals>
 	      <equals value="channel">
 		<default param="nchan"><value>-1</value></default>
-		<default param="start"><value>""</value>
+		<default param="start"><value type="string"></value>
 		  <description>Begin the output cube at the frequency of this channel in the MS</description>
 		  <!--
 		     <description>first channel to use (0=first channel in first SpW of the MS)</description>
