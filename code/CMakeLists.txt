@@ -45,6 +45,8 @@ if( CMAKE_Fortran_COMPILER STREQUAL CMAKE_Fortran_COMPILER-NOTFOUND )
   message( FATAL_ERROR "Could not find fortran compiler. Please check!" )
 endif()
 
+casa_always_install()
+
 #
 # Build options
 #

@@ -31,7 +31,9 @@
 #
 # For this to work, all other targets must be added as dependencies
 # of this "inst" target. This is done in the macro's below using add_dependencies()
-add_custom_target( inst ALL ${CMAKE_BUILD_TOOL} install/fast )
+macro( casa_always_install )
+  add_custom_target( inst ALL ${CMAKE_BUILD_TOOL} install/fast )
+endmacro()
 
 
 #
