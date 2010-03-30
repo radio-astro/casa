@@ -145,12 +145,17 @@ imagecal1time=time.time()
 print '--image src - 22apr98--'
 default('clean')
 clean(vis='src.split.ms',imagename='tmosaicb',
-       nchan=30,start=47,width=4,
+      nchan=30,start=47,width=4,
 #       spw=range(0,3),field=range(7),
-       spw='0,1,2',field='0,1,2,3,4,5,6',
-       cell=[1.,1.],imsize=[256,256],
-       stokes='I',mode='channel',
-       psfmode='clark',imagermode='mosaic', ftmachine='mosaic', niter=300,scaletype='SAULT', pbcor=False, minpb=0.01,cyclefactor=1.0, calready=False)
+      spw='0,1,2',field='0,1,2,3,4,5,6',
+      cell=[1.,1.],imsize=[256,256],
+      stokes='I',mode='channel',
+      psfmode='clark',imagermode='mosaic', ftmachine='mosaic',
+      niter=300,
+      scaletype='SAULT',
+      pbcor=False,
+      minpb=0.01,
+      cyclefactor=2.0, calready=False, mask=[66,72,195,185])
 imagesrc1time=time.time()
 ## Write image to a fits file:
 ##
