@@ -239,7 +239,7 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
     if(fillRecord){
       outRec.define("numrecords", nrow());
       outRec.define("IntegrationTime", exposTime);
-      outRec.define("StartTime", startTime/C::day);
+      outRec.define("BeginTime", startTime/C::day);
       outRec.define("EndTime", stopTime/C::day);
       outRec.define("timeref", timeref);
     }
