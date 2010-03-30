@@ -622,13 +622,13 @@ Constraints
       <equals type="bool" value="False" />
     </when>
     <when param="transform">
+      <equals type="bool" value="False" />
       <equals type="bool" value="True">
         <default param="freqframe"><value type="string" /></default>
         <default param="restfreq"><value type="string"></value></default>
         <default param="veldef"><value type="string">RADIO</value></default>
         <default param="shift"><value type="doubleArray"><value>0.0</value><value>0.0</value></value></default>
       </equals>
-      <equals type="bool" value="False" />
     </when>
     <when param="extendflag">
       <equals type="bool" value="False" />

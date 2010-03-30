@@ -147,6 +147,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <constraints>
             <when param="specunit">
+                <equals type="string" value=""/>
                 <equals type="string" value="channel"/>
                 <equals type="string" value="GHz"/>
                 <equals type="string" value="MHz"/>

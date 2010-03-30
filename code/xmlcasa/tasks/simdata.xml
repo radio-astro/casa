@@ -303,7 +303,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <!-- in simdata2, cell will get listed in setup for ignorecoord, 
 	   as well as in cleal -->
       <when param="noise_thermal">
-	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">	  
 	  <default param="noise_mode"><value>"tsys-atm"</value></default>
 	  <default param="user_pwv"><value>1.</value></default>
@@ -311,6 +310,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	  <default param="t_sky"><value>263.</value></default>
 	  <default param="tau0"><value>0.1</value></default>
 	</equals>
+	<equals type="bool" value="False"/>
       </when>
       <!--      -->
       <when param="weighting">

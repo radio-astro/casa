@@ -177,8 +177,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 </equals>
             </when>
             <when param="fitmode">
-                <equals value="list"/>
-                <equals value="interact"/>
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
                         <default param="min_nchan"><value>3</value></default>
@@ -186,6 +184,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="box_size"><value>0.2</value></default>
                         <default param="edge"><value type='vector'><value>0</value></value></default>
                 </equals>
+                <equals value="list"/>
+                <equals value="interact"/>
             </when>
     </constraints>
 
