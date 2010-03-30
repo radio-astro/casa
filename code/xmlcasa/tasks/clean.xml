@@ -765,13 +765,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  For mode='channel', default=1; &gt;1 indicates channel averaging
                  example: width=4.
                  For mode=' 'velocity' or 'frequency', default=''; width of
-                   first input channel, or more precisely, the difference 
-                   in frequencies between the first two selected channels. 
-                   (for example if channels 1 and 3 are selected with spw, 
-                    then the default width will be the difference between their
-                    frequencies, and not the width of channel 1)
-                   When not using the default, one must give units
+                 first input channel, or more precisely, the difference 
+                 in frequencies between the first two selected channels. 
+                 (for example if channels 1 and 3 are selected with spw, 
+                  then the default width will be the difference between their
+                  frequencies, and not the width of channel 1)
+                 When not using the default, one must give units
                  examples: width='1.0km/s', or width='24.2kHz'.
+                 Setting width>0 gives channels of increasing frequency for 
+                 mode='frequency', and increasing velocity for mode='velocity'. 
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'nearest'  HOWEVER, 'linear' is generally recommended
