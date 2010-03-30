@@ -637,23 +637,50 @@ if( XERCES_VERSION VERSION_EQUAL   3.0 OR
   message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
 endif()
 
+#
 # Boost
-if( APPLE )
-  set( boost_components regex program_options filesystem system )
-else()
-  set( boost_components regex program_options filesystem )
-endif()
+#
 # Use the Boost finder that ships with CMake. It needs to be told where boost is.
+# If the version is >= 1.35, require also boost-system.
+#
+# Note, find_package( Boost ... ) must be called for every cmake invocation
+# in order to setup non-cached variables
+#
 if( NOT BOOST_ROOT )
   set( BOOST_ROOT ${casa_packages} )
 endif()
-find_package( Boost 1.32 REQUIRED ${boost_components} )
-# The macro does not implement version check
+
+set( boost_components regex program_options filesystem )
+find_package( Boost REQUIRED ${boost_components} )
+
 if( NOT Boost_FOUND )
   message( FATAL_ERROR "Boost could not be found. Please check!" )
 endif()
 
+# For boost >= 1.35, we need to link also to boost-system
+if( Boost_VERSION GREATER 103499 )
+
+  # Force redetection by resetting these variables
+  if( NOT Boost_SYSTEM_FOUND )
+    message( STATUS "Boost version (${Boost_VERSION}) is 1.35.0 or newer" )
+    set( Boost_FOUND False )
+    set( Boost_INCLUDE_DIR "" )
+  endif()
+  set( boost_components regex program_options filesystem system )
+  find_package( Boost REQUIRED ${boost_components} )
+
+  if( NOT Boost_FOUND )
+    message( FATAL_ERROR "Boost-system could not be found. Please check!" )
+  endif()
+endif() 
+
+if( NOT Boost_VERSION GREATER 103199 AND NOT CASA_IGNORE_VERSION )
+  message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 103200 (1.32.0) or newer. Please check!" )
+endif()
+
+#
 # RPFITS (Fortran)
+#
 casa_find( RPFITS
   VERSION 2.11
   INCLUDES RPFITS.h
