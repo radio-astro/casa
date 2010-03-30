@@ -1060,7 +1060,7 @@ the ms definition itself. -->
     
      <param type="any" direction="out" name="header">
      <any type="record"/>
-     <description>Header information (PARAMETER IGNORED!!!)</description>
+     <description>Header information (PARAMETER IGNORED..its an output)</description>
      </param>
    </output>
    <input> 
@@ -1076,7 +1076,6 @@ the ms definition itself. -->
     system logger. The verbose argument provides some control on how
     much information is displayed.
 
-    RETURNING NON-EMPTY HEADER ARGUMENT NOT IMPLENTED!!!
 
     This function can also return, in the header argument, a record
     containing the following fields.
@@ -1089,7 +1088,11 @@ the ms definition itself. -->
     \begin{verbatim}
       
       ms.open('3C273XC1.MS')
-      ms.summary(verbose=True)
+      outr=ms.summary(verbose=True)
+      ###print the begining of observation in this ms
+      print qa.time(qa.quantity(outr['header']['BeginTime'],'d'), form='ymd')
+      ###print  a dictionary of the info of scan 1
+      outr['header']['scan_1']
     \end{verbatim}
     This example will send a verbose summary of the measurement
     set to the logger.
