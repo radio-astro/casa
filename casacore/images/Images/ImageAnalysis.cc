@@ -1529,8 +1529,9 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 	// Set auto-threshold at 5-sigma
 	if (threshold <= 0.0) {
 		LatticeStatistics<Float> stats(subImage);
-		Array<Float> out;
+		Array<Double> out;
 		//Bool ok = stats.getSigma (out, True); //what did this do?
+		Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
 		threshold = 5.0 * out(IPosition(subImage.ndim(), 0));
 	}
 
