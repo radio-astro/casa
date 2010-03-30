@@ -111,10 +111,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </when>
 
             <when param="applyflags">
-                <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
                     <default param="tbuff"><value type="double">1.0</value></default>
                 </equals>
+                <equals type="bool" value="False"/>
             </when>
     </constraints>
 
