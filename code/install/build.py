@@ -473,7 +473,7 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.comment("It is essential that 3rd-party/bin comes before other stuff in your $PATH.")
         b.set_env('PATH', prefix, "/../", third, "/bin:$PATH")
         b.set_env('PATH', "$PATH:/Applications/CMake\\ 2.8-0.app/Contents/bin")
-        b.comment("This is a workaround for QWT, CFITSIO and CASACore libraries not containing the proper rpaths")
+        b.comment("This is a workaround for QWT and CASACore libraries not containing the proper rpaths (Note: Do not set DYLD_LIBRARY_PATH or something else might break.)")
         if architecture == "10.5":
             qwtdir = "qwt-5.2.0"
         else:
@@ -559,12 +559,9 @@ def build_casa(b, url, revision, type, ops, architecture):
     b.chdir("..")
 
 
-    # Build CASA non-core
-
-    # Set CASAPATH and PATH and LD_LIBRARY_PATH. (An alternative to setting these manually is to source ", prefix, "/casainit.sh)
-    # Here 'garching' is the sitename (anything should work)
-    # Here 'alma' is the machine's hostname (anything should work)
-    b.set_env('CASAPATH', "", prefix, " ", builddir, " garching alma")
+    b.comment("Build CASA non-core")
+    b.comment("Define the two first words of the environment variable CASAPATH. This variable is not used by the build system, but you need to define it in order to run CASA. (For backwards compatibility, it does not hurt if you define the 3rd and 4th words also, but anything past the 2nd word is not used.)")
+    b.set_env('CASAPATH', "", prefix, " ", builddir)
     b.set_env('PATH', "$PATH:", prefix, "/", builddir, "/bin")
 
     if type != "test":
