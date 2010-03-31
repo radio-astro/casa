@@ -2210,14 +2210,18 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       indgen(datafieldids_p);
     }
     //Now lets see what was selected as spw and match it with datadesc
-    dataspectralwindowids_p.resize();
-    dataspectralwindowids_p=thisSelection.getSpwList();
+	//
+	// getSpwList could return duplicated spw ids
+	// when multiple channel ranges are specified.
+    //dataspectralwindowids_p.resize();
+    //dataspectralwindowids_p=thisSelection.getSpwList();
 	//get channel selection in spw
     Matrix<Int> chansels=thisSelection.getChanList();
-    //cout<<"chansels="<<chansels<<endl;
+    //cout<<"chansels="<<chansels<<" spwstring="<<spwstring<<endl;
 	//convert the selection into flag
 	uInt nms = 1;
 	uInt nrow = chansels.nrow();
+    dataspectralwindowids_p.resize();
 	const ROMSSpWindowColumns spwc(ms_p->spectralWindow());
 	uInt nspw = spwc.nrow();
 	const ROScalarColumn<Int> spwNchans(spwc.numChan());
@@ -2226,20 +2230,25 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     for (uInt i=0;i<nchanvec.nelements();i++) {
 	  maxnchan=max(nchanvec[i],maxnchan);
     }	  
+
 	spwchansels_p.resize(nms,nspw,maxnchan);
 	uInt nselspw=0;
 	if (nrow==0) {
 		//no channel selection, select all channels
 		spwchansels_p=1;
+        dataspectralwindowids_p=thisSelection.getSpwList();
 	}
 	else {
-	  spwchansels_p=0;
+	  spwchansels_p=0; //deselect
       Int prvspwid=-1;
+	  Vector<Int> selspw;
       for (uInt i=0;i<nrow;i++) {
         Vector<Int> sel = chansels.row(i);
         Int spwid = sel[0];
 		if (spwid != prvspwid){
 			nselspw++;
+			selspw.resize(nselspw);
+			selspw[nselspw-1]=spwid;
 		}
         uInt minc= sel[1];
         uInt maxc = sel[2];
@@ -2252,6 +2261,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
         }
 		prvspwid=spwid;
       }
+      dataspectralwindowids_p=selspw;
 	}
 	//cout<<"spwchansels_p="<<spwchansels_p<<endl;
 
@@ -2276,6 +2286,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  // no need for this- TT
       //check if we can find channel selection in the spw string
       //Matrix<Int> chanselmat=thisSelection.getChanList();
+	  //
 	  // This not correct for multiple channel ranges TT
       //if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
       if(nselspw==dataspectralwindowids_p.nelements()){
@@ -2285,17 +2296,50 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	dataStart_p.resize(dataspectralwindowids_p.nelements());
 	dataNchan_p.resize(dataspectralwindowids_p.nelements());
 	for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
-	  //dataStep_p[k]=chanselmat.row(k)(3);
 	  dataStep_p[k]=1;
-	  //if(dataStep_p[k] < 1)
-	  //  dataStep_p[k]=1;
+	  if (nrow > 0) {
+        dataStep_p[k]=chansels.row(k)(3);
+	  }
+	  else {
+	  //dataStep_p[k]=1;
+	    if(dataStep_p[k] < 1)
+	      dataStep_p[k]=1;
+	  }
 	  //dataStart_p[k]=chanselmat.row(k)(1);
 	  dataStart_p[k]=0;
-	  //dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k])/Double(dataStep_p[k])))+1;
 	  dataNchan_p[k]=nchanvec(k);
+	  //find start
+	  Bool first =True;
+	  uInt nchn = 0;
+	  uInt lastchan;
+      for (uInt j=0 ; j < nchanvec(k); j++) {
+  		if (spwchansels_p(0,k,j)==1) {
+	      if (first) {
+		    dataStart_p[k]=j;
+	        first = False;
+		  }
+		  lastchan=j;
+		  nchn++;
+		}	
+	  }
+	  dataNchan_p[k]=Int(ceil(Double(lastchan-dataStart_p[k])/Double(dataStep_p[k])))+1;
+	  //dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k])/Double(dataStep_p[k])))+1;
 
 	  //if(dataNchan_p[k]<1)
 	  //  dataNchan_p[k]=1;	  
+
+	  //cout<<"modified start="<<dataStart_p[k]<<endl;
+	  //cout<<"modified nchan="<<dataNchan_p[k]<<endl;
+	  //
+	  //Since msselet will be applied to the data before flags from spwchansels_p
+	  //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
+	  Cube<Int> spwchansels_tmp;
+	  spwchansels_tmp.resize(spwchansels_p.shape());
+	  spwchansels_tmp=0;
+	  for (uInt j=0  ; j < nchanvec(k)-dataStart_p[k]; j++){
+        spwchansels_tmp(0,k,j) = spwchansels_p(0,k,j+dataStart_p[k]);
+	  }
+	  spwchansels_p = spwchansels_tmp;
 	}
       }
     }
