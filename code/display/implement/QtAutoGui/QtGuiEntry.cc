@@ -66,14 +66,7 @@ void QtSliderBase::constructBase(QDomElement& ele,  QSlider* slider,
   floatrng_ = ele.attribute("ptype") == "floatrange";
 	// Whether widget should emit float or integer values.
   
-  QMenu*   mn      = new QMenu;  
-  QAction* origAct = new QAction("Original", this);
-  mn->addAction(origAct);
-  menuBtn_->setMenu(mn);
-  connect(menuBtn_, SIGNAL(clicked()),  menuBtn_, SLOT(showMenu()) );
-
   connect(slider_, SIGNAL(valueChanged(int)),     SLOT(slChg(int)) );
-  connect(origAct, SIGNAL(triggered()),           SLOT(setOriginal()));
 
   // Store main state.
  
@@ -219,7 +212,7 @@ void QtSliderBase::getAttr(const QDomElement& ele,
 QtSliderEditor::QtSliderEditor(QDomElement& ele, QWidget *parent) 
 	      : QtSliderBase(parent) {
   setupUi(this);		// Creates ui widgets such as slider.
-  constructBase(ele, slider, nameLabel, tool);	// sets up base class.
+  constructBase(ele, slider, nameLabel, 0);	// sets up base class.
   radioButton->hide();	//#dk
   connect(lineEdit, SIGNAL(editingFinished()),  SLOT(edited()) );  }
 
@@ -259,7 +252,7 @@ QtSliderLabel::QtSliderLabel(QDomElement& ele, QWidget *parent)
 	     : QtSliderBase(parent) {
   setupUi(this);		    // Creates ui widgets such as slider.
   radioButton->hide();	//#dk
-  constructBase(ele, slider, nameLabel, tool);  }  // sets up base class.
+  constructBase(ele, slider, nameLabel, 0);  }  // sets up base class.
 
   
 void QtSliderLabel::updateText() {
@@ -304,7 +297,7 @@ QtMinMaxEditor::QtMinMaxEditor(QDomElement &ele, QWidget *parent)
     //connect(lineEdit, SIGNAL(textChanged(QString)),
     //        this, SLOT(display2(QString)) );
     connect(hist, SIGNAL(clicked()), this, SLOT(setHistogram()) );
-    connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
+//  connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
     
     hist->hide();	//#dk -- until this button does something...
 
@@ -316,23 +309,6 @@ QtMinMaxEditor::QtMinMaxEditor(QDomElement &ele, QWidget *parent)
     lineEdit->setText(ele.attribute("value"));
     nameLabel->setText(ele.attribute("listname"));
     nameLabel->setToolTip(ele.attribute("help"));
-    QMenu *mn = new QMenu;
-    QAction *origAct = new QAction("Original", this);
-    connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    mn->addAction(origAct);
-    //#dk QAction *dfltAct = new QAction("default", this);
-    //#dk connect(dfltAct, SIGNAL(triggered()), this, SLOT(setDefault()));
-    //#dk mn->addAction(dfltAct);
-    //#dk QAction *copyAct = new QAction("Copy", this);
-    //#dk connect(copyAct, SIGNAL(triggered()), this, SLOT(setCopy()));
-    //#dk mn->addAction(copyAct);
-    //#dk QAction *pasteAct = new QAction("Paste", this);
-    //#dk connect(pasteAct, SIGNAL(triggered()), this, SLOT(setPaste()));
-    //#dk mn->addAction(origAct);
-    //#dk mn->addAction(dfltAct);
-    //#dk mn->addAction(copyAct);
-    //#dk mn->addAction(pasteAct);
-    tool->setMenu(mn);
     
     orig = lineEdit->text();	// Save original value (for setOriginal()).
 }
@@ -368,7 +344,7 @@ bool QtMinMaxEditor::validate(QString value)
     QStringList list = str.split(",");
     if (list.size() != 2)
     {
-        labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
+//      labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
         return false;
     }
     double d1 = list[0].toDouble(&ok1) ;
@@ -380,11 +356,11 @@ bool QtMinMaxEditor::validate(QString value)
                           + QString::number(d2) + "]");
         emit  itemValueChanged(itemName, lineEdit->text(),
                                QtAutoGui::Set, radioButton->isChecked());
-        labelOk->setPixmap(QPixmap(":/icons/tick.png"));
+//      labelOk->setPixmap(QPixmap(":/icons/tick.png"));
         return true;
     }
     else
-        labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
+//      labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
     return false;
 }
 
@@ -439,28 +415,11 @@ QtLineEditor::QtLineEditor(QDomElement &ele, QWidget *parent)
     //                this,SLOT(display2(QString)));
     connect(lineEdit, SIGNAL(editingFinished()),
             this, SLOT(editingFinished()) );
-    connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
+//  connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
     ptype = ele.attribute("ptype");
     nameLabel->setText(ele.attribute("listname"));
     nameLabel->setToolTip(ele.attribute("help"));
-    QMenu *mn = new QMenu;
-    QAction *origAct = new QAction("Original", this);
-    connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    mn->addAction(origAct);
-    //#dk QAction *dfltAct = new QAction("default", this);
-    //#dk connect(dfltAct, SIGNAL(triggered()), this, SLOT(setDefault()));
-    //#dk mn->addAction(dfltAct);
-    //#dk QAction *copyAct = new QAction("Copy", this);
-    //#dk connect(copyAct, SIGNAL(triggered()), this, SLOT(setCopy()));
-    //#dk mn->addAction(copyAct);
-    //#dk QAction *pasteAct = new QAction("Paste", this);
-    //#dk connect(pasteAct, SIGNAL(triggered()), this, SLOT(setPaste()));
-    //#dk mn->addAction(origAct);
-    //#dk mn->addAction(dfltAct);
-    //#dk mn->addAction(copyAct);
-    //#dk mn->addAction(pasteAct);
-    tool->setMenu(mn);
-    
+
     reSet(ele.attribute("value"));
     
     origValue = lineEdit->text();
@@ -522,8 +481,8 @@ Bool QtLineEditor::validate(QString value) {
     
   
       
-  labelOk->setPixmap(QPixmap(ok?  ":/icons/tick.png" : 
-                                  ":/icons/cross.png" ));
+// labelOk->setPixmap(QPixmap(ok?  ":/icons/tick.png" : 
+//                                 ":/icons/cross.png" ));
   return ok;  }
 
     
@@ -558,7 +517,7 @@ QtCombo::QtCombo(QDomElement &ele, QWidget *parent) :
     radioButton->hide();	//#dk
     itemName = ele.tagName();
     connect(combo, SIGNAL(activated(int)),  SLOT(emitValue()) );
-    connect(tool, SIGNAL(clicked()), tool,  SLOT(showMenu()) );
+//  connect(tool, SIGNAL(clicked()), tool,  SLOT(showMenu()) );
     QString popt = ele.attribute("popt");
     
     if(popt.startsWith("[")) popt.remove(0, 1);
@@ -590,24 +549,6 @@ QtCombo::QtCombo(QDomElement &ele, QWidget *parent) :
     
     nameLabel->setText(ele.attribute("listname"));
     nameLabel->setToolTip(ele.attribute("help"));
-    QMenu *mn = new QMenu;
-    QAction *origAct = new QAction("Original", this);
-    connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    mn->addAction(origAct);
-    
-    //#dk QAction *dfltAct = new QAction("default", this);
-    //#dk connect(dfltAct, SIGNAL(triggered()), this, SLOT(setDefault()));
-    //#dk mn->addAction(dfltAct);
-    //#dk QAction *copyAct = new QAction("Copy", this);
-    //#dk connect(copyAct, SIGNAL(triggered()), this, SLOT(setCopy()));
-    //#dk mn->addAction(copyAct);
-    //#dk QAction *pasteAct = new QAction("Paste", this);
-    //#dk connect(pasteAct, SIGNAL(triggered()), this, SLOT(setPaste()));
-    //#dk mn->addAction(origAct);
-    //#dk mn->addAction(dfltAct);
-    //#dk mn->addAction(copyAct);
-    //#dk mn->addAction(pasteAct);
-    tool->setMenu(mn);
 }
 
 
@@ -660,7 +601,7 @@ QtBool::QtBool(QDomElement &ele, QWidget *parent) :
     radioButton->hide();	//#dk
     itemName = ele.tagName();
     connect(combo, SIGNAL(activated(int)),  SLOT(emitValue()) );
-    connect(tool, SIGNAL(clicked()),  tool, SLOT(showMenu()) );
+//  connect(tool, SIGNAL(clicked()),  tool, SLOT(showMenu()) );
     combo->addItem("false");
     combo->addItem("true");
     combo->setCurrentIndex(1);
@@ -673,24 +614,6 @@ QtBool::QtBool(QDomElement &ele, QWidget *parent) :
     
     nameLabel->setText(ele.attribute("listname"));
     nameLabel->setToolTip(ele.attribute("help"));
-    QMenu *mn = new QMenu;
-    QAction *origAct = new QAction("Original", this);
-    connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    mn->addAction(origAct);
-    
-    //#dk QAction *dfltAct = new QAction("default", this);
-    //#dk connect(dfltAct, SIGNAL(triggered()), this, SLOT(setDefault()));
-    //#dk mn->addAction(dfltAct);
-    //#dk QAction *copyAct = new QAction("Copy", this);
-    //#dk connect(copyAct, SIGNAL(triggered()), this, SLOT(setCopy()));
-    //#dk mn->addAction(copyAct);
-    //#dk QAction *pasteAct = new QAction("Paste", this);
-    //#dk connect(pasteAct, SIGNAL(triggered()), this, SLOT(setPaste()));
-    //#dk mn->addAction(origAct);
-    //#dk mn->addAction(dfltAct);
-    //#dk mn->addAction(copyAct);
-    //#dk mn->addAction(pasteAct);
-    tool->setMenu(mn);
 }
 
 void QtBool::reSet(QString value)
@@ -729,7 +652,7 @@ QtCheck::QtCheck(QDomElement &ele, QWidget *parent) :  QWidget(parent) {
   setupUi(this);
   radioButton->hide();	//#dk
   itemName = ele.tagName();
-  connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
+//connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
     
   QString popt = ele.attribute("popt");
   if(popt.startsWith("[")) popt.remove(0,1);
@@ -752,24 +675,7 @@ QtCheck::QtCheck(QDomElement &ele, QWidget *parent) :  QWidget(parent) {
     
   nameLabel->setText(ele.attribute("listname"));
   nameLabel->setToolTip(ele.attribute("help"));
-  QMenu *mn = new QMenu;
-  QAction *origAct = new QAction("Original", this);
-  connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-  mn->addAction(origAct);
-    
-  //#dk QAction *dfltAct = new QAction("default", this);
-  //#dk connect(dfltAct, SIGNAL(triggered()), this, SLOT(setDefault()));
-  //#dk mn->addAction(dfltAct);
-  //#dk QAction *copyAct = new QAction("Copy", this);
-  //#dk connect(copyAct, SIGNAL(triggered()), this, SLOT(setCopy()));
-  //#dk mn->addAction(copyAct);
-  //#dk QAction *pasteAct = new QAction("Paste", this);
-  //#dk connect(pasteAct, SIGNAL(triggered()), this, SLOT(setPaste()));
-  //#dk mn->addAction(origAct);
-  //#dk mn->addAction(dfltAct);
-  //#dk mn->addAction(copyAct);
-  //#dk mn->addAction(pasteAct);
-  tool->setMenu(mn);  }
+}
 
 
 void QtCheck::checkboxChanged(int newState) {
@@ -877,7 +783,7 @@ QtAdjustmentTop::QtAdjustmentTop(QtAutoGui *parent, QString name)
     restoreButton->setToolTip("Load the display options from a file");
     connect(restoreButton, SIGNAL(clicked()), this, SLOT(load()) );
     connect(dismissButton, SIGNAL(clicked()), this, SLOT(close()) );
-    connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
+//  connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
     connect(dataName, SIGNAL(textChanged(QString)),
             this, SLOT(dataNameChanged(QString)) );
     dataName->setText(name);
@@ -888,32 +794,7 @@ QtAdjustmentTop::QtAdjustmentTop(QtAutoGui *parent, QString name)
     saveButton->hide();
     restoreButton->hide();
     dataName->hide();
-    tool->hide();
-    labelOk->hide();
     
-    QMenu *mn = new QMenu;
-    //#dk QAction *origAct = new QAction("Original", this);
-    //#dk connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    //#dk origAct->setToolTip("Reset the display data to the saved values");
-    //#dk mn->addAction(origAct);
-    //#dk QAction *dfltAct = new QAction("default", this);
-    //#dk connect(dfltAct, SIGNAL(triggered()), this, SLOT(setDefault()));
-    //#dk dfltAct->setToolTip("Reset the display data to the default values");
-    //#dk mn->addAction(dfltAct);
-    //#dk QAction *memoryAct = new QAction("Memorize", this);
-    //#dk memoryAct->setToolTip("Save current settings in memory");
-    //#dk connect(memoryAct, SIGNAL(triggered()), this, SLOT(setMemory()));
-    //#dk mn->addAction(memoryAct);
-    //#dk QAction *clearAct = new QAction("Clear", this);
-    //#dk connect(clearAct, SIGNAL(triggered()), this, SLOT(setClear()));
-    //#dk //mn->addAction(clearAct);
-    //#dk QAction *copyAct = new QAction("Copy", this);
-    //#dk connect(copyAct, SIGNAL(triggered()), this, SLOT(setCopy()));
-    //#dk //mn->addAction(copyAct);
-    //#dk QAction *pasteAct = new QAction("Paste", this);
-    //#dk connect(pasteAct, SIGNAL(triggered()), this, SLOT(setPaste()));
-    //#dk //mn->addAction(pasteAct);
-    tool->setMenu(mn);
 }
 
 void QtAdjustmentTop::dataNameChanged(QString value)
@@ -1004,7 +885,7 @@ QtRegionEditor::QtRegionEditor(QDomElement &ele, QWidget *parent)
     //                this,SLOT(display2(QString)));
     connect(lineEdit, SIGNAL(editingFinished()),
             this, SLOT(editingFinished()) );
-    connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
+//  connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
     QString value = ele.attribute("value");
 
     if (value.isNull() && ele.attribute("datatype") == "Bool")
@@ -1026,32 +907,6 @@ QtRegionEditor::QtRegionEditor(QDomElement &ele, QWidget *parent)
     ptype = ele.attribute("ptype");
     nameLabel->setText(ele.attribute("listname"));
     nameLabel->setToolTip(ele.attribute("help"));
-    QMenu *mn = new QMenu;
-    //#dk QAction *fromImgAct = new QAction("fromImage", this);
-    //#dk connect(fromImgAct, SIGNAL(triggered()), this, SLOT(fromImg()));
-    //#dk mn->addAction(fromImgAct);
-    //#dk QAction *createAct = new QAction("Create", this);
-    //#dk connect(createAct, SIGNAL(triggered()), this, SLOT(createRegion()));
-    //#dk mn->addAction(createAct);
-    //#dk QAction *unsetAct = new QAction("Unset", this);
-    //#dk connect(unsetAct, SIGNAL(triggered()), this, SLOT(unset()));
-    //#dk mn->addAction(unsetAct);
-    //#dk QAction *origAct = new QAction("Original", this);
-    //#dk connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    //#dk mn->addAction(origAct);
-    //#dk QAction *dfltAct = new QAction("default", this);
-    //#dk connect(dfltAct, SIGNAL(triggered()), this, SLOT(setDefault()));
-    //#dk mn->addAction(dfltAct);
-    //#dk QAction *copyAct = new QAction("Copy", this);
-    //#dk connect(copyAct, SIGNAL(triggered()), this, SLOT(setCopy()));
-    //#dk mn->addAction(copyAct);
-    //#dk QAction *pasteAct = new QAction("Paste", this);
-    //#dk connect(pasteAct, SIGNAL(triggered()), this, SLOT(setPaste()));
-    //#dk mn->addAction(origAct);
-    //#dk mn->addAction(dfltAct);
-    //#dk mn->addAction(copyAct);
-    //#dk mn->addAction(pasteAct);
-    tool->setMenu(mn);
 }
 
 void QtRegionEditor::reSet(QString value)
@@ -1081,27 +936,27 @@ bool QtRegionEditor::validate(QString value)
 {
     if (value.isNull())
     {
-        labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
+//      labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
         return false;
     }
     if (ptype == "region")
     {
         if (value.contains(QRegExp("\\[.+\\]")) == 0)
         {
-            labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
+//          labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
             return false;
         }
         QStringList poptList = value.remove('[').remove(']').split(",");
         bool ok = true;
-        labelOk->setPixmap(QPixmap(":/icons/tick.png"));
+//      labelOk->setPixmap(QPixmap(":/icons/tick.png"));
         for (int i = 0; i < poptList.size(); i++)
         {
             QString opt = poptList.at(i).simplified();
             ok = false;
             if (ok == false)
             {
-                labelOk->setPixmap(QPixmap(QString::fromUtf8(
-                                               ":/icons/cross.png")));
+//              labelOk->setPixmap(QPixmap(QString::fromUtf8(
+//                                             ":/icons/cross.png")));
                 return false;
             }
         }
@@ -1137,7 +992,7 @@ void QtRegionEditor::createRegion()
 void QtRegionEditor::unset()
 {
     lineEdit->setText("<unset>");
-    labelOk->setPixmap(QPixmap(":/icons/tick.png"));
+//  labelOk->setPixmap(QPixmap(":/icons/tick.png"));
 }
 
 void QtRegionEditor::setCopy()  {  }  //#dk  clipBoard =  lineEdit->text();
@@ -1260,12 +1115,6 @@ QtPairEditor::QtPairEditor(QDomElement& ele, QWidget* parent) :
     nameLabel->setText(ele.attribute("listname"));
     nameLabel->setToolTip(ele.attribute("help"));
     
-    QMenu* mn = new QMenu();
-    QAction* origAct = new QAction("Original", this);
-    connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    mn->addAction(origAct);
-    tool->setMenu(mn);
-    connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()));
 }
 
 QtPairEditor::~QtPairEditor() { }
@@ -1406,12 +1255,6 @@ QtNumberEditor::QtNumberEditor(QDomElement& ele, QWidget* parent) :
     nameLabel->setText(ele.attribute("listname"));
     nameLabel->setToolTip(ele.attribute("help"));
     
-    QMenu* mn = new QMenu();
-    QAction* origAct = new QAction("Original", this);
-    connect(origAct, SIGNAL(triggered()), this, SLOT(setOriginal()));
-    mn->addAction(origAct);
-    tool->setMenu(mn);
-    connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()));
 }
 
 QtNumberEditor::~QtNumberEditor() { }
