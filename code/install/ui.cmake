@@ -37,7 +37,10 @@
 macro( casa_add_tasks _target )
   set( _xmls ${ARGN} )
 
-  set( _out_all "" )
+  set( _out_py "" )
+  set( _out_latex "" )
+  set( _out_html "" )
+  set( _out_pdf "" )
 
   foreach( _x ${_xmls} )
     
@@ -70,14 +73,19 @@ macro( casa_add_tasks _target )
       DEPENDS ${_xml} ${_xsl} )
 
     # Keep track of generated files
-    set( _out_all ${_out_all} ${_py} ${_cli} ${_pg} )
+    set( _out_py ${_out_py} ${_py} ${_cli} ${_pg} )
 
+    # Create task documentation
+    casa_add_doc( ${_xml} )
+  
   endforeach()
 
   add_custom_target( 
     ${_target}
     ALL 
-    DEPENDS ${_out_all} )
+    DEPENDS ${_out_py} 
+    )
+  add_dependencies( inst ${_target} )
 
   install( 
     FILES ${_xmls}
@@ -85,10 +93,9 @@ macro( casa_add_tasks _target )
     )
 
   install( 
-    PROGRAMS ${_out_all}
+    PROGRAMS ${_out_py}
     DESTINATION python/${PYTHONV} 
     )
-
 
   # Create tasks.py, tasksinfo.py
   # This is a lousy implementation, which
@@ -112,6 +119,7 @@ macro( casa_add_tasks _target )
     )
 
   add_custom_target( tasks ALL DEPENDS ${_tasks} ${_tasksinfo} )
+  add_dependencies( inst tasks )
 
   install(
     PROGRAMS ${_tasks} ${_tasksinfo} DESTINATION python/${PYTHONV}
@@ -301,6 +309,9 @@ macro( casa_add_tools out_idl out_sources )
 
     set( ${out_sources} ${${out_sources}} ${_outputs} )
 
+    # Create tool documentation
+    #casa_add_doc( ${_xml} )
+
   endforeach()
   
 endmacro()
@@ -377,4 +388,75 @@ macro( casa_pybinding outfiles )
     # whenever an input file changes (which takes much time). The
     # output only depends on the input filenames.
 
+endmacro()
+
+
+
+# casa_add_doc( XML )
+#
+# - extracts PDF + HTML + LATEX documentation from the given XML
+#   and adds the output names to the cmake variables
+#   casa_out_pdf, casa_out_html and casa_out_latex  
+
+macro( casa_add_doc xml )
+
+    # Create htex
+    set( _htex  ${CASA_DOC_DIR}/casaref/helpfiles/${_base}.htex )
+    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2latex.xsl )
+
+    add_custom_command(
+      OUTPUT ${_htex}
+      COMMAND mkdir -p ${CASA_DOC_DIR}/casaref/helpfiles
+      COMMAND ${SAXON} ${xml} ${_xsl} | sed -e "s/<?xml version.*//" | awk -f ${CMAKE_SOURCE_DIR}/install/docutils/xml2latex.awk >  ${_htex}
+      DEPENDS ${xml} ${_xsl}
+      VERBATIM
+      )
+
+    # Create latex
+    set( _latex ${CASA_DOC_DIR}/${_base}.latex )
+    
+    add_custom_command(
+      OUTPUT ${_latex}
+      COMMAND cat ${CMAKE_SOURCE_DIR}/install/docutils/tmpheader4tex > ${_latex}
+      COMMAND cat ${_htex} >> ${_latex}
+      COMMAND cat ${CMAKE_SOURCE_DIR}/install/docutils/tmptail4tex >> ${_latex}
+      DEPENDS ${CMAKE_SOURCE_DIR}/install/docutils/tmpheader4tex
+      ${_htex}                
+      ${CMAKE_SOURCE_DIR}/install/docutils/tmptail4tex
+      VERBATIM
+      )
+    
+    set( casa_out_latex ${casa_out_latex} ${_latex} )
+    
+    # Create HTML
+    if( LATEX2HTML_CONVERTER )
+
+      set( _html ${CASA_DOC_DIR}/htmlfiles/${_base}/${_base}.html )
+
+      add_custom_command(
+        OUTPUT ${_html}
+        COMMAND mkdir -p ${CASA_DOC_DIR}/htmlfiles
+        COMMAND cd ${CASA_DOC_DIR}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND cd ${CASA_DOC_DIR}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND cd ${CASA_DOC_DIR}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        DEPENDS ${_latex}
+        VERBATIM )
+      
+      set( casa_out_html ${casa_out_html} ${_html} )
+    endif()
+      
+    # Create PDF
+    if( PDFLATEX_COMPILER )
+      set( _pdf  ${CASA_DOC_DIR}/pdf_files/${_base}.pdf )
+      add_custom_command(
+        OUTPUT ${_pdf}
+        COMMAND mkdir -p ${CASA_DOC_DIR}/pdf_files
+        COMMAND cd ${CASA_DOC_DIR}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND cd ${CASA_DOC_DIR}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND cd ${CASA_DOC_DIR}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
+        DEPENDS ${_latex}
+        VERBATIM )
+      
+      set( casa_out_pdf ${casa_out_pdf} ${_pdf} )
+    endif()
 endmacro()

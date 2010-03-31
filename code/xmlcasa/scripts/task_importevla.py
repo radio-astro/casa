@@ -171,6 +171,9 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		      else:
 		         print 'No flagging found in Flag.xml'
 			 casalog.post('No flagging found in Flag.xml')
+		   else:
+		      print 'Warning: will not be applying flags (applyflags=False)'
+		      casalog.post('Will not be applying flags (applyflags=False)')
 		else:
 		   print 'No Flag.xml in SDM'
 		   casalog.post('No Flag.xml in SDM')

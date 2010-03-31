@@ -425,7 +425,6 @@
 				</equals>
 			</when>
 			<when param="selectdata">
-				<equals type="bool" value="False"/>
 				<equals type="bool" value="True">
 					<default param="antenna"><value type="string"></value></default>
 					<default param="timerange"><value type="string"></value></default>
@@ -435,6 +434,7 @@
 					<default param="array"><value type="string"></value></default>
 					<default param="uvrange"><value type="string"></value></default>
 				</equals>
+				<equals type="bool" value="False"/>
 			</when>
 			<when param="averagemode">
 			        <equals value=""/>

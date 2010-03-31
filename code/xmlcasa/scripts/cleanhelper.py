@@ -1477,7 +1477,10 @@ class cleanhelper:
         # now we have a list of the selected channel freqs in the data, 
         # and we can start to parse start/width/nchan in a mode-dependent way:
 
-
+        # noninteractive clean(mode="freq") passes start=0 as default.
+        if (mode=="frequency" or mode=="velocity") and start==0:            
+            start=""
+ 
         # copy these params - we may change them
         locstart=start
         locwidth=width

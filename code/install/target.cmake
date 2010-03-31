@@ -23,6 +23,20 @@
 
 
 #
+# In CASA, it does not make sense to build without also installing
+# the build products. Therefore...
+#
+# Create a target which ensures that the install target is 
+# always run as part of all. 
+#
+# For this to work, all other targets must be added as dependencies
+# of this "inst" target. This is done in the macro's below using add_dependencies()
+macro( casa_always_install )
+  add_custom_target( inst ALL ${CMAKE_BUILD_TOOL} install/fast )
+endmacro()
+
+
+#
 # Setup definitions and include directories for this module,
 # and create a dynamic library
 #
@@ -33,6 +47,7 @@ macro( casa_add_library module )
   include_directories( ${${module}_INCLUDE_DIRS} )
 
   add_library( ${module} ${ARGN} )
+  add_dependencies( inst ${module} )
 
   target_link_libraries( ${module} ${${module}_LINK_TO} )
 
@@ -52,6 +67,7 @@ macro( casa_add_executable module name )
   set( _sources ${ARGN} )
 
   add_executable( ${name} ${_sources} )
+  add_dependencies( inst ${name} )
   
   target_link_libraries( ${name} ${module} )
 
@@ -76,7 +92,6 @@ macro( casa_add_test module source )
 
   add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
   target_link_libraries( ${_tname} ${module} )
-  add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
   add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
   add_dependencies( check ${_tname} )
 
@@ -274,6 +289,8 @@ MACRO( casa_add_python _target _install_dir )
     DEPENDS ${_out_all} )
     #COMMENT "Creating python files")
 
+  add_dependencies( inst ${_target} )
+
   install( PROGRAMS ${_out_all}
            DESTINATION ${_install_dir} )
 
@@ -295,9 +312,10 @@ macro( casa_add_pymodule name )
   set( _sources ${ARGN} )
 
   add_library( ${name} MODULE ${_sources} )
+  add_dependencies( inst ${name} )
+
   set_target_properties( ${name} PROPERTIES PREFIX "" )
   target_link_libraries( ${name} xmlcasa ${xmlcasa_LINK_TO} )
   install( TARGETS ${name} LIBRARY DESTINATION python/${PYTHONV} )
 
 endmacro()
-

@@ -457,48 +457,53 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               </equals>
 	    </when>
 	    <when param="mode">
-		<equals value="mfs">
-			<default param="nterms"><value>1</value></default>
-			<default param="reffreq"><value type="string"></value></default>
-		</equals>
-		<equals value="channel">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value>0</value>
-			    <description>First channel to use (0=first channel specified in spw)</description>
-			</default>
-			<default param="width"><value>1</value></default>
-			<default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value></default>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-		</equals>
-	        <equals value="velocity">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value type="string"></value>
-			    <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in spw)</description>
-		    </default>
-		    <default param="width"><value type="string"></value>
-			    <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in spw)</description>
-		    </default>
-		    <default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-                    </default>
-		    <default param="veltype"><value type="string">radio</value>
-			    <description>Velocity definition of output image</description>
-                    </default>
-	        </equals>
-	        <equals value="frequency">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value type="string"></value>
-			    <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in spw)</description>
-		    </default>
-		    <default param="width"><value type="string"></value>
-			    <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in spw)</description>
-		    </default>
-		    <default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value></default>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-	        </equals>
+	      <equals value="mfs">
+		<default param="nterms"><value>1</value></default>
+		<default param="reffreq"><value type="string"></value></default>
+	      </equals>
+	      <equals value="channel">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Begin the output cube at the frequency of this channel in the MS</description>
+		  <!--
+		     <description>first channel to use (0=first channel in first SpW of the MS)</description>
+		     -->
+		</default>
+		<default param="width"><value>1</value>
+                  <description>Width of output channel relative to MS channel (# to average)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value></default>
+		<description>Velocity reference frame of output image; \'\' =input</description>
+	      </equals>
+	      <equals value="velocity">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in first SpW of MS)</description>
+		</default>
+		<default param="width"><value type="string"></value>
+		  <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value>
+		  <description>Velocity reference frame of output image; \'\' =input</description>
+                </default>
+		<default param="veltype"><value type="string">radio</value>
+		  <description>Velocity definition of output image</description>
+                </default>
+	      </equals>
+	      <equals value="frequency">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in first SpW of MS)</description>
+		</default>
+		<default param="width"><value type="string"></value>
+		  <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value></default>
+		<description>Velocity reference frame of output image; \'\' =input</description>
+	      </equals>
 	    </when>
 	    
 	    <when param="weighting">
@@ -754,8 +759,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  For mode='channel', default=1; &gt;1 indicates channel averaging
                  example: width=4.
                  For mode=' 'velocity' or 'frequency', default=''; width of
-                   first input channel, otherwise must give units
+                 first input channel, or more precisely, the difference 
+                 in frequencies between the first two selected channels. 
+                 (for example if channels 1 and 3 are selected with spw, 
+                  then the default width will be the difference between their
+                  frequencies, and not the width of channel 1)
+                 When not using the default, one must give units
                  examples: width='1.0km/s', or width='24.2kHz'.
+                 Setting width>0 gives channels of increasing frequency for 
+                 mode='frequency', and increasing velocity for mode='velocity'. 
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'nearest'  HOWEVER, 'linear' is generally recommended
