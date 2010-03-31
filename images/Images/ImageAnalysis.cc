@@ -6288,7 +6288,7 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 			String fields[4];
 			Int num = split(var, fields, 4, String(" "));
 			String fitsfile;
-			if (num == 1 || num == 4) {
+			if (num >= 1) {
 				if (imagetype.contains("cube"))
 					fitsfile = fields[0] + "/data/demo/Images/test_image.fits";
 				else if (imagetype.contains("2d"))
