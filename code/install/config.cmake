@@ -202,7 +202,12 @@ macro( casa_find package )
     endif()
   endif()
 
-
+  if( NOT "${${package}_VERSION_SPEC}" STREQUAL "${_version}" )
+    set( ${package}_VERSION_SPEC "${_version}" CACHE STRING "${package} version requirement" FORCE )
+    set( ${package}_FOUND False CACHE BOOL "Was ${package} found?" FORCE )
+    # Remember the version specification so that the detection can be repeated if the version specification has changed
+    # in-between cmake runs (even if the package was already found)
+  endif()
 
   if( NOT ${package}_FOUND )
 
@@ -312,7 +317,6 @@ macro( casa_find package )
           COMPILE_DEFINITIONS ${${package}_DEFINITIONS}
           COMPILE_OUTPUT_VARIABLE _compile_out
           RUN_OUTPUT_VARIABLE _run_out )
-        
         message( STATUS "Checking whether ${package} headers compile -- ${${package}_COMPILE}" )
         
         if( NOT ${package}_COMPILE )
