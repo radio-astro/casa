@@ -1375,7 +1375,13 @@ class cleanhelper:
         else:
             sel=ms.msseltoindex(self.vis, spw=spw)
             spwinds=sel['spw'].tolist()
+            #spw returns by msseletoindex, spw='0:5~10;10~20' 
+            #will gives spw=[0] and len(spw) not equals to len(chanids)
+            #so get spwids from chaninds instead.
             chaninds=sel['channel'].tolist()
+            spwinds=[]
+            for k in range(len(chaninds)):
+                spwinds.append(chaninds[k][0])
             if(len(spwinds) == 0):
                 spwinds = -1      
                 # I don't believe it is possible to select spw=-1 (all) and select other 
