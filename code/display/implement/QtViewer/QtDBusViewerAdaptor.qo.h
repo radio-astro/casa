@@ -66,7 +66,7 @@ namespace casa {
 	QDBusVariant reload( int panel_or_data );
 	QDBusVariant unload( int data );
 	QDBusVariant restore( const QString &path, int panel=0 );
-	QString cwd( const QString &new_path = "" );
+	QDBusVariant cwd( const QString &new_path = "" );
 	QDBusVariant panel( const QString &type="viewer", bool hidden=false  );
 	QDBusVariant hide( int panel=0 );
 	QDBusVariant show( int panel=0 );
@@ -106,6 +106,12 @@ namespace casa {
 	void handle_destroyed_panel(QObject*);
 
     private:
+
+	inline QDBusVariant error( const QString &message ) {
+	    QMap<QString,QVariant> err;
+	    err["*error*"] = message;
+	    return QDBusVariant(QVariant(err));
+	}
 
 	class data_desc {
 	public:

@@ -151,6 +151,7 @@ class viewertool(object):
         if not self.__state['launched']:
             raise Exception, 'launch failed'
 
+        error = None
         for i in range(1,500):
             time.sleep(0.1)
             try:
@@ -158,16 +159,48 @@ class viewertool(object):
                 if self.__state['proxy'] == None:
                     time.sleep(0.25)
                     continue
+                error = None
                 break
-            except:
+            except dbus.DBusException, e:
+                if e.get_dbus_name() == 'org.freedesktop.DBus.Error.Disconnected' :
+                    raise RuntimeError('DBus daemon has died...')
+                elif e.get_dbus_name() == 'org.freedesktop.DBus.Error.ServiceUnknown' :
+                    error = RuntimeError('DBus Viewer service failed to start...')
+                    continue
+                else:
+                    raise RuntimeError('Unexpected DBus problem: ' + e.get_dbus_name( ) + "(" + e.message + ")")
+            except Exception, e:
+                error = e
                 continue
+
+        if error is not None :
+            raise error
+
+    def __invoke( self, dt, t, func, *args, **kwargs ):
+        try:
+            result = func(*args,**kwargs)
+        except dbus.DBusException, e:
+            if e.get_dbus_name() == 'org.freedesktop.DBus.Error.Disconnected' :
+                raise RuntimeError('DBus daemon has died....')
+            elif e.get_dbus_name() == 'org.freedesktop.DBus.Error.ServiceUnknown' :
+                raise RuntimeError('DBus Viewer service has exited....')
+            else:
+                raise RuntimeError('Unexpected DBus problem: ' + e.get_dbus_name( ) + "(" + e.message + ")")
+
+        if type(result) == dbus.Dictionary and result.has_key('*error*') :
+            raise RuntimeError(str(result['*error*']))
+        elif type(result) != dt :
+            raise RuntimeError(str(result))
+
+        return t(result)
 
     def panel( self, paneltype="viewer" ):
         if type(paneltype) != str or (paneltype != "viewer" and paneltype != "clean"):
             raise Exception, "the only valid panel types are 'viewer' and 'clean'"
         if self.__state['proxy'] == None:
             self.__connect( )
-        return int(self.__state['proxy'].panel( paneltype ))
+
+        return self.__invoke( dbus.Int32, int, self.__state['proxy'].panel, paneltype )
 
     def load( self, path, displaytype="raster", panel=0 ):
         if type(path) != str or type(displaytype) != str:
@@ -176,7 +209,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return int(self.__state['proxy'].load( path, displaytype, panel ))
+        return self.__invoke( dbus.Int32, int, self.__state['proxy'].load, path, displaytype, panel )
 
     def close( self, panel=0 ):
         if type(panel) != int :
@@ -185,7 +218,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return bool(self.__state['proxy'].close( panel ))
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].close, panel )
 
     def popup( self, what, panel=0 ):
         if type(what) != str or type(panel) != int :
@@ -194,7 +227,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return bool(self.__state['proxy'].popup( what, panel ))
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].popup, what, panel )
 
     def restore( self, path, panel=0 ):
         if type(path) != str or type(panel) != int:
@@ -203,7 +236,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return int(self.__state['proxy'].restore( path, panel ))
+        return self.__invoke( dbus.Int32, int, self.__state['proxy'].restore, path, panel )
 
     def cwd( self, new_path='' ):
         if type(new_path) != str:
@@ -212,7 +245,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return str(self.__state['proxy'].cwd(new_path))
+        return self.__invoke( dbus.String, str, self.__state['proxy'].cwd, new_path )
 
     def output( self, device, devicetype='file', panel=0, scale=1.0, dpi=300, format="jpg", \
                     orientation="portrait", media="letter" ):
@@ -224,7 +257,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return bool(self.__state['proxy'].output( device, devicetype, panel, scale, dpi, format, orientation, media ))
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].output, device, devicetype, panel, scale, dpi, format, orientation, media )
 
     def frame( self, num=-1, panel=0 ):
         if type(num) != int or type(panel) != int:
@@ -233,7 +266,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return int(self.__state['proxy'].frame( num, panel ))
+        return self.__invoke( dbus.Int32, int, self.__state['proxy'].frame, num, panel )
 
     def zoom( self, level, panel=0 ):
         if type(level) != int or type(panel) != int:
@@ -242,7 +275,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return bool(self.__state['proxy'].zoom( level, panel ))
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].zoom, level, panel )
 
     def hide( self, panel=0 ):
         if type(panel) != int:
@@ -251,7 +284,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return bool(self.__state['proxy'].hide(panel))
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].hide, panel )
 
     def show( self, panel=0 ):
         if type(panel) != int:
@@ -260,7 +293,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return bool(self.__state['proxy'].show(panel))
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].show, panel )
 
     def keyinfo( self, key ):
         if type(key) != int:
@@ -269,13 +302,15 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return map(str,self.__state['proxy'].keyinfo(key))
+        return self.__invoke( dbus.Array, lambda x: map(str,x), self.__state['proxy'].keyinfo, key )
 
     def done( self ):
 
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        result = self.__state['proxy'].done( )
+        result = self.__invoke( dbus.Boolean, bool, self.__state['proxy'].done )
         self.__state['proxy'] = None
-        return bool(result)
+        self.__state['launched'] = False
+        return result
+
