@@ -10,7 +10,7 @@ def startup():
     toolhelp               - One line summary of available tools
     help par.parametername - Full help for parameter name
     Single Dish sd* tasks are available after asap_init() is run   
-    ___________________________________________________________________"""
+___________________________________________________________________"""
 
 def taskhelp(scrap=None):
     """ Briefly describe all tasks with scrap in their name or one-line description. """

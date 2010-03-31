@@ -43,6 +43,7 @@
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/PlainTable.h>
 #include <casa/Utilities/Regex.h>
 
 
@@ -1901,6 +1902,35 @@ table::statistics(const std::string& column,
     }
     return retval;
 }
+
+std::vector<std::string>
+table::showcache(const bool verbose)
+{
+ std::vector<std::string> rstat(0);
+ try {
+     const TableCache& cache = PlainTable::tableCache;
+     if(verbose){
+	 if(cache.ntable()==0){
+	     *itsLog << LogIO::NORMAL << "The Table Cache is empty." << LogIO::POST;
+	 }
+	 else{
+	     *itsLog << LogIO::NORMAL << "The Table Cache has the following " << cache.ntable() << " entries:"  << LogIO::POST;
+	 }	     
+     }
+     for (uInt i=0; i<cache.ntable(); ++i) {
+	 if(verbose){
+	     *itsLog << LogIO::NORMAL << "    " << i << ": \"" <<  cache(i)->tableName() << "\"" << LogIO::POST;
+	 }
+	 rstat.push_back(cache(i)->tableName());
+     } 
+ } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;
+}
+
+
 
 } // casac namespace
 

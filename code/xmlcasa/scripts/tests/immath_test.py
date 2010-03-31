@@ -104,7 +104,9 @@ import numpy
 from tasks import *
 from taskinit import *
 
+cas1452_1_im = 'CAS-1452-1.im'
 cas1910_im = 'CAS-1910.im'
+cas1830_im = 'ngc5921.demo.cleanimg.image'
 
 ################      HELPER FUNCTIONS      ###################
 
@@ -1081,6 +1083,7 @@ def many_image_test():
 def cas_1910_fix_test():
     retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
     try:
+
         if (
             not immath(
                 imagename=cas1910_im, outfile='cas-1910_out.im',
@@ -1093,6 +1096,72 @@ def cas_1910_fix_test():
     except:
         retValue['success'] = False
         retValue['error_msgs'] += "\nimmath threw exception for setting box correctly (CAS-1910)"
+    return retValue
+
+# cas-1452
+def one_function_test():
+    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    funcs = ['sin', 'SIN', 'Sin']
+    imagename = cas1452_1_im
+    ia.open(imagename)
+    expected = numpy.sin(ia.getchunk())
+    ia.close()
+    #try:
+    for f in funcs:
+            outfile = 'cas-1452_out_' + f + '.im'
+            expr = f + "(\'" + imagename + "\')" 
+            if (
+                immath(
+                    imagename=imagename, outfile=outfile,
+                    mode='evalexpr', expr=expr
+                )
+            ):
+                ia.open(outfile)
+                got = ia.getchunk()
+                ia.close()
+                maxdiff = numpy.abs(got - expected).max()
+                if ( maxdiff > 1e-7):
+                    retValue['success'] = False
+                    retValue['error_msgs'] += "\nimmath calculation incorrect for " + f
+    
+	        os.system('rm -rf ' + outfile) #Remove the old imagefile so it won't confuse case-insensitive file systems (osx).
+            else:
+                retValue['success'] = False
+                retValue['error_msgs'] += "\nimmath returned False for " + f + " calculation"
+    #except:
+    #    retValue['success'] = False
+    #    retValue['error_msgs'] += "\nimmath threw exception for " + f + " calculation"
+    return retValue
+
+def cas_1830_fix_test():
+    test = "cas_1830_fix_test"
+    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    expected = [256, 256, 1, 1]
+    i = 0
+    for expr in ["IM0", "'" + cas1830_im + "'", '"' + cas1830_im + '"']:
+        if (expr == "IM0"):
+            imagenames = [cas1830_im]
+        else:
+            imagenames = [cas1830_im, ""]
+        for imagename in imagenames:
+            try:
+                outfile = 'cas1830_out+' + str(i)
+                if (imagename):
+                    res = immath(imagename=imagename, expr=expr, chans='22', outfile=outfile)
+                else:
+                    res = immath(expr=expr, chans='22', outfile=outfile)
+                if(res):
+                    ia.open(outfile)
+                    if (ia.shape() != expected):
+                        retValue['success'] = False
+                        retValue['error_msgs'] += "\n" + test + ": immath produced image of wrong shape for image " + imagename + " expr " + expr
+                else:
+                    retValue['success'] = False
+                    retValue['error_msgs'] += "\n" + test + ": immath returned false for image " + imagename + " expr " + expr
+            except Exception, e:
+                retValue['success'] = False
+                retValue['error_msgs'] += "\n" + test + ": immath threw exception " + str(e) + " for image " + imagename + " expr " + expr    
+            i += 1
     return retValue
 
 ####################################################################
@@ -1129,12 +1198,12 @@ def data():
     return [
         'ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image',
         'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
-        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im', cas1910_im
+        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im', cas1910_im,
+        cas1452_1_im, cas1830_im
     ]
 
 def doCopy():
-    #print "\n\nIn IMMATH doCopy()\n\n"
-    return [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    return [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 def run():
     test_list = [ 'input_test()', 'math_test()', \
@@ -1155,6 +1224,8 @@ def run():
     testResults.append( pol_test( data() ) )
     testResults.append(many_image_test())
     testResults.append(cas_1910_fix_test())
+    testResults.append(one_function_test())
+    testResults.append(cas_1830_fix_test())
     print "TEST RESULTS: ", testResults
 
     for results in testResults:

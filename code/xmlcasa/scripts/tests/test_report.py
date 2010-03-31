@@ -5,18 +5,6 @@ class version_test(unittest.TestCase):
 
     def shortDescription(self):
         return "Unit tests of comparing version strings"
-    
-    def setUp(self):
-        pass
-    
-    def tearDown(self):
-        pass
-
-    def test_fails(self):
-        assert 2 + 2 == 5
-
-    def test_execution_failure(self):
-        raise Exception("die")
 
     def test_r_r_1(self):
         "test revision vs revision"
@@ -61,7 +49,6 @@ class version_test(unittest.TestCase):
 
         self.order(b, a)
 
-
     def order(self, a, b):
         """Verify that the cmp_version function behaves
         as it should, given that a is earlier than b"""
@@ -73,8 +60,3 @@ class version_test(unittest.TestCase):
 
 def suite():
     return [version_test]
-
-def run_suite():
-    set = unittest.TestLoader().loadTestsFromTestCase(version_test)
-    unittest.TextTestRunner(verbosity=2).run(set)
-

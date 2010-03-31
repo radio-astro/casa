@@ -43,7 +43,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="field">
       <description>Field Name or id</description>
-      <value></value>
+     <value></value>
     </param>
 
     <param type="any" name="spw">
@@ -365,7 +365,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--========================================================= -->
     <param type="double" name="minpb">
 	    <description>Minimum PB level to use</description>
-	    <value>0.1</value>
+	    <value>0.2</value>
     </param>
 <!--========================================================= -->
     <param type="bool" name="calready">
@@ -400,7 +400,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="int" name="nterms" subparam="true">
-	    <description>Number of terms used to model the sky frequency dependence</description>
+	    <description>Number of terms used to model the sky frequency dependence (Note: nterms>1 is under development)</description>
 	    <value>1</value>
     </param>
 <!--========================================================= -->
@@ -457,48 +457,53 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               </equals>
 	    </when>
 	    <when param="mode">
-		<equals value="mfs">
-			<default param="nterms"><value>1</value></default>
-			<default param="reffreq"><value type="string"></value></default>
-		</equals>
-		<equals value="channel">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value>0</value>
-			    <description>First channel to use (0=first channel specified in spw)</description>
-			</default>
-			<default param="width"><value>1</value></default>
-			<default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value></default>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-		</equals>
-	        <equals value="velocity">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value type="string"></value>
-			    <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in spw)</description>
-		    </default>
-		    <default param="width"><value type="string"></value>
-			    <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in spw)</description>
-		    </default>
-		    <default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-                    </default>
-		    <default param="veltype"><value type="string">radio</value>
-			    <description>Velocity definition of output image</description>
-                    </default>
-	        </equals>
-	        <equals value="frequency">
-			<default param="nchan"><value>-1</value></default>
-			<default param="start"><value type="string"></value>
-			    <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in spw)</description>
-		    </default>
-		    <default param="width"><value type="string"></value>
-			    <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in spw)</description>
-		    </default>
-		    <default param="interpolation"><value type="string">nearest</value></default>
-		    <default param="outframe"><value type="string"></value></default>
-			    <description>Velocity reference frame of output image; \'\' =input</description>
-	        </equals>
+	      <equals value="mfs">
+		<default param="nterms"><value>1</value></default>
+		<default param="reffreq"><value type="string"></value></default>
+	      </equals>
+	      <equals value="channel">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Begin the output cube at the frequency of this channel in the MS</description>
+		  <!--
+		     <description>first channel to use (0=first channel in first SpW of the MS)</description>
+		     -->
+		</default>
+		<default param="width"><value>1</value>
+                  <description>Width of output channel relative to MS channel (# to average)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value></default>
+		<description>Velocity reference frame of output image; \'\' =input</description>
+	      </equals>
+	      <equals value="velocity">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in first SpW of MS)</description>
+		</default>
+		<default param="width"><value type="string"></value>
+		  <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value>
+		  <description>Velocity reference frame of output image; \'\' =input</description>
+                </default>
+		<default param="veltype"><value type="string">radio</value>
+		  <description>Velocity definition of output image</description>
+                </default>
+	      </equals>
+	      <equals value="frequency">
+		<default param="nchan"><value>-1</value></default>
+		<default param="start"><value type="string"></value>
+		  <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in first SpW of MS)</description>
+		</default>
+		<default param="width"><value type="string"></value>
+		  <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
+		</default>
+		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="outframe"><value type="string"></value></default>
+		<description>Velocity reference frame of output image; \'\' =input</description>
+	      </equals>
 	    </when>
 	    
 	    <when param="weighting">
@@ -649,19 +654,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  field='3C286,3C295'; field named 3C286 and 3C295
                  field = '3,4C*'; field id 3, all names starting with 4C
        spw -- Select spectral window/channels
-               (Channel selection is not implemented yet for this task)
                NOTE: channels de-selected here will contain all zeros if
-               selected by the parameter mode subparameters    
+               selected by the parameter mode subparameters.    
+               Channel selection behaves differently in clean (e.g. The multiple
+               ranges are not supported yet).
                default: ''=all spectral windows and channels
                  spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+                 spw='0:5~61'; spw 0, channels 5 to 61
+                 spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
                  <!-- COMMENTED OUT UNTIL PROPER PARSING OF CHANNEL SELECTION
                  IS IMPLEMENTED -->
-                 <!--spw='0:5~61'; spw 0, channels 5 to 61
-                  -->
-                 spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
+				 <!--need to  check if these work--> 
                  <!--spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
 				   channels 3 to 45.
                  spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+				 -->
+			     <!-- multiple ranges do not work for 3.0.1
                  spw='0:0~10;15~60'; spectral window 0 with channels 
 				    0-10,15-60
                  spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
@@ -728,7 +736,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                equivalent to assuming no frequency dependence.
                nterms=2 is equivalent to the Sault-Wieringa algorithm
                (AandAS, 1994) reffreq is the reference frequency about
-               which the Taylor expansion is done.
+               which the Taylor expansion is done. ** Note that the 
+               software implementation of the algorithm for nterms>1 
+               is still experimental and will be fully available in a 
+               later release. **
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
                nchan -- Total number of channels in the output image.
@@ -748,8 +759,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  For mode='channel', default=1; &gt;1 indicates channel averaging
                  example: width=4.
                  For mode=' 'velocity' or 'frequency', default=''; width of
-                   first input channel, otherwise must give units
+                 first input channel, or more precisely, the difference 
+                 in frequencies between the first two selected channels. 
+                 (for example if channels 1 and 3 are selected with spw, 
+                  then the default width will be the difference between their
+                  frequencies, and not the width of channel 1)
+                 When not using the default, one must give units
                  examples: width='1.0km/s', or width='24.2kHz'.
+                 Setting width>0 gives channels of increasing frequency for 
+                 mode='frequency', and increasing velocity for mode='velocity'. 
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'nearest'  HOWEVER, 'linear' is generally recommended
@@ -765,20 +783,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  NOTE: the viewer always defaults to displaying the 'radio'
                    frame, but that can be changed in the position tracking
                    pull down.
-           mode='channel' examples:
+           mode='mfs' examples:
                spw = '0,1'; mode = 'mfs'
                   will produce one image made from all channels in spw 
  		       0 and 1
-               <!--spw='0:5~28^2'; mode = 'mfs'
+               spw='0:5~28^2'; mode = 'mfs'
                   will produce one image made with channels 
  		       (5,7,9,...,25,27)
-                -->
+
+           mode='channel' examples:
                spw = '0'; mode = 'channel': nchan=3; start=5; width=4
                   will produce an image with 3 output planes
                   plane 1 contains data from channels (5+6+7+8)
                   plane 2 contains data from channels (9+10+11+12)
                   plane 3 contains data from channels (13+14+15+16)
-               <!--spw = '0:0~63^3'; mode='channel'; nchan=21; start = 0; 
+               spw = '0:0~63^3'; mode='channel'; nchan=21; start = 0; 
  		   width = 1
                   will produce an image with 20 output planes
                   Plane 1 contains data from channel 0
@@ -790,7 +809,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   plane 1 contains channels (5,7)
                   plane 2 contains channels (13,15)
                   plane 3 contains channels (21,23)
-                -->
 
        psfmode -- method of PSF calculation to use during minor cycles:
                default: 'clark': Options: 'clark','clarkstokes', 'hogbom'
@@ -1057,7 +1075,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  	       default: pbcor=False; output un-corrected image 
  	       example: pbcor=True; output pb-corrected image (masked outside
                         minpb) 
-       minpb -- Minimum PB level to use default=0.1;
+       minpb -- Minimum PB level to use default=0.2;
                The flux image is used to determine this
 	       except for the case of mosaic with ftmachine='mosaic'
 	       where the flux.pbcoverage image is used.

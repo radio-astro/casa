@@ -4,7 +4,7 @@ usage: python report.py testresult_dir report_dir revision generate_plot
 
 testresult_dir: database top directory
 report_dir: output directory
-revision: 'latest' for latest stable only, or 'all'
+revision: 'latest' for latest test-branch only, or 'all'
 generate_plot: boolean, generates png plots iff true
 
 expected format of logfiles:
@@ -181,7 +181,7 @@ def selected_revisions(data):
         else:
             print "Drop", all_list[c]
 
-    # And always use, too, the latest version on the stable branch
+    # And always use, too, the latest version on the test branch
     stable_versions = []
     for log in data:
         host = log['host']
@@ -192,9 +192,9 @@ def selected_revisions(data):
     if len(stable_versions) > 0:
         stable_versions.sort(reverse=True, cmp=cmp_version)
         selected.add(stable_versions[0])
-        print "Use latest on stable: ", stable_versions[0]
+        print "Use latest on test branch: ", stable_versions[0]
     else:
-        print "No tests on stable"
+        print "No tests on test branch"
 
     return selected
     
@@ -215,7 +215,7 @@ class report:
         data = self.read_log(result_dir, revision)
 
         if len(data) == 0:
-            raise Exception, "No test log files found in %s, cannot determine CASA version" % result_dir
+            raise Exception, "No matching test log files found in %s, cannot determine CASA version" % result_dir
 
         if revision == 'all':
             # Select only some revisions (in order to reduce length of historical report)
@@ -428,7 +428,7 @@ class report:
                     raise Exception, "Could not parse revision number '%s'" \
                           % (latest_on_stable)
 
-            fd.write('<br><h2>Revision '+revision+' only, stable branch only</h2>')
+            fd.write('<br><h2>Revision '+revision+' only, test branch only</h2>')
             fd.write('<hr>')
 
             # Filter out all other versions
@@ -573,7 +573,7 @@ class report:
         if len(self.hosts_devel) > 0:
             fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>test</td>')
         fd.write('</tr>')
         
         fd.write('<TR><TD></TD>')
@@ -661,7 +661,7 @@ class report:
         if len(self.hosts_devel) > 0:
             fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>test</td>')
         fd.write('</tr>')
         
         for host in self.hosts:
@@ -678,6 +678,8 @@ class report:
             self.dump_host(fd, host, extended)
 
             if extended:
+                if not os.path.isdir(reg_dir + '/Log'):
+                    raise Exception, "Missing directory: " + reg_dir + '/Log'
                 latest_metalog = commands.getoutput('/bin/ls -1tr ' + reg_dir + '/Log/ | grep -E "\-'+host+'.log$" | tail -1')
                 if len(latest_metalog) > len('.log'):
                     shutil.copyfile(reg_dir + '/Log/' + latest_metalog, \
@@ -692,7 +694,7 @@ class report:
 
             fd.write('</td>')
             
-        fd.write('<TD><b>Stable summary</b></TD>')
+        fd.write('<TD><b>Test branch summary</b></TD>')
         fd.write('</TR>\n')    
 
         subtests_list = {}
@@ -802,7 +804,7 @@ class report:
                                     summary_subtest,
                                     summary_host,
                                     data, fd, reg_dir, report_dir,
-                                    extended)
+                                    extended, revision)
 
                 self.dump_td_start(fd, \
                                    summary_subtest['pass'], \
@@ -879,7 +881,7 @@ class report:
     def dump_entry(self, test, subtest, host, \
                    summary_subtest, summary_host, \
                    data, fd, reg_dir, report_dir, \
-                   extended):
+                   extended, revision):
 
         result_dir = reg_dir + '/Result'
 
@@ -906,7 +908,7 @@ class report:
         if host in self.hosts_devel:
             branch = "active"
         else:
-            branch = "stable"
+            branch = "test"
 
         coords = ' title="' + branch + ': ' + test + ' \\ '+host+'"'
         
@@ -1117,11 +1119,19 @@ class report:
 
             # If there's no log[] entry produced, and if the session log
             # doesn't say "casapy returned 0", then the session must have crashed
+            #
+            # The version of the session log matches if either
+            # - no version string is found, or
+            # - we're reporting all revision, or
+            # - the revision number can be grep'ed from the session log
+            #
             
             framework_log = reg_dir + '/Log/run-' + test + '-' + host + '.log'
             if subtest[1] == 'exec' and \
                    os.path.isfile(framework_log) and \
-                   os.system('grep >/dev/null "casapy returned 0" ' + framework_log) != 0:
+                   os.system('grep >/dev/null "casapy returned 0" ' + framework_log) != 0 and \
+                   (os.system('grep CASA.version ' + framework_log) != 0 or revision == 'all' or
+                    os.system('grep -w r' + revision + ' ' + framework_log) == 0):
                         self.dump_td_start(fd,
                                            0,
                                            1,

@@ -1124,6 +1124,7 @@ def one_function_test():
                     retValue['success'] = False
                     retValue['error_msgs'] += "\nimmath calculation incorrect for " + f
     
+	        os.system('rm -rf ' + outfile) #Remove the old imagefile so it won't confuse case-insensitive file systems (osx).
             else:
                 retValue['success'] = False
                 retValue['error_msgs'] += "\nimmath returned False for " + f + " calculation"

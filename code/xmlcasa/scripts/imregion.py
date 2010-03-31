@@ -13,6 +13,7 @@ import inspect
 from taskinit import *
 from odict import odict
 from parameter_check import *
+import re
 
 def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dropExtra=False):
         """Helper task for seleting regions in images
@@ -34,7 +35,8 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
         rg=myf['rg']
         casalog=myf['casalog']
 
-
+        # strip out any spaces in box, CAS-2050
+        box = re.sub(' ', '', box)
         ###
         #Add type/menu/range error checking here
         arg_names=['imagename','spectral','stokes','box','poly','circ']

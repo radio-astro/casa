@@ -24,12 +24,12 @@ import copy
 myname = 'cvel_regression'
 
 # default dataset name
-dataset_name = 'ANTEN_sort_hann_for_cvel_reg.ms'
+dataset_name_orig = 'ANTEN_sort_hann_for_cvel_reg.ms'
 
 # get the dataset name from the wrapper if possible
 mydict = locals()
 if mydict.has_key("dataset_name"):
-    dataset_name = mydict["dataset_name"]
+    dataset_name_orig = mydict["dataset_name"]
 
 def isnear(a,b,p):
     print "  ", a, b
@@ -98,11 +98,20 @@ cvel_imstats = { 'frequency': copy.deepcopy(mode_imstats),
 cleanonly_imstats = copy.deepcopy(cvel_imstats)
 
 
-# clean needs write access to the input MS.
-# For the clean-only path, make a copy of the input MS
-os.system('cp -RL '+dataset_name+' inputms_local_copy.ms')
-os.system('chmod -R u+w  inputms_local_copy.ms')
-clean_inputvis_local_copy = 'inputms_local_copy.ms'
+# First we want to test the regridding and spectral frame transformation only.
+#  So we combine the spws in the input dataset beforehand.
+# Also: clean needs write access to the input MS, so we need a local copy anyway.
+
+#cvel(
+#    vis = dataset_name_orig,
+#    outputvis = 'input.ms'
+#    )
+#dataset_name = 'input.ms'
+#clean_inputvis_local_copy = 'input.ms'
+dataset_name = dataset_name_orig
+os.system('cp -RL '+dataset_name_orig+' input.ms')
+os.system('chmod -R u+w input.ms')
+clean_inputvis_local_copy = 'input.ms'
 
 
 # loop over all possible output reference frames
@@ -115,7 +124,6 @@ clean_inputvis_local_copy = 'inputms_local_copy.ms'
 
 # in order to shorten the test, leave out LSRD, GALACTO, and LGROUP
 frames_to_do = ['TOPO', 'LSRK', 'BARY', 'CMB']
-
 
 for frame in frames_to_do:
     
@@ -375,9 +383,11 @@ for frame in frames_to_do:
 # Analysis
 
 passed = True
-tolerance = 0.0038
+tolerance = 0.001
 numpoints = 0.
 avdev = 0.
+maxdev = 0.
+maxdevat = " "
 problems = 0
 for frame in frames_to_do:
     for mode in ['frequency', 'radio velocity', 'optical velocity']:
@@ -386,6 +396,11 @@ for frame in frames_to_do:
             c1 = cleanonly_imstats[mode][chan][frame]['max']
             c2 = cvel_imstats[mode][chan][frame]['max']
             print "Testing ", frame, ", ",  mode, ", box ", testregion, ", channel ", chan, " ..."
+            if(abs(c1-c2) > maxdev):
+                maxdev = abs(c1-c2)
+                maxdevat = mode+" mode for output frame "+frame\
+                           +":\n    cvel+clean finds max flux in channel "+str(chan)+" to be "+str(c2)\
+                           +"\n    clean-only finds max flux in channel "+str(chan)+" to be "+str(c1)
             if(not isnear(c1,c2, tolerance)):
                 print " ** Problem in ", mode, " mode for output frame ", frame, ":"
                 print "     cvel+clean finds max flux in channel ", chan, " to be ", c2
@@ -413,7 +428,8 @@ for frame in frames_to_do:
                 print "... OK"      
 
 if(numpoints > 0.):
-    print numpoints, ' spectral points compared, average deviation = ', avdev/numpoints, " Jy"
+    print numpoints, " spectral points compared, average deviation = ", avdev/numpoints, " Jy"
+    print "   maximum deviation = ", maxdev, " in ", maxdevat 
                     
 if passed:
     print "PASSED"

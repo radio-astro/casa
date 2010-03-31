@@ -593,9 +593,10 @@ and/or show() is called.
       <value />
     </param>
     
-    <param type="double" name="restfreq">
-      <description>Rest frequency (MHz) to use when calculating velocities</description>
-      <value>0.0</value>
+    <param type="any" name="restfreq">
+      <description>Rest frequency (w/ units) to use when calculating velocities</description>
+      <any type="variant"/>
+      <value></value>
     </param>
     
     <param type="double" name="xshift">

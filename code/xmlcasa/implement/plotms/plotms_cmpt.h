@@ -18,6 +18,7 @@
 
 #include <xmlcasa/conversions.h>
 #include <xmlcasa/record.h>
+#include <xmlcasa/variant.h>
 #include <xmlcasa/plotms/plotms_forward.h>
 
 // put includes here
@@ -79,7 +80,7 @@ class plotms
 
     ::casac::record* getPlotMSAveraging(const int plotIndex = 0);
 
-    void setPlotMSTransformations(const std::string& freqframe = "", const std::string& veldef = "", const double restfreq = 0.0, const double xshift = 0.0, const double yshift = 0.0, const bool updateImmediately = true, const int plotIndex = 0);
+    void setPlotMSTransformations(const std::string& freqframe = "", const std::string& veldef = "", const ::casac::variant& restfreq = ::casac::initialize_variant(""), const double xshift = 0.0, const double yshift = 0.0, const bool updateImmediately = true, const int plotIndex = 0);
 
     void setPlotMSTransformationsRec(const ::casac::record& transformations, const bool updateImmediately = true, const int plotIndex = 0);
 

@@ -25,7 +25,7 @@ if not os.access(SCRIPT_REPOS, os.F_OK):
         UTILS_DIR = SCRIPT_REPOS+'admin'
     else:            #Mac release
         SCRIPT_REPOS = AIPS_DIR+'/Resources/python/tests/'
-        UTILS_DIR = SCRIPT_REPOS+'admin'        
+        UTILS_DIR = AIPS_DIR+'/Resources/python/regressions/'+'admin'        
 
 sys.path.append(UTILS_DIR)
 
@@ -37,6 +37,10 @@ class UnitTest:
         self.scriptdir = SCRIPT_REPOS       
         self.datadir = [DATA_DIR]
         self.dataFiles = []
+    
+    def funcdesc(self):
+        '''Name of test for FunctionTestCase'''
+        return 'Test '+self.testname
     
     def funcSetup(self):        
         """Copy data files to local working directory"""
@@ -88,7 +92,8 @@ class UnitTest:
               
         # Wrap the test, funcSetup and funcTeardown in a FunctionTestCase and return it
         testcase = (unittest.FunctionTestCase(mytest.run,setUp=self.funcSetup,
-                                              tearDown=self.funcTeardown))
+                                              tearDown=self.funcTeardown,
+                                              description=self.funcdesc()))
         
         return testcase
 
@@ -127,34 +132,13 @@ class UnitTest:
                             testlist.append(c(attr))
                 else:
 #                    print attr, " = ", value
-                    if len(attr) >= len("test") and \
-                        attr[:len("test")] == "test":
+                   if len(attr) >= len("test") and \
+                        attr[:len("test")] == "test" : \
+#                        attr.rfind('test') != -1 :
                         testlist.append(c(attr))
-        
+            
         return testlist
-    
-        # Return the tests of this test module
-#        testlist = []
-#            if list:
-#                print "There is a list"
-#                for test in list:
-#                    print test
-#                    testcase = unittest.TestCase(myclass.test)
-#                    print testcase
-#                    testlist = testlist+[testcase]
-#                return testlist
-#            else:
-#                tests = []
-#            
-#    #        print classes
-#                for attr, value in c.__dict__.iteritems():
-#                    print attr, " = ", value
-#                    if len(attr) >= len("test") and \
-#                        attr[:len("test")] == "test":
-#                        tests.append(c(attr))
-    
-#        return tests
-        
+            
 
     def cleanup(self,workdir):
         # for safety, avoid removing the local directory

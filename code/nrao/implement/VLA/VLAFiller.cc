@@ -446,7 +446,11 @@ void VLAFiller::fill(Int verbose){
 Bool VLAFiller::fillOne() { 
   if (!itsRecord.read()) return False;
   if (stopFilling(itsRecord)) return False;
-  if (!itsInputFilters.passThru(itsRecord)) return True;
+  if (!itsInputFilters.passThru(itsRecord)){
+	  // OK here we mark a new scan if we skip anything.
+	  itsNewScan=True;
+	  return True;
+  }
 
   fillStarted = True;
   const VLARCA& rca = itsRecord.RCA();

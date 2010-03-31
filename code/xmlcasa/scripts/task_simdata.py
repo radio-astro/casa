@@ -102,6 +102,11 @@ def simdata(
                 in_cell = qa.convert(cell,'arcsec')            
                 in_cell = [in_cell,in_cell]
         
+        if type(imsize)==type([]):
+            if imsize.__len__()==1:
+                imsize=[imsize[0],imsize[0]]
+        else:
+            imsize=[imsize,imsize]
 
         #####################
         # create image from components - this is used in checkinputs, 
@@ -110,8 +115,6 @@ def simdata(
         if (modelimage == ''):
             # if we are going to create an image we need a shape:
             # RI TODO set from mosaicsize instead of imsize
-            if imsize.__len__()==1:
-                imsize=[imsize,imsize]            
             out_nstk=stokes.__len__()
             # RI TODO find nchan from components
             nchan=1
@@ -187,6 +190,8 @@ def simdata(
         # set startfeq and bandwidtg in util object after treating model image
         bandwidth=qa.mul(qa.quantity(nchan),qa.quantity(chanwidth))
         util.bandwidth=bandwidth
+
+        # RI TODO check for freq overlap here.
 
 
         ##################################################################
@@ -420,7 +425,7 @@ def simdata(
                         ",trx="+str(t_rx)+",tau="+str(tau0)+
                         ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-                    msg("** this may take a few minutes, but will be faster in the next CASA release",priority="warn")
+                    msg("** this may take a few minutes, but will be faster in future releases",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
                             tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
@@ -456,6 +461,9 @@ def simdata(
         #            gaincal_defaults()
         #            # make cal file to be modified
         #            gaincal(vis=msfile,caltable=noisycalfile,solint=-1)
+
+
+        # calculate psf to suggest a cell size
 
 
 
@@ -508,7 +516,7 @@ def simdata(
             imagermode="mosaic"
             ftmachine="mosaic"   
 
-# if paddig is implemented the pad amount in pixels needs to be preserved and 
+# if padding is implemented the pad amount in pixels needs to be preserved and 
 # passed to statim, which needs to zoom to the original size, _and_ use the 
 # original size for the rms calculation. 
 #            # is image large enough?
@@ -827,7 +835,7 @@ def simdata(
             if modelimage != '' and fidelity == True:
                 if display: pl.subplot(233)                
                 util.statim(project+".diff.im",plot=display,disprange=max_cleanim)
-                if display: pl.subplot(234)
+                if display: pl.subplot(234)                
                 fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display)
 
         if display:

@@ -84,6 +84,13 @@ refstats = { 'sum': 240.7, #'flux': 0.21939,
              'rms': 0.0395,
              'sigma': 0.0391 }
 
+# padding changes, and mfs BW fix for sum 20100325
+refstats = { 'sum': 520.5, 
+             'max': 0.4292,
+             'min': -0.04473,
+             'rms': 0.0349,
+             'sigma': 0.0344 }
+
 ia.open(project + '.diff.im')
 hiidiff_stats=ia.statistics()
 ia.close()
@@ -94,6 +101,13 @@ diffstats = {'sum': 66.7,
              'min': -0.00391,
              'rms': 0.00199,
              'sigma': 0.00109 }
+
+#padding change, 20100325
+diffstats = {'sum': 67.1,
+             'max': 0.005628,
+             'min': -0.00105,
+             'rms': 0.000940,
+             'sigma': 0.000573 }
 
 ### tight 
 reftol   = {'sum':  1e-2,

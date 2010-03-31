@@ -1,22 +1,44 @@
-#
-
-try:
-    import casac
-except ImportError, e:
-    print "failed to load casa:\n", e
-    exit(1)
-
 import os
 import sys
-import matplotlib
+import time
 import signal
-from asap_init import *
+
+##
+## watchdog... which is *not* in the casapy process group
+##
+if os.fork( ) == 0 :
+    ppid = os.getppid( )
+    while True :
+        try:
+            os.kill(ppid,0)
+        except:
+            break
+        time.sleep(15)
+    os.killpg(ppid, signal.SIGTERM)
+    os.sleep(15)
+    os.killpg(ppid, signal.SIGKILL)
+    exit(0)
 
 ##
 ## ensure that we're the process group leader
 ## of all processes that we fork...
 ##
 os.setpgid(0,0)
+
+
+##
+## no one likes a bloated watchdog...
+## ...do this after setting up the watchdog
+##
+try:
+    import casac
+except ImportError, e:
+    print "failed to load casa:\n", e
+    exit(1)
+
+import matplotlib
+from asap_init import *
+
 
 def termination_handler(signum, frame):
 
@@ -106,7 +128,7 @@ casa = { 'build': {
 ##  a broken dbus-daemon-1...
 ##
 for exe in ['dbus-daemon']:
-    for dir in ['/bin', '/usr/bin', '/opt/local/bin'] :
+    for dir in ['/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
         dd = dir + os.sep + exe
         if os.path.exists(dd) and os.access(dd,os.X_OK) :
             casa['helpers']['dbus'] = dd

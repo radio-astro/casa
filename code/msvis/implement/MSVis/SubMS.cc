@@ -41,6 +41,8 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
+//#include <casa/OS/Memory.h>              // Can be commented out along with
+//                                         // Memory:: calls.
 #include <casa/Containers/Record.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -91,7 +93,8 @@ namespace casa {
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    nant_p(0)
+    nant_p(0),
+    ignorables_p("")
   {
   }
   
@@ -110,7 +113,8 @@ namespace casa {
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    nant_p(0)
+    nant_p(0),
+    ignorables_p("")
   {
   }
   
@@ -505,7 +509,7 @@ namespace casa {
   
   
   Bool SubMS::makeSubMS(String& msname, String& colname,
-                        const Vector<Int>& tileShape)
+                        const Vector<Int>& tileShape, const String& ignorables)
   {
     LogIO os(LogOrigin("SubMS", "makeSubMS()"));
     try{
@@ -551,6 +555,8 @@ namespace casa {
                              colNamesTok, 0);
       }
       
+      ignorables_p = ignorables;
+
       msOut_p= *outpointer;
       msc_p=new MSColumns(msOut_p);
       
@@ -1395,8 +1401,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       if (!ms_p.tableDesc().isColumn(MS::columnName(colNames[i])))
 	{
 	  ostringstream ostr;
-	  ostr << "Desired column (" << colNames[i] << ") not found in the input MS ("
-	       << ms_p.tableName() << ").";
+	  ostr << "Desired column (" << MS::columnName(colNames[i])
+               << ") not found in the input MS (" << ms_p.tableName() << ").";
 	  throw(AipsError(ostr.str()));
 	}
   }
@@ -3516,7 +3522,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
 	    Int foundRow = -1;
 	    for(int i=0; i<nextSourceRow; i++){
-	      if(SOURCEsourceIdCol(i) == theSOURCEId && SOURCESPWIdCol(i)==theSPWId){
+	      if(SOURCEsourceIdCol(i) == theSOURCEId && (SOURCESPWIdCol(i)==theSPWId || SOURCESPWIdCol(i)==-1)){
 		foundRow = i;
 		break;
 	      }
@@ -4620,6 +4626,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    }
 		  }
 		}
+		for(uInt k=0; k<nCorrelators; k++){
+		  if(numNominal(k)>0. && numNominal(k)<averageN[i]-1){ // there are channels right on this frequency
+		    // and there are at least two more not on this frequency.
+		    // In order to make cvel's output agree with the interpolation done in clean,
+		    //  need to reduce the weight of the channels right on the frequency. 
+		    if(averageChanFrac[i][j]==1.){ // this is one of them
+		      averageChanFrac[i][j] = 0.1;
+		      modNorm(k) -= 0.9; // correct norm
+		    }
+		  }
+		}
 	      }
 	    }
 
@@ -4637,17 +4654,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
 
                       // renormalize for the case of missing SPW coverage
-		      if(numNominal(k)>0.){ // there are channels right on this frequency
-			if(averageChanFrac[i][j]==1.){ // this is one of them
-			  weight = 1./numNominal(k);
-			}
-			else{
-			  weight = 0.;
-			}
-		      }
-		      else { // need to interpolate
-			weight = averageChanFrac[i][j] / modNorm(k);
-		      }
+		      weight = averageChanFrac[i][j] / modNorm(k);
 
 		      if(CORRECTED_DATAColIsOK){
 			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
@@ -4948,8 +4955,8 @@ const Vector<MS::PredefinedColumns>& SubMS::parseColumnNames(String col,
     }
     else if(!doAny){
       ostringstream ostr;
-      ostr << "Desired column (" << wanted[i] << ") not found in the input MS ("
-           << msref.tableName() << ").";
+      ostr << "Desired column (" << MS::columnName(wanted[i])
+           << ") not found in the input MS (" << msref.tableName() << ").";
       throw(AipsError(ostr.str()));
     }
   }
@@ -5254,10 +5261,20 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     
   Double timeBin=timeBin_p;
 
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Before fillAntIndexer(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   //// fill time and timecentroid and antennas
   nant_p = fillAntIndexer(mscIn_p, antIndexer_p);
   if(nant_p < 1)
     return False;
+
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Before numOfTimeBins(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
 
   //Int numBaselines=numOfBaselines(ant1, ant2, False);
   Int numTimeBins = numOfTimeBins(timeBin);  // Sets up remappers as a side-effect.
@@ -5267,12 +5284,22 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
        << "Number of time bins is < 1: time averaging bin size is not > 0"
        << LogIO::POST;
 
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Before msOut_p.addRow(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   msOut_p.addRow(numOutRows_p, True);
         
   //    relabelIDs();
 
   msc_p->interval().fillColumn(timeBin);
-    
+
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "After numOfTimeBins(): "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   //things to be taken care in fillTimeAverData...
   // flagRow		ScanNumber	uvw		weight		
   // sigma		ant1		ant2		time
@@ -6030,6 +6057,15 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
 
   Int SubMS::numOfTimeBins(const Double timeBin)
   {
+    // Figure out which bins each row (slot) will go in, and return the
+    // number of bins (-1 on failure).
+    //
+    // Normally the bins are automatically separated by changes in any data
+    // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
+    // allowed to span (ignore) changes in certain descriptors.  An example is 
+    // scan # in WSRT MSes; it goes up with each integration, defeating time
+    // averaging!
+    //
     if(timeBin > 0.0){
       Int numrows = mssel_p.nrow();
       const Vector<Int>&    ant1         = mscIn_p->antenna1().getColumn();
@@ -6038,10 +6074,29 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       const Vector<Double>& intervalRows = mscIn_p->interval().getColumn();
       const Vector<Int>&    datDesc      = mscIn_p->dataDescId().getColumn();
       const Vector<Int>&    fieldId      = mscIn_p->fieldId().getColumn();
-      const Vector<Int>&    arrayIDs     = mscIn_p->arrayId().getColumn();
-      const Vector<Int>&    scan         = mscIn_p->scanNumber().getColumn();
-      const Vector<Int>&    state        = mscIn_p->stateId().getColumn();
-      const Vector<Bool>&   rowFlag      = mscIn_p->flagRow().getColumn();
+
+      Bool ignore_array = false;    
+      Bool ignore_scan  = false;    // The most likely thing to ignore,
+                                    // esp. for WSRT MSes.
+      Bool ignore_state = false;
+      Vector<Int> zeroes;                  // The dummy values for ignored quantities.
+      if(ignorables_p != ""){              // Ignore something
+        zeroes.resize(ant1.nelements());   // Dummy vector of nrows zeroes.
+        ignore_array = ignorables_p.contains("arr"); // Pirate talk for "array".
+        ignore_scan  = ignorables_p.contains("scan");
+        ignore_state = ignorables_p.contains("state");
+      }
+
+      const Vector<Int>& arrayIDs = ignore_array ? 
+                                    zeroes : mscIn_p->arrayId().getColumn();
+
+      const Vector<Int>& scan = ignore_array ? zeroes :
+                                mscIn_p->scanNumber().getColumn();
+
+      const Vector<Int>& state = ignore_array ? zeroes :
+                                 mscIn_p->stateId().getColumn();
+
+      const Vector<Bool>& rowFlag = mscIn_p->flagRow().getColumn();
 
       //std::set<Int> slotSet;
       
@@ -6050,9 +6105,19 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       newTimeVal_p.resize(numrows);
       bin_slots_p.resize(numrows);
 
-      make_map(arrayIDs, arrayRemapper_p);
-      make_map(scan,     scanRemapper_p);  // This map is only implicitly used.
-      make_map(state,    stateRemapper_p);
+      if(ignore_array)
+        arrayRemapper_p.resize(1);         // 0 -> 0
+      else
+        make_map(arrayIDs, arrayRemapper_p);
+      if(ignore_scan)
+        scanRemapper_p.resize(1);         // 0 -> 0
+      else
+        make_map(scan,     scanRemapper_p);  // This map is only implicitly
+                                             // used.
+      if(ignore_state)
+        stateRemapper_p.resize(1);         // 0 -> 0
+      else
+        make_map(state,    stateRemapper_p);
 
       Int numBin = 0;
 
@@ -6273,10 +6338,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   Matrix<Float> outRowWeight(npol_p[0], outNrow);
   outRowWeight.set(0.0);
 
-  Matrix<Float> outImagingWeight(doImgWts_p ? nchan_p[0] : 0,
-				 doImgWts_p ? outNrow    : 0);
-  if(doImgWts_p)
-    outImagingWeight.set(0.0);
+  Vector<Float> outImagingWeight;  // Gets resized + initialized later.
 
   Matrix<Bool> outFlag(npol_p[0], nchan_p[0]);
 
@@ -6324,8 +6386,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   outSigma.set(0.0);
 
   const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
-  os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
-  os << LogIO::NORMAL2 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
+  //os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
+  os << LogIO::DEBUG1 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
   //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
@@ -6337,6 +6399,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   // The real initialization is inside the loop - this just prevents a compiler warning.
   uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
   Array<Float> unflgWtSpec;
+  Vector<Float> unflgImgWts;
   Array<Complex> data_toikit;
   Array<Float> floatData_toikit;
   Vector<Float> unflaggedwt;
@@ -6344,8 +6407,18 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   // Iterate through timebins.
   uInt orn = 0; 		      // row number in output.
   // Guarantee oldDDID != ddID on 1st iteration.
+
   Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
+  //Float oldMemUse = -1.0;
   for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
+    // Float memUse = Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0);
+    // if(memUse != oldMemUse){
+    //   oldMemUse = memUse;
+    //   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+    //      << "tbn " << tbn << ": " << memUse << " MB"
+    //      << LogIO::POST;
+    // }
+    
     // Iterate through slots.
     for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
         slotit != bin_slots_p[tbn].end(); ++slotit){
@@ -6366,6 +6439,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           ddID = 0;
         }
       
+        // Note the lack of polStart_p[ddID] - this is not set up to select by
+        // polarization, or even correlation.
         blc = IPosition(2, 0, chanStart_p[ddID]);
         trc = IPosition(2, npol_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
         chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
@@ -6373,8 +6448,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         sliceShape = trc - blc + 1;
         if(sliceShape != oldsliceShape){
           os << LogIO::DEBUG1
-             << "sliceShape = " << sliceShape
+             << "sliceShape = " << sliceShape << " (was: " << oldsliceShape << ")"
              << LogIO::POST;
+          oldsliceShape = sliceShape;
 
           // Refit the temp & output holders for this shape.
           unflaggedwt.resize(npol_p[ddID]);
@@ -6382,13 +6458,17 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           data_toikit.resize(sliceShape);
           for(uInt datacol = 0; datacol < ntok; ++datacol)
             outData[datacol].resize(sliceShape);
+          if(doFloat){
+            floatData_toikit.resize(sliceShape);
+            outFloatData.resize(sliceShape);
+          }
           if(doSpWeight){
             unflgWtSpec.resize(sliceShape);
             outSpWeight.resize(sliceShape);
           }
-          if(doFloat){
-            floatData_toikit.resize(sliceShape);
-            outFloatData.resize(sliceShape);
+          if(doImgWts_p){
+            unflgImgWts.resize(nchan_p[ddID]);
+            outImagingWeight.resize(nchan_p[ddID]);
           }
         }
       }
@@ -6401,6 +6481,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         outFloatData.set(0.0);      
       if(doSpWeight)
         outSpWeight.set(0.0);
+      if(doImgWts_p)
+        outImagingWeight.set(0.0);
 
       // Iterate through mscIn_p's rows that belong to the slot.
       Double swv = 0.0; // Sum of the weighted visibilities.
@@ -6514,6 +6596,21 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
                                floatData(*toikit), flag(*toikit), outFloatData);
             }
           }
+          
+          if(doImgWts_p){
+            for(Int c = 0; c < nchan_p[ddID]; ++c){
+              Bool unflagged = false;
+                  
+              for(Int polind = 0; polind < npol_p[ddID]; ++polind){
+                if(!flag(*toikit)(IPosition(2, polind, chanStart_p[ddID] + c))){
+                  unflagged = true;
+                  break;
+                }
+              }
+              unflgImgWts[c] = unflagged ? inImagingWeight(*toikit)(IPosition(1, chanStart_p[ddID] + c)) : 0.0;
+            }
+          }
+
 
           Double wv = 0.0;
           Array<Complex>::const_iterator dataEnd = data_toikit.end();
@@ -6531,15 +6628,13 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           outExposure[orn] += totrowwt * inExposure(*toikit);
         
           if(doImgWts_p){
-            inImagingWeight.get(*toikit, inImgWtsSpectrum);
-          
-            for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
-              outImagingWeight(c, orn) += totrowwt * inImgWtsSpectrum[c];
+            for(Int c = 0; c < nchan_p[ddID]; ++c)
+              outImagingWeight[c] += totrowwt * unflgImgWts[c];
           }
         }
       } // End of loop through the slot's rows.
 
-      // If there were no weights > 0, plop in a reasonable values just for
+      // If there were no weights > 0, plop in reasonable values just for
       // appearance's sake.
       if(swv <= 0.0)
         outUVW.column(orn) = inUVW(slotv0);
@@ -6548,14 +6643,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       //totslotwt = sum(outRowWeight.column(orn));  // Uncomment for debugging
       if(totslotwt > 0.0){
         outExposure[orn] *= slotv.size() / totslotwt;
-        if(doImgWts_p){
-          for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
-            outImagingWeight(c, orn) /= totslotwt;
-        }
       }
       else{
         // outExposure[orn] = 0.0;      // Already is.
-        // outImagingWeight(c, orn) = 0.0;  // Ditto.
         outTC[orn] = inTC(slotv0);      // Looks better than 1858.
         outRowFlag[orn] = true;
       }
@@ -6574,6 +6664,18 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             ++oDIter;
           }
         }
+        if(doImgWts_p){
+          uInt npol = outRowWeight.column(orn).nelements();          
+          uInt nchan = chanStop - chanStart_p[ddID];
+
+          for(uInt c = 0; c < nchan; ++c){
+            Float totchanwt = 0.0;
+            for(uInt polind = 0; polind < npol; ++polind)
+              totchanwt += outSpWeight(polind, c);
+            if(totchanwt > 0.0)
+              outImagingWeight[c] /= totchanwt;
+          }
+        }        
       }
       else{
         uInt npol  = outRowWeight.column(orn).nelements();
@@ -6592,6 +6694,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
                 outData[datacol](polind, c) = 0.0;
             }
           }
+        }
+        if(doImgWts_p){
+          if(totslotwt > 0.0)
+            for(uInt c = 0; c < nchan; ++c)
+              outImagingWeight[c] /= totslotwt;
         }
       }
 
@@ -6639,11 +6746,17 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         msc_p->floatData().put(orn, outFloatData);
       if(doSpWeight)
         msc_p->weightSpectrum().put(orn, outSpWeight);
+      if(doImgWts_p)
+        msc_p->imagingWeight().put(orn, outImagingWeight);
       
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.
   }
   os << LogIO::NORMAL << "Data binned." << LogIO::POST; 
+
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
 
   bin_slots_p.resize(0);           // Free some memory
 
@@ -6655,10 +6768,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   msc_p->sigma().putColumn(outSigma);
   outSigma.resize();
 
-  if(doImgWts_p){
-    msc_p->imagingWeight().putColumn(outImagingWeight);
-    outImagingWeight.resize();
-  }
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "memory after putting ImagingWt: "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
 
   msc_p->antenna1().putColumn(outAnt1);
   msc_p->antenna2().putColumn(outAnt2);
@@ -6679,6 +6792,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   msc_p->time().putColumn(outTime);
   msc_p->timeCentroid().putColumn(outTC);
 
+  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+  //    << "memory after putting TC: "
+  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+  //    << LogIO::POST;
+
   return True;
 }
 
@@ -6686,7 +6804,7 @@ void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
                           const Vector<MS::PredefinedColumns> colEnums)
 {
   // Set up a map from dataColumn indices to ArrayColumns in the output.
-  // mapper has to b    e a pointer (gasp!), not a Vector, because
+  // mapper has to be a pointer (gasp!), not a Vector, because
   // Vector<ArrayColumn<Complex> > mapper(ntok) would implicitly call
   // .resize(), which uses =, which is banned for ArrayColumn.
 
@@ -6701,7 +6819,7 @@ void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
         mapper[i].reference(msc_p->modelData());
       else if(colEnums[i] == MS::LAG_DATA)
         mapper[i].reference(msc_p->lagData());
-      else                                  // The putput default !=
+      else                                  // The output default !=
         mapper[i].reference(msc_p->data()); // the input default.
     }
   }

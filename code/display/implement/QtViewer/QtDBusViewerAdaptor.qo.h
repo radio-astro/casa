@@ -68,9 +68,10 @@ namespace casa {
 	QDBusVariant restore( const QString &path, int panel=0 );
 	QString cwd( const QString &new_path = "" );
 	QDBusVariant panel( const QString &type="viewer", bool hidden=false  );
-	QDBusVariant hide( int panel );
-	QDBusVariant show( int panel );
-	QDBusVariant close( int panel );
+	QDBusVariant hide( int panel=0 );
+	QDBusVariant show( int panel=0 );
+	QDBusVariant close( int panel=0 );
+	QDBusVariant popup( const QString &what, int panel=0 );
 
 	QDBusVariant frame( int num=-1, int panel=0 );
 	QDBusVariant zoom( int level, int panel=0 );

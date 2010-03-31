@@ -92,10 +92,14 @@ namespace casa {
     agents_p = NULL;
     agentCount_p=0;
     opts_p = NULL;
-    
+
     logSink_p = LogSink(LogMessage::NORMAL, False);
     
     nant = 0;
+    nifr = 0;
+    nfeed = 0;
+    nfeedcorr = 0;
+
     setdata_p = False;
     selectdata_p = False;
     // setupAgentDefaults();
@@ -128,8 +132,8 @@ namespace casa {
     quack_agent_exists = false;
   }
   
-    Flagger::~Flagger ()
-    {
+  Flagger::~Flagger ()
+  {
 	/*
 	  jmlarsen: Eh? The following code is probably a bug
 	  (it closes the MS when the length() is 0)
@@ -1726,7 +1730,7 @@ namespace casa {
 		  // iterate over visbuffers
 		  for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
 
-		    progmeter.update(Double(itime));
+		    progmeter.update(itime);
 		    chunk.newTime();
 		    Bool anyActive = False;
 		    anyActive=False;
@@ -1826,7 +1830,7 @@ namespace casa {
 		      acc[ival]->startDry();
 		  for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
 		    {
-		      progmeter.update(Double(itime));
+		      progmeter.update(itime);
 		      // now, call individual VisBuffer iterators
 		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 			if ( iter_mode(ival) == RFA::DRY )
@@ -1864,7 +1868,7 @@ namespace casa {
 		  acc[i]->startFlag();
 	      uInt itime=0;
 	      for( vi.origin(); vi.more(); vi++,itime++ ) {
-		  progmeter.update(Double(itime));
+		  progmeter.update(itime);
 		  
 		  chunk.newTime();
 		  //		  inRowFlags += sum(chunk.nrfIfr());

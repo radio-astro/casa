@@ -16,6 +16,9 @@ class listhistory_test(unittest.TestCase):
     def setUp(self):
         self.res = None
         default(listhistory)
+        
+        if(os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
 
         shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
                             '/data/regression/exportasdm/input/'+self.msfile, self.msfile)
@@ -47,7 +50,7 @@ class listhistory_test(unittest.TestCase):
         os.system(cmd)
     
         # Get the number of lines in file
-        refnum=25
+        refnum=14
         cmd="wc -l %s |egrep \"[0-9]+\" -o" %newfile    
         output=commands.getoutput(cmd)
         num = int(output)

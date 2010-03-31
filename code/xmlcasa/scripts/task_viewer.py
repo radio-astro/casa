@@ -141,6 +141,9 @@ class __viewer_class(object):
 					if type(outlandscape) == bool and outlandscape :
 						orientation="landscape"
 					vwr.output(outfile,scale=scale,dpi=dpi,format=format,orientation=orientation,panel=panel)
+			else:
+				vwr.popup( 'open', panel=panel )
+
 
 			# it makes no sense to leave a panel open with no way of interacting with it
 			if type(gui) == bool and not gui:

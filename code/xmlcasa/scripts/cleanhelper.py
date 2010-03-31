@@ -33,7 +33,10 @@ class cleanhelper:
         self.finalimages={}
         self.usescratch=usescratch
         self.dataspecframe='LSRK'
-        self.usespecframe=''
+        self.usespecframe='' 
+        # to use phasecenter parameter in initChannelizaiton stage
+        # this is a temporary fix need. 
+        self.srcdir=''
         if not casalog:  # Not good!
             loghome =  casac.homefinder.find_home_by_name('logsinkHome')
             casalog = loghome.create()
@@ -829,7 +832,7 @@ class cleanhelper:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
                         splitline2=splitline[0].split()
-                        print "splitline2=",splitline2
+                        #print "splitline2=",splitline2
                         if (len(splitline2)<6):
                             ##circles
                             if(int(splitline2[1]) <0):
@@ -999,7 +1002,7 @@ class cleanhelper:
         return True
 
 
-    def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype,restf):
+    def oldsetChannelization(self,mode,spw,field,nchan,start,width,frame,veltype,restf):
         """
         determine appropriate values for channelization
         parameters when default values are used
@@ -1030,7 +1033,6 @@ class cleanhelper:
                         width=''
                 else:      
                     raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
-                #raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
 
         ####use the frame defined by user
         if(frame != ''):
@@ -1060,8 +1062,14 @@ class cleanhelper:
             # keep original unit
             if(qa.quantity(start)['unit'].find('m/s') > -1):
                 instartunit=qa.quantity(start)['unit']
+            else:
+                if start!='': 
+                    raise TypeError, "Unrecognized unit for start parameter in velocity mode"
             if(qa.quantity(width)['unit'].find('m/s') > -1):
                 inwidthunit=qa.quantity(start)['unit']
+            else:
+                if width!='':
+                    raise TypeError, "Unrecognized unit for width parameter in velocity mode"
             if((start=='' or width=='') or nchan==-1):
                 if(veltype!='radio'):
                     raise TypeError, "Currently default nchan, start and width for velocity mode work with the default veltype(='radio') only "
@@ -1072,8 +1080,14 @@ class cleanhelper:
             # keep original unit
             if(qa.quantity(start)['unit'].find('Hz') > -1):
                 instartunit=qa.quantity(start)['unit']
+            else:
+                if start!='': 
+                    raise TypeError, "Unrecognized unit for start parameter in frequency mode"
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 inwidthunit=qa.quantity(width)['unit']
+            else:
+                if width!='': 
+                    raise TypeError, "Unrecognized unit for width parameter in frequency mode"
         # deal with frequency or velocity mode
         if(start==''):
             if(width==''):
@@ -1104,7 +1118,11 @@ class cleanhelper:
             if(width==''):
                 if(frame != ''):
                     self._casalog.post('Note: in frequency and velocity mode, the default width is the original channel width\n  and is not converted to the output reference frame.', 'WARN')
-                (freqlist,finc)=self.getfreqs(nchan,spw,start,1)
+                # need be done in a better way... 
+                if(mode=='velocity'):
+                    (freqlist,finc)=self.getfreqs(nchan,spw,start,-1)
+                else: 
+                    (freqlist,finc)=self.getfreqs(nchan,spw,start,1)
             else:
                 if(mode=='velocity'):
                     loc_width=1
@@ -1117,15 +1135,6 @@ class cleanhelper:
             if(self.usespecframe==''):
                 self.usespecframe=self.dataspecframe
             retnchan = len(freqlist)
-        if(mode=='velocity' and nchan==-1):
-            vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf) 
-            vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field,restf) 
-            if(width==''):
-                vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)))
-            else:
-                vwidth=qa.convert(width,'m/s')
-            vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
-            retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
 
         if(mode=='frequency'):
             # returned values are in Hz
@@ -1140,17 +1149,39 @@ class cleanhelper:
                 retwidth = self.qatostring(qa.convert(str(finc)+'Hz',inwidthunit))
              
         elif(mode=='velocity'):
-            #convert back to velocities
-            retstart = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
-            if(width==''):
-                w1 = self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)
-                w0 = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
-                retwidth=str(qa.quantity(qa.sub(qa.quantity(w1),qa.quantity(w0)))['value'])+'m/s'
+            #convert back to velocities (take max freq for min vel )
+            if start=='':
+                retstart = self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf)
             else:
-                retwidth=width
+                retstart = self.convertvf(start,frame,field,restf)
+
+            if nchan ==-1:
+            # re-caluculate nchan
+                if retnchan > 1:
+                    vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf) 
+                    vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field,restf) 
+                    if(width==''):
+                        vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)))
+                    else:
+                        vwidth=qa.convert(width,'m/s')
+                    vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
+                else:
+                    vwidth=qa.quantity(str(finc)+'m/s')
+                    vrange=vwidth
+                retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
+                retwidth=vwidth
+
+            else:
+                if(width==''):
+                    # width should be determined from last freq channels
+                    v1 = self.convertvf(str(freqlist[-2])+'Hz',frame,field,restf)
+                    v0 = self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf)
+                    retwidth=str(qa.quantity(qa.sub(qa.quantity(v1),qa.quantity(v0)))['value'])+'m/s'
+                else:
+                    retwidth=width
         else:
             raise TypeError, "Specified mode is not support"
- 
+
         return retnchan, retstart, retwidth
 
     def qatostring(self,q):
@@ -1161,20 +1192,26 @@ class cleanhelper:
             raise TypeError, "Does not seems to be quantity"
         return str(q['value'])+q['unit']
 
-    def convertvf(self,vf,frame,field,restf):
+    def convertvf(self,vf,frame,field,restf,veltype='radio'):
         """
         returns doppler(velocity) or frequency in string
-        # currently use first rest frequency
+        currently use first rest frequency
+        Assume input vf (velocity or fequency) and output are
+        the same 'frame'.
         """
         #pdb.set_trace()
         docalcf=False
-        if(frame==''): frame='LSRK'
+        #if(frame==''): frame='LSRK' 
+        #Use datasepcframe, it is cleanhelper initialized to set
+        #to LSRK
+        if(frame==''): frame=self.dataspecframe
         if(qa.quantity(vf)['unit'].find('m/s') > -1):
             docalcf=True
         elif(qa.quantity(vf)['unit'].find('Hz') > -1):
             docalcf=False
         else:
-            raise TypeError, "Unrecognized unit for the velocity or frequency parameter"
+            if vf !=0:
+                raise TypeError, "Unrecognized unit for the velocity or frequency parameter"
         fldinds=ms.msseltoindex(self.vis, field=field)['field'].tolist()
         if(len(fldinds) == 0):
             fldid0=0
@@ -1198,19 +1235,24 @@ class cleanhelper:
                 #print "using user input rest freq=",rfreq
             else:
                 raise TypeError, "Unrecognized unit or type for restfreq"
-        if(docalcf):
-            dop=me.doppler('radio', qa.quantity(vf)) 
-            rvf=me.tofrequency(frame, dop, qa.quantity(rfreq[0],'Hz'))
+        if(vf==0):
+            # assume just want to get a restfrequecy from the data
+            ret=str(rfreq[0])+'Hz'
         else:
-            frq=me.frequency(frame, qa.quantity(vf))
-            rvf=me.todoppler('radio',frq, qa.quantity(rfreq[0],'Hz')) 
-        ret=str(rvf['m0']['value'])+rvf['m0']['unit']
+            if(docalcf):
+                dop=me.doppler(veltype, qa.quantity(vf)) 
+                rvf=me.tofrequency(frame, dop, qa.quantity(rfreq[0],'Hz'))
+            else:
+                frq=me.frequency(frame, qa.quantity(vf))
+                rvf=me.todoppler(veltype, frq, qa.quantity(rfreq[0],'Hz')) 
+            ret=str(rvf['m0']['value'])+rvf['m0']['unit']
         return ret 
 
 
     def getfreqs(self,nchan,spw,start,width, dummy=False):
         """
         returns a list of frequencies to be used in output clean image
+        if width = -1, start is actually end (max) freq 
         """
         #pdb.set_trace()
         freqlist=[]
@@ -1281,15 +1323,22 @@ class cleanhelper:
                    # assume called from setChannelization with local width=1
                    # for the default width(of clean task parameter)='' for
                    # velocity and frequency modes. This case set width to 
-                   # first channel width
-                   finc=chanfreqs1d[1]-chanfreqs1d[0]
+                   # first channel width (for freq) and last one (for vel) 
+                   if width==-1:
+                       finc=chanfreqs1d[-1]-chanfreqs1d[-2]
+                   else:
+                       finc=chanfreqs1d[1]-chanfreqs1d[0]
+
                    # still need to convert to target reference frame!
         elif(type(width)==str):
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 finc=qa.convert(qa.quantity(width),'Hz')['value']
         if(nchan ==-1):
-            if(qa.quantity(start)['unit'].find('Hz') > -1): 
-                bw=chanfreqs1d[-1]-startf
+            if(qa.quantity(start)['unit'].find('Hz') > -1):
+                if width==-1: # must be in velocity order (i.e. startf is max)
+                    bw=startf-chanfreqs1d[0]
+                else:
+                    bw=chanfreqs1d[-1]-startf
             else:
                 bw=chanfreqs1d[-1]-chanfreqs1d[start]
             if(bw < 0):
@@ -1309,6 +1358,415 @@ class cleanhelper:
             else:
                 freqlist.append(freqlist[-1]+finc) 
         return freqlist, finc
+
+    def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype,restf):
+        """
+        determine appropriate values for channelization
+        parameters when default values are used
+        for mode='velocity' or 'frequency' or 'channel'
+        """
+
+        # first parse spw parameter:
+
+        # use MSSelect if possible:
+        if spw in (-1, '-1', '*', '', ' '):
+            spwinds = -1
+            chaninds = -1
+        else:
+            sel=ms.msseltoindex(self.vis, spw=spw)
+            spwinds=sel['spw'].tolist()
+            chaninds=sel['channel'].tolist()
+            if(len(spwinds) == 0):
+                spwinds = -1      
+                # I don't believe it is possible to select spw=-1 (all) and select other 
+                # than all chans, but in case it is here is a check:
+                if(len(chaninds) > 0):
+                    raise Exception, 'spw parameter '+spw+' resulted in chan select without spw select';
+                chaninds = -1
+
+        # the first selected spw 
+        if(spwinds==-1): 
+            spw0=0
+        else:
+            spw0=spwinds[0]
+
+        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        chanfreqscol=tb.getvarcol('CHAN_FREQ')
+        chanwidcol=tb.getvarcol('CHAN_WIDTH')
+        spwframe=tb.getcol('MEAS_FREQ_REF');
+        tb.close()
+
+        # set dataspecframe:
+        elspecframe=["REST",
+                     "LSRK",
+                     "LSRD",
+                     "BARY",
+                     "GEO",	    
+                     "TOPO",
+                     "GALACTO",
+                     "LGROUP",
+                     "CMB"]
+        self.dataspecframe=elspecframe[spwframe[spw0]];
+
+        # set usespecframe:  user's frame if set, otherwise data's frame
+        if(frame != ''):
+            self.usespecframe=frame
+        else:
+            self.usespecframe=self.dataspecframe
+
+
+        # extract array from dictionary returned by getvarcol
+        # and accumulate selected chan freqs in chanfreqs1d (sorted by flatten)
+
+        chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
+        # ALL chans in first spw - keep this because later if in chan mode, start will 
+        # be an index in this list, and width will also calculate based on this
+        chanfreqs0 = chanfreqs[0]  
+        if len(chanfreqs0)<1:
+            raise Exception, 'spw parameter '+spw+' selected spw '+str(spw0+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
+
+        
+        # start accumulating channels:
+        if chaninds!=-1:
+            chanind0=chaninds[0]
+        else:
+            chanind0=[0,0,len(chanfreqs0)-1,1]
+        
+        chanfreqs1dx = numpy.array(chanfreqs0[chanind0[1]])
+        for ci in range(chanind0[1],chanind0[2]+1,chanind0[3])[1:]:
+            chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqs0[ci])
+
+        # while we're here get width of first selected channel of first selected spw
+        chanwids0=chanwidcol['r'+str(spw0+1)].transpose()
+        chan0freqwidth=chanwids0[0][chanind0[1]]
+
+        # more spw?:
+        if(spwinds!=-1):
+            for ispw in range(1,len(spwinds)):
+                spwi=spwinds[ispw]
+                chanfreqs=chanfreqscol['r'+str(spwi+1)].transpose()
+                chanfreqsi = chanfreqs[0]  
+                if len(chanfreqsi)<1:
+                    raise Exception, 'spw parameter '+spw+' selected spw '+str(spwinds[ispw]+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
+                # accumulate channels:
+                if chaninds!=-1:
+                    chanindi=chaninds[ispw]
+                else:
+                    chanindi=[1,0,len(chanfreqsi)-1,1]
+        
+                for ci in range(chanindi[1],chanindi[2]+1,chanindi[3]):
+                    chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqsi[ci])
+            if len(spwinds)<=1:
+                chanindi=chanind0
+                spwi=spw0
+        else:
+            chanindi=chanind0
+            spwi=spw0
+         
+        # get width of last selected channel of last spw (that could be used for width in vel mode)
+        chanwidsN=chanwidcol['r'+str(spwi+1)].transpose()
+        chanNfreqwidth=chanwidsN[0][chanindi[2]]
+
+
+        # flatten:
+        chanfreqs1d = chanfreqs1dx.flatten()        
+        # despite what I was told, flatten() does not sort.
+        chanfreqs1d.sort()
+        chanfreqs0.sort()
+                
+        # now we have a list of the selected channel freqs in the data, 
+        # and we can start to parse start/width/nchan in a mode-dependent way:
+
+        # noninteractive clean(mode="freq") passes start=0 as default.
+        if (mode=="frequency" or mode=="velocity") and start==0:            
+            start=""
+ 
+        # copy these params - we may change them
+        locstart=start
+        locwidth=width
+        inwidthunit=''
+        instartunit=''
+        
+        # if start is float or int, will interpret as channel index.  otherwise
+        # otherwise convert start/width from vel to freq, save original units.
+        # do the conversion in the USER-SPECIFIED outframe 
+        # if frame='', convertvf will use dataspecframe
+ 
+        if type(start)==str:  
+            instartunit=qa.quantity(start)['unit']            
+            if(qa.quantity(start)['unit'].find('m/s') > -1):                
+                locstart=self.convertvf(start,frame,field,restf,veltype=veltype)
+
+        if type(width)==str:  
+            inwidthunit=qa.quantity(width)['unit']
+            if(qa.quantity(width)['unit'].find('m/s') > -1):            
+                if veltype!="radio":
+                    self._casalog.post('Note: the specified width '+width+' in frame '+veltype+' is being converted to frequency at the rest frequency, as in the radio frame', 'WARN')
+                    # the only other choice I could think of for freq at which to do the 
+                    # conversion would be at the start freq or end freq...
+                tmprestf=restf
+                if restf=="":
+                    # run a convertvf to get rest freq from the data
+                    tmprestf=self.convertvf(0,frame,field,restf,veltype=veltype)
+                locwidth=self.qatostring(qa.sub(self.convertvf(width,frame,field,restf,veltype=veltype),tmprestf))
+                
+        # now locstart and locwidth are either strings in freq, or numbers = chan indices, or ""
+
+        # next, convert chan indices into freqs, and convert string/quantities into numbers in Hz:
+        # some of this is mode-dependent for the interpretation of channels and defaults:
+
+        if(type(locstart)==int or type(locstart)==float):
+            # the user must mean start to refer to a channel
+            # we reference the start channel to the *unselected* channels in the first selected spw
+            if locstart>=len(chanfreqs0) or locstart<0:
+                raise TypeError, "Start channel is outside the first spw"
+            if type(locstart)==int:
+                # GAAAH - in noninteractive mode, default start=0 instead of "" that it should be!!!
+                if mode=="velocity" and locstart==0:
+                    fstart = chanfreqs1d[-1]
+                else:
+                    fstart = chanfreqs0[locstart]
+            else:
+                raise TypeError, "clean cannot use a fractional start channel at this time.  If you intended a start frequency or velocity please set start as a string with units"
+        elif(type(locstart)==str):
+            if(qa.quantity(locstart)['unit'].find('Hz') > -1):                
+                fstart=qa.convert(qa.quantity(locstart),'Hz')['value']
+            elif len(locstart)<=0:  # start not specified by user:
+                if mode=="velocity":
+                    fstart=chanfreqs1d[-1] # last selected channel
+                else:
+                    fstart=chanfreqs1d[0] # first selected channel
+            else:
+                raise TypeError, "Unrecognized start parameter"
+
+
+        if(type(locwidth)==str):
+            if(qa.quantity(locwidth)['unit'].find('Hz') > -1):
+                finc=qa.convert(qa.quantity(locwidth),'Hz')['value']
+            elif len(locwidth)<=0: # width not specified by user
+                locwidth=1
+                # Now the frame conversion is done in the end, hopefully this
+                # warning is  no longer needed
+                #if frame!="":
+                #    self._casalog.post('Note: in frequency and velocity mode, the default width is the original channel width\n  and is not converted to the output reference frame.', 'WARN')
+            else:
+                raise TypeError, "Unrecognized width parameter"
+
+        if(type(locwidth)==int or type(locwidth)==float):
+            # the user must mean width to refer to channels
+            # can be fractional or negative;  be careful about width=-1 which is valid, doesn't mean default.
+            #if frame!="":
+            #    self._casalog.post('Note: in frequency and velocity mode, the default width is the original channel width\n  and is not converted to the output reference frame.', 'WARN')
+
+            if locwidth==0:  # this should not happen
+                locwidth=1
+                
+            # if more than one channel, use the difference between 0 and 1 as the default width, 
+            # except in vel mode we'll use the last (highest freq) width of the last spw selected 
+            if mode=="velocity":
+                if len(chanfreqs1d)>1:
+                    defchanwidth = chanfreqs1d[-2]-chanfreqs1d[-1]  # negative inc
+                else:
+                    defchanwidth = -chanNfreqwidth
+                # if the user puts in "2" for width, they mean 2 chan width, in vel mode that's 
+                # a negative increment.  if they put in -2 they mean to go opposite the natural
+                # direction for some reason, i.e. a positive freq increment.
+
+            else:
+                if len(chanfreqs1d)>1:
+                    defchanwidth = chanfreqs1d[1]-chanfreqs1d[0]
+                else:
+                    defchanwidth = chan0freqwidth
+                # in freq or chan mode, a width of "2" means 2 chans, positive increment in freq.
+                    
+            self._casalog.post('default chan width = %f' % defchanwidth, 'DEBUG')
+            finc=defchanwidth*locwidth
+            # XXX still need to convert to target reference frame!
+            
+
+
+
+        self._casalog.post('fstart = %f, finc = %f' % (fstart,finc), 'DEBUG')
+        #print 'fstart = %f, finc = %f' % (fstart,finc)
+        # we now have fstart and finc, the start and increment in Hz.  finc can be <0        
+
+        if nchan<=0:            
+            if finc>=0:  # (shouldn't be 0)
+                bw = chanfreqs1d[-1]-fstart
+            else:
+                bw = fstart-chanfreqs1d[0]
+
+            if(bw < 0): # I think this is already take care of above but just in case
+                raise TypeError, "Start parameter is outside the data range"
+            # now we implicitly (in the +1) use the default chan width at both 
+            # beginning and end of the calculated bw.  if the last channel has a 
+            # vastly different chan width than the first one, and if the first chan 
+            # width was being used to calculate the output chan width, then part of the 
+            # last chan may be cut off.
+            nchan = int(round(bw/abs(finc)))+1   # XXX could argue for ceil here
+        
+        # sanity checks:
+        fend = fstart + finc*(nchan-1) 
+        if fend >= (chanfreqs1d[-1]+abs(finc)):
+            self._casalog.post("your values of spw, start, and width appear to exceed the spectral range available.  Blank channels may result","WARN")
+        if fend <= 0:
+            if finc<=0:
+                nchan = int(floor(fstart/abs(finc)))
+            else:
+                raise TypeError, "values of spw, start, width, and nchan have resulted in negative frequency output channels"
+        if fend <= (chanfreqs1d[0]-abs(finc)):
+            self._casalog.post("your values of spw, start, and width appear to exceed the spectral range available.  Blank channels may result","WARN")
+            
+        if nchan<=0:
+            raise TypeError, "values of spw, start, width, and nchan result in no output cube"
+
+
+        # here are the output channels in Hz
+        freqlist = numpy.array(range(nchan)) * finc + fstart
+
+        retnchan=len(freqlist)
+    
+        #print bw,freqlist[0],freqlist[-1]
+        
+        if mode=="channel":
+            # XXX depending on how this gets used, we probably needs checks here to convert
+            # from quantity strings to channel indices.  Check for strange behaviour.
+            if start=="":
+                retstart=0
+            else:
+                retstart=start
+            if width=="":
+                retwidth=1
+            else:
+                retwidth=width
+
+        elif(mode=='frequency'):
+            # freqlist are in Hz - could use fstart here too.
+            if instartunit=='':
+                retstart = str(freqlist[0])+'Hz'
+            else:
+                retstart = self.qatostring(qa.convert(str(freqlist[0])+'Hz',instartunit))
+
+            if inwidthunit=='':
+                # convert frame when default width is used 
+                if width=="" and frame!='':
+                    finc=self.convertframe(finc,frame,field)
+                retwidth = str(finc)+'Hz'
+            else:
+                retwidth = self.qatostring(qa.convert(str(finc)+'Hz',inwidthunit))
+
+        elif(mode=='velocity'):
+            # convert back to velocities (take max freq for min vel )
+            # use USER-SPECIFIED frame again (or default LSRK) XXX 
+            if(qa.quantity(start)['unit'].find('m/s') > -1):
+                # retstart = self.convertvf(start,frame,field,restf)
+                # since this is the same frame as we converted to freq, we can just give the 
+                # original start parameter back:
+                retstart = start
+            else:
+                # start means start. 
+                # start="" case, do in data frame
+                ##retstart = self.convertvf(str(fstart)+'Hz',frame,field,restf,veltype=veltype)
+                retstart = self.convertvf(str(fstart)+'Hz',self.dataspecframe,field,restf,veltype=veltype)
+                                
+            if(qa.quantity(width)['unit'].find('m/s') > -1):
+                # since this is the same frame as we converted to freq, we can just give the 
+                # original start parameter back:
+                retwidth=width
+            else:
+                if retnchan>1:
+                # watch out for the sign of finc.
+                    if finc>0:
+                        if frame =="":
+                            # here use data frame
+                            # v1 = self.convertvf(str(freqlist[-2])+'Hz',frame,field,restf,veltype=veltype)
+                            # v0 = self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf,veltype=veltype)                
+                            v1 = self.convertvf(str(freqlist[-2])+'Hz',self.dataspecframe,field,restf,veltype=veltype)
+                            v0 = self.convertvf(str(freqlist[-1])+'Hz',self.dataspecframe,field,restf,veltype=veltype)                
+                        else:
+                            # do frame conversion while it is still in freq
+                            f1 = self.convertframe(feqlist[-2], frame, field) 
+                            f0 = self.convertframe(feqlist[-1], frame, field) 
+                            v1 = self.convertvf(str(f1)+'Hz',self.datasepcframe,field,restf,veltype=veltype)
+                            v0 = self.convertvf(str(f0)+'Hz',self.dataspecframe,field,restf,veltype=veltype)                
+                        retwidth = str(qa.quantity(qa.sub(qa.quantity(v0),qa.quantity(v1)))['value'])+'m/s'
+                    else:
+                        if frame =="":
+                            # here use data frame
+                            # v1 = self.convertvf(str(freqlist[1])+'Hz',frame,field,restf,veltype=veltype)
+                            # v0 = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf,veltype=veltype)
+                            v1 = self.convertvf(str(freqlist[1])+'Hz',self.dataspecframe,field,restf,veltype=veltype)
+                            v0 = self.convertvf(str(freqlist[0])+'Hz',self.dataspecframe,field,restf,veltype=veltype)
+                        else:
+                            f1 = self.convertframe(freqlist[1],frame,field)
+                            f0 = self.convertframe(freqlist[0],frame,field)
+                            v1 = self.convertvf(str(f1)+'Hz',self.dataspecframe,field,restf,veltype=veltype)
+                            v0 = self.convertvf(str(f0)+'Hz',self.dataspecframe,field,restf,veltype=veltype)
+                        retwidth = str(qa.quantity(qa.sub(qa.quantity(v1),qa.quantity(v0)))['value'])+'m/s'
+                else:
+                    self._casalog.post("your parameters result in one channel - in vel mode the calculated width may not be accurate","WARN")
+                    retwidth = self.convertvf(str(finc)+'Hz',self.dataspecframe,field,restf,veltype=veltype)
+        else:
+            raise TypeError, "Specified mode is not supported"
+
+        # XXX do we need to set usespecframe=dataspecframe, overriding the user's, if start was ""?
+        # the old code seemed to do that.
+        # use data frame for default start (will be passed to defineimage in
+        # data frame, do the conversion in imager)
+        if start=="":
+            self.usespecframe=self.dataspecframe
+
+        return retnchan, retstart, retwidth
+
+
+    def convertframe(self,fin,frame,field):
+        """
+        convert freq frame in dataframe to specfied frame, assume fin in Hz
+        retruns converted freq in Hz (value only)
+        """
+        # assume set to phasecenter before initChanelization is called
+        pc=self.srcdir
+        if(type(pc)==str):
+            if (pc==''):
+                fieldused = field
+                if (fieldused ==''):
+                    fieldused ='0'
+                dir = int(ms.msseltoindex(self.vis,field=fieldused)['field'][0])
+            else:
+                tmpdir = phasecenter
+                try:
+                    if(len(ms.msseltoindex(self.vis, field=pc)['field']) > 0):
+                        tmpdir  = int(ms.msseltoindex(self.vis,field=pc)['field'][0])
+                except Exception, instance:
+                    tmpdir = pc
+                dir = tmpdir
+        if type(dir)==str:
+            try:
+                mrf, ra, dec = dir.split()
+            except Exception, instance:
+                raise TypeError, "Error in a string format  for phasecenter"
+            mdir = me.direction(mrf, ra, dec)
+        else:
+            tb.open(self.vis+'/FIELD')
+            srcdir=tb.getcell('DELAY_DIR',dir)
+            mrf=tb.getcolkeywords('DELAY_DIR')['MEASINFO']['Ref']
+            tb.close()
+            mdir = me.direction(mrf,str(srcdir[0][0])+'rad',str(srcdir[1][0])+'rad')
+            tb.open(self.vis+'/OBSERVATION')
+        telname=tb.getcell('TELESCOPE_NAME',0)
+        # use time in main table instead?
+        tmr=tb.getcell('TIME_RANGE',0)
+        tb.close()
+        #print "direction=", me.direction(mrf,str(srcdir[0][0])+'rad',str(srcdir[1][0])+'rad')
+        #print "tmr[1]=",tmr[1]
+        #print "epoch=", me.epoch('utc',qa.convert(qa.quantity(str(tmr[1])+'s'),'d'))
+        me.doframe(me.epoch('utc',qa.convert(qa.quantity(str(tmr[0])+'s'),'d')))
+        me.doframe(me.observatory(telname))
+        me.doframe(mdir)
+        f0 = me.frequency(self.dataspecframe, str(fin)+'Hz')
+        #print "frame=", frame, ' f0=',f0
+        fout = me.measure(f0,frame)['m0']['value']
+        return fout
 
     def initChaniter(self,nchan,spw,start,width,imagename,mode,tmpdir='_tmpimdir/'):
         """
@@ -1332,11 +1790,23 @@ class cleanhelper:
             os.mkdir(tmppath[-1])
         #internally converted to frequency mode for mode='channel'
         #to ensure correct frequency axis for output image
-        # put in helper function
+        #if mode == 'channel':
+        #    freqs, finc = self.getfreqs(nchan, spw, start, width)
+        #    newmode = 'frequency'
         if mode == 'channel':
-            freqs, finc = self.getfreqs(nchan, spw, start, width)
+            # get spectral axis info from the dirty image
+            ia.open(imagename[0]+'.image')
+            imcsys=ia.coordsys().torecord()
+            ia.close()
+            cdelt=imcsys['spectral2']['wcs']['cdelt']
+            crval=imcsys['spectral2']['wcs']['crval']
+            for i in range(nchan):
+                if i==0: freqs.append(crval)
+                freqs.append(freqs[-1]+cdelt)
+            finc = cdelt
             newmode = 'frequency'
         return freqs,finc,newmode,tmppath
+
 
     def makeTemplateCubes(self, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, mode, facets, cfcache, interpolation, 
@@ -1466,7 +1936,7 @@ class cleanhelper:
             # need to convert to frequencies
             # to ensure correct frequencies in
             # output images(especially for multi-spw)
-            # Use freq list instead
+            # Use freq list instead generated in initChaniter
             imstart=q(freqs[chan],'Hz')
             width=q(finc,'Hz')
         elif start.find('m/s')>0:

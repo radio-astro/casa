@@ -20,7 +20,7 @@ def feather(imagename=None,highres=None,lowres=None):
 		observations.
         lowres -- Name of low resolution (single dish) image
                 default: none; example: imagename='orion_gbt.im'
-	     This image is often a image from a single-dish oobservations
+	     This image is often a image from a single-dish observations
 	        or a clean image obtained from a lower resolution synthesis
 		observations.
 

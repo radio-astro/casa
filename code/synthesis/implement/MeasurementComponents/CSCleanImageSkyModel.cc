@@ -85,7 +85,8 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
     return True;
   //Make the PSFs, one per field
 
-  os << "Making approximate Point Spread Functions" << LogIO::POST;
+  os << LogIO::NORMAL    // Loglevel PROGRESS
+     << "Making approximate Point Spread Functions" << LogIO::POST;
   if(!donePSF_p)
     makeApproxPSFs(se);
   //
@@ -189,16 +190,16 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 
   while((absmax>=threshold())&& (maxIterations<numberIterations()) &&!stop) {
 
-    os << LogIO::NORMAL2 << "*** Starting major cycle " << cycle + 1 
+    os << LogIO::NORMAL << "*** Starting major cycle " << cycle + 1 
        << LogIO::POST;  // Loglevel PROGRESS
     cycle++;
 
     // Make the residual images. We do an incremental update
     // for cycles after the first one. If we have only one
     // model then we use convolutions to speed the processing
-    os << LogIO::NORMAL2         // Loglevel PROGRESS
-       << "Starting major cycle : making residual images for all fields"
-       << LogIO::POST;
+    //os << LogIO::NORMAL2         // Loglevel PROGRESS
+    //   << "Starting major cycle : making residual images for all fields"
+    //   << LogIO::POST;
     if(modified_p) {
       Bool incremental(cycle>1);
       if (incremental&&(itsSubAlgorithm == "fast")) {
@@ -223,7 +224,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
     if(cycle==1) oldmax=absmax;
 
     for (model=0;model<numberOfModels();model++) {
-      os << LogIO::NORMAL2         // Loglevel PROGRESS
+      os << LogIO::NORMAL         // Loglevel INFO
          << "Model " << model+1 << ": max, min residuals = "
 	 << max(resmax[model]) << ", " << min(resmin[model]) << endl;
     }
@@ -231,13 +232,13 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 
     // Can we stop?
     if(absmax<threshold()) {
-      os << LogIO::NORMAL2         // Loglevel PROGRESS
+      os << LogIO::NORMAL         // Loglevel INFO
          << "Reached stopping peak residual = " << absmax << LogIO::POST;
       stop=True;
     }
     else {
       if(oldmax < absmax){
-	//Diverging ? lets increase the cyclefactor 
+	//Diverging?  Let's increase the cyclefactor 
 	cycleFactor_p=1.5*cycleFactor_p;
 	oldmax=absmax;
       }
@@ -247,7 +248,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
       if (fudge > 0.8) fudge = 0.8;   // painfully slow!
 
       cycleThreshold=max(threshold(), fudge * absmax);
-      os << LogIO::NORMAL1         // Loglevel INFO
+      os << LogIO::NORMAL         // Loglevel INFO
          << "Maximum residual = " << absmax << ", cleaning down to "
 	 << cycleThreshold << LogIO::POST;
       
@@ -274,7 +275,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
           if((max(abs(resmax[model]))>cycleThreshold)||
 	     (max(abs(resmin[model]))>cycleThreshold)) {
 	    
-	    os << LogIO::NORMAL2         // Loglevel PROGRESS
+	    os << LogIO::NORMAL         // Loglevel PROGRESS
                << "Processing model " << model+1 << LogIO::POST;
 	    
 	    IPosition onePlane(4, nx, ny, 1, 1);
@@ -287,7 +288,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 	    // Now clean each channel
 	    for (Int chan=0;chan<nchan;++chan) {
 	      if(nchan>1) {
-		os << LogIO::NORMAL2         // Loglevel PROGRESS
+		os << LogIO::NORMAL         // Loglevel PROGRESS
                    <<"Processing channel number "<<chan<<" of "<<nchan 
                    << " channels" <<LogIO::POST;
 	      }
@@ -337,7 +338,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		  if ( displayProgress_p ) {
 		    cleaner.setProgress( *progress_p );
 		  }
-		  os << LogIO::NORMAL2         // Loglevel PROGRESS
+		  os << LogIO::NORMAL         // Loglevel PROGRESS
                      << "Starting minor cycle of Clean" << LogIO::POST;
 		  SubLattice<Float> mask_sl;
 		  if(hasMask(model)) {
@@ -349,11 +350,11 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		  
 
 		  if(modified_p){
-		    os << LogIO::NORMAL    // Loglevel PROGRESS? (See CAS-2017)
+		    os << LogIO::NORMAL    // Loglevel PROGRESS (See CAS-2017)
                        << "Finished minor cycle of Clean"
 		       << LogIO::POST;
 		    
-		    os << LogIO::NORMAL    // Loglevel PROGRESS? (See CAS-2017)
+		    os << LogIO::NORMAL    // Loglevel INFO
                        << "Clean used " << cleaner.numberIterations()
 		       << " iterations to approach a threshold of "
 		       << cycleThreshold << LogIO::POST;
@@ -414,7 +415,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
     os << LogIO::NORMAL    // Loglevel INFO
        << LatticeExprNode(sum(image(0))).getFloat() 
        << " Jy is the sum of the clean components " << LogIO::POST;
-    os << LogIO::NORMAL    // Loglevel PROGRESS?
+    os << LogIO::NORMAL    // Loglevel PROGRESS
        << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True);
     Float finalabsmax=maxField(resmax, resmin);

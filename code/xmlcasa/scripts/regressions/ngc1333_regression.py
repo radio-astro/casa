@@ -840,7 +840,7 @@ if doimage:
 ### image centered on field 0, making 18 channels
 ### averaging 5 data channels to 1 image channel
     nchan = 18
-    start = 2
+    start = 4
     width = 5
     psfmode = 'clark'
     imsize = [800,800]

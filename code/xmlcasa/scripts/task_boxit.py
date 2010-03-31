@@ -1,6 +1,7 @@
 from taskinit import *
 import numpy
 import sys
+import re
 
 # Writes out regions above threshold to regionfile+'.box'
 
@@ -29,7 +30,12 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
     newIsland = numpy.zeros(1, dtype=[('box','4i4'),('npix','i4')])
     # Find all pixels above the threshold
     ia.open(imagename)
-    fullmask = ia.getregion(mask=imagename+'>'+str(threshold),getmask=True)
+    # CAS-2059 escape characters in image name that will confuse the lattice expression processor
+    escaped_imagename = imagename
+    for escapeme in ['-', '+', '*', '/' ]:
+        escaped_imagename = re.sub("[" + escapeme + "]", "\\" + escapeme, escaped_imagename)         
+    mask = escaped_imagename+'>'+str(threshold)
+    fullmask = ia.getregion(mask=mask, getmask=True)
     if not(fullmask.max()):
         casalog.post('Maximum flux in image is below threshold.', 'WARN')
         return

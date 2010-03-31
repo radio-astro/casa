@@ -383,6 +383,19 @@ namespace casa {
 	return QDBusVariant(QVariant(true));
     }
 
+    QDBusVariant QtDBusViewerAdaptor::popup( const QString &what, int panel ) {
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return panel == 0 ? QDBusVariant(QVariant(true)) : QDBusVariant(QVariant("*error* could not find requested panel"));
+	}
+	if ( what == "open" ) {
+	    dpg->showDataManager();
+	} else {
+	    return QDBusVariant(QVariant("*error* unknown popup-widow name, expected 'open'"));
+	}
+	return QDBusVariant(QVariant(true));
+    }
+
     QDBusVariant QtDBusViewerAdaptor::frame( int num, int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {

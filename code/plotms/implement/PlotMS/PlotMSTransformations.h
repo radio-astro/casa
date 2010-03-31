@@ -28,6 +28,7 @@
 #define PLOTMSTRANSFORMATIONS_H_
 
 #include <plotms/PlotMS/PlotMSConstants.h>
+#include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MDoppler.h>
 
@@ -87,6 +88,7 @@ public:
   void setVelDef(MDoppler::Types type)  { mdoppType_=type; };
   void setVelDef(const String& typeStr) { MDoppler::getType(mdoppType_,typeStr); };
   void setRestFreq(Double restfreq)     { restFreq_ = restfreq; };  // in MHz
+  void setRestFreq(Quantity restfreq)   { restFreq_ = restfreq.getValue("MHz"); };
   void setXpcOffset(Double dx)          { XpcOffset_ = dx; };
   void setYpcOffset(Double dy)          { YpcOffset_ = dy; };
   // </group>
