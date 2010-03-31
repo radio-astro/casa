@@ -214,7 +214,7 @@ Bool ImageInfo::getRestoringBeam (LoggerHolder& logger)
 {
    for (LoggerHolder::const_iterator iter = logger.begin(); iter != logger.end(); iter++) {
       String line = iter->message();
-      cout << line << endl;
+//       cout << line << endl;
       if (line.contains(String("BMAJ")) &&
           line.contains(String("BMIN")) &&
           line.contains(String("BPA"))) {
