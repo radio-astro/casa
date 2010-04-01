@@ -36,8 +36,3 @@ plotserver/PlotServerProxy.dbusproxy.h
 session/DBusSession.dbusproxy.h
 viewer/ViewerProxy.dbusproxy.h  )
 
-casa_add_tools( tools_idl tools_sources 
-  implement/plotserver/PlotServerProxy.dbusproxy.xml
-  implement/session/DBusSession.dbusproxy.xml
-  implement/viewer/ViewerProxy.dbusproxy.xml )
-

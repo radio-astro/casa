@@ -217,18 +217,16 @@ for mod in modules:
         cml.write(' )\n\n')
 
 
-    if xmltask_sources.find('xml') >= 0:
+    if mod == "xmlcasa":
         cml.write('casa_add_tasks( %s_tasks \n' %mod )
         cml.write(xmltask_sources)
         cml.write(' )\n\n')
 
-    if xmltool_sources.find('xml') >= 0 and mod != "casaqt":
         cml.write('casa_add_tools( tools_idl tools_sources \n' )
         cml.write(xmltool_sources)
         cml.write(' )\n\n')
 
 
-    if mod == "xmlcasa":
         cml.write('# Handle source IDLs\n')
         cml.write('set( outputs_idl "" )\n')
         cml.write('casa_idl( outputs_idl idl/casatypes.idl Quantity)\n')
@@ -280,21 +278,21 @@ for mod in modules:
 if( casa_out_latex )
   add_custom_target( doc_latex DEPENDS ${casa_out_latex} )
 else()
-  add_custom_target( doc_latex COMMAND echo "No latex to generate!" )
+  add_custom_target( doc_latex COMMAND echo "No LaTeX to generate!" )
 endif()
 
 # HTML target
 if( casa_out_html )
   add_custom_target( doc_html DEPENDS ${casa_out_html} )
 else()
-  add_custom_target( doc_html COMMAND echo "latex to html converter was not found." )
+  add_custom_target( doc_html COMMAND echo "LaTeX to HTML converter was not found." )
 endif()
 
 # PDF target
 if( casa_out_pdf )
   add_custom_target( doc_pdf DEPENDS ${casa_out_pdf} )
 else()
-  add_custom_target( doc_pdf COMMAND echo "pdf to html converter was not found." )
+  add_custom_target( doc_pdf COMMAND echo "PDF to HTML converter was not found." )
 endif()
 
 # All documentation
