@@ -481,7 +481,7 @@ set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
 casa_find( Java
   VERSION 1.5
   PROGRAMS java
-  PROG_VERSION "${Java_java} -version")
+  PROG_VERSION "-version")
 
 set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/xmlcasa/install/saxon8.jar )
 

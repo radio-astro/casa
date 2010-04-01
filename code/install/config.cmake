@@ -122,11 +122,15 @@ endmacro()
 #                will cause the program to return zero if
 #                this additional runtime test passed.
 #
-#  PROG_VERSION: shell command which prints on standard output
-#                the package version
+#  PROG_VERSION: command line options which will cause the executable
+#                to print on standard output its version number. This is
+#                not fully implemented: specifying PROG_VERSION causes a
+#                check to be made that the executable can execute and
+#                returns non-zero with the given arguments
 #
 #       DEPENDS: Include directories and libraries from dependency
 #                packages will be used when compiling and linking
+#
 macro( casa_find package )
   
   # Parse arguments
@@ -615,11 +619,29 @@ macro( casa_find package )
       else()
         message( STATUS "Looking for ${package} program ${_program} -- ${${package}_${_program}_EXECUTABLE}" )
       endif()
+
+      # Optionally, check if the program is executable
+      if( _prog_version )
+        message( STATUS "Checking that ${${package}_${_program}_EXECUTABLE} works" )
+                
+        execute_process( 
+          COMMAND ${${package}_${_program}_EXECUTABLE} ${_prog_version}
+          RESULT_VARIABLE _run_status
+          OUTPUT_VARIABLE _run_out
+          ERROR_VARIABLE _run_out
+          )
       
-      #if( TRUE )
-      #  execute_process( COMMAND ${_prog_version} )
-      #endif()
-      
+        if( _run_status )
+          message( STATUS "Checking that ${${package}_${_program}_EXECUTABLE} works -- no" )
+          message( "Failing command was: ${${package}_${_program}_EXECUTABLE} ${_prog_version}" )
+          message( ${_run_out} )
+          set( _found FALSE )
+          unset( ${package}_${_program}_EXECUTABLE CACHE )
+        else()
+          message( STATUS "Checking that ${${package}_${_program}_EXECUTABLE} works -- ok" )
+        endif()
+      endif()
+
     endforeach()
   endif()
 
