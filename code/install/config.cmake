@@ -265,7 +265,7 @@ macro( casa_find package )
         message( STATUS "Looking for ${package} header ${_include} -- ${${package}_${_include}}/${_include}" )
       endif()
 
-      set( ${package}_INCLUDE_DIR ${${package}_INCLUDE_DIR} ${${package}_${_include}} )
+      casa_append( ${package}_INCLUDE_DIR ${${package}_${_include}} )
       
     endforeach()
 
@@ -274,7 +274,9 @@ macro( casa_find package )
       set( ${package}_INCLUDE_DIRS ${${package}_INCLUDE_DIR} CACHE PATH "${package} include directories" FORCE )
       
       foreach( _d ${_depends} )
-        set( ${package}_INCLUDE_DIRS ${${package}_INCLUDE_DIRS} ${${_d}_INCLUDE_DIRS} CACHE PATH "${package} include directories" FORCE )
+        foreach( _di ${${_d}_INCLUDE_DIRS} )
+          casa_append( ${package}_INCLUDE_DIRS ${_di} CACHE PATH "${package} include directories" FORCE )
+        endforeach()
       endforeach()
       
       # Try to compile program, and check compile version, if applicable
@@ -422,7 +424,7 @@ macro( casa_find package )
           message( STATUS "Looking for ${package} library ${_lib} -- ${${package}_${_lib}}" )
         endif()
 
-        set( ${package}_LIBRARY ${${package}_LIBRARY} ${${package}_${_lib}} )
+        casa_append( ${package}_LIBRARY ${${package}_${_lib}} )
 
       endforeach()
 
@@ -432,9 +434,11 @@ macro( casa_find package )
       # Add dependencies to libs
       set( ${package}_LIBRARIES ${${package}_LIBRARY} CACHE FILEPATH "${package} libraries" FORCE )
       foreach( _d ${_depends} )
-        set( ${package}_LIBRARIES ${${package}_LIBRARIES} ${${_d}_LIBRARIES} CACHE FILEPATH "${package} libraries" FORCE )
+        foreach( _dl ${${_d}_LIBRARIES} )
+          casa_append( ${package}_LIBRARIES ${_dl} CACHE FILEPATH "${package} libraries" FORCE )
+        endforeach()
       endforeach()
-      
+
       # Link to program and check runtime version
       message( STATUS "Checking whether ${package} links")
       
@@ -629,12 +633,11 @@ macro( casa_find package )
 
   else()
     #message( STATUS "${package} already found" )
-    
-    #dump( ${package}_FOUND     ${package}_INCLUDE_DIRS    ${package}_LIBRARIES    ${package}_DEFINITIONS )
-    #foreach( _p ${_programs} )
-    #  dump( ${package}_${_p}_EXECUTABLE )
-    #endforeach()
-
-  endif() # end if not package found...
-    
+  endif()
+  
+  #dump( ${package}_FOUND     ${package}_INCLUDE_DIRS    ${package}_LIBRARIES    ${package}_DEFINITIONS )
+  #foreach( _p ${_programs} )
+  #  dump( ${package}_${_p}_EXECUTABLE )
+  #endforeach()
+   
 endmacro( casa_find )
