@@ -2217,7 +2217,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     //dataspectralwindowids_p=thisSelection.getSpwList();
 	//get channel selection in spw
     Matrix<Int> chansels=thisSelection.getChanList();
-    //cout<<"chansels="<<chansels<<" spwstring="<<spwstring<<endl;
+    //cout<<"chansels="<<chansels<<endl;
 	//convert the selection into flag
 	uInt nms = 1;
 	uInt nrow = chansels.nrow();
@@ -2247,13 +2247,12 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
         Int spwid = sel[0];
 		if (spwid != prvspwid){
 			nselspw++;
-			selspw.resize(nselspw);
+			selspw.resize(nselspw,True);
 			selspw[nselspw-1]=spwid;
 		}
         uInt minc= sel[1];
         uInt maxc = sel[2];
         uInt step = sel[3];
-        //cout<<"spwchansels_p.shape()="<<spwchansels_p.shape()<<endl;
 		// step as the same context as in im.selectvis
 		// select channels 
         for (uInt k=minc;k<(maxc+1);k+=step) {
@@ -2295,25 +2294,27 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	dataStep_p.resize(dataspectralwindowids_p.nelements());
 	dataStart_p.resize(dataspectralwindowids_p.nelements());
 	dataNchan_p.resize(dataspectralwindowids_p.nelements());
+	Cube<Int> spwchansels_tmp;
+	spwchansels_tmp.resize(spwchansels_p.shape());
+
 	for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
-	  dataStep_p[k]=1;
+	  uInt curspwid=dataspectralwindowids_p[k];
+	  //dataStep_p[k]=1;
 	  if (nrow > 0) {
         dataStep_p[k]=chansels.row(k)(3);
 	  }
 	  else {
-	  //dataStep_p[k]=1;
-	    if(dataStep_p[k] < 1)
-	      dataStep_p[k]=1;
+	    dataStep_p[k]=1;
 	  }
 	  //dataStart_p[k]=chanselmat.row(k)(1);
 	  dataStart_p[k]=0;
-	  dataNchan_p[k]=nchanvec(k);
+	  dataNchan_p[k]=nchanvec(curspwid);
 	  //find start
 	  Bool first =True;
 	  uInt nchn = 0;
-	  uInt lastchan;
-      for (uInt j=0 ; j < nchanvec(k); j++) {
-  		if (spwchansels_p(0,k,j)==1) {
+	  uInt lastchan = 0;
+      for (uInt j=0 ; j < nchanvec(curspwid); j++) {
+  		if (spwchansels_p(0,curspwid,j)==1) {
 	      if (first) {
 		    dataStart_p[k]=j;
 	        first = False;
@@ -2333,14 +2334,17 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  //
 	  //Since msselet will be applied to the data before flags from spwchansels_p
 	  //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
-	  Cube<Int> spwchansels_tmp;
-	  spwchansels_tmp.resize(spwchansels_p.shape());
-	  spwchansels_tmp=0;
-	  for (uInt j=0  ; j < nchanvec(k)-dataStart_p[k]; j++){
-        spwchansels_tmp(0,k,j) = spwchansels_p(0,k,j+dataStart_p[k]);
+	  //for (uInt j=0  ; j < nchanvec(k)-dataStart_p[k]; j++){
+      for (uInt j=0  ; j < nchanvec(curspwid); j++){
+		if (j<nchanvec(curspwid)-dataStart_p[k]) {
+          spwchansels_tmp(0,curspwid,j) = spwchansels_p(0,curspwid,j+dataStart_p[k]);
+		}
+		else {
+		  spwchansels_tmp(0,curspwid,j) = 0;
+		}
 	  }
-	  spwchansels_p = spwchansels_tmp;
 	}
+	spwchansels_p = spwchansels_tmp;
       }
     }
     if(!(exprNode.isNull())){
