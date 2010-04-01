@@ -163,26 +163,21 @@ set( CMAKE_INSTALL_PREFIX ${_casaroot}/${arch} )
 dump( CMAKE_INSTALL_PREFIX )
 
 #
-# Target for creating the documentation
+# Targets for creating doxygen documentation
 #
-find_package( Doxygen )
 find_package( LATEX )
-# redefine latex2html to htlatex, if it exists
-find_program( HTLATEX
-  NAMES htlatex
-)
-if( HTLATEX )
-  set( LATEX2HTML_CONVERTER ${HTLATEX} )
+
+# Use htlatex, if it exists
+unset( LATEX2HTML_CONVERTER CACHE )
+find_program( LATEX2HTML_CONVERTER NAMES htlatex latex2html )
+
+if( LATEX2HTML_CONVERTER MATCHES htlatex )
   set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,3" )
 endif()
 
-FIND_PROGRAM(LATEX2HTML_CONVERTER
-  NAMES latex2html
-  PATHS ${MIKTEX_BINARY_PATH}
-        /usr/bin
-)
-set( CASA_DOC_DIR ${_casaroot}/doc ) # Where to put documentation
-execute_process( COMMAND mkdir -p ${CASA_DOC_DIR} )
+set( CASA_DOC_DIR ${_casaroot}/docs ) # Where to put documentation
+
+find_package( Doxygen )
 
 if( DOXYGEN_FOUND )
   add_custom_target( doc_doxy
@@ -815,28 +810,3 @@ casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display
 
 # demo atmosphere ionosphere jive nfra simulators vlbi vo
 
-
-# Documentation targets, which depend on the contents of casa_out_* being set
-# Latex target
-if( casa_out_latex )
-  add_custom_target( doc_latex DEPENDS ${casa_out_latex} )
-else()
-  add_custom_target( doc_latex COMMAND echo "No latex to generate!" )
-endif()
-
-# HTML target
-if( casa_out_html )
-  add_custom_target( doc_html DEPENDS ${casa_out_html} )
-else()
-  add_custom_target( doc_html COMMAND echo "latex to html converter was not found." )
-endif()
-
-# PDF target
-if( casa_out_pdf )
-  add_custom_target( doc_pdf DEPENDS ${casa_out_pdf} )
-else()
-  add_custom_target( doc_pdf COMMAND echo "pdf to html converter was not found." )
-endif()
-
-# All documentation
-add_custom_target( doc DEPENDS doc_doxy doc_latex doc_html doc_pdf )

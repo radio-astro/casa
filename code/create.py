@@ -272,6 +272,35 @@ for mod in modules:
             cmlr.write(sources)
             cmlr.write('\n)\n')
 
+            
+
+        cml.write("""
+# Documentation targets, which depend on the contents of casa_out_* being set
+# Latex target
+if( casa_out_latex )
+  add_custom_target( doc_latex DEPENDS ${casa_out_latex} )
+else()
+  add_custom_target( doc_latex COMMAND echo "No latex to generate!" )
+endif()
+
+# HTML target
+if( casa_out_html )
+  add_custom_target( doc_html DEPENDS ${casa_out_html} )
+else()
+  add_custom_target( doc_html COMMAND echo "latex to html converter was not found." )
+endif()
+
+# PDF target
+if( casa_out_pdf )
+  add_custom_target( doc_pdf DEPENDS ${casa_out_pdf} )
+else()
+  add_custom_target( doc_pdf COMMAND echo "pdf to html converter was not found." )
+endif()
+
+# All documentation
+add_custom_target( doc DEPENDS doc_doxy doc_latex doc_html doc_pdf )
+""")
+
 
     cml.close()
     os.chdir('..')
