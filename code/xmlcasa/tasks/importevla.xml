@@ -50,7 +50,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="ocorr_mode" >
 	    <description>output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
-	    <value>ca</value>
+	    <value>co</value>
 	    <allowed kind="enum">
 	       <value>co</value>
 	       <value>ao</value>
@@ -155,7 +155,7 @@ time_sampling -- specifies the time sampling, INTEGRATION and/or
 
 ocorr_mode    -- output data for correlation mode AUTO_ONLY 
                  (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
-		 default: ca
+		 default: co (for EVLA)
 		 
 
 compression  -- produces comrpressed columns in the resulting measurement set.
@@ -196,19 +196,19 @@ applyflags -- apply the online flags from the SDM Flag.xml table to the MS
  
             Examples:
 
-                 importevla(asdm='CLowTest_000',ocorr_mode='co',applyflags=False)
+                 importevla(asdm='CLowTest_000',ocorr_mode='ca',applyflags=False)
 
-                     Produces MS CLowTest_000.ms w/o autocorrelations.
+                     Produces MS CLowTest_000.ms with autocorrelations.
                      You will find the Antenna.xml and Flag.xml in the
                      MS directory (e.g. for later use).  Does not apply
                      online flags.
 
                  importevla(asdm='CLowTest_000')
 
-                     Produces MS CLowTest_000.ms including the
-                     Antenna.xml and Flag.xml tables.  Will also flag
-                     the data using the on-line flags in the Flag.xml
-                     table.
+                     Produces MS CLowTest_000.ms without
+                     autocorrelations, but including the Antenna.xml
+                     and Flag.xml tables.  Will also flag the data
+                     using the on-line flags in the Flag.xml table.
 
                  importevla(asdm='CLowTest_000',tbuff=2.0)
 
