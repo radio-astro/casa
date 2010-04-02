@@ -1,0 +1,3543 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-04-19  new parameter interface
+% STM 2007-06-13  point to standard selection etc.
+% MPR 2007-07-05  minor tweaks, esp. to match frozen alpha-1 release of 4jul07
+% STM 2007-09-20  pre-beta version
+% STM 2007-10-10  beta version spell-checked
+% STM 2007-11-10  beta patch 0.5
+% STM 2008-02-25  beta patch 1.0 editing started
+% STM 2008-04-29  beta patch 1.0 editing done
+% STM 2008-05-13  beta patch 2.0 editing started
+% STM 2008-06-23  beta patch 2.0 updated
+% STM 2008-07-30  beta patch 2.1 updated (add solint changes)
+% STM 2008-08-15  beta patch 2.2 updates
+% STM 2008-09-30  beta patch 3.0 editing started
+% STM 2008-12-01  beta patch 3.0 release
+% STM 2009-01-21  beta patch 3.1 release
+% STM 2009-05-19  beta patch 4.0 editing started
+% STM 2009-06-19  beta patch 4.0 release
+% STM 2009-11-10  release 3.0.0 editing started
+% STM 2009-12-02  release 3.0.0 change to User Reference and Cookbook
+% JO 2010-02-22 release 3.0.1 editing started
+
+\chapter{Introduction}
+\label{chapter:intro}
+
+%\vspace{5mm}
+
+This document describes how to calibrate and image interferometric and
+single-dish radio astronomical data using the CASA (Common Astronomy
+Software Application) package.  CASA is a suite of
+astronomical data reduction tools and tasks that can be run via the
+IPython interface to Python.  CASA is being developed in order to 
+fulfill the data post-processing requirements of the ALMA and EVLA
+projects, but also provides basic and advanced capabilities useful for
+the analysis of data from other radio, millimeter, and submillimeter
+telescopes.
+
+You have in your hands the latest release of CASA.  This package is
+under active development, and thus there are a number of caveats and
+limitations for the use of this 
+package.  See the release notes (\S~\ref{section:intro.release})
+below for more information,
+and pay heed to the numerous {\bf ALERT}s placed throughout this
+reference.  You can expect regular updates and patches, as well as
+increasing functionality.
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     Throughout this user reference, we will occasionally intersperse
+     boxed-off pointers to parts of the toolkit that power users might
+     want to explore.  
+  \end{boxedminipage}
+\end{wrapfigure}
+
+This user reference and cookbook is a task-based walk-through of
+interferometric data reduction and analysis. In CASA, {\bf tasks}
+represent the more streamlined operations that a typical user would
+carry out. The idea for having tasks is that they are simple to use,
+provide a more familiar interface, and are easy to learn for most
+astronomers who are familiar with radio interferometric data reduction
+(and hopefully for novice users as well). In CASA, the {\bf tools}
+provide the full capability of the package, and are the atomic
+functions that form the basis of data reduction.  These tools augment
+the tasks, or fill in gaps left by tasks that are under development
+but not yet available. See the {\bf CASA Toolkit Manual} for more
+details on the tools (avaiable from \verb=casa.nrao.edu=).  Note that
+in most cases, the tasks are Python interface scripts to the tools,
+but with specific, limited access to them and a standardized interface
+for parameter setting.  The tasks and tools can be used together to
+carry out more advanced data reduction operations.
+
+For the moment, the audience is assumed to have some basic grasp of
+the fundamentals of synthesis imaging, so details of how a radio
+interferometer or telescope works and why the data needs to undergo
+calibration in order to make synthesis images are left to other
+documentation --- a good place to start might be Synthesis Imaging in
+Radio Astronomy II (1999, ASP Conference Series Vol. 180, eds. Taylor,
+Carilli \& Perley).
+
+This reference is broken down by the main phases of data analysis:
+\begin{itemize}
+   \item data import, export, and selection (Chapter~\ref{chapter:io}),
+
+   \item examination and flagging of data (Chapter~\ref{chapter:edit}),
+
+   \item interferometric calibration (Chapter~\ref{chapter:cal}),
+
+   \item interferometric imaging (Chapter~\ref{chapter:im}),
+
+   \item image analysis (Chapter~\ref{chapter:analysis}), and
+
+   \item data and image visualization (Chapter~\ref{chapter:display}).
+
+\end{itemize}
+
+There are also special chapters in the Appendix on
+\begin{itemize}
+   \item single dish data analysis (Chapter~\ref{chapter:sd}), and
+
+   \item simulation (Chapter~\ref{chapter:sim}).
+
+\end{itemize}
+These are included for users that will be doing EVLA and ALMA
+telescope commissioning and software development.
+
+The general appendices provide more details on what's happening
+under the hood of CASA, as well as supplementary material on tasks,
+scripts, and relating CASA to other packages.  These appendices
+include:
+\begin{itemize}
+   \item obtaining and installing CASA 
+         (Appendix~\ref{chapter:install}),
+
+   \item more details about Python and CASA 
+         (Appendix~\ref{chapter:python}),
+
+   \item a discussion of the Hamaker-Bregman-Sault Measurement Equation
+         (Appendix~\ref{chapter:me}),
+
+%   \item task summaries and parameter lists
+%         (Appendix~\ref{chapter:tasks}),
+
+   \item annotated scripts for typical data reduction cases 
+         (Appendix~\ref{chapter:scripts}), and
+
+   \item CASA dictionaries to AIPS, MIRIAD, and CLIC
+         (Appendix~\ref{chapter:dict}).
+
+   \item Writing your own CASA Task
+         (Appendix~\ref{chapter:write}).
+\end{itemize}
+
+The CASA User Documentation includes:
+\begin{itemize}
+   \item CASA {\bf User Reference \& Cookbook} --- this
+     document, a task-based data analysis walk-through and instructions;
+   \item CASA {\bf in-line help} --- accessed using {\tt help} in the 
+              {\bf casapy} interface;
+   \item The {\bf CASA Toolkit Reference Manual} --- 
+         details on a specific task or tool does and how to use it.
+   \item The {\bf CASA Task Reference Manual} --- 
+         the information from the inline help and task documentation,
+         available online in HTML.
+\end{itemize}
+
+The CASA home page can be found at:
+\begin{quote}
+  \url{http://casa.nrao.edu}
+\end{quote}
+From there you can find documentation and assistance for the use
+of the package, including the User Documentation.  You will
+also find information on how to obtain the latest release and
+receive user support.
+
+There is also a CASAGuides Wiki
+\begin{quote}
+   \url{http://casaguides.nrao.edu}
+\end{quote}
+that contains helpful information on CASA startup, AIPS-to-CVASA
+cheatsheet, example scripts on processing your data in CASA,
+along with hints and tricks to best use this package.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{About This Release}
+\label{section:intro.release}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\underline{\bf ALERT}}
+     Boxes like this will bring to your attention some of the
+     features (or lack thereof) in the current release
+     of CASA.  There are also {\bf ALERT} notes in the text.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+This release (3.0.1) is a patch to the 3.0.0 release.  The patch is
+mainly driven by the first light of the EVLA. CASA, however, is still
+under development, and some features might change in future releases.
+This should be taken into account as users begin to learn the package.
+We will do our best to point out commands, tasks, and parameters that
+are likely to change underfoot.  Although many bugs were eradicated in
+the Beta Release stage, there are some that persist.  We will do our
+best to stamp these out as soon as we find them.  See the release
+notes for the current version for more details.  In this reference, we
+will try to point out known pitfalls and workarounds in the {\bf
+  ALERT} boxes or notes in the text.
+
+We occasionally issue patches to the current release in between formal
+releases.  Please check the CASA Home page (\url{http://casa.nrao.edu}) regularly
+to look for updates to the release and the documentation,
+and to check the list of known problems.  You can find the contact
+information for feedback here also.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{What's New in Release 3.0.1}
+\label{section:intro.release.whatsnew}
+
+Release 3.0.1 is mainly intended to be a patch to the previous 3.0.0
+release of CASA. It is timed to coincide with the first scientific
+data delivery from the EVLA. However, many improvements to the code
+have been made and a number of bugs have been fixed. The improvements include:
+
+\begin{itemize}
+
+\item {\bf Flagging}
+    \begin{itemize}
+   \item flagging statistics, {\tt flagdata(mode='summary')} now   returns statistical information
+     \item         possible to query / filter the output of  {\tt flagdata(mode='summary')}
+      \item     Fixed/implemented inrow selections for mode='summary'
+    \end{itemize}
+
+\item {\bf Imaging}
+   \begin{itemize}    
+    \item re-implementation of {\tt boxit} to write boxes in ascii format to
+      be handled by {\tt viewer} and {\tt clean}
+      \item Improved handling of sidelobes of the psf
+        \item default padding of 1.2 to avoid edge effects in deconvolution
+   \end{itemize}
+
+\item {\bf Data examination/editing}
+  \begin{itemize}
+    \item significant {\tt plotms} improvements in overall usability
+      \item {\tt plotms} can now relabel the visibilities to 
+        velocities and a variety of velocity and frequency frames and
+        velocity definitions can be chosen
+        \item {\tt plotms} can perform shifts of the phase center
+          \item new parameters in {\tt varlist} to work with
+            expressions
+            \item improved handling of spws with different numbers of
+              channels
+              \item updates region treatment in {\tt viewer} (note
+                that there may be further changes in the future)
+   \end{itemize}
+
+\item {\bf Calibration}
+\begin{itemize}
+ \item improvements to leakage term solution
+   \item improved handling and computing of uvw coordinates
+     \item handling of aatm libraries later than v.0.08
+       \item updating ALMA calibration algorithms
+\end{itemize}
+  
+
+\item {\bf Data and Image Manipulation}
+  \begin{itemize}
+  \item improved {\tt split} to include averaging in spectral and time
+    domain simultaneously
+   \item {\tt split} can average MSes with differently shaped spwd.
+  \item single dish support in {\tt split} 
+    \item {\tt split} retains the weather table
+      \item add position angle to {\tt imsmooth} and add option to
+        provide either smoothing or smoothed beam
+        \item cross-spw solution for continuum {\tt uvcontsub2}
+          subtraction
+          \item {\tt uvcontsub2} now makes a new MS instead of altering the input one.  This
+also makes the continuum estimate easier to use.
+          \item easy coordinate transformation options (e.g. J2000 to
+            B1950 or Galactic) in  {\tt imregrid} 
+            \item improved regridding of velocities into different frames using
+              {\tt cvel}. Now in line with regridding in {\tt clean}
+   \end{itemize}
+
+\item {\bf Simulation}
+  \begin{itemize}
+   \item Import of multiple pointings via external text file
+   \item mosaicsize parameter is now used for specifying the angular
+     size of sky to observe, independently of the user's choices of
+     cell and imsize in {\tt simdata}
+     \item new {\tt simdata} option to add a calibrator observation interleaved with the
+science target mosaic has been added as an experimental feature. Please
+report any issues or questions.
+   \item transformation of input model image cubes into the 4-d format used
+internally (direction, stokes, spectral) in {\tt simdata} is now more robust to different
+choices of direction and spectral coordinates than previously
+   \item parameter name changes in {\tt simdata} and {\tt sdsim}
+     \item improved single dish simulations
+    \end{itemize}
+
+\item {\bf Data im/export}
+     \begin{itemize}
+       \item single dish parameter in {\tt importasdm}
+       \item im/export of weather data and flags stored in the ASDM
+         \item fixed spw setting of ALMA autocorrelation data
+     \item {\tt exportasdm} - version 1 of a new task to turn an arbitrary MS into an ASDM. This is mainly
+                     geared towards  ALMA testing and to store simulated data in the ALMA archive.
+                    In version 1 all relevant tables except the weather and the history table are filled.
+       \end{itemize}
+
+\item {\bf Single Dish}
+  \begin{itemize}
+    \item use of SRCTYPE as identifier for scan intent (ON, OFF, etc)
+      \item allow arithmetic operations on scantables
+        \item antenna selection for MS data with multiple antennas
+          \item improved plotting of sd data
+    \end{itemize}
+
+\item {\bf Documentation}
+  \begin{itemize}
+    \item EVLA examples on {\tt casaguides.nrao.edu}
+    \item rationalizing of documentation into cookbook and
+      {\tt casaguides.nrao.edu}
+      \item {\tt plotms} description in cookbook
+   \end{itemize} 
+
+\item {\bf Other}
+  \begin{itemize}
+    \item preparations for  code generalizations to implement parallel
+      computing on clusters 
+    \item TM library in CASA is updated to aatm-0.3.0. A method in
+   atmosphere tools, {\tt atmosphere.getAtmTypeHPT}, is removed
+   due to the upgrade
+   \item The default I/O tile size was reduced to 32 KB. This speeds up some I/O modes, as used by flagging and exportuvfits.
+  \end{itemize}
+
+
+
+\end{itemize}
+
+
+%\subsection{What's New in Release 3.0.0}
+%\label{section:intro.release.whatsnew}
+%
+%This document is for CASA Release Version 3.0.0).  
+%This patch differs from previous versions of CASA in a number of ways:
+%
+%\begin{itemize}
+%
+%\item New interface changes:
+%   \begin{itemize}
+%   \item There is now a {\tt tput} command to save task inputs to
+%         the {\tt <taskname>.last} file for later use
+%         (\S~\ref{section:intro.tasks.setpar.tput}).
+%   \item The uv-distance units are {\tt "lambda"} rather then just
+%         {\tt "l"} (conflicted with litre in quanta).
+%   \end{itemize}
+%
+%\item New data handling features:
+%   \begin{itemize}
+%   \item (Task {\tt importasdm}) The {\tt importasdm} task now reads
+%       SDM v1.0 and has better handling of
+%       EVLA SDM data
+%       (\S~\ref{section:io.import.asdm}).
+%   \item (Task {\tt importoldasdm}) The previous version of {\tt importasdm} 
+%       is retained as {\tt importoldasdm} for reading SDM v0 format
+%       data
+%       (\S~\ref{section:io.import.asdm.old}).
+%   \item (Task {\tt importvla}) New option {\tt evlabands=T} to use
+%       EVLA defined band boundaries, e.g.\ to access frequencies
+%       outside the old VLA bands
+%       (\S~\ref{section:io.import.vla}).
+%   \item (Task {\tt exportuvfits}) Efficiency has been improved,
+%       particularly for MS produced by {\tt importasdm}
+%       (\S~\ref{section:io.import.uvfits.export}).
+%   \item (Task {\tt listvis}) Now prints u,v,w of data 
+%         (\S~\ref{section:io.vis.listvis}).
+%   \item (Task {\tt vishead}) New task to list meta-data in header of MS
+%      (\S~\ref{section:io.vis.vishead}).
+%   \item (Task {\tt visstat}) New task to calculate statistics on data in MS
+%      (\S~\ref{section:io.vis.visstat}).
+%   \item Data selection now handles the {\tt correlation} parameter
+%      (\S~\ref{section:io.selection}).
+%   \end{itemize}
+%
+%\item New plotting and flagging features:
+%   \begin{itemize}
+%   \item (Task {\tt flagdata}) There are a number of improvements,
+%          including an easier list-mode for selection parameters under
+%          {\tt mode='manualflag'},
+%          and automatic backup of previous flags using {\tt flagbackup=T}
+%          (\S~\ref{section:edit.flagdata}).
+%   \item (Task {\tt plotms}) The new prototype MS plotting application {\tt plotms} has
+%          many new features
+%          (\S~\ref{section:edit.plot.plotms}).
+%   \end{itemize}
+%
+%\item New synthesis calibration features:   
+%   \begin{itemize}
+%   \item (Task {\tt cvel}) There is a new task {\tt cvel} that will regrid a spectral MS
+%         onto a new frequency channel system
+%         (\S~\ref{section:cal.other.cvel}).
+%   \item (Task {\tt gencal}) There is a new task {\tt gencal} that will create a calibration 
+%         table from lists, including options for delays and antenna position errors
+%         (\S~\ref{section:cal.prior.gencal}).
+%   \item (Task {\tt setjy}) The calibration models provided for use in {\tt setjy} now
+%         cover wider bandwidths (\S~\ref{section:cal.prior.models}).
+%   \item (Task {\tt split}) You can now split a read only ms as long
+%         as you have write access to output disk
+%	 (\S~\ref{section:cal.other.split}).
+%   \end{itemize}
+%
+%\item New synthesis imaging features:   
+%   \begin{itemize}
+%   \item (Task {\tt clean}) A number of improvements were
+%          made to the {\tt clean} task (\S~\ref{section:im.clean}):
+%      \begin{enumerate}
+%      \item There is a new {\tt calready} parameter to create a
+%            scratch column and save model visibilities (e.g.\ for
+%            self-cal).
+%      \item There are new options using {\tt gridmode} parameter,
+%            including {\tt 'widefield'} for w-projection and faceting,
+%            and {\tt 'aprojection'} for squint correction.
+%      \item Mosaicing with {\tt ftmachine='mosaic'} now improved using
+%            flat-noise residuals.     
+%      \item For {\tt interactive=T} there is now a {\tt chaniter=T}
+%            option to fully clean each cube channel sequentially.
+%      \item Frame handling via {\tt outframe} and {\tt veltype} for
+%            {\tt mode='velocity'} and {\tt 'frequency'}.
+%      \item Sault-Wieringa MFS for higher-order Taylor expansion of
+%            spectrum now available in {\tt mode='mfs'}.
+%      \end{enumerate}
+%   \item (Task {\tt autoclean}) New prototype (experimental) task to
+%          automatically {\tt clean} data, including auto-boxing of emission
+%         (\S~\ref{section:im.autoclean}).
+%   \item (Task {\tt boxit}) New prototype (experimental) task to
+%          automatically generate {\tt clean} boxes from an image
+%	 (\S~\ref{section:im.mask.boxit}).
+%   \item The task {\tt widefield} was removed, as its functionality is
+%         now available in {\tt clean}.
+%   \end{itemize}
+%
+%\item New image analysis features:
+%   \begin{itemize}
+%   \item (Task {\tt imfit}) Now does multi-component fitting (starting
+%         from estimates provided in a file) and returns a Python
+%         dictionary instead of a component list
+%         (\S~\ref{section:analysis.imfit}).
+%   \item (Task {\tt immath}) Now uses the {\tt imagename} parameter to
+%         assign image name syntax in {\tt mode='evalexpr'}
+%         (\S~\ref{section:analysis.immath}).
+%   \item (Task {\tt immath}) {\bf Known Bug:}
+%         For {\tt mode='pola'} you MUST call as a function, 
+%         giving the parameters as arguments, or {\tt immath} will fail.
+%   \end{itemize}
+%
+%\item New visualization features in the {\tt viewer}
+%      (\S~\ref{chapter:display}):
+%   \begin{itemize}
+%   \item (Task {\tt viewer}) The viewer now handles images in
+%          different frames more robustly.
+%   \item (Task {\tt viewer}) The Spectral Plot tool has some slight improvements.
+%   \item (Task {\tt viewer}) For spectral cubes, you now see the
+%          channel velocities by default in the upper right corner of
+%          image.  The number of decimal places shown is not sufficient
+%          to distinguish channels.
+%   \item (Task {\tt viewer}) There is now a FileBox tool to
+%          display/edit clean-box regions.
+%   \end{itemize}
+%
+%\item New single-dish processing features
+%      (Appendix~\ref{chapter:sd}):
+%   \begin{itemize}
+%   \item The single dish package was upgraded from using ASAP 2.2 to ASAP2.3.1.
+%   \item (Task {\tt sdimaging}) Added new Single-Dish task {\tt
+%          sdimaging} that performs imaging both total power and spectral data
+%          for Single-Dish observation.  
+%   \item (Task {\tt sdimprocess}) New task {\tt sdimprocess} for raster scans implementing 
+%      Emerson-Grave and Sofue-Reich algorithms.
+%   \item There are a number of other changes, as this CASA module is
+%      under continuous development.  See the Appendix~\ref{chapter:sd} 
+%      for the latest guide.
+%   \end{itemize}
+%
+%\item New simulator features:
+%   \begin{itemize}
+%   \item The simulator task {\tt simdata} has a number of new features
+%      (\S~\ref{chapter:sim}).
+%   \end{itemize}
+%
+%\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{CASA Basics --- Information for First-Time Users}
+\label{section:intro.basics}
+
+This section assumes that CASA has been installed on your LINUX or OSX
+system.  See Appendix~\ref{chapter:install} for instructions on how to 
+obtain and install CASA.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Before Starting CASA}
+\label{section:intro.basics.before}
+
+First, you will most likely be starting CASA running from a working
+directory that has your data in it, or at least where you want your
+output to go.  It is easiest to start from there rather than changing
+directories inside {\tt casapy}.
+{\bf ALERT:} There is at least one task ({\tt plotxy}) that 
+fails if the path to your working directory contains spaces in
+its name, e.g. {\tt /users/smyers/MyTest/} is fine, but 
+{\tt /users/smyers/My\ Test/} is not!  We will try to bulletproof the
+file-handling better.
+
+If you have done a default installation under Linux using rpms, or 
+on the Mac with the CASA application, then there should be a {\tt sh}
+script called {\tt casapy} in the {\tt /usr/bin} area which is in
+your path.  This shell will set up its environment and run the version
+of {\tt casapy} that it points to.  If this is how you set up the
+system, then you need to nothing further and can run {\tt casapy}.
+
+Depending on your setup, there may be other specially built versions
+available. For example at the NRAO AOC, the ``stable build'' can be
+started by running ``casapy-test'', e.g.
+\small
+\begin{verbatim}
+   /usr/bin/casapy-test
+\end{verbatim}
+\normalsize
+
+On some systems, particularly if you have multiple versions installed,
+to define environment variables and the {\tt casapy} alias, you will
+need to run one of the {\tt casainit} shell scripts.
+The location of the startup scripts for CASA will depend upon where
+you installed CASA on your system.  For a default installation
+this will likely be in {\tt /usr/bin/casapy/}.  
+For example, at the NRAO AOC, the current release is executed as
+\small
+\begin{verbatim}
+   /usr/bin/casapy
+\end{verbatim}
+\normalsize
+and uses the pathname to
+\small
+\begin{verbatim}
+   /usr/lib/casapy/23.0.6654-001
+\end{verbatim}
+\normalsize
+
+Sometimes, you will have multiple non-default
+versions (for example, various development versions).  For example at the
+NRAO AOC, the ``stable build'' is in {\tt /home/casa}.
+Then, to use this version:
+\small
+\begin{verbatim}
+  In bash:
+  > . /home/casa/casainit.sh
+  or for csh:
+  > source /home/casa/casainit.csh
+\end{verbatim}
+\normalsize
+depending on what shell you are running (Bourne or [t]csh). 
+
+{\bf ALERT:} If you want to run the {\tt casabrowser}
+(see \S~\ref{section:edit.browse}) outside of the {\tt casapy}
+shell, then you will need to put the CASA root in
+your path using one of the above mechanisms, or give its path
+explicitly.
+
+\subsubsection{Environment Variables}
+\label{section:intro.basics.before.env}
+
+Before starting up {\tt casapy}, you should set or reset any
+{\it environment variables} needed, as CASA will adopt these on startup.  For
+example, the {\tt PAGER} environment variable determines how help is
+displayed in the CASA terminal window (see
+\S~\ref{section:intro.basics.help.page}).  The choices are {\tt less},
+{\tt more}, and {\tt cat}.
+
+In {\tt bash}, pick one of
+\small
+\begin{verbatim}
+   PAGER=less
+   PAGER=more
+   PAGER=cat
+\end{verbatim}
+\normalsize
+followed by
+\small
+\begin{verbatim}
+   export PAGER
+\end{verbatim}
+\normalsize
+
+In {\tt csh} or {\tt tcsh}, pick one of
+\small
+\begin{verbatim}
+   setenv PAGER less
+   setenv PAGER more
+   setenv PAGER cat
+\end{verbatim}
+\normalsize
+The actions of these are as if you were using the equivalent Unix
+shell command to view the help material.  See
+\S~\ref{section:intro.basics.help.page} for more information on these
+choices.
+We recommend using the {\tt cat} option for most users, as this works
+smoothly both interactively and in scripts.
+
+\subsubsection{Where is CASA?}
+\label{section:intro.basics.before.path}
+
+Note that the path to the CASA installation, which contains
+the scripts and data repository, will also depend upon the 
+installation.  With a default installation under Linux this
+will probably be in
+\small
+\begin{verbatim}
+   /usr/lib/casapy/
+\end{verbatim}
+\normalsize
+while in a Mac OSX default install it will likely be an 
+application (in the Applications folder), with the data
+repository in:
+\small
+\begin{verbatim}
+   /opt/casa/
+\end{verbatim}
+\normalsize
+
+You can find the location after initialized by looking at
+the {\tt CASAPATH} environment variable.  You can find
+it within {\tt casapy} by
+\small
+\begin{verbatim}
+   pathname=os.environ.get('CASAPATH').split()[0]
+   print pathname
+\end{verbatim}
+\normalsize
+
+\subsection{Starting CASA}
+\label{section:intro.basics.starting}
+
+After having run the appropriate casainit script, CASA is started by
+typing\\ {\tt casapy}\\ on the UNIX command line, e.g.
+\small
+\begin{verbatim}
+   casapy
+\end{verbatim}
+\normalsize
+After startup information,
+you should get an IPython\\ {\tt CASA <1>:}\\ command prompt in the
+xterm window where you started CASA. CASA will take approximately 10
+seconds to initialize at startup in a new working directory;
+subsequent startups are faster.  CASA is active when you get a\\ {\tt
+CASA <1>}\\ prompt in the command line interface.  You will also
+see a {\tt logger} GUI appear on your Desktop (usually near the
+upper left).  {\em Note: Under MacOSX the logger will appear in a
+Console window.}
+
+You also have the option of starting CASA with various {\tt logger}
+options (see \S~\ref{section:intro.common.logger.startup}).  For
+example, if you are running remotely in a terminal window without
+an X11 connection, or if you just do not want to see the logger GUI,
+and want the {\tt logger} messages to come to your terminal, do
+\small
+\begin{verbatim}
+   casapy --nologger --log2term
+\end{verbatim}
+\normalsize
+
+See \S~\ref{section:intro.common.logger} for information on the
+{\tt logger} in general.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Ending CASA}
+\label{section:intro.basics.ending}
+
+You can exit CASA by typing {\tt quit}.  This will bring up the
+query
+\small
+\begin{verbatim}
+Do you really want to exit ([y]/n)?
+\end{verbatim}
+\normalsize
+to give you a chance in case you did not mean to exit.  You can
+also quit using {\tt \%exit} or {\tt CTRL-D}.
+
+If you don't want to see the question {\tt "Do you really want to exit
+[y]/n?"}, then just type {\tt Exit} or {\tt exit} and CASA will stop
+right then and there.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{What happens if something goes wrong?}
+\label{section:intro.basics.wrong}
+
+{\bf ALERT:} Please check the CASA Home Page for Release
+Notes and FAQ information including a list of known problems.  If you think you
+have encountered an unknown problem, please consult the CASA HelpDesk
+(contact information on the CASA Home Page).  
+See also the caveats to this Release (\S~\ref{section:intro.release} 
+for pointers to our policy on User Support.
+
+First, always check that your inputs are correct; use the
+\small
+\begin{verbatim}
+   help <taskname>
+\end{verbatim}
+\normalsize
+(\S~\ref{section:intro.basics.help.help}) or
+\small
+\begin{verbatim}
+   help par.<parameter name>
+\end{verbatim}
+\normalsize
+(\S~\ref{section:intro.basics.help.par}) to review the inputs/output.
+
+%%%%%%%
+\subsection{Aborting CASA execution}
+\label{section:intro.basics.wrong.abort}
+
+If something has gone wrong and you want to stop what is executing,
+then typing {\tt CNTL-C} (Control and C keys simultaneously) will
+usually cleanly abort the application. 
+This will work if you are running a task synchronously.
+If this does not work on your system, or you are running a task
+asynchronously (\S~\ref{section:intro.tasks.async}) 
+then try {\tt CNTL-Z} to put the task or shell in the
+background, and then follow up with a {\tt kill -9 <PID>} where you
+have found the relevant {\tt casapy} process ID ({\tt PID}) using 
+{\tt ps} (see \S~\ref{section:intro.basics.crash} below).
+
+See \S~\ref{section:intro.tasks.run} for more information on running tasks.
+
+If the problem causes CASA to crash, see the next sub-section.
+
+% You can submit a question/bug/enhancement via the site:
+% 
+% \url{http://bugs.aoc.nrao.edu}
+% 
+% Login (or register yourself if you don't have a login/password); click
+% the 'Create New Issue' along the top tabs to file a
+% question/bug/enhancement.
+% 
+% \begin{figure}[h!]
+% \gname{jira}{3.5}
+% \gname{jira2}{3.5}
+% \caption{\label{fig:jira} Issue/Defect Tracking system. {\bf Left:}
+%   http://bugs.aoc.nrao.edu page showing login entry fields. {\bf
+%   Right:} Screen after selecting the "Create New
+%   Issue" tab along the top.}
+% \hrulefill
+% \end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{What happens if CASA crashes?}
+\label{section:intro.basics.crash}
+
+Usually, restarting {\tt casapy} is sufficient to get you going again
+after a crash takes you out of the Python interface.  Note that there
+may be spawned subprocesses still running, such as the 
+{\tt casaviewer} or the {\tt logger}.  These can be dismissed manually
+in the usual manner.  After a crash, there may also be hidden
+processes.  You can find these by listing processes, e.g. in linux:
+\small
+\begin{verbatim}
+   ps -elf | grep casa
+\end{verbatim}
+\normalsize
+or on MacOSX (or other BSD Unix):
+\small
+\begin{verbatim}
+   ps -aux | grep casa
+\end{verbatim}
+\normalsize
+You can then kill these, for example using the Unix {\tt kill}
+or {\tt killall} commands.  This may be necessary if you are running
+remotely using {\tt ssh}, as you cannot logout until all your
+background processes are terminated.  For example,
+\small
+\begin{verbatim}
+   killall ipcontroller
+\end{verbatim}
+\normalsize
+or
+\small
+\begin{verbatim}
+   killall Python
+\end{verbatim}
+\normalsize
+will terminate the most common post-crash zombies.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Python Basics for CASA}
+\label{section:intro.basics.python}
+
+Within CASA, you use Python to interact with the system.  This does
+not mean an extensive Python course is necessary - basic interaction
+with the system (assigning parameters, running tasks) is
+straightforward.  At the same time, the full potential of Python is at
+the more experienced user's disposal.  Some further details about
+Python, IPython, and the interaction between Python and CASA can be
+found in Appendix~\ref{chapter:python}.
+
+The following are some examples of helpful hints and tricks on making
+Python work for you in CASA.
+
+\subsubsection{Variables}
+\label{section:intro.basics.python.var}
+
+Python variables are set using the {\tt <parameter> = <value>} 
+syntax.  Python assigns the type dynamically as you set the value,
+and thus you can easily give it a non-sensical value, e.g. 
+\small
+\begin{verbatim}
+   vis = 'ngc5921.ms'
+   vis = 1
+\end{verbatim}
+\normalsize
+The CASA parameter system will check types when you run a task or
+tool, or more helpfully when you set inputs using {\tt inp} (see
+below).  CASA will check and protect the assignments of the global
+parameters in its namespace.
+
+Note that Python variable names are case-sensitive:
+\small
+\begin{verbatim}
+CASA <109>: Foo = 'bar'
+CASA <110>: foo = 'Bar'
+CASA <111>: foo
+  Out[111]: 'Bar'
+CASA <112>: Foo
+  Out[112]: 'bar'
+\end{verbatim}
+\normalsize
+so be careful.  
+
+Also note that mis-spelling a variable assignment
+will not be noticed (as long as it is a valid Python variable name)
+by the interface.  For example, if you wish to set 
+{\tt correlation='RR'} but instead type {\tt corellation='RR'}
+you will find {\tt correlation} unset and a new {\tt corellation}
+variable set.  Command completion (see
+\S\,\ref{section:intro.basics.help.tab}) should help you avoid this.
+
+\subsubsection{Lists and Ranges}
+\label{section:intro.basics.python.lists}
+
+Sometimes, you need to give a task a list of indices.  If these
+are consecutive, you can use the Python {\tt range} function to 
+generate this list:
+\small
+\begin{verbatim}
+CASA <1>: iflist=range(4,8)
+CASA <2>: print iflist
+[4, 5, 6, 7]
+CASA <3>: iflist=range(4)
+CASA <4>: print iflist
+[0, 1, 2, 3]
+\end{verbatim}
+\normalsize
+
+See Appendix~\ref{section:python.lists} for more information.
+
+\subsubsection{Indexes}
+\label{section:intro.basics.python.index}
+
+As in C, Python indices are 0-based.  For example, the first
+element in a list {\tt antlist} would be {\tt antlist[0]}:
+\small
+\begin{verbatim}
+CASA <113>: antlist=range(5)
+CASA <114>: antlist
+  Out[114]: [0, 1, 2, 3, 4]
+CASA <115>: antlist[0]
+  Out[115]: 0
+CASA <116>: antlist[4]
+  Out[116]: 4
+\end{verbatim}
+\normalsize
+
+CASA also uses 0-based indexing internally for elements in the Measurement
+Set (MS -- the basic construct that contains visibility and/or single dish
+data; see Chapter~\ref{chapter:io}).
+Thus, we will often talk about Field or Antenna ``ID''s
+which will be start at 0.  For example, the first field in an MS
+would have {\tt FIELD\_ID==0} in the MSselect syntax, and can
+be addressed as be indexed as {\tt field='0'} in most tasks, as
+well as by name {\tt field='0137+331'} (assuming thats the name
+of the first field).  You will see these indices in the MS summary
+from the task {\tt listobs}. 
+% Things can get confusing with 
+% antenna names from old VLA data where the name is a number,
+% e.g. {\tt antenna='1'} has {\tt ANTENNA\_ID==0} in the MS.
+
+\subsubsection{Indentation}
+\label{section:intro.basics.python.indent}
+
+Python pays attention to the indentation of lines, as it
+uses indentation to determine the level
+of nesting in loops.  Be careful when cutting and pasting: if you
+get the wrong indentation, then unpredictable things can happen
+(usually it just gives an error).  
+
+See Appendix~\ref{section:python.indent} for more information.
+
+\subsubsection{System shell access}
+\label{section:intro.basics.python.sys}
+
+If you want to access system commands from a script, use the
+{\tt os.system} command (Appendix~\ref{section:python.sys.os}).
+
+In interactive mode, any input line beginning with a {\tt '!'} 
+character is passed verbatim (minus the {\tt '!'}, of course) to the
+underlying operating system. Also, several common commands ({\tt ls},
+{\tt pwd}, {\tt less}) may be executed with or without the {\tt '!'},
+although the {\tt cp} command must use {\tt '!'} and
+{\tt cd} must be executed without the {\tt '!'}. 
+For example:
+\small
+\begin{verbatim}
+  CASA <5>: !rm -r mydata.ms
+\end{verbatim}
+\normalsize
+
+Note that if you want to access a Unix environment variable, you
+will need to prefix with a double {\tt \$\$} instead of a single
+{\tt \$} --- for example, to print the value of the {\tt \$PAGER}
+variable, you would use
+\small
+\begin{verbatim}
+  CASA <6>: !echo $$PAGER
+\end{verbatim}
+\normalsize
+
+See Appendix~\ref{section:python.sys} for more information.
+
+\subsubsection{Executing Python scripts}
+\label{section:intro.basics.python.execfile}
+
+You can execute Python scripts (ASCII text files containing 
+Python or casapy commands) using the {\tt execfile} command.
+For example, to execute the script contained in the file
+{\tt myscript.py} (in the current directory), you would type
+\small
+\begin{verbatim}
+  CASA <7>: execfile('myscript.py')
+\end{verbatim}
+\normalsize
+or
+\small
+\begin{verbatim}
+  CASA <8>: execfile 'myscript.py'
+\end{verbatim}
+\normalsize
+which will invoke the IPython auto-parenthesis feature.
+
+NOTE: in some cases, you can use the IPython {\tt run} command
+instead, e.g.
+\small
+\begin{verbatim}
+  CASA <9>: run myscript.py
+\end{verbatim}
+\normalsize
+In this case, you do not need the quotes around the filename.
+This is most useful for re-initializing the task parameters,
+e.g.
+\small
+\begin{verbatim}
+  CASA <10>: run clean.last
+\end{verbatim}
+\normalsize
+(see \S~\ref{section:intro.tasks.setpar.last}).
+
+See Appendix~\ref{section:python.scripts} for more information.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Getting Help in CASA}
+\label{section:intro.basics.help}
+
+\subsubsection{{\tt TAB} key}
+\label{section:intro.basics.help.tab}
+
+At {\bf any} time, hitting the {\tt <TAB>} key will complete any
+available commands or
+variable names and show you a list of the possible completions if
+there's no unambiguous result. It will also complete filenames in the
+current directory if no CASA or Python names match.
+
+For example, it can be used to list the available functionality using
+minimum match; once you have typed enough characters to make the
+command unique, {\tt <TAB>} will complete it. 
+\small
+\begin{verbatim}
+  CASA <15>: cle<TAB>
+  clean                  clean_description      clearcal_check_params
+  clearplot              clearstat
+  clean_check_params     clear                  clearcal_defaults
+  clearplot_defaults     clearstat_defaults
+  clean_defaults         clearcal               clearcal_description
+  clearplot_description  clearstat_description
+\end{verbatim}
+\normalsize
+
+%%%%%%
+\subsubsection{{\tt help <taskname>}}
+\label{section:intro.basics.help.help}
+
+Basic information on an application, including the parameters used and
+their defaults, can be obtained by typing {\tt pdoc task}, 
+{\tt help task}, {\tt help 'task'} or
+{\tt task?}. The {\tt pdoc task} currently gives the cleanest
+documentation format with the smallest amount of object-oriented 
+(programmer) output.  This inline help provides a one line description of
+the task and then lists all parameters, a brief description of the
+parameter, the parameter default, an example setting the parameter and
+any options if there are limited allowed values for the parameter.
+
+For example:
+\small
+\begin{verbatim}
+    Import VLA archive file(s) to a measurement set
+    
+    Imports an arbitrary number of VLA archive-format data sets into
+    a casa measurement set.  If more than one band is present, they
+    will be put in the same measurement set but in a separate spectral
+    window.  The task will handle old style and new style VLA (after
+    July 2007) archive data and apply the tsys to the data and to
+    the weights.
+    
+    Keyword arguments:
+    archivefiles -- Name of input VLA archive file(s)
+            default: none.  Must be supplied
+            example: archivefiles = 'AP314_A959519.xp1'
+            example: archivefiles=['AP314_A950519.xp1','AP314_A950519.xp2']
+    vis -- Name of output visibility file
+            default: none.  Must be supplied.
+            example: vis='NGC7538.ms'
+            Will not over-write existing ms of same name.
+            A backup flag-file version 'Original' will be made in
+              vis.flagversions.  See help flagmanager
+    bandname -- VLA Frequency band
+            default: => '' = all bands
+            example: bandname='K'
+            Options: '4'=48-96 MHz,'P'=298-345 MHz,'L'=1.15-1.75 GHz,
+            'C'=4.2-5.1 GHz,'X'=6.8-9.6 GHz,'U'=13.5-16.3 GHz,
+            'K'=20.8-25.8 GHz,'Q'=38-51 GHz
+    frequencytol -- Tolerance in frequency shift in making spectral windows
+            default: => 150000 (Hz).  For Doppler shifted data, <10000 Hz may
+            may produce too many unnecessary spectral windows.
+            example: frequencytol = 1500000.0 (units = Hz)
+    project -- Project name to import from archive files:
+            default: '' => all projects in file
+            example: project='AL519'
+            project = 'al519' or AL519 will work.  Do not include
+            leading zeros; project = 'AL0519' will not work.
+    starttime -- Time after which data will be considered for importing
+            default: '' => all:  Date must be included.
+            syntax: starttime = '2003/1/31/05:05:23'
+    stoptime --  Time before which data will be considered for importing
+            default: '' => all:  Date must be included.
+            syntax: stoptime = '2003/1/31/08:05:23'
+    applytsys -- Apply data scaling and weight scaling by nominal
+            sensitivity (~Tsys)
+            default: True.  Strongly recommended
+    autocorr --  import autocorrelations to ms
+            default:  => False (no autocorrelations)
+    antnamescheme -- 'old' or 'new' antenna names.
+            default => 'new' gives antnenna names
+              'VA04' or 'EA13 for VLA telescopse 04 and 13 (EVLA)
+              'old' gives names '04' or '13'
+    keepblanks -- Should sources with blank names be filled into the data base
+            default => false.  Do not fill
+            These scans are tipping scans (as of June 1, 2009) and should not
+            be filled in the visibility data set.
+    evlabands -- Use the EVLA's center frequency and bandwidths for frequencies
+            specified via wavelength or band. 
+            default => True. 
+    async --  Run asynchronously
+            default = False; do not run asychronously
+
+\end{verbatim}
+\normalsize
+
+You can also get the short help for a CASA tool method by typing 'help tool.method'.
+\small  
+\begin{verbatim}
+CASA <46>: help ia.subimage
+Help on built-in function subimage:
+
+subimage(...)
+    Create a (sub)image from a region of the image
+    --- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+      outfile:  Output image file name. Default is unset. 
+      region:  Region of interest. Default is whole image. 
+      mask:  OTF mask, Boolean LEL expression or mask region. Default is none. 
+      dropdeg:  Drop degenerate axes false 
+      overwrite:  Overwrite (unprompted) pre-existing output file? false 
+      list:  List informative messages to the logger true 
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+          outfile
+          region
+          mask
+          dropdeg   = false
+          overwrite = false
+          list      = true
+        ----------------------------------------
+\end{verbatim}
+\normalsize
+
+For a full list of keywords associated with the various tools,
+see the {\bf CASA User Reference Manual}.  
+
+%%%%%%
+\subsubsection{{\tt help } and {\tt PAGER}}
+\label{section:intro.basics.help.page}
+
+Your {\tt PAGER} environment variable (\S~\ref{section:intro.basics.before})
+determines how help is displayed
+in the terminal window where you start CASA. If you set your {\tt
+bash} environment variable {\tt PAGER=less} ({\tt setenv PAGER less}
+in {\tt csh}) then typing {\tt help <taskname>} will show you the help
+but the text will vanish and return you to the command line when you
+are done viewing it. Setting {\tt PAGER=more} ({\tt setenv PAGER
+more}) will scroll the help onto your command window and then return
+you to your prompt (but leaving it on display). Setting {\tt
+PAGER=cat} ({\tt setenv PAGER cat}) will give you the {\tt more}
+equivalent without some extra formatting baggage and is the
+recommended choice.
+
+If you have set {\tt PAGER=more}
+or {\tt PAGER=less}, the {\tt help} display will be fine, but the display of
+'taskname?' will often have confusing formatting content at the
+beginning (lots of {\tt ESC} surrounding the text). This can be remedied
+by exiting casapy and doing an '{\tt unset PAGER}' 
+({\tt unsetenv PAGER} in [t]csh) at the Unix command line.
+
+You can see the current value of the {\tt PAGER} environment variable
+with CASA by typing:
+\small
+\begin{verbatim}
+  !echo $$PAGER
+\end{verbatim}
+\normalsize
+(note the double {\tt \$\$}).  This will show what command paging is
+pointed to.
+
+%%%%%%
+\subsubsection{{\tt help par.<parameter>}}
+\label{section:intro.basics.help.par}
+
+Typing {\tt help par.<parameter>} provides a brief description of a 
+given parameter {\tt <parameter>}.
+\small
+\begin{verbatim}
+  CASA <46>: help par.robust
+  Help on function robust in module parameter_dictionary:
+
+  robust()
+    Brigg's robustness parameter.
+
+    Options: -2.0 (close to uniform) to 2.0 (close to natural)
+\end{verbatim}
+\normalsize
+
+%%%%%%
+\subsubsection{Python {\tt help}}
+\label{section:intro.basics.help.py}
+
+Typing {\tt help} at the casapy prompt with no arguments will bring
+up the native Python help facility, and give you the
+{\tt help>} prompt for further information; hitting {\tt <RETURN>} at the help
+prompt returns you to the CASA prompt.
+\small
+\begin{verbatim}
+  CASA <2>: help
+  --------> help()
+
+  Welcome to Python 2.5!  This is the online help utility.
+
+  If this is your first time using Python, you should definitely check out
+  the tutorial on the Internet at http://www.python.org/doc/tut/.
+
+  Enter the name of any module, keyword, or topic to get help on writing
+  Python programs and using Python modules.  To quit this help utility and
+  return to the interpreter, just type "quit".
+
+  To get a list of available modules, keywords, or topics, type "modules",
+  "keywords", or "topics".  Each module also comes with a one-line summary
+  of what it does; to list the modules whose summaries contain a given word
+  such as "spam", type "modules spam".
+
+  help> keywords
+
+  Here is a list of the Python keywords.  Enter any keyword to get more
+  help.
+
+  and                 else                import              raise
+  assert              except              in                  return
+  break               exec                is                  try
+  class               finally             lambda              while
+  continue            for                 not                 yield
+  def                 from                or                  
+  del                 global              pass                
+  elif                if                  print               
+
+  help>
+
+  # hit <RETURN> to return to CASA prompt
+
+  You are now leaving help and returning to the Python interpreter.
+  If you want to ask for help on a particular object directly from the
+  interpreter, you can type "help(object)".  Executing
+  "help('string')" has the same effect as typing a particular string
+  at the help> prompt.
+\end{verbatim}
+\normalsize
+
+Further help in working within
+the Python shell is given in Appendix~\ref{chapter:python}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Tasks and Tools in CASA}
+\label{section:intro.tasks}
+
+Originally, CASA consisted of a collection of tools, combined in the
+so-called toolkit.  Since the majority of prospective users is far
+more familiar with the concept of tasks, an effort is underway to
+replace most - if not all - toolkit functionality by tasks.
+
+While running CASA, you will have access to and be interacting with
+tasks, either indirectly by providing parameters to a task, or
+directly by running a task.  Each task has a well defined purpose, and
+a number of associated parameters, the values of which are to be
+supplied by the user.  Technically speaking, tasks are built on top of
+tools - when you are running a task, you are running tools in the
+toolkit, though this should be transparent.
+
+As more tasks are being written, and the functionality of each task is
+enhanced, there will be less and less reason to run tools in the
+toolkit.  We are working toward a system in which direct access to the
+underlying toolkit is unnecessary for all standard data processing.
+
+\subsection{What Tasks are Available?}
+\label{section:intro.tasks.more}
+
+As mentioned in the introduction, tasks in CASA are python interfaces
+to the more basic toolkit.  Tasks are executed to perform a single
+job, such as loading, plotting, flagging, calibrating, and imaging the
+data.
+
+Basic information on tasks, including the parameters used and their
+defaults, can be obtained by typing {\tt help <taskname>} or {\tt
+<taskname>?} at the CASA prompt, where {\tt <taskname>} is the name of
+a given task.  As described above in \S~\ref{section:intro.basics.help.help},
+{\tt help <taskname>} provides a description of the task
+and then lists all parameters, a brief description of the parameter,
+the parameter default, an example setting the parameter and any
+options if there are limited allowed values for the parameter.
+
+To see what tasks are available in CASA, use {\tt tasklist}, e.g.
+\small
+\begin{verbatim}
+
+CASA <5>: tasklist
+--------> tasklist()
+Available tasks: 
+
+Import/Export    Information  Data Editing  Display/Plot
+-------------    -----------  ------------  ------------
+importvla        listcal      (fixvis)      clearplot
+(importasdm)     listhistory  flagautocorr  plotants 
+importfits       listobs      flagdata      plotcal
+importuvfits     listvis      flagmanager   plotms
+exportfits       imhead       plotms        plotxy
+exportuvfits     imstat       plotxy        viewer
+                 vishead
+                 visstat
+
+Calibration      Imaging      Modelling     Utility
+-----------      -------      ---------     -------
+accum            clean        setjy         help task
+applycal         deconvolve   uvcontsub     help par.parameter
+bandpass         feather      (uvcontsub2)  taskhelp
+blcal            ft           uvmodelfit    tasklist
+calstat          makemask                   browsetable
+gaincal          mosaic                     clearplot
+fluxscale        widefield                  clearstat
+(fringecal)                                 concat
+clearcal                                    filecatalog
+listcal                                     startup
+smoothcal                                   split
+polcal                                      fixvis
+hanningsmooth
+                                                 
+
+Image Analysis   Simulation   Single Dish (after running asap_init())
+--------------   ----------   -----------
+imcontsub        simdata      sdaverage
+imhead                        sdbaseline
+immath                        sdcal
+immoments                     sdcoadd
+imregrid                      sdfit
+imsmooth                      sdflag
+imstat                        sdimaging
+imval                         sdimprocess
+(specfit)                     sdlist
+                              sdmath
+                              sdplot
+                              sdsave
+                              sdscale
+                              (sdsim)
+                              sdsmooth
+                              sdstat
+                              sdtpimaging
+
+User defined tasks
+------------------
+
+\end{verbatim}
+\normalsize
+The tasks with name in parentheses are experimental. In the above
+case, the user has not defined any task him/herself.
+
+Typing {\tt taskhelp} provides a one line description of all available
+tasks.
+\small
+\begin{verbatim}
+CASA <6>: taskhelp
+--------> taskhelp()
+Available tasks: 
+
+accum            : Accumulate incremental calibration solutions into a calibration table
+applycal         : Apply calibrations solutions(s) to data
+autoclean        : CLEAN an image with automatically-chosen clean regions.
+bandpass         : Calculates a bandpass calibration solution
+blcal            : Calculate a baseline-based calibration solution (gain or bandpass)
+boxit            : Box regions in image above given threshold value.
+browsetable      : Browse a table (MS, calibration table, image)
+calstat          : Displays statistical information on a calibration table
+clean            : Invert and deconvolve images with selected algorithm
+clearcal         : Re-initializes the calibration for a visibility data set
+clearplot        : Clear the matplotlib plotter and all layers
+clearstat        : Clear all autolock locks
+concat           : Concatenate several visibility data sets.
+cvel             : regrid an MS to a new spectral window / channel structure or frame
+deconvolve       : Image based deconvolver
+exportfits       : Convert a CASA image to a FITS file
+exportuvfits     : Convert a CASA visibility data set to a UVFITS file:
+feather          : Combine two images using their Fourier transforms
+find             : Find string in tasks, task names, parameter names:
+fixvis           : Recalculates (u, v, w)
+flagautocorr     : Flag autocorrelations
+flagdata         :  All purpose flagging task based on selections
+flagmanager      : Enable list, save, restore, delete and rename flag version files.
+fluxscale        : Bootstrap the flux density scale from standard calibrators
+fringecal        : Calculate a baseline-based fringe-fitting solution (phase, delay, delay-rate)
+ft               : Insert a source model into the MODEL_DATA column of a visibility set:
+gaincal          : Determine temporal gains from calibrator observations
+gencal           : Specify Calibration Values of Various Types
+hanningsmooth    : Hanning smooth frequency channel data to remove Gibbs ringing
+imcontsub        : Subtracts specified continuum channels from a spectral line data set
+imfit            : Fit one or more elliptical Gaussian components on an image region(s)
+imhead           : List, get and put image header parameters
+immath           : Perform math operations on images
+immoments        : Compute moments from an image
+importasdm       : Convert an ALMA Science Data Model observation into a CASA visibility file
+importfits       : Convert an image FITS file into a CASA image
+importgmrt       : Convert a UVFITS file to a CASA visibility data set
+importoldasdm    : Convert an ALMA Science Data Model observation into a CASA visibility file
+importuvfits     : Convert a UVFITS file to a CASA visibility data set
+importvla        : Import VLA archive file(s) to a measurement set
+imregrid         : regrid an image onto a template image
+imsmooth         : Smooth an image or portion of an image
+imstat           : Displays statistical information from an image or image region
+imval            : Get the data value(s) and/or mask value in an image.
+listcal          : List antenna gain solutions
+listhistory      : List the processing history of a dataset:
+listobs          : List data set summary in the logger
+listvis          : List measurement set visibilities.
+makemask         : Make a mask image from rectangular boxes
+mosaic           : Create a multi-field deconvolved image with selected algorithm
+newflagdata      : Flag/Clip data based on selections
+peel             : Do direction dependent selfcal(s) and optionally remove annoying sources.
+plotants         : Plot the antenna distribution in the local reference frame:
+plotcal          : An all-purpose plotter for calibration results 
+plotms           : A plotter/interactive flagger for visibility data.
+plotxy           : An X-Y plotter/interactive flagger for visibility data.
+polcal           : Determine instrumental polarization calibrations
+rmtables         : 
+sdaverage        : ASAP SD task: do data selection, calibration, and averaging
+sdbaseline       : ASAP SD task: fit/remove a spectral baseline 
+sdcal            : ASAP SD task: do sdaverage, sdsmooth, and sdbaseline in one task
+sdcoadd          : ASAP SD task: coadd multiple scantables into one
+sdfit            : ASAP SD task: fit a spectral line
+sdflag           : ASAP SD spectral flagging task 
+sdimaging        : SD task: imaging for total power and spectral data
+sdimprocess      : SD task: task for single-dish image processing
+sdlist           : ASAP SD task: list summary of single dish data
+sdmath           : ASAP SD task: do simple arithmatic (subtraction, addition, multiplication, and division) for spectra
+sdplot           : ASAP SD plotting task 
+sdsave           : ASAP SD task: save the sd spectra in various format
+sdscale          : ASAP SD task: scale the sd spectra
+sdsim            : single dish simulation task:
+sdsmooth         : ASAP SD task: do smoothing of spectra
+sdstat           : ASAP SD task: list statistics of spectral region
+sdtpimaging      : SD task: do a simple calibration and imaging for total power data 
+setjy            : Fills the model column with the visibility of a calibrator
+simdata          : simulation task:
+simdata2         : mosaic simulation task:
+smoothcal        : Smooth calibration solution(s) derived from one or more sources:
+specfit          : Fit 1-dimentional profile(s) or polynomial(s) to an image or image region
+split            : Create a visibility subset from an existing visibility set
+uvcontsub        : Continuum fitting and subtraction in the uv plane
+uvcontsub2       : Continuum fitting and subtraction in the uv plane CALIBRATION VERSION
+uvmodelfit       : Fit a single component source model to the uv data
+uvsub            : Subtract/add model from/to the corrected visibility data.
+viewer           : View an image or visibility data set:
+viewerconnection : Scripting connection to the CASA Viewer
+vishead          : List, summary, get, and put metadata in a measurement set
+visstat          : Displays statistical information from a measurement set, or from a measurement set selection
+widefield        : Wide-field imaging and deconvolution with selected algorithm
+\end{verbatim}
+\normalsize
+
+Typing {\tt startup} will provide the startup page displayed when
+entering CASA.  For example,
+\small
+\begin{verbatim}
+CASA <7>: startup
+--------> startup()
+___________________________________________________________
+Available tasks:
+
+   accum          flagmanager       listobs           sdscale
+   applycal       fluxscale         listvis           sdsim
+   bandpass       ft                makemask          sdsmooth
+   blcal          gaincal           plotants          sdstat
+   browsetable    gencal            plotcal           sdtpimaging
+   calstat        hanningsmooth     plotmsl           setjyt
+   clean          imcontsub         plotxy            smoothcal
+   clearcal       imfit             sdaverage         specfit
+   clearplot      imhead            sdbaseline        split
+   clearstat      immoments         sdcal             tget
+   concat         importfits        sdcoadd           tput
+   deconvolve     importuvfits      sdfit             uvcontsub
+   exportfits     importvla         sdflag            uvcontsub2
+   exportuvfits   imregrid          sdimaging         uvmodelfit
+   feather        imsmooth          sdimprocess       viewer
+   filecatalog    imstat            sdlist            vishead
+   find           imval             sdmath            visstat
+   fixvis         listcal           sdplot
+   flagdata       listhistory       sdsave
+
+
+                
+sd* tasks are available after asap_init() is run
+
+Additional tasks available for ALMA commissioning use
+         (still alpha code as of Beta release):
+
+ simdata        importasdm
+
+Available tools:
+
+   cb (calibrater)       cp (cal plot)    fg (flagger)
+   ia (image analysis)   im (imager)      me (measures)
+   mp (MS plot)          ms (MS)          qa (quanta)
+   sm (simulation)       tb (table)       tp (table plot)
+   vp (voltage patterns) pm (plotms)      at (atmosphere)
+
+   pl (pylab functions)
+   sd (ASAP functions - run asap_init() to import into CASA)
+
+   casalogger             - Call up the casalogger (if it goes away)
+   
+___________________________________________________________________
+Help:
+   help taskname          - Full help for task
+   help par.parametername - Full help for parameter name
+   tasklist               - Task list organized by catagory
+   taskhelp               - One line summary of available tasks
+   toolhelp               - One line summary of available tools
+   startup                - The start up screen
+___________________________________________________________________
+
+
+\end{verbatim}
+\normalsize
+
+%%NOTE: THESE EXAMPLES WERE UPDATED 2010-02-24
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Running Tasks and Tools}
+\label{section:intro.tasks.run}
+
+Tools are functions linked to the Python interface which must be
+called by name with arguments.  Tasks have higher-level capabilities
+than tools.  Tasks require input parameters which maybe be specified
+when you call the task as a function, or be set as parameters in the
+interface.  A task, like a tool, is a function under Python and may be
+written in Python, C, or C++ (the CASA toolkit is made up of C++
+functions).
+
+There are two distinct ways to run tasks. You can either set the
+global CASA parameters relevant to the task and
+tell the task to ``go'', or you can call the task as a function with
+one or more arguments specified.  These two invocation methods differ
+in whether the global parameter values are used or not.
+
+For example,
+\small
+\begin{verbatim}
+    default('plotxy')
+    vis='ngc5921.ms'
+    xaxis='channel'
+    yaxis='amp'
+    datacolumn='data'
+    go
+\end{verbatim}
+\normalsize
+will execute {\tt plotxy} with the set values for the parameters
+(see \S~\ref{section:intro.tasks.setpar}).  Instead of using 
+{\tt go} command (\S~\ref{section:intro.tasks.setpar.go}) to invoke
+the task, you can also call the task with no arguments, e.g.
+\small
+\begin{verbatim}
+    default('plotxy')
+    vis='ngc5921.ms'
+    xaxis='channel'
+    yaxis='amp'
+    datacolumn='data'
+    plotxy()
+\end{verbatim}
+\normalsize
+which will also use the global parameter values.
+
+Second, one may call tasks and tools by name with parameters set
+on the same line.  Parameters may be set either as explicit
+{\tt <parameter>=<value>} arguments, or as a series of comma delimited
+{\tt <value>}s in the correct order for that task or tool.  Note that missing
+parameters will {\em use the default values for that task}.
+For example, the following are equivalent:
+\small
+\begin{verbatim}
+  # Specify parameter names for each keyword input: 
+    plotxy(vis='ngc5921.ms',xaxis='channel',yaxis='amp',datacolumn='data')
+  # when specifying the parameter name, order doesn't matter, e.g.:
+    plotxy(xaxis='channel',vis='ngc5921.ms',datacolumn='data',yaxis='amp')
+  # use parameter order for invoking tasks
+    plotxy('ngc5921.ms','channel','amp','data')
+\end{verbatim}
+\normalsize
+This non-use of globals when calling as a function is so that robust 
+scripts can be written.  One need only cut-and-paste the calls and
+need not worry about the state of the global variables or what has
+been run previously.  It is also more like the standard behavior of
+function calls in Python and other languages.
+
+Tools can only be called in this second manner by name, with
+arguments (\S~\ref{section:intro.tasks.tools}).  Tools never use the
+global parameters and the related mechanisms of {\tt inp} and {\tt go}.
+
+%%%%%%%
+\subsubsection{Aborting Synchronous Tasks}
+\label{section:intro.tasks.run.abort}
+
+If you are running CASA tasks synchronously, then you can usually use
+{\tt CNTL-C} to abort execution of the task.  If this does not work,
+try {\tt CNTL-Z} followed by a {\tt kill}.
+See \S~\ref{section:intro.basics.wrong.abort} for more on these
+methods to abort CASA execution.
+
+You may have to quit and restart CASA after an abort, as the internal
+state can get mixed up.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Getting Return Values}
+\label{section:intro.tasks.return}
+
+Some tasks and tools return a record (usually a Python dictionary)
+to the interface.  For example, the {\tt imstat} task 
+(\S~\ref{section:analysis.imstat}) returns a dictionary with the
+image statistics in it.  To catch these return values into a
+Python variable, you MUST assign that variable to the task call, e.g.
+\small
+\begin{verbatim}
+   xstat = imstat('ngc5921.clean.image')
+\end{verbatim}
+\normalsize
+or 
+\small
+\begin{verbatim}
+   default('imstat')
+   imagename = 'ngc5921.clean.image'
+   xstat = imstat()
+\end{verbatim}
+\normalsize
+Note that tools that return values work in the same way
+(\S~\ref{section:intro.tasks.tools}).
+
+You can print or use the return value in Python for controlling
+scripts.  For example,
+\small
+\begin{verbatim}
+CASA <1>: xstat = imstat('ngc5921.clean.image')
+CASA <2>: xstat
+  Out[2]: 
+{'blc': array([0, 0, 0, 0]),
+ 'blcf': '15:24:08.404, +04.31.59.181, I, 1.41281e+09Hz',
+ 'flux': array([ 4.15292207]),
+ 'max': array([ 0.05240594]),
+ 'maxpos': array([134, 134,   0,  38]),
+ 'maxposf': '15:21:53.976, +05.05.29.998, I, 1.41374e+09Hz',
+ 'mean': array([  1.62978083e-05]),
+ 'medabsdevmed': array([ 0.00127287]),
+ 'median': array([ -1.10467618e-05]),
+ 'min': array([-0.0105249]),
+ 'minpos': array([160,   1,   0,  30]),
+ 'minposf': '15:21:27.899, +04.32.14.923, I, 1.41354e+09Hz',
+ 'npts': array([ 3014656.]),
+ 'quartile': array([ 0.00254587]),
+ 'rms': array([ 0.00201818]),
+ 'sigma': array([ 0.00201811]),
+ 'sum': array([ 49.1322855]),
+ 'sumsq': array([ 12.27880404]),
+ 'trc': array([255, 255,   0,  45]),
+ 'trcf': '15:19:52.390, +05.35.44.246, I, 1.41391e+09Hz'}
+CASA <3>: myrms = xstat['rms'][0]
+CASA <4>: print 10.0*myrms
+0.0201817648485
+\end{verbatim}
+\normalsize
+
+If you do not catch the return variable, it will be lost
+\small
+\begin{verbatim}
+   imstat('ngc5921.clean.image')
+\end{verbatim}
+\normalsize
+ or
+\small
+\begin{verbatim}
+   default('imstat')
+   imagename = 'ngc5921.clean.image'
+   imstat()
+\end{verbatim}
+\normalsize
+and spewed to terminal.  Note that {\tt go} will trap and lose
+the return value, e.g.
+\small
+\begin{verbatim}
+   default('imstat')
+   imagename = 'ngc5921.clean.image'
+   go
+\end{verbatim}
+\normalsize
+will not dump the return to the terminal either.
+
+NOTE: You cannot currently catch a return value from a task run
+asynchronously (\S~\ref{section:intro.tasks.async}).
+
+%%%%%%%
+\subsection{Running Tasks Asynchronously}
+\label{section:intro.tasks.async}
+
+By default, most tasks run synchronously in the foreground.  Many
+tasks, particularly those that can take a long time to execute,
+have the {\tt async} parameter.  This allows the user to send the
+task to the background for execution.
+
+{\bf ALERT:} A few tasks, such as the {\tt exportuvfits} and
+{\tt exportfits} tasks, have {\tt async=True} by default.  This
+is a workaround for a known problem where they can trample on other
+tasks and tools if they use the default global tools underneath.
+
+\subsubsection{Monitoring Asynchronous Tasks}
+\label{section:intro.tasks.async.tm}
+
+% \begin{wrapfigure}{r}{2.5in}
+%   \begin{boxedminipage}{2.5in}
+%      \centerline{\underline{\bf Inside the Toolkit:}}
+%      The {\tt tm} tool is the manager for asynchronous
+%      processes.  There is currently no task equivalent.
+%   \end{boxedminipage}
+% \end{wrapfigure}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf ALERT:}
+     You should not use the {\tt go} command to run a task
+     asynchronously, as the ``handle'' will be swallowed by
+     the Python task wrapper and you will not be able to
+     access it with {\tt tm}.  This is also true if you run
+     in a Python script.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+There is a ``taskmanager'' tool {\tt tm} that allows the user
+to retrieve the status of, and to abort the execution of, tasks
+running with {\tt async=True} in the background.  There
+are two methods of interest for the user, {\tt tm.retrieve} and
+{\tt tm.abort}.
+
+If you run a task with {\tt async=True} then several things will
+happen.  First of all, the task returns a ``handle'' that is 
+a number used to identify the process.  This is printed to the 
+screen, e.g. 
+\small
+\begin{verbatim}
+CASA <5>: inp()
+#  mosaic :: Calculate a multi-field deconvolved image with selected clean algorithm:
+...
+async               =       True        #   if True run in the background, prompt is freed
+
+CASA <6>: mosaic()
+Connecting to controller:  ('127.0.0.1', 60775)
+  Out[6]: 0
+\end{verbatim}
+\normalsize
+where the output value {\tt 0} is the handle id.  
+
+You can also catch the return value in a variable, e.g.
+\small
+\begin{verbatim}
+CASA <7>: handle = mosaic()
+...
+CASA <8>: print handle
+1
+\end{verbatim}
+\normalsize
+You should also see the usual messages from the task in the 
+{\tt logger}, with some extra lines of information
+\small
+\begin{verbatim}
+###############################################
+###  Begin Task: mosaic  ###
+Tue Oct 2 17:58:16 2007    NORMAL ::mosaic:
+""
+"Use: "
+tm.abort(return_value)    # to abort the asynchronous task
+tm.retrieve(return_value) # to retrieve the status
+""
+... usual messages here ...
+
+###  End Task: mosaic  ###
+###############################################
+""
+\end{verbatim}
+\normalsize
+for the example above.
+
+To show the current state of an asynchronous task, use the
+{\tt tm.retrieve} method using the handle id as the argument.
+For example,
+\small
+\begin{verbatim}
+CASA <9>: tm.retrieve(handle)
+  Out[9]: {'result': None, 'state': 'pending'}
+\end{verbatim}
+\normalsize
+or
+\small
+\begin{verbatim}
+CASA <10>: tm.retrieve(1)
+  Out[10]: {'result': None, 'state': 'pending'}
+\end{verbatim}
+\normalsize
+which means its still running.  You should be seeing output in
+the {\tt logger} also while the task is running.  
+
+When a task is finished, you will see:
+\small
+\begin{verbatim}
+CASA <11>: tm.retrieve(1)
+  Out[11]: {'result': None, 'state': 'done'}
+\end{verbatim}
+\normalsize
+which indicates completion.
+
+%%%%%%%
+\subsubsection{Aborting Asynchronous Tasks}
+\label{section:intro.tasks.async.abort}
+
+To abort a task while it is running in the background, use the
+{\tt tm.abort} method, again with the task handle id as the
+argument.  For example,
+\small
+\begin{verbatim}
+CASA <12>: handle = mosaic()
+...
+CASA <13>: tm.abort(handle)
+\end{verbatim}
+\normalsize
+will abort the task if it is running.
+
+If this does not work,
+try {\tt CNTL-Z} followed by a {\tt kill -9 <PID>} for the appropriate
+process ID.
+See \S~\ref{section:intro.basics.wrong.abort} for more on these
+methods to abort CASA execution.
+
+{\bf ALERT:} Currently, this is only available with the 
+{\tt tm} tool.  We are working on a {\tt taskmanager} task.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Setting Parameters and Invoking Tasks}
+\label{section:intro.tasks.setpar}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     In the current version of CASA, you cannot use the
+     task parameter setting features, such as the {\tt inp},
+     {\tt default}, or {\tt go} commands, for the tools.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+One can set parameters for tasks (but not for tools) by
+performing the assignment within the CASA shell and then inspecting
+them using the {\tt inp} command:
+\small
+\begin{verbatim}
+CASA <30>: default(bandpass)
+CASA <31>: vis = 'ngc5921.demo.ms'
+CASA <32>: caltable = 'ngc5921.demo.bcal'
+CASA <33>: field = '0'
+CASA <34>: refant = '15'
+CASA <35>: inp('bandpass')
+#  bandpass :: Calculates a bandpass calibration solution
+vis         = 'ngc5921.demo.ms' #  Nome of input visibility file
+caltable    = 'ngc5921.demo.bcal' #  Name of output gain calibration table
+field       =        '0'        #  Select field using field id(s) or field name(s)
+spw         =         ''        #  Select spectral window/channels
+selectdata  =      False        #  Other data selection parameters
+solint      =      'inf'        #  Solution interval
+combine     =     'scan'        #  Data axes which to combine for solve (scan, spw, field)
+refant      =       '15'        #  Reference antenna name
+minblperant =          4        #  Minimum baselines _per antenna_ required for solve
+solnorm     =      False        #  Normalize average solution amplitudes to 1.0 (G, T only)
+bandtype    =        'B'        #  Type of bandpass solution (B or BPOLY)
+  fillgaps  =          0        #  Fill flagged solution channels by interpolation
+append      =      False        #  Append solutions to the (existing) table
+gaintable   =         ''        #  Gain calibration table(s) to apply on the fly
+gainfield   =         ''        #  Select a subset of calibrators from gaintable(s)
+interp      =         ''        #  Interpolation mode (in time) to use for each gaintable
+spwmap      =         []        #  Spectral windows combinations to form for gaintables(s)
+gaincurve   =      False        #  Apply internal VLA antenna gain curve correction
+opacity     =        0.0        #  Opacity correction to apply (nepers)
+parang      =      False        #  Apply parallactic angle correction
+async       =      False        #  
+\end{verbatim}
+\normalsize
+See \S~\ref{section:intro.tasks.setpar.inp} below for more details on
+the use of the {\tt inputs} command.
+
+% In summary, for tasks, one can
+% either (1) assign parameters, one at a time, from the CASA prompt, and
+% then execute the task; (2) execute the task in one line, specifically
+% assigning each parameter within the line; or (3) using the position
+% within the task call to specify the value of the parameter.
+
+All task parameters have {\bf global} scope within CASA: the
+parameter values are common to all tasks and also at the CASA command
+line. This allows the convenience of not changing parameters that are
+shared between tasks but does require care when chaining together
+sequences of task invocations (to ensure proper values are provided).
+
+If you want to reset the input keywords for a single task, use the
+{\tt default} command (\S~\ref{section:intro.tasks.setpar.default}).  
+For example, to set the defaults for the {\tt bandpass} task, type:
+\small
+\begin{verbatim}
+CASA <30>: default('bandpass')
+\end{verbatim}
+\normalsize
+as we did above.
+
+To inspect a single parameter value just type it at the command line.
+Continuing the above example:
+\small
+\begin{verbatim}
+CASA <36>: combine
+  Out[14]: 'scan'
+\end{verbatim}
+\normalsize
+CASA parameters are just Python variables.
+
+Parameters for a given task can be saved by using the {\tt saveinputs}
+command (see \S~\ref{section:intro.tasks.setpar.saveinputs})
+and restored using the {\tt execfile '<filename>'} command.  Note that
+if the task is successfully executed, then a {\tt <taskname>.last}
+file is created in the working directory containing the parameter
+values (see \S~\ref{section:intro.tasks.setpar.last}).
+
+We now describe the individual CASA task parameter interface commands
+and features in more detail.
+
+%%%%%%
+\subsubsection{The scope of parameters in CASA}
+\label{section:intro.tasks.setpar.scope}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\underline{\bf Advanced Tip}}
+     By default, the scope of CASA parameters is global, as stated
+     here.  However, if you call a task as a function with one or
+     more arguments specified, e.g. {\tt task(arg1=val1,...)}, then
+     non-specified parameters will be defaulted and no globals used.
+     This makes scripting more robust.  Tasks DO NOT change the value
+     of globals.
+  \end{boxedminipage}
+\end{wrapfigure}
+All task parameters have {\bf global} scope within CASA: the
+parameter values are common to all tasks and also at the CASA command
+line. This allows the convenience of not changing parameters that are
+shared between tasks but does require care when chaining together
+sequences of task invocations (to ensure proper values are provided).
+Tasks DO NOT change the values of the global parameters, nor does the
+invocation of tasks using the functional call with arguments change
+the globals.
+
+This does mean that unless you do an explict {\tt default} of the task
+(\S~\ref{section:intro.tasks.setpar.default}), previously set values
+may be unexpectedly used if you do not inspect the {\tt inp}
+carefully.  For example, good practice is:
+\small
+\begin{verbatim}
+   default('imhead')
+   imagename = 'ngc5921.demo.cleanimg.image'
+   mode = 'list'
+   imhead()
+\end{verbatim}
+\normalsize
+
+If you supply the task call with arguments, then these will be used
+for the values of those parameters (see above).  However, if some but
+not all arguments are supplied, then those parameters not given as
+arguments will default and NOT use the current global values.  Thus,
+\small
+\begin{verbatim}
+   imhead('ngc5921.demo.cleanimg.image',mode='list')
+\end{verbatim}
+\normalsize
+will reproduce the above.
+
+%%%%%%
+\subsubsection{The {\tt default} Command}
+\label{section:intro.tasks.setpar.default}
+
+Each task has a special set of default parameters defined for its
+parameters.  You can use the {\tt default} command to reset the
+parameters for a specified task (or the current task as defined
+by the {\tt taskname} variable) to their default. 
+
+{\bf Important Note:} The {\tt default} command resets the values
+of the task parameters to a set of ``defaults'' as specified in
+the task code.  Some defaults are blank strings {\tt ''} or 
+empty lists {\tt []}, others are specific numerical values, strings,
+or lists.  It is important to understand that just setting a string
+parameter to an empty string {\tt ''} is not setting it to its 
+default!  Some parameters do not have a blank as an allowed value.
+See the {\tt help} for a particular task to find out its default.
+If {\tt ''} is the default or an allowed value, it will say so
+explicitly.
+
+For example, suppose we have been running CASA on a particular
+dataset, e.g.
+\small
+\begin{verbatim}
+CASA <40>: inp clean
+---------> inp('clean')
+#  clean :: Deconvolve an image with selected algorithm
+vis                 = 'ngc5921.demo.src.split.ms.contsub' #  name of input visibility file
+imagename           = 'ngc5921.demo.cleanimg' #  Pre-name of output images
+field               =        '0'        #  Field Name
+spw                 =         ''        #  Spectral windows:channels: '' is all
+selectdata          =      False        #  Other data selection parameters
+mode                =  'channel'        #  Type of selection (mfs, channel, velocity, frequency)
+     nchan          =         46        #  Number of channels (planes) in output image
+     start          =          5        #  first input channel to use
+     width          =          1        #  Number of input channels to average
+     interpolation  =  'nearest'        #  Spectral interpolation (nearest, linear, cubic)
+niter               =       6000        #  Maximum number of iterations
+...
+\end{verbatim}
+\normalsize
+and now we wish to switch to a different one.  We can reset the
+parameter values using {\tt default}:
+\small
+\begin{verbatim}
+CASA <41>: default
+---------> default()
+
+CASA <42>: inp
+---------> inp()
+#  clean :: Deconvolve an image with selected algorithm
+vis                 =         ''        #  name of input visibility file
+imagename           =         ''        #  Pre-name of output images
+field               =         ''        #  Field Name
+spw                 =         ''        #  Spectral windows:channels: '' is all
+selectdata          =      False        #  Other data selection parameters
+mode                =      'mfs'        #  Type of selection (mfs, channel, velocity, frequency)
+niter               =        500        #  Maximum number of iterations
+...
+\end{verbatim}
+\normalsize
+
+It is good practice to use {\tt default} before running a task
+if you are unsure what state the CASA global variables are in.
+
+{\bf ALERT:} You currently can only reset ALL of the parameters
+for a given task to their defaults.  In an upcoming update we will
+allow the {\tt default} command to take a second argument with a
+specific parameter to default its value.
+
+%%%%%%
+\subsubsection{The {\tt go} Command}
+\label{section:intro.tasks.setpar.go}
+
+You can execute a task using the {\tt go} command, either explicitly
+\small
+\begin{verbatim}
+CASA <44>: go listobs
+---------> go(listobs)
+Executing:  listobs()
+...
+\end{verbatim}
+\normalsize
+or implicitly
+if {\tt taskname} is defined (e.g. by previous use of {\tt default}
+or {inp})
+\small
+\begin{verbatim}
+CASA <45>: taskname = 'clean'
+CASA <46>: go
+---------> go()
+Executing:  clean()
+...
+\end{verbatim}
+\normalsize
+
+You can also execute a task simply by typing the taskname.
+\small
+\begin{verbatim}
+CASA <46>: clean
+---------> clean()
+Executing:  clean()
+...
+\end{verbatim}
+\normalsize
+
+The {\tt go} command can also be used to launch a different task without
+changing the current {\tt taskname}, without disrupting the 
+{\tt inp} process on the current task you are working on.  For
+example
+\small
+\begin{verbatim}
+   default 'gaincal' # set current task to gaincal and default
+   vis = 'n5921.ms'  # set the working ms
+   ...               # set some more parameters
+   go listobs        # launch listobs w/o chaning current task
+   inp               # see the inputs for gaincal (not listobs!)
+\end{verbatim}
+\normalsize
+{\bf ALERT:} Doing {\tt go listobs(vis='foo.ms')} will currently
+change the {\tt taskname}, and will change {\tt vis}, which might
+not be what is desired.
+
+%%%%%%
+\subsubsection{The {\tt inp} Command}
+\label{section:intro.tasks.setpar.inp}
+
+You can set the values for the parameters for tasks (but currently not
+for tools) by performing the assignment within the CASA shell and then
+inspecting them using the {\tt inp} command.  This command can be
+invoked in any of three ways: 
+via function call {\tt inp('<taskname>')} or {\tt inp(<taskname>)}, 
+without parentheses {\tt inp '<taskname>'} or {\tt inp <taskname>},
+or using the current {\tt taskname} variable setting with {\tt inp}.
+For example,
+\small
+\begin{verbatim}
+CASA <1>: inp('clean')
+...
+CASA <2>: inp 'clean'
+----------> inp('clean')
+...
+CASA <3>: inp(clean)
+...
+CASA <4>: inp clean
+----------> inp(clean)
+...
+CASA <5>: taskname = 'clean'
+CASA <6>: inp
+----------> inp()
+\end{verbatim}
+\normalsize
+all do the same thing. 
+
+% NOTE: the version without quotes work because {\tt <taskname>} points
+% to the task objects. But...
+% 
+% WARNING: be careful not to set {\tt taskname = clean} without the
+% quotes to make a string {\tt 'clean'}, otherwise you will set
+% the variable {\tt taskname} to point to the object {\tt clean}
+% for the task.  Its not clear that there are any bad effects from
+% this (you can run {\tt inp} as normal) but it is bad form!
+
+
+
+When you invoke the task inputs via {\tt inp}, you see a list of
+the parameters, their current values, and a short description of what
+that parameters does.  For example, starting from the default values,
+\small
+\begin{verbatim}
+CASA <18>: inp('clean')
+#  clean :: Deconvolve an image with selected algorithm
+vis                 =         ''        #  name of input visibility file
+imagename           =         ''        #  Pre-name of output images
+field               =         ''        #  Field Name
+spw                 =         ''        #  Spectral windows:channels: '' is all
+selectdata          =      False        #  Other data selection parameters
+mode                =      'mfs'        #  Type of selection (mfs, channel, velocity, frequency)
+niter               =        500        #  Maximum number of iterations
+gain                =        0.1        #  Loop gain for cleaning
+threshold           =   '0.0mJy'        #  Flux level to stop cleaning.  Must include units
+psfmode             =    'clark'        #  method of PSF calculation to use during minor cycles
+imagermode          =         ''        #  Use csclean or mosaic.  If '', use psfmode
+multiscale          =         []        #  multi-scale deconvolution scales (pixels)
+interactive         =      False        #  use interactive clean (with GUI viewer)
+mask                =         []        #  cleanbox(es), mask image(s), and/or region(s)
+imsize              = [256, 256]        #  x and y image size in pixels
+cell                = ['1.0arcsec', '1.0arcsec'] #  x and y cell size. default unit arcsec
+phasecenter         =         ''        #  Image phase center: position or field index
+restfreq            =         ''        #  rest frequency to assign to image (see help)
+stokes              =        'I'        #  Stokes params to image (eg I,IV, QU,IQUV)
+weighting           =  'natural'        #  Weighting of uv (natural, uniform, briggs, ...)
+uvtaper             =      False        #  Apply additional uv tapering of  visibilities.
+modelimage          =         ''        #  Name of model image(s) to initialize cleaning
+restoringbeam       =       ['']        #  Output Gaussian restoring beam for CLEAN image
+pbcor               =      False        #  Output primary beam-corrected image
+minpb               =        0.1        #  Minimum PB level to use
+async               =      False        #  If true the taskname must be started using clean(...)
+\end{verbatim}
+\normalsize
+Figure~\ref{fig:inpclean1} shows how this will look to you on your
+terminal.  Note that some parameters are in boldface with a gray
+background.  This means that some values for this parameter will 
+cause it to {\it expand}, revealing new {\it sub-parameters} to 
+be set.
+
+\begin{figure}[h!]
+\begin{center}
+%\gname{casa_inpclean1}{6}
+%\pngname{clean_inputs_1}{6}
+\pngname{newclean_inputs_1}{6}
+\caption{\label{fig:inpclean1} Screen shot of the default CASA inputs
+for task {\tt clean}.}
+\hrulefill
+\end{center}
+\end{figure}
+
+CASA uses color and font to indicate different properties of
+parameters and their values:
+\begin{center}
+{\it Parameter and Values in CASA {\tt inp}}\\[5mm]
+\begin{tabular}{|l|l|l|l|l|l|}
+\hline
+  & Text Font & Text Color & Highlight & Indentation & Meaning \\
+\hline
+\multicolumn{6}{|l|}{Parameters:}\\
+\hline
+  & plain & black & none & none & standard parameter \\
+  & bold  & black & grey & none & expandable parameter \\
+  & plain & green & none & yes & sub-parameter \\
+\hline
+\multicolumn{6}{|l|}{Values:}\\
+\hline
+  & plain & black & none & none & default value \\
+  & plain & blue & none & none & non-default value \\
+  & plain & red & none & none & invalid value \\
+\hline
+\end{tabular}
+\end{center}
+
+Figure~\ref{fig:inpclean2} shows what happens when you set some of the
+{\tt clean} parameters to non-default values.  Some have
+opened up sub-parameters, which can now be seen and set.
+Figure~\ref{fig:inpclean3} shows what happens when you set a
+parameter, in this case {\tt vis} and {\tt mode}, to an invalid value.  
+Its value now appears in red.  Reasons for invalidation include
+incorrect type, an invalid menu choice, or a filename that does not
+exist.  For example, since {\tt vis} expects a
+filename, it will be invalidated (red) if it is set to a non-string
+value, or a string that is not the name of a file that can be found.
+The {\tt mode='happy'} is invalid because its not a supported choice
+({\tt'mfs'}, {\tt'channel'}, {\tt'velocity'}, or {\tt'frequency'}).
+
+\begin{figure}[h]
+\begin{center}
+%\gname{casa_inpclean2}{6}
+%\pngname{clean_inputs_2}{6}
+\pngname{newclean_inputs_2}{6}
+\caption{\label{fig:inpclean2} The {\tt clean} inputs after
+setting values away from their defaults (blue text).
+Note that some of the boldface ones have opened up new 
+dependent sub-parameters (indented and green).
+}
+\hrulefill
+\end{center}
+\end{figure}
+
+\begin{figure}[h]
+\begin{center}
+%\gname{casa_inpclean3}{6}
+%\pngname{clean_inputs_3}{6}
+\pngname{newclean_inputs_3}{6}
+\caption{\label{fig:inpclean3} The {\tt clean} inputs where
+one parameter has been set to an invalid value.  This is
+drawn in red to draw attention to the problem.  This hapless
+user probably confused the {\tt 'hogbom'} clean algorithm 
+with Harry Potter.
+}
+\hrulefill
+\end{center}
+\end{figure}
+
+
+%%%%%%
+% \subsubsection{The {\tt restore} Command}
+% \label{section:intro.tasks.setpar.restore}
+% 
+% \begin{wrapfigure}{r}{2.5in}
+%   \begin{boxedminipage}{2.5in}
+%      \centerline{\underline{\bf ALERT}}
+%      In the current version of CASA, the {\tt restore} command
+%      has been disabled, as it is still difficult to keep the list
+%      of CASA globals stored in different places.  When we sort out
+%      our parameter handling mechanisms, we
+%      will probably bring back {\tt restore}.
+%   \end{boxedminipage}
+% \end{wrapfigure}
+% 
+% If you want to reset all input keywords for all tasks to the
+% {\it global default values}, use the {\tt restore} command:
+% \small
+% \begin{verbatim}
+% CASA <10>: restore
+% \end{verbatim}
+% \normalsize
+% 
+% Note that the global default values for many parameters are 
+% different than the task-specific default values.  This is because
+% some parameters have different default values in the different
+% tasks they appear in!  Using the {\tt default <taskname>}
+% command is much safer.
+
+%%%%%%
+\subsubsection{The {\tt saveinputs} Command}
+\label{section:intro.tasks.setpar.saveinputs}
+
+The {\tt saveinputs} command will save the current values of
+a given task parameters to a Python (plain ascii) file.  It
+can take up to two arguments, e.g.
+\small
+\begin{verbatim}
+   saveinputs(taskname, outfile)
+\end{verbatim}
+\normalsize
+The first is the usual {\tt taskname} parameter.  
+The second is the name for the
+output Python file.  If there is no second argument, for example,
+\small
+\begin{verbatim}
+   saveinputs('clean')
+\end{verbatim}
+\normalsize
+a file with name {\tt <taskname>.saved} (in this case 
+{\tt 'clean.saved'} will be created or 
+overwritten if extant.  If invoked with no arguments, e.g.
+\small
+\begin{verbatim}
+   saveinputs
+\end{verbatim}
+\normalsize
+it will use the current values of the {\tt taskname} variable
+(as set using {\tt inp <taskname>} or {\tt default <taskname>}).
+You can also use the {\tt taskname} global parameter explicitly,
+\small
+\begin{verbatim}
+   saveinputs(taskname, taskname+'_1.save')
+\end{verbatim}
+\normalsize
+
+For example, starting from default values
+\small
+\begin{verbatim}
+CASA <1>: default('listobs')
+CASA <2>: vis='ngc5921.demo.ms'
+CASA <3>: saveinputs
+CASA <4>: !more 'listobs.saved' 
+IPython system call: more 'listobs.saved'
+taskname           = "listobs"
+vis                =  "ngc5921.demo.ms"
+verbose            =  True
+#listobs(vis="ngc5921.ms",verbose=False)
+\end{verbatim}
+\normalsize
+To read these back in, use the Python {\tt execfile} command.  For example,
+\small
+\begin{verbatim}
+CASA <5>: execfile('listobs.saved')
+\end{verbatim}
+\normalsize
+and we are back.
+
+An example save to a custom named file:
+\small
+\begin{verbatim}
+CASA <6>: saveinputs('listobs','ngc5921_listobs.par')
+\end{verbatim}
+\normalsize
+
+You can also use the CASA {\tt tget} command (see
+\S~\ref{section:intro.tasks.setpar.tget} below) instead of the Python
+{\tt execfile} to restore your inputs.
+
+%%%%%%
+\subsubsection{The {\tt tget} Command}
+\label{section:intro.tasks.setpar.tget}
+
+The {\tt tget} command will recover saved values of the
+inputs of tasks.  This is a convenient alternative to using the
+Python {\tt execfile} command (see above).
+
+Typing {\tt tget} without a taskname will recover the saved values of the
+inputs for the current task as given in the current value of the 
+{\tt taskname} parameter.
+
+Adding a task name, e.g. {\tt tget <taskname>} will recover
+values for the specified task.  This is done by searching for
+1) a {\tt <taskname>.last} file (see 
+\S~\ref{section:intro.tasks.setpar.last} below), then for
+2) a {\tt <taskname>.saved} file (see
+\S~\ref{section:intro.tasks.setpar.saveinputs} above), and then
+executing the Python in these files.
+
+For example,
+\small
+\begin{verbatim}
+   default('gaincal')   # set current task to gaincal and default
+   tget                 # read saved inputs from gaincal.last (or gaincal.saved)
+   inp                  # see these inputs!
+   tget bandpass        # now get from bandpass.last (or bandpass.saved)
+   inp                  # task is now bandpass, with recovered inputs
+\end{verbatim}
+\normalsize
+
+%%%%%%
+\subsubsection{The {\tt tput} Command}
+\label{section:intro.tasks.setpar.tput}
+
+The {\tt tput} command will save the current parameter values of a
+task to its {\tt <taskname>.last} file.  This is a shorthand to
+{\tt saveinputs} and is a counterpart to {\tt tget}.
+
+Typing {\tt tput} without a taskname will save the values of the
+inputs for the current task as given in the current value of the 
+{\tt taskname} parameter.
+
+Adding a task name, e.g. {\tt tget <taskname>} will save the
+values for the specified task.
+
+For example,
+\small
+\begin{verbatim}
+   default('gaincal')   # set current task to gaincal and default
+   tget                 # read saved inputs from gaincal.last (or gaincal.saved)
+   inp                  # see these inputs!
+   vis = 'new.ms'       # change the vis parameter
+   tput                 # save back to the gaincal.last file for later use
+\end{verbatim}
+\normalsize
+
+%%%%%%
+\subsubsection{The {\tt .last} file}
+\label{section:intro.tasks.setpar.last}
+
+Whenever you successfully execute a CASA task, a Python script file
+called {\tt <taskname>.last} will be written (or over-written) into
+the current working directory.  For example, if you ran the
+{\tt listobs} task as detailed above, then
+\small
+\begin{verbatim}
+CASA <14>: vis = 'ngc5921.ms'
+
+CASA <15>: verbose = True
+
+CASA <16>: listobs()
+
+CASA <17>: !more 'listobs.last'
+IPython system call: more listobs.last
+taskname           = "listobs"
+vis                =  "ngc5921.ms"
+verbose            =  True
+#listobs(vis="ngc5921.ms",verbose=False)
+\end{verbatim}
+\normalsize
+
+You can restore the parameter values from the save file using
+\small
+\begin{verbatim}
+CASA <18>: execfile('listobs.last')
+\end{verbatim}
+\normalsize
+or
+\small
+\begin{verbatim}
+CASA <19>: run listobs.last
+\end{verbatim}
+\normalsize
+
+Note that the {\tt .last} file in generally not created until
+the task actually finished (successfully), so it is often best
+to manually create a save file beforehand using the {\tt saveinputs} 
+command if you are running a critical task that you strongly desire
+to have the inputs saved for.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Tools in CASA}
+\label{section:intro.tasks.tools}
+
+The CASA {\em toolkit} is the foundation of the functionality in the 
+package, and consists of a suite of functions that are callable from
+Python.  The tools are used by the tasks, and can be used by advanced
+users to perform operations that are not available through the tasks.
+
+It is beyond the scope of this reference to describe the toolkit in 
+detail.  Occasionally, examples will be given that utilize the tools
+(e.g. \S~\ref{section:analysis.toolkit}).
+In short, tools are always called as functions, with any parmeters
+that are not to be defaulted given as arguments.  For example:
+\small
+\begin{verbatim}
+   ia.open('ngc5921.chan21.clean.cleanbox.mask')
+   ia.calcmask('"ngc5921.chan21.clean.cleanbox.mask">0.5','mymask')
+   ia.summary()
+   ia.close()
+\end{verbatim}
+\normalsize
+uses the {\tt image} tool ({\tt ia}) to turn a clean mask image into
+an image mask.  Tools never use the CASA global parameters.
+
+To find what tools are available, use the {\tt toolhelp} command:
+\small
+\begin{verbatim}
+CASA <8>: toolhelp
+--------> toolhelp()
+ 
+Available tools: 
+
+ at : Juan Pardo ATM library
+ cb : Calibration utilities
+ cp : Cal solution plotting utilities
+ fg : Flagging/Flag management utilities
+ ia : Image analysis utilities
+ im : Imaging utilities
+ me : Measures utilities
+ ms : MeasurementSet (MS) utilties
+ mp : MS plotting (data (amp/phase) versus other quantities)
+ pm : PlotMS utilities
+ tb : Table utilities (selection, extraction, etc)
+ tp : Table plotting utilities
+ qa : Quanta utilities
+ sm : Simulation utilities
+ vp : Voltage pattern/primary beam utilties
+ ---
+ pl : pylab functions (e.g., pl.title, etc)
+ sd : (after running asap_init()) Single dish utilities
+ ---
+
+\end{verbatim}
+\normalsize
+%% This list was updated 2010-02-24
+
+You can find much more information about the toolkit in the 
+{\em CASA User Reference Manual}:
+\begin{quote}
+  \url{http://casa.nrao.edu/docs/casaref/CasaRef.html}
+\end{quote}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Getting the most out of CASA}
+\label{section:intro.common}
+
+There are some other general things you should know about using
+CASA in order to make things go smoothly during your data reduction.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Your command line history}
+\label{section:intro.common.commands}
+
+Your command line history is automatically maintained and stored 
+as {\tt ipython.log} in your local directory . This file can be edited and
+re-executed as appropriate using the {\tt execfile '<filename>'}
+feature.
+
+You can also use the ``up-arrow'' and ``down-arrow'' keys for command line
+recall in the {\tt casapy} interface.  If you start typing text, and
+then use ``up-arrow'', you will navigate back through commands
+matching what you typed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Logging your session}
+\label{section:intro.common.logger}
+
+The output from CASA commands is sent to the file {\tt casapy.log},
+also in your local directory.  Whenever you start up {\tt casapy}, the previous
+{\tt casapy.log} is renamed (based on the date and time) and a new log
+file is started.
+
+% \begin{figure}[ht]
+% \gname{casalogger1}{6}
+% \caption{\label{fig:casalogger1} CASA Logger GUI window}
+% \hrulefill
+% \end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+%\pngname{casalogger_window}{6}
+\pngname{newcasalogger_window}{6}
+\caption{\label{fig:casalogger1} The CASA Logger GUI window under
+Linux. Note that under MacOSX a stripped down logger will instead
+appear as a Console.}
+\hrulefill
+\end{center}
+\end{figure}
+
+The output contained in {\tt casapy.log} is also displayed in a
+separate window using the {\it casalogger}.  Generally,
+the logger window will be brought up when casapy is started.  If you
+do not want the logger GUI to appear, then start casapy using the 
+{\tt --nologger} option,
+\small
+\begin{verbatim}
+   casapy --nologger
+\end{verbatim}
+\normalsize
+which will run CASA in the terminal window.  See \S~\ref{section:intro.common.logger.startup}
+for more startup options.
+
+% \begin{figure}[h]
+% \gname{casalogger_select}{6}
+% \caption{\label{fig:logger_search} CASA Logger - Search example:
+% Specify a string in the entry box to
+% have all instances of the found string highlighted.}
+% \hrulefill
+% \end{figure}
+
+\begin{figure}[h]
+\begin{center}
+%\pngname{casalogger_search}{6}
+\pngname{newcasalogger_search}{6}
+\caption{\label{fig:logger_search} Using the Search facility in the
+{\tt casalogger}.  Here we have specified the string {\tt 'plotted'}
+and it has highlighted all instances in green.}
+\hrulefill
+\end{center}
+\end{figure}
+
+{\bf ALERT:} Due to problems with Qt under MacOSX, we had to
+replace the GUI {\tt qtcasalogger} with a special stripped down one that
+uses the Mac Console.  This still has the important capabilties 
+such as showing the messages and cut/paste.  The following description
+is for the Linux version and thus should mostly be disregarded on OSX.  On
+the Mac, you treat this as just another console window and use the
+usual mouse and hot-key actions to do what is needed.
+
+The CASA logger window for Linux is shown in Figure~\ref{fig:casalogger1}.  The
+main feature is the display area for the log text, which is divided
+into columns.  The columns are:
+\begin{itemize}
+\item {\tt Time} --- the time that the message was generated.  Note
+  that this will be in local computer time (usually UT) for casapy
+  generated messages, and may be different for user generated messages;
+\item {\tt Priority} --- the {\it Priority Level} (see below) of the
+  message;
+\item {\tt Origin} --- where within CASA the message came from.  This
+  is in the format {\tt Task::Tool::Method} (one or more of the fields
+  may be missing depending upon the message);
+\item {\tt Message} --- the actual text.
+\end{itemize}
+
+% \begin{figure}[h]
+% \gname{casalogger_filter}{6}
+% \caption{\label{fig:logger_filter} CASA Logger - Filter facility: The
+% log output can be sorted by Priority, Time, Origin. One can also
+% filter for a string found in the Message.}  
+% \hrulefill
+% \end{figure}
+
+\begin{figure}[h]
+\begin{center}
+%\pngname{casalogger_filter_origin}{6}
+\pngname{newcasalogger_filter}{6}
+\caption{\label{fig:logger_filter} Using the {\tt casalogger} Filter
+facility.  The log output can be sorted by Priority, Time, Origin, and
+Message.  In this example we are filtering by Origin using {\tt 'clean'},
+and it now shows all the log output from the {\tt clean} task.}  
+\hrulefill
+\end{center}
+\end{figure}
+
+\begin{figure}[h]
+\begin{center}
+%\gname{casalogger_insert}{6}
+%\pngname{casalogger_insert}{6}
+\pngname{newcasalogger_insert}{6}
+\caption{\label{fig:logger_insert} CASA Logger - Insert facility: The
+log output can be augmented by adding notes or comments during the
+reduction. The file should then be saved to disk to retain these
+changes.}
+\hrulefill
+\end{center}
+\end{figure}
+
+The {\tt casalogger} GUI has a range of features, which include:
+\begin{itemize}
+\item {\bf Search} --- search messages by entering text in the Search
+window and clicking the search icon.  The search currently just
+matches the exact text you type anywhere in the message.  See 
+Figure~\ref{fig:logger_search} for an example.
+
+\item {\bf Filter} --- a filter to sort by message priority, time,
+task/tool of origin, and message contents.  Enter text in the
+Filter window and click the filter icon to the right of the window.
+Use the pull-down at the left of the Filter window to choose what
+to filter.  The matching is for the exact text currently (no regular
+expressions).  See 
+Figure~\ref{fig:logger_filter} for an example.
+
+\item {\bf View} --- show and hide columns (Time, Priority, Origin,
+Message) by checking boxes under the {\bf View} menu pull-down.  You
+can also change the font here.
+
+\item {\bf Insert Message} --- insert additional comments as ``notes''
+in the log.  Enter the text into the ``Insert Message'' box at the
+bottom of the logger, and click on the Add (+) button, or choose to
+enter a longer message.  The entered message will appear with a
+priority of ``NOTE'' with the Origin as your username.  See
+Figure~\ref{fig:logger_insert} for an example. {\bf ALERT:} This
+message currently will not be inserted into the correct (or user
+controllable) order into the log.
+
+\item {\bf Copy} --- left-click on a row, or click-drag a
+range of rows, or click at the start and shift click at the end to
+select.  Use the Copy button or {\bf Edit} menu Copy to put the
+selected rows into the clipboard.  You can then (usually) paste this
+where you wish.  {\bf ALERT:} this does not work routinely in the
+current version.  You are best off going to the {\tt casapy.log} file
+if you want to grab text.
+
+\item {\bf Open} --- There is an Open function in the
+{\bf File} menu, and an Open button, that will allow you to load old
+casalogger files. {\bf ALERT:} You cannot see the old casapy.log
+files with timestamps (e.g.\ names like
+{\tt casapy.log-2009-05-26T22:24:31}) currently in the file browser,
+but you can type the name in explicitly and hit {\tt <return>} to
+view them.
+
+\end{itemize}
+
+Other operations are also possible from the menu or buttons.  Mouse
+``flyover'' will reveal the operation of buttons, for example.
+
+%%%%%%
+\subsubsection{Starup options for the {\tt logger}}
+\label{section:intro.common.logger.startup}
+
+One can specify {\tt logger} options at the startup of {\tt casapy} on
+the command line:
+\small
+\begin{verbatim}
+   casapy <logger option>
+\end{verbatim}
+\normalsize
+
+These options are:
+\small
+\begin{verbatim}
+     --log2term                == logging message go to terminal
+     --nologfile               == no casapy.log logfile is produced
+     --logfile <filename>      == use specified name for logfile instead of casapy.log
+     --nologger                == do not bring up GUI logger (see above)
+     --nolog (is deprecated use --nologger)
+\end{verbatim}
+\normalsize
+For example, to not bring up a GUI but send the message to your
+terminal, do
+\small
+\begin{verbatim}
+   casapy --nologger --log2term
+\end{verbatim}
+\normalsize
+while
+\small
+\begin{verbatim}
+   casapy --logfile mynewlogfile.log
+\end{verbatim}
+\normalsize
+will start {\tt casapy} with {\tt logger} messages going to the file
+{\tt mynewlogfile.log}.
+
+%%%%%%
+\subsubsection{Setting priority levels in the {\tt logger}}
+\label{section:intro.common.logger.levels}
+
+Logger messages are assigned a {\it Priority Level} when generated
+within CASA.  The current levels of Priority are:
+\begin{enumerate}
+\item {\bf SEVERE} --- errors;
+\item {\bf WARN} --- warnings;
+\item {\bf INFO} --- basic information every user should be aware of or
+  has requested;
+\item {\bf INFO1} --- information possibly helpful to the user;
+\item {\bf INFO2} --- details the power user might want to see;
+\item {\bf INFO3} --- even more details;
+\item {\bf INFO4} --- lowest level of non-debugging information;
+\item {\bf DEBUGGING} --- most ``important'' debugging messages;
+\item {\bf DEBUG1} --- more details;
+\item {\bf DEBUG2} --- lowest level of debugging messages.
+\end{enumerate}
+The ``debugging'' levels are intended for the developers use.
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt casalog} tool can be used to control the logging.
+     In particular, the {\tt casalog.filter} method sets the
+     priority threshold.  This tool can also be used to change
+     the output log file, and to post messages into the logger.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+There is a threshold for which these messages are
+written to the {\tt casapy.log} file and are thus visible in the
+{\tt logger}.  By default, only messages at level {\bf INFO} and
+above are logged.  The user can change the threshold using the
+{\tt casalog.filter} method.  This takes a single string argument of
+the {\tt level} for the threshold.  The {\tt level} sets the lowest
+priority that will be generated, and all messages of this level or
+higher will go into the {\tt casapy.log} file.
+
+Some examples:
+\small
+\begin{verbatim}
+   casalog.filter('INFO')           # the default
+   casalog.filter('INFO2')          # should satisfy even advanced users
+   casalog.filter('INFO4')          # all INFOx messages
+   casalog.filter('DEBUG2')         # all messages including debugging
+\end{verbatim}
+\normalsize
+
+{\bf WARNING:} Setting the threshold to {\bf DEBUG2} will put lots of
+messages in the log!
+
+%\begin{figure}[h!]
+%\begin{center}
+%\pngname{casalogger_priority}{6}
+%\caption{\label{fig:logger_priority} Different message priority levels
+%as seen in the {\tt casalogger} window.  These can also be Filtered upon.}  
+%\hrulefill
+%\end{center}
+%\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Where are my data in CASA?}
+\label{section:intro.common.data}
+
+Interferometric data are filled into a so-called Measurement Set (or
+MS).  In its logical structure, the MS looks like a generalized
+description of data from any interferometric
+or single dish telescope. Physically, the MS consists of several
+tables in a directory on disk.  
+
+Tables in CASA are actually directories containing files that are the
+sub-tables.  For example, when you create a MS called {\tt AM675.ms},
+then the name of the directory where all the tables are stored will be
+called {\tt AM675.ms/}.  See Chapter~\ref{chapter:io} for more
+information on Measurement Set and Data Handling in CASA.
+
+The data that you originally get from a telescope can be put in any
+directory that is convenient to you.  Once you "fill" the data into a
+measurement set that can be accessed by CASA, it is generally best to
+keep that MS in the same directory where you started CASA so you can
+get access to it easily (rather than constantly having to specify a
+full path name).
+
+When you generate calibration solutions or images (again these
+are in table format), these will also be written to disk.  It is a
+good idea to keep them in the directory in which you started CASA.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{How do I get rid of my data in CASA?}
+\label{section:intro.common.data.delete}
+
+Note that when you delete a measurement set, calibration table, or 
+image, which are in fact directories, you must delete this and all underlying
+directories and files.  If you are not running {\tt casapy}, this is
+most simply done by using the file delete method of the operating
+system you started CASA from.  For example, when running CASA on a
+Linux system, in order to delete the measurement set named 
+{\tt AM675.ms} type:
+\small
+\begin{verbatim}
+  CASA <5>: !rm -r AM675.ms
+\end{verbatim}
+\normalsize
+from within CASA.  The {\tt !} tells CASA that a system command
+follows (see \S~\ref{section:intro.basics.python.sys}),
+and the {\tt -r} makes sure that all subdirectories are deleted
+recursively. 
+
+It is convenient to prefix all MS, calibration tables,
+and output files produced in a run with a common string.  For example,
+one might prefix all files from VLA project AM675 with {\tt AM675},
+e.g. {\tt AM675.ms}, {\tt AM675.cal}, {\tt AM675.clean}.  Then,
+\small
+\begin{verbatim}
+  CASA <6>: !rm -r AM675*
+\end{verbatim}
+\normalsize
+will clean up all of these.
+
+In scripts, the {\tt !} escape to the OS will not work.  Instead,
+use the {\tt os.system()} function
+(Appendix~\ref{section:python.sys.os}) to do the same thing:
+\small
+\begin{verbatim}
+   os.system('rm -r AM675*')
+\end{verbatim}
+\normalsize
+
+If you are within {\tt casapy}, then the CASA system is keeping
+a cache of tables that you have been using and using the OS to
+delete them will confuse things.  For example, running a script
+that contains {\tt rm} commands multiple times will often not
+run or crash the second time as the cache gets confused.  The
+clean way of removing CASA tables (MS, caltables, images) 
+inside {\tt casapy} is to use the {\tt rmtables} task:
+\small
+\begin{verbatim}
+  rmtables('AM675.ms')
+\end{verbatim}
+\normalsize
+and this can also be wildcarded
+\small
+\begin{verbatim}
+  rmtables('AM675*')
+\end{verbatim}
+\normalsize
+(though you may get warnings if it tries to delete files or
+directories that fit the name wildcard that are not CASA tables).
+
+{\bf ALERT:} Some CASA processes lock the file and forget to
+give it up when they are done ({\tt plotxy} is usually the culprit).
+You will get WARNING messages from {\tt rmtables} and your script
+will probably crash second time around as the file isnt removed.
+The safest thing is still to exit {\tt casapy} and start a new 
+session for multiple runs.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{What's in my data?}
+\label{section:intro.common.ms}
+
+The actual data is in a large {\tt MAIN} table that is organized in
+such a way that you can access different parts of the data easily.
+This table contains a number of ``rows'', which are effectively a
+single timestamp for a single spectral window (like an IF from the
+VLA) and a single baseline (for an interferometer).  
+
+There are a number of ``columns'' in the MS, the most important of
+which for our purposes is the {\tt DATA} column --- this contains the
+original visibility data from when the MS was created or filled.
+There are other helpful ``scratch'' columns which hold useful versions
+of the data or weights for further processing: the {\tt
+CORRECTED\_DATA} column, which is used to hold calibrated data; the
+{\tt MODEL\_DATA} column, which holds the Fourier inversion of a
+particular model image; and the {\tt IMAGING\_WEIGHT} column which
+can hold the weights to be used in imaging.  The creation and use
+of the scratch columns is generally done behind the scenes, but you
+should be aware that they are there (and when they are used).  We
+will occasionally refer to the rows and columns in the MS.
+
+More on the contents of the MS can be found in \S~\ref{section:io.ms}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Selection in CASA}
+\label{section:intro.common.selection}
+
+We have tried to make the CASA task interface as uniform as possible.
+If a given parameter appears in multiple tasks, it should, as far as
+is possible, mean the same thing and be used in the same way in each.
+There are groups of parameters that appear in a number of tasks to
+do the same thing, such as for data selection.
+
+The parameters {\tt field}, {\tt spw}, and {\tt selectdata} (which if
+{\tt True} expands to a number of sub-parameters) are commonly used in
+tasks to select data on which to work.  These common data selection
+parameters are described in \S~\ref{section:io.selection}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{From Loading Data to Images}
+\label{section:intro.walkthru}
+
+The subsections below provide a brief overview of the steps you will
+need to load data into CASA and obtain a final, calibrated image.
+Each subject is covered in more detail in Chapters~\ref{chapter:io}
+through \ref{chapter:analysis}.
+
+An end-to-end workflow diagram for CASA data reduction for
+interferometry data is shown in Figure~\ref{fig:casaflow}.  
+This might help you chart your course through the package.
+In the following sub-sections, we will chart a rough course through
+this process, with the later chapters filling in the individual
+boxes.
+
+\begin{figure}[h!]
+\pngname{casa_flow}{6.5}
+\caption{\label{fig:casaflow}
+Flow chart of the data processing operations that a general 
+user will carry out in an end-to-end CASA reduction session.}
+\hrulefill
+\end{figure}
+
+Note that single-dish data reduction (for example with the ALMA
+single-dish system) follows a similar course.  This is detailed
+in Chapter~\ref{chapter:sd}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Loading Data into CASA}
+\label{section:intro.walkthru.load}
+
+The key data and image import tasks are:
+\begin{itemize}
+   \item {\tt importuvfits} --- import visibility data in UVFITS
+         format (\S~\ref{section:io.import.uvfits});
+   \item {\tt importvla} --- import data from VLA that is in 
+         {\it export} format (\S~\ref{section:io.import.vla});
+   \item {\tt importasdm} --- import ALMA or EVLA data in ASDM format 
+         (\S~\ref{section:io.import.asdm});
+   \item {\tt importfits} --- import a FITS image into a CASA  
+         {\it image} format table (\S~\ref{section:analysis.fits}).
+\end{itemize}
+
+These are used to bring in your interferometer data, to be stored
+as a CASA Measurement set (MS), and any previously made images
+or models (to be stored as CASA image tables).  
+
+The data import tasks will create a MS with a path and name specified
+by the {\tt vis} parameter.  See \S~\ref{section:intro.common.data}
+for more information on MS in CASA.  The measurement set is the 
+internal data format used by CASA, and conversion from any other
+native format is necessary for most of the data reduction tasks.
+
+Once data is imported, there are other operations you can use to
+manipulate the datasets:
+\begin{itemize}
+   \item {\tt concat} --- concatenate a second MS into a
+         given MS (\S~\ref{section:io.concat})
+\end{itemize}
+
+Data import, export, concatenation, and selection
+detailed in Chapter~\ref{chapter:io}.
+
+\subsubsection{VLA: Filling data from VLA archive format}
+\label{section:intro.walkthru.load.VLAfill}
+
+VLA data in ``archive'' format are read into CASA from disk using
+the {\tt importvla} task (see \S~\ref{section:io.import.vla}).  
+This filler supports the new naming conventions of EVLA antennas
+when incorporated into the old VLA system.
+
+% Note: autocorrelations are filled automatically into the data
+% set. Autocorrelation data is not needed for standard interferometric
+% data, further, the imaging routine will try to image the
+% autocorrelation data (it assumes it is single dish data) which will
+% swamp any real signal. Thus, it is necessary to flag the
+% autocorrelation data any time before imaging. 
+
+Note that future data from the EVLA in ASDM format will use a
+different filler.  This will be made available in a later release.
+
+\subsubsection{Filling data from UVFITS format}
+\label{section:intro.walkthru.load.uvfits}
+
+For UVFITS format, use the {\tt importuvfits} task. A subset of popular
+flavors of UVFITS (in particular UVFITS as written by AIPS) is
+supported by the CASA filler.  See \S~\ref{section:io.import.uvfits}
+for details.
+
+\subsubsection{Loading FITS images}
+\label{section:intro.walkthru.load.imfits}
+
+For FITS format images, such as those to be used as calibration
+models, use the {\tt importfits} task.  Most, though not all, types
+of FITS images written by astronomical software packages can be
+read in.
+
+See \S~\ref{section:analysis.fits} for more information.
+
+\subsubsection{Concatenation of multiple MS}
+\label{section:intro.walkthru.load.concat}
+
+Once you have loaded data into measurement sets on disk, you 
+can use the {\tt concat} task to combine them.  Currently,
+{\tt concat} will add a second MS to an existing MS (not producing
+a new one).  This would be run multiple times if you had more than
+two sets to combine.
+
+See \S~\ref{section:io.concat} for details.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Examination, Editing, and Flagging} 
+\label{section:intro.walkthru.flag}
+
+The main data examination and flagging tasks are:
+\begin{itemize}
+   \item {\tt listobs} --- summarize the contents of a MS 
+         (\S~\ref{section:io.list});
+   \item {\tt flagmanager} --- save and manage versions of the
+         flagging entries in the measurement set
+         (\S~\ref{section:edit.flagmanager});
+   \item {\tt flagautocorr} --- non-interactive flagging of
+         auto-correlations (\S~\ref{section:edit.flagautocorr});
+   \item {\tt plotms} --- interactive X-Y plotting and flagging of
+         visibility data (\S~\ref{section:edit.plot.plotms});
+   \item ({\tt plotxy} --- interactive X-Y plotting and flagging of
+         visibility data (\S~\ref{section:edit.plot.plotxy}), {\bf
+           note:} plotxy is slower than plotms and will eventually be
+         phased out, plotxy is still useful to create scripted
+         hardcopy output, this functionality will likeyl be available
+         in plotms in the next release);
+   \item {\tt flagdata} --- non-interactive flagging (and unflagging)
+         of specified data (\S~\ref{section:edit.flagdata});
+   \item {\tt viewer} --- the CASA viewer can display (as a raster
+         image) MS data, with some editing capabilities 
+         (\S~\ref{chapter:display});
+\end{itemize}
+
+These tasks allow you to list, plot, and/or flag data in a CASA MS.
+
+There will eventually be tasks for ``automatic'' flagging to
+data based upon statistical criteria.  Stay tuned.
+
+Examination and editing of synthesis data is described in
+Chapter~\ref{chapter:edit}.
+
+Visualization and editing of an MS using the {\tt casaviewer}
+is described in Chapter~\ref{chapter:display}.
+
+\subsubsection{Interactive X-Y Plotting and Flagging}
+\label{section:intro.walkthru.flag.plotxy}
+
+The principal tool for making X-Y plots of visibility data is
+{\tt plotxy} (see \S~\ref{section:edit.plot.plotxy}).  Amplitudes and phases
+(among other things) can be plotted against several x-axis options.
+
+Interactive flagging (i.e., ``see it -- flag it'') is possible on the
+{\tt plotxy} X-Y displays of the data
+(\S~\ref{section:edit.plot.plotxy.flag}).  Since flags are inserted into the
+measurement set, it is useful to backup (or make a copy) of the
+current flags before further flagging is done, using {\tt flagmanager}
+(\S~\ref{section:edit.flagmanager}).  Copies of the flag table can
+also be restored to the MS in this way.
+
+% \begin{enumerate}
+%    \item Plot the data to be flagged. Set {\tt xaxis = 'time'} or
+%      {\tt 'uvdist'}. {\tt yaxis = 'amp'} is most useful.  
+%    \item Several plots on a page can be useful. For example,
+%      {\tt field = ''; iteration = 'field_id';  subplot = 331; plotxy()} will
+%      plot 9 fields. 
+%    \item When plots come up, use the cursor to specify flagged data by
+%      defining a simple box. Continue as desired.
+%    \item Do not fiddle with other functions. 
+%    \item Type {\tt s} in the CASA window to exit without appying any
+%      flagging. The potential unflagged data will be displayed.
+%    \item Type {\tt w} in the CASA window to exit with application of all
+%      flags. 
+% \end{enumerate}
+
+\subsubsection{Flag the Data Non-interactively}
+\label{section:intro.walkthru.flag.flag}
+
+The {\tt flagdata} task (\S~\ref{section:edit.flagdata})
+will flag the visibility data set based on the specified data
+selections.  The {\tt listobs} task (\S~\ref{section:io.list}) may be
+run (e.g. with {\tt verbose=True}) to provide some of the information
+needed to specify the flagging scope. 
+ 
+\subsubsection{Viewing and Flagging the MS}
+\label{section:intro.walkthru.flag.viewer}
+
+The CASA {\tt viewer} can be used to display the data in the MS
+as a (grayscale or color) raster image.  The MS can also be edited.
+Use of the {\tt viewer} on an MS is detailed in
+\S~\ref{section:display.ms}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Calibration}
+\label{section:intro.walkthru.calib}
+
+The major calibration tasks are:
+\begin{itemize}
+   \item {\tt setjy} --- Computes the model visibilities for a specified source
+         given a flux density or model image, knows about standard
+         calibrator sources (\S~\ref{section:cal.prior.models});
+   \item {\tt gencal} --- Creates a calibration table for known delay
+         and antenna position offsets
+         (\S~\ref{section:cal.prior.gencal});
+   \item {\tt bandpass} --- Solves for frequency-dependent (bandpass) complex
+         gains (\S~\ref{section:cal.solve.band});
+   \item {\tt gaincal} --- Solves for time-dependent
+         (frequency-independent) complex gains 
+         (\S~\ref{section:cal.solve.gain});
+   \item {\tt fluxscale} --- Bootstraps the flux density scale from standard
+         calibrators (\S~\ref{section:cal.solve.fluxscale});
+   \item {\tt polcal} --- polarization calibration
+         (\S~\ref{section:cal.solve.pol});
+   \item {\tt applycal} --- Applies calculated calibration solutions 
+         (\S~\ref{section:cal.correct.apply});
+   \item {\tt clearcal} --- Re-initializes calibrated visibility data 
+         in a given measurement set (\S~\ref{section:cal.correct.clearcal});
+   \item {\tt listcal} --- Lists calibration solutions 
+         (\S~\ref{section:cal.tables.listcal});
+   \item {\tt plotcal} --- Plots (and optionally flags) calibration
+         solutions (\S~\ref{section:cal.tables.plotcal});
+   \item {\tt uvcontsub} --- carry out uv-plane continuum subtraction
+         for spectral-line data (\S~\ref{section:cal.other.uvcontsub});
+   \item {\tt split} --- write out a new (calibrated) MS for specified
+         sources (\S~\ref{section:cal.other.split});
+   \item {\tt cvel} --- Regrid a spectral MS onto a new frequency
+         channel system (\S~\ref{section:cal.other.cvel}).
+\end{itemize}
+
+During the course of calibration, the user will specify a set of
+calibrations to pre-apply before solving for a particular type of
+effect, for example gain or bandpass or polarization.  The solutions
+are stored in a calibration table (subdirectory) which is specified by
+the user, {\it not} by the task: care must be taken in naming the
+table for future use.  The user then has the option, as the
+calibration process proceeds, to accumulate the current state of 
+calibration in a new cumulative table.  Finally, the calibration can
+be applied to the dataset.
+
+Synthesis data calibration is described in detail in
+Chapter~\ref{chapter:cal}. 
+
+%%%%%%
+\subsubsection{Prior Calibration}
+\label{section:intro.walkthru.calib.prior}
+
+The {\tt setjy} task places the Fourier transform of a standard
+calibration source model in the {\tt MODEL\_DATA} column of the
+measurement set.  This can then be used in later calibration tasks.
+Currently, {\tt setjy} knows the flux density as a function of
+frequency for several standard VLA flux calibrators, and the value of
+the flux density can be manually inserted for any other source.  If
+the source is not well-modeled as a point source, then a model image
+of that source structure can be used (with the total flux density
+scaled by the values given or calculated above for the flux density).
+Models are provided for the standard VLA calibrators.
+
+Antenna gain-elevation curves (e.g. for the VLA antennas) and
+atmospheric optical depth corrections (applied as an
+elevation-dependent function) may
+be pre-applied before solving for the bandpass and gains.  This
+is currently done by setting the {\tt gaincurve} and {\tt opacity}
+parameters in the various calibration solving tasks.
+
+There is now a {\tt gencal} task to create calibration tables for
+known delay and antenna position offsets.
+
+See \S~\ref{section:cal.prior} for more details.
+
+%%%%%%
+\subsubsection{Bandpass Calibration}
+\label{section:intro.walkthru.calib.bpass}
+
+The {\tt bandpass} task
+calculates a bandpass calibration solution: that is, it solves for
+gain variations in frequency as well as in time.   Since the bandpass
+(relative gain as a function of frequency) generally varies much more slowly 
+than the changes in overall (mean) gain solved for by {\tt gaincal}, one
+generally uses a long time scale when solving for the bandpass. The
+default {\tt 'B'} solution mode solves for the gains in frequency
+slots consisting of channels or averages of channels.
+
+A polynomial fit for the solution (solution type {\tt 'BPOLY'}) may be
+carried out instead of the default frequency-slot based {\tt 'B'}
+solutions.  This single solution will span (combine) multiple spectral
+windows.
+
+Bandpass calibration is discussed in detail in
+\S~\ref{section:cal.solve.band}.
+
+If the gains of the system are changing over the time that the
+bandpass calibrator is observed, then you may need to do an initial
+gain calibration (see next step).
+
+%%%%%%
+\subsubsection{Gain Calibration}
+\label{section:intro.walkthru.calib.gaincal}
+
+The {\tt gaincal} task determines solutions for the time-based complex
+antenna gains, for each spectral window, from the specified
+calibration sources.  A solution interval may be specified. The
+default {\tt 'G'} solution mode solved for gains in specified
+time solution invervals.
+
+A spline fit for the solution (solution type {\tt 'GSPLINE'}) may be
+carried out instead of the default time-slot based {\tt 'G'} solutions.
+This single solution will span (combine) multiple spectral windows.
+
+See \S~\ref{section:cal.solve.gain} for more on gain calibration.
+
+%%%%%%
+\subsubsection{Polarization Calibration}
+\label{section:intro.walkthru.calib.polcal}
+
+The {\tt polcal} task will solve for any unknown polarization leakage
+and cross-hand phase terms ({\tt 'D'} and {\tt 'X'} solutions).  The
+{\tt 'D'} leakage solutions will work on sources with no polarization, sources
+with known (and supplied) polarization, and sources with unknown
+polarization tracked through a range in parallactic angle on the sky.
+
+The solution for the unknown cross-hand polarization phase difference
+{\tt 'X'} term requires a polarized source with known linear
+polarization (Q,U).
+
+See \S~\ref{section:cal.solve.pol} for more on polarization calibration.
+
+%%%%%%
+\subsubsection{Examining Calibration Solutions}
+\label{section:intro.walkthru.calib.plotcal}
+
+The {\tt plotcal} task (\S~\ref{section:cal.tables.plotcal}) will plot the
+solutions in a calibration table.  The {\tt xaxis} choices include
+time (for {\tt gaincal} solutions) and channel (e.g. for {\tt
+bandpass} calibration).  
+The {\tt plotcal} interface and plotting surface is similar to that in
+{\tt plotxy}.  Eventually, {\tt plotcal} will allow you to flag and
+unflag calibration solutions in the same way that data can be edited
+in {\tt plotxy}.
+
+The {\tt listcal} task (\S~\ref{section:cal.tables.listcal}) will print out
+the calibration solutions in a specified table.
+
+%%%%%%
+\subsubsection{Bootstrapping Flux Calibration}
+\label{section:intro.walkthru.calib.fluxscale}
+
+The {\tt fluxscale} task bootstraps the flux density scale from
+``primary'' standard calibrators to the ``secondary'' calibration
+sources.  Note that the flux density scale must have been previously
+established on the ``primary'' calibrator(s), typically using 
+{\tt setjy}, and of course a calibration table containing
+valid solutions for all calibrators must be available.
+
+See \S~\ref{section:cal.solve.fluxscale} for more.
+
+%%%%%%
+\subsubsection{Correcting the Data}
+\label{section:intro.walkthru.calib.applycal}
+
+The final step in the calibration process, {\tt applycal} may be used
+to apply several calibration tables (e.g., from {\tt gaincal} or
+{\tt bandpass}). 
+The corrections are applied to the {\tt DATA} column of the
+visibility, writing the {\tt CORRECTED\_DATA} column which can then be
+plotted (e.g. in {\tt plotxy}), {\tt split} out as the {\tt DATA}
+column of a new MS, or imaged (e.g. using {\tt clean}).  Any existing
+corrected data are overwritten.
+
+See \S~\ref{section:cal.correct.apply} for details.
+ 
+
+ 
+
+%%%%%%
+\subsubsection{Splitting the Data}
+\label{section:intro.walkthru.calib.split}
+
+After a suitable calibration is achieved, it may be desirable to
+create one or more new measurement sets containing the data for
+selected sources.  This can be done using the {\tt split} task
+(\S~\ref{section:cal.other.split}).
+
+Further imaging and calibration (e.g. self-calibration) can be
+carried out on these split Measurement Sets.
+
+
+%%%%%%
+\subsubsection{UV Continuum subtraction}
+\label{section:intro.walkthru.calib.uvcontsub}
+
+For spectral line data, continuum subtraction can be performed in the
+image domeain ({\tt imcontsub}) or in the uv domain. For the latter,
+there are two tasks available: {\tt uvcontsub} subtracts polynomial of
+desired order from each baseline, defined by line-free channels. {\tt
+  uvcontsub2} performs this process (as of release 3.0.1 only first
+order) across spectral windows in a broad band dataset.
+
+%See \S~\ref{section:cal.correct.apply} for details.
+
+%%%%%%
+\subsubsection{Transforming the Data to a new frame}
+\label{section:intro.walkthru.calib.cvel}
+
+If you want to transform your dataset to a different frequency and
+velocity frame than the one it was observed in, then you can use
+the {\tt cvel} task
+(\S~\ref{section:cal.other.cvel}). Alternatively, you can do the
+regridding during the imaging process in {\tt clean} without running
+{\tt cvel} before.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Synthesis Imaging}
+\label{section:intro.walkthru.image}
+
+The key synthesis imaging tasks are:
+\begin{itemize}
+   \item {\tt clean} --- Calculates a deconvolved image based on the visibility
+         data, using one of several clean algorithms  
+         (\S~\ref{section:im.clean});
+   \item {\tt feather} --- Combines a single dish and synthesis image in the
+         Fourier plane (\S~\ref{section:im.feather}).
+\end{itemize}
+Most of these tasks are used to take calibrated interferometer data, with the
+possible addition of a single-dish image, and reconstruct a model
+image of the sky. {\bf Alert:} The {\tt clean} task is now even more
+powerful and incorporates the functionality of previous specialized
+tasks such as {\tt mosaic} and {\tt widefield}.
+
+See Chapter~\ref{chapter:im} for more on synthesis imaging.
+
+\subsubsection{Cleaning a single-field image or a mosaic}
+\label{section:intro.walkthru.image.clean}
+
+The CLEAN algorithm is the most popular and widely-studied method for
+reconstructing a model image based on interferometer data.  It 
+iteratively removes at each step a fraction of the flux
+in the brightest pixel in a defined region of the current ``dirty'' 
+image, and places this in the model image.  The
+{\tt clean} task implements the CLEAN algorithm for single-field
+data.  The user can choose from a number of options for the particular 
+flavor of CLEAN to use.
+
+Often, the first step in imaging is to make a simple gridded Fourier
+inversion of the calibrated data to make a ``dirty'' image.  This
+can then be examined to look for the presence of noticeable emission
+above the noise, and to assess the quality of the calibration by 
+searching for artifacts in the image.  This is done using {\tt clean}
+with {\tt niter=0}.
+
+The {\tt clean} task can jointly deconvolve mosaics as well as single
+fields, and also has options to do wide-field and wide-band
+multi-frequency synthesis imaging.
+
+See \S~\ref{section:im.clean} for an in-depth discussion of the
+{\tt clean} task.
+
+\subsubsection{Feathering in a Single-Dish image}
+\label{section:intro.walkthru.image.feather}
+
+If you have a single-dish image of the large-scale emission in the
+field, this can be ``feathered'' in to the image obtained from
+the interferometer data.  This is carried out using the 
+{\tt feather} tasks as the weighted sum in the uv-plane of the gridded
+transforms of these two images.  While not as accurate as a true
+joint reconstruction of an image from the synthesis and single-dish
+data together, it is sufficient for most purposes.
+
+See \S~\ref{section:im.feather} for details on the use of the
+{\tt feather} task.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Self Calibration}
+\label{section:intro.walkthru.selfcal}
+
+Once a calibrated dataset is obtained, and a first deconvolved 
+model image is computed, a ``self-calibration'' loop can be 
+performed.  Effectively, the model (not restored) image is passed
+back to another calibration process (on the target data).  This
+refines the calibration of the target source, which up to this
+point has had (usually) only external calibration applied.  This
+process follows the regular calibration procedure outlined above.
+
+Any number of self-calibration loops can be performed.  As long
+as the images are improving, it is usually prudent to continue
+the self-calibration iterations.
+
+This process is described in \S~\ref{section:im.selfcal}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data and Image Analysis}
+\label{section:intro.walkthru.analysis}
+
+The key data and image analysis tasks are:
+\begin{itemize}
+   \item {\tt imhead} --- summarize and manipulate the ``header'' 
+         information in a CASA image 
+         (\S~\ref{section:analysis.imhead});
+   \item {\tt imcontsub} --- perform continuum subtraction on a
+         spectral-line image cube 
+         (\S~\ref{section:analysis.imcontsub});
+   \item {\tt immath} --- perform mathematical operations on or
+         between images
+         (\S~\ref{section:analysis.immath});
+   \item {\tt immoments} --- compute the moments of an image cube
+         (\S~\ref{section:analysis.moments});
+   \item {\tt imstat} --- calculate statistics on an image or part
+         of an image
+         (\S~\ref{section:analysis.imstat});
+   \item {\tt imval} --- extract values of one or more pixels,
+         as a spectrum for cubes, from an image
+         (\S~\ref{section:analysis.imval});
+   \item {\tt imfit} --- simple 2D Gaussian fitting of single
+         components to a region of an image
+         (\S~\ref{section:analysis.imfit});
+   \item {\tt imregrid} --- regrid an image onto the coordinate
+         system of another image 
+         (\S~\ref{section:analysis.regrid});
+   \item {\tt viewer} --- there are useful region statistics and
+         image cube plotting capabilities in the viewer 
+         (\S~\ref{chapter:display}).
+\end{itemize}
+
+%%%%%%
+\subsubsection{What's in an image?}
+\label{section:intro.walkthru.analysis.imhead}
+
+The {\tt imhead} task will print out a summary of image ``header'' 
+keywords and values.  This task can also be
+used to retrieve and change the header values.
+
+See \S~\ref{section:analysis.imhead} for more.
+
+%%%%%%
+\subsubsection{Image statistics}
+\label{section:intro.walkthru.analysis.imstat}
+
+The {\tt imstat} task will print image statistics.  There are options
+to restrict this to a box region, and to specified channels and Stokes
+of the cube.  This task will return the statistics in a Python
+dictionary return variable.
+
+See \S~\ref{section:analysis.imstat} for more.
+
+%%%%%%
+\subsubsection{Image values}
+\label{section:intro.walkthru.analysis.imval}
+
+The {\tt imval} task will values from an image.  There are options
+to restrict this to a box region, and to return specified channels and Stokes
+of the cube as a spectrum.  This task will return these values in a Python
+dictionary return variable which can then be operated on in the 
+{\tt casapy} environment.
+
+See \S~\ref{section:analysis.imstat} for more.
+
+%%%%%%
+\subsubsection{Moments of an image cube}
+\label{section:intro.walkthru.analysis.moments}
+
+The {\tt immoments} task will compute a ``moments'' image of
+an input image cube.  A number of options are available, from
+the traditional true moments (zero, first, second) and variations
+thereof, to other images such as median, minimum, or maximum along
+the moment axis.
+
+See \S~\ref{section:analysis.moments} for details.
+
+%%%%%%
+\subsubsection{Image math}
+\label{section:intro.walkthru.analysis.immath}
+
+The {\tt immath} task will allow you to form a new image by
+mathematical combinations of other images (or parts of images).
+This is a powerful, but tricky, task to use.
+
+See \S~\ref{section:analysis.immath} for more.
+
+%%%%%%
+\subsubsection{Regridding an Image}
+\label{section:intro.walkthru.analysis.regrid}
+
+It is occasionally necessary to regrid an image onto a new
+coordinate system.  The {\tt imregrid} task can be used
+to regrid an input image onto the coordinate system of an
+existing template image, creating a new output image.
+
+See \S~\ref{section:analysis.regrid} for a description of
+this task.
+
+%%%%%%
+\subsubsection{Displaying Images}
+\label{section:intro.walkthru.analysis.display}
+
+To display an image use the {\tt viewer} task.  The viewer will
+display images in raster, contour, or vector form.  Blinking and
+movies are available for spectral-line image cubes.  To start the
+viewer, type:
+
+\small
+\begin{verbatim}
+  viewer
+\end{verbatim}
+\normalsize
+
+Executing the {\tt viewer} task will bring up two windows: a viewer
+screen showing the data or image, and a file catalog list. Click on an
+image or ms from the file catalog list, choose the proper display, and
+the image should pop up on the screen. Clicking on the wrench
+tool (second from left on upper left) will obtain the data display
+options. Most functions are self-documenting. 
+
+The viewer can be run outside of casapy by typing {\tt casaviewer}. 
+
+See \S~\ref{chapter:display} for more on viewing images.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Getting data and images out of CASA}
+\label{section:intro.walkthru.export}
+
+The key data and image export tasks are:
+\begin{itemize}
+   \item {\tt exportuvfits} --- export a CASA MS in UVFITS format 
+         (\S~\ref{section:io.import.uvfits});
+   \item {\tt exportfits} --- export a CASA image table as FITS 
+         (\S~\ref{section:analysis.fits}).
+\end{itemize}
+
+These tasks can be used to export a CASA MS or image to UVFITS
+or FITS respectively.  See the individual sections referred to
+above for more on each.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

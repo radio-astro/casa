@@ -1,0 +1,189 @@
+\documentclass[11pt]{report} 
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Wide-field imaging, deconvolution ({\tt widefield})}
+\label{section:im.widefield}
+
+When imaging sufficiently large angular regions, the sky can no longer
+be treated as a two-dimensional plane and the use of the {\tt clean}
+task will produce bright source distortions that become
+increasingly large with distance from the phase center.  The task
+{\tt widefield} should then be used.  It contains most, but not all,
+of the flexibility of {\tt clean}.  Besides making large area
+undistorted images, {\tt widefield} must be used to image isolated
+regions (i.e. confusing sources) is they are distant from the field
+center.
+
+When is {\tt widefield} needed?  It depends on the expected dynamic
+range the image.  In order to keep the phase error associated with the
+sky/array curvature less than about $5^\circ$ (good to about 500:1
+dynamic range), use the following table, suitably scaled, for
+guidance:
+
+\scriptsize
+\begin{verbatim}
+        Maximum Radius of Image Before widefield is Needed
+          Assuming 5 deg phase error and 35-km Baseline
+
+           Wavelength                 Radius of image
+              6 cm                       1.4 arcmin
+             20 cm                       2.6 arcmin
+             90 cm                       5.3 arcmin
+
+  Radius of image ~ SQRT (Wavelength * phase error / Maximum baseline)
+      (arcmin)              (cm)          (deg)           (km)
+\end{verbatim}
+\normalsize
+
+\noindent If a relatively small image is being made, but there are outliers
+sources beyond the above limits, then widefield should also be used.
+
+The task {\tt widefield} can be used in two major modes: First, the
+wf-projection method deals with the w-term (the phase associated with
+the sky/array curvature) internally.  Secondly, the image can be
+broken into many facets, each small enough so that the w-term is not
+significant.  These two basic methods can be combined, and are discussed
+below.
+
+\medskip
+
+The default inputs to {\tt widefield} are:
+\scriptsize
+\begin{verbatim}
+#  widefield :: Wide-field imaging and deconvolution with selected algorithm
+vis                 =       ['']        #  name of input visibility file
+imagename           =                   #  Pre-name of output images
+outlierfile         =         ''        #  Text file with image names, sizes, centers
+field               =         ''        #  Field Name
+spw                 =         ''        #  Spectral windows:channels: '' is all
+selectdata          =      False        #  Other data selection parameters
+mode                =      'mfs'        #  Type of selection (mfs, channel, velocity, frequency)
+niter               =        500        #  Maximum number of iterations
+gain                =        0.1        #  Loop gain for cleaning
+threshold           =    '0.0Jy'        #  Flux level to stop cleaning.  Must include units
+psfmode             =    'clark'        #  Algorithm to use (clark, hogbom)
+ftmachine           = 'wproject'        #  Gridding method for the image (wproject, ft)
+     wprojplanes    =        256        #  Number of planes to use in wprojection convolutiuon function
+     facets         =          1        #  Number of facets along each axis in main image only
+
+multiscale          =         []        #  set deconvolution scales (pixels), default: multiscale=[]
+                                        #   (standard CLEAN)
+interactive         =      False        #  use interactive clean (with GUI viewer)
+mask                =         []        #  cleanbox(es), mask image(s), and/or region(s)
+imsize              = [256, 256]        #  Image size in pixels (nx,ny), symmetric for single value
+cell                = ['1.0arcsec', '1.0arcsec'] #  The image cell size in arcseconds [x,y].
+phasecenter         =         ''        #  Field Identififier or direction of the image phase center
+restfreq            =         ''        #  rest frequency to assign to image (see help)
+stokes              =        'I'        #  Stokes params to image (I,IV,QU,IQUV,RR,LL,XX,YY,RRLL,XXYY)
+weighting           =  'natural'        #  Weighting to apply to visibilities
+cyclefactor         =        1.5        #  Change the threshold at which the deconvolution cycle will stop,
+                                        #   degrid, and subtract from the visiblities.
+cyclespeedup        =         -1        #  Cycle threshold doubles in this number of iterations
+uvtaper             =      False        #  Apply additional uv tapering of  visibilities.
+restoringbeam       =       ['']        #  Output Gaussian restoring beam for CLEAN image
+async               =      False        #  If true the taskname must be started using widefield(...)
+\end{verbatim}
+\normalsize
+
+\noindent Most of the parameters are similar to {\tt clean} and should be reviewed
+there.  Specialized parameters for {\tt widefield} are as follows:
+
+The parameters {\tt outlierfield} versus {\tt imsize} + {\tt
+phasecenter}: When using widefield, the position and imagesize of each
+image must be specified.  The following example shows two methods for
+specifying a big image with four outliers:
+
+\scriptsize
+\begin {verbatim}
+vis                 = 'wfield.ms'       #  name of input visibility file
+imagename           = 'wf'              #  Pre-name of output images
+outlierfile         = 'setup.txt'       #  Text file with image names, sizes, centers
+imsize              = [256, 256]        #  Image size in pixels (nx,ny), symmetric for single value
+cell                = '1.0arcsec'       #  The image cell size in arcseconds [x,y].
+phasecenter         =         ''        #  Field Identififier or direction of the image phase center
+
+The file "setup.txt" is:
+
+C   main 2048 2048   13 27 20.98     43 26 28.0   # Main field with image size and phase center
+C   out1  128  128   13 30 52.158    43 23 08.00  # First outlier field specification
+                      etc
+The C in column 1 must be present, although it not presently used.
+\end{verbatim}
+\normalsize
+
+\noindent The {\tt cell} is identical for all fields, and {\tt imsize} and {\tt
+phasecenter} are not used.  The image pre-names would be: wf.main,
+wf.out1, etc
+
+The alternative input, needing no additional outlier file, is: 
+
+\scriptsize
+\begin{verbatim}
+vis                 = 'wfield.ms'       #  name of input visibility file
+imagename           = 'wf'              #  Pre-name of output images
+outlierfile         = 'image_setup.txt' #  Text file with image names, sizes, centers
+imsize              = [2048, 2048, 128, 128] #  Image size in pixels (nx,ny)
+cell                = '1.0arcsec'       #  The image cell size in arcseconds [x,y].
+phasecenter         = ['J2000 13h27m20.98 43d26m28.0', 'J2000 13h30m52.158 43d23m08.00']
+\end{verbatim}
+\normalsize
+
+The crucial part of {\tt widefield} is the parameters under {\tt ftmachine}.  The three
+types of use are: (1) w-projection only; (2) facets only; (3) w-projection with facets.
+
+(1) Pure wprojection method
+
+\scriptsize
+\begin{verbatim}
+ftmachine           = 'wproject'        #  Gridding method for the image (wproject, ft)
+     wprojplanes    =         64        #  Number of planes to use in wprojection convolutiuon function
+     facets         =          1        #  Number of facets along each axis in main image only
+\end{verbatim}
+
+\noindent A reasonable value is wprojplanes = Bmax(k$\lambda)\times$
+imagewidth($arcmin^2) / 600$), with a minimum value of 16.  The
+wprojection algorithm is much faster than using faceting, but it does
+consume a lot of memory.  On most 32-bit machines with 1 or 2 Mbytes
+of memory, images larger than about $4000\times 4000$ cannot be made.
+
+(2) Faceting only (breaking image into many small parts)
+
+\scriptsize
+\begin{verbatim}
+ftmachine           = 'ft'        #  Gridding method for the image (wproject, ft)
+     facets         =          7        #  Number of facets along each axis in main image only
+                                           i.e. in this case 7x7 facets
+\end{verbatim}
+\normalsize
+
+\noindent A reasonable value of facets is such that the imagewidth of each facet does not need
+the w-term correction.  The computation method with pure faceting is slow, so that wprojection
+is recommended
+
+
+(3) Combination of wprojection and faceting:
+
+\scriptsize
+\begin{verbatim}
+
+ftmachine           = 'wproject'        #  Gridding method for the image (wproject, ft)
+     wprojplanes    =         32        #  Number of planes to use in wprojection convolutiuon function
+     facets         =          3        #  Number of facets along each axis in main image only
+
+\end{verbatim}
+\normalsize
+
+\noindent This hybrid method allows for a smaller wprojplanes in order
+to try to conserve memory if the image size approached the memory limit
+of the computer.  However, there is a large penalty in execution time.
+
+The other parameters are described in {\tt clean}, and multi-scale
+cleaning in available.  Mosaicing and MEM is not yet included in {\tt
+widefield}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

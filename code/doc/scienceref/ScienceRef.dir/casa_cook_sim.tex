@@ -1,0 +1,127 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-10-11  add into beta
+% STM 2007-10-22  put in appendix for Beta Release
+% RI  2009-12-17  Release 0 (3.0.0) draft
+% STM 2009-12-21  Release 0 (3.0.0) final
+
+%\chapter{Simulation}
+\chapter[Appendix: Simulation]{Simulation}
+\label{chapter:sim}
+
+The capability for simulating observations and datasets from the EVLA
+and ALMA are an important use-case for CASA.  This not only allows one
+to get an idea of the capabilities of these instruments for doing
+science, but also provides benchmarks for the performance and utility
+of the software for processing ``realistic'' datasets (with
+atmospheric and instrumental effects).  CASA can now calculate
+visibilities (create a measurement set) for any interferometric array,
+and calculate and apply calibration tables representing some of the
+most important corrupting effects.  Version 3.0.0 now also contains a
+{\em beta} version of a task to simulate single dish or total power
+data from the same sky model as interferometric data.
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The simulator methods are in the {\tt sm} tool.
+     Many of the other tools are also helpful when
+     constructing and analyzing simulations.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+CASA's simulation capabilities have been under development, and will
+likely continue to evolve through this and the next release of CASA.
+For the most current information, please refer to
+\url{http://www.casaguides.nrao.edu}, and click on ``Simulating
+Observations in CASA''.
+%
+Following general CASA practice, the greatest flexibility and richest
+functionality is at the Toolkit level.  The most commonly used
+procedures for interferometric simulation are encapsulated in the {\tt
+  simdata} task.  Total power simulation is possible at the task level
+using the {\tt sdsimdata} task, which follows somewhat parallel inputs
+and whose capabilities will being developed more fully in the next
+release.
+
+%{\bf BETA ALERT:} The simulation capabilities are currently under
+%development.  What we do have is mostly at the Toolkit level.
+%We have only a single task {\tt almasimmos} at the present time.
+%Stay tuned.  For the Beta Release, we include this chapter
+%in the Appendix for the use of telescope commissioners and software
+%developers.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Simulating ALMA with {\tt simdata}}
+\label{section:sim.almasimmos}
+
+The inputs are:
+\small
+\begin{verbatim}
+#  simdata :: mosaic simulation task:
+modelimage        =         ''        #  input image name
+ignorecoord       =      False        #  scale model coordinates to output parameters
+inbright          = 'unchanged'       #  set peak surface brightness in Jy/pixel or "unchanged"
+complist          =         ''        #  componentlist table to observe
+antennalist       = 'alma.out10.cfg'  #  antenna position file
+checkinputs       =       'no'        #  graphically verify parameters [yes|no|only]
+project           =      'sim'        #  root for output files
+refdate           = '2012/05/21/22:05:00' #  center time/date of observation *see help
+totaltime         =    '7200s'        #  total time of observation
+integration       =      '10s'        #  integration (sampling) time
+scanlength        =          5        #  number of integrations per pointing in the mosaic
+startfreq         =    '89GHz'        #  frequency of first channel
+chanwidth         =    '10MHz'        #  channel width
+nchan             =          1        #  number of channels
+direction         = ['J2000 19h00m00 -40d00m00'] #  mosaic center, or list of pointings
+pointingspacing   =  '1arcmin'        #  spacing in between beams in mosaic
+relmargin         =        1.0        #  space btw. pointings and edge, rel. to pointingspacing
+cell              = '0.1arcsec'       #  output cell/pixel size
+imsize            = [128, 128]        #  output image size in pixels (x,y)
+niter             =        500        #  maximum number of iterations
+threshold         =  '0.01mJy'        #  flux level (+units) to stop cleaning
+psfmode           =    'clark'        #  method of PSF calculation to use during minor cycles
+weighting         =  'natural'        #  weighting to apply to visibilities
+uvtaper           =      False        #  apply additional uv tapering of  visibilities.
+stokes            =        'I'        #  Stokes params to image
+noise_thermal     =       True        #  add thermal noise
+     noise_mode   = 'tsys-atm'        #  tsys-atm: set PWV, use ATM; tsys-manual: set t_sky, tau0
+     user_pwv     =        1.0        #  Precipitable Water Vapor in mm
+     t_ground     =      269.0        #  ambient temperature
+     t_sky        =      263.0        #  atmospheric temperature
+     tau0         =        0.1        #  zenith opacity
+fidelity          =       True        #  Calculate fidelity images
+display           =       True        #  Plot simulation result images,figures
+verbose           =      False        
+async             =      False        #  If true the taskname must be started using simdata(...)
+\end{verbatim}
+\normalsize
+
+This task takes an input model image or list of components, plus a
+list of antennas (locations and sizes), and simulates a particular
+observation (specifies by mosaic setup and observing cycles and
+times).  The output is a MS suitable for further analysis in CASA, a
+synthesized image create from those visibilities, a difference image
+between the synthesized image and your sky model convolved with the
+output synthesized beam, and a fidelity image.
+
+Random thermal noise (from the atmosphere and receiver) can optionally
+be added. A realistic model of the troposphere is created from known
+site characteristics (altitude, etc) and used to calculate the
+frequency dependence of the noise.  Similarly, specifications for ALMA
+and EVLA receiver temperature and antenna efficiencies are coded into
+the task to determine a realistic system temperature.  Other
+corrupting effects, such as phase noise, gain drift, and
+cross-polarization, can be added the the MS with the toolkit - see the
+web documentation for more information.
+
+Much more detailed information, and use-case examples, can be found at 
+
+\url{http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

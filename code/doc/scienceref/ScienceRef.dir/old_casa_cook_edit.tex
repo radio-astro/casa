@@ -1,0 +1,1634 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-06-25  bring up to Alpha Patch 1 level
+% MPR 2007-07-05  minor tweaks, esp. to match frozen alpha-1 release of 4jul07
+% STM 2007-09-20  pre-beta version
+% STM 2007-10-09  Gustaaf's corrections
+% STM 2007-10-09  beta version (spell-checked)
+% STM 2007-11-09  beta 0.5, qcasabrowser
+% STM 2008-03-24  patch 1.0
+% STM 2008-05-14  start patch 2.0
+% STM 2008-09-30  Patch 3 editing start, extendflag
+% STM 2009-05-19  Patch 4 editing start, plotants and plotms
+% STM 2009-11-24  Release 3.0.0 editing start
+
+\chapter{Data Examination and Editing}
+\label{chapter:edit}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Plotting and Flagging Visibility Data in CASA}
+\label{section:edit.intro}
+
+The tasks available for plotting and flagging of data are:
+\begin{itemize}
+   \item {\tt flagmanager} --- manage versions of data flags
+      (\S~\ref{section:edit.flagmanager})
+   \item {\tt flagautocorr} --- non-interactive flagging of auto-correlations
+      (\S~\ref{section:edit.flagautocorr})
+   \item {\tt plotms} --- prototype next-generation X-Y MS plotter
+      (\S~\ref{section:edit.plot.plotms})
+   \item {\tt plotxy} --- create X-Y plots of data in MS, flag data
+      (\S~\ref{section:edit.plot.plotxy})
+   \item {\tt flagdata} --- non-interactive flagging of data
+      (\S~\ref{section:edit.flagdata})
+   \item {\tt browsetable} --- browse data in any CASA table (including a MS)
+      (\S~\ref{section:edit.browse})
+   \item {\tt plotants} --- create simple plots of antenna positions
+      (\S~\ref{section:edit.plot.plotants})
+\end{itemize}
+
+The following sections describe the use of these tasks.
+
+Information on other related operations can be found in:
+\begin{itemize}
+   \item {\tt listobs} --- list summary of a MS (\S~\ref{section:io.list})
+   \item {\tt listvis} --- list data in a MS (\S~\ref{section:io.vis.listvis})
+   \item {\tt selectdata} --- general data selection syntax
+      (\S~\ref{section:io.selection})
+   \item {\tt viewer} --- use the {\tt casaviewer} to display the MS as a 
+      raster image, and flag it (\S~\ref{chapter:display})
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Managing flag versions with {\tt flagmanager}}
+\label{section:edit.flagmanager}
+
+The {\tt flagmanager} task will allow you to manage different
+versions of flags in your data.  These are stored inside a CASA
+flagversions table, under the name of the MS {\tt <msname>.flagversions}.
+For example, for the MS {\tt jupiter6cm.usecase.ms}, there will need
+to be {\tt jupiter6cm.usecase.ms.flagversions} on disk.  This is
+created on import (by {\tt importvla} or {\tt importuvfits}) or
+when flagging is first done on an MS without a {\tt .flagversions}
+(e.g. with {\tt plotxy}).  
+
+By default, when the {\tt .flagversions} is created, this
+directory will contain a {\tt flags.Original} in it containing
+a copy of the original flags in the {\tt MAIN} table of the MS
+so that you have a backup.  It will also contain a file called
+{\tt FLAG\_VERSION\_LIST} that has the information on the various
+flag versions there.
+
+The inputs for {\tt flagmanager} are:
+\small
+\begin{verbatim}
+vis                 =         ''        #   Name of input visibility file (MS)
+mode                =     'list'        #   Flag management operation (list,save,restore,delete)
+\end{verbatim}
+\normalsize
+
+The {\tt mode='list'} option will list the available flagversions from
+the {\tt <msname>.flagversions} file.  For example:
+\small
+\begin{verbatim}
+CASA <102>: default('flagmanager')
+CASA <103>: vis = 'jupiter6cm.usecase.ms'
+CASA <104>: mode = 'list'
+CASA <105>: flagmanager()
+MS : /home/imager-b/smyers/Oct07/jupiter6cm.usecase.ms
+
+main : working copy in main table
+Original : Original flags at import into CASA
+flagautocorr : flagged autocorr
+xyflags : Plotxy flags
+\end{verbatim}
+\normalsize
+
+The {\tt mode} parameter expands the options.  For example, if you wish to 
+save the current flagging state of {\tt vis=<msname>}, 
+\small
+\begin{verbatim}
+mode                =     'save'        #   Flag management operation (list,save,restore,delete)
+     versionname    =         ''        #   Name of flag version (no spaces)
+     comment        =         ''        #   Short description of flag version
+     merge          =  'replace'        #   Merge option (replace, and, or)
+\end{verbatim}
+\normalsize
+with the output version name specified by {\tt versionname}.  For example, the
+above {\tt xyflags} version was written using:
+\small
+\begin{verbatim}
+   default('flagmanager')
+   vis = 'jupiter6cm.usecase.ms'
+   mode = 'save'
+   versionname = 'xyflags'
+   comment = 'Plotxy flags'
+   flagmanager()
+\end{verbatim}
+\normalsize
+and you can see that there is now a sub-table in the flagversions directory
+\small
+\begin{verbatim}
+CASA <106>: ls jupiter6cm.usecase.ms.flagversions/
+  IPython system call: ls -F jupiter6cm.usecase.ms.flagversions/
+  flags.flagautocorr  flags.Original  flags.xyflags  FLAG_VERSION_LIST
+\end{verbatim}
+\normalsize
+{\bf It is recommended that you use this facility regularly to save versions
+during flagging.}
+
+You can restore a previously saved set of flags using the 
+{\tt mode='restore'} option:
+\small
+\begin{verbatim}
+mode                =  'restore'        #   Flag management operation (list,save,restore,delete)
+     versionname    =         ''        #   Name of flag version (no spaces)
+     merge          =  'replace'        #   Merge option (replace, and, or)
+\end{verbatim}
+\normalsize
+The {\tt merge} sub-parameter will control the action.  
+For {\tt merge='replace'}, the flags in {\tt versionname} will replace those
+in the MAIN table of the MS.  For {\tt merge='and'}, only data that is
+flagged in BOTH the current MAIN table and in {\tt versionname} will 
+be flagged.  For {\tt merge='or'}, data flagged in EITHER the MAIN or
+in {\tt versionname} will be flagged.
+
+The {\tt mode='delete'} option can be used to remove {\tt versionname} from the
+flagversions:
+\small
+\begin{verbatim}
+mode                =   'delete'        #   Flag management operation (list,save,restore,delete)
+     versionname     =         ''       #   Name of flag version (no spaces)
+\end{verbatim}
+\normalsize
+
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Flagging auto-correlations with {\tt flagautocorr}}
+\label{section:edit.flagautocorr}
+
+The {\tt flagautocorr} task can be used if all you want to do
+is to flag the auto-correlations out of the MS.  Nominally,
+this can be done upon filling from the VLA for example, but
+you may be working from a dataset that still has them.
+
+This task has a single input, the MS file name:
+\small
+\begin{verbatim}
+vis                 =         ''        #   Name of input visibility file (MS)
+\end{verbatim}
+\normalsize
+To use it, just set and go:
+\small
+\begin{verbatim}
+CASA <90>: vis = 'jupiter6cm.usecase.ms'                                         
+CASA <91>: flagautocorr()
+\end{verbatim}
+\normalsize
+
+Note that the auto-correlations can also be flagged using 
+{\tt flagdata} (\S~\ref{section:edit.flagdata}) but the 
+{\tt flagautocorr} task is an handy shortcut for this common
+operation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{X-Y Plotting and Editing of the Data}
+\label{section:edit.plot}
+
+There are three main X-Y plotting tasks in CASA:
+\begin{itemize}
+   \item {\tt plotms} --- prototype next-generation X-Y MS plotter
+      (\S~\ref{section:edit.plot.plotms})
+   \item {\tt plotxy} --- create X-Y plots of data in MS, flag data
+      (\S~\ref{section:edit.plot.plotxy})
+   \item {\tt plotants} --- create simple plots of antenna positions
+      (\S~\ref{section:edit.plot.plotants})
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{MS Plotting and Editing using {\tt casaplotms}}
+\label{section:edit.plot.plotms}
+
+{\bf ALERT:}
+The {\tt casaplotms} tool is a standalone
+plotter application based on Qt.  It is intended to replace
+{\tt plotxy} and will be more fully functional in the next release.
+
+You can also start the application outside
+CASA (e.g.\ by typing {\tt casaplotms}) or from inside the shell
+using the OS command syntax, either {\tt !casaplotms} from IPython,
+or {os.system('casaplotms')} from IPython or script.
+
+The current inputs to the {\tt plotms} task are:
+\small
+\begin{verbatim}
+#  plotms :: A plotter/interactive flagger for visibility data.
+vis            =      ''   #  input visibility dataset (blank for none)
+xaxis          =      ''   #  plot x-axis (blank for default/current)
+yaxis          =      ''   #  plot y-axis (blank for default/current)
+selectdata     =    True   #  data selection parameters
+   field       =      ''   #  field names or field index numbers (blank for all)
+   spw         =      ''   #  spectral windows:channels (blank for all)
+   timerange   =      ''   #  time range (blank for all)
+   uvrange     =      ''   #  uv range (blank for all)
+   antenna     =      ''   #  antenna/baselines (blank for all)
+   scan        =      ''   #  scan numbers (blank for all)
+   correlation =      ''   #  correlations (blank for all)
+   array       =      ''   #  (sub)array numbers (blank for all)
+   msselect    =      ''   #  MS selection (blank for all)
+
+averagedata    =    True   #  data averaging parameters
+   avgchannel  =      ''   #  average over channel?  (blank = False, otherwise value in channels)
+   avgtime     =      ''   #  average over time? (blank = False, other value in seconds)
+   avgscan     =   False   #  only valid if time averaging is turned on.  average over scans?
+   avgfield    =   False   #  only valid if time averaging is turned on.  average over fields?
+   avgbaseline =   False   #  average over all baselines?  (mutually exclusive with avgantenna)
+   avgantenna  =   False   #  average by per-antenna?  (mutually exclusive with avgbaseline)
+   avgspw      =   False   #  average over all spectral windows?
+
+extendflag     =   False   #  have flagging extend to other data points?
+plotxycomp     =   False   #  use plotxy compliance parameters?
+async          =   False   #  If true the taskname must be started using plotms(...)
+\end{verbatim}
+\normalsize
+
+You can find a short example of using {\tt casaplotms} on the
+CASAGuides Wiki:
+\begin{quote}
+   \url{http://casaguides.nrao.edu/index.php?title=Data_flagging_with_casaplotms}
+\end{quote}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Plotting and Editing using {\tt plotxy}}
+\label{section:edit.plot.plotxy}
+
+{\bf ALERT:} The {\tt plotxy} code is fragile and slow, and is being
+replaced by the {\tt plotms} (\S~\ref{section:edit.plot.plotms}).
+We retain {\tt plotxy} in this release as not all functionality is
+available yet in {\tt plotms}.
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     Access to {\tt matplotlib} is also provided through 
+     the {\tt pl} tool. 
+     See below for a description of the {\tt pl} tool functions. 
+  \end{boxedminipage}
+\end{wrapfigure}
+
+The principal way to get X-Y plots of visibility data is using the
+{\tt plotxy} task.  This task also provides editing capability.
+CASA uses the {\tt matplotlib} plotting library to display its plots.
+You can find information on {\tt matplotlib} at
+\url{http://matplotlib.sourceforge.net/}.
+
+\begin{figure}[h!]
+\begin{center}
+%\gname{uvcoverage}{5.5}
+\pngname{plotxy_jupiter}{5.5}
+\caption{\label{fig:matplotlib}The {\tt plotxy} plotter, showing the
+  Jupiter data versus uv-distance.  You can see bad data in this plot.
+  The {\bf bottom set of buttons} on the
+  lower left are: 1,2,3) {\bf Home, Back, and Forward}. Click to
+  navigate between previously defined views (akin to web navigation).
+  4) {\bf Pan}. Click and drag to pan to a new position. 5) {\bf
+  Zoom}. Click to define a rectangular region for zooming. 6) {\bf
+  Subplot Configuration}. Click to configure the parameters of the
+  subplot and spaces for the figures. 7) {\bf Save}. Click to launch a
+  file save dialog box.  The {\bf upper set of buttons in the lower left} are:
+  1) {\bf Mark Region}. Press this to begin marking regions (rather than
+  zooming or panning).  2,3,4) {\bf Flag, Unflag, Locate}.  Click on these
+  to flag, unflag, or list the data within the marked regions.  5) {\bf Next}.
+  Click to move to the next in a series of iterated plots.
+  Finally, the {\bf cursor readout} is on the bottom right.}
+\hrulefill
+\end{center}
+\end{figure}
+
+To bring up this plotter use the {\tt plotxy} task.  The inputs are: 
+\small
+\begin{verbatim}
+#  plotxy :: X-Y plotter/interactive flagger for visibility data
+
+vis              =         ''   #  Name of input visibility
+xaxis            =     'time'   #  X-axis: def = 'time': see help for options
+yaxis            =      'amp'   #  Y-axis: def = 'amp': see help for options
+     datacolumn  =     'data'   #  data (raw), corrected, model, residual (corrected - model)
+
+selectdata       =      False   #  Other data selection parameters
+spw              =         ''   #  spectral window:channels: ''==>all, spw='1:5~57'
+field            =         ''   #  field names or index of calibrators: ''==>all
+averagemode      =         ''   #  Select averaging type: 'vector', 'scalar'
+restfreq         =         ''   #  a frequency quanta or transition name. see help for options
+extendflag       =      False   #  Have flagging extend to other data points?
+subplot          =        111   #  Panel number on display screen (yxn)
+plotsymbol       =        '.'   #  Options include . : , o ^ v > < s + x D d 2 3 4 h H | _
+plotcolor        =  'darkcyn'   #  Plot color
+plotrange        = [-1, -1, -1, -1]  #  The range of data to be plotted (see help)
+multicolor       =     'corr'   #  Plot in different colors: Options: none, both, chan, corr
+selectplot       =      False   #  Select additional plotting options (e.g, fontsize, title,etc)
+overplot         =      False   #  Overplot on current plot (if possible)
+showflags        =      False   #  Show flagged data?
+interactive      =       True   #  Show plot on gui?
+figfile          =         ''   #  ''= no plot hardcopy, otherwise supply name
+async            =      False   #  If true the taskname must be started using plotxy(...)
+\end{verbatim}
+\normalsize
+
+{\bf ALERT:} The {\tt plotxy} task expects all of the scratch columns to
+be present in the MS, even if it is not asked to plot the contents.
+If you get an error to the effect {\tt "Invalid Table operation:
+Table: cannot add a column"} then use {\tt clearcal()} to force these
+columns to be made in the MS.  Note that this will clear anything in
+all scratch columns (in case some were actually there and being used).
+
+Setting {\tt selectdata=True} opens up the selection sub-parameters:
+\small
+\begin{verbatim}
+selectdata       =       True   #   Other data selection parameters
+     antenna     =         ''   #   antenna/baselines: ''==>all, antenna = '3,VA04' 
+     timerange   =         ''   #   time range: ''==>all 
+     correlation =         ''   #   correlations: default = '' 
+     scan        =         ''   #   scan numbers: Not yet implemented
+     feed        =         ''   #   multi-feed numbers: Not yet implemented
+     array       =         ''   #   array numbers: Not yet implemented
+     uvrange     =         ''   #   uv range''==>all; uvrange = '0~100kl' (default unit=meters)
+\end{verbatim}
+\normalsize
+These are described in \S~\ref{section:io.selection}.
+
+Averaging is controlled with the set of parameters
+\small
+\begin{verbatim}
+averagemode      =   'vector'   #  Select averaging type: vector, scalar
+     timebin     =        '0'   #  Length of time-interval in seconds to average
+     crossscans  =      False   #  Have time averaging cross scan boundaries?
+     crossbls    =      False   #  have averaging cross over baselines?
+     crossarrays =      False   #  have averaging cross over arrays?
+     stackspw    =      False   #  stack multiple spw on top of each other?
+     width       =        '1'   #  Number of channels to average
+\end{verbatim}
+\normalsize
+See \S~\ref{section:edit.plot.plotxy.average} below for more on averaging.
+
+You can extend the flagging beyond the data cell plotted:
+\small
+\begin{verbatim}
+extendflag          =   True    #  Have flagging extend to other data points?
+     extendcorr     =     ''    #  flagging correlation extension type
+     extendchan     =     ''    #  flagging channel extension type
+     extendspw      =     ''    #  flagging spectral window extension type
+     extendant      =     ''    #  flagging antenna extension type
+     extendtime     =     ''    #  flagging time extension type
+\end{verbatim}
+\normalsize
+See \S~\ref{section:edit.plot.plotxy.extend} below for more on flag
+extension.
+
+The {\tt restfreq} parameter can be set to a transition or frequency:
+\small
+\begin{verbatim}
+restfreq            =    'HI'   #  a frequency quanta or transition name. see help for options
+     frame          =  'LSRK'   #  frequency frame for spectral axis. see help for options
+     doppler        = 'RADIO'   #  doppler mode. see help for options
+\end{verbatim}
+\normalsize
+See \S~\ref{section:edit.plot.plotxy.restfreq} below for more on setting rest
+frequencies and frames.
+
+Setting {\tt selectplot=True} will open up a set of plotting control
+sub-parameters.  
+These are described in \S~\ref{section:edit.plot.plotxy.select} below.
+
+The {\tt interactive} and {\tt figfile} parameters allow
+non-interactive production of hardcopy plots.  See
+\S~\ref{section:edit.plot.plotxy.print} for more details on saving plots to disk.
+
+The {\tt iteration}, {\tt overplot}, {\tt plotrange}, 
+{\tt plotsymbol}, {\tt showflags} and {\tt subplot}
+parameters deserve extra explanation, and are described below.
+
+For example:
+\small
+\begin{verbatim}
+plotxy(vis='jupiter6cm.ms',                # jupiter 6cm dataset
+       xaxis='uvdist',                     # plot uv-distance on x-axis
+       yaxis='amp',                        # plot amplitude on y-axis
+       field='JUPITER',                    # plot only JUPITER
+       selectdata=True,                    # open data selection
+       correlation='RR,LL',                #   plot RR and LL correlations
+       selectplot=True,                    # open plot controls
+       title = 'Jupiter 6cm uncalibrated') #   give it a title 
+\end{verbatim}
+\normalsize
+The plotter resulting from these settings is shown in figure \ref{fig:matplotlib}.  
+
+{\bf ALERT:} The {\tt plotxy} task still has a number of issues.
+The averaging has been greatly speeded up in this release, but there
+are cases where the plots will be made incorrectly.  In particular,
+there are problems plotting multiple {\tt spw} at the same time.
+There are sometimes also cases where data that you have flagged in 
+{\tt plotxy} from averaged data is done so incorrectly.  This task is
+under active developement for the next cycle to fix these remaining 
+problems, so users should be aware of this.
+
+{\bf ALERT:} Another know problem with ({\tt plotxy}) is that it
+fails if the path to your working directory contains spaces in
+its name, e.g. {\tt /users/smyers/MyTest/} is fine, but 
+{\tt /users/smyers/My\ Test/} is not!
+
+% There are a number of things to keep in mind and to be aware of
+% in order to make your plotting and editing go smoother:
+
+% The {\tt field} selection is a minimum match on a
+% space-separated list of names. You can use the {\tt
+% selectfield(vis=filename, minstring='string')} to test what field
+% names and indices you are matching. Similarly, {\tt
+% selectantenna(vis=filename, minstring='antname')} will also give you
+% this information for antenna names.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{GUI Plot Control}
+\label{section:edit.plot.plotxy.control}
+
+You can use the various buttons on the {\tt plotxy} GUI to control
+its operation -- in particular, to determine flagging and unflagging
+behaviors.
+
+There is a standard row of buttons at the bottom.  These include
+(left to right):
+\begin{itemize}
+\item {\bf Home} --- The ``house'' button (1st on left) returns to
+  the original zoom level.
+\item {\bf Step} --- The left and right arrow buttons (2nd and 3rd
+  from left) step through the zoom settings you've visited.
+\item {\bf Pan} --- The ``four-arrow button'' (4th from left) lets you pan
+  in zoomed plot.
+\item {\bf Zoom} --- The most useful is the ``magnifying glass'' (5th
+  from the left) which lets you draw a box and zoom in on the plot.  
+\item {\bf Panels} --- The ``window-thingy'' button (second from
+  right) brings up a menu to adjust the panel placement in the plot.
+\item {\bf Save} -- The ``disk'' button (last on right) saves a
+  {\tt .png} copy of the plot to a generically named file on disk.
+\end{itemize}
+
+In a row above these, there are a set of other buttons (left to right):
+\begin{itemize}
+\item {\bf Mark Region} --- If depressed lets you draw rectangles to
+  mark points in the panels.  This is done by left-clicking and
+  dragging the mouse.  You can Mark multiple boxes before doing
+  something.  Clicking the button again will un-depress it and forget
+  the regions.  ESC will remove the last region marked.
+\item {\bf Flag} --- Click this to Flag the points in a marked region.
+\item {\bf Unflag} --- Click this to Unflag any flagged point that
+  would be in that region (even if invisible).
+\item {\bf Locate} --- Print out some information to the logger on
+  points in the marked regions.  
+\item {\bf Next} --- Step to the next plot in an iteration.
+\item {\bf Quit} --- Exit {\tt plotcal}, clear the window and detach from the MS.
+\end{itemize}
+
+These buttons are shared with the {\tt plotcal} tool.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt selectplot} Parameters}
+\label{section:edit.plot.plotxy.select}
+
+These parameters work in concert with the native matplotlib
+functionality to enable flexible representations of data displays. 
+
+Setting {\tt selectplot=True} will open up a set of plotting control
+sub-parameters:
+\small
+\begin{verbatim}
+selectplot       =       True   #  Select additional plotting options (e.g, fontsize, title,etc)
+     markersize  =        5.0   #  Size of plotted marks
+     linewidth   =        1.0   #  Width of plotted lines
+     skipnrows   =          1   #  Plot every nth point
+     newplot     =      False   #  Replace the last plot or not when overplotting
+     clearpanel  =     'Auto'   #  Specify if old plots are cleared or not
+     title       =         ''   #  Plot title (above plot)
+     xlabels     =         ''   #  Label for x-axis
+     ylabels     =         ''   #  Label for y-axis
+     fontsize    =       10.0   #  Font size for labels
+     windowsize  =        5.0   #  Window size: not yet implemented
+\end{verbatim}
+\normalsize
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+        For even more functionality, you can access the 
+        {\tt pl} tool directly using Pylab functions that 
+        allow one to annotate, alter, or add
+        to any plot displayed in the {\tt matplotlib} plotter 
+        (e.g. {\tt plotxy}).
+  \end{boxedminipage}
+\end{wrapfigure}
+
+The {\tt markersize} parameter will change the size of the plot
+symbols.  Increasing it will help legibility when doing screen shots.
+Decreasing it can help in congested plots.  The {\tt linewidth}
+parameter will do similar things to the lines.
+
+The {\tt skipnrows} parameter, if set to an integer {\tt n} greater than 1,
+will allow only every {\tt n}th point to be plotted.  It does this,
+as the name suggests, by skipping over whole rows of the MS, so beware
+(channels are all within the same row for a given {\tt spw}).  Be
+careful flagging on data where you have skipped points!  Note
+that you can also reduce the number of points plotted via averaging
+(\S~\ref{section:edit.plot.plotxy.average}) or channel striding in the 
+{\tt spw} specification (\S~\ref{section:io.selection.spw}).
+
+The {\tt newplot} toggle lets you choose whether or not the
+last layer plotted is replaced when {\tt overplot=True}, or whether
+a new layer is added.
+
+The {\tt clearpanel} parameter turns on/off the clearing of plot panels
+that lie under the current panel layer being plotted. The options are:
+{\tt 'none'} (clear nothing), {\tt 'auto'} (automatically clear the
+plotting area), {\tt 'current'} (clear the current plot area only), 
+and {\tt 'all'} (clear the whole plot panel).
+
+The {\tt title}, {\tt xlabels}, and {\tt ylabels} parameters can
+be used to change the plot title and axes labels.
+
+The {\tt fontsize} parameter is useful in order to enlarge the label
+fonts so as to be visible when making plots for screen capture, or
+just to improve legibility.  Shrinking can help if you have lots of
+panels on the plot also.
+
+The {\tt windowsize} parameter is supposed to allow adjustments on
+the window size. {\bf ALERT:} This currently does nothing,
+unless you set it below 1.0, in which case it will produce an 
+error.
+
+%%%%%%%
+\subsubsection{ The {\tt iteration} parameter}
+\label{section:edit.plot.plotxy.iter}
+
+There are currently four iteration options available:
+{\tt 'field'}, {\tt 'antenna'}, and {\tt 'baseline'}.  
+If one of these options
+is chosen, the data will be split into separate plot displays for each
+value of the iteration axis (e.g., for the VLA, the 'antenna' option
+will get you 27 displays, one for each antenna).  
+
+An example use of iteration:
+\small
+\begin{verbatim}
+  # choose channel averaging, every 5 channels
+  plotxy('n5921.ms','channel',subplot=221,iteration='antenna',width='5')
+\end{verbatim}
+\normalsize
+The results of this are shown in Figure~\ref{fig:plotiter}.  Note
+that this example combines the use of {\tt width}, {\tt iteration}
+and {\tt subplot}.
+
+% \begin{figure}[h!]
+% \gname{msplot_iteration}{6.5}
+% \caption{\label{fig:msplotiteration} The {\tt plotxy} iteration plot: The first
+%   set of plots from the example in \S~\ref{section:edit.plot.plotxy.iter}. 
+%   Each time you press the {\bf Next} button, you
+%   get the next series of plots.} 
+% \hrulefill
+% \end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{plotxy_iter}{6}
+\caption{\label{fig:plotiter} The {\tt plotxy} iteration plot.
+  The first set of plots from the example in
+  \S~\ref{section:edit.plot.plotxy.iter} with {\tt iteration='antenna'}.
+  Each time you press the {\bf Next} button, you
+  get the next series of plots.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+{\bf NOTE:} If you use {\tt iteration='antenna'} or {\tt 'baseline'},
+be aware if you have set {\tt antenna} selection.  You can also
+control whether you see auto-correlations or not using the appropriate
+syntax, e.g. {\tt antenna='*\&\&*'} or {\tt antenna='*\&\&\&'}
+(\S~\ref{section:io.selection.selectdata.antenna}).
+
+%%%%%%%
+\subsubsection{ The {\tt overplot} parameter}
+\label{section:edit.plot.plotxy.overplot}
+
+The {\tt overplot} parameter toggles whether the current plot will
+be overlaid on the previous plot or subpanel (via the {\tt subplot}
+setting, \S~{section:edit.plot.plotxy.subplot}) or will overwrite it.
+The default is {\tt False} and the new plot will replace the old.
+
+The {\tt overplot} parameter interacts with the {\tt newplot}
+sub-parameter (see \S~\ref{section:edit.plot.plotxy.select}).
+
+See \S~\ref{section:edit.plot.plotxy.showflags} for an example using 
+{\tt overplot}. 
+
+%%%%%%%
+\subsubsection{ The {\tt plotrange} parameter}
+\label{section:edit.plot.plotxy.plotrange}
+
+The {\tt plotrange} parameter can be used to specify the size of the
+plot.  The format is {\tt [xmin, xmax, ymin, ymax]}.  The units are
+those on the plot.  For example,
+\small
+\begin{verbatim}
+   plotrange = [-20,100,15,30]
+\end{verbatim}
+\normalsize
+Note that if {\tt xmin=xmax} and/or {\tt ymin=ymax}, then the values
+will be ignored and a best guess will be made to auto-range that axis.
+{\tt ALERT:} Unfortunately, the units for the time axis must be
+in Julian Days, which are the plotted values.
+
+%%%%%%%
+\subsubsection{ The {\tt plotsymbol} parameter}
+\label{section:edit.plot.plotxy.symb}
+
+The {\tt plotsymbol} parameter defines both the line or
+symbol for the data being drawn as well as the color; from the
+matplotlib online documentation (e.g., type {\tt pl.plot?} for help):
+
+\small
+\begin{verbatim}
+    The following line styles are supported:
+        -     : solid line
+        --    : dashed line
+        -.    : dash-dot line
+        :     : dotted line
+        .     : points
+        ,     : pixels
+        o     : circle symbols
+        ^     : triangle up symbols
+        v     : triangle down symbols
+        <     : triangle left symbols
+        >     : triangle right symbols
+        s     : square symbols
+        +     : plus symbols
+        x     : cross symbols
+        D     : diamond symbols
+        d     : thin diamond symbols
+        1     : tripod down symbols
+        2     : tripod up symbols
+        3     : tripod left symbols
+        4     : tripod right symbols
+        h     : hexagon symbols
+        H     : rotated hexagon symbols
+        p     : pentagon symbols
+        |     : vertical line symbols
+        _     : horizontal line symbols
+        steps : use gnuplot style 'steps' # kwarg only
+    The following color abbreviations are supported
+        b  : blue
+        g  : green
+        r  : red
+        c  : cyan
+        m  : magenta
+        y  : yellow
+        k  : black
+        w  : white
+    In addition, you can specify colors in many weird and
+    wonderful ways, including full names 'green', hex strings
+    '#008000', RGB or RGBA tuples (0,1,0,1) or grayscale
+    intensities as a string '0.8'.
+    Line styles and colors are combined in a single format string, as in
+    'bo' for blue circles.
+\end{verbatim}
+\normalsize
+
+%%%%%%
+\subsubsection{ The {\tt showflags} parameter}
+\label{section:edit.plot.plotxy.showflags}
+
+The {\tt showflags} parameter determines whether {\em only} unflagged
+data ({\tt showflags=False}) or flagged ({\tt showflags=True}) data is
+plotted by this execution.  The default is {\tt False} and will show
+only unflagged ``good'' data.
+
+Note that if you want to plot both unflagged and flagged data, in
+different colors, then you need to run {\tt plotxy} twice using
+{\tt overplot} (see \S~\ref{section:edit.plot.plotxy.overplot}) 
+the second time, e.g.
+\small
+\begin{verbatim}
+> plotxy(vis="myfile", xaxis='uvdist', yaxis='amp' )
+> plotxy(vis="myfile", xaxis='uvdist', yaxis='amp', overplot=True, showflags=True )
+\end{verbatim}
+\normalsize
+
+%%%%%%
+\subsubsection{ The {\tt subplot} parameter }
+\label{section:edit.plot.plotxy.subplot}
+
+The {\tt subplot} parameter takes three
+numbers. The first is the number of y panels (stacking vertically),
+the second is the number of xpanels (stacking horizontally) and the
+third is the number of the panel you want to draw into. For example,
+{\tt subplot=212} would draw into the lower of two
+panels stacked vertically in the figure.
+
+An example use of subplot capability is shown in
+Fig~\ref{fig:multiplot}.  These were drawn with the commands (for the
+top, bottom left, and bottom right panels respectively):
+\small
+\begin{verbatim}
+plotxy('n5921.ms','channel',     # plot channels for the n5921.ms data set
+       field='0',                  # plot only first field
+       datacolumn='corrected',     # plot corrected data
+       plotcolor='',               # over-ride default plot color
+       plotsymbol='go',            # use green circles
+       subplot=211)                # plot to the top of two panels
+
+plotxy('n5921.ms','x',           # plot antennas for n5921.ms data set
+       field='0',                  # plot only first field
+       datacolumn='corrected',     # plot corrected data
+       subplot=223,                # plot to 3rd panel (lower left) in 2x2 grid
+       plotcolor='',               # over-ride default plot color
+       plotsymbol='r.')            # red dots
+
+plotxy('n5921.ms','u','v',       # plot uv-coverage for n5921.ms data set
+       field='0',                  # plot only first field
+       datacolumn='corrected',     # plot corrected data
+       subplot=224,                # plot to the lower right in a 2x2 grid
+       plotcolor='',               # over-ride default plot color
+       plotsymbol='b,')            # blue, somewhat larger dots
+                                   # NOTE: You can change the gridding
+                                   # and panel size by manipulating
+                                   # the ny x nx grid.
+
+\end{verbatim}
+\normalsize
+
+\begin{figure}[h!]
+\begin{center}
+%\gname{n5921_multiplot}{6}
+\pngname{ngc5921_multiplot}{5.5}
+\caption{\label{fig:multiplot} Multi-panel display of visibility
+  versus channel ({\bf top}), antenna array configuration ({\bf bottom left})
+  and the resulting uv coverage ({\bf bottom right}). The commands to
+  make these three panels respectively are: 
+  1) {\tt plotxy('ngc5921.ms', xaxis='channel',
+    datacolumn='data', field='0', subplot=211, plotcolor='',
+    plotsymbol='go')}
+  2) {\tt plotxy('ngc5921.ms', xaxis='x', field='0', subplot=223, plotsymbol='r.')}, 
+  3) {\tt plotxy('ngc5921.ms', xaxis='u', yaxis='v', field='0',
+    subplot=224, plotsymbol='b,',figfile='ngc5921\_multiplot.png')}.
+  }
+\hrulefill
+\end{center}
+\end{figure}
+
+See also \S~\ref{section:edit.plot.plotxy.iter} above, and
+Figure~\ref{fig:plotiter} for an example of channel 
+averaging using {\tt iteration} and {\tt subplot}.
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Averaging in {\tt plotxy}}
+\label{section:edit.plot.plotxy.average}
+
+The averaging parameters and sub-parameters are:
+\small
+\begin{verbatim}
+averagemode      = 'vector' #  Select averaging type: vector, scalar
+     timebin     =      '0' #  length of time in seconds to average, default='0', or: 'all'
+     crossscans  =    False #  have time averaging cross over scans?
+     crossbls    =    False #  have averaging cross over baselines?
+     crossarrays =    False #  have averaging cross over arrays?
+     stackspw    =    False #  stack multiple spw on top of each other?
+     width       =      '1' #  number of channels to average, default: '1', or: 'all', 'allspw'
+\end{verbatim}
+\normalsize
+
+The choice of {\tt averagemode} controls how the amplitudes are calculated
+in the average.  The default mode is {\tt 'vector'}, where the complex
+average is formed by averaging the real and imaginary parts of the
+relevant visibilities.  If {\tt 'scalar'} is chosen, then the
+amplitude of the average is formed by a scalar average of the
+individual visibility amplitudes.
+
+Time averaging is effected by setting the {\tt timebin} parameter to a
+value larger than the integration time.  Currently, {\tt timebin}
+takes a string containing the averaging time in seconds, e.g.
+\small
+\begin{verbatim}
+   timebin = '60.0'
+\end{verbatim}
+\normalsize
+to plot one-minute averages.
+
+Channel averaging is invoked by setting {\tt width} to a value greater
+than 1.  Currently, the averaging {\tt width} is given as a number of
+channels.
+
+By default, the averaging will not cross {\tt scan} boundaries (as set
+in the import process).  However, if {\tt crossscans=True}, then
+averaging will cross scans.  
+
+Note that data taken in different sub-arrays are never averaged
+together. Likewise, there is no way to plot data averaged over {\tt field}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Interactive Flagging in {\tt plotxy}}
+\label{section:edit.plot.plotxy.flag}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Hint!}
+     In the plotting environments such as {\tt plotxy}, the
+     {\tt ESC} key can be used to remove the last region box
+     drawn. 
+  \end{boxedminipage}
+\end{wrapfigure}
+
+Interactive flagging, on the principle of ``see it --- flag it'', is
+possible on the X-Y display of the data plotted by {\tt plotxy}.  The user can
+use the cursor to mark one or more regions, and then flag, unflag, or list
+the data that falls in these zones of the display.
+
+There is a row of buttons below the plot in the window.  You can punch the
+{\bf Mark Region} button (which will appear to depress), then mark a region
+by left-clicking and dragging the mouse (each click and drag will mark an
+additional region).  You can get rid of all your regions by clicking again
+on the {\bf Mark Region} button (which will appear to un-depress), or you
+can use the {\tt ESC} key to remove the last box you drew.  Once regions are
+marked, you can then click on one of the other buttons to take action:
+\begin{enumerate}
+\item {\bf Flag} --- flag the points in the region(s),
+\item {\bf Unflag} --- unflag flagged points in the region(s),
+\item {\bf Locate} --- spew out a list of the points in the region(s) to 
+   the logger (Warning: this could be a long list!).
+\end{enumerate}
+Whenever you click on a button, that action occurs without 
+forcing a disk-write (unlike previous versions).  If you quit {\tt plotxy}
+and re-enter, you will see your previous edits.
+
+\begin{figure}[h!]
+\begin{center}
+%\gname{markflags}{3}
+%\gname{markflags2}{3}
+\pngname{ngc5921_markflag2}{2.75}
+\pngname{ngc5921_markflag3}{2.75}
+\caption{\label{fig:markflags} Plot of amplitude versus
+uv distance, before (left) and after (right) flagging two marked regions.
+The call was:
+{\tt plotxy(vis='ngc5921.ms',xaxis='uvdist', field='1445*')}.
+}
+\hrulefill
+\end{center}
+\end{figure}
+
+A table with the name {\tt <msname>.flagversions} (where
+{\tt vis=<msname>}) will be created in the same directory if
+it does not exist already.
+
+It is recommended that you save important flagging stages using
+the {\tt flagmanager} task (\S~\ref{section:edit.flagmanager}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Flag extension in {\tt plotxy}}
+\label{section:edit.plot.plotxy.extend}
+
+Flag extension is controlled using {\tt extendflag=T} and its sub-parameters:
+\small
+\begin{verbatim}
+extendflag          =   True    #  Have flagging extend to other data points?
+     extendcorr     =     ''    #  flagging correlation extension type
+     extendchan     =     ''    #  flagging channel extension type
+     extendspw      =     ''    #  flagging spectral window extension type
+     extendant      =     ''    #  flagging antenna extension type
+     extendtime     =     ''    #  flagging time extension type
+\end{verbatim}
+\normalsize
+The use of {\tt extendflag} enables the user to plot a subset of the
+data and extend the flagging to a wider set.
+
+{\bf ALERT:} Using the {\tt extendflag} options will greatly
+slow down the flagging in {\tt plotxy}.  You will see a long delay
+after hitting the {\bf Flag} button, with lots of logger messages
+as it goes through each flag.  Fixing this requires a refactoring
+of {\tt plotxy} which is underway starting in Patch 4 development.
+
+Setting {\tt extendchan='all'} will extend the flagging to other
+channels in the same {\tt spw} as the displayed point.  For example,
+if {\tt spw='0:0'} and channel 0 is displayed, then flagging will
+extend to all channels in spw 0.
+
+The {\tt extendcorr} sub-parameter will extend the flagging beyond the
+correlations displayed.  If {\tt extendcorr='all'}, then all
+correlations will be flagged, e.g.\ with RR displayed RR,RL,LR,LL will 
+be flagged.  If {\tt extendcorr='half'}, then the extension will be
+to those correlations in common with that show, e.g.\ with RR
+displayed then RR,RL,LR will be flagged.
+
+Setting {\tt extendspw='all'} will extend the flagging to all other
+spw for the selection.  Using the same example as above, with
+{\tt spw='0:0'} displayed, then channel 0 in ALL spw will be flagged.
+Note that use of {\tt extendspw} could result in unintended behavior
+if the spw have different numbers of channels, or if it is used in
+conjunction with {\tt extendchan}.
+
+{\bf WARNING:} use of the following options, particularly in
+conjunction with other flag extensions, may lead to deletion of much
+more data than desired.  Be careful!
+
+Setting {\tt extendant='all'} will extend the flagging to all
+baselines that have antennas in common with those displayed and
+marked.  For example, if {\tt antenna='1\&2'} is shown, then ALL
+baselines to BOTH antennas 1 and 2 will be flagged.  Currently, there
+is no option to extend the flag to ONLY baselines to the first (or 
+second) antenna in a displayed pair, so it is better to use
+{\tt flagdata} to remove specific antennas.
+
+Setting {\tt extendtime='all'} will extend the flagging to all times 
+matching the other selection or extension for the data in the marked
+region.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Setting rest frequencies in {\tt plotxy}}
+\label{section:edit.plot.plotxy.restfreq}
+
+The {\tt restfreq} parameter can be set to a transition or frequency
+and expands to allow setting of frame information.  For example,
+\small
+\begin{verbatim}
+restfreq            =    'HI'   #  a frequency quanta or transition name. see help for options
+     frame          =  'LSRK'   #  frequency frame for spectral axis. see help for options
+     doppler        = 'RADIO'   #  doppler mode. see help for options
+\end{verbatim}
+\normalsize
+Examples of transitions include:
+\small
+\begin{verbatim}
+   restfreq='1420405751.786Hz'  #  21cm HI frequency
+   restfreq='HI'                #  21cm HI transition name
+   restfreq='115.2712GHz'       #  CO 1-0 line frequency
+\end{verbatim}
+\normalsize
+For a list of known lines in the CASA {\tt measures} system, use the
+toolkit command {\tt me.linelist()}.  For example:
+\small
+\begin{verbatim}
+CASA <14>: me.linelist()
+  Out[14]: 'C109A CI CII166A DI H107A H110A H138B H166A H240A H272A H2CO HE110A HE138B HI OH1612 OH1665 OH1667 OH1720'
+\end{verbatim}
+\normalsize
+{\bf ALERT:} The list of known lines in CASA is currently very
+restricted, and will be increased in upcoming releases (to include lines
+in ALMA bands for example).
+
+You can use the {\tt me.spectralline} tool method to turn transition names into
+frequencies 
+\small
+\begin{verbatim}
+CASA <16>: me.spectralline('HI')
+  Out[17]: 
+{'m0': {'unit': 'Hz', 'value': 1420405751.786},
+ 'refer': 'REST',
+ 'type': 'frequency'}
+\end{verbatim}
+\normalsize
+(not necessary for this task, but possibly useful).
+
+The {\tt frame} sub-parameter sets the frequency frame.  The allowed
+options can be listed using the {\tt me.listcodes} method on the
+{\tt me.frequency()} method, e.g.
+\small
+\begin{verbatim}
+CASA <17>: me.listcodes(me.frequency())
+  Out[17]: 
+{'extra': array([], 
+      dtype='|S1'),
+ 'normal': array(['REST', 'LSRK', 'LSRD', 'BARY', 'GEO', 'TOPO', 'GALACTO', 'LGROUP',
+       'CMB'], 
+      dtype='|S8')}
+\end{verbatim}
+\normalsize
+
+The {\tt doppler} sub-parameter likewise sets the Doppler system.  The
+allowed codes can be listed using the {\tt me.listcodes} method on the
+{\tt me.doppler()} method,
+\small
+\begin{verbatim}
+CASA <18>: me.listcodes(me.doppler())
+  Out[18]: 
+{'extra': array([], 
+      dtype='|S1'),
+ 'normal': array(['RADIO', 'Z', 'RATIO', 'BETA', 'GAMMA', 'OPTICAL', 'TRUE',
+       'RELATIVISTIC'], 
+      dtype='|S13')}
+\end{verbatim}
+\normalsize
+For most cases the {\tt 'RADIO''} Doppler system is appropriate, but
+be aware of differences.
+
+For more information on frequency frames and spectral coordinate
+systems, see the paper by Greisen et al. (A\&A, 446, 747, 2006)
+\footnote{Also at \url{http://www.aoc.nrao.edu/~egreisen/scs.ps}}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Printing from {\tt plotxy}}
+\label{section:edit.plot.plotxy.print}
+
+There are two ways to get hardcopy plots in {\tt plotxy}.  
+
+The first is to use the ``disk save'' icon from the interactive plot GUI to 
+print the current plot.  This will bring up a sub-menu GUI that will
+allow you to choose the filename and format.  The allowed formats are {\tt .png} (PNG), 
+{\tt .eps} (EPS), and {\tt svg} (SVG).  If you give the filename with
+a suffix ({\tt .png}, {\tt .eps}, or {\tt svg}) it will make a plot of
+that type.  Otherwise it will put a suffix on depending on the format
+chosen from the menu.
+
+{\bf ALERT:} The plot files produced by the EPS option can be
+large, and the SVG files can be very large.  The PNG is the smallest.
+
+The second is to specify a {\tt figfile}.  You probably want to disable the
+GUI using {\tt interactive=False} in this case.  The type of plot file
+that is made will depend upon the filename suffix.  The allowed
+choices are {\tt .png} (PNG), {\tt .eps} (EPS), and {\tt svg} (SVG).
+
+This latter option is most useful from scripts.  For example,
+\small
+\begin{verbatim}
+   default('plotxy')
+   vis = 'ngc5921.ms'
+   field = '2'
+   spw = ''
+   xaxis = 'uvdist'
+   yaxis = 'amp'
+   interactive=False
+   figfile = 'ngc5921.uvplot.amp.png'
+   plotxy()
+\end{verbatim}
+\normalsize
+will plot amplitude versus uv-distance in PNG format.  No {\tt plotxy}
+GUI will appear.
+
+{\bf ALERT:} if
+you use this option to print to {\tt figfile} with an {\tt iteration}
+set, you will only get the first plot.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Exiting {\tt plotxy}}
+\label{section:edit.plot.plotxy.exit}
+
+You can use the {\bf Quit} button to clear the plot from the
+window and detach from the MS.  You can also dismiss the 
+window by killing it with the X on the frame, which will also
+detach the MS.
+
+You can also just leave it alone.  The plotter pretty much keeps running
+in the background even when it looks like it's done!  You can
+keep doing stuff in the plotter window, which is where the
+{\tt overplot} parameter comes in.  Note that the {\tt plotcal}
+task (\S~\ref{section:cal.tables.plotcal}) will use the same window, and
+can also overplot on the same panel.
+
+If you leave {\tt plotxy} running, beware of (for instance)
+deleting or writing over the MS without stopping.  It may work
+from a memory version of the MS or crash.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Example session using {\tt plotxy}}
+\label{section:edit.plot.plotxy.example}
+
+The following is an example of interactive plotting and flagging
+using {\tt plotxy} on the Jupiter 6cm continuum VLA dataset.
+This is extracted from the script {\tt jupiter6cm\_usecase.py}
+available in the script area.
+
+This assumes that the MS {\tt jupiter6cm.usecase.ms} is
+on disk with {\tt flagautocorr} already run.
+
+\small
+\begin{verbatim}
+default('plotxy')
+
+vis = 'jupiter6cm.usecase.ms'
+
+# The fields we are interested in: 1331+305,JUPITER,0137+331
+selectdata = True
+
+# First we do the primary calibrator
+field = '1331+305'
+
+# Plot only the RR and LL for now
+correlation = 'RR LL'
+
+# Plot amplitude vs. uvdist
+xaxis = 'uvdist'
+yaxis = 'amp'
+multicolor = 'both'
+
+# The easiest thing is to iterate over antennas
+iteration = 'antenna'
+
+plotxy()
+
+# You'll see lots of low points as you step through RR LL RL LR
+# A basic clip at 0.75 for RR LL and 0.055 for RL LR will work
+# If you want to do this interactively, set
+iteration = ''
+
+plotxy()
+
+# You can also use flagdata to do this non-interactively
+# (see below)
+
+# Now look at the cross-polar products
+correlation = 'RL LR'
+
+plotxy()
+
+#---------------------------------------------------------------------
+# Now do calibrater 0137+331
+field = '0137+331'
+correlation = 'RR LL'
+xaxis = 'uvdist'
+spw = ''
+iteration = ''
+antenna = ''
+
+plotxy()
+
+# You'll see a bunch of bad data along the bottom near zero amp
+# Draw a box around some of it and use Locate
+# Looks like much of it is Antenna 9 (ID=8) in spw=1
+
+xaxis = 'time'
+spw = '1'
+correlation = ''
+
+# Note that the strings like antenna='9' first try to match the 
+# NAME which we see in listobs was the number '9' for ID=8.
+# So be careful here (why naming antennas as numbers is bad).
+antenna = '9'
+
+plotxy()
+
+# YES! the last 4 scans are bad.  Box 'em and flag.
+
+# Go back and clean up
+xaxis = 'uvdist'
+spw = ''
+antenna = ''
+correlation = 'RR LL'
+
+plotxy()
+
+# Box up the bad low points (basically a clip below 0.52) and flag
+
+# Note that RL,LR are too weak to clip on.
+
+#---------------------------------------------------------------------
+# Finally, do JUPITER
+field = 'JUPITER'
+correlation = ''
+iteration = ''
+xaxis = 'time'
+
+plotxy()
+
+# Here you will see that the final scan at 22:00:00 UT is bad
+# Draw a box around it and flag it!
+
+# Now look at whats left
+correlation = 'RR LL'
+xaxis = 'uvdist'
+spw = '1'
+antenna = ''
+iteration = 'antenna'
+
+plotxy()
+
+# As you step through, you will see that Antenna 9 (ID=8) is often 
+# bad in this spw. If you box and do Locate (or remember from
+# 0137+331) its probably a bad time.
+
+# The easiset way to kill it:
+
+antenna = '9'
+iteration = ''
+xaxis = 'time'
+correlation = ''
+
+plotxy()
+
+# Draw a box around all points in the last bad scans and flag 'em!
+
+# Now clean up the rest
+xaxis = 'uvdist'
+correlation = 'RR LL'
+antenna = ''
+spw = ''
+
+# You will be drawing many tiny boxes, so remember you can
+# use the ESC key to get rid of the most recent box if you
+# make a mistake.
+
+plotxy()
+
+# Note that the end result is we've flagged lots of points
+# in RR and LL.  We will rely upon imager to ignore the
+# RL LR for points with RR LL flagged!
+
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Plotting antenna positions using {\tt plotants}}
+\label{section:edit.plot.plotants}
+
+This task is a simple plotting interface (to the {\tt plotxy}
+functionality) to produce plots of the antenna positions (taken from
+the {\tt ANTENNA} sub-table of the MS).
+
+The inputs to {\tt plotants} are:
+\small
+\begin{verbatim}
+#  plotants :: Plot the antenna distribution in the local reference frame:
+vis       =         ''   #  Name of input visibility file (MS)
+figfile   =         ''   #  Save the plotted figure to this file
+async     =      False   #  
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Non-Interactive Flagging using {\tt flagdata}}
+\label{section:edit.flagdata}
+
+Task {\tt flagdata} will flag the visibility data set based on the
+specified data selections, most of the information coming from a run
+of the {\tt listobs} task (with/without {\tt verbose=True}). Currently you can
+select based on any combination of: 
+
+\begin{itemize}
+   \item antennas ({\tt antenna})
+   \item baselines ({\tt antenna})
+   \item spectral windows and channels ({\tt spw})
+   \item correlation types ({\tt correlation})
+   \item field ids or names ({\tt field})
+   \item uv-ranges ({\tt uvrange})
+   \item times ({\tt timerange}) or scan numbers ({\tt scan})
+   \item antenna arrays ({\tt array})
+\end{itemize}
+
+and choose to flag, unflag, clip ({\tt setclip} and sub-parameters), and
+remove the first part of each scan ({\tt setquack}) and/or the 
+autocorrelations ({\tt autocorr}).
+
+The inputs to {\tt flagdata} are:
+\small
+\begin{verbatim}
+#  flagdata :: Flag/Clip data based on selections:
+
+vis               =         ''   #  Name of input visibility file
+mode              = 'manualflag' #  Mode (manualflag,shadow,quack,summary,autoflag,rfi)
+     autocorr     =      False   #  Flag autocorrelations
+     unflag       =      False   #  Unflag the data specified
+     clipexpr     =   'ABS RR'   #  Expression to clip on
+     clipminmax   =         []   #  Range to use for clipping
+     clipcolumn   =     'DATA'   #  Data column to use for clipping
+     clipoutside  =       True   #  Clip outside the range, or within it
+     channelavg   =      False   #  Average over channels
+
+spw               =         ''   #  spectral-window/frequency/channel
+field             =         ''   #  Field names or field index numbers: ''==>all, field='0~2,3C286'
+selectdata        =       True   #  More data selection parameters (antenna, timerange etc)
+     antenna      =         ''   #  antenna/baselines: ''==>all, antenna = '3,VA04'
+     timerange    =         ''   #  time range: ''==>all, timerange='09:14:0~09:54:0'
+     correlation  =         ''   #  Select data based on correlation
+     scan         =         ''   #  scan numbers: ''==>all
+     feed         =         ''   #  multi-feed numbers: Not yet implemented
+     array        =         ''   #  (sub)array numbers: ''==>all
+     uvrange      =         ''   #  uv range: ''==>all; uvrange = '0~100klambda', default units=meters
+
+async             =      False   #  If true the taskname must be started using flagdata(...)
+\end{verbatim}
+\normalsize
+
+The default flagging {\tt mode} is {\tt 'manualflag'}.  See 
+\S~\ref{section:edit.flagdata.clip} more more on this option.
+
+The {\tt mode='summary'} will print out a summary of the current
+state of flagging into the {\tt logger}.
+
+The {\tt mode='quack'} will allow dropping of integrations from the
+beginning of scans.  See \S~\ref{section:edit.flagdata.quack} for
+details.
+
+The {\tt mode='shadow'} option will allow shadowed data to be flagged,
+e.g.\ if it has not already during filling 
+(\S~\ref{section:edit.flagdata.shadow}).
+
+There are also ``autoflagging'' modes {\tt'autoflag'} and {\tt'rfi'} 
+available for testing (\S~\ref{section:edit.flagdata.autoflag}).
+
+Note that often you want to apply many different flagging operations
+in a single pass through the data.  For this, we have implemented
+a ``list'' mode for the {\tt 'manualflag'} selections where
+several flagdata task invocations can be combined into a single
+{\tt flagdata} run by giving lists of parameters. 
+This is possible for the modes {\tt 'manualflag'} and {\tt 'quack'}, only.
+    
+For example, the following three flagdata runs:
+\small
+\begin{verbatim}
+   flagdata(vis='my.ms', mode='manualflag', selectdata=True, field='3', autocorr=True)
+   flagdata(vis='my.ms', mode='manualflag', selectdata=True, field='3', timerange = '6:0:0~6:23:00')
+   flagdata(vis='my.ms', mode='manualflag', selectdata=True, field='3', scan='0', spw='0:60;62;64')
+\end{verbatim}
+\normalsize
+can be combined into a single run by:
+\small
+\begin{verbatim}
+   vis = 'my.ms'
+   mode = 'manualflag'
+   selectdata = True
+   
+   field     = '3'
+   spw       = [ ''   , ''            , '0:60;62:64' ]
+   autocorr  = [ True , False         , False        ]
+   timerange = [ ''   , '6:0:0~6:23:0', ''           ]
+   scan      = [ ''   , ''            , '0'          ]
+   
+   flagdata()
+\end{verbatim}
+\normalsize
+Note that {\tt field='3'} is equivalent to {\tt field=['3','3','3']}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+-------------------------
+\subsection{Flag Antenna/Channels}
+\label{section:edit.flagdata.ant}
+
+The following commands give the results shown in 
+Figure\,\ref{fig:flagdata_antchan}:
+\small
+\begin{verbatim}
+  default{'plotxy')
+  plotxy('ngc5921.ms','channel',iteration='antenna',subplot=311)
+  default('flagdata')
+  flagdata(vis='ngc5921.ms',antenna='0',spw='0:10~15')
+  default plotxy
+  plotxy('ngc5921.ms','channel',iteration='antenna',subplot=311)
+\end{verbatim}
+\normalsize
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{msplot_channelants}{3}
+\pngname{msplot_flagantchan}{3}
+\caption{\label{fig:flagdata_antchan} {\tt flagdata}: Example showing before
+  and after displays using a selection of one antenna and a range of
+  channels. Note that each invocation of the flagdata task represents
+  a cumulative selection, i.e., running antenna='0' will flag all
+  data with antenna 0, while antenna='0', spw='0:10~15'
+  will flag only those channels on antenna 0. }
+\hrulefill
+\end{center}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Manual flagging and clipping in {\tt flagdata}}
+\label{section:edit.flagdata.clip}
+
+For {\tt mode='manualflag''}, manual flagging and clipping is controlled by the
+sub-parameters:
+\small
+\begin{verbatim}
+mode              = 'manualflag' #  Mode (manualflag,shadow,quack,summary,autoflag,rfi)
+     autocorr     =      False   #  Flag autocorrelations
+     unflag       =      False   #  Unflag the data specified
+     clipexpr     =   'ABS RR'   #  Expression to clip on
+     clipminmax   =         []   #  Range to use for clipping
+     clipcolumn   =     'DATA'   #  Data column to use for clipping
+     clipoutside  =       True   #  Clip outside the range, or within it
+     channelavg   =      False   #  Average over channels
+\end{verbatim}
+\normalsize
+
+The following commands give the results shown in 
+Figure\,\ref{fig:flagdata}:
+\small
+\begin{verbatim}
+  plotxy('ngc5921.ms','uvdist')
+  flagdata(vis='ngc5921.ms',clipexpr='LL',clipminmax=[0.0,1.6],clipoutside=True)
+  plotxy('ngc5921.ms','uvdist')
+\end{verbatim}
+\normalsize
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{msplot_clipbefore}{3}
+\pngname{msplot_clipafter}{3}
+\caption{\label{fig:flagdata} {\tt flagdata}: Flagging example using the
+  clip facility. }
+\hrulefill
+\end{center}
+\end{figure}
+
+The {\tt channelavg} toggle (new in Version 3.0.0) is now available
+to (vector) average the data over all channels before doing the
+clipping test.  This is most useful when flagging on phase stable or
+corrected data (e.g.\ after {\tt applycal} and split to a new
+dataset).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Flagging the beginning of scans}
+\label{section:edit.flagdata.quack}
+
+You can use the {\tt mode='quack'} option to drop integrations from
+the beginning of scans (as in the AIPS task {\tt QUACK}):
+\small
+\begin{verbatim}
+mode              = 'quack'  # Mode (manualflag,shadow,quack,summary,autoflag,rfi)
+   autocorr       =   False  # Flag autocorrelations
+   unflag         =   False  # Unflag the data specified
+   quackinterval  =     0.0  # Quack n seconds from quackmode scan boundary
+   quackmode      =   'beg'  # 'beg' (start), 'endb' (end), 'end' (all but end), 'tail' (all but start)
+   quackincrement =   False  #  Flag incrementally in time?
+\end{verbatim}
+\normalsize
+Note that the time is measured from the first integration in the MS
+for a given scan, and this is often already flagged by the online
+system.
+
+For example, assuming the integration time is 3.3 seconds (e.g. for
+VLA), then
+\small
+\begin{verbatim}
+   mode = 'quack'
+   quackinterval = 14.0 
+\end{verbatim}
+\normalsize
+will flag the first 4 integrations in every scan.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Flagging shadowed data with mode {\tt 'shadow'} }
+\label{section:edit.flagdata.shadow}
+
+Visibilities where one antenna is obscured by another antenna
+(typically at low elevations) can be flagged with the {\tt 'shadow'}
+mode:
+\small
+\begin{verbatim}
+mode          =   'shadow'  #  Mode (manualflag,shadow,quack,summary,autoflag,rfi)
+   diameter   =       -1.0  #  Effective diameter (m) to use. -1 ==>antenna diameter
+\end{verbatim}
+\normalsize
+Note that this can only flag data shadowed by antennas known in the MS
+(in the same subarray for example), not by antennas not in the dataset.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Autoflagging using modes {\tt 'autoflag'} and {\tt 'rfi'}}
+\label{section:edit.flagdata.autoflag}
+
+There are two ``autoflagging'' modes currently available in {\tt flagdata}.
+{\bf ALERT:} These are still experimental and under development for
+ALMA and EVLA commissioning.
+
+The {\tt mode='autoflag'} option uses an older autoflagging algorithm
+developed for {\tt aips++}:
+\small
+\begin{verbatim}
+mode          = 'autoflag'  #  Mode (manualflag,shadow,quack,summary,autoflag,rfi)
+   algorithm  =  'timemed'  #  Autoflag algorithm (timemed,freqmed)
+   column     =     'DATA'  #  Data column to operate on.
+   expr       =   'ABS RR'  #  Expression to flag on
+   thr        =        5.0  #  Flagging threshold (n sigma)
+   window     =         10  #  Sliding median filter width
+\end{verbatim}
+\normalsize
+This algorithm passes median filters of a given width ({\tt window})
+in time ({\tt timemed'}) or frequency ({\tt freqmed'}) over the data
+and flagging outliers above a threshold ({\tt 'thr'}).
+
+The {\tt mode='rfi'} option uses an newer autoflagging algorithm:
+\small
+\begin{verbatim}
+mode               =    'rfi'  # Mode (manualflag,shadow,quack,summary,autoflag,rfi)
+   clipcolumn      =   'DATA'  # Data column to use for clipping
+   clipexpr        = 'ABS RR'  # Expression to clip on
+   time_amp_cutoff =      4.0  # Flagging thresholds in units of sigma
+   freq_amp_cutoff =      3.0  # Flagging thresholds in units of sigma
+   freqlinefit     =    False  # Fit bandpass with a straight line (True), else piecewise polynomial
+   auto_cross      =        1  # Flag on cross and auto-correlations (0=autocor only)
+   num_time        =      400  # Number of time-steps in each chunk
+   start_chan      =        1  # Channel range start (1 based)
+   end_chan        =     2048  # Channel range end (1 based)
+   bs_cutoff       =      0.0  # Baseline tolerance
+   ant_cutoff      =      0.0  # Total autocorrelation amplitude threshold for a functional antenna
+   flag_level      =        1  # 0=no extend; 1=also one timestep before+after; 2= also one channel
+\end{verbatim}
+\normalsize
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Browse the Data}
+\label{section:edit.browse}
+
+The {\tt browsetable} task is available for viewing data directly
+(and handles all CASA tables, including Measurement Sets, calibration tables,
+and images). This task brings up the CASA Qt
+{\tt casabrowser}, which is a separate program.  You can launch this
+from outside {\tt casapy}.  
+
+The default inputs are:
+\small
+\begin{verbatim}
+#  browsetable :: Browse a table (MS, calibration table, image)
+
+tablename         =         ''  #   Name of input table
+async             =      False  #  If true the taskname must be started using browsetable(...)
+
+\end{verbatim}
+\normalsize
+
+Currently, its single input is the {\tt tablename}, so an example would
+be:
+\small
+\begin{verbatim}
+   browsetable('ngc5921.ms')
+\end{verbatim}
+\normalsize
+For an MS such as this, it will come up with a browser of the 
+{\tt MAIN} table (see Fig~\ref{fig:qcasabrowser1}).  
+If you want to look at sub-tables, use the tab 
+{\bf table keywords} along the left side to bring up a panel with the sub-tables
+listed (Fig~\ref{fig:qcasabrowser2}), then choose (left-click) a table and
+{\bf View:Details} to bring it up (Fig~\ref{fig:qcasabrowser3}).  
+You can left-click on a cell in a table to view the
+contents.
+
+\begin{figure}[h!]
+\begin{center}
+%\gname{tablebrowser2}{6}
+\pngname{qcasabrowser1}{6}
+\caption{\label{fig:qcasabrowser1} {\tt browsetable}: The browser displays
+  the main table within a frame. You can scroll
+  through the data (x=columns of the {\tt MAIN} table, and y=the rows) or
+  select a specific page or row as desired.  By default, 1000 rows of
+  the table are loaded at a time, but you can step through the MS in batches.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+%\gname{tablebrowser3}{6}
+\pngname{qcasabrowser2}{6}
+\caption{\label{fig:qcasabrowser2} {\tt browsetable}: You can use the
+  tab for {\tt Table Keywords} to look at other tables within an MS.
+  You can then double-click on a table to view its contents.} 
+\hrulefill
+\end{center}
+\end{figure}
+ 
+\begin{figure}[h!]
+\begin{center}
+%\gname{tablebrowser4}{6}
+\pngname{qcasabrowser3}{6}
+\caption{\label{fig:qcasabrowser3} {\tt browsetable}: Viewing the 
+{\tt SOURCE} table of the MS.}
+\hrulefill
+\end{center}
+\end{figure}
+
+Note that one useful feature is that you can Edit the table and its
+contents.  Use the {\tt Edit table} choice from the {\bf Edit} menu,
+or click on the {\bf Edit} button.  Be careful with this, and make
+a backup copy of the table before editing!
+
+Use the {\tt Close Tables and Exit} option from the {\bf Files} menu
+to quit the {\tt casabrowser}.
+
+There are alot of features in the {\tt casabrowser}
+that are not fully documented here.  Feel free to explore the
+capabilities such as plotting and sorting!
+
+{\bf ALERT:} You are likely to find that the {\tt casabrowser}
+needs to get a table lock before proceeding.  Use the {\tt clearstat}
+command to clear the lock status in this case.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Examples of Data Display and Flagging}
+\label{section:edit.examples}
+
+See the scripts provied in Appendix~\ref{chapter:scripts} for examples of
+data examination and flagging.  In particular, we refer
+the interested user to the demonstrations for:
+\begin{itemize}
+\item NGC5921 (VLA HI) --- a quick demo of basic CASA capabilities
+      (\ref{section:scripts.ngc5921})
+\item Jupiter (VLA 6cm continuum polarimetry) --- more extensive
+      editing
+      (\ref{section:scripts.jupiter})
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
