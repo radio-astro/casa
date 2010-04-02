@@ -313,31 +313,36 @@ Table~\ref{BASELINE:TAB}.
 \hline
 {\bf Specification} & {\bf Meaning}\\
 \hline
-ANT    & Select only cross-correlation baselines between all the \\
-       & antennas in ANT and {\it all} other available antennas \\
+ANT    & Select only cross-correlation baselines between all the\\
+       & antennas in ANT and {\it all} other available antennas\\
 \hline
-ANT\&  & Select only cross-correlation baselines between antennas \\
+ANT\&  & Select only cross-correlation baselines between antennas\\
        & in ANT only\\
 \hline
-ANT1\&ANT2 & Select only cross-correlation baselines between \\
+ANT1\&ANT2 & Select only cross-correlation baselines between\\
        & antennas in ANT1 and ANT2\\
 \hline
-ANT\&\& & Select cross- {\it and} auto-correlation baselines \\
+ANT\&\& & Select cross- {\it and} auto-correlation baselines\\
        &between all the antennas in ANT only\\
 \hline
-ANT1\&\&ANT2 & Select cross- {\it and} auto-correlation baselines \\
+ANT\&\&* & Select cross- {\it and} auto-correlation baselines\\
+       &between all the antennas in ANT and {\it all} other\\
+       &available antennas\\
+\hline
+ANT1\&\&ANT2 & Select cross- {\it and} auto-correlation baselines\\
        & between antennas in ANT1 and ANT2\\
 \hline
-ANT\&\&\&  & Select {\it only} auto-correlation baselines for \\
+ANT\&\&\&  & Select {\it only} auto-correlation baselines for\\
        &antennas in ANT\\
 \hline
-!ANT  & Excludes all baselines involving antennas in ANT. ANT can be \\
-      & any of the above expressions \\
+!ANT  & Excludes all baselines involving antennas in ANT.\\
+      & ANT can be any of the above expressions\\
 \hline
-ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions. This\\
-             & selects only cross-correlation baselines between all the \\
-             & antennas in ANT1 and {\it all} other available antennas\\
-             & {\bf except} those involving antennas in ANT2. \\ 
+ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions.\\
+             & This selects only cross-correlation baselines\\
+             & between all the antennas in ANT1 and {\it all}\\
+             & other available antennas {\bf except} those involving\\ 
+             & antennas in ANT2.\\ 
 \hline
 \end{tabular}
 \end{center}
