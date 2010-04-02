@@ -161,7 +161,11 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 			 antenna = []
 			 timerange = []
 			 for ant in keylist:
-			    antenna.append(ant)
+			    if ocorr_mode=='co':
+			       antenna.append(ant)
+			    else:
+			       # append &&* to catch auto-correlations
+			       antenna.append(ant+'&&*')
 			    timerange.append(flagants[ant])
 			 # save the params in a dictionary
 			 flags['antenna'] = antenna
