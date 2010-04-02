@@ -2025,8 +2025,8 @@ NNLS algorithm</shortdescription>
 
 Solve for the model brightness using the Briggs' Non-Negative Least
 Squares algorithm. Since NNLS works only on the $I$ image, the $I$
-pixels in the current image is set to zero where the fluxmask is $&gt;
-0.0$, then NNLS is used to estimate the $I$-pixels for that region.
+pixels in the current image is set to zero where the fluxmask is $&gt; 0.0$,
+then NNLS is used to estimate the $I$-pixels for that region.
 The deconvolution is performed on the residual image calculated from
 the visibility data currently selected. Hence the first step performed
 in clean is to transform the current model to fill in the MODEL\_DATA
