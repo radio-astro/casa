@@ -831,7 +831,9 @@ class asapplotter:
         else:
             poleval = scan._getpollabel(scan.getpol(row),scan.poltype())
         d = {'b': "Beam "+str(scan.getbeam(row)),
-             's': scan._getsourcename(row),
+             #'s': scan._getsourcename(row),
+             's': "Scan "+str(scan.getscan(row))+\
+                  " ("+str(scan._getsourcename(row))+")",
              'i': "IF"+str(scan.getif(row)),
              'p': poleval,
              't': str(scan.get_time(row)) }

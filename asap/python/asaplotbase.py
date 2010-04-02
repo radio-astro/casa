@@ -726,8 +726,10 @@ class asaplotbase:
             yts = fp.get_size_in_points() - (self.rows)/2
             for sp in self.subplots:
                 ax = sp['axes']
-                s = ax.title.get_size()
-                tsize = s-(self.cols+self.rows)
+                #s = ax.title.get_size()
+                #tsize = s-(self.cols+self.rows)
+                s=FP(size=rcParams['axes.titlesize'])
+                tsize = s.get_size_in_points()-(self.cols)/2
                 ax.title.set_size(tsize)
                 fp = FP(size=rcParams['axes.labelsize'])
                 setp(ax.get_xticklabels(), fontsize=xts)
