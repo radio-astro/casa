@@ -858,7 +858,7 @@ void QtProfile::wcChanged(const String c,
       if (ok) {
         if(ordersOfM!=0){
           // correct display y axis values
-          for (uInt i = 0; i < z_yval.size(); i++) {
+          for (uInt i = 0; i < yval.size(); i++) {
             yval(i) *= pow(10.,ordersOfM);
           }
         }
