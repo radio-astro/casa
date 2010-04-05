@@ -184,7 +184,6 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
     wpConvFunc_p=other.wpConvFunc_p;
-    useDoubleGrid_p=other.useDoubleGrid_p;
   };
   return *this;
 };

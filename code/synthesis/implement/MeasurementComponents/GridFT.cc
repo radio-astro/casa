@@ -165,8 +165,7 @@ GridFT& GridFT::operator=(const GridFT& other)
     offsetLoc=other.offsetLoc;
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
-    noPadding_p=other.noPadding_p;
-    useDoubleGrid_p=other.useDoubleGrid_p;	
+    noPadding_p=other.noPadding_p;	
   };
   return *this;
 };
