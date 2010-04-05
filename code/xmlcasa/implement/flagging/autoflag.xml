@@ -561,8 +561,8 @@ bins with less than {\tt maxpop} points are flagged.
 
 \item If the {\tt thr} parameter is specified, a probability cut-off is
 selected. This is done as follows. The cumulative probability $p(N)$, defined
-as the probability for a given point to reside in a bin of a population $\le
-N$, is first computed. All bins of population $N$, where $p(N)&lt;${\tt thr}, 
+as the probability for a given point to reside in a bin of a population $\le N$,
+is first computed. All bins of population $N$, where $p(N)&lt;${\tt thr}, 
 are then flagged.
 
 In simpler terms, using {\tt thr=0.01} will flag up to 1\% of your data

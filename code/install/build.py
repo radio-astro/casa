@@ -1,11 +1,23 @@
 #!/usr/bin/python
-# This script creates documentation on how to build casa
-# arguments:
-# - SVN repository URL
-# - SVN repository revision
-# - build type: full, incremental, test
+#
+# Usage: build.py URL REVISION TYPE [dry]
+#
+# This script builds CASA and creates documentation of the build procedure.
+# The documentation is generated in $HOME/documentation/
+# Possible values for TYPE are full/incremental/test.
+#
+# Examples:
+#    Build from scratch and generate documentation:
+#
+#       $ build.py https://svn.cv.nrao.edu/svn/casa/active 10809 full
+#
+#    Dry run, just generate the documentation:
+#
+#       $ build.py https://svn.cv.nrao.edu/svn/casa/active 10809 full dry
+#
 #
 # Supported platforms: RH5.3 32bit, RH5.3 64bit, OSX 10.5, 10.6
+#
 
 import subprocess
 import time
@@ -55,7 +67,7 @@ class sh_builder(builder):
         self.definitions = {}
         self.file.write("#!/bin/bash\n")
         self.file.write("#\n")
-        self.file.write("# This Bourne Shell script installs CASA from scratch. It was generated from the command\n")
+        self.file.write("# This Bourne Shell script does a " + type + " build of CASA. It was generated from the command\n")
         self.file.write("#\n")
         self.file.write("#         " + string.join(sys.argv) + "\n")
         self.file.write("#\n")
@@ -190,7 +202,8 @@ class exe_builder(builder):
 
     def do(self, comment, *texts):
         cmd = self._transform(texts)
-        print cmd
+        if not self.dry:
+            print cmd
         sys.stdout.flush()
         if not self.dry:
 
@@ -222,14 +235,16 @@ class exe_builder(builder):
     def chdir(self, *texts):
         # Substitute any environment variables by calling the shell
         dir = commands.getoutput("echo " + self._transform(texts))
-        print "cd", dir
+        if not self.dry:
+            print "cd", dir
         sys.stdout.flush()
         if not self.dry:
             os.chdir(dir)
 
     def set_env(self, env, *texts):
         val = commands.getoutput("echo " + self._transform(texts))
-        print env, "=", val
+        if not self.dry:
+            print env, "=", val
         sys.stdout.flush()
         if not self.dry:
             os.environ[env] = val
@@ -239,7 +254,7 @@ class exe_builder(builder):
 # The output of the execution is inserted
 # in the HTML
 class exe_and_doc_builder(builder):
-    def __init__(self, dir, oss, arch, dry, type):
+    def __init__(self, dir, oss, arch, type, dry):
         self.type = type
         self.dir = dir
         if not os.path.isdir(dir):
@@ -269,7 +284,7 @@ class exe_and_doc_builder(builder):
     def comment(self, comment, *texts):
         self.html.comment(comment, *texts)
         self.exe.comment(comment, *texts)
-        self.sh.do(comment, *texts)
+        self.sh.comment(comment, *texts)
     
     def chdir(self, *texts):
         self.html.chdir(*texts)
@@ -285,7 +300,6 @@ class exe_and_doc_builder(builder):
 def build_casa(b, url, revision, type, ops, architecture):
 
     builddirs = {'Linux' : {'i386' : 'linux_gnu', 'x86_64' : 'linux_64b'}, 'Darwin' : {'10.5' : 'darwin', '10.6': 'darwin'}}
-
     if not ops in builddirs.keys() or \
             not architecture in builddirs[ops].keys():
         raise Exception, ("Unknown OS and architecture " + str(ops) + ", " + str(architecture) + ", must be one of " + str(builddirs))
@@ -607,11 +621,13 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.do("", "make install")        
 
 def main(argv):
-    if len(argv) != 4:
-        raise Exception("Usage: %s svn_url svn_revision build_type" % argv[0])
+    if len(argv) < 4:
+        raise Exception("Usage: %s svn_url svn_revision build_type [dry]" % argv[0])
     url = argv[1]
     revision = argv[2]
     type = argv[3]
+
+    assert type in ["full", "incremental", "test"]
 
     # Determine architecture
     oss = os.uname()[0]
@@ -630,15 +646,20 @@ def main(argv):
         b = html_builder('/tmp/build.html', oss, arch, type)
         build_casa(b, url, revision, type, oss, arch)
 
-        s = sh_builder('./build.sh', type)
+        s = sh_builder('/tmp/build.sh', type)
         build_casa(s, url, revision, type, oss, arch)
         s = 123  # force destructor call
         sys.exit(0)
 
-    print "Going to build on", oss, arch
+    dry = (len(argv) > 4)
+    doc_dir = os.getenv('HOME') + "/documentation/" + type + "-" + oss + "-" + arch
+    if dry:
+        print "Writing documentation for", oss, arch, "to", doc_dir
+    else:
+        print "Going to build on", oss, arch
     sys.stdout.flush()
-    b = exe_and_doc_builder(os.getenv('HOME') + "/documentation/" + type + "-" + oss + "-" + arch,
-                            oss, arch, dry = False, type = type)
+    b = exe_and_doc_builder(doc_dir,
+                            oss, arch, type = type, dry = dry)
     build_casa(b, url, revision, type, oss, arch)
     return 0          
 

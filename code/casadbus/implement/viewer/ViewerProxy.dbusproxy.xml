@@ -32,7 +32,7 @@
     </method>
     <method name="cwd">
       <arg direction="in" type="s" name="new_path" />
-      <arg direction="out" type="s" />
+      <arg direction="out" type="v" />
     </method>
     <method name="panel">
       <arg direction="in" type="s" name="type" />

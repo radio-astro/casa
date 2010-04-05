@@ -1,7 +1,4 @@
 <ui version="4.0" >
- <author></author>
- <comment></comment>
- <exportmacro></exportmacro>
  <class>LineEditorItem</class>
  <widget class="QWidget" name="LineEditorItem" >
   <property name="geometry" >
@@ -22,11 +19,11 @@
    <string>lineEditorItem</string>
   </property>
   <layout class="QHBoxLayout" >
-   <property name="margin" >
-    <number>1</number>
-   </property>
    <property name="spacing" >
     <number>3</number>
+   </property>
+   <property name="margin" >
+    <number>1</number>
    </property>
    <item>
     <widget class="QLabel" name="nameLabel" >
@@ -55,7 +52,7 @@
      <property name="sizeType" >
       <enum>QSizePolicy::MinimumExpanding</enum>
      </property>
-     <property name="sizeHint" >
+     <property name="sizeHint" stdset="0" >
       <size>
        <width>0</width>
        <height>0</height>
@@ -65,10 +62,10 @@
    </item>
    <item>
     <layout class="QVBoxLayout" >
-     <property name="margin" >
+     <property name="spacing" >
       <number>0</number>
      </property>
-     <property name="spacing" >
+     <property name="margin" >
       <number>0</number>
      </property>
      <item>
@@ -90,26 +87,6 @@
     </layout>
    </item>
    <item>
-    <widget class="QToolButton" name="tool" >
-     <property name="text" >
-      <string/>
-     </property>
-     <property name="icon" >
-      <iconset resource="QtAutoGui.qrc" >:/icons/spanner.png</iconset>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="labelOk" >
-     <property name="text" >
-      <string/>
-     </property>
-     <property name="pixmap" >
-      <pixmap resource="QtAutoGui.qrc" >:/icons/tick.png</pixmap>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QRadioButton" name="radioButton" >
      <property name="text" >
       <string>auto apply</string>
@@ -121,7 +98,6 @@
    </item>
   </layout>
  </widget>
- <pixmapfunction></pixmapfunction>
  <resources>
   <include location="QtAutoGui.qrc" />
  </resources>

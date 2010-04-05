@@ -156,23 +156,15 @@ macro( casa_add_module module )
     # (if not already contained in _INCLUDE_DIRS)
     foreach( _dir ${${_dep}_INCLUDE_DIRS} )
 
-      list( FIND ${module}_INCLUDE_DIRS ${_dir} _exists )
-      if( _exists EQUAL -1 )
-        set( ${module}_INCLUDE_DIRS 
-          ${${module}_INCLUDE_DIRS}
-          ${_dir} )
-      endif()
+      casa_append( ${module}_INCLUDE_DIRS ${_dir} )
+
     endforeach()
 
     # DEFINITIONS 
     foreach( _def ${${_dep}_DEFINITIONS} )
 
-      list( FIND ${module}_DEFINITIONS ${_def} _exists )
-      if( _exists EQUAL -1 )
-        set( ${module}_DEFINITIONS 
-          ${${module}_DEFINITIONS}
-          ${_def} )
-      endif()
+      casa_append( ${module}_DEFINITIONS ${_def} )
+
     endforeach()
 
     # LINK_TO 

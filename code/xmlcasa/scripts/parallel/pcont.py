@@ -272,6 +272,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
     os.system('rm -rf '+'tempmodel')
     if(not contclean):
+        print "Removing ", model, 'and', imagename+'.image'
         os.system('rm -rf '+model)
         os.system('rm -rf '+imagename+'.image')
     ###num of cpu per node
@@ -286,7 +287,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     numcpu=numcpu*len(hostnames)
     ###spw and channel selection
     spwsel,startsel,nchansel=findchansel(msname, spwids, numcpu)
-
+    
     out=range(numcpu)  
     c.pgc('from  parallel.parallel_cont import *')
     spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
@@ -314,14 +315,13 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     print 'number of channels', numchanperms
     minfreq=np.min(allfreq)
     band=np.max(allfreq)-minfreq
-    minfreq=minfreq-(band/2.0);
+    ##minfreq=minfreq-(band/2.0);
     ###need to get the data selection for each process here
     ## this algorithm is a poor first try
     if(minfreq <0 ):
         minfreq=0.0
-    band=band*1.5;
-    freq='"%s"'%(str(minfreq)+'Hz')
-    band='"%s"'%(str(band)+'Hz')
+    freq='"%s"'%(str((minfreq+band/2.0))+'Hz')
+    band='"%s"'%(str((band*1.1))+'Hz')
     tb.done()
     ###define image names
     imlist=[]
@@ -344,7 +344,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
-            c.pgc('a.cfcache='+'"'+str(cfcachelist[k])+'"');
+            c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
             runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel[k])+', numchan='+str(nchansel[k])+', field="'+str(field)+'", spw='+str(spwsel[k])+', freq='+freq+', band='+band+', imname='+imnam+')'
             print 'command is ', runcomm
             out[k]=c.odo(runcomm,k)

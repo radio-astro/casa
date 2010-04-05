@@ -155,6 +155,8 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     firstMovingDir_p=other.firstMovingDir_p;
     freqInterpMethod_p=other.freqInterpMethod_p;
     pointingDirCol_p=other.pointingDirCol_p;
+	spwChanSelFlag_p.resize();
+	spwChanSelFlag_p=other.spwChanSelFlag_p;
 
   };
   return *this;

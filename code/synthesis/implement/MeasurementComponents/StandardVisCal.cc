@@ -2479,6 +2479,394 @@ void XMueller::solveOneVB(const VisBuffer& vb) {
 
 
 // **********************************************************
+//  XJones: position angle for circulars (antenna-based
+//
+
+XJones::XJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  SolvableVisJones(vs)    // immediate parent
+{
+  if (prtlev()>2) cout << "X::X(vs)" << endl;
+
+  cout << "NB: You are using an EXPERIMENTAL antenna-based X calibration." << endl;
+
+}
+
+XJones::XJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  SolvableVisJones(nAnt)
+{
+  if (prtlev()>2) cout << "X::X(nAnt)" << endl;
+}
+
+XJones::~XJones() {
+  if (prtlev()>2) cout << "X::~X()" << endl;
+}
+
+void XJones::setApply(const Record& apply) {
+
+  SolvableVisCal::setApply(apply);
+
+  // Force calwt to False 
+  calWt()=False;
+
+}
+
+
+void XJones::setSolve(const Record& solvepar) {
+
+  SolvableVisCal::setSolve(solvepar);
+
+  // Force calwt to False 
+  calWt()=False;
+
+  // For X insist preavg is meaningful (5 minutes or user-supplied)
+  if (preavg()<0.0)
+    preavg()=300.0;
+
+}
+
+void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
+
+  if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
+
+  MeasurementSet ms(msName());
+  MSFieldColumns msfldcol(ms.field());
+
+  // Inform logger/history
+  logSink() << "Solving for " << typeName()
+            << LogIO::POST;
+
+  // Initialize the svc according to current VisSet
+  //  (this counts intervals, sizes CalSet)
+  Vector<Int> nChunkPerSol;
+  Int nSol = sizeUpSolve(vs,nChunkPerSol);
+
+  // The iterator, VisBuffer
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  //  cout << "nSol = " << nSol << endl;
+  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;
+
+  Vector<Int> slotidx(vs.numberSpw(),-1);
+
+  Int nGood(0);
+  vi.originChunks();
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
+    
+    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
+
+      // Current _chunk_'s spw
+      Int spw(vi.spectralWindow());
+
+      // Abort if we encounter a spw for which a priori cal not available
+      if (!ve.spwOK(spw))
+        throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+
+
+      // Collapse each timestamp in this chunk according to VisEq
+      //  with calibration and averaging
+      for (vi.origin(); vi.more(); vi++) {
+
+        // Force read of the field Id
+        vb.fieldId();
+
+        // This forces the data/model/wt I/O, and applies
+        //   any prior calibrations
+        ve.collapse(vb);
+
+        // If permitted/required by solvable component, normalize
+        if (normalizable())
+	  vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
+
+        // Accumulate collapsed vb in a time average
+        vba.accumulate(vb);
+      }
+      // Advance the VisIter, if possible
+      if (vi.moreChunks()) vi.nextChunk();
+
+    }
+
+    // Finalize the averged VisBuffer
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff());
+
+    // Establish meta-data for this interval
+    //  (some of this may be used _during_ solve)
+    //  (this sets currSpw() in the SVC)
+    Bool vbOk=syncSolveMeta(svb,-1);
+
+    Int thisSpw=spwMap()(svb.spectralWindow());
+    slotidx(thisSpw)++;
+
+    // Fill solveCPar() with 1, nominally, and flagged
+    // TBD: drop unneeded basline-dependence    
+    solveCPar()=Complex(1.0);
+    solveParOK()=False;
+    
+    if (vbOk && svb.nRow()>0) {
+
+      // solve for the R-L phase term in the current VB
+      solveOneVB(svb);
+
+      if (solveParOK()(0,0,0))
+	logSink() << "Position angle offset solution for " 
+		  << msfldcol.name()(currField())
+		  << " (spw = " << currSpw() << ") = "
+		  << arg(solveCPar()(0,0,0))*180.0/C::pi/2.0
+		  << " deg."
+		  << LogIO::POST;
+      else
+	logSink() << "Position angle offset solution for " 
+		  << msfldcol.name()(currField())
+		  << " (spw = " << currSpw() << ") "
+		  << " was not determined (insufficient data)."
+		  << LogIO::POST;
+	
+      nGood++;
+    }
+
+    keep(slotidx(thisSpw));
+    
+  }
+  
+  logSink() << "  Found good "
+            << typeName() << " solutions in "
+            << nGood << " intervals."
+            << LogIO::POST;
+
+  // Store whole of result in a caltable
+  if (nGood==0)
+    logSink() << "No output calibration table written."
+              << LogIO::POST;
+  else {
+
+    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+    //  TBD
+    // globalPostSolveTinker();
+
+    // write the table
+    store();
+  }
+
+}
+
+
+// File a solved solution (and meta-data) into a slot in the CalSet
+void XJones::keep(const Int& slot) {
+
+  if (prtlev()>4) cout << " M::keep(i)" << endl;
+
+  if (slot<cs().nTime(currSpw())) {
+    // An available valid slot
+
+   
+    //    cout << "Result: solveCPar() = " << solveCPar() << endl;
+
+    //    cout << "   Amp: " << amplitude(solveCPar()) << endl;
+    //    cout << " Phase: " << phase(solveCPar()/solveCPar()(0,0,0))*180.0/C::pi << endl;
+
+    //    cout << "Result: solveParOK() = " << solveParOK() << endl;
+
+    cs().fieldId(currSpw())(slot)=currField();
+    cs().time(currSpw())(slot)=refTime();
+
+    // Only stop-start diff matters
+    //  TBD: change CalSet to use only the interval
+    //  TBD: change VisBuffAcc to calculate exposure properly
+    cs().startTime(currSpw())(slot)=0.0;
+    cs().stopTime(currSpw())(slot)=interval();
+
+    // For now, just make these non-zero:
+    cs().iFit(currSpw()).column(slot)=1.0;
+    cs().iFitwt(currSpw()).column(slot)=1.0;
+    cs().fit(currSpw())(slot)=1.0;
+    cs().fitwt(currSpw())(slot)=1.0;
+
+    IPosition blc4(4,0,       0,           0,        slot);
+    IPosition trc4(4,nPar()-1,nChanPar()-1,nElem()-1,slot);
+    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
+    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
+
+    cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
+
+  }
+  else
+    throw(AipsError("XJones::keep: Attempt to store solution in non-existent CalSet slot"));
+
+}
+
+void XJones::calcAllJones() {
+
+  //  cout << "currJElem().shape() = " << currJElem().shape() << endl;
+
+  //  put the par in the first position on the diagonal
+  //  [p 0]
+  //  [0 1]
+  
+
+  // Set first element to the parameter
+  IPosition blc(3,0,0,0);
+  IPosition trc(3,0,nChanMat()-1,nElem()-1);
+  currJElem()(blc,trc)=currCPar();
+  currJElemOK()(blc,trc)=currParOK();
+  
+  // Set second diag element to one
+  blc(0)=trc(0)=1;
+  currJElem()(blc,trc)=Complex(1.0);
+  currJElemOK()(blc,trc)=currParOK();
+
+}
+
+
+void XJones::solveOneVB(const VisBuffer& vb) {
+
+  // This just a simple average of the cross-hand
+  //  visbilities...
+
+  Int nChan=vb.nChannel();
+
+  Complex d,md;
+  Float wt,a;
+  Vector<DComplex> rl(nChan,0.0),lr(nChan,0.0);
+  Double sumwt(0.0);
+  for (Int irow=0;irow<vb.nRow();++irow) {
+    if (!vb.flagRow()(irow) &&
+	vb.antenna1()(irow)!=vb.antenna2()(irow)) {
+
+      for (Int ich=0;ich<nChan;++ich) {
+	if (!vb.flag()(ich,irow)) {
+	  
+	  // A common weight for both crosshands
+	  // TBD: we should probably consider this carefully...
+	  //  (also in D::guessPar...)
+	  wt=Double(vb.weightMat()(1,irow)+
+		    vb.weightMat()(2,irow))/2.0;
+
+	  // correct weight for model normalization
+	  //	  a=abs(vb.modelVisCube()(1,ich,irow));
+	  //	  wt*=(a*a);
+	  
+	  if (wt>0.0) {
+	    // Cross-hands only
+	    for (Int icorr=1;icorr<3;++icorr) {
+	      //	      md=vb.modelVisCube()(icorr,ich,irow);
+	      d=vb.visCube()(icorr,ich,irow);
+	      
+	      if (abs(d)>0.0) {
+		
+		if (icorr==1) 
+		  rl(ich)+=DComplex(Complex(wt)*d);
+		//		  rl(ich)+=DComplex(Complex(wt)*d/md);
+		else
+		  lr(ich)+=DComplex(Complex(wt)*d);
+		//		  lr(ich)+=DComplex(Complex(wt)*d/md);
+		
+		sumwt+=Double(wt);
+		
+	      } // abs(d)>0
+	    } // icorr
+	  } // wt>0
+	} // !flag
+      } // ich
+    } // !flagRow
+  } // row
+  
+
+  //  cout << "spw = " << currSpw() << endl;
+  //  cout << " rl = " << rl << " " << phase(rl)*180.0/C::pi << endl;
+  //  cout << " lr = " << lr << " " << phase(lr)*180.0/C::pi << endl;
+
+  // Record results
+  solveCPar()=Complex(1.0);
+  solveParOK()=False;
+  for (Int ich=0;ich<nChan;++ich) {
+    // combine lr with rl
+    rl(ich)+=conj(lr(ich));
+  
+    // Normalize to unit amplitude
+    //  (note that the phase result is insensitive to sumwt)
+    Double amp=abs(rl(ich));
+    // For now, all antennas get the same solution
+    IPosition blc(3,0,0,0);
+    IPosition trc(3,0,0,nElem()-1);
+    if (sumwt>0 && amp>0.0) {
+      rl(ich)/=DComplex(amp);
+      blc(1)=trc(1)=ich;
+      solveCPar()(blc,trc)=Complex(rl(ich));
+      solveParOK()(blc,trc)=True;
+    }
+  }
+  
+}
+
+// **********************************************************
+//  XfJones: CHANNELIZED position angle for circulars (antenna-based)
+//
+
+XfJones::XfJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  XJones(vs)              // immediate parent
+{
+  if (prtlev()>2) cout << "Xf::Xf(vs)" << endl;
+
+  cout << "NB: You are using an EXPERIMENTAL antenna-based and CHANNEL-DEPENDENT X calibration." << endl;
+
+}
+
+XfJones::XfJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  XJones(nAnt)
+{
+  if (prtlev()>2) cout << "Xf::Xf(nAnt)" << endl;
+}
+
+XfJones::~XfJones() {
+  if (prtlev()>2) cout << "Xf::~Xf()" << endl;
+}
+
+void XfJones::initSolvePar() {
+
+  if (prtlev()>3) cout << " XJones::initSolvePar()" << endl;
+
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+
+    currSpw()=ispw;
+
+    solveCPar().resize(nPar(),nChanPar(),nAnt());
+    solveCPar()=Complex(1.0);
+    solveParOK().resize(nPar(),nChanPar(),nAnt());
+    solveParOK()=True;
+    solveParErr().resize(nPar(),nChanPar(),nAnt());
+    solveParErr()=0.0;
+    solveParSNR().resize(nPar(),nChanPar(),nAnt());
+    solveParSNR()=0.0;
+
+  }
+  currSpw()=0;
+
+}
+
+
+
+
+
+
+// **********************************************************
 //  KJones Implementations
 //
 

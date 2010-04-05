@@ -32,6 +32,18 @@ macro( dump )
   endforeach()
 endmacro()
 
+#
+# Append element to list, if that element does not already exist in the list
+#
+macro( casa_append l x )
+
+  list( FIND ${l} ${x} _exists )
+  if( _exists EQUAL -1 )
+    set( ${l} ${${l}} ${x} ${ARGN} )
+  endif()
+
+endmacro()
+
 
 #
 # How to generate .h from .xml for DBUS

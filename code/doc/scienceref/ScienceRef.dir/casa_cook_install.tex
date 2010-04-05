@@ -1,0 +1,52 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+
+\chapter[Appendix: Obtaining and Installing CASA]{Obtaining and Installing CASA}
+\label{chapter:install}
+
+\section{Installation Script}
+\label{section:install.script}
+
+Currently you must be able to log into your system as the root user or
+an administrator user to install CASA. 
+
+The easiest way to install CASA on a RedHat Enterprise Linux (or
+compatible) system is to use our installation script,
+load-casapy. This script will ftp the CASA RPMs and install them. To
+use it, first use the link above to download it to your hard
+disk. Next, make sure execute permission is set for the file. 
+
+Install CASA into /usr by logging in as root and running:
+
+load-casapy --root
+
+This option will install CASA into /usr, but it can only be run by the root user.
+
+Alternatively, you can visit our FTP server, download the rpms, and
+install them by hand. Note: you must be root/administrater to install
+CASA in this manner. 
+
+See the following for more details:
+
+https://wikio.nrao.edu/bin/view/Software/ObtainingCASA
+
+\section{Startup}
+\label{section:install.startup}
+
+This section assumes that CASA has been installed on your LINUX or OSX
+system. {\it For NRAO-AOC testers, you should do the following on an AOC
+RHE4 machine:} 
+
+\small
+\begin{verbatim}
+  > . /home/casa/casainit.sh
+  or
+  > source /home/casa/casainit.csh
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

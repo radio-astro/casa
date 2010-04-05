@@ -1,0 +1,1160 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-08-24  quick update
+% DK  2007-10-10  beta release
+% STM 2007-10-10  spell-check
+
+\chapter{Visualization With The CASA Viewer}
+\label{chapter:display}
+
+This chapter describes how to display data with the {\tt casaviewer}
+either as a stand-alone or through the {\tt viewer} task. You can
+display both images and Measurement Sets.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Starting the {\tt viewer}}
+\label{section:display.start}
+
+\begin{figure}[h!]
+\pngname{viewer_n5921_1}{3.25}
+\pngname{viewer_n5921_2}{3.25}
+\caption{\label{fig:viewer_start} The {\bf Viewer Display Panel} (left) and 
+{\bf Data Display Options} (right) panels that appear when the 
+{\tt viewer} is called with the image cube from NGC5921
+({\tt viewer('ngc5921.usecase.clean.image')}).  The initial display is
+of the first channel of the cube.}
+\hrulefill
+\end{figure}
+
+Within the casapy environment, there is a {\tt viewer} task
+which can be used to call up an image.  The inputs are:
+\small
+\begin{verbatim}
+#  viewer :: View an image or visibility data set.
+
+infile              =         ''   #   Name of file to visualize
+filetype            =    'image'   #   Type of file (ms, image, or vector)
+\end{verbatim}
+\normalsize
+
+Examples of starting the {\tt viewer}:
+\small
+\begin{verbatim}
+  CASA <4>: viewer()
+
+  CASA <5>: viewer('ngc5921.usecase.ms','ms')
+
+  CASA <6>: viewer('ngc5921.usecase.clean.image')
+\end{verbatim}
+\normalsize
+The first of these starts an empty {\tt viewer}, which will bring up
+an empty {\bf Viewer Display Panel} 
+(\S~\ref{section:display.viewerGUI.displaypanel}) and a {\bf Load Data} panel 
+(\S~\ref{section:display.viewerGUI.load}) .  The second starts the
+{\tt viewer} loaded with a Measurement Set.  The last of these examples
+starts the {\tt viewer} with an image cube 
+(see Figure~\ref{fig:viewer_start}).
+
+{\bf BETA ALERT:} the {\tt viewer} task cannot currently figure out whether
+a given file is an image or MS, so for now you need to specify 
+{\tt filetype='ms'} explicitly if you want to view an MS in raster mode.
+
+\begin{figure}[h!]
+\pngname{viewer_n5921ms_1}{3.25}
+\pngname{viewer_n5921ms_2}{3.25}
+\caption{\label{fig:viewer_start_ms} The {\bf Viewer Display Panel}
+(left) and {\bf Data Display Options} (right) panels that appear when the 
+{\tt viewer} is called with the NGC5921 Measurement Set
+({\tt viewer('ngc5921.usecase.ms','ms')}).} 
+\hrulefill
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Starting the {\tt casaviewer} outside of {\tt casapy}}
+\label{section:display.start.casaviewer}
+
+The {\tt casaviewer} is the name of the stand-alone application that is
+available with a CASA installation.  From outside {\tt casapy}, you
+can call this command from the command line in the following ways:
+
+Start the {\tt casaviewer} with no default image/MS loaded; it will
+pop up the {\bf Load Data} frame 
+(\S~\ref{section:display.viewerGUI.load}) and a blank, 
+standard {\bf Viewer Display Panel} 
+(\S~\ref{section:display.viewerGUI.displaypanel}).
+
+\small
+\begin{verbatim}
+  > casaviewer &
+\end{verbatim}
+\normalsize
+
+Start the {\tt casaviewer} with the selected image; the image will be
+displayed in the {\tt Viewer Display Panel}. If the image is a cube (more
+than one plane for frequency or polarization) then it will be one the
+first plane of the cube.
+
+\small
+\begin{verbatim}
+  > casaviewer image_filename &
+\end{verbatim}
+\normalsize
+
+Start the {\tt casaviewer} with the selected Measurement Set; note the
+additional parameter indicating that it is an ms; the default is
+'image'.
+
+\small
+\begin{verbatim}
+  > casaviewer ms_filename ms &
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The {\tt viewer} GUI}
+\label{section:display.viewerGUI}
+
+The CASA {\tt viewer} application consists of a number of
+graphical user interfaces (GUIs) that are mouse cursor and button
+controlled.  There are a number of panels to this GUI. 
+
+We describe the {\bf Viewer Display Panel} 
+(\S~\ref{section:display.viewerGUI.displaypanel}) and the
+{\bf Load Data - Viewer} 
+(\S~\ref{section:display.viewerGUI.load})
+below, as these are common to whether
+you are viewing and image or MS.  The other panels are context
+specific and described in the following sections on viewing
+images (\S~\ref{section:display.image}) and 
+Measurement Sets (\S~\ref{section:display.ms}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{The Viewer Display Panel}
+\label{section:display.viewerGUI.displaypanel}
+
+% \begin{figure}[h!]
+% \gname{viewer0}{4}
+% \caption{\label{fig:viewer0} Viewer Display Panel with no data
+%   loaded. Each section of the GUI is explained below} 
+% \hrulefill
+% \end{figure}
+ 
+The Viewer Display Panel GUI is the the panel that contains the
+image or MS display.  This is shown in the left panels of 
+Figures~\ref{fig:viewer_start} and \ref{fig:viewer_start_ms}.
+Note that this panel is the same whether an image or MS is
+being displayed.
+ 
+At the top of the Viewer Display Panel GUI are the menus:
+\begin{itemize}
+\item {\bf Data}
+  \begin{itemize}
+      \item  {\tt Open} --- open an image from disk
+      \item  {\tt Register} --- register/unregister selected image (menu
+             expands to the right containing all loaded images) 
+      \item  {\tt Close} --- close selected image (menu expands to the right)
+      \item  {\tt Adjust} --- open the Data Display Options ('Adjust') panel 
+      \item  {\tt Print} --- print the displayed image
+      \item  {\tt Close Panel} --- close the Viewer Display Panel (will exit if
+             this is the last display panel open)
+      \item  {\tt Quit Viewer} --- close all display panels and exit
+  \end{itemize}
+\item {\bf Display Panel}
+  \begin{itemize}
+      \item {\tt New Panel} --- create a new Viewer Display Panel
+      \item {\tt Panel Options} --- open the Display Panel's options window
+      \item {\tt Print} --- print displayed image
+      \item {\tt Close Panel} --- close the Viewer Display Panel (will exit if
+            this is the last display panel open)
+  \end{itemize}
+\item {\bf Tools}
+  \begin{itemize}
+      \item {\tt Annotations} --- not yet available (greyed out) 
+      \item {\tt Spectral Profile} --- plot frequency/velocity profile
+                 of point or region of image
+  \end{itemize}
+\item {\bf View}
+  \begin{itemize}
+      \item {\tt Main Toolbar} --- show/hide top row of icons
+      \item {\tt Mouse Toolbar} --- show/hide second row of
+                 mouse-button action selection icons
+      \item {\tt Animator} --- show/hide tapedeck control panel
+      \item {\tt Position Tracking} --- show/hide bottom position
+                 tracking report box  
+  \end{itemize}
+\end{itemize}
+
+Below this is the {\bf Main Toolbar}, the top row of icons for fast
+access to some of these menu items:
+\begin{itemize}
+   \item {\bf folder} ({\tt Data:Open} shortcut) --- pulls up Load Data panel
+   \item {\bf wrench} ({\tt Data:Adjust} shortcut) --- pulls up Data Display
+              Options ('Adjust') panel 
+   \item {\bf panels} ({\tt Data:Register} shortcut) --- pull up 
+              menu of loaded data
+   \item {\bf delete} ({\tt Data:Close} shortcut) --- closes/unloads 
+              selected data
+   \item {\bf panel} ({\tt Display Panel:New Panel})
+   \item {\bf panel wrench} ({\tt Display Panel:Panel Options}) --- pulls up
+              the Display Panel's options window 
+   \item {\bf print} ({\tt Display Panel:Print}) --- print data
+   \item {\bf magnifier box} --- Zoom out all the way
+   \item {\bf magnifier plus} --- Zoom in (by a factor of 2)
+   \item {\bf magnifier minus} --- Zoom out (by a factor of 2)
+\end{itemize}
+
+Below this are the eight {\bf Mouse Tool} buttons. These allow assignment of
+{\it each} of the three mouse buttons to a different operation on the display
+area. Clicking a mouse tool icon will [re-]assign {\bf the mouse button that
+was clicked} to that tool.  The icons show which mouse button is currently
+assigned to which tool.  
+
+The 'escape' key can be used to cancel any mouse tool operation that was
+begun but not completed, and to erase any tool showing in the display area.
+\begin{itemize}
+   \item {\bf Zooming (magnifying glass icon):}
+     To zoom into a selected area, press the Zoom tool's mouse button
+     (the {\bf left} button by default) on one corner of the desired
+     rectangle and drag to the desired opposite corner. Once the button is
+     released, the zoom rectangle can still be moved or resized by dragging.
+     To complete the zoom, double-click inside the selected rectangle
+     (double-clicking {\it outside} it will zoom {\it out} instead).
+   \item {\bf Panning (hand icon):} Press the tool's mouse button on a 
+     point you wish to move, drag it to the position where you want it
+     moved, and release. {\it Note: The arrow keys, Page Up, Page Down,
+     Home and End keys can also be used to scroll through your data any time
+     you are zoomed in. (Click on the main display area first, to be sure
+     the keyboard is 'focused' there).}
+   \item {\bf Stretch-shift colormap fiddling (crossed arrows):} This is
+     usually the handiest color adjustment; it is assigned to the {\bf middle}
+     mouse button by default.
+   \item {\bf Brightness-contrast colormap fiddling (light/dark sun):} 
+   \item {\bf Positioning (bombsight):} This tool can place a 'crosshair'
+     marker on the display to select a position. It is used to flag
+     Measurement Set data or to select an image position for spectral profiles.
+     Click on the desired position with the tool's mouse button to place
+     the crosshair; once placed you can drag it to other locations.
+     Double-click is not needed for this tool.  
+     See \S~\ref{section:display.viewerGUI.displaypanel.region} for more
+     detail.
+   \item {\bf Rectangle and Polygon region drawing:} The rectangle region tool
+     is assigned to the {\bf right} mouse button by default. As with the zoom
+     tool, a rectangle region is generated by dragging with the assigned mouse
+     button; the selection is confirmed by double-clicking within the rectangle.
+     Polygon regions are created by clicking the assigned mouse button
+     at the desired vertices, clicking the final location twice to finish.
+     Once created, a polygon can be moved by dragging from inside, or
+     reshaped by dragging the handles at the vertices.  Double-click inside to
+     confirm region selection.
+     See \S~\ref{section:display.viewerGUI.displaypanel.region} for the uses
+     of this tool.
+   \item {\bf Polyline drawing:}
+     A polyline can be created by selecting this tool. It is manipulated
+     similarly to the polygon region tool: create segments by clicking at
+     the desired positions and then double-click to finish the line.
+     [Uses for this tool are still to be implemented].
+\end{itemize}
+
+The main {\bf Display Area} lies below the toolbars.
+
+Underneath the display area is an {\bf Animator} panel.  The most prominent
+feature is the ``tape deck'' which provides movement between image planes
+along a selected third dimension of an image cube. This set of buttons is
+only enabled when a registered image reports that it has more than one plane
+along its 'Z axis'. In the most common case, the animator selects the frequency
+channel. From left to right, the tape deck controls allow the user to:
+\begin{itemize}
+   \item {\bf rewind} to the start of the sequence (i.e., the first plane)
+   \item {\bf step backwards} by one plane
+   \item {\bf play backwards}, or repetitively step backwards
+   \item {\bf stop} any current play
+   \item {\bf play forward}, or repetitively step forward
+   \item {\bf step forward} by one plane
+   \item {\bf fast forward} to the end of the sequence
+\end{itemize}
+To the right of the tape deck is an editable text box indicating the
+current frame (channel) number and a label showing the total number of
+frames. Below that is a slider for controlling the (nominal) animation
+speed. To the right is a 'Full/Compact' toggle. In 'Full' mode (the
+default), a slider controlling frame number and a 'Blink mode' control
+are also available.
+
+'Blink' mode is useful when more than one raster image is
+registered. In that mode, the tapedeck controls {\it which image} is
+displayed at the moment rather than the particular image plane
+(set that in 'Normal' mode first). The registered images must cover the
+same portion of the sky and use the same coordinate projection.
+
+{\bf Note:} {\em In 'Normal' mode, it is advisable to have only ONE
+raster image registered at a time, to avoid confusion. Unregister (or
+close) the others).}
+
+At the bottom of the Display Panel is the {\bf Position Tracking} panel.  As
+the mouse moves over the main display, this panel shows information such as
+flux density, position (e.g. RA and Dec), Stokes, and frequency (or velocity),
+for the point currently under the cursor.  Each registered image/MS displays
+its own tracking information.  Tracking can be 'frozen' (and unfrozen again)
+with the space bar.  (Click on the main display area first, to be sure the
+keyboard is 'focused' there).
+
+The Animator or Tracking panels can be hidden or detached (and later
+re-attached) by using the boxes at upper right of the panels; this is
+useful for increasing the size of the display area.  (Use the 'View'
+menu to show a hidden panel again).  The individual tracking areas
+(one for each registered image) can be hidden using the checkbox at
+upper left of each area.
+
+%%%%%%
+
+\subsection{Region Selection and Positioning}
+\label{section:display.viewerGUI.displaypanel.region}
+
+You can draw regions or select positions on the display with the mouse,
+once you have selected the appropriate tool(s) on the {\tt Mouse Toolbar}
+(see above).
+
+The {\tt Rectangle region drawing} tool currently works for the following: 
+\begin{itemize}
+  \item Region statistics reporting for images,
+  \item Region spectral profiles for images, via the
+        {\tt Tools:Spectral Profile} menu,
+  \item Flagging of Measurement Sets
+\end{itemize}
+
+The {\tt Polygon region drawing} tool works for the first two of the
+above only (polygon region flagging of an MS is not supported).
+
+The {\tt Positioning} crosshair tool works for the last two of the above.
+
+The {\tt Spectral Profile} display
+(see \S~\ref{section:display.image.specprof}), when active, updates on
+each change of the rectangle, polygon, or crosshair.  
+Flagging with the crosshair also responds to single click or drag.
+
+Region statistics are printed in the terminal window (not the logger)
+by double-clicking the completed region.  Flagging a rectangular region
+also requires a double-click to take effect.
+
+Here is an example of region statistics from the viewer:
+\small
+\begin{verbatim}
+ngc5921.usecase.clean.image-contour     (Jy/beam)
+
+n           Std Dev     RMS         Mean        Variance    Sum
+52          0.01067     0.02412     0.02168     0.0001139   1.127     
+
+Flux        Med |Dev|   IntQtlRng   Median      Min         Max
+0.09526     0.009185    0.01875     0.02076     0.003584    0.04181   
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{The Load Data Panel}
+\label{section:display.viewerGUI.load}
+
+\begin{figure}[h!]
+\pngname{viewer_load}{6}
+\caption{\label{fig:viewer_load} The {\bf Load Data - Viewer} panel
+that appears if you open the {\tt viewer} without any {\tt infile}
+specified, or if you use the {\tt Data:Open} menu or Open icon.
+You can see the images and MS available in your current directory,
+and the options for loading them.} 
+\hrulefill
+\end{figure}
+
+You can use the {\bf Load Data - Viewer} GUI to interactively
+choose images or MS to load into the viewer.  An example of
+this panel is shown in Figure~\ref{fig:viewer_load}.  This
+panel is accessed through the {\tt Data:Open} menu or Open icon
+of the {\bf Viewer Display Panel}.  It also appears if you open 
+the {\tt viewer} without any {\tt infile} specified.
+
+Selecting a file on disk in the {\tt Load Data} panel will
+provide options for how to display the data. Images can be displayed
+as: 
+\begin{enumerate}
+\item Raster Image, 
+\item Contour Map, 
+\item Vector map, or 
+\item Marker Map.  
+\end{enumerate}
+A MS can only be displayed as a raster.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Viewing Images}
+\label{section:display.image}
+
+You have several options for viewing an image.  These are seen
+at the right of the {\bf Load Data - Viewer} panel 
+described in \S~\ref{section:display.viewerGUI.load} and shown in 
+Figure~\ref{fig:viewer_load_image} when an image is selected.  They are:
+\begin{itemize}
+   \item {\tt Raster Image} --- a greyscale or color image,
+   \item {\tt Contour Map} --- contours of intensity as a line plot,
+   \item {\tt Vector Map} --- vectors (as in polarization) as a line plot,
+   \item {\tt Marker Map} --- a line plot with symbols to mark positions.
+\end{itemize}
+
+The {\tt Raster Image} is the default image display, and is what you
+get if you invoke the {\tt viewer} from {\tt casapy} with an image
+file name.  In this case, you will need to use the {\tt Open} menu to
+bring up the {\bf Load Data} panel to choose a different display.
+
+\begin{figure}[h!]
+\pngname{viewer_load_image}{6}
+\caption{\label{fig:viewer_load_image} The {\bf Load Data - Viewer} panel
+as it appears if you select an image.  You can see all options
+are available to load the image as a {\tt Raster Image}, 
+{\tt Contour Map}, {\tt Vector Map}, or {\tt Marker Map}.
+In this example, clicking on the {\tt Raster Image} button would 
+bring up the displays shown in Figure~\ref{fig:viewer_start}.}
+\hrulefill
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Viewing a raster map}
+\label{section:display.image.raster}
+
+A raster map of an image shows pixel intensities in a two-dimensional
+cross-section of gridded data with colors selected from a finite set
+of (normally) smooth and continuous colors, i.e., a colormap.
+
+% \begin{figure}[h!]
+% \gname{viewer1}{3.5}
+% \gname{viewer_loaddata}{3.5}
+% \caption{\label{fig:viewer1} casaviewer: Illustration of a raster
+%   image in the Viewer Display Panel(left) and the Load Data panel
+%   (right).} 
+% \hrulefill
+% \end{figure}
+
+Starting the {\tt casaviewer} with an image as a raster map will look
+something like the example in Figure~\ref{fig:viewer_start}. 
+ 
+You will see the GUI which consists of two main windows, entitled
+"Viewer Display Panel" and "Load Data". In the "Load Data" panel, you
+will see all of the viewable files in the current working directory along
+with their type (Image, Measurement Set, etc).  After selecting a file, you
+are presented with the available data types for these data. Clicking
+on the button {\tt Raster Map} will create a display as above. 
+
+The data display can be adjusted by the user as needed.  This
+is done through the {\bf Data Display Options} panel.  This window
+appears when you choose the {\tt Data:Adjust} menu or use the
+wrench icon from the {\bf Main Toolbar}.  This also comes up
+by default along with the {\bf Viewer Display Panel}.
+
+The {\bf Data Display Options} window is shown in the right panel
+of Figure~\ref{fig:viewer_start}.  It consists of a tab for each
+image or MS loaded, under which are a cascading series of expandable
+categories.  For an image, these are:
+\begin{itemize}
+   \item {\bf Display axes}
+   \item {\bf Hidden axes}
+   \item {\bf Basic Settings}
+   \item {\bf Position tracking}
+   \item {\bf Axis labels}
+   \item {\bf Axis label properties}
+   \item {\bf Beam Ellipse}
+   \item {\bf Color Wedge}
+\end{itemize}
+The {\bf Basic Settings} category is expanded by
+default.  To expand a category to show its options, click on it with
+the left mouse button.
+
+
+%%%%%%
+\subsubsection{Raster Image --- Basic Settings}
+\label{section:display.image.raster.adjust.basic}
+
+This roll-up is open by default.  It has some commonly-used parameters
+that alter the way the image is displayed; three of affect the colors used.
+An example of this part of the panel is shown in
+Figure~\ref{fig:viewer_raster_basic}.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{viewer_ras_basic}{5}
+\caption{\label{fig:viewer_raster_basic} The {\tt Basic Settings}
+category of the {\bf Data Display Options} panel
+as it appears if you load the image as a {\tt Raster Image}.
+This is a zoom-in for the data displayed in Figure~\ref{fig:viewer_start}.}
+\hrulefill
+\end{center}
+\end{figure}
+
+The options available are:
+\begin{itemize}
+
+\item {\tt Basic Settings:Aspect ratio}
+
+This option controls the horizontal-vertical size ratio of data pixels
+on screen.  {\tt Fixed world} (the default) means that the aspect
+ratio of the pixels is set according to the coordinate system of
+the image (i.e., true to the projected sky). {\tt Fixed lattice}
+means that data pixels will always be square on the screen.  Selecting
+{\tt flexible} allows the map to stretch independently in each
+direction to fill as much of the display area as possible.
+
+\item {\tt Basic Settings:Pixel treatment}
+
+This option controls the precise alignment of the edge of the current
+'zoom window' with the data lattice.  {\tt edge} (the default) means
+that whole data pixels are always drawn, even on the edges of the display.
+For most purposes, {\tt edge} is recommended.  {\tt center} means that
+data pixels on the edge of the display are drawn only from their centers
+inwards. (Note that a data pixel's center is considered its 'definitive'
+position, and corresponds to a whole number in 'data pixel' or 'lattice'
+coordinates).
+
+\item {\tt Basic Settings: Resampling mode}
+
+This setting controls how the data are resampled to the resolution of
+the screen.  {\tt nearest} (the default) means that screen pixels are
+colored according to the intensity of the nearest data point, so that
+each data pixel is shown in a single color. {\tt bilinear} applies a
+bilinear interpolation between data pixels to produce smoother looking images
+when data pixels are large on the screen.  {\tt bicubic} applies an
+even higher-order (and somewhat slower) interpolation.
+
+\item {\tt Basic Settings: Data Range}
+
+You can use the entry box provided to set the minimum and maximum data values
+mapped to the available range of colors. For very high dynamic range images,
+you will probably want to enter a value less than the maximum (within a high-probability range of your data), to see detail in lower brightness-level
+pixels.  The next setting also helps quite a lot in this regard.
+
+\item {\tt Basic settings: Scaling power cycles}
+
+This option allows logarithmic scaling of data values to colormap cells.  
+
+The color of a pixel is determined as follows: first, the data value is clipped
+to lie within the data range specified above, then m Several {\tt Basic Settings} options control the contour
+levels used.apped to an index into the
+available colors as described below. The color corresponding to this index is
+ultimately determined by the current colormap and its 'fiddling' (shift/slope)
+and brightness/contrast settings (see {\bf Mouse Toolbar}, above).  (Adding a
+{\bf Color Wedge} to your image can help clarify the effect of the various
+color controls).
+
+The {\tt Scaling power cycles} option controls the mapping of clipped data
+values to colormap indices.  Set to zero (the default), a straight linear
+relation is used.  For negative scaling values, a logarithmic mapping
+assigns an larger fraction of the available colors to lower data values (this
+is usually what you want). Setting dataMin to something around the noise level
+is often useful/appropriate in conjunction with a negative 'Power cycles'
+setting. 
+
+For positive values, an larger fraction of the colormap is used for the high
+data values.
+\footnote{The actual functions are computed as follows:
+
+For negative scaling values (say $-p$), the data is scaled linearly
+from the range ({\tt dataMin} -- {\tt dataMax}) to the range (1 -- $10^{p}$).
+Then the program takes the $\log$ (base 10) of that value (arriving at
+a number from 0 to $p$) and scales that linearly to the number of
+available colors.  Thus the data is treated as if it had $p$ decades
+of range, with an equal number of colors assigned to each decade.
+
+For positive scaling values, the inverse (exponential) functions are used.
+If $p$ is the (positive) value chosen,  The data value is scaled linearly to
+lie between 0 and $p$, and 10 is raised to this power, yielding a value in the
+range (1 -- $10^{p}$).  Finally, that value is scaled linearly to the number
+of available colors.}
+
+See Figure~\ref{fig:scalingpower} for sample curves.
+\begin{figure}[h]
+\begin{center}
+\pngname{viewer_scalingpower}{3.6}
+\caption{\label{fig:scalingpower} Example curves for scaling power cycles.}
+\hrulefill
+\end{center}
+\end{figure}
+
+\item {\tt Basic settings: Colormap}
+
+You can select from a variety of colormaps here.  {\tt Hot Metal},
+{\tt Rainbow} and {\tt Greyscale} colormaps are the ones most commonly used.
+
+\end{itemize}
+
+
+%%%%%%
+\subsubsection{Raster Image --- Other Settings}
+\label{section:display.image.raster.adjust.other}
+
+Many of the other settings on the {\bf Data Options} panel for raster images
+are self-explanatory, such as those which affect {\bf Beam ellipse} drawing
+(only available if your image provides beam data), or the form of the
+{\bf Axis labeling} and {\bf Position tracking} information.  You can also
+give your image a {\bf Color wedge}, a key to the current mapping from data
+values to colors.
+
+You can control which of your image's axes are on the vertical and horizontal
+display axes and which on the animation or 'movie' axis, within the
+{\bf Display axes} drop-down.  you must assure yourself that the X, Y
+and Z (animation) axes each show {\it different} image axes for your choice
+to take effect.
+
+If your image has a fourth axis (typically Stokes), it can be controlled
+by a slider within the {\bf Hidden axes} drop-down.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Viewing a contour map}
+\label{section:display.image.contour}
+
+Viewing a contour image is similar the process above. A contour map
+shows lines of equal pixel intensity (e.g., flux density) in a two
+dimensional cross-section of gridded data (Figure~\ref{fig:viewer_con}).
+Several {\tt Basic Settings} options control the contour levels used.
+Contour maps are particularly useful for overlaying on raster images so
+that two different measurements of the same part of the sky can be shown
+simultaneously.
+
+% \begin{figure}[h!]
+% \gname{viewer5}{3.5}
+% \gname{viewer_displaydata5}{3.5}
+% \caption{\label{fig:viewer5} Example of a contour
+%   image in the {\bf Viewer Display Panel} (left) and the 
+%   {\bf Load Data} panel (right).} 
+% \hrulefill
+% \end{figure}
+ 
+\begin{figure}[h!]
+\pngname{viewer_n5921_con_1}{3.25}
+\pngname{viewer_n5921_con_2}{3.25}
+\caption{\label{fig:viewer_con} The {\bf Viewer Display Panel}
+(left) and {\bf Data Display Options} panel (right) after choosing
+{\tt Contour Map} from the {\bf Load Data} panel.  The
+image shown is for channel 11 of the NGC5921 cube, selected using
+the {\bf Animator} tape deck, and zoomed in using the tool bar icon.
+Note the different options in the open {\tt Basic Settings} category
+of the {\bf Data Display Options} panel.} 
+\hrulefill
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Overlay contours on a raster map}
+\label{section:display.image.viewcontours}
+
+Contours of either a second data set or the same data set can be used
+for comparison or to enhance visualization of the data. The Data Options
+Panel will have multiple tabs which allow adjusting each overlay
+individually (Note tabs along the top).  {\bf Beware:} it's easy to
+forget which tab is active!   Also note that axis labeling is controlled
+by the {\it first-registered} image overlay (whether raster or contour) that
+has labeling turned on, so make label adjustments within that tab.
+
+To add a Contour overlay, open the {\bf Load Data} panel (Use the {\bf Data}
+menu or click on the Folder icon), select the data set and select {\tt Contour}.
+See Figure~\ref{fig:viewer_rascon} for an example using NGC5921.
+
+% \begin{figure}[h!]
+% \gname{viewer_datadisplay1}{3.5}
+% \gname{viewer3}{3.5}
+% \caption{\label{fig:viewer_overlay}  Display of a contour
+% overlay on top of a raster image.} 
+% \hrulefill
+% \end{figure}
+ 
+\begin{figure}[h!]
+\pngname{viewer_n5921_rascon_1}{3.25}
+\pngname{viewer_n5921_rascon_2}{3.25}
+\caption{\label{fig:viewer_rascon} The {\bf Viewer Display Panel}
+(left) and {\bf Data Display Options} panel (right) after overlaying
+a {\tt Contour Map} on a {\tt Raster Image} from the same image cube.  The
+image shown is for channel 11 of the NGC5921 cube, selected using
+the {\bf Animator} tape deck, and zoomed in using the tool bar icon.
+The tab for the contour plot is open in the {\bf Data Display Options} 
+panel.} 
+\hrulefill
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Spectral Profile Plotting}
+\label{section:display.image.specprof}
+
+From the {\bf Tools} menu, the {\tt Spectral Profile} plotting
+tool can be selected.  This will pop up a new {\bf Image Profile}
+window containing an x-y plot of the intensity versus spectral
+axis (usually velocity).  You can then select a region with the
+{\bf Rectangle} or {\bf Polygon Region} drawing tools, or pinpoint
+a position using the {\bf Crosshair} tool.  The profile
+for the region or position selected will then appear in the
+{\bf Image Profile} window.  This profile will update in real time
+to track changes to the region or crosshair, which can be moved
+by click-dragging the mouse.  See Figure~\ref{fig:viewer_specprof}.
+
+\begin{figure}[h!]
+\pngname{viewer_specprof}{6.5}
+\caption{\label{fig:viewer_specprof} The {\bf Image Profile} panel
+that appears if you use the {\tt Tools:Spectral Profile} menu,
+and then use the rectangle or polygon tool to select a region in the image.
+You can also use the crosshair to get the profile at a single
+position in the image.  The profile will change to track movements
+of the region or crosshair if moved by dragging with the mouse.} 
+\hrulefill
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \begin{figure}[h!]
+% \gname{viewer_datadisplay2}{3.5}
+% \gname{viewer_datadisplay3}{3.5}
+% \caption{\label{fig:datadisplay} casaviewer: Data display options. In
+%   the left panel, the Display axes, Hidden axes, and Basic Settings
+%   options are shown; in the right panel, the Position tracking and
+%   Axis labels options are shown. }
+% \end{figure}
+
+% \begin{figure}[h!]
+% \gname{viewer_datadisplay4}{3.5}
+% \caption{\label{fig:datadisplay-p3} casaviewer: Data display options. In
+%   this final, third panel , the Axis label properties are shown. }
+% \hrulefill
+% \end{figure}
+
+% This older web page gives details of individual display options.
+% Although it has not yet been integrated into the reference manual for
+% the newer CASA, it is accurate in most cases: 
+% 
+% \url{http://aips2.nrao.edu/daily/docs/user/Display/node267.html}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Adjusting Canvas Parameters/Multi-panel displays}
+\label{section:display.viewerGUI.canvas}
+
+The display area can also be manipulated with the following controls in
+the {\bf Panel Options} (or 'Viewer Canvas Manager') window.
+Use the wrench icon with a 'P' (or the 'Display Panel' menu) to show this
+window.
+\begin{itemize}
+   \item Margins - specify the spacing for the left, right, top, and bottom margins
+   \item Number of panels - specify the number of panels in x and y
+         and the spacing between those panels.
+   \item Background Color - white or black (more choices to come)
+\end{itemize}
+
+Figure~\ref{fig:viewer_canvas} illustrates a multi-panel display along
+with the Viewer Canvas Manager settings which created it. 
+
+\begin{figure}[h!]
+\gname{viewer_canvas}{3.5}
+\gname{viewer4}{3.5}
+\caption{\label{fig:viewer_canvas} A multi-panel display
+set up through the {\bf Viewer Canvas Manager}.} 
+\hrulefill
+\end{figure}
+ 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Viewing Measurement Sets}
+\label{section:display.ms}
+
+\begin{figure}[h!]
+\pngname{viewer_load_ms}{6}
+\caption{\label{fig:viewer_load_ms} The {\bf Load Data - Viewer} panel
+as it appears if you select an MS.  The only option available is
+to load this as a {\tt Raster Image}.  In this example, clicking
+on the {\tt Raster Image} button would bring up the displays shown
+in Figure~\ref{fig:viewer_start_ms}.}
+\hrulefill
+\end{figure}
+
+Visibility data can also be displayed and flagged directly from the
+viewer. For Measurement Set files the only option for display is 'Raster'
+(similar to AIPS task TVFLG).  An example of MS display is
+shown in Figure~\ref{fig:viewer_start_ms}; loading of an
+MS is shown in Figure~\ref{fig:viewer_load_ms}.  
+
+{\bf WARNING:} {\em Only one MS should be registered at a time on a
+Display Panel} 
+Only one MS can be shown in any case.  
+You do not have to close other images/MSs, but you should at
+least 'unregister' them from the Display Panel used for viewing the MS.
+If you wish to see other images or MSs at the same time, create multiple
+Display Panel windows.
+
+% \begin{figure}[h]
+% \gname{viewer_ms1}{3.5}
+% \gname{viewer_ms2}{3.5}
+% \caption{\label{fig:viewer_ms1} Display of visibility
+%   data. The default axes are time vs. baseline.} 
+% \hrulefill
+% \end{figure}
+ 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{The Data Display Options Panel for MSs}
+\label{section:display.ms.adjust}
+
+The {\bf Data Display Options} panel provides adjustments for MSs
+similar to those for images, and also includes flagging options.
+As with images, this window appears when you choose the {\tt Data:Adjust}
+menu or use the wrench icon from the {\bf Main Toolbar}. It is also shown
+by default when an MS is loaded. The window is shown in the right panel
+of Figure~\ref{fig:viewer_start_ms}.  It consists of a tab for each
+MS loaded, under which are a cascading series of expandable
+categories.  For a Measurement Set, the categories are:
+\begin{itemize}
+   \item {\bf Advanced}
+   \item {\bf MS and Visibility Selection}
+   \item {\bf Display Axes}
+   \item {\bf Flagging Options}
+   \item {\bf Basic Settings}
+   \item {\bf Axis Drawing and Labels}
+   \item {\bf Color Wedge}
+\end{itemize}
+
+%%%%%%
+\subsubsection{MS Options--- Basic Settings}
+\label{section:display.ms.adjust.basic}
+
+The {\bf Basic Settings} roll-up is expanded by
+default.  To expand a category to show its options, click on it with
+the left mouse button. {\bf Basic Settings} contains entries similar to
+those for a raster image (\S~\ref{section:display.image.raster.adjust.basic}). 
+Together with the brightness/contrast and colormap adjustment icons
+on the {\tt Mouse Toolbar} of the Display Panel, they are especially
+important for adjusting the color display of your MS.
+
+The available Basic options are:
+
+\begin{itemize}
+
+\item {\tt Data minimum/maximum}
+
+This has the same usage as for raster images.  
+Lowering the data maximum will help brighten
+weaker data values.
+
+\item {\tt Scaling power cycles}
+
+This has exactly the same usage as for raster images (see
+\S~\ref{section:display.image.raster.adjust.basic}).  Again, lowering
+this value often helps make weaker data visible.  If you want to view
+several fields with very different amplitudes simultaneously, this is
+often one of the first adjustments you should make.
+
+\item {\tt Colormap}
+
+Greyscale or Hot Metal colormaps are generally good choices for MS
+data.
+
+\end{itemize}
+
+
+
+%%%%%%
+\subsubsection{MS Options--- MS and Visibility Selections}
+\label{section:display.ms.adjust.select}
+
+\begin{itemize}
+
+\item {\tt Visibility Type}
+
+\item {\tt Visibility Component}
+
+\item {\tt Moving Average Size}
+
+\end{itemize}
+
+This roll-up provides choice boxes for Visibility Type
+(Observed, Corrected, Model, Residual) and Component (Amplitude,
+Phase, Real, or Imaginary).  
+
+Changes to Visibility Type or Component (changing from Phase to
+Amplitude, for example) require the data to be retrieved again
+from the disk into memory, which can be a lengthy process.  When a
+large MS is first selected for viewing, the user must
+trigger this retrieval manually by pressing the 'Apply' button
+(located below all the options), after selecting the data to be
+viewed ({\tt Field IDs} and {\tt Spectral Windows}, below).
+
+Changing visibility type between 'Observed' and 'Corrected' can also be
+used to assure that data and flags are reloaded from disk.  You should
+do this if you're using another flagging tool simultaneously (such as 
+autoflag or msplot), so that the viewer sees the other tool's new edits
+and doesn't overwrite them with obsolete flags.  The 'Apply' button 
+alone won't reload unless something within the viewer itself requires
+it; in the future, a button will be provided to reload flags from the disk
+unconditionally.  
+
+You can also choose to view the difference from a running mean or the
+local RMS deviation of either Phase or Amplitude.  There is a slider
+for choosing the nominal number of time slots in the 'local neighborhood'
+for these displays.
+
+(Note: {\bf Insufficient Data} is shown in the tracking area during
+these displays when there is no other unflagged data in the
+local neighborhood to compare to the point in question.  The
+moving time windows will not extend across changes in either field ID
+or scan number, so you may see this message if your scan
+numbers change with every time stamp.  An option will be added later
+to ignore scan boundaries).
+
+\begin{itemize}
+
+\item {\tt Field IDs}
+
+\item {\tt Spectral Windows}
+
+\end{itemize}
+
+You can retrieve and edit a selected portion of the MS data
+by entering the desired Spectral Window and Field ID numbers into
+these boxes.  {\bf Important:} Especially with large MSs, often the
+{\bf first thing you'll want to do} is to {\bf select spectral windows}
+which all have the {\bf same number of channels} and the
+{\bf same polarization setup}.  It also makes sense to edit only
+{\bf a few fields at a time}.   Doing this will also
+greatly reduce data retrieval times and memory requirements.
+
+You can separate the ID numbers with spaces or commas; you do not need to
+enter enclosing brackets.  Changes to either entry box will cause
+the selected MS data to be reloaded from disk.
+
+If you select, say, spectral windows 7, 8, 23, and 24, the animator, slice
+position sliders, and axis labeling will show 
+these as 1, 2, 3, and 4 (the 'slice positions' or 'pixel coordinates' of the
+chosen spectral windows).  Looking at the position tracking display is the best
+way to avoid confusion in such cases.  It will show something like: 
+{\bf Sp Win 23 (s 3)} when you are viewing spectral window 23, the third 
+selected spectral window.
+
+Changes to MS selections will not be allowed until you have saved
+(or discarded) any previous edits you have made (see {\tt Flagging Options 
+-- Save Edits}, below).  A warning is printed on the console (not the logger).
+
+Initially, all fields and spectral windows are selected.  To revert to
+this 'unselected' state, choose 'Original' under the wrench
+icons next to the entry boxes.
+
+
+%%%%%%
+\subsubsection{MS Options--- Display Axes}
+\label{section:display.ms.adjust.axes}
+
+This roll-up is very similar to that for images: it allows the user to
+choose which axes (from Time, Baseline, Polarization, Channel, and
+Spectral Window) are are on the display and the animator.  There are
+also sliders here for choosing positions on the remaining axes.
+
+For MSs, changing the choice of axis on one control will automatically
+swap axes, maintaining different axes on each control.  Changing axes
+or slider/animator positions does not normally require pressing
+'Apply'--the new slice is shown immediately.  However, the display may be 
+partially or completely grey in areas where the required data is not
+currently in memory, either because no data has been loaded yet, or
+because not all the selected data will fit into the allowed memory
+(see {\tt Max. Visibility Memory}, below).  When the
+cursor is over such an area, the following message shows in the position
+tracking area:
+
+{\bf press 'Apply' on Adjust panel to load data}
+
+Pressing 'Apply' will reload the memory buffer so that it includes
+the slice you are trying to view.
+
+The message {\bf No Data} has a different meaning; in that
+case, there simply {\it is} no data in the selected MS at the
+indicated position.
+
+For large measurement sets, loading visibility data into memory is the
+most time-consuming step.  Progress feedback is provided in the
+console window.  Again, careful selection of the data to be viewed can
+greatly speed up retrieval.
+
+
+%%%%%%
+\subsubsection{MS Options--- Flagging}
+\label{section:display.ms.adjust.flagging}
+
+These options allow you to edit (flag or unflag) MS data.
+The crosshair and rectangle region {\bf Mouse Tools}
+(\S~\ref{section:display.viewerGUI.displaypanel.region}) are used on
+the display to pick the data region to edit.  You right-mouse 
+double-click inside the selection region to flag/unflag.
+
+The options below determine how the edits will be applied.
+
+\begin{itemize}
+
+\item {\tt Show Flagged Regions...}
+
+You have the option to display flagged regions in the background
+color (as in TVFLG) or to highlight them with color.
+In the former case, flagged regions look just like regions of no
+data.  With the (default) color option, flags are shown in shades of blue:
+darker blue for flags already saved to disk, lighter blue for
+new flags not yet saved; regions with no data will be shown in black.
+
+\item {\tt Flag or Unflag}
+
+This setting determines whether selected regions will be flagged or
+unflagged.  This does {\it not} affect previous
+edits; it only determines the effect which later edits
+will have.  Both flagging and unflagging edits can be accumulated
+and then saved in one pass through the MS.
+
+\item {\tt Flag/Unflag All...}
+
+These flagging extent checkboxes allow you to extend your edit over any
+of the five data axes.  For example, to flag {\it all} the data in a given
+time range, you would check all the axes {\it except} Time, and then
+select the desired time range with the region mouse control.  Such edits
+will extend along the corresponding axes over the entire selected MS
+(whether loaded into memory or not) and optionally over unselected 
+portions of the MS as well ({\tt Use Entire MS}, below).  Use care in
+selecting edit extents to assure that you're editing all
+the data you wish to edit.
+
+\item {\tt Flag/Unflag Entire Antenna?}
+
+This control can be used to extend subsequent edits to all baselines
+which include the desired antenna[s].  For example, if you set this item
+to 'Yes' and then click the crosshair on a visibility point with
+baseline 3-19, the edit would extend over baselines 1-3, 2-3, 3-3, 3-4,
+3-5, 3-6, ... 3-<nAntennas>.  Note that the second antenna of the selection
+(19) is irrelevant here--you can click anywhere on the display where the
+first antenna number is 3, to select all baselines which include antenna 3.
+
+This item controls the edit extent only along the baseline axis.  If you
+wish to flag {\it all} the data for a given antenna, you must still check
+the boxes to flag all Times, Channels, Polarizations and Spectral Windows.
+There would be no point, however, in activating {\it both} this item and
+the 'Flag All Baselines' checkbox.  You can flag an antenna in a limited
+range of times, etc., by using the appropriate checkboxes and selecting
+a rectangular region of visibilities with the mouse. {\bf Note:} You do
+not need to include the entire 'antenna block' in your
+rectangle (and you may stray into the next antenna if you try). Anywhere
+within the block will work.  To flag higher-numbered antennas, it often
+helps to zoom in.
+
+\item {\tt Undo Last Edit}
+
+\item {\tt Undo All Edits}
+
+The 'Undo' buttons do the expected thing: completely undo the effect of
+the last edit (or all unsaved edits).  Please note,
+however, that only unsaved edits can be undone here;
+there is no ability to revert to the flagging state at the start of the
+session once flags have been saved to disk (unless you have previously
+saved a 'flag version'.  The flag version tool is not available through
+the viewer directly).
+
+\item {\tt Use Entire MS When Saving Edits?}
+
+"Yes" means that saving the edits will flag/unflag over the entire MS,
+{\it including} fields (and possibly spectral windows) which are not 
+currently selected for viewing.  Specifically, data within time range[s]
+you swept out with the mouse (even for unselected fields) will be edited.
+
+In addition, if "Flag/Unflag All..." boxes were checked, such edits will
+extend throughout the MS.  Note that only
+unselected {\it times} (fields) can be edited {\it without} checking
+extent boxes for the edits as well.  Unselected spectral windows, e.g.,
+will {\it not} be edited unless the edit also has "Flag/Unflag All
+Spectral Windows" checked.  
+
+Warning: Beware of checking "All Spectral Windows" unless you have also 
+checked "All Channels" or turned "Entire MS" off; channel edits appropriate 
+to the selected spectral windows may not be appropriate to unselected
+ones.  Set "Use Entire MS" to"No" if your edits need to apply only to the
+portion of the MS you have selected for viewing.  {\it Edits can often be
+saved significantly faster this way as well}.
+
+Also note that checkboxes apply to individual edits, and must be checked
+before making the edit with the mouse.  "Use Entire MS", on the other hand,
+applies to all the edits saved at one time, and must be set as desired
+before pressing "Save Edits".
+
+\item {\tt Save Edits}
+
+MS editing works like a text editor in that
+you see all of your edits immediately, but nothing is committed to disk
+until you press 'Save Edits'.  Feel free to experiment with all the other
+controls; nothing but 'Save Edits' will alter your MS on disk. 
+As mentioned previously, however, there is no way to undo your edits once
+they are saved, except by manually entering the reverse edits (or restoring
+a previously-saved 'flag version').
+
+Also, {\it you must save} (or discard) {\it your edits before changing the 
+MS selections}.  If edits are pending, the selection change will not be 
+allowed, and a warning will appear on the console.  
+
+If you close the MS in vie viewer, {\it unsaved edits are simply discarded},
+without prior warning.  It's important, therefore, to remember to save them
+yourself.  You can distinguish unsaved flags (when using the 'Flags In Color'
+option), because they are in a lighter shade of blue.
+
+The program must make a pass through the MS on disk to save the edits.
+This can take a little time; progress is shown in the console window.
+
+\end{itemize}
+
+
+
+%%%%%%
+\subsubsection{MS Options---  Advanced}
+\label{section:display.ms.adjust.adv}
+
+These settings can help optimize your memory usage, especially for
+large MSs, if you're comfortable tweaking such things.  A rule of thumb
+is that they can be increased until response becomes sluggish, when
+they should be backed down again.
+
+You can run the unix 'top' program and hit 'M' in it (to sort by memory
+usage) in order to examine the effects of these settings.  Look at the
+amount of RSS (main memory) and SWAP used by the X server and 'casaviewer'
+processes.  If that sounds familiar and easy, then fiddling with these
+settings is for you.  Otherwise, the default settings should provide
+reasonable performance in most cases.
+
+\begin{itemize}
+
+\item {\tt Cache size}
+
+The value of this option specifies the maximum
+number of different views of the data to save so that they
+can be redrawn quickly.  If you run an animation or scroll around
+zoomed data, you will notice that the data displays noticeably faster
+the second time through because of this feature.  Often, setting this
+value to the number of animation frames is ideal  Note, however, that
+on multi-panel displays, each panel counts as one cached image.
+
+Large images naturally take more room than small ones.  The memory used
+for these images will show up in the X server process.  If you need more
+Visibility Memory (below) for a really large ms, it is usually better to
+forgo caching a large number of views.
+
+\item {\tt Max. Visibility Memory}
+
+This option specifies how many megabytes of memory may be used to store
+visibility data from the measurement set internally.  {\it Even if you do
+not adjust this entry, it is useful to look at it to see how many megabytes
+are required to store your entire (selected) MS in memory}.  If the slider
+setting is above this, the whole selected MS will fit into the memory
+buffer.  Otherwise, some data planes will be 'greyed out', and the selected 
+data will have to be viewed one buffer at a time, which is somewhat less 
+convenient. In most cases, this means you should {\it select fewer fields
+or spectral windows} -- see \S~\ref{section:display.ms.adjust.select}.
+The 'casaviewer' process contains this buffer memory (it contains the entire
+viewer, but the memory buffer can take most of the space).
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

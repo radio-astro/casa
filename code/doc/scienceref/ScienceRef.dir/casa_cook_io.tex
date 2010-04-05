@@ -1,0 +1,1865 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-04-14  major rewriting to include ms, handling, export
+% STM 2007-06-13  put common selectdata stuff here
+% MPR 2007-07-05  minor tweaks, esp. to match frozen alpha-1 release of 4jul07
+% STM 2007-09-20  pre-beta version
+% STM 2007-10-09  Gustaaf's corrections
+% STM 2007-10-10  beta version (spell-checked)
+% STM 2007-11-09  beta 0.5, spw select issue
+% STM 2008-04-29  note that post-Modcomp importvla is supported
+% STM 2008-06-15  Patch 2.0, selection syntax
+% STM 2009-05-19  Patch 4.0, vishead
+% STM 2009-06-04  Patch 4.0, concat warning
+% STM 2009-11-17  Release 3.0.0, importasdm
+% STM 2009-12-11  Release 3.0.0 final
+% JO 2010-03-10     edits for Release 3.0.1
+
+\chapter{Visibility Data Import, Export, and Selection}
+\label{chapter:io} 
+
+To use CASA to process your data, you first will need to get it
+into a form that is understood by the package.  These are 
+``measurement sets'' for synthesis (and single dish) data, and
+``image tables'' for images.
+
+There are a number of tasks used to fill telescope-specific data,
+to import/export standard formats, to list data contents, and
+to concatenate multiple datasets.  These are:
+\begin{itemize}
+   \item {\tt importasdm} --- import ALMA or EVLA data in ASDM format 
+         (\S~\ref{section:io.import.asdm})
+   \item {\tt importuvfits} --- import visibility data in UVFITS
+         format (\S~\ref{section:io.import.uvfits.import})
+   \item {\tt importvla} --- import data from VLA that is in 
+         {\it export} format (\S~\ref{section:io.import.vla})
+   \item {\tt exportuvfits} --- export a CASA MS in UVFITS format 
+         (\S~\ref{section:io.import.uvfits.export})
+   \item {\tt listobs} --- summarize the contents of a MS 
+         (\S~\ref{section:io.list})
+   \item {\tt listvis} --- list the data in a MS 
+         (\S~\ref{section:io.vis.listvis})
+   \item {\tt vishead} --- list and change the metadata contents of a MS 
+         (\S~\ref{section:io.vis.vishead})
+   \item {\tt visstat} --- statistics on data in a MS 
+         (\S~\ref{section:io.vis.visstat})
+   \item {\tt concat} --- concatenate two or more MS into a
+         new MS (\S~\ref{section:io.concat})
+\end{itemize}
+
+In CASA, there is a standard syntax for selection of data that
+is employed by multiple tasks.  
+This is described in \S~\ref{section:io.selection}.
+
+There are also tasks for the import and export of image data using
+FITS:
+\begin{itemize}
+   \item {\tt importfits} --- import a FITS image into a CASA  
+         {\it image} format table 
+         (\S~\ref{section:analysis.fits})
+   \item {\tt exportfits} --- export a CASA image table as FITS 
+         (\S~\ref{section:analysis.fits})
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{CASA Measurement Sets}
+\label{section:io.ms}
+
+Data is handled in CASA via the {\tt table} system.  In particular,
+visibility data are stored in a CASA table known as a Measurement Set
+(MS).  Details of the physical and logical MS structure are given
+below, but for our purposes here an MS is just a construct that
+contains the data.  An MS can also store single dish data (essentially
+a set of auto-correlations of a 1-element interferometer), though
+there are also data formats more suitable for single-dish spectra (see
+\S~\ref{chapter:sd}).
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     Measurement sets are handled in the {\tt ms} tool.
+     Import and export methods include {\tt ms.fromfits} and
+     {\tt ms.tofits}.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+Note that images are handled through special
+{\tt image} tables, although standard FITS I/O is also supported.
+Images and {\tt image} data are described in a separate chapter.
+
+Unless your data was previously processed by CASA or software based
+upon its predecessor {\tt aips++}, you will need to import it into
+CASA as an MS.  Supported formats include some ``standard'' flavors
+of UVFITS, the VLA ``Export'' archive format, and most recently,
+the ALMA Science Data Model (ASDM) format.  These are described below
+in \S~\ref{section:io.import}.
+
+Once in Measurement Set form, your data can be accessed through various tools
+and tasks with a common interface.  The most important of these is the {\em
+data selection interface} (\S~\ref{section:io.selection}) which allows you to
+specify the subset of the data on which the tasks and tools will
+operate.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Under the Hood: Structure of the Measurement Set}
+\label{section:io.ms.structure}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     Generic CASA tables are handled in the {\tt tb} tool.
+     You have direct access to keywords, rows and columns of
+     the tables with the methods of this tool.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+It is not necessary that a casual CASA user know the specific details
+on how the data in the MS is stored and the contents of all the
+sub-tables.  However, we will occasionally refer to specific
+``columns'' of the MS when describing the actions of various tasks,
+and thus we provide the following synopsis to familiarize the user
+with the necessary nomenclature.  You may skip ahead to subsequent
+sections if you like!
+
+All CASA data files, including Measurement Sets, are written into
+the current working directory by default, with each CASA table
+represented as a separate sub-directory.  MS names therefore need only
+comply with UNIX file or directory naming conventions, and can be
+referred to from within CASA directly, or via full path names.
+
+An MS consists of a {\tt MAIN} table containing the visibility data. 
+and associated sub-tables containing auxiliary or secondary
+information.  The tables are logical constructs, with
+contents located in the physical {\tt table.*} files on disk.  The
+{\tt MAIN} table consists of the {\tt table.*} files in the main
+directory of the ms-file itself, and the other tables are in the 
+respective subdirectories.  The various MS tables and sub-tables can be seen by
+listing the contents of the MS directory itself (e.g. using Unix {\tt
+ls}), or via the {\tt browsetable} task (\S~\ref{section:edit.browse}).
+
+See Fig~\ref{fig:tablekeyword} for an example of the contents of a MS
+directory.  Or, from the casapy prompt,
+\small
+\begin{verbatim}
+CASA <1>: ls ngc5921.ms
+IPython system call: ls -F ngc5921.ms
+ANTENNA           POLARIZATION     table.f1        table.f3_TSM1  table.f8
+DATA_DESCRIPTION  PROCESSOR        table.f10       table.f4       table.f8_TSM1
+FEED              SORTED_TABLE     table.f10_TSM1  table.f5       table.f9
+FIELD             SOURCE           table.f11       table.f5_TSM1  table.f9_TSM1
+FLAG_CMD          SPECTRAL_WINDOW  table.f11_TSM1  table.f6       table.info
+HISTORY           STATE            table.f2        table.f6_TSM0  table.lock
+OBSERVATION       table.dat        table.f2_TSM1   table.f7
+POINTING          table.f0         table.f3        table.f7_TSM1
+\end{verbatim}
+\normalsize
+Note that the {\tt MAIN} table information is contained in the
+{\tt table.*} files in this directory.  Each of the sub-table
+sub-directories contain their own {\tt table.dat} and other files, e.g.
+\small
+\begin{verbatim}
+CASA <2>: ls ngc5921.ms/SOURCE
+IPython system call: ls -F ngc5921.ms/SOURCE
+table.dat  table.f0  table.f0i  table.info  table.lock
+\end{verbatim}
+\normalsize
+
+\begin{figure}[h!]
+%\gname{jbrowser_ms}{6}
+\pngname{browser_ms}{6}
+\caption{\label{fig:tablekeyword} The contents of a Measurement
+  Set. These tables compose a Measurement Set named {\tt ngc5921.demo.ms} on
+  disk.  This display is obtained by using the {\bf File:Open} menu in
+  {\tt browsetable} and left double-clicking on the {\tt ngc5921.demo.ms}
+  directory.}
+\hrulefill
+\end{figure}
+
+Each ``row'' in a table contains entries for a number of specified 
+``columns''.  For example, in the {\tt MAIN} table of the MS, the
+original visibility data is contained in the {\tt  DATA} column ---
+each ``cell'' contains a matrix of observed
+complex visibilities for that row at a single time stamp, for a single
+baseline in a single spectral window.  The shape of the data matrix is
+given by the number of channels and the number of correlations
+(voltage-products) formed by the correlator for an array.  
+
+Table~\ref{tabselect} lists the non-data columns of the {\tt MAIN}
+table that are most important during a typical data reduction session.
+Table \ref{tabmain} lists the key data columns of the {\tt MAIN} table
+of an interferometer MS.  The MS produced by fillers for specific
+instruments may insert special columns, such as
+{\tt ALMA\_PHASE\_CORR}, {\tt ALMA\_NO\_PHAS\_CORR} and 
+{\tt ALMA\_PHAS\_CORR\_FLAG\_ROW} for ALMA data filled using the 
+{\tt importasdm} filler (\S~\ref{section:io.import.asdm}).
+These columns are visible in {\tt browsetable} and are accessible from
+the toolkit in the {\tt ms} tool (e.g. the {\tt ms.getdata} method)
+and from the {\tt tb} ``table'' tool (e.g. using {\tt tb.getcol}).
+
+Note that when you examine table entries for IDs such as {\tt FIELD\_ID} or 
+{\tt DATA\_DESC\_ID}, you will see 0-based numbers.
+
+\vspace{5mm}
+\begin{table}[h!]
+\caption[Common MS Columns]
+        {\label{tabselect} Common columns in the {\tt MAIN} table of
+        the MS.}
+\begin{center}
+\begin{tabular}{|ll|} \hline
+{\bf Parameter}   &   {\bf Contents}                  \\
+\hline
+\hline
+ANTENNA1      &   First antenna in baseline   \\
+ANTENNA2      &   Second antenna in baseline  \\
+FIELD\_ID      &   Field (source no.) identification  \\
+DATA\_DESC\_ID  &   Spectral window number, polarization identifier pair (IF no.)  \\
+ARRAY\_ID      &   Subarray number                \\
+OBSERVATION\_ID  &   Observation identification   \\
+POLARIZATION\_ID  &   Polarization identification \\ 
+SCAN\_NUMBER   &   Scan number                    \\
+TIME          &   Integration midpoint time      \\
+UVW           &   UVW coordinates                \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The MS can contain a number of ``scratch'' columns, which are used to
+hold useful versions of other columns such as the data or weights
+for further processing.  The most common scratch columns are:
+\begin{itemize}
+\item {\tt CORRECTED\_DATA} --- used to hold calibrated data for
+  imaging or display;
+\item {\tt MODEL\_DATA} --- holds the Fourier inversion of a
+  particular model image for calibration or imaging;
+\item {\tt IMAGING\_WEIGHT} ---holds the gridding weights to be used in
+  imaging.  
+\end{itemize}
+The creation and use of the scratch columns is generally done behind the scenes, but you
+should be aware that they are there (and when they are used).
+
+\vspace{5mm}
+\begin{table}[h!]
+\caption[Commonly accessed {\tt MAIN} Table columns]
+        {\label{tabmain} Commonly accessed {\tt MAIN} Table
+        data-related columns.
+        Note that the columns {\tt ALMA\_PHASE\_CORR}, 
+        {\tt ALMA\_NO\_PHAS\_CORR} and {\tt ALMA\_PHAS\_CORR\_FLAG\_ROW}
+        are specific to ALMA data filled using the {\tt importasdm}
+        filler.}
+\begin{center}
+\begin{tabular}{|llp{2.5in}|} \hline
+  {\bf Column}      &  {\bf Format} & {\bf Contents} \\        
+  DATA              &  Complex(N$_c$, N$_f$)  
+     & complex visibility data matrix  (= ALMA\_PHASE\_CORR by default) \\
+  FLAG             &  Bool(N$_c$, N$_f$) &  cumulative data flags    \\
+  WEIGHT            &  Float(N$_c$)    &  weight for a row \\     
+  WEIGHT\_SPECTRUM   &  Float(N$_c$, N$_f$) 
+     &  individual weights for a data matrix \\
+  ALMA\_PHASE\_CORR   &  Complex(N$_c$, N$_f$) 
+     &  on-line phase corrected data  ({\it Not in VLA data})  \\
+  ALMA\_NO\_PHAS\_CORR  &  Bool(N$_c$, N$_f$) 
+     & data that has not been phase corrected  ({\it Not in VLA data})  \\
+  ALMA\_PHAS\_CORR\_FLAG\_ROW  &  Bool(N$_c$, N$_f$)  
+     & flag to use phase-corrected data or not ({\it not in VLA data}) \\    
+  MODEL\_DATA       &  Complex(N$_c$, N$_f$)
+     &  Scratch: created by calibrater or imager tools  \\
+  CORRECTED\_DATA   &  Complex(N$_c$, N$_f$)    
+     &  Scratch: created by calibrater or imager tools \\ 
+  IMAGING\_WEIGHT   &  Float(N$_c$)
+     &  Scratch: created by calibrater or imager tools  \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The most recent specification for the MS
+is {\bf Aips++ MeasurementSet definition version 2.0}
+(\url{http://casa.nrao.edu/Memos/229.html}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Import and Export}
+\label{section:io.import}
+
+There are a number of tasks available to bring data in various forms
+into CASA as a Measurement Set:
+
+\begin{itemize}
+
+\item ALMA and EVLA Science Data Model format data can be imported
+      into CASA ({\tt importasdm})
+
+\item VLA Archive format data can be imported into CASA
+      ({\tt importvla})
+
+\item UVFITS format can be imported into and exported from CASA
+      ({\tt importuvfits} and {\tt exportuvfits})
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ALMA \& EVLA: Filling Science Data Model (ASDM) data}
+\label{section:io.import.asdm}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\underline{\bf Under the Hood:}}
+     The {\tt importasdm} task is just an interface to the stand-alone
+     {\tt asdm2MS} application.  To find out the command-line
+     arguments to this application, do {\tt asdm2MS --help}.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+The ALMA and EVLA projects have agreed upon a common archival science
+data model (ASDM) format, and have jointly developed the software to
+fill this data into CASA.  In the ASDM format, the bulk of the data is
+contained in large binary data format (BDF) tables, with the meta-data
+and ancillary information in XML tables.  This is structured as a
+directory, like the MS, and was designed to be similar to the MS to 
+facilitate conversion.
+
+The {\bf importasdm} task will fill SDM1 format data (Oct 2009 or
+later) into a CASA visibility data set (MS).  The default inputs are:
+
+\small
+\begin{verbatim}
+#  importasdm :: Convert an Science Data Model observation into a CASA visibility file
+asdm                =     ''   #  Name of input asdm directory (on disk)
+vis                 =     ''   #  Root name of the ms to be created. Note the .ms is added
+singledish          =  False   # Set true to output single-dish data format 
+corr_mode           =  'all'   #  correlation mode to be input (ao, co, ac, all)
+srt                 =  'all'   #  spectral resolution type (fr, ca, bw, or all)
+time_sampling       =  'all'   #  time sampling (INTEGRATION and/or SUBINTEGRATION) (i, si, or all)
+ocorr_mode          =   'ca'   #  output correlation mode AUTO_ONLY (ao), CROSS_ONLY (co), CROSS_AND_AUTO (ca)
+compression         =  False   #  Flag for turning on data compression
+asis                =     ''   #  string of table names separated by spaces to be passed verbatim (* allowed)
+wvr_corrected_data  =   'no'   #  'no' (default), 'yes'= WVR corrected, 'both'= output separate MS
+verbose             =  False   #  Output lots of information while the filler is working
+overwrite           =  False   #  Overwrite an existing MS
+showversion         =  False   #  Report the version of asdm2MS being used
+async               =  False   #  If true the taskname must be started using importasdm(...)
+\end{verbatim}
+\normalsize
+
+{\bf ALERT}: Currently there are no options for filling selected data
+(you get the whole data set).  
+
+If {\tt singledish=True}, output data format is scantable (single-dish data
+format, see \ref{chapter:sd}) instead of MS. In that case, you must specify
+name or id of the antenna that you want to obtain data. This can be
+done by using antenna parameter that is defined as a subparameter of
+singledish. For single-dish mode, only auto-correlation data are
+filled, i.e. {\tt ocorr\_mode} is forcibly set to 'ao'. 
+
+%%%%%%
+\subsubsection{Filling SDM v0 data using {\tt importoldasdm}}
+\label{section:io.import.asdm.old}
+
+If you are filling old test data taken
+before October 2009 in the SDM0 format, then you should use the 
+{\tt importoldasdm} task to fill this.
+\small
+\begin{verbatim}
+#  importoldasdm :: Convert a Science Data Model v0 observation into a CASA visibility file
+asdm            =      ''   #  Name of input asdm directory (on disk)
+corr_mode       =   'all'   #  correlation mode to be considered on input
+srt             =   'all'   #  specifies the spectral resolution type to be considered on input
+time_sampling   =   'all'   #  time sampling (INTEGRATION and/or SUBINTEGRATION)
+ocorr_mode      =    'co'   #  AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+compression     =   False   #  Flag for turning on data compression
+async           =   False   #  If true the taskname must be started using importoldasdm(...)
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{VLA: Filling data from archive format ({\tt importvla})}
+\label{section:io.import.vla}
+
+VLA data in archive format (i.e., as downloaded from the VLA data archive)
+are read into CASA from disk using the {\tt importvla} task.  The inputs are:
+\small
+\begin{verbatim}
+#  importvla :: import VLA archive file(s) to a measurement set:
+
+archivefiles  =         ''   #  Name of input VLA archive file(s)
+vis           =         ''   #  Name of output visibility file
+bandname      =         ''   #  VLA frequency band name:''=>obtain all bands in archive files
+frequencytol  =   150000.0   #  Frequency shift to define a unique spectral window (Hz)
+project       =         ''   #  Project name:  '' => all projects in file
+starttime     =         ''   #  start time to search for data
+stoptime      =         ''   #  end time to search for data
+applytsys     =       True   #  apply nominal sensitivity scaling to data & weights
+autocorr      =      False   #  import autocorrelations to ms, if set to True
+antnamescheme =      'new'   #   'old' or 'new'; 'VA04' or '4' for ant 4
+keepblanks    =      False   #  Fill scans with empty source names (e.g. tipping scans)?
+evlabands     =      False   #  Use updated eVLA frequencies and bandwidths
+async         =      False        
+\end{verbatim}
+\normalsize
+
+The main parameters are {\tt archivefiles} to specify the input
+VLA Archive format file names, and {\tt vis} to specify the output
+MS name. 
+
+{\bf ALERT:} The scaling of VLA data both before and after the
+June 2007 Modcomp-turnoff is fully supported, based on the value of
+{\tt applytsys}.  
+
+The NRAO Archive is located at:
+\begin{itemize}
+  \item \url{https://archive.nrao.edu}
+\end{itemize}
+Note that {\tt archivefiles} takes a string or list of
+strings, as there are often multiple files for a project in the
+archive.
+
+For example:
+\small
+\begin{verbatim}
+   archivefiles = ['AP314_A950519.xp1','AP314_A950519.xp2']
+   vis = 'NGC7538.ms'
+\end{verbatim}
+\normalsize
+
+The {\tt importvla} task allows selection on the frequency band.
+Suppose that you have 1.3\,cm line observations in K-band and you
+have copied the archive data files {\tt AP314\_A95019.xp*} to your 
+working directory and started {\tt casapy}.  Then,
+\small
+\begin{verbatim}
+   default('importvla')
+   archivefiles = ['AP314_A950519.xp1','AP314_A950519.xp2','AP314_A950519.xp3']
+   vis = 'ngc7538.ms' 
+   bandname = 'K' 
+   frequencytol = 10e6
+   importvla()
+\end{verbatim}
+\normalsize
+If the data is located in a different directory on disk, then use the
+full path name to specify each archive file, e.g.:
+\small
+\begin{verbatim}
+archivefiles=['/home/rohir2/jmcmulli/ALMATST1/Data/N7538/AP314_A950519.xp1',\
+     '/home/rohir2/jmcmulli/ALMATST1/Data/N7538/AP314_A950519.xp2',\
+     '/home/rohir2/jmcmulli/ALMATST1/Data/N7538/AP314_A950519.xp3']
+\end{verbatim}
+\normalsize
+
+{\bf Important Note:} {\tt importvla} will import the on-line flags
+(from the VLA system) along with the data. Shadowed antennas will also
+be flagged. The flags will be put in the {\tt MAIN} table and thus
+available to subsequent tasks and tools.  If you wish to revert to
+unflagged data, use {\tt flagmanager}
+(\S~\ref{section:edit.flagmanager}) to save the flags (if you wish),
+and then use {\tt flagdata} (\S~\ref{section:edit.flagdata}) with {\tt
+  mode='manualflag'} and {\tt unflag=True} to toggle off the flags.
+
+The other parameters are:
+
+\subsubsection{Parameter {\tt applytsys} }
+\label{section:io.import.vla.applytsys}
+
+The {\tt applytys} parameter controls whether the nominal sensitivity
+scaling (based on the measured TSYS, with the weights scaled
+accordingly using the integration time) is
+applied to the visibility amplitudes or not.  If {\tt True}, then it
+will be scaled so as to be the same as AIPS {\tt FILLM}
+(ie. approximately in deciJanskys).
+Note that post-Modcomp data is in raw correlation coefficient and will
+be scaled using the TSYS values, while Modcomp-era data had this
+applied online.  
+In all cases {\tt importvla} will do
+the correct thing to data and weights based on an internal flag in the
+VLA Archive file, either scaling it or unscaling based on your choice
+for {\tt applytys}.
+
+If {\tt applytsys=True} and you see strange behavior in data
+amplitudes, it may be due to erroneous TSYS values from the online
+system.  You might want to then fill with {\tt applytsys=False} 
+and look at the correlation coefficients to see if the behavior is
+as expected.
+
+\subsubsection{Parameter {\tt bandname} }
+\label{section:io.import.vla.bandname}
+
+The {\tt bandname} indicates the VLA Frequency band(s) to load,
+using the traditional bandname codes.  These are:
+\begin{itemize}
+  \item {\tt '4'} =   48-96 MHz
+  \item {\tt 'P'} =  298-345 MHz
+  \item {\tt 'L'} = 1.15-1.75 GHz
+  \item {\tt 'C'} =  4.2-5.1 GHz
+  \item {\tt 'X'} =  6.8-9.6 GHz
+  \item {\tt 'U'} = 13.5-16.3 GHz
+  \item {\tt 'K'} = 20.8-25.8 GHz
+  \item {\tt 'Q'} =   38-51 GHz
+  \item {\tt ''}  = all bands (default)
+\end{itemize}
+
+Note that as the transition from the VLA to EVLA progresses,
+the actual frequency ranges covered by the bands will expand,
+and additional bands will be added (namely {\tt 'S'} from 1-2 GHz and 
+{\tt 'A'} from 26.4-40 GHz).
+
+\subsubsection{Parameter {\tt frequencytol} }
+\label{section:io.import.vla.frequencytol}
+
+The {\tt frequencytol} parameter specifies the frequency separation
+tolerated when assigning data to spectral windows.  The
+default is {\tt frequencytol=150000} (Hz).  
+For Doppler tracked data, where the sky frequency changes with time,
+a {\tt frequencytol} $< 10000$ Hz may may produce too many
+unnecessary spectral windows.
+
+\subsubsection{Parameter {\tt project} }
+\label{section:io.import.vla.project}
+
+You can specify a specific {\tt project} name to import from 
+archive files.  The default {\tt ''} will import data from all
+projects in file(s) {\tt archivefiles}.
+
+For example for VLA Project {\tt AL519}:
+\small
+\begin{verbatim}
+   project = 'AL519'    # this will work
+   project = 'al519'    # this will also work
+\end{verbatim}
+\normalsize
+while {\tt project='AL0519'} will NOT work (even though that is what
+queries to the VLA Archive will print it as - sorry!).
+
+\subsubsection{Parameters {\tt starttime} and {\tt stoptime} }
+\label{section:io.import.vla.starttime}
+
+You can specify start and stop times for the data, e.g.:
+\small
+\begin{verbatim}
+   starttime = '1970/1/31/00:00:00'
+   stoptime = '2199/1/31/23:59:59'
+\end{verbatim}
+\normalsize
+Note that the blank defaults will load all data fitting other criteria.
+
+\subsubsection{Parameter {\tt autocorr} }
+\label{section:io.import.vla.autocorr}
+
+Note that autocorrelations are filled into the data set if {\tt
+autocorr=True}.  Generally for the VLA, autocorrelation data is not
+useful, and furthermore the imaging routine will try to image the
+autocorrelation data (it assumes it is single dish data) which will
+swamp any real signal.  Thus, if you do fill the autocorrelations, you
+will have to flag them before imaging.
+
+\subsubsection{Parameter {\tt antnamescheme} }
+\label{section:io.import.vla.antnamescheme}
+
+The {\tt antnamescheme} parameter controls whether {\tt importvla}
+will try to use a naming scheme where EVLA antennas are prefixed
+with {\tt EA} (e.g. {\tt 'EA16'}) and old VLA antennas have names
+prefixed with {\tt VA} (e.g. {\tt 'VA11'}).  Our method to detect
+whether an antenna is EVLA is not yet perfected, and thus unless you
+require this feature, simply use {\tt antnamescheme='old'}.
+
+
+\subsubsection{Parameter {\tt evlabands} }
+\label{section:io.import.vla.evlabands}
+
+The {\tt evlabands=True} option is provided to allow users to access
+EVLA frequencies outside the standard VLA tuninings (e.g.\ the extended
+C-band above 6~GHz).  {\bf ALERT:} use of this option for standard VLA
+data will cause unexpected associations, such as X-band data below
+8~GHz being extracted to C-band (as the EVLA C-band is 4--8~GHz).  Use
+with care.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{UVFITS Import and Export}
+\label{section:io.import.uvfits}
+
+The UVFITS format is not exactly a standard, but is a popular
+archive and transport format nonetheless.  CASA supports 
+UVFITS files written by the AIPS {\tt FITTP} task, and others.
+
+UVFITS is supported for both import and export.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Import using {\tt importuvfits} }
+\label{section:io.import.uvfits.import}
+
+To import UVFITS format data into CASA, use the {\tt importuvfits} task: 
+\small
+\begin{verbatim}
+CASA <1>: inp(importuvfits)
+fitsfile            =         ''  # Name of input UVFITS file
+vis                 =         ''  # Name of output visibility file (MS)
+antnamescheme       =      'old'  # For VLA only; 'new' or 'old'; 'VA04' or '04' for VLA ant 4
+async               =      False  # if True run in the background, prompt is freed
+\end{verbatim}
+\normalsize
+This is straightforward, since all it does is read in a UVFITS file and
+convert it as best it can into a MS.
+
+For example:
+\small
+\begin{verbatim}
+   importuvfits(fitsfile='NGC5921.fits',vis='ngc5921.ms')
+\end{verbatim}
+\normalsize
+
+{\bf ALERT:} We cannot currently fill CARMA data exported
+via Miriad UVFITS.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Export using {\tt exportuvfits} }
+\label{section:io.import.uvfits.export}
+
+The {\tt exportuvfits} task will take a MS and write it out in UVFITS
+format.  The defaults are:
+\small
+\begin{verbatim}
+#  exportuvfits :: Convert a CASA visibility data set (MS) to a UVFITS file
+
+vis            =         ''    #   Name of input visibility file
+fitsfile       =         ''    #   Name of output UVFITS file)
+datacolumn     = 'corrected'   #   which data to write (data, corrected, model)
+field          =         ''    #   Field name list
+spw            =         ''    #   Spectral window and channel selection
+antenna        =         ''    #   antenna list to select
+time           =         ''    #   time range selection
+nchan          =         -1    #   Number of channels to select
+start          =          0    #   Start channel
+width          =          1    #   Channel averaging width (value>1 indicates averaging)
+writesyscal    =      False    #   Write GC and TY tables
+multisource    =       True    #   Write in multi-source format
+combinespw     =       True    #   Combine spectral windows (True for AIPS)
+writestation   =       True    #   Write station name instead of antenna name
+async          =      False    #   if True run in the background, prompt is freed
+\end{verbatim}
+\normalsize
+
+For example:
+\small
+\begin{verbatim}
+   exportuvfits(vis='ngc5921.split.ms',
+                fitsfile='NGC5921.split.fits',
+                multisource=False)
+\end{verbatim}
+\normalsize
+
+The MS selection parameters {\tt field}, {\tt spw}, {\tt antenna}, 
+and {\tt timerange} follow the standard selection syntax described
+in \S~\ref{section:io.selection}.
+
+{\bf ALERT:} The {\tt nchan}, {\tt start}, and {\tt width}
+parameters will be superseded by channel selection in {\tt spw}.
+Currently, there is a {\tt time} parameter rather than {\tt
+  timerange}.
+
+The {\tt datacolumn} parameter chooses which data-containing column
+of the MS (see \S~\ref{section:io.ms.structure}) is to be written out
+to the UV FITS file.  Choices are: {\tt 'data'}, {\tt 'corrected'}, 
+and {\tt 'model'}.
+
+There are a number of special parameters that control what is written
+out.  These are mostly here for compatibility with AIPS. 
+
+The {\tt writesyscal} parameter toggles whether {\tt GC} and 
+{\tt TY} extension tables are written.  These are important for
+VLBA data, and for EVLA data.  {\bf ALERT:} Not yet available.
+
+The {\tt multisource} parameter determines whether the UV FITS file is
+a multi-source file or a single-source file, if you have a
+{\it single-source} MS or choose only a single source.  Note: the difference
+between a single-source and multi-source UVFITS file here is whether
+it has a source (SU) table and the source ID in the random parameters.
+Some programs (i.e. difmap) only accept single-source files.  If you
+select more than one source in fields, then the multisource parameter
+will be overridden to be True regardless.
+
+The {\tt combinespw} parameter allows, if some conditions are met,
+exporting all of spectral windows (SpW) as a set of "IF"s in a single
+"FREQID" setup instead of giving each SpW its own FREQID in the FITS
+file.  In this context an IF (Intermediate Frequency) is a
+specialization of an SpW, where each IF in a UV FITS file must have
+the same number of channels and polarizations, each channel must have
+the same width, and each IF must be present (even if flagged)
+throughout the entire observation.  If these conditions are not met
+the data must be exported using multiple FREQIDs, the UV FITS
+equivalent of a general SpW.  This matters since many (sub)programs
+will work with multiple IFs, but not multiple FREQIDs.  For example, a
+UV FITS file with multiple FREQIDs can be read by AIPS, but you may
+find that you have to separate the FREQIDs with {\tt SPLIT} before you
+can do very much with them.  Therefore {\tt combinespw=True} should be
+{\tt True} if possible.  Typically MSes where each band was observed
+simultaneously can be exported with {\tt combinespw=True}.  MSes where the
+tuning changed with time, e.g.\ 10 minutes at 4.8 GHz followed by 15
+minutes at 8.4 GHz, should be exported to multiple UV FITS files using
+spw to select one tuning (set of simultaneous SpWs) per file.
+
+
+
+The {\tt multisource} parameter determines whether the UV FITS file is
+a multi-source file or a single-source file, if you have a 
+{\em single-source} MS or choose only a single source.  Note: the
+difference between a single-source and multi-source UVFITS file here
+is whether it has a source ({\tt SU}) table and the source ID in the
+random parameters.  If you select more than one source in 
+{\tt fields}, then the {\tt multisource} parameter will be overridden
+to be {\tt True} regardless.
+
+The {\tt combinespw} parameter allows combination of all spectral
+windows at one time.  If {\tt True}, then all spectral windows must
+have the same shape.  For AIPS to read an exported file, then set {\tt
+combinespw=True}.
+
+The {\tt writestation} parameter toggles the writing of the station
+name instead of antenna name.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Handling Measurement Set metadata and data}
+\label{section:io.vis}
+
+There are tasks provided for basic listing and manipulation of
+Measurement Set data and metadata.  These include:
+\begin{itemize}
+   \item {\tt listobs} --- summarize the contents of a MS 
+         (\S~\ref{section:io.list})
+   \item {\tt vishead} --- list and change the metadata contents of a MS 
+         (\S~\ref{section:io.vis.vishead})
+   \item {\tt visstat} --- statistics on data in a MS 
+         (\S~\ref{section:io.vis.visstat})
+   \item {\tt concat} --- concatenate two or more MS into a
+         new MS (\S~\ref{section:io.concat})
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Summarizing your MS ({\tt listobs})}
+\label{section:io.list}
+
+Once you import your data into a CASA Measurement Set, you can
+get a summary of the MS contents with the {\tt listobs} task.
+
+The inputs are:
+\small
+\begin{verbatim}
+vis                 =         ''        #   Name of input visibility file (MS)
+verbose             =       True        #   Extended summary list of data set in logger
+\end{verbatim}
+\normalsize
+
+The summary will be written to the logger and to the {\tt casapy.log}
+file.  For example,
+\small
+\begin{verbatim}
+   listobs('n5921.ms')
+\end{verbatim}
+\normalsize
+results in the logger messages:
+\small
+\begin{verbatim}
+================================================================================
+MeasurementSet Name: /home/sandrock3/smyers/Testing3/Patch4/N5921/ngc5921.demo.ms
+MS Version 2
+================================================================================
+   Observer: TEST     Project:   
+Observation: VLA
+Data records: 22653       Total integration time = 5280 seconds
+   Observed from   13-Apr-1995/09:19:00.0   to   13-Apr-1995/10:47:00.0 (TAI)
+
+   ObservationID = 0         ArrayID = 0
+  Date        Timerange (TAI)          Scan  FldId FieldName    nVis   Int(s)   SpwIds
+  13-Apr-1995/09:19:00.0 - 09:24:30.0     1      0 1331+305000* 4509   30       [0]
+              09:27:30.0 - 09:29:30.0     2      1 1445+099000* 1890   30       [0]
+              09:33:00.0 - 09:48:00.0     3      2 N5921_2      6048   30       [0]
+              09:50:30.0 - 09:51:00.0     4      1 1445+099000* 756    30       [0]
+              10:22:00.0 - 10:23:00.0     5      1 1445+099000* 1134   30       [0]
+              10:26:00.0 - 10:43:00.0     6      2 N5921_2      6804   30       [0]
+              10:45:30.0 - 10:47:00.0     7      1 1445+099000* 1512   30       [0]
+           (nVis = Total number of time/baseline visibilities per scan) 
+Fields: 3
+  ID   Code Name         RA            Decl           Epoch   SrcId nVis   
+  0    C    1331+305000* 13:31:08.2873 +30.30.32.9590 J2000   0     4509   
+  1    A    1445+099000* 14:45:16.4656 +09.58.36.0730 J2000   1     5292   
+  2         N5921_2      15:22:00.0000 +05.04.00.0000 J2000   2     12852  
+   (nVis = Total number of time/baseline visibilities per field) 
+Spectral Windows:  (1 unique spectral windows and 1 unique polarization setups)
+  SpwID  #Chans Frame Ch1(MHz)    ChanWid(kHz)TotBW(kHz)  Ref(MHz)    Corrs   
+  0          63 LSRK  1412.66507  24.4140625  1550.19688  1413.42801  RR  LL  
+Sources: 3
+  ID   Name         SpwId RestFreq(MHz)  SysVel(km/s) 
+  0    1331+305000* 0     1420.405752    0            
+  1    1445+099000* 0     1420.405752    0            
+  2    N5921_2      0     1420.405752    0            
+Antennas: 27:
+  ID   Name  Station   Diam.    Long.         Lat.         
+  0    1     VLA:N7    25.0 m   -107.37.07.2  +33.54.12.9  
+  1    2     VLA:W1    25.0 m   -107.37.05.9  +33.54.00.5  
+  2    3     VLA:W2    25.0 m   -107.37.07.4  +33.54.00.9  
+  3    4     VLA:E1    25.0 m   -107.37.05.7  +33.53.59.2  
+  4    5     VLA:E3    25.0 m   -107.37.02.8  +33.54.00.5  
+  5    6     VLA:E9    25.0 m   -107.36.45.1  +33.53.53.6  
+  6    7     VLA:E6    25.0 m   -107.36.55.6  +33.53.57.7  
+  7    8     VLA:W8    25.0 m   -107.37.21.6  +33.53.53.0  
+  8    9     VLA:N5    25.0 m   -107.37.06.7  +33.54.08.0  
+  9    10    VLA:W3    25.0 m   -107.37.08.9  +33.54.00.1  
+  10   11    VLA:N4    25.0 m   -107.37.06.5  +33.54.06.1  
+  11   12    VLA:W5    25.0 m   -107.37.13.0  +33.53.57.8  
+  12   13    VLA:N3    25.0 m   -107.37.06.3  +33.54.04.8  
+  13   14    VLA:N1    25.0 m   -107.37.06.0  +33.54.01.8  
+  14   15    VLA:N2    25.0 m   -107.37.06.2  +33.54.03.5  
+  15   16    VLA:E7    25.0 m   -107.36.52.4  +33.53.56.5  
+  16   17    VLA:E8    25.0 m   -107.36.48.9  +33.53.55.1  
+  17   18    VLA:W4    25.0 m   -107.37.10.8  +33.53.59.1  
+  18   19    VLA:E5    25.0 m   -107.36.58.4  +33.53.58.8  
+  19   20    VLA:W9    25.0 m   -107.37.25.1  +33.53.51.0  
+  20   21    VLA:W6    25.0 m   -107.37.15.6  +33.53.56.4  
+  21   22    VLA:E4    25.0 m   -107.37.00.8  +33.53.59.7  
+  23   24    VLA:E2    25.0 m   -107.37.04.4  +33.54.01.1  
+  24   25    VLA:N6    25.0 m   -107.37.06.9  +33.54.10.3  
+  25   26    VLA:N9    25.0 m   -107.37.07.8  +33.54.19.0  
+  26   27    VLA:N8    25.0 m   -107.37.07.5  +33.54.15.8  
+  27   28    VLA:W7    25.0 m   -107.37.18.4  +33.53.54.8  
+\end{verbatim}
+\normalsize
+using the (default) {\tt verbose=True} option.
+The most useful extra information that {\tt verbose=True} gives
+is the list of the scans in the dataset.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Listing MS data ({\tt listvis})}
+\label{section:io.vis.listvis}
+
+The {\tt listvis} task will print to the terminal (or file) listing
+of the data in your MS.
+The inputs are:
+\small
+\begin{verbatim}
+#  listvis :: List measurement set visibilities.
+vis          =         ''   #  Name of input visibility file
+options      =       'ap'   #  List options: ap only
+datacolumn   =     'data'   #  Column to list: data, corrected, model, residual
+field        =         ''   #  Field names or index to be listed: ''==>all
+spw          =        '*'   #  Spectral window:channels: '\*'==>all, spw='1:5~57'
+selectdata   =      False   #  Other data selection parameters
+average      =         ''   #  Averaging mode: ==>none (Not yet implemented)
+showflags    =      False   #  Show flagged data (Not yet implemented)
+pagerows     =         50   #  Rows per page
+listfile     =         ''   #  Output file
+async        =      False   #  If true the taskname must be started using listvis(...)
+\end{verbatim}
+\normalsize
+
+For example:
+\small
+\begin{verbatim}
+CASA <2>: listvis('ngc5921.demo.ms',datacolumn='corrected',field='0',selectdata=T,antenna='*&*',pagerows=10)
+All selected data has FIELD = 0
+All selected data has SPW = 0
+Date/Time:                    RR:                 LL:                                                
+1995/04/13/ Intrf UVDist Chn     Amp    Phs  Wt F    Amp    Phs  Wt F          U          V          W
+------------|---|------|---|--------------------|-------------------|----------|----------|----------|
+  09:19:00.0 1-2   1823   0:  7.388   17.4 100    3.518  131.9  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   1: 11.913   -6.0 100   10.945   12.7  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   2: 13.570    1.5 100   12.700    3.5  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   3: 13.829   -0.6 100   13.479    2.2  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   4: 14.082    1.1 100   14.201   -0.1  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   5: 14.436    3.2 100   14.886    0.3  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   6: 15.190   -1.2 100   14.977   -1.0  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   7: 14.823    2.6 100   14.475    0.9  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   8: 14.484    1.7 100   14.572    0.9  81       386.69  130409.94      15.46
+  09:19:00.0 1-2   1823   9: 14.393    1.3 100   14.675    1.8  81       386.69  130409.94      15.46
+Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: Q
+
+\end{verbatim}
+\normalsize
+
+{\bf ALERT:} We are working on improving the format of the {\tt listvis} output.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Listing and manipulating MS metadata ({\tt vishead})}
+\label{section:io.vis.vishead}
+
+The {\tt vishead} task is provided to access keyword information in
+the Measurement Set.  The default inputs are:
+\small
+\begin{verbatim}
+#  vishead :: List, get, and put metadata in a measurement set
+vis            =          ''   #  Name of input visibility file
+mode           =      'list'   #  options: list, summary, get, put
+   listitems   =          []   #  items to list ([] for all)
+async          =       False   #  
+\end{verbatim}
+\normalsize
+
+The {\tt mode = 'summary'} option just gives the same output as
+{\tt listobs}.
+
+For {\tt mode = 'list'} the options are: {\tt 'telescope'}, 
+{\tt 'observer'}, {\tt 'project'}, {\tt 'field'}, {\tt 'freq\_group\_name'},
+{\tt 'spw\_name'}, {\tt 'schedule'}, {\tt 'schedule\_type'}, 
+{\tt 'release\_date'}. 
+
+\small
+\begin{verbatim}
+CASA <29>: vishead('ngc5921.demo.ms',mode='list',listitems=[])
+  Out[29]: 
+{'cal_grp': (array([-1, -1, -1], dtype=int32), {}),
+ 'field': (array(['1331+30500002_0', '1445+09900002_0', 'N5921_2'], 
+      dtype='|S16'),
+           {}),
+ 'fld_code': (array(['C', 'A', ''], 
+      dtype='|S2'), {}),
+ 'freq_group_name': (array(['none'], 
+      dtype='|S5'), {}),
+ 'log': ({'r1': False}, {}),
+ 'observer': (array(['TEST'], 
+      dtype='|S5'), {}),
+ 'project': (array([''], 
+      dtype='|S1'), {}),
+ 'ptcs': ({'r1': array([[[-2.74392758]],
+
+       [[ 0.53248521]]]),
+           'r2': array([[[-2.42044692]],
+
+       [[ 0.17412604]]]),
+           'r3': array([[[-2.26020138]],
+
+       [[ 0.08843002]]])},
+          {'MEASINFO': {'Ref': 'J2000', 'type': 'direction'},
+           'QuantumUnits': array(['rad', 'rad'], 
+      dtype='|S4')}),
+ 'release_date': (array([  4.30444800e+09]),
+                  {'MEASINFO': {'Ref': 'TAI', 'type': 'epoch'},
+                   'QuantumUnits': array(['s'], 
+      dtype='|S2')}),
+ 'schedule': ({'r1': False}, {}),
+ 'schedule_type': (array([''], 
+      dtype='|S1'), {}),
+ 'source_name': (array(['1331+30500002_0', '1445+09900002_0', 'N5921_2'], 
+      dtype='|S16'),
+                 {}),
+ 'spw_name': (array(['none'], 
+      dtype='|S5'), {}),
+ 'telescope': (array(['VLA'], 
+      dtype='|S4'), {})}
+\end{verbatim}
+\normalsize
+
+You can use {\tt mode='get'} to retrieve the valuses of specific
+keywords, and likewise {\tt mode='put'} to change them.
+The inputs are:
+\small
+\begin{verbatim}
+mode           =      'get'    #  options: list, summary, get, put
+   hdkey       =         ''    #  keyword to get/put
+   hdindex     =         ''    #  keyword index to get/put, counting from zero. ==>all
+\end{verbatim}
+\normalsize
+and
+\small
+\begin{verbatim}
+#  vishead :: List, summary, get, and put metadata in a measurement set
+mode           =      'put'    #  options: list, summary, get, put
+   hdkey       =         ''    #  keyword to get/put
+   hdindex     =         ''    #  keyword index to get/put, counting from zero. ==>all
+   hdvalue     =         ''    #  value of hdkey
+\end{verbatim}
+\normalsize
+For example, a common operation is to change the Telescope name (e.g.\
+if it is unrecognized), e.g.
+\small
+\begin{verbatim}
+CASA <36>: vishead('ngc5921.demo.ms',mode='get',hdkey='telescope')
+  Out[36]: 
+(array(['VLA'], 
+      dtype='|S4'), {})
+
+CASA <37>: vishead('ngc5921.demo.ms',mode='put',hdkey='telescope',hdvalue='EVLA')
+
+CASA <38>: vishead('ngc5921.demo.ms',mode='get',hdkey='telescope')
+  Out[38]: 
+(array(['EVLA'], 
+      dtype='|S5'), {})
+\end{verbatim}
+\normalsize
+
+
+\subsection{MS statistics ({\tt visstat})}
+\label{section:io.vis.visstat}
+
+{\tt ALERT:} This is still a prototype task.
+
+The {\tt visstat} task is provided to obtain simple statistics for a
+Measurement Set, useful in regression tests.
+
+The inputs are:
+\small
+\begin{verbatim}
+#  visstat :: Displays statistical information from a measurement set
+vis              =      ''   #  Name of input visibility file
+axis             =   'amp'   #  Which values to use
+   datacolumn    =  'data'   #  Which data column to use (data, corrected, model)
+
+useflags         =    True   #  Take flagging into account?
+spw              =      ''   #  spectral-window/frequency/channel
+field            =      ''   #  Field names or field index numbers: ''==>all, field='0~2,3C286'
+selectdata       =    True   #  More data selection parameters (antenna, timerange etc)
+   antenna       =      ''   #  antenna/baselines: ''==>all, antenna = '3,VA04'
+   timerange     =      ''   #  time range: ''==>all, timerange='09:14:0~09:54:0'
+   correlation   =      ''   #  Select data based on correlation
+   scan          =      ''   #  scan numbers: ''==>all
+   array         =      ''   #  (sub)array numbers: ''==>all
+   uvrange       =      ''   #  uv range: ''==>all; uvrange = '0~100klambda', default units=meters
+
+async            =   False   #  If true the taskname must be started using visstat(...)
+\end{verbatim}
+\normalsize
+Running this task returns a record (Python dictionary) with the
+statistics, which can be captured in a Python variable.
+For example,
+\small
+\begin{verbatim}
+CASA <42>: mystat = visstat('ngc5921.demo.ms',axis='amp',datacolumn='corrected',field='0')
+
+CASA <43>: mystat
+  Out[43]: 
+{'CORRECTED': {'max': 51.938671112060547,
+               'mean': 14.796444141750133,
+               'medabsdevmed': 0.28020858764648438,
+               'median': 14.764373779296875,
+               'min': 0.81362706422805786,
+               'npts': 514916.0,
+               'quartile': 0.56053066253662109,
+               'rms': 14.829294204711914,
+               'stddev': 0.98650836609147285,
+               'sum': 7618925.8316934109,
+               'sumsq': 113234125.12642419,
+               'var': 0.97319875636846753}}
+
+CASA <44>: print mystat['CORRECTED']['stddev']
+0.986508366091
+\end{verbatim}
+\normalsize
+
+The options for {\tt axis} are:
+\small
+\begin{verbatim}
+    axis='amplitude'      #    or ('amp')
+    axis='phase'
+    axis='imag'
+    axis='scan_number'
+    axis='flag'
+\end{verbatim}
+\normalsize
+The phase of a complex number is in radians with range $(-\pi, \pi)$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Concatenating multiple datasets ({\tt concat})}
+\label{section:io.concat}
+
+Once you have your data in the form of CASA Measurement Sets, you
+can go ahead and process your data using the editing, calibration,
+and imaging tasks.  In some cases, you will most efficiently operate
+on single MS for a particular session (such as calibration).  Other
+tasks will (eventually) take multiple Measurement Sets as input.  For others,
+it is easiest to combine your multiple data files into one.
+
+If you need to combine multiple datasets, you can use the {\tt concat} task.
+The default inputs are:
+\small
+\begin{verbatim}
+#  concat :: Concatenate two or more visibility data sets.
+vis         =    ['']   #  Name of input visibility files to be concatenated
+concatvis   =      ''   #  Name of output visibility file
+freqtol     =      ''   #  Frequency tolerance for considering data as the same spwid
+dirtol      =      ''   #  Direction tolerance for considering data as the same field
+timesort    =   False   #  If true, sort by TIME in ascending order
+async       =   False   #  If true the taskname must be started using concat(...)
+\end{verbatim}
+\normalsize
+
+The {\tt vis} parameter will take a list of one or more MS.  Usually,
+this will contain all the MS to combine.
+
+The {\tt concatvis} parameter contains the name of the output MS.
+If this points to an existing file on disk, then the MS in
+{\tt vis} will appended to it,  otherwise a new MS file
+is created to contain the concatenated data.  Be careful here!
+
+The {\tt timesort} parameter can be used to make sure the output
+MS is in time order (e.g.\ if your input MS have concurrent times).
+This can possibly speed up some subsequent calibration operations.
+
+The parameters {\tt freqtol} and {\tt dirtol} control how close
+together in frequency and angle on the sky spectral windows or field
+locations need to be before calling them the same.
+
+{\bf ALERT:} Note that if multiple frequencies or pointings are
+combined using {\tt freqtol} or {\tt dirtol}, then the data are not
+changed (ie. not rephased to the single phase center).  Use of these 
+parameters is intended to be tolerant of small offsets (e.g. planets
+tracked which move slightly in J2000 over the course of observations,
+or combining epochs observed with slightly different positions).
+
+For example:
+\small
+\begin{verbatim}
+   default('concat')
+   vis = ['n4826_16apr.split.ms','n4826_22apr.split.ms']
+   concatvis = 'n4826_tboth.ms'
+   freqtol = '50MHz'
+   concat()
+\end{verbatim}
+\normalsize
+combines the two days in {\tt 'n4826\_16apr.split.ms'} and
+{\tt 'n4826\_22apr.split.ms'} into a new output MS called
+{\tt 'n4826\_tboth.ms'}.
+
+{\bf ALERT:} There are additional issues when concatenating
+individual MS files with different spectral windows.  In this
+case, the rest frequencies (if set) of these windows may be lost
+in subsequent operations (e.g. {\tt split}).  If this occurs,
+then you can either set the {\tt restfreq} explicitly in certain
+tasks ({\tt plotxy} and {\tt clean}), or use the following snippet
+of code to fix this up after {\tt concat} has run:
+\small
+\begin{verbatim}
+   #
+   ##########################################################################
+   #
+   # Fix up the MS after concat (NOTE: STILL NECESSARY IN 2.4 and 3.0)
+   # This ensures that the rest freq will be found for all spws. 
+   # print '--Fixing up spw rest frequencies in MS--'
+   vis='ngc4826.tutorial.ms'              # Example vis name, put yours here!
+   tb.open(vis+'/SOURCE',nomodify=false)
+   spwid=tb.getcol('SPECTRAL_WINDOW_ID')
+   # The following is for 64bit systems 08-Jul-2008. ok on 32bit also.
+   spwid.setfield(-1,'int32')
+   tb.putcol('SPECTRAL_WINDOW_ID',spwid)
+   tb.close()
+\end{verbatim}
+\normalsize
+For example, this is used in the NGC4826 BIMA mosaic script
+(Appendix~\ref{section:scripts.ngc4826}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Selection}
+\label{section:io.selection}
+
+Once in MS form, subsets of the data can be operated on using the tasks and
+tools.  In CASA, there are three common data selection parameters used in
+the various
+tasks: {\tt field}, {\tt spw}, and {\tt selectdata}.  In addition, the
+{\tt selectdata} parameter, if set to {\tt True}, will open up a
+number of other sub-parameters 
+for selection.  The selection operation is unified across all the tasks.  The
+available {\tt selectdata} parameters may not be the same in all tasks.  But if
+present, the same parameters mean the same thing and behave in the
+same manner when used in any task.
+
+For example:
+\small
+\begin{verbatim}
+field               =         ''        #   field names or index of calibrators ''==>all
+spw                 =         ''        #   spectral window:channels: ''==>all
+selectdata          =      False        #   Other data selection parameters
+\end{verbatim}
+\normalsize
+versus
+\small
+\begin{verbatim}
+field               =         ''        #   field names or index of calibrators ''==>all
+spw                 =         ''        #   spectral window:channels: ''==>all
+selectdata          =       True        #   Other data selection parameters
+     timerange      =         ''        #   time range: ''==>all 
+     uvrange        =         ''        #   uv range''=all
+     antenna        =         ''        #   antenna/baselines: ''==>all
+     scan           =         ''        #   scan numbers: Not yet implemented
+     msselect       =         ''        #   Optional data selection (Specialized. but see help)
+
+\end{verbatim}
+\normalsize
+
+The following are the general syntax rules and descriptions of the
+individual selection parameters of particular interest for the tasks:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{General selection syntax}
+\label{section:io.selection.syntax}
+
+Most of the selections are effected through the use of selection
+strings.  This sub-section describes the general rules used in
+constructing and parsing these strings.  Note that some selections
+are done though the use of numbers or lists.  There are also 
+parameter-specific rules that are described under each parameter.
+
+All lists of basic selection specification-units are comma separated
+lists and can be of any length.  White-spaces before and after the
+commas (e.g. {\tt '3C286, 3C48, 3C84'}) are ignored, while white-space 
+within sub-strings is treated as part of the sub-string 
+(e.g. {\tt '3C286, VIRGO A, 3C84'}).
+
+All integers can be of any length (in terms of characters) composed of
+the characters 0--9.  Floating point numbers can be in the standard
+format ({\tt DIGIT.DIGIT}, {\tt DIGIT.}, or {\tt .DIGIT}) or in the 
+mantissa-exponent format (e.g. {\tt 1.4e9}).  Places where only 
+integers make sense (e.g. IDs), if a floating point number is given, 
+only the integer part is used (it is truncated).
+
+Range of numbers (integers or real numbers) can be given in the format
+{\verb!'N0~N1'!}.  For integer ranges, it is expanded into a list of integers
+starting from {\tt N0} (inclusive) to {\tt N1} (inclusive).  For real numbers, it
+is used to select all values present for the appropriate parameter in
+the Measurement Set between {\tt N0} and {\tt N1} (including the
+boundaries).  Note that the {\verb!'~'!} character is used rather than the
+more obvious {\tt '-'} in order to accommodate hyphens in strings and
+minus signs in numbers.
+
+Wherever appropriate, units can be specified.  The
+units are used to convert the values given to the units used in the
+Measurement Set.  For ranges, the unit is specified only once (at
+the end) and applies to both the range boundaries.
+
+\subsubsection{String Matching}
+\label{section:io.selection.syntax.string}
+
+String matching can be done in three ways. Any component of a comma
+separated list that cannot be parsed as a number, a number range, or
+a physical quantity is treated as a regular expression or a literal
+string. If the string does not contain the characters {\tt '*'}, {\tt
+'\{'}, {\tt '\}'} or {\tt '?'}, it is treated as a literal string and
+used for exact matching. If any of the above mentioned characters are
+part of the string, they are used as a regular expression. As a result,
+for most cases, the user does not need to supply any special
+delimiters for literal strings and/or regular expressions.  For
+example:
+\small
+\begin{verbatim}
+  field = '3'     # match field ID 3 and not select field named "3C286".
+
+  field = '3*'    # used as a pattern and matched against field names. If
+                  # names like "3C84", "3C286", "3020+2207" are found,
+                  # all will match. Field ID 3 will not be selected
+                  # (unless of course one of the above mentioned field
+                  # names also correspond to field ID 3!). 
+
+  field = '30*'   # will match only with "3020+2207" in above set. 
+\end{verbatim}
+\normalsize
+However if it is required that the string be matched exclusively as a
+regular expression, it can be supplied within a pair of {\tt '/'} as
+delimiters (e.g. {\tt '/.+BAND.+/'}). A string enclosed within double
+quotes ({\tt '"'}) is used exclusively for pattern matching (patterns
+are a simplified form of regular expressions - used in most UNIX
+commands for string matching). Patterns are internally converted to
+equivalent regular expressions before matching. See the
+Unix command {\tt "info regex"}, or visit
+\url{http://www.regular-expressions.info}, for details of regular
+expressions and patterns.
+
+Strings can include any character except the following:
+\small
+\begin{verbatim}
+     ','   ';'   '"'  '/'   NEWLINE
+\end{verbatim}
+\normalsize
+(since these are part of the selection syntax).  
+Strings that do not contain any of the characters used to construct
+regular expressions or patterns are used for exact matches. Although
+it is highly discouraged to have name in the MS containing the above
+mentioned reserved characters, if one {\it does} choose to include the
+reserved characters as parts of names etc., those names can only be
+matched against quoted strings (since regular expression and patterns
+are a super-set of literal strings -- i.e., a literal string is also a valid
+regular expression). 
+
+This leaves  
+{\tt '"'}, {\tt '*'}, {\tt'\{'}, {\tt '\}'} or {\tt '?'}
+as the list of printable character that cannot be part of a name
+(i.e., a name containing this character can never be matched in a
+MSSelection expression).  These will be treated as pattern-matching
+even inside double double quotes ({\tt '" "'}).
+There is currently no escape mechanism (e.g. via a backslash).
+
+Some examples of strings, regular expressions, and patterns:
+\begin{itemize}
+
+\item The string {\tt 'LBAND'} will be used as a literal string for
+      exact match.  It will match only the exact string {\tt LBAND}.
+
+\item The wildcarded string {\tt '*BAND*'} will be used as a string pattern 
+      for matching. This will match any string which has the
+      sub-string {\tt BAND} in it. 
+
+\item The string {\tt '"*BAND*"'} will also be used as a string
+      pattern, matching any string which has the sub-string {\tt BAND} in it. 
+
+\item The string {\tt '/.+BAND.+/'} will be used as a regular
+      expression. This will also match any string which as the 
+      sub-string {\tt BAND} in it. (the {\tt .+} regex operator 
+      has the same meaning as the {\tt *} wildcard operator of patterns). 
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The {\tt field} Parameter}
+\label{section:io.selection.field}
+
+The {\tt field} parameter is a string that specifies which field
+names or ids will be processed in the task or tool.
+The field selection expression consists of comma separated list of
+field specifications inside the string.
+
+Field specifications can be literal field names, regular expressions
+or patterns (see \S~\ref{section:io.selection.syntax.string}).  
+Those fields for which the entry in the {\tt NAME} column of
+the {\tt FIELD} MS sub-table match the literal field name/regular
+expression/pattern are selected.
+If a field name/regular expression/pattern fails to match any field
+name, the given name/regular expression/pattern are matched against
+the field code.  If still no field is selected, an exception is thrown.
+
+Field specifications can also be given by their integer IDs.  IDs can
+be a single or a range of IDs.  Field ID selection can also be done as
+a boolean expression.  For a field specification of the form {\tt '>ID'},
+all field IDs greater than ID are selected.  Similarly for {\tt '<ID'} all
+field IDs less than the ID are selected.
+
+For example, if the MS has the following observations:
+\small
+\begin{verbatim}
+MS summary:
+==========
+FIELDID   SPWID   NChan       Pol        NRows     Source Name
+---------------------------------------------------------------
+ 0          0      127         RR        10260     0530+135
+ 1          0      127         RR        779139    05582+16320
+ 2          0      127         RR        296190    05309+13319
+ 3          0      127         RR        58266     0319+415
+ 4          0      127         RR        32994     1331+305
+ 5          1       1      RR,RL,LL,RR   23166     KTIP
+\end{verbatim}
+\normalsize
+one might select
+\small
+\begin{verbatim}
+  field = '0~2,KTIP'          # FIELDID 0,1,2 and field name KTIP
+  field = '0530+135'          # field 0530+135
+  field = '05*'               # fields 0530+135,05582+16320,05309+13319
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The {\tt spw} Parameter}
+\label{section:io.selection.spw}
+
+The {\tt spw} parameter is a string that indicates the specific
+spectral windows and the channels within them to be used in subsequent
+processing. Spectral window selection ({\tt 'SPWSEL'}) can be given as
+a spectral window integer ID, a list of integer IDs, a spectral window
+name specified as a literal string (for exact match) or a regular
+expression or pattern. 
+
+The specification can be via frequency ranges or by indexes.  
+A range of frequencies are
+used to select all spectral windows which contain channels within the
+given range. Frequencies can be specified with an optional unit ---
+the default unit being {\tt Hz}.  Other common choices for radio and
+mm/sub-mm data are {\tt kHz}, {\tt MHz}, and {\tt GHz}.  You will get
+the entire spectral windows, not just the channels in the specified
+range.  You will need to do channel selection (see below) to do that.
+
+The {\tt spw} can also be selected via comparison for
+integer IDs.  For example, {\tt '>ID'} will select all spectral
+windows with ID greater than the specified value, while {\tt '<ID'}
+will select those with ID lesser than the specified value.
+
+{\bf ALERT:} In the current release, {\tt '<ID'} and
+{\tt '>ID'} are {\em inclusive} with the {\tt ID} specified included
+in the selection, e.g. {\tt spw='<2'} is equivalent to 
+{\tt spw='0,1,2'} and not {\tt spw='0,1'} as was intended.  This will
+be fixed in an upcoming release.
+
+Spectral window selection using strings follows the standard rules:
+\small
+\begin{verbatim}
+  spw = '1'                   # SPWID 1
+  spw = '1,3,5'               # SPWID 1,3,5
+  spw = '0~3'                 # SPWID 0,1,2,3
+  spw = '0~3,5'               # SPWID 0,1,2,3 and 5
+  spw = '<3,5'                # SPWID 0,1,2,3 and 5
+  spw = '*'                   # All spectral windows
+  spw = '1412~1415MHz'        # Spectral windows containing 1412-1415MHz
+\end{verbatim}
+\normalsize
+%  spw = '<4,5'                # SPWID 0,1,2,3 and 5
+
+% You may also specify the {\tt spw} selection as single integer or a list
+% of integers, e.g.  
+% \small
+% \begin{verbatim}
+%   spw = 1
+%   spw = [0,1,2,3]
+% \end{verbatim}
+% \normalsize
+% In this mode of operation, no channelization can be specified and all
+% channels in the chosen spectral windows will be used.
+
+In some cases, the spectral windows may allow specification by name.
+For example,
+\small
+\begin{verbatim}
+  spw = '3mmUSB, 3mmLSB'      # choose by names (if available)
+\end{verbatim}
+\normalsize
+might be meaningful for the dataset in question.
+
+Note that the order in which multiple {\tt spw}s are given may be
+important for other parameters.
+For example, the {\tt mode = 'channel'} in {\tt clean} uses the
+first {\tt spw} as the origin for the channelization of the resulting
+image cube.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Channel selection in the {\tt spw} parameter}
+\label{section:io.selection.spw.channel}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\underline{\bf ALERT!}}
+     Not all options are available yet, such as
+     percentages or velocities. Stay tuned!
+  \end{boxedminipage}
+\end{wrapfigure}
+Channel selection can be included in the {\tt spw} string in the form
+{\tt 'SPWSEL:CHANSEL'} where {\tt CHANSEL} is the channel selector.
+In the end, the spectral selection within a given spectral window
+comes down to the selection of specific channels.  We provide a number
+of shorthand selection options for this.  These {\tt CHANSEL} 
+options include:
+\begin{itemize}
+\item {\it Channel ranges:} {\verb!'START~STOP'!}
+\item {\it Frequency ranges:} {\verb!'FSTART~FSTOP'!}
+\item {\it Velocity ranges:} {\verb!'VSTART~VSTOP'!} ({\bf not yet available})
+\item {\it Bandwidth percentages:} {\verb!'PSTART~PSTOP'!} or {\verb!'PWIDTH'!}
+           ({\bf not yet available})
+\item {\it Channel striding/stepping:} {\verb!'START~STOP^STEP'!} or 
+           {\verb!'FSTART~FSTOP^FSTEP'!}
+\end{itemize}
+
+The most common selection is via channel ranges
+{\verb!'START~STOP'!} or frequency ranges {\verb!'FSTART~FSTOP'!}:
+\small
+\begin{verbatim}
+  spw = '0:13~53'             # spw 0, channels 13-53, inclusive
+  spw = '0:1413~1414MHz'      # spw 0, 1413-1414MHz section only
+\end{verbatim}
+\normalsize
+All ranges are inclusive, with the channel given by, or containing
+the frequency or velocity given by, {\tt START} and {\tt STOP} plus
+all channels between included in the selection.  You can also select
+the spectral window via frequency ranges {\verb!'FSTART~FSTOP'!}, 
+as described above:
+\small
+\begin{verbatim}
+  spw = '1413~1414MHz:1413~1414MHz'    # channels falling within 1413~1414MHz
+  spw = '*:1413~1414MHz'               # does the same thing
+\end{verbatim}
+\normalsize
+
+You can also specify multiple spectral window or channel ranges, e.g.
+\small
+\begin{verbatim}
+  spw = '2:16, 3:32~34'       # spw 2, channel 16 plus spw 3 channels 32-34
+  spw = '2:1~3;57~63'         # spw 2, channels 1-3 and 57-63
+  spw = '1~3:10~20'           # spw 1-3, channels 10-20
+  spw = '*:4~56'              # all spw, channels 4-56
+\end{verbatim}
+\normalsize
+Note the use of the wildcard in the last example.
+
+% Channel range may be given also in percentage of the total bandwidth
+% in a given spectral window:
+% \small
+% \begin{verbatim}
+%   spw = '0:10%~95%'           # spw 0, skip 10% of beginning chans and 5% of end
+%   spw = '1:50%'               # the inner 50% of spw 1
+%   spw = ':80%'                # the inner 80% of all spw
+% \end{verbatim}
+% \normalsize
+% Note that a single percentage {\tt ':X\%'} means the inner {\tt X}\%
+% centered upon the band center.
+
+A step can be also be included using {\verb!'^STEP'!} as a postfix:
+\small
+\begin{verbatim}
+  spw = '0:10~100^2'          # chans 10,12,14,...,100 of spw 0
+  spw = ':^4'                 # chans 0,4,8,... of all spw
+  spw = ':100~150GHz^10GHz'   # closest chans to 100,110,...,150GHz
+\end{verbatim}
+\normalsize
+A step in frequency or velocity will pick the channel in which that
+frequency or velocity falls, or the nearest channel.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The {\tt selectdata} Parameters}
+\label{section:io.selection.selectdata}
+
+The {\tt selectdata} parameter, if set to {\tt True}, will expand
+the inputs to include a number of sub-parameters, given below and
+in the individual task descriptions (if different).  If 
+{\tt selectdata = False}, then the sub-parameters are treated as
+blank for selection by the task.  The default for {\tt selectdata} 
+is {\tt False}.
+
+The common {\tt selectdata} expanded sub-parameters are:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt antenna} Parameter}
+\label{section:io.selection.selectdata.antenna}
+
+The {\tt antenna} selection string is a semi-colon ({\tt ';'}) 
+separated list of baseline specifications. 
+A baseline specification is of the form:
+\begin{itemize}
+
+\item {\tt 'ANT1'} --- Select all baselines including the antenna(s)
+    specified by the selector {\tt ANT1}.
+
+\item {\tt 'ANT1\&'} --- Select only baselines between the antennas
+     specified by the selector {\tt ANT1}.
+
+\item {\tt 'ANT1\&ANT2'} --- Select only the cross-correlation
+     baselines between the
+     antennas specified by selector {\tt ANT1} and antennas specified
+     by selector {\tt ANT2}.  Thus {\tt 'ANT1\&'} is an abbreviation for
+     {\tt 'ANT1\&ANT1'}.
+
+\item {\tt 'ANT1\&\&ANT2'} --- Select only auto-correlation and
+     cross-correlation baselines between antennas specified by
+     the selectors {\tt ANT1} and {\tt ANT2}.  Note that this
+     is what the default {\tt antenna=''} gives you.
+
+\item {\tt 'ANT1\&\&\&'} --- Select only autocorrelations specified by
+     the selector {\tt ANT1}. 
+
+\end{itemize}
+The selectors {\tt ANT1} and {\tt ANT2} are comma-separated lists of
+antenna integer-IDs or literal antenna names, patterns, or regular
+expressions.  The {\tt ANT} strings are parsed and converted to a list
+of antenna integer-IDs or IDs of antennas whose name match the given
+names/pattern/regular expression.  Baselines corresponding to all
+combinations of the elements in lists on either side of ampersand are
+selected.
+
+Integer IDs can be specified as single values or a range of integers.
+When items of the list are parsed as literal strings or regular
+expressions or patterns (see \S~\ref{section:io.selection.syntax} 
+for more details on strings).  All antenna names that match the given 
+string (exact match)/regular expression/pattern are selected.
+
+%Added STM 2009-11-23
+{\bf ALERT:} Just for antenna selection, a user supplied integer (or
+integer list) is converted to a string and matched against the antenna
+name. If that fails, the normal logic of using an integer as an
+integer and matching it with antenna index is done.  Note that
+currently there is no method for specifying a pure index (e.g.\ a
+number that will not first be checked against the name).
+
+The comma is used only as a separator for the list of antenna
+specifications.  The list of baselines specifications is a
+semi-colon separated list, e.g.
+\small
+\begin{verbatim}
+   antenna = '1~3 & 4~6 ; 10&11'
+\end{verbatim}
+\normalsize
+will select baselines between antennas 1,2,3 and 4,5,6
+({\tt '1\&4'}, {\tt '1\&5'}, \ldots, {\tt '3\&6'}) plus
+baseline {\tt '10\&11'}.
+
+The wildcard operator ({\tt '*'}) will be the most often used
+pattern. To make it easy to use, the wildcard (and only this
+operator) can be used without enclosing it in quotes.  
+For example, the selection
+\small
+\begin{verbatim}
+   antenna = 'VA*'
+\end{verbatim}
+\normalsize
+will match all antenna names which have {\tt 'VA'} as the first 2
+characters in the name (irrespective of what follows after these
+characters).
+
+There is also a negation operator ``{\tt !}'' that can be used to
+de-select antennas or baselines.
+
+Some examples:
+\small
+\begin{verbatim}
+   antenna=''          # shows blank autocorr pages
+   antenna='*&*'       # does not show the autocorrs
+   antenna='*&&*'      # show both auto and cross-cor (default)
+   antenna='*&&&'      # shows only autocorrs
+
+   antenna='5&*'       # shows non-auto baselines with AN 5
+
+   antenna='5,6&&&'    # AN 5 and 6 autocor
+   antenna='5&&&;6&*'  # AN 5 autocor plus cross-cors to AN 6
+
+   antenna='!5'        # baselines not involving AN 5
+\end{verbatim}
+\normalsize
+
+{\bf Antenna numbers as names:}
+Needless to say, naming antennas such that the names can also be
+parsed as a valid token of the syntax is a bad idea.  Nevertheless,
+antenna names that contain any of the reserved characters and/or can be
+parsed as integers or integer ranges can still be used by enclosing
+the antenna names in double quotes ({\verb!' "ANT" '!}).  E.g. the string
+\small
+\begin{verbatim}
+   antenna = '10~15,21,VA22'
+\end{verbatim}
+\normalsize
+will expand into an antenna ID list 10,11,12,13,14,15,21,22 (assuming
+the index of the antenna named {\tt 'VA22'} is 22).  
+%Added STM 2009-11-23
+If, however, the antenna with ID index 50 is named {\tt '21'}, then
+the string 
+\small
+\begin{verbatim}
+   antenna = '10~15,21,VA22'
+\end{verbatim}
+\normalsize
+will expand into an antenna ID list of 10,11,12,13,14,15,50,22.
+{\em Keep in mind that numbers are FIRST matched against
+names, and only against indices if that matching fails.}
+There is currently no way to force a selection to use the index, and
+if there an antenna with that name it will select that.
+
+Read elsewhere (e.g. {\tt info regex} under Unix) for details of
+regular expression and patterns.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt scan} Parameter}
+\label{section:io.selection.selectdata.scan}
+
+The {\tt scan} parameter selects the scan ID numbers of the data.
+There is currently no naming convention for scans.  The scan ID
+is filled into the MS depending on how the data was obtained,
+so use this with care.
+
+Examples:
+\small
+\begin{verbatim}
+  scan = '3'                      # scan number 3.
+  scan = '1~8'                    # scan numbers 1 through 8, inclusive
+  scan = '1,2,4,6'                # scans 1,2,4,6
+  scan = '<9'                     # scans <9 (1-8)
+\end{verbatim}
+\normalsize
+
+NOTE: ALMA and VLA/EVLA number scans starting with 1
+and not 0.  You can see what the numbering is in your MS using
+the {\tt listobs} task with {\tt verbose=True} (see
+\S~\ref{section:io.list}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt timerange} Parameter}
+\label{section:io.selection.selectdata.timerange}
+
+The time strings in the following ({\tt T0}, {\tt T1} and {\tt dT}) 
+can be specified as {\tt YYYY/MM/DD/HH:MM:SS.FF}.  
+The time fields (i.e., {\tt YYYY}, {\tt MM}, {\tt DD}, {\tt HH}, 
+{\tt MM}, {\tt SS} and {\tt FF}),
+starting from left to right, may be omitted and they will be replaced
+by context sensitive defaults as explained below.
+
+Some examples:
+\begin{enumerate}
+
+\item {\verb!timerange='T0~T1'!}:   Select all time stamps from 
+{\tt T0} to {\tt T1}.  For example:
+\small
+\begin{verbatim}
+  timerange = '2007/10/09/00:40:00 ~ 2007/10/09/03:30:00'
+\end{verbatim}
+\normalsize
+
+Note that fields missing in {\tt T0} are replaced by the fields in the
+time stamp of the first valid row in the MS.  For example, 
+\small
+\begin{verbatim}
+  timerange = '09/00:40:00 ~ 09/03:30:00'
+\end{verbatim}
+\normalsize
+where the {\tt YY/MM/} part of the selection has been defaulted
+to the start of the MS.  
+
+Fields missing in {\tt T1}, such as
+the date part of the string, are replaced by the corresponding fields
+of {\tt T0} (after its defaults are set).  For example:
+\small
+\begin{verbatim}
+  timerange = '2007/10/09/22:40:00 ~ 03:30:00'
+\end{verbatim}
+\normalsize
+does the same thing as above.  
+
+\item {\tt timerange='T0'}:  Select all time stamps that are within an
+integration time of {\tt T0}.  For example,
+\small
+\begin{verbatim}
+  timerange = '2007/10/09/23:41:00'
+\end{verbatim}
+\normalsize
+
+Integration time is determined from the first valid row
+(more rigorously, an average integration time should be computed).
+Default settings for the missing fields of {\tt T0} are as in (1).
+
+\item {\tt timerange='T0+dT'}:  Select all time stamps starting from
+{\tt T0} and ending with time stamp {\tt T0+dT}.  For example,
+\small
+\begin{verbatim}
+  timerange = '23:41:00+01:00:00'
+\end{verbatim}
+\normalsize
+picks an hour-long chunk of time.
+
+Defaults of {\tt T0} are set as usual.  Defaults for {\tt dT} are set from the
+time corresponding to MJD=0.  Thus, {\tt dT} is a specification of length of
+time from the assumed nominal "start of time".
+
+\item {\tt timerange='>T0'}: Select all times greater than {\tt T0}.
+For example,
+\small
+\begin{verbatim}
+  timerange = '>2007/10/09/23:41:00'
+  timerange = '>23:41:00'                # Same thing without day specification
+\end{verbatim}
+\normalsize
+Default settings for {\tt T0} are as above.
+
+\item {\tt timerange='<T1'}: Select all times less than {\tt T1}.
+For example,
+\small
+\begin{verbatim}
+  timerange = '<2007/10/09/23:41:00'
+\end{verbatim}
+\normalsize
+Default settings for {\tt T1} are as above.
+
+\end{enumerate}
+
+An ultra-conservative selection might be:
+\small
+\begin{verbatim}
+  timerange = '1960/01/01/00:00:00~2020/12/31/23:59:59'
+\end{verbatim}
+\normalsize
+which would choose all possible data!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt uvrange} Parameter}
+\label{section:io.selection.selectdata.uvrange}
+
+Rows in the MS can also be selected based on the uv-distance or
+physical baseline length that the visibilities in each row correspond
+to.  This {\tt uvrange} can be specified in various formats.
+
+The basic building block of uv-distance specification is a valid
+number with optional units in the format N[UNIT] (the unit in square
+brackets is optional).  We refer to this basic building block as {\tt
+UVDIST}.  The default unit is meter.  Units of length (such as {\tt
+'m'} and {\tt 'km'}) select physical baseline distances (independent
+of wavelength).  The other allowed units are in wavelengths (such as
+{\tt 'lambda'}, {\tt 'klambda'} and {\tt 'Mlambda'} 
+and are true uv-plane radii
+\begin{equation}
+  r_{uv} = \sqrt{u^2+v^2}.
+\end{equation}
+If only a single {\tt UVDIST} is specified, all rows, the uv-distance of which
+exactly matches the given {\tt UVDIST}, are selected.
+
+{\tt UVDIST} can be specified as a range in the format 
+{\verb!'N0~N1[UNIT]'!} (where {\tt N0} and {\tt N1} are valid numbers).  All
+rows corresponding to uv-distance between {\tt N0} and {\tt N1}
+(inclusive) when converted the specified units are selected.
+
+{\tt UVDIST} can also be selected via comparison operators.  When specified in
+the format {\tt '>UVDIST'}, all visibilities with uv-distances greater than the
+given {\tt UVDIST} are selected.  Likewise, when specified in the
+format {\tt '<UVDIST'}, all rows with uv-distances less than the given
+{\tt UVDIST} are selected.
+
+% To selected data with uv-distances within an equal range about a given
+% value, with the range specified as a percentage of the given value,
+% the {\tt UVDIST} specification can be given in the format 
+% {\tt 'UVDIST:N\%'}.  All data with uv-distance between +/- {\tt N} 
+% percent of the given {\tt UVDIST} in appropriate units are selected.
+
+Any number of above mentioned uv-distance specifications can be given
+as a comma-separated list.
+
+Examples:
+\small
+\begin{verbatim}
+  uvrange = '100~200km'                     # an annulus in physical baseline length
+  uvrange = '24~35Mlambda, 40~45Mlambda'    # two annuli in units of mega-wavelengths
+  uvrange = '< 45klambda'                   # less than 45 kilolambda 
+  uvrange = '> 0lambda'                     # greater than zero length (no auto-corrs)
+  uvrange = '100km'                         # baselines of length 100km
+  uvrange = '100klambda'                    # uv-radius 100 kilolambda
+\end{verbatim}
+\normalsize
+
+%  uvrange = '31Mlambda:5%'                    # +/- 2.5% about 31Ml
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt msselect} Parameter}
+\label{section:io.selection.selectdata.msselect}
+
+More complicated selections within the MS structure are possible
+using the Table Query Language (TaQL).  This is accessed through
+the {\tt msselect} parameter.
+
+Note that the TaQL syntax does not follow the rules given in 
+\S~\ref{section:io.selection.syntax} for our other selection strings.
+TaQL is explained in more detail in {\bf Aips++ NOTE 199 --- 
+Table Query Language}
+(\url{http://aips2.nrao.edu/docs/notes/199/199.html}).
+This will eventually become a CASA document.  The specific 
+columns of the MS are given in the most recent MS specification
+document: {\bf Aips++ NOTE 229 --- MeasurementSet definition version 2.0}
+(\url{http://aips2.nrao.edu/docs/notes/229/229.html}).
+This documentation will eventually be updated to the CASA 
+document system.
+
+Most selection can be carried out using the other
+selection parameters.  However, these are merely shortcuts
+to the underlying TaQL selection.  For example, field
+and spectral window selection can be done using {\tt msselect}
+rather than through {\tt field} or {\tt spw}:
+\small
+\begin{verbatim}
+  msselect='FIELD_ID == 0'                   # Field id 0 only
+  msselect='FIELD_ID <= 1'                   # Field id 0 and 1
+  msselect='FIELD_ID IN [1,2]'               # Field id 1 and 2
+  msselect='FIELD_ID==0 && DATA_DESC_ID==3'  # Field id 0 in spw id 3 only
+\end{verbatim}
+\normalsize
+
+{\bf ALERT:} The {\tt msselect} style parameters will be phased
+out of the tasks.  TaQL selection will still be available in the
+Toolkit.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -457,16 +457,16 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
   if(calType_p=="G" || calType_p=="T" || calType_p=="GSPLINE" || 
      calType_p=="B" || calType_p=="BPOLY"  ||
      calType_p=="M" || calType_p=="MF" || calType_p=="A" || 
-     calType_p=="D")
+     calType_p=="D" || calType_p=="X")
     return doPlot();
 
   else if(calType_p=="K")
     //    return timePlotK();
     throw(AipsError("K plots are disabled for now."));
-  
-  else if(calType_p=="X")
-    throw(AipsError("X plots are disabled for now."));
 
+  else if(calType_p=="Xold")
+    throw(AipsError("X (old-style) plots are disabled for now."));
+  
   else 
     throw(AipsError("The cal table (type "+calType_p+") you specified is not supported yet."));
   
@@ -1064,7 +1064,7 @@ Int PlotCal::multiTables(const Table& tablein,
     tabSel_p=tab_p;
    
     String subType[2];
-    split(tab_p.tableInfo().subType(), subType, 1, String(" "));
+    split(tab_p.tableInfo().subType(), subType, 2, String(" "));
  
     if(subType[0].contains("G")){
       if (tab_p.tableInfo().subType()=="GSPLINE")
@@ -1094,7 +1094,12 @@ Int PlotCal::multiTables(const Table& tablein,
       calType_p="K";
     } 
     else if(subType[0].contains("X")){
-      calType_p="X";
+      if (subType[1].contains("Jones"))
+	// We support the new style (X, Xf Jones)
+	calType_p="X";
+      else
+	// ...but not the old (non-freqdep Mueller)
+	calType_p="Xold";
     }
     else if(subType[0].contains("A")){
       calType_p="A";

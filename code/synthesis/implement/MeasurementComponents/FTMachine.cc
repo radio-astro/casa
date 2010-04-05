@@ -84,6 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   spectralCoord_p=SpectralCoordinate();
   isIOnly=False;
+  spwChanSelFlag_p=0;
 }
 
 
@@ -120,7 +121,6 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   logIO() << LogOrigin("FTMachine", "initMaps") << LogIO::NORMAL;
 
   AlwaysAssert(image, AipsError);
-
 
   // Set the frame for the UVWMachine
   mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s")), mLocation_p);
@@ -326,6 +326,7 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   }
   logIO() << LogIO::DEBUGGING << "Polarization map = "<< polMap
   	  << LogIO::POST;
+  //cerr<<"spwchanselflag_p shape="<<spwChanSelFlag_p.shape()<<endl;
 }
 
 FTMachine::~FTMachine() 
@@ -341,6 +342,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 					     FTMachine::Type type){
 
     Cube<Complex> origdata;
+    Cube<Bool> modflagCube;
     Vector<Float> visFreq(vb.frequency().nelements());
     if(doConversion_p[vb.spectralWindow()]){
       convertArray(visFreq, lsrFreq_p);
@@ -371,9 +373,15 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     }
     if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour) || (vb.nChannel()==1)){
       data.reference(origdata);
-      flags.resize(vb.flagCube().shape());
+	  // do something here for apply flag based on spw chan sels
+	  // e.g. 
+	  // setSpecFlag(vb, chansels_p) -> newflag cube
+	  setSpectralFlag(vb,modflagCube);
+      //flags.resize(vb.flagCube().shape());
+      flags.resize(modflagCube.shape());
       flags=0;
-      flags(vb.flagCube())=True;
+      //flags(vb.flagCube())=True;
+      flags(modflagCube)=True;
       weight.reference(wt);
       interpVisFreq_p.resize();
       interpVisFreq_p=lsrFreq_p;
@@ -393,7 +401,9 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	//2 swap of axes needed
 	Cube<Complex> flipdata;
 	Cube<Bool> flipflag;
-	swapyz(flipflag,vb.flagCube());
+	setSpectralFlag(vb,modflagCube);
+	//swapyz(flipflag,vb.flagCube());
+	swapyz(flipflag,modflagCube);
 	swapyz(flipdata,origdata);
 	InterpolateArray1D<Float,Complex>::
 	  interpolate(data,flag,imageFreq_p,visFreq,flipdata,flipflag,freqInterpMethod_p);
@@ -407,8 +417,11 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	flag.reference(flipflag);
       }
       else{
+	//InterpolateArray1D<Float,Complex>::
+	//  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
+	setSpectralFlag(vb,modflagCube);
 	InterpolateArray1D<Float,Complex>::
-	  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
+	  interpolatey(data,flag,imageFreq_p,visFreq,origdata,modflagCube,freqInterpMethod_p);
       }
     }
     else{
@@ -417,7 +430,9 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       flag.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
       flag.set(True);
       ArrayIterator<Bool> iter(flag, IPosition(2,0,2));
-      ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
+      //ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
+	  setSpectralFlag(vb,modflagCube);
+      ReadOnlyArrayIterator<Bool> origiter(modflagCube, IPosition(2,0,2));
       Int channum=0;
       Float step=imageFreq_p[1]-imageFreq_p[0];
       Float origstep=lsrFreq_p[1]-lsrFreq_p[0];
@@ -463,10 +478,14 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 
 
     if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour)||  (vb.nChannel()==1)){
+	  Cube<Bool> modflagCube;
+	  setSpectralFlag(vb,modflagCube);
       data.reference(vb.modelVisCube());
-      flags.resize(vb.flagCube().shape());
+      //flags.resize(vb.flagCube().shape());
+      flags.resize(modflagCube.shape());
       flags=0;
-      flags(vb.flagCube())=True;
+      //flags(vb.flagCube())=True;
+      flags(modflagCube)=True;
       interpVisFreq_p.resize();
       interpVisFreq_p=vb.frequency();
       return;
@@ -1061,8 +1080,6 @@ void FTMachine::setFreqInterpolation(const String& method){
     freqInterpMethod_p=InterpolateArray1D<Float,Complex>::nearestNeighbour;
   }
 
-
-
 }
 
 
@@ -1130,6 +1147,26 @@ void FTMachine::setFreqInterpolation(const String& method){
 
   }
 
+  void FTMachine::setSpwChanSelection(const Cube<Int>& spwchansels) {
+	spwChanSelFlag_p.resize();
+	spwChanSelFlag_p=spwchansels;
+  }
+
+  void FTMachine::setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube){
+    //cerr<<"vb.flagCube.shape..."<<vb.flagCube().shape()<<endl;
+	modflagcube.resize(vb.flagCube().shape());
+	modflagcube(vb.flagCube());
+	uInt nchan = vb.nChannel();
+	uInt msid = vb.msId();
+	uInt selspw = vb.spectralWindow();
+	//cout<<"spwChanSelFlag_p="<<spwChanSelFlag_p<<endl;
+    
+	for (uInt i=0;i<nchan;i++) {
+	  modflagcube.xzPlane(i).set(True);
+	  if (spwChanSelFlag_p(msid,selspw,i)==1) {
+	    modflagcube.xzPlane(i).set(False);
+	  }
+	}
+  }
 
 } //# NAMESPACE CASA - END
-

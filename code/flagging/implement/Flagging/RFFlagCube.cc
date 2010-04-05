@@ -343,6 +343,16 @@ void RFFlagCube::getMSFlags()
   {
     const Cube<Bool>   & fc( chunk.visBuf().flagCube() );
 
+    if (fc.shape()(0) != num(CORR) ||
+	fc.shape()(1) != num(CHAN))
+      {
+	stringstream ss;
+	ss << "The shape of FLAGs has changed (from (" << num(CORR) << ", " << num(CHAN)
+	   << ") to (" << fc.shape()(0) << ", " << fc.shape()(1) << ")) within the same chunk. "
+	   << "Invalid MS.";
+	throw AipsError(ss.str());
+      }
+
     for( uInt i=0; i<fr.nelements(); i++ )
     {
       uInt ifr = chunk.ifrNum(i);

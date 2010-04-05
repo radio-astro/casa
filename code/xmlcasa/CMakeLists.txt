@@ -160,6 +160,7 @@ casa_add_python( xmlcasa_python python/${PYTHONV}
   scripts/task_immath.py
   scripts/task_immoments.py
   scripts/task_importasdm.py
+  scripts/task_importevla.py
   scripts/task_importfits.py
   scripts/task_importgmrt.py
   scripts/task_importoldasdm.py
@@ -260,6 +261,7 @@ casa_add_tasks( xmlcasa_tasks
   tasks/immath.xml
   tasks/immoments.xml
   tasks/importasdm.xml
+  tasks/importevla.xml
   tasks/importfits.xml
   tasks/importgmrt.xml
   tasks/importoldasdm.xml
@@ -378,3 +380,28 @@ add_subdirectory( scripts/regressions )
 add_subdirectory( scripts/regressions/tests )
 add_subdirectory( scripts/usecases )
 add_subdirectory( scripts/demos )
+
+# Documentation targets, which depend on the contents of casa_out_* being set
+# Latex target
+if( casa_out_latex )
+  add_custom_target( doc_latex DEPENDS ${casa_out_latex} )
+else()
+  add_custom_target( doc_latex COMMAND echo "No LaTeX to generate!" )
+endif()
+
+# HTML target
+if( casa_out_html )
+  add_custom_target( doc_html DEPENDS ${casa_out_html} )
+else()
+  add_custom_target( doc_html COMMAND echo "LaTeX to HTML converter was not found." )
+endif()
+
+# PDF target
+if( casa_out_pdf )
+  add_custom_target( doc_pdf DEPENDS ${casa_out_pdf} )
+else()
+  add_custom_target( doc_pdf COMMAND echo "PDF to HTML converter was not found." )
+endif()
+
+# All documentation
+add_custom_target( doc DEPENDS doc_doxy doc_latex doc_html doc_pdf )

@@ -391,7 +391,12 @@ ms::summary(::casac::record& header, const bool verbose)
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
        MSSummary mss(itsMS);
-       mss.list(*itsLog, verbose);
+       casa::Record outRec;
+       mss.list(*itsLog, outRec, verbose, True);
+       casac::record* cOutRec=fromRecord(outRec);
+       header=*cOutRec;
+       if(cOutRec)
+	 delete cOutRec;
        rstat = True;
      }
    } catch (AipsError x) {
