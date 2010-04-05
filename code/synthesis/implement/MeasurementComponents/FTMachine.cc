@@ -376,7 +376,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	  // do something here for apply flag based on spw chan sels
 	  // e.g. 
 	  // setSpecFlag(vb, chansels_p) -> newflag cube
-	  setSpectralFlag(vb,modflagCube);
+      setSpectralFlag(vb,modflagCube);
       //flags.resize(vb.flagCube().shape());
       flags.resize(modflagCube.shape());
       flags=0;
@@ -969,9 +969,13 @@ Bool FTMachine::matchChannel(const Int& spw,
   else{
     lsrFreq=vb.lsrFrequency();
   }
+  // cout << "freq " << vb.frequency() << endl;
+  // cout << "lsrFreq " << lsrFreq << endl;
   lsrFreq_p.resize(lsrFreq.nelements());
   lsrFreq_p=lsrFreq;
-  
+  // cout << "FreqFrameValid " << freqFrameValid_p << " conversion " << doConversion_p[spw] << endl;
+  // cout << "freq sys " << spectralCoord_p.frequencySystem(True) << "    " << spectralCoord_p.frequencySystem(False) << endl;
+
   Vector<Double> c(1);
   c=0.0;
   Vector<Double> f(1);
@@ -979,12 +983,17 @@ Bool FTMachine::matchChannel(const Int& spw,
 
   //cout << "lsrFreq " << endl;
 
-
+  //cout.precision(10);
   for (Int chan=0;chan<nvischan;chan++) {
     f(0)=lsrFreq[chan];
     if(spectralCoord_p.toPixel(c, f)) {
       Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
       //cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+      /////////////
+      //c(0)=pixel;
+      //spectralCoord_p.toWorld(f, c);
+      // cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+      ////////////////
       if(pixel>-1&&pixel<nchan) {
 	chanMap(chan)=pixel;
         nFound++;
@@ -998,6 +1007,8 @@ Bool FTMachine::matchChannel(const Int& spw,
       }
     }
   }
+
+  //cout << "chanMap " << chanMap << endl; 
 
   multiChanMap_p[spw].resize();
   multiChanMap_p[spw]=chanMap;
@@ -1159,13 +1170,16 @@ void FTMachine::setFreqInterpolation(const String& method){
 	uInt nchan = vb.nChannel();
 	uInt msid = vb.msId();
 	uInt selspw = vb.spectralWindow();
-	//cout<<"spwChanSelFlag_p="<<spwChanSelFlag_p<<endl;
-    
+	Bool spwFlagIsSet=( (spwChanSelFlag_p.shape()(1) > selspw) && 
+			(spwChanSelFlag_p.shape()(0) > msid) && 
+			(spwChanSelFlag_p.shape()(2) >=nchan));
 	for (uInt i=0;i<nchan;i++) {
-	  modflagcube.xzPlane(i).set(True);
-	  if (spwChanSelFlag_p(msid,selspw,i)==1) {
-	    modflagcube.xzPlane(i).set(False);
-	  }
+	  //Flag those channels that  did not get selected...
+	  //respect the flags from vb  if selected  or 
+	  //if spwChanSelFlag is wrong shape
+	    if ((spwFlagIsSet) && (spwChanSelFlag_p(msid,selspw,i)!=1)) {
+	      modflagcube.xzPlane(i).set(True);
+	    }
 	}
   }
 
