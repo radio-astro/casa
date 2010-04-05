@@ -1529,8 +1529,9 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 	// Set auto-threshold at 5-sigma
 	if (threshold <= 0.0) {
 		LatticeStatistics<Float> stats(subImage);
-		Array<Float> out;
+		Array<Double> out;
 		//Bool ok = stats.getSigma (out, True); //what did this do?
+		Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
 		threshold = 5.0 * out(IPosition(subImage.ndim(), 0));
 	}
 
@@ -6287,7 +6288,7 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 			String fields[4];
 			Int num = split(var, fields, 4, String(" "));
 			String fitsfile;
-			if (num == 1 || num == 4) {
+			if (num >= 1) {
 				if (imagetype.contains("cube"))
 					fitsfile = fields[0] + "/data/demo/Images/test_image.fits";
 				else if (imagetype.contains("2d"))
