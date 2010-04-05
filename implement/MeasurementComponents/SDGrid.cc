@@ -142,10 +142,6 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     pointingToImage=other.pointingToImage;
     userSetSupport_p=other.userSetSupport_p;
     xyPosMovingOrig_p=other.xyPosMovingOrig_p;
-    movingDir_p=other.movingDir_p;
-    fixMovingSource_p=other.fixMovingSource_p;
-    firstMovingDir_p=other.firstMovingDir_p;
-    freqInterpMethod_p=other.freqInterpMethod_p;
     pointingDirCol_p=other.pointingDirCol_p;
 
   };

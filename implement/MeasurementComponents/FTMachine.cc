@@ -138,6 +138,13 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
     doConversion_p.resize();
     doConversion_p=other.doConversion_p;
 
+    //moving source stuff
+    movingDir_p=other.movingDir_p;
+    fixMovingSource_p=other.fixMovingSource_p;
+    firstMovingDir_p=other.firstMovingDir_p;
+    //Double precision gridding for those FTMachines that can do
+    useDoubleGrid_p=other.useDoubleGrid_p;
+
   };
   return *this;
 };
