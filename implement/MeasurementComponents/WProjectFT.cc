@@ -150,32 +150,11 @@ WProjectFT::WProjectFT(const RecordInterface& stateRec)
 WProjectFT& WProjectFT::operator=(const WProjectFT& other)
 {
   if(this!=&other) {
-    nAntenna_p=other.nAntenna_p;
-    mLocation_p=other.mLocation_p;
-    distance_p=other.distance_p;
-    lastFieldId_p=other.lastFieldId_p;
-    lastMSId_p=other.lastMSId_p;
-    nx=other.nx;
-    ny=other.ny;
-    npol=other.npol;
-    nchan=other.nchan;
-    nvischan=other.nvischan;
-    nvispol=other.nvispol;
-    chanMap.resize();
-    chanMap=other.chanMap;
-    polMap.resize();
-    polMap=other.polMap;
-    doUVWRotation_p=other.doUVWRotation_p;
-    freqFrameValid_p=other.freqFrameValid_p;
-    selectedSpw_p.resize();
-    selectedSpw_p=other.selectedSpw_p;
-    multiChanMap_p=other.multiChanMap_p;
+    //Do the base parameters
+    FTMachine::operator=(other);
+    
+    
     padding_p=other.padding_p;
-    nVisChan_p.resize();
-    nVisChan_p=other.nVisChan_p;
-    spectralCoord_p=other.spectralCoord_p;
-    doConversion_p.resize();
-    doConversion_p=other.doConversion_p;
     nWPlanes_p=other.nWPlanes_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
@@ -205,10 +184,7 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
     wpConvFunc_p=other.wpConvFunc_p;
-    freqInterpMethod_p=other.freqInterpMethod_p;
     useDoubleGrid_p=other.useDoubleGrid_p;
-	spwChanSelFlag_p.resize();
-	spwChanSelFlag_p=other.spwChanSelFlag_p;
   };
   return *this;
 };

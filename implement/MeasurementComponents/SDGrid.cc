@@ -125,16 +125,8 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 SDGrid& SDGrid::operator=(const SDGrid& other)
 {
   if(this!=&other) {
-    distance_p=other.distance_p;
-    lastFieldId_p=other.lastFieldId_p;
-    lastMSId_p=other.lastMSId_p;
-    nx=other.nx;
-    ny=other.ny;
-    npol=other.npol;
-    nchan=other.nchan;
-    freqFrameValid_p=other.freqFrameValid_p;
-    selectedSpw_p=other.selectedSpw_p;
-    multiChanMap_p=other.multiChanMap_p;
+     //Do the base parameters
+    FTMachine::operator=(other);
     sj_p=other.sj_p;
     imageCache=other.imageCache;
     wImage=other.wImage;
@@ -155,8 +147,6 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     firstMovingDir_p=other.firstMovingDir_p;
     freqInterpMethod_p=other.freqInterpMethod_p;
     pointingDirCol_p=other.pointingDirCol_p;
-	spwChanSelFlag_p.resize();
-	spwChanSelFlag_p=other.spwChanSelFlag_p;
 
   };
   return *this;

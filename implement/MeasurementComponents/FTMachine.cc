@@ -95,7 +95,49 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
 {
   if(this!=&other) {
     image=other.image;
-    uvwMachine_p=other.uvwMachine_p;
+    //generic selection stuff and state
+    nAntenna_p=other.nAntenna_p;
+    distance_p=other.distance_p;
+    lastFieldId_p=other.lastFieldId_p;
+    lastMSId_p=other.lastMSId_p;
+    
+    tangentSpecified_p=other.tangentSpecified_p;
+    mTangent_p=other.mTangent_p;
+    mImage_p=other.mImage_p;
+    mFrame_p=other.mFrame_p;
+
+    nx=other.nx;
+    ny=other.ny;
+    npol=other.npol;
+    nchan=other.nchan;
+    nvischan=other.nvischan;
+    nvispol=other.nvispol;
+    mLocation_p=other.mLocation_p;
+    if(uvwMachine_p)
+      delete uvwMachine_p;
+    if(other.uvwMachine_p)
+      uvwMachine_p=new UVWMachine(*other.uvwMachine_p);
+    else
+      uvwMachine_p=0;
+    doUVWRotation_p=other.doUVWRotation_p;
+    //Spectral and pol stuff 
+    freqInterpMethod_p=other.freqInterpMethod_p;
+    spwChanSelFlag_p.resize();
+    spwChanSelFlag_p=other.spwChanSelFlag_p;
+    freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p.resize();
+    selectedSpw_p=other.selectedSpw_p;
+    multiChanMap_p=other.multiChanMap_p;
+    chanMap.resize();
+    chanMap=other.chanMap;
+    polMap.resize();
+    polMap=other.polMap;
+    nVisChan_p.resize();
+    nVisChan_p=other.nVisChan_p;
+    spectralCoord_p=other.spectralCoord_p;
+    doConversion_p.resize();
+    doConversion_p=other.doConversion_p;
+
   };
   return *this;
 };
