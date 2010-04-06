@@ -458,15 +458,15 @@ casa_find( PYTHON
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
 
+# Define pyroot to two directory levels above Python.h.
+string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
 
 if( APPLE )
-    if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-        set( pyroot ${casa_packages}/lib/Python.framework/Versions/${PYTHONV} )
-    else()
-       set( pyroot ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
-    endif()
-else()
-    set( pyroot ${casa_packages} )
+  if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
+    set( pyroot ${pyroot}/lib/Python.framework/Versions/${PYTHONV} )
+  else()
+    set( pyroot ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
+  endif()
 endif()
 
 set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
@@ -553,7 +553,7 @@ file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
 # The names of CCMTools libraries changed.
 # Need to support both naming conventions, until the new
 # version is universally available. (This implementation
-# would be cleaner if CCM exported a version number.)
+# would be cleaner if CCMTools exported a version number.)
 #
 if( EXISTS ${casa_packages}/lib/libCCM_Python.so OR
     EXISTS ${casa_packages}/lib64/libCCM_Python.so OR
@@ -702,6 +702,8 @@ set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 list( GET ${RPFITS_LIBRARIES} 0 rpfits_lib )
 get_filename_component(rpfitslibd ${rpfits_lib} PATH)
 
+string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
+
 # convert semicolons to spaces...
 set( _ii "" )
 foreach( _i ${PYTHON_INCLUDE_DIRS} )
@@ -727,7 +729,7 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   WCSLIBLIBD = .\n
   WCSLIBLIB = ${WCSLIB_wcs}\n
   PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${casa_packages}/lib\n
+  PYTHONLIBD = ${_pythonlibd}\n
   PYTHONINCD = ${_ii}\n
   PYTHONLIB = ${PYTHON_LIBRARIES}\n
   BOOSTROOT = ${BOOST_ROOT}\n
