@@ -131,9 +131,9 @@ def distribution(s):
 # Returns true if the given hostname is testing
 # the non-active (stable, test etc..) branch
 def is_stable_branch(host):
-    return host.find('tst') >= 0 or \
-           host.find('ma014655') >= 0 or \
-           host.find('sneffels')
+    return (host.find('tst') >= 0 or \
+            host.find('ma01') >= 0 or \
+            host.find('sneffels') >= 0)
 
 def selected_revisions(data):
   
