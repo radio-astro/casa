@@ -493,7 +493,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     c.pgc('a.pblimit='+str(pblimit));
     c.pgc('a.dopbcorr='+str(dopbcorr));
     c.pgc('a.applyoffsets='+str(applyoffsets));
-    c.pgc('a.epjtablename='+str(epjtablename));
+    c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
 
     chancounter=0
     nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1
