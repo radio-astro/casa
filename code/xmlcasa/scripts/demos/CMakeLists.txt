@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa_demos_python python/${PYTHONV}/regressions
+casa_add_python( xmlcasa xmlcasa_demos_python python/${PYTHONV}/regressions
   backend_demo.py
   jupiter6cm_caldemo.py
   jupiter6cm_demo.py

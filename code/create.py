@@ -212,13 +212,13 @@ for mod in modules:
 
 
     if py_sources.find('py') >= 0 and mod != "msvis":
-        cml.write('casa_add_python( %s_python python/${PYTHONV}\n' % mod )
+        cml.write('casa_add_python( %s %s_python python/${PYTHONV}\n' % (mod, mod) )
         cml.write(py_sources)
         cml.write(' )\n\n')
 
 
     if mod == "xmlcasa":
-        cml.write('casa_add_tasks( %s_tasks \n' %mod )
+        cml.write('casa_add_tasks( %s %s_tasks \n' % (mod, mod) )
         cml.write(xmltask_sources)
         cml.write(' )\n\n')
 
@@ -262,7 +262,7 @@ for mod in modules:
 
             os.system("cp /tmp/gpl.txt " + d[0]+"/CMakeLists.txt")
             cmlr = open(d[0]+"/CMakeLists.txt", "a")
-            cmlr.write('casa_add_python( %s_python %s\n' % (d[2], d[1]))
+            cmlr.write('casa_add_python( %s %s_python %s\n' % (mod, d[2], d[1]))
             
             sources = commands.getoutput(
                 'cd ' + d[0] + ' && /bin/ls -1 *.py | sort | xargs -n1 echo " "'

@@ -811,4 +811,3 @@ casa_add_module( nrao CASACORE )
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
 
 # demo atmosphere ionosphere jive nfra simulators vlbi vo
-

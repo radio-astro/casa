@@ -88,7 +88,7 @@ casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
 casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
 casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
-casa_add_python( xmlcasa_python python/${PYTHONV}
+casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
   scripts/assignmentFilter.py
   scripts/casa_in_py.py
@@ -224,7 +224,7 @@ casa_add_python( xmlcasa_python python/${PYTHONV}
   scripts/viewertool.py
   scripts/vishead_util.py )
 
-casa_add_tasks( xmlcasa_tasks 
+casa_add_tasks( xmlcasa xmlcasa_tasks 
   tasks/accum.xml
   tasks/applycal.xml
   tasks/autoclean.xml

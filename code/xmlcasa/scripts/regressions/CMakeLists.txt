@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa_regressions_python python/${PYTHONV}/regressions
+casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regressions
   3c129_tutorial_regression.py
   3C219D_regression.py
   accum_regression.py
