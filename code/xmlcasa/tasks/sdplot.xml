@@ -213,6 +213,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
     </param>
 
+    <param type="bool" name="header">
+	    <description>print header information on the plot</description>
+	    <value>True</value>
+    </param>
+
+    <param type="int" name="headsize" subparam='true'>
+            <description>header fontsize</description>
+            <value>9</value>
+    </param>
+
+<!--
+    <param type="bool" name="plotstyle">
+	    <description>set custom plot settings</description>
+	    <value>False</value>
+    </param>
+
+    <param type="doubleArray" name="layout" subparam='true'>
+            <description>plot layout in [left, bottom, right, top, horizontal space, vertical space]</description>
+            <value type="vector"></value>
+    </param>
+-->
+
     <param type="string" name="plotfile">
 	    <description>file name for hardcopy output</description>
 	    <value></value>
@@ -281,6 +303,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 </equals>
             </when>
 
+            <when param="header">
+                <equals type="bool" value="True">
+                        <default param="headsize"><value type="int">9</value></default>
+                </equals>
+                <equals type="bool" value="False"/>
+            </when>
+
+<!--
+            <when param="plotstyle">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                        <default param="layout"><value type="vector"></value></default>
+                </equals>
+            </when>
+-->
 
 
     </constraints>
@@ -386,62 +423,70 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         plottype -- type of plot
                  options: 'spectra','totalpower','pointing','azel'
                  default: 'spectra'
-        stack -- code for stacking on single plot for spectral plotting
-                options: 'p','b','i','t','s' or
-                         'pol', 'beam', 'if', 'time', 'scan'
-                default: 'p'
-                example: maximum of 25 stacked spectra
-                         stack by pol, beam, if, time, scan
-        panel -- code for splitting into multiple panels for spectral plotting
-                options: 'p','b','i','t','s' or
-                         'pol', 'beam', 'if', 'time', 'scan'
-                default: 'i'
-                example: maximum of 25 panels
-                         panel by pol, beam, if, time, scan
-        flrange -- range for flux axis of plot for spectral plotting
-                options: (list) [min,max]
-                default: [] (full range)
-                example: flrange=[-0.1,2.0] if 'K'
-                         assumes current fluxunit
-        sprange -- range for spectral axis of plot
-                options: (list) [min,max]
-                default: [] (full range)
-                example: sprange=[42.1,42.5] if 'GHz'
-                         assumes current specunit
-        linecat -- control for line catalog plotting for spectral plotting
-                options: (str) 'all','none' or by molecule
-                default: 'none' (no lines plotted)
-                example: linecat='SiO' for SiO lines
-                         linecat='*OH' for alcohols
-                         uses sprange to limit catalog
-                WARNING: specunit must be in frequency (*Hz)
-                         to plot from the line catalog!
-                         and must be 'GHz' or 'MHz' to use
-                         sprange to limit catalog
-        linedop -- doppler offset for line catalog plotting (spectral plotting)
-                options: (float) doppler velocity (km/s)
-                default: 0.0
-                example: linedop=-30.0
-        colormap -- the colours to be used for plot lines. 
-                default: None
-                example: colormap="green red black cyan magenta" (html standard)
-                         colormap="g r k c m" (abbreviation)
-                         colormap="#008000 #00FFFF #FF0090" (RGB tuple)
-                         The plotter will cycle through these colours 
-                         when lines are overlaid (stacking mode).
-        linestyles -- the linestyles to be used for plot lines. 
-                default: None
-                example: linestyles="line dashed dotted dashdot dashdotdot dashdashdot". 
-                         The plotter will cycle through these linestyles 
-                         when lines are overlaid (stacking mode). 
-                WARNING: Linestyles can be specified only one color has been set. 
-        linewidth -- width of plotted lines. 
-                default: 1
-                example: linewidth=1 (integer)
-                         linewidth=0.75 (double)
-        histogram -- plot histogram
+            &gt;&gt;&gt; plottype expandable parameter
+                 stack -- code for stacking on single plot for spectral plotting
+                         options: 'p','b','i','t','s' or
+                                  'pol', 'beam', 'if', 'time', 'scan'
+                         default: 'p'
+                         example: maximum of 25 stacked spectra
+                                  stack by pol, beam, if, time, scan
+                 panel -- code for splitting into multiple panels for spectral plotting
+                         options: 'p','b','i','t','s' or
+                                  'pol', 'beam', 'if', 'time', 'scan'
+                         default: 'i'
+                         example: maximum of 25 panels
+                                  panel by pol, beam, if, time, scan
+                flrange -- range for flux axis of plot for spectral plotting
+                        options: (list) [min,max]
+                        default: [] (full range)
+                        example: flrange=[-0.1,2.0] if 'K'
+                                 assumes current fluxunit
+                sprange -- range for spectral axis of plot
+                        options: (list) [min,max]
+                        default: [] (full range)
+                        example: sprange=[42.1,42.5] if 'GHz'
+                                 assumes current specunit
+                linecat -- control for line catalog plotting for spectral plotting
+                        options: (str) 'all','none' or by molecule
+                        default: 'none' (no lines plotted)
+                        example: linecat='SiO' for SiO lines
+                                 linecat='*OH' for alcohols
+                                 uses sprange to limit catalog
+                        WARNING: specunit must be in frequency (*Hz)
+                                 to plot from the line catalog!
+                                 and must be 'GHz' or 'MHz' to use
+                                 sprange to limit catalog
+                linedop -- doppler offset for line catalog plotting (spectral plotting)
+                        options: (float) doppler velocity (km/s)
+                        default: 0.0
+                        example: linedop=-30.0
+                colormap -- the colours to be used for plot lines. 
+                        default: None
+                        example: colormap="green red black cyan magenta" (html standard)
+                                 colormap="g r k c m" (abbreviation)
+                                 colormap="#008000 #00FFFF #FF0090" (RGB tuple)
+                                 The plotter will cycle through these colours 
+                                 when lines are overlaid (stacking mode).
+                linestyles -- the linestyles to be used for plot lines. 
+                        default: None
+                        example: linestyles="line dashed dotted dashdot dashdotdot dashdashdot". 
+                                 The plotter will cycle through these linestyles 
+                                 when lines are overlaid (stacking mode). 
+                        WARNING: Linestyles can be specified only one color has been set. 
+                linewidth -- width of plotted lines. 
+                        default: 1
+                        example: linewidth=1 (integer)
+                                 linewidth=0.75 (double)
+                histogram -- plot histogram
+                        options: (bool) True, False
+                        default: False
+        header -- print header information on plot
                 options: (bool) True, False
-                default: False
+                default: True
+            &gt;&gt;&gt; header expandable parameter
+                headsize -- header font size
+                        options: (int)
+                        default: 9
         plotfile -- file name for hardcopy output
                 options: (str) filename.eps,.ps,.png
                 default: '' (no hardcopy)
