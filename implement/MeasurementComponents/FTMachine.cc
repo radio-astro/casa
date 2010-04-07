@@ -1213,9 +1213,10 @@ void FTMachine::setFreqInterpolation(const String& method){
   }
 
   void FTMachine::setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube){
-    //cerr<<"vb.flagCube.shape..."<<vb.flagCube().shape()<<endl;
-	modflagcube.resize(vb.flagCube().shape());
-	modflagcube(vb.flagCube());
+    
+    modflagcube.resize(vb.flagCube().shape());
+    // cerr <<"vb.flagCube.shape..."<<vb.flagCube().shape()<< " mod " << modflagcube.shape() << endl;
+    modflagcube=vb.flagCube();
 	uInt nchan = vb.nChannel();
 	uInt msid = vb.msId();
 	uInt selspw = vb.spectralWindow();
