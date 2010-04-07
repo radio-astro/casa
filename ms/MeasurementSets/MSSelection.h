@@ -225,35 +225,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // replaced with the value of the defaultStep parameter. Multiple
     // channel specifications for the same Spectral Window selection,
     // results in multiple rows in the Matrix.
-    inline Matrix<Int> getChanList(const MeasurementSet* ms=NULL, const Int defaultStep=1) 
-    {
-      if (chanIDs_p.nelements() <= 0) getTEN(ms); 
-      Int nChIds=chanIDs_p.shape()[0],
-	nSpwIds=spwIDs_p.shape()[0];
-      if (nChIds < nSpwIds)
-	throw(MSSelectionError("MSSelection::getChanList() found more SPW IDs than channel IDs."));	
-      Matrix<Int> chanIDList=chanIDs_p;
-
-      chanIDList.resize(nSpwIds,4);
-      for (Int i=0;i<nSpwIds;i++)
-	{
-	  Int spw;
-	  spw=spwIDs_p[i];
-	  chanIDList(spw,0)=spw;
-	  chanIDList(spw,1)=chanIDs_p(spw,1);
-	  chanIDList(spw,2)=chanIDs_p(spw,2);
-	  chanIDList(spw,3)=chanIDs_p(spw,3);
-	}
-      for(Int i=0;i<nSpwIds;i++) 
-      	if (chanIDList(i,3) < 0) 
-      	  chanIDList(i,3)=defaultStep;
-      /*
-      for(Int i=0;i<nChIds;i++) 
-      	if (chanIDList(i,3) < 0) 
-      	  chanIDList(i,3)=defaultStep;
-      */
-      return chanIDList.copy();
-    }
+    Matrix<Int> getChanList(const MeasurementSet* ms=NULL, const Int defaultStep=1);
 
     // Return the list of the selected Data Description IDs.    
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
