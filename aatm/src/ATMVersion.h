@@ -28,6 +28,10 @@
 #include "ATMCommon.h"
 #include <string>
 
+#ifndef ATM_VERSION
+#define ATM_VERSION "0.3.0"
+#endif
+
 ATM_NAMESPACE_BEGIN
   std::string getVersion();
   std::string getTag();
