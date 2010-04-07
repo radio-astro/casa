@@ -827,7 +827,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
   // Sort the table in order of TIME, ANTENNA1, ANTENNA2, FIELDID, SPWID.
   // Iterate through the table on the first 4 fields.
   Block<String> sortNames(5);
-  sortNames[0] = MS::columnName(MS::TIME);
+  sortNames[0] = MS::columnName(MS::TIME_CENTROID);
   sortNames[1] = MS::columnName(MS::ANTENNA1);
   sortNames[2] = MS::columnName(MS::ANTENNA2);
   sortNames[3] = MS::columnName(MS::FIELD_ID);
