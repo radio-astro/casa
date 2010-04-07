@@ -104,7 +104,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </value>
     </param>
 
-<!--
     <param type="string" name="checkinputs">
       <description>graphically verify parameters [yes|no|only]</description>
       <value>no</value>
@@ -114,7 +113,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	  <value>only</value>
 	</allowed>
     </param>
--->            
 
 
 <!--  PREDICT  -->
@@ -198,6 +196,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
 
+<!--   DISPLAY  (will become analysis)  -->    
+    
+    <param type="bool" name="fidelity">
+      <description>Calculate fidelity images</description>
+      <value>True</value>
+    </param>
+    
+    <param type="bool" name="display">
+      <description>Plot simulation result images,figures</description>
+      <value>True</value>
+    </param>
 
     <param type="bool" name="verbose">
       <description></description>
@@ -306,6 +315,10 @@ single dish simulation task (prototype):
                        default: 260.0
                 tau0 -- zenith opacity at observing frequency
                        default: 0.1
+    -------------------------------
+    fidelity -- Calculate fidelity image
+    display -- Plot array config, uv coverage, beam, and images
+
 
 
 
