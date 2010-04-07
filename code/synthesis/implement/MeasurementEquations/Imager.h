@@ -588,8 +588,6 @@ protected:
   Vector<Int> dataspectralwindowids_p;
   Vector<Int> datadescids_p;
   Vector<Int> datafieldids_p;
-  //TT
-  Cube<Int> spwchansels_p;
 
   String telescope_p;
   String vpTableStr_p;         // description of voltage patterns for various telescopes

@@ -242,7 +242,6 @@ public:
 
   virtual String getPointingDirColumnInUse();
 
-  virtual void setSpwChanSelection(const Cube<Int>& spwchansels);
 
 protected:
 
@@ -335,8 +334,6 @@ protected:
 				    Cube<Complex>& data, Cube<Int>& flag);
 
 
-  void setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube); 
-
   // Private variables needed for spectral frame conversion 
   SpectralCoordinate spectralCoord_p;
   Vector<Bool> doConversion_p;
@@ -347,8 +344,6 @@ protected:
   Vector<Double> interpVisFreq_p;
   InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
   String pointingDirCol_p;
-  Cube<Int> spwChanSelFlag_p;
-
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

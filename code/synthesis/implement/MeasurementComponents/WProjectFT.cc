@@ -207,8 +207,6 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     wpConvFunc_p=other.wpConvFunc_p;
     freqInterpMethod_p=other.freqInterpMethod_p;
     useDoubleGrid_p=other.useDoubleGrid_p;
-	spwChanSelFlag_p.resize();
-	spwChanSelFlag_p=other.spwChanSelFlag_p;
   };
   return *this;
 };
