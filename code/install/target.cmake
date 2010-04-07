@@ -208,7 +208,8 @@ macro( casa_add_module module )
     # the linker will make sure that C is eventually
     # linked to A
 
-    if( DEFINED ${_dep}_LIBRARIES )
+    if( DEFINED ${_dep}_LIBRARIES OR _dep STREQUAL DL )
+
       # External library
 
       set( ${module}_LINK_TO 
