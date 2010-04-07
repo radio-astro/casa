@@ -34,12 +34,12 @@ if (! $first_test) {
 $scheduler_state = "$result_dir/tests_next.txt";
 
 if (`uname` eq "Darwin\n") {
-    $release_dir = "https://svn.cv.nrao.edu/casa/osx_distro/test/10.5/ https://svn.cv.nrao.edu/casa/osx_distro/stable/10.5/";
+    @release_dir = ("https://svn.cv.nrao.edu/casa/osx_distro/test/10.5/", "https://svn.cv.nrao.edu/casa/osx_distro/stable/10.5/");
     $filename_regexp = "CASA-intel-[0-9]*\\.dmg"
 }
 elsif (`uname` eq "Linux\n") {
     #$release_dir = "http://svn.cv.nrao.edu/casa/linux_distro/test/";
-    $release_dir = "/casa/www/linux_distro/test/"; # works in CV
+    @release_dir = ("/casa/www/linux_distro/test/"); # works in CV
 
     # different filenames for 32 and 64 bit tar balls
     $arch = `uname -i`;
@@ -69,20 +69,32 @@ else {
     die "Unknown architechture " . `uname`;
 }
 
-if ($release_dir =~ /^http/) {
+if ($release_dir[0] =~ /^http/) {
 # identify latest release by parsing the HTML
-    $cmd = "curl $release_dir 2>/dev/null | egrep -o \"$filename_regexp\" | sort | tail -1";
+    $cmd = "curl " . join (" ", @release_dir) . " 2>/dev/null | egrep -o \"$filename_regexp\" | sort | tail -1";
 }
 else {
-    $cmd = "/bin/ls -1t $release_dir 2>/dev/null | egrep -o \"$filename_regexp\" | head -1";
+    $cmd = "/bin/ls -1t $release_dir[0] 2>/dev/null | egrep -o \"$filename_regexp\" | head -1";
 }
 $latest_release = `$cmd`;
 $? == 0 or die "$cmd: $!";
 chomp($latest_release);
-print "Getting $latest_release from $release_dir...\n";
 
-if ($release_dir =~ /^http/) {
-    sys_exe("curl $release_dir/$latest_release > $prefix/$latest_release");
+if ($release_dir[0] =~ /^http/) {
+
+    # Try all directories, until we got something which is not a 404 HTML
+    for $r (@release_dir) {
+        print "Getting $latest_release from $r...\n";
+    
+        sys_exe("curl $r/$latest_release -o $prefix/$latest_release");
+        if (system("file $prefix/$latest_release | grep HTML") != 0)
+        {
+            last;
+        }
+        else {
+            print "That was an HTML document, trying next URL...\n";
+        }
+    }
 }
 else {
     sys_exe("ln -s $release_dir/$latest_release $prefix/$latest_release");
