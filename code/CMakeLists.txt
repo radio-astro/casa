@@ -60,6 +60,8 @@ if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
 endif()
 
+set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
+
 dump( CMAKE_HOST_SYSTEM_NAME
   CMAKE_HOST_SYSTEM
   CMAKE_HOST_UNIX
