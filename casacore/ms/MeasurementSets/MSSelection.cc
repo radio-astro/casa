@@ -710,7 +710,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return False;
   }
-  
+  //----------------------------------------------------------------------------
+  Matrix<Int> MSSelection::getChanList(const MeasurementSet* ms, const Int defaultStep) 
+    {
+      if (chanIDs_p.nelements() <= 0) getTEN(ms); 
+      Int nChIds=chanIDs_p.shape()[0],
+	nSpwIds=spwIDs_p.shape()[0];
+      if (nChIds < nSpwIds)
+	throw(MSSelectionError("MSSelection::getChanList() found more SPW IDs than channel IDs."));	
+      Matrix<Int> chanIDList;//=chanIDs_p;
+      chanIDList.resize(nSpwIds,4);
+      for (Int i=0;i<nSpwIds;i++)
+	{
+	  Int spw;
+	  spw=spwIDs_p(i);
+	  chanIDList(i,0)=chanIDs_p(i,0);
+	  chanIDList(i,1)=chanIDs_p(i,1);
+	  chanIDList(i,2)=chanIDs_p(i,2);
+	  chanIDList(i,3)=chanIDs_p(i,3);
+	}
+      for(Int i=0;i<nSpwIds;i++) 
+      	if (chanIDList(i,3) < 0) 
+      	  chanIDList(i,3)=defaultStep;
+      /*
+      for(Int i=0;i<nChIds;i++) 
+      	if (chanIDList(i,3) < 0) 
+      	  chanIDList(i,3)=defaultStep;
+      */
+      return chanIDList.copy();
+    }
   //----------------------------------------------------------------------------
 
   void MSSelection::getChanSlices(Vector<Vector<Slice> >& chanslices,
