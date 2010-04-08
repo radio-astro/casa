@@ -1,1 +1,0 @@
-../regressions/tests/boxit_test.py
