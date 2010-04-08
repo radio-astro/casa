@@ -58,25 +58,26 @@ NROFITSDataset::NROFITSDataset( string name )
   if ( open() ) 
     os << LogIO::SEVERE << "error while opening file " << filename_ << LogIO::EXCEPTION ;
  
-  // memory allocation
-  initialize() ;
-
+  // data initialization
   readHeader( numField_, "TFIELDS", same_ ) ;
   forms_.resize( numField_ ) ;
   names_.resize( numField_ ) ;
   units_.resize( numField_ ) ;
-
-  // data initialization
   getField() ;
 
   // check endian
-  // FITS file is always BIG_ENDIAN
-  int itmp ;
-  if ( readTable( itmp, "NCH", true ) != 0 ) {
+  // FITS file is always BIG_ENDIAN, but it is not true for NRO data
+  vector<int> itmp( 6 ) ;
+  if ( readTable( itmp, "LAVST", true, 0 ) != 0 ) {
     os << LogIO::WARN << "Error while checking endian." << LogIO::POST ;
     return ;
   }
-  if ( itmp > 0 && itmp <= 2048 ) {
+//   os << "itmp = " << itmp[0] << " " 
+//      << itmp[1] << " " << itmp[2] << " " 
+//      << itmp[3] << " " << itmp[4] << " " 
+//      << itmp[5] << LogIO::POST ;
+  // check endian by looking month value in LAVST (start time)
+  if ( itmp[1] > 0 && itmp[1] < 13 ) {
     same_ = 1 ;
     os << LogIO::NORMAL << "same endian " << LogIO::POST ;
   }
@@ -84,6 +85,9 @@ NROFITSDataset::NROFITSDataset( string name )
     same_ = 0 ;
     os << LogIO::NORMAL << "different endian " << LogIO::POST ;
   }
+
+  // memory allocation
+  initialize() ;
 }
 
 // destructor 
@@ -96,6 +100,8 @@ NROFITSDataset::~NROFITSDataset()
 // data initialization
 void NROFITSDataset::initialize()
 {
+  LogIO os( LogOrigin( "NROFITSDataset", "initialize()", WHERE ) ) ;
+
   int status = 0 ;
   status = readHeader( ARYNM, "ARYNM", same_ ) ;
   if ( status != 0 ) 
@@ -104,7 +110,12 @@ void NROFITSDataset::initialize()
   readHeader( scanLen_, "NAXIS1", same_ ) ;
   status = 0 ;
   scanNum_ = rowNum_ / ARYNM ;
-  chmax_ = 2048 ;
+  int nchan = 0 ;
+  if ( readTable( nchan, "NCH", same_ ) != 0 ) {
+    os << LogIO::WARN << "Error while checking maximum channel number." << LogIO::POST ;
+    return ;
+  }
+  chmax_ = nchan ;
   datasize_ = sizeof( int ) * chmax_ ;
   //record_->JDATA.resize( chmax_ ) ;
   JDATA.resize( chmax_ ) ;
@@ -547,8 +558,8 @@ int NROFITSDataset::fillHeader( int sameEndian )
   //
   if ( readHeader( NUMCH, "NCH", sameEndian ) != 0 ) {
     if ( readTable( NUMCH, "NCH", sameEndian ) != 0 ) {
-      os << LogIO::NORMAL << "NUMCH set to 2048." << LogIO::POST ;
-      NUMCH = 2048 ;
+      os << LogIO::NORMAL << "NUMCH set to " << chmax_ << "." << LogIO::POST ;
+      NUMCH = chmax_ ;
     }
   }
   // DEBUG
@@ -562,8 +573,8 @@ int NROFITSDataset::fillHeader( int sameEndian )
   //cout << "CHMIN = " << CHMIN << endl ;
   //
   if ( readHeader( CHMAX, "CHMAX", sameEndian ) != 0 ) {
-    os << LogIO::NORMAL << "CHMAX set to 2048." << LogIO::POST ;
-    CHMAX = 2048 ;
+    os << LogIO::NORMAL << "CHMAX set to " << chmax_ << "." << LogIO::POST ;
+    CHMAX = chmax_ ;
   }
   // DEBUG
   //cout << "CHMAX = " << CHMAX << endl ;
@@ -608,14 +619,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "RX      " ;
+//       //cout << "RX      " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << "\'" << RX[i] << "\' " ;
+//     //cout << "\'" << RX[i] << "\' " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( HPBW, "HPBW", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data HPBW." << LogIO::POST ;
@@ -624,14 +635,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "HPBW    " ;
+//       //cout << "HPBW    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << HPBW[i] << " " ;
+//     //cout << HPBW[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( EFFA, "EFFA", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFFA." << LogIO::POST ;
@@ -640,14 +651,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "EFFA    " ;
+//       //cout << "EFFA    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << EFFA[i] << " " ;
+//     //cout << EFFA[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( EFFB, "EFFB", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFFB." << LogIO::POST ;
@@ -656,14 +667,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "EFFB    " ;
+//       //cout << "EFFB    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << EFFB[i] << " " ;
+//     //cout << EFFB[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( EFFL, "EFFL", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFFL." << LogIO::POST ;
@@ -672,14 +683,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "EFFL    " ;
+//       //cout << "EFFL    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     } 
-//     cout << EFFL[i] << " " ;
+//     //cout << EFFL[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( EFSS, "EFSS", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EFSS." << LogIO::POST ;
@@ -688,14 +699,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "EFSS    " ;
+//       //cout << "EFSS    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << EFSS[i] << " " ;
+//     //cout << EFSS[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( GAIN, "GAIN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data GAIN." << LogIO::POST ;
@@ -704,14 +715,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "GAIN    " ;
+//       //cout << "GAIN    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << GAIN[i] << " " ;
+//     //cout << GAIN[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( HORN, "HORN" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data HORN." << LogIO::POST ;
@@ -720,14 +731,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "HORN    " ;
+//       //cout << "HORN    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << "\'" << HORN[i] << "\' " ;
+//     //cout << "\'" << HORN[i] << "\' " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( POLTP, "POLTP" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data POLTP." << LogIO::POST ;
@@ -736,14 +747,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "POLTP   " ;
+//       //cout << "POLTP   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << "\'" << POLTP[i] << "\' " ;
+//     //cout << "\'" << POLTP[i] << "\' " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   vector<int> ipoldr( ARYNM, 0 ) ;
   if ( readColumn( ipoldr, "POLDR", sameEndian ) != 0 ) {
@@ -755,14 +766,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "POLDR   " ;
+//       //cout << "POLDR   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << POLDR[i] << " " ;
+//     //cout << POLDR[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( POLAN, "POLAN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data POLAN." << LogIO::POST ;
@@ -771,14 +782,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "POLAN   " ;
+//       //cout << "POLAN   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << POLAN[i] << " " ;
+//     //cout << POLAN[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( DFRQ, "DFRQ", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data DFRQ." << LogIO::POST ;
@@ -787,14 +798,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "DFRQ    " ;
+//       //cout << "DFRQ    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << DFRQ[i] << " " ;
+//     //cout << DFRQ[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( SIDBD, "SIDBD" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SIDBD." << LogIO::POST ;
@@ -803,14 +814,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "SIDBD   " ;
+//       //cout << "SIDBD   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << "\'" << SIDBD[i] << "\' " ;
+//     //cout << "\'" << SIDBD[i] << "\' " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( REFN, "REFN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data REFN." << LogIO::POST ;
@@ -819,14 +830,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "REFN    " ;
+//       //cout << "REFN    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << REFN[i] << " " ;
+//     //cout << REFN[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( IPINT, "IPINT", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data IPINT." << LogIO::POST ;
@@ -835,14 +846,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "IPINT   " ;
+//       //cout << "IPINT   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << IPINT[i] << " " ;
+//     //cout << IPINT[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( MULTN, "MULTN", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data MULTN." << LogIO::POST ;
@@ -851,14 +862,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "MULTN   " ;
+//       //cout << "MULTN   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << MULTN[i] << " " ;
+//     //cout << MULTN[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( MLTSCF, "MLTSCF", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data MLTSCF." << LogIO::POST ;
@@ -867,14 +878,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "MLTSCF  " ;
+//       //cout << "MLTSCF  " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << MLTSCF[i] << " " ;
+//     //cout << MLTSCF[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( LAGWIND, "LAGWIN" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data LAGWIND." << LogIO::POST ;
@@ -883,14 +894,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "LAGWIND " ;
+//       //cout << "LAGWIND " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << "\'" << LAGWIND[i] << "\' " ;
+//     //cout << "\'" << LAGWIND[i] << "\' " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( BEBW, "BEBW", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data BEBW." << LogIO::POST ;
@@ -899,14 +910,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "BEBW    " ;
+//       //cout << "BEBW    " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << BEBW[i] << " " ;
+//     //cout << BEBW[i] << " " ;
 //   }  
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( BERES, "BERES", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data BERES." << LogIO::POST ;
@@ -915,14 +926,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "BERES   " ;
+//       //cout << "BERES   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << BERES[i] << " " ;
+//     //cout << BERES[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( CHWID, "CHWID", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data CHWID." << LogIO::POST ;
@@ -931,14 +942,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
     // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "CHWID   " ;
+//       //cout << "CHWID   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << CHWID[i] << " " ;
+//     //cout << CHWID[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readARRY() != 0 ) {
     os << LogIO::WARN << "Error while reading data ARRY." << LogIO::POST ;
@@ -947,14 +958,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < NRO_FITS_ARYMAX ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "ARRY    " ;
+//       //cout << "ARRY    " ;
 //     }
 //     else if ( ( i % 20 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << ARRY[i] << " " ;
+//     //cout << ARRY[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( NFCAL, "NFCAL", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data NFCAL." << LogIO::POST ;
@@ -963,14 +974,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
     // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "NFCAL   " ;
+//       //cout << "NFCAL   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << NFCAL[i] << " " ;
+//     //cout << NFCAL[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   if ( readColumn( F0CAL, "F0CAL", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data F0CAL." << LogIO::POST ;
@@ -979,14 +990,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
     // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "F0CAL   " ;
+//       //cout << "F0CAL   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << F0CAL[i] << " " ;
+//     //cout << F0CAL[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
   for ( int i= 0 ; i < 10 ; i++) {
     vector<double> vv( ARYNM, 0 ) ;
@@ -1003,16 +1014,16 @@ int NROFITSDataset::fillHeader( int sameEndian )
 //     for ( int j = 0 ; j < 10 ; j++ ) {
 //       if ( j == 0 ) {
 //         if ( i < 10 ) 
-//           cout << "FQCAL0" << i << " " ;
+//           //cout << "FQCAL0" << i << " " ;
 //         else 
-//           cout << "FQCAL" << i << " " ;
+//           //cout << "FQCAL" << i << " " ;
 //       }
 //       else if ( ( j % 5 ) == 0 ) {
-//         cout << endl << "        " ;
+//         //cout << endl << "        " ;
 //       }
-//       cout << FQCAL[i][j] << " " ;
+//       //cout << FQCAL[i][j] << " " ;
 //     }
-//     cout << endl ;
+//     //cout << endl ;
 //   }
   //
   for ( int i= 0 ; i < 10 ; i++) {
@@ -1030,16 +1041,16 @@ int NROFITSDataset::fillHeader( int sameEndian )
 //     for ( int j = 0 ; j < 10 ; j++ ) {
 //       if ( j == 0 ) {
 //         if ( i < 10 ) 
-//           cout << "CHCAL0" << i << " " ;
+//           //cout << "CHCAL0" << i << " " ;
 //         else 
-//           cout << "CHCAL" << i << " " ;
+//           //cout << "CHCAL" << i << " " ;
 //       }
 //       else if ( ( j % 5 ) == 0 ) {
-//         cout << endl << "        " ;
+//         //cout << endl << "        " ;
 //       }
-//      cout << CHCAL[i][j] << " " ;
+//      //cout << CHCAL[i][j] << " " ;
 //    }
-//    cout << endl ;
+//    //cout << endl ;
 //   }
   //
   for ( int i= 0 ; i < 10 ; i++) {
@@ -1057,16 +1068,16 @@ int NROFITSDataset::fillHeader( int sameEndian )
 //     for ( int j = 0 ; j < 10 ; j++ ) {
 //       if ( j == 0 ) {
 //         if ( i < 10 ) 
-//           cout << "CWCAL0" << i << " " ;
+//           //cout << "CWCAL0" << i << " " ;
 //         else 
-//           cout << "CWCAL" << i << " " ;
+//           //cout << "CWCAL" << i << " " ;
 //       }
 //       else if ( ( j % 5 ) == 0 ) {
-//         cout << endl << "        " ;
+//         //cout << endl << "        " ;
 //       }
-//       cout << CWCAL[i][j] << " " ;
+//       //cout << CWCAL[i][j] << " " ;
 //     }
-//     cout << endl ;
+//     //cout << endl ;
 //   }
   //
   if ( readHeader( SCNLEN, "NAXIS1", sameEndian ) != 0 ) {
@@ -1105,14 +1116,14 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   for ( int i = 0 ; i < ARYNM ; i++ ) {
 //     if ( i == 0 ) {
-//       cout << "DSBFC   " ;
+//       //cout << "DSBFC   " ;
 //     }
 //     else if ( ( i % 5 ) == 0 ) {
-//       cout << endl << "        " ;
+//       //cout << endl << "        " ;
 //     }
-//     cout << DSBFC[i] << " " ;
+//     //cout << DSBFC[i] << " " ;
 //   }
-//   cout << endl ;
+//   //cout << endl ;
   //
 
   show() ;
@@ -1445,8 +1456,8 @@ int NROFITSDataset::fillRecord( int i )
   }
   // DEBUG
 //   for ( int i = 0 ; i < chmax_ ; i++ ) 
-//     cout << "JDATA[" << i << "] = " << JDATA[i] << " " ;
-//   cout << endl ;
+//     //cout << "JDATA[" << i << "] = " << JDATA[i] << " " ;
+//   //cout << endl ;
   //
   return status ;
 }
@@ -1487,7 +1498,7 @@ vector<double> NROFITSDataset::getSpectrum( int i )
     vector<double> chcal = getCHCAL()[ib] ;
     int ncal = getNFCAL()[ib] ;
 
-//     cout << "NRODataset::getFrequencies()  ncal = " << ncal << endl ;
+//     //cout << "NRODataset::getFrequencies()  ncal = " << ncal << endl ;
     while ( ncal < (int)fqcal.size() ) {
       fqcal.pop_back() ;
       chcal.pop_back() ;
@@ -1534,11 +1545,11 @@ vector<double> NROFITSDataset::getSpectrum( int i )
     zi[nchan] = z[nchan-1] + 0.5 * dz ;
     yi[nchan] = yout[nchan-1] + 0.5 * ( yout[nchan-1] - yout[nchan-2] ) ;
 //     // debug
-//     cout << "nchan=" << nchan << ", bw=" << bw << ", dz=" << dz 
+//     //cout << "nchan=" << nchan << ", bw=" << bw << ", dz=" << dz 
 //          << ", y[1]-y[0]=" << yout[1]-yout[0] << endl ; 
-//     cout << "z: " << z[0] << " - " << z[nchan-1] 
+//     //cout << "z: " << z[0] << " - " << z[nchan-1] 
 //          << ", zi: " << zi[0] << " - " << zi[nchan] << endl ;
-//     cout << "y: " << yout[0] << " - " << yout[nchan-1] 
+//     //cout << "y: " << yout[0] << " - " << yout[nchan-1] 
 //          << ", yi: " << yi[0] << " - " << yi[nchan] << endl ;
 //     ofstream ofs1( "spgrid1.dat", ios::out | ios::app ) ;
 //     ofs1 << "spid=" << i << ", ARRYT=" << record->ARRYT << endl ;
@@ -1960,7 +1971,7 @@ void NROFITSDataset::findData()
   }
 
 //   for ( int i = 0 ; i < ARYNM ; i++ ) 
-//     cout << "arrayid_[" << i << "] = " << arrayid_[i] << endl ;
+//     //cout << "arrayid_[" << i << "] = " << arrayid_[i] << endl ;
   }
 
 int NROFITSDataset::getOffset( char *name ) 
@@ -2683,10 +2694,10 @@ int NROFITSDataset::readColumn( vector<double> &v, char *name, int b, int idx )
     fseek( fp_, -sizeof(double)-offset, SEEK_CUR ) ;
   }
 
-//   cout << "v: " << endl ;
+//   //cout << "v: " << endl ;
 //   for ( vector<double>::iterator i = v.begin() ; i != v.end() ; i++ ) 
-//     cout << *i << " " ;
-//   cout << endl ;
+//     //cout << *i << " " ;
+//   //cout << endl ;
   
   return status ;
 }
