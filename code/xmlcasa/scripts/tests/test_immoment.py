@@ -217,7 +217,7 @@ class immoment_test1(unittest.TestCase):
         
         datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/ngc1333/reference/ngc1333_regression/'
         for file in list1:
-            os.system('cp -r ' +datapath + file +' ' + file)
+            os.system('cp -RL ' +datapath + file +' ' + file)
 
 
     def tearDown(self):
@@ -868,7 +868,7 @@ class immoment_test2(unittest.TestCase):
         
         datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/ngc1333/reference/ngc1333_regression/'
         for file in list2:
-            os.system('cp -r ' +datapath + file +' ' + file)
+            os.system('cp -RL ' +datapath + file +' ' + file)
 
 
     def tearDown(self):
