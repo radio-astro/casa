@@ -180,7 +180,7 @@ class immath_test1(unittest.TestCase):
             
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
         for img in imageList:
-            os.system('cp -r ' +datapath + img +' ' + img)
+            os.system('cp -RL ' +datapath + img +' ' + img)
             
 
     def tearDown(self):
@@ -853,7 +853,7 @@ class immath_test2(unittest.TestCase):
         # FIXME: add links to repository
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
         for img in imageList2:
-            os.system('cp -r ' +datapath + img +' ' + img)
+            os.system('cp -RL ' +datapath + img +' ' + img)
             
 
     def tearDown(self):
