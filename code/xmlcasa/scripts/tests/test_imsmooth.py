@@ -1116,7 +1116,7 @@ class imsmooth_test2(unittest.TestCase):
         if(os.path.exists(targetres_im)):
             os.system('rm -rf ' +targetres_im)
         
-        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/g192redux/reference/'
+        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/imsmooth/'
         os.system('cp -r ' +datapath + targetres_im +' ' + targetres_im)
 
 
