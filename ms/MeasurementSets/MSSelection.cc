@@ -714,30 +714,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Matrix<Int> MSSelection::getChanList(const MeasurementSet* ms, const Int defaultStep) 
     {
       if (chanIDs_p.nelements() <= 0) getTEN(ms); 
+      Int n=0,spw;
       Int nChIds=chanIDs_p.shape()[0],
 	nSpwIds=spwIDs_p.shape()[0];
       if (nChIds < nSpwIds)
 	throw(MSSelectionError("MSSelection::getChanList() found more SPW IDs than channel IDs."));	
-      Matrix<Int> chanIDList;//=chanIDs_p;
-      //      chanIDList.resize(nSpwIds,4);
-      Int j=0,spw;
-      Bool foundSpw=False;
+      Matrix<Int> chanIDList;
       for (Int i=0;i<nChIds;i++)
-	{
-	  foundSpw=False;
-	  for(Int s=0;s<nSpwIds;s++)
-	    if (chanIDs_p(i,0) == spwIDs_p(s)) 
-	      {
-		foundSpw=True;
-		chanIDList.resize(chanIDList.shape()(0)+1,4,True);
-		chanIDList(j,0)=chanIDs_p(i,0);
-		chanIDList(j,1)=chanIDs_p(i,1);
-		chanIDList(j,2)=chanIDs_p(i,2);
-		chanIDList(j,3)=chanIDs_p(i,3);
-		j++;
-	      }
-	}
-      for(Int i=0;i<nSpwIds;i++) 
+	for(Int s=0;s<nSpwIds;s++)
+	  if (chanIDs_p(i,0) == spwIDs_p(s)) 
+	    {
+	      chanIDList.resize((n=chanIDList.shape()(0))+1,4,True);
+	      chanIDList(n,0)=chanIDs_p(i,0);
+	      chanIDList(n,1)=chanIDs_p(i,1);
+	      chanIDList(n,2)=chanIDs_p(i,2);
+	      chanIDList(n,3)=chanIDs_p(i,3);
+	    }
+      n=chanIDList.shape()(0);
+      for(Int i=0;i<n;i++) 
       	if (chanIDList(i,3) < 0) 
       	  chanIDList(i,3)=defaultStep;
       /*
