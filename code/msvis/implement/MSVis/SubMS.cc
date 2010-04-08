@@ -158,13 +158,31 @@ namespace casa {
     }
 
     // Each row should have spw, start, stop, step
-    Matrix<Int> chansel = mssel.getChanList(&ms_p, widths[0]);
+    // A single width is a default, but multiple widths should be used
+    // literally.
+    Matrix<Int> chansel = mssel.getChanList(&ms_p,
+                                            widths.nelements() == 1 ?
+                                            widths[0] : 1);
 
     if(chansel.nrow() > 0) {         // Use spwstr if it selected anything...
       spw_p       = chansel.column(0);
       chanStart_p = chansel.column(1);
       nchan_p     = chansel.column(2);
       chanStep_p  = chansel.column(3);
+
+      // A single width is a default, but multiple widths should be used
+      // literally.
+      if(widths.nelements() > 1){
+        if(widths.nelements() != spw_p.nelements()){
+          os << LogIO::SEVERE
+             << "Mismatch between the # of widths specified by width and the # of spws."
+             << LogIO::POST;
+          return false;
+        }
+        else{
+          chanStep_p = widths;
+        }
+      }
 
       // SubMS uses a different meaning for nchan_p from MSSelection.  For
       // SubMS it is the # of output channels for each output spw.  For
@@ -5654,6 +5672,8 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     
     Cube<Bool> locflag;
 
+    Int oldSpw = -1;
+    
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
       {
 	for (vi.origin(); vi.more(); vi++) 
@@ -5665,6 +5685,9 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 
             Cube<Complex> averdata(npol_p[spw], nchan_p[spw], rowsnow);
 		
+            locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
+            if(doSpWeight)
+              spWeight.resize(npol_p[spw], nchan_p[spw], rowsnow);              
 	    for(uInt ni=0;ni<ntok;ni++)
 	      {
 		if(complexDataCols[ni]== MS::DATA)
@@ -5674,44 +5697,94 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 		else
 		  vis.reference(vb.correctedVisCube());
 		
+                if(spw != oldSpw){
+                  os << LogIO::DEBUG1
+                     << "spw: " << spw << "\n"
+                     << "vis.shape(): " << vis.shape() << "\n"
+                     << "npol_p[spw]: " << npol_p[spw] << "\n"
+                     << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
+                     << "nchan_p[spw]: " << nchan_p[spw] << "\n"
+                     << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
+                     << "rowsdone: " << rowsdone << LogIO::POST;
+                  oldSpw = spw;
+                }
+
+                uInt npol_cube  = vis.shape()[0];
+                uInt nchan_cube = vis.shape()[1];
+                
+                if(npol_cube != npol_p[spw] ||
+                   nchan_cube != inNumChan_p[spw]){
+                  // Should not happen, but can.
+                  os << LogIO::SEVERE
+                     << "The data in the current chunk does not have the expected shape!\n"
+                     << "spw: " << spw << "\n"
+                     << "vis.shape(): " << vis.shape() << "\n"
+                     << "npol_p[spw]: " << npol_p[spw] << "\n"
+                     << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
+                     << "nchan_p[spw]: " << nchan_p[spw] << "\n"
+                     << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
+                     << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
+                }
+                else if(chanStep_p[spw] > nchan_cube){
+                  // Should not happen, but can.
+                  os << LogIO::SEVERE
+                     << "chanStep is too wide for the current chunk!\n"
+                     << "spw: " << spw << "\n"
+                     << "vis.shape(): " << vis.shape() << "\n"
+                     << "npol_p[spw]: " << npol_p[spw] << "\n"
+                     << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
+                     << "nchan_p[spw]: " << nchan_p[spw] << "\n"
+                     << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
+                     << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
+                }                 
+
 		chanFlag.reference(vb.flag());
 		inFlag.reference(vb.flagCube());
-                inSpWeight.reference(vb.weightSpectrum());
-		averdata.set(Complex(0.0, 0.0));
+ 		averdata.set(Complex(0.0, 0.0));
 		
+		Float* iweight = NULL;
+                Float* oSpWt = NULL;
 		if (doSpWeight){
-		  spWeight.resize(npol_p[spw], nchan_p[spw], rowsnow);
+                  inSpWeight.reference(vb.weightSpectrum());
+                  iweight = inSpWeight.getStorage(idelete);
+
                   spWeight.set(0.0);
+                  oSpWt = spWeight.getStorage(idelete);
                 }
 		
-		locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
                 locflag.set(false);
 		const Bool* iflag=inFlag.getStorage(idelete);
 		const Complex* idata=vis.getStorage(idelete);
-		const Float* iweight=inSpWeight.getStorage(idelete);
 		Complex* odata=averdata.getStorage(idelete);
-		Bool* oflag=locflag.getStorage(idelete);		
-		Float* oSpWt = spWeight.getStorage(idelete);
+		Bool* oflag=locflag.getStorage(idelete);
 		
-		for(Int r=0; r < rowsnow; ++r)
+		for(Int r = 0; r < rowsnow; ++r)
 		  {
-		    for(Int c=0; c < nchan_p[spw]; ++c)
+                    uInt roffset = r * nchan_cube;
+                    
+		    for(Int c = 0; c < nchan_p[spw]; ++c)
 		      {
-			for (Int pol=0; pol < npol_p[spw]; ++pol)
+                        uInt coffset = c * nchan_p[spw];
+                    
+			for (Int pol = 0; pol < npol_cube; ++pol)
 			  {
-			    Int outoffset=r*nchan_p[spw]*npol_p[spw]+c*npol_p[spw]+pol;
+			    Int outoffset = (r * nchan_p[spw] + c) * npol_cube
+                                            + pol;
 			    if(!averageChannel_p)
 			      {
-				Int whichChan=chanStart_p[spw]+ c*chanStep_p[spw];
+				Int whichChan = chanStart_p[spw] +
+                                                c * chanStep_p[spw];
 				averdata.xyPlane(r).column(c) = vis.xyPlane(r).column(whichChan); 
 				locflag.xyPlane(r).column(c)  = inFlag.xyPlane(r).column(whichChan);
-                                spWeight.xyPlane(r).column(c) = inSpWeight.xyPlane(r).column(whichChan);
+                                if(doSpWeight)
+                                  spWeight.xyPlane(r).column(c) = inSpWeight.xyPlane(r).column(whichChan);
 			      }
 			    else{
                               if(doSpWeight){
                                 for(Int m = 0; m < chanStep_p[spw]; ++m){
-                                  Int inoffset=r*inNumChan_p[spw]*npol_p[spw]+
-                                    (c*chanStep_p[spw]+m)*npol_p[spw]+ pol;
+                                  Int inoffset = (roffset +
+                                                  (c * chanStep_p[spw] + m)) * 
+                                                 npol_cube + pol;
 				    
                                   if(!iflag[inoffset]){
                                     odata[outoffset] += iweight[inoffset] *
@@ -5728,8 +5801,9 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
                                 uInt counter = 0;
                                 
                                 for(Int m = 0; m < chanStep_p[spw]; ++m){
-                                  Int inoffset=r*inNumChan_p[spw]*npol_p[spw]+
-                                    (c*chanStep_p[spw]+m)*npol_p[spw]+ pol;
+                                  Int inoffset = (roffset +
+                                                  (c * chanStep_p[spw] + m)) *
+                                                 npol_cube + pol;
 				    
                                   if(!iflag[inoffset]){
                                     odata[outoffset] += idata[inoffset];
