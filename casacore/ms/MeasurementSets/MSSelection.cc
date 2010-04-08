@@ -719,15 +719,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if (nChIds < nSpwIds)
 	throw(MSSelectionError("MSSelection::getChanList() found more SPW IDs than channel IDs."));	
       Matrix<Int> chanIDList;//=chanIDs_p;
-      chanIDList.resize(nSpwIds,4);
-      for (Int i=0;i<nSpwIds;i++)
+      //      chanIDList.resize(nSpwIds,4);
+      Int j=0,spw;
+      Bool foundSpw=False;
+      for (Int i=0;i<nChIds;i++)
 	{
-	  Int spw;
-	  spw=spwIDs_p(i);
-	  chanIDList(i,0)=chanIDs_p(i,0);
-	  chanIDList(i,1)=chanIDs_p(i,1);
-	  chanIDList(i,2)=chanIDs_p(i,2);
-	  chanIDList(i,3)=chanIDs_p(i,3);
+	  foundSpw=False;
+	  for(Int s=0;s<nSpwIds;s++)
+	    if (chanIDs_p(i,0) == spwIDs_p(s)) 
+	      {
+		foundSpw=True;
+		chanIDList.resize(chanIDList.shape()(0)+1,4,True);
+		chanIDList(j,0)=chanIDs_p(i,0);
+		chanIDList(j,1)=chanIDs_p(i,1);
+		chanIDList(j,2)=chanIDs_p(i,2);
+		chanIDList(j,3)=chanIDs_p(i,3);
+		j++;
+	      }
 	}
       for(Int i=0;i<nSpwIds;i++) 
       	if (chanIDList(i,3) < 0) 
