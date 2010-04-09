@@ -683,6 +683,12 @@ class cluster(object):
       x=c.pad_task_id('basename', [3, 5, 8])
       x
       {3: 'basename-3', 5: 'basename-5', 8: 'basename-8'}
+      x=c.pad_task_id([1,3],[0,1,2,3])
+      x
+      {0: '1-0', 1: '3-1', 2: '3-2', 3: '3-3'}
+      x=c.pad_task_id(['a', 'b','c','d','e'],[0,1,2,3])
+      x
+      {0: 'a-0', 1: 'b-1', 2: 'c-2', 3: 'd-3'}
      
       '''
 
@@ -697,10 +703,28 @@ class cluster(object):
       if not int_id:
          return base
 
+      if type(b)==list:
+         for j in range(len(b)):
+            if type(b[j])!=str:
+               b[j]=str(b[j])
+
       if len(task_id)==0:
          task_id=list(xrange(0, len(self.__engines))) 
-      for j in task_id:
-         base[j]=b+'-'+str(j)
+      if type(b)==str:
+         for j in task_id:
+            base[j]=b+'-'+str(j)
+      if type(b)==list:
+         k=len(b)
+         m=len(task_id)
+         if m<=k:
+            for j in range(m):
+               base[task_id[j]]=b[j]+'-'+str(task_id[j])
+         else:
+            for j in range(k):
+               base[task_id[j]]=b[j]+'-'+str(task_id[j])
+            for j in range(k,m):
+               base[task_id[j]]=b[k-1]+'-'+str(task_id[j])
+
       return base
        
    def one_to_n(self, arg, task_id=[]):
@@ -1359,6 +1383,45 @@ c.get_result(1)
 #pg.activate()
 #px 'from casa_in_py import *'
 '''
+
+   def example(self):
+      print """example: run clean on 4 engines
+
+from parallel_go import *
+c=cluster()
+c.start_engine('casa-dev-08', 4,
+               '/home/casa-dev-08/hye/cluster')
+default clean
+mspath='/home/casa-dev-09/hye/test/ngc6503/ngc6503_output/'
+msname='ngc6503.ms.contsub'
+vis=mspath+msname
+wpath=[]
+for i in c.pull('work_dir'):
+   wpath.append(i+'/'+msname+'.clean')
+
+imagename=c.pad_task_id(wpath)
+mode='channel'
+start=c.split_int(9, 127)
+nchan=40
+width=1
+gain=0.1
+msize=[370,250]
+psfmode='clark'
+cell=[4.,4.]
+niter=10000
+threshold=0.0003
+taskghting='briggs'
+#rmode = 'norm'
+robust=0.5
+mask = ''
+s=c.distribute()
+job=[]
+for i in c.get_ids():
+    job.append(c.odo(s[i], i))
+
+c.check_job(job[0])
+"""
+
 
 cluster=cluster()
 

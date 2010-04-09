@@ -163,7 +163,7 @@ from listcal_pg import listcal_pg as listcal
 from ft_pg import ft_pg as ft
 from importuvfits_pg import importuvfits_pg as importuvfits
 from setjy_pg import setjy_pg  as setjy
-#from clean_pg import clean_pg as clean
+from clean_pg import clean_pg as clean
 from immath_pg import immath_pg as immath
 from imhead_pg import imhead_pg as imhead
 from find_pg import find_pg as find
