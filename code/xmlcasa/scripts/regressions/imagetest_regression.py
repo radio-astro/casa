@@ -13,7 +13,7 @@
 #    replacemaskedpixels, FITS conversion, boundingbox, {set}restoringbeam   #
 #    coordmeasures, topixel, toworld,                                        #
 #    summary, maskhandler, subimage, insert, hanning, convolve, sepconvole,  #
-#    LEL, statistics, histograms, moments, modify, fft, regrid,      #
+#    LEL, statistics, histograms, moments, modify, fitsky, fft, regrid,      #
 #    convolve2d, deconvolvecomponentlist, findsources, maxfit, adddegaxes,   #
 #    addnoise, {set}miscinfo, {set}history, {set}brightnessunit              #
 #    {set}restoringbeam, convertflux
@@ -4931,11 +4931,11 @@ def imagetest(which=None, size=[32,32,8]):
     def test25():
         #
         # Test methods
-        #   modify and fitcomponents
+        #   modify and fitsky
         info('')
         info('')
         info('')
-        info('Test 25 - modify, fitcomponents')
+        info('Test 25 - modify, fitsky')
         # Make the directory
         testdir = 'imagetest_temp'
         if not cleanup(testdir):
@@ -4992,18 +4992,49 @@ def imagetest(which=None, size=[32,32,8]):
         if not myim.modify(cl0.torecord(), subtract=F): fail()
         #
 
-        cl1 = myim.fitcomponents(
-            region=rg.box(blc=[.25,.25,.25],
-            trc=[.75,.75,.75], frac=true)
-        )
+        #cl1 = myim.fitsky(deconvolve=F, region=rg.quarter())
+        cl1 = myim.fitsky(deconvolve=F,
+                          region=rg.box(blc=[.25,.25,.25],
+                                        trc=[.75,.75,.75], frac=true))
         if not cl1:
-            stop('fitcomponents 1 failed')
+            stop('fitsky 1 failed')
         if not cl1['converged']:
-            stop('fitcomponents 1 did not converge')
+            stop('fitsky 1 did not converge')
+        r = cl1['pixels']
+        m = cl1['pixelmask']
+        ok = alltrue(m)
+        if not ok:
+            stop('recovered mask 1 is wrong')
         cl1tool=cltool.create()
-        cl1tool.fromrecord(cl1['results'])
+        cl1tool.fromrecord(cl1['return'])
         if not compareComponentList(cl0,cl1tool):
-            stop('failed fitcomponents 1')
+            stop('failed fitsky 1')
+        #
+        # Have another go with previous output as model
+        #
+        #cl2 = myim.fitsky(estimate=cl1, deconvolve=F, region=rg.quarter())
+        cl2 = myim.fitsky(estimate=cl1, deconvolve=F,
+                          region=rg.box(blc=[.25,.25,.25],trc=[.75,.75,.75],
+                                        frac=true))
+        if not cl2:
+            stop('fitsky 2 failed')
+        if not cl2['converged']:
+            stop('fitsky 2 did not converge')
+        ok = alltrue(cl2['pixelmask'])
+        if not ok:
+            stop('recovered mask 2 is wrong')
+        cl2tool=cltool.create()
+        cl2tool.fromrecord(cl2['return'])
+        if not compareComponentList(cl0,cl2tool):
+            stop('failed fitsky 2')
+        #
+        ok = myim.done()
+        if not ok:
+            stop('Done failed (1)')
+        #
+        if not (cl0.done()): fail()
+        if not (cl1tool.done()): fail()
+        if not (cl2tool.done()): fail()
         return cleanup(testdir)
 
    
