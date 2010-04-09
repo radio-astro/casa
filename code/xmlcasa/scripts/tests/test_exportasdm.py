@@ -1,265 +1,192 @@
 # unit test for the exportasdm task
 
-myname = 'test_task_exportasdm'
-
 import os
-#vis_a = 'ngc4826.ms'
-vis_b = 'test.ms'
-#vis_c = 'jupiter6cm.demo.ms'
-vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
-vis_e = 'g19_d2usb_targets_line-shortened.ms'
-vis_f = 'Itziar.ms'
-vis_g = 'M51.ms'
 
-#if(not os.path.exists(vis_a)):
-#    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_a)
-if(not os.path.exists(vis_b)):
-    os.system('cp -R '+os.environ['CASADATA']+'/regression/fits-import-export/input/test.ms .')
-#if(not os.path.exists(vis_c)):
-#    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/jupiter6cm/jupiter6cm.fits', vis=vis_c)
-if(not os.path.exists(vis_d)):
-    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_d)
-if(not os.path.exists(vis_e)):
-    os.system('cp -R '+os.environ['CASADATA']+'/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
-if(not os.path.exists(vis_f)):
-    os.system('cp -R '+os.environ['CASADATA']+'/regression/exportasdm/input/Itziar.ms .')
-if(not os.path.exists(vis_g)):
-    os.system('cp -R '+os.environ['CASADATA']+'/regression/exportasdm/input/M51.ms .')
+from __main__ import default
+from tasks import *
+from taskinit import *
+import unittest
+
+class exportasdm_test(unittest.TestCase):
+    
+    #vis_a = 'ngc4826.ms'
+    vis_b = 'test.ms'
+    #vis_c = 'jupiter6cm.demo.ms'
+    vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
+    vis_e = 'g19_d2usb_targets_line-shortened.ms'
+    vis_f = 'Itziar.ms'
+    vis_g = 'M51.ms'
+    out = 'exportasdm-output.asdm'
+    rval = False
+    
+    def setUp(self):    
+        self.rval = False
+        #if(not os.path.exists(vis_a)):
+        #    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_a)
+        if(not os.path.exists(self.vis_b)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/fits-import-export/input/test.ms .')
+        #if(not os.path.exists(vis_c)):
+        #    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/jupiter6cm/jupiter6cm.fits', vis=vis_c)
+        if(not os.path.exists(self.vis_d)):
+            importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', 
+                         vis=self.vis_d)
+        if(not os.path.exists(self.vis_e)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
+        if(not os.path.exists(self.vis_f)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/exportasdm/input/Itziar.ms .')            
+        if(not os.path.exists(self.vis_g)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/exportasdm/input/M51.ms .')
+
+        default(exportasdm)
+
+    def tearDown(self):
+        os.system('rm -rf myinput.ms')
+        os.system('rm -rf ' + self.vis_b)
+        os.system('rm -rf ' + self.vis_d)
+        os.system('rm -rf ' + self.vis_e)
+        os.system('rm -rf ' + self.vis_f)
+        os.system('rm -rf ' + self.vis_g)
+        os.system('rm -rf ' + self.out)
 
 
-def verify_asdm(asdmname, withPointing):
-    print "Verifying asdm ", asdmname
-    if(not os.path.exists(asdmname)):
-        print "asdm ", asdmname, " doesn't exist."
-        raise Exception
-    # test for the existence of all obligatory tables
-    allTables = [ "Antenna.xml",
-                  "ASDM.xml",
-                 # "CalData.xml",
-                 # "CalDelay.xml",
-                 # "CalReduction.xml",
-                  "ConfigDescription.xml",
-                  "CorrelatorMode.xml",
-                  "DataDescription.xml",
-                  "ExecBlock.xml",
-                  "Feed.xml",
-                  "Field.xml",
-                 #"FocusModel.xml",
-                 #"Focus.xml",
-                  "Main.xml",
-                  "PointingModel.xml",
-                  "Polarization.xml",
-                  "Processor.xml",
-                  "Receiver.xml",
-                  "SBSummary.xml",
-                  "Scan.xml",
-                  "Source.xml",
-                  "SpectralWindow.xml",
-                  "State.xml",
-                  "Station.xml",
-                  "Subscan.xml",
-                  "SwitchCycle.xml"
-                  ]
-    isOK = True
-    for fileName in allTables:
-        filePath = asdmname+'/'+fileName
-        if(not os.path.exists(filePath)):
-            print "ASDM table file ", filePath, " doesn't exist."
-            isOK = False
-        else:
-            # test if well formed
-            rval = os.system('xmllint --noout '+filePath)
-            if(rval !=0):
-                print "Table ", filePath, " is not a well formed XML document."
+    def verify_asdm(self,asdmname, withPointing):
+        print "Verifying asdm ", asdmname
+        if(not os.path.exists(asdmname)):
+            print "asdm ", asdmname, " doesn't exist."
+            raise Exception
+        # test for the existence of all obligatory tables
+        allTables = [ "Antenna.xml",
+                      "ASDM.xml",
+                     # "CalData.xml",
+                     # "CalDelay.xml",
+                     # "CalReduction.xml",
+                      "ConfigDescription.xml",
+                      "CorrelatorMode.xml",
+                      "DataDescription.xml",
+                      "ExecBlock.xml",
+                      "Feed.xml",
+                      "Field.xml",
+                     #"FocusModel.xml",
+                     #"Focus.xml",
+                      "Main.xml",
+                      "PointingModel.xml",
+                      "Polarization.xml",
+                      "Processor.xml",
+                      "Receiver.xml",
+                      "SBSummary.xml",
+                      "Scan.xml",
+                      "Source.xml",
+                      "SpectralWindow.xml",
+                      "State.xml",
+                      "Station.xml",
+                      "Subscan.xml",
+                      "SwitchCycle.xml"
+                      ]
+        isOK = True
+        for fileName in allTables:
+            filePath = asdmname+'/'+fileName
+            if(not os.path.exists(filePath)):
+                print "ASDM table file ", filePath, " doesn't exist."
                 isOK = False
-
-    print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
-        
-    if(not os.path.exists(asdmname+"/ASDMBinary")):
-        print "ASDM binary directory "+asdmname+"/ASDMBinary doesn't exist."
-        isOK = False
-
-    if(withPointing and not os.path.exists(asdmname+"/Pointing.bin")):
-        print "ASDM binary file "+asdmname+"/Pointing.bin doesn't exist."
-        isOK = False
-
-    if (not isOK):
-        raise Exception
+            else:
+                # test if well formed
+                rval = os.system('xmllint --noout '+filePath)
+                if(rval !=0):
+                    print "Table ", filePath, " is not a well formed XML document."
+                    isOK = False
+    
+        print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
+            
+        if(not os.path.exists(asdmname+"/ASDMBinary")):
+            print "ASDM binary directory "+asdmname+"/ASDMBinary doesn't exist."
+            isOK = False
+    
+        if(withPointing and not os.path.exists(asdmname+"/Pointing.bin")):
+            print "ASDM binary file "+asdmname+"/Pointing.bin doesn't exist."
+            isOK = False
+    
+        if (not isOK):
+            raise Exception
 
 # Test cases    
+    def test1(self):
+        '''Test 1: Testing default'''
+        myvis = self.vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm()
+        self.assertFalse(self.rval)
 
-keeptestlist = True
+    def test2(self):
+        '''Test 2: small input MS, default output'''
+        myvis = self.vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(
+                vis = 'myinput.ms',
+                asdm = self.out,
+                archiveid="S1",
+                verbose=True,
+                apcorrected=False)
 
-try:
-    print "List of tests to be executed ...", testlist
-except:
-    print "Global variable testlist not set."
-    testlist = []
-if (testlist==[]):
-    print "testlist empty. Executing all tests."
-    testlist = range(0,100)
-    keeptestlist = False
-
-total = 0
-failures = 0
-rval = False
-
-testnumber = 1
-if (testnumber in testlist):
-    myvis = vis_b
-    os.system('rm -rf exportasdm-output.asdm myinput.ms')
-    os.system('cp -R ' + myvis + ' myinput.ms')
-    default('exportasdm')
-    total += 1
-    try:
-        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "Testing default."
-        rval = exportasdm()
-        if not rval:
-            print myname, ': *** Error as expected ***'   
-        else:
-            print "Failed ..."
-            failures +=1
-    except:
-        print myname, ': *** Unexpected error ***'   
-        failures += 1
-
-
-testnumber = 2
-if (testnumber in testlist):
-    myvis = vis_b
-    os.system('rm -rf exportasdm-output.asdm myinput.ms')
-    os.system('cp -R ' + myvis + ' myinput.ms')
-    default('exportasdm')
-    total += 1
-    try:
-        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "small input MS, default output"
-        rval = exportasdm(
-            vis = 'myinput.ms',
-            asdm = 'exportasdm-output.asdm',
-            archiveid="S1",
-            verbose=True,
-            apcorrected=False
-            )
-        print "rval is ", rval
-        if not rval:
-            raise Exception
-        omsname = "test"+str(testnumber)+'exportasdm-output.asdm'
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(2)+self.out
         os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
-        verify_asdm(omsname, False)
-    except:
-        print myname, ': *** Unexpected error ***'   
-        failures += 1
+        self.verify_asdm(omsname, False)
 
-testnumber = 3
-if (testnumber in testlist):
-    myvis = vis_f
-    os.system('rm -rf exportasdm-output.asdm myinput.ms')
-    os.system('cp -R ' + myvis + ' myinput.ms')
-    default('exportasdm')
-    total += 1
-    try:
-        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "simulated input MS, default output"
-        rval = exportasdm(
-            vis = 'myinput.ms',
-            asdm = 'exportasdm-output.asdm',
-            archiveid="S1"
-            )
-        print "rval is ", rval
-        if not rval:
-            raise Exception
-        omsname = "test"+str(testnumber)+'exportasdm-output.asdm'
+    def test3(self):
+        '''Test 3: simulated input MS, default output'''
+        myvis = self.vis_f
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(vis = 'myinput.ms',asdm = self.out,archiveid="S1")
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(3)+self.out
         os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
-        verify_asdm(omsname, True)
-    except:
-        print myname, ': *** Unexpected error ***'   
-        failures += 1
+        self.verify_asdm(omsname, True)
 
-testnumber = 4
-if (testnumber in testlist):
-    myvis = vis_d
-    os.system('rm -rf exportasdm-output.asdm myinput.ms')
-    os.system('cp -R ' + myvis + ' myinput.ms')
-    default('exportasdm')
-    total += 1
-    try:
-        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "real input MS, default output"
-        rval = exportasdm(
+    def test4(self):
+        '''Test 4: real input MS, default output'''
+        myvis = self.vis_d
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(
             vis = 'myinput.ms',
-            asdm = 'exportasdm-output.asdm',
+            asdm = self.out,
             archiveid="S1",
             apcorrected=False
             )
-        print "rval is ", rval
-        if not rval:
-            raise Exception
-        omsname = "test"+str(testnumber)+'exportasdm-output.asdm'
-        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
-        verify_asdm(omsname, False)
-    except:
-        print myname, ': *** Unexpected error ***'   
-        failures += 1
 
-testnumber = 5
-if (testnumber in testlist):
-    myvis = vis_e
-    os.system('rm -rf exportasdm-output.asdm myinput.ms')
-    os.system('cp -R ' + myvis + ' myinput.ms')
-    default('exportasdm')
-    total += 1
-    try:
-        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "real input MS, MS has several SPWs observed in parallel - not supported, expected error"
-        rval = exportasdm(
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(4)+self.out
+        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
+        self.verify_asdm(omsname, False)
+
+    def test5(self):
+        '''Test 5: real input MS, MS has several SPWs observed in parallel - not supported, expected error'''
+        myvis = self.vis_e
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(
             vis = 'myinput.ms',
-            asdm = 'exportasdm-output.asdm',
+            asdm = self.out,
             archiveid="S1",
             apcorrected=False
             )
-        print "rval is ", rval
-        if not rval:
-            print myname, ': *** Error as expected ***'   
-        else:
-            print "Failed ..."
-            failures +=1
-    except:
-        print myname, ': *** Unexpected error ***'   
-        failures += 1
 
-testnumber = 6
-if (testnumber in testlist):
-    myvis = vis_g
-    os.system('rm -rf exportasdm-output.asdm myinput.ms')
-    os.system('cp -R ' + myvis + ' myinput.ms')
-    default('exportasdm')
-    total += 1
-    try:
-        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "simulated input MS with pointing table, default output"
-        rval = exportasdm(
+        self.assertFalse(self.rval)
+
+    def test6(self):
+        '''Test 6: simulated input MS with pointing table, default output'''
+        myvis = self.vis_g
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(
             vis = 'myinput.ms',
-            asdm = 'exportasdm-output.asdm',
+            asdm = self.out,
             archiveid="S002",
             apcorrected=False
             )
-        print "rval is ", rval
-        if not rval:
-            raise Exception
-        omsname = "test"+str(testnumber)+'exportasdm-output.asdm'
+
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(6)+self.out
         os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
-        verify_asdm(omsname, True)
-    except:
-        print myname, ': *** Unexpected error ***'   
-        failures += 1
+        self.verify_asdm(omsname, True)
 
+def suite():
+    return [exportasdm_test]
 
-# Summary ########################################
-print "Tests = ", total    
-print "Failures = ", failures
-
-# empty test list if it was empty to start with
-if not keeptestlist:
-    testlist = []
