@@ -290,6 +290,7 @@ traceEvent(1,"Entering imager::defaults",25);
   smallScaleBias_p=0.6;
   freqFrame_p=MFrequency::LSRK;
   imageTileVol_p=0;
+  singlePrec_p=False;
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -2534,7 +2535,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Bool applyPointingOffsets,
 			const Bool doPointingCorrection,
 			const String& cfCacheDirName,const Float& paStep, 
-			const Float& pbLimit, const String& interpMeth, const Int imageTileVol)
+			const Float& pbLimit, const String& interpMeth, const Int imageTileVol,
+			const Bool singprec)
 {
 
 #ifdef PABLO_IO
@@ -2583,6 +2585,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   pbLimit_p = pbLimit;
   freqInterpMethod_p=interpMeth;
   imageTileVol_p=imageTileVol;
+  singlePrec_p=singprec;
 
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
@@ -7621,7 +7624,7 @@ Bool Imager::createFTMachine()
   Bool useDoublePrecGrid=False;
   //few channels use Double precision
   //till we find a better algorithm to determine when to use Double prec gridding
-  if(imageNchan_p < 5)
+  if((imageNchan_p < 5) && !(singlePrec_p))
     useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
