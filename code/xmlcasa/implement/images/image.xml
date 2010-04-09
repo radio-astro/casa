@@ -87,9 +87,6 @@ a \fits\ file:
 
 \item <link anchor="images:image.fitcomponents.function">fitcomponents</link> - Fit model components to an image.
 
-\item <link anchor="images:image.fitsky.function">fitsky</link> - fit 2-dimensional models to the sky
-(see also the <link anchor="images:imagefitter">imagefitter</link> \tool.
-
 \item <link anchor="images:image.fitpolynomial.function">fitpolynomial</link> - fit 1-d polynomials 
 to profiles and subtract (see also the <link anchor="images:imageprofilefitter">imageprofilefitter</link> \tool.
 
@@ -3342,8 +3339,8 @@ See also functions <link anchor="images:image.setrestoringbeam.function">setrest
 #
 print "\t----\t deconvolvecomponentlist Ex 1 \t----"
 ia.maketestimage()
-r = ia.fitsky(deconvolve=F)
-cl1 = r['return']                      # cl1 and cl2 are record representations
+r = ia.fitcomponents()
+cl1 = r['results']                      # cl1 and cl2 are record representations
 cl2 = ia.deconvolvecomponentlist(cl1)  #   of componentlists
 print cl1, cl2
 cl.fromrecord(cl2)                     # set componentlist tool with record
@@ -3720,7 +3717,7 @@ The \region\ must be 2-dimensional and it must hold a region of the sky.
 Any degenerate trailing dimensions in the region are discarded.
 
 See also the function <link
-anchor="images:image.fitsky.function">fitsky</link> (for which {\stff
+anchor="images:image.fitcomponents.function">fitcomponents</link> (for which {\stff
 findsources} can provide an initial estimate). <!-- and the <link
 anchor="images:imagefitter">Imagefitter</link> \tool.-->
 
@@ -4044,226 +4041,6 @@ tool attached to the residual (continuum subtracted) image.
 </method>
 
  
-   <method type="function" name="fitsky">
-   <shortdescription>DEPRECATED USE FTICOMPONENTS() INSTEAD. Fit 2-dimensional models to the sky.</shortdescription>
-   
-
-<input>
-  
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
-     <description>The 2-D region of interest to fit. Default is whole image.</description>
-     <value></value>
-     </param>
-
-     <param type="int" direction="in" name="chan">
-     <description>Spectral plane to use to fit gaussian(s)</description>
-     <value>0</value>
-     </param>
-
-     <param type="string" direction="in" name="stokes">
-     <description>Stokes (polarization) plane to use to fit gaussian(s).</description>
-     <value>I</value>
-     </param>
-   
-     <param type="any" direction="in" name="mask">
-	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
-     </param>
-  
-     <param type="stringArray" direction="in" name="models">
-     <description>The model types to fit simultaneously.  Default is ['gaussian']</description>
-     <value>gaussian</value>
-     </param>
-  
-     <param type="any" direction="in" name="estimate">
-	     <any type="record"/>
-     <description>Initial estimate for the model (from componentlist.torecord()). Default is to use an internal estimate.</description>
-     <value></value>
-     </param>
-  
-     <param type="stringArray" direction="in" name="fixedparams">
-     <description>Parameters to hold fixed per model, String or vector of strings, one per model. Choose from ``fxyabp''.  Default is all parameters vary.</description>
-     <value></value>
-     </param>
-  
-     <param type="doubleArray" direction="in" name="includepix">
-     <description>Range of pixel values to include.  For default behaviour see discussion.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="doubleArray" direction="in" name="excludepix">
-     <description>Range of pixel values to exclude.  For default behaviour see discussion.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="bool" direction="in" name="fit">
-     <description>Do fit or get estimate</description>
-     <value>true</value>
-     </param>
-  
-     <param type="bool" direction="in" name="deconvolve">
-     <description>Deconvolve from restoring beam</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool" direction="in" name="list">
-     <description>List informative messages to the logger</description>
-     <value>true</value>
-     </param>
-</input>
-<returns type="any"><any type="record"/>
-Componentlist tool or fail</returns>
-
-<description>
-
-THIS METHOD HAS BEEN DEPRECATED AND WILL BE REMOVED IN A FUTURE VERSION
-OF CASA. USE FITCOMPONENTS() INSTEAD.
-
-This function fits 2-dimensional models to regions of the sky.  You
-can fit multiple models simulataneously, although only Gaussian models
-are currently implemented.  The fit is returned as a record that can
-be loaded into a <link
-anchor="componentmodels:componentlist">Componentlist</link> \tool\
-with the fromrecord() function.  <!-- See also the <link
-anchor="images:imagefitter">imagefitter</link> \tool\ which is an
-interactive high-level \tool\ based around this function.-->
-
-\begin{itemize}
-
-\item If {\stfaf fit=T} the fit is done and returned.
-If {\stfaf fit=F} the fit is not done.  Instead, the initial
-auto-determined estimate is returned (this is used as the
-starting guess of the actual fit); in this case, arguments
-{\stfaf pixels, pixelmask, converged, estimate} and {\stfaf fixed} are
-ignored.   The auto-fit can only be determined for a single
-model.
-
-\item The {\stfaf pixels} array is returned to you (in the return
-record) with the residual of the fit.  The {\stfaf pixelmask} array is
-returned to you (also in the return record) with the \pixelmask\ of
-the specified region (this reflects both the underlying \pixelmask\
-that you applied [if any] as well as the shape of the region).
-
-\item If the fit converged, {\stfaf converged=T} in the return record.
-
-\item The \region\ must be 2-dimensional and it must hold a region of the
-sky.   Any degenerate trailing dimensions in the region are discarded.
-
-\item The {\stfaf models} argument specifies the simultaneous model
-types you would like to fit to the specified region.  Currently you
-can only choose from `gaussian' (minimum match).  Specify the {\stfaf
-models} argument as a vector of strings. <!--, or a string with comma
-or space delimiters. --> Thus, to fit 3 simultaneous gaussians, you
-would give <!-- {\stfaf models='gaussian gaussian gaussian'}.-->
-{\stfaf models=['gaussian','gaussian','gaussian']}.
-
-\item An initial automatically determined estimate of the parameters
-of the model can be made for you (only for single model fits).
-However, if this turns out to be poor, or if you want to hold some
-parameters fixed, then you can enter your estimate with the {\stfaf
-estimate} argument to which you supply a record associated with a
-<link anchor="componentmodels:componentlist">Componentlist</link>
-\tool\ (the same type of record that is returned by this function).
-Note that an integrated flux is specified in the estimate of a
-Gaussian component.  The estimate doesn't have to be the same type as
-the model you are fitting.  For example you can give a Point model
-estimate for a Gaussian fit.  The other parameter estimates will be
-filled in for you.  The function <link
-anchor="images:image.findsources.function">findsources</link> can be
-used to get rough point source estimates.  You must supply one
-estimate component for every model component that you wish to fit when
-fitting multiple simultaneous models.
-
-\item When you fit a model, you can choose which parameters you hold
-fixed in the fit and which you solve for.  The {\stfaf fixed} argument
-enables you to specify which parameters of the fit you hold fixed.  It
-is entered as a vector of strings, one string for each model specifying
-which parameters of the fit are fixed.
-
-For gaussian models, that string should contain letters chosen from
-
-\begin{itemize}
-\item `f' - hold the peak flux (intensity) of the model fixed
-\item `x' - hold the X location of the model fixed
-\item `y' - hold the Y location of the model fixed
-\item `a' - hold the major axis width fixed
-\item `b' - hold the minor axis width fixed
-\item `p' - hold the position angle fixed
-\end{itemize}
-
-If you hold any parameters fixed, you may need to specify an input
-estimate.  As currently implemented, the effect of holding constant
-the flux of a Gaussian model is confusing.  The input estimate is
-specified as an integral flux.  This is used to determine the peak
-flux of the Gaussian model.  It is this peak flux which is kept
-constant.  The returned model's integral flux may be different than
-the specified integral flux because other parameters (such as the
-shape) of the Gaussian model may have changed.
-
-\item Often when fitting, it is advisable to exclude noise pixels.  The
-{\stfaf includepix} (pixel value range to include) or {\stfaf
-excludepix} (pixel value range to exclude) arguments (you can't specify
-them both) allow you to select a subset of the pixels for the fit.  If
-you only give one value for either of these vectors, say {\stfaf
-includepix=[b]}, then this is interpreted as {\stfaf
-includepix=[-abs(b),abs(b)]}.  
-
-For total intensity (Stokes I) images, if neither of these are specified
-and  the peak in the region is positive, then all
-pixels below zero are discarded.  If the peak is negative (a negative
-source), all pixels above zero are discarded.  For other Stokes
-parameters all pixels are included by default. 
-
-\end{itemize}
-
-Return value is a record with 4 elements. The keys are 'return',
-'pixelmask', 'pixels' and 'converged'.
-
-\begin{itemize}
-\item {\tt 'return'} is a componentlist record which can be used with the componentlist tool.  (The returned flux values are integral, not peak values.)
-\item {\tt 'pixelmask'} is a boolean array that defines on the image where the residual values  are invalid
-\item {\tt 'pixels'} is a float array containing the residuals after subtracting the fitted components
-\item {\tt 'converged'} is a boolean value representing the convergence of the fit.
-
-\end{itemize} 
-
-</description>
-
-<example>
-\begin{verbatim}
-"""
-#
-print "\t----\t fitsky Ex 1 \t----"
-ia.maketestimage('image.large', overwrite=true)
-innerquarter=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
-ia.fromimage(outfile='image.small', infile='image.large',
-             region=innerquarter, overwrite=true)
-ia.close()
-ia.open('image.small')
-cl1 = ia.fitsky(models=["gaussian"])
-print cl1.keys()
-# 'pixels','pixelmask','converged','return'
-print cl1['return'] # 'return' field holds a componentlist record
-if cl1['converged']:
-  ia.close()
-  ia.open('image.large')
-  cl2 = ia.fitsky(models=["gaussian"], estimate=cl1['return'])
-  print cl2['return']
-ia.close()
-#
-"""
-\end{verbatim}
-
-In this example we assume the image is 2-dimensional.  We fit the first
-image using the internal starting estimate for the model parameters.  We
-fit the second image using the result of the first fit as the starting
-estimate. 
-
-</example>
-</method>
-
 <method type="function" name="fitcomponents">
     <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
     <input>
@@ -5690,8 +5467,8 @@ masked bad.
 #
 print "\t----\t modify Ex 1 \t----"
 ia.maketestimage()
-clrec = ia.fitsky()
-ia.modify(clrec['return'])
+clrec = ia.fitcomponents()
+ia.modify(clrec['results'])
 ia.close()
 #
 """
@@ -5704,7 +5481,7 @@ ia.close()
 In this example we subtract the model contained in the Table
 called {\sff list}. -->
 
-In this example we subtract the model returned by the fitsky function.
+In this example we subtract the model returned by the fitcomponents function.
 
 </example>
 </method>
@@ -5758,7 +5535,7 @@ and fit.
 See function <link anchor="images:image.findsources.function">findsources</link> for
 a description of arguments {\stfaf point} and {\stfaf width}.
 
-See also the function <link anchor="images:image.fitsky.function">fitsky</link>.
+See also the function <link anchor="images:image.fitcomponents.function">fitcomponents</link>.
 
 </description>
 
