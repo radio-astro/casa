@@ -232,7 +232,8 @@ class Imager
 		  const Float& pastep=5.0,
 		  const Float& pbLimit=5.0e-2,
 		  const String& freqinterpmethod="linear",
-		  const Int imageTileSizeInPix=0);
+		  const Int imageTileSizeInPix=0,
+		  const Bool singleprecisiononly=False);
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
@@ -715,6 +716,8 @@ protected:
   //Whether to use model column or use it in memory on the fly
   Bool useModelCol_p;
 
+  //Force single precision always
+  Bool singlePrec_p;
   //sink used to store history mainly
   LogSink logSink_p;
 
