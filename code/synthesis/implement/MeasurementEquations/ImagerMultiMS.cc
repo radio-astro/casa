@@ -40,7 +40,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/SubMS.h>
+#include <msvis/MSVis/SimpleSubMS.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
@@ -100,14 +100,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Old);
-    SubMS splitter(thisms);
+    SimpleSubMS splitter(thisms);
     splitter.setmsselect(spwstring, fieldnames, antnames, scan, uvdist, 
 			 msSelect, nchan, start, step, True, "");
     splitter.selectTime(-1.0, timerng);
-    String whichCol="data";
+    MS::PredefinedColumns whichCol=MS::DATA;
     if(thisms.tableDesc().isColumn("CORRECTED_DATA"))
-      whichCol="corrected";
-    CountedPtr<MeasurementSet> subMS(splitter.makeScratchSubMS(whichCol, True), True);
+      whichCol=MS::CORRECTED_DATA;
+    CountedPtr<MeasurementSet> subMS(splitter.makeMemSubMS(whichCol), True);
     return setDataOnThisMS(*subMS);
 
   }
