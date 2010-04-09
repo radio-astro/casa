@@ -405,23 +405,6 @@ imager::close()
  return rstat;
 }
 
-bool
-imager::correct(const bool doparallactic, const Quantity& timestep)
-{
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         casa::Quantity qtimestep(casaQuantity(timestep));
-         rstat = itsImager->correct(doparallactic, qtimestep);
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	 RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
-}
 
 bool
 imager::done()
@@ -793,25 +776,6 @@ imager::pb(const std::string& inimage, const std::string& outimage,
 }
 
 bool
-imager::pixon(const std::string& algorithm, const Quantity& sigma, const std::string& model, const bool async)
-{
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-	*itsLog << LogIO::WARN << "PIXON is no longer supported; will be removed  "  << LogIO::POST;
-         rstat = itsImager->pixon(algorithm, casaQuantity(sigma), model);
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	 RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
-}
-
-bool
 imager::plotsummary()
 {
    Bool rstat(False);
@@ -864,10 +828,10 @@ imager::plotvis(const std::string& type, const int increment)
    return rstat;
 }
 
-// bool
-// imager::plotweights(const bool gridded, const int increment)
-// {
-//    Bool rstat(False);
+ bool
+ imager::plotweights(const bool gridded, const int increment)
+ {
+    Bool rstat(False);
 //    if(hasValidMS_p){
 //       try {
 //         // Has a tendency to dump core.  Add to plotms, replace with
@@ -880,8 +844,8 @@ imager::plotvis(const std::string& type, const int increment)
 //    } else {
 //       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
 //    }
-//    return rstat;
-// }
+    return rstat;
+ }
 
 bool
 imager::regionmask(const std::string& mask, const ::casac::record& region, 
@@ -1205,24 +1169,6 @@ imager::setbeam(const ::casac::variant& bmaj, const ::casac::variant& bmin,
    return rstat;
 }
 
-bool
-imager::setdata(const std::string& mode, const std::vector<int>& nchan, const std::vector<int>& start, const std::vector<int>& step, const Quantity& mstart, const Quantity& mstep, const std::vector<int>& spwid, const std::vector<int>& fieldid, const std::string& msselect, const bool async)
-{
-    Bool rstat(False);
-    if(hasValidMS_p){
-       try {
-          rstat = itsImager->setdata(mode, Vector<Int>(nchan), Vector<Int>(start),
-                         Vector<Int>(step), casaQuantity(mstart), casaQuantity(mstep), Vector<Int>(spwid),
-                         Vector<Int>(fieldid), String(msselect));
-       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
-}
 
 bool
 imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
@@ -1442,42 +1388,6 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 
 
 bool
-imager::setimage(const int nx, const int ny, const Quantity& cellx, const Quantity& celly, const std::string& stokes, const bool doshift, const std::string& phasecenter, const Quantity& shiftx, const Quantity& shifty, const std::string& mode, const int nchan, const int start, const int step, const std::string& mstart, const std::string& mstep, const std::vector<int>& spwid, const int fieldid, const int facets, const Quantity& distance)
-{
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         casa::Quantity qcellx(casaQuantity(cellx));
-         casa::Quantity qcelly(casaQuantity(celly));
-         String err;
-         MDirection mphaseCenter;
-         mdFromString(mphaseCenter, phasecenter);
-         casa::Quantity qshiftx(casaQuantity(shiftx));
-         casa::Quantity qshifty(casaQuantity(shifty));
-
-//
-         casa::MRadialVelocity mmStart;
-         mrvFromString(mmStart, mstart);
-         casa::MRadialVelocity mmStep;
-         mrvFromString(mmStep, mstep);
-//
-         Vector<Int> mspwid = spwid;
-         casa::Quantity qdistance(casaQuantity(distance));
-         rstat = itsImager->setimage(nx, ny, qcellx, qcelly, stokes, doshift, mphaseCenter,
-                                qshiftx, qshifty, String(mode), nchan, start, step,
-                                mmStart, mmStep, mspwid, fieldid, facets, qdistance);
-       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
-}
-
-bool
 imager::setjy(const ::casac::variant& field, const ::casac::variant& spw, 
 	      const std::string& modimage,
 	      const std::vector<double>& fluxdensity, const std::string& standard)
@@ -1532,7 +1442,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol )
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol, const bool singprec )
 {
 
    Bool rstat(False);
@@ -1550,7 +1460,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 					applypointingoffsets, 
 					dopbgriddingcorrections, 
 					String(cfcachedirname), Float(pastep), 
-					Float(pblimit), String(freqinterp), imagetilevol);
+					Float(pblimit), String(freqinterp), imagetilevol, singprec);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
