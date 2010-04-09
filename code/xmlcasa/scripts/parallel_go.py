@@ -27,6 +27,9 @@ else:
 class cluster(object):
 
    "control cluster engines for parallel tasks"
+
+   print 'start cluster---------'
+   _instance = None
    
    __client=None
    __controller=None
@@ -44,13 +47,25 @@ class cluster(object):
    __new_engs=[]
    #__result={}
 
+   def __new__(cls, *args, **kwargs):
+       if not cls._instance:
+           cls._instance = super(cluster, cls).__new__(
+                                cls, *args, **kwargs)
+       return cls._instance
+
+   def __call__(self):
+       # if there is already a controller, use it
+       if (self.__controller!=None):
+           print ("the controller %s is already running" % 
+                  self.__controller)
+       return self
+
    def __init__(self):
       '''Initialize a Cluster.
 
       A Cluster enables parallel and distributed execution of CASA tasks and tools on a set of networked computers. A culster consists of one controller and one or more engines. Each engine is an independent Python instance that takes Python commands over a network connection. The controller provides an interface for working with a set of engines. A user uses casapy console to command the controller. A password-less ssh access to the computers that hosts engines is required for the communication between controller and engines.
       
       '''
-
       self.__client=None
       self.__controller=None
       self.__timestamp=None
@@ -753,6 +768,54 @@ class cluster(object):
          base[j]=args[i]
       return base
 
+   def split_int(self, start, end, task_id=[]):
+      '''Generate a dictionary to distribute the spectral windows
+
+      @param start The start integer value
+      @param end The end integer value
+      @param task_id The list of integer ids
+      This is a convenience function for quick generating a dictionary of integer start points. Example:
+      x=c.split_int(9, 127, [2,3,4])
+      x
+      {2: 9, 3: 49, 4: 89 }
+
+      '''
+      base={}
+      if len(task_id)==0:
+         task_id=list(xrange(0, len(self.__engines))) 
+
+      if len(task_id)==0:
+         print "no engines available, no split done"
+         return base
+
+      if type(start)!=int or type(end)!=int:
+         print "start and end point must be integer"
+         return base
+
+      if start<0:
+         print "the start must be greate than 0"
+         return base
+
+      if start>=end:
+         print "the end must be greate than start"
+         return base
+
+      nx=1
+      try:
+         nx=int(ceil(abs(float(end - start))/len(task_id)))
+      except:
+         pass
+
+      #print nx, nchan, len(task_id)
+      i=-1
+      for j in task_id:
+         i=i+1
+         if i>=len(task_id):
+            break
+         st=i*nx
+         base[j]=st+start
+      return base
+       
    def split_channel(self, spw, nchan, task_id=[]):
       '''Generate a dictionary to distribute the spectral windows
 
@@ -791,7 +854,7 @@ class cluster(object):
             break
          st=i*nx
          se=st+nx-1
-         base[i]=str(spw)+":"+str(st)+"~"+str(se)
+         base[j]=str(spw)+":"+str(st)+"~"+str(se)
       return base
        
    def pgc(self,*args,**kwargs):
@@ -1110,6 +1173,110 @@ class cluster(object):
       '''
       return self.__client.activate()
 
+   def distribute(self, taskname=None,outfile='',
+                    target=[],ipython_globals=None):
+       #parameter_printvalues(arg_names,arg_values,arg_types)
+       ''' Make parallel tasks using current input values 
+   
+       taskname -- Name of task
+           default: None = current active task; 
+           example: taskname='bandpass'
+           <Options: type tasklist() for the complete list>
+       outfile -- Output file for the task inputs
+           default: '' = taskname.parallel;
+           example: outfile=taskname.orion
+       target -- List of integer parallel engine ids
+           default: [] = all current active engines;
+           example: target=[0,2,4]
+   
+       '''
+       base={} 
+       for j in target:
+           if type(j)!=types.IntType or j<0:
+               print ('engine id', j, 
+                      'must be a positive integer')
+               return base
+
+       if len(target)==0:
+           target=list(xrange(0, len(self.__engines))) 
+       if len(target)==0:
+           print 'no target engines'
+           return base
+
+       try:
+           if ipython_globals == None:
+               t=len(inspect.stack())-1 
+               myf=sys._getframe(t).f_globals
+           else:
+               myf=ipython_globals
+   
+           if taskname==None or taskname=='' or \
+              type(taskname)!=str:
+               taskname=myf['taskname']
+   
+           if outfile=='' or outfile==None or \
+              type(outfile)!=str:
+               outfile=taskname+'.parallel'
+   
+           tname=myf[taskname]
+           if not myf.has_key(taskname) and \
+              str(type(tname))!="<type 'instance'>" and \
+              not hasattr(tname,"defaults"):
+               raise TypeError("task %s is not defined " %
+                               taskname)
+           else:
+               myf['taskname']=taskname
+               myf['update_params'](func=myf['taskname'],
+                     printtext=False, ipython_globals=myf)
+           
+           #f=zip(myf[taskname].__call__.func_code.co_varnames,
+           #      myf[taskname].__call__.func_defaults) 
+           #print f
+
+           #pfile=open(outfile,'w')
+           for j in target:
+               script=taskname+'('
+               for k in myf[taskname].parameters:
+                   par=myf[taskname].parameters[k]
+                   if type(par)==dict:  
+                     #val=myf[taskname].__call__.func_defaults
+                       val=par
+                       #print ('j=', j, 'k=', k, 'par=', par, 
+                       #       'val=', val)
+                       for v in par.keys():
+                           if type(v)==types.IntType and j==v:
+                               #print v, 'par[v]', par[v]
+                               val=par[v]
+                               break
+                           elif type(v)==str:
+                               #print v, '-par[v]', par[v]
+                               a=-1
+                               try:
+                                   a=int(v)
+                               except:
+                                   pass
+                               if a!=-1 and a==j:
+                                   val=par[v]
+                                   break
+                       if type(val)==str:
+                           script=script+k+"='"+val+"',"
+                       else:
+                           script=script+k+"="+str(val)+","
+                   elif type(par)==str:
+                       script=script+k+"='"+par+"',"
+                   else:
+                       script=script+k+"="+str(par)+","
+               script=script.rstrip(',')
+               script=script+')'
+               base[j]=script
+           #    print >>pfile,script
+
+           #pfile.close()
+           return base
+       except TypeError, e:
+           print "distribute --error: ", e
+
+
    def check_job(self, job, verbose=True):
       '''check the status of an asynch job
 
@@ -1192,6 +1359,9 @@ c.get_result(1)
 #pg.activate()
 #px 'from casa_in_py import *'
 '''
+
+cluster=cluster()
+
 
 '''
 for i in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16;
