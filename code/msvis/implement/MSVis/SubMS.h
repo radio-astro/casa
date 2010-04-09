@@ -100,7 +100,7 @@ class SubMS
 
   
 
-  ~SubMS();
+  virtual ~SubMS();
   
   // Change or Set the MS this MSSelector refers to.
   void setMS(MeasurementSet& ms);
@@ -174,10 +174,10 @@ class SubMS
   //Useful if temporary subselection/averaging is necessary
   // It'll be in memory if the basic output ms is less than half of 
   // memory reported by HostInfo unless forced to by user...
-  MeasurementSet* makeScratchSubMS(const Vector<MS::PredefinedColumns>& whichDataCols, 
+  virtual MeasurementSet* makeScratchSubMS(const Vector<MS::PredefinedColumns>& whichDataCols, 
 				   const Bool forceInMemory=False);
   // In this form whichDataCol gets passed to parseColumnNames().
-  MeasurementSet* makeScratchSubMS(const String& whichDataCol, 
+  virtual MeasurementSet* makeScratchSubMS(const String& whichDataCol, 
 				   const Bool forceInMemory=False);
 
   // This sets up a default new ms
@@ -333,7 +333,24 @@ class SubMS
   // Vector<Int>(1,-1) means: use all SPWs
   Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1));
 
- private:
+ protected:
+
+  //method that returns the selected ms (?! - but it's Boolean - RR)
+  Bool makeSelection();
+  Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillDDTables();
+  Bool fillFieldTable();
+  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
+  Bool copyAntenna();
+  Bool copyFeed();
+  Bool copySource();
+  Bool copyObservation();
+  Bool copyPointing();
+  Bool copyWeather();
+  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillAccessoryMainCols();
+
   // *** Private member functions ***
   Bool getDataColumn(ROArrayColumn<Complex>& data,
                      const MS::PredefinedColumns colName);
@@ -358,20 +375,7 @@ class SubMS
   static uInt dataColStrToEnums(const String& col,
                                 Vector<MS::PredefinedColumns>& colvec);
     
-  //method that returns the selected ms (?! - but it's Boolean - RR)
-  Bool makeSelection();
-  Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillDDTables();
-  Bool fillFieldTable();
-  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
-  Bool copyAntenna();
-  Bool copyFeed();
-  Bool copySource();
-  Bool copyObservation();
-  Bool copyPointing();
-  Bool copyWeather();
-  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
+  
   Bool writeSimilarSpwShape(const Vector<MS::PredefinedColumns>& colNames);
 
   // The guts of writeSimilarSpwShape(), ripped out so they can handle either

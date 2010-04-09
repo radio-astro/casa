@@ -5056,50 +5056,55 @@ uInt SubMS::dataColStrToEnums(const String& col, Vector<MS::PredefinedColumns>& 
 }
 
 
+Bool SubMS::fillAccessoryMainCols(){
+  msOut_p.addRow(mssel_p.nrow(), True);
+  
+  if(!antennaSel_p){
+    msc_p->antenna1().putColumn(mscIn_p->antenna1());
+    msc_p->antenna2().putColumn(mscIn_p->antenna2());
+  }
+  else{
+    Vector<Int> ant1 = mscIn_p->antenna1().getColumn();
+    Vector<Int> ant2 = mscIn_p->antenna2().getColumn();
+    
+    for(uInt k = 0; k < ant1.nelements(); ++k){
+      ant1[k] = antNewIndex_p[ant1[k]];
+      ant2[k] = antNewIndex_p[ant2[k]];
+    }
+    msc_p->antenna1().putColumn(ant1);
+    msc_p->antenna2().putColumn(ant2);
+  }
+  msc_p->feed1().putColumn(mscIn_p->feed1());
+  msc_p->feed2().putColumn(mscIn_p->feed2());
+  
+  msc_p->exposure().putColumn(mscIn_p->exposure());
+  //  msc_p->flag().putColumn(mscIn_p->flag());
+  // if(!(mscIn_p->flagCategory().isNull()))
+  //  if(mscIn_p->flagCategory().isDefined(0))
+  //    msc_p->flagCategory().putColumn(mscIn_p->flagCategory());
+  msc_p->flagRow().putColumn(mscIn_p->flagRow());
+  msc_p->interval().putColumn(mscIn_p->interval());
+  msc_p->scanNumber().putColumn(mscIn_p->scanNumber());
+  msc_p->time().putColumn(mscIn_p->time());
+  msc_p->timeCentroid().putColumn(mscIn_p->timeCentroid());
+  
+  // ScalarMeasColumn doesn't have a putColumn() for some reason.
+  //msc_p->uvwMeas().putColumn(mscIn_p->uvwMeas());
+  msc_p->uvw().putColumn(mscIn_p->uvw());
+  
+  msc_p->weight().putColumn(mscIn_p->weight());
+  msc_p->sigma().putColumn(mscIn_p->sigma());
+  
+  relabelIDs();
+  return True;
+}
+
   Bool SubMS::fillMainTable(const Vector<MS::PredefinedColumns>& colNames)
   {  
     LogIO os(LogOrigin("SubMS", "fillMainTable()"));
     Bool success = true;
     
-    msOut_p.addRow(mssel_p.nrow(), True);
-    
-    if(!antennaSel_p){
-      msc_p->antenna1().putColumn(mscIn_p->antenna1());
-      msc_p->antenna2().putColumn(mscIn_p->antenna2());
-    }
-    else{
-      Vector<Int> ant1 = mscIn_p->antenna1().getColumn();
-      Vector<Int> ant2 = mscIn_p->antenna2().getColumn();
-      
-      for(uInt k = 0; k < ant1.nelements(); ++k){
-	ant1[k] = antNewIndex_p[ant1[k]];
-	ant2[k] = antNewIndex_p[ant2[k]];
-      }
-      msc_p->antenna1().putColumn(ant1);
-      msc_p->antenna2().putColumn(ant2);
-    }
-    msc_p->feed1().putColumn(mscIn_p->feed1());
-    msc_p->feed2().putColumn(mscIn_p->feed2());
-
-    msc_p->exposure().putColumn(mscIn_p->exposure());
-    //  msc_p->flag().putColumn(mscIn_p->flag());
-    // if(!(mscIn_p->flagCategory().isNull()))
-    //  if(mscIn_p->flagCategory().isDefined(0))
-    //    msc_p->flagCategory().putColumn(mscIn_p->flagCategory());
-    msc_p->flagRow().putColumn(mscIn_p->flagRow());
-    msc_p->interval().putColumn(mscIn_p->interval());
-    msc_p->scanNumber().putColumn(mscIn_p->scanNumber());
-    msc_p->time().putColumn(mscIn_p->time());
-    msc_p->timeCentroid().putColumn(mscIn_p->timeCentroid());
-
-    // ScalarMeasColumn doesn't have a putColumn() for some reason.
-    //msc_p->uvwMeas().putColumn(mscIn_p->uvwMeas());
-    msc_p->uvw().putColumn(mscIn_p->uvw());
-
-    msc_p->weight().putColumn(mscIn_p->weight());
-    msc_p->sigma().putColumn(mscIn_p->sigma());
-
-    relabelIDs();
+    fillAccessoryMainCols();
 
     //Deal with data
     if(!chanModification_p){
@@ -5871,7 +5876,7 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 		msc_p->imagingWeight().putColumnCells(rowstoadd,avgImgWts);
 	      }
 	    //----------------------------------------------------------------------
-
+	    
 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
             if(doSpWeight)
               msc_p->weightSpectrum().putColumnCells(rowstoadd, spWeight);
