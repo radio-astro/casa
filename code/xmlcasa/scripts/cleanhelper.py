@@ -1366,41 +1366,36 @@ class cleanhelper:
         for mode='velocity' or 'frequency' or 'channel'
         """
 
-        # first parse spw parameter:
-
-        # use MSSelect if possible:
-        if spw in (-1, '-1', '*', '', ' '):
-            spwinds = -1
-            chaninds = -1
-        else:
-            sel=ms.msseltoindex(self.vis, spw=spw)
-            spwinds=sel['spw'].tolist()
-            #spw returns by msseletoindex, spw='0:5~10;10~20' 
-            #will gives spw=[0] and len(spw) not equals to len(chanids)
-            #so get spwids from chaninds instead.
-            chaninds=sel['channel'].tolist()
-            spwinds=[]
-            for k in range(len(chaninds)):
-                spwinds.append(chaninds[k][0])
-            if(len(spwinds) == 0):
-                spwinds = -1      
-                # I don't believe it is possible to select spw=-1 (all) and select other 
-                # than all chans, but in case it is here is a check:
-                if(len(chaninds) > 0):
-                    raise Exception, 'spw parameter '+spw+' resulted in chan select without spw select';
-                chaninds = -1
-
-        # the first selected spw 
-        if(spwinds==-1): 
-            spw0=0
-        else:
-            spw0=spwinds[0]
-
         tb.open(self.vis+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
+
+        # first parse spw parameter:
+
+        # use MSSelect if possible
+        if spw in (-1, '-1', '*', '', ' '):
+            # spwinds = -1
+            # chaninds = -1
+            # get nchan of all spw from mssel- after this spwinds and chaninds should always 
+            # be defined
+            # spw = range(len(chanfreqscol))
+            spw="*"
+
+        sel=ms.msseltoindex(self.vis, spw=spw)
+        # spw returned by msseletoindex, spw='0:5~10;10~20' 
+        # will give spw=[0] and len(spw) not equal to len(chanids)
+        # so get spwids from chaninds instead.
+        chaninds=sel['channel'].tolist()
+        spwinds=[]
+        for k in range(len(chaninds)):
+            spwinds.append(chaninds[k][0])
+        if(len(spwinds) == 0):
+            raise Exception, 'unable to parse spw parameter '+spw;
+            
+        # the first selected spw 
+        spw0=spwinds[0]
 
         # set dataspecframe:
         elspecframe=["REST",
@@ -1433,11 +1428,8 @@ class cleanhelper:
 
         
         # start accumulating channels:
-        if chaninds!=-1:
-            chanind0=chaninds[0]
-        else:
-            chanind0=[0,0,len(chanfreqs0)-1,1]
-        
+        chanind0=chaninds[0]
+                
         chanfreqs1dx = numpy.array(chanfreqs0[chanind0[1]])
         for ci in range(chanind0[1],chanind0[2]+1,chanind0[3])[1:]:
             chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqs0[ci])
@@ -1447,27 +1439,19 @@ class cleanhelper:
         chan0freqwidth=chanwids0[0][chanind0[1]]
 
         # more spw?:
-        if(spwinds!=-1):
-            for ispw in range(1,len(spwinds)):
-                spwi=spwinds[ispw]
-                chanfreqs=chanfreqscol['r'+str(spwi+1)].transpose()
-                chanfreqsi = chanfreqs[0]  
-                if len(chanfreqsi)<1:
-                    raise Exception, 'spw parameter '+spw+' selected spw '+str(spwinds[ispw]+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
-                # accumulate channels:
-                if chaninds!=-1:
-                    chanindi=chaninds[ispw]
-                else:
-                    chanindi=[1,0,len(chanfreqsi)-1,1]
-        
-                for ci in range(chanindi[1],chanindi[2]+1,chanindi[3]):
-                    chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqsi[ci])
-            if len(spwinds)<=1:
-                chanindi=chanind0
-                spwi=spw0
-        else:
-            chanindi=chanind0
-            spwi=spw0
+        # spw returned by msseletoindex, spw='0:5~10;10~20' 
+        # will give spw=[0] and len(spw) not equal to len(chanids)
+        chanindi=chanind0
+        spwi=spw0
+        for isel in range(1,len(chaninds)):
+            chanindi=chaninds[isel]
+            spwi=chanindi[0]
+            chanfreqs=chanfreqscol['r'+str(spwi+1)].transpose()
+            chanfreqsi = chanfreqs[0]  
+            if len(chanfreqsi)<1:
+                raise Exception, 'spw parameter '+spw+' selected spw '+str(spwinds[isel]+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
+            for ci in range(chanindi[1],chanindi[2]+1,chanindi[3]):
+                chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqsi[ci])
          
         # get width of last selected channel of last spw (that could be used for width in vel mode)
         chanwidsN=chanwidcol['r'+str(spwi+1)].transpose()

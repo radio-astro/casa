@@ -211,32 +211,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if(this!=&other) 
       {
-	nAntenna_p=other.nAntenna_p;
-	mLocation_p=other.mLocation_p;
-	distance_p=other.distance_p;
-	lastFieldId_p=other.lastFieldId_p;
-	lastMSId_p=other.lastMSId_p;
-	nx=other.nx;
-	ny=other.ny;
-	npol=other.npol;
-	nchan=other.nchan;
-	nvischan=other.nvischan;
-	nvispol=other.nvispol;
-	chanMap.resize();
-	chanMap=other.chanMap;
-	polMap.resize();
-	polMap=other.polMap;
-	doUVWRotation_p=other.doUVWRotation_p;
-	freqFrameValid_p=other.freqFrameValid_p;
-	selectedSpw_p.resize();
-	selectedSpw_p=other.selectedSpw_p;
-	multiChanMap_p=other.multiChanMap_p;
+	//Do the base parameters
+	FTMachine::operator=(other);
+
+	
 	padding_p=other.padding_p;
-	nVisChan_p.resize();
-	nVisChan_p=other.nVisChan_p;
-	spectralCoord_p=other.spectralCoord_p;
-	doConversion_p.resize();
-	doConversion_p=other.doConversion_p;
+	
 	nWPlanes_p=other.nWPlanes_p;
 	imageCache=other.imageCache;
 	cachesize=other.cachesize;
@@ -264,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pointingToImage=other.pointingToImage;
 	usezero_p=other.usezero_p;
 
-	uvwMachine_p=other.uvwMachine_p;
+	
 	padding_p=other.padding_p;
 	nWPlanes_p=other.nWPlanes_p;
 	imageCache=other.imageCache;
@@ -283,7 +263,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	epJ=other.epJ;
 	convSize=other.convSize;
-	tangentSpecified_p=other.tangentSpecified_p;
 	lastIndex_p=other.lastIndex_p;
 	paChangeDetector=other.paChangeDetector;
 	pbLimit_p=other.pbLimit_p;

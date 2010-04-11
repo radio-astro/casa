@@ -35,10 +35,12 @@ int main(int argc, char* argv[]) {
   // Parse arguments.
   if(argc < 3 || argc > 6 || argv[1] == "-h" || argv[1] == "--help"){
     cout << argv[0] << ": Stand-alone executable for splitting an MS.\n"
-	 << "\nUse:\n\t" << argv[0] << " [-n] [-s spwsel] inputms outputms [timebin]\n\n"
+	 << "\nUse:\n\t" << argv[0] << " [-n] [-s spwsel] [-t timerange] [-w datacol] inputms outputms [timebin]\n\n"
 	 << "where timebin is an averaging time in seconds.\n"
 	 << "\n\t-n: Open inputms read-only.\n"
-	 << "\n\t-s: Spectral window selection." << endl;
+	 << "\n\t-s: Spectral window selection."
+	 << "\n\t-t: timerange selection."
+	 << "\n\t-w: Which column (i.e. data, model_data, etc.) to use." << endl;
     return !(argv[1] == "-h" || argv[1] == "--help");
   }
   
@@ -60,19 +62,21 @@ int main(int argc, char* argv[]) {
 
   char **args = argv + 1;
   while(args[0][0] == '-'){
-    if(args[0] == "-n")
+    String opt(args[0]);
+    
+    if(opt == "-n")
       nomodify = true;
-    else if(args[0] == "-s"){
+    else if(opt == "-s"){
       spwsel = args[1];
-      ++args;
+      ++args;              // <- Like "shift".
     }
-    else if(args[0] == "-t"){
+    else if(opt == "-t"){
       timerange = args[1];
-      ++args;
+      ++args;              // <- Like "shift".
     }
-    else if(args[0] == "-w"){
+    else if(opt == "-w"){
       t_whichcol = args[1];
-      ++args;
+      ++args;              // <- Like "shift".
     }
     ++args;              // <- Like "shift".
   }

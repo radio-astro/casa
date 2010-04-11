@@ -60,6 +60,8 @@ if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
 endif()
 
+set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
+
 dump( CMAKE_HOST_SYSTEM_NAME
   CMAKE_HOST_SYSTEM
   CMAKE_HOST_UNIX
@@ -565,7 +567,6 @@ endif()
 
 casa_find( CCMTOOLS
   VERSION 0.5.5
-  DEPENDS PYTHON
   INCLUDES CCM_Local/HomeFinder.h
            CCM_Python/BasicTypes.h
            CCM_Python/Py.h
@@ -581,15 +582,20 @@ casa_find( CCMTOOLS
     /* This code is not reached, if IPython was launched */
     return 1;
     "
+  DEPENDS PYTHON
 )
 
 set( CCMTOOLS_ccmtools_FLAGS -Xms1024M -Xmx1024M )
+
+#find_package( OpenGL REQUIRED )
+#set( OPENGL_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR} CACHE PATH "OpenGL include directories" FORCE )
+
 
 # QT4  4.3.4 or 4.5.1
 
 find_package(
   Qt4 4.3.4
-  COMPONENTS QtCore QtGui QtDBus QtXml )
+  COMPONENTS QtCore QtGui QtDBus QtXml ) #QtOpenGL )
 # Version checking not supported...
 
 set( QT4_INCLUDE_DIRS ${QT_INCLUDES} CACHE PATH "QT4 include directories" FORCE )
@@ -599,6 +605,7 @@ set( QT4_LIBRARIES
   ${QT_QTGUI_LIBRARY} 
   ${QT_QTDBUS_LIBRARY} 
   ${QT_QTXML_LIBRARY} 
+  # ${QT_QTOPENGL_LIBRARY}
   CACHE FILEPATH "QT4 libraries" FORCE )
 set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 
@@ -798,6 +805,7 @@ casa_add_module( msvis CASACORE graphics )
 casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
 casa_add_module( plotms CASACORE QT4 casaqt msvis )
 casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis )
+#casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( flagging CASACORE Boost tableplot msvis )
 casa_add_module( calibration CASACORE tableplot msvis )
 casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
@@ -809,4 +817,3 @@ casa_add_module( nrao CASACORE )
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
 
 # demo atmosphere ionosphere jive nfra simulators vlbi vo
-

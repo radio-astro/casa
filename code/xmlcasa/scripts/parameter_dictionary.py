@@ -950,6 +950,22 @@ class par(str):
 		"""
 
 	@staticmethod
+	def header():
+		"""
+		header -- print header information on plot
+                options: (bool) True, False
+                default: True
+		"""
+	
+	@staticmethod
+	def headsize():
+		"""
+		headsize -- header font size
+		options: (int)
+		default: 9
+		"""
+
+	@staticmethod
 	def highres():
 		""" Name of high resolution (interferometer) image: """
 

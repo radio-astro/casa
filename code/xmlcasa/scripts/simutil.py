@@ -121,7 +121,7 @@ class simutil:
             self.msg("%s: unknown units" % image,origin="statim")
             toJyarcsec=1.
             toJypix=1.
-        stats=ia.statistics(robust=True)
+        stats=ia.statistics(robust=True,verbose=False,list=False)
         im_min=stats['min']*toJypix
         if type(im_min)==type([]):
             if len(im_min)<1: im_min=0.
@@ -130,7 +130,7 @@ class simutil:
             if len(im_max)<1: im_max=1.
         imsize=ia.shape()[0:2]
         reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
-        stats=ia.statistics(region=reg1)
+        stats=ia.statistics(region=reg1,verbose=False,list=False)
         #im_rms=stats['rms']*toJyarcsec
         im_rms=stats['rms']*toJypix
         if type(im_rms)==type([]):
@@ -1445,7 +1445,7 @@ class simutil:
         if (inbright=="unchanged") or (inbright=="default"):
             scalefactor=1.
         else:
-            stats=in_ia.statistics()
+            stats=in_ia.statistics(verbose=False,list=False)
             highvalue=stats['max']
             scalefactor=float(inbright)/highvalue.max()
 

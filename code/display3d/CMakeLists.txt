@@ -18,14 +18,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa xmlcasa_demos_python python/${PYTHONV}/regressions
-  backend_demo.py
-  jupiter6cm_caldemo.py
-  jupiter6cm_demo.py
-  jupiter6cm_flagdemo.py
-  jupiter6cm_imagingdemo.py
-  jupiter6cm_poldemo.py
-  ngc4826_demo.py
-  ngc4826_tutorial.py
-  ngc5921_demo.py
-)
+include( ${QT_USE_FILE} )
+set( QT4_LIBRARIES ${QT_LIBRARIES} )
+
+qt4_wrap_cpp( outfiles_qoh
+  implement/3DViewer/3DController.qo.h
+  implement/3DViewer/3DDisplayData.qo.h
+  implement/3DViewer/3DWindow.qo.h
+  implement/3DViewer/Colorbar.qo.h
+  implement/3DViewer/SlideEditor.qo.h
+  )
+
+casa_add_library( display3d
+  ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
+  implement/3DViewer/3DController.cc
+  implement/3DViewer/3DDisplayData.cc
+  implement/3DViewer/3DWindow.cc
+  implement/3DViewer/Colorbar.cc
+  implement/3DViewer/SlideEditor.cc
+  implement/3DViewer/tqlayout.cc
+  )
+
+casa_add_executable( display3d 3v apps/3v/3v.cc )

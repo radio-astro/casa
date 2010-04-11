@@ -84,6 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   spectralCoord_p=SpectralCoordinate();
   isIOnly=False;
+  spwChanSelFlag_p=0;
 }
 
 
@@ -94,7 +95,56 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
 {
   if(this!=&other) {
     image=other.image;
-    uvwMachine_p=other.uvwMachine_p;
+    //generic selection stuff and state
+    nAntenna_p=other.nAntenna_p;
+    distance_p=other.distance_p;
+    lastFieldId_p=other.lastFieldId_p;
+    lastMSId_p=other.lastMSId_p;
+    
+    tangentSpecified_p=other.tangentSpecified_p;
+    mTangent_p=other.mTangent_p;
+    mImage_p=other.mImage_p;
+    mFrame_p=other.mFrame_p;
+
+    nx=other.nx;
+    ny=other.ny;
+    npol=other.npol;
+    nchan=other.nchan;
+    nvischan=other.nvischan;
+    nvispol=other.nvispol;
+    mLocation_p=other.mLocation_p;
+    if(uvwMachine_p)
+      delete uvwMachine_p;
+    if(other.uvwMachine_p)
+      uvwMachine_p=new UVWMachine(*other.uvwMachine_p);
+    else
+      uvwMachine_p=0;
+    doUVWRotation_p=other.doUVWRotation_p;
+    //Spectral and pol stuff 
+    freqInterpMethod_p=other.freqInterpMethod_p;
+    spwChanSelFlag_p.resize();
+    spwChanSelFlag_p=other.spwChanSelFlag_p;
+    freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p.resize();
+    selectedSpw_p=other.selectedSpw_p;
+    multiChanMap_p=other.multiChanMap_p;
+    chanMap.resize();
+    chanMap=other.chanMap;
+    polMap.resize();
+    polMap=other.polMap;
+    nVisChan_p.resize();
+    nVisChan_p=other.nVisChan_p;
+    spectralCoord_p=other.spectralCoord_p;
+    doConversion_p.resize();
+    doConversion_p=other.doConversion_p;
+
+    //moving source stuff
+    movingDir_p=other.movingDir_p;
+    fixMovingSource_p=other.fixMovingSource_p;
+    firstMovingDir_p=other.firstMovingDir_p;
+    //Double precision gridding for those FTMachines that can do
+    useDoubleGrid_p=other.useDoubleGrid_p;
+
   };
   return *this;
 };
@@ -120,7 +170,6 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   logIO() << LogOrigin("FTMachine", "initMaps") << LogIO::NORMAL;
 
   AlwaysAssert(image, AipsError);
-
 
   // Set the frame for the UVWMachine
   mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s")), mLocation_p);
@@ -326,6 +375,7 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   }
   logIO() << LogIO::DEBUGGING << "Polarization map = "<< polMap
   	  << LogIO::POST;
+  //cerr<<"spwchanselflag_p shape="<<spwChanSelFlag_p.shape()<<endl;
 }
 
 FTMachine::~FTMachine() 
@@ -341,6 +391,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 					     FTMachine::Type type){
 
     Cube<Complex> origdata;
+    Cube<Bool> modflagCube;
     Vector<Float> visFreq(vb.frequency().nelements());
     if(doConversion_p[vb.spectralWindow()]){
       convertArray(visFreq, lsrFreq_p);
@@ -371,9 +422,15 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     }
     if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour) || (vb.nChannel()==1)){
       data.reference(origdata);
-      flags.resize(vb.flagCube().shape());
+	  // do something here for apply flag based on spw chan sels
+	  // e.g. 
+	  // setSpecFlag(vb, chansels_p) -> newflag cube
+      setSpectralFlag(vb,modflagCube);
+      //flags.resize(vb.flagCube().shape());
+      flags.resize(modflagCube.shape());
       flags=0;
-      flags(vb.flagCube())=True;
+      //flags(vb.flagCube())=True;
+      flags(modflagCube)=True;
       weight.reference(wt);
       interpVisFreq_p.resize();
       interpVisFreq_p=lsrFreq_p;
@@ -393,7 +450,9 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	//2 swap of axes needed
 	Cube<Complex> flipdata;
 	Cube<Bool> flipflag;
-	swapyz(flipflag,vb.flagCube());
+	setSpectralFlag(vb,modflagCube);
+	//swapyz(flipflag,vb.flagCube());
+	swapyz(flipflag,modflagCube);
 	swapyz(flipdata,origdata);
 	InterpolateArray1D<Float,Complex>::
 	  interpolate(data,flag,imageFreq_p,visFreq,flipdata,flipflag,freqInterpMethod_p);
@@ -407,8 +466,11 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	flag.reference(flipflag);
       }
       else{
+	//InterpolateArray1D<Float,Complex>::
+	//  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
+	setSpectralFlag(vb,modflagCube);
 	InterpolateArray1D<Float,Complex>::
-	  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
+	  interpolatey(data,flag,imageFreq_p,visFreq,origdata,modflagCube,freqInterpMethod_p);
       }
     }
     else{
@@ -417,7 +479,9 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       flag.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
       flag.set(True);
       ArrayIterator<Bool> iter(flag, IPosition(2,0,2));
-      ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
+      //ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
+	  setSpectralFlag(vb,modflagCube);
+      ReadOnlyArrayIterator<Bool> origiter(modflagCube, IPosition(2,0,2));
       Int channum=0;
       Float step=imageFreq_p[1]-imageFreq_p[0];
       Float origstep=lsrFreq_p[1]-lsrFreq_p[0];
@@ -463,10 +527,14 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 
 
     if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour)||  (vb.nChannel()==1)){
+	  Cube<Bool> modflagCube;
+	  setSpectralFlag(vb,modflagCube);
       data.reference(vb.modelVisCube());
-      flags.resize(vb.flagCube().shape());
+      //flags.resize(vb.flagCube().shape());
+      flags.resize(modflagCube.shape());
       flags=0;
-      flags(vb.flagCube())=True;
+      //flags(vb.flagCube())=True;
+      flags(modflagCube)=True;
       interpVisFreq_p.resize();
       interpVisFreq_p=vb.frequency();
       return;
@@ -950,9 +1018,13 @@ Bool FTMachine::matchChannel(const Int& spw,
   else{
     lsrFreq=vb.lsrFrequency();
   }
+  // cout << "freq " << vb.frequency() << endl;
+  // cout << "lsrFreq " << lsrFreq << endl;
   lsrFreq_p.resize(lsrFreq.nelements());
   lsrFreq_p=lsrFreq;
-  
+  // cout << "FreqFrameValid " << freqFrameValid_p << " conversion " << doConversion_p[spw] << endl;
+  // cout << "freq sys " << spectralCoord_p.frequencySystem(True) << "    " << spectralCoord_p.frequencySystem(False) << endl;
+
   Vector<Double> c(1);
   c=0.0;
   Vector<Double> f(1);
@@ -960,12 +1032,17 @@ Bool FTMachine::matchChannel(const Int& spw,
 
   //cout << "lsrFreq " << endl;
 
-
+  //cout.precision(10);
   for (Int chan=0;chan<nvischan;chan++) {
     f(0)=lsrFreq[chan];
     if(spectralCoord_p.toPixel(c, f)) {
       Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
       //cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+      /////////////
+      //c(0)=pixel;
+      //spectralCoord_p.toWorld(f, c);
+      // cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+      ////////////////
       if(pixel>-1&&pixel<nchan) {
 	chanMap(chan)=pixel;
         nFound++;
@@ -979,6 +1056,8 @@ Bool FTMachine::matchChannel(const Int& spw,
       }
     }
   }
+
+  //cout << "chanMap " << chanMap << endl; 
 
   multiChanMap_p[spw].resize();
   multiChanMap_p[spw]=chanMap;
@@ -1061,8 +1140,6 @@ void FTMachine::setFreqInterpolation(const String& method){
     freqInterpMethod_p=InterpolateArray1D<Float,Complex>::nearestNeighbour;
   }
 
-
-
 }
 
 
@@ -1130,6 +1207,30 @@ void FTMachine::setFreqInterpolation(const String& method){
 
   }
 
+  void FTMachine::setSpwChanSelection(const Cube<Int>& spwchansels) {
+	spwChanSelFlag_p.resize();
+	spwChanSelFlag_p=spwchansels;
+  }
+
+  void FTMachine::setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube){
+    
+    modflagcube.resize(vb.flagCube().shape());
+    // cerr <<"vb.flagCube.shape..."<<vb.flagCube().shape()<< " mod " << modflagcube.shape() << endl;
+    modflagcube=vb.flagCube();
+	uInt nchan = vb.nChannel();
+	uInt msid = vb.msId();
+	uInt selspw = vb.spectralWindow();
+	Bool spwFlagIsSet=( (spwChanSelFlag_p.shape()(1) > selspw) && 
+			(spwChanSelFlag_p.shape()(0) > msid) && 
+			(spwChanSelFlag_p.shape()(2) >=nchan));
+	for (uInt i=0;i<nchan;i++) {
+	  //Flag those channels that  did not get selected...
+	  //respect the flags from vb  if selected  or 
+	  //if spwChanSelFlag is wrong shape
+	    if ((spwFlagIsSet) && (spwChanSelFlag_p(msid,selspw,i)!=1)) {
+	      modflagcube.xzPlane(i).set(True);
+	    }
+	}
+  }
 
 } //# NAMESPACE CASA - END
-

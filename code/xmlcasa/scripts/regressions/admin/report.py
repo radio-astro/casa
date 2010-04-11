@@ -1310,33 +1310,58 @@ class report:
         #
         #  Convert logfiles in a list of dictionaries
         #
-        #alllogs=os.listdir(result_dir)
 
-        find_cmd = 'find '+result_dir+' -name result\*.txt'
-        findout = commands.getoutput(find_cmd)
-        alllogs = ['']
-        if(findout != ''):
-            alllogs=findout.split('\n')
-
-        print "Parsing %s logfiles..." % str(len(alllogs))
-        # It takes some time, seems to be dominated by i/o
+        # Read from a single (monolithic) file of concatenated logfiles?
+        monofile = result_dir + "/../all-result.txt"
+        mono = os.path.exists(monofile)
         
-        #print alllogs
+        if mono:
+            fd = open(monofile)
+            line = fd.readline().rstrip()
+            print "Parsing monolithic logfile, %s..." % (monofile)
+
+        else:
+            # ... or recursively find all log files
+            # This is very expensive in I/O when there are
+            # ~10,000 to ~100,000 small log files
+            find_cmd = 'find '+result_dir+' -name result\*.txt'
+            findout = commands.getoutput(find_cmd)
+            alllogs = ['']
+            if(findout != ''):
+                alllogs=findout.split('\n')
+
+            log_index = 0
+            print "Parsing %s logfiles..." % str(len(alllogs))
+
+            #print alllogs
 
         data = []
         i = 0
-        for logfile in alllogs:
+        while True:
+            if mono:
+                if line:
+                    logfile = line
+                else:
+                    break
+            else:
+                if log_index < len(alllogs):
+                    logfile = alllogs[log_index]
+                    log_index += 1
+                    fd = open(logfile, "r")
+                else:
+                    break
+
             i += 1
             if (i % 100) == 0:
                 sys.stdout.write('.')
                 sys.stdout.flush()
             #print "match:", logfile
-            fd = open(logfile, "r")
+
             data_file = {}
             lineno = 0
             line = fd.readline().rstrip() ; lineno += 1
             data_file['logfile'] = logfile.split(result_dir)[1].lstrip('/')
-            while line:
+            while line and (len(line) == 0 or line[0] != "/"):
                 #print line
 
                 # workarounds for casapyinfo not returning
@@ -1369,10 +1394,10 @@ class report:
                 data_file[k] = v
                 
                 # next line
-                line = fd.readline().rstrip()
-                lineno += 1
-                
-            fd.close()
+                line = fd.readline().rstrip() ; lineno += 1
+
+            if not mono:
+                fd.close()
 
             # Test for mandatory entries' existence
             is_valid = True

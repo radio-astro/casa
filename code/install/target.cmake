@@ -46,14 +46,24 @@ macro( casa_add_library module )
   add_definitions( ${${module}_DEFINITIONS} )
   include_directories( ${${module}_INCLUDE_DIRS} )
 
-  add_library( ${module} ${ARGN} )
-  add_dependencies( inst ${module} )
+  # Create the target lib<module>, but set the output library
+  # filename to lib<module>.<suffix> (which would have defaulted
+  # to liblib<module>.<suffix>). The target named <module> is the 
+  # umbrella target for all targets (libraries, executables, ...) 
+  # in this subdirectory.
 
-  target_link_libraries( ${module} ${${module}_LINK_TO} )
+  add_library( lib${module} ${ARGN} )
+  set_target_properties( lib${module} PROPERTIES OUTPUT_NAME ${module} )
 
-  set_target_properties( ${module} PROPERTIES SOVERSION ${CASA_API_VERSION} )
+  add_dependencies( inst lib${module} )
+  add_custom_target( lib${module}_fast ${CMAKE_BUILD_TOOL} lib${module}/fast )
+  add_dependencies( ${module}_fast lib${module}_fast )
 
-  install( TARGETS ${module} LIBRARY DESTINATION lib )
+  target_link_libraries( lib${module} ${${module}_LINK_TO} )
+
+  set_target_properties( lib${module} PROPERTIES SOVERSION ${CASA_API_VERSION} )
+
+  install( TARGETS lib${module} LIBRARY DESTINATION lib )
 
 endmacro()
 
@@ -68,8 +78,10 @@ macro( casa_add_executable module name )
 
   add_executable( ${name} ${_sources} )
   add_dependencies( inst ${name} )
-  
-  target_link_libraries( ${name} ${module} )
+  add_custom_target( ${name}_fast ${CMAKE_BUILD_TOOL} ${name}/fast )
+  add_dependencies( ${module}_fast ${name}_fast )
+
+  target_link_libraries( ${name} lib${module} )
 
   install( TARGETS ${name} RUNTIME DESTINATION bin )
 
@@ -91,7 +103,7 @@ macro( casa_add_test module source )
   get_filename_component( _tname ${source} NAME_WE )
 
   add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
-  target_link_libraries( ${_tname} ${module} )
+  target_link_libraries( ${_tname} lib${module} )
   add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
   add_dependencies( check ${_tname} )
 
@@ -108,7 +120,7 @@ macro( casa_add_assay module source )
   get_filename_component( _tname ${source} NAME_WE )
 
   add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
-  target_link_libraries( ${_tname} ${module} )
+  target_link_libraries( ${_tname} lib${module} )
   add_test( ${_tname} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
   add_dependencies( check ${_tname} )
 
@@ -129,6 +141,27 @@ endmacro()
 macro( casa_add_module module )
 
   set( _dependencies ${ARGN} )
+
+  # Internal target to update this module including dependencies,
+  # then install this module, excluding dependencies
+  add_custom_target( 
+    ${module}_install
+    COMMAND ${CMAKE_BUILD_TOOL} install 
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${module}
+    )
+
+  # Target to update and install this module, excluding dependencies
+  add_custom_target( 
+    ${module}_fast
+    COMMAND ${CMAKE_BUILD_TOOL} install/fast
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${module}
+    COMMENT "Updating ${module} (fast)..."
+    )
+
+  # Target to update and install this module, including dependency modules
+  add_custom_target( ${module} COMMENT "Updating ${module}..." )
+  add_dependencies( ${module} ${module}_install )
+  
 
   # Include path always include code/include/
   set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include )
@@ -170,12 +203,13 @@ macro( casa_add_module module )
     # LINK_TO 
     # Unlike include dirs, libraries do not have
     # to be transitively propagated.
-    # E.g. if A links to B and B links to C
+    # E.g. if A links to (depends on) B and B links to C
     # we just need to explicitly link A to B and
     # the linker will make sure that C is eventually
     # linked to A
 
-    if( DEFINED ${_dep}_LIBRARIES )
+    if( DEFINED ${_dep}_LIBRARIES OR _dep STREQUAL DL )
+
       # External library
 
       set( ${module}_LINK_TO 
@@ -185,9 +219,12 @@ macro( casa_add_module module )
     else()
       # Another CASA module
 
-      set( ${module}_LINK_TO 
+      set(
+        ${module}_LINK_TO 
         ${${module}_LINK_TO} 
-        ${_dep} )
+        lib${_dep} )
+
+      add_dependencies( ${module} ${_dep}_install )
 
     endif()
 
@@ -219,6 +256,8 @@ macro( casa_add_module module )
 
   #dump( ${module}_DEFINITIONS ${module}_INCLUDE_DIRS ${module}_LINK_TO )
 
+  set( all_modules ${all_modules} ${module} )
+
   add_subdirectory( ${module} )
 
 endmacro()
@@ -226,7 +265,8 @@ endmacro()
 
 
 #
-# casa_add_python( target_name
+# casa_add_python( module
+#                  target_name
 #                  installation_directory 
 #                  source1 [source2 ...]
 #                )
@@ -234,7 +274,7 @@ endmacro()
 # Creates target for python files
 #
 
-MACRO( casa_add_python _target _install_dir )
+MACRO( casa_add_python module  _target _install_dir )
   set( _pyexecs ${ARGN} )
 
   set( _out_all "" )
@@ -282,6 +322,8 @@ MACRO( casa_add_python _target _install_dir )
     #COMMENT "Creating python files")
 
   add_dependencies( inst ${_target} )
+  add_custom_target( ${_target}_fast ${CMAKE_BUILD_TOOL} ${_target}/fast )
+  add_dependencies( ${module}_fast ${_target}_fast )
 
   install( PROGRAMS ${_out_all}
            DESTINATION ${_install_dir} )
@@ -293,10 +335,10 @@ endmacro()
 
 
 #
-#   casa_add_pymodule( name source1 [source2 ...] )
+#   casa_add_pymodule( module name source1 [source2 ...] )
 #
 # Creates a python module. 
-# The module is always linked to xmlcasa and ${xmlcasa_LINK_TO}.
+# The module is always linked to libxmlcasa and ${xmlcasa_LINK_TO}.
 #
 
 macro( casa_add_pymodule name )
@@ -305,9 +347,11 @@ macro( casa_add_pymodule name )
 
   add_library( ${name} MODULE ${_sources} )
   add_dependencies( inst ${name} )
+  add_custom_target( ${name}_fast ${CMAKE_BUILD_TOOL} ${name}/fast )
+  add_dependencies( xmlcasa_fast ${name}_fast )
 
   set_target_properties( ${name} PROPERTIES PREFIX "" )
-  target_link_libraries( ${name} xmlcasa ${xmlcasa_LINK_TO} )
+  target_link_libraries( ${name} libxmlcasa ${xmlcasa_LINK_TO} )
   install( TARGETS ${name} LIBRARY DESTINATION python/${PYTHONV} )
 
 endmacro()

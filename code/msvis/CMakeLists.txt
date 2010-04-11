@@ -25,6 +25,7 @@ casa_add_library( msvis
   implement/MSVis/MSContinuumSubtractor.cc
   implement/MSVis/MSUVWGenerator.cc
   implement/MSVis/SelectAverageSpw.cc
+  implement/MSVis/SimpleSubMS.cc
   implement/MSVis/StokesVector.cc
   implement/MSVis/SubMS.cc
   implement/MSVis/VisBuffAccumulator.cc

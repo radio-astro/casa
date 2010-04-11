@@ -31,19 +31,29 @@ import nose
 #             'immoment_test','imregrid_test',
 #             'imsmooth_test','imval_test','vishead_test',
 #             'visstat_test']
-OLD_TESTS = ['asdm-import','boxit_test',
-             'imfit_test',
+OLD_TESTS = ['asdm-import',
+#             'imfit_test',
              'imregrid_test',
-             'imval_test','vishead_test']
-NEW_TESTS = ['test_listhistory',
+#             'imval_test',
+             'vishead_test']
+
+NEW_TESTS = ['test_boxit',
              'test_clean',
-             'test_report',
-             #'test_exportasdm',
-             'test_plotants',
-             'test_smoothcal',
-             'test_hanningsmooth',
              'test_clearstat',
-             'test_imstat']
+#             'test_exportasdm',
+             'test_hanningsmooth',
+#             'test_imcontsub',
+             'test_imfit',
+             'test_imhead',
+             'test_immath',
+#             'test_immoment',
+             'test_imsmooth',
+             'test_imstat',
+             'test_imval',
+             'test_listhistory',             
+             'test_plotants',
+             'test_report',
+             'test_smoothcal']
 
 whichtests = 0
 

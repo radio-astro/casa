@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa_usecases_python python/${PYTHONV}/regressions
+casa_add_python( xmlcasa xmlcasa_usecases_python python/${PYTHONV}/regressions
   jupiter6cm_usecase.py
   ngc5921_usecase.py
   run_polcal_20080224_cband_usecase.py

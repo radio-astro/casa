@@ -26,7 +26,8 @@
 #
 #  Rule for handling task XML
 #
-#     casa_add_tasks( target
+#     casa_add_tasks( module
+#                     target
 #                     source1.xml [source2.xml ...] )
 #
 #  - Generates python bindings
@@ -34,7 +35,7 @@
 #  - Defines install rules
 #
 
-macro( casa_add_tasks _target )
+macro( casa_add_tasks module _target )
   set( _xmls ${ARGN} )
 
   set( _out_py "" )
@@ -86,6 +87,8 @@ macro( casa_add_tasks _target )
     DEPENDS ${_out_py} 
     )
   add_dependencies( inst ${_target} )
+  add_custom_target( ${_target}_fast ${CMAKE_BUILD_TOOL} ${_target}/fast )
+  add_dependencies( ${module}_fast ${_target}_fast )
 
   install( 
     FILES ${_xmls}
@@ -120,6 +123,8 @@ macro( casa_add_tasks _target )
 
   add_custom_target( tasks ALL DEPENDS ${_tasks} ${_tasksinfo} )
   add_dependencies( inst tasks )
+  add_custom_target( tasks_fast ${CMAKE_BUILD_TOOL} tasks/fast )
+  add_dependencies( ${module}_fast tasks_fast )
 
   install(
     PROGRAMS ${_tasks} ${_tasksinfo} DESTINATION python/${PYTHONV}
