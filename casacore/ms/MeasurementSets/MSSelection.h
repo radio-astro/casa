@@ -225,16 +225,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // replaced with the value of the defaultStep parameter. Multiple
     // channel specifications for the same Spectral Window selection,
     // results in multiple row in the Matrix.
-    inline Matrix<Int> getChanList(const MeasurementSet* ms=NULL, const Int defaultStep=1) 
-    {
-      if (chanIDs_p.nelements() <= 0) getTEN(ms); 
-      Int n=chanIDs_p.shape()[0];
-      Matrix<Int> chanIDList=chanIDs_p;
-      for(Int i=0;i<n;i++) 
-      	if (chanIDList(i,3) < 0) 
-      	  chanIDList(i,3)=defaultStep;
-      return chanIDList.copy();
-    }
+    Matrix<Int> getChanList(const MeasurementSet* ms=NULL, const Int defaultStep=1);
 
     // Return the list of the selected Data Description IDs.    
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
