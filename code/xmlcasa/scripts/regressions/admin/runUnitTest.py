@@ -31,13 +31,12 @@ import nose
 #             'immoment_test','imregrid_test',
 #             'imsmooth_test','imval_test','vishead_test',
 #             'visstat_test']
-OLD_TESTS = ['asdm-import',
-#             'imfit_test',
-             'imregrid_test',
+OLD_TESTS = ['imregrid_test',
 #             'imval_test',
              'vishead_test']
 
-NEW_TESTS = ['test_boxit',
+NEW_TESTS = ['test_asdm-import',
+             'test_boxit',
              'test_clean',
              'test_clearstat',
 #             'test_exportasdm',
