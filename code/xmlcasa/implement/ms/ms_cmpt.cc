@@ -294,7 +294,14 @@ ms::command(const std::string& msfile, const std::string& command, const bool no
 */
 
 bool
-ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac::variant& field, const ::casac::variant& spw, const int nchan, const int start, const int width, const ::casac::variant& baseline, const std::string& time, const ::casac::variant& scan, const ::casac::variant& uvrange, const std::string& taql,const bool writesyscal, const bool multisource, const bool combinespw, const bool writestation)
+ms::tofits(const std::string& fitsfile, const std::string& column,
+           const ::casac::variant& field, const ::casac::variant& spw,
+           const int nchan, const int start, const int width,
+           const ::casac::variant& baseline, const std::string& time,
+           const ::casac::variant& scan, const ::casac::variant& uvrange,
+           const std::string& taql, const bool writesyscal,
+           const bool multisource, const bool combinespw,
+           const bool writestation, const bool padwithflags)
 {
   Bool rstat(True);
   try{
@@ -364,7 +371,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
  
          if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
                                           inchan, iwidth, writesyscal,
-                                          multisource, combinespw, writestation)) {
+                                          multisource, combinespw,
+                                          writestation, 1.0, padwithflags)) {
            *itsLog << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
            rstat = False;
          }

@@ -54,7 +54,7 @@ class ms
 
     std::string name();
 
-    bool tofits(const std::string& fitsfile = "", const std::string& column = "corrected", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const int nchan = -1, const int start = 0, const int width = 1, const ::casac::variant& baseline = ::casac::initialize_variant(""), const std::string& time = "", const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const bool writesyscal = false, const bool multisource = false, const bool combinespw = false, const bool writestation = false);
+  bool tofits(const std::string& fitsfile = "", const std::string& column = "corrected", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const int nchan = -1, const int start = 0, const int width = 1, const ::casac::variant& baseline = ::casac::initialize_variant(""), const std::string& time = "", const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const bool writesyscal = false, const bool multisource = false, const bool combinespw = false, const bool writestation = false, const bool padwithflags=false);
 
     bool summary(::casac::record& header, const bool verbose = false);
 

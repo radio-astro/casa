@@ -962,7 +962,7 @@ the ms definition itself. -->
      </param>
     
      <param type="bool" direction="in" name="combinespw">
-     <description>Handle spectral window as IF</description>
+     <description>Export spectral windows as IFs</description>
      <value>false</value>
      </param>
     
@@ -970,23 +970,29 @@ the ms definition itself. -->
      <description>Write station name instead of antenna name</description>
      <value>false</value>
      </param>    
+
+     <param type="bool" direction="in" name="padwithflags">
+     <description>If combinespw==True, pad data with flags to fit IFs</description>
+     <value>false</value>
+     </param>
   </input>
   <returns type="bool"/>
 
   <description>
-    This functions writes a \uvfits\ file that contains the data in
+    This function writes a \uvfits\ file that contains the data in
     the measurement set associated with this tool. The \fits\ file is
-    always written in floating point format and the data is always
+    always written in floating point format and the data are always
     stored in the primary array of the \fits\ file.
 
-    If the measurement set has been processed by many of the imaging
-    tools, including imager and calibrator, it may contain additional
-    data columns. You need to select which of these data columns will
-    be written to the \fits\ file. The possible options are:
+    If the measurement set has been imaged or calibrated in CASA, it
+    may contain additional data columns. You need to select ONE of
+    these columns to be written to the \fits\ file. The possible
+    options are:
     \begin{description}
       \item[observed] This is the raw data as collected by the
                       telescope. All interferometric measurement sets must
-                      contain this column. A synonym for 'observed' is 'data'.
+                      contain this column. A synonym for 'observed' is
+                      'data'.
       \item[corrected] This is the calibrated data. A synonym for
                        'corrected' is 'corrected\_data'.
       \item[model] This is the visibilites that would be measured using
@@ -1007,17 +1013,27 @@ the ms definition itself. -->
     The combinespw argument is used to control whether data from
     different spectral windows will be written as different entries in
     the \fits\ FQ (frequency) table or combined as different IF's
-    within one entry in the FQ table. You should set this to True only if
-    you know that the data from different spectral windows was
-    observed simultaneously, and the data in the measurement set can
-    be equally divided between all the spectral windows.
-    Use of this switch is recommended for data to be processed in classic
-    AIPS (if possible, e.g., standard dual IF observations).
+    within one entry in the FQ table. You should normally only set
+    this to True if you know that the data from different spectral
+    windows were observed simultaneously, and the data in the
+    measurement set can be equally divided between all the spectral
+    windows (i.e.\ each window should have the same width).  Use of
+    this switch is recommended for data to be processed in classic
+    AIPS and difmap (if possible, e.g., standard dual IF observations).
 
-    The \fits\ GC (gain curve) and TY (system temperature) tables
-    can be optionally written by setting the writesyscal argument to
-    True.  This is a rather WSRT-specific operation at the moment and may
-    not work correctly for measurement sets from other telescopes.
+    The padwithflags argument is only relevant if combinespw is True.
+    If true, it will fill in data that is 'missing' with flags to fit
+    the IF structure.  This is appropriate if the MS had a few
+    frequency-dependent flags applied, and was then time-averaged by
+    split.  If the spectral windows were observed at different times,
+    padwithflags=True will add a large number of flags, making the 
+    output file significantly longer.  It does not yet support spectral
+    windows with different widths.
+
+    The \fits\ GC (gain curve) and TY (system temperature) tables can
+    be optionally written by setting the writesyscal argument to True.
+    This is a rather WSRT-specific operation at the moment and may not
+    work correctly for measurement sets from other telescopes.
 
     The three parameters 'start', 'nchan', 'width' are for channel
     averaging while outputing the data to the fits file. The default
