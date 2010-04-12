@@ -63,9 +63,22 @@ MeasurementSet create_ms()
     feed.putScalar(rownr, 1);
 
 
+    // MAIN - antenna
+    {
+        casa::MSMainColumns(ms).antenna1().put(0, 0);
+        casa::MSMainColumns(ms).antenna1().put(1, 0);
+        casa::MSMainColumns(ms).antenna1().put(2, 1);
+        casa::MSMainColumns(ms).antenna2().put(0, 1);
+        casa::MSMainColumns(ms).antenna2().put(1, 2);
+        casa::MSMainColumns(ms).antenna2().put(2, 2);
+    }
+
+
     // Antenna
     ArrayColumn<Double> antpos(ms.antenna(),
                                MSAntenna::columnName(MSAntenna::POSITION));
+    ms.antenna().addRow();
+    ms.antenna().addRow();
     ms.antenna().addRow();
 
     Array<Double> position(IPosition(1, 3)); 
@@ -179,7 +192,7 @@ MeasurementSet create_ms()
         msspwinCol.chanWidth().put(crow, chanWidth);
         msspwinCol.effectiveBW().put(crow, effectiveBW);
         msspwinCol.resolution().put(crow, resolution);
-        msspwinCol.measFreqRef().put(crow, f0);
+        msspwinCol.measFreqRef().put(crow, 0);
         msspwinCol.totalBandwidth().put(crow, num_chan * df);
         msspwinCol.netSideband().put(crow, 1);
         //if (bbc_no_ >= 0) msspwinCol.bbcNo().put(crow, bbc_no_);
@@ -287,17 +300,29 @@ int run()
 
     cout << "Run flagger..." << endl;
 
+
+    //LogIO l(LogOrigin("Flagger","FlagCube"));
+    //    l << "helo l" << LogIO::POST;
+    //    cerr << "survived" << endl;
+
+
     bool trial = false;
     bool reset = false;
 
-    string baseline = "!5";
+    string baseline = "";
+
+    baseline = "";
     flagger.setdata("", "", "", "", "",
                     baseline, "", "", ""); 
     
     cout << "setmanualflags..." << endl;
     Vector<Double> cliprange(2);
+    cliprange[0] = 0.5;
+    cliprange[1] = 1.0;
+
     flagger.setmanualflags(false, false, "", cliprange, "",
                            false, false);
+
     cout << "run..." << endl;
     flagger.run(trial, reset);
 
