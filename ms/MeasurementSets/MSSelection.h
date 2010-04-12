@@ -16,7 +16,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -129,12 +129,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		     TAQL_EXPR,
 		     MAX_EXPR = TAQL_EXPR};
     enum MSSMode {PARSE_NOW=0, PARSE_LATE};
+
     // Default null constructor, and destructor
     MSSelection();
     virtual ~MSSelection();
     
-    // Construct from a record representing a selection item
-    // at the CLI or user interface level.
+    // Construct using an MS and the various selection expressions to
+    // be applied to the given MS.  By default, the expressions will
+    // be parsed immediately.  With mode=PARSE_LATE, the parsing will
+    // be done with a call to toTableExprNode().
     MSSelection(const MeasurementSet& ms,
 		const MSSMode& mode=PARSE_NOW,
 		const String& timeExpr="",
@@ -147,6 +150,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const String& scanExpr="",
 		const String& arrayExpr="");
     
+    // Construct from a record representing a selection item at the
+    // CLI or user interface level.  This is functionally same as the
+    // constructor above with mode=PARSE_LATE.
     MSSelection(const Record& selectionItem);
     
     // Copy constructor
@@ -161,7 +167,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Helper method for converting name vectors to expression strings
     static String nameExprStr(Vector<String> name);
     
-    // Expression accessors
+    // Expression accessors.  The following set*Expr() methods only
+    // set the expressions.  Parsing is done with a call to
+    // toTableExprNode().
     Bool setAntennaExpr(const String& antennaExpr);
     Bool setFieldExpr(const String& fieldExpr);
     Bool setSpwExpr(const String& spwExpr);
@@ -172,50 +180,78 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool setTaQLExpr(const String& taqlExpr);
     Bool setPolnExpr(const String& polnExpr);
     
+    // Accessor for result of parsing all of the selection
+    // expressions.  The final TableExprNode (TEN) is the result of
+    // ANDing the TENs for the individual expressions.
     TableExprNode getTEN(const MeasurementSet*ms = NULL);
 
-    // Methods to return the list of various selected IDs
+    // Accessor for the list of the selected scan IDs.
     inline Vector<Int> getScanList(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return scanIDs_p.copy();}
 
+    // Accessor for the list of selected sub-array IDs.
     inline Vector<Int> getSubArrayList(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return arrayIDs_p.copy();}
     
+    // Accessor for the list of antenna-1 of the selected baselines.
+    // Antennas affected by the baseline negation operator have the
+    // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna1List(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return antenna1IDs_p.copy();}
     
+    // Accessor for the list of antenna-2 of the selected baselines.
+    // Antennas affected by the baseline negation operator have the
+    // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna2List(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return antenna2IDs_p.copy();}
     
+    // Accessor for the list of selected baselines.  The list is a Nx2
+    // Matrix with one row per baseline containing the antenna IDs of
+    // the two antenna associated with the baseline.
+    //
+    // Baselines affected by the negation operator in the baseline
+    // selection expression are reported with one or both the antenna
+    // IDs multiplied by -1.  E.g. a baseline selection expression
+    // "!1" will result in a baseline list
+    //
+    // [-1, 2],
+    // [-1, 3],
+    // [-1, 4],
+    // ....
+    //
+    // The expression "!1&10" will result in a baseline list [-1,
+    // -10].  Etc...
+    //
     inline Matrix<Int> getBaselineList(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return baselineIDs_p.copy();}
     
+    // Accessor for the list of selected field IDs.
     inline Vector<Int> getFieldList(const MeasurementSet* ms=NULL) 
     {if (fieldIDs_p.nelements() <= 0) getTEN(ms); return fieldIDs_p.copy();}
     
-    // Return the list of the specified time range(s) as the start and
-    // end MJD values.
+    // Accessor for the list of the specified time range(s) as the
+    // start and end MJD values.
     inline Matrix<Double> getTimeList(const MeasurementSet* ms=NULL)
     {getTEN(ms); return selectedTimesList_p.copy();}
     
-    // Return the list of the specified uv-range(s) as the start and
-    // end values in units used in the MS.
+    // Accessor for the list of the specified uv-range(s) as the start
+    // and end values in units used in the MS.
     inline Matrix<Double> getUVList(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedUVRange_p.copy();}
     
-    // Return the list of user defined units for the uv-range(s).  The
-    // uv-range(s) return by getUVList is always in the units used in
-    // the MS.
+    // Accessor for the list of user defined units for the
+    // uv-range(s).  The uv-range(s) return by getUVList is always in
+    // the units used in the MS.
     inline Vector<Bool> getUVUnitsList(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedUVUnits_p.copy();}
 
-    // Return the list of the selected Spectral Window IDs.
+    // Accessor for the list of the selected Spectral Window IDs.
     inline Vector<Int> getSpwList(const MeasurementSet* ms=NULL) 
     {if (spwIDs_p.nelements() <= 0) getTEN(ms); return spwIDs_p.copy();}
     
-    // Return the table (as a nx4 Matrix) of the selected Spectral
-    // Windows and associated ranges of selected channels.  Each row
-    // of the Matrix has the following elements:
+    // Accessor for the table (as a nx4 Matrix) of the selected
+    // Spectral Windows and associated ranges of selected channels.
+    // Each row of the Matrix has the following elements:
     //
     //    SpwID StartCh StopCh Step
     //
@@ -227,7 +263,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // results in multiple rows in the Matrix.
     Matrix<Int> getChanList(const MeasurementSet* ms=NULL, const Int defaultStep=1);
 
-    // Return the list of the selected Data Description IDs.    
+    // Accessor for the list of the selected Data Description IDs.
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
     {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p.copy();}
     
@@ -256,10 +292,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Convert to TableExprNode format (C++ interface to TaQL)
     TableExprNode toTableExprNode(const MeasurementSet* ms);
     
-    // Return the selected MS.  For now, the selected MS reflects only
-    // row selections (as against in-row selections).  If outMSName !=
-    // "", the selected MS is also written to the disk (a shallow
-    // copy).
+    // Return the selected MS.  The selected MS reflects only row
+    // selections (as against in-row selections).  If outMSName != "",
+    // the selected MS is also written to the disk (a shallow copy).
+    //
+    // For in-row selection, use the appropriate global function
+    // mssSetData() MSSelectionTools.h which also returns the in-row
+    // (corr/chan) slices that can be supplied to the VisIter object
+    // for on-the-fly in-row selection.
     Bool getSelectedMS(MeasurementSet& selectedMS,
 		       const String& outMSName="");
     
