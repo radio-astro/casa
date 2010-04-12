@@ -762,7 +762,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 
   // Check that an integral number of SPWs fit in the MS.
   uInt nif = 1;
-  if (combineSpw) {
+  if (combineSpw && !padWithFlags) {
     nif = nrspw;
     if (nrow%nif != 0) {
       os << LogIO::SEVERE << "The number of rows per spectral-window varies;"
