@@ -94,7 +94,8 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
 				 Bool asMultiSource,
 				 Bool combineSpw,			       
 				 Bool writeStation,
-                                 Double sensitivity)
+                                 Double sensitivity,
+                                 const Bool padWithFlags)
 {
   LogIO os(LogOrigin("MSFitsOutput", "writeFitsFile"));
   const uInt nrow = ms.nrow();
@@ -150,7 +151,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     std::set<Int> allIDs;
     for (uInt i = 0; i < ddidcol.nelements(); i++) {
       Int ddid = ddidcol(i);
-      if (ddid < spwidcol.nelements()) {
+      if (static_cast<uInt>(ddid) < spwidcol.nelements()) {
         Int spwid = spwidcol(ddid);
         
         allIDs.insert(spwid);
@@ -198,7 +199,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
 				     outfile, ms, column,
 				     spwidMap, nrspw, startchan, nchan, 
 				     stepchan, fieldidMap,
-				     asMultiSource, combineSpw);
+				     asMultiSource, combineSpw, padWithFlags);
 
   Bool ok = (fitsOutput != 0);
   if (!ok) {
@@ -286,7 +287,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 				    Int chanstep,
 				    const Block<Int>& fieldidMap,
 				    Bool asMultiSource,
-				    Bool combineSpw)
+				    const Bool combineSpw,
+                                    const Bool padWithFlags)
 {
   FitsOutput *outfile = 0;
   LogIO os(LogOrigin("MSFitsOutput", "writeMain"));
@@ -896,52 +898,62 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     meter.update((rownr+1)*1.0);
     Float* outptr = optr;           // reset for each spectral-window
     for (uInt m=0; m<nif; m++) {
+      Bool rowFlag;           // FLAG_ROW
+
       rownr++;
 
+      // All operations using rownr must happen inside this if...else!
       if(combineSpw && inspwinid(rownr) != expectedDDIDs[rownr % nif]){
-        os << LogIO::SEVERE
-           << "A DATA_DESC_ID appeared out of the expected order."
-           << LogIO::POST;
-        os << LogIO::SEVERE
-           << "MSes with multiple tunings (i.e. spw varies with time) cannot be"
-           << LogIO::POST;
-        os << LogIO::SEVERE
-           << "exported with combinespw.  Export each tuning separately."
-           << LogIO::POST;
-        return 0;
+        if(padWithFlags){
+          // Save this row for the next one, and fill in with flagged junk.
+          --rownr;
+          
+          indatatmp.set(0.0);   // DATA matrix
+          rowFlag = true;
+          inflagtmp.set(true);
+          inwttmp.set(0.0);
+          // Don't update lasttime.
+        }
+        else{
+          os << LogIO::SEVERE
+             << "A DATA_DESC_ID appeared out of the expected order.\n"
+             << "MSes with multiple tunings (i.e. spw varies with time) cannot"
+             << "\nbe exported with combinespw.  Export each tuning separately."
+             << LogIO::POST;
+          return 0;
+        }        
       }
-      
-      // DATA matrix
-      indata.get(rownr, indatatmp);
-      // FLAG_ROW
-      Bool rowFlag = inrowflag(rownr);
-      // FLAG
-      indataflag.get(rownr, inflagtmp);
-      // WEIGHT_SPECTRUM (defaults to WEIGHT)
-      Bool getwt = True;
-      if (hasWeightArray) {
-	IPosition shp = inweightarray.shape(rownr);
-	if (shp.isEqual(inwttmp.shape())) {
-	  inweightarray.get(rownr, inwttmp);
-	  getwt = False;
-	}
-      }
-      if (getwt) {
-	const Vector<Float> wght = inweightscalar(rownr);
-	for (Int p = 0; p < numcorr0; p++) {
-	  inwttmp.row(p) = wght(p);
-	}
-      }
+      else{
+        indata.get(rownr, indatatmp);   // DATA matrix
+        rowFlag = inrowflag(rownr);
+        indataflag.get(rownr, inflagtmp);      // FLAG
 
-      /*
-      Double rtime(86400.0*floor(intime(0)/86400.0));
-      cout << "rtime = " << rtime << " " << "nrows = " << intime.nrow() << endl;
-      cout << "time = " << intime(rownr)-rtime;
-      if (intime(rownr)!=lasttime)
-	cout << " ***NEW*** ";
-      cout << endl;
-      */
-      lasttime=intime(rownr);
+        // WEIGHT_SPECTRUM (defaults to WEIGHT)
+        Bool getwt = True;
+        if (hasWeightArray) {
+          IPosition shp = inweightarray.shape(rownr);
+          if (shp.isEqual(inwttmp.shape())) {
+            inweightarray.get(rownr, inwttmp);
+            getwt = False;
+          }
+        }
+        if (getwt) {
+          const Vector<Float> wght = inweightscalar(rownr);
+          for (Int p = 0; p < numcorr0; p++) {
+            inwttmp.row(p) = wght(p);
+          }
+        }
+        /*
+          Double rtime(86400.0*floor(intime(0)/86400.0));
+          cout << "rtime = " << rtime << " " << "nrows = " << intime.nrow()
+               << endl;
+          cout << "time = " << intime(rownr)-rtime;
+          if (intime(rownr)!=lasttime)
+            cout << " ***NEW*** ";
+          cout << endl;
+        */
+        lasttime = intime(rownr);
+      }
 
       // We should optimize this loop more, probably do frequency as
       // the inner loop?
@@ -1004,7 +1016,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 	}
 
       }
-    }
+    }   // Ends loop over IFs.
 
     // If found data at this timestamp, write it out
     //    if (dowrite) {

@@ -60,8 +60,8 @@ public:
 			    Int nchan=-1, Int stepchan=-1, 
 			    Bool writeSysCal = False,
 			    Bool asMultiSource = False, Bool combineSpw=False,
-			    Bool writeStation=False, Double sensitivity = 1.0);
-
+			    Bool writeStation=False, Double sensitivity = 1.0,
+                            const Bool padWithFlags=false);
 
 private:
   // Write the main table.
@@ -75,7 +75,8 @@ private:
 			       Int startchan, Int nchan, Int stepchan,
 			       const Block<Int>& fieldidMap,
 			       Bool asMultiSource,
-			       Bool combineSpw);
+			       const Bool combineSpw,
+                               const Bool padWithFlags=true);
 
   // Write the FQ table.
   // If combineSpw is True, all spectral-windows are written in one
