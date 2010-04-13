@@ -528,6 +528,17 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 table::queryC(const std::string& query, const std::string& resultTable,
               const std::string& sortlist, const std::string& columns)
 {
+  *itsLog << LogIO::WARN
+          << "tb.queryC has been merged with tb.query, and will disappear\n"
+          << "in the next release.  Update your scripts now!"
+          << LogIO::POST;
+  return table::query(query, resultTable, sortlist, columns);
+}
+
+::casac::table*
+table::query(const std::string& query, const std::string& name,
+             const std::string& sortlist, const std::string& columns)
+{
  ::casac::table *rstat(0);
  try {
    if(itsTable){
@@ -540,8 +551,8 @@ table::queryC(const std::string& query, const std::string& resultTable,
        taqlString << " where " << query;
      if(!sortlist.empty())
        taqlString << " orderby " << sortlist;
-     if(!resultTable.empty())
-       taqlString << " giving " << resultTable;
+     if(!name.empty())
+       taqlString << " giving " << name;
      casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
      rstat = new ::casac::table(theQTab);
    } else {
@@ -549,29 +560,8 @@ table::queryC(const std::string& query, const std::string& resultTable,
              << "No table specified, please open first" << LogIO::POST;
    }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE
-            << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
- }
- return rstat;
-}
-
-::casac::table*
-table::query(const std::string& query, const std::string& name, const std::string& sortlist, const std::string& columns)
-{
- ::casac::table *rstat(0);
- try {
-	 if(itsTable){
-		 std::ostringstream taqlString;
-		 taqlString <<  "select from " << this->name() << " where ";
-		 taqlString <<   query;
-		 casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
-                 rstat = new ::casac::table(theQTab);
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
- } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+            << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
