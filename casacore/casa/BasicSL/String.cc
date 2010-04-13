@@ -94,6 +94,19 @@ Float String::toFloat(const String& string) {
     return var;
 }
 
+Int String::toInt(const String& string) {
+    istringstream instr(string);
+    // Initialize in case the string is empty or non-numeric.
+
+    Int var(0);
+    instr >> var;
+    if(instr.fail()) {
+    	// making sure things get reset
+	    var = 0.0;
+    }
+    return var;
+}
+
 void String::trim() {
     iterator iter = begin();
     while (
