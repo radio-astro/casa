@@ -579,6 +579,15 @@ class String : public string {
   // a Float, 0 is returned.
   static Float toFloat(const String& string);
 
+  // Convert a string to an Int. If the specified string does not represent
+  // an Int or Double or Float, 0 is returned. If a string representing a float or double is passed in,
+  // the integer portion will be returned. eg
+  // Int x = String::toInt("4.9"); // x = 4
+  // Int y = String::toInt("-7.6"); // y = -7
+
+  static Int toInt(const String& string);
+
+
   // Remove beginning and ending whitespace.
   void trim();
 
