@@ -969,23 +969,56 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                          stringToVector(MS::columnName(MS::WEIGHT)));
     td.defineHypercolumn("TiledSigma", 2,
                          stringToVector(MS::columnName(MS::SIGMA)));
-    
+   
+
     SetupNewTable newtab(MSFileName, td, Table::New);
     
+    uInt cache_val=32768;
     // Set the default Storage Manager to be the Incr one
-    IncrementalStMan incrStMan ("ISMData");
+    IncrementalStMan incrStMan ("ISMData",cache_val);
     newtab.bindAll(incrStMan, True);
+    //Override the binding for specific columns
+    
+    IncrementalStMan incrStMan0("Array_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::ARRAY_ID), incrStMan0);
+    IncrementalStMan incrStMan1("EXPOSURE",cache_val);
+    newtab.bindColumn(MS::columnName(MS::EXPOSURE), incrStMan1);
+    IncrementalStMan incrStMan2("FEED1",cache_val);
+    newtab.bindColumn(MS::columnName(MS::FEED1), incrStMan2);
+    IncrementalStMan incrStMan3("FEED2",cache_val);
+    newtab.bindColumn(MS::columnName(MS::FEED2), incrStMan3);
+    IncrementalStMan incrStMan4("FIELD_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::FIELD_ID), incrStMan4);
+    IncrementalStMan incrStMan5("FLAG_ROW",cache_val/4);
+    newtab.bindColumn(MS::columnName(MS::FLAG_ROW), incrStMan5);
+    IncrementalStMan incrStMan6("INTERVAL",cache_val);
+    newtab.bindColumn(MS::columnName(MS::INTERVAL), incrStMan6);
+    IncrementalStMan incrStMan7("OBSERVATION_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::OBSERVATION_ID), incrStMan7);
+    IncrementalStMan incrStMan8("PROCESSOR_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::PROCESSOR_ID), incrStMan8);
+    IncrementalStMan incrStMan9("SCAN_NUMBER",cache_val);
+    newtab.bindColumn(MS::columnName(MS::SCAN_NUMBER), incrStMan9);
+    IncrementalStMan incrStMan10("STATE_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::STATE_ID), incrStMan10);
+    IncrementalStMan incrStMan11("TIME",cache_val);
+    newtab.bindColumn(MS::columnName(MS::TIME), incrStMan11);
+    IncrementalStMan incrStMan12("TIME_CENTROID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::TIME_CENTROID), incrStMan12);
     
     // Bind ANTENNA1, ANTENNA2 and DATA_DESC_ID to the standardStMan 
     // as they may change sufficiently frequently to make the
     // incremental storage manager inefficient for these columns.
     
-    StandardStMan aipsStMan(32768);
-    newtab.bindColumn(MS::columnName(MS::ANTENNA1), aipsStMan);
-    newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan);
-    newtab.bindColumn(MS::columnName(MS::DATA_DESC_ID), aipsStMan);
+      
+    StandardStMan aipsStMan0("ANTENNA1", cache_val);
+    newtab.bindColumn(MS::columnName(MS::ANTENNA1), aipsStMan0);
+    StandardStMan aipsStMan1("ANTENNA2", cache_val);
+    newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan1);
+    StandardStMan aipsStMan2("DATA_DESC_ID", cache_val);
+    newtab.bindColumn(MS::columnName(MS::DATA_DESC_ID), aipsStMan2);
     
-      ///////////////////
+     
     //    itsLog << LogOrigin("MSFitsInput", "setupMeasurementSet");
     //itsLog << LogIO::NORMAL << "Using tile shape "<<tileShape <<" for "<<
     //  array_p<<" with obstype="<< obsType<<LogIO::POST;
