@@ -26,14 +26,10 @@ import nose
 
 
 # List of tests to run
-#OLD_TESTS = ['asdm-import','boxit_test',
-#             'imcontsub_test','imfit_test','imhead_test','immath_test',
-#             'immoment_test','imregrid_test',
-#             'imsmooth_test','imval_test','vishead_test',
-#             'visstat_test']
 OLD_TESTS = ['imregrid_test',
 #             'imval_test',
-             'vishead_test']
+#             'visstat_test',
+             ]
 
 NEW_TESTS = ['test_asdm-import',
              'test_boxit',
@@ -52,7 +48,8 @@ NEW_TESTS = ['test_asdm-import',
              'test_listhistory',             
              'test_plotants',
              'test_report',
-             'test_smoothcal']
+             'test_smoothcal',
+             'test_vishead']
 
 whichtests = 0
 
