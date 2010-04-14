@@ -26,8 +26,8 @@ import nose
 
 
 # List of tests to run
-OLD_TESTS = ['imregrid_test'
-             ]
+OLD_TESTS = [
+            ]
 
 NEW_TESTS = ['test_asdm-import',
              'test_boxit',
@@ -40,6 +40,7 @@ NEW_TESTS = ['test_asdm-import',
              'test_imhead',
              'test_immath',
 #             'test_immoment',
+             'test_imregrid',
              'test_imsmooth',
              'test_imstat',
              'test_imval',
