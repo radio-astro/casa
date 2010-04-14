@@ -5747,8 +5747,8 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
                   oldSpw = spw;
                 }
 
-                uInt npol_cube  = vis.shape()[0];
-                uInt nchan_cube = vis.shape()[1];
+                Int npol_cube  = vis.shape()[0];
+                Int nchan_cube = vis.shape()[1];
                 
                 if(npol_cube != npol_p[spw] ||
                    nchan_cube != inNumChan_p[spw]){
@@ -5802,7 +5802,7 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
                     
 		    for(Int c = 0; c < nchan_p[spw]; ++c)
 		      {
-                        uInt coffset = c * nchan_p[spw];
+                        uInt coffset = c * chanStep_p[spw];
                     
 			for (Int pol = 0; pol < npol_cube; ++pol)
 			  {
@@ -5821,7 +5821,7 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
                               if(doSpWeight){
                                 for(Int m = 0; m < chanStep_p[spw]; ++m){
                                   Int inoffset = (roffset +
-                                                  (c * chanStep_p[spw] + m)) * 
+                                                  (coffset + m)) * 
                                                  npol_cube + pol;
 				    
                                   if(!iflag[inoffset]){
@@ -5840,7 +5840,7 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
                                 
                                 for(Int m = 0; m < chanStep_p[spw]; ++m){
                                   Int inoffset = (roffset +
-                                                  (c * chanStep_p[spw] + m)) *
+                                                  (coffset + m)) *
                                                  npol_cube + pol;
 				    
                                   if(!iflag[inoffset]){
