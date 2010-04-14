@@ -110,8 +110,7 @@ regardless of want_cont.
 	Keyword arguments:
 	vis -- Name of input visibility file
 		default: none; example: vis='ngc5921.ms'
-        field -- Field selection for continuum estimation, subtraction, and
-                (if splitdata=True) split
+        field -- Field selection for continuum estimation and subtraction.
                 default: field = '' means select all fields
                 field = 1 # will get field_id=1 (if you give it an 
                         integer, it will retrieve the source with that index.
@@ -124,8 +123,9 @@ regardless of want_cont.
         combine -- Data axes to combine for the continuum estimate
                 default: '' --> solutions will break at scan, field, and spw
                       boundaries according to solint
-              Options: '','spw'','scan',field', or any comma-separated combination
-              example: combine='spw'  --> form spw-averaged continuum estimate
+              Options: '', 'spw'', 'scan', 'field', or any comma-separated
+                       combination
+              example: combine='spw' --> form spw-merged continuum estimate
 	solint -- Timescale for per-baseline fit (units optional)
 		default: 'int' --&gt; no averaging, fit every integration;
 		example: solint='10s'  --&gt; average to 10s before fitting
@@ -134,12 +134,8 @@ regardless of want_cont.
                          'inf' --&gt; per scan
 	fitorder -- Polynomial order for the fit of the continuum
 		default: 0 (constant); example: fitorder=1
-	spw -- Optional per spectral window selection of channels from
-	       which to subtract the continuum. 
-		default: spw='', means subtract from all channels for
-		  each spw that had a continuum estimated
-	       Also, this specifies which spw/chan will be split
-	       out if splitdata=True.
+	spw -- Optional per spectral window selection of channels to include
+               in the output.
 	want_cont -- Create vis + '.cont' to hold the continuum estimate.
 		default: 'False'; example: want_cont=True
 		The continuum estimate will be placed in: vis.cont
