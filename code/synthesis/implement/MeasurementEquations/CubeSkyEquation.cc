@@ -472,14 +472,12 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 	    psfSub.copyData( (LatticeExpr<Float>) 
 			     (iif(ggSSub > (0.0), 
 				  (gSSub/planeMax),0.0)));
-	    
 	  }
 	  else{
 	    psfSub.set(0.0);
 	  }
 	}
       }
-      
       //
     }
    
@@ -488,8 +486,6 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
       PagedImage<Float> thisScreen(psfs[model]->shape(), psfs[model]->coordinates(), String("ELPSF).psf"));
 	LatticeExpr<Float> le(*psfs[model]);
 	thisScreen.copyData(le);
-	
-
       } 
     */
     LatticeExprNode maxPSF=max(*psfs[model]);
@@ -501,25 +497,21 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     if(maxpsf > 0.0 ){
       LatticeExpr<Float> len((*psfs[model])/maxpsf);
       psfs[model]->copyData(len);
-    
     }
     else{
       if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-        os  << "PSF calculation resulted in a PSF with a peak  being 0 or lesser." << LogIO::POST;
+        os << "PSF calculation resulted in a PSF with its peak being 0 or less." << LogIO::POST;
       }
       else{
-	throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with a peak  being 0 or lesser !"));
+	throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
       }
-
     }
   }
 
-
-  isPSFWork_p=False; // resseting this flag so that subsequent calculation uses
+  isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
   // the right SkyJones correction;
-  
-
 }
+
 void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
@@ -674,7 +666,7 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
   else{
     Long npix=theIm.shape().product();
     // use memory size denfined in aisprc if exists
-    Long memtot=HostInfo::memoryTotal(true);
+    Long memtot=HostInfo::memoryTotal(true); // Use aipsrc/casarc
     //check for 32 bit OS and limit it to 2Gbyte
     if( sizeof(void*) == 4){
       if(memtot > 2000000)
@@ -687,6 +679,8 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 
     }
     Long pixInMem=(memtot/8)*1024;
+    // cerr << "CSE: " << memtot << " " << pixInMem << endl;
+    // cerr << npix << " " << pixInMem/8 << endl;
     nslice=1;
 
     if(npix > (pixInMem/8)){
@@ -695,6 +689,8 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       //One plane is
       npix=theIm.shape()(0)*theIm.shape()(1)*theIm.shape()(2);
       nchanPerSlice_p=Int(floor(pixInMem/npix));
+      // cerr << "Nchan " << nchanPerSlice_p << " " << pixInMem << " " << npix << " " << pixInMem/npix << endl
+	;
       if (nchanPerSlice_p==0){
 	nchanPerSlice_p=1;
       }
@@ -903,6 +899,7 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   trc(3)=endChannel;
   sl_p=Slicer (blc, trc, Slicer::endIsLast);
   SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, False);
+  //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
     Double memoryMB=HostInfo::memoryTotal(true)/1024.0/(8.0*(sm_->numberOfModels()));
@@ -1036,9 +1033,27 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   Bool CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi, 
 				     const CoordinateSystem& coords, 
 				     Int slice, Int nslice){
-
     //bypass this for now
-    //    return False;
+    //
+    // Enforce that all SPWs are in the same frequency frame.
+    //
+    // If all the SPWs in the MS are in LSRK frame, we can do data
+    // selection (since image is always in LSRK).
+    //
+    // If not all SPWs in the MS are in the same frequency frame and
+    // in LSRK frame, for now, disable data selection since the
+    // mapping between image (in LSRK) and MS channels will be time
+    // variable.
+    ROScalarMeasColumn<MFrequency> freqFrame=vi.msColumns().spectralWindow().refFrequencyMeas();
+    uInt nrows=vi.msColumns().spectralWindow().nrow();
+    String firstString = freqFrame(0).getRefString();
+    Bool allFramesSame=True;
+    for (uInt i=0;i<nrows;i++)
+      if (freqFrame(i).getRefString() != firstString)
+	{allFramesSame = False;break;}
+
+    if (!allFramesSame || (firstString!="LSRK"))
+      return False;
 
     // Only one slice lets keep what the user selected
     if(nslice==1)
@@ -1061,6 +1076,8 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     Block<Vector<Int> > nchanb;
     Block<Vector<Int> > incrb=blockChanInc_p;
     vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
+    // cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
+    // 	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
     if(spwb.nelements()==0)
       return False;
 

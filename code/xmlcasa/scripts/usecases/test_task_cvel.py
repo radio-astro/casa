@@ -289,7 +289,7 @@ if (testnumber in testlist):
             passall = False,
             mode='frequency',
             nchan = 1,
-            start = '4.8101GHz',
+            start = '4.8351GHz',
             width = '50MHz'
             )
         if not rval:
@@ -349,7 +349,7 @@ if (testnumber in testlist):
             passall = False,
             mode='frequency',
             nchan = 2,
-            start = '4.8101 GHz',
+            start = '4.8351 GHz',
             width = '50 MHz',
             outframe = ''
             )
@@ -444,7 +444,7 @@ if (testnumber in testlist):
             passall = False,
             mode='frequency',
             nchan = 1,
-            start = '4.80GHz',
+            start = '4.850GHz',
             width = '50MHz',
             outframe = ''
             )
@@ -506,7 +506,7 @@ if (testnumber in testlist):
                 passall = False,
                 mode='frequency',
                 nchan = 10,
-                start = '114.9507GHz',
+                start = '114.9527GHz',
                 width = '3.125MHz',
                 outframe = 'lsrd',
                 phasecenter = 2
@@ -538,7 +538,7 @@ if (testnumber in testlist):
             passall = False,
             mode='frequency',
             nchan = 10,
-            start = '114.9507GHz',
+            start = '114.9527GHz',
             width = '3.125MHz',
             outframe = 'lsrd',
             phasecenter = 'J2000 12h56m43.88s +21d41m00.1s'
@@ -623,7 +623,7 @@ if (testnumber in testlist):
             outputvis = 'cvel-output.ms',
             mode='frequency',
             nchan = 21,
-            start = '229586.0MHz',
+            start = '229587.0MHz',
             width = '1600kHz',
             phasecenter = "J2000 18h25m56.09 -12d04m28.20"
             )
@@ -651,7 +651,7 @@ if (testnumber in testlist):
             outputvis = 'cvel-output.ms',
             mode='frequency',
             nchan = 210,
-            start = '229586.0MHz',
+            start = '229588.0MHz',
             width = '-2400kHz',
             phasecenter = "J2000 18h25m56.09 -12d04m28.20"
             )
@@ -677,6 +677,7 @@ if (testnumber in testlist):
         print "start = ", start, ", width = ", width
         vrad = (220398.676E6 - 229586E6)/220398.676E6 * 2.99792E8
         vwidth = ((220398.676E6 - 229586E6+1600E3)/220398.676E6 * 2.99792E8) - vrad
+        vrad = vrad-vwidth/2.
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = 'cvel-output.ms',
@@ -709,6 +710,7 @@ if (testnumber in testlist):
         print "SMA input MS, 24 spws to combine, radio velocity mode, 35 output channels"
         vrad = (220398.676E6 - 229586E6)/220398.676E6 * 2.99792E8
         vwidth = ((220398.676E6 - 229586E6+3200E3)/220398.676E6 * 2.99792E8) - vrad
+        vrad = vrad-vwidth/2.
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = 'cvel-output.ms',
@@ -744,6 +746,7 @@ if (testnumber in testlist):
         lambda2 = 2.99792E8/(229586E6+1600E3)
         vopt = (lambda1-lambda0)/lambda0 * 2.99792E8
         vwidth = vopt - (lambda2-lambda0)/lambda0 * 2.99792E8
+        vopt = vopt-vwidth/2.
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = 'cvel-output.ms',
@@ -777,6 +780,7 @@ if (testnumber in testlist):
         vopt = (lambda1-lambda0)/lambda0 * 2.99792E8
         lambda2 = 2.99792E8/(229586E6+1200E3)
         vwidth = vopt - (lambda2-lambda0)/lambda0 * 2.99792E8
+        vopt = vopt-vwidth/2.
         print "\n>>>> Test ", testnumber, ", input MS: ", myvis
         print "SMA input MS, 24 spws to combine, optical velocity mode, 40 output channels"
         rval = cvel(

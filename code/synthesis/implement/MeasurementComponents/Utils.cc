@@ -107,9 +107,18 @@ namespace casa{
   //
   Double getPA(const VisBuffer& vb)
   {
-    Double pa;
+    Double pa=0;
+    Int n=0;
     Vector<Float> antPA = vb.feed_pa(getCurrentTimeStamp(vb));
-    pa = sum(antPA)/(antPA.nelements()-1);
+    for (uInt i=0;i<antPA.nelements();i++)
+      {
+	if (!vb.msColumns().antenna().flagRow()(i))
+	  {pa += antPA(i); n++;break;}
+      }
+    //    pa = sum(antPA)/(antPA.nelements()-1);
+    pa /= n;
+    if (n==0) 
+      throw(AipsError("No unflagged antenna found in getPA()."));
     return pa;
   }
   //

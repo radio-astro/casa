@@ -160,11 +160,12 @@ from polcal import  polcal
 from rmtables import  rmtables
 from setjy import  setjy
 from simdata import  simdata
+from simdata2 import  simdata2
 from smoothcal import  smoothcal
 from specfit import  specfit
 from split import  split
-from uvcontsub2 import  uvcontsub2
 from uvcontsub import  uvcontsub
+from uvcontsub2 import  uvcontsub2
 from uvmodelfit import  uvmodelfit
 from uvsub import  uvsub
 from viewerconnection import  viewerconnection

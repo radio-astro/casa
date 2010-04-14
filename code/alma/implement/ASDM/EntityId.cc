@@ -53,7 +53,9 @@ namespace asdm {
 		string result = "";
 		
 		// Check the entityId for the correct format.
-		 char * rexp = "^uid://X[a-fA-F0-9]\\+/X[a-fA-F0-9]\\+\\(/X[a-fA-F0-9]\\+\\)\\?$";
+		//	the old one	 char * rexp = "^uid://X[a-fA-F0-9]\\+/X[a-fA-F0-9]\\+\\(/X[a-fA-F0-9]\\+\\)\\?$";
+		 char * rexp = "^[uU][iI][dD]://[0-9a-zA-Z]+(/[xX][0-9a-fA-F]+){2}(#\\w{1,}){0,}$";
+
 		 regex_t preg;
 		 regcomp(&preg, rexp, REG_NOSUB);
 		 if ( regexec(&preg, x.c_str(), 0, 0, 0) )

@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SubscanRow::~SubscanRow() {
 	}
 
@@ -798,135 +797,176 @@ namespace asdm {
 
 	}
 	
-	SubscanRow* SubscanRow::fromBin(EndianISStream& eiss, SubscanTable& table) {
-		SubscanRow* row = new  SubscanRow(table);
-		
-		
+void SubscanRow::execBlockIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->execBlockId =  Tag::fromBin(eiss);
+		execBlockId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void SubscanRow::scanNumberFromBin(EndianISStream& eiss) {
 		
-			
-		row->scanNumber =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->subscanNumber =  eiss.readInt();
+		scanNumber =  eiss.readInt();
 			
 		
 	
-
 	
+}
+void SubscanRow::subscanNumberFromBin(EndianISStream& eiss) {
 		
-		
-		row->startTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endTime =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->fieldName =  eiss.readString();
+		subscanNumber =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void SubscanRow::startTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void SubscanRow::endTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void SubscanRow::fieldNameFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->subscanIntent = CSubscanIntent::from_int(eiss.readInt());
+		fieldName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void SubscanRow::subscanIntentFromBin(EndianISStream& eiss) {
 		
-			
-		row->numberIntegration =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		subscanIntent = CSubscanIntent::from_int(eiss.readInt());
+			
+		
 	
-		row->numberSubintegration.clear();
+	
+}
+void SubscanRow::numberIntegrationFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numberIntegration =  eiss.readInt();
+			
+		
+	
+	
+}
+void SubscanRow::numberSubintegrationFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		numberSubintegration.clear();
 		
 		unsigned int numberSubintegrationDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < numberSubintegrationDim1; i++)
 			
-			row->numberSubintegration.push_back(eiss.readInt());
+			numberSubintegration.push_back(eiss.readInt());
 			
 	
 
 		
 	
+	
+}
+void SubscanRow::flagRowFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		flagRow =  eiss.readBoolean();
+			
+		
+	
+	
+}
 
-	
-	
+void SubscanRow::subscanModeFromBin(EndianISStream& eiss) {
 		
-			
-		row->flagRow =  eiss.readBoolean();
-			
-		
-	
-
-		
-		
-		
-	row->subscanModeExists = eiss.readBoolean();
-	if (row->subscanModeExists) {
+	subscanModeExists = eiss.readBoolean();
+	if (subscanModeExists) {
 		
 	
 	
 		
 			
-		row->subscanMode = CSwitchingMode::from_int(eiss.readInt());
-			
-		
-	
-
-	}
-
-	row->correlatorCalibrationExists = eiss.readBoolean();
-	if (row->correlatorCalibrationExists) {
-		
-	
-	
-		
-			
-		row->correlatorCalibration = CCorrelatorCalibration::from_int(eiss.readInt());
+		subscanMode = CSwitchingMode::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
+	
+}
+void SubscanRow::correlatorCalibrationFromBin(EndianISStream& eiss) {
 		
+	correlatorCalibrationExists = eiss.readBoolean();
+	if (correlatorCalibrationExists) {
+		
+	
+	
+		
+			
+		correlatorCalibration = CCorrelatorCalibration::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+	
+}
+	
+	
+	SubscanRow* SubscanRow::fromBin(EndianISStream& eiss, SubscanTable& table, const vector<string>& attributesSeq) {
+		SubscanRow* row = new  SubscanRow(table);
+		
+		map<string, SubscanAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SubscanTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1463,6 +1503,23 @@ subscanMode = CSwitchingMode::from_int(0);
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 correlatorCalibration = CCorrelatorCalibration::from_int(0);
 	
+
+	
+	
+	 fromBinMethods["execBlockId"] = &SubscanRow::execBlockIdFromBin; 
+	 fromBinMethods["scanNumber"] = &SubscanRow::scanNumberFromBin; 
+	 fromBinMethods["subscanNumber"] = &SubscanRow::subscanNumberFromBin; 
+	 fromBinMethods["startTime"] = &SubscanRow::startTimeFromBin; 
+	 fromBinMethods["endTime"] = &SubscanRow::endTimeFromBin; 
+	 fromBinMethods["fieldName"] = &SubscanRow::fieldNameFromBin; 
+	 fromBinMethods["subscanIntent"] = &SubscanRow::subscanIntentFromBin; 
+	 fromBinMethods["numberIntegration"] = &SubscanRow::numberIntegrationFromBin; 
+	 fromBinMethods["numberSubintegration"] = &SubscanRow::numberSubintegrationFromBin; 
+	 fromBinMethods["flagRow"] = &SubscanRow::flagRowFromBin; 
+		
+	
+	 fromBinMethods["subscanMode"] = &SubscanRow::subscanModeFromBin; 
+	 fromBinMethods["correlatorCalibration"] = &SubscanRow::correlatorCalibrationFromBin; 
 	
 	}
 	
@@ -1545,7 +1602,23 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 		else
 			correlatorCalibrationExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["execBlockId"] = &SubscanRow::execBlockIdFromBin; 
+		 fromBinMethods["scanNumber"] = &SubscanRow::scanNumberFromBin; 
+		 fromBinMethods["subscanNumber"] = &SubscanRow::subscanNumberFromBin; 
+		 fromBinMethods["startTime"] = &SubscanRow::startTimeFromBin; 
+		 fromBinMethods["endTime"] = &SubscanRow::endTimeFromBin; 
+		 fromBinMethods["fieldName"] = &SubscanRow::fieldNameFromBin; 
+		 fromBinMethods["subscanIntent"] = &SubscanRow::subscanIntentFromBin; 
+		 fromBinMethods["numberIntegration"] = &SubscanRow::numberIntegrationFromBin; 
+		 fromBinMethods["numberSubintegration"] = &SubscanRow::numberSubintegrationFromBin; 
+		 fromBinMethods["flagRow"] = &SubscanRow::flagRowFromBin; 
+			
+	
+		 fromBinMethods["subscanMode"] = &SubscanRow::subscanModeFromBin; 
+		 fromBinMethods["correlatorCalibration"] = &SubscanRow::correlatorCalibrationFromBin; 
+			
 	}
 
 	
@@ -1693,6 +1766,28 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, SubscanAttributeFromBin> SubscanRow::initFromBinMethods() {
+		map<string, SubscanAttributeFromBin> result;
+		
+		result["execBlockId"] = &SubscanRow::execBlockIdFromBin;
+		result["scanNumber"] = &SubscanRow::scanNumberFromBin;
+		result["subscanNumber"] = &SubscanRow::subscanNumberFromBin;
+		result["startTime"] = &SubscanRow::startTimeFromBin;
+		result["endTime"] = &SubscanRow::endTimeFromBin;
+		result["fieldName"] = &SubscanRow::fieldNameFromBin;
+		result["subscanIntent"] = &SubscanRow::subscanIntentFromBin;
+		result["numberIntegration"] = &SubscanRow::numberIntegrationFromBin;
+		result["numberSubintegration"] = &SubscanRow::numberSubintegrationFromBin;
+		result["flagRow"] = &SubscanRow::flagRowFromBin;
+		
+		
+		result["subscanMode"] = &SubscanRow::subscanModeFromBin;
+		result["correlatorCalibration"] = &SubscanRow::correlatorCalibrationFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -43,6 +43,7 @@
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/PlainTable.h>
 #include <casa/Utilities/Regex.h>
 
 
@@ -1094,18 +1095,92 @@ table::getcolslice(const std::string& columnname, const std::vector<int>& blc, c
 }
 
 bool
-table::putcell(const std::string& columnname, const std::vector<int>& rownr, const ::casac::variant& thevalue)
+table::putcell(const std::string& columnname, const std::vector<int>& rownr,
+               const ::casac::variant& thevalue)
+{
+  Bool rstat(False);
+
+  *itsLog << LogOrigin("putcell", columnname);
+ 
+  try {
+    if(itsTable){
+      if(!itsTable->isWritable()){
+        *itsLog << LogIO::WARN
+                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << LogIO::POST;
+        return False;
+      }
+
+      ValueHolder *aval = toValueHolder(thevalue);
+      itsTable->putCell(columnname, rownr, *aval);
+      delete aval;
+      return True;
+    } else {
+      *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool
+table::putcellslice(const std::string& columnname, const int rownr,
+                    const ::casac::variant& value, const std::vector<int>& blc,
+                    const std::vector<int>& trc, const std::vector<int>& incr)
+{
+  Bool rstat(False);
+
+  *itsLog << LogOrigin("putcellslice", columnname);
+ 
+  try {
+    if(itsTable){
+      if(!itsTable->isWritable()){
+        *itsLog << LogIO::WARN
+                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << LogIO::POST;
+        return False;
+      }
+
+      ValueHolder *aval = toValueHolder(value);
+      itsTable->putCellSlice(columnname, rownr, blc, trc, incr, *aval);
+      delete aval;
+      return True;
+    } else {
+      *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool
+table::putcol(const std::string& columnname, const ::casac::variant& value,
+              const int startrow, const int nrow, const int rowincr)
 {
  Bool rstat(False);
+
+ *itsLog << LogOrigin("putcol", columnname);
+ 
  try {
-	 if(itsTable){
-		 ValueHolder *aval = toValueHolder(thevalue);
-		 itsTable->putCell(columnname, rownr, *aval);
-		 delete aval;
-		 return True;
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
+   if(itsTable){
+     if(!itsTable->isWritable()){
+       *itsLog << LogIO::WARN
+               << "The table is not modifiable.  Was it opened with nomodify=False?"
+               << LogIO::POST;
+       return False;
+     }
+     
+     ValueHolder *aval = toValueHolder(value);
+     itsTable->putColumn(String(columnname), startrow, nrow, rowincr, *aval);
+     delete aval;
+     rstat = True;
+   } else {
+     *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+   }
  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -1114,88 +1189,72 @@ table::putcell(const std::string& columnname, const std::vector<int>& rownr, con
 }
 
 bool
-table::putcellslice(const std::string& columnname, const int rownr, const ::casac::variant& value, const std::vector<int>& blc, const std::vector<int>& trc, const std::vector<int>& incr)
+table::putvarcol(const std::string& columnname, const ::casac::record& value,
+                 const int startrow, const int nrow, const int rowincr)
 {
- Bool rstat(False);
- try {
-	 if(itsTable){
-		 ValueHolder *aval = toValueHolder(value);
-		 itsTable->putCellSlice(columnname, rownr, blc, trc, incr, *aval);
-		 delete aval;
-		 return True;
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
- } catch (AipsError x) {
+  Bool rstat(False);
+
+  *itsLog << LogOrigin("putvarcol", columnname);
+ 
+  try {
+    if(itsTable){
+      if(!itsTable->isWritable()){
+        *itsLog << LogIO::WARN
+                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << LogIO::POST;
+        return False;
+      }
+
+      Record *aval = toRecord(value);
+      itsTable->putVarColumn(String(columnname), startrow, nrow, rowincr, *aval);
+      delete aval;
+      rstat = True;
+    } else {
+      *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+    }
+  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
- }
- return rstat;
+  }
+  return rstat;
 }
 
 bool
-table::putcol(const std::string& columnname, const ::casac::variant& value, const int startrow, const int nrow, const int rowincr)
+table::putcolslice(const std::string& columnname, const ::casac::variant& value,
+                   const std::vector<int>& blc, const std::vector<int>& trc,
+                   const std::vector<int>& incr, const int startrow,
+                   const int nrow, const int rowincr)
 {
- Bool rstat(False);
- try {
-	 if(itsTable){
-		 ValueHolder *aval = toValueHolder(value);
-		 itsTable->putColumn(String(columnname), startrow, nrow, rowincr, *aval);
-		 delete aval;
-		 rstat = True;
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
- } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
- }
- return rstat;
-}
+  Bool rstat(False);
 
-bool
-table::putvarcol(const std::string& columnname, const ::casac::record& value, const int startrow, const int nrow, const int rowincr)
-{
- Bool rstat(False);
- try {
-	 if(itsTable){
-		 Record *aval = toRecord(value);
-		 itsTable->putVarColumn(String(columnname), startrow, nrow, rowincr, *aval);
-		 delete aval;
-		 rstat = True;
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
- } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
- }
- return rstat;
-}
+  *itsLog << LogOrigin("putcolslice", columnname);
+ 
+  try {
+    if(itsTable){
+      if(!itsTable->isWritable()){
+        *itsLog << LogIO::WARN
+                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << LogIO::POST;
+        return False;
+      }
 
-bool
-table::putcolslice(const std::string& columnname, const ::casac::variant& value, const std::vector<int>& blc, const std::vector<int>& trc, const std::vector<int>& incr, const int startrow, const int nrow, const int rowincr)
-{
- Bool rstat(False);
- try {
-	 if(itsTable){
-		 ValueHolder *aval = toValueHolder(value);
-		 Vector<Int> iinc(incr);
-		 if((iinc.nelements()==1) && (iinc[0]==1)){
-		   iinc.resize(blc.size());
-		   iinc.set(1);
-		 }
-		 itsTable->putColumnSlice(String(columnname), startrow, nrow, rowincr, blc, trc, iinc, *aval);
-		 delete aval;
-		 rstat = True;
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
- } catch (AipsError x) {
+      ValueHolder *aval = toValueHolder(value);
+      Vector<Int> iinc(incr);
+      if((iinc.nelements()==1) && (iinc[0]==1)){
+        iinc.resize(blc.size());
+        iinc.set(1);
+      }
+      itsTable->putColumnSlice(String(columnname), startrow, nrow, rowincr, blc, trc, iinc, *aval);
+      delete aval;
+      rstat = True;
+    } else {
+      *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+    }
+  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
- }
- return rstat;
+  }
+  return rstat;
 }
 
 std::vector<std::string>
@@ -1843,6 +1902,35 @@ table::statistics(const std::string& column,
     }
     return retval;
 }
+
+std::vector<std::string>
+table::showcache(const bool verbose)
+{
+ std::vector<std::string> rstat(0);
+ try {
+     const TableCache& cache = PlainTable::tableCache;
+     if(verbose){
+	 if(cache.ntable()==0){
+	     *itsLog << LogIO::NORMAL << "The Table Cache is empty." << LogIO::POST;
+	 }
+	 else{
+	     *itsLog << LogIO::NORMAL << "The Table Cache has the following " << cache.ntable() << " entries:"  << LogIO::POST;
+	 }	     
+     }
+     for (uInt i=0; i<cache.ntable(); ++i) {
+	 if(verbose){
+	     *itsLog << LogIO::NORMAL << "    " << i << ": \"" <<  cache(i)->tableName() << "\"" << LogIO::POST;
+	 }
+	 rstat.push_back(cache(i)->tableName());
+     } 
+ } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;
+}
+
+
 
 } // casac namespace
 

@@ -424,6 +424,7 @@ c      dPA=0
       sDPA = sin(dPA)
       convOrigin = (convsize+1)/2
       convOrigin = (convsize-1)/2
+      convOrigin = (convsize)/2
 
       do irow=rbeg, rend
          if(rflag(irow).eq.0) then
@@ -651,6 +652,7 @@ c      dPA = 0
       sDPA = sin(dPA)
 c      convOrigin = (convsize+1)/2
       convOrigin = (convsize-1)/2
+      convOrigin = (convsize)/2
 
       do irow=rbeg, rend
          if(rflag(irow).eq.0) then

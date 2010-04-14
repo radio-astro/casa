@@ -18,8 +18,6 @@
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
-//#include <msvis/MSVis/VisSetUtil.h>
 #include <casa/BasicSL/String.h>	// for parseColumnNames()
 
 #include <casa/iostream.h>
@@ -44,8 +42,8 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   antennaId_p.resize();
   antennaSelStr_p.resize();
   distances_p.resize();
-  dataColNames_p = SubMS::parseColumnNames(dataColName);
-  nDataCols_p = dataColNames_p.nelements();
+  dataCols_p = SubMS::parseColumnNames(dataColName);
+  nDataCols_p = dataCols_p.nelements();
 
   // To use FTMachine, the image has to be set up with coordinates, even
   // though no image will be made.
@@ -256,7 +254,7 @@ void FixVis::convertFieldCols(MSFieldColumns& msfcs,
                               const Bool doAll3)
 {
   logSink() << LogOrigin("FixVis", "convertFieldCols");
-  // Unfortunately ArrayMeasColumn::doConvert() is private, which squashes the
+  // Unfortunately ArrayMeasColumn::doConvert() is private, which moots the
   // point of making a conversion machine here.
 //   Vector<MDirection> dummyV;
 //   dummyV.assign(pdc(0));
@@ -359,7 +357,7 @@ uInt FixVis::check_fields()
 }
 
 // Calculate the (u, v, w)s and store them in ms_p.
-Bool FixVis::calc_uvw(const String& refcode)
+Bool FixVis::calc_uvw(const String& refcode, const Bool reuse)
 {
   Bool retval = false;
   
@@ -376,6 +374,7 @@ Bool FixVis::calc_uvw(const String& refcode)
 
     // Get the PHASE_DIR reference frame type for the input ms.
     MSFieldColumns& msfcs(msc_p->field());
+    MDirection startDir = msfcs.phaseDirMeas(0);
     MDirection::Types startDirType = MDirection::castType(msfcs.phaseDirMeasCol().getMeasRef().getType());
     MDirection::Types wantedDirType;
     MDirection::getType(wantedDirType, refcode);
@@ -390,48 +389,61 @@ Bool FixVis::calc_uvw(const String& refcode)
       else
         convertFieldDirs(wantedDirType);
     }
-    
-    // This is just an enum!  Why can't Muvw just return it instead of
-    // filling out a reference?
-    Muvw::Types uvwtype;
-    MBaseline::Types bltype;
-    
-    try{
-      MBaseline::getType(bltype, refcode);
-      Muvw::getType(uvwtype, refcode);
-    }
-    catch(AipsError x){
-      logSink() << LogIO::SEVERE
-		<< "refcode \"" << refcode << "\" is not valid for baselines."
-		<< LogIO::POST;
-      return false;
+    else if(reuse){
+      logSink() << LogIO::NORMAL
+                << "The UVWs are already in the desired frame - leaving them as is."
+                << LogIO::POST;
+      return true;
     }
     
     try{
-      MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);
-      retval = uvwgen.make_uvws(FieldIds_p);
-
-      // Update HISTORY table
-      LogSink localLogSink = LogSink(LogMessage::NORMAL, False);
-      localLogSink.clearLocally();
-      LogIO os(LogOrigin("im", "calcuvw()", WHERE), localLogSink);
+      if(reuse){
+        const MDirection::Ref outref(wantedDirType);
+        
+        rotateUVW(startDir, outref);
+      }
+      else{
+        // This is just an enum!  Why can't Muvw just return it instead of
+        // filling out a reference?
+        Muvw::Types uvwtype;
+        MBaseline::Types bltype;
+    
+        try{
+          MBaseline::getType(bltype, refcode);
+          Muvw::getType(uvwtype, refcode);
+        }
+        catch(AipsError x){
+          logSink() << LogIO::SEVERE
+                    << "refcode \"" << refcode << "\" is not valid for baselines."
+                    << LogIO::POST;
+          return false;
+        }
       
-      os << "UVWs regenerated for field";
-      if(FieldIds_p.nelements() > 1)
-        os << "s";
-      os << " " << FieldIds_p
-        //<< ", proj=" << proj
-         << LogIO::POST;
-      ms_p.lock();
-      MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
-      mhh.addMessage(os);
-      ms_p.unlock();      
+       
+        MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);
+        retval = uvwgen.make_uvws(FieldIds_p);
+      }
+      
     }
     catch(AipsError x){
-      logSink() << LogIO::SEVERE
-		<< "Error " << x.getMesg() << " in MSUVWGenerator::uvwgen()."
-		<< LogIO::POST;
+      logSink() << LogIO::SEVERE << "Error " << x.getMesg() << LogIO::POST;
     }
+
+    // Update HISTORY table
+    LogSink localLogSink = LogSink(LogMessage::NORMAL, False);
+    localLogSink.clearLocally();
+    LogIO os(LogOrigin("im", "calc_uvw()", WHERE), localLogSink);
+    
+    os << "UVWs " << (reuse ? "converted" : "calculated") << " for field";
+    if(FieldIds_p.nelements() > 1)
+      os << "s";
+    os << " " << FieldIds_p
+      //<< ", proj=" << proj
+       << LogIO::POST;
+    ms_p.lock();
+    MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
+    mhh.addMessage(os);
+    ms_p.unlock();
   }
   else{
     logSink() << LogIO::SEVERE
@@ -439,6 +451,25 @@ Bool FixVis::calc_uvw(const String& refcode)
 	      << LogIO::POST;
   }
   return retval;
+}
+
+// Convert the UVW column to a new reference frame by rotating the old
+// baselines instead of calculating fresh ones.
+//
+// oldref must be supplied instead of extracted from msc_p->uvw(), because
+// the latter might be wrong (use the field direction).
+void FixVis::rotateUVW(const MDirection &indir, const MDirection::Ref& newref)
+{
+  ArrayColumn<Double>& UVWcol = msc_p->uvw();
+
+  // Setup a machine for converting a UVW vector from the old frame to
+  // uvwtype's frame
+  UVWMachine uvm(newref, indir);
+  RotMatrix rm(uvm.rotationUVW());
+
+  uInt nRows = UVWcol.nrow();
+  for(uInt row = 0; row < nRows; ++row)
+    UVWcol(row) = (rm * MVuvw(UVWcol(row))).getVector();
 }
 
 // Don't just calculate the (u, v, w)s, do everything and store them in ms_p.
@@ -553,7 +584,7 @@ Bool FixVis::makeSelection(const Int selectedField)
 {
   logSink() << LogOrigin("FixVis", "makeSelection()");
     
-  //VisSet/MSIter will check if SORTED_TABLE exists and resort if necessary.
+  //Vis/MSIter will check if SORTED_TABLE exists and resort if necessary.
   MSSelection thisSelection;
   if(selectedField >= 0 && nAllFields_p > 1){
     Vector<Int> wrapper;
@@ -863,9 +894,14 @@ void FixVis::processSelected(uInt numInSel)
               distances_p[numInSel] : 0.0);
   cImageImage.setMiscInfo(info);
   
-  VisSet vs(makeVisSet(mssel_p));
-  AlwaysAssert(&vs, AipsError);
-  ROVisIter& vi(vs.iter());	// Initialize the gradients
+  Block<Int> sort(0);
+  sort.resize(4);
+  sort[0] = MS::ARRAY_ID; 		    // use default sort order
+  sort[1] = MS::FIELD_ID;
+  sort[2] = MS::DATA_DESC_ID;
+  sort[3] = MS::TIME;
+
+  ROVisibilityIterator vi(mssel_p, sort);	// Initialize the gradients
 	  
   // Loop over all visibilities in the selected field.
   VisBuffer vb(vi);
@@ -877,9 +913,9 @@ void FixVis::processSelected(uInt numInSel)
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
     for(vi.origin(); vi.more(); ++vi){
       for(uInt datacol = 0; datacol < nDataCols_p; ++datacol){
-        if(dataColNames_p[datacol] == MS::columnName(MS::MODEL_DATA))
+        if(dataCols_p[datacol] == MS::MODEL_DATA)
           vb.visCube() = vb.modelVisCube();
-        else if(dataColNames_p[datacol] == MS::columnName(MS::CORRECTED_DATA))
+        else if(dataCols_p[datacol] == MS::CORRECTED_DATA)
           vb.visCube() = vb.correctedVisCube();
 			
         put(vb, -1);
@@ -888,7 +924,7 @@ void FixVis::processSelected(uInt numInSel)
       }
     }
   }
-  vs.flush();
+  //vs.flush();
 
   // Update HISTORY table
   LogSink localLogSink = LogSink(LogMessage::NORMAL, False);	  
@@ -920,7 +956,7 @@ void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type,
     chanMap = multiChanMap_p[vb.spectralWindow()];
   }
 
-  //No point in reading data if its not matching in frequency
+  //No point in reading data if it's not matching in frequency
   if(max(chanMap) == -1)
     return;
 
@@ -937,7 +973,6 @@ void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type,
     endRow   = row;
   }
 
-
   Matrix<Double> uvw(3, vb.uvw().nelements());
   uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());
@@ -950,30 +985,10 @@ void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type,
 // 	uvw(2, i) = vb.uvw()(i)(2);
 //   }
 
-  rotateUVW(uvw, dphase, vb);
+  FTMachine::rotateUVW(uvw, dphase, vb);
 
   // Immediately returns if not needed.
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-}
-
-VisSet FixVis::makeVisSet(MeasurementSet& ms, Bool compress, Bool mosaicOrder)
-{
-  Block<Int> sort(0);
-  sort.resize(4);
-  if(mosaicOrder){
-    sort[0] = MS::FIELD_ID;
-    sort[1] = MS::ARRAY_ID;
-  }
-  else{ 					// use default sort order
-    sort[0] = MS::ARRAY_ID;
-    sort[1] = MS::FIELD_ID;
-  }
-  sort[2] = MS::DATA_DESC_ID;
-  sort[3] = MS::TIME;
-
-  Matrix<Int> noselection;
-  Double timeInterval = 0;
-  return VisSet(ms, sort, noselection, timeInterval, compress);
 }
 
 void FixVis::ok() {

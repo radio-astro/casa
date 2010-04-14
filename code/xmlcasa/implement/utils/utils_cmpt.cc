@@ -130,8 +130,9 @@ utils::verifyparam(const ::casac::record& param)
 utils::expandparam(const std::string& name , const ::casac::variant& value )
 {
    ::casac::variant *rstat(0);
-   rec_map::iterator iter = myConstraints->begin(); // We need the underlying record...
+
    if(myConstraints){
+       rec_map::iterator iter = myConstraints->begin(); // We need the underlying record...
        //dumpRecord(std::cerr, (*iter).second.asRecord()["parameters"].asRecord()[name].asRecord());
        if((*iter).second.asRecord()["parameters"].asRecord().count(name) &&
 		       (*iter).second.asRecord()["parameters"].asRecord()[name].asRecord().count("allowed")){

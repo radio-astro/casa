@@ -1,15 +1,44 @@
-#
+import os
+import sys
+import time
+import signal
 
+##
+## watchdog... which is *not* in the casapy process group
+##
+if os.fork( ) == 0 :
+    ppid = os.getppid( )
+    while True :
+        try:
+            os.kill(ppid,0)
+        except:
+            break
+        time.sleep(15)
+    os.killpg(ppid, signal.SIGTERM)
+    os.sleep(15)
+    os.killpg(ppid, signal.SIGKILL)
+    exit(0)
+
+##
+## ensure that we're the process group leader
+## of all processes that we fork...
+##
+os.setpgid(0,0)
+
+
+##
+## no one likes a bloated watchdog...
+## ...do this after setting up the watchdog
+##
 try:
     import casac
 except ImportError, e:
     print "failed to load casa:\n", e
     exit(1)
 
-import os
-import sys
 import matplotlib
-import signal
+from asap_init import *
+
 
 def termination_handler(signum, frame):
 
@@ -75,15 +104,52 @@ casa = { 'build': {
          },
          'helpers': {
              'logger': 'casalogger',
-             'viewer': 'casaviewer'
+             'viewer': 'casaviewer',
+             'dbus': None
          },
          'dirs': {
              'rc': homedir + '/.casa'
          },
          'flags': { },
-         'files': { }
+         'files': { },
+         'state' : { 'startup': True }
        }
-print "CASA Version " + casa['build']['version'] + " (r" + casa['build']['number'] + ")\n  Compiled on: " + casa['build']['time']
+
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## setup dbus-daemon launch path...
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##     first try to find dbus launch script in likely system areas
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##
+##   for exe in ['dbus-daemon', 'dbus-daemon-1']:
+##
+##  hosts which have dbus-daemon-1 but not dbus-daemon seem to have
+##  a broken dbus-daemon-1...
+##
+for exe in ['dbus-daemon']:
+    for dir in ['/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
+        dd = dir + os.sep + exe
+        if os.path.exists(dd) and os.access(dd,os.X_OK) :
+            casa['helpers']['dbus'] = dd
+            break
+    if casa['helpers']['dbus'] is not None:
+        break
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##     next search through $PATH for dbus launch script
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if casa['helpers']['dbus'] is None:
+    for exe in ['dbus-daemon']:
+        for dir in os.getenv('PATH').split(':') :
+            dd = dir + os.sep + exe
+            if os.path.exists(dd) and os.access(dd,os.X_OK) :
+                casa['helpers']['dbus'] = dd
+                break
+        if casa['helpers']['dbus'] is not None:
+            break
+
+print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )
@@ -122,7 +188,6 @@ if os.uname()[0]=='Darwin' :
             casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
 
 
-
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## ensure default initialization occurs before this point...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -132,6 +197,48 @@ if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
     except:
         print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
         exit(1)
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## on linux set up a dbus-daemon for casa because each
+## x-server (e.g. Xvfb) gets its own dbus session...
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.uname()[0] == 'Linux' :
+    if casa['helpers']['dbus'] is not None :
+
+        argv_0_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+        dbus_path = os.path.dirname(os.path.abspath(casa['helpers']['dbus']))
+        dbus_conf = None
+
+        if argv_0_path == dbus_path :
+            dbus_conf = dbus_path
+            while dbus_conf != '/' and not os.path.basename(dbus_conf).startswith("lib") :
+                dbus_conf = os.path.dirname(dbus_conf)
+            if os.path.basename(dbus_conf).startswith("lib"):
+                dbus_conf = os.path.dirname(dbus_conf) + "/etc/dbus/session.conf"
+            else:
+                dbus_conf = None
+
+        (r,w) = os.pipe( )
+
+        if os.fork( ) == 0 :
+            os.close(r)
+            args = [ 'casa-dbus-daemon' ]
+            args = args + ['--print-address', str(w)]
+            if dbus_conf is not None and os.path.exists(dbus_conf) :
+                args = args + ['--config-file',dbus_conf]
+            else:
+                args = args + ['--session']
+            os.execvp(casa['helpers']['dbus'],args)
+            sys.exit(1)
+        
+        os.close(w)
+        dbus_address = os.read(r,200)
+        dbus_address = dbus_address.strip( )
+        os.close(r)
+        if len(dbus_address) > 0 :
+            os.putenv('DBUS_SESSION_BUS_ADDRESS',dbus_address)
+            os.environ['DBUS_SESSION_BUS_ADDRESS'] = dbus_address
+
 
 ipythonenv  = casa['dirs']['rc'] + '/ipython'
 ipythonpath = casa['dirs']['rc'] + '/ipython'
@@ -211,6 +318,9 @@ if casa['flags'].has_key('--nolog') :
 if casa['flags'].has_key('--nologger') :
     deploylogger = False
 
+if casa['flags'].has_key('--nogui') :
+    deploylogger = False
+
 if deploylogger and (thelogfile != 'null') :
     casalogger( thelogfile)
 
@@ -227,13 +337,7 @@ from parameter_check import *
 ####################
 def go(taskname=None):
     """ Execute taskname: """
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel=k
-            break
-    myf=sys._getframe(stacklevel).f_globals
+    myf = sys._getframe(len(inspect.stack())-1).f_globals
     if taskname==None: taskname=myf['taskname']
     oldtaskname=myf['taskname']
     #myf['taskname']=taskname
@@ -275,57 +379,6 @@ def selectfield(vis,minstring):
 
     print 'Selected fields are: ',stringlist
     return indexlist
-
-def asap_init():
-    """ Initialize ASAP....: """
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel=k
-            break
-    myf=sys._getframe(stacklevel).f_globals
-    casapath=os.environ['CASAPATH']
-    print '*** Loading ATNF ASAP Package...'
-    import asap as sd
-    print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
-    os.environ['CASAPATH']=casapath
-    from sdaverage_cli import sdaverage_cli as sdaverage
-    from sdsmooth_cli import sdsmooth_cli as sdsmooth
-    from sdbaseline_cli import sdbaseline_cli as sdbaseline
-    from sdcal_cli import sdcal_cli as sdcal
-    from sdcoadd_cli import sdcoadd_cli as sdcoadd
-    from sdsave_cli import sdsave_cli as sdsave
-    from sdscale_cli import sdscale_cli as sdscale
-    from sdfit_cli import sdfit_cli as sdfit
-    from sdplot_cli import sdplot_cli as sdplot
-    from sdstat_cli import sdstat_cli as sdstat
-    from sdlist_cli import sdlist_cli as sdlist
-    from sdflag_cli import sdflag_cli as sdflag
-    from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
-    from sdmath_cli import sdmath_cli as sdmath
-    from sdimaging_cli import sdimaging_cli as sdimaging
-    from sdsim_cli import sdsim_cli as sdsim
-    from sdimprocess_cli import sdimprocess_cli as sdimprocess
-    myf['sd']=sd
-    myf['sdaverage']=sdaverage
-    myf['sdsmooth']=sdsmooth
-    myf['sdbaseline']=sdbaseline
-    myf['sdcal']=sdcal
-    myf['sdcoadd']=sdcoadd
-    myf['sdsave']=sdsave
-    myf['sdscale']=sdscale
-    myf['sdfit']=sdfit
-    myf['sdplot']=sdplot
-    myf['sdstat']=sdstat
-    myf['sdlist']=sdlist
-    myf['sdflag']=sdflag
-    myf['sdtpimaging']=sdtpimaging
-    myf['sdmath']=sdmath
-    myf['sdimaging']=sdimaging
-    myf['sdsim']=sdsim
-    myf['sdimprocess']=sdimprocess
-
 
 def selectantenna(vis,minstring):
     """Derive the antennaid from matched string(s): """
@@ -387,11 +440,6 @@ def readboxfile(boxfile):
 
 def inp(taskname=None):
     try:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
         myf=sys._getframe(len(inspect.stack())-1).f_globals
         if((taskname==None) and (not myf.has_key('taskname'))):
             print 'No task name defined for inputs display'
@@ -432,13 +480,7 @@ def update_params(func, printtext=True, ipython_globals=None):
     from odict import odict
 
     if ipython_globals == None:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+        myf=sys._getframe(len(inspect.stack())-1).f_globals
     else:
         myf=ipython_globals
 
@@ -712,12 +754,7 @@ def print_params_col(param=None, value=None, comment='', colorparam=None,
     print parampart + valpart + commentpart
 
 def __set_default_parameters(b):
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel=k
-    myf=sys._getframe(stacklevel).f_globals
+    myf=sys._getframe(len(inspect.stack())-1).f_globals
     a=b
     elkey=a.keys()
     for k in range(len(a)):
@@ -767,13 +804,7 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
 
     try:
         if ipython_globals == None:
-            a=inspect.stack()
-            stacklevel=0
-            for k in range(len(a)):
-                if (string.find(a[k][1], 'ipython console') > 0):
-                    stacklevel=k
-                    break
-            myf=sys._getframe(stacklevel).f_globals
+	    myf = sys._getframe(len(inspect.stack())-1).f_globals
         else:
             myf=ipython_globals
 
@@ -848,13 +879,7 @@ def default(taskname=None):
     """
 
     try:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+	myf = sys._getframe(len(inspect.stack())-1).f_globals
         if taskname==None: taskname=myf['taskname']
         myf['taskname']=taskname
         if type(taskname)!=str:
@@ -883,13 +908,7 @@ def taskparamgui(useGlobals=True):
     import paramgui
 
     if useGlobals:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0) or (string.find(a[k][1], '<string>') >= 0):
-                stacklevel=k
-                break
-        paramgui.setGlobals(sys._getframe(stacklevel).f_globals)
+        paramgui.setGlobals(sys._getframe(len(inspect.stack())-1).f_globals)
     else:
         paramgui.setGlobals({})
 
@@ -988,14 +1007,14 @@ if ipython:
     if casa['flags'].has_key('-c') :
         print 'will execute script',casa['flags']['-c']
         if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
         else:
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
     else:
         if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
         else:
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
         ipshell.IP.runlines('execfile("'+fullpath+'")')
 
 #ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
@@ -1016,6 +1035,8 @@ casalog.version()
 if cu.hostinfo( )['memory']['available'] < 524288:
     casalog.post( 'available memory less than 512MB (with casarc settings)\n...some things will not run correctly', 'SEVERE' )
 
+casa['state']['startup'] = False
+
 import shutil
 if ipython:
     ipshell.mainloop( )
@@ -1034,3 +1055,5 @@ if ipython:
 
     if vwrpid!=9999: os.kill(vwrpid,9)
     print "leaving casapy..."
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    os.killpg(os.getpgid(0), signal.SIGTERM)

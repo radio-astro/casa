@@ -254,8 +254,20 @@ public:
   // Return feed parallactic angles Vector(nant) (1 feed/ant)
   const Vector<Float>& feed_pa(Double time) const;
 
+
+  // Return nominal parallactic angle at specified time
+  // (does not include feed position angle offset--see feed_pa)
+  // A global value for all antennas (e.g., small array)
+  const Float& parang0(Double time) const;
+  // Per antenna:
+  const Vector<Float>& parang(Double time) const;
+
   // Return the antenna AZ/EL Vector(nant) 
+  const MDirection& azel0(Double time) const;
   const Vector<MDirection>& azel(Double time) const;
+
+  // Return the hour angle for the specified time
+  const Double& hourang(Double time) const;
 
   // Return the current FieldId
   Int fieldId() const
@@ -563,8 +575,14 @@ protected:
   Cube<Complex> visCube_p;
   Matrix<Double> uvwMat_p;
   Matrix<Float> imagingWeight_p;
-  Vector<Float> pa_p;
+  Vector<Float> feedpa_p;
+
+  Float parang0_p;
+  Vector<Float> parang_p;
+  MDirection azel0_p;
   Vector<MDirection> azel_p;
+  Double hourang_p;
+
   Bool floatDataFound_p;
 
   // for PA/AZEL calculations

@@ -35,6 +35,7 @@
 #include <images/Regions/RegionManager.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/namespace.h>
+#include <images/Regions/WCUnion.h>-
 using namespace std;
 
 namespace casac {
@@ -828,51 +829,30 @@ regionmanager::makeunion(const ::casac::variant& regions, const std::string& com
     return retval;
 }
 
-casa::ImageRegion*
-regionmanager::dounion(casa::Record*& regions){
+// Implementation courtesy of Honglin (https://bugs.aoc.nrao.edu/browse/CAS-1666, 2009dec16)
+casa::ImageRegion* regionmanager::dounion(casa::Record*& regions) {
     casa::ImageRegion* retval=0;
-    
-    // If the "isRegion" field is defined then what we have is
-    // a single region.  If there are less then 2 regions, then
-    // we have nothing to union.  Either way we throw an exeception
-    // and let the user know why.
+
     if(regions->nfields()<2 or regions->fieldNumber("isRegion")!=-1)
-	throw(AipsError("need 2 or more regions to make a union")); 
+        throw(AipsError("need 2 or more regions to make a union"));
 
-    try {
-	ImageRegion *reg0=0;
-	ImageRegion *reg1=0;
-	TableRecord rec1;
-	TableRecord rec2;
-	rec1.assign(regions->asRecord(casa::RecordFieldId(0)));
-	rec2.assign(regions->asRecord(casa::RecordFieldId(1)));
-	*itsLog << LogIO::DEBUGGING
-		<< "RegionManager val 1 " << rec1.asInt("isRegion") 
-		<< "\nRegionManager val 2 " << rec2.asInt("isRegion") 
-		<< LogIO::POST;
-            
-	reg0=ImageRegion::fromRecord(rec1,"");
-	reg1=ImageRegion::fromRecord(rec2,"");
-
-	if(reg0!=0 && reg1!=0)
-	    retval=itsRegMan->doUnion(*reg0, *reg1);
-	if(reg1 !=0)
-	    delete reg1;
-	for (uInt k=2; k < (regions->nfields()); ++k){
-	    rec1.assign(regions->asRecord(casa::RecordFieldId(k)));
-	    if(reg0 !=0)
-		delete reg0;
-	    reg0=ImageRegion::fromRecord(rec1, "");
-	    ImageRegion reg3(*retval);
-	    if(retval !=0)
-		delete retval;
-	    retval=itsRegMan->doUnion(*reg0, reg3);
-	}
-	
-    } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	RETHROW(x);
+    PtrBlock<const ImageRegion*> unionRegions_p;
+    uInt nreg = regions->nfields();
+    unionRegions_p.resize(nreg);
+    for (uInt i = 0; i < nreg; i++) {
+        TableRecord trec;
+        trec.assign(regions->asRecord(casa::RecordFieldId(i)));
+        unionRegions_p[i] = ImageRegion::fromRecord(trec, "");
     }
+    WCUnion leUnion(unionRegions_p);
+    retval = new ImageRegion(leUnion);
+    for (uInt i = 0; i < nreg; i++) {
+        if (unionRegions_p[i]) {
+            delete unionRegions_p[i];
+            unionRegions_p[0] = 0;
+        }
+    }
+    unionRegions_p.resize(0, True);
 
     return retval;
 }

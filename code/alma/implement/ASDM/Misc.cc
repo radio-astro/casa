@@ -34,55 +34,92 @@
 
 #include <algorithm> //required for std::swap
 
- namespace asdm {
- 	bool directoryExists(const char* dir) {
-    	DIR* dhandle = opendir(dir);
+namespace asdm {
+  bool directoryExists(const char* dir) {
+    DIR* dhandle = opendir(dir);
 
-    	if (dhandle != NULL) {
-        	closedir(dhandle);
-        	return true;
-    	}
-    	else {
-        	return false;
-    	}
-	}
+    if (dhandle != NULL) {
+      closedir(dhandle);
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
 
-	bool createDirectory(const char* dir) { 
-		return mkdir(dir, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) == 0;
-	}
+  bool createDirectory(const char* dir) { 
+    return mkdir(dir, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) == 0;
+  }
 	
-	bool createPath(const char* path) {
-		char localpath[256];
-    	strcpy(localpath, path);
+  bool createPath(const char* path) {
+    char localpath[256];
+    strcpy(localpath, path);
 
-    	char directory[256];
-    	if (path[0] == '/') {
-        	strcpy(directory, "/");
-    	}
-    	else {
-        	strcpy(directory, "");
-    	}
+    char directory[256];
+    if (path[0] == '/') {
+      strcpy(directory, "/");
+    }
+    else {
+      strcpy(directory, "");
+    }
     	
-    	char* pch = strtok(localpath, "/");
-    	while (pch != NULL) {
-        	strcat(directory, pch);
-        	strcat(directory, "/");
-        	if (!directoryExists(directory) && !createDirectory(directory)) {
-            	return false;
-        	}
-        	pch = strtok(NULL, "/");
-    	}
-    	return true;
+    char* pch = strtok(localpath, "/");
+    while (pch != NULL) {
+      strcat(directory, pch);
+      strcat(directory, "/");
+      if (!directoryExists(directory) && !createDirectory(directory)) {
+	return false;
+      }
+      pch = strtok(NULL, "/");
     }
+    return true;
+  }
     
-    void ByteSwap(unsigned char * b, int n) {
-   		register int i = 0;
-   		register int j = n-1;
-   		while (i<j) {
-      		std::swap(b[i], b[j]);
-      		i++, j--;
-   		}
+  void ByteSwap(unsigned char * b, int n) {
+    register int i = 0;
+    register int j = n-1;
+    while (i<j) {
+      std::swap(b[i], b[j]);
+      i++, j--;
     }
- } // end namespace asdm
+  }
+
+#if defined(__APPLE__)
+  const ByteOrder* ByteOrder::Little_Endian = new ByteOrder("Little_Endian", __DARWIN_LITTLE_ENDIAN);
+  const ByteOrder* ByteOrder::Big_Endian = new ByteOrder("Big_Endian", __DARWIN_BIG_ENDIAN);
+#else 
+  const ByteOrder* ByteOrder::Little_Endian = new ByteOrder("Little_Endian", __LITTLE_ENDIAN);
+  const ByteOrder* ByteOrder::Big_Endian = new ByteOrder("Big_Endian", __BIG_ENDIAN);
+#endif
+  const ByteOrder* ByteOrder::Machine_Endianity = ByteOrder::machineEndianity();
+
+  ByteOrder::ByteOrder(const string& name, int endianity):
+    name_(name), endianity_(endianity){;}
+
+  ByteOrder::~ByteOrder() {;}
+
+  const ByteOrder* ByteOrder::machineEndianity() {
+#if defined(__APPLE__)
+    if (__DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN)
+#else 
+      if (__BYTE_ORDER == __LITTLE_ENDIAN)
+#endif
+	return Little_Endian;
+      else
+	return Big_Endian;
+  }
+  
+  string ByteOrder::toString() const {
+    return name_;
+  }
+
+  const ByteOrder* ByteOrder::fromString(const string &s) {
+    if (s == "Little_Endian") return Little_Endian;
+    if (s == "Big_Endian") return Big_Endian;
+    return 0;
+  }
+
+
+} // end namespace asdm
  
  

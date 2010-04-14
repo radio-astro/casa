@@ -37,7 +37,7 @@ class par(str):
 	def antenna():
 		""" 
 		      antenna -- Select data based on antenna/baseline
-       		       default: '' (all)
+       		       default: 0 for sdimaging, '' (means all) for the other tasks
        		       If antenna string is a non-negative integer, it is assumed an antenna index
        		         otherwise, it is assumed as an antenna name
        		       antenna='5&6'; baseline between antenna index 5 and index 6.
@@ -100,6 +100,34 @@ class par(str):
 		"""
 
 	@staticmethod
+	def average():
+		"""
+		average -- averaging on spectral data
+		default: False
+		options: True, False
+		
+		"""
+
+	@staticmethod
+	def averageall():
+		"""
+		averageall -- average multi-resolution spectra
+		              spectra are averaged by referring
+			      their frequency coverage
+	        default: False
+		options: True, False
+		"""
+
+	@staticmethod
+	def avg_limit():
+		"""
+		avg_limit -- channel averaging for broad lines
+		default: 4
+		example: a number of consecutive channels not greater than
+		         this parameter can be averaged to search for broad lines
+	        """
+		
+	@staticmethod
 	def axis():
 		"""
         	axis -- The moment axis (0-based)
@@ -128,17 +156,51 @@ class par(str):
 	@staticmethod
 	def baseline():
 		""" 
-    baseline -- Baseline index identifiers
-            default: [-1] (all); example: baseline=[0,6,11]
-
+                baseline -- Baseline index identifiers
+                default: [-1] (all); example: baseline=[0,6,11]
 		"""
 
+	@staticmethod
+	def beamsize():
+		"""
+		beamsize -- beam size
+		default: 0.0
+		example: 10.0 (interpreted as '10 arcsec'), '1arcmin'
+		"""
+		
 	@staticmethod
 	def bitpix():
 		"""
         	bitpix -- Bits per pixel
                 default: -32 (floating point)
                 <Options: -32 (floating point), 16 (integer)>
+		"""
+
+	@staticmethod
+	def blmode():
+		"""
+		blmode -- mode for baseline fitting
+		default: 'auto' for sdbaseline, 'none' for sdcal
+		options: 'auto', 'list', 'interact', 'none'(for sdcal)
+		example: blmode='auto' uses expandable parameters
+		in addition to blpoly to run linefinder
+		to determine line-free regions
+		USE WITH CARE! May need to tweak the parameters,
+		thresh, avg_limit, and edge.
+		blmode='interact' allows adding and deleting mask.
+		regions by drawing rectangles on the plot with mouse.
+		Draw a rectangle with LEFT-mouse to ADD the region to
+		the mask and with RIGHT-mouse to DELETE the region. 
+		"""
+
+	@staticmethod
+	def blpoly():
+		"""
+		blpoly -- order of baseline polynomial
+		options: (int) (<0 turns off baseline fitting)
+		default: 5 for sdbaseline/sdcal, 1 for sdtpimaging
+		example: typically in range 2-9 (higher values
+		         seem to be needed for GBT)
 		"""
 		
 	@staticmethod
@@ -154,7 +216,15 @@ class par(str):
 		Example: box='0,0,50,50'
 		Example: box='[10,20,30,40];[100,100,150,150]'
 		"""
-		
+
+	@staticmethod
+	def box_size():
+		"""
+		box_size -- running mean box size
+		default: 0.2
+		example: a running mean box size specified as a fraction
+		of the total spectrum length
+		"""
 
 	@staticmethod
 	def bptable():
@@ -178,8 +248,20 @@ class par(str):
 
 	@staticmethod
 	def calmode():
-		""" Solutions to solve for when using the gaincal task.
-		Options are: 'p', 'a', and 'ap'. """
+		"""
+		(for sdaverage, sdcal, sdtpimaging)
+		calmode -- SD calibration mode
+		options: 'ps', 'nod', 'fs', 'fsotf', 'quotient', 'none' (for sdaverage/sdcal)
+			 'baseline', 'none' (for sdtpimaging)
+	        default: 'none'
+		example: choose 'none' if you have already calibrated
+		
+		-----------------------------------------------------------
+		
+		(for the other tasks)	 
+		calmode -- Solutions to solve for when using the gaincal task.
+		options: 'p', 'a', and 'ap'.
+		"""
 
 
 	@staticmethod
@@ -197,8 +279,32 @@ class par(str):
 
 	@staticmethod
 	def cell():
-		""" Cell size in [x,y]; units='arcsec': """
+		"""
+		(for sdimaging, sdtpimaging)
+		cell -- x and y cell size. default unit arcmin.
+		default: ['1.0arcmin', '1.0arcmin']
+		example: cell=['0.2arcmin', '0.2arcmin']
+		         cell='0.2arcmin' (equivalent to example above)
 
+	        -----------------------------------------------------
+
+		(for sdsim)
+		cell -- output cell/pixel size
+		default: '0.1arcsec'
+	        example: 'incell'    #uses incell value for the output cell size
+		
+		"""
+
+	@staticmethod
+	def channelrange():
+		"""
+		channelrange -- channel range selection
+		default: []    #use all channel
+		example: [0, 5000]
+		         Note that specified values are recognized as
+			 'channel' regardless of the value of specunit
+		"""
+		
 	@staticmethod
 	def chans():
 		""" Range of channels:
@@ -215,6 +321,13 @@ class par(str):
 		
 		"""
 
+	@staticmethod
+	def chanwidth():
+		"""
+		chanwidth -- channel width
+		default: '10MHz'
+		"""
+		
 	@staticmethod
 	def circ():
 		"""
@@ -248,6 +361,14 @@ class par(str):
 		 options: None, Auto, Current, All
 		 default: Auto
 		 example: clearpanel='Current'
+		"""
+
+	@staticmethod
+	def clip():
+		"""
+		clip -- flag data that are outside a specified range
+                options: (bool)True,False
+                default: False
 		"""
 		
 	@staticmethod
@@ -297,6 +418,18 @@ class par(str):
                 example: False -> flag data WITHIN the range.
 		"""
 
+	@staticmethod
+	def colormap():
+		"""
+		colormap -- the colours to be used for plot lines
+		default: None
+		example: colormap='green red black cyan magenta'  (HTML standard)
+		         colormap='g r k c m'  (abbreviation)
+			 colormap='#008000 #00FFFF #FF0090'  (RGB tuple)
+		         The plotter will cycle through these colours
+			 when lines are overlaid (stacking mode)
+		"""
+		
 	@staticmethod	
 	def combinespw():
 		"""
@@ -367,6 +500,12 @@ class par(str):
 		Default: none; Example: contfile='ngc5921_cont.im'
 		"""
 
+	@staticmethod
+	def createimage():
+		"""
+		createimage -- do imaging?
+		default: False
+		"""
 		
 	@staticmethod
 	def correlations():
@@ -423,6 +562,25 @@ class par(str):
 		""" Polynomial degree for phase bandpass solutions. """
 
 	@staticmethod
+	def direction():
+		"""
+		(for sdimprocess)
+		direction -- scan direction in unit of degree
+		default: []
+		example: [0.0, 90.0]
+
+		---------------------------------------------
+
+		(for sdsim)
+		direction -- image center direction
+		* can optionally be a list of pointings, which will override
+		pointingspacing. Otherwise sdsim will hexagonally
+		pack the input image with pointings. When direction is a
+		list, the centroid of direction will be used as the center.
+		default: ['J2000 19h00m00 -40d00m00']
+		"""
+
+	@staticmethod
 	def dirtol():
 		"""
         	dirtol -- Direction shift tolerance for considering data as the same field
@@ -432,12 +590,47 @@ class par(str):
 		"""
 
 	@staticmethod
+	def dochannelmap():
+		"""
+		dochannelmap -- channel map image or total power image
+		options: True (channel map), False (total power)
+		default: False (total power)
+		"""
+
+	@staticmethod
+	def doppler():
+		"""
+		doppler -- doppler mode
+		options: 'RADIO', 'OPTICAL', 'Z', 'BETA', 'GAMMA'
+		default: currently set doppler in scantable
+		"""
+		
+	@staticmethod
 	def dropdeg():
 		"""
         	dropdeg -- Drop degenerate axes?
                 default: False; example: dropdeg=True
 		"""
 
+	@staticmethod
+	def edge():
+		"""
+		edge -- channels to drop at beginning and end of spectrum
+		default: 0
+		example: [1000] drops 1000 channels at beginning AND end
+		         [1000,500] drops 1000 from beginning and 500 from end
+		"""
+
+	@staticmethod
+	def ephemesrcname():
+		"""
+		ephemsrcname -- ephemeris source name for moving source
+		default: ''
+		if the source name in the data matches one of the known
+		solar objects by the system, the tasks sdimaging and sdtpimaging
+		automatically set the source name
+		"""
+		
 	@staticmethod
 	def estfile():
 		"""
@@ -454,28 +647,48 @@ class par(str):
 		"""		
 
 	@staticmethod
-	def  excludepix():
+	def excludepix():
 		"""
         	excludepix -- Range of pixel values to exclude
                 default: [-1] (don't exclude pixels); example=[100.,200.]
 		"""
 
 	@staticmethod
+	def expr():
+		"""
+		expr -- mathematical expression using scantables
+		default: ''
+		example: expr='("orion_on.asap"-"orion_off.asap")/"orion_off.asap"'
+		
+		In the expression, input file names should be put inside
+		of single or double quotes
+		"""
+
+	@staticmethod
+	def factor():
+		"""
+		factor -- scaling factor
+		default: 1.0 (no scaling)
+		"""
+		
+	@staticmethod
 	def field():
-		""" List of field names.
-		      field -- Select field using field id(s) or field name(s).
-               		  [run listobs to obtain the list id's or names]
-              			default: ''=all fields
-              		If field string is a non-negative integer, it is assumed a field index
-                	otherwise, it is assumed a field name
-              		field='0~2'; field ids 0,1,2
-              		field='0,4,5~7'; field ids 0,4,5,6,7
-              		field='3C286,3C295'; field named 3C286 adn 3C295
-              		field = '3,4C*'; field id 3, all names starting with 4C
+		"""
+		field -- Select field using field id(s) or field name(s).
+		        [run listobs to obtain the list id's or names]
+	        default: 0  (for sdimaging)
+		         '' = all fields (for the other ASAP tasks)
+			 
+	        If field string is a non-negative integer, it is assumed a field index
+		otherwise, it is assumed a field name
+		         field='0~2'; field ids 0,1,2
+			 field='0,4,5~7'; field ids 0,4,5,6,7
+			 field='3C286,3C295'; field named 3C286 adn 3C295
+			 field = '3,4C*'; field id 3, all names starting with 4C
+	        This selection is in addition to scanlist, iflist, and pollist.
 
-			See help par.selectdata for additional syntax.
-			See specific task for any additional details.
-
+		See help par.selectdata for additional syntax.
+		See specific task for any additional details.
 		"""
 
 	@staticmethod
@@ -491,21 +704,44 @@ class par(str):
 
 	@staticmethod
 	def fitfile():
-		""" File name containing the resulting fitted image.
-		    default:
+		""" name of output file for fit result
+		    default: ''  (no output fit file)
 		    example: fitfile="myimage.fit"
-		"""		
+		"""
+
+	@staticmethod
+	def fitfunc():
+		"""
+		fitfunc -- function for fitting
+		options: 'gauss', 'lorentz'
+		default: 'gauss'
+		"""
 
 	@staticmethod
 	def fitmode():
-		""" 
-	        fitmode -- Use of the continuum fit model
-                default: 'subtract'; example: fitmode='replace'
-                <Options: 
-                'subtract'-store continuum model and subtract from data,
-                'replace'-replace vis with continuum model,
-                'model'-only store continuum model>
+		"""
+		(for sdfit)
+		fitmode -- mode for fitting
+		options: 'list', 'auto', 'interact'
+		default: 'auto'
+		example: 'list' will use maskline to define regions to
+	                        fit for lines with nfit in each
+	                 'auto' will use the linefinder to fir for lines
+			        using the following parameters
+	                 'interact' allows adding and deleting mask
+	                        regions by drawing rectangles on the plot
+				with mouse. Draw a rectangle with LEFT-mouse
+				to ADD the region to the mask and with RIGHT-mouse
+				to DELETE the region
 
+	        -------------------------------------------------------------------
+		
+		(for uvcontsub)
+	        fitmode -- use of the continuum fit model
+                options: 'subtract' -- store continuum model and subtract from data
+                         'replace'  -- replace vis with continuum model
+			 'model'    -- only store continuum model
+                default: 'subtract'
 		"""
 
 	@staticmethod
@@ -533,6 +769,45 @@ class par(str):
 		"""
 
 	@staticmethod
+	def flaglist():
+		"""
+		flaglist -- list of scan numbers to flag (ranges can be accepted)
+		default: [] (use all scans)
+		example: [[0,3],80]
+		         flag the scan range [0,3] = [0,1,2,3] and scan 80
+	        """
+
+	@staticmethod
+	def flagmode():
+		"""
+		flagmode -- flag mode
+		options: 'flag', 'unflag', 'restore'
+		         in 'restore' mode, a history of flagging is
+			 displayed and current flag state is returned
+		default: 'flag'
+		"""
+
+	@staticmethod
+	def flagrow():
+		"""
+		flagrow -- list of row numbers to apply flag/unflag (row based)
+		default: [] (no row selection)
+		example: [0,2,3]
+
+		This parameter is effective only when one or more row numbers
+		are given explicitly and also clip=False
+		"""
+
+	@staticmethod
+	def flrange():
+		"""
+		flrange -- range for flux axis of plot for spectral plotting
+		options: (list) [min,max]
+		default: [] (full range)
+		example: flrange=[-0.1,2.0] if 'K' assumes current fluxunit
+		"""
+		
+	@staticmethod
 	def fluxdensity():
 		""" 
        		fluxdensity -- Specified flux density [I,Q,U,V] in Jy
@@ -555,12 +830,39 @@ class par(str):
 		"""
 
 	@staticmethod
+	def fluxunit():
+		"""
+		fluxunit -- units for line flux
+		options: 'K', 'Jy', ''
+		default: '' (keep current fluxunit)
+
+		For GBT data, see description for par.telescopeparm
+		"""
+
+	@staticmethod
 	def fontsize():
 		"""
        		fontsize -- Font size for labels
                	default: 10; example: fontsize=2
 		"""
 
+	@staticmethod
+	def format():
+		"""
+		format -- format string to print statistic values
+		default: '3.3f'
+		"""
+
+	@staticmethod
+	def frame():
+		"""
+		frame -- frequency frame for spectral axis
+		options: 'LSRK', 'REST', 'TOPO', 'LSRD', 'BARY', 
+			 'GEO', 'GALACTO', 'LGROUP', 'CMB'
+	        default: currently set frame in scantable
+		WARNING: frame='REST' not yet implemented
+		"""
+		
 	@staticmethod
 	def freqdep():
 		""" Solve for frequency dependent solutions
@@ -617,6 +919,14 @@ class par(str):
 		""" Gain calibration solutions table: """
 
 	@staticmethod
+	def gridfunction():
+		"""
+		gridfunction -- gridding function for imaging
+		options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
+		default: 'BOX'
+		"""
+		
+	@staticmethod
 	def hditem():
 		"""
         	hditem -- Header item to change
@@ -643,34 +953,98 @@ class par(str):
 	def highres():
 		""" Name of high resolution (interferometer) image: """
 
+	@staticmethod
+	def histogram():
+		"""
+		histogram -- plot histogram
+		options: (bool) True, False
+		default: False
+		"""
+
+	@staticmethod
+	def iflist():
+		"""
+		iflist -- list of IF id numbers to select
+		default: [] (use all IFs)
+		example: [15]
+		
+	        This selection is in addition to scanlist, field, and pollist
+		"""
+		
+	@staticmethod
+	def imagename():
+		"""
+		(for boxit, deconvolve, exportfits, imcontsub, imfit, imhead,
+		     immath, immoments, imregrid, imsmooth, imstat, imval,
+		     and specfit)
+		imagename -- input image name(s)
+
+		------------------------------------------------------------
+
+		(for feather, importfits, makemask, sdimaging, sdimprocess,
+		     and sdtpimaging)
+		imagename -- output image name
+
+		------------------------------------------------------------
+		(for autoclean, clean, mosaic, and widefield)
+		imagename -- pre-name of output image(s)
+		
+		For output image files, imagename is followed by
+		'.residual', '.model', '.image', etc.
+
+		------------------------------------------------------------
+		"""
 
 	@staticmethod
 	def imagermode():
-		""" Determines advanced imaging/gridding scheme.
-		
-		Options: '', 'mosaic', 'csclean'
-		default: '' means single field clean
-		example imagermode='mosaic'; image fields as a mosaic
-	        example imagermode='csclean'; use Cotton-schwab cleaning
-		
-
 		"""
-
-
-
-	@staticmethod
-	def imagename():
-		""" Name of output image(s); for the clean and mosaic tasks, this will be appended to .residual, .model and .image. """
+		imagermode -- Determines advanced imaging/gridding scheme.
+		options: '', 'mosaic', 'csclean'
+		default: '' means single field clean
+		example: imagermode='mosaic'  (image fields as a mosaic)
+	                 imagermode='csclean' (use Cotton-schwab cleaning)
+		"""
 
 	@staticmethod
 	def imsize():
-		""" Image size in spatial pixels [x,y]: 
-                default = [256,256]; example: imsize=[350,350]
+		"""
+		imsize -- image pixel size [x,y]
+                default: [256,256]
+		example: imsize=[500,500]
+		         imsize=500  (equivalent to [500,500])
                 Need not be a power of 2, but not a prime number
-
-		If a single value is given, e.g., imsize=256, it assumes symmetry.
 		"""
 
+	@staticmethod
+	def inbright():
+		"""
+		(for simdata)
+		inbright -- peak surface brightness to scale input image
+		in Jy/pixel.
+		default: 'unchanged'
+		
+		[alpha alert] If you specify 'unchanged' it will take the
+		numerical values in your image and assume they are in Jy/pixel,
+		even if it says some other unit in the header. This will be made
+		more flexible in the future.
+
+		----------------------------------------------------------------
+		
+		(for sdsim)
+		inbright -- peak surface brightness to scale input image
+		in Jy/square arcsec.
+		options: 'default' or surface brightness in Jy/sq.arcsec.
+		default: 'default'
+		"""
+
+	@staticmethod
+	def incell():
+		"""
+		incell -- pixel size of the model image.
+		options: 'header' or pixel size, e.g. '0.1arcsec'
+		default: 'header'
+		"""
+		
 	@staticmethod
 	def includepix():
 		"""
@@ -690,13 +1064,31 @@ class par(str):
 		""" Input (incremental) calibration table (any type): """
 
 	@staticmethod
-	def interactive():
-		""" 
-		determines interactive masking while cleaning
-		default: False; example ineteractive=True
-
+	def integration():
 		"""
+		integration -- integration (sampling) time
+		default: '10s'
+		"""
+		
+	@staticmethod
+	def interactive():
+		"""
+		(for sdstat)
+		interactive -- determines interactive masking
+		options: True, False
+		default: False
+		example: interactive=True allows adding and deleting mask
+		regions by drawing rectangles on the plot with mouse.
+		Draw a rectangle with LEFT-mouse to ADD the region to
+		the mask and with RIGHT-mouse to DELETE the region.
 
+		----------------------------------------------------------
+
+		(for widefield)
+		interactive -- use interactive clean (with GUI viewer)
+		options: True, False
+		defalt: False
+		"""
 
 	@staticmethod
 	def interp():
@@ -719,9 +1111,16 @@ class par(str):
 
 		If the uncalibrated phase is changing rapidly, a 'nearest' interpolation is not desirable.
 		Usually, interp='linear' is the best choice. 
-
 		"""
 
+	@staticmethod
+	def invertmask():
+		"""
+		invertmask -- invert mask (EXCLUDE masklist instead)
+		options: True, False
+		default: False
+		"""
+		
 	@staticmethod
 	def iteration():
 		"""
@@ -733,10 +1132,51 @@ class par(str):
 		"""
 
 	@staticmethod
-	def linewidth():
+	def kernel():
 		"""
-       		linewidth -- Width of plotted lines.
-               	default: 1; example: linewidth=0.75
+		(for imsmooth)
+		kernel -- type of kernel to use when smoothing.
+		Currently, only gaussian is supported.
+		options: 'gaussian', 'boxcar'
+		default: 'gaussian'
+
+		-----------------------------------------------------------
+		
+		(for sdcal, sdplot, and sdsmooth)
+		kernel -- type of spectral smoothing
+		options: 'none', 'hanning', 'gaussian', 'boxcar'
+		default: 'hanning' for sdsmooth, 'none' for the other tasks
+		"""
+
+	@staticmethod
+	def kwidth():
+		"""
+		kwidth -- width of spectral smoothing kernel
+		options: (int) in channels
+		default: 5
+		example: 5 or 10 seem to be popular for boxcar
+		         ignored for hanning (fixed at 5 chans)
+			 (0 will turn off gaussian or boxcar)
+		"""
+
+	@staticmethod
+	def linecat():
+		"""
+		linecat -- control for line catalog plotting for spectral plotting
+		options: (str) 'all', 'none', or by molecule
+		default: 'none' (no lines plotted)
+		example: linecat='SiO' for SiO lines
+		         linescat='*OH' for alcohols
+			 uses sprange to limit catalog
+		"""
+
+	@staticmethod
+	def linedop():
+		"""
+		linedop -- doppler offset for line catalog plotting (spectral plotting)
+		options: (float) doppler velocity (km/s)
+		default: 0.0
+		example: linedop=-30.0
 		"""
 		
 	@staticmethod
@@ -744,6 +1184,33 @@ class par(str):
 		""" 
        		linefile -- Name of output line image
 		Default: none; Example: outline='ngc5921_line.im'
+		"""
+
+	@staticmethod
+	def linestyles():
+		"""
+		linestyles -- the linestyles to be used for plotting lines
+		default: None
+		example: linestyles='line dashed dotted dashdot dashdotdot dashdashdot'
+		         The plotter will cycle through these linestyles
+			 when lines are overlaid (stacking mode).
+
+	        warning: linestyles can be specified only one color has been set. 
+		"""
+		
+	@staticmethod
+	def linewidth():
+		"""
+       		linewidth -- Width of plotted lines.
+               	default: 1
+		example: linewidth=0.75
+		"""
+
+	@staticmethod
+	def listfile():
+		"""
+		listfile -- output file name (will not overwrite)
+		default: '' (no output file)
 		"""
 		
 	@staticmethod
@@ -777,6 +1244,60 @@ class par(str):
 		""" Controls how many channels at the edge of each input spectral window are ignored
 		on-the-fly. It is usually better to flag these channels directly. """
 
+	@staticmethod
+	def maskflag():
+		"""
+		maskflag -- list of mask regions to apply flag/unflag
+		default: []  (entire spectrum)
+		example: [[1000,3000],[5000,7000]]
+		warning: if one or more rows are given in flagrow, or 
+		         clip=True, this parameter is ignored
+		"""
+
+	@staticmethod
+	def maskline():
+		"""
+		maskline -- list of mask regions to INCLUDE in LINE fitting
+		default: all
+		example: maskline=[[3900,4300]] for a single region, or
+		         maskline=[[3900,4300],[5000,5400]] for two, etc. 
+		"""
+
+	@staticmethod
+	def masklist():
+		"""
+                (for sdbaseline and sdcal)
+		masklist -- list of mask regions to INCLUDE in BASELINE fitting
+		default: []  (entire spectrum)
+		example: [[1000,3000],[5000,7000]]
+		         if blmode='auto' then this mask will be applied
+			 before fitting
+
+	        ---------------------------------------------------------------
+
+		(for sdstat)
+		masklist -- list of mask regions to INCLUDE in stats
+		default: []  (entire spectrum)
+		example: [4000,4500] for one region
+		         [[1000,3000],[5000,7000]] for two regions, etc.
+			 
+	        ---------------------------------------------------------------
+
+		(for sdtpimaging)
+		masklist -- mask in numbers of rows from each edge of each scan
+		for baseline fitting
+		default: none
+		example: [30,30] or [30]
+		         uses first 30 rows and last 30 rows of each scan
+			 for baseline
+		
+	        ---------------------------------------------------------------
+
+		(for sdimprocess)
+		masklist -- mask width for Basket-Weaving on percentage
+		default: 1.0 (1.0% of map size)
+		"""
+		
         @staticmethod
         def maxpix():
                 """
@@ -799,7 +1320,6 @@ class par(str):
                 default: 0 = autoscale
                 """
 
-
 	@staticmethod
 	def minpb(): 
 		""" 
@@ -815,22 +1335,104 @@ class par(str):
 		"""
 
 	@staticmethod
+	def min_nchan():
+		"""
+		min_nchan -- minimum number of consecutive channels for linefinder
+		default: 3
+		example: minimum number of consecutive channels required to pass threshold
+		"""
+		
+	@staticmethod
 	def mode():
-		""" Type of data selection: 
+		"""
+		(for flagdata)
+		mode -- mode of operation
+		options: 'manualflag', 'autoflag', 'summary', 'quack', 'shadow', 'rfi'
+		         'manualflag' = flagging based on specific selection parameter
+			                plus clipping and flagging autocorrelations
+	                 'autoflag'   = experimental auto-flagging outliers
+			 'summary'    = report the amount of flagged data
+			 'quack'      = remove/keep specific time range at scan
+			                beginning/end
+	                 'shadow'     = remove antenna-shadowed data
+			 'rfi'        = Redio Frequency Interference auto-flagging
+		default: 'manualflag'
 
-		Options: 'none' (all data), 'channel','velocity'
+		--------------------------------------------------------------------------
 
-		For flagmanager:
-        	mode -- Flag version operation
-                default: 'list'; to list existing flagtables
-                example:mode='save' will save flags in current ms
-                Options: 'list','save','restore','delete'
-
-		For imhead:
+                (for imhead)
  	        mode -- Mode, either 'get' or 'put'
-                default: 'get'; example: mode='put'
-                Options: 'get','put','summary','list','stats'
+                options: 'list', 'get', 'put', 'history', 'summary', 'add', 'del'
+		         'list'    = lists the image header keywords and values
+			 'get'     = get the specified keyword value(s) from the image
+			 'put'     = put the specified keyword value(s) into the image
+			 'history' = display the history information in the CASA logger
+			 'summary' = information summarizing the CASA image file
+			 'add'     = adds a new header key. use with caution
+			 'del'     = deletes a header key, hdkey. use with caution
+                default: 'summary'
 
+		--------------------------------------------------------------------------
+
+                (for immath)
+		mode -- mode for mathematical operation
+		options: 'evalexpr' = evaluate a mathematical expression defined in 'expr'
+		         'spix'     = spectralindex image
+			 'pola'     = polarization position angle image
+			 'poli'     = polarization intensity image
+		default: 'evalexpr'
+
+		--------------------------------------------------------------------------
+
+                (for makemask)
+		mode -- type of data selection
+		options: 'mfs', 'channel'
+		default: 'mfs'
+
+		--------------------------------------------------------------------------
+
+                (for mosaic, widefield)
+		mode -- frequency specification; type of selection
+		options: 'mfs'       = produce one image from all specified data
+		         'channel'   = use with nchan, start, width to specify
+			               output image cube. 
+		         'velocity'  = channels are specified in velocity
+	                 'frequency' = channels are specified in frequency
+	        default: 'mfs'
+
+		--------------------------------------------------------------------------
+
+		(for newflagdata)
+		mode -- mode of operation
+		options: 'manualflag', 'autoflag', 'summary', 'query', 'extend', 'run'
+
+		--------------------------------------------------------------------------
+
+                (for sdimprocess)
+		mode -- processing mode
+		options: 'basket', 'press'
+		default: 'basket'
+
+		--------------------------------------------------------------------------
+
+		(for specfit)
+		mode -- operation mode
+		options: 'single' = fits a 1-D model to a single profile
+		         'all'    = fits a 1-D model to all profiles
+			 'poly'   = fits 1-D polynomials to profiles
+		default: 'single'
+
+		--------------------------------------------------------------------------
+
+		(for vishead)
+		mode -- operation mode
+		options: 'list'    = list all keywords that are recognized, and list the
+		                     value(s) for each. Only these keywords can be
+				     obtained (get) or changed (put). 
+	                 'summary' = equivalent to running taskname='listobs'; verbose=False
+			 'get'     = get the specified keyword value(s) from the ms
+	                 'put'     = put the specified keyword value(s) into the ms
+		default: 'list'
 		"""
 
 	@staticmethod
@@ -853,16 +1455,31 @@ class par(str):
 	@staticmethod
 	def modelimage():
 		"""
-       		modelimage -- Optional model image  from which to predict visibilities
+		(for mosaic)
+		modelimage -- name of output(/input) model image
+		default: ''  (none=imagename.model)
+		note: this specifies the output model if a single dish image is
+		      input or the output model name from the imaging
+
+       		Optional model image from which to predict visibilities
 		This can be either a model image from a previous deconvolution
 		or an image from a single dish image if single dish uv coverage
 		is being introduced in the imaging
 
-		default '';
-		example modelimage='sdimage.im'
-		
+		----------------------------------------------------------------------
+
+		(for sdsim)
+		modelimage -- name of input image
+		default: ''
 		"""
 
+	@staticmethod
+	def modifymodel():
+		"""
+		modifymodel -- modify model image WCS or flux scale
+		options: True, False
+		default: False
+		"""
 		
 	@staticmethod
 	def moments():
@@ -921,18 +1538,18 @@ class par(str):
 		"""
 
 	@staticmethod
-	def ngauss():
-		"""
-        	ngauss -- Number of Gaussian elements to use when fitting profiles                default: 1;
-		"""		
-
-	@staticmethod
-	def niter():
-		""" Number of iterations; set niter=0 for no CLEANing: """
-
-	@staticmethod
 	def nchan():
-		""" Number of channels to select; used when mode='channel': """
+		"""
+		(for exportuvfits, makemask)
+		nchan -- number of channels to select
+		default: -1  (all)
+
+		----------------------------------------------------
+
+		(for mosaic, sdimaging, sdsim, simdata, widefield)
+		nchan -- number of channels (planes) in output image
+		default: 1
+		"""
 	
 	@staticmethod
 	def negcomponent():
@@ -945,6 +1562,26 @@ class par(str):
 		"""
 
 	@staticmethod
+	def nfit():
+		"""
+		nfit -- list of number of Gaussian lines to fit in maskline region
+		default: 0  (no fitting)
+		example: nfit=[1] for single line in single region
+		         nfit=[2] for two lines in single region
+			 nfit=[1,1] for single lines in each of two regions, etc.
+		"""
+		
+	@staticmethod
+	def ngauss():
+		"""
+        	ngauss -- Number of Gaussian elements to use when fitting profiles                default: 1;
+		"""		
+
+	@staticmethod
+	def niter():
+		""" Number of iterations; set niter=0 for no CLEANing: """
+
+	@staticmethod
 	def noise():
 		"""
         	--- superuniform/briggs weighting parameter
@@ -952,6 +1589,16 @@ class par(str):
                    example noise='1.0mJy'
 		"""
 
+	@staticmethod
+	def noise_thermal():
+		"""
+		noise_thermal -- add thermal noise
+		options: True, False
+		default: False
+
+		* [alpha] currently only knows about ALMA (and (E)VLA) receivers
+		"""
+		
 	@staticmethod
 	def npercycle():
 		"""
@@ -972,6 +1619,13 @@ class par(str):
 		""" Number of points to average together for tuning the
 		GSPLINE phase wrapping algorithm. """
 
+	@staticmethod
+	def numpoly():
+		"""
+		numpoly -- order of polynomial fit in Pressed-out
+		default: 2
+		"""
+		
 	@staticmethod
 	def nxpanel():
 		""" Panel number in the x-direction: """
@@ -994,15 +1648,59 @@ class par(str):
 	@staticmethod
 	def outfile():
 		"""
-        	outfile -- Output image file name (or root for multiple moments)
-                default: '' (input+auto-determined suffix);example: outfile='source_moment'
+		(for immath)
+		outfile -- output image file name.
+		default: 'immath_results.im'
 
-		uvmodelfit:
-	        outfile -- Optional output component list table
-                default: ''; example: outfile='componentlist.cl'
+		Overwriting an existing outfile is not permitted.
 
+		----------------------------------------------------------------
+
+		(for immoments)
+        	outfile -- output image file name (or root for multiple moments)
+                default: '' (input+auto-determined suffix)
+		example: outfile='source_moment'
+
+		----------------------------------------------------------------
+
+		(for imsmooth)
+		outfile -- output image file name.
+		default: 'imsmooth_results.im'
+		
+		----------------------------------------------------------------
+
+		(for ASAP tasks (sd*))
+		outfile -- output file name
+		default: ''
+
+		Given default value ('') for outfile, some ASAP tasks set output
+		file name as sdfile (=input file name) with suffix as follows:
+		        <sdfile>_cal             for sdaverage and sdcal,
+			<sdfile>_bs              for sdbaseline,
+			<sdflag>_f               for sdflag,
+			<sdfile>_scaleed<factor> for sdscale, and
+			<sdfile>_sm              for sdsmooth.
+
+		----------------------------------------------------------------
+
+		(for uvmodelfit)
+	        outfile -- optional output component list table
+                default: ''
+		example: outfile='componentlist.cl'
 		"""
 
+	@staticmethod
+	def outform():
+		"""
+		outform -- output file format
+		options: 'ASAP','ASCII','MS2','SDFITS'
+		default: 'ASAP'
+
+		the ASAP format is easiest for further sd processing;
+		use MS2 for CASA imaging. If ASCII, then will append some
+		stuff to the output file.
+		"""
+		
 	@staticmethod
 	def outputvis():
 		""" Name of output visibility file (MS) """
@@ -1017,10 +1715,22 @@ class par(str):
 	@staticmethod
 	def overwrite():
 		"""
-        	overwrite -- Overwrite pre-existing imagename
-                default=False; example: overwrite=True
+        	overwrite -- overwrite pre-existing imagename or output file
+		options: True, False
+                default: False
 		"""
 
+	@staticmethod
+	def panel():
+		"""
+		panel -- code for splitting into multiple panels for spectral plotting
+                options: 'p','b','i','t','s' or
+                         'pol','beam','if','time','scan'
+                default: 'i'
+                example: maximum of 25 panels
+                         panel by pol, beam, if, time, scan
+		"""
+		
 	@staticmethod
 	def pbcor():
 		""" Correct final image for primary beam or not.
@@ -1033,9 +1743,11 @@ class par(str):
 	@staticmethod
 	def phasecenter():
 		"""
-        	phasecenter -- direction measure  or fieldid for the mosaic center
-                default: '' (imply field=0 as center); example: phasecenter=6
-                or phasecenter='J2000 19h30m00 -40d00m00'
+        	phasecenter -- image phase center (for ASAP tasks) or mosaic center:
+		               direction measure or fieldid
+                default: '' (imply field=0 as center)
+		example: phasecenter=6
+                         phasecenter='J2000 19h30m00 -40d00m00'
 		"""
 
 	@staticmethod
@@ -1064,6 +1776,24 @@ class par(str):
                         plotcolor='#7FFF34' (RGB tuple)
 		"""
 
+	@staticmethod
+	def plotfile():
+		"""
+		plotfile -- file name for hardcopy output
+		options: (str) filename.eps, .ps, .png
+		default: ''  (no hardcopy)
+		"""
+
+	@staticmethod
+	def plotlevel():
+		"""
+		plotlevel -- control for plotting of results
+		options: (int) 0(none), 1(some), 2(more), <0(hardcopy)
+		default: 0  (no plotting)
+
+		Given a negative value, hardcopy plot will be named <sdfile>_scans.eps. 
+		"""
+		
 	@staticmethod	
 	def plotrange():
 		"""
@@ -1085,9 +1815,50 @@ class par(str):
 		"""
 
 	@staticmethod
+	def plottype():
+		"""
+		plottype -- type of plot
+		options: 'spectra','totalpower','pointing','azel'
+		default: 'spectra'
+		"""
+
+	@staticmethod
+	def pointingcolumn():
+		"""
+		pointingcolumn -- pointing data column to use
+                options: 'direction','target','pointing_offset','source_offset','encoder' 
+                default: 'direction'
+		"""
+
+	@staticmethod
+	def pointingspacing():
+		"""
+		pointingspacing -- spacing in between beams
+		default: '1arcmin'
+		"""
+		
+	@staticmethod
 	def pointtable():
 		""" Name of pointing calibration table: """
 
+	@staticmethod
+	def polaverage():
+		"""
+		polaverage -- average polarizations
+		options: True,False
+		default: False
+		"""
+
+	@staticmethod
+	def pollist():
+		"""
+		pollist -- list of polarization id numbers to select
+		default: []  (all)
+		example: [1]
+
+		this selection is in addition to scanlist, field, and iflist. 
+		"""
+		
 	@staticmethod
 	def poly():
 		"""
@@ -1118,11 +1889,8 @@ class par(str):
 	@staticmethod
 	def project():
 		"""
-      		project -- Project name to import from archive files:
-                 default: '' => all projects in file
-                 example: project='AL519'
-                 project = 'al519' will work, but
-                 project = 'AL0519' will not.
+      		project -- root for output file names
+		default: 'sim'
 		"""
 
 	@staticmethod
@@ -1140,8 +1908,18 @@ class par(str):
         	psfmode -- Distinguish between Clark and Hogbom style of clean
 		default='clark'
 		example: psfmode='hogbom'
-		
 		"""
+
+	@staticmethod
+	def pweight():
+		"""
+		pweight -- weighting for polarization average
+		options: 'none'
+	                 'var'  = 1/var(spec) weighted
+			 'tsys' = 1/Tsys**2 weighted
+	        default: 'none'
+		"""
+		
 	@staticmethod
 	def quackinterval():
 		"""
@@ -1159,16 +1937,23 @@ class par(str):
 		""" Reference antenna: """
 
 	@staticmethod
-	def refspwmap():
+	def refdate():
 		"""
-       		refspwmap -- Vector of spectral windows enablings scaling across spectral windows
-               default: [-1]==> none.
-               Example with 4 spectral windows: if the reference fields were observed only in spw=1 & 3,
-               and the transfer fields were observed in all 4 spws (0,1,2,3), specify refspwmap=[1,1,3,3].
-               This will ensure that transfer fields observed in spws 0,1,2,3 will be referenced to
-               reference field data only in spw 1 or 3.  Pray you don't have to do this.
+		refdate -- central time of simulated observation
+		default: '2012/05/21/22:05:00'
+		
+                * [alpha] observations are centered at the nearest transit. 
 		"""
 
+	@staticmethod
+	def refdirection():
+		"""
+		refdirection -- reference direction of the model image. 
+                       options: (str) 'direction', 'header', or reference 
+                                direction, e.g., 'J2000 19h00m00 -40d00m00'
+                       default: 'direction'
+		"""
+		
 	@staticmethod
 	def reference():
 		"""
@@ -1182,6 +1967,26 @@ class par(str):
 		"""
 
 	@staticmethod
+	def refpixel():
+		"""
+		refpixel -- reference pixel (CRPIX)
+		options: '[x,y]' or 'center' or 'header'
+		default: 'center'
+		example: '[100,100]'
+		"""
+		
+	@staticmethod
+	def refspwmap():
+		"""
+       		refspwmap -- Vector of spectral windows enablings scaling across spectral windows
+               default: [-1]==> none.
+               Example with 4 spectral windows: if the reference fields were observed only in spw=1 & 3,
+               and the transfer fields were observed in all 4 spws (0,1,2,3), specify refspwmap=[1,1,3,3].
+               This will ensure that transfer fields observed in spws 0,1,2,3 will be referenced to
+               reference field data only in spw 1 or 3.  Pray you don't have to do this.
+		"""
+
+	@staticmethod
 	def region():
 		"""
 		region -- File path of a file containing an ImageRegion.
@@ -1189,6 +1994,16 @@ class par(str):
 		region manager, and typically have the suffix '.rgn'
 		default: None
 		example: region="myimage.im.rgn"
+		"""
+
+	@staticmethod
+	def relmargin():
+		"""
+		relmargin -- how close pointing centers may approach the edge of the
+                output image, as a fraction of pointingspacing.
+                * ignored if direction is a list.
+		options: (float)
+		default: 1.0
 		"""
 		
 	@staticmethod
@@ -1218,7 +2033,10 @@ class par(str):
 	def restfreq():
 		"""
         	restfreq -- Specify rest frequency to use for image
-            	default='' none---try to use the one specified in   ms
+		options: (float) or (string with unit) : see example
+            	default: ''  (try to use the one specified in input data)
+		example: 4.6e10, '46GHz'
+	                 Allowed units are 'THz','GHz','MHz','kHz', and 'Hz'
 		"""
 		
 	@staticmethod
@@ -1234,6 +2052,17 @@ class par(str):
 		"""
 
 	@staticmethod
+	def rowlist():
+		"""
+		rowlist --  list of row numbers to process
+                default: [] (use all rows)
+                example: [0,2,4,6]
+                         For expert users only!
+                         this selection is applied first, and then followed by
+			 the selection with scans, fields, ifs, and polarizations. 
+		"""
+		
+	@staticmethod
 	def scales():
 		"""
         	--- Multiscale parameter
@@ -1241,6 +2070,14 @@ class par(str):
                 default = [0,3,10]
 		"""
 
+	@staticmethod
+	def scaletsys():
+		"""
+		scaletsys -- scaling of associated Tsys
+		options: True,False
+		default: True
+		"""
+		
 	@staticmethod
 	def scaletype():
 		""" Image plane flux scale type.
@@ -1253,6 +2090,46 @@ class par(str):
 	def scan():
 		""" Scan number range - underdevelopment. """
 
+	@staticmethod
+	def scanaverage():
+		"""
+		scanaverage -- average integrations within scans
+                options: (bool) True,False
+                default: False
+                example: if True, this happens in read-in
+                         For GBT, set False!
+		"""
+
+	@staticmethod
+	def scanlist():
+		"""
+		scanlist -- list of scan numbers to process
+                default: [] (use all scans)
+                example: [21,22,23,24]
+                         this selection is in addition to field, iflist, and pollist
+		"""
+
+	@staticmethod
+	def sdfile():
+		"""
+		sdfile -- name of input SD dataset
+		default: ''
+		"""
+
+	@staticmethod
+	def sdfilelist():
+		"""
+		sdfilelist -- list of names of input SD dataset
+		default: ''
+		"""
+
+	@staticmethod
+	def sdimages():
+		"""
+		sdimages -- name of input SD (FITS or CASA) image
+		default: ''
+		"""
+		
 	@staticmethod
 	def showflags():
 		"""
@@ -1289,6 +2166,18 @@ class par(str):
 		"""		
 
 	@staticmethod
+	def smoothsize():
+		"""
+		smoothsize -- smoothing beam in Pressed-out
+		default: 2.0 (interpreted as 2.0 * beamsize)
+		example: '1arcmin' (set smoothsize directly)
+		"""
+
+	@staticmethod
+	def smoothtime():
+		""" The smoothing filter time (sec). """
+
+	@staticmethod
 	def smoothtype():
 		""" The smoothing filter to be used for calibration solutions.
 
@@ -1296,10 +2185,6 @@ class par(str):
 		'none'(copy table)
 		
 		"""
-
-	@staticmethod
-	def smoothtime():
-		""" The smoothing filter time (sec). """
 
 	@staticmethod
 	def solint():
@@ -1319,6 +2204,15 @@ class par(str):
 		"""
 
 	@staticmethod
+	def specunit():
+		"""
+		specunit -- units for spectral axis
+                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
+                default: '' (=current)
+                example: this will be the units for masklist
+		"""
+		
+	@staticmethod
 	def splinetime():
 		""" Spline timescale (sec); used for gaintype='GSPLINE' """
 
@@ -1332,18 +2226,38 @@ class par(str):
 		"""
 
 	@staticmethod
+	def sprange():
+		"""
+		sprange -- range for spectral axis of plot
+                options: (list) [min,max]
+                default: [] (full range)
+                example: sprange=[42.1,42.5] if 'GHz' assumes current specunit
+		"""
+		
+	@staticmethod
 	def spw():
 		"""
+		(for sdimaging)
+		spw -- spectral window id
+                default: 0
+                example: 1
+
+	        this selection is in addition to scanlist and field
+
+	        -----------------------------------------------------------------
+
+		(for other tasks)
       		spw -- Select spectral window/channels
-              	default: ''=all spectral windows and channels
-              	spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
-              	spw='<2';  spectral windows less than 2 (i.e. 0,1)
-              	spw='0:5~61'; spw 0, channels 5 to 61
-              	spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
-              	spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-              	spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-              	spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
-                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+              	default: ''  (all spectral windows and channels)
+		example: spw='0~2,4'        = spectral windows 0,1,2,4 (all channels))
+              	         spw='<2'           = spectral windows less than 2 (i.e. 0,1))
+			 spw='0:5~61'       = spw 0, channels 5 to 61)
+			 spw='0,10,3:3~45'  = spw 0,10 all channels, spw 3, channels 3 to 45.
+			 spw='0~2:2~6'      = spw 0,1,2 with channels 2 through 6 in each.
+			 spw='0:0~10;15~60' = spectral window 0 with channels 0-10,15-60
+			 spw='0:0~10,1:20~30,2:1;2;3' = spw 0, channels 0-10,
+			                                spw 1, channels 20-30, and
+							spw 2, channels, 1,2 and 3
 		"""
 
 	@staticmethod
@@ -1359,6 +2273,17 @@ class par(str):
 		applied to spws 2 and 4 (as well as 1 and 3), use spwmap=[1,1,3,3]. """
 
 	@staticmethod
+	def stack():
+		"""
+		stack -- code for stacking on single plot for spectral plotting
+                options: 'p','b','i','t','s' or
+                         'pol', 'beam', 'if', 'time', 'scan'
+                default: 'p'
+                example: maximum of 25 stacked spectra
+                         stack by pol, beam, if, time, scan
+		"""
+		
+	@staticmethod
 	def standard():
 		""" Flux density standard:
 
@@ -1369,8 +2294,18 @@ class par(str):
 
 	@staticmethod
 	def start():
-		""" Start channel (0-relative), velocity; used when mode='channel', 'velocity': """
+		"""
+		start -- start channel
+		default: 0
+		"""
 
+	@staticmethod
+	def startfreq():
+		"""
+		startfreq -- frequency of first channel
+                default: '89GHz'
+		"""
+		
 	@staticmethod
 	def starttime():
 		"""
@@ -1380,16 +2315,26 @@ class par(str):
 		"""
 
 	@staticmethod
+	def statfile():
+		"""
+		statfile -- name of output file for line statistics
+                default: '' (no output statistics file)
+                example: 'stat.txt'
+		"""
+		
+	@staticmethod
 	def step():
-		""" Increment between channels; used when mode='channel','velocity': """
+		"""
+		step -- increment between channels
+		default: 1
+		"""
 
 	@staticmethod
 	def stokes():
-		""" Stokes parameters to image:
-		
-		Options: 'I','IV','IQU','IQUV'
+		"""
+		stokes -- stokes parameters to select/image
+		options: 'I','IV','QU','IQUV',...
                 'RR', 'LL', can only be done by flagging one polarization
-
 		"""
 
 	@staticmethod
@@ -1420,6 +2365,20 @@ class par(str):
 		"""
 
 	@staticmethod
+	def t_atm():
+		"""
+		t_atm -- atmospheric temperature in K 
+		default: 260.0
+		"""
+		
+	@staticmethod
+	def t_ground():
+		"""
+		t_ground -- ambient temperature in K 
+		default: 269.0
+		"""
+		
+	@staticmethod
 	def tablein():
 		""" Input calibration table: 
 		"""
@@ -1444,9 +2403,60 @@ class par(str):
 		"""
 
 	@staticmethod
-	def threshold():
-		""" Flux level at which to stop CLEANing; units=mJy: """
+	def tau():
+		"""
+		tau -- atmospheric optical depth
+		default: 0.0  (no correction)
+		"""
 
+	@staticmethod
+	def tau0():
+		"""
+		tau0 -- zenith opacity at observing frequency
+		default: 0.1
+		"""
+
+	@staticmethod
+	def telescopeparm():
+		"""
+		telescopeparm -- the telescope name or characteristics
+                        options: (str) name or (list) list of gain info
+                        default: '' (none set)
+                        example: if telescopeparm='', it tries to get the telescope
+                                 name from the data.
+                                 Full antenna parameters (diameter,ap.eff.) known
+                                 to ASAP are
+                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                 to 'K' first then convert to a new fluxunit.
+                                 telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                 telescopeparm=[0.743] gain in Jy/K
+                                 telescopeparm='FIX' to change default fluxunit
+		"""
+
+	@staticmethod
+	def thresh():
+		"""
+		thresh -- S/N threshold for linefinder
+		default: 5
+		example: a single channel S/N ratio above which the channel is
+	                 considered to be a detection
+		"""
+		
+	@staticmethod
+	def threshold():
+		"""
+		threshold -- flux level at which to stop CLEANing (units=mJy)
+		"""
+
+	@staticmethod
+	def timeaverage():
+		"""
+		timeaverage -- average times for multiple scan cycles
+                options: (bool) True,False
+                default: False
+		"""
+	
 	@staticmethod
 	def timebin():
 		""" Value for time averaging; '-1s' indicates no averaging: """
@@ -1479,6 +2489,22 @@ class par(str):
 		"""
 
 	@staticmethod
+	def tmax():
+		"""
+		tmax -- maximum value used for process
+                default: 0.0 (no threshold in maximum)
+                example: 10.0 (mask data larger value than 10.0)
+		"""
+		
+	@staticmethod
+	def tmin():
+		"""
+		tmin -- minimum value used for process
+                default: 0.0 (no threshold in minimum)
+                example: -10.0 (mask data smaller value than -10.0)
+		"""
+		
+	@staticmethod
 	def transfer():
 		"""
        		transfer -- Transfer field name(s)
@@ -1496,6 +2522,19 @@ class par(str):
                caltable fit.
 		"""
 
+	@staticmethod
+	def tweight():
+		"""
+		tweight -- weighting for time average
+	        options: 'none' 
+	                 'var'      = 1/var(spec) weighted
+			 'tsys'     = 1/Tsys**2 weighted
+			 'tint'     = integration time weighted
+			 'tintsys'  = Tint/Tsys**2
+			 'median'   = median averaging
+	        default: 'none'
+		"""
+		
 	@staticmethod
 	def uvtaper():
 		"""
@@ -1532,6 +2571,41 @@ class par(str):
 	def verbose():
 		""" List each observation in addition to the summary (True or False): """
 
+	@staticmethod
+	def verify():
+		"""
+		verify -- verify the results. 
+                options: (bool) True,False
+                default: False
+		"""
+		
+	@staticmethod
+	def verifybl():
+		"""
+		verifybl -- verify the results of baseline fitting
+                options: (bool) True,False
+                default: False
+		"""
+
+	@staticmethod
+	def verifycal():
+		"""
+		verifycal -- verify the results of calibration
+                options: (bool) True,False
+                default: False
+                WARNING: Currently verifying parameters just asks whether you 
+                         accept the displayed calibraion/fit and if not, 
+                         continues without doing any calibraion/baseline fit.
+		"""
+		
+	@staticmethod
+	def verifysm():
+		"""
+		verifysm -- verify the results of smoothing
+                options: (bool) True,False
+                default: False
+		"""
+		
 	@staticmethod
 	def versionname():
 		"""
@@ -1825,3 +2899,22 @@ class par(str):
            
                         Not yet implemented.
                """
+
+        @staticmethod
+        def singledish():
+                """
+                singledish -- Set True to write data as single-dish format (Scantable)
+                              default: False
+                              task: importasdm
+                """
+
+        @staticmethod
+        def varlist():
+                """
+                varlist -- Dictionary of variables used in expr (mathematical
+                           expression) and their values. Keys must be coincide with
+                           variables used in expr. Values are substituted in each
+                           value in expr.
+                           default: {} (empty dictionary)
+                           task: sdmath
+                """

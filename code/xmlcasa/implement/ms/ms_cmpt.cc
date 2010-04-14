@@ -362,16 +362,6 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
            mssel = new MeasurementSet(*itsMS);
          }
  
-
-      //==================================================   
-	 // Well this here be a work around until we get proper use of the cfitsio
-	 // routines by rewriting the underlying fits writer stuff.
-	 /*
-   Table::relinquishAutoLocks(True);
-   if(!fork()){
-      rstat = true;
-      try {
-      */
          if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
                                           inchan, iwidth, writesyscal,
                                           multisource, combinespw, writestation)) {
@@ -382,23 +372,6 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
 	 //Done...clear off the mssel
 	 if(mssel)
 	   delete mssel;
-	 /*
-      } catch (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-         rstat = False;
-      } catch (...) {
-         *itsLog << LogIO::SEVERE << "Unknown Exception Reported " << LogIO::POST;
-         rstat = False;
-      }
-      exit(rstat);
-   }
-   int dummy;
-   wait(&dummy);
-   if(dummy)
-      rstat=true;
-     } else {
-       rstat = False;
-     */
      }
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -408,6 +381,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
    Table::relinquishAutoLocks();
    return rstat;
 }
+
 
 bool
 ms::summary(::casac::record& header, const bool verbose)
@@ -703,28 +677,29 @@ ms::statistics(const std::string& column,
 
                /* If FLAG_ROW is set, update flags */
                for (unsigned i = 0; i < flagrow_chunk.nelements(); i++) {
-                 if (flagrow_chunk(i)) {
-                   for (unsigned channel = 0; channel < (unsigned)flag_chunk.shape()(0); channel++) {
-                     for (unsigned pol = 0; pol < (unsigned)flag_chunk.shape()(1); pol++) {
-                       flag_chunk(i, channel, pol) = true;
-                     }
-                   }
-                 }
+                 if (flagrow_chunk(i))
+                   flag_chunk.xyPlane(i).set(true);
                }
 
                append<Bool>(flags, flags_length, nrow, flag_chunk, "FLAG");
-               append<Bool>(flagrows, flagrows_length, nrow, flagrow_chunk, "FLAG_ROW");
+               append<Bool>(flagrows, flagrows_length, nrow, flagrow_chunk,
+                            "FLAG_ROW");
              }
 
              if (column == "DATA" || column == "CORRECTED" || column == "MODEL") {
                  ROVisibilityIterator::DataColumn dc;
-                 if (column == "DATA") dc = ROVisibilityIterator::Observed;
-                 else if (column == "CORRECTED") dc = ROVisibilityIterator::Corrected;
-                 else dc = ROVisibilityIterator::Model;
+                 if(column == "DATA")
+                   dc = ROVisibilityIterator::Observed;
+                 else if(column == "CORRECTED")
+                   dc = ROVisibilityIterator::Corrected;
+                 else
+                   dc = ROVisibilityIterator::Model;
                  
-                 vi.visibility(static_cast<Cube<Complex>&>(data_complex_chunk), dc);
+                 vi.visibility(static_cast<Cube<Complex>&>(data_complex_chunk),
+                               dc);
                  
-                 append<Complex>(data_complex, length, nrow, data_complex_chunk, column);
+                 append<Complex>(data_complex, length, nrow, data_complex_chunk,
+                                 column);
              }
              else if (column == "UVW") {
                  Vector<RigidVector<Double, 3> > uvw;
@@ -1222,7 +1197,7 @@ ms::cvel(const std::string& mode,
     }
     if(!width.toString().empty()){ // channel width was set
       if(t_mode == "channel"){
-	t_width = abs(Double(atoi(width.toString().c_str())));
+	t_width = abs(atoi(width.toString().c_str()));
       }
       else if(t_mode == "channel_b"){
 	t_cwidth = abs(Double(atoi(width.toString().c_str())));
@@ -1328,7 +1303,7 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogOrigin("ms", "cvel");
 
-    SubMS *sms = new SubMS(originalName);
+    SubMS *sms = new SubMS(originalName, Table::Update);
 
     *itsLog << LogIO::NORMAL << "Starting combination of spectral windows ..." << LogIO::POST;
 
@@ -1404,15 +1379,16 @@ ms::cvel(const std::string& mode,
       Int totNumChan = cw.size();
       
       Bool isEquidistant = True;
-      for(Int i=0; i< totNumChan; i++){
-	if(cw(i)-cw(0)>1.){
+      for(Int i=0; i<totNumChan; i++){
+	if(abs(cw(i)-cw(0))>0.1){
 	  isEquidistant = False;
 	}
       }
       Double minWidth = min(cw);
       Double maxWidth = max(cw);
-      
+
       ostringstream oss;
+      
       if(isEquidistant){
 	oss <<  "Final spectral window has " << totNumChan 
 	    << " channels of width " << scientific << setprecision(6) << setw(6) << cw(0) << " Hz";
@@ -1422,13 +1398,21 @@ ms::cvel(const std::string& mode,
 	    << " channels of varying width: minimum width = " << scientific << setprecision(6) << setw(6) << minWidth 
 	    << " Hz, maximum width = " << scientific << setprecision(6) << setw(6) << maxWidth << " Hz";
       }
-      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+      oss << endl;
       if(totNumChan > 1){
-	*itsLog << LogIO::NORMAL  << "First channel center = " << cf(0) 
-		<< " Hz, last channel center = " << cf(totNumChan-1) << " Hz" << LogIO::POST;
+	oss << "First channel center = " << setprecision(9) << setw(9) << cf(0) 
+	    << " Hz, last channel center = " << setprecision(9) << setw(9) << cf(totNumChan-1) << " Hz";
       }
       else{
-	*itsLog << LogIO::NORMAL << "First channel center = " << cf(0) << " Hz" << LogIO::POST;
+	oss << "Channel center = " << setprecision(9) << setw(9) << cf(0) << " Hz";
+      }
+      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+
+      for(Int i=0; i<totNumChan-1; i++){
+	if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>0.1 ){
+	  *itsLog << LogIO::WARN << "Internal error: Center of channel i " << i <<  " is off nominal center by " 
+		  << ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz" << LogIO::POST;
+	}
       }
     } 
     
@@ -1629,7 +1613,8 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
           const std::string&      timerange, const ::casac::variant& scan,
           const ::casac::variant& uvrange,   const std::string&      taql,
           const std::string&      whichcol,  const ::casac::variant& tileShape,
-          const ::casac::variant& subarray,  const bool averchan)
+          const ::casac::variant& subarray,  const bool averchan,
+          const std::string&      ignorables)
 {
   Bool rstat(False);
   try {
@@ -1674,7 +1659,9 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
        t_tileshape.resize();
        t_tileshape=tileShape.toIntVec();
      }
-     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape)){
+     const String t_ignorables = downcase(ignorables);
+
+     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_ignorables)){
        *itsLog << LogIO::SEVERE
                << "Error splitting " << itsMS->tableName() << " to "
                << t_outputms

@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	PolarizationRow::~PolarizationRow() {
 	}
 
@@ -454,50 +453,56 @@ namespace asdm {
 
 	}
 	
-	PolarizationRow* PolarizationRow::fromBin(EndianISStream& eiss, PolarizationTable& table) {
-		PolarizationRow* row = new  PolarizationRow(table);
-		
-		
+void PolarizationRow::polarizationIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->polarizationId =  Tag::fromBin(eiss);
+		polarizationId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void PolarizationRow::numCorrFromBin(EndianISStream& eiss) {
 		
-			
-		row->numCorr =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numCorr =  eiss.readInt();
+			
+		
 	
-		row->corrType.clear();
+	
+}
+void PolarizationRow::corrTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		corrType.clear();
 		
 		unsigned int corrTypeDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < corrTypeDim1; i++)
 			
-			row->corrType.push_back(CStokesParameter::from_int(eiss.readInt()));
+			corrType.push_back(CStokesParameter::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void PolarizationRow::corrProductFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->corrProduct.clear();
+		corrProduct.clear();
 		
 		unsigned int corrProductDim1 = eiss.readInt();
 		unsigned int corrProductDim2 = eiss.readInt();
@@ -508,32 +513,46 @@ namespace asdm {
 			
 			corrProductAux1.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
-			row->corrProduct.push_back(corrProductAux1);
+			corrProduct.push_back(corrProductAux1);
 		}
 	
 	
 
 		
 	
+	
+}
 
+void PolarizationRow::flagRowFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->flagRowExists = eiss.readBoolean();
-	if (row->flagRowExists) {
+	flagRowExists = eiss.readBoolean();
+	if (flagRowExists) {
 		
 	
 	
 		
 			
-		row->flagRow =  eiss.readBoolean();
+		flagRow =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	PolarizationRow* PolarizationRow::fromBin(EndianISStream& eiss, PolarizationTable& table, const vector<string>& attributesSeq) {
+		PolarizationRow* row = new  PolarizationRow(table);
 		
+		map<string, PolarizationAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PolarizationTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -767,6 +786,16 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["polarizationId"] = &PolarizationRow::polarizationIdFromBin; 
+	 fromBinMethods["numCorr"] = &PolarizationRow::numCorrFromBin; 
+	 fromBinMethods["corrType"] = &PolarizationRow::corrTypeFromBin; 
+	 fromBinMethods["corrProduct"] = &PolarizationRow::corrProductFromBin; 
+		
+	
+	 fromBinMethods["flagRow"] = &PolarizationRow::flagRowFromBin; 
 	
 	}
 	
@@ -814,7 +843,16 @@ namespace asdm {
 		else
 			flagRowExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["polarizationId"] = &PolarizationRow::polarizationIdFromBin; 
+		 fromBinMethods["numCorr"] = &PolarizationRow::numCorrFromBin; 
+		 fromBinMethods["corrType"] = &PolarizationRow::corrTypeFromBin; 
+		 fromBinMethods["corrProduct"] = &PolarizationRow::corrProductFromBin; 
+			
+	
+		 fromBinMethods["flagRow"] = &PolarizationRow::flagRowFromBin; 
+			
 	}
 
 	
@@ -889,6 +927,21 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, PolarizationAttributeFromBin> PolarizationRow::initFromBinMethods() {
+		map<string, PolarizationAttributeFromBin> result;
+		
+		result["polarizationId"] = &PolarizationRow::polarizationIdFromBin;
+		result["numCorr"] = &PolarizationRow::numCorrFromBin;
+		result["corrType"] = &PolarizationRow::corrTypeFromBin;
+		result["corrProduct"] = &PolarizationRow::corrProductFromBin;
+		
+		
+		result["flagRow"] = &PolarizationRow::flagRowFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

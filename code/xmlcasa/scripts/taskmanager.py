@@ -33,7 +33,7 @@ class taskmanager(object):
     __dir = { 'home': os.environ['HOME'] + "/.casa/tm" }
     __cert = { }
     __furl = { }
-    __hub = { 'init atend': True, 'proc': None, 'engines': [], 'engine hosts': { },
+    __hub = { 'init atend': False, 'proc': None, 'engines': [], 'engine hosts': { },
               'mec': None, 'tasks initialized': [], 'task path': [], 'initialized': False,
               'log root': None, 'execute count': 0, 'result map': { }, 'pipe minder': None }
 
@@ -60,7 +60,7 @@ class taskmanager(object):
         if self.__hub['result map'].has_key(reciept):
             return self.__hub['result map'][reciept]['result']
         else:
-            raise Exception, "invalid reciept"
+            raise Exception, "invalid reciept: " + str(reciept)
 
     def execute(self, taskname, *args, **kwargs):
 

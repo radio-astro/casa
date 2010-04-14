@@ -114,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void initCache();
     void cacheConvFunction(Int which, Float pa, Array<Complex>& cf, CoordinateSystem& coords,
 			   CoordinateSystem& ftcoords, Int& convSize, Cube<Int>& convSupport, 
-			   Float convSampling, String nameQualifier="");
+			   Float convSampling, String nameQualifier="",Bool savePA=True);
     void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, CoordinateSystem& coords,
 			      Int& convSize, Cube<Int>& convSupport, Float convSampling);
     Bool searchConvFunction(const VisBuffer& vb, VPSkyJones& vpSJ, Int& which, Float &pa);

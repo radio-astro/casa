@@ -46,31 +46,10 @@ using std::set;
 using asdmIDL::ConfigDescriptionRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <Tag.h>
+using  asdm::Tag;
 
 
 
@@ -116,28 +95,13 @@ using namespace SpectralResolutionTypeMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file ConfigDescription.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -164,10 +128,13 @@ class DataDescriptionRow;
 class ProcessorRow;
 	
 
+class ConfigDescriptionRow;
+typedef void (ConfigDescriptionRow::*ConfigDescriptionAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The ConfigDescriptionRow class is a row of a ConfigDescriptionTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class ConfigDescriptionRow {
@@ -182,49 +149,6 @@ public:
 	 */
 	ConfigDescriptionTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a ConfigDescriptionRowIDL struct.
-	 */
-	ConfigDescriptionRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct ConfigDescriptionRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (ConfigDescriptionRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the ConfigDescriptionTable to which the row built by deserialization will be parented.
-	  */
-	 static ConfigDescriptionRow* fromBin(EndianISStream& eiss, ConfigDescriptionTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -1093,12 +1017,70 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this ConfigDescriptionRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param numAntenna
+	    
+	 * @param numDataDescription
+	    
+	 * @param numFeed
+	    
+	 * @param correlationMode
+	    
+	 * @param numAtmPhaseCorrection
+	    
+	 * @param atmPhaseCorrection
+	    
+	 * @param processorType
+	    
+	 * @param spectralType
+	    
+	 * @param antennaId
+	    
+	 * @param feedId
+	    
+	 * @param switchCycleId
+	    
+	 * @param dataDescriptionId
+	    
+	 * @param processorId
+	    
 	 */ 
 	bool compareNoAutoInc(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param numAntenna
+	    
+	 * @param numDataDescription
+	    
+	 * @param numFeed
+	    
+	 * @param correlationMode
+	    
+	 * @param numAtmPhaseCorrection
+	    
+	 * @param atmPhaseCorrection
+	    
+	 * @param processorType
+	    
+	 * @param spectralType
+	    
+	 * @param antennaId
+	    
+	 * @param feedId
+	    
+	 * @param switchCycleId
+	    
+	 * @param dataDescriptionId
+	    
+	 * @param processorId
+	    
+	 */ 
 	bool compareRequiredValue(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId); 
 		 
 	
@@ -1111,6 +1093,37 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(ConfigDescriptionRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a ConfigDescriptionRowIDL struct.
+	 */
+	ConfigDescriptionRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct ConfigDescriptionRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (ConfigDescriptionRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;	
 
 private:
 	/**
@@ -1422,6 +1435,46 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, ConfigDescriptionAttributeFromBin> fromBinMethods;
+void configDescriptionIdFromBin( EndianISStream& eiss);
+void numAntennaFromBin( EndianISStream& eiss);
+void numDataDescriptionFromBin( EndianISStream& eiss);
+void numFeedFromBin( EndianISStream& eiss);
+void correlationModeFromBin( EndianISStream& eiss);
+void numAtmPhaseCorrectionFromBin( EndianISStream& eiss);
+void atmPhaseCorrectionFromBin( EndianISStream& eiss);
+void processorTypeFromBin( EndianISStream& eiss);
+void spectralTypeFromBin( EndianISStream& eiss);
+void antennaIdFromBin( EndianISStream& eiss);
+void feedIdFromBin( EndianISStream& eiss);
+void switchCycleIdFromBin( EndianISStream& eiss);
+void dataDescriptionIdFromBin( EndianISStream& eiss);
+void processorIdFromBin( EndianISStream& eiss);
+
+void phasedArrayListFromBin( EndianISStream& eiss);
+void numAssocValuesFromBin( EndianISStream& eiss);
+void assocNatureFromBin( EndianISStream& eiss);
+void assocConfigDescriptionIdFromBin( EndianISStream& eiss);
+	
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the ConfigDescriptionTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static ConfigDescriptionRow* fromBin(EndianISStream& eiss, ConfigDescriptionTable& table, const vector<string>& attributesSeq);	 
 
 };
 

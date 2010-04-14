@@ -165,7 +165,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         writestation -- Write station name instead of antenna name
                 default: True;
         async --  Run asynchronously
-                default = true; highly recommended.
+                default = False;
 
 </example> 
 

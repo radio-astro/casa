@@ -60,6 +60,7 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel()
 
   donePSF_p=False;
   modified_p=True;
+  getScales();
 
 };
 
@@ -71,10 +72,9 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Int nscales,
   stopLargeNegatives_p(sln), stopPointMode_p(spm),smallScaleBias_p(inbias)
 {
 
-
   donePSF_p=False;
   modified_p=True;
-
+  getScales();
 
 };
 
@@ -88,8 +88,7 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Vector<Float>& userScaleSiz
 
   donePSF_p=False;
   modified_p=True;
-
-
+  getScales();
 
 };
 
@@ -122,8 +121,6 @@ MFMSCleanImageSkyModel::~MFMSCleanImageSkyModel()
     if(beam_p[thismodel]) delete beam_p[thismodel]; beam_p[thismodel]=0;
   }
 
-
-
 };
 
 
@@ -142,7 +139,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   */
   //Make the PSFs, one per field
   if(!donePSF_p){
-    os << "Making approximate PSFs" << LogIO::POST;
+    os << LogIO::NORMAL         // Loglevel PROGRESS
+       << "Making approximate PSFs" << LogIO::POST;
     makeApproxPSFs(se);
   }
 
@@ -184,7 +182,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	LatticeExprNode node = min(subPSF);
 	psfmin(model) = node.getFloat();
       }
-      os << "Model " << model+1 << ": max, min PSF = "
+      os << LogIO::NORMAL    // Loglevel INFO
+         << "Model " << model+1 << ": max, min PSF = "
 	 << psfmax(model) << ", " << psfmin(model) << endl;
       if(abs(psfmin(model))>maxSidelobe) maxSidelobe=abs(psfmin(model));
     }
@@ -210,7 +209,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   Bool stop=False;
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
 
-    os << "*** Starting major cycle " << cycle+1 << LogIO::POST;
+    os << LogIO::NORMAL    // Loglevel PROGRESS
+       << "*** Starting major cycle " << cycle+1 << LogIO::POST;
     cycle++;
 
 
@@ -221,13 +221,15 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     if(modified_p){
       if (!incremental||(itsSubAlgorithm == "full")) {
 	
-	os << "Using visibility-subtraction for residual calculation"
+	os << LogIO::NORMAL1    // Loglevel INFO
+           << "Using visibility-subtraction for residual calculation"
 	   << LogIO::POST;
 	makeNewtonRaphsonStep(se, False);
 	
       }
       else {
-	os << "Using XFR-based shortcut for residual calculation"
+	os << LogIO::NORMAL1    // Loglevel INFO
+           << "Using XFR-based shortcut for residual calculation"
 	   << LogIO::POST;
 	makeNewtonRaphsonStep(se, True);
       }
@@ -241,26 +243,29 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     absmax=maxField(resmax, resmin);
 
     for (model=0;model<numberOfModels();model++) {
-      os << "Model " << model+1 << ": max, min residuals = "
+      os << LogIO::NORMAL    // Loglevel INFO
+         << "Model " << model+1 << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
     os << LogIO::POST;
 
     // Can we stop?
     if(absmax<threshold()) {
-      os << "Reached stopping peak point source residual = "
+      os << LogIO::NORMAL    // Loglevel PROGRESS?
+         << "Reached stopping peak point source residual = "
 	 << absmax << LogIO::POST;
       stop=True;
     }
     else {
-    
       // Calculate the threshold for this cycle. Add a safety factor
       Float fudge = cycleFactor_p*maxSidelobe;
       if (fudge > 0.8) fudge = 0.8;   // painfully slow!
       Quantity fThreshold(fudge*100, "%");
       Quantity aThreshold(threshold(), "Jy");
-      os << "Maximum point source residual = " << absmax << LogIO::POST;
-      os << "Cleaning scale flux down to maximum of " << fThreshold.getValue("%")
+      os << LogIO::NORMAL    // Loglevel INFO
+         << "Maximum point source residual = " << absmax << LogIO::POST;
+      os << LogIO::NORMAL    // Loglevel INFO
+         << "Cleaning scale flux down to maximum of " << fThreshold.getValue("%")
 	 << " % and " << aThreshold.getValue("Jy") << " Jy" << LogIO::POST;
       
       for (model=0;model<numberOfModels();model++) {
@@ -282,7 +287,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	// Only process solveable models
 	if(isSolveable(model)) {
 	  
-	  os << "Processing model " << model+1 << LogIO::POST;
+	  os << LogIO::NORMAL    // Loglevel PROGRESS
+             << "Processing model " << model+1 << LogIO::POST;
 	  
 	  // If mask exists, use it;
 	  // If not, use the fluxScale image to figure out
@@ -309,7 +315,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	      // We could keep a cleaner per channel but for the moment
 	      // we simply make a new one for each channel
 	      if(nchan>1) {
-		os<<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
+		os << LogIO::NORMAL    // Loglevel PROGRESS
+                   <<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
 		if(!cleaner[model].null()) cleaner[model]=0;
 	      }
 	      
@@ -317,19 +324,21 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	      trcDirty(3) = chan;
 	      blcDirty(2) = 0; trcDirty(2) = 0;
 	      LCBox firstPlane(blcDirty, trcDirty, image(model).shape());
+              SubLattice<Float> subPSF( PSF(model), firstPlane);
 	      
 	      for (Int pol=0; pol<npol; pol++) {
 		blcDirty(2) = pol; trcDirty(2) = pol;
 		// The PSF should be the same for each polarization so we
 		// can use the existing cleaner (unlike the spectral case)
 		if(npol>1) {
-		  os<<"Processing polarization "<<pol+1<<" of "<<npol<<LogIO::POST;
+		  os << LogIO::NORMAL    // Loglevel PROGRESS
+                     <<"Processing polarization "<<pol+1<<" of "<< npol
+                     <<LogIO::POST;
 		}
 		LCBox onePlane(blcDirty, trcDirty, image(model).shape());
 		
 		SubLattice<Float> subImage( image(model), onePlane, True);
 		SubLattice<Float> subResid( residual(model), onePlane);
-		SubLattice<Float> subPSF( PSF(model), firstPlane);
 		SubLattice<Float> subDeltaImage( deltaImage(model), onePlane, True);
 		SubLattice<Float> *subMaskPointer=0;
 		Bool skipThisPlane=False;
@@ -341,12 +350,15 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		}
 		if(!skipThisPlane){
 		  if(!cleaner[model].null()) {
-		    os << "Updating multiscale cleaner with new residual images"
+		    os << LogIO::NORMAL2    // Loglevel PROGRESS
+                       << "Updating multiscale cleaner with new residual images"
 		       << LogIO::POST;
 		    cleaner[model]->update(subResid);
 		  }
 		  else {
-		    os << "Creating multiscale cleaner with psf and residual images" << LogIO::POST;
+		    os << LogIO::NORMAL2    // Loglevel PROGRESS
+                       << "Creating multiscale cleaner with psf and residual images"
+                       << LogIO::POST;
 		    cleaner[model]=new LatticeCleaner<Float>(subPSF, subResid);
 		    setScales(*(cleaner[model]));
                     cleaner[model]->setSmallScaleBias(smallScaleBias_p);
@@ -360,7 +372,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 				      aThreshold, fThreshold, True);
 		  
 		  if (cycleSpeedup_p > 1) {
-		    os << "cycleSpeedup is " << cycleSpeedup_p << LogIO::POST;
+		    os << LogIO::NORMAL    // Loglevel INFO
+                       << "cycleSpeedup is " << cycleSpeedup_p << LogIO::POST;
 		    cleaner[model]->speedup(cycleSpeedup_p);
 		  }
 		
@@ -386,7 +399,9 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  iterations[model](chan)=cleaner[model]->numberIterations();
 		  maxIterations=(iterations[model](chan)>maxIterations) ?
 		    iterations[model](chan) : maxIterations;
-		  os << "Clean used " << iterations[model](chan) << " iterations" 
+		  os << LogIO::NORMAL    // Loglevel INFO
+                     << "Clean used " << iterations[model](chan)
+                     << " iterations" 
 		     << LogIO::POST;
 		  modified_p=True;
 		  
@@ -394,7 +409,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  
 		  if (cleaner[model]->queryStopPointMode()) {
 		    stop = True;		
-		    os << "MSClean terminating because we hit " 
+		    os << LogIO::NORMAL    // Loglevel INFO
+                       << "MSClean terminating because we hit " 
 		       << stopPointMode_p
 		       << " consecutive compact sources" << LogIO::POST;
 		  }
@@ -414,14 +430,17 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   }
 
   if(modified_p) {
-    os << "Finalizing residual images for all fields" << LogIO::POST;
+    os << LogIO::NORMAL    // Loglevel PROGRESS?
+       << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True);
     Float finalabsmax=maxField(resmax, resmin);
     converged=(finalabsmax < 1.05 * threshold());
-      os << "Final maximum residual = " << finalabsmax << LogIO::POST;
+      os << LogIO::NORMAL    // Loglevel INFO
+         << "Final maximum residual = " << finalabsmax << LogIO::POST;
       
     for (model=0;model<numberOfModels();model++) {
-      os << "Model " << model+1 << ": max, min residuals = "
+      os << LogIO::NORMAL    // Loglevel INFO
+         << "Model " << model+1 << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
     os << LogIO::POST;
@@ -437,10 +456,9 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   
 
 void
-MFMSCleanImageSkyModel::setScales(LatticeCleaner<Float>& cleaner)
+MFMSCleanImageSkyModel::getScales()
 {
-
-  LogIO os(LogOrigin("MFCleanImageSkyModel","setScales"));
+  LogIO os(LogOrigin("MFCleanImageSkyModel", "getScales"));
   if (method_p == USERVECTOR) {
     if (userScaleSizes_p.nelements() <= 0) {
       os << LogIO::SEVERE 
@@ -448,31 +466,34 @@ MFMSCleanImageSkyModel::setScales(LatticeCleaner<Float>& cleaner)
 	 << LogIO::POST;
     }
     os << "Creating scales from uservector method: " << LogIO::POST;
-    for(uInt scale=0; scale < userScaleSizes_p.nelements(); scale++) {
-      os << "scale " << scale+1 << " = " << userScaleSizes_p(scale)
-	 << " pixels" << LogIO::POST;
-    }
-    cleaner.setscales(userScaleSizes_p);   
-  } else {
+  }
+  else {
     if (nscales_p <= 0) nscales_p = 1;
     Vector<Float> scaleSizes(nscales_p);  
     os << "Creating " << nscales_p << 
       " scales from powerlaw nscales method" << LogIO::POST;
     scaleSizes(0) = 0.0;
-    os << "scale 1 = 0.0 pixels " << LogIO::POST;
     Float scaleInc = 2.0;
-    for (Int scale=1; scale<nscales_p;scale++) {
-      scaleSizes(scale) =
-	scaleInc * pow(10.0, (Float(scale)-2.0)/2.0);
-      os << "scale " << scale+1 << " = " << scaleSizes(scale)
-	 << " pixels" << LogIO::POST;
-    }  
-    cleaner.setscales(scaleSizes);   
+    for(uInt scale = 1; scale < nscales_p; ++scale)
+      scaleSizes[scale] = scaleInc * pow(10.0, (Float(scale) - 2.0)/2.0);
+  
     //store the scales as user setscales..in case we need to reduce scales
     userScaleSizes_p.resize();
     userScaleSizes_p=scaleSizes;
     method_p=USERVECTOR;
   }
+
+  for(uInt scale = 0; scale < userScaleSizes_p.nelements(); ++scale)
+    os << LogIO::NORMAL << 
+      "scale " << scale+1 << " = " << userScaleSizes_p(scale)
+       << " pixels"
+       << LogIO::POST;
 };
+
+// Inlined here and not in the .h because the .h doesn't #include LatticeCleaner.
+inline void MFMSCleanImageSkyModel::setScales(LatticeCleaner<Float>& cleaner)
+{ 
+  cleaner.setscales(userScaleSizes_p);
+}
 
 } //#End casa namespace

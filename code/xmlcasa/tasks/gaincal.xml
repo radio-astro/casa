@@ -19,7 +19,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Nome of input visibility file</description>
+		<description>Name of input visibility file</description>
 		<value></value>
 	</param>
 
@@ -249,7 +249,10 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
              spw='0:0~10^2,1:20~30^5'; spw 0, channels 0,2,4,6,8,10,
                    spw 1, channels 20,25,30
       selectdata -- Other data selection parameters
-              default: True
+              default: False 
+
+              Must set selectdata=True to use the following selections:
+
       timerange  -- Select data based on time range:
               default = '' (all); examples,
               timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'

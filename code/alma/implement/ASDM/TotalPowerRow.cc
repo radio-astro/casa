@@ -80,7 +80,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	TotalPowerRow::~TotalPowerRow() {
 	}
 
@@ -1162,98 +1161,122 @@ namespace asdm {
 
 	}
 	
-	TotalPowerRow* TotalPowerRow::fromBin(EndianISStream& eiss, TotalPowerTable& table) {
-		TotalPowerRow* row = new  TotalPowerRow(table);
-		
-		
+void TotalPowerRow::timeFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->time =  ArrayTime::fromBin(eiss);
+		time =  ArrayTime::fromBin(eiss);
 		
 	
-
 	
+}
+void TotalPowerRow::configDescriptionIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->configDescriptionId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->fieldId =  Tag::fromBin(eiss);
+		configDescriptionId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->scanNumber =  eiss.readInt();
-			
+}
+void TotalPowerRow::fieldIdFromBin(EndianISStream& eiss) {
 		
 	
-
+		
+		
+		fieldId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void TotalPowerRow::scanNumberFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->subscanNumber =  eiss.readInt();
+		scanNumber =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void TotalPowerRow::subscanNumberFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->integrationNumber =  eiss.readInt();
+		subscanNumber =  eiss.readInt();
 			
 		
 	
-
 	
-		
-		
-			
-	
-	row->uvw = Length::from2DBin(eiss);		
-	
-
+}
+void TotalPowerRow::integrationNumberFromBin(EndianISStream& eiss) {
 		
 	
-
 	
-		
 		
 			
-	
-	row->exposure = Interval::from2DBin(eiss);		
-	
-
+		integrationNumber =  eiss.readInt();
+			
 		
 	
-
+	
+}
+void TotalPowerRow::uvwFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->timeCentroid = ArrayTime::from2DBin(eiss);		
+	uvw = Length::from2DBin(eiss);		
 	
 
 		
 	
+	
+}
+void TotalPowerRow::exposureFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	exposure = Interval::from2DBin(eiss);		
+	
 
+		
+	
+	
+}
+void TotalPowerRow::timeCentroidFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	timeCentroid = ArrayTime::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+void TotalPowerRow::floatDataFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->floatData.clear();
+		floatData.clear();
 			
 		unsigned int floatDataDim1 = eiss.readInt();
 		unsigned int floatDataDim2 = eiss.readInt();
@@ -1271,36 +1294,42 @@ namespace asdm {
 				}
 				floatDataAux2.push_back(floatDataAux1);
 			}
-			row->floatData.push_back(floatDataAux2);
+			floatData.push_back(floatDataAux2);
 		}	
 	
 
 		
 	
-
+	
+}
+void TotalPowerRow::flagAntFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->flagAnt.clear();
+		flagAnt.clear();
 		
 		unsigned int flagAntDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < flagAntDim1; i++)
 			
-			row->flagAnt.push_back(eiss.readInt());
+			flagAnt.push_back(eiss.readInt());
 			
 	
 
 		
 	
-
+	
+}
+void TotalPowerRow::flagPolFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->flagPol.clear();
+		flagPol.clear();
 		
 		unsigned int flagPolDim1 = eiss.readInt();
 		unsigned int flagPolDim2 = eiss.readInt();
@@ -1311,66 +1340,92 @@ namespace asdm {
 			
 			flagPolAux1.push_back(eiss.readInt());
 			
-			row->flagPol.push_back(flagPolAux1);
+			flagPol.push_back(flagPolAux1);
 		}
 	
 	
 
 		
 	
-
 	
-	
-		
-			
-		row->flagRow =  eiss.readBoolean();
-			
-		
-	
-
-	
-		
-		
-		row->interval =  Interval::fromBin(eiss);
-		
-	
-
-	
-		
-		
-			
-	
-	row->stateId = Tag::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-		
-		
-		row->execBlockId =  Tag::fromBin(eiss);
-		
-	
-
-		
-		
-		
-	row->subintegrationNumberExists = eiss.readBoolean();
-	if (row->subintegrationNumberExists) {
+}
+void TotalPowerRow::flagRowFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->subintegrationNumber =  eiss.readInt();
+		flagRow =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void TotalPowerRow::intervalFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		interval =  Interval::fromBin(eiss);
+		
+	
+	
+}
+void TotalPowerRow::stateIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	stateId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void TotalPowerRow::execBlockIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		execBlockId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+
+void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
+		
+	subintegrationNumberExists = eiss.readBoolean();
+	if (subintegrationNumberExists) {
+		
+	
+	
+		
+			
+		subintegrationNumber =  eiss.readInt();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	TotalPowerRow* TotalPowerRow::fromBin(EndianISStream& eiss, TotalPowerTable& table, const vector<string>& attributesSeq) {
+		TotalPowerRow* row = new  TotalPowerRow(table);
 		
+		map<string, TotalPowerAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "TotalPowerTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2169,6 +2224,28 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["time"] = &TotalPowerRow::timeFromBin; 
+	 fromBinMethods["configDescriptionId"] = &TotalPowerRow::configDescriptionIdFromBin; 
+	 fromBinMethods["fieldId"] = &TotalPowerRow::fieldIdFromBin; 
+	 fromBinMethods["scanNumber"] = &TotalPowerRow::scanNumberFromBin; 
+	 fromBinMethods["subscanNumber"] = &TotalPowerRow::subscanNumberFromBin; 
+	 fromBinMethods["integrationNumber"] = &TotalPowerRow::integrationNumberFromBin; 
+	 fromBinMethods["uvw"] = &TotalPowerRow::uvwFromBin; 
+	 fromBinMethods["exposure"] = &TotalPowerRow::exposureFromBin; 
+	 fromBinMethods["timeCentroid"] = &TotalPowerRow::timeCentroidFromBin; 
+	 fromBinMethods["floatData"] = &TotalPowerRow::floatDataFromBin; 
+	 fromBinMethods["flagAnt"] = &TotalPowerRow::flagAntFromBin; 
+	 fromBinMethods["flagPol"] = &TotalPowerRow::flagPolFromBin; 
+	 fromBinMethods["flagRow"] = &TotalPowerRow::flagRowFromBin; 
+	 fromBinMethods["interval"] = &TotalPowerRow::intervalFromBin; 
+	 fromBinMethods["stateId"] = &TotalPowerRow::stateIdFromBin; 
+	 fromBinMethods["execBlockId"] = &TotalPowerRow::execBlockIdFromBin; 
+		
+	
+	 fromBinMethods["subintegrationNumber"] = &TotalPowerRow::subintegrationNumberFromBin; 
 	
 	}
 	
@@ -2264,7 +2341,28 @@ namespace asdm {
 		else
 			subintegrationNumberExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["time"] = &TotalPowerRow::timeFromBin; 
+		 fromBinMethods["configDescriptionId"] = &TotalPowerRow::configDescriptionIdFromBin; 
+		 fromBinMethods["fieldId"] = &TotalPowerRow::fieldIdFromBin; 
+		 fromBinMethods["scanNumber"] = &TotalPowerRow::scanNumberFromBin; 
+		 fromBinMethods["subscanNumber"] = &TotalPowerRow::subscanNumberFromBin; 
+		 fromBinMethods["integrationNumber"] = &TotalPowerRow::integrationNumberFromBin; 
+		 fromBinMethods["uvw"] = &TotalPowerRow::uvwFromBin; 
+		 fromBinMethods["exposure"] = &TotalPowerRow::exposureFromBin; 
+		 fromBinMethods["timeCentroid"] = &TotalPowerRow::timeCentroidFromBin; 
+		 fromBinMethods["floatData"] = &TotalPowerRow::floatDataFromBin; 
+		 fromBinMethods["flagAnt"] = &TotalPowerRow::flagAntFromBin; 
+		 fromBinMethods["flagPol"] = &TotalPowerRow::flagPolFromBin; 
+		 fromBinMethods["flagRow"] = &TotalPowerRow::flagRowFromBin; 
+		 fromBinMethods["interval"] = &TotalPowerRow::intervalFromBin; 
+		 fromBinMethods["stateId"] = &TotalPowerRow::stateIdFromBin; 
+		 fromBinMethods["execBlockId"] = &TotalPowerRow::execBlockIdFromBin; 
+			
+	
+		 fromBinMethods["subintegrationNumber"] = &TotalPowerRow::subintegrationNumberFromBin; 
+			
 	}
 
 	
@@ -2490,6 +2588,33 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, TotalPowerAttributeFromBin> TotalPowerRow::initFromBinMethods() {
+		map<string, TotalPowerAttributeFromBin> result;
+		
+		result["time"] = &TotalPowerRow::timeFromBin;
+		result["configDescriptionId"] = &TotalPowerRow::configDescriptionIdFromBin;
+		result["fieldId"] = &TotalPowerRow::fieldIdFromBin;
+		result["scanNumber"] = &TotalPowerRow::scanNumberFromBin;
+		result["subscanNumber"] = &TotalPowerRow::subscanNumberFromBin;
+		result["integrationNumber"] = &TotalPowerRow::integrationNumberFromBin;
+		result["uvw"] = &TotalPowerRow::uvwFromBin;
+		result["exposure"] = &TotalPowerRow::exposureFromBin;
+		result["timeCentroid"] = &TotalPowerRow::timeCentroidFromBin;
+		result["floatData"] = &TotalPowerRow::floatDataFromBin;
+		result["flagAnt"] = &TotalPowerRow::flagAntFromBin;
+		result["flagPol"] = &TotalPowerRow::flagPolFromBin;
+		result["flagRow"] = &TotalPowerRow::flagRowFromBin;
+		result["interval"] = &TotalPowerRow::intervalFromBin;
+		result["stateId"] = &TotalPowerRow::stateIdFromBin;
+		result["execBlockId"] = &TotalPowerRow::execBlockIdFromBin;
+		
+		
+		result["subintegrationNumber"] = &TotalPowerRow::subintegrationNumberFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

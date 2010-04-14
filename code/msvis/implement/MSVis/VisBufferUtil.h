@@ -69,6 +69,10 @@ public:
 
   //Empty Constructor
   VisBufferUtil();
+
+  // Construct from a VisBuffer (sets a MeasFrame)
+  VisBufferUtil(const VisBuffer& vb);
+
   // Make PSF VisBuffer
   void makePSFVisBuffer(VisBuffer& vb);
   
@@ -76,21 +80,33 @@ public:
   //Regrid the data on a new frequency grid (defined by outFreqGrid) , on the frequency 
   //frame (defined by freqFrame). It will pass back the interpolated data and flags 
  
-  static Bool interpolateFrequency(Cube<Complex>& data, 
-				   Cube<Bool>& flags, 
-				   const VisBuffer& vb,
-				   const Vector<Float>& outFreqGrid, const MS::PredefinedColumns whichCol=MS::DATA,
-				   const MFrequency::Types freqFrame=MFrequency::LSRK,
-				   const InterpolateArray1D< Float, Complex>::InterpolationMethod interp = 
-				   (InterpolateArray1D<Float,Complex>::nearestNeighbour));
+  Bool interpolateFrequency(Cube<Complex>& data, 
+			    Cube<Bool>& flags, 
+			    const VisBuffer& vb,
+			    const Vector<Float>& outFreqGrid, const MS::PredefinedColumns whichCol=MS::DATA,
+			    const MFrequency::Types freqFrame=MFrequency::LSRK,
+			    const InterpolateArray1D< Float, Complex>::InterpolationMethod interp = 
+			    (InterpolateArray1D<Float,Complex>::nearestNeighbour));
 
   // Converts the frequency in this visbuffer to the frame requested
-  static void convertFrequency(Vector<Double>& outFreq, const VisBuffer& vb, 
-			       const MFrequency::Types freqFrame);
+  void convertFrequency(Vector<Double>& outFreq, 
+			const VisBuffer& vb, 
+			const MFrequency::Types freqFrame);
+
+  // Converts the frequency in this VisBuffer to velocity in the frame/def requested
+  void toVelocity(Vector<Double>& outVel, 
+		  const VisBuffer& vb, 
+		  const MFrequency::Types freqFrame,
+		  const MVFrequency restFreq,
+		  const MDoppler::Types veldef);
 
  private:
-  static void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
-  static void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
+  void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
+  void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
+
+  // A MeasFrame for conversions
+  MeasFrame mframe_;
+  
 
 };
 

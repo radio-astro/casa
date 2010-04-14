@@ -118,6 +118,32 @@ public:
     unaryOperate( const casa::CountedPtr<Scantable>& in, float val,
                   const std::string& mode, bool tsys=false );
 
+  // array operation
+  casa::CountedPtr<Scantable>
+    arrayOperate( const casa::CountedPtr<Scantable>& in,
+                  const std::vector<float> val,
+                  const std::string& mode,
+                  const std::string& opmode="channel",  
+                  bool tsys=false );
+
+  // channel operation
+  casa::CountedPtr<Scantable>
+    arrayOperateChannel( const casa::CountedPtr<Scantable>& in, 
+                         const std::vector<float> val,
+                         const std::string& mode, bool tsys=false );
+
+  // row operation
+  casa::CountedPtr<Scantable>
+    arrayOperateRow( const casa::CountedPtr<Scantable>& in, 
+                     const std::vector<float> val,
+                     const std::string& mode, bool tsys=false );
+
+  // 2d array operation
+  casa::CountedPtr<Scantable>
+    array2dOperate( const casa::CountedPtr<Scantable>& in,
+                  const std::vector< std::vector<float> > val,
+                  const std::string& mode, bool tsys=false );
+
   casa::CountedPtr<Scantable>
     binaryOperate( const casa::CountedPtr<Scantable>& left, 
 		   const casa::CountedPtr<Scantable>& right, 
@@ -236,6 +262,13 @@ public:
                                       const casa::CountedPtr<Scantable> &ref,
                                       casa::Double choffset,
                                       casa::Double choffset = 0.0 );
+
+  /**
+   * ALMA calibration
+   **/
+  casa::CountedPtr<Scantable> almacal( const casa::CountedPtr<Scantable>& s, 
+                                       const casa::String calmode ) ;
+  casa::CountedPtr<Scantable> almacalfs( const casa::CountedPtr<Scantable>& s ) ;
 
   casa::CountedPtr<Scantable>
     freqSwitch( const casa::CountedPtr<Scantable>& in );
@@ -361,6 +394,8 @@ private:
   vector<float> getTcalFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
   vector<float> getTsysFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
   vector<int> getRowIdFromTime( string reftime, casa::CountedPtr<Scantable>& s ) ;
+
+  // Chopper-Wheel type calibration
   vector<float> getCalibratedSpectra( casa::CountedPtr<Scantable>& on,
                                       casa::CountedPtr<Scantable>& off,
                                       casa::CountedPtr<Scantable>& sky,
@@ -368,6 +403,10 @@ private:
                                       casa::CountedPtr<Scantable>& cold,
                                       int index,
                                       string antname ) ;
+  // Tsys * (ON-OFF)/OFF
+  vector<float> getCalibratedSpectra( casa::CountedPtr<Scantable>& on,
+                                      casa::CountedPtr<Scantable>& off,
+                                      int index ) ;
   vector<float> getFSCalibratedSpectra( casa::CountedPtr<Scantable>& sig,
                                         casa::CountedPtr<Scantable>& ref,
                                         casa::CountedPtr<Scantable>& sky,

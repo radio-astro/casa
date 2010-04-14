@@ -3,7 +3,7 @@ import string
 from taskinit import *
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
-          timebin, timerange, scan, array, uvrange):
+          timebin, timerange, scan, array, uvrange, ignorables):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -13,8 +13,10 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                   default: none; example: outputvis='ngc5921_src.ms'
     datacolumn -- Which data column to split out
                   default='corrected'; example: datacolumn='data'
-                  Options: 'data', 'corrected', 'model', 'data,corrected',
-                  'data,model','model,corrected','data,model,corrected','all'
+                  Options: 'data', 'corrected', 'model', 'all',
+                  'float_data', 'lag_data', 'float_data,data', and
+                  'lag_data,data'.
+                  note: 'all' = whichever of the above that are present.
     field -- Field name
               default: field = '' means  use all sources
               field = 1 # will get field_id=1 (if you give it an
@@ -43,6 +45,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              default '' (all).
     uvrange -- uv distance range to select.
                default '' (all).
+    ignorables -- Data descriptors that time averaging can ignore:
+                  array, scan, and/or state
+                  Default '' (none)
     """
 
     #Python script
@@ -50,34 +55,12 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     try:
         casalog.origin('split')
 
-        # HACK ALERT!  (RR, 10/26/2009)
-        # readonly should be removed (i.e. always be True) when ROVisIter is
-        # fixed.  In the meantime, this compromise allows differently shaped
-        # spws in the output if the input is writable.
-        readonly = True
-        if hasattr(spw, '__iter__'):
-            for window in spw:
-                if type(window) == str:
-                    # This isn't a perfect test, but I think a perfect test
-                    # would be more trouble than it's worth.  The problem is
-                    # the dual nature of ; in spw:chan selection strings.
-                    if window.find(':') > -1 and (window.find(',') > -1 or
-                                                  window.find(';') > -1):
-                        readonly = False
-                        break
-        elif type(spw) == str:
-            # This isn't a perfect test, but I think a perfect test
-            # would be more trouble than it's worth.  The problem is
-            # the dual nature of ; in spw:chan selection strings.
-            if spw.find(':') > -1 and (spw.find(',') > -1 or
-                                       spw.find(';') > -1):
-                readonly = False                   
-
         if ((type(vis)==str) & (os.path.exists(vis))):
-            ms.open(vis, nomodify=readonly)
+            ms.open(vis, nomodify=True)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         if os.path.exists(outputvis):
+            ms.close()
             raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
 
         # No longer needed.  When did it get put in?  Note that the default
@@ -87,12 +70,17 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         #if(spw == ''):
         #    spw = '*'
         
-        if timebin in ('0s', '0'):
-            timebin = '-1s'
+        if(type(antenna) == list):
+            antenna = ', '.join([str(ant) for ant in antenna])
+
         ## Accept digits without units ...assume seconds
         timebin = qa.convert(qa.quantity(timebin), 's')['value']
         timebin = str(timebin) + 's'
-        if(type(width) == str):
+        
+        if timebin == '0s':
+            timebin = '-1s'
+            
+        if type(width) == str:
             try:
                 if(width.isdigit()):
                     width=[string.atoi(width)]
@@ -109,18 +97,64 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             except:
                 raise TypeError, 'parameter width is invalid..using 1'
 
-        if(type(antenna) == list):
-            antenna = ', '.join([str(ant) for ant in antenna])
+        if hasattr(ignorables, '__iter__'):
+            ignorables = ', '.join(ignorables)
 
-        ms.split(outputms=outputvis, field=field,
-                 spw=spw,            step=width,
-                 baseline=antenna,   subarray=array,
-                 timebin=timebin,    time=timerange,
+        do_chan_avg = spw.find('^') > -1     # '0:2~11^1' would be pointless.
+        if not do_chan_avg:                  # ...look in width.
+            if type(width) == int and width > 1:
+                do_chan_avg = True
+            elif hasattr(width, '__iter__'):
+                for w in width:
+                    if w > 1:
+                        do_chan_avg = True
+                        break
+
+        do_both_chan_and_time_avg = (do_chan_avg and
+                                     string.atof(timebin[:-1]) > 0.0)
+        if do_both_chan_and_time_avg:
+            # Do channel averaging first because it might be included in the spw
+            # string.
+            import tempfile
+            cavms = tempfile.mkdtemp(suffix=outputvis)
+
+            casalog.post('Channel averaging to ' + cavms)
+            ms.split(outputms=cavms,     field=field,
+                     spw=spw,            step=width,
+                     baseline=antenna,   subarray=array,
+                     timebin='',         time=timerange,
+                     whichcol=datacolumn,
+                     scan=scan,          uvrange=uvrange)
+            
+            # The selection was already made, so blank them before time averaging.
+            field = ''
+            spw = ''
+            width = [1]
+            antenna = ''
+            array = ''
+            timerange = ''
+            datacolumn = 'all'
+            scan = ''
+            uvrange = ''
+
+            ms.close()
+            ms.open(cavms)
+            casalog.post('Starting time averaging')
+
+        ms.split(outputms=outputvis,  field=field,
+                 spw=spw,             step=width,
+                 baseline=antenna,    subarray=array,
+                 timebin=timebin,     time=timerange,
                  whichcol=datacolumn,
-                 scan=scan,          uvrange=uvrange)
+                 scan=scan,           uvrange=uvrange,
+                 ignorables=ignorables)
         ms.close()
-        #the history should go to splitted ms, not the source ms
-        # Write history to output MS
+
+        if do_both_chan_and_time_avg:
+            import shutil
+            shutil.rmtree(cavms)
+        
+        # Write history to output MS, not the input ms.
         ms.open(outputvis, nomodify=False)
         ms.writehistory(message='taskname=split', origin='split')
         ms.writehistory(message='vis         = "'+str(vis)+'"',
@@ -138,6 +172,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         ms.writehistory(message='timerange   = "'+str(timerange)+'"',
                         origin='split')
         ms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
+                        origin='split')
+        ms.writehistory(message='ignorables  = "'+str(ignorables)+'"',
                         origin='split')
         ms.close()
 

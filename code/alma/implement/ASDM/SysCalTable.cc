@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -123,22 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	
-	
-		
 	unsigned int SysCalTable::size() {
-		int result = 0;
-		
-		map<string, TIME_ROWS >::iterator mapIter;
-		for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) 
-			result += ((*mapIter).second).size();
-			
-		return result;
-	}	
-		
+		return privateRows.size();
+	}
 	
-	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -171,26 +165,22 @@ namespace asdm {
 		return new SysCalRow (*this);
 	}
 	
-	SysCalRow *SysCalTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaId. 
+ 	 * @param antennaId 
 	
- 	 * @param spectralWindowId. 
+ 	 * @param spectralWindowId 
 	
- 	 * @param timeInterval. 
+ 	 * @param timeInterval 
 	
- 	 * @param feedId. 
+ 	 * @param feedId 
 	
- 	 * @param numReceptor. 
+ 	 * @param numReceptor 
 	
- 	 * @param numChan. 
+ 	 * @param numChan 
 	
      */
 	SysCalRow* SysCalTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan){
@@ -210,32 +200,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	SysCalRow* SysCalTable::newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan)	{
-		SysCalRow *row = new SysCalRow(*this);
-			
-		row->setAntennaId(antennaId);
-			
-		row->setSpectralWindowId(spectralWindowId);
-			
-		row->setTimeInterval(timeInterval);
-			
-		row->setFeedId(feedId);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setNumChan(numChan);
-	
-		return row;				
-	}
 	
 
 
 SysCalRow* SysCalTable::newRow(SysCalRow* row) {
-	return new SysCalRow(*this, *row);
-}
-
-SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 	return new SysCalRow(*this, *row);
 }
 
@@ -480,27 +448,13 @@ SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 	}
 #endif
 
-	char *SysCalTable::toFITS() const  {
-		throw ConversionException("Not implemented","SysCal");
-	}
-
-	void SysCalTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","SysCal");
-	}
-
-	string SysCalTable::toVOTable() const {
-		throw ConversionException("Not implemented","SysCal");
-	}
-
-	void SysCalTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","SysCal");
-	}
-
 	
 	string SysCalTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\"> ");	
+		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -558,6 +512,10 @@ SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 		}
 		if (!xml.isStr("</SysCalTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -566,11 +524,50 @@ SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 	}
 	
 	
-	string SysCalTable::toMIME() {
-		EndianOSStream eoss;
+	string SysCalTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysCalTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<antennaId/>\n"; 
+		oss << "<spectralWindowId/>\n"; 
+		oss << "<timeInterval/>\n"; 
+		oss << "<feedId/>\n"; 
+		oss << "<numReceptor/>\n"; 
+		oss << "<numChan/>\n"; 
+
+		oss << "<tcalFlag/>\n"; 
+		oss << "<tcalSpectrum/>\n"; 
+		oss << "<trxFlag/>\n"; 
+		oss << "<trxSpectrum/>\n"; 
+		oss << "<tskyFlag/>\n"; 
+		oss << "<tskySpectrum/>\n"; 
+		oss << "<tsysFlag/>\n"; 
+		oss << "<tsysSpectrum/>\n"; 
+		oss << "<tantFlag/>\n"; 
+		oss << "<tantSpectrum/>\n"; 
+		oss << "<tantTsysFlag/>\n"; 
+		oss << "<tantTsysSpectrum/>\n"; 
+		oss << "<phaseDiffFlag/>\n"; 
+		oss << "<phaseDiffSpectrum/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</SysCalTable>\n";
+
+		return oss.str();				
+	}
+	
+	string SysCalTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -595,13 +592,7 @@ SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -629,39 +620,163 @@ SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 
 	
 	void SysCalTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "SysCal");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			SysCalRow* aRow = SysCalRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "SysCal");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "SysCal");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "SysCal");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "SysCal");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SysCal");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SysCal");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("antennaId") ; 
+     
+    attributesSeq.push_back("spectralWindowId") ; 
+     
+    attributesSeq.push_back("timeInterval") ; 
+     
+    attributesSeq.push_back("feedId") ; 
+     
+    attributesSeq.push_back("numReceptor") ; 
+     
+    attributesSeq.push_back("numChan") ; 
+    
+     
+    attributesSeq.push_back("tcalFlag") ; 
+     
+    attributesSeq.push_back("tcalSpectrum") ; 
+     
+    attributesSeq.push_back("trxFlag") ; 
+     
+    attributesSeq.push_back("trxSpectrum") ; 
+     
+    attributesSeq.push_back("tskyFlag") ; 
+     
+    attributesSeq.push_back("tskySpectrum") ; 
+     
+    attributesSeq.push_back("tsysFlag") ; 
+     
+    attributesSeq.push_back("tsysSpectrum") ; 
+     
+    attributesSeq.push_back("tantFlag") ; 
+     
+    attributesSeq.push_back("tantSpectrum") ; 
+     
+    attributesSeq.push_back("tantTsysFlag") ; 
+     
+    attributesSeq.push_back("tantTsysSpectrum") ; 
+     
+    attributesSeq.push_back("phaseDiffFlag") ; 
+     
+    attributesSeq.push_back("phaseDiffSpectrum") ; 
+              
+     }
+    else if (string("SysCalTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/SysCalTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "SysCal");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/SysCalTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "SysCal");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/SysCalTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "SysCal");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/SysCalTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "SysCal");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	SysCalRow* aRow = SysCalRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "SysCal");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "SysCal");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -670,7 +785,19 @@ SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/SysCal.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "SysCal");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "SysCal");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/SysCal.bin";
@@ -682,60 +809,75 @@ SysCalRow* SysCalTable::newRowCopy(SysCalRow* row) {
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "SysCal");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/SysCal.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "SysCal");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "SysCal");
-		}
 	}
 
 	
 	void SysCalTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/SysCal.bin";
-		else
-			tablename = directory + "/SysCal.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "SysCal");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"SysCal");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"SysCal");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/SysCal.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/SysCal.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the SysCal table", "SysCal");
 	}			
+
+	
+  void SysCalTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/SysCal.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "SysCal");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"SysCal");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"SysCal");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void SysCalTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/SysCal.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "SysCal");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "SysCal");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "SysCal");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

@@ -8,13 +8,13 @@ from odict import odict
 import asap as sd
 from asap._asap import Scantable
 import pylab as pl
-from sdaverage_cli import sdaverage_cli as sdaverage
-from sdsmooth_cli import sdsmooth_cli as sdsmooth 
-from sdbaseline_cli import sdbaseline_cli as sdbaseline 
+from sdaverage import sdaverage
+from sdsmooth import sdsmooth
+from sdbaseline import sdbaseline
 
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, interactive, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
-def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, verifycal,verifysm,verifybl, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
+def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, verifycal,verifysm,verifybl, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
 
         a=inspect.stack()
         stacklevel=0
@@ -93,11 +93,11 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
             if calmode != 'none':
               tmpoutfile = sdaverageout
               #sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
-              sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verifycal, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verifycal, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
             #print "Skipping calibration..."
               tmpoutfile = sdaverageout
-              sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
                 
             #reset data selection
             tmpsdfile=tmpoutfile
@@ -112,10 +112,10 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
             casalog.post( "" )
             casalog.post( "*** sdsmooth stage ***" )
             if kernel != 'none':
-              sdsmooth.defaults()
+              #sdsmooth.defaults()
               tmpoutfile = sdsmoothout 
               #sdsmooth(sdfile=tmpsdfile, kernel=kernel, kwidth=kwidth, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
-              sdsmooth(sdfile=tmpsdfile, kernel=kernel, kwidth=kwidth, verify=verifysm, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
+              sdsmooth(sdfile=tmpsdfile, antenna=antenna, kernel=kernel, kwidth=kwidth, verify=verifysm, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
               tmpsdfile = tmpoutfile
               #tmpfilelist+=tmpoutfile+' '
               if not os.path.exists(tmpsdfile):
@@ -131,9 +131,9 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
             casalog.post( "*** sdbaseline stage ***")
             if blmode != 'none':
               tmpoutfile = sdbaselineout
-              sdbaseline.defaults()
+              #sdbaseline.defaults()
 #              sdbaseline(sdfile=tmpsdfile, blmode=blmode,blpoly=blpoly,interactive=interactive,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
-              sdbaseline(sdfile=tmpsdfile, blmode=blmode,blpoly=blpoly,verify=verifybl,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              sdbaseline(sdfile=tmpsdfile, antenna=antenna, blmode=blmode,blpoly=blpoly,verify=verifybl,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
               #print "No baseline subtraction was applied..."
               #print ""
@@ -152,7 +152,7 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

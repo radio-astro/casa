@@ -6,7 +6,7 @@ ARCHLIB=`echo $CASAPATH | awk '{printf "%s/%s/lib", $1,$2}'`
 ARCH=`echo $CASAPATH | awk '{print $2}'`
 SITE=`echo $CASAPATH | awk '{print $3}'`
 MAKEDEFS=$AIPSROOT/$ARCH/$SITE/makedefs
-VARS="CPPSTD PYTHONLIBD PYTHONVER CCMTOOLSLIBD CCMTOOLSINCD CORELIB CORELIBD COREINCD WCSLIBLIBD WCSLIBINCD QT4LIBD QT4LIB QT4INCD CFITSIOLIBD CFITSIOINCD ATMINCD XTRNLIBS_rpath"
+VARS="CPPSTD PYTHONLIBD PYTHONVER CCMTOOLSLIBD CCMTOOLSLIB CCMTOOLSINCD CORELIB CORELIBD COREINCD WCSLIBLIBD WCSLIBINCD QT4LIBD QT4LIB QT4INCD CFITSIOLIBD CFITSIOINCD ATMINCD XTRNLIBS_rpath"
 eval `gmake -f $AIPSROOT/$ARCH/makedefs VARS="$VARS" eval_vars`
 DEFINES2=`for i in $CPPSTD; do echo $i | grep "\-D"; done`
 DEFINES2="$DEFINES2 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE_64_SOURCE"
@@ -34,9 +34,9 @@ fi
   then
      if [ "$SETUPEXTRALINK" = "" ]; then
         if [ "$XTRNLIBS_rpath" = "" ]; then
-            SETUPEXTRALINK="'-Xlinker', '-rpath', '-Xlinker', '$PYTHONLIBD:$WCSLIBLIBD', '$CCMTOOLSLIBD/libCCM_Local_HomeFinder.a', '$CCMTOOLSLIBD/libWX_Utils_types.a'"
+            SETUPEXTRALINK="'-Xlinker', '-rpath', '-Xlinker', '$PYTHONLIBD:$WCSLIBLIBD'"
         else
-            SETUPEXTRALINK="'$XTRNLIBS_rpath', '$CCMTOOLSLIBD/libCCM_Local_HomeFinder.a', '$CCMTOOLSLIBD/libWX_Utils_types.a'"
+            SETUPEXTRALINK="'$XTRNLIBS_rpath'"
         fi
      fi
   fi
@@ -89,7 +89,12 @@ fi
 if [ "$SETUPPYTHONLIB" != "" ]; then
 echo "$SETUPPYTHONLIB," >> $SETUPDOTPY
 fi
-echo "                           'CCM_Python', 'CCM_Local_HomeFinder', 'WX_Utils_error', 'WX_Utils_code', 'WX_Utils_types', 'c', 'm' ]," >> $SETUPDOTPY
+ccmtools=''
+for i in `echo $CCMTOOLSLIB | sed 's/-l//g'`; do
+    ccmtools="$ccmtools '$i',";
+done
+echo "                          $ccmtools" >> $SETUPDOTPY
+echo "                           'c', 'm' ]," >> $SETUPDOTPY
 echo "               extra_compile_args = [" >> $SETUPDOTPY
 for i in $DEFINES2
 do

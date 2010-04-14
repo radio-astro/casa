@@ -161,6 +161,18 @@ class selector(_selector):
         else:
             raise TypeError('Unknown row number type. Use lists of integers.')
 
+    def set_types(self, types=[]):
+        """
+        Set a sequence of source types. 
+        Parameters:
+            types:    a list of integers. Default [] is to unset the selection.
+        """
+        vec = _to_list(types, int) 
+        if isinstance(vec,list):
+            self._settypes(vec)
+        else:
+            raise TypeError('Unknown row number type. Use lists of integers.')
+
     def get_scans(self):
         return list(self._getscans())
     def get_cycles(self):
@@ -175,6 +187,8 @@ class selector(_selector):
         return list(self._getpoltypes())
     def get_order(self):
         return list(self._getorder())
+    def get_types(self):
+        return list(self._gettypes())
     def get_query(self):
 	prefix = "SELECT FROM $1 WHERE "
         return self._gettaql().replace(prefix, "")

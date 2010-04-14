@@ -385,8 +385,8 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 	mainTD.defineHypercolumn("HYPERDATA", 3, dmCols,
 				 stringToVector(",,"));
 	// not sure what the best default tile shape might be
-	IPosition defaultTileShape(3,4,1023,8);
-	TiledShapeStMan stman("HYPERDATA", IPosition(3, 4, 1023, 8));
+	IPosition defaultTileShape(3,4,128,8);
+	TiledShapeStMan stman("HYPERDATA", IPosition(3, 4, 128, 8));
 
 	// second hypercolumn for the lags, if necessary
 	if (!fillOptions.fillLags()) {
@@ -400,7 +400,7 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 	    dm2Cols(0) = MS::columnName(MS::LAG_DATA);
 	    mainTD.defineHypercolumn("LAGSHYPERDATA", 3, dm2Cols,
 				     stringToVector(",,"));
- 	    TiledShapeStMan lagssm("LAGSHYPERDATA", IPosition(3,4,1024,8));
+ 	    TiledShapeStMan lagssm("LAGSHYPERDATA", IPosition(3,4,128,8));
    	    AlwaysAssert(GBTBackendFiller::createMS(msName_p, mainTD,
    						    stman, dmCols, defaultTileShape, 
 						    fillOptions, lagssm, dm2Cols, 

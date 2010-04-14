@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -117,12 +122,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int EphemerisTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -155,17 +159,9 @@ namespace asdm {
 		return new EphemerisRow (*this);
 	}
 	
-	EphemerisRow *EphemerisTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 
 EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
-	return new EphemerisRow(*this, *row);
-}
-
-EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 	return new EphemerisRow(*this, *row);
 }
 
@@ -316,27 +312,13 @@ EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 	}
 #endif
 
-	char *EphemerisTable::toFITS() const  {
-		throw ConversionException("Not implemented","Ephemeris");
-	}
-
-	void EphemerisTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","Ephemeris");
-	}
-
-	string EphemerisTable::toVOTable() const {
-		throw ConversionException("Not implemented","Ephemeris");
-	}
-
-	void EphemerisTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","Ephemeris");
-	}
-
 	
 	string EphemerisTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/2/EphemerisTable.xsd\"> ");	
+		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/2/EphemerisTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -394,6 +376,10 @@ EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 		}
 		if (!xml.isStr("</EphemerisTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -402,11 +388,31 @@ EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 	}
 	
 	
-	string EphemerisTable::toMIME() {
-		EndianOSStream eoss;
+	string EphemerisTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/2/EphemerisTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='EphemerisTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<ephemerisId/>\n"; 
+
+		oss << "</Attributes>\n";		
+		oss << "</EphemerisTable>\n";
+
+		return oss.str();				
+	}
+	
+	string EphemerisTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -431,13 +437,7 @@ EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -465,39 +465,125 @@ EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 
 	
 	void EphemerisTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "Ephemeris");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			EphemerisRow* aRow = EphemerisRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "Ephemeris");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "Ephemeris");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "Ephemeris");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "Ephemeris");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Ephemeris");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Ephemeris");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("ephemerisId") ; 
+    
+              
+     }
+    else if (string("EphemerisTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/EphemerisTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "Ephemeris");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/EphemerisTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "Ephemeris");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/EphemerisTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "Ephemeris");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/EphemerisTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "Ephemeris");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	EphemerisRow* aRow = EphemerisRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "Ephemeris");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "Ephemeris");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -506,7 +592,19 @@ EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/Ephemeris.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "Ephemeris");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "Ephemeris");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/Ephemeris.bin";
@@ -518,60 +616,75 @@ EphemerisRow* EphemerisTable::newRowCopy(EphemerisRow* row) {
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "Ephemeris");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/Ephemeris.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "Ephemeris");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "Ephemeris");
-		}
 	}
 
 	
 	void EphemerisTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/Ephemeris.bin";
-		else
-			tablename = directory + "/Ephemeris.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "Ephemeris");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"Ephemeris");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"Ephemeris");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Ephemeris.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Ephemeris.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the Ephemeris table", "Ephemeris");
 	}			
+
+	
+  void EphemerisTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/Ephemeris.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "Ephemeris");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"Ephemeris");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"Ephemeris");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void EphemerisTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/Ephemeris.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "Ephemeris");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "Ephemeris");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "Ephemeris");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

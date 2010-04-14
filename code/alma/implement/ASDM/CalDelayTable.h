@@ -42,34 +42,19 @@ using std::string;
 using std::vector;
 using std::map;
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <PartId.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <DuplicateKey.h>
-#include <UniquenessViolationException.h>
-#include <NoSuchRow.h>
-#include <DuplicateKey.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
-*/
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Angle.h>
+using  asdm::Angle;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <Frequency.h>
+using  asdm::Frequency;
 
 
 
@@ -126,33 +111,21 @@ using namespace ReceiverSidebandMod;
 	
 
 
-#ifndef WITHOUT_ACS
-#include <asdmIDLC.h>
-using asdmIDL::CalDelayTableIDL;
-#endif
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::PartId;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-
+#include <ConversionException.h>
+#include <DuplicateKey.h>
+#include <UniquenessViolationException.h>
+#include <NoSuchRow.h>
+#include <DuplicateKey.h>
 using asdm::DuplicateKey;
 using asdm::ConversionException;
 using asdm::NoSuchRow;
 using asdm::DuplicateKey;
+
+#ifndef WITHOUT_ACS
+#include <asdmIDLC.h>
+using asdmIDL::CalDelayTableIDL;
+#endif
 
 #include <Representable.h>
 
@@ -171,7 +144,7 @@ class CalDelayRow;
  * Result of delay offset calibration performed on-line by  TelCal. This calibration determines the delay offsets to be added in the  correlator to compensate for residual cable delays.   Delays are entered in seconds but represented as double precision floating point numbers.
  * <BR>
  
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDelay </CAPTION>
@@ -343,7 +316,7 @@ class CalDelayRow;
  * </TABLE>
  */
 class CalDelayTable : public Representable {
-	friend class asdm::ASDM;
+	friend class ASDM;
 
 public:
 
@@ -389,7 +362,36 @@ public:
 	 * @param e An entity. 
 	 */
 	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for CalDelay (CalDelayTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
 
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a CalDelayTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a CalDelayTableIDL
+	 */
+	CalDelayTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a CalDelayTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(CalDelayTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -400,53 +402,42 @@ public:
 	 */
 	CalDelayRow *newRow();
 	
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	CalDelayRow* newRowEmpty();
-
 	
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaName. 
+ 	 * @param antennaName
 	
- 	 * @param atmPhaseCorrection. 
+ 	 * @param atmPhaseCorrection
 	
- 	 * @param basebandName. 
+ 	 * @param basebandName
 	
- 	 * @param receiverBand. 
+ 	 * @param receiverBand
 	
- 	 * @param calDataId. 
+ 	 * @param calDataId
 	
- 	 * @param calReductionId. 
+ 	 * @param calReductionId
 	
- 	 * @param startValidTime. 
+ 	 * @param startValidTime
 	
- 	 * @param endValidTime. 
+ 	 * @param endValidTime
 	
- 	 * @param refAntennaName. 
+ 	 * @param refAntennaName
 	
- 	 * @param numReceptor. 
+ 	 * @param numReceptor
 	
- 	 * @param delayError. 
+ 	 * @param delayError
 	
- 	 * @param delayOffset. 
+ 	 * @param delayOffset
 	
- 	 * @param polarizationTypes. 
+ 	 * @param polarizationTypes
 	
- 	 * @param reducedChiSquared. 
+ 	 * @param reducedChiSquared
 	
      */
 	CalDelayRow *newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared);
 	
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	CalDelayRow *newRowFull(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared);
 
 
 	/**
@@ -462,12 +453,6 @@ public:
 	 * @param row the row which is to be copied.
 	 */
 	 CalDelayRow *newRow(CalDelayRow *row); 
-
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	 CalDelayRow *newRowCopy(CalDelayRow *row); 
 
 	//
 	// ====> Append a row to its table.
@@ -512,17 +497,17 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param antennaName. 
+	 * @param antennaName
 	
-	 * @param atmPhaseCorrection. 
+	 * @param atmPhaseCorrection
 	
-	 * @param basebandName. 
+	 * @param basebandName
 	
-	 * @param receiverBand. 
+	 * @param receiverBand
 	
-	 * @param calDataId. 
+	 * @param calDataId
 	
-	 * @param calReductionId. 
+	 * @param calReductionId
 	
  	 *
 	 */
@@ -538,134 +523,37 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param antennaName.
+ 	 * @param antennaName
  	 		
- 	 * @param atmPhaseCorrection.
+ 	 * @param atmPhaseCorrection
  	 		
- 	 * @param basebandName.
+ 	 * @param basebandName
  	 		
- 	 * @param receiverBand.
+ 	 * @param receiverBand
  	 		
- 	 * @param calDataId.
+ 	 * @param calDataId
  	 		
- 	 * @param calReductionId.
+ 	 * @param calReductionId
  	 		
- 	 * @param startValidTime.
+ 	 * @param startValidTime
  	 		
- 	 * @param endValidTime.
+ 	 * @param endValidTime
  	 		
- 	 * @param refAntennaName.
+ 	 * @param refAntennaName
  	 		
- 	 * @param numReceptor.
+ 	 * @param numReceptor
  	 		
- 	 * @param delayError.
+ 	 * @param delayError
  	 		
- 	 * @param delayOffset.
+ 	 * @param delayOffset
  	 		
- 	 * @param polarizationTypes.
+ 	 * @param polarizationTypes
  	 		
- 	 * @param reducedChiSquared.
+ 	 * @param reducedChiSquared
  	 		 
  	 */
 	CalDelayRow* lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared); 
 
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a CalDelayTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a CalDelayTableIDL
-	 */
-	CalDelayTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a CalDelayTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(CalDelayTableIDL x) ;
-#endif
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	char *toFITS() const ;
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	void fromFITS(char *fits) ;
-
-	/**
-	 * To be implemented
-	 * @throw ConversionException
-	 */
-	string toVOTable() const ;
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	void fromVOTable(string vo) ;
-
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for CalDelay (CalDelayTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
-	
-	/**
-	 * Populate this table from the content of a XML document that is required to
-	 * be conform to the XML schema defined for a CalDelay (CalDelayTable.xsd).
-	 * @throws ConversionException
-	 * 
-	 */
-	void fromXML(string xmlDoc) ;
-	
-   /**
-	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
-	 * @returns a string containing the MIME message.
-	 * 
-	 */
-	string toMIME();
-	
-   /** 
-     * Extracts the binary part of a MIME message and deserialize its content
-	 * to fill this with the result of the deserialization. 
-	 * @param mimeMsg the string containing the MIME message.
-	 * @throws ConversionException
-	 */
-	 void setFromMIME(const string & mimeMsg);
-	
-	/**
-	  * Stores a representation (binary or XML) of this table into a file.
-	  *
-	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
-	  * will be saved in a file "CalDelay.bin" or an XML representation (fileAsBin==false) will be saved in a file "CalDelay.xml".
-	  * The file is always written in a directory whose name is passed as a parameter.
-	 * @param directory The name of directory  where the file containing the table's representation will be saved.
-	  * 
-	  */
-	  void toFile(string directory);
-	  
-	/**
-	 * Reads and parses a file containing a representation of a CalDelayTable as those produced  by the toFile method.
-	 * This table is populated with the result of the parsing.
-	 * @param directory The name of the directory containing the file te be read and parsed.
-	 * @throws ConversionException If any error occurs while reading the 
-	 * files in the directory or parsing them.
-	 *
-	 */
-	 void setFromFile(const string& directory);	
 
 private:
 
@@ -713,16 +601,76 @@ private:
 
 // A data structure to store the pointers on the table's rows.
 
-// In all cases we maintain a private ArrayList of CalDelayRow s.
+// In all cases we maintain a private vector of CalDelayRow s.
    vector<CalDelayRow * > privateRows;
    
 
 			
 	vector<CalDelayRow *> row;
 
-
+	
 	void error() ; //throw(ConversionException);
 
+	
+	/**
+	 * Populate this table from the content of a XML document that is required to
+	 * be conform to the XML schema defined for a CalDelay (CalDelayTable.xsd).
+	 * @throws ConversionException
+	 * 
+	 */
+	void fromXML(string xmlDoc) ;
+		
+	/**
+	  * Private methods involved during the build of this table out of the content
+	  * of file(s) containing an external representation of a CalDelay table.
+	  */
+	void setFromMIMEFile(const string& directory);
+	void setFromXMLFile(const string& directory);
+	
+		 /**
+	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
+	 * @returns a string containing the MIME message.
+	 *
+	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
+	 * 
+	 */
+	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+  
+	
+   /** 
+     * Extracts the binary part of a MIME message and deserialize its content
+	 * to fill this with the result of the deserialization. 
+	 * @param mimeMsg the string containing the MIME message.
+	 * @throws ConversionException
+	 */
+	 void setFromMIME(const string & mimeMsg);
+	
+	/**
+	  * Private methods involved during the export of this table into disk file(s).
+	  */
+	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	
+	/**
+	  * Stores a representation (binary or XML) of this table into a file.
+	  *
+	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
+	  * will be saved in a file "CalDelay.bin" or an XML representation (fileAsBin==false) will be saved in a file "CalDelay.xml".
+	  * The file is always written in a directory whose name is passed as a parameter.
+	 * @param directory The name of directory  where the file containing the table's representation will be saved.
+	  * 
+	  */
+	  void toFile(string directory);
+	  
+	/**
+	 * Reads and parses a file containing a representation of a CalDelayTable as those produced  by the toFile method.
+	 * This table is populated with the result of the parsing.
+	 * @param directory The name of the directory containing the file te be read and parsed.
+	 * @throws ConversionException If any error occurs while reading the 
+	 * files in the directory or parsing them.
+	 *
+	 */
+	 void setFromFile(const string& directory);	
+ 
 };
 
 } // End namespace asdm

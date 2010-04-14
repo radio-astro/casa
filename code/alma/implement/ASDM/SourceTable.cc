@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -121,24 +126,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	
-	
-	unsigned SourceTable::size() {
-/*
-		int result = 0	;
-		map<string, ID_TIME_ROWS >::iterator mapIter = context.begin();
-		ID_TIME_ROWS::iterator planeIter;
-		vector<SourceRow*>::iterator rowIter; 
-		for (mapIter=context.begin(); mapIter!=context.end(); mapIter++)
-			for (planeIter=((*mapIter).second).begin(); planeIter != ((*mapIter).second).end(); planeIter++)
-				result += (*planeIter).size();
-		return result;
-*/
-	   return privateRows.size();
+	unsigned int SourceTable::size() {
+		return privateRows.size();
 	}
 	
-	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -171,26 +163,22 @@ namespace asdm {
 		return new SourceRow (*this);
 	}
 	
-	SourceRow *SourceTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param timeInterval. 
+ 	 * @param timeInterval 
 	
- 	 * @param spectralWindowId. 
+ 	 * @param spectralWindowId 
 	
- 	 * @param code. 
+ 	 * @param code 
 	
- 	 * @param direction. 
+ 	 * @param direction 
 	
- 	 * @param properMotion. 
+ 	 * @param properMotion 
 	
- 	 * @param sourceName. 
+ 	 * @param sourceName 
 	
      */
 	SourceRow* SourceTable::newRow(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName){
@@ -210,32 +198,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	SourceRow* SourceTable::newRowFull(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName)	{
-		SourceRow *row = new SourceRow(*this);
-			
-		row->setTimeInterval(timeInterval);
-			
-		row->setSpectralWindowId(spectralWindowId);
-			
-		row->setCode(code);
-			
-		row->setDirection(direction);
-			
-		row->setProperMotion(properMotion);
-			
-		row->setSourceName(sourceName);
-	
-		return row;				
-	}
 	
 
 
 SourceRow* SourceTable::newRow(SourceRow* row) {
-	return new SourceRow(*this, *row);
-}
-
-SourceRow* SourceTable::newRowCopy(SourceRow* row) {
 	return new SourceRow(*this, *row);
 }
 
@@ -576,27 +542,13 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 	}
 #endif
 
-	char *SourceTable::toFITS() const  {
-		throw ConversionException("Not implemented","Source");
-	}
-
-	void SourceTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","Source");
-	}
-
-	string SourceTable::toVOTable() const {
-		throw ConversionException("Not implemented","Source");
-	}
-
-	void SourceTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","Source");
-	}
-
 	
 	string SourceTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\"> ");	
+		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -654,6 +606,10 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		}
 		if (!xml.isStr("</SourceTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -662,11 +618,61 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 	}
 	
 	
-	string SourceTable::toMIME() {
-		EndianOSStream eoss;
+	string SourceTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SourceTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<sourceId/>\n"; 
+		oss << "<timeInterval/>\n"; 
+		oss << "<spectralWindowId/>\n"; 
+		oss << "<code/>\n"; 
+		oss << "<direction/>\n"; 
+		oss << "<properMotion/>\n"; 
+		oss << "<sourceName/>\n"; 
+
+		oss << "<directionCode/>\n"; 
+		oss << "<directionEquinox/>\n"; 
+		oss << "<calibrationGroup/>\n"; 
+		oss << "<catalog/>\n"; 
+		oss << "<deltaVel/>\n"; 
+		oss << "<position/>\n"; 
+		oss << "<numLines/>\n"; 
+		oss << "<transition/>\n"; 
+		oss << "<restFrequency/>\n"; 
+		oss << "<sysVel/>\n"; 
+		oss << "<rangeVel/>\n"; 
+		oss << "<sourceModel/>\n"; 
+		oss << "<frequencyRefCode/>\n"; 
+		oss << "<numFreq/>\n"; 
+		oss << "<numStokes/>\n"; 
+		oss << "<frequency/>\n"; 
+		oss << "<frequencyInterval/>\n"; 
+		oss << "<stokesParameter/>\n"; 
+		oss << "<flux/>\n"; 
+		oss << "<fluxErr/>\n"; 
+		oss << "<positionAngle/>\n"; 
+		oss << "<positionAngleErr/>\n"; 
+		oss << "<size/>\n"; 
+		oss << "<sizeErr/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</SourceTable>\n";
+
+		return oss.str();				
+	}
+	
+	string SourceTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -691,13 +697,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -725,39 +725,185 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 
 	
 	void SourceTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "Source");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			SourceRow* aRow = SourceRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "Source");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "Source");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "Source");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "Source");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Source");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Source");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("sourceId") ; 
+     
+    attributesSeq.push_back("timeInterval") ; 
+     
+    attributesSeq.push_back("spectralWindowId") ; 
+     
+    attributesSeq.push_back("code") ; 
+     
+    attributesSeq.push_back("direction") ; 
+     
+    attributesSeq.push_back("properMotion") ; 
+     
+    attributesSeq.push_back("sourceName") ; 
+    
+     
+    attributesSeq.push_back("directionCode") ; 
+     
+    attributesSeq.push_back("directionEquinox") ; 
+     
+    attributesSeq.push_back("calibrationGroup") ; 
+     
+    attributesSeq.push_back("catalog") ; 
+     
+    attributesSeq.push_back("deltaVel") ; 
+     
+    attributesSeq.push_back("position") ; 
+     
+    attributesSeq.push_back("numLines") ; 
+     
+    attributesSeq.push_back("transition") ; 
+     
+    attributesSeq.push_back("restFrequency") ; 
+     
+    attributesSeq.push_back("sysVel") ; 
+     
+    attributesSeq.push_back("rangeVel") ; 
+     
+    attributesSeq.push_back("sourceModel") ; 
+     
+    attributesSeq.push_back("frequencyRefCode") ; 
+     
+    attributesSeq.push_back("numFreq") ; 
+     
+    attributesSeq.push_back("numStokes") ; 
+     
+    attributesSeq.push_back("frequency") ; 
+     
+    attributesSeq.push_back("frequencyInterval") ; 
+     
+    attributesSeq.push_back("stokesParameter") ; 
+     
+    attributesSeq.push_back("flux") ; 
+     
+    attributesSeq.push_back("fluxErr") ; 
+     
+    attributesSeq.push_back("positionAngle") ; 
+     
+    attributesSeq.push_back("positionAngleErr") ; 
+     
+    attributesSeq.push_back("size") ; 
+     
+    attributesSeq.push_back("sizeErr") ; 
+              
+     }
+    else if (string("SourceTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/SourceTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "Source");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/SourceTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "Source");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/SourceTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "Source");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/SourceTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "Source");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	SourceRow* aRow = SourceRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "Source");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "Source");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -766,7 +912,19 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/Source.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "Source");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "Source");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/Source.bin";
@@ -778,60 +936,75 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "Source");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/Source.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "Source");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "Source");
-		}
 	}
 
 	
 	void SourceTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/Source.bin";
-		else
-			tablename = directory + "/Source.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "Source");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"Source");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"Source");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Source.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Source.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the Source table", "Source");
 	}			
+
+	
+  void SourceTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/Source.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "Source");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"Source");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"Source");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void SourceTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/Source.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "Source");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "Source");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "Source");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

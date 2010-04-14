@@ -65,7 +65,7 @@ rec1 = im1.torecord()
 print '*************'
 print rec1['shape']
 print '*************'
-rec1['shape'] = numpy.array([3*rec1['shape'][0], 2*rec1['shape'][1]])
+rec1['shape'] = numpy.array([3*rec1['shape'][0], 2*rec1['shape'][1]], numpy.int32)
 rec1['coordsys']['coordsys']['direction0']['cdelt'] = [
     rec1['coordsys']['coordsys']['direction0']['cdelt'][0]/3.0,
     rec1['coordsys']['coordsys']['direction0']['cdelt'][1]/2.0]

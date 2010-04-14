@@ -147,7 +147,8 @@ imager::boxmask(const std::string& mask, const std::vector<int>& blc, const std:
     return rstat;
 }
 
-bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
+bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode, 
+                     const bool reuse)
 {
   Bool rstat(false);
   try {
@@ -167,7 +168,7 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
     *itsLog << LogIO::NORMAL2 << "FixVis created" << LogIO::POST;
     //visfixer.setField(m1toBlankCStr_(fields));
     visfixer.setFields(fields);
-    rstat = visfixer.calc_uvw(String(refcode));
+    rstat = visfixer.calc_uvw(String(refcode), reuse);
     *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;
   }
   catch (AipsError x) {
@@ -863,23 +864,24 @@ imager::plotvis(const std::string& type, const int increment)
    return rstat;
 }
 
-bool
-imager::plotweights(const bool gridded, const int increment)
-{
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-        rstat = itsImager->plotweights(gridded, increment);
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	 RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
-}
+// bool
+// imager::plotweights(const bool gridded, const int increment)
+// {
+//    Bool rstat(False);
+//    if(hasValidMS_p){
+//       try {
+//         // Has a tendency to dump core.  Add to plotms, replace with
+//         // something else, or fix.
+//         rstat = itsImager->plotweights(gridded, increment);
+//       } catch  (AipsError x) {
+//          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+// 	 RETHROW(x);
+//       }
+//    } else {
+//       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+//    }
+//    return rstat;
+// }
 
 bool
 imager::regionmask(const std::string& mask, const ::casac::record& region, 
@@ -1530,7 +1532,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit)
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol )
 {
 
    Bool rstat(False);
@@ -1548,7 +1550,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 					applypointingoffsets, 
 					dopbgriddingcorrections, 
 					String(cfcachedirname), Float(pastep), 
-					Float(pblimit), String(freqinterp));
+					Float(pblimit), String(freqinterp), imagetilevol);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);

@@ -5,7 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-def sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdaverage')
 
@@ -36,7 +36,7 @@ def sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode
                     raise Exception, s
 
 
-            s=sd.scantable(sdfile,scanaverage)
+            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
 
             if not isinstance(s,Scantable):
                     raise Exception, 'Scantable data %s, is not found'
@@ -143,7 +143,7 @@ def sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode
                 s.set_selection(sel)
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
             del sel
 
@@ -355,6 +355,6 @@ def sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority='ERROR' )
+                casalog.post( str(instance), priority='ERROR' )
                 return
 

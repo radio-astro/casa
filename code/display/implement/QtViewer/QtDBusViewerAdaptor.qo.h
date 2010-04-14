@@ -45,9 +45,10 @@ namespace casa {
 	Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.viewer")
 
     public:    
-	// Connects to the DBus server using the dbusName() method with the current
-	// process ID.  Returns whether the connection succeeded or not.
-	bool connectToDBus();
+	// Connects to the DBus server using the name provided (if non-null). Otherwise, the
+	// dbusName() method with the current process ID is used.  Returns a boolean which
+	// indicates whether the connection succeeded or not.
+	bool connectToDBus( const QString &dbus_name="" );
 
 	static const QString &name( );
 	const QString &getName( ) const { return name( ); }
@@ -64,12 +65,17 @@ namespace casa {
 	QDBusVariant load( const QString &path, const QString &displaytype = "raster", int panel=0 );
 	QDBusVariant reload( int panel_or_data );
 	QDBusVariant unload( int data );
-	QDBusVariant restore( const QString &path, bool new_window = true );
+	QDBusVariant restore( const QString &path, int panel=0 );
 	QString cwd( const QString &new_path = "" );
 	QDBusVariant panel( const QString &type="viewer", bool hidden=false  );
-	QDBusVariant hide( int panel );
-	QDBusVariant show( int panel );
-	QDBusVariant close( int panel );
+	QDBusVariant hide( int panel=0 );
+	QDBusVariant show( int panel=0 );
+	QDBusVariant close( int panel=0 );
+	QDBusVariant popup( const QString &what, int panel=0 );
+
+	QDBusVariant frame( int num=-1, int panel=0 );
+	QDBusVariant zoom( int level, int panel=0 );
+
 	// like "close()", but leaves the closing up to the user if the window is not hidden
 	QDBusVariant release( int panel );
 	//To change certain things so the panel 
@@ -95,14 +101,16 @@ namespace casa {
 	void interact( QDBusVariant );
 
     protected slots:
+
 	void handle_interact( QVariant );
+	void handle_destroyed_panel(QObject*);
 
     private:
 
 	class data_desc {
 	public:
 	    data_desc( int idx, const QString &pathx, const QString &typex,
-		       QtDisplayData *ddx, QtDisplayPanel *dpx ) :
+		       QtDisplayData *ddx, QtDisplayPanelGui *dpx ) :
 				id_(idx), path_(pathx), type_(typex), dd_(ddx), dp_(dpx) { }
 
 	    data_desc( int idx ) : id_(idx), dd_(0) { }
@@ -116,15 +124,15 @@ namespace casa {
 	    const QString &type( ) const { return type_; }
 	    QtDisplayData *&data( ) { return dd_; }
 	    const QtDisplayData *data( ) const { return dd_; }
-	    QtDisplayPanel *&panel( ) { return dp_; }
-	    const QtDisplayPanel *panel( ) const { return dp_; }
+	    QtDisplayPanelGui *&panel( ) { return dp_; }
+	    const QtDisplayPanelGui *panel( ) const { return dp_; }
 
 	private:
 	    int id_;
 	    QString path_;
 	    QString type_;
 	    QtDisplayData *dd_;
-	    QtDisplayPanel *dp_;
+	    QtDisplayPanelGui *dp_;
 
 	    // QtDisplayData does not have a copy constructor...
 	    // wonder if we'll need to copy our descriptor...
@@ -136,16 +144,16 @@ namespace casa {
 	class panel_desc {
 	public:
 
-	    panel_desc(QtDisplayPanel*p) : panel_(p) { }
+	    panel_desc(QtDisplayPanelGui*p) : panel_(p) { }
 
 	    std::list<int> &data( ) { return data_; }
 	    const std::list<int> &data( ) const { return data_; }
-	    QtDisplayPanel *&panel( ) { return panel_; }
-	    const QtDisplayPanel *panel( ) const { return panel_; }
+	    QtDisplayPanelGui *&panel( ) { return panel_; }
+	    const QtDisplayPanelGui *panel( ) const { return panel_; }
 
 	private:
 	    std::list<int> data_;
-	    QtDisplayPanel *panel_;
+	    QtDisplayPanelGui *panel_;
 	};
 
 
@@ -157,20 +165,19 @@ namespace casa {
 	void  adjusteps( const char *from, const char *to, const QSize &wcmax, const QRect &viewport );
 
 	typedef std::map<int,panel_desc*> panelmap;
-	typedef std::map<int, QtDisplayPanelGui*> mainwinmap;
 	typedef std::map<int,data_desc*> datamap;
 	datamap managed_datas;
 	panelmap managed_panels;
-	mainwinmap managed_windows;
 
-	int get_id( QtDisplayPanel *, QtDisplayData *, const QString &path, const QString &type );
-	int get_id( QtDisplayPanel* );
-	QtDisplayPanel *findpanel( int );
+	int get_id( QtDisplayPanelGui *, QtDisplayData *, const QString &path, const QString &type );
+	int get_id( QtDisplayPanelGui * );
+	QtDisplayPanelGui *findpanel( int key, bool create=true );
 
     protected:
-	void load_data( QtDisplayPanel *panel, int index );
-	void unload_data( QtDisplayPanel *panel, int index, bool erase=true );
-	void erase_panel( QtDisplayPanel *panel );
+	QtDisplayPanelGui *create_panel( );
+	void load_data( QtDisplayPanelGui *panel, int index );
+	void unload_data( QtDisplayPanelGui *panel, int index, bool erase=true );
+	QtDisplayPanelGui *erase_panel( int panel );
 	void erase_data( int );
 
     };

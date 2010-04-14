@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.cpp 1603 2009-07-17 20:35:47Z TakTsutsumi $
+//# $Id: python_asap.cpp 1693 2010-02-10 08:39:06Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <string>
 #include <vector>
@@ -74,6 +74,7 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_STWriter();
   asap::python::python_LineCatalog();
   asap::python::python_Logger();
+  asap::python::python_SrcType();
 
 #ifndef HAVE_LIBPYRAP
   // Use built-in pyconversions.h

@@ -38,6 +38,7 @@
 #include <casa/Containers/Block.h>
 #include <msvis/MSVis/VisIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferUtil.h>
 
 namespace casa {
 
@@ -93,6 +94,7 @@ public:
 	    const String& msname,
             const PlotMSSelection& selection,
             const PlotMSAveraging& averaging,
+            const PlotMSTransformations& transformations,
             PlotMSCacheThread* thread = NULL);
 
   // Convenience method for loading x and y axes.
@@ -101,6 +103,7 @@ public:
             const String& msname,
             const PlotMSSelection& selection,
             const PlotMSAveraging& averaging,
+            const PlotMSTransformations& transformations,
             PlotMSCacheThread* thread = NULL) {
 
     cout << "AHHHHHHHHHHHH*********************" << endl;
@@ -109,7 +112,7 @@ public:
       axes[0] = xAxis; axes[1] = yAxis;
       vector<PMS::DataColumn> data(2);
       data[0] = xData; data[1] = yData;
-      load(axes, data, msname, selection, averaging, thread);
+      load(axes, data, msname, selection, averaging,transformations, thread);
   }
   
   // Releases the given axes from the cache.
@@ -149,6 +152,7 @@ public:
   inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk); };
 
   inline Double getFreq(Int chnk,Int irel) { return *(freq_[chnk]->data()+irel); };
+  inline Double getVel(Int chnk,Int irel)  { return *(vel_[chnk]->data()+irel); };
   inline Double getChan(Int chnk,Int irel) { return *(chan_[chnk]->data()+irel); };
   inline Double getCorr(Int chnk,Int irel) { return *(corr_[chnk]->data()+irel); };
   inline Double getAnt1(Int chnk,Int irel) { return *(antenna1_[chnk]->data()+irel); };
@@ -169,13 +173,17 @@ public:
   inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
+  // These are array-global (one value per chunk)
+  inline Double getAz0(Int chnk,Int irel) { return az0_(chnk); };
+  inline Double getEl0(Int chnk,Int irel) { return el0_(chnk); };
+  inline Double getHA0(Int chnk,Int irel) { return ha0_(chnk); };
+  inline Double getPA0(Int chnk,Int irel) { return pa0_(chnk); };
+
   // These are antenna-based
   inline Double getAntenna(Int chnk,Int irel) { return *(antenna_[chnk]->data()+irel); };
   inline Double getAz(Int chnk,Int irel)      { return *(az_[chnk]->data()+irel); };
   inline Double getEl(Int chnk,Int irel)      { return *(el_[chnk]->data()+irel); };
   inline Double getParAng(Int chnk,Int irel)  { return *(parang_[chnk]->data()+irel); };
-
-
 
   // Axis-specific gets
   inline Double getScan()      { return scan_(currChunk_); };
@@ -184,6 +192,7 @@ public:
   inline Double getTimeIntr()  { return timeIntr_(currChunk_); };
   inline Double getSpw()       { return spw_(currChunk_); };
   inline Double getFreq() { return *(freq_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanmax_(currChunk_)); };
+  inline Double getVel() { return *(vel_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanmax_(currChunk_)); };
   inline Double getChan() { return *(chan_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanmax_(currChunk_)); };
   inline Double getCorr() { return *(corr_[currChunk_]->data()+(irel_%icorrmax_(currChunk_))); };
   inline Double getAnt1() { return *(antenna1_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
@@ -206,6 +215,12 @@ public:
   inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
+  // These are array-global (one value per chunk):
+  inline Double getAz0() { return az0_(currChunk_); };
+  inline Double getEl0() { return el0_(currChunk_); };
+  inline Double getHA0() { return ha0_(currChunk_); };
+  inline Double getPA0() { return pa0_(currChunk_); };
+
   // These are antenna-based
   inline Double getAntenna() { return *(antenna_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
   inline Double getAz() { return *(az_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
@@ -220,6 +235,9 @@ public:
 
   // Access to averaging state in the cache:
   PlotMSAveraging& averaging() { return averaging_; }
+
+  // Access to transformations state in the cache
+  PlotMSTransformations& transformations() { return transformations_; }
 
   // Access to channel averaging bounds
   Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
@@ -246,11 +264,6 @@ private:
 
   // Increase the number of chunks
   void increaseChunks(Int nc=0);
-
-  // Log info about averaging setup (as interpretted by PlotMSCache; this
-  //  probably could be move up to PlotMSAveraging)
-  void reportAveMode();
-
 
   // Setup the VisIter
   void setUpVisIter(const String& msname,
@@ -372,7 +385,7 @@ private:
   PtrBlock<Vector<Int>*> antenna1_, antenna2_, baseline_;
   PtrBlock<Vector<Double>*> uvdist_, u_, v_, w_;
   PtrBlock<Matrix<Double>*> uvdistL_;
-  PtrBlock<Vector<Double>*> freq_;
+  PtrBlock<Vector<Double>*> freq_, vel_;
   PtrBlock<Vector<Int>*> chan_;
   PtrBlock<Vector<Int>*> corr_;
 
@@ -389,6 +402,8 @@ private:
   PtrBlock<Vector<Float>*> parang_;
   PtrBlock<Vector<Int>*> antenna_;
   PtrBlock<Vector<Double>*> az_,el_;
+
+  Vector<Double> az0_,el0_,ha0_,pa0_;
 
   // Indexing help
   Vector<Int> icorrmax_, ichanmax_, ibslnmax_, idatamax_;
@@ -407,6 +422,7 @@ private:
   String msname_;
   PlotMSSelection selection_;
   PlotMSAveraging averaging_;
+  PlotMSTransformations transformations_;
 
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;
@@ -417,6 +433,10 @@ private:
   // VisIterator pointer
   ROVisIterator* rvi_p;
   VisIterator* wvi_p;
+
+  // VisBufferUtil for freq/vel calculations
+  VisBufferUtil vbu_;
+
     
 };
 typedef CountedPtr<PlotMSCache> PlotMSCachePtr;

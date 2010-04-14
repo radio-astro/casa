@@ -74,7 +74,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalDeviceRow::~CalDeviceRow() {
 	}
 
@@ -814,93 +813,109 @@ namespace asdm {
 
 	}
 	
-	CalDeviceRow* CalDeviceRow::fromBin(EndianISStream& eiss, CalDeviceTable& table) {
-		CalDeviceRow* row = new  CalDeviceRow(table);
-		
-		
+void CalDeviceRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void CalDeviceRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->feedId =  eiss.readInt();
-			
+}
+void CalDeviceRow::timeIntervalFromBin(EndianISStream& eiss) {
 		
 	
-
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+	
+}
+void CalDeviceRow::feedIdFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numCalload =  eiss.readInt();
+		feedId =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CalDeviceRow::numCalloadFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numCalload =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalDeviceRow::calLoadNamesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->calLoadNames.clear();
+		calLoadNames.clear();
 		
 		unsigned int calLoadNamesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < calLoadNamesDim1; i++)
 			
-			row->calLoadNames.push_back(CCalibrationDevice::from_int(eiss.readInt()));
+			calLoadNames.push_back(CCalibrationDevice::from_int(eiss.readInt()));
 			
 	
 
 		
 	
+	
+}
 
+void CalDeviceRow::numReceptorFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->numReceptorExists = eiss.readBoolean();
-	if (row->numReceptorExists) {
+	numReceptorExists = eiss.readBoolean();
+	if (numReceptorExists) {
 		
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		numReceptor =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->calEffExists = eiss.readBoolean();
-	if (row->calEffExists) {
+	
+}
+void CalDeviceRow::calEffFromBin(EndianISStream& eiss) {
+		
+	calEffExists = eiss.readBoolean();
+	if (calEffExists) {
 		
 	
 	
 		
 			
 	
-		row->calEff.clear();
+		calEff.clear();
 		
 		unsigned int calEffDim1 = eiss.readInt();
 		unsigned int calEffDim2 = eiss.readInt();
@@ -911,7 +926,7 @@ namespace asdm {
 			
 			calEffAux1.push_back(eiss.readFloat());
 			
-			row->calEff.push_back(calEffAux1);
+			calEff.push_back(calEffAux1);
 		}
 	
 	
@@ -920,21 +935,24 @@ namespace asdm {
 	
 
 	}
-
-	row->noiseCalExists = eiss.readBoolean();
-	if (row->noiseCalExists) {
+	
+}
+void CalDeviceRow::noiseCalFromBin(EndianISStream& eiss) {
+		
+	noiseCalExists = eiss.readBoolean();
+	if (noiseCalExists) {
 		
 	
 	
 		
 			
 	
-		row->noiseCal.clear();
+		noiseCal.clear();
 		
 		unsigned int noiseCalDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < noiseCalDim1; i++)
 			
-			row->noiseCal.push_back(eiss.readDouble());
+			noiseCal.push_back(eiss.readDouble());
 			
 	
 
@@ -942,24 +960,40 @@ namespace asdm {
 	
 
 	}
-
-	row->temperatureLoadExists = eiss.readBoolean();
-	if (row->temperatureLoadExists) {
+	
+}
+void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
+		
+	temperatureLoadExists = eiss.readBoolean();
+	if (temperatureLoadExists) {
 		
 	
 		
 		
 			
 	
-	row->temperatureLoad = Temperature::from1DBin(eiss);	
+	temperatureLoad = Temperature::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
+	
+}
+	
+	
+	CalDeviceRow* CalDeviceRow::fromBin(EndianISStream& eiss, CalDeviceTable& table, const vector<string>& attributesSeq) {
+		CalDeviceRow* row = new  CalDeviceRow(table);
 		
+		map<string, CalDeviceAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalDeviceTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1487,6 +1521,21 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &CalDeviceRow::antennaIdFromBin; 
+	 fromBinMethods["spectralWindowId"] = &CalDeviceRow::spectralWindowIdFromBin; 
+	 fromBinMethods["timeInterval"] = &CalDeviceRow::timeIntervalFromBin; 
+	 fromBinMethods["feedId"] = &CalDeviceRow::feedIdFromBin; 
+	 fromBinMethods["numCalload"] = &CalDeviceRow::numCalloadFromBin; 
+	 fromBinMethods["calLoadNames"] = &CalDeviceRow::calLoadNamesFromBin; 
+		
+	
+	 fromBinMethods["numReceptor"] = &CalDeviceRow::numReceptorFromBin; 
+	 fromBinMethods["calEff"] = &CalDeviceRow::calEffFromBin; 
+	 fromBinMethods["noiseCal"] = &CalDeviceRow::noiseCalFromBin; 
+	 fromBinMethods["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromBin; 
 	
 	}
 	
@@ -1575,7 +1624,21 @@ namespace asdm {
 		else
 			temperatureLoadExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &CalDeviceRow::antennaIdFromBin; 
+		 fromBinMethods["spectralWindowId"] = &CalDeviceRow::spectralWindowIdFromBin; 
+		 fromBinMethods["timeInterval"] = &CalDeviceRow::timeIntervalFromBin; 
+		 fromBinMethods["feedId"] = &CalDeviceRow::feedIdFromBin; 
+		 fromBinMethods["numCalload"] = &CalDeviceRow::numCalloadFromBin; 
+		 fromBinMethods["calLoadNames"] = &CalDeviceRow::calLoadNamesFromBin; 
+			
+	
+		 fromBinMethods["numReceptor"] = &CalDeviceRow::numReceptorFromBin; 
+		 fromBinMethods["calEff"] = &CalDeviceRow::calEffFromBin; 
+		 fromBinMethods["noiseCal"] = &CalDeviceRow::noiseCalFromBin; 
+		 fromBinMethods["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromBin; 
+			
 	}
 
 	
@@ -1665,6 +1728,26 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalDeviceAttributeFromBin> CalDeviceRow::initFromBinMethods() {
+		map<string, CalDeviceAttributeFromBin> result;
+		
+		result["antennaId"] = &CalDeviceRow::antennaIdFromBin;
+		result["spectralWindowId"] = &CalDeviceRow::spectralWindowIdFromBin;
+		result["timeInterval"] = &CalDeviceRow::timeIntervalFromBin;
+		result["feedId"] = &CalDeviceRow::feedIdFromBin;
+		result["numCalload"] = &CalDeviceRow::numCalloadFromBin;
+		result["calLoadNames"] = &CalDeviceRow::calLoadNamesFromBin;
+		
+		
+		result["numReceptor"] = &CalDeviceRow::numReceptorFromBin;
+		result["calEff"] = &CalDeviceRow::calEffFromBin;
+		result["noiseCal"] = &CalDeviceRow::noiseCalFromBin;
+		result["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

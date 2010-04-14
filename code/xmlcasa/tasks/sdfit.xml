@@ -26,6 +26,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="string" name="fluxunit">
             <description>units for line flux (K,Jy) (''=current)</description>
             <value></value>
@@ -82,6 +88,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
+    <param type="string" name="fitfunc">
+            <description>function for fitting</description>
+            <value>gauss</value>
+            <allowed kind="enum">
+                    <value>gauss</value>
+                    <value>lorentz</value>
+            </allowed>
+    </param>
+
     <param type="string" name="fitmode">
             <description>mode for fitting</description>
             <value>auto</value>
@@ -99,7 +114,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="intArray" name="nfit">
-            <description>list of number of gaussian lines to fit in in maskline region</description>
+            <description>list of number of gaussian/lorentzian lines to fit in in maskline region</description>
             <value></value>
     </param>
 
@@ -162,8 +177,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 </equals>
             </when>
             <when param="fitmode">
-                <equals value="list"/>
-                <equals value="interact"/>
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
                         <default param="min_nchan"><value>3</value></default>
@@ -171,6 +184,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="box_size"><value>0.2</value></default>
                         <default param="edge"><value type='vector'><value>0</value></value></default>
                 </equals>
+                <equals value="list"/>
+                <equals value="interact"/>
             </when>
     </constraints>
 
@@ -191,6 +206,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: none - must input file name
                 example: 'mysd.asap'
                          See sdcal for allowed formats.
+        antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: (str) 'K','Jy',''
                 default: '' (keep current fluxunit)
@@ -236,6 +252,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         pollist -- list of polarization id numbers to select
                 default: [] (use all polarizations)
                 example: [1]
+        fitfunc -- function for fitting
+                options: (str) 'gauss','lorentz'
+                default: 'gauss'
         fitmode -- mode for fitting
                 options: (str) 'list','auto','interact'
                 default: 'auto'
@@ -284,7 +303,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: False
                 example: invertmask=True, then will make one region that is
                          the exclusion of the maskline regions
-        nfit -- list of number of gaussian lines to fit in in maskline region
+        nfit -- list of number of gaussian/lorentzian lines to fit in in maskline region
                 default: 0 (no fitting)
                 example: nfit=[1] for single line in single region,
                          nfit=[2] for two lines in single region,
@@ -327,6 +346,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Note that multiple scans, IFs, and polarizations can in principle 
         be handled, but we recommend that you use scanlist, field, iflist, 
         and pollist to give a single selection for each fit.
+
+        Currently, you can choose Gaussian or Lorentzian profile as a 
+        fitting model. 
 
         For complicated spectra, sdfit does not do a good job of
         "auto-guessing" the starting model for the fit.  We recommend

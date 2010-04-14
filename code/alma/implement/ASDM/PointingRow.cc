@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	PointingRow::~PointingRow() {
 	}
 
@@ -1171,197 +1170,253 @@ namespace asdm {
 
 	}
 	
-	PointingRow* PointingRow::fromBin(EndianISStream& eiss, PointingTable& table) {
+void PointingRow::antennaIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		antennaId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void PointingRow::timeIntervalFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+	
+}
+void PointingRow::numSampleFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numSample =  eiss.readInt();
+			
+		
+	
+	
+}
+void PointingRow::encoderFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	encoder = Angle::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+void PointingRow::pointingTrackingFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		pointingTracking =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void PointingRow::usePolynomialsFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		usePolynomials =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void PointingRow::timeOriginFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		timeOrigin =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void PointingRow::numTermFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numTerm =  eiss.readInt();
+			
+		
+	
+	
+}
+void PointingRow::pointingDirectionFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	pointingDirection = Angle::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+void PointingRow::targetFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	target = Angle::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+void PointingRow::offsetFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	offset = Angle::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+void PointingRow::pointingModelIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		pointingModelId =  eiss.readInt();
+			
+		
+	
+	
+}
+
+void PointingRow::overTheTopFromBin(EndianISStream& eiss) {
+		
+	overTheTopExists = eiss.readBoolean();
+	if (overTheTopExists) {
+		
+	
+	
+		
+			
+		overTheTop =  eiss.readBoolean();
+			
+		
+	
+
+	}
+	
+}
+void PointingRow::sourceOffsetFromBin(EndianISStream& eiss) {
+		
+	sourceOffsetExists = eiss.readBoolean();
+	if (sourceOffsetExists) {
+		
+	
+		
+		
+			
+	
+	sourceOffset = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+	
+}
+void PointingRow::sourceOffsetReferenceCodeFromBin(EndianISStream& eiss) {
+		
+	sourceOffsetReferenceCodeExists = eiss.readBoolean();
+	if (sourceOffsetReferenceCodeExists) {
+		
+	
+	
+		
+			
+		sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+	
+}
+void PointingRow::sourceOffsetEquinoxFromBin(EndianISStream& eiss) {
+		
+	sourceOffsetEquinoxExists = eiss.readBoolean();
+	if (sourceOffsetEquinoxExists) {
+		
+	
+		
+		
+		sourceOffsetEquinox =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void PointingRow::sampledTimeIntervalFromBin(EndianISStream& eiss) {
+		
+	sampledTimeIntervalExists = eiss.readBoolean();
+	if (sampledTimeIntervalExists) {
+		
+	
+		
+		
+			
+	
+	sampledTimeInterval = ArrayTimeInterval::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+	
+}
+	
+	
+	PointingRow* PointingRow::fromBin(EndianISStream& eiss, PointingTable& table, const vector<string>& attributesSeq) {
 		PointingRow* row = new  PointingRow(table);
 		
-		
-		
-	
-		
-		
-		row->antennaId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->numSample =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->encoder = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	
-	
-		
-			
-		row->pointingTracking =  eiss.readBoolean();
-			
-		
-	
-
-	
-	
-		
-			
-		row->usePolynomials =  eiss.readBoolean();
-			
-		
-	
-
-	
-		
-		
-		row->timeOrigin =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->numTerm =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->pointingDirection = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	
-		
-		
-			
-	
-	row->target = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	
-		
-		
-			
-	
-	row->offset = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	
-	
-		
-			
-		row->pointingModelId =  eiss.readInt();
-			
-		
-	
-
-		
-		
-		
-	row->overTheTopExists = eiss.readBoolean();
-	if (row->overTheTopExists) {
-		
-	
-	
-		
-			
-		row->overTheTop =  eiss.readBoolean();
-			
-		
-	
-
-	}
-
-	row->sourceOffsetExists = eiss.readBoolean();
-	if (row->sourceOffsetExists) {
-		
-	
-		
-		
-			
-	
-	row->sourceOffset = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	}
-
-	row->sourceOffsetReferenceCodeExists = eiss.readBoolean();
-	if (row->sourceOffsetReferenceCodeExists) {
-		
-	
-	
-		
-			
-		row->sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(eiss.readInt());
-			
-		
-	
-
-	}
-
-	row->sourceOffsetEquinoxExists = eiss.readBoolean();
-	if (row->sourceOffsetEquinoxExists) {
-		
-	
-		
-		
-		row->sourceOffsetEquinox =  ArrayTime::fromBin(eiss);
-		
-	
-
-	}
-
-	row->sampledTimeIntervalExists = eiss.readBoolean();
-	if (row->sampledTimeIntervalExists) {
-		
-	
-		
-		
-			
-	
-	row->sampledTimeInterval = ArrayTimeInterval::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-		
+		map<string, PointingAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "PointingTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2136,6 +2191,28 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &PointingRow::antennaIdFromBin; 
+	 fromBinMethods["timeInterval"] = &PointingRow::timeIntervalFromBin; 
+	 fromBinMethods["numSample"] = &PointingRow::numSampleFromBin; 
+	 fromBinMethods["encoder"] = &PointingRow::encoderFromBin; 
+	 fromBinMethods["pointingTracking"] = &PointingRow::pointingTrackingFromBin; 
+	 fromBinMethods["usePolynomials"] = &PointingRow::usePolynomialsFromBin; 
+	 fromBinMethods["timeOrigin"] = &PointingRow::timeOriginFromBin; 
+	 fromBinMethods["numTerm"] = &PointingRow::numTermFromBin; 
+	 fromBinMethods["pointingDirection"] = &PointingRow::pointingDirectionFromBin; 
+	 fromBinMethods["target"] = &PointingRow::targetFromBin; 
+	 fromBinMethods["offset"] = &PointingRow::offsetFromBin; 
+	 fromBinMethods["pointingModelId"] = &PointingRow::pointingModelIdFromBin; 
+		
+	
+	 fromBinMethods["overTheTop"] = &PointingRow::overTheTopFromBin; 
+	 fromBinMethods["sourceOffset"] = &PointingRow::sourceOffsetFromBin; 
+	 fromBinMethods["sourceOffsetReferenceCode"] = &PointingRow::sourceOffsetReferenceCodeFromBin; 
+	 fromBinMethods["sourceOffsetEquinox"] = &PointingRow::sourceOffsetEquinoxFromBin; 
+	 fromBinMethods["sampledTimeInterval"] = &PointingRow::sampledTimeIntervalFromBin; 
 	
 	}
 	
@@ -2259,7 +2336,28 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 		else
 			sampledTimeIntervalExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &PointingRow::antennaIdFromBin; 
+		 fromBinMethods["timeInterval"] = &PointingRow::timeIntervalFromBin; 
+		 fromBinMethods["numSample"] = &PointingRow::numSampleFromBin; 
+		 fromBinMethods["encoder"] = &PointingRow::encoderFromBin; 
+		 fromBinMethods["pointingTracking"] = &PointingRow::pointingTrackingFromBin; 
+		 fromBinMethods["usePolynomials"] = &PointingRow::usePolynomialsFromBin; 
+		 fromBinMethods["timeOrigin"] = &PointingRow::timeOriginFromBin; 
+		 fromBinMethods["numTerm"] = &PointingRow::numTermFromBin; 
+		 fromBinMethods["pointingDirection"] = &PointingRow::pointingDirectionFromBin; 
+		 fromBinMethods["target"] = &PointingRow::targetFromBin; 
+		 fromBinMethods["offset"] = &PointingRow::offsetFromBin; 
+		 fromBinMethods["pointingModelId"] = &PointingRow::pointingModelIdFromBin; 
+			
+	
+		 fromBinMethods["overTheTop"] = &PointingRow::overTheTopFromBin; 
+		 fromBinMethods["sourceOffset"] = &PointingRow::sourceOffsetFromBin; 
+		 fromBinMethods["sourceOffsetReferenceCode"] = &PointingRow::sourceOffsetReferenceCodeFromBin; 
+		 fromBinMethods["sourceOffsetEquinox"] = &PointingRow::sourceOffsetEquinoxFromBin; 
+		 fromBinMethods["sampledTimeInterval"] = &PointingRow::sampledTimeIntervalFromBin; 
+			
 	}
 
 	
@@ -2439,6 +2537,33 @@ sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, PointingAttributeFromBin> PointingRow::initFromBinMethods() {
+		map<string, PointingAttributeFromBin> result;
+		
+		result["antennaId"] = &PointingRow::antennaIdFromBin;
+		result["timeInterval"] = &PointingRow::timeIntervalFromBin;
+		result["numSample"] = &PointingRow::numSampleFromBin;
+		result["encoder"] = &PointingRow::encoderFromBin;
+		result["pointingTracking"] = &PointingRow::pointingTrackingFromBin;
+		result["usePolynomials"] = &PointingRow::usePolynomialsFromBin;
+		result["timeOrigin"] = &PointingRow::timeOriginFromBin;
+		result["numTerm"] = &PointingRow::numTermFromBin;
+		result["pointingDirection"] = &PointingRow::pointingDirectionFromBin;
+		result["target"] = &PointingRow::targetFromBin;
+		result["offset"] = &PointingRow::offsetFromBin;
+		result["pointingModelId"] = &PointingRow::pointingModelIdFromBin;
+		
+		
+		result["overTheTop"] = &PointingRow::overTheTopFromBin;
+		result["sourceOffset"] = &PointingRow::sourceOffsetFromBin;
+		result["sourceOffsetReferenceCode"] = &PointingRow::sourceOffsetReferenceCodeFromBin;
+		result["sourceOffsetEquinox"] = &PointingRow::sourceOffsetEquinoxFromBin;
+		result["sampledTimeInterval"] = &PointingRow::sampledTimeIntervalFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

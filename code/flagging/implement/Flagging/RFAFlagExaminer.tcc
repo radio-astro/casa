@@ -24,6 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
+#include <flagging/Flagging/RFAFlagExaminer.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -34,8 +35,8 @@
 #include <casa/Logging/LogIO.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <flagging/Flagging/RFAFlagExaminer.h>
 #include <casa/stdio.h>
+#include <map>
 #include <cassert>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -52,7 +53,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //desc_str = String("flagexaminer");
     if(dbg3) cout<<"FlagExaminer constructor "<<endl;
 
-
     totalflags    = accumTotalFlags    = 0;
     totalcount    = accumTotalCount    = 0;
     totalrowflags = accumTotalRowFlags = 0;
@@ -60,15 +60,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //parseParm(parm);
 
     os = LogIO(LogOrigin("RFAFlagExaminer", "RFAFlagExaminer", WHERE));
+
+    accumflags.clear();
+    accumtotal.clear();
+
+
+    // Handle in-row selections, the following is a
+    // copy-paste from RFASelector2
+
+    char s[256];
+    // parse input arguments: channels
+    if( parseRange(sel_chan,parm,RF_CHANS)) 
+      {
+        String sch;
+        for( uInt i=0; i<sel_chan.ncolumn(); i++) 
+          {
+            sprintf(s,"%d:%d",sel_chan(0,i),sel_chan(1,i));
+            addString(sch,s,",");
+          }
+        addString(desc_str, String(RF_CHANS) + "=" +sch);
+        sel_chan(sel_chan>=0) += -(Int)indexingBase();
+      }
+
+    // parse input arguments: correlations
+    if( fieldType(parm,RF_CORR,TpString,TpArrayString))
+      {
+        String ss;
+        Vector<String> scorr( parm.asArrayString(RF_CORR)) ;
+        sel_corr.resize( scorr.nelements()) ;
+        for( uInt i=0; i<scorr.nelements(); i++) 
+          {
+            sel_corr(i) = Stokes::type( scorr(i)) ;
+            if( sel_corr(i) == Stokes::Undefined) 
+              os<<"Illegal correlation "<<scorr(i)<<endl<<LogIO::EXCEPTION;
+            addString(ss,scorr(i),",");
+          }
+        addString(desc_str,String(RF_CORR)+"="+ss);
+      }
   }
   
-  
-  RFAFlagExaminer::~RFAFlagExaminer ()
+ 
+  RFAFlagExaminer::~RFAFlagExaminer()
   {
-    if(dbg3)  cout << "FlgaExaminer destructor " << endl;    
+    if(dbg3)  cout << "FlagExaminer destructor " << endl;    
   }
+
+  Bool RFAFlagExaminer::newChunk(Int &maxmem)
+    {
+      /* For efficiency reasons, use arrays to collect 
+         histogram data for in-row selections
+      */
+      accumflags_channel = vector<unsigned>(chunk.num(CHAN), 0);
+      accumtotal_channel = vector<unsigned>(chunk.num(CHAN), 0);
+      accumflags_correlation = vector<unsigned>(chunk.num(CORR), 0);
+      accumtotal_correlation = vector<unsigned>(chunk.num(CORR), 0);
+          
+      return RFASelector::newChunk(maxmem);
+    }
+
   
-  // jmlarsen: gets called
   void RFAFlagExaminer::initialize()
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -86,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	outTotalRowFlags = 0;
   }
 
-  // jmlarsen: doesn't get called (?)
+  // Is not called if this is the only agent
   void RFAFlagExaminer::finalize()
   {
     //cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -97,15 +147,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // processRow
   // Raises/clears flags for a single row, depending on current selection
   // -----------------------------------------------------------------------
-  // jmlarsen: gets called
   void RFAFlagExaminer::processRow(uInt ifr, uInt it)
   {
-      // called often... if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
-      
+      // called often... if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;      
       return;
   }
   
-  // jmlarsen: gets called
   void RFAFlagExaminer::startFlag ()
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -128,7 +175,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   }
   
-  // jmlarsen: gets called
   void RFAFlagExaminer::initializeIter (uInt it) 
   {
       if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -150,8 +196,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      jj++)
 	      if (chunk.visBuf().flag()(ii,jj)) inTotalFlags++;
   }
-  
-  // jmlarsen: doesn't get called (?)
+
+  // Is not called if this is the only agent
   void RFAFlagExaminer::finalizeIter (uInt it) 
   {
     //cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -179,15 +225,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
-  // jmlarsen: gets called
   // it: time index
   void RFAFlagExaminer::iterFlag(uInt it)
-      //Bool resetFlags
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
     // Set the flags and count them up.
-    RFAFlagCubeBase::iterFlag(it);
+    RFASelector::iterFlag(it);
     
     // count if within specific timeslots
     const Vector<Double> &times( chunk.visBuf().time() );
@@ -209,6 +253,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	const Vector<Int> &ifrs( chunk.ifrNums() );
 	const Vector<Int> &feeds( chunk.feedNums() );
 	const Vector<casa::RigidVector<casa::Double, 3> >&uvw( chunk.visBuf().uvw() );
+
+        unsigned spw = chunk.visBuf().spectralWindow();
+        unsigned field = chunk.visBuf().fieldId();
+        const Vector<Int> &antenna1( chunk.visBuf().antenna1() );
+        const Vector<Int> &antenna2( chunk.visBuf().antenna2() );
+        const Vector<Int> &scan    ( chunk.visBuf().scan() );
+
+        const Vector<String> &antenna_names( chunk.antNames()) ;
+
 	// Vector<Vector<Double> > &uvw=NULL;//( chunk.visIter.uvw(uvw) );
 	//chunk.visIter().uvw(uvw);
 	Double uvdist=0.0;
@@ -240,16 +293,127 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
                 totalrowcount++;
 
-                totalflags += chunk.nfIfrTime(ifrs(i), it);
-                totalcount += chunk.num(CORR) * chunk.num(CHAN);
+                unsigned int f = chunk.nfIfrTime(ifrs(i), it);
+                unsigned int c = chunk.num(CORR) * chunk.num(CHAN);
+
+                // need nfIfrTimeCorr
+                // need nfIfrTimeChan
+
+                totalflags += f;
+                totalcount += c;
+
+                /* Update histograms */
+                
+                /* histogram baseline */
+                {
+                  string baseline = 
+                    antenna_names(antenna1(i)) + "&&" +
+                    antenna_names(antenna2(i));
+                  
+                  accumflags["baseline"][baseline] += f;
+                  accumtotal["baseline"][baseline] += c;
+                }
+                
+                /* histogram antenna */
+                {
+                  /* Careful here, update the counts for both
+                     antenna1 and antenna2, unless they are the same.
+                  */
+                  accumflags["antenna"][antenna_names(antenna1(i))] += f;
+                  accumtotal["antenna"][antenna_names(antenna1(i))] += c;
+                  if (antenna1(i) != antenna2(i)) {
+                    accumflags["antenna"][antenna_names(antenna2(i))] += f;
+                    accumtotal["antenna"][antenna_names(antenna2(i))] += c;
+                  }
+                }
+
+                /* histogram spw */
+                {
+                  stringstream spw_string;
+                  spw_string << spw;
+                  accumflags["spw"][spw_string.str()] += f;
+                  accumtotal["spw"][spw_string.str()] += c;
+                }
+
+                /* histogram fieldID */
+                {
+                  stringstream fieldID_string;
+                  fieldID_string << field;
+                  accumflags["field"][fieldID_string.str()] += f;
+                  accumtotal["field"][fieldID_string.str()] += c;
+                }
+                /* histogram scan */
+                {
+                  stringstream scan_string;
+                  scan_string << scan(i);
+                  accumflags["scan"][scan_string.str()] += f;
+                  accumtotal["scan"][scan_string.str()] += c;
+                }
               }
-	}
+        }
     }
     
     return;
   }
 
-  // jmlarsen: gets called
+  /* Update histogram for channel and correlation
+     This cannot happen in iterFlag(), which is called once per chunk,
+     because the "flag" cursor needs to be updated once per row.
+  */
+  RFA::IterMode RFAFlagExaminer::iterRow(uInt irow)
+    {
+      unsigned ifr = chunk.ifrNum(irow);
+      
+      for( uInt ich = 0;
+           ich < chunk.num(CHAN); 
+           ich++ ) {
+
+        if( !flagchan.nelements() || flagchan(ich) ) {
+          
+          RFlagWord corrs = flag.getFlag(ich, ifr);
+          unsigned n_flags = 0;
+
+          for (uInt icorr = 0; icorr < chunk.num(CORR); icorr++) {
+              if (corrs & 1) {
+                  accumflags_correlation[icorr] += 1;
+                  n_flags += 1;
+              }
+              accumtotal_correlation[icorr] += 1;
+              corrs >>= 1;
+          }
+
+          accumflags_channel[ich] += n_flags;
+          accumtotal_channel[ich] += chunk.num(CORR);
+        }
+      }
+      
+      return RFA::CONT;
+    }
+
+  void RFAFlagExaminer::endChunk ()
+    {
+        RFASelector::endChunk();
+
+        for (unsigned ich = 0; ich < chunk.num(CHAN); ich++) {
+            if (accumtotal_channel[ich] > 0) {
+                stringstream ss;
+                ss << ich;
+                accumflags["channel"][ss.str()] = accumflags_channel[ich];
+                accumtotal["channel"][ss.str()] = accumtotal_channel[ich];
+            }
+        }
+
+        for (unsigned icorr = 0; icorr < chunk.num(CORR); icorr++) {
+            if (accumtotal_correlation[icorr] > 0) {
+                stringstream ss;
+                ss << icorr;
+                accumflags["correlation"][ss.str()] = accumflags_correlation[icorr];
+                accumtotal["correlation"][ss.str()] = accumtotal_correlation[icorr];
+            }
+        }
+    }
+
+
   void RFAFlagExaminer::endFlag ()
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -308,7 +472,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       r.define("flagged", (Int) accumTotalFlags);
       r.define("total"  , (Int) accumTotalCount);
+
+
+      for (map<string, map<string, unsigned> >::iterator j = accumtotal.begin();
+           j != accumtotal.end();
+           j++) {
+        /* Note here: loop over the keys of accumtotal, not accumflags,
+           because accumflags may not have all channel keys */
+        
+          Record prop;
+          for (map<string, unsigned>::const_iterator i = j->second.begin();
+               i != j->second.end();
+               i++) {
+            
+              Record t;
+
+              t.define("flagged", (Int) accumflags[j->first][i->first]);
+              t.define("total", (Int) i->second);
+              
+              prop.defineRecord(i->first, t);
+          }
           
+          r.defineRecord(j->first, prop);
+      }
+      
       return r;
     }
 

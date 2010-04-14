@@ -201,6 +201,7 @@ template<class T> T & RFCubeLatticeIterator<T>::operator()(uInt i,uInt j)
 template<class T> RFCubeLattice<T>::RFCubeLattice ()
 {
 }
+
 template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
                                                     uInt nifr,
                                                     uInt ntime,

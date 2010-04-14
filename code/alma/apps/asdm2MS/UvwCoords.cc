@@ -89,7 +89,7 @@ void UvwCoords::uvw_an( double                        timeCentroid,
 
 
   MEpoch    epoch( Quantity(timeCentroid,"s"),
-  		   MEpoch::TAI);
+  		   MEpoch::UTC);
 
   casa::Double dirx=phaseDir[0][0].get();
   casa::Double diry=phaseDir[0][1].get();

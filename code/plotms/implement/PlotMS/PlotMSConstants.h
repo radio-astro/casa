@@ -111,10 +111,11 @@ public:
     // <group>
     PMS_ENUM1(Axis, axes, axesStrings, axis,
 	      SCAN,FIELD,TIME,TIME_INTERVAL,
-	      SPW,CHANNEL,FREQUENCY,CORR,
+	      SPW,CHANNEL,FREQUENCY,VELOCITY,CORR,
 	      ANTENNA1,ANTENNA2,BASELINE,
 	      UVDIST,UVDIST_L,U,V,W,
 	      AMP,PHASE,REAL,IMAG,FLAG,
+	      AZ0,EL0,HA0,PA0,
 	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
 	      ROW,FLAG_ROW)
 
@@ -124,11 +125,12 @@ public:
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
 	      "Scan","Field","Time","Time_interval",
-	      "Spw","Channel","Frequency","Corr",
+	      "Spw","Channel","Frequency","Velocity","Corr",
 	      "Antenna1","Antenna2","Baseline",
 	      "UVDist","UVDist_L","U","V","W",
 	      "Amp","Phase","Real","Imag","Flag",
-	      "Antenna","Azimuth","Elevation","ParAng",
+	      "Azimuth","Elevation","HourAngle","ParAngle",
+	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAng",
 	      "Row","FlagRow")
 
     //              "time", "uvdist", "channel", "corr", "frequency", "vel_radio",

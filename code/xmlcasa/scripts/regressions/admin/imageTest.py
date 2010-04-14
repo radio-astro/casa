@@ -155,28 +155,33 @@ class ImageTest:
         dat=self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
         self.show(dat)
         a={'return':{}}
+        residual = self.imTool.name() + '.resid'
+        
         try:
-            a=self.imTool.fitsky(region=reg)
+            a = self.imTool.fitcomponents(region=reg, residual=residual)
+            if (not a['converged']):
+               a = self._retryFit(shp, plane, residual)
         except:
-            ###lets limit the region and try again
-            blc=[int(0.45*shp[0]),int(0.45*shp[1]) ,plane,0]
-            trc=[int(0.55*shp[0]),int(0.55*shp[1]) ,plane,0]
-            reg=self.rgTool.box(blc=blc, trc=trc)
-            dat=self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
-            self.show(dat)
-            try:
-                a=self.imTool.fitsky(region=reg)
-            except:
-                a={'return':{}, 'pixels':[]}
+            a = self._retryFit(shp, plane, residual)
+        resid = []
+        if (a['converged']):
+            origName = self.imTool.name()
+            self.imTool.open(residual)
+            resid = self.imTool.getchunk()
+            residshape = resid.shape
+            resid = resid.reshape(residshape[0], residshape[1])
+            self.imTool.open(origName)
+        else:
+            resid = pylab.array([])
         body2=[]
-        resid=pylab.array(a['pixels'])
-        if(a['return'].has_key('component0')):
-            ra = self.qaTool.time(a['return']['component0']['shape']['direction']['m0'])
-            dec = self.qaTool.angle(a['return']['component0']['shape']['direction']['m1'])
-            bmaj= self.qaTool.angle(a['return']['component0']['shape']['majoraxis'], form='dig2')
-            bmin = self.qaTool.angle(a['return']['component0']['shape']['minoraxis'], form='dig2')
-            bpa = self.qaTool.angle(a['return']['component0']['shape']['positionangle'])
-            flux = str('%4.2f'%a['return']['component0']['flux']['value'][0])+a['return']['component0']['flux']['unit']
+        fit_results = a['results']
+        if(fit_results.has_key('component0')):
+            ra = self.qaTool.time(fit_results['component0']['shape']['direction']['m0'])
+            dec = self.qaTool.angle(fit_results['component0']['shape']['direction']['m1'])
+            bmaj= self.qaTool.angle(fit_results['component0']['shape']['majoraxis'], form='dig2')
+            bmin = self.qaTool.angle(fit_results['component0']['shape']['minoraxis'], form='dig2')
+            bpa = self.qaTool.angle(fit_results['component0']['shape']['positionangle'])
+            flux = str('%4.2f'%fit_results['component0']['flux']['value'][0])+fit_results['component0']['flux']['unit']
             result.append([ra, dec, bmaj, bmin, bpa, flux])
             ss='fit:\testimated center: %s  %s\n'%(ra,dec)+'\tMajAxis : %s  \tMinAxis: %s \tPosAng: %s'%(bmaj, bmin, bpa)+' flux= '+flux
             body2.append('<pre>%s</pre>'%ss)
@@ -206,7 +211,21 @@ class ImageTest:
                 pylab.savefig(saveDir)
                 self.htmlPub.doBlk(body1, body2, saveDir,header)
         return result, rms
-	
+
+    def _retryFit(self, shp, plane, residual):	
+        ###lets limit the region and try again
+        blc=[int(0.45*shp[0]),int(0.45*shp[1]) ,plane,0]
+        trc=[int(0.55*shp[0]),int(0.55*shp[1]) ,plane,0]
+        reg=self.rgTool.box(blc=blc, trc=trc)
+        dat=self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
+        self.show(dat)
+        a = {}
+        try:
+            a = self.imTool.fitcomponents(region=reg, residual=residual)
+        except:
+            a = {'converged': False, 'results':{}}
+        return a
+
     def bmodel_old(self,XY=None,plane=0):
      self.model()
      result=[]

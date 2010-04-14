@@ -231,7 +231,8 @@ class Imager
 		  const String& cfCacheDirName="", 
 		  const Float& pastep=5.0,
 		  const Float& pbLimit=5.0e-2,
-		  const String& freqinterpmethod="linear");
+		  const String& freqinterpmethod="linear",
+		  const Int imageTileSizeInPix=0);
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
@@ -517,8 +518,9 @@ protected:
   Table weathertab_p;
   Int lockCounter_p;
   Int nx_p, ny_p, npol_p, nchan_p;
-  ObsInfo latestObsInfo_p;  
-  
+  ObsInfo latestObsInfo_p;
+  //What should be the tile volume on disk
+  Int imageTileVol_p;
 
 
 
@@ -653,6 +655,15 @@ protected:
 	      ImageInterface<Float>& out, 
 	      const MDirection&,
 	      const Quantity&);
+
+  // Helper func for printing clean's restoring beam to the logger.  May find
+  // the restoring beam as a side effect, so sm_p can't be const.
+  void printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun=true);
+
+  // Helper func for createFTMachine().  Returns phaseCenter_p as a String,
+  // *assuming* it is set.  It does not check!
+  String tangentPoint();
+  
 
   Bool assertDefinedImageParameters() const;
  // Virtual methods to set the ImageSkyModel and SkyEquation.

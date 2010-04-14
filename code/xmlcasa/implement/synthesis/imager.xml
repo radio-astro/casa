@@ -292,6 +292,10 @@ mask.
        </description>
        <value></value>
      </param>
+     <param type="bool" name="reuse">
+       <description>Start from the UVWs in vis (True) or calculate them from the antenna positions?</description>
+       <value>true</value>
+     </param>
    </input>  
    <returns type="bool"/>
    <example>
@@ -1226,7 +1230,9 @@ lowres='casa.sd');
 Apply visibility tapering to emphasize certain scale structures.  The
 imaging tapers are applied to a Table column called IMAGING\_WEIGHT,
 which may be plotted using 
-<link anchor="imager:imager.plotweights.function">plotweights</link>. In addition, this column
+tb and pl.
+<!-- <link anchor="imager:imager.plotweights.function">plotweights</link>. -->
+In addition, this column
 may be accessed directly using either the <link anchor="table">table</link>
 or <link anchor="ms">ms</link> modules. Note that the taper is multiplicative and
 so the weights must be calculated first using
@@ -2019,8 +2025,8 @@ NNLS algorithm</shortdescription>
 
 Solve for the model brightness using the Briggs' Non-Negative Least
 Squares algorithm. Since NNLS works only on the $I$ image, the $I$
-pixels in the current image is set to zero where the fluxmask is $&gt;
-0.0$, then NNLS is used to estimate the $I$-pixels for that region.
+pixels in the current image is set to zero where the fluxmask is $&gt; 0.0$,
+then NNLS is used to estimate the $I$-pixels for that region.
 The deconvolution is performed on the residual image calculated from
 the visibility data currently selected. Hence the first step performed
 in clean is to transform the current model to fill in the MODEL\_DATA
@@ -2407,7 +2413,7 @@ im.plotvis(increment=10)
 </comments>
 </method>
 
- 
+<!-- Dumps core 2/3 of the time.
    <method type="function" name="plotweights">
    <shortdescription>Plot the visibility weights as a function of u-v radius</shortdescription>
    
@@ -2442,7 +2448,7 @@ im.plotweights(gridded=True,increment=10)
 <comments>
 </comments>
 </method>
-
+-->
  
    <method type="function" name="regionmask">
    <shortdescription>Construct a mask image from a region</shortdescription>
@@ -3710,8 +3716,6 @@ This function is for setting different gridding and memory options
 \item[ft] Standard interferometric gridding
 \item[sd] Standard single dish gridding
 \item[both] ft and sd as appropriate.
-\item[wfmemoryft] option for wide-field imaging, to grid in memory for
-  all facets in one pass through the data
 \item[wproject] option for using the wproject algorithm for wide-field
   imaging; when this option is used the parameter {\tt wprojplanes}
   define the number of convolution functions to be used
@@ -3757,12 +3761,13 @@ especially in wide-field cleaning.
      <description>Fourier transform
   machine</description>
      <value>ft</value>
-     <value>sd</value>
-     <value>both</value>
-     <value>wfmemoryft</value>
-     <value>wproject</value>
-     <value>mosaic</value>
-     <value>ft</value>
+     <allowed kind="enum">
+       <value>ft</value>
+       <value>sd</value>
+       <value>both</value>
+       <value>wproject</value>
+       <value>mosaic</value>
+     </allowed>
      </param>
 
      <param type="int" name="cache">
@@ -3848,6 +3853,12 @@ however not used yet.</description>
      <value>0.05</value>
      </param>
 
+     <param type="int" name="imagetilevol">
+     <description>Tile size on for image on disk  (in pixel, multiply by 
+            4 to get the byte size). It is safe to leave this as default, 
+           meant for usage on filesystem like Lustre, the default implies 32x32x4x32 tile shape</description>
+     <value>0</value>
+     </param>
 </input>
 <returns type="bool"/>
 <example>
@@ -4316,9 +4327,10 @@ im.uvrange(0, 4000.0)
 <description>
 Apply visibility weighting to correct for the local density of
 sampling in the uv plane. The imaging weights are written into a Table
-column called IMAGING\_WEIGHT, which may be plotted using 
-<link anchor="imager:imager.plotweights.function">plotweights</link>. In addition this
-columns may be accessed directly using either the
+column called IMAGING\_WEIGHT, which may be plotted using
+<link anchor="table">tb</link> and pl.
+<!-- <link anchor="imager:imager.plotweights.function">plotweights</link>. -->
+The column may also be directly accessed using either the
 <link anchor="table">table</link> or <link anchor="ms">ms</link> modules.
 
 To correct for visibility sampling effects, natural, uniform (the

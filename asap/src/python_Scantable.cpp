@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_Scantable.cpp 1656 2009-11-05 10:47:49Z WataruKawasaki $
+//# $Id: python_Scantable.cpp 1707 2010-02-19 09:30:37Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #include <vector>
 
@@ -87,6 +87,8 @@ void python_Scantable() {
          (boost::python::arg("whichrow")=0) )
     .def("_getmask", &ScantableWrapper::getMask,
          (boost::python::arg("whichrow")=0) )
+    .def("_getclipmask", &ScantableWrapper::getClipMask,
+	 (boost::python::arg("whichrow")=0) )
     .def("_gettsys", &ScantableWrapper::getTsys)
     .def("_getsourcename", &ScantableWrapper::getSourceName,
          (boost::python::arg("whichrow")=0) )
@@ -107,6 +109,9 @@ void python_Scantable() {
     .def("_flag_row", &ScantableWrapper::flagRow)
     .def("_getflagrow", &ScantableWrapper::getFlagRow,
 	 (boost::python::arg("whichrow")=0) )
+    .def("_clip", &ScantableWrapper::clip,
+	 (boost::python::arg("clipoutside")=true,
+	  boost::python::arg("unflag")=false) )
     .def("_save",  &ScantableWrapper::makePersistent)
     .def("_summary",  &ScantableWrapper::summary,
          (boost::python::arg("verbose")=true) )

@@ -46,31 +46,19 @@ using std::set;
 using asdmIDL::CalPrimaryBeamRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <Frequency.h>
+using  asdm::Frequency;
+
+#include <EntityRef.h>
+using  asdm::EntityRef;
 
 
 
@@ -108,28 +96,13 @@ using namespace PolarizationTypeMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file CalPrimaryBeam.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -144,10 +117,13 @@ class CalReductionRow;
 class CalDataRow;
 	
 
+class CalPrimaryBeamRow;
+typedef void (CalPrimaryBeamRow::*CalPrimaryBeamAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The CalPrimaryBeamRow class is a row of a CalPrimaryBeamTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class CalPrimaryBeamRow {
@@ -162,49 +138,6 @@ public:
 	 */
 	CalPrimaryBeamTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a CalPrimaryBeamRowIDL struct.
-	 */
-	CalPrimaryBeamRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct CalPrimaryBeamRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (CalPrimaryBeamRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the CalPrimaryBeamTable to which the row built by deserialization will be parented.
-	  */
-	 static CalPrimaryBeamRow* fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -652,12 +585,62 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalPrimaryBeamRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param antennaName
+	    
+	 * @param receiverBand
+	    
+	 * @param calDataId
+	    
+	 * @param calReductionId
+	    
+	 * @param startValidTime
+	    
+	 * @param endValidTime
+	    
+	 * @param antennaMake
+	    
+	 * @param frequencyRange
+	    
+	 * @param numReceptor
+	    
+	 * @param polarizationTypes
+	    
+	 * @param mainBeamEfficiency
+	    
+	 * @param beamMapUID
+	    
+	 * @param relativeAmplitudeRms
+	    
 	 */ 
 	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param startValidTime
+	    
+	 * @param endValidTime
+	    
+	 * @param antennaMake
+	    
+	 * @param frequencyRange
+	    
+	 * @param numReceptor
+	    
+	 * @param polarizationTypes
+	    
+	 * @param mainBeamEfficiency
+	    
+	 * @param beamMapUID
+	    
+	 * @param relativeAmplitudeRms
+	    
+	 */ 
 	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms); 
 		 
 	
@@ -670,6 +653,37 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(CalPrimaryBeamRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a CalPrimaryBeamRowIDL struct.
+	 */
+	CalPrimaryBeamRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct CalPrimaryBeamRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (CalPrimaryBeamRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;	
 
 private:
 	/**
@@ -883,6 +897,41 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, CalPrimaryBeamAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianISStream& eiss);
+void receiverBandFromBin( EndianISStream& eiss);
+void calDataIdFromBin( EndianISStream& eiss);
+void calReductionIdFromBin( EndianISStream& eiss);
+void startValidTimeFromBin( EndianISStream& eiss);
+void endValidTimeFromBin( EndianISStream& eiss);
+void antennaMakeFromBin( EndianISStream& eiss);
+void frequencyRangeFromBin( EndianISStream& eiss);
+void numReceptorFromBin( EndianISStream& eiss);
+void polarizationTypesFromBin( EndianISStream& eiss);
+void mainBeamEfficiencyFromBin( EndianISStream& eiss);
+void beamMapUIDFromBin( EndianISStream& eiss);
+void relativeAmplitudeRmsFromBin( EndianISStream& eiss);
+
+		
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the CalPrimaryBeamTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalPrimaryBeamRow* fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table, const vector<string>& attributesSeq);	 
 
 };
 

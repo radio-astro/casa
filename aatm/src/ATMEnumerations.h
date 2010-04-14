@@ -1,10 +1,41 @@
-#if !defined(ATM_ENUMERATION_H)
+#ifndef _ATM_ENUMERATION_H
+#define _ATM_ENUMERATION_H
+/*******************************************************************************
+ * ALMA - Atacama Large Millimiter Array
+ * (c) Institut de Radioastronomie Millimetrique, 2009
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ *
+ * "@(#) $Id: ATMEnumerations.h,v 1.4.2.1 2010/02/19 15:00:11 dbroguie Exp $"
+ *
+ * who       when      what
+ * --------  --------  ----------------------------------------------
+ * pardo     24/03/09  created
+ */
 
-namespace atm {
+#ifndef __cplusplus
+#error "This is a C++ include file and cannot be used from plain C"
+#endif
+
+#include "ATMCommon.h"
+
+ATM_NAMESPACE_BEGIN
 
 /** \file
- *  \brieg Global enumeration objects
- *  
+ *  \brief Global enumeration objects
+ *
  *  The ASDM uses the the item netSideband to describe the sidebands. It appears
  *  more convenient to use a pair of items, the side of the sideband and its type.
  *  The following two enumerations describes this.
@@ -16,7 +47,7 @@ namespace atm {
  *  Heterodyne receivers have two sidebands, a lower and an upper sideband. On the
  *  other hand the detectors do not have sidebands. The Science Data Model assign
  *  one spectral window per sideband. Hence, with detectors, there is a single
- *  spectral window. SidebandSide differenciates between these various cases.<br>
+ *  spectral window. SidebandSide differentiates between these various cases.<br>
  *
  *  The codes have the following meaning:
  *    <ul>
@@ -59,7 +90,32 @@ enum SidebandType{ NOTYPE=-1,      //!< Not relevant (no sideband)
                    TWOSB=2         //!< two sidebands (sideband separation)
 };
 
-}
+ 
+/** \brief Defines the type of atmosphere
+ *
+ *  
+ *
+ *  The codes have the following meaning:
+ *   <ul>
+ *     <li> 1  Tropical (tropical)
+ *     <li> 2  Mid-latitude Summer (midlatSummer) 
+ *     <li> 3  Mid-latitude Winter (midlatWinter) 
+ *     <li> 4  Sub-arctic Summer (subarcticSummer) 
+ *     <li> 5  Sub-arctic Winter (subarcticWinter) 
+ *     <li> 6  typeATM_end
+ *    </ul>
+ *  </ul>
+ */
 
-#define ATM_ENUMERATION_H
-#endif
+enum typeAtm_t { tropical=1, 
+ 		 midlatSummer, 
+ 		 midlatWinter, 
+ 		 subarcticSummer, 
+ 		 subarcticWinter, 
+ 		 typeATM_end 
+};
+
+
+ATM_NAMESPACE_END
+
+#endif /*!_ATM_ENUMERATION_H*/

@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STMath.cpp 1633 2009-09-16 07:11:16Z TakeshiNakazato $
+//# $Id: python_STMath.cpp 1677 2010-01-27 07:29:48Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <vector>
 #include <boost/python.hpp>
@@ -48,6 +48,8 @@ namespace asap {
         .def("_averagepol", &STMathWrapper::averagePolarisations)
         .def("_averagebeams", &STMathWrapper::averageBeams)
         .def("_unaryop", &STMathWrapper::unaryOperate)
+        .def("_arrayop", &STMathWrapper::arrayOperate)
+        //.def("_array2dop", &STMathWrapper::array2dOperate)
         .def("_binaryop", &STMathWrapper::binaryOperate)
         .def("_auto_quotient", &STMathWrapper::autoQuotient)
         .def("_quotient", &STMathWrapper::quotient)
@@ -77,6 +79,7 @@ namespace asap {
         .def("_new_average", &STMathWrapper::new_average)
         // cwcal
         .def("cwcal", &STMathWrapper::cwcal)
+        .def("almacal", &STMathWrapper::almacal)
           ;
     };
 

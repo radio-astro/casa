@@ -99,7 +99,7 @@ can be made with this task.
 	stokeslast -- Put Stokes axis last in header?
 		default: True; example: syokeslast=False
         async --  Run asynchronously
-                default = True; recommended.
+                default = False;
 </example> 
 
 </task>

@@ -23,6 +23,9 @@
 // ATM. Unfortunately, due to the design of ATM, this list is somewhat
 // long and includes the use of "using namespace std;". 
 
+#ifndef _AATM_TEST_AATMINCLUDES_HPP__
+#define _AATM_TEST_AATMINCLUDES_HPP__
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -45,13 +48,11 @@ using namespace std;
 #include "ATMFrequency.h"
 #include "ATMWaterVaporRadiometer.h"
 #include "ATMWVRMeasurement.h"
-#include "ATMAtmosphereType.h"
-#include "ATMType.h"
 #include "ATMProfile.h"
 #include "ATMSpectralGrid.h"
 #include "ATMRefractiveIndex.h"
 #include "ATMSkyStatus.h"
-#include "ATMTypeName.h"
 #include "ATMAngle.h"
 
 
+#endif

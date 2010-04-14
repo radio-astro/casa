@@ -46,85 +46,58 @@ using std::set;
 using asdmIDL::TotalPowerRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
+
+
 #include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
+using  asdm::ArrayTime;
+
 #include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
+using  asdm::Interval;
+
 #include <Tag.h>
-#include <Temperature.h>
+using  asdm::Tag;
+
+#include <Length.h>
+using  asdm::Length;
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
 #include <ConversionException.h>
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
-
-
-
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
 
 /*\file TotalPower.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -145,10 +118,13 @@ class ConfigDescriptionRow;
 class ExecBlockRow;
 	
 
+class TotalPowerRow;
+typedef void (TotalPowerRow::*TotalPowerAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The TotalPowerRow class is a row of a TotalPowerTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class TotalPowerRow {
@@ -163,49 +139,6 @@ public:
 	 */
 	TotalPowerTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a TotalPowerRowIDL struct.
-	 */
-	TotalPowerRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct TotalPowerRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (TotalPowerRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the TotalPowerTable to which the row built by deserialization will be parented.
-	  */
-	 static TotalPowerRow* fromBin(EndianISStream& eiss, TotalPowerTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -850,12 +783,76 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this TotalPowerRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param time
+	    
+	 * @param configDescriptionId
+	    
+	 * @param fieldId
+	    
+	 * @param scanNumber
+	    
+	 * @param subscanNumber
+	    
+	 * @param integrationNumber
+	    
+	 * @param uvw
+	    
+	 * @param exposure
+	    
+	 * @param timeCentroid
+	    
+	 * @param floatData
+	    
+	 * @param flagAnt
+	    
+	 * @param flagPol
+	    
+	 * @param flagRow
+	    
+	 * @param interval
+	    
+	 * @param stateId
+	    
+	 * @param execBlockId
+	    
 	 */ 
 	bool compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param scanNumber
+	    
+	 * @param subscanNumber
+	    
+	 * @param integrationNumber
+	    
+	 * @param uvw
+	    
+	 * @param exposure
+	    
+	 * @param timeCentroid
+	    
+	 * @param floatData
+	    
+	 * @param flagAnt
+	    
+	 * @param flagPol
+	    
+	 * @param flagRow
+	    
+	 * @param interval
+	    
+	 * @param stateId
+	    
+	 * @param execBlockId
+	    
+	 */ 
 	bool compareRequiredValue(int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId); 
 		 
 	
@@ -868,6 +865,37 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(TotalPowerRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a TotalPowerRowIDL struct.
+	 */
+	TotalPowerRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct TotalPowerRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (TotalPowerRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;	
 
 private:
 	/**
@@ -1140,6 +1168,45 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, TotalPowerAttributeFromBin> fromBinMethods;
+void timeFromBin( EndianISStream& eiss);
+void configDescriptionIdFromBin( EndianISStream& eiss);
+void fieldIdFromBin( EndianISStream& eiss);
+void scanNumberFromBin( EndianISStream& eiss);
+void subscanNumberFromBin( EndianISStream& eiss);
+void integrationNumberFromBin( EndianISStream& eiss);
+void uvwFromBin( EndianISStream& eiss);
+void exposureFromBin( EndianISStream& eiss);
+void timeCentroidFromBin( EndianISStream& eiss);
+void floatDataFromBin( EndianISStream& eiss);
+void flagAntFromBin( EndianISStream& eiss);
+void flagPolFromBin( EndianISStream& eiss);
+void flagRowFromBin( EndianISStream& eiss);
+void intervalFromBin( EndianISStream& eiss);
+void stateIdFromBin( EndianISStream& eiss);
+void execBlockIdFromBin( EndianISStream& eiss);
+
+void subintegrationNumberFromBin( EndianISStream& eiss);
+	
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the TotalPowerTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static TotalPowerRow* fromBin(EndianISStream& eiss, TotalPowerTable& table, const vector<string>& attributesSeq);	 
 
 };
 

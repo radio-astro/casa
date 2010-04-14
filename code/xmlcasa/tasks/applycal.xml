@@ -29,7 +29,7 @@ another visibility file.
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Nome of input visibility file</description>
+		<description>Name of input visibility file</description>
 		<value></value>
 	</param>
 
@@ -121,7 +121,6 @@ another visibility file.
 
    <constraints>
 	<when param="selectdata">
-		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 			<default param="timerange"><value type="string"/></default>
 			<default param="uvrange"><value type="string"/></default>
@@ -129,6 +128,7 @@ another visibility file.
 			<default param="scan"><value type="string"/></default>
 			<default param="msselect"><value type="string"/></default>
 		</equals>
+		<equals type="bool" value="False"/>
 	</when>
    </constraints>
 </input>

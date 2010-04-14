@@ -357,6 +357,10 @@ void RFASelector::addClipInfoDesc ( const Block<ClipInfo> &clip)
 RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) : 
   RFAFlagCubeBase(ch,parm)
 {
+  if ( chunk.measSet().isNull() ) {
+    throw AipsError("Received chunk referring to NULL MS!");
+  }
+
   char s[256];
 
   if( fieldType(parm,RF_FREQS,TpArrayString)) // frequency range[s], as measures
@@ -390,7 +394,8 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     }
     addString(desc_str,String(RF_FREQS)+"="+fq+"MHz");
   }
-// parse input arguments: channels
+
+  // parse input arguments: channels
   if( parseRange(sel_chan,parm,RF_CHANS)) 
   {
     String sch;
@@ -402,7 +407,8 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     addString(desc_str,String(RF_CHANS)+"="+sch);
     sel_chan(sel_chan>=0) += -(Int)indexingBase();
   }
-// parse input arguments: correlations
+  
+  // parse input arguments: correlations
   if( fieldType(parm,RF_CORR,TpString,TpArrayString))
   {
     String ss;
@@ -424,7 +430,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     addString(desc_str, String(RF_COLUMN)+"="+sel_column);
   }
   
-// parse input arguments: Spw ID(s)
+  // parse input arguments: Spw ID(s)
   if( fieldType(parm,RF_SPWID,TpInt,TpArrayInt)) 
   {
     parm.get(RF_SPWID,sel_spwid);
@@ -434,7 +440,8 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     addString(desc_str,String(RF_SPWID)+"="+ss);
     sel_spwid -= (Int)indexingBase();
   }
-// parse input arguments: Field names or ID(s)
+
+  // parse input arguments: Field names or ID(s)
   if( fieldType(parm,RF_FIELD,TpString,TpArrayString)) 
   {
     parm.get(RF_FIELD,sel_fieldnames);
@@ -497,7 +504,8 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
 
       addString(desc_str, s);
   }
-// parse input: specific UV ranges 
+
+  // parse input: specific UV ranges 
   Array<Double> uvrng;
   Matrix<Double> uvrange;
   if( parseTimes(uvrng,parm,RF_UVRANGE)) 
@@ -507,6 +515,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     sel_uvrange = uvrange;
     addString(desc_str,String(RF_UVRANGE)+"("+String::toString(uvrange.ncolumn())+")");
   }
+
 // parse input arguments: ANT specified by string ID
   LogicalVector sel_ant(num(ANT),False); 
   if( fieldType(parm,RF_ANT,TpString,TpArrayString)) 
@@ -534,14 +543,15 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     String sant;
     for( uInt i=0; i<num(ANT); i++) 
       if( sel_ant(i)) 
-        addString(sant,chunk.antNames()(i),",");
-    addString(desc_str,String(RF_ANT)+"="+sant);
+        addString(sant, chunk.antNames()(i),",");
+    addString(desc_str, String(RF_ANT)+"="+sant);
   }
+
 // parse input: baselines as "X-Y"
   sel_ifr = LogicalVector(num(IFR),False);
   String ifrdesc;
   const Vector<String> &names( chunk.antNames()) ;
-  if( fieldType(parm,RF_BASELINE,TpString,TpArrayString)) 
+  if( fieldType(parm, RF_BASELINE, TpString, TpArrayString)) 
   {
     Vector<String> ss(parm.asArrayString(RF_BASELINE));
     ss.apply(stringUpper);
@@ -618,6 +628,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
       }
     }
   }
+
   if( sum(sel_ifr))
   {
     String ss;
@@ -635,6 +646,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     else // no antennas either? flag everything
       sel_ifr.resize();
   }
+
   // parse input: feeds as [[x1,y1],[x2,y2],... etc.
   if( fieldType(parm,RF_FEED,TpInt,TpArrayInt)) 
   {
@@ -681,7 +693,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
 
   ac = new ROMSAntennaColumns(chunk.measSet().antenna());
   diameters = ac->dishDiameter().getColumn();
-
+  
   shadow = fieldType(parm, RF_SHADOW, TpBool) && parm.asBool(RF_SHADOW);
   if (shadow) {
     diameter = parm.asDouble(RF_DIAMETER);
@@ -709,6 +721,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     sel_time.row(0) = ctimes - timedelta;
     sel_time.row(1) = ctimes + timedelta;
   }
+
 // flag autocorrelations too?
   sel_autocorr =  (fieldType(parm,RF_AUTOCORR,TpBool) && parm.asBool(RF_AUTOCORR));
   if (sel_autocorr)

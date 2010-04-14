@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 from asap._asap import Scantable
 
-def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, verify, outfile, outform, overwrite, plotlevel):
+def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdsmooth')
 
@@ -32,7 +32,7 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,scanaverage)
+            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
             if (isinstance(s,Scantable)):
                     stmp = s.copy()
                     s=stmp.average_time(scanav=True)
@@ -95,7 +95,7 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
             except Exception, instance:
                 #print '***Error***',instance
                 #print 'No output written.'
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 casalog.post( 'No output written.' )
                 return
 
@@ -165,7 +165,7 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

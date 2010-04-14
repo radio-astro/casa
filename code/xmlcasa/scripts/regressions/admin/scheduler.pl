@@ -17,12 +17,13 @@ use Sys::Hostname;
 $#ARGV == 3 or die "Usage: $0 [options] reg_dir data_dir load_limit timeout";
 
 # Supported command line options
-$work    = "" if (0);   # non-default work dir
-$res_dir = "" if (0);   # non-default result dir
-$noloop  = "" if (0);   # Iterate through tests only once
-$noclean = "" if (0);   # Do not cleanup result dir
-$all     = "" if (0);   # Loop through all tests?
-$profile = "" if (0);   # enable profiling? assumes sudo opcontrol
+$work     = "" if (0);   # non-default work dir
+$res_dir  = "" if (0);   # non-default result dir
+$noloop   = "" if (0);   # Iterate through tests only once
+$noclean  = "" if (0);   # Do not cleanup result dir
+$all      = "" if (0);   # Loop through all tests?
+$profile  = "" if (0);   # enable profiling? assumes sudo opcontrol
+$pack_all = "" if (0);   # create a result-all.tgz from all the tar files?
 
 $reg_dir  = $ARGV[0];
 $data_dir = $ARGV[1];
@@ -69,7 +70,7 @@ while(<FILE>) {
     if (/^\S+$/) {
 	push @tests, $_;
     }
-    elsif (/^\S+\s+\S+$/) {
+    elsif (/^\S+\s+\S+\s+\S+$/) {
 	@t = split;
 	push @tests, $t[0];
     }
@@ -195,7 +196,8 @@ if ($load_average_15 < $la_limit) {
 		if (-e "./retrieved") {
 		    system("/bin/ls -1tr . | grep -B9999 retrieved | grep tar.gz | xargs /bin/rm -f");
 		}
-		
+            }
+            if ($pack_all) {
 		$cmd = "tar zc result-*.tar.gz > result-all.tgz_temp";
 		if (system($cmd) != 0) {
 		    print STDERR "$cmd: $!";

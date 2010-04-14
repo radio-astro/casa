@@ -3533,7 +3533,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                    }
                }
 
-               if (row < 0 || row >= selRows) {
+               if (row < 0 || row >= (Int)selRows) {
                   continue;
                }
 

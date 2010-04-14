@@ -139,6 +139,7 @@ PKSreader* getPKSreader(
 
 PKSreader* getPKSreader(
         const String name,
+        const String antenna,
         const Int retry,
         const Int interpolate,
         String &format,
@@ -154,8 +155,8 @@ PKSreader* getPKSreader(
 
   // Try to open it.
   if (reader) {
-    if (reader->open(name, beams, IFs, nChan, nPol, haveXPol, haveBase,
-                     haveSpectra)) {
+    if (reader->open(name, antenna, beams, IFs, nChan, nPol, haveXPol, 
+                     haveBase, haveSpectra)) {
       format += " OPEN ERROR";
       delete reader;
       reader = 0x0;
@@ -171,6 +172,7 @@ PKSreader* getPKSreader(
 // appropriate PKSreader for it.
 PKSreader* getPKSreader(
         const String name,
+        const String antenna,
         const Vector<String> directories,
         const Int retry,
         const Int interpolate,
@@ -189,8 +191,8 @@ PKSreader* getPKSreader(
 
   // Try to open it.
   if (reader) {
-    if (reader->open(name, beams, IFs, nChan, nPol, haveXPol, haveBase,
-                     haveSpectra)) {
+    if (reader->open(name, antenna, beams, IFs, nChan, nPol, haveXPol, 
+                     haveBase, haveSpectra)) {
       format += " OPEN ERROR";
       delete reader;
       reader = 0x0;

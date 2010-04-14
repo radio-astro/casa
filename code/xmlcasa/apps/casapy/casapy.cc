@@ -79,7 +79,6 @@ static int make_it_a_dir( const char *path ) {
 //#include <display/QtViewer/QtApp.h>
 
 int main( int argc, char **argv ) {
-    // casa::QtApp::init(argc, argv);
 
     static const char file_separator = '/';
 
@@ -338,3 +337,4 @@ int main( int argc, char **argv ) {
     // py.evalString("IPython.Shell.IPShell(user_ns=__ipython_namespace__).mainloop(1)");
 
 }
+

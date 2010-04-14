@@ -86,13 +86,13 @@ WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize,
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero), useDoubleGrid_p(useDoublePrec), 
+    pointingToImage(0), usezero_p(usezero), 
     machineName_p("WProjectFT")
 {
   convSize=0;
   tangentSpecified_p=False;
   lastIndex_p=0;
-
+  useDoubleGrid_p=useDoublePrec;
   wpConvFunc_p=new WPConvFunc();
 
 }
@@ -104,7 +104,7 @@ WProjectFT::WProjectFT(Int nWPlanes,
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero),  useDoubleGrid_p(useDoublePrec), 
+    pointingToImage(0), usezero_p(usezero),  
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -113,7 +113,7 @@ WProjectFT::WProjectFT(Int nWPlanes,
   mLocation_p=mLocation;
   lastIndex_p=0;
   wpConvFunc_p=new WPConvFunc();
-  
+  useDoubleGrid_p=useDoublePrec;
 }
 WProjectFT::WProjectFT(
 		       Int nWPlanes, MDirection mTangent, 
@@ -124,7 +124,7 @@ WProjectFT::WProjectFT(
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero), useDoubleGrid_p(useDoublePrec), 
+    pointingToImage(0), usezero_p(usezero), 
     machineName_p("WProjectFT")
 {
   convSize=0;
@@ -134,6 +134,7 @@ WProjectFT::WProjectFT(
   mLocation_p=mLocation;
   lastIndex_p=0;
   wpConvFunc_p=new WPConvFunc();
+  useDoubleGrid_p=useDoublePrec;
 }
 
 WProjectFT::WProjectFT(const RecordInterface& stateRec)

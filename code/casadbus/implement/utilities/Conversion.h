@@ -47,7 +47,7 @@ namespace casa {
 
 	template<class t> std::vector<double> af( const Vector<t> &other ) {
 	    std::vector<double> result(other.nelements( ));
-	    for (int x=0; x < result.size(); ++x)
+	    for (unsigned int x=0; x < result.size(); ++x)
 		result[x] = (double) other[x];
 	    return result;
 	}

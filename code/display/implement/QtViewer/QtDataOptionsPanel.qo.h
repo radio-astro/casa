@@ -42,7 +42,7 @@
  
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtViewer;
+class QtDisplayPanelGui;
 class QtDisplayData;
 
 class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
@@ -54,7 +54,7 @@ class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
 
  public:
   
-  QtDataOptionsPanel(QtViewer* viewer=0, QWidget* parent=0 );
+  QtDataOptionsPanel(QtDisplayPanelGui* panel=0, QWidget* parent=0 );
   ~QtDataOptionsPanel();
   
 
@@ -65,7 +65,7 @@ class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
   void resizeEvent (QResizeEvent* ev);		//#diag -- to show size
   
   QWidget *parent_;
-  QtViewer* v_;
+  QtDisplayPanelGui *panel_;
  
  
  protected slots:

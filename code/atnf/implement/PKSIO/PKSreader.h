@@ -34,6 +34,7 @@
 #define ATNF_PKSREADER_H
 
 #include <atnf/PKSIO/PKSrecord.h>
+#include <atnf/PKSIO/SrcType.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
@@ -66,6 +67,7 @@ class PKSreader* getPKSreader(
 // Open an appropriate PKSreader for a Parkes Multibeam dataset.
 class PKSreader* getPKSreader(
         const String name,
+        const String antenna,
         const Int retry,
         const Int interpolate,
         String &format,
@@ -80,6 +82,7 @@ class PKSreader* getPKSreader(
 // As above, but search a list of directories for it.
 class PKSreader* getPKSreader(
         const String name,
+        const String antenna,
         const Vector<String> directories,
         const Int retry,
         const Int interpolate,
@@ -103,6 +106,7 @@ class PKSreader
     // Open the dataset.
     virtual Int open(
         const String inName,
+        const String antenna,
         Vector<Bool> &beams,
         Vector<Bool> &IFs,
         Vector<uInt> &nChan,

@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	AntennaRow::~AntennaRow() {
 	}
 
@@ -684,104 +683,139 @@ namespace asdm {
 
 	}
 	
-	AntennaRow* AntennaRow::fromBin(EndianISStream& eiss, AntennaTable& table) {
-		AntennaRow* row = new  AntennaRow(table);
-		
-		
+void AntennaRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void AntennaRow::nameFromBin(EndianISStream& eiss) {
 		
-			
-		row->name =  eiss.readString();
-			
-		
-	
-
 	
 	
 		
 			
-		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+		name =  eiss.readString();
 			
 		
 	
-
+	
+}
+void AntennaRow::antennaMakeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->antennaType = CAntennaType::from_int(eiss.readInt());
+		antennaMake = CAntennaMake::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void AntennaRow::antennaTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		antennaType = CAntennaType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void AntennaRow::dishDiameterFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->dishDiameter =  Length::fromBin(eiss);
+		dishDiameter =  Length::fromBin(eiss);
 		
 	
-
+	
+}
+void AntennaRow::positionFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->position = Length::from1DBin(eiss);	
+	position = Length::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void AntennaRow::offsetFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->offset = Length::from1DBin(eiss);	
+	offset = Length::from1DBin(eiss);	
 	
 
 		
 	
+	
+}
+void AntennaRow::timeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		time =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void AntennaRow::stationIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		stationId =  Tag::fromBin(eiss);
+		
+	
+	
+}
 
-	
+void AntennaRow::assocAntennaIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->time =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->stationId =  Tag::fromBin(eiss);
-		
-	
-
-		
-		
-		
-	row->assocAntennaIdExists = eiss.readBoolean();
-	if (row->assocAntennaIdExists) {
+	assocAntennaIdExists = eiss.readBoolean();
+	if (assocAntennaIdExists) {
 		
 	
 		
 		
-		row->assocAntennaId =  Tag::fromBin(eiss);
+		assocAntennaId =  Tag::fromBin(eiss);
 		
 	
 
 	}
-
+	
+}
+	
+	
+	AntennaRow* AntennaRow::fromBin(EndianISStream& eiss, AntennaTable& table, const vector<string>& attributesSeq) {
+		AntennaRow* row = new  AntennaRow(table);
 		
+		map<string, AntennaAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "AntennaTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1262,6 +1296,21 @@ antennaType = CAntennaType::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &AntennaRow::antennaIdFromBin; 
+	 fromBinMethods["name"] = &AntennaRow::nameFromBin; 
+	 fromBinMethods["antennaMake"] = &AntennaRow::antennaMakeFromBin; 
+	 fromBinMethods["antennaType"] = &AntennaRow::antennaTypeFromBin; 
+	 fromBinMethods["dishDiameter"] = &AntennaRow::dishDiameterFromBin; 
+	 fromBinMethods["position"] = &AntennaRow::positionFromBin; 
+	 fromBinMethods["offset"] = &AntennaRow::offsetFromBin; 
+	 fromBinMethods["time"] = &AntennaRow::timeFromBin; 
+	 fromBinMethods["stationId"] = &AntennaRow::stationIdFromBin; 
+		
+	
+	 fromBinMethods["assocAntennaId"] = &AntennaRow::assocAntennaIdFromBin; 
 	
 	}
 	
@@ -1329,7 +1378,21 @@ antennaType = CAntennaType::from_int(0);
 		else
 			assocAntennaIdExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &AntennaRow::antennaIdFromBin; 
+		 fromBinMethods["name"] = &AntennaRow::nameFromBin; 
+		 fromBinMethods["antennaMake"] = &AntennaRow::antennaMakeFromBin; 
+		 fromBinMethods["antennaType"] = &AntennaRow::antennaTypeFromBin; 
+		 fromBinMethods["dishDiameter"] = &AntennaRow::dishDiameterFromBin; 
+		 fromBinMethods["position"] = &AntennaRow::positionFromBin; 
+		 fromBinMethods["offset"] = &AntennaRow::offsetFromBin; 
+		 fromBinMethods["time"] = &AntennaRow::timeFromBin; 
+		 fromBinMethods["stationId"] = &AntennaRow::stationIdFromBin; 
+			
+	
+		 fromBinMethods["assocAntennaId"] = &AntennaRow::assocAntennaIdFromBin; 
+			
 	}
 
 	
@@ -1469,6 +1532,26 @@ antennaType = CAntennaType::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, AntennaAttributeFromBin> AntennaRow::initFromBinMethods() {
+		map<string, AntennaAttributeFromBin> result;
+		
+		result["antennaId"] = &AntennaRow::antennaIdFromBin;
+		result["name"] = &AntennaRow::nameFromBin;
+		result["antennaMake"] = &AntennaRow::antennaMakeFromBin;
+		result["antennaType"] = &AntennaRow::antennaTypeFromBin;
+		result["dishDiameter"] = &AntennaRow::dishDiameterFromBin;
+		result["position"] = &AntennaRow::positionFromBin;
+		result["offset"] = &AntennaRow::offsetFromBin;
+		result["time"] = &AntennaRow::timeFromBin;
+		result["stationId"] = &AntennaRow::stationIdFromBin;
+		
+		
+		result["assocAntennaId"] = &AntennaRow::assocAntennaIdFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -39,7 +39,8 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
-   CXXFLAGS +=-DAIPS_DARWIN
+   CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
+   #CXXFLAGS +=-DAIPS_DARWIN
 endif
 
 # cfitsio
@@ -88,6 +89,7 @@ BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
    LDFLAGS   := -bundle -arch i386
+   #LDFLAGS   := -bundle
 endif
 
 
@@ -133,6 +135,7 @@ PYOBJECTS := python_Scantable.o \
              python_STLineFinder.o \
              python_STFitEntry.o \
              python_STWriter.o \
+             python_SrcType.o \
              python_LineCatalog.o \
 	     python_asap.o
 
@@ -140,6 +143,8 @@ OBJECTS := $(CCOBJECTS) $(PYOBJECTS)
 
 HEADERS   := MathUtils.h \
              Logger.h \
+	     Lorentzian1D.h \
+	     Lorentzian1DParam.h \
              STAttr.h \
              STHeader.h \
              Scantable.h \

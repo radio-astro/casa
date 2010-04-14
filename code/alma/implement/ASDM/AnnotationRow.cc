@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	AnnotationRow::~AnnotationRow() {
 	}
 
@@ -1187,74 +1186,84 @@ namespace asdm {
 
 	}
 	
-	AnnotationRow* AnnotationRow::fromBin(EndianISStream& eiss, AnnotationTable& table) {
-		AnnotationRow* row = new  AnnotationRow(table);
-		
-		
+void AnnotationRow::annotationIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->annotationId =  Tag::fromBin(eiss);
+		annotationId =  Tag::fromBin(eiss);
 		
 	
+	
+}
+void AnnotationRow::timeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		time =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void AnnotationRow::issueFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		issue =  eiss.readString();
+			
+		
+	
+	
+}
+void AnnotationRow::detailsFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		details =  eiss.readString();
+			
+		
+	
+	
+}
 
-	
+void AnnotationRow::numAntennaFromBin(EndianISStream& eiss) {
 		
-		
-		row->time =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->issue =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->details =  eiss.readString();
-			
-		
-	
-
-		
-		
-		
-	row->numAntennaExists = eiss.readBoolean();
-	if (row->numAntennaExists) {
+	numAntennaExists = eiss.readBoolean();
+	if (numAntennaExists) {
 		
 	
 	
 		
 			
-		row->numAntenna =  eiss.readInt();
+		numAntenna =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->basebandNameExists = eiss.readBoolean();
-	if (row->basebandNameExists) {
+	
+}
+void AnnotationRow::basebandNameFromBin(EndianISStream& eiss) {
+		
+	basebandNameExists = eiss.readBoolean();
+	if (basebandNameExists) {
 		
 	
 	
 		
 			
 	
-		row->basebandName.clear();
+		basebandName.clear();
 		
 		unsigned int basebandNameDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < basebandNameDim1; i++)
 			
-			row->basebandName.push_back(CBasebandName::from_int(eiss.readInt()));
+			basebandName.push_back(CBasebandName::from_int(eiss.readInt()));
 			
 	
 
@@ -1262,61 +1271,73 @@ namespace asdm {
 	
 
 	}
-
-	row->numBasebandExists = eiss.readBoolean();
-	if (row->numBasebandExists) {
+	
+}
+void AnnotationRow::numBasebandFromBin(EndianISStream& eiss) {
+		
+	numBasebandExists = eiss.readBoolean();
+	if (numBasebandExists) {
 		
 	
 	
 		
 			
-		row->numBaseband =  eiss.readInt();
-			
-		
-	
-
-	}
-
-	row->intervalExists = eiss.readBoolean();
-	if (row->intervalExists) {
-		
-	
-		
-		
-		row->interval =  Interval::fromBin(eiss);
-		
-	
-
-	}
-
-	row->dValueExists = eiss.readBoolean();
-	if (row->dValueExists) {
-		
-	
-	
-		
-			
-		row->dValue =  eiss.readDouble();
+		numBaseband =  eiss.readInt();
 			
 		
 	
 
 	}
+	
+}
+void AnnotationRow::intervalFromBin(EndianISStream& eiss) {
+		
+	intervalExists = eiss.readBoolean();
+	if (intervalExists) {
+		
+	
+		
+		
+		interval =  Interval::fromBin(eiss);
+		
+	
 
-	row->vdValueExists = eiss.readBoolean();
-	if (row->vdValueExists) {
+	}
+	
+}
+void AnnotationRow::dValueFromBin(EndianISStream& eiss) {
+		
+	dValueExists = eiss.readBoolean();
+	if (dValueExists) {
+		
+	
+	
+		
+			
+		dValue =  eiss.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void AnnotationRow::vdValueFromBin(EndianISStream& eiss) {
+		
+	vdValueExists = eiss.readBoolean();
+	if (vdValueExists) {
 		
 	
 	
 		
 			
 	
-		row->vdValue.clear();
+		vdValue.clear();
 		
 		unsigned int vdValueDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < vdValueDim1; i++)
 			
-			row->vdValue.push_back(eiss.readDouble());
+			vdValue.push_back(eiss.readDouble());
 			
 	
 
@@ -1324,16 +1345,19 @@ namespace asdm {
 	
 
 	}
-
-	row->vvdValuesExists = eiss.readBoolean();
-	if (row->vvdValuesExists) {
+	
+}
+void AnnotationRow::vvdValuesFromBin(EndianISStream& eiss) {
+		
+	vvdValuesExists = eiss.readBoolean();
+	if (vvdValuesExists) {
 		
 	
 	
 		
 			
 	
-		row->vvdValues.clear();
+		vvdValues.clear();
 		
 		unsigned int vvdValuesDim1 = eiss.readInt();
 		unsigned int vvdValuesDim2 = eiss.readInt();
@@ -1344,7 +1368,7 @@ namespace asdm {
 			
 			vvdValuesAux1.push_back(eiss.readDouble());
 			
-			row->vvdValues.push_back(vvdValuesAux1);
+			vvdValues.push_back(vvdValuesAux1);
 		}
 	
 	
@@ -1353,35 +1377,41 @@ namespace asdm {
 	
 
 	}
-
-	row->llValueExists = eiss.readBoolean();
-	if (row->llValueExists) {
+	
+}
+void AnnotationRow::llValueFromBin(EndianISStream& eiss) {
+		
+	llValueExists = eiss.readBoolean();
+	if (llValueExists) {
 		
 	
 	
 		
 			
-		row->llValue =  eiss.readLong();
+		llValue =  eiss.readLong();
 			
 		
 	
 
 	}
-
-	row->vllValueExists = eiss.readBoolean();
-	if (row->vllValueExists) {
+	
+}
+void AnnotationRow::vllValueFromBin(EndianISStream& eiss) {
+		
+	vllValueExists = eiss.readBoolean();
+	if (vllValueExists) {
 		
 	
 	
 		
 			
 	
-		row->vllValue.clear();
+		vllValue.clear();
 		
 		unsigned int vllValueDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < vllValueDim1; i++)
 			
-			row->vllValue.push_back(eiss.readLong());
+			vllValue.push_back(eiss.readLong());
 			
 	
 
@@ -1389,16 +1419,19 @@ namespace asdm {
 	
 
 	}
-
-	row->vvllValueExists = eiss.readBoolean();
-	if (row->vvllValueExists) {
+	
+}
+void AnnotationRow::vvllValueFromBin(EndianISStream& eiss) {
+		
+	vvllValueExists = eiss.readBoolean();
+	if (vvllValueExists) {
 		
 	
 	
 		
 			
 	
-		row->vvllValue.clear();
+		vvllValue.clear();
 		
 		unsigned int vvllValueDim1 = eiss.readInt();
 		unsigned int vvllValueDim2 = eiss.readInt();
@@ -1409,7 +1442,7 @@ namespace asdm {
 			
 			vvllValueAux1.push_back(eiss.readLong());
 			
-			row->vvllValue.push_back(vvllValueAux1);
+			vvllValue.push_back(vvllValueAux1);
 		}
 	
 	
@@ -1418,24 +1451,40 @@ namespace asdm {
 	
 
 	}
-
-	row->antennaIdExists = eiss.readBoolean();
-	if (row->antennaIdExists) {
+	
+}
+void AnnotationRow::antennaIdFromBin(EndianISStream& eiss) {
+		
+	antennaIdExists = eiss.readBoolean();
+	if (antennaIdExists) {
 		
 	
 		
 		
 			
 	
-	row->antennaId = Tag::from1DBin(eiss);	
+	antennaId = Tag::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
+	
+}
+	
+	
+	AnnotationRow* AnnotationRow::fromBin(EndianISStream& eiss, AnnotationTable& table, const vector<string>& attributesSeq) {
+		AnnotationRow* row = new  AnnotationRow(table);
 		
+		map<string, AnnotationAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "AnnotationTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2269,6 +2318,26 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["annotationId"] = &AnnotationRow::annotationIdFromBin; 
+	 fromBinMethods["time"] = &AnnotationRow::timeFromBin; 
+	 fromBinMethods["issue"] = &AnnotationRow::issueFromBin; 
+	 fromBinMethods["details"] = &AnnotationRow::detailsFromBin; 
+		
+	
+	 fromBinMethods["numAntenna"] = &AnnotationRow::numAntennaFromBin; 
+	 fromBinMethods["basebandName"] = &AnnotationRow::basebandNameFromBin; 
+	 fromBinMethods["numBaseband"] = &AnnotationRow::numBasebandFromBin; 
+	 fromBinMethods["interval"] = &AnnotationRow::intervalFromBin; 
+	 fromBinMethods["dValue"] = &AnnotationRow::dValueFromBin; 
+	 fromBinMethods["vdValue"] = &AnnotationRow::vdValueFromBin; 
+	 fromBinMethods["vvdValues"] = &AnnotationRow::vvdValuesFromBin; 
+	 fromBinMethods["llValue"] = &AnnotationRow::llValueFromBin; 
+	 fromBinMethods["vllValue"] = &AnnotationRow::vllValueFromBin; 
+	 fromBinMethods["vvllValue"] = &AnnotationRow::vvllValueFromBin; 
+	 fromBinMethods["antennaId"] = &AnnotationRow::antennaIdFromBin; 
 	
 	}
 	
@@ -2426,7 +2495,26 @@ namespace asdm {
 		else
 			antennaIdExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["annotationId"] = &AnnotationRow::annotationIdFromBin; 
+		 fromBinMethods["time"] = &AnnotationRow::timeFromBin; 
+		 fromBinMethods["issue"] = &AnnotationRow::issueFromBin; 
+		 fromBinMethods["details"] = &AnnotationRow::detailsFromBin; 
+			
+	
+		 fromBinMethods["numAntenna"] = &AnnotationRow::numAntennaFromBin; 
+		 fromBinMethods["basebandName"] = &AnnotationRow::basebandNameFromBin; 
+		 fromBinMethods["numBaseband"] = &AnnotationRow::numBasebandFromBin; 
+		 fromBinMethods["interval"] = &AnnotationRow::intervalFromBin; 
+		 fromBinMethods["dValue"] = &AnnotationRow::dValueFromBin; 
+		 fromBinMethods["vdValue"] = &AnnotationRow::vdValueFromBin; 
+		 fromBinMethods["vvdValues"] = &AnnotationRow::vvdValuesFromBin; 
+		 fromBinMethods["llValue"] = &AnnotationRow::llValueFromBin; 
+		 fromBinMethods["vllValue"] = &AnnotationRow::vllValueFromBin; 
+		 fromBinMethods["vvllValue"] = &AnnotationRow::vvllValueFromBin; 
+		 fromBinMethods["antennaId"] = &AnnotationRow::antennaIdFromBin; 
+			
 	}
 
 	
@@ -2501,6 +2589,31 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, AnnotationAttributeFromBin> AnnotationRow::initFromBinMethods() {
+		map<string, AnnotationAttributeFromBin> result;
+		
+		result["annotationId"] = &AnnotationRow::annotationIdFromBin;
+		result["time"] = &AnnotationRow::timeFromBin;
+		result["issue"] = &AnnotationRow::issueFromBin;
+		result["details"] = &AnnotationRow::detailsFromBin;
+		
+		
+		result["numAntenna"] = &AnnotationRow::numAntennaFromBin;
+		result["basebandName"] = &AnnotationRow::basebandNameFromBin;
+		result["numBaseband"] = &AnnotationRow::numBasebandFromBin;
+		result["interval"] = &AnnotationRow::intervalFromBin;
+		result["dValue"] = &AnnotationRow::dValueFromBin;
+		result["vdValue"] = &AnnotationRow::vdValueFromBin;
+		result["vvdValues"] = &AnnotationRow::vvdValuesFromBin;
+		result["llValue"] = &AnnotationRow::llValueFromBin;
+		result["vllValue"] = &AnnotationRow::vllValueFromBin;
+		result["vvllValue"] = &AnnotationRow::vvllValueFromBin;
+		result["antennaId"] = &AnnotationRow::antennaIdFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

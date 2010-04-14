@@ -217,11 +217,15 @@ void MSAsRaster::initMSAR_() {
   nFieldIds_ = msCols_->field().nrow();
   fieldIds_.resize(nFieldIds_); indgen(fieldIds_);
   String chanerr = "MSAsRaster: channel conformance error in MS";
-  nSpwIds_ = msCols_->spectralWindow().nrow();
+  nSpwIds_ = msCols_->dataDescription().nrow();
+  //cout << "nSpwIds_=" << nSpwIds_ << endl;
   if(nSpwIds_<=0) throw AipsError(chanerr);
   spwIds_.resize(nSpwIds_); indgen(spwIds_);
   nChan_ = msCols_->spectralWindow().numChan().getColumn();
-  if(nSpwIds_!=Int(nChan_.nelements())) throw AipsError(chanerr);
+  if (Int(nChan_.nelements()) < nSpwIds_)
+      throw AipsError(chanerr);
+  if (Int(nChan_.nelements()) > nSpwIds_)
+      nChan_.resize(nSpwIds_, True);
   
   const ColumnDescSet& cds = itsMS->tableDesc().columnDescSet();
   dish_ = (cds.isDefined(MS::columnName(MS::FLOAT_DATA)));

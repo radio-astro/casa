@@ -578,8 +578,8 @@ this is done when you have generated two images, each at a different frequency
 $m_{\nu 1}$ and $m_{\nu 2}$ then the depolarization ratio is 
 $m_{\nu 1}/ m_{\nu 2}$.
 
-This function operates with two images; the first (at frequency $\nu
-1$) is the one attached to your Imagepol \tool.  The second (at
+This function operates with two images; the first (at frequency $\nu 1$)
+is the one attached to your Imagepol \tool.  The second (at
 frequency $\nu 2$) is supplied via the argument {\stfaf infile}, which
 is <!-- can be an Image \tool, or--> a String holding the name of the
 \imagefile.

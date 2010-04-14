@@ -14,8 +14,6 @@ startProc = time.clock()
 
 print '--Running simdata of input672GHz_50pc.image--'
 
-#my_project="ppsim.pwv12"
-#my_project="ppsim.pwv05"
 my_project="psim"
 my_modelimage="diskmodel.im"
 
@@ -34,6 +32,7 @@ ignorecoord=True
 antennalist=repodir+"/data/alma/simmos/alma.out20.cfg"
 direction="J2000 18h00m00.03s -45d59m59.6s"
 pointingspacing="0.5arcsec"
+mosaicsize="0.76arcsec"
 refdate="2012/06/21/03:25:00"
 totaltime="7200s"
 integration="10s"
@@ -73,33 +72,12 @@ ppdso_im=ia.open(project + '.clean.image')
 ppdso_stats=ia.statistics()
 ia.close()
 
-# noisefree inbright=7.2e-7 20090508
-refstats = { 'flux': 0.0004025,
-             'max': 2.654e-06,
-             'min': -2.825e-07,
-             'rms': 1.418e-06,
-             'sigma': 1.024e-06 }
-
-# noisy inbright=unchanged 20090608
-refstats = { 'flux': 0.0366,
-             'max': 4.9e-04,
-             'min': -7.6e-05,
-             'rms': 1.3e-04,
-             'sigma': 9.7e-05 }
-
-# new noise 20091118, imager 200912
-refstats = { 'flux': 0.0365,
-             'max': 4.6e-04,
-             'min': -0.59e-04,
-             'rms': 1.3e-04,
-             'sigma': 0.96e-04 }
-
 # tsys-atm
 refstats = { 'flux': 0.0365,
-             'max': 5.66e-04,
-             'min': -2.11e-04,
-             'rms': 1.46e-04,
-             'sigma': 1.14e-04 }
+             'max': 4.78e-04,
+             'min': -0.75e-04,
+             'rms': 1.33e-04,
+             'sigma': 0.98e-04 }
 
 reftol   = {'flux':  0.05,
             'max':   0.1,

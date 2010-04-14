@@ -17,48 +17,48 @@ except ImportError, e:
 ##
 ## first set up CASAPATH
 ##
-if os.environ.has_key('CASAPATH') :
-    __casapath__ = os.environ['CASAPATH'].split(' ')[0]
-    if not os.path.exists(__casapath__ + "/data") :
-        raise RuntimeError, "CASAPATH environment variable is improperly set"
-else :
-    __casapath__ = casac.__file__
-    while __casapath__ and __casapath__ != "/" :
-        if os.path.exists( __casapath__ + "/data") :
-            break
-        __casapath__ = os.path.dirname(__casapath__)
-    if __casapath__ and __casapath__ != "/" :
-        os.environ['CASAPATH']=__casapath__ + " linux local host"
-    else :
-        raise RuntimeError, "CASAPATH environment variable must be set"
-
-##
-## next adjust the PYTHONPATH
-##
-if re.match( r'.*/\d+\.\d+\.\d+\w*-\d+$', __casapath__ ) :
-    for root, dirs, files in os.walk(os.path.dirname(__casapath__)):
-        if root.endswith("/numpy"):
-            sys.path.append(os.path.dirname(root))
-            break
-else:
-    for root, dirs, files in os.walk(__casapath__):
-        if root.endswith("/numpy"):
-            sys.path.append(os.path.dirname(root))
-            break
-
-##
-## next adjust PATH and LD_LIBRARY_PATH
-##
-for root, dirs, files in os.walk(__casapath__):
-    if root.endswith("/bin") and "casapyinfo" in files :
-        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casapyinfo --exec 'which ipcontroller'"))
-        if os.path.exists(__ipcontroller__) :
-            os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
-        else :
-            raise RuntimeError, "cannot configure CASA tasking system"
-        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
-        map(lambda x: sys.path.append(x),__ld_library_path__)
-        break
+#if os.environ.has_key('CASAPATH') :
+#    __casapath__ = os.environ['CASAPATH'].split(' ')[0]
+#    if not os.path.exists(__casapath__ + "/data") :
+#        raise RuntimeError, "CASAPATH environment variable is improperly set"
+#else :
+#    __casapath__ = casac.__file__
+#    while __casapath__ and __casapath__ != "/" :
+#        if os.path.exists( __casapath__ + "/data") :
+#            break
+#        __casapath__ = os.path.dirname(__casapath__)
+#    if __casapath__ and __casapath__ != "/" :
+#        os.environ['CASAPATH']=__casapath__ + " linux local host"
+#    else :
+#        raise RuntimeError, "CASAPATH environment variable must be set"
+#
+###
+### next adjust the PYTHONPATH
+###
+#if re.match( r'.*/\d+\.\d+\.\d+\w*-\d+$', __casapath__ ) :
+#    for root, dirs, files in os.walk(os.path.dirname(__casapath__)):
+#        if root.endswith("/numpy"):
+#            sys.path.append(os.path.dirname(root))
+#            break
+#else:
+#    for root, dirs, files in os.walk(__casapath__):
+#        if root.endswith("/numpy"):
+#            sys.path.append(os.path.dirname(root))
+#            break
+#
+###
+### next adjust PATH and LD_LIBRARY_PATH
+###
+#for root, dirs, files in os.walk(__casapath__):
+#    if root.endswith("/bin") and "casapyinfo" in files :
+#        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casapyinfo --exec 'which ipcontroller'"))
+#        if os.path.exists(__ipcontroller__) :
+#            os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
+#        else :
+#            raise RuntimeError, "cannot configure CASA tasking system"
+#        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
+#        map(lambda x: sys.path.append(x),__ld_library_path__)
+#        break
 
 #
 #from taskinit import *
@@ -143,10 +143,11 @@ from imfit_pg import imfit_pg as imfit
 from deconvolve_pg import deconvolve_pg as deconvolve
 
 from simdata_pg import simdata_pg as simdata
+from simdata2_pg import simdata2_pg as simdata2
 
 from importasdm_pg import importasdm_pg as importasdm
 from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
-from polcal_pg import polcal_pg as polcal
+#from polcal_pg import polcal_pg as polcal
 
 from clearcal_pg import clearcal_pg as clearcal
 from bandpass_pg import bandpass_pg as bandpass
@@ -174,7 +175,7 @@ from exportuvfits_pg import exportuvfits_pg as exportuvfits
 #from plotcal_pg import plotcal_pg as plotcal
 from flagmanager_pg import flagmanager_pg as flagmanager
 from specfit_pg import specfit_pg  as specfit
-from viewer_pg import viewer_pg as viewer
+#from viewer_pg import viewer_pg as viewer
 from exportfits_pg import exportfits_pg as exportfits
 from blcal_pg import blcal_pg as blcal
 from uvsub_pg import uvsub_pg as uvsub

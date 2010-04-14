@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.cpp 1661 2009-11-21 05:37:32Z KanaSugimoto $
+//# $Id: STWriter.cpp 1683 2010-02-04 05:38:46Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 
 #include <string>
@@ -167,8 +167,8 @@ Int STWriter::write(const CountedPtr<Scantable> in,
     pksrec.beamNo = 1;
     while (!beamit.pastEnd() ) {
       Table btable = beamit.table();
-      MDirection::ScalarColumn dirCol(btable, "DIRECTION");
-      pksrec.direction = dirCol(0).getAngle("rad").getValue();
+      //MDirection::ScalarColumn dirCol(btable, "DIRECTION");
+      //pksrec.direction = dirCol(0).getAngle("rad").getValue();
       TableIterator cycit(btable, "CYCLENO");
       ROArrayColumn<Double> srateCol(btable, "SCANRATE");
       Vector<Double> sratedbl;
@@ -188,9 +188,9 @@ Int STWriter::write(const CountedPtr<Scantable> in,
       pksrec.cycleNo = 1;
       while (!cycit.pastEnd() ) {
         Table ctable = cycit.table();
-        TableIterator ifit(ctable, "IFNO");
-        //MDirection::ScalarColumn dirCol(ctable, "DIRECTION");
-        //pksrec.direction = dirCol(0).getAngle("rad").getValue();
+        TableIterator ifit(ctable, "IFNO", TableIterator::Ascending, TableIterator::HeapSort);
+        MDirection::ScalarColumn dirCol(ctable, "DIRECTION");
+        pksrec.direction = dirCol(0).getAngle("rad").getValue();
         pksrec.IFno = 1;
         while (!ifit.pastEnd() ) {
           Table itable = ifit.table();

@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, polaverage, outfile, outform, overwrite):
+def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, polaverage, outfile, outform, overwrite):
 
         casalog.origin('sdcoadd')
 
@@ -39,7 +39,7 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
                     s = "File '%s' not found." % (filename)
                     raise Exception, s
                 else:
-                    scanlist.append(sd.scantable(sdfilelist[i],scanaverage))
+                    scanlist.append(sd.scantable(sdfilelist[i],average=scanaverage,antenna=antenna))
                     nrow+=scanlist[i].nrow()
 
                     # get telescope name
@@ -234,7 +234,7 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
             # DONE
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 

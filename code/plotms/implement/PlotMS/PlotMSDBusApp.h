@@ -78,6 +78,7 @@ public:
     static const String PARAM_PLOTINDEX; // int or uInt
     static const String PARAM_PRIORITY; // String
     static const String PARAM_SELECTION; // Record (see PlotMSSelection)
+    static const String PARAM_TRANSFORMATIONS; // Record (see PlotMSTransformations)
     static const String PARAM_UPDATEIMMEDIATELY; // bool
     static const String PARAM_WIDTH; // int or uInt
     // </group>
@@ -120,7 +121,8 @@ public:
     // (PARAM_PLOTINDEX), including: the MS filename (PARAM_FILENAME), the x
     // axis (PARAM_AXIS_X) and data column (PARAM_DATACOLUMN_X), the y axis
     // (PARAM_AXIS_Y) and data column (PARAM_DATACOLUMN_Y), averaging
-    // (PARAM_AVERAGING), and selection (PARAM_SELECTION).
+    // (PARAM_AVERAGING), selection (PARAM_SELECTION), and trasformations
+    // (PARAM_TRANSFORMATIONS)
     // PARAMETERS: plot index.
     // RETURNS: value (Record), unless invalid or run asynchronously.
     static const String METHOD_GETPLOTPARAMS;

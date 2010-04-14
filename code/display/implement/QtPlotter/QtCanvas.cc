@@ -116,9 +116,23 @@ void QtCanvas::markPrev()
         refreshPixmap();
     }
 }
-void QtCanvas::setCurveData(int id, const CurveData &data)
+int QtCanvas::getLineCount()
+{
+    return curveMap.size();
+}
+CurveData* QtCanvas::getCurveData(int id)
+{
+    return &curveMap[id];
+}
+QString QtCanvas::getCurveName(int id)
+{
+    return legend[id];
+}
+void QtCanvas::setCurveData(int id, const CurveData &data, 
+                                    const QString& lbl)
 {
     curveMap[id] = data;
+    legend[id] = lbl;
     refreshPixmap();
 }
 void QtCanvas::setDataRange()
@@ -168,9 +182,22 @@ void QtCanvas::setDataRange()
 
 }
 
+void QtCanvas::clearData()
+{
+    curveMap.clear();
+    legend.clear();
+}
+
 void QtCanvas::clearCurve(int id)
 {
-    curveMap.erase(id);
+    if (id == -1) {
+       curveMap.clear();
+       legend.clear();
+    }
+    else {
+       curveMap.erase(id);
+       legend.erase(id);
+    }
     refreshPixmap();
 }
 
@@ -427,6 +454,7 @@ void QtCanvas::drawBackBuffer(QPainter *painter)
               (int)settings.maxX, (int)settings.maxY);
     painter->drawPixmap(rect, backBuffer, src);
 }
+
 void QtCanvas::drawGrid(QPainter *painter)
 {
     QRect rect(Margin, Margin,
@@ -646,6 +674,9 @@ QColor QtCanvas::getLinearColor(double d)
 void QtCanvas::drawCurves(QPainter *painter)
 {
 
+    QFont ft(painter->font());
+    QPen pen(painter->pen());
+    
     QtPlotSettings settings = zoomStack[curZoom];
     QRect rect(Margin, Margin,
                width() - 2 * Margin, height() - 2 * Margin);
@@ -655,8 +686,8 @@ void QtCanvas::drawCurves(QPainter *painter)
 
     std::map<int, CurveData>::const_iterator it = curveMap.begin();
 
-    int sz = curveMap.size();
-    sz = sz > 1 ? sz - 1 : 1;
+    int siz = curveMap.size();
+    int sz = siz > 1 ? siz - 1 : 1;
     QColor colorFolds[sz];
 
     while (it != curveMap.end())
@@ -686,14 +717,46 @@ void QtCanvas::drawCurves(QPainter *painter)
         }
         painter->setPen(colorFolds[(uint)id % 6]);
         painter->drawPath(points);
+   
+        if (siz > 1) {
+           painter->setFont(QFont(xLabel.fontName, xLabel.fontSize));  
+           painter->drawText(Margin + 4, Margin + (5 + id * 15), 
+                          width() - 2 * Margin, Margin / 2,
+                          Qt::AlignLeft | Qt::AlignTop, legend[id]);
+        }                                  
         ++it;
     }
+
+    painter->setPen(pen);                   
+    painter->setFont(ft);
 }
 
 
 void QtCanvas::setMarkMode(bool b)
 {
     markMode = b;
+}
+
+void QtCanvas::addPolyLine(const Vector<Float> &x,
+                           const Vector<Float> &y, 
+                           const QString& lb)
+{
+    //qDebug() << "add poly line float";
+    Int xl, yl;
+    x.shape(xl);
+    y.shape(yl);
+    CurveData data;
+    for (uInt i = 0; i < (uInt)min(xl, yl); i++)
+    {
+        data.push_back(x[i]);
+        data.push_back(y[i]);
+    }
+    int j = curveMap.size();
+    //qDebug() << "j:" << j;
+    setCurveData(j, data, lb);
+
+    setDataRange();
+    return;
 }
 
 void QtCanvas::plotPolyLines(QString path)
@@ -752,7 +815,8 @@ void QtCanvas::plotPolyLines(QString path)
     setDataRange();
     return;
 }
-void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y)
+void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+                            const QString& lb)
 {
 
     //qDebug() << "plot poly line float";
@@ -765,7 +829,7 @@ void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y)
         data.push_back(x[i]);
         data.push_back(y[i]);
     }
-    setCurveData(0, data);
+    setCurveData(0, data, lb);
 
     setDataRange();
     return;

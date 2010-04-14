@@ -46,31 +46,13 @@ using std::set;
 using asdmIDL::SubscanRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Tag.h>
+using  asdm::Tag;
 
 
 
@@ -108,28 +90,13 @@ using namespace CorrelatorCalibrationMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file Subscan.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -141,10 +108,13 @@ namespace asdm {
 class ExecBlockRow;
 	
 
+class SubscanRow;
+typedef void (SubscanRow::*SubscanAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The SubscanRow class is a row of a SubscanTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class SubscanRow {
@@ -159,49 +129,6 @@ public:
 	 */
 	SubscanTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a SubscanRowIDL struct.
-	 */
-	SubscanRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct SubscanRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (SubscanRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the SubscanTable to which the row built by deserialization will be parented.
-	  */
-	 static SubscanRow* fromBin(EndianISStream& eiss, SubscanTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -624,12 +551,52 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this SubscanRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param execBlockId
+	    
+	 * @param scanNumber
+	    
+	 * @param subscanNumber
+	    
+	 * @param startTime
+	    
+	 * @param endTime
+	    
+	 * @param fieldName
+	    
+	 * @param subscanIntent
+	    
+	 * @param numberIntegration
+	    
+	 * @param numberSubintegration
+	    
+	 * @param flagRow
+	    
 	 */ 
 	bool compareNoAutoInc(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param startTime
+	    
+	 * @param endTime
+	    
+	 * @param fieldName
+	    
+	 * @param subscanIntent
+	    
+	 * @param numberIntegration
+	    
+	 * @param numberSubintegration
+	    
+	 * @param flagRow
+	    
+	 */ 
 	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow); 
 		 
 	
@@ -642,6 +609,37 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(SubscanRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a SubscanRowIDL struct.
+	 */
+	SubscanRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct SubscanRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (SubscanRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;	
 
 private:
 	/**
@@ -841,6 +839,40 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, SubscanAttributeFromBin> fromBinMethods;
+void execBlockIdFromBin( EndianISStream& eiss);
+void scanNumberFromBin( EndianISStream& eiss);
+void subscanNumberFromBin( EndianISStream& eiss);
+void startTimeFromBin( EndianISStream& eiss);
+void endTimeFromBin( EndianISStream& eiss);
+void fieldNameFromBin( EndianISStream& eiss);
+void subscanIntentFromBin( EndianISStream& eiss);
+void numberIntegrationFromBin( EndianISStream& eiss);
+void numberSubintegrationFromBin( EndianISStream& eiss);
+void flagRowFromBin( EndianISStream& eiss);
+
+void subscanModeFromBin( EndianISStream& eiss);
+void correlatorCalibrationFromBin( EndianISStream& eiss);
+	
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the SubscanTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SubscanRow* fromBin(EndianISStream& eiss, SubscanTable& table, const vector<string>& attributesSeq);	 
 
 };
 

@@ -11,7 +11,10 @@ startProc = time.clock()
 
 print '--Running simdata of test cube--'
 # configs are in the repository
-repodir=os.getenv("CASAPATH").split(' ')[0]
+l=locals() 
+if not l.has_key("repodir"): 
+    repodir=os.getenv("CASAPATH").split(' ')[0]
+
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
@@ -26,6 +29,7 @@ direction="J2000 19h00m00s -40d00m00s"
 pointingspacing="1arcmin"
 refdate="2012/06/21/03:25:00"
 totaltime="7200s"
+mosaicsize="38arcsec"
 integration="10s"
 startfreq="350GHz"   
 chanwidth="0.5MHz" 
@@ -37,12 +41,14 @@ stokes="I"
 verbose=True
 #thermalnoise=True
 #tau0=1.0
-checkinputs="no"
-display=False
 
-# interactive:
-#checkinputs="yes"
-#display=True
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    checkinputs="yes"    
+else:
+    checkinputs="no"
+    display=False
+    fidelity=False
 
 
 

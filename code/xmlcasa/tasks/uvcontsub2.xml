@@ -15,35 +15,42 @@ be generalized in the near future.   The data may be averaged
 in time to increase the signal to noise for each continuum
 estimate.  This fit represents a model of the continuum in 
 all channels.
-	
-The fitted continuum spectrum is subtracted from all channels 
-selected in spw, and the result (presumably only
-line emission) is stored in the	CORRECTED_DATA.  The
-continuum fit is stored in the MODEL_DATA.
 
-If desired, new MeasurementSets are generating containing
-the continuum and continuum-subtracted line data. 
+The fitted continuum spectrum is subtracted from all channels 
+selected in spw, and the result (presumably only line emission)
+is stored in the CORRECTED_DATA of a <em>new</em> MS (vis + ".contsub").
+The selected CORRECTED_DATA column of vis is copied to the DATA
+column of the new ms.
+
+If want_cont is True, the continuum fit is placed in the DATA
+column of a second new MS (vis + ".cont").  N.B. because the
+continuum model is necessarily a smoothed fit, images made with
+it are liable to have their field of view reduced in some
+strange way, and if possible should be compared with images
+made by excluding the line channels.  A copy of the continuum
+estimate is always placed in the MODEL_DATA column of vis + ".cont"
+regardless of want_cont.
 
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Nome of input visibility file</description>
+		<description>Name of input MS.  Output goes to vis + ".contsub"</description>
 		<value></value>
 	</param>
 
         <param type="any" name="field">
-                <description>Select field using field id(s) or field name(s)</description>
+                <description>Select field(s) using id(s) or name(s)</description>
 		<any type="variant" limittypes="string stringArray int intArray"/>
                 <value type="string"></value>
         </param>
 
 	<param type="string" name="fitspw">
-		<description>Spectral window/channel selection for fitting the continuum</description>
+		<description>Spectral window:channel selection for fitting the continuum</description>
 		<value></value>
 	</param>
 
         <param type="string" name="combine">
-                <description>Data axes which to combine for the continuum estimation (spw, scan, and/or field)</description>
+                <description>Data axes to combine for the continuum estimation (spw, scan, and/or field)</description>
                 <value></value>
         </param>
 
@@ -63,8 +70,8 @@ the continuum and continuum-subtracted line data.
 		<value></value>
 	</param>
 
-	<param type="bool" name="splitdata">
-		<description>Split out continuum, continuum-subtracted data</description>
+	<param type="bool" name="want_cont">
+		<description>Create vis + ".cont" to hold the continuum estimate.</description>
 		<value>False</value>
 	</param>
 
@@ -81,22 +88,29 @@ the continuum and continuum-subtracted line data.
         estimate.  This fit represents a model of the continuum in 
         all channels.
 	
-	The fitted continuum spectrum is subtracted from all channels 
-        selected in spw, and the result (presumably only
-	line emission) is stored in the	CORRECTED_DATA.  The
-	continuum fit is stored in the MODEL_DATA.
+        The fitted continuum spectrum is subtracted from all channels 
+        selected in spw, and the result (presumably only line emission)
+        is stored in the CORRECTED_DATA of a <em>new</em> MS (vis + ".contsub").
+        The selected CORRECTED_DATA column of vis is copied to the DATA
+        column of the new ms.
 
-        If desired, new MeasurementSets are generating containing
-        the continuum and continuum-subtracted line data. 
+        If want_cont is True, the continuum fit is placed in the DATA
+        column of a second new MS (vis + '.cont').  N.B. because the
+        continuum model is necessarily a smoothed fit, images made with
+        it are liable to have their field of view reduced in some
+        strange way, and if possible should be compared with images
+        made by excluding the line channels.  A copy of the continuum
+        estimate is always placed in the MODEL_DATA column of vis + '.cont'
+        regardless of want_cont.
+
 
         The input MeasurementSet should have calibrated data in
-        its DATA column.
+        its CORRECTED_DATA column.
 
 	Keyword arguments:
 	vis -- Name of input visibility file
 		default: none; example: vis='ngc5921.ms'
-        field -- Field selection for continuum estimation, subtraction, and
-                (if splitdata=True) split
+        field -- Field selection for continuum estimation and subtraction.
                 default: field = '' means select all fields
                 field = 1 # will get field_id=1 (if you give it an 
                         integer, it will retrieve the source with that index.
@@ -109,8 +123,9 @@ the continuum and continuum-subtracted line data.
         combine -- Data axes to combine for the continuum estimate
                 default: '' --> solutions will break at scan, field, and spw
                       boundaries according to solint
-              Options: '','spw'','scan',field', or any comma-separated combination
-              example: combine='spw'  --> form spw-averaged continuum estimate
+              Options: '', 'spw'', 'scan', 'field', or any comma-separated
+                       combination
+              example: combine='spw' --> form spw-merged continuum estimate
 	solint -- Timescale for per-baseline fit (units optional)
 		default: 'int' --&gt; no averaging, fit every integration;
 		example: solint='10s'  --&gt; average to 10s before fitting
@@ -119,16 +134,11 @@ the continuum and continuum-subtracted line data.
                          'inf' --&gt; per scan
 	fitorder -- Polynomial order for the fit of the continuum
 		default: 0 (constant); example: fitorder=1
-	spw -- Optional per spectral window selection of channels from
-	       which to subtract the continuum. 
-		default: spw='', means subtract from all channels for
-		  each spw that had a continuum estimated
-	       Also, this specifies which spw/chan will be split
-	       out if splitdata=True.
-	splitdata -- Split out continuum and continuum subtracted line data
-		default: 'False'; example: splitdata=True
-		The continuum data will be placed in: vis.cont
-		The continuum subtracted data will be placed in: vis.contsub
+	spw -- Optional per spectral window selection of channels to include
+               in the output.
+	want_cont -- Create vis + '.cont' to hold the continuum estimate.
+		default: 'False'; example: want_cont=True
+		The continuum estimate will be placed in: vis.cont
         async -- Run task in a separate process (return CASA prompt)
                 default: False; example: async=True
 

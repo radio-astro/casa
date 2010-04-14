@@ -287,7 +287,7 @@ Bool GBTDCRFiller::fill(const String &backendFile,
 				 stringToVector(MS::columnName(MS::FLOAT_DATA)),
 				 stringToVector(",,"));
 	// not sure what the best default tile shape might be
-	IPosition defaultTileShape(3,4,2,4096);
+	IPosition defaultTileShape(3,4,2,512);
 	TiledShapeStMan stman("HYPERDATA", defaultTileShape);
 
 	// create the MS, make sure the hypercolumns get set to use

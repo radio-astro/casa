@@ -289,6 +289,7 @@ traceEvent(1,"Entering imager::defaults",25);
   imwgt_p=VisImagingWeight();
   smallScaleBias_p=0.6;
   freqFrame_p=MFrequency::LSRK;
+  imageTileVol_p=0;
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -404,6 +405,7 @@ Imager &Imager::operator=(const Imager & other)
   if (pgplotter_p && this != &other) {
     *pgplotter_p = *(other.pgplotter_p);
   }
+  imageTileVol_p=other.imageTileVol_p;
   return *this;
 }
 
@@ -780,25 +782,27 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     for (Int i=0;i<nspw;++i) {
       Int spw=spectralwindowids_p(i);
       Vector<Double> chanFreq=msc.spectralWindow().chanFreq()(spw); 
-      Vector<Double> freqResolution=msc.spectralWindow().chanWidth()(spw); 
+      Vector<Double> freqResolution = msc.spectralWindow().chanWidth()(spw); 
       
       if(dataMode_p=="none"){
       
-
 	if(i==0) {
-	  fmin=min(chanFreq-abs(freqResolution));
-	  fmax=max(chanFreq+abs(freqResolution));
+	  fmin=min(chanFreq-abs(0.5*freqResolution));
+	  fmax=max(chanFreq+abs(0.5*freqResolution));
 	}
 	else {
-	  fmin=min(fmin,min(chanFreq-abs(freqResolution)));
-	  fmax=max(fmax,max(chanFreq+abs(freqResolution)));
+	  fmin=min(fmin,min(chanFreq-abs(0.5*freqResolution)));
+	  fmax=max(fmax,max(chanFreq+abs(0.5*freqResolution)));
 	}
       }
       else if(dataMode_p=="channel"){
+	// This needs some careful thought about roundoff - it is likely 
+	// still adding an extra half-channel at top and bottom but 
+	// if the freqResolution is nonlinear, there are subtleties
 	Int lastchan=dataStart_p[i]+ dataNchan_p[i]*dataStep_p[i];
         for(Int k=dataStart_p[i] ; k < lastchan ;  k+=dataStep_p[i]){
-	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*dataStep_p[i]));
-	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*dataStep_p[i]));
+	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(dataStep_p[i]-0.5)));
+	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(dataStep_p[i]-0.5)));
         }
       }
       else{
@@ -819,7 +823,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     }
     imageNchan_p=1;
     Double finc=(fmax-fmin); 
-    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean, finc,
+    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean//-finc/2.0
+					, finc,
       					refChan, restFreq);
     os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Center frequency = "
@@ -932,7 +937,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	 << imageStart_p << " stepped by " << imageStep_p << LogIO::POST;
       freqs.resize(imageNchan_p);
       for (Int chan=0;chan<imageNchan_p;chan++) {
-	freqs(chan)=chanFreq(Int(imageStart_p)+Int(Float(chan+0.5)*Float(imageStep_p)-0.5));
+	freqs(chan)=chanFreq(Int(imageStart_p)+Int(Float(chan)*Float(imageStep_p)));
       }
       // Use this next line when non-linear working
       //    mySpectral = new SpectralCoordinate(obsFreqRef, freqs,
@@ -948,7 +953,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
 
-      mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0), finc,
+	  //in order to outframe to work need to set here original freq frame
+      //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
+      mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)//-finc/2.0
+					  , finc,
 					  refChan, restFreq);
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO
@@ -1006,8 +1014,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       if(!MFrequency::getType(mfreqref, (MRadialVelocity::showType(mImageStart_p.getRef().getType()))))
 	mfreqref=freqFrame_p;
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
-      mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
-					  freqs(1)-freqs(0), refChan,
+      mySpectral = new SpectralCoordinate(mfreqref, freqs(0)//-(freqs(1)-freqs(0))/2.0
+					  , freqs(1)-freqs(0), refChan,
 					  restFreq);
      
       {
@@ -1078,7 +1086,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	if(chanVelResolution==0.0)
 	  chanVelResolution=freqResolution(0);
 	mySpectral = new SpectralCoordinate(imfreqref,
-					    freqs(0),
+					    freqs(0)//-chanVelResolution/2.0,
+					    ,
 					    chanVelResolution,
 					    refChan, restFreq);
       }
@@ -2427,7 +2436,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Bool applyPointingOffsets,
 			const Bool doPointingCorrection,
 			const String& cfCacheDirName,const Float& paStep, 
-			const Float& pbLimit, const String& interpMeth)
+			const Float& pbLimit, const String& interpMeth, const Int imageTileVol)
 {
 
 #ifdef PABLO_IO
@@ -2475,6 +2484,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   paStep_p = paStep;
   pbLimit_p = pbLimit;
   freqInterpMethod_p=interpMeth;
+  imageTileVol_p=imageTileVol;
 
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
@@ -3250,7 +3260,7 @@ Bool Imager::pb(const String& inimage,
       }
       inImage_pointer = new PagedImage<Float>( inimage );
       if (outimage != "") {
-	outImage_pointer = new PagedImage<Float>( inImage_pointer->shape(), 
+	outImage_pointer = new PagedImage<Float>( TiledShape(inImage_pointer->shape(), inImage_pointer->niceCursorShape()), 
 						  inImage_pointer->coordinates(), outimage);
       }
     }
@@ -3403,9 +3413,9 @@ Bool Imager::linearmosaic(const String& mosaic,
   Double meminMB=Double(HostInfo::memoryTotal(true))/1024.0;
   PagedImage<Float> mosaicImage( mosaic );
   mosaicImage.set(0.0);
-  TempImage<Float>  numerator( mosaicImage.shape(), mosaicImage.coordinates(), meminMB/2.0);
+  TempImage<Float>  numerator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
   numerator.set(0.0);
-  TempImage<Float>  denominator( mosaicImage.shape(), mosaicImage.coordinates(), meminMB/2.0);
+  TempImage<Float>  denominator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
   numerator.set(0.0);
   IPosition iblcmos(mosaicImage.shape().nelements(),0);
   IPosition itrcmos(mosaicImage.shape());
@@ -4199,10 +4209,24 @@ Bool Imager::makeimage(const String& type, const String& image,
     
     // Now set up the tile size, here we guess only
     IPosition cimageShape(imageshape());
-    
-    IPosition tileShape(4, min(32, cimageShape(0)), min(32, cimageShape(1)),
+    Int tilex=32;
+    if(imageTileVol_p >0){
+      tilex=static_cast<Int>(ceil(sqrt(imageTileVol_p/min(4,
+                                                          cimageShape(2))/min(32,
+                                                                              cimageShape(3)))));
+      if(tilex >0){
+	if(tilex > min(Int(cimageShape(0)), Int(cimageShape(1))))
+	  tilex=min(Int(cimageShape(0)), Int(cimageShape(1)));
+	else
+	  tilex=cimageShape(0)/Int(cimageShape(0)/tilex);
+      }
+      //Not too small in x-y tile
+      if(tilex < 10)
+	tilex=10;
+   
+    }
+    IPosition tileShape(4, min(tilex, cimageShape(0)), min(tilex, cimageShape(1)),
 			min(4, cimageShape(2)), min(32, cimageShape(3)));
-    
     CoordinateSystem cimagecoords;
     if(!imagecoordinates(cimagecoords, false))
       {
@@ -4591,7 +4615,8 @@ Bool Imager::smooth(const Vector<String>& model,
         imageNames(thismodel)=model(thismodel)+".smoothed";
       }
       PagedImage<Float> modelImage(model(thismodel));
-      PagedImage<Float> imageImage(modelImage.shape(),
+      PagedImage<Float> imageImage(TiledShape(modelImage.shape(), 
+					      modelImage.niceCursorShape()),
 				   modelImage.coordinates(),
 				   imageNames(thismodel));
       imageImage.table().markForDelete();
@@ -4771,10 +4796,14 @@ Bool Imager::clean(const String& algorithm,
 	// Support serial and parallel specializations
 	setClarkCleanImageSkyModel();
 	if(algorithm.contains("stokes"))
-	   sm_p->setJointStokesClean(False);
+          sm_p->setJointStokesClean(False);
+	os << LogIO::NORMAL // Loglevel INFO.        Stating the algo is more for
+           << "Using Clark clean" << LogIO::POST; // the logfile than the window.
       }
       else if (algorithm=="hogbom") {
 	sm_p = new HogbomCleanImageSkyModel();
+	os << LogIO::NORMAL // Loglevel INFO.         Stating the algo is more for
+           << "Using Hogbom clean" << LogIO::POST; // the logfile than the window.
       }
       else if (algorithm=="wfhogbom") {
 	setWFCleanImageSkyModel();
@@ -4782,7 +4811,7 @@ Bool Imager::clean(const String& algorithm,
 	doMultiFields_p = True;
 	doMultiFields_p = False;
 	os << LogIO::NORMAL // Loglevel INFO
-           << "Using wide-field algorithm with Hogbom Clean" << LogIO::POST;
+           << "Using wide-field algorithm with Hogbom clean" << LogIO::POST;
       }
       else if (algorithm=="multiscale") {
 	if (!scaleInfoValid_p) {
@@ -4797,15 +4826,17 @@ Bool Imager::clean(const String& algorithm,
 	}
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
+	os << LogIO::NORMAL // Loglevel INFO.             Stating the algo is more for
+           << "Using multiscale clean" << LogIO::POST; // the logfile than the window.
       }
       else if (algorithm.substr(0,7)=="mfclark" || algorithm=="mf") {
 	sm_p = new MFCleanImageSkyModel();
 	sm_p->setSubAlgorithm("clark");
 	if(algorithm.contains("stokes"))
-	   sm_p->setJointStokesClean(False);
+          sm_p->setJointStokesClean(False);
 
 	doMultiFields_p = True;
-	os << LogIO::NORMAL << "Using Clark Clean" << LogIO::POST; // Loglevel INFO
+	os << LogIO::NORMAL << "Using multifield Clark clean" << LogIO::POST; // Loglevel INFO
       }
       else if (algorithm=="csclean" || algorithm=="cs") {
 	sm_p = new CSCleanImageSkyModel();
@@ -4823,7 +4854,7 @@ Bool Imager::clean(const String& algorithm,
 	sm_p = new MFCleanImageSkyModel();
 	sm_p->setSubAlgorithm("hogbom");
 	doMultiFields_p = True;
-	os << LogIO::NORMAL << "Using Hogbom Clean" << LogIO::POST; // Loglevel INFO
+	os << LogIO::NORMAL << "Using multifield Hogbom clean" << LogIO::POST; // Loglevel INFO
       }
       else if (algorithm=="mfmultiscale") {
 	if (!scaleInfoValid_p) {
@@ -4847,7 +4878,7 @@ Bool Imager::clean(const String& algorithm,
 	sm_p->setSubAlgorithm("full");
 
 	doMultiFields_p = True;
-	os << LogIO::NORMAL << "Using Multi-Scale Clean"  // Loglevel INFO
+	os << LogIO::NORMAL << "Using multifield multi-scale clean"  // Loglevel INFO
 	   << LogIO::POST;
       } 
       else if (algorithm=="wfclark" || algorithm=="wf") {
@@ -4856,7 +4887,7 @@ Bool Imager::clean(const String& algorithm,
 	sm_p->setSubAlgorithm("clark");
 	doMultiFields_p = False;
 	os << LogIO::NORMAL // Loglevel INFO
-           << "Using wide-field algorithm with Clark Clean" << LogIO::POST;
+           << "Using wide-field algorithm with Clark clean" << LogIO::POST;
       }
       else if (algorithm=="wfhogbom") {
 	// Support serial and parallel specializations
@@ -4864,27 +4895,29 @@ Bool Imager::clean(const String& algorithm,
 	sm_p->setSubAlgorithm("hogbom");
 	doMultiFields_p = False;
 	os << LogIO::NORMAL // Loglevel INFO
-           << "Using wide-field algorithm with Hogbom Clean" << LogIO::POST;
+           << "Using wide-field algorithm with Hogbom clean" << LogIO::POST;
       }
       else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
 	doWideBand_p = True;
 	if ( ftmachine_p != "ft" ) {
-	  os << LogIO::SEVERE << " MSMFS currently works only with the default ftmachine " << LogIO::POST;
+	  os << LogIO::SEVERE
+             << "Multiscale multifield clean currently works only with the default ftmachine"
+             << LogIO::POST;
 	  return False;
 	}
 	if (!scaleInfoValid_p) {
-	   this->unlock();
-	   os << LogIO::WARN << "Scales not yet set, using power law" << LogIO::POST;
-	   sm_p = new WBCleanImageSkyModel(ntaylor_p,1,reffreq_p);
+          this->unlock();
+          os << LogIO::WARN << "Scales not yet set, using power law" << LogIO::POST;
+          sm_p = new WBCleanImageSkyModel(ntaylor_p, 1 ,reffreq_p);
 	}
 	if (scaleMethod_p=="uservector") {	
-	   sm_p = new WBCleanImageSkyModel(ntaylor_p,userScaleSizes_p,reffreq_p);
+          sm_p = new WBCleanImageSkyModel(ntaylor_p,userScaleSizes_p,reffreq_p);
 	} else {
-	   sm_p = new WBCleanImageSkyModel(ntaylor_p,nscales_p,reffreq_p);
+          sm_p = new WBCleanImageSkyModel(ntaylor_p,nscales_p,reffreq_p);
 	}
 	os << LogIO::NORMAL // Loglevel INFO
-           << "Using multi frequency synthesis Algorithm" << LogIO::POST;
+           << "Using multi frequency synthesis algorithm" << LogIO::POST;
 	((WBCleanImageSkyModel*)sm_p)->imageNames = Vector<String>(image);
       }
       else {
@@ -4899,31 +4932,35 @@ Bool Imager::clean(const String& algorithm,
 	return False;
       }
     
-    AlwaysAssert(sm_p, AipsError);
-    sm_p->setAlgorithm("clean");
+      AlwaysAssert(sm_p, AipsError);
+      sm_p->setAlgorithm("clean");
 
-    //    if (!se_p)
-    if(!createSkyEquation(modelNames, fixed, maskNames, complist)) 
-      {
+      //    if (!se_p)
+      if(!createSkyEquation(modelNames, fixed, maskNames, complist)) 
+        {
 	
 #ifdef PABLO_IO
-	traceEvent(1,"Exiting Imager::clean",21);
+          traceEvent(1,"Exiting Imager::clean",21);
 #endif
 	
-	return False;
-      }
-    os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
-    addResidualsToSkyEquation(residualNames);
+          return False;
+        }
+      os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
+
+      addResidualsToSkyEquation(residualNames);
     }
     else{
       //adding or modifying mask associated with skyModel
       addMasksToSkyEquation(maskNames,fixed);
     }
 
-    if (displayProgress) {
-      sm_p->setDisplayProgress(True);
-      sm_p->setPGPlotter( getPGPlotter() );
-    }
+    // The old plot that showed how much flux was being incorporated in each
+    // scale.   No longer available, slated for removal.
+    // if (displayProgress) {
+    //   sm_p->setDisplayProgress(True);
+    //   sm_p->setPGPlotter( getPGPlotter() );
+    // }
+
     sm_p->setGain(gain);
     sm_p->setNumberIterations(niter);
     sm_p->setThreshold(threshold.get("Jy").getValue());
@@ -4932,9 +4969,12 @@ Bool Imager::clean(const String& algorithm,
     {
       ostringstream oos;
       oos << "Clean gain = " <<gain<<", Niter = "<<niter<<", Threshold = "
-	  <<threshold << ", Algorithm = " << algorithm;
-      os << LogIO::DEBUG1 << String(oos) << LogIO::POST;
+	  << threshold;
+      os << LogIO::NORMAL << String(oos) << LogIO::POST; // More for the
+                                                         // logfile than the
+                                                         // log window.
     }
+
 #ifdef PABLO_IO
     traceEvent(1,"Starting Deconvolution",23);
 #endif
@@ -4955,29 +4995,7 @@ Bool Imager::clean(const String& algorithm,
     traceEvent(1,"Exiting Deconvolution",21);
 #endif
 
-    //Use predefined beam for restoring or find one by fitting
-    Bool printBeam = false;
-    if(!beamValid_p){
-      Vector<Float> beam(3);
-      beam=sm_p->beam(0);
-      if(beam[0] > 0.0){
-	bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
-	bmin_p=Quantity(abs(beam(1)), "arcsec");
-	bpa_p=Quantity(beam(2), "deg");
-	beamValid_p=True;
-	printBeam = true;
-	os << LogIO::NORMAL << "Fitted beam used in restoration: " ;	 // Loglevel INFO
-      }
-    }
-    else if(firstrun){
-      printBeam = true;
-      os << LogIO::NORMAL << "Beam used in restoration: "; // Loglevel INFO
-    }
-    if(printBeam)
-      os << LogIO::NORMAL << bmaj_p.get("arcsec").getValue() << " by " // Loglevel INFO
-         << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-         << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
-
+    printbeam(sm_p, os, firstrun);
     
     if(((algorithm.substr(0,5)=="clark") || algorithm=="hogbom" ||
         algorithm=="multiscale") && (niter != 0))
@@ -4996,7 +5014,7 @@ Bool Imager::clean(const String& algorithm,
     }
     this->writeHistory(os);
     try{
-    { // write data processing history into image logtable
+     // write data processing history into image logtable
       LoggerHolder imagelog (False);
       LogSink& sink = imagelog.sink();
       LogOrigin lor( String("imager"), String("clean()") );
@@ -5004,23 +5022,24 @@ Bool Imager::clean(const String& algorithm,
       sink.postLocally(msg);
       
       ROMSHistoryColumns msHis(ms_p->history());
+      const ROScalarColumn<Double> &time_col = msHis.time();
+      const ROScalarColumn<String> &origin_col = msHis.origin();
+      const ROArrayColumn<String> &cli_col = msHis.cliCommand();
+      const ROScalarColumn<String> &message_col = msHis.message();
       if (msHis.nrow()>0) {
 	ostringstream oos;
-	uInt nmessages = msHis.time().nrow();
-	Vector<Double> time = ((msHis.time()).getColumn());
-	for (uInt i=0; i < nmessages; ++i) {
-	  String tmp=frmtTime(time(i));
+	uInt nmessages = time_col.nrow();
+	for (uInt i=0; i < nmessages; i++) {
+	  String tmp=frmtTime(time_col(i));
 	  oos << tmp
-	      << "  HISTORY " << (msHis.origin())(i);
-	  
-	  oos << " " << (msHis.cliCommand())(i) << " ";
-	  oos << (msHis.message())(i)
+	      << "  HISTORY " << origin_col(i);
+	  oos << " " << cli_col(i) << " ";
+	  oos << message_col(i)
 	      << endl;
 	}
-	String historyline(oos);
-	sink.postLocally(msg.message(historyline));
+	// String historyline(oos);
+	sink.postLocally(msg.message(oos.str()));
       }
-      
       for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
 	if(Table::isWritable(image(thismodel))){
 	  PagedImage<Float> restoredImage(image(thismodel),
@@ -5032,7 +5051,6 @@ Bool Imager::clean(const String& algorithm,
 	}
       }
       
-    }
     }catch(exception& x){
       
       os << LogIO::WARN << "Caught exception: " << x.what()
@@ -5092,6 +5110,31 @@ Bool Imager::clean(const String& algorithm,
   return converged;
 }
 
+void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
+{
+  //Use predefined beam for restoring or find one by fitting
+  Bool printBeam = false;
+  if(!beamValid_p){
+    Vector<Float> beam(3);
+    beam=sm_p->beam(0);
+    if(beam[0] > 0.0){
+      bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
+      bmin_p=Quantity(abs(beam(1)), "arcsec");
+      bpa_p=Quantity(beam(2), "deg");
+      beamValid_p=True;
+      printBeam = true;
+      os << LogIO::NORMAL << "Fitted beam used in restoration: " ;	 // Loglevel INFO
+    }
+  }
+  else if(firstrun){
+    printBeam = true;
+    os << LogIO::NORMAL << "Beam used in restoration: "; // Loglevel INFO
+  }
+  if(printBeam)
+    os << LogIO::NORMAL << bmaj_p.get("arcsec").getValue() << " by " // Loglevel INFO
+       << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
+       << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
+}
 
 // Mem algorithm
 Bool Imager::mem(const String& algorithm,
@@ -5811,6 +5854,9 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "ft()", WHERE));
+
+  if (useModelCol_p == False)
+    os << LogIO::WARN << "Please start the imager tool with \"usescratch=true\" when using Imager::ft" << LogIO::EXCEPTION;
   
   this->lock();
   try {
@@ -6398,8 +6444,11 @@ Bool Imager::clone(const String& imageName, const String& newImageName)
   LogIO os(LogOrigin("imager", "clone()", WHERE));
   try {
     PagedImage<Float> oldImage(imageName);
-    PagedImage<Float> newImage(oldImage.shape(), oldImage.coordinates(),
+    PagedImage<Float> newImage(TiledShape(oldImage.shape(), 
+					  oldImage.niceCursorShape()), oldImage.coordinates(),
 			       newImageName);
+    newImage.set(0.0);
+    newImage.table().flush(True, True);
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
@@ -7147,8 +7196,8 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
      
       
-      Float umax=Float(nx_p/2)/uscale;
-      Float vmax=Float(ny_p/2)/vscale;
+      //Float umax=Float(nx_p/2)/uscale;
+      //Float vmax=Float(ny_p/2)/vscale;
 
 
       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
@@ -7162,7 +7211,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 
       gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
       IPosition shape = gwt.shape( );
-      bool deleteit = false;
+      //bool deleteit = false;
       std::vector<double> data(shape[0] * shape[1]);
       int off = 0;
       for ( int column=0; column < shape[1]; ++column ) {
@@ -7470,6 +7519,13 @@ Bool Imager::createFTMachine()
   if(gvp_p) {delete gvp_p; gvp_p=0;}
   if(cft_p) {delete cft_p; cft_p=0;}
 
+  //For ftmachines that can use double precision gridders 
+  Bool useDoublePrecGrid=False;
+  //few channels use Double precision
+  //till we find a better algorithm to determine when to use Double prec gridding
+  if(imageNchan_p < 5)
+    useDoublePrecGrid=True;
+
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
   
   // This next line is only a guess
@@ -7500,23 +7556,14 @@ Bool Imager::createFTMachine()
 
   if(ftmachine_p=="sd") {
     os << LogIO::NORMAL // Loglevel INFO
-       << "Performing Single Dish gridding with convolution function "
-       << gridfunction_p << LogIO::POST;
+       << "Performing single dish gridding..." << LogIO::POST;
+    os << LogIO::NORMAL1 // gridfunction_p is too cryptic for most users.
+       << "with convolution function " << gridfunction_p << LogIO::POST;
 
     // Now make the Single Dish Gridding
-    os << "Gridding will use specified common tangent point:" << LogIO::POST;
-    MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
-    MVAngle mvDec=phaseCenter_p.getAngle().getValue()(1);
-    ostringstream oos;
-    oos << "     ";
-    Int widthRA=20;
-    Int widthDec=20;
-    oos.setf(ios::left, ios::adjustfield);
-    oos.width(widthRA);  oos << mvRa(0.0).string(MVAngle::TIME,8);
-    oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
-    oos << "     "
-	<< MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-    os << LogIO::NORMAL << String(oos)  << LogIO::POST; // Loglevel INFO
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Gridding will use specified common tangent point:" << LogIO::POST;
+    os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
     if(gridfunction_p=="pb") {
       if(!gvp_p) {
 	if (doDefaultVP_p) {
@@ -7552,10 +7599,9 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
   }
   else if(ftmachine_p=="mosaic") {
-    os << LogIO::NORMAL << "Performing Mosaic gridding" << LogIO::POST; // Loglevel PROGRESS
+    os << LogIO::NORMAL << "Performing mosaic gridding" << LogIO::POST; // Loglevel PROGRESS
    
     setMosaicFTMachine();
-
 
     // VisIter& vi(vs_p->iter());
     //   vi.setRowBlocking(100);
@@ -7576,11 +7622,7 @@ Bool Imager::createFTMachine()
 	 << "No of WProjection planes set too low for W projection - recommend at least 128"
 	 << LogIO::POST;
     }
-    Bool useDoublePrecGrid=False;
-    //few channels use Double precision
-    //till we find a better algorithm to determine when to use Double prec gridding
-    if(imageNchan_p < 5)
-      useDoublePrecGrid=True;
+    
     ft_p = new WProjectFT(wprojPlanes_p,  mLocation_p,
 			  cache_p/2, tile_p, True, padding_p, useDoublePrecGrid);
     AlwaysAssert(ft_p, AipsError);
@@ -7744,18 +7786,7 @@ Bool Imager::createFTMachine()
     // Now make the Single Dish Gridding
     os << LogIO::NORMAL // Loglevel INFO
        << "Gridding will use specified common tangent point:" << LogIO::POST;
-    MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
-    MVAngle mvDec=phaseCenter_p.getAngle().getValue()(1);
-    ostringstream oos;
-    oos << "     ";
-    Int widthRA=20;
-    Int widthDec=20;
-    oos.setf(ios::left, ios::adjustfield);
-    oos.width(widthRA);  oos << mvRa(0.0).string(MVAngle::TIME,8);
-    oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
-    oos << "     "
-	<< MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-    os << LogIO::NORMAL << String(oos)  << LogIO::POST; // Loglevel INFO
+    os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
     if(!gvp_p) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Using defaults for primary beams used in gridding" << LogIO::POST;
@@ -7787,27 +7818,18 @@ Bool Imager::createFTMachine()
   }  
   else {
     os << LogIO::NORMAL // Loglevel INFO
-       << "Performing interferometric gridding with convolution function "
-       << gridfunction_p << LogIO::POST;
+       << "Performing interferometric gridding..."
+       << LogIO::POST;
+    os << LogIO::NORMAL1 // gridfunction_p is too cryptic for most users.
+       << "...with convolution function " << gridfunction_p << LogIO::POST;
     // Now make the FTMachine
     if(facets_p>1) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Multi-facet Fourier transforms will use specified common tangent point:"
 	 << LogIO::POST;
-      MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
-      MVAngle mvDec=phaseCenter_p.getAngle().getValue()(1);
-      ostringstream oos;
-      oos << "     ";
-      Int widthRA=20;
-      Int widthDec=20;
-      oos.setf(ios::left, ios::adjustfield);
-      oos.width(widthRA);  oos << mvRa(0.0).string(MVAngle::TIME,8);
-      oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
-      oos << "     "
-	  << MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-      os << LogIO::NORMAL << String(oos)  << LogIO::POST; // Loglevel INFO
+      os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
       ft_p = new GridFT(cache_p / 2, tile_p, gridfunction_p, mLocation_p,
-                        phaseCenter_p, padding);
+                        phaseCenter_p, padding, False, useDoublePrecGrid);
       
     }
     else {
@@ -7815,7 +7837,7 @@ Bool Imager::createFTMachine()
          << "Single facet Fourier transforms will use image center as tangent points"
 	 << LogIO::POST;
       ft_p = new GridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
-			padding);
+			padding, False, useDoublePrecGrid);
 
     }
     AlwaysAssert(ft_p, AipsError);
@@ -7830,6 +7852,22 @@ Bool Imager::createFTMachine()
     ft_p->setMovingSource(trackDir_p);
   }
   return True;
+}
+
+String Imager::tangentPoint()
+{
+  MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
+  MVAngle mvDec=phaseCenter_p.getAngle().getValue()(1);
+  ostringstream oos;
+  oos << "     ";
+  Int widthRA=20;
+  Int widthDec=20;
+  oos.setf(ios::left, ios::adjustfield);
+  oos.width(widthRA);  oos << mvRa(0.0).string(MVAngle::TIME,8);
+  oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
+  oos << "     "
+      << MDirection::showType(phaseCenter_p.getRefPtr()->getType());
+  return String(oos);
 }
 
 Bool Imager::removeTable(const String& tablename) {
@@ -8106,7 +8144,8 @@ Bool Imager::addResidualsToSkyEquation(const Vector<String>& imageNames) {
     if(imageNames(thismodel)!="") {
       removeTable(imageNames(thismodel));
       residuals_p[thismodel]=
-	new PagedImage<Float> (images_p[thismodel]->shape(),
+	new PagedImage<Float> (TiledShape(images_p[thismodel]->shape(), 
+images_p[thismodel]->niceCursorShape()),
 			       images_p[thismodel]->coordinates(),
 			       imageNames(thismodel));
       AlwaysAssert(!residuals_p[thismodel].null(), AipsError);
@@ -8622,15 +8661,14 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	    return False;
 	  }
 
+          os << LogIO::NORMAL // Too contentious for DEBUG1
+             << "Selecting ";
           if(nch > 1)
-            os << LogIO::DEBUG1
-               << "Selecting " << nch << " channels, starting at "
-               << dataStart[i]  << ", stepped by " << dataStep[i]
-               << ", for spw " << spwid << LogIO::POST;
+            os << nch << " channels, starting at "
+               << dataStart[i]  << ", stepped by " << dataStep[i] << ",";
           else
-            os << LogIO::DEBUG1
-               << "Selecting channel " << dataStart[i]
-               << " for spw " << spwid << LogIO::POST;
+            os << "channel " << dataStart[i];
+          os << " for spw " << spwid << LogIO::POST;
 	  rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
 				     Int(dataStep[i]), spwid);
 	  dataNchan[i]=nch;
@@ -8933,8 +8971,8 @@ Bool Imager::makePBImage(const Table& vpTable, ImageInterface<Float>& pbImage){
 Bool Imager::makePBImage(const CoordinateSystem& imageCoord, PBMath& pbMath, 
 			 const String& diskPBName){
 
-  IPosition imShape(4, nx_p, ny_p, npol_p, imageNchan_p);
-  PagedImage<Float> pbImage(imShape, imageCoord, diskPBName);
+  make(diskPBName);
+  PagedImage<Float> pbImage(diskPBName);
   return makePBImage(pbMath, pbImage);
 }
 
@@ -9005,8 +9043,23 @@ ObsInfo& Imager::latestObsInfo(){
 
 Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID){
 
+  Int tilex=32;
+  if(imageTileVol_p >0){
+    tilex=static_cast<Int>(ceil(sqrt(imageTileVol_p/min(4, npol_p)/min(32, imageNchan_p))));
+    if(tilex >0){
+      if(tilex > min(nx_p, ny_p))
+	tilex=min(nx_p, ny_p);
+      else
+	tilex=nx_p/Int(nx_p/tilex);
+    }    
+    //Not too small in x-y tile
+    if(tilex < 10)
+      tilex=10;
+  }
+  IPosition tileShape(4, min(tilex, nx_p), min(tilex, ny_p),
+		     min(4, npol_p), min(32, imageNchan_p));
   IPosition imageShape(4, nx_p, ny_p, npol_p, imageNchan_p);
-  PagedImage<Float> modelImage(imageShape, coords, name);
+  PagedImage<Float> modelImage(TiledShape(imageShape, tileShape), coords, name);
   modelImage.set(0.0);
   modelImage.table().markForDelete();
     

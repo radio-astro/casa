@@ -63,8 +63,20 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
     itsMaskedSymbolWidget_->setMinimumSizes(minSymbolSizes);
     
     // Setup colorize axis choices.
-    for(unsigned int i = 0; i < PlotMSCache::N_METADATA; i++)
-        colorizeChooser->addItem(PMS::axis(PlotMSCache::METADATA[i]).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::SCAN).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::FIELD).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::SPW).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::ANTENNA1).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::ANTENNA2).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::BASELINE).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::CHANNEL).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::CORR).c_str());
+    // Old way, not used because non-index METADATA items don't work!
+    //    for(unsigned int i = 0; i < PlotMSCache::N_METADATA; i++)
+    //        colorizeChooser->addItem(PMS::axis(PlotMSCache::METADATA[i]).c_str());
+
+    // Setup colorize axis choices.
+
     
     // Set up label defaults.
     itsLabelDefaults_.insert(titleLabel, titleLabel->text());

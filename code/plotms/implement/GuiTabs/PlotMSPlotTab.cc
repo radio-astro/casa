@@ -34,6 +34,7 @@
 #include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
 #include <plotms/GuiTabs/PlotMSMultiAxesTab.qo.h>
+#include <plotms/GuiTabs/PlotMSTransformationsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSMultiPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
@@ -272,7 +273,7 @@ PT_ST(Data)
 PT_ST(Display)
 PT_ST(Export)
 PT_ST(MultiAxes)
-
+PT_ST(Transformations)
 
 // Private //
 

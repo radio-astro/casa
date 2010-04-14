@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	DopplerRow::~DopplerRow() {
 	}
 
@@ -370,51 +369,68 @@ namespace asdm {
 	
 	}
 	
-	DopplerRow* DopplerRow::fromBin(EndianISStream& eiss, DopplerTable& table) {
+void DopplerRow::dopplerIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		dopplerId =  eiss.readInt();
+			
+		
+	
+	
+}
+void DopplerRow::sourceIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		sourceId =  eiss.readInt();
+			
+		
+	
+	
+}
+void DopplerRow::transitionIndexFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		transitionIndex =  eiss.readInt();
+			
+		
+	
+	
+}
+void DopplerRow::velDefFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		velDef = CDopplerReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+
+		
+	
+	DopplerRow* DopplerRow::fromBin(EndianISStream& eiss, DopplerTable& table, const vector<string>& attributesSeq) {
 		DopplerRow* row = new  DopplerRow(table);
 		
-		
-		
-	
-	
-		
-			
-		row->dopplerId =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->sourceId =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->transitionIndex =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->velDef = CDopplerReferenceCode::from_int(eiss.readInt());
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, DopplerAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DopplerTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -619,6 +635,15 @@ namespace asdm {
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 velDef = CDopplerReferenceCode::from_int(0);
 	
+
+	
+	
+	 fromBinMethods["dopplerId"] = &DopplerRow::dopplerIdFromBin; 
+	 fromBinMethods["sourceId"] = &DopplerRow::sourceIdFromBin; 
+	 fromBinMethods["transitionIndex"] = &DopplerRow::transitionIndexFromBin; 
+	 fromBinMethods["velDef"] = &DopplerRow::velDefFromBin; 
+		
+	
 	
 	}
 	
@@ -655,7 +680,15 @@ velDef = CDopplerReferenceCode::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["dopplerId"] = &DopplerRow::dopplerIdFromBin; 
+		 fromBinMethods["sourceId"] = &DopplerRow::sourceIdFromBin; 
+		 fromBinMethods["transitionIndex"] = &DopplerRow::transitionIndexFromBin; 
+		 fromBinMethods["velDef"] = &DopplerRow::velDefFromBin; 
+			
+	
+			
 	}
 
 	
@@ -724,6 +757,20 @@ velDef = CDopplerReferenceCode::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, DopplerAttributeFromBin> DopplerRow::initFromBinMethods() {
+		map<string, DopplerAttributeFromBin> result;
+		
+		result["dopplerId"] = &DopplerRow::dopplerIdFromBin;
+		result["sourceId"] = &DopplerRow::sourceIdFromBin;
+		result["transitionIndex"] = &DopplerRow::transitionIndexFromBin;
+		result["velDef"] = &DopplerRow::velDefFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -1,3 +1,4 @@
+//Humidity.h generated on 'Thu Feb 04 10:20:05 CET 2010'. Edit at your own risk.
 /*
  * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
@@ -23,81 +24,135 @@
  *
  * File Humidity.h
  */
-
 #ifndef Humidity_CLASS
 #define Humidity_CLASS
-
 #include <vector>
 #include <iostream>
 #include <string>
 using namespace std;
-
 #ifndef WITHOUT_ACS
 #include <asdmIDLTypesC.h>
 using asdmIDLTypes::IDLHumidity;
 #endif
-
 #include <StringTokenizer.h>
 #include <NumberFormatException.h>
 using asdm::StringTokenizer;
 using asdm::NumberFormatException;
-
 #include "EndianStream.h"
 using asdm::EndianOSStream;
 using asdm::EndianISStream;
-
 namespace asdm {
-
 class Humidity;
 Humidity operator * ( double , const Humidity & );
 ostream & operator << ( ostream &, const Humidity & );
-istream & operator >> ( istream &, Humidity&);
-
+istream & operator >> ( istream &, Humidity &);
 /**
- * The Humidity class implements a quantity of humidity in percent.
+ * The Humidity class implements a quantity of humidity in percent..
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
+ * 
  * @version 1.1 Aug 8, 2006
  * @author Michel Caillat 
  * added toBin/fromBin methods.
  */
 class Humidity {
-	friend Humidity operator * ( double , const Humidity & );
-    friend ostream & operator << ( ostream &, const Humidity & );
-	friend istream & operator >> ( istream &, Humidity&);
-
+  /**
+   * Overloading of multiplication operator.
+   * @param d a value in double precision .
+   * @param x a const reference to a Humidity .
+   * @return a Humidity 
+   */
+  friend Humidity operator * ( double d, const Humidity & x );
+  /**
+   * Overloading of << to output the value an Humidity on an ostream.
+   * @param os a reference to the ostream to be written on.
+   * @param x a const reference to a Humidity.
+   */
+  friend ostream & operator << ( ostream & os, const Humidity & x);
+  /**
+   * Overloading of >> to read an Humidity from an istream.
+   */
+  friend istream & operator >> ( istream & is, Humidity & x);
 public:
-	static double fromString(const string&);
-	static string toString(double);
-	static Humidity getHumidity(StringTokenizer &t) throw(NumberFormatException);
-
 	/**
-	 * Write the binary representation of this to a EndianOSStream.
+	 * The nullary constructor (default).
+	 */
+	Humidity();
+	/**
+	 * The copy constructor.
+	 */
+	Humidity(const Humidity &);
+	/**
+	 * A constructor from a string representation.
+	 * The string passed in argument must be parsable into a double precision
+	 * number to express the value in radian of the angle.
+	 *
+	 * @param s a string.
+	 */
+	Humidity(const string &s);
+#ifndef WITHOUT_ACS
+	/**
+	 *
+	 * A constructor from a CORBA/IDL representation.
+	 * 
+	 * @param idlHumidity a cons ref to an IDLHumidity.
+	 */
+	Humidity(const IDLHumidity & idlHumidity);
+#endif
+	/**
+	 * A constructor from a value in double precision.
+	 * The value passed in argument defines the value of the Humidity in radian.
+	 */
+	Humidity(double value);
+	/**
+	 * The destructor.
+	 */
+	virtual ~Humidity();
+	/**
+	 * A static method equivalent to the constructor from a string.
+	 * @param s a string?.
+	 */
+	static double fromString(const string& s);
+	/**
+	 * Conversion into string.
+	 * The resulting string contains the representation of the value of this Humidity.
+	 *
+	 * @return string
+	 */
+	static string toString(double);
+	/**
+	 * Parse the next (string) token of a StringTokenizer into an angle.
+	 * @param st a reference to a StringTokenizer.
+	 * @return an Humidity.
+	 */
+	static Humidity getHumidity(StringTokenizer &st) throw(NumberFormatException);
+			
+	/**
+	 * Write the binary representation of this to an EndianOSStream .
+	 * @param eoss a reference to an EndianOSStream .
 	 */		
 	void toBin(EndianOSStream& eoss);
-
 	/**
 	 * Write the binary representation of a vector of Humidity to a EndianOSStream.
-	 * @param humidity the vector of Humidity to be written
+	 * @param angle the vector of Humidity to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */
-	static void toBin(const vector<Humidity>& humidity,  EndianOSStream& eoss);
+	static void toBin(const vector<Humidity>& angle,  EndianOSStream& eoss);
 	
 	/**
 	 * Write the binary representation of a vector of vector of Humidity to a EndianOSStream.
-	 * @param humidity the vector of vector of Humidity to be written
+	 * @param angle the vector of vector of Humidity to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */	
-	static void toBin(const vector<vector<Humidity> >& humidity,  EndianOSStream& eoss);
+	static void toBin(const vector<vector<Humidity> >& angle,  EndianOSStream& eoss);
 	
 	/**
 	 * Write the binary representation of a vector of vector of vector of Humidity to a EndianOSStream.
-	 * @param humidity the vector of vector of vector of Humidity to be written
+	 * @param angle the vector of vector of vector of Humidity to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */
-	static void toBin(const vector<vector<vector<Humidity> > >& humidity,  EndianOSStream& eoss);
-
+	static void toBin(const vector<vector<vector<Humidity> > >& angle,  EndianOSStream& eoss);
 	/**
 	 * Read the binary representation of an Humidity from a EndianISStream
 	 * and use the read value to set an  Humidity.
@@ -109,7 +164,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of  Humidity from an EndianISStream
 	 * and use the read value to set a vector of  Humidity.
-	 * @param dis the EndianISStream to be read
+	 * @param eiss a reference to the EndianISStream to be read
 	 * @return a vector of Humidity
 	 */	 
 	 static vector<Humidity> from1DBin(EndianISStream & eiss);
@@ -117,7 +172,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of vector of Humidity from an EndianISStream
 	 * and use the read value to set a vector of  vector of Humidity.
-	 * @param eiis the EndianISStream to be read
+	 * @param eiss the EndianISStream to be read
 	 * @return a vector of vector of Humidity
 	 */	 
 	 static vector<vector<Humidity> > from2DBin(EndianISStream & eiss);
@@ -129,117 +184,188 @@ public:
 	 * @return a vector of vector of vector of Humidity
 	 */	 
 	 static vector<vector<vector<Humidity> > > from3DBin(EndianISStream & eiss);	 
-	Humidity();                              		// default constructor
-	Humidity(const Humidity &);						// X const X& constructor
-	Humidity(const string &s);
-#ifndef WITHOUT_ACS
-	Humidity(const IDLHumidity &);
-#endif
-	Humidity(double value);
-	virtual ~Humidity();							// destructor
-
-	Humidity& operator = (const Humidity&);			// assignment operator
-	Humidity& operator = (const double);			// assignment operator
-
-	Humidity& operator += (const Humidity&);		// assignment with arithmetic
-	Humidity& operator -= (const Humidity&);		//	operators
-	Humidity& operator *= (const double);
-	Humidity& operator /= (const double);
-
-	Humidity operator + (const Humidity&) const;	// arithmetic operators
-	Humidity operator - (const Humidity&) const;
-	Humidity operator * (const double) const;
-	Humidity operator / (const double) const;
-
-	bool operator < (const Humidity&) const;		// comparison operators
-	bool operator > (const Humidity&) const;
-	bool operator <= (const Humidity&) const;
-	bool operator >= (const Humidity&) const;
-	bool operator == (const Humidity&) const;
-	bool equals(const Humidity&) const;
-	bool operator != (const Humidity&) const;
-
+	 
+	 /**
+	  * An assignment operator Humidity = Humidity.
+	  * @param x a const reference to an Humidity.
+	  */
+	 Humidity & operator = (const Humidity & x);
+	 
+	 /**
+	  * An assignment operator Humidity = double.
+	  * @param d a value in double precision.
+	  */
+	 Humidity & operator = (const double d);
+	 /**
+	  * Operator increment and assign.
+	  * @param x a const reference to an Humidity.
+	  */
+	Humidity & operator += (const Humidity & x);
+	/**
+	 * Operator decrement and assign.
+	 * @param x a const reference to an Humidity.
+	 */
+	Humidity & operator -= (const Humidity & x);
+	/**
+	 * Operator multiply and assign.
+	 * @param x a value in double precision.
+	 */
+	Humidity & operator *= (const double x);
+	/**
+	 * Operator divide and assign.
+	 * @param x a valye in double precision.
+	 */
+	Humidity & operator /= (const double x);
+	/**
+	 * Addition operator.
+	 * @param x a const reference to a Humidity.
+	 */
+	Humidity operator + (const Humidity & x) const;
+	/**
+	 * Substraction operator.
+	 * @param x a const reference to a Humidity.
+	 */
+	Humidity operator - (const Humidity & x) const;
+	/**
+	 * Multiplication operator.
+	 * @param x a value in double precision.
+	 */
+	Humidity operator * (const double x) const;
+	/**
+	 * Division operator.
+	 * @param d a value in double precision.
+	 */
+	Humidity operator / (const double x) const;
+	/**
+	 * Comparison operator. Less-than.
+	 * @param x a const reference to a Humidity.
+	 */
+	bool operator < (const Humidity & x) const;
+	/**
+	 * Comparison operator. Greater-than.
+	 * @param x a const reference to a Humidity.
+	 */
+	bool operator > (const Humidity & x) const;
+	/**
+	 * Comparison operator. Less-than or equal.
+	 * @param x a const reference to a Humidity.
+	 */	
+	bool operator <= (const Humidity & x) const;
+	/**
+	 * Comparison operator. Greater-than or equal.
+	 * @param x a const reference to a Humidity.
+	 */
+	bool operator >= (const Humidity & x) const;
+	/**
+	 * Comparision operator. Equal-to.
+	 * @param x a const reference to a Humidity.
+	 */
+	bool operator == (const Humidity & x) const;
+	/** 
+	 * Comparison method. Equality.
+	 * @param x a const reference to a Humidity.
+	 */
+	bool equals(const Humidity & x) const;
+	/**
+	 * Comparison operator. Not-equal.
+	 * @param x a const reference to a Humidity.
+	 */
+	bool operator != (const Humidity & x) const;
+	/**
+	 * Comparison method. Test nullity.
+	 * @return a bool.
+	 */
 	bool isZero() const;
-
-	Humidity operator - () const;					// unary minus
-	Humidity operator + () const; 				// unary plus
-
+	/**
+	 * Unary operator. Opposite.
+	 */
+	Humidity operator - () const;
+	/**
+	 * Unary operator. Unary plus.
+	 */
+	Humidity operator + () const;
+	/**
+	 * Converts into a string.
+	 * @return a string containing the representation of a the value in double precision.
+	 */
 	string toString() const;
+	/** 
+	 * Idem toString.
+	 */
 	string toStringI() const;
-
+	/**
+	 * Conversion operator.
+	 * Converts into a string.
+	 */
 	operator string () const;
+	/**
+	 * Return the double precision value of the Humidity.
+	 * @return double
+	 */
 	double get() const;
 #ifndef WITHOUT_ACS
+	/**
+	 * Return the IDLHumidity representation of the Humidity.
+	 * @return IDLHumidity 
+	 */
 	IDLHumidity toIDLHumidity() const;
 #endif
+	/**
+	 * Returns the abbreviated name of the unit implicitely associated to any Humidity.
+	 * @return string
+	 */
 	static string unit();
-
 private:
 	double value;
-
 };
-
 // Humidity constructors
 inline Humidity::Humidity() : value(0.0) {
 }
-
 inline Humidity::Humidity(const Humidity &t) : value(t.value) {
 }
-
 #ifndef WITHOUT_ACS
 inline Humidity::Humidity(const IDLHumidity &l) : value(l.value) {
 }
 #endif
-
 inline Humidity::Humidity(const string &s) : value(fromString(s)) {
 }
-
 inline Humidity::Humidity(double v) : value(v) {
 }
-
 // Humidity destructor
 inline Humidity::~Humidity() { }
-
 // assignment operator
-inline Humidity& Humidity::operator = ( const Humidity &t ) {
+inline Humidity & Humidity::operator = ( const Humidity &t ) {
 	value = t.value;
 	return *this;
 }
-
 // assignment operator
-inline Humidity& Humidity::operator = ( const double v ) {
+inline Humidity & Humidity::operator = ( const double v ) {
 	value = v;
 	return *this;
 }
-
 // assignment with arithmetic operators
-inline Humidity& Humidity::operator += ( const Humidity& t) {
+inline Humidity & Humidity::operator += ( const Humidity & t) {
 	value += t.value;
 	return *this;
 }
-
-inline Humidity& Humidity::operator -= ( const Humidity& t) {
+inline Humidity & Humidity::operator -= ( const Humidity & t) {
 	value -= t.value;
 	return *this;
 }
-
-inline Humidity& Humidity::operator *= ( const double n) {
+inline Humidity & Humidity::operator *= ( const double n) {
 	value *= n;
 	return *this;
 }
-
-inline Humidity& Humidity::operator /= ( const double n) {
+inline Humidity & Humidity::operator /= ( const double n) {
 	value /= n;
 	return *this;
 }
-
 // arithmetic functions
 inline Humidity Humidity::operator + ( const Humidity &t2 ) const {
 	Humidity tmp;
 	tmp.value = value + t2.value;
 	return tmp;
 }
-
 inline Humidity Humidity::operator - ( const Humidity &t2 ) const {
 	Humidity tmp;
 	tmp.value = value - t2.value;
@@ -250,71 +376,57 @@ inline Humidity Humidity::operator * ( const double n) const {
 	tmp.value = value * n;
 	return tmp;
 }
-
 inline Humidity Humidity::operator / ( const double n) const {
 	Humidity tmp;
 	tmp.value = value / n;
 	return tmp;
 }
-
 // comparison operators
-inline bool Humidity::operator < (const Humidity& x) const {
+inline bool Humidity::operator < (const Humidity & x) const {
 	return (value < x.value);
 }
-
-inline bool Humidity::operator > (const Humidity& x) const {
+inline bool Humidity::operator > (const Humidity & x) const {
 	return (value > x.value);
 }
-
-inline bool Humidity::operator <= (const Humidity& x) const {
+inline bool Humidity::operator <= (const Humidity & x) const {
 	return (value <= x.value);
 }
-
-inline bool Humidity::operator >= (const Humidity& x) const {
+inline bool Humidity::operator >= (const Humidity & x) const {
 	return (value >= x.value);
 }
-
-inline bool Humidity::operator == (const Humidity& x) const {
+inline bool Humidity::equals(const Humidity & x) const {
 	return (value == x.value);
 }
-inline bool Humidity::equals(const Humidity& x) const {
+inline bool Humidity::operator == (const Humidity & x) const {
 	return (value == x.value);
 }
-
-inline bool Humidity::operator != (const Humidity& x) const {
+inline bool Humidity::operator != (const Humidity & x) const {
 	return (value != x.value);
 }
-
 // unary - and + operators
 inline Humidity Humidity::operator - () const {
 	Humidity tmp;
         tmp.value = -value;
 	return tmp;
 }
-
 inline Humidity Humidity::operator + () const {
 	Humidity tmp;
     tmp.value = value;
 	return tmp;
 }
-
 // Conversion functions
 inline Humidity::operator string () const {
 	return toString();
 }
-
 inline string Humidity::toString() const {
 	return toString(value);
 }
-
 inline string Humidity::toStringI() const {
 	return toString(value);
 }
-
 inline double Humidity::get() const {
 	return value;
 }
-
 #ifndef WITHOUT_ACS
 inline IDLHumidity Humidity::toIDLHumidity() const {
 	IDLHumidity tmp;
@@ -322,29 +434,22 @@ inline IDLHumidity Humidity::toIDLHumidity() const {
 	return tmp;
 }
 #endif
-
 // Friend functions
-
 inline Humidity operator * ( double n, const Humidity &x) {
 	Humidity tmp;
 	tmp.value = x.value * n;
 	return tmp;
 }
-
 inline ostream & operator << ( ostream &o, const Humidity &x ) {
 	o << x.value;
 	return o;
 }
-
 inline istream & operator >> ( istream &i, Humidity &x ) {
 	i >> x.value;
 	return i;
 }
-
 inline string Humidity::unit() {
 	return string ("%");
 }
-
 } // End namespace asdm
-
 #endif /* Humidity_CLASS */

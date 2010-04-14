@@ -25,9 +25,10 @@
 //#
 //# $Id$
 
+#include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
-#include <display/QtViewer/QtViewerBase.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtAutoGui/QtXmlRecord.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/MSAsRaster.h>
@@ -67,12 +68,13 @@
 #include <images/Images/ImageExprParse.h>
 
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtDisplayData::QtDisplayData(QtViewerBase* v, String path,
+QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 			     String dataType, String displayType) :
-	       v_(v), 
+	       panel_(panel), 
 	       path_(path),
 	       dataType_(dataType),
 	       displayType_(displayType),
@@ -354,7 +356,7 @@ QtDisplayData::QtDisplayData(QtViewerBase* v, String path,
     Vector<String> vertHor(2);   vertHor[0]="vertical";
                                  vertHor[1]="horizontal";
     
-    String orientation = v_->colorBarsVertical()? vertHor[0] : vertHor[1];
+    String orientation = panel_->colorBarsVertical()? vertHor[0] : vertHor[1];
     
     colorBarDisplayOpt_ = new DParameterChoice("wedge",
             "Display Color Wedge?",
@@ -442,7 +444,7 @@ QtDisplayData::QtDisplayData(QtViewerBase* v, String path,
     colorBar_->setOptions(cbropts, chgdopts);
     
     
-    connect( v_, SIGNAL(colorBarOrientationChange()),
+    connect( panel_, SIGNAL(colorBarOrientationChange()),
                    SLOT(setColorBarOrientation_()) );
       
     setColorBarOrientation_();  }  }
@@ -454,6 +456,10 @@ QtDisplayData::QtDisplayData(QtViewerBase* v, String path,
 
 QtDisplayData::~QtDisplayData() { 
   done();  }
+
+String QtDisplayData::description( ) const {
+  return name_ + " (" + path_ + ") " + dataType_ + "/" + displayType_;
+}
 
 void QtDisplayData::done() { 
   if(dd_==0) return;		// (already done).
@@ -706,7 +712,7 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
            cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
           
 
-      held=True;   v_->hold();
+      held=True;   panel_->viewer()->hold();
 	// (avoids redrawing more often than necessary)
       
       
@@ -717,7 +723,7 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 		// Make sure user interface sees this change via chgdOpts.
         Bool orientation = (colorBarOrientationOpt_->value()=="vertical");
         
-	v_->setColorBarOrientation(orientation);  }
+	panel_->setColorBarOrientation(orientation);  }
     
       else if(cbChg || (wouldDisplayColorBar() && cbSzChg)) {
         
@@ -730,7 +736,7 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 
     
     
-    if(!held) { held=True;  v_->hold();  }
+    if(!held) { held=True;  panel_->viewer()->hold();  }
     
     
     // Refresh all main canvases where dd_ is registered, if required
@@ -744,7 +750,7 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
     if(needsRefresh)   dd_->refresh(True);
 
     
-    held=False;  v_->release();     
+    held=False;  panel_->viewer()->release();     
     
     errMsg_ = "";		// Just lets anyone interested know that
     emit optionsSet();  }	// options were set ok.  (QtDDGui will
@@ -753,13 +759,13 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
   catch (const casa::AipsError& err) {
     errMsg_ = err.getMesg();
     //cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
-    if(held) { held=False;  v_->release();  }
+    if(held) { held=False;  panel_->viewer()->release();  }
     emit qddError(errMsg_);  }
   
   catch (...) { 
     errMsg_ = "Unknown error setting data options";
     //cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
-    if(held) { held=False;  v_->release();  }
+    if(held) { held=False;  panel_->viewer()->release();  }
     emit qddError(errMsg_);  }
 
   checkAxis();
@@ -799,11 +805,11 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 
 void QtDisplayData::setColorBarOrientation_() {
   // Set the color bar orientation option according to the master
-  // value stored in the QtViewerBase (v_->colorBarsVertical_).
+  // value stored in the QtViewerBase (panel_->colorBarsVertical_).
   // Connected to QtViewerBase's colorBarOrientationChange() signal;
   // also called during initialization.
   Record orientation;
-  orientation.define( "orientation",  v_->colorBarsVertical()?
+  orientation.define( "orientation",  panel_->colorBarsVertical()?
                                       "vertical" : "horizontal" );
   setOptions(orientation);  }
 
@@ -874,12 +880,12 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
   // state, in which the dd may try to draw with a colormap which is not
   // really ready to be used yet...).
   
-  v_->hold();
+  panel_->viewer()->hold();
   
   dd_->setColormap(clrMap, 1.);
   if(hasColorBar()) colorBar_->setColormap(clrMap, 1.);
   
-  v_->release();
+  panel_->viewer()->release();
 
     
   clrMap_ = clrMap;
@@ -1192,7 +1198,7 @@ Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
   // Compute and print statistics on DD's image for given region.
   // Current plane only.  Returns False if it can't compute for
   // various reasons.
-          
+
   if(im_==0) return False;
 	// This code only supports QDDs containing an im_
 	// (ImageInterface<Float>) at present (Complex is not supported).

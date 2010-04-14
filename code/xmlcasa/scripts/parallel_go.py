@@ -1,13 +1,29 @@
 from IPython.kernel import client 
 from subprocess import *
 import os
+import sys
 import commands
 import string
 import atexit
 import time
 import types
+import inspect
 from math import *
 
+a=inspect.stack()
+stacklevel=0
+for k in range(len(a)):
+   if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+      stacklevel=k
+
+myf=sys._getframe(stacklevel).f_globals
+
+if myf.has_key('casa') :
+   casa = myf['casa']
+else:
+   casa = { }
+
+##scriptdir = '/home/casa-dev-08/dschieb/casapy-test-30.1.10182-001-64b/lib64/python2.5/'
 class cluster(object):
 
    "control cluster engines for parallel tasks"
@@ -48,6 +64,7 @@ class cluster(object):
       self.__new_engs=[]
       #print 'ipythondir', self.__ipythondir
       #print 'HOME:', self.homepath
+      #atexit.register(self.stop_cluster)
       atexit.register(cluster.stop_cluster,self)
 
    def start_engine(self, node_name, num_engine, work_dir=None):
@@ -159,8 +176,11 @@ class cluster(object):
       from time import strftime
       timestamp=strftime("%Y%m%d%H%M%S")
       lfile=self.__ipythondir+'/log/casacontroller-'+timestamp+'-'
+      ffile=self.__ipythondir+'/security/casacontroller-engine-'+timestamp+'.furl'
+      efile=self.__ipythondir+'/security/casacontroller-mec-'+timestamp+'.furl'
+      tfile=self.__ipythondir+'/security/casacontroller-tc-'+timestamp+'.furl'
       cmd=commands.getoutput("which ipcontroller")
-      self.__controller=Popen([cmd, '--logfile='+lfile]).pid
+      self.__controller=Popen([cmd, '--engine-furl-file='+ffile, '--multiengine-furl-file='+efile, '--task-furl-file='+tfile, '--logfile='+lfile]).pid
       #print 'cmd=', cmd, 'pid=', self.__controller
       if (self.__controller==None):
          return False
@@ -174,6 +194,7 @@ class cluster(object):
       self.__write_stop_controller()
       
       info=self.__ipythondir+'/log/casacontroller-'+str(self.__timestamp)+'-'+str(self.__controller)+'.log'
+      meng=self.__ipythondir+'/security/casacontroller-mec-'+self.__timestamp+'.furl'
       #print 'info=', info
       for i in range(1, 15):
          #print os.path.exists(info)
@@ -182,7 +203,7 @@ class cluster(object):
          time.sleep(1)
          #print "wait", i 
 
-      self.__client=client.MultiEngineClient()
+      self.__client=client.MultiEngineClient(meng)
       #print "__client=", self.__client
 
       #self.__client.activate()
@@ -204,7 +225,7 @@ class cluster(object):
       cmd=commands.getoutput("which ipengine")
       ef.write('export contrid=%s\n' % self.__controller)
       ef.write('export stamp=%s\n' % self.__timestamp)
-      ef.write(cmd+' --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- &\n')
+      ef.write(cmd+' --furl-file='+self.__ipythondir+'/security/casacontroller-engine-'+self.__timestamp+'.furl --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- &\n')
       ef.close()
 
    def __write_stop_node(self):
@@ -216,7 +237,11 @@ class cluster(object):
       ef=open(self.__ipythondir+'/'+self.__stop_node_file, 'w')
       bash=commands.getoutput("which bash")
       ef.write('#!%s\n' % bash)
-      ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | awk '{print $2}' | xargs kill -TERM")
+      #stop all engines started by me
+      #ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | awk '{print $2}' | xargs kill -TERM >/dev/null")
+
+      #stop all engines started by the current controller
+      ef.write("ps -fu `whoami` | grep ipengine | grep -v grep | grep "+self.__timestamp+" | awk '{print $2}' | xargs kill -TERM>/dev/null")
       ef.close()
 
    def __write_stop_controller(self):
@@ -228,7 +253,7 @@ class cluster(object):
       ef=open(self.__ipythondir+'/'+self.__stop_controller_file, 'w')
       bash=commands.getoutput("which bash")
       ef.write('#!%s\n' % bash)
-      ef.write("ps -ef | grep `whoami` | grep ipcontroller | grep -v grep | awk '{print $2}' | xargs kill -TERM")
+      ef.write("ps -ef | grep `whoami` | grep ipcontroller | grep -v grep | awk '{print $2}' | xargs kill -TERM >/dev/null")
       ef.close()
 
    def __write_bashrc(self):
@@ -264,6 +289,10 @@ class cluster(object):
       
       '''
        
+      if type(engine_id).__name__ != 'int':
+         print 'engine id must be an integer'
+         return None 
+
       node_name=''
       procid=None
       for i in self.__engines:
@@ -303,6 +332,18 @@ class cluster(object):
       If a computer with the given name is in the current cluster, running this function will stop all the engines currently running on that node and remove the node and engines from the engine list. This function will not shutdown the computer.
      
       '''
+      if type(node_name).__name__ != 'str':
+         print 'node_name must be a string'
+         return None
+
+      #if self.__engines == []:
+      #   print 'there is no engines running'
+      #   return None
+
+      if self.get_nodes().count(node_name) == 0:
+         print 'there is no node by the name: ', node_name
+         return None
+
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
       dist=node_name+':'+self.__prefix+self.__stop_node_file
@@ -363,7 +404,11 @@ class cluster(object):
       except:
          pass
 
-      self.__controller=None
+      try:
+         self.__controller=None
+      except:
+         pass
+
       print "controller stopped"
       return True
 
@@ -379,17 +424,26 @@ class cluster(object):
          elist.append(i[1])
       fruit=set(elist)
 
-      self.__engines=[]
+      #self.__engines=[]
       for i in fruit:
-         #print i
-         self.stop_node(i)
+         try:
+            self.stop_node(i)
+         except:
+            continue
 
       # shutdone controller
-      self.__stop_controller()
-      #self.__controller=None
+      try:
+         self.__stop_controller()
+      except:
+         pass
 
-      #self.__client=None
+      try:
+         self.activate()
+         self.__client=None
+      except:
+         pass
 
+      #print 'cluster shutdown'
 
    def wash_logs(self):
       '''Clean up the cluster log files.
@@ -415,6 +469,7 @@ class cluster(object):
      '''
      
      print 'initialize engines', i
+     self.__client.push({'casa': casa })
      self.__client.execute('import os', i)
      self.__client.execute('if os.path.isdir(work_dir):os.chdir(work_dir)\nelse:work_dir=os.environ["HOME"]', i)
      phome=''
@@ -458,6 +513,7 @@ class cluster(object):
         phome=dhome
 
      sdir='/CASASUBST/python_library_directory/'+'/'
+     ##sdir='/home/casa-dev-08/dschieb/casapy-test-30.1.10182-001-64b/lib64/python2.5/'
      self.__client.push(dict(phome=phome), i)
      self.__client.execute('import sys', i)
      #self.__client.execute('scriptdir=phome+"/python/2.5/"', i)
@@ -481,10 +537,16 @@ class cluster(object):
       
       '''
       if self.__client is None:
-         pass
+         print 'there is no client'
+         return None
 
-      tobeinit=self.__client.pull('id')
-      #print tobeinit
+      try:
+         tobeinit=self.__client.pull('id')
+         #print tobeinit
+      except:
+         print "cluster not running"
+         return None
+         
 
       if len(tobeinit)>0:
          self.__init_nodes(tobeinit)
@@ -572,9 +634,13 @@ class cluster(object):
       Each working engine is a CASA instance and saves its own log. This function retrun the list of logs with their full path. One can view the log contents with casalogviewer.
 
       '''
-      #self.__client.pull(['work_dir', 'thelogfile'])
-      self.__client.execute('tmp=work_dir+"/"+thelogfile')
-      return self.__client.pull('tmp')
+      try:
+         #self.__client.pull(['work_dir', 'thelogfile'])
+         self.__client.execute('tmp=work_dir+"/"+thelogfile')
+         return self.__client.pull('tmp')
+      except:
+         print "cluster not running"
+         return None
 
    def read_casalogs(self):
       '''Read the casa log files.
@@ -584,9 +650,13 @@ class cluster(object):
       '''
       import os
       import string
-      files = string.join(self.get_casalogs(), ' ')
-      #print files
-      os.system("emacs "+files+ "&")
+      _logs = self.get_casalogs()
+      if _logs != None:
+         files = string.join(_logs, ' ')
+         #print files
+         os.system("emacs "+files+ "&")
+      else:
+         print "could not read casalogs"
 
    def pad_task_id(self, b='', task_id=[]):
       # pad task id (not engine id!)
@@ -911,7 +981,11 @@ class cluster(object):
 
       '''
       print "Hello CASA Controller"
-      return self.__client.execute('print "Hello CASA Node"')
+      
+      if self.get_engines() != []:
+         return self.__client.execute('print "Hello CASA Node"')
+      else:
+         return None
 
    def __set_cwds(self, clusterdir):
       '''Set current working dir for all engines
@@ -940,7 +1014,10 @@ class cluster(object):
 
 
       '''
-      return self.__client.get_ids()
+      try:
+         return self.__client.get_ids()
+      except:
+         return []
 
    def get_nodes(self):
       '''get hostnames for all available engines
@@ -1023,7 +1100,8 @@ class cluster(object):
 
 
       '''
-      return self.__client.get_result(i)
+      #this one is not very useful
+      return self.__client.get_result()[i]
 
    def activate(self):
       '''set the cluster to parallel execution mode
@@ -1047,8 +1125,9 @@ class cluster(object):
             if verbose:
                print "job '%s' done" % job
             return True
-      except:
-         print "could not get the status of job '%s'" % job
+      except e:
+         print e
+         #print "could not get the status of job '%s'" % job
          return False
 
    def howto(self):

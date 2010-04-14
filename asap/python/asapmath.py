@@ -183,8 +183,23 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
     """
     varlist = vars()
     # check for the appropriate data
-    s = scantab.get_scan('*_ps*')
-    if s is None:
+##    s = scantab.get_scan('*_ps*')
+##     if s is None:
+##         msg = "The input data appear to contain no position-switch mode data."
+##         if rcParams['verbose']:
+##             #print msg
+##             asaplog.push(msg)
+##             print_log('ERROR')
+##             return
+##         else:
+##             raise TypeError(msg)
+    s = scantab.copy()
+    from asap._asap import srctype
+    sel = selector()
+    sel.set_types( srctype.pson )
+    try:
+        scantab.set_selection( sel )
+    except Exception, e:
         msg = "The input data appear to contain no position-switch mode data."
         if rcParams['verbose']:
             #print msg
@@ -193,6 +208,8 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
             return
         else:
             raise TypeError(msg)
+    s.set_selection()
+    sel.reset()
     ssub = s.get_scan(scannos)
     if ssub is None:
         msg = "No data was found with given scan numbers!"
@@ -203,8 +220,18 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
             return
         else:
             raise TypeError(msg)
-    ssubon = ssub.get_scan('*calon')
-    ssuboff = ssub.get_scan('*[^calon]')
+    #ssubon = ssub.get_scan('*calon')
+    #ssuboff = ssub.get_scan('*[^calon]')
+    sel.set_types( [srctype.poncal,srctype.poffcal] )
+    ssub.set_selection( sel )
+    ssubon = ssub.copy()
+    ssub.set_selection()
+    sel.reset()
+    sel.set_types( [srctype.pson,srctype.psoff] )
+    ssub.set_selection( sel )
+    ssuboff = ssub.copy()
+    ssub.set_selection()
+    sel.reset()
     if ssubon.nrow() != ssuboff.nrow():
         msg = "mismatch in numbers of CAL on/off scans. Cannot calibrate. Check the scan numbers."
         if rcParams['verbose']:
@@ -215,8 +242,18 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
         else:
             raise TypeError(msg)
     cals = dototalpower(ssubon, ssuboff, tcalval)
-    sig = cals.get_scan('*ps')
-    ref = cals.get_scan('*psr')
+    #sig = cals.get_scan('*ps')
+    #ref = cals.get_scan('*psr')
+    sel.set_types( srctype.pson )
+    cals.set_selection( sel )
+    sig = cals.copy()
+    cals.set_selection()
+    sel.reset()
+    sel.set_types( srctype.psoff )
+    cals.set_selection( sel )
+    ref = cals.copy()
+    cals.set_selection()
+    sel.reset()
     if sig.nscan() != ref.nscan():
         msg = "mismatch in numbers of on/off scans. Cannot calibrate. Check the scan numbers."
         if rcParams['verbose']:
@@ -260,40 +297,47 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
         precal={}
         postcal=[]
         keys=['ps','ps_calon','psr','psr_calon']
+        types=[srctype.pson,srctype.poncal,srctype.psoff,srctype.poffcal]
         ifnos=list(ssub.getifnos())
         polnos=list(ssub.getpolnos())
         sel=selector()
         for i in range(2):
-            ss=ssuboff.get_scan('*'+keys[2*i])
+            #ss=ssuboff.get_scan('*'+keys[2*i])
             ll=[]
             for j in range(len(ifnos)):
                 for k in range(len(polnos)):
                     sel.set_ifs(ifnos[j])
                     sel.set_polarizations(polnos[k])
+                    sel.set_types(types[2*i])
                     try:
-                        ss.set_selection(sel)
+                        #ss.set_selection(sel)
+                        ssuboff.set_selection(sel)
                     except:
                         continue
-                    ll.append(numpy.array(ss._getspectrum(0)))
+                    #ll.append(numpy.array(ss._getspectrum(0)))
+                    ll.append(numpy.array(ssuboff._getspectrum(0)))
                     sel.reset()
-                    ss.set_selection()
+                    ssuboff.set_selection()
             precal[keys[2*i]]=ll
-            del ss
-            ss=ssubon.get_scan('*'+keys[2*i+1])
+            #del ss
+            #ss=ssubon.get_scan('*'+keys[2*i+1])
             ll=[]
             for j in range(len(ifnos)):
                 for k in range(len(polnos)):
                     sel.set_ifs(ifnos[j])
                     sel.set_polarizations(polnos[k])
+                    sel.set_types(types[2*i+1])
                     try:
-                        ss.set_selection(sel)
+                        #ss.set_selection(sel)
+                        ssubon.set_selection(sel)
                     except:
                         continue
-                    ll.append(numpy.array(ss._getspectrum(0)))
+                    #ll.append(numpy.array(ss._getspectrum(0)))
+                    ll.append(numpy.array(ssubon._getspectrum(0)))
                     sel.reset()
-                    ss.set_selection()
+                    ssubon.set_selection()
             precal[keys[2*i+1]]=ll
-            del ss
+            #del ss
         for j in range(len(ifnos)):
             for k in range(len(polnos)):
                 sel.set_ifs(ifnos[j])
@@ -412,12 +456,27 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
     """
     varlist = vars()
     from asap._asap import stmath
+    from asap._asap import srctype
     stm = stmath()
     stm._setinsitu(False)
 
     # check for the appropriate data
-    s = scantab.get_scan('*_nod*')
-    if s is None:
+##     s = scantab.get_scan('*_nod*')
+##     if s is None:
+##         msg = "The input data appear to contain no Nod observing mode data."
+##         if rcParams['verbose']:
+##             #print msg
+##             asaplog.push(msg)
+##             print_log('ERROR')
+##             return
+##         else:
+##             raise TypeError(msg)
+    s = scantab.copy()
+    sel = selector()
+    sel.set_types( srctype.nod )
+    try:
+        s.set_selection( sel )
+    except Exception, e:
         msg = "The input data appear to contain no Nod observing mode data."
         if rcParams['verbose']:
             #print msg
@@ -426,6 +485,9 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
             return
         else:
             raise TypeError(msg)
+    sel.reset()
+    del sel
+    del s
 
     # need check correspondance of each beam with sig-ref ...
     # check for timestamps, scan numbers, subscan id (not available in
@@ -474,12 +536,14 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
         import numpy
         precal={}
         postcal=[]
-        keys=['nod','nod_calon']
+        keys=['','_calon']
+        types=[srctype.nod,srctype.nodcal]
         ifnos=list(scantab.getifnos())
         polnos=list(scantab.getpolnos())
         sel=selector()
+        ss = scantab.copy()
         for i in range(2):
-            ss=scantab.get_scan('*'+keys[i])
+            #ss=scantab.get_scan('*'+keys[i])
             ll=[]
             ll2=[]
             for j in range(len(ifnos)):
@@ -487,6 +551,7 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
                     sel.set_ifs(ifnos[j])
                     sel.set_polarizations(polnos[k])
                     sel.set_scans(pairScans[0])
+                    sel.set_types(types[i])
                     try:
                         ss.set_selection(sel)
                     except:
@@ -497,6 +562,7 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
                     sel.set_ifs(ifnos[j])
                     sel.set_polarizations(polnos[k])
                     sel.set_scans(pairScans[1])
+                    sel.set_types(types[i])
                     try:
                         ss.set_selection(sel)
                     except:
@@ -505,11 +571,11 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
                     ll2.append(numpy.array(ss._getspectrum(0)))
                     sel.reset()
                     ss.set_selection()
-            key='%s%s' %(pairScans[0],keys[i].lstrip('nod'))
+            key='%s%s' %(pairScans[0],keys[i])
             precal[key]=ll
-            key='%s%s' %(pairScans[1],keys[i].lstrip('nod'))
+            key='%s%s' %(pairScans[1],keys[i])
             precal[key]=ll2
-            del ss
+            #del ss
         keys=precal.keys()
         for j in range(len(ifnos)):
             for k in range(len(polnos)):
@@ -637,6 +703,7 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
     """
     varlist = vars()
     from asap._asap import stmath
+    from asap._asap import srctype
     stm = stmath()
     stm._setinsitu(False)
 
@@ -656,48 +723,75 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
     if verify:
         # get data
         ssub = s.get_scan(scannos)
-        ssubon = ssub.get_scan('*calon')
-        ssuboff = ssub.get_scan('*[^calon]')
+        #ssubon = ssub.get_scan('*calon')
+        #ssuboff = ssub.get_scan('*[^calon]')
+        sel = selector()
+        sel.set_types( [srctype.foncal,srctype.foffcal] )
+        ssub.set_selection( sel )
+        ssubon = ssub.copy()
+        ssub.set_selection()
+        sel.reset()
+        sel.set_types( [srctype.fson,srctype.fsoff] )
+        ssub.set_selection( sel )
+        ssuboff = ssub.copy()
+        ssub.set_selection()
+        sel.reset()
         import numpy
         precal={}
         postcal=[]
         keys=['fs','fs_calon','fsr','fsr_calon']
+        types=[srctype.fson,srctype.foncal,srctype.fsoff,srctype.foffcal]
         ifnos=list(ssub.getifnos())
         polnos=list(ssub.getpolnos())
-        sel=selector()
         for i in range(2):
-            ss=ssuboff.get_scan('*'+keys[2*i])
+            #ss=ssuboff.get_scan('*'+keys[2*i])
             ll=[]
             for j in range(len(ifnos)):
                 for k in range(len(polnos)):
                     sel.set_ifs(ifnos[j])
                     sel.set_polarizations(polnos[k])
+                    sel.set_types(types[2*i])
                     try:
-                        ss.set_selection(sel)
+                        #ss.set_selection(sel)
+                        ssuboff.set_selection(sel)
                     except:
                         continue
                     ll.append(numpy.array(ss._getspectrum(0)))
                     sel.reset()
-                    ss.set_selection()
+                    #ss.set_selection()
+                    ssuboff.set_selection()
             precal[keys[2*i]]=ll
-            del ss
-            ss=ssubon.get_scan('*'+keys[2*i+1])
+            #del ss
+            #ss=ssubon.get_scan('*'+keys[2*i+1])
             ll=[]
             for j in range(len(ifnos)):
                 for k in range(len(polnos)):
                     sel.set_ifs(ifnos[j])
                     sel.set_polarizations(polnos[k])
+                    sel.set_types(types[2*i+1])
                     try:
-                        ss.set_selection(sel)
+                        #ss.set_selection(sel)
+                        ssubon.set_selection(sel)
                     except:
                         continue
                     ll.append(numpy.array(ss._getspectrum(0)))
                     sel.reset()
-                    ss.set_selection()
+                    #ss.set_selection()
+                    ssubon.set_selection()
             precal[keys[2*i+1]]=ll
-            del ss
-        sig=resspec.get_scan('*_fs')
-        ref=resspec.get_scan('*_fsr')
+            #del ss
+        #sig=resspec.get_scan('*_fs')
+        #ref=resspec.get_scan('*_fsr')
+        sel.set_types( srctype.fson )
+        resspec.set_selection( sel )
+        sig=resspec.copy()
+        resspec.set_selection()
+        sel.reset()
+        sel.set_type( srctype.fsoff )
+        resspec.set_selection( sel )
+        ref=resspec.copy()
+        resspec.set_selection()
+        sel.reset()
         for k in range(len(polnos)):
             for j in range(len(ifnos)):
                 sel.set_ifs(ifnos[j])
@@ -871,14 +965,18 @@ def calibrate( scantab, scannos=[], calmode='none', verify=None ):
     elif ( calmode == 'ps' ):
         asaplog.push( 'Calibrating %s position-switched data.' % antname )
         print_log()
-        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+        if ( antname.find( 'APEX' ) != -1 ):
+            scal = apexcal( scantab, scannos, calmode, verify )
+        elif ( antname.find( 'ALMA' ) != -1 or antname.find( 'OSF' ) != -1 ):
             scal = almacal( scantab, scannos, calmode, verify )
         else:
             scal = calps( scantab, scannos=scannos, verify=verify )
     elif ( calmode == 'fs' or calmode == 'fsotf' ):
         asaplog.push( 'Calibrating %s frequency-switched data.' % antname )
         print_log()
-        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+        if ( antname.find( 'APEX' ) != -1 ):
+            scal = apexcal( scantab, scannos, calmode, verify )
+        elif ( antname.find( 'ALMA' ) != -1 or antname.find( 'OSF' ) != -1 ):
             scal = almacal( scantab, scannos, calmode, verify )
         else:
             scal = calfs( scantab, scannos=scannos, verify=verify )
@@ -892,9 +990,9 @@ def calibrate( scantab, scannos=[], calmode='none', verify=None ):
 
     return scal 
 
-def almacal( scantab, scannos=[], calmode='none', verify=False ):
+def apexcal( scantab, scannos=[], calmode='none', verify=False ):
     """
-    Calibrate APEX and ALMA data
+    Calibrate APEX data
 
     Parameters:
         scantab:       scantable
@@ -908,6 +1006,23 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
     antname = scantab.get_antennaname()
     ssub = scantab.get_scan( scannos )
     scal = scantable( stm.cwcal( ssub, calmode, antname ) )
+    return scal
+
+def almacal( scantab, scannos=[], calmode='none', verify=False ):
+    """
+    Calibrate ALMA data
+
+    Parameters:
+        scantab:       scantable
+        scannos:       list of scan number
+        calmode:       calibration mode
+
+        verify:        verify calibration     
+    """
+    from asap._asap import stmath
+    stm = stmath()
+    ssub = scantab.get_scan( scannos )
+    scal = scantable( stm.almacal( ssub, calmode ) )
     return scal
 
 def splitant(filename, outprefix='',overwrite=False):
@@ -928,27 +1043,27 @@ def splitant(filename, outprefix='',overwrite=False):
     """
     # Import the table toolkit from CASA
     try:
-        import casac
+       import casac
     except ImportError:
-        if rcParams['verbose']:
-            #print "failed to load casa"
-            print_log()
-            asaplog.push("failed to load casa")
-            print_log('ERROR')
-        else: raise
-        return False
+       if rcParams['verbose']:
+           #print "failed to load casa"
+           print_log()
+           asaplog.push("failed to load casa")
+           print_log('ERROR')
+       else: raise
+       return False
     try:
-        tbtool = casac.homefinder.find_home_by_name('tableHome')
-        tb = tbtool.create()
-        tb2 = tbtool.create()
+       tbtool = casac.homefinder.find_home_by_name('tableHome')
+       tb = tbtool.create()
+       tb2 = tbtool.create()
     except:
-        if rcParams['verbose']:
-            #print "failed to load a table tool:\n", e
-            print_log()
-            asaplog.push("failed to load table tool")
-            print_log('ERROR')
-        else: raise
-        return False
+       if rcParams['verbose']:
+           #print "failed to load a table tool:\n", e
+           print_log()
+           asaplog.push("failed to load table tool")
+           print_log('ERROR')
+       else: raise
+       return False
     # Check the input filename
     if isinstance(filename, str):
         import os.path
@@ -985,18 +1100,9 @@ def splitant(filename, outprefix='',overwrite=False):
     outname=''
     if len(outprefix) > 0: prefix=outprefix+'.'
     else:
-        prefix=filename
+        prefix=filename.rstrip('/')
     # Now do the actual splitting.
     outfiles=[]
-    tmpms="temp_antsplit.ms"
-    if os.path.exists(tmpms):
-        ans=raw_input('Temporal file '+tmpms+' exists. Delete it and continue? [y/N]: ')
-        if ans.upper() == 'Y':
-            os.system('rm -rf '+tmpms)
-            asaplog.push('The file '+tmpms+' deleted.')
-        else:
-            asaplog.push('Exit without splitting.')
-            return
     tb.open(tablename=filename+'/ANTENNA',nomodify=True)
     nant=tb.nrows()
     antnames=tb.getcol('NAME',0,nant,1)
@@ -1004,24 +1110,55 @@ def splitant(filename, outprefix='',overwrite=False):
     tb.close()
     tb.open(tablename=filename,nomodify=True)
     ant1=tb.getcol('ANTENNA1',0,-1,1)
+    tb.close()
     for antid in set(ant1):
-        qstr="ANTENNA1 == "+str(antid)
-        stab = tb.queryC(qstr)
-        ctab = stab.copy(tmpms,deep=True)
-        stab.close()
-        ctab.close()
-        scan=scantable(tmpms,average=False,getpt=True)
+        scan=scantable(filename,average=False,getpt=True,antenna=int(antid))
         outname=prefix+antnames[antid]+'.asap'
         scan.save(outname,format='ASAP',overwrite=overwrite)
-        # Modify scantable header
-        tb2.open(tablename=outname,nomodify=False)
-        tb2.putkeyword(keyword='AntennaName',value=antnames[antid])
-        tb2.putkeyword(keyword='AntennaPosition',value=antpos[antid])
-        tb2.flush()
-        tb2.close()
-        del scan, ctab, stab
+        del scan
         outfiles.append(outname)
-    tb.close()
     del tb, tb2
-    os.system('rm -rf '+tmpms)
     return outfiles
+
+def _array2dOp( scan, value, mode="ADD", tsys=False ):
+    """
+    This function is workaround on the basic operation of scantable
+    with 2 dimensional float list.
+
+    scan:    scantable operand
+    value:   float list operand
+    mode:    operation mode (ADD, SUB, MUL, DIV)
+    tsys:    if True, operate tsys as well 
+    """
+    nrow = scan.nrow()
+    s = None
+    if len( value ) == 1:
+        from asap._asap import stmath
+        stm = stmath()
+        s = scantable( stm._arrayop( scan.copy(), value[0], mode, tsys ) )
+        del stm
+    elif len( value ) != nrow:
+        asaplog.push( 'len(value) must be 1 or conform to scan.nrow()' )
+        print_log( 'ERROR' )
+    else:
+        from asap._asap import stmath
+        stm = stmath()
+        # insitu must be True 
+        stm._setinsitu( True )
+        s = scan.copy()
+        sel = selector()
+        for irow in range( nrow ):
+            sel.set_rows( irow )
+            s.set_selection( sel )
+            if len( value[irow] ) == 1:
+                stm._unaryop( s, value[irow][0], mode, tsys )
+            else:
+                stm._arrayop( s, value[irow], mode, tsys, 'channel' )
+            s.set_selection()
+            sel.reset()
+        del sel
+        del stm
+    return s
+
+            
+            

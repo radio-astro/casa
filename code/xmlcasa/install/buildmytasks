@@ -86,7 +86,7 @@ do
    sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_cli.py.bak > ${xmlfile}_cli.py
    if [ -e ${xmlfile}_pg.py ] ; then
       mv ${xmlfile}_pg.py ${xmlfile}_pg.py.bak
-      sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_pg.py.bak > ${xmlfile}_pg.y
+      sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_pg.py.bak > ${xmlfile}_pg.py
    fi
    if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
       mv ${xmlfile}.py ${INSTALLDIR}
@@ -99,7 +99,8 @@ done
 
 verbose "generating `basename $OUTFILE` file ... "
 
-sed -i .bak -e s/^tasksum/mytasks/g ${INFOFILE}
+mv ${INFOFILE} ${INFOFILE}.bak
+sed -e s/^tasksum/mytasks/g ${INFOFILE}.bak >${INFOFILE}
 
 cat /dev/null > ${OUTFILE}
 echo "#" >> ${OUTFILE}

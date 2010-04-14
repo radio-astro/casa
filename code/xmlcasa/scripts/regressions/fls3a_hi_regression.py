@@ -59,7 +59,7 @@ print '--Import--'
 storage_sav=sd.rcParams['scantable.storage']
 sd.rc('scantable',storage='disk')		# Note this enables handling of large datasets with limited memory
 #s=sd.scantable('FLS3_all_newcal_SP',false)	# the 'false' indicates that no averaging should be done - this is
-s=sd.scantable(datapath,false)	# the 'false' indicates that no averaging should be done - this is
+s=sd.scantable(datapath,average=false,getpt=false)	# the 'false' indicates that no averaging should be done - this is
 						# always the case for data that hasn't been calibrated
 importtime=time.time()
 

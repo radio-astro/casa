@@ -87,9 +87,8 @@ TSLogSink::TSLogSink (const LogFilterInterface& filter)
 
 #ifndef AIPS_LOG4CPLUS
 //
-// right, just what it looks like...
-//    if you supply a logname it uses that, otherwise it looks for a logname in
-//    the aiprc file, else it defaults to the old standby.
+// if you supply a logname it uses that, otherwise it looks for a logname in
+// the aiprc file, else it defaults to the old standby.
 //
 void TSLogSink::setLogSink(String logname){
    if(!logname.size()){

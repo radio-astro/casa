@@ -36,7 +36,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="stringArray" name="listitems" subparam="true">
-      <description>items to list ([]] for all)</description>
+      <description>items to list ([] for all)</description>
 		 <value type="stringArray">
 		   <value type="string">telescope</value>
 		   <value type="string">observer</value>

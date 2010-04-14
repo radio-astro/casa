@@ -27,7 +27,7 @@
     </method>
     <method name="restore">
       <arg direction="in" type="s" name="path" />
-      <arg direction="in" type="b" name="new_window" />
+      <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
     <method name="cwd">
@@ -50,6 +50,11 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
+    <method name="popup">
+      <arg direction="in" type="s" name="what" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
     <method name="output">
       <arg direction="in" type="s" name="device" />
       <arg direction="in" type="s" name="devicetype" />
@@ -64,6 +69,16 @@
     <method name="keyinfo">
       <arg direction="in" type="i" name="key" />
       <arg direction="out" type="as" />
+    </method>
+    <method name="frame">
+      <arg direction="in" type="i" name="num" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="zoom">
+      <arg direction="in" type="i" name="level" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
     </method>
     <method name="done">
       <arg direction="out" type="b" />

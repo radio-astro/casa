@@ -4,7 +4,7 @@ usage: python report.py testresult_dir report_dir revision generate_plot
 
 testresult_dir: database top directory
 report_dir: output directory
-revision: 'latest' for latest stable only, or 'all'
+revision: 'latest' for latest test-branch only, or 'all'
 generate_plot: boolean, generates png plots iff true
 
 expected format of logfiles:
@@ -33,7 +33,9 @@ colormania = True    #
 SOURCE_DIR = os.environ["CASAPATH"].split()[0]
 known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 2.3.1 (build #6826)",
-                  "CASA Version 2.4.0 (build #8115)"]
+                  "CASA Version 2.4.0 (build #8115)",
+                  "CASA Version 3.0.0 (r9861)", # for Mac...
+                  "CASA Version 3.0.0 (r9888)"] # for Linux...
 
 exclude_host = []
 exclude_test = {}
@@ -47,6 +49,36 @@ def cmp_exec(a, b):
         return 1
     else:
         return 0
+
+# Usual integer / string comparison
+def cmp_std(a, b):
+    if a < b:
+        return -1
+    elif a > b:
+        return 1
+    else:
+        return 0
+
+# Compare version numbers
+def cmp_version(a, b):
+    if a.find('build') >= 0 and b.find('build') < 0:
+        return -1
+    elif a.find('build') < 0 and b.find('build') >= 0:
+        return 1
+    elif a.find('build') >= 0 and b.find('build') >= 0:
+        return cmp_std(a, b)
+    else:
+        # Neither a nor b contain 'build'
+        n = len("CASA Version 3.0.1 (r")
+        if a[:n] != b[:n]:
+            return cmp_std(a[:n], b[:n])
+        else:
+            # Compare XYZ numerically in
+            # "CASA Version 3.0.1 (rXYZ)"
+            a_int = int(a[n:len(a)-len(")")])
+            b_int = int(b[n:len(b)-len(")")])
+            return cmp_std(a_int, b_int)
+        
 
 def shorten(s, maxlength=20):
     if len(s) > maxlength:
@@ -105,7 +137,7 @@ def selected_revisions(data):
     all_list = []
     for c in all:
         all_list.append(c)
-    all_list.sort(reverse=True)
+    all_list.sort(reverse=True, cmp=cmp_version)
 
     # The following code selects which versions to use,
     # with lower density as we go back in time.
@@ -149,7 +181,7 @@ def selected_revisions(data):
         else:
             print "Drop", all_list[c]
 
-    # And always use, too, the latest version on the stable branch
+    # And always use, too, the latest version on the test branch
     stable_versions = []
     for log in data:
         host = log['host']
@@ -158,19 +190,20 @@ def selected_revisions(data):
             stable_versions.append(log['CASA'])
 
     if len(stable_versions) > 0:
-        stable_versions.sort(reverse=True)
+        stable_versions.sort(reverse=True, cmp=cmp_version)
         selected.add(stable_versions[0])
-        print "Use latest on stable: ", stable_versions[0]
+        print "Use latest on test branch: ", stable_versions[0]
     else:
-        print "No tests on stable"
+        print "No tests on test branch"
 
     return selected
     
 
 class report:
     def __init__(self, reg_dir, report_dir, \
-                 revision, \
+                 revision='all', \
                  gen_plot=True,   # generate plots?
+                 skull=''         # path to crash image
                  ):
 
         casalog.showconsole(onconsole=True)
@@ -182,7 +215,7 @@ class report:
         data = self.read_log(result_dir, revision)
 
         if len(data) == 0:
-            raise Exception, "No test log files found in %s, cannot determine CASA version" % result_dir
+            raise Exception, "No matching test log files found in %s, cannot determine CASA version" % result_dir
 
         if revision == 'all':
             # Select only some revisions (in order to reduce length of historical report)
@@ -200,7 +233,7 @@ class report:
         #
         hosts_set         = sets.Set()
         tests_set         = sets.Set()
-        self.tests_v      = {}          # tests per version
+        self.tests_v      = {}          # subtests per version
         self.subtests     = {}
         casas_set         = sets.Set()
         for log in data:
@@ -218,15 +251,18 @@ class report:
                 self.subtests[test] = sets.Set()
 
             if not self.tests_v.has_key(log['CASA']):
-                self.tests_v[log['CASA']] = sets.Set()
+                self.tests_v[log['CASA']] = {}
 
-            self.tests_v[log['CASA']].add(log['testid'])
-                
+            if not self.tests_v[log['CASA']].has_key(test):
+                self.tests_v[log['CASA']][test] = sets.Set()
+
             if log['type'] == 'exec':
                 self.subtests[test].add(('', log['type']))
+                self.tests_v[log['CASA']][test].add(('', log['type']))
             else:
                 self.subtests[test].add((log['image'],log['type']))
-           
+                self.tests_v[log['CASA']][test].add((log['image'],log['type']))
+
         #
         # Identify also hosts from entries in ./Log but no ./Result logfile exist
         if False:
@@ -253,7 +289,7 @@ class report:
         self.casas = []
         for c in casas_set:
             self.casas.append(c)
-        self.casas.sort(reverse=True)
+        self.casas.sort(reverse=True, cmp=cmp_version)
 
 
         # Get test short description (from latest log)
@@ -287,7 +323,7 @@ class report:
 
             v = log['CASA']
             if not self.casa_revision.has_key(host) or \
-                   v > self.casa_revision[host]:
+                   cmp_version(v, self.casa_revision[host]) > 0:
                 self.casa_revision[host] = v
 
         latest_on_stable = self.casas[0] # global latest
@@ -303,12 +339,11 @@ class report:
             for log in data:
                 host = log['host']
                 v = log['CASA']
-                #if v < self.casa_revision[host] and \
-                if v < self.global_latest and \
+                if cmp_version(v, self.global_latest) < 0 and \
                        (not latest2.has_key(host) or \
-                        v > latest2[host]):
+                        cmp_version(v, latest2[host])) > 0:
                     latest2[host] = v
-
+                    
             for host in self.casa_revision.keys():
                 if not latest2.has_key(host):
                     latest2[host] = self.casa_revision[host]
@@ -341,14 +376,17 @@ class report:
         #
         # Done collecting. Generate reports
         #
-        html_header = SOURCE_DIR+'/code/xmlcasa/scripts/regressions/admin/stdcasaheader.phtm'
-        html_footer = SOURCE_DIR+'/code/xmlcasa/scripts/regressions/admin/stdcasatrail.phtm'
         pagename  = report_dir+'/test-report.html'
 
         if not os.path.isdir(report_dir):
             os.mkdir(report_dir)
+
+        if skull != '':
+            shutil.copyfile(skull,
+                            report_dir + '/skullnbones.jpg')
+
         
-        #shutil.copyfile(html_header, pagename)
+        
         fd = open(pagename, "w")
         fd.write('<html></head>')
 
@@ -375,16 +413,22 @@ class report:
         fd.write('<center>')
 
         if revision != 'all':
-            a = latest_on_stable.find('build #')
+            a = latest_on_stable.find('(r')
             if a >=0:
-                a += len('build #')
+                a += len('(r')
                 b = latest_on_stable.find(')', a)
                 revision = latest_on_stable[a:b]
             else:
-                raise Exception, "Could not parse revision number '%s'" \
-                      % (latest_on_stable)
+                a = latest_on_stable.find('build #')
+                if a >=0:
+                    a += len('build #')
+                    b = latest_on_stable.find(')', a)
+                    revision = latest_on_stable[a:b]
+                else:
+                    raise Exception, "Could not parse revision number '%s'" \
+                          % (latest_on_stable)
 
-            fd.write('<br><h2>Revision '+revision+' only, stable branch only</h2>')
+            fd.write('<br><h2>Revision '+revision+' only, test branch only</h2>')
             fd.write('<hr>')
 
             # Filter out all other versions
@@ -402,6 +446,7 @@ class report:
         fd.write('<br><a name="revision_platform"></a>')
 
         extended = False
+
         self.generate_host_vs_revision('Revision vs. platform',
                                        reg_dir, report_dir,
                                        self.tests_v,
@@ -410,6 +455,7 @@ class report:
         self.dump_legend(fd)
 
         fd.write('<br><a name="test_platform"></a>')
+
         self.generate_host_vs_test(reg_dir, report_dir, revision,
                                    False, extended, data, fd)
 
@@ -432,7 +478,6 @@ class report:
         fd.write('</center></body>\n')
         fd.write('</html>\n')
         fd.close()
-        #os.system('cat ' + html_footer + ' >> '+pagename)
         print "Wrote", pagename
         
         os.system('touch '+report_dir+'/success')
@@ -440,7 +485,8 @@ class report:
         # executing this program failed
 
     def generate_host_vs_revision(self, heading, reg_dir, report_dir,
-                                  tests,             # the test(s) to consider
+                                  tests,             # dictionary of tests->subtests, which
+                                                     # should be considered
                                   gen_plot, extended, data, fd):
 
         result_dir = reg_dir + '/Result'
@@ -462,7 +508,7 @@ class report:
                 summary[host][casa]['pass'] = 0
                 summary[host][casa]['fail'] = 0
                 summary[host][casa]['undetermined'] = 0
-                for test in tests[casa]:
+                for test in tests[casa].keys():
                     status  [host][casa][test] = {}
                     run_date[host][casa][test] = {}
                     l       [host][casa][test] = {}
@@ -471,12 +517,13 @@ class report:
             host = log['host']
             casa = log['CASA']
             test = log['testid']
-            if test in tests[casa]:
-                if log['type'] == 'exec':
-                    subtest = ('', log['type'])
-                else:
-                    subtest = ((log['image'],log['type']))
+            if test in tests[casa].keys():
+              if log['type'] == 'exec':
+                  subtest = ('', log['type'])
+              else:
+                  subtest = ((log['image'],log['type']))
 
+              if subtest in tests[casa][test]:
 
                 # If we have a 2nd entry for this (host,casa,test)
                 # then one of them is obsolete, warn about that.
@@ -499,8 +546,8 @@ class report:
         for host in self.hosts:
             for casa in self.casas:
                 # Count number of pass/fail/undet.
-                for test in tests[casa]:
-                    for subtest in self.subtests[test]:
+                for test in tests[casa].keys():
+                    for subtest in tests[casa][test]:
                         if status[host][casa][test].has_key(subtest):
                             s = status[host][casa][test][subtest]
                             
@@ -526,7 +573,7 @@ class report:
         if len(self.hosts_devel) > 0:
             fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>test</td>')
         fd.write('</tr>')
         
         fd.write('<TR><TD></TD>')
@@ -614,7 +661,7 @@ class report:
         if len(self.hosts_devel) > 0:
             fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>test</td>')
         fd.write('</tr>')
         
         for host in self.hosts:
@@ -631,6 +678,8 @@ class report:
             self.dump_host(fd, host, extended)
 
             if extended:
+                if not os.path.isdir(reg_dir + '/Log'):
+                    raise Exception, "Missing directory: " + reg_dir + '/Log'
                 latest_metalog = commands.getoutput('/bin/ls -1tr ' + reg_dir + '/Log/ | grep -E "\-'+host+'.log$" | tail -1')
                 if len(latest_metalog) > len('.log'):
                     shutil.copyfile(reg_dir + '/Log/' + latest_metalog, \
@@ -645,7 +694,7 @@ class report:
 
             fd.write('</td>')
             
-        fd.write('<TD><b>Stable summary</b></TD>')
+        fd.write('<TD><b>Test branch summary</b></TD>')
         fd.write('</TR>\n')    
 
         subtests_list = {}
@@ -673,11 +722,11 @@ class report:
 
                 print "Creating %s..." % (summary_filename)
 
-                # For every CASA version, make a summary of only
-                # the current test
+                # Make a summary of only the current test
+                # as function of CASA version
                 tests_to_consider = {}
                 for casa in self.casas:
-                    tests_to_consider[casa] = [test]
+                    tests_to_consider[casa] = {test: self.subtests[test]}
                 
                 self.generate_host_vs_revision(test+' all subtests',
                                                reg_dir, report_dir,
@@ -755,7 +804,7 @@ class report:
                                     summary_subtest,
                                     summary_host,
                                     data, fd, reg_dir, report_dir,
-                                    extended)
+                                    extended, revision)
 
                 self.dump_td_start(fd, \
                                    summary_subtest['pass'], \
@@ -832,23 +881,36 @@ class report:
     def dump_entry(self, test, subtest, host, \
                    summary_subtest, summary_host, \
                    data, fd, reg_dir, report_dir, \
-                   extended):
+                   extended, revision):
 
         result_dir = reg_dir + '/Result'
 
         # Find the latest run; CASA version has 1st priority, date has 2nd priority
         log = None
-        latest_run = 'A'
+        latest_run_version = ''
+        latest_run_date = ''
         for l in data:
             if l['host'] == host and \
                (same_version_per_host == False or l['CASA'] == self.casa_revision[host]) and \
                l['testid'] == test and \
                l['type'] == subtest[1] and \
                (subtest[0] == '' or l['image'] == subtest[0]):
-                if (l['CASA'] + l['date']) > latest_run:
-                    latest_run = (l['CASA'] + l['date'])
+
+                if latest_run_version == '' or \
+                   (cmp_version(l['CASA'], latest_run_version) > 0 or \
+                    cmp_version(l['CASA'], latest_run_version) == 0 and \
+                    l['date'] > latest_run_date):
+                    
+                    latest_run_version = l['CASA']
+                    latest_run_date    = l['date']
                     log = l
-        coords = ' title="'+test+' \\ '+host+'"'
+
+        if host in self.hosts_devel:
+            branch = "active"
+        else:
+            branch = "test"
+
+        coords = ' title="' + branch + ': ' + test + ' \\ '+host+'"'
         
         if log != None:
             #print log
@@ -858,7 +920,7 @@ class report:
                 summary_subtest[log['status']] += 1
 
             if log['type'] != 'exec':
-                coords = ' title="' + log['image']+'-'+log['type'] + ' \\ '+host+'"'
+                coords = ' title="' + branch + ': ' + log['image']+'-'+log['type'] + ' \\ '+host+'"'
             self.dump_td_start(fd,
                                1,
                                log['status'] == 'fail',
@@ -1054,12 +1116,44 @@ class report:
             # endif extended
         # endif log != None
         else:
-            fd.write('<td align=center '+coords+'>')
-            if extended:
-                if subtest[1] == 'exec':
-                    fd.write('Test not run (yet)')
-                else:
-                    fd.write('Test not done (yet)')
+
+            # If there's no log[] entry produced, and if the session log
+            # doesn't say "casapy returned 0", then the session must have crashed
+            #
+            # The version of the session log matches if either
+            # - no version string is found, or
+            # - we're reporting all revision, or
+            # - the revision number can be grep'ed from the session log
+            #
+            
+            framework_log = reg_dir + '/Log/run-' + test + '-' + host + '.log'
+            if subtest[1] == 'exec' and \
+                   os.path.isfile(framework_log) and \
+                   os.system('grep >/dev/null "casapy returned 0" ' + framework_log) != 0 and \
+                   (os.system('grep CASA.version ' + framework_log) != 0 or revision == 'all' or
+                    os.system('grep -w r' + revision + ' ' + framework_log) == 0):
+                        self.dump_td_start(fd,
+                                           0,
+                                           1,
+                                           0,
+                                           'align=center ' + coords)
+                        if extended:
+                            fd.write('CRASHED')
+                            if os.system('tail -20 ' + framework_log + ' | grep TIMEOUT >/dev/null') == 0:
+                                fd.write('<br>TIMEOUT')
+                                
+                            elif os.system('tail -10 ' + framework_log + ' | grep "casapy returned" >/dev/null') == 0:
+                                error_message = commands.getoutput('tail -10 ' + framework_log + ' | grep -B1 "casapy returned" | head -1')
+                                fd.write('<br><img src="skullnbones.jpg"><br>' + shorten(error_message, 40))
+                            else:
+                                fd.write('<br>??? unknown reason ???')
+
+            else:
+                fd.write('<td align=center '+coords+'>')
+                if extended and subtest[1] == 'exec':
+                    fd.write('Test not run yet')
+            if extended and subtest[1] != 'exec':
+                fd.write('Test not done')
             summary_host[host]['undet'] += 1
             if host.find('tst') >= 0 or \
                    host.find('ma014655') >= 0:
@@ -1069,7 +1163,7 @@ class report:
             if not same_version_per_host:
                 fd.write('<br>'+log['CASA'])
             if log.has_key('data_version'):
-                fd.write('<br>Data: '+log['data_version'])
+                fd.write('<br>Data version: '+log['data_version'])
 
             if log['type'] == 'exec':
                 from_dir = os.path.dirname('%s/%s' % (result_dir, log['logfile']))
@@ -1171,7 +1265,7 @@ class report:
             fd.write('<TD BGCOLOR='+color)
         else:
             fd.write('<TD><font COLOR='+color)
-        fd.write('%s>' % extra)
+        fd.write(' %s>' % extra)
 
     def dump_td_end(self, fd):
         if colormania:
@@ -1325,7 +1419,7 @@ class report:
                    data_file['CASA'] in exclude_test[data_file['testid']]:
                 #print "Excluding", data_file['testid'], "in version", data_file['CASA']
                 is_valid = False
-                               
+
             if is_valid:
                 if revision == 'all' or \
                        data_file['host'].find('tst') >= 0 or \
@@ -1400,14 +1494,19 @@ class report:
 
                 #print t
 
-                # read the number after 'build #'
-                # or after 'Rev ' (older versions)
-                a = log['CASA'].find('build #')
+                # Read the number after '(r' or after 'build #' or after 'Rev ' (older versions)
+                a = log['CASA'].find('(r')
                 if a >=0:
-                    a += len('build #')
+                    a += len('(r')
                     b = log['CASA'].find(')', a)
                     revision = log['CASA'][a:b]
                 else:
+                  a = log['CASA'].find('build #')
+                  if a >=0:
+                      a += len('build #')
+                      b = log['CASA'].find(')', a)
+                      revision = log['CASA'][a:b]
+                  else:
                     a = log['CASA'].find('Rev ')
                     if a >=0:
                         a += len('Rev ')

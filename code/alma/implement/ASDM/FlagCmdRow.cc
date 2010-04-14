@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	FlagCmdRow::~FlagCmdRow() {
 	}
 
@@ -482,76 +481,102 @@ namespace asdm {
 	
 	}
 	
-	FlagCmdRow* FlagCmdRow::fromBin(EndianISStream& eiss, FlagCmdTable& table) {
+void FlagCmdRow::timeIntervalFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+	
+}
+void FlagCmdRow::typeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		type =  eiss.readString();
+			
+		
+	
+	
+}
+void FlagCmdRow::reasonFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		reason =  eiss.readString();
+			
+		
+	
+	
+}
+void FlagCmdRow::levelFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		level =  eiss.readInt();
+			
+		
+	
+	
+}
+void FlagCmdRow::severityFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		severity =  eiss.readInt();
+			
+		
+	
+	
+}
+void FlagCmdRow::appliedFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		applied =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void FlagCmdRow::commandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		command =  eiss.readString();
+			
+		
+	
+	
+}
+
+		
+	
+	FlagCmdRow* FlagCmdRow::fromBin(EndianISStream& eiss, FlagCmdTable& table, const vector<string>& attributesSeq) {
 		FlagCmdRow* row = new  FlagCmdRow(table);
 		
-		
-		
-	
-		
-		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->type =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->reason =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->level =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->severity =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->applied =  eiss.readBoolean();
-			
-		
-	
-
-	
-	
-		
-			
-		row->command =  eiss.readString();
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, FlagCmdAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FlagCmdTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -840,6 +865,18 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["timeInterval"] = &FlagCmdRow::timeIntervalFromBin; 
+	 fromBinMethods["type"] = &FlagCmdRow::typeFromBin; 
+	 fromBinMethods["reason"] = &FlagCmdRow::reasonFromBin; 
+	 fromBinMethods["level"] = &FlagCmdRow::levelFromBin; 
+	 fromBinMethods["severity"] = &FlagCmdRow::severityFromBin; 
+	 fromBinMethods["applied"] = &FlagCmdRow::appliedFromBin; 
+	 fromBinMethods["command"] = &FlagCmdRow::commandFromBin; 
+		
+	
 	
 	}
 	
@@ -888,7 +925,18 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["timeInterval"] = &FlagCmdRow::timeIntervalFromBin; 
+		 fromBinMethods["type"] = &FlagCmdRow::typeFromBin; 
+		 fromBinMethods["reason"] = &FlagCmdRow::reasonFromBin; 
+		 fromBinMethods["level"] = &FlagCmdRow::levelFromBin; 
+		 fromBinMethods["severity"] = &FlagCmdRow::severityFromBin; 
+		 fromBinMethods["applied"] = &FlagCmdRow::appliedFromBin; 
+		 fromBinMethods["command"] = &FlagCmdRow::commandFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1009,6 +1057,23 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, FlagCmdAttributeFromBin> FlagCmdRow::initFromBinMethods() {
+		map<string, FlagCmdAttributeFromBin> result;
+		
+		result["timeInterval"] = &FlagCmdRow::timeIntervalFromBin;
+		result["type"] = &FlagCmdRow::typeFromBin;
+		result["reason"] = &FlagCmdRow::reasonFromBin;
+		result["level"] = &FlagCmdRow::levelFromBin;
+		result["severity"] = &FlagCmdRow::severityFromBin;
+		result["applied"] = &FlagCmdRow::appliedFromBin;
+		result["command"] = &FlagCmdRow::commandFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

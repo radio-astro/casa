@@ -46,31 +46,10 @@ using std::set;
 using asdmIDL::CorrelatorModeRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <Tag.h>
+using  asdm::Tag;
 
 
 
@@ -112,28 +91,13 @@ using namespace CorrelatorNameMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file CorrelatorMode.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -142,10 +106,13 @@ namespace asdm {
 
 	
 
+class CorrelatorModeRow;
+typedef void (CorrelatorModeRow::*CorrelatorModeAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The CorrelatorModeRow class is a row of a CorrelatorModeTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class CorrelatorModeRow {
@@ -160,49 +127,6 @@ public:
 	 */
 	CorrelatorModeTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a CorrelatorModeRowIDL struct.
-	 */
-	CorrelatorModeRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct CorrelatorModeRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (CorrelatorModeRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the CorrelatorModeTable to which the row built by deserialization will be parented.
-	  */
-	 static CorrelatorModeRow* fromBin(EndianISStream& eiss, CorrelatorModeTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -512,12 +436,54 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CorrelatorModeRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param numBaseband
+	    
+	 * @param basebandNames
+	    
+	 * @param basebandConfig
+	    
+	 * @param accumMode
+	    
+	 * @param binMode
+	    
+	 * @param numAxes
+	    
+	 * @param axesOrderArray
+	    
+	 * @param filterMode
+	    
+	 * @param correlatorName
+	    
 	 */ 
 	bool compareNoAutoInc(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param numBaseband
+	    
+	 * @param basebandNames
+	    
+	 * @param basebandConfig
+	    
+	 * @param accumMode
+	    
+	 * @param binMode
+	    
+	 * @param numAxes
+	    
+	 * @param axesOrderArray
+	    
+	 * @param filterMode
+	    
+	 * @param correlatorName
+	    
+	 */ 
 	bool compareRequiredValue(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName); 
 		 
 	
@@ -530,6 +496,37 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(CorrelatorModeRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a CorrelatorModeRowIDL struct.
+	 */
+	CorrelatorModeRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct CorrelatorModeRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (CorrelatorModeRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;	
 
 private:
 	/**
@@ -708,6 +705,38 @@ private:
 	// Links //
 	///////////
 	
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, CorrelatorModeAttributeFromBin> fromBinMethods;
+void correlatorModeIdFromBin( EndianISStream& eiss);
+void numBasebandFromBin( EndianISStream& eiss);
+void basebandNamesFromBin( EndianISStream& eiss);
+void basebandConfigFromBin( EndianISStream& eiss);
+void accumModeFromBin( EndianISStream& eiss);
+void binModeFromBin( EndianISStream& eiss);
+void numAxesFromBin( EndianISStream& eiss);
+void axesOrderArrayFromBin( EndianISStream& eiss);
+void filterModeFromBin( EndianISStream& eiss);
+void correlatorNameFromBin( EndianISStream& eiss);
+
+		
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the CorrelatorModeTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CorrelatorModeRow* fromBin(EndianISStream& eiss, CorrelatorModeTable& table, const vector<string>& attributesSeq);	 
 
 };
 

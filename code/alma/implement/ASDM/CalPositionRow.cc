@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalPositionRow::~CalPositionRow() {
 	}
 
@@ -1246,216 +1245,284 @@ namespace asdm {
 
 	}
 	
-	CalPositionRow* CalPositionRow::fromBin(EndianISStream& eiss, CalPositionTable& table) {
-		CalPositionRow* row = new  CalPositionRow(table);
-		
-		
+void CalPositionRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void CalPositionRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
 		
-			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-			
-	
-	row->antennaPosition = Length::from1DBin(eiss);	
-	
-
-		
-	
-
 	
 	
 		
 			
-		row->stationName =  eiss.readString();
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void CalPositionRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalPositionRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalPositionRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalPositionRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalPositionRow::antennaPositionFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->stationPosition = Length::from1DBin(eiss);	
+	antennaPosition = Length::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalPositionRow::stationNameFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->positionMethod = CPositionMethod::from_int(eiss.readInt());
+		stationName =  eiss.readString();
 			
 		
 	
-
 	
-	
-		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
+}
+void CalPositionRow::stationPositionFromBin(EndianISStream& eiss) {
 		
 	
-
-	
-	
+		
 		
 			
-		row->numAntenna =  eiss.readInt();
-			
-		
+	
+	stationPosition = Length::from1DBin(eiss);	
 	
 
+		
+	
+	
+}
+void CalPositionRow::positionMethodFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		positionMethod = CPositionMethod::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalPositionRow::receiverBandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalPositionRow::numAntennaFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numAntenna =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalPositionRow::refAntennaNamesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->refAntennaNames.clear();
+		refAntennaNames.clear();
 		
 		unsigned int refAntennaNamesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < refAntennaNamesDim1; i++)
 			
-			row->refAntennaNames.push_back(eiss.readString());
+			refAntennaNames.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalPositionRow::axesOffsetFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->axesOffset =  Length::fromBin(eiss);
+		axesOffset =  Length::fromBin(eiss);
 		
 	
-
 	
+}
+void CalPositionRow::axesOffsetErrFromBin(EndianISStream& eiss) {
 		
-		
-		row->axesOffsetErr =  Length::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->axesOffsetFixed =  eiss.readBoolean();
-			
-		
-	
-
 	
 		
 		
-			
-	
-	row->positionOffset = Length::from1DBin(eiss);	
-	
-
+		axesOffsetErr =  Length::fromBin(eiss);
 		
 	
-
 	
-		
-		
-			
-	
-	row->positionErr = Length::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-	
-		
-			
-		row->reducedChiSquared =  eiss.readDouble();
-			
-		
-	
-
-		
-		
-		
-	row->delayRmsExists = eiss.readBoolean();
-	if (row->delayRmsExists) {
+}
+void CalPositionRow::axesOffsetFixedFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->delayRms =  eiss.readDouble();
+		axesOffsetFixed =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void CalPositionRow::positionOffsetFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	positionOffset = Length::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void CalPositionRow::positionErrFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	positionErr = Length::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void CalPositionRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		reducedChiSquared =  eiss.readDouble();
+			
+		
+	
+	
+}
+
+void CalPositionRow::delayRmsFromBin(EndianISStream& eiss) {
+		
+	delayRmsExists = eiss.readBoolean();
+	if (delayRmsExists) {
+		
+	
+	
+		
+			
+		delayRms =  eiss.readDouble();
 			
 		
 	
 
 	}
-
-	row->phaseRmsExists = eiss.readBoolean();
-	if (row->phaseRmsExists) {
+	
+}
+void CalPositionRow::phaseRmsFromBin(EndianISStream& eiss) {
+		
+	phaseRmsExists = eiss.readBoolean();
+	if (phaseRmsExists) {
 		
 	
 		
 		
-		row->phaseRms =  Angle::fromBin(eiss);
+		phaseRms =  Angle::fromBin(eiss);
 		
 	
 
 	}
-
+	
+}
+	
+	
+	CalPositionRow* CalPositionRow::fromBin(EndianISStream& eiss, CalPositionTable& table, const vector<string>& attributesSeq) {
+		CalPositionRow* row = new  CalPositionRow(table);
 		
+		map<string, CalPositionAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPositionTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2337,6 +2404,32 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalPositionRow::antennaNameFromBin; 
+	 fromBinMethods["atmPhaseCorrection"] = &CalPositionRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["calDataId"] = &CalPositionRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalPositionRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalPositionRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalPositionRow::endValidTimeFromBin; 
+	 fromBinMethods["antennaPosition"] = &CalPositionRow::antennaPositionFromBin; 
+	 fromBinMethods["stationName"] = &CalPositionRow::stationNameFromBin; 
+	 fromBinMethods["stationPosition"] = &CalPositionRow::stationPositionFromBin; 
+	 fromBinMethods["positionMethod"] = &CalPositionRow::positionMethodFromBin; 
+	 fromBinMethods["receiverBand"] = &CalPositionRow::receiverBandFromBin; 
+	 fromBinMethods["numAntenna"] = &CalPositionRow::numAntennaFromBin; 
+	 fromBinMethods["refAntennaNames"] = &CalPositionRow::refAntennaNamesFromBin; 
+	 fromBinMethods["axesOffset"] = &CalPositionRow::axesOffsetFromBin; 
+	 fromBinMethods["axesOffsetErr"] = &CalPositionRow::axesOffsetErrFromBin; 
+	 fromBinMethods["axesOffsetFixed"] = &CalPositionRow::axesOffsetFixedFromBin; 
+	 fromBinMethods["positionOffset"] = &CalPositionRow::positionOffsetFromBin; 
+	 fromBinMethods["positionErr"] = &CalPositionRow::positionErrFromBin; 
+	 fromBinMethods["reducedChiSquared"] = &CalPositionRow::reducedChiSquaredFromBin; 
+		
+	
+	 fromBinMethods["delayRms"] = &CalPositionRow::delayRmsFromBin; 
+	 fromBinMethods["phaseRms"] = &CalPositionRow::phaseRmsFromBin; 
 	
 	}
 	
@@ -2455,7 +2548,32 @@ receiverBand = CReceiverBand::from_int(0);
 		else
 			phaseRmsExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalPositionRow::antennaNameFromBin; 
+		 fromBinMethods["atmPhaseCorrection"] = &CalPositionRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["calDataId"] = &CalPositionRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalPositionRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalPositionRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalPositionRow::endValidTimeFromBin; 
+		 fromBinMethods["antennaPosition"] = &CalPositionRow::antennaPositionFromBin; 
+		 fromBinMethods["stationName"] = &CalPositionRow::stationNameFromBin; 
+		 fromBinMethods["stationPosition"] = &CalPositionRow::stationPositionFromBin; 
+		 fromBinMethods["positionMethod"] = &CalPositionRow::positionMethodFromBin; 
+		 fromBinMethods["receiverBand"] = &CalPositionRow::receiverBandFromBin; 
+		 fromBinMethods["numAntenna"] = &CalPositionRow::numAntennaFromBin; 
+		 fromBinMethods["refAntennaNames"] = &CalPositionRow::refAntennaNamesFromBin; 
+		 fromBinMethods["axesOffset"] = &CalPositionRow::axesOffsetFromBin; 
+		 fromBinMethods["axesOffsetErr"] = &CalPositionRow::axesOffsetErrFromBin; 
+		 fromBinMethods["axesOffsetFixed"] = &CalPositionRow::axesOffsetFixedFromBin; 
+		 fromBinMethods["positionOffset"] = &CalPositionRow::positionOffsetFromBin; 
+		 fromBinMethods["positionErr"] = &CalPositionRow::positionErrFromBin; 
+		 fromBinMethods["reducedChiSquared"] = &CalPositionRow::reducedChiSquaredFromBin; 
+			
+	
+		 fromBinMethods["delayRms"] = &CalPositionRow::delayRmsFromBin; 
+		 fromBinMethods["phaseRms"] = &CalPositionRow::phaseRmsFromBin; 
+			
 	}
 
 	
@@ -2714,6 +2832,37 @@ receiverBand = CReceiverBand::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalPositionAttributeFromBin> CalPositionRow::initFromBinMethods() {
+		map<string, CalPositionAttributeFromBin> result;
+		
+		result["antennaName"] = &CalPositionRow::antennaNameFromBin;
+		result["atmPhaseCorrection"] = &CalPositionRow::atmPhaseCorrectionFromBin;
+		result["calDataId"] = &CalPositionRow::calDataIdFromBin;
+		result["calReductionId"] = &CalPositionRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalPositionRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalPositionRow::endValidTimeFromBin;
+		result["antennaPosition"] = &CalPositionRow::antennaPositionFromBin;
+		result["stationName"] = &CalPositionRow::stationNameFromBin;
+		result["stationPosition"] = &CalPositionRow::stationPositionFromBin;
+		result["positionMethod"] = &CalPositionRow::positionMethodFromBin;
+		result["receiverBand"] = &CalPositionRow::receiverBandFromBin;
+		result["numAntenna"] = &CalPositionRow::numAntennaFromBin;
+		result["refAntennaNames"] = &CalPositionRow::refAntennaNamesFromBin;
+		result["axesOffset"] = &CalPositionRow::axesOffsetFromBin;
+		result["axesOffsetErr"] = &CalPositionRow::axesOffsetErrFromBin;
+		result["axesOffsetFixed"] = &CalPositionRow::axesOffsetFixedFromBin;
+		result["positionOffset"] = &CalPositionRow::positionOffsetFromBin;
+		result["positionErr"] = &CalPositionRow::positionErrFromBin;
+		result["reducedChiSquared"] = &CalPositionRow::reducedChiSquaredFromBin;
+		
+		
+		result["delayRms"] = &CalPositionRow::delayRmsFromBin;
+		result["phaseRms"] = &CalPositionRow::phaseRmsFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -123,12 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int CalFocusTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -161,50 +165,46 @@ namespace asdm {
 		return new CalFocusRow (*this);
 	}
 	
-	CalFocusRow *CalFocusTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaName. 
+ 	 * @param antennaName 
 	
- 	 * @param receiverBand. 
+ 	 * @param receiverBand 
 	
- 	 * @param calDataId. 
+ 	 * @param calDataId 
 	
- 	 * @param calReductionId. 
+ 	 * @param calReductionId 
 	
- 	 * @param startValidTime. 
+ 	 * @param startValidTime 
 	
- 	 * @param endValidTime. 
+ 	 * @param endValidTime 
 	
- 	 * @param ambientTemperature. 
+ 	 * @param ambientTemperature 
 	
- 	 * @param atmPhaseCorrection. 
+ 	 * @param atmPhaseCorrection 
 	
- 	 * @param focusMethod. 
+ 	 * @param focusMethod 
 	
- 	 * @param frequencyRange. 
+ 	 * @param frequencyRange 
 	
- 	 * @param pointingDirection. 
+ 	 * @param pointingDirection 
 	
- 	 * @param numReceptor. 
+ 	 * @param numReceptor 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param polarizationTypes 
 	
- 	 * @param wereFixed. 
+ 	 * @param wereFixed 
 	
- 	 * @param offset. 
+ 	 * @param offset 
 	
- 	 * @param offsetError. 
+ 	 * @param offsetError 
 	
- 	 * @param offsetWasTied. 
+ 	 * @param offsetWasTied 
 	
- 	 * @param reducedChiSquared. 
+ 	 * @param reducedChiSquared 
 	
      */
 	CalFocusRow* CalFocusTable::newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared){
@@ -248,56 +248,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	CalFocusRow* CalFocusTable::newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared)	{
-		CalFocusRow *row = new CalFocusRow(*this);
-			
-		row->setAntennaName(antennaName);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setCalDataId(calDataId);
-			
-		row->setCalReductionId(calReductionId);
-			
-		row->setStartValidTime(startValidTime);
-			
-		row->setEndValidTime(endValidTime);
-			
-		row->setAmbientTemperature(ambientTemperature);
-			
-		row->setAtmPhaseCorrection(atmPhaseCorrection);
-			
-		row->setFocusMethod(focusMethod);
-			
-		row->setFrequencyRange(frequencyRange);
-			
-		row->setPointingDirection(pointingDirection);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
-		row->setWereFixed(wereFixed);
-			
-		row->setOffset(offset);
-			
-		row->setOffsetError(offsetError);
-			
-		row->setOffsetWasTied(offsetWasTied);
-			
-		row->setReducedChiSquared(reducedChiSquared);
-	
-		return row;				
-	}
 	
 
 
 CalFocusRow* CalFocusTable::newRow(CalFocusRow* row) {
-	return new CalFocusRow(*this, *row);
-}
-
-CalFocusRow* CalFocusTable::newRowCopy(CalFocusRow* row) {
 	return new CalFocusRow(*this, *row);
 }
 
@@ -516,27 +470,13 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 	}
 #endif
 
-	char *CalFocusTable::toFITS() const  {
-		throw ConversionException("Not implemented","CalFocus");
-	}
-
-	void CalFocusTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","CalFocus");
-	}
-
-	string CalFocusTable::toVOTable() const {
-		throw ConversionException("Not implemented","CalFocus");
-	}
-
-	void CalFocusTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","CalFocus");
-	}
-
 	
 	string CalFocusTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/2/CalFocusTable.xsd\"> ");	
+		buf.append("<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/2/CalFocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -594,6 +534,10 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		}
 		if (!xml.isStr("</CalFocusTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -602,11 +546,58 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 	}
 	
 	
-	string CalFocusTable::toMIME() {
-		EndianOSStream eoss;
+	string CalFocusTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/2/CalFocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFocusTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<antennaName/>\n"; 
+		oss << "<receiverBand/>\n"; 
+		oss << "<calDataId/>\n"; 
+		oss << "<calReductionId/>\n"; 
+		oss << "<startValidTime/>\n"; 
+		oss << "<endValidTime/>\n"; 
+		oss << "<ambientTemperature/>\n"; 
+		oss << "<atmPhaseCorrection/>\n"; 
+		oss << "<focusMethod/>\n"; 
+		oss << "<frequencyRange/>\n"; 
+		oss << "<pointingDirection/>\n"; 
+		oss << "<numReceptor/>\n"; 
+		oss << "<polarizationTypes/>\n"; 
+		oss << "<wereFixed/>\n"; 
+		oss << "<offset/>\n"; 
+		oss << "<offsetError/>\n"; 
+		oss << "<offsetWasTied/>\n"; 
+		oss << "<reducedChiSquared/>\n"; 
+
+		oss << "<polarizationsAveraged/>\n"; 
+		oss << "<focusCurveWidth/>\n"; 
+		oss << "<focusCurveWidthError/>\n"; 
+		oss << "<focusCurveWasFixed/>\n"; 
+		oss << "<offIntensity/>\n"; 
+		oss << "<offIntensityError/>\n"; 
+		oss << "<offIntensityWasFixed/>\n"; 
+		oss << "<peakIntensity/>\n"; 
+		oss << "<peakIntensityError/>\n"; 
+		oss << "<peakIntensityWasFixed/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</CalFocusTable>\n";
+
+		return oss.str();				
+	}
+	
+	string CalFocusTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -631,13 +622,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -665,39 +650,179 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 
 	
 	void CalFocusTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalFocus");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			CalFocusRow* aRow = CalFocusRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "CalFocus");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "CalFocus");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "CalFocus");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "CalFocus");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalFocus");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalFocus");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("antennaName") ; 
+     
+    attributesSeq.push_back("receiverBand") ; 
+     
+    attributesSeq.push_back("calDataId") ; 
+     
+    attributesSeq.push_back("calReductionId") ; 
+     
+    attributesSeq.push_back("startValidTime") ; 
+     
+    attributesSeq.push_back("endValidTime") ; 
+     
+    attributesSeq.push_back("ambientTemperature") ; 
+     
+    attributesSeq.push_back("atmPhaseCorrection") ; 
+     
+    attributesSeq.push_back("focusMethod") ; 
+     
+    attributesSeq.push_back("frequencyRange") ; 
+     
+    attributesSeq.push_back("pointingDirection") ; 
+     
+    attributesSeq.push_back("numReceptor") ; 
+     
+    attributesSeq.push_back("polarizationTypes") ; 
+     
+    attributesSeq.push_back("wereFixed") ; 
+     
+    attributesSeq.push_back("offset") ; 
+     
+    attributesSeq.push_back("offsetError") ; 
+     
+    attributesSeq.push_back("offsetWasTied") ; 
+     
+    attributesSeq.push_back("reducedChiSquared") ; 
+    
+     
+    attributesSeq.push_back("polarizationsAveraged") ; 
+     
+    attributesSeq.push_back("focusCurveWidth") ; 
+     
+    attributesSeq.push_back("focusCurveWidthError") ; 
+     
+    attributesSeq.push_back("focusCurveWasFixed") ; 
+     
+    attributesSeq.push_back("offIntensity") ; 
+     
+    attributesSeq.push_back("offIntensityError") ; 
+     
+    attributesSeq.push_back("offIntensityWasFixed") ; 
+     
+    attributesSeq.push_back("peakIntensity") ; 
+     
+    attributesSeq.push_back("peakIntensityError") ; 
+     
+    attributesSeq.push_back("peakIntensityWasFixed") ; 
+              
+     }
+    else if (string("CalFocusTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/CalFocusTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "CalFocus");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/CalFocusTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "CalFocus");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/CalFocusTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "CalFocus");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/CalFocusTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "CalFocus");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	CalFocusRow* aRow = CalFocusRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "CalFocus");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "CalFocus");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -706,7 +831,19 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/CalFocus.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "CalFocus");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "CalFocus");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/CalFocus.bin";
@@ -718,60 +855,75 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "CalFocus");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/CalFocus.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "CalFocus");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "CalFocus");
-		}
 	}
 
 	
 	void CalFocusTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/CalFocus.bin";
-		else
-			tablename = directory + "/CalFocus.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "CalFocus");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"CalFocus");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"CalFocus");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalFocus.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalFocus.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the CalFocus table", "CalFocus");
 	}			
+
+	
+  void CalFocusTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalFocus.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalFocus");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"CalFocus");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"CalFocus");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void CalFocusTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalFocus.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalFocus");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "CalFocus");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "CalFocus");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

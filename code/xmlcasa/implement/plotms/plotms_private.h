@@ -13,7 +13,7 @@ static const unsigned int LAUNCH_TOTAL_WAIT_US;
 class plotms_watcher : public CasapyWatcher {
 public:
     // Constructor which takes parent.
-    plotms_watcher(plotms& pl) : p(pl) { CasapyWatcher::registerWatcher(this); }
+    plotms_watcher(plotms *pl) : p(pl) { CasapyWatcher::registerWatcher(this); }
     
     // Destructor.
     ~plotms_watcher() { }
@@ -21,27 +21,38 @@ public:
     // Overrides casapy_watcher::logChanged().
     // <group>
     void logChanged(const String& sinkLocation) {
-        p.setLogFilename(sinkLocation); }
+        p->setLogFilename(sinkLocation); }
     void logChanged(LogMessage::Priority filterPriority) {
-        p.setLogFilter(LogMessage::toString(filterPriority).c_str()); }
+        p->setLogFilter(LogMessage::toString(filterPriority).c_str()); }
     // </group>
     
     // Overrides casapy_watcher::casapyClosing().
-    void casapyClosing() { p.closeApp(); }
+    void casapyClosing() { p->closeApp(); }
     
 private:
     // Plotms parent.
-    plotms& p;
+    plotms *p;
 };
 
+class plotms_app : public QtDBusApp {
+public:
+  plotms_app( ) { }
+  const String &dbusName( ) const { return itsDBusName_; }
+  String &dbusName( ) { return itsDBusName_; }
+  // DBus name of the plotms application we're communicating with.
+  const QString &getName( ) const { return PlotMSDBusApp::name( ); }
+ private:
+  String itsDBusName_;
+};
 
 // Non-Static //
 
+// must forward declare & use a pointer because build system
+// does not allow extra include in plotms_cmpt.h...
+plotms_app app;
+
 // Casapy watcher.
 plotms_watcher itsWatcher_;
-
-// DBus name of the plotms application we're communicating with.
-String itsDBusName_;
 
 // Log parameters that are set before the application is launched.
 // <group>
@@ -68,6 +79,10 @@ void setPlotMSSelection_(const PlotMSSelection& selection,
 
 // Helper method for setting the MS averaging.
 void setPlotMSAveraging_(const PlotMSAveraging& averaging,
+        const bool updateImmediately, const int plotIndex);
+
+// Helper method for setting the MS transformations.
+void setPlotMSTransformations_(const PlotMSTransformations& trans,
         const bool updateImmediately, const int plotIndex);
 
 // Helper method for setting the flag extension.

@@ -27,15 +27,15 @@
 
 #include <casa/BasicSL/String.h>
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
-#include <display/QtViewer/QtViewer.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtDisplayDataGui.qo.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtDataOptionsPanel::QtDataOptionsPanel(QtViewer* v, QWidget* parent) :
-		    QWidget(parent), v_(v)  {
+QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel, QWidget* parent) :
+		    QWidget(parent), panel_(panel)  {
     
   setWindowTitle("Viewer Data Options Panel");
   
@@ -64,16 +64,16 @@ QtDataOptionsPanel::QtDataOptionsPanel(QtViewer* v, QWidget* parent) :
 	// (Qt designer insists on putting some tabs in my
 	// TabWidget, whether I want them there yet or not...).
   
-  List<QtDisplayData*> ddlist(v->dds());
+  List<QtDisplayData*> ddlist(panel_->dds());
   for (ListIter<QtDisplayData*> qdds(ddlist); !qdds.atEnd(); qdds++) {
     createDDTab_(qdds.getRight());  }
 	// These are the tabs I _really_ want....
   
   
-  connect( v_, SIGNAL(ddCreated(QtDisplayData*, Bool)),
+  connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool)),
 		 SLOT(createDDTab_(QtDisplayData*)) );
   
-  connect( v_, SIGNAL(ddRemoved(QtDisplayData*)),
+  connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
 		 SLOT(removeDDTab_(QtDisplayData*)) );  }
 
 
@@ -97,10 +97,10 @@ void QtDataOptionsPanel::createDDTab_(QtDisplayData* qdd) {
   
   tabs_->addTab(sca, qdd->nameChrs());
 
-  if(tabs_->count()==1 && v_->autoDDOptionsShow) v_->showDataOptionsPanel();
+  if(tabs_->count()==1 && panel_->autoDDOptionsShow) panel_->showDataOptionsPanel();
 	// Users want to see this window automatically once there
 	// are DDs to tweak.  (Apps like interactive clean can turn
-	// v_->autoDDOptionsShow off to prevent this, if desired).
+	// panel_->autoDDOptionsShow off to prevent this, if desired).
 
   tabs_->setTabToolTip(tabs_->indexOf(sca), qdd->nameChrs());
   tabs_->show();  }
@@ -117,7 +117,7 @@ void QtDataOptionsPanel::removeDDTab_(QtDisplayData* qdd) {
       
       tabs_->removeTab(i);	// (NB: does not delete sca).
     
-      if(tabs_->count()==0) v_->hideDataOptionsPanel();
+      if(tabs_->count()==0) panel_->hideDataOptionsPanel();
 	// (An empty options panel is just confusing clutter).
       
           

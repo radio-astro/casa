@@ -280,6 +280,7 @@ bool CLASS::operator==(const Group& other) const {                            \
 PMS_PP_RECKEY(PMS_PP_MSData, REC_FILENAME, "filename")
 PMS_PP_RECKEY(PMS_PP_MSData, REC_SELECTION, "selection")
 PMS_PP_RECKEY(PMS_PP_MSData, REC_AVERAGING, "averaging")
+PMS_PP_RECKEY(PMS_PP_MSData, REC_TRANSFORMATIONS, "transformations")
 
 // PMS_PP_MSData constructors/destructors.
 PMS_PP_CONSTRUCTORS(PMS_PP_MSData)
@@ -289,6 +290,7 @@ PMS_PP_TORECORD_START(PMS_PP_MSData)
     PMS_PP_TORECORD_DEF(REC_FILENAME, itsFilename_)
     PMS_PP_TORECORD_DEFREC(REC_SELECTION, itsSelection_.toRecord())
     PMS_PP_TORECORD_DEFREC(REC_AVERAGING, itsAveraging_.toRecord())
+    PMS_PP_TORECORD_DEFREC(REC_TRANSFORMATIONS, itsTransformations_.toRecord())
 PMS_PP_TORECORD_END
 
 // PMS_PP_MSData::fromRecord().
@@ -296,6 +298,7 @@ PMS_PP_FROMRECORD_START(PMS_PP_MSData)
     PMS_PP_FROMRECORD_VAL(itsFilename_, REC_FILENAME, TpString, asString)
     PMS_PP_FROMRECORD_VALREC(itsSelection_, REC_SELECTION, PlotMSSelection)
     PMS_PP_FROMRECORD_VALREC(itsAveraging_, REC_AVERAGING, PlotMSAveraging)
+    PMS_PP_FROMRECORD_VALREC(itsTransformations_, REC_TRANSFORMATIONS, PlotMSTransformations)
 PMS_PP_FROMRECORD_END
 
 // PMS_PP_MSData::operator=().
@@ -303,6 +306,7 @@ PMS_PP_COPYOP_START(PMS_PP_MSData)
     PMS_PP_COPYOP_PARAM(itsFilename_)
     PMS_PP_COPYOP_PARAM(itsSelection_)
     PMS_PP_COPYOP_PARAM(itsAveraging_)
+    PMS_PP_COPYOP_PARAM(itsTransformations_)
 PMS_PP_COPYOP_END
 
 // PMS_PP_MSData::operator==().
@@ -310,6 +314,7 @@ PMS_PP_EQUALOP_START(PMS_PP_MSData)
     PMS_PP_EQUALOP_PARAM(itsFilename_)
     PMS_PP_EQUALOP_PARAM(itsSelection_)
     PMS_PP_EQUALOP_PARAM(itsAveraging_)
+    PMS_PP_EQUALOP_PARAM(itsTransformations_)
 PMS_PP_EQUALOP_END
 
 // PMS_PP_MSData::setDefaults().
@@ -317,6 +322,7 @@ PMS_PP_SETDEFAULTS_START(PMS_PP_MSData)
     PMS_PP_SETDEFAULTS_PARAM(itsFilename_, "")
     PMS_PP_SETDEFAULTS_PARAM(itsSelection_, PlotMSSelection())
     PMS_PP_SETDEFAULTS_PARAM(itsAveraging_, PlotMSAveraging())
+    PMS_PP_SETDEFAULTS_PARAM(itsTransformations_, PlotMSTransformations())
 PMS_PP_SETDEFAULTS_END
 
 

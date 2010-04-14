@@ -74,6 +74,7 @@ PKSFITSreader::~PKSFITSreader()
 
 Int PKSFITSreader::open(
         const String fitsName,
+        const String antenna,
         Vector<Bool> &beams,
         Vector<Bool> &IFs,
         Vector<uInt> &nChan,
@@ -431,7 +432,7 @@ Int PKSFITSreader::read(PKSrecord &pksrec)
   pksrec.srcPM.resize(2);
   pksrec.srcPM(0)  = 0.0;
   pksrec.srcPM(1)  = 0.0;
-  pksrec.srcVel    = 0.0;
+  pksrec.srcVel    = cMBrec.srcVelocity;
   pksrec.obsType   = trim(cMBrec.obsType);
 
   pksrec.IFno = cMBrec.IFno[0];

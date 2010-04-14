@@ -26,6 +26,7 @@
 //# $Id: $
 #include <sys/stat.h>
 #include <unistd.h>
+#include <climits>
 #include <sys/param.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -36,9 +37,11 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/QtViewer/QtCleanPanelGui.qo.h>
+#include <display/Display/State.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/List.h>
 #include <QtDBus>
+
 
 namespace casa {
 
@@ -49,19 +52,19 @@ namespace casa {
 	return QtViewer::name( );
     }
 
-    bool QtDBusViewerAdaptor::connectToDBus() {
+    bool QtDBusViewerAdaptor::connectToDBus(const QString &dbus_name) {
 
 	bool dbusRegistered = false;
 
-	if( dbusRegistered || serviceIsAvailable(dbusServiceName()) )
+	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(dbus_name)) )
 	    return false;
 
 	try {
 	    // Register service and object.
 	    QObject *xparent = parent();
 	    dbusRegistered = connection().isConnected() &&
-			     connection().registerService(dbusServiceName()) &&
-			     connection().registerObject(dbusObjectName(), xparent,
+			     connection().registerService(dbusServiceName(dbus_name)) &&
+			     connection().registerObject(dbusObjectName(dbus_name), xparent,
 // 			     connection().registerObject(dbusObjectName(), parent(),
 // 			     connection().registerObject(dbusObjectName(), this,
 							 QDBusConnection::ExportAdaptors);
@@ -77,30 +80,30 @@ namespace casa {
     }
 
     QDBusVariant QtDBusViewerAdaptor::start_interact( const QDBusVariant &input, int panel ) {
-	mainwinmap::iterator iter = managed_windows.find( panel );
-	if ( iter == managed_windows.end( ) ) {
+	panelmap::iterator iter = managed_panels.find( panel );
+	if ( iter == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
 	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
 	}
-	if ( ! iter->second->supports( QtDisplayPanelGui::INTERACT ) ) {
+	if ( ! iter->second->panel()->supports( QtDisplayPanelGui::INTERACT ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
 	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' does not support 'interact'"));
 	};
-	return QDBusVariant(iter->second->start_interact(input.variant(),panel));
+	return QDBusVariant(iter->second->panel()->start_interact(input.variant(),panel));
     }
 
 
     QDBusVariant QtDBusViewerAdaptor::setoptions( const QDBusVariant &input, int panel ) {
 
-	mainwinmap::iterator iter = managed_windows.find( panel );
-	if ( iter == managed_windows.end( ) ) {
+	panelmap::iterator iter = managed_panels.find( panel );
+	if ( iter == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
 	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
 	}
-	if ( ! iter->second->supports( QtDisplayPanelGui::SETOPTIONS ) ) {
+	if ( ! iter->second->panel()->supports( QtDisplayPanelGui::SETOPTIONS ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
 	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' does not support 'interact'"));
@@ -113,7 +116,7 @@ namespace casa {
 	    arg >> map;
 	}
 
-	return QDBusVariant(iter->second->setoptions(map,panel));
+	return QDBusVariant(iter->second->panel()->setoptions(map,panel));
     }
 
     QDBusVariant QtDBusViewerAdaptor::load( const QString &path, const QString &displaytype, int panel ) {
@@ -124,55 +127,39 @@ namespace casa {
 	    return QDBusVariant(QVariant("*error* path '" + path + "' not found"));
 	}
 
-	if ( panel != 0 && managed_panels.find( panel ) == managed_panels.end( ) ) {
-	    char buf[50];
-	    sprintf( buf, "%d", panel );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
+	QtDisplayPanelGui *dpg = findpanel( panel );
+	if ( ! dpg ) {
+	    return QDBusVariant(QVariant("*error* could not find requested panel"));
 	}
 
 	String datatype = viewer_->filetype(path.toStdString()).chars();
-	if ( datatype == "image" ) {
+	if ( datatype == "image" || datatype == "ms" ) {
 	    if ( displaytype == "raster"	||
 		 displaytype == "contour"	||
 		 displaytype == "vector"	||
 		 displaytype == "marker" ) {
 		QtDisplayData *result = 0;
-		QtDisplayPanel *dp = 0;
-		if ( panel == 0 )
-		    result = viewer_->createDD(to_string(path), datatype, to_string(displaytype));
-		else {
-		    panelmap::iterator iter = managed_panels.find( panel );
-		    if ( iter == managed_panels.end( ) ) {
-			char buf[50];
-			sprintf( buf, "%d", panel );
-			return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
-		    }
-		    dp = iter->second->panel( );
-		    viewer_->autoDDOptionsShow = False;
-		    result = viewer_->createDD(to_string(path), datatype, to_string(displaytype), false);
-		    dp->registerDD(result);
-		    viewer_->autoDDOptionsShow = True;
-		}
-		if ( result ) {
-		    mainwinmap::iterator iter = managed_windows.find( panel );
-		    if ( iter != managed_windows.end( ) ) {
-			iter->second->addedData( displaytype, result );
-		    }
-		    return QDBusVariant(QVariant(get_id( dp, result, path, displaytype )));
-		}
+
+		dpg->autoDDOptionsShow = False;
+		result = dpg->createDD(to_string(path), datatype, to_string(displaytype), false);
+		dpg->displayPanel()->registerDD(result);
+		dpg->autoDDOptionsShow = True;
+
+		dpg->addedData( displaytype, result );
+		return QDBusVariant(QVariant(get_id( dpg, result, path, displaytype )));
 	    }
 	}
 	return QDBusVariant(QVariant(QString("*error* datatype '") + datatype.c_str( ) + "' not yet implemented"));
     }
 
-    void QtDBusViewerAdaptor::unload_data( QtDisplayPanel *panel, int index, bool erase ) {
+    void QtDBusViewerAdaptor::unload_data( QtDisplayPanelGui *panel, int index, bool erase ) {
 	datamap::iterator iter = managed_datas.find( index );
 	if ( iter == managed_datas.end( ) ) {
 	    fprintf( stderr, "error: internal error (data id not found)" );
 	    return;
 	}
 	if ( iter->second->data( ) != 0 ) {
-	    viewer_->removeDD( iter->second->data( ) );
+	    iter->second->panel()->removeDD( iter->second->data( ) );
 //***	    fails to notify the wrench that things have changed...
 // 	    panel->unregisterDD( iter->second->data( ) );
 	    iter->second->data( ) = 0;
@@ -180,24 +167,13 @@ namespace casa {
 	}
     }
 
-    void QtDBusViewerAdaptor::load_data( QtDisplayPanel *panel, int index ) {
+    void QtDBusViewerAdaptor::load_data( QtDisplayPanelGui *panel, int index ) {
+
 	datamap::iterator iter = managed_datas.find( index );
 	if ( iter == managed_datas.end( ) ) {
 	    fprintf( stderr, "error: internal error (data id not found)" );
 	    return;
 	}
-
-	QtDisplayPanelGui *win = 0;
-	for ( panelmap::iterator dpiter = managed_panels.begin(); dpiter != managed_panels.end(); ++dpiter ) {
-	    if ( dpiter->second->panel() == panel ) {
-		mainwinmap::iterator iter = managed_windows.find( dpiter->first );
-		if ( iter != managed_windows.end( ) ) {
-		    win = iter->second;
-		    break;
-		}
-	    }
-	}
-
 
 	struct stat buf;
 	const QString &path = iter->second->path();
@@ -218,20 +194,19 @@ namespace casa {
 		QtDisplayData *dp = 0;
 		if ( panel != 0 ) {
 		    if ( iter->second->data( ) != 0 ) {
-			panel->unregisterDD( iter->second->data( ) );
+			panel->displayPanel()->unregisterDD( iter->second->data( ) );
 			iter->second->data( ) = 0;
 		    }
 
-		    viewer_->autoDDOptionsShow = False;
-		    dp = viewer_->createDD(to_string(path), datatype, to_string(displaytype), false);
-		    panel->registerDD(dp);
-		    viewer_->autoDDOptionsShow = True;
+		    panel->autoDDOptionsShow = False;
+		    dp = panel->createDD(to_string(path), datatype, to_string(displaytype), false);
+		    panel->displayPanel()->registerDD(dp);
+		    panel->autoDDOptionsShow = True;
 		} else {
-		    viewer_->removeDD( iter->second->data( ) );
-		    iter->second->data( ) = 0;
-		    dp = viewer_->createDD(to_string(path), datatype, to_string(displaytype));
+		    fprintf( stderr, "we can no longer support null panels" );
+		    return;
 		}
-		if ( win ) win->addedData( displaytype, dp );
+		panel->addedData( displaytype, dp );
 		iter->second->data( ) = dp;
 	    }
 	} else {
@@ -239,18 +214,18 @@ namespace casa {
 	    return;
 	}
     }
-      
+
 
     QDBusVariant QtDBusViewerAdaptor::reload( int panel_or_data ) {
 
 	if ( panel_or_data == 0 ) {
 	    return QDBusVariant(QVariant("*error* no panel (i.e. '0') provided"));
 	}
-	  
+
 	panelmap::iterator dpiter = managed_panels.find( panel_or_data );
 	if ( dpiter != managed_panels.end( ) ) {
-	    QtDisplayPanel::panel_state state = dpiter->second->panel( )->getPanelState( );
-	    dpiter->second->panel( )->hold( );
+	    QtDisplayPanel::panel_state state = dpiter->second->panel( )->displayPanel()->getPanelState( );
+	    dpiter->second->panel( )->displayPanel()->hold( );
 
 	    std::list<int> &data = dpiter->second->data( );
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
@@ -260,8 +235,8 @@ namespace casa {
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
 		load_data( dpiter->second->panel( ), *diter );
 	    }
-	    dpiter->second->panel( )->setPanelState( state );
-	    dpiter->second->panel( )->release( );
+	    dpiter->second->panel( )->displayPanel()->setPanelState( state );
+	    dpiter->second->panel( )->displayPanel()->release( );
 
 	} else {
 	    datamap::iterator dmiter = managed_datas.find( panel_or_data );
@@ -294,7 +269,7 @@ namespace casa {
 	return QDBusVariant(QVariant(true));
     }
 
-    QDBusVariant QtDBusViewerAdaptor::restore( const QString &qpath, bool new_window ) {
+    QDBusVariant QtDBusViewerAdaptor::restore( const QString &qpath, int panel ) {
 
 	struct stat buf;
 	QByteArray qpatha(qpath.toAscii());
@@ -304,54 +279,21 @@ namespace casa {
 	    QDBusVariant(QVariant("*error* file or dir(" + qpath + ") does not exist"));
 	}
 
-	QtDisplayPanel* dp = 0;
-
-	if ( new_window == false ) {
-
-	    List<QtDisplayPanel*> DPs = viewer_->openDPs();
-	    ListIter<QtDisplayPanel*> dps(DPs);
-
-	    for(dps.toStart(); !dps.atEnd(); dps++) {
-		QtDisplayPanel* panel = dps.getRight();
-		if(panel->registeredDDs().len()==0) {
-		    dp = panel;
-		    break;
-		}
-	    }
-
-	    if ( dp == 0 ) {
-		dps.toStart();
-		if(!dps.atEnd()) {
-		    dp = dps.getRight();
-		}
-	    }
+	QtDisplayPanelGui *dpg = findpanel( panel );
+	if ( ! dpg ) {
+	    return QDBusVariant(QVariant("*error* could not find requested panel"));
 	}
 
-	if ( dp == 0 ) {
-	    // Create new display panel, restore viewer state to it.
-	    viewer_->createDPG();
-
-	    List<QtDisplayPanel*> DPs = viewer_->openDPs();
-	    if(DPs.len()>0) {				// (Safety: should be True)
-		ListIter<QtDisplayPanel*> dps(DPs);
-		dps.toEnd();
-		dps--;					// Newly-created dp should be
-		dp = dps.getRight();			// the last one on the list.
-	    }
-	}
-
-	if ( dp == 0 ) {
-	    // some internal error here, perhaps should send to logger?
-	    return QDBusVariant(QVariant("*error* internal error: display panel not found"));
-	}
-
-	bool result = dp->restorePanelState(path);
+	bool result = dpg->displayPanel()->restorePanelState(path);
 
 	if ( result ) {
-	    return QDBusVariant(get_id( dp ));
+	    return QDBusVariant(get_id( dpg ));
 	}
 
 	return QDBusVariant(0);
+    }
+
+    QtDisplayPanelGui *create_panel( int id ) {
     }
 
     QDBusVariant QtDBusViewerAdaptor::panel( const QString &type, bool hidden ) {
@@ -361,38 +303,18 @@ namespace casa {
 	    // <drs> somehow it seems like we must be leaking this...
 	    //       probably need to mirror the createDD( ) functionality...
 	    QtCleanPanelGui *cpg_ = new QtCleanPanelGui(viewer_);
-	    QtDisplayPanel* dp = cpg_->displayPanel( );
-	    result = get_id( dp );
-	    managed_windows.insert(mainwinmap::value_type(result, cpg_));
+	    result = get_id( cpg_ );
 
 	    if ( hidden ) cpg_->hide( );
 
 	    connect(cpg_, SIGNAL(interact(QVariant)), this, SLOT(handle_interact(QVariant)));
 
 	} else {
-	    QtDisplayPanelGui *dpg = viewer_->createDPG();
-	    QtDisplayPanel* dp = dpg->displayPanel( );
-	    result = get_id( dp );
-	    managed_windows.insert(mainwinmap::value_type(result, dpg));
+
+	    QtDisplayPanelGui *dpg = create_panel( );
+	    result = get_id( dpg );
 
 	    if ( hidden ) dpg->hide( );
-
-#if 0
-	    QtDisplayPanelGui *dpg = viewer_->createDPG();
-	    QtDisplayPanel* dp = 0;
-	    List<QtDisplayPanel*> DPs = viewer_->openDPs();
-	    if(DPs.len()>0) {				// (Safety: should be True)
-		ListIter<QtDisplayPanel*> dps(DPs);
-		dps.toEnd();
-		dps--;					// Newly-created dp should be
-		dp = dps.getRight();			// the last one on the list.
-	    }
-
-	    if ( dp != 0 ) {
-		int result = get_id( dp );
-		managed_windows.insert(mainwinmap::value_type(result, dpg));
-	    }
-#endif
 	}
 
 	return QDBusVariant(QVariant(result));
@@ -408,65 +330,113 @@ namespace casa {
 	}
     }
 
-    void QtDBusViewerAdaptor::erase_panel( QtDisplayPanel *panel ) {
-	for ( panelmap::iterator dpiter = managed_panels.begin(); dpiter != managed_panels.end(); ++dpiter ) {
-	    if ( dpiter->second->panel() == panel ) {
-		std::list<int> &data = dpiter->second->data();
-		for ( std::list<int>::iterator diter = data.begin( ); diter != data.end(); ++diter ) {
-		    erase_data(*diter);
-		}
-		delete dpiter->second;
-		managed_panels.erase(dpiter);
-		break;
+    QtDisplayPanelGui *QtDBusViewerAdaptor::erase_panel( int panel ) {
+
+	if ( panel == 0 ) panel = INT_MAX;
+
+	QtDisplayPanelGui *win;
+	panelmap::iterator dpiter = managed_panels.find( panel );
+	if ( dpiter != managed_panels.end( ) ) {
+	    std::list<int> &data = dpiter->second->data();
+	    for ( std::list<int>::iterator diter = data.begin( ); diter != data.end(); ++diter ) {
+		erase_data(*diter);
 	    }
+	    win = dpiter->second->panel();
+	    delete dpiter->second;
+	    managed_panels.erase(dpiter);
 	}
+	return win;
     }
 
 
     QDBusVariant QtDBusViewerAdaptor::hide( int panel ) {
-	if ( managed_windows.find( panel ) == managed_windows.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return QDBusVariant(QVariant("*error* could not find requested panel"));
 	}
-	mainwinmap::iterator iter = managed_windows.find( panel );
-	iter->second->hide( );
+	dpg->hide( );
 	return QDBusVariant(QVariant(true));
     }
 
     QDBusVariant QtDBusViewerAdaptor::show( int panel ) {
-	if ( managed_windows.find( panel ) == managed_windows.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return QDBusVariant(QVariant("*error* could not find requested panel"));
 	}
-	mainwinmap::iterator iter = managed_windows.find( panel );
-	iter->second->show( );
-	iter->second->displayPanel( )->refresh( );
+	dpg->show( );
+	dpg->displayPanel( )->refresh( );
 	return QDBusVariant(QVariant(true));
     }
 
     QDBusVariant QtDBusViewerAdaptor::close( int panel ) {
-	if ( managed_windows.find( panel ) == managed_windows.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return panel == 0 ? QDBusVariant(QVariant(true)) : QDBusVariant(QVariant("*error* could not find requested panel"));
 	}
-	mainwinmap::iterator iter = managed_windows.find( panel );
-	if ( iter != managed_windows.end( ) ) {
-	    QtDisplayPanelGui *win = iter->second;
-	    managed_windows.erase(iter);
-	    erase_panel( win->displayPanel( ) );
-	    win->closeMainPanel( );
+
+	QtDisplayPanelGui *win = erase_panel( panel );
+	if ( win == 0 ) {
+	    return QDBusVariant(QVariant("*error* internal error closing panel"));
+	}
+
+	win->closeMainPanel( );
+	return QDBusVariant(QVariant(true));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::popup( const QString &what, int panel ) {
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return panel == 0 ? QDBusVariant(QVariant(true)) : QDBusVariant(QVariant("*error* could not find requested panel"));
+	}
+	if ( what == "open" ) {
+	    dpg->showDataManager();
+	} else {
+	    return QDBusVariant(QVariant("*error* unknown popup-widow name, expected 'open'"));
 	}
 	return QDBusVariant(QVariant(true));
     }
 
+    QDBusVariant QtDBusViewerAdaptor::frame( int num, int panel ) {
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	}
+
+	if ( num >= 0 ) { dpg->displayPanel()->goTo(num); }
+
+	return QDBusVariant(QVariant(dpg->displayPanel()->frame()));
+    }
+
+
+    QDBusVariant QtDBusViewerAdaptor::zoom( int level, int panel ) {
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	}
+
+	if ( level == 0 )
+	    dpg->displayPanel()->unzoom( );
+	else if ( level < 0 )
+	    dpg->displayPanel()->zoomOut( abs(level) );
+	else
+	    dpg->displayPanel()->zoomIn( level );
+
+	return QDBusVariant(QVariant(true));
+    }
+
+
     QDBusVariant QtDBusViewerAdaptor::release( int panel ) {
-	if ( managed_windows.find( panel ) == managed_windows.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return panel == 0 ? QDBusVariant(QVariant(true)) : QDBusVariant(QVariant("*error* could not find requested panel"));
 	}
-	mainwinmap::iterator iter = managed_windows.find( panel );
-	if ( iter != managed_windows.end( ) ) {
-	    QtDisplayPanelGui *win = iter->second;
-	    managed_windows.erase(iter);
-	    erase_panel( win->displayPanel( ) );
-	    win->releaseMainPanel( );
+
+	QtDisplayPanelGui *win = erase_panel( panel );
+	if ( win == 0 ) {
+	    return QDBusVariant(QVariant("*error* internal error releasing panel"));
 	}
+
+	win->releaseMainPanel( );
 	return QDBusVariant(QVariant(true));
     }
 
@@ -504,15 +474,15 @@ namespace casa {
 
 	}
 
-	QtDisplayPanel *dp = findpanel( panel );
 
-	if ( ! dp ) return false;
+	QtDisplayPanelGui *dpg = findpanel( panel );
+	if ( ! dpg ) return false;
 
 	if ( suffix == "pdf" || suffix == "ps" || suffix == "eps" ) {
-	    printps( dp, suffix, path + "/" + base + "." + suffix, dpi, orientation, media );
+	    printps( dpg->displayPanel(), suffix, path + "/" + base + "." + suffix, dpi, orientation, media );
 	} else if ( suffix == "jpg" || suffix == "png" ||
 		    suffix == "xbm" || suffix == "xpm" || suffix == "ppm" ) {
-	    printraster( dp, suffix, path + "/" + base + "." + suffix, scale );
+	    printraster( dpg->displayPanel(), suffix, path + "/" + base + "." + suffix, scale );
 	} else {
 	    return false;
 	}
@@ -659,48 +629,39 @@ namespace casa {
         width =  (int)(((double) width  * scale) + 0.5);
         height = (int)(((double) height * scale) + 0.5);
 
-        if ( s.width() == width && s.height() == height ) {
+	// ensure that bitmap is redrawn to avoid displaying labeling within the plot
+	if ( s.width() == width && s.height() == height ) {
+	    width += 1;
+	    height += 1;
+	}
 
-	    // screenshot
-	    panel->hold();
-	    QPixmap* mp = panel->contents();
-            panel->release();
-	    if ( ! mp->save( file, type.toAscii().constData( ) ) ) {
-		delete mp;
-		return false;
-	    }
+	// resized
+	QApplication::setOverrideCursor(Qt::WaitCursor);
+	display::state::instance().beginFileOutputMode( );
 
-            delete mp;
+	QSize oldSize = panel->size();
+	QSize scaledSize = s;
+	int dw = oldSize.width() - scaledSize.width(),
+	dh = oldSize.height() - scaledSize.height();
+	scaledSize.scale(width, height, Qt::KeepAspectRatio);
 
-        } else {
+	panel->setUpdateAllowed(False);
+	// (Prevent display widget flashing during temporary resize.)
+	panel->resize(scaledSize.width() + dw, scaledSize.height() + dh);
+	QPixmap* mp = panel->contents();
+	display::state::instance().endFileOutputMode( );
+	panel->setUpdateAllowed(True);
+	panel->resize(oldSize);
+	QCoreApplication::processEvents();
 
-            // resized
-	    QApplication::setOverrideCursor(Qt::WaitCursor);
+	QApplication::restoreOverrideCursor();
 
-	    QSize oldSize = panel->size();
-	    QSize scaledSize = s;
-            int dw = oldSize.width() - scaledSize.width(),
-                dh = oldSize.height() - scaledSize.height();
-            scaledSize.scale(width, height, Qt::KeepAspectRatio);
+	if ( ! mp->save(file, type.toAscii().constData( ) ) ) {
+	    delete mp;
+	    return false;
+	}
 
-            panel->setUpdateAllowed(False);
-            	// (Prevent display widget flashing during temporary resize.)
-            panel->resize(scaledSize.width() + dw, scaledSize.height() + dh);
-            QPixmap* mp = panel->contents();
-            panel->setUpdateAllowed(True);
-            panel->resize(oldSize);
-            QCoreApplication::processEvents();
-
-            QApplication::restoreOverrideCursor();
-
-            if ( ! mp->save(file, type.toAscii().constData( ) ) ) {
-		delete mp;
-		return false;
-	    }
-
-            delete mp;
-
-        }
+	delete mp;
 	return true;
     }
 
@@ -738,11 +699,11 @@ namespace casa {
 	// objects or exit the process, although the driver program might
 	// do that.  Also, some of the panels may have WA_DeleteOnClose set,
 	// which would cause their deletion (see, e.g., QtViewer::createDPG()).
-	for ( mainwinmap::iterator iter = managed_windows.begin();
-	      iter != managed_windows.end(); ++iter ) {
-	    iter->second->closeMainPanel( );
+	for ( panelmap::iterator iter = managed_panels.begin();
+	      iter != managed_panels.end(); ++iter ) {
+	    iter->second->panel()->closeMainPanel( );
 	}
-	QtApp::app()->closeAllWindows();
+	QtApp::app()->quit();
 	return true;
     }
 
@@ -751,32 +712,28 @@ namespace casa {
     }
 
     QtDBusViewerAdaptor::~QtDBusViewerAdaptor() {
-      
+
 
     }
 
-    QtDisplayPanel *QtDBusViewerAdaptor::findpanel( int key ) {
+    QtDisplayPanelGui *QtDBusViewerAdaptor::findpanel( int key, bool create ) {
+
+	if ( key == 0 ) key = INT_MAX;
 
 	if ( managed_panels.find( key ) != managed_panels.end( ) )
 	    return managed_panels.find( key )->second->panel( );
 
-	QtDisplayPanel *result = 0;
-	List<QtDisplayPanel*> DPs = viewer_->openDPs();
-	ListIter<QtDisplayPanel*> dps(DPs);
-
-	for(dps.toStart(); !dps.atEnd(); dps++) {
-	    QtDisplayPanel* panel = dps.getRight();
-	    if( panel->registeredDDs().len() > 0 ) {
-		result = panel;
-		break;
-	    }
+	if ( key == INT_MAX && create ) {
+	    QtDisplayPanelGui *dpg = create_panel( );
+	    managed_panels.insert(panelmap::value_type(INT_MAX, new panel_desc(dpg)));
+	    return dpg;
 	}
 
-	return result;
+	return 0;
     }
 
-    int QtDBusViewerAdaptor::get_id( QtDisplayPanel *panel, QtDisplayData *data, const QString &path, const QString &type ) {
-      
+    int QtDBusViewerAdaptor::get_id( QtDisplayPanelGui *panel, QtDisplayData *data, const QString &path, const QString &type ) {
+
 	for ( datamap::iterator iter = managed_datas.begin(); iter != managed_datas.end(); ++iter ) {
 	    if ( iter->second->data() == data )
 		return iter->second->id();
@@ -796,7 +753,7 @@ namespace casa {
 	return index;
     }
 
-    int QtDBusViewerAdaptor::get_id( QtDisplayPanel *panel ) {
+    int QtDBusViewerAdaptor::get_id( QtDisplayPanelGui *panel ) {
 
 	for ( panelmap::iterator iter = managed_panels.begin(); iter != managed_panels.end(); ++iter ) {
 	    if ( iter->second->panel() == panel )
@@ -806,6 +763,32 @@ namespace casa {
 	int index = QtDBusApp::get_id( );
 	managed_panels.insert(panelmap::value_type(index, new panel_desc(panel)));
 	return index;
+    }
+
+
+    void QtDBusViewerAdaptor::handle_destroyed_panel( QObject *panel ) {
+	for ( panelmap::iterator iter = managed_panels.begin();
+	      iter != managed_panels.end(); ++iter ) {
+	    if ( iter->second->panel( ) == panel ) {
+		for ( std::list<int>::iterator diter = iter->second->data().begin();
+		      diter != iter->second->data().end(); ++diter ) {
+		    datamap::iterator kill = managed_datas.find(*diter);
+		    if ( kill != managed_datas.end( ) ) {
+			delete kill->second;
+			managed_datas.erase(kill);
+		    }
+		}
+		delete iter->second;
+		managed_panels.erase(iter);
+		break;
+	    }
+	}
+    }
+
+    QtDisplayPanelGui *QtDBusViewerAdaptor::create_panel( ) {
+	QtDisplayPanelGui *result = viewer_->createDPG();
+	connect( result, SIGNAL(destroyed(QObject*)), SLOT(handle_destroyed_panel(QObject*)) );
+	return result;
     }
 
     ////////////////////////////////////////////////////////////////////////

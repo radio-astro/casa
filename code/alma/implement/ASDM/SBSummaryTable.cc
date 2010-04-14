@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -117,12 +122,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int SBSummaryTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -155,44 +159,40 @@ namespace asdm {
 		return new SBSummaryRow (*this);
 	}
 	
-	SBSummaryRow *SBSummaryTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param sbSummaryUID. 
+ 	 * @param sbSummaryUID 
 	
- 	 * @param projectUID. 
+ 	 * @param projectUID 
 	
- 	 * @param obsUnitSetId. 
+ 	 * @param obsUnitSetId 
 	
- 	 * @param frequency. 
+ 	 * @param frequency 
 	
- 	 * @param frequencyBand. 
+ 	 * @param frequencyBand 
 	
- 	 * @param sbType. 
+ 	 * @param sbType 
 	
- 	 * @param sbDuration. 
+ 	 * @param sbDuration 
 	
- 	 * @param centerDirection. 
+ 	 * @param centerDirection 
 	
- 	 * @param numObservingMode. 
+ 	 * @param numObservingMode 
 	
- 	 * @param observingMode. 
+ 	 * @param observingMode 
 	
- 	 * @param numberRepeats. 
+ 	 * @param numberRepeats 
 	
- 	 * @param numScienceGoal. 
+ 	 * @param numScienceGoal 
 	
- 	 * @param scienceGoal. 
+ 	 * @param scienceGoal 
 	
- 	 * @param numWeatherConstraint. 
+ 	 * @param numWeatherConstraint 
 	
- 	 * @param weatherConstraint. 
+ 	 * @param weatherConstraint 
 	
      */
 	SBSummaryRow* SBSummaryTable::newRow(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint){
@@ -230,50 +230,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	SBSummaryRow* SBSummaryTable::newRowFull(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint)	{
-		SBSummaryRow *row = new SBSummaryRow(*this);
-			
-		row->setSbSummaryUID(sbSummaryUID);
-			
-		row->setProjectUID(projectUID);
-			
-		row->setObsUnitSetId(obsUnitSetId);
-			
-		row->setFrequency(frequency);
-			
-		row->setFrequencyBand(frequencyBand);
-			
-		row->setSbType(sbType);
-			
-		row->setSbDuration(sbDuration);
-			
-		row->setCenterDirection(centerDirection);
-			
-		row->setNumObservingMode(numObservingMode);
-			
-		row->setObservingMode(observingMode);
-			
-		row->setNumberRepeats(numberRepeats);
-			
-		row->setNumScienceGoal(numScienceGoal);
-			
-		row->setScienceGoal(scienceGoal);
-			
-		row->setNumWeatherConstraint(numWeatherConstraint);
-			
-		row->setWeatherConstraint(weatherConstraint);
-	
-		return row;				
-	}
 	
 
 
 SBSummaryRow* SBSummaryTable::newRow(SBSummaryRow* row) {
-	return new SBSummaryRow(*this, *row);
-}
-
-SBSummaryRow* SBSummaryTable::newRowCopy(SBSummaryRow* row) {
 	return new SBSummaryRow(*this, *row);
 }
 
@@ -539,27 +499,13 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 	}
 #endif
 
-	char *SBSummaryTable::toFITS() const  {
-		throw ConversionException("Not implemented","SBSummary");
-	}
-
-	void SBSummaryTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","SBSummary");
-	}
-
-	string SBSummaryTable::toVOTable() const {
-		throw ConversionException("Not implemented","SBSummary");
-	}
-
-	void SBSummaryTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","SBSummary");
-	}
-
 	
 	string SBSummaryTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/2/SBSummaryTable.xsd\"> ");	
+		buf.append("<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbsmmr=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/2/SBSummaryTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -617,6 +563,10 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 		}
 		if (!xml.isStr("</SBSummaryTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -625,11 +575,48 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 	}
 	
 	
-	string SBSummaryTable::toMIME() {
-		EndianOSStream eoss;
+	string SBSummaryTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbsmmr=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/2/SBSummaryTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SBSummaryTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<sBSummaryId/>\n"; 
+		oss << "<sbSummaryUID/>\n"; 
+		oss << "<projectUID/>\n"; 
+		oss << "<obsUnitSetId/>\n"; 
+		oss << "<frequency/>\n"; 
+		oss << "<frequencyBand/>\n"; 
+		oss << "<sbType/>\n"; 
+		oss << "<sbDuration/>\n"; 
+		oss << "<centerDirection/>\n"; 
+		oss << "<numObservingMode/>\n"; 
+		oss << "<observingMode/>\n"; 
+		oss << "<numberRepeats/>\n"; 
+		oss << "<numScienceGoal/>\n"; 
+		oss << "<scienceGoal/>\n"; 
+		oss << "<numWeatherConstraint/>\n"; 
+		oss << "<weatherConstraint/>\n"; 
+
+		oss << "<centerDirectionCode/>\n"; 
+		oss << "<centerDirectionEquinox/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</SBSummaryTable>\n";
+
+		return oss.str();				
+	}
+	
+	string SBSummaryTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -654,13 +641,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -688,39 +669,159 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 
 	
 	void SBSummaryTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "SBSummary");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			SBSummaryRow* aRow = SBSummaryRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "SBSummary");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "SBSummary");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "SBSummary");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "SBSummary");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SBSummary");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SBSummary");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("sBSummaryId") ; 
+     
+    attributesSeq.push_back("sbSummaryUID") ; 
+     
+    attributesSeq.push_back("projectUID") ; 
+     
+    attributesSeq.push_back("obsUnitSetId") ; 
+     
+    attributesSeq.push_back("frequency") ; 
+     
+    attributesSeq.push_back("frequencyBand") ; 
+     
+    attributesSeq.push_back("sbType") ; 
+     
+    attributesSeq.push_back("sbDuration") ; 
+     
+    attributesSeq.push_back("centerDirection") ; 
+     
+    attributesSeq.push_back("numObservingMode") ; 
+     
+    attributesSeq.push_back("observingMode") ; 
+     
+    attributesSeq.push_back("numberRepeats") ; 
+     
+    attributesSeq.push_back("numScienceGoal") ; 
+     
+    attributesSeq.push_back("scienceGoal") ; 
+     
+    attributesSeq.push_back("numWeatherConstraint") ; 
+     
+    attributesSeq.push_back("weatherConstraint") ; 
+    
+     
+    attributesSeq.push_back("centerDirectionCode") ; 
+     
+    attributesSeq.push_back("centerDirectionEquinox") ; 
+              
+     }
+    else if (string("SBSummaryTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/SBSummaryTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "SBSummary");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/SBSummaryTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "SBSummary");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/SBSummaryTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "SBSummary");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/SBSummaryTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "SBSummary");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	SBSummaryRow* aRow = SBSummaryRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "SBSummary");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "SBSummary");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -729,7 +830,19 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/SBSummary.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "SBSummary");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "SBSummary");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/SBSummary.bin";
@@ -741,60 +854,75 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "SBSummary");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/SBSummary.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "SBSummary");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "SBSummary");
-		}
 	}
 
 	
 	void SBSummaryTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/SBSummary.bin";
-		else
-			tablename = directory + "/SBSummary.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "SBSummary");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"SBSummary");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"SBSummary");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/SBSummary.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/SBSummary.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the SBSummary table", "SBSummary");
 	}			
+
+	
+  void SBSummaryTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/SBSummary.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "SBSummary");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"SBSummary");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"SBSummary");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void SBSummaryTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/SBSummary.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "SBSummary");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "SBSummary");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "SBSummary");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

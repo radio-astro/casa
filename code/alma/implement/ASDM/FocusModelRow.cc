@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	FocusModelRow::~FocusModelRow() {
 	}
 
@@ -719,127 +718,162 @@ namespace asdm {
 	
 	}
 	
-	FocusModelRow* FocusModelRow::fromBin(EndianISStream& eiss, FocusModelTable& table) {
-		FocusModelRow* row = new  FocusModelRow(table);
-		
-		
+void FocusModelRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void FocusModelRow::focusModelIdFromBin(EndianISStream& eiss) {
 		
-			
-		row->focusModelId =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->polarizationType = CPolarizationType::from_int(eiss.readInt());
+		focusModelId =  eiss.readInt();
 			
 		
 	
-
 	
-	
+}
+void FocusModelRow::polarizationTypeFromBin(EndianISStream& eiss) {
 		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
 	
 	
 		
 			
-		row->numCoeff =  eiss.readInt();
+		polarizationType = CPolarizationType::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void FocusModelRow::receiverBandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void FocusModelRow::numCoeffFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numCoeff =  eiss.readInt();
+			
+		
+	
+	
+}
+void FocusModelRow::coeffNameFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffName.clear();
+		coeffName.clear();
 		
 		unsigned int coeffNameDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
 			
-			row->coeffName.push_back(eiss.readString());
+			coeffName.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void FocusModelRow::coeffFormulaFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffFormula.clear();
+		coeffFormula.clear();
 		
 		unsigned int coeffFormulaDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
 			
-			row->coeffFormula.push_back(eiss.readString());
+			coeffFormula.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void FocusModelRow::coeffValFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->coeffVal.clear();
+		coeffVal.clear();
 		
 		unsigned int coeffValDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < coeffValDim1; i++)
 			
-			row->coeffVal.push_back(eiss.readFloat());
+			coeffVal.push_back(eiss.readFloat());
 			
 	
 
 		
 	
+	
+}
+void FocusModelRow::assocNatureFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		assocNature =  eiss.readString();
+			
+		
+	
+	
+}
+void FocusModelRow::assocFocusModelIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		assocFocusModelId =  eiss.readInt();
+			
+		
+	
+	
+}
 
-	
-	
-		
-			
-		row->assocNature =  eiss.readString();
-			
 		
 	
-
-	
-	
+	FocusModelRow* FocusModelRow::fromBin(EndianISStream& eiss, FocusModelTable& table, const vector<string>& attributesSeq) {
+		FocusModelRow* row = new  FocusModelRow(table);
 		
-			
-		row->assocFocusModelId =  eiss.readInt();
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, FocusModelAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FocusModelTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1280,6 +1314,21 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &FocusModelRow::antennaIdFromBin; 
+	 fromBinMethods["focusModelId"] = &FocusModelRow::focusModelIdFromBin; 
+	 fromBinMethods["polarizationType"] = &FocusModelRow::polarizationTypeFromBin; 
+	 fromBinMethods["receiverBand"] = &FocusModelRow::receiverBandFromBin; 
+	 fromBinMethods["numCoeff"] = &FocusModelRow::numCoeffFromBin; 
+	 fromBinMethods["coeffName"] = &FocusModelRow::coeffNameFromBin; 
+	 fromBinMethods["coeffFormula"] = &FocusModelRow::coeffFormulaFromBin; 
+	 fromBinMethods["coeffVal"] = &FocusModelRow::coeffValFromBin; 
+	 fromBinMethods["assocNature"] = &FocusModelRow::assocNatureFromBin; 
+	 fromBinMethods["assocFocusModelId"] = &FocusModelRow::assocFocusModelIdFromBin; 
+		
+	
 	
 	}
 	
@@ -1340,7 +1389,21 @@ receiverBand = CReceiverBand::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &FocusModelRow::antennaIdFromBin; 
+		 fromBinMethods["focusModelId"] = &FocusModelRow::focusModelIdFromBin; 
+		 fromBinMethods["polarizationType"] = &FocusModelRow::polarizationTypeFromBin; 
+		 fromBinMethods["receiverBand"] = &FocusModelRow::receiverBandFromBin; 
+		 fromBinMethods["numCoeff"] = &FocusModelRow::numCoeffFromBin; 
+		 fromBinMethods["coeffName"] = &FocusModelRow::coeffNameFromBin; 
+		 fromBinMethods["coeffFormula"] = &FocusModelRow::coeffFormulaFromBin; 
+		 fromBinMethods["coeffVal"] = &FocusModelRow::coeffValFromBin; 
+		 fromBinMethods["assocNature"] = &FocusModelRow::assocNatureFromBin; 
+		 fromBinMethods["assocFocusModelId"] = &FocusModelRow::assocFocusModelIdFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1487,6 +1550,26 @@ receiverBand = CReceiverBand::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, FocusModelAttributeFromBin> FocusModelRow::initFromBinMethods() {
+		map<string, FocusModelAttributeFromBin> result;
+		
+		result["antennaId"] = &FocusModelRow::antennaIdFromBin;
+		result["focusModelId"] = &FocusModelRow::focusModelIdFromBin;
+		result["polarizationType"] = &FocusModelRow::polarizationTypeFromBin;
+		result["receiverBand"] = &FocusModelRow::receiverBandFromBin;
+		result["numCoeff"] = &FocusModelRow::numCoeffFromBin;
+		result["coeffName"] = &FocusModelRow::coeffNameFromBin;
+		result["coeffFormula"] = &FocusModelRow::coeffFormulaFromBin;
+		result["coeffVal"] = &FocusModelRow::coeffValFromBin;
+		result["assocNature"] = &FocusModelRow::assocNatureFromBin;
+		result["assocFocusModelId"] = &FocusModelRow::assocFocusModelIdFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

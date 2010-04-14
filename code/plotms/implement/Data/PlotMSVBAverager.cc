@@ -348,8 +348,8 @@ void PlotMSVBAverager::simpAccumulate (VisBuffer& vb)
   if (vb.nChannel() != nChan_p || vb.nCorr() != nCorr_p) 
     throw(AipsError("PlotMSVBAverager: data shape does not conform"));
 
-  if (vb.spectralWindow()!=avBuf_p.spectralWindow())
-    avBuf_p.spectralWindow()=-1;
+  //  if (vb.spectralWindow()!=avBuf_p.spectralWindow())
+  //    avBuf_p.spectralWindow()=-1;
 
   // Convert to A/ph for incoherent averaging
   if (inCoh_p) {
@@ -489,8 +489,8 @@ void PlotMSVBAverager::antAccumulate (VisBuffer& vb)
   if (vb.nChannel() != nChan_p || vb.nCorr() != nCorr_p) 
     throw(AipsError("PlotMSVBAverager: data shape does not conform"));
 
-  if (vb.spectralWindow()!=avBuf_p.spectralWindow())
-    avBuf_p.spectralWindow()=-1;
+  //  if (vb.spectralWindow()!=avBuf_p.spectralWindow())
+  //    avBuf_p.spectralWindow()=-1;
 
   // Convert to A/ph for incoherent averaging
   if (inCoh_p) {

@@ -851,7 +851,7 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
       field='0~6',spw='0~3',
       cell=[1.,1.],imsize=[clnsize,clnsize],
       stokes='I',
-      mode='channel',nchan=36,start=35,width=4,
+      mode='channel',nchan=36,start=34,width=4,
       psfmode='clark',imagermode='mosaic',ftmachine='mosaic',
       scaletype='SAULT',
 ### As we moved to clean by default in flat sigma rather than
@@ -1168,7 +1168,7 @@ vismean_cal=pl.mean(ms.range(["amplitude"]).get("amplitude"))
 ms.close()
 ms.open('ngc4826.tutorial.16apr98.src.split.ms')
 vismean_src=pl.mean(ms.range(["amplitude"]).get("amplitude"))
-ms.close
+ms.close()
 
 #
 ##########################################################################
@@ -1355,24 +1355,41 @@ if benchmarking:
 #model_sum = 74.374
 #model_pbcor_sum = 65.319
 
-#New values STM 2009-12-02 Release 0 (prerelease version)
+## #New values STM 2009-12-02 Release 0 (prerelease version)
+## #for 400x400 clean
+## #new values for flat noise clean
+## testdate = '2009-12-02 (STM)'
+## testvers = 'CASA Version 3.0.1 Rev 10130'
+## clean_image_max = 1.465047 
+## clean_offsrc_rms = 0.058497
+## clean_offline_rms = 0.055416
+## clean_momentzero_max = 163.726852
+## clean_momentzero_rms = 15.206372
+## clean_momentone_median = 428.326385
+## clean_momentone_planezero = 696.702393
+## clean_momentone_planelast = 127.786629
+## vis_mean_cal = 194.915085
+## vis_mean_src = 54.627020
+## model_sum = 71.171693
+## model_pbcor_sum = 61.853749
+
+#New values RR 2010-03-30 3.0.1 prerelease
 #for 400x400 clean
-#new values for flat noise clean
-testdate = '2009-12-02 (STM)'
-testvers = 'CASA Version 3.0.0 Rev 9692'
-clean_image_max = 1.454770
-clean_offsrc_rms = 0.057324
-clean_offline_rms = 0.054325
-clean_momentzero_max = 165.231247
-clean_momentzero_rms = 15.065811
-clean_momentone_median = 420.62667847
-clean_momentone_planezero = 688.575012
-clean_momentone_planelast = 119.659264
+#new values after start channel change.  I did not update passing values.
+testdate = '2010-03-30 (RR)'
+testvers = 'CASA Version 3.0.1 (build #10841)'
+clean_image_max = 1.615747 # was 1.465047 Peak hits a channel better?
+clean_offsrc_rms = 0.058497
+clean_offline_rms = 0.055416
+clean_momentzero_max = 163.726852
+clean_momentzero_rms = 15.206372
+clean_momentone_median = 429.658844 # was 428.326385; change << 1 chanwidth.
+clean_momentone_planezero = 696.702393
+clean_momentone_planelast = 127.786629
 vis_mean_cal = 194.915085
 vis_mean_src = 54.627020
-model_sum = 72.618549
-model_pbcor_sum = 64.304426
-
+model_sum = 71.171693
+model_pbcor_sum = 66.882499 # was 61.853749 Peak hits a channel better?
 canonical = {}
 canonical['exist'] = True
 
@@ -1656,36 +1673,23 @@ resultlist = ['clean_image_max','clean_image_offsrc_max','clean_image_offline_ma
 
 for keys in resultlist:
     res = results[keys]
+    prev = None
     if prev_results.has_key(keys):
         # This is a known regression
         prev = prev_results[keys]
-        new_val = res['value']
-        prev_val = prev['value']
-        if res['op'] == 'divf':
-            new_diff = (new_val - prev_val)/prev_val
-        else:
-            new_diff = new_val - prev_val
-
-        if abs(new_diff)>res['tol']:
-            new_status = 'Failed'
-        else:
-            new_status = 'Passed'
-        
-        results[keys]['prev'] = prev_val
-        results[keys]['diff'] = new_diff
-        results[keys]['status'] = new_status
         results[keys]['test'] = 'Last'
     elif canonical_results.has_key(keys):
         # Go back to canonical values
         prev = canonical_results[keys]
+        results[keys]['test'] = 'Canon'
+    if prev:
         new_val = res['value']
         prev_val = prev['value']
+        new_diff = new_val - prev_val
         if res['op'] == 'divf':
-            new_diff = (new_val - prev_val)/prev_val
-        else:
-            new_diff = new_val - prev_val
+            new_diff /= prev_val
 
-        if abs(new_diff)>res['tol']:
+        if abs(new_diff) > res['tol']:
             new_status = 'Failed'
         else:
             new_status = 'Passed'
@@ -1693,7 +1697,6 @@ for keys in resultlist:
         results[keys]['prev'] = prev_val
         results[keys]['diff'] = new_diff
         results[keys]['status'] = new_status
-        results[keys]['test'] = 'Canon'
     else:
         # Unknown regression key
         results[keys]['prev'] = 0.0

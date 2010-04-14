@@ -349,7 +349,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
   // find its maximum value of the residual
   Float maxRes = maxResidual(*itsResidualPtr);
   Float maxResPrevious=maxRes;
-  itsLog << LogIO::NORMAL1 << "Initial maximum residual: " << maxRes << LogIO::POST;
+  itsLog << LogIO::NORMAL << "Initial maximum residual: " << maxRes << LogIO::POST;
   // if flux limit or iteration limit reached then bail out. 
   Bool userHalt = False;
   Int numIt=numberIterations();
@@ -416,7 +416,6 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
   			psfPatch, fluxLimit, numMinorIterations, 
 			Fmn, numIterations, totalFlux);
       numIterations += numMinorIterations;
-//       itsLog << "Clean has used " << numIterations << " Iterations" ;
       maxNumberMinorIterations = std::max(maxNumberMinorIterations,
 				     numMinorIterations);
       maxNumPix = std::max((Int)itsMaxNumPix, numPix);
@@ -440,12 +439,11 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
       }
       maxResPrevious=maxRes;
 	
-      //      itsLog << "Iteration: " << numIterations
-      //     << ", Maximum residual=" << maxRes << LogIO::POST;
-// 	     << " Flux limit=" << std::max(fluxLimit,threshold()) 
-// 	     << ", " << numPix << " Active pixels" << LogIO::POST;
-      
-//       itsLog << " to get to a maximum residual of " << maxRes << LogIO::POST;
+      itsLog << LogIO::NORMAL
+             << "Iteration: " << numIterations
+             << ", Maximum residual=" << maxRes
+             << " Flux limit=" << std::max(fluxLimit,threshold()) 
+ 	     << ", " << numPix << " Active pixels" << LogIO::POST;
 
       // Count the number of major cycles
       numMajorCycles++;

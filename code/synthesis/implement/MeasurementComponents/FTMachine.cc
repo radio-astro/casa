@@ -76,7 +76,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   FTMachine::FTMachine() : image(0), uvwMachine_p(0), 
 			   tangentSpecified_p(False), fixMovingSource_p(False),
-			 distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
+			   distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
+			   useDoubleGrid_p(False), 
 			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), pointingDirCol_p("DIRECTION")
 {
 
@@ -107,6 +108,10 @@ Bool FTMachine::changed(const VisBuffer& vb) {
 FTMachine::FTMachine(const FTMachine& other)
 {
   operator=(other);
+}
+
+Bool FTMachine::doublePrecGrid(){
+  return useDoubleGrid_p;
 }
 
 //----------------------------------------------------------------------
@@ -208,7 +213,7 @@ void FTMachine::initMaps(const VisBuffer& vb) {
     imageFreq_p.resize(chanNumbre);
     Vector<Double> tempStorFreq(chanNumbre);
     indgen(pixindex);
-    pixindex=pixindex+0.5;
+    //    pixindex=pixindex+1.0; 
     for (Int ll=0; ll< chanNumbre; ++ll){
       if( !spectralCoord_p.toWorld(tempStorFreq(ll), pixindex(ll))){
 	logIO() << "Cannot get imageFreq " << LogIO::EXCEPTION;
@@ -938,8 +943,6 @@ Bool FTMachine::matchChannel(const Int& spw,
   Bool condoo=False;
  
 
-  //cout << "Freqvalid " << freqFrameValid_p << endl;
-
   if(freqFrameValid_p){
     vb.lsrFrequency(spw, lsrFreq, condoo);
     doConversion_p[spw]=condoo;
@@ -961,8 +964,8 @@ Bool FTMachine::matchChannel(const Int& spw,
   for (Int chan=0;chan<nvischan;chan++) {
     f(0)=lsrFreq[chan];
     if(spectralCoord_p.toPixel(c, f)) {
-      Int pixel=Int(floor(c(0)+0.5));
-      // cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+      Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
+      //cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
       if(pixel>-1&&pixel<nchan) {
 	chanMap(chan)=pixel;
         nFound++;
@@ -976,7 +979,6 @@ Bool FTMachine::matchChannel(const Int& spw,
       }
     }
   }
-
 
   multiChanMap_p[spw].resize();
   multiChanMap_p[spw]=chanMap;

@@ -120,12 +120,14 @@ public:
 		   const String& msname,
 		   const PlotMSSelection& selection,
 		   const PlotMSAveraging& averaging,
+		   const PlotMSTransformations& transformations,
 		   PlotMSCacheThread* thread = NULL);
     void loadCache(const vector<PMS::Axis>& axes,
 		   const vector<PMS::DataColumn>& data,
 		   const String& msname,
 		   const PlotMSSelection& selection,
 		   const PlotMSAveraging& averaging,
+		   const PlotMSTransformations& transformations,
 		   PlotMSCacheThread* thread = NULL);
     // </group>
     

@@ -42,34 +42,22 @@ using std::string;
 using std::vector;
 using std::map;
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <PartId.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <DuplicateKey.h>
-#include <UniquenessViolationException.h>
-#include <NoSuchRow.h>
-#include <DuplicateKey.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
-*/
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Angle.h>
+using  asdm::Angle;
+
+#include <Interval.h>
+using  asdm::Interval;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <EntityRef.h>
+using  asdm::EntityRef;
 
 
 
@@ -120,33 +108,21 @@ using namespace DirectionReferenceCodeMod;
 	
 
 
-#ifndef WITHOUT_ACS
-#include <asdmIDLC.h>
-using asdmIDL::SBSummaryTableIDL;
-#endif
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::PartId;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-
+#include <ConversionException.h>
+#include <DuplicateKey.h>
+#include <UniquenessViolationException.h>
+#include <NoSuchRow.h>
+#include <DuplicateKey.h>
 using asdm::DuplicateKey;
 using asdm::ConversionException;
 using asdm::NoSuchRow;
 using asdm::DuplicateKey;
+
+#ifndef WITHOUT_ACS
+#include <asdmIDLC.h>
+using asdmIDL::SBSummaryTableIDL;
+#endif
 
 #include <Representable.h>
 
@@ -165,7 +141,7 @@ class SBSummaryRow;
  * Characteristics of the Scheduling Block that has been executed. Much of the  data here is reproduced from the Scheduling block itself.
  * <BR>
  
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SBSummary </CAPTION>
@@ -313,7 +289,7 @@ class SBSummaryRow;
  * </TABLE>
  */
 class SBSummaryTable : public Representable {
-	friend class asdm::ASDM;
+	friend class ASDM;
 
 public:
 
@@ -359,7 +335,36 @@ public:
 	 * @param e An entity. 
 	 */
 	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for SBSummary (SBSummaryTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	string toXML()  ;
 
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a SBSummaryTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a SBSummaryTableIDL
+	 */
+	SBSummaryTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a SBSummaryTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(SBSummaryTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -370,55 +375,44 @@ public:
 	 */
 	SBSummaryRow *newRow();
 	
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	SBSummaryRow* newRowEmpty();
-
 	
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param sbSummaryUID. 
+ 	 * @param sbSummaryUID
 	
- 	 * @param projectUID. 
+ 	 * @param projectUID
 	
- 	 * @param obsUnitSetId. 
+ 	 * @param obsUnitSetId
 	
- 	 * @param frequency. 
+ 	 * @param frequency
 	
- 	 * @param frequencyBand. 
+ 	 * @param frequencyBand
 	
- 	 * @param sbType. 
+ 	 * @param sbType
 	
- 	 * @param sbDuration. 
+ 	 * @param sbDuration
 	
- 	 * @param centerDirection. 
+ 	 * @param centerDirection
 	
- 	 * @param numObservingMode. 
+ 	 * @param numObservingMode
 	
- 	 * @param observingMode. 
+ 	 * @param observingMode
 	
- 	 * @param numberRepeats. 
+ 	 * @param numberRepeats
 	
- 	 * @param numScienceGoal. 
+ 	 * @param numScienceGoal
 	
- 	 * @param scienceGoal. 
+ 	 * @param scienceGoal
 	
- 	 * @param numWeatherConstraint. 
+ 	 * @param numWeatherConstraint
 	
- 	 * @param weatherConstraint. 
+ 	 * @param weatherConstraint
 	
      */
 	SBSummaryRow *newRow(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
 	
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	SBSummaryRow *newRowFull(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
 
 
 	/**
@@ -435,12 +429,6 @@ public:
 	 */
 	 SBSummaryRow *newRow(SBSummaryRow *row); 
 
-	/**
-	  * Has the same definition than the newRow method with the same signature.
-	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
-	  */
-	 SBSummaryRow *newRowCopy(SBSummaryRow *row); 
-
 	//
 	// ====> Append a row to its table.
 	//
@@ -453,8 +441,8 @@ public:
 	 * If there table contains a row whose key's fields are equal
 	 * to x's ones then return a pointer on this row (i.e. no actual insertion is performed) 
 	 * otherwise add x to the table and return x.
-	 * @param x. A pointer on the row to be added.
- 	 * @returns a SBSummaryRow pointer.
+	 * @param x . A pointer on the row to be added.
+ 	 * @returns a pointer to a SBSummaryRow.	 
 	 */	 
 	 
  	 SBSummaryRow* add(SBSummaryRow* x) ;
@@ -481,7 +469,7 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param sBSummaryId. 
+	 * @param sBSummaryId
 	
  	 *
 	 */
@@ -497,136 +485,39 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param sbSummaryUID.
+ 	 * @param sbSummaryUID
  	 		
- 	 * @param projectUID.
+ 	 * @param projectUID
  	 		
- 	 * @param obsUnitSetId.
+ 	 * @param obsUnitSetId
  	 		
- 	 * @param frequency.
+ 	 * @param frequency
  	 		
- 	 * @param frequencyBand.
+ 	 * @param frequencyBand
  	 		
- 	 * @param sbType.
+ 	 * @param sbType
  	 		
- 	 * @param sbDuration.
+ 	 * @param sbDuration
  	 		
- 	 * @param centerDirection.
+ 	 * @param centerDirection
  	 		
- 	 * @param numObservingMode.
+ 	 * @param numObservingMode
  	 		
- 	 * @param observingMode.
+ 	 * @param observingMode
  	 		
- 	 * @param numberRepeats.
+ 	 * @param numberRepeats
  	 		
- 	 * @param numScienceGoal.
+ 	 * @param numScienceGoal
  	 		
- 	 * @param scienceGoal.
+ 	 * @param scienceGoal
  	 		
- 	 * @param numWeatherConstraint.
+ 	 * @param numWeatherConstraint
  	 		
- 	 * @param weatherConstraint.
+ 	 * @param weatherConstraint
  	 		 
  	 */
 	SBSummaryRow* lookup(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint); 
 
-
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a SBSummaryTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a SBSummaryTableIDL
-	 */
-	SBSummaryTableIDL *toIDL() ;
-#endif
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a SBSummaryTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(SBSummaryTableIDL x) ;
-#endif
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	char *toFITS() const ;
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	void fromFITS(char *fits) ;
-
-	/**
-	 * To be implemented
-	 * @throw ConversionException
-	 */
-	string toVOTable() const ;
-
-	/**
-	 * To be implemented
-	 * @throws ConversionException
-	 */
-	void fromVOTable(string vo) ;
-
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for SBSummary (SBSummaryTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 * @throws ConversionException
-	 */
-	string toXML()  ;
-	
-	/**
-	 * Populate this table from the content of a XML document that is required to
-	 * be conform to the XML schema defined for a SBSummary (SBSummaryTable.xsd).
-	 * @throws ConversionException
-	 * 
-	 */
-	void fromXML(string xmlDoc) ;
-	
-   /**
-	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
-	 * @returns a string containing the MIME message.
-	 * 
-	 */
-	string toMIME();
-	
-   /** 
-     * Extracts the binary part of a MIME message and deserialize its content
-	 * to fill this with the result of the deserialization. 
-	 * @param mimeMsg the string containing the MIME message.
-	 * @throws ConversionException
-	 */
-	 void setFromMIME(const string & mimeMsg);
-	
-	/**
-	  * Stores a representation (binary or XML) of this table into a file.
-	  *
-	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
-	  * will be saved in a file "SBSummary.bin" or an XML representation (fileAsBin==false) will be saved in a file "SBSummary.xml".
-	  * The file is always written in a directory whose name is passed as a parameter.
-	 * @param directory The name of directory  where the file containing the table's representation will be saved.
-	  * 
-	  */
-	  void toFile(string directory);
-	  
-	/**
-	 * Reads and parses a file containing a representation of a SBSummaryTable as those produced  by the toFile method.
-	 * This table is populated with the result of the parsing.
-	 * @param directory The name of the directory containing the file te be read and parsed.
-	 * @throws ConversionException If any error occurs while reading the 
-	 * files in the directory or parsing them.
-	 *
-	 */
-	 void setFromFile(const string& directory);	
 
 private:
 
@@ -680,16 +571,76 @@ private:
 
 // A data structure to store the pointers on the table's rows.
 
-// In all cases we maintain a private ArrayList of SBSummaryRow s.
+// In all cases we maintain a private vector of SBSummaryRow s.
    vector<SBSummaryRow * > privateRows;
    
 
 			
 	vector<SBSummaryRow *> row;
 
-
+	
 	void error() ; //throw(ConversionException);
 
+	
+	/**
+	 * Populate this table from the content of a XML document that is required to
+	 * be conform to the XML schema defined for a SBSummary (SBSummaryTable.xsd).
+	 * @throws ConversionException
+	 * 
+	 */
+	void fromXML(string xmlDoc) ;
+		
+	/**
+	  * Private methods involved during the build of this table out of the content
+	  * of file(s) containing an external representation of a SBSummary table.
+	  */
+	void setFromMIMEFile(const string& directory);
+	void setFromXMLFile(const string& directory);
+	
+		 /**
+	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
+	 * @returns a string containing the MIME message.
+	 *
+	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
+	 * 
+	 */
+	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+  
+	
+   /** 
+     * Extracts the binary part of a MIME message and deserialize its content
+	 * to fill this with the result of the deserialization. 
+	 * @param mimeMsg the string containing the MIME message.
+	 * @throws ConversionException
+	 */
+	 void setFromMIME(const string & mimeMsg);
+	
+	/**
+	  * Private methods involved during the export of this table into disk file(s).
+	  */
+	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	
+	/**
+	  * Stores a representation (binary or XML) of this table into a file.
+	  *
+	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
+	  * will be saved in a file "SBSummary.bin" or an XML representation (fileAsBin==false) will be saved in a file "SBSummary.xml".
+	  * The file is always written in a directory whose name is passed as a parameter.
+	 * @param directory The name of directory  where the file containing the table's representation will be saved.
+	  * 
+	  */
+	  void toFile(string directory);
+	  
+	/**
+	 * Reads and parses a file containing a representation of a SBSummaryTable as those produced  by the toFile method.
+	 * This table is populated with the result of the parsing.
+	 * @param directory The name of the directory containing the file te be read and parsed.
+	 * @throws ConversionException If any error occurs while reading the 
+	 * files in the directory or parsing them.
+	 *
+	 */
+	 void setFromFile(const string& directory);	
+ 
 };
 
 } // End namespace asdm

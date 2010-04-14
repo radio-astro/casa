@@ -46,7 +46,7 @@ include $(AIPSARCH)/makedefs
 
 
 BUILDTIME := $(shell date -u "+%a %Y/%m/%d %H:%M:%S UTC")
-SVNREVISION := $(shell cd $(AIPSROOT)/code && perl -e 'open(INFO,"svn info |"); while ( <INFO> ) { if ( s/^Revision:\s+// ) { print } }')
+SVNREVISION := $(shell cd $(AIPSROOT)/code && perl -e 'open(INFO,"svn info |"); while ( <INFO> ) { if ( s/^Last Changed Rev:\s+// ) { print } }')
 SVNURL := $(shell cd $(AIPSROOT)/code && perl -e 'open(INFO,"svn info |"); while ( <INFO> ) { if ( s/^URL:\s+// ) { print } }')
 CASAVERSION := $(shell cd $(AIPSROOT)/code && perl -e 'open(VERSION,"\< VERSION"); $$_ = <VERSION>; s/^(\d+?)(\d)\.(\d+).*/$$1.$$2.$$3/; print')
 CASABUILD := $(shell cd $(AIPSROOT)/code && perl -e 'open(VERSION,"\< VERSION"); $$_ = <VERSION>; s/^\d+?\d\.\d+\.(\d+).*/$$1/; print')

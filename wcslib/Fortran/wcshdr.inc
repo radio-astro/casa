@@ -1,0 +1,57 @@
+*=======================================================================
+*
+*   WCSLIB 4.3 - an implementation of the FITS WCS standard.
+*   Copyright (C) 1995-2007, Mark Calabretta
+*
+*   This file is part of WCSLIB.
+*
+*   WCSLIB is free software: you can redistribute it and/or modify
+*   it under the terms of the GNU Lesser General Public License as
+*   published by the Free Software Foundation, either version 3 of
+*   the License, or (at your option) any later version.
+*
+*   WCSLIB is distributed in the hope that it will be useful, but
+*   WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
+*
+*   Correspondence concerning WCSLIB may be directed to:
+*      Internet email: mcalabre@atnf.csiro.au
+*      Postal address: Dr. Mark Calabretta
+*                      Australia Telescope National Facility, CSIRO
+*                      PO Box 76
+*                      Epping NSW 1710
+*                      AUSTRALIA
+*
+*   Author: Mark Calabretta, Australia Telescope National Facility
+*   http://www.atnf.csiro.au/~mcalabre/index.html
+*   $Id: wcshdr.inc,v 4.3 2007/12/27 05:48:07 cal103 Exp $
+*=======================================================================
+
+*     Functions.
+      INTEGER   WCSIDX, WCSPIH, WCSTAB, WCSVCOPY, WCSVFREE
+
+*     Flag bits for the RELAX argument.
+      INTEGER   WCSHDR_all, WCSHDR_reject, WCSHDR_CD00i00j,
+     :          WCSHDR_CROTAia, WCSHDR_EPOCHa, WCSHDR_PC00i00j,
+     :          WCSHDR_PROJPn, WCSHDR_VELREFa, WCSHDR_VSOURCEa
+
+      PARAMETER (WCSHDR_all      =   1)
+      PARAMETER (WCSHDR_reject   =   2)
+      PARAMETER (WCSHDR_CROTAia  =   4)
+      PARAMETER (WCSHDR_EPOCHa   =   8)
+      PARAMETER (WCSHDR_VELREFa  =  16)
+      PARAMETER (WCSHDR_CD00i00j =  32)
+      PARAMETER (WCSHDR_PC00i00j =  64)
+      PARAMETER (WCSHDR_PROJPn   = 128)
+      PARAMETER (WCSHDR_VSOURCEa = 256)
+
+      CHARACTER WCSHDR_ERRMSG(0:3)*80
+      DATA WCSHDR_ERRMSG /
+     :   'Success',
+     :   'Null wcsprm pointer passed',
+     :   'Memory allocation failed',
+     :   'Invalid tabular parameters'/

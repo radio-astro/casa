@@ -80,7 +80,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	FeedRow::~FeedRow() {
 	}
 
@@ -1105,56 +1104,68 @@ namespace asdm {
 
 	}
 	
-	FeedRow* FeedRow::fromBin(EndianISStream& eiss, FeedTable& table) {
-		FeedRow* row = new  FeedRow(table);
-		
-		
+void FeedRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void FeedRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->feedId =  eiss.readInt();
-			
+}
+void FeedRow::timeIntervalFromBin(EndianISStream& eiss) {
 		
 	
-
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+	
+}
+void FeedRow::feedIdFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		feedId =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void FeedRow::numReceptorFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numReceptor =  eiss.readInt();
+			
+		
+	
+	
+}
+void FeedRow::beamOffsetFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->beamOffset.clear();
+		beamOffset.clear();
 		
 		unsigned int beamOffsetDim1 = eiss.readInt();
 		unsigned int beamOffsetDim2 = eiss.readInt();
@@ -1165,147 +1176,185 @@ namespace asdm {
 			
 			beamOffsetAux1.push_back(eiss.readDouble());
 			
-			row->beamOffset.push_back(beamOffsetAux1);
+			beamOffset.push_back(beamOffsetAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void FeedRow::focusReferenceFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->focusReference = Length::from2DBin(eiss);		
+	focusReference = Length::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void FeedRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void FeedRow::polResponseFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->polResponse = Complex::from2DBin(eiss);		
+	polResponse = Complex::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void FeedRow::receptorAngleFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->receptorAngle = Angle::from1DBin(eiss);	
+	receptorAngle = Angle::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void FeedRow::receiverIdFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->receiverId.clear();
+		receiverId.clear();
 		
 		unsigned int receiverIdDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < receiverIdDim1; i++)
 			
-			row->receiverId.push_back(eiss.readInt());
+			receiverId.push_back(eiss.readInt());
 			
 	
 
 		
 	
+	
+}
 
+void FeedRow::feedNumFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->feedNumExists = eiss.readBoolean();
-	if (row->feedNumExists) {
+	feedNumExists = eiss.readBoolean();
+	if (feedNumExists) {
 		
 	
 	
 		
 			
-		row->feedNum =  eiss.readInt();
+		feedNum =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->illumOffsetExists = eiss.readBoolean();
-	if (row->illumOffsetExists) {
+	
+}
+void FeedRow::illumOffsetFromBin(EndianISStream& eiss) {
+		
+	illumOffsetExists = eiss.readBoolean();
+	if (illumOffsetExists) {
 		
 	
 		
 		
 			
 	
-	row->illumOffset = Length::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-	row->positionExists = eiss.readBoolean();
-	if (row->positionExists) {
-		
-	
-		
-		
-			
-	
-	row->position = Length::from1DBin(eiss);	
+	illumOffset = Length::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->beamIdExists = eiss.readBoolean();
-	if (row->beamIdExists) {
+	
+}
+void FeedRow::positionFromBin(EndianISStream& eiss) {
+		
+	positionExists = eiss.readBoolean();
+	if (positionExists) {
 		
 	
 		
 		
 			
 	
-	row->beamId = Tag::from1DBin(eiss);	
+	position = Length::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
+	
+}
+void FeedRow::beamIdFromBin(EndianISStream& eiss) {
+		
+	beamIdExists = eiss.readBoolean();
+	if (beamIdExists) {
+		
+	
+		
+		
+			
+	
+	beamId = Tag::from1DBin(eiss);	
+	
 
 		
+	
+
+	}
+	
+}
+	
+	
+	FeedRow* FeedRow::fromBin(EndianISStream& eiss, FeedTable& table, const vector<string>& attributesSeq) {
+		FeedRow* row = new  FeedRow(table);
+		
+		map<string, FeedAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FeedTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2136,6 +2185,26 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &FeedRow::antennaIdFromBin; 
+	 fromBinMethods["spectralWindowId"] = &FeedRow::spectralWindowIdFromBin; 
+	 fromBinMethods["timeInterval"] = &FeedRow::timeIntervalFromBin; 
+	 fromBinMethods["feedId"] = &FeedRow::feedIdFromBin; 
+	 fromBinMethods["numReceptor"] = &FeedRow::numReceptorFromBin; 
+	 fromBinMethods["beamOffset"] = &FeedRow::beamOffsetFromBin; 
+	 fromBinMethods["focusReference"] = &FeedRow::focusReferenceFromBin; 
+	 fromBinMethods["polarizationTypes"] = &FeedRow::polarizationTypesFromBin; 
+	 fromBinMethods["polResponse"] = &FeedRow::polResponseFromBin; 
+	 fromBinMethods["receptorAngle"] = &FeedRow::receptorAngleFromBin; 
+	 fromBinMethods["receiverId"] = &FeedRow::receiverIdFromBin; 
+		
+	
+	 fromBinMethods["feedNum"] = &FeedRow::feedNumFromBin; 
+	 fromBinMethods["illumOffset"] = &FeedRow::illumOffsetFromBin; 
+	 fromBinMethods["position"] = &FeedRow::positionFromBin; 
+	 fromBinMethods["beamId"] = &FeedRow::beamIdFromBin; 
 	
 	}
 	
@@ -2244,7 +2313,26 @@ namespace asdm {
 		else
 			beamIdExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &FeedRow::antennaIdFromBin; 
+		 fromBinMethods["spectralWindowId"] = &FeedRow::spectralWindowIdFromBin; 
+		 fromBinMethods["timeInterval"] = &FeedRow::timeIntervalFromBin; 
+		 fromBinMethods["feedId"] = &FeedRow::feedIdFromBin; 
+		 fromBinMethods["numReceptor"] = &FeedRow::numReceptorFromBin; 
+		 fromBinMethods["beamOffset"] = &FeedRow::beamOffsetFromBin; 
+		 fromBinMethods["focusReference"] = &FeedRow::focusReferenceFromBin; 
+		 fromBinMethods["polarizationTypes"] = &FeedRow::polarizationTypesFromBin; 
+		 fromBinMethods["polResponse"] = &FeedRow::polResponseFromBin; 
+		 fromBinMethods["receptorAngle"] = &FeedRow::receptorAngleFromBin; 
+		 fromBinMethods["receiverId"] = &FeedRow::receiverIdFromBin; 
+			
+	
+		 fromBinMethods["feedNum"] = &FeedRow::feedNumFromBin; 
+		 fromBinMethods["illumOffset"] = &FeedRow::illumOffsetFromBin; 
+		 fromBinMethods["position"] = &FeedRow::positionFromBin; 
+		 fromBinMethods["beamId"] = &FeedRow::beamIdFromBin; 
+			
 	}
 
 	
@@ -2392,6 +2480,31 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, FeedAttributeFromBin> FeedRow::initFromBinMethods() {
+		map<string, FeedAttributeFromBin> result;
+		
+		result["antennaId"] = &FeedRow::antennaIdFromBin;
+		result["spectralWindowId"] = &FeedRow::spectralWindowIdFromBin;
+		result["timeInterval"] = &FeedRow::timeIntervalFromBin;
+		result["feedId"] = &FeedRow::feedIdFromBin;
+		result["numReceptor"] = &FeedRow::numReceptorFromBin;
+		result["beamOffset"] = &FeedRow::beamOffsetFromBin;
+		result["focusReference"] = &FeedRow::focusReferenceFromBin;
+		result["polarizationTypes"] = &FeedRow::polarizationTypesFromBin;
+		result["polResponse"] = &FeedRow::polResponseFromBin;
+		result["receptorAngle"] = &FeedRow::receptorAngleFromBin;
+		result["receiverId"] = &FeedRow::receiverIdFromBin;
+		
+		
+		result["feedNum"] = &FeedRow::feedNumFromBin;
+		result["illumOffset"] = &FeedRow::illumOffsetFromBin;
+		result["position"] = &FeedRow::positionFromBin;
+		result["beamId"] = &FeedRow::beamIdFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

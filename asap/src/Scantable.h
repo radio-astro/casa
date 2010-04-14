@@ -243,6 +243,20 @@ public:
     { return (flagrowCol_(whichrow) > 0); }
 
   /**
+   * Flag the data outside a specified range (in a channel-based manner).
+   * (CAS-1807 Wataru Kawasaki)
+   */
+  void clip(const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag);
+
+  /**
+   * Return a list of booleans with the size of nchan for a specified row, to get info 
+   * about which channel is clipped.
+   */
+  std::vector<bool> getClipMask(int whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag);
+  void srchChannelsToClip(casa::uInt whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag, 
+			  casa::Vector<casa::uChar> flgs);
+
+  /**
    * Return a list of row numbers with respect to the original table.
    * @return a list of unsigned ints
    */

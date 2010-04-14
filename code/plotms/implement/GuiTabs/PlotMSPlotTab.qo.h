@@ -45,6 +45,7 @@ class PlotMSDataTab;
 class PlotMSDisplayTab;
 class PlotMSExportTab;
 class PlotMSMultiAxesTab;
+class PlotMSTransformationsTab;
 class PlotMSPlotTab;
 
 
@@ -190,6 +191,9 @@ protected:
     PlotMSExportTab* insertExportSubtab(int index);
     PlotMSMultiAxesTab* addMultiAxesSubtab();
     PlotMSMultiAxesTab* insertMultiAxesSubtab(int index);
+    PlotMSTransformationsTab* addTransformationsSubtab();
+    PlotMSTransformationsTab* insertTransformationsSubtab(int index);
+
     // </group>
     
     // Returns the first subtab with the given type, or NULL if there are none

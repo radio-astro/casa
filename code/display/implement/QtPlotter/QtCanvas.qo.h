@@ -74,8 +74,12 @@ public:
     QtCanvas(QWidget *parent = 0);
 
     void setPlotSettings(const QtPlotSettings &settings);
-    void setCurveData(int id, const CurveData &data);
-    void clearCurve(int id);
+    void setCurveData(int id, const CurveData &data, const QString& lb="");
+    CurveData* getCurveData(int);
+    QString getCurveName(int);
+    int getLineCount();
+    void clearCurve(int id = -1);
+    void clearData();
     void setDataRange();
     void setImageMode(bool);
     void setPixmap(const QImage&);
@@ -83,8 +87,11 @@ public:
     void drawBackBuffer(QPainter *);
     void plotPolyLines(QString);    
     void plotPolyLine(const Vector<Int>&, const Vector<Int>&);
-    void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y);
+    void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+                      const QString& lb="");
     void plotPolyLine(const Vector<Double>&, const Vector<Double>&);
+    void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+                      const QString& lb="");    
     void plotPolyLine(const Matrix<Int> &verts);
     void plotPolyLine(const Matrix<Float> &verts);
     void plotPolyLine(const Matrix<Double> &verts);
@@ -147,6 +154,7 @@ protected:
     GraphLabel yLabel;
     GraphLabel welcome;
     
+    std::map<int, QString> legend;
     std::map<int, CurveData> curveMap;
     std::vector<QtPlotSettings> zoomStack;
     std::map<int, CurveData> markerStack;

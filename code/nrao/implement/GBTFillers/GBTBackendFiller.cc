@@ -596,7 +596,7 @@ void GBTBackendFiller::addCalSet(const IPosition &defaultTileShape,
 	    // try to infer nCorr from table, if there is something there
 	    if (data->nrow() > 0 && data->isDefined(0)) {
 		nCorr = data->shape(0)(0);
-		dataTileShape = IPosition(3, nCorr, tileSize, 16384/nCorr/tileSize);
+		dataTileShape = IPosition(3, nCorr, tileSize, max(1, 4096/nCorr/tileSize));
 	    }
 	}
     };

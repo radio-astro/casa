@@ -59,7 +59,7 @@ using namespace asdmIDL;   /// <-------------------
 #endif
 
 /*\file ASDM.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -254,9 +254,10 @@ class WeatherTable;
  * creates a complete set of tables.
  *
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  */
-class ASDM : public Representable {
+//class ASDM : public Representable {
+class ASDM {
 
 public:
 	/**
@@ -735,13 +736,7 @@ public:
 	   */
 	virtual void fromIDL(ASDMDataSetIDL* x); 
 	#endif
-	
-	virtual string toVOTable() const ;
-	virtual void fromVOTable(string vo) ;
-	
-	virtual char * toFITS() const ;
-	virtual void fromFITS(char * fits) ;
-	
+		
 	virtual Entity getEntity() const;
 
 	virtual void setEntity(Entity e);

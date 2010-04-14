@@ -53,6 +53,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/BasicSL/Constants.h>
 
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/ConvolutionEquation.h>
@@ -185,11 +186,13 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	psfmaxouter(model) << endl;
       if(abs(psfmin(model))>maxSidelobe) maxSidelobe=abs(psfmin(model));
       if(psfmaxouter(model) > maxSidelobe) maxSidelobe= psfmaxouter(model );
+      //      os << "     : PSFPatch = " << psfpatch << LogIO::POST;
     }
   }
   os << LogIO::POST;
 	
   Float absmax=threshold();
+  Float oldabsmax=C::flt_max;
   Float cycleThreshold=0.0;
   Block< Vector<Int> > iterations(numberOfModels());
   Int maxIterations=0;
@@ -198,6 +201,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   // Loop over major cycles
   Int cycle=0;
   Bool stop=False;
+  Bool diverging=False;
 
   if (displayProgress_p) {
     progress_p = new ClarkCleanProgress( pgplotter_p );
@@ -313,8 +317,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     
   Float maxggS=0.0;
 
-  while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
-    os << LogIO::NORMAL2 << "*** Starting major cycle " << cycle << LogIO::POST; // Loglevel PROGRESS
+  while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop && !diverging) {
+    os << LogIO::NORMAL
+       << "*** Starting major cycle " << cycle
+       << LogIO::POST; // Loglevel PROGRESS
     cycle++;
 
     // Make the residual images. We do an incremental update
@@ -370,6 +376,15 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     }
 
     absmax=maxField(resmax, resmin);
+    if(cycle >1){
+      if(absmax < oldabsmax)
+	oldabsmax=absmax;
+      else{
+	diverging=True;
+	os << LogIO::WARN 
+         << "Clean not converging   "  << LogIO::POST;
+      }
+    }
 
     os << LogIO::NORMAL1; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
@@ -380,11 +395,12 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
     // Can we stop?
     if(absmax<threshold()) {
-      os << LogIO::NORMAL2 // Loglevel PROGRESS
+      os << LogIO::NORMAL // Loglevel PROGRESS
          << "Reached stopping peak residual = " << absmax << LogIO::POST;
       stop=True;
     }
-    else {
+    else if(!diverging) {
+      
     
       // Calculate the threshold for this cycle. Add a safety factor
       // This will be fixed someday by an option for an increasing threshold
@@ -392,7 +408,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       if (fudge > 0.8) fudge = 0.8;   // painfully slow!
 
       cycleThreshold=max(0.95*threshold(), fudge * absmax);
-      os << LogIO::NORMAL1 << "Maximum residual = " << absmax // Loglevel INFO
+      os << LogIO::NORMAL << "Maximum residual = " << absmax // Loglevel INFO
          << ", cleaning down to " << cycleThreshold << LogIO::POST;
       
       for (model=0;model<numberOfModels();model++) {
@@ -411,6 +427,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	    iterations[model].resize(nchan);
 	  else
 	    iterations[model].resize(nchan*npol);
+	  iterations[model].resize(nchan*npol);
 	  iterations[model]=0;
 	}
 	  
@@ -424,7 +441,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
           if((abs(resmax(model))>cycleThreshold)||
 	     (abs(resmin(model))>cycleThreshold)) {
 
-	    os << LogIO::NORMAL2 << "Processing model " << model << LogIO::POST; // Loglevel PROGRESS
+	    os << LogIO::NORMAL
+               << "Processing model " << model
+               << LogIO::POST; // Loglevel PROGRESS
 	    
 	    IPosition onePlane(4, nx, ny, 1, 1);
 	    IPosition oneCube(4, nx, ny, npolcube, 1);
@@ -468,7 +487,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		   ggSli++,chan++) {
 	      if(!doPolJoint_p){
 		if(chan==0){
-		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+		  os << LogIO::NORMAL // Loglevel PROGRESS
                      << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
 		}
 		if(chan==nchan){
@@ -502,7 +521,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  for (Int ix=0;ix<nx;ix++) {
 		    for (Int pol=0;pol<npolcube;pol++) {
 		      //resid(ix,iy,pol)*=weight(ix,iy,pol);
-		      if(weight(ix,iy,pol)>0.0001) {
+		      if(weight(ix,iy,pol)>0.01) {
 			wmask(ix,iy)=1.0;
 		      }
 		    }
@@ -542,7 +561,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 			 (void*) &HogbomCleanImageSkyModelmsgput,
 			 (void*) &HogbomCleanImageSkyModelstopnow);
 
-		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+		  os << LogIO::NORMAL // Loglevel PROGRESS
                      << "Finished Hogbom clean inner cycle " << LogIO::POST;
 		  
 		  imageStepli.rwCursor().putStorage (limageStep_data, delete_its);
@@ -579,7 +598,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  // residual image and psf and then clean it
 		  ConvolutionEquation eqn(psfli.matrixCursor(),
 					  residu);
-		  deltaimageli.rwCursor()=Float(0.0);
+		  deltaimageli.rwCursor().set(Float(0.0));
 		  ClarkCleanModel cleaner(deltaimageli.rwCursor());
 		  cleaner.setMask(wmask);
 		  cleaner.setGain(gain());
@@ -596,33 +615,17 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  if ( displayProgress_p ) {
 		    cleaner.setProgress( *progress_p );
 		  }
-		  cleaner.solve(eqn);
+		  cleaner.singleSolve(eqn, residu);
 		  iterations[model](chan*npolcube+ipol)=cleaner.numberIterations();
 		  maxIterations=(iterations[model](chan*npolcube+ipol)>maxIterations) ?
 		    iterations[model](chan*npolcube+ipol) : maxIterations;
 		  modified_p=True;
 		  
 		  cleaner.getModel(deltaimageli.rwCursor());
-		  /////Need to go
-		  /*
-		  Cube<Float> step(deltaimageli.rwCursor().nonDegenerate(3));
-		  for (Int iy=0;iy<ny;iy++) {
-		    for (Int ix=0;ix<nx;ix++) {
-		      for (Int pol=0;pol<npol;pol++) {
-			if(weight(ix,iy,pol)>0.0) {
-			  step(ix,iy,pol)/=weight(ix,iy,pol);
-			}
-		      }
-		    }
-		  }
-		  
-		  deltaimageli.rwCursor()=step.addDegenerate(1);
-		  */	  
-		  /////
 		  //imageli.rwCursor()+=deltaimageli.cursor();
-		  eqn.residual(imageStepli.rwCursor(), cleaner);
+		  //eqn.residual(imageStepli.rwCursor(), cleaner);
 		  
-		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+		  os << LogIO::NORMAL // Loglevel PROGRESS
                      <<"Finished Clark clean inner cycle " << LogIO::POST;
 		}
 		if(maxIterations==0) {
@@ -631,17 +634,22 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		else{
 		  stop=False;
 		}
-		os << LogIO::NORMAL2 << "Clean used " // Loglevel PROGRESS
+                // Upped to NORMAL per CAS-2017.
+		// cerr << model << " " << chan << " " << npolcube << " " << ipol 
+		//      << " " << iterations.nelements() 
+		//      << " " << iterations[0].shape()
+		//      << endl;
+		os << LogIO::NORMAL << "Clean used " // Loglevel PROGRESS
                    << iterations[model](chan*npolcube+ipol) << " iterations" 
-		   << " to approach a threshold of " << cycleThreshold
+		   << " to approach a threshhold of " << cycleThreshold
 		   << LogIO::POST; 
 	      }
 	    }
 	  }
 	  else {
-	    os << LogIO::NORMAL1 // Loglevel INFO
+	    os << LogIO::NORMAL // Loglevel INFO
                << "No need to clean model " << model
-               << ": peak residual below threshold"
+               << ": peak residual below threshhold"
                << LogIO::POST;
 	  }
 	}
@@ -690,9 +698,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     Float finalabsmax=maxField(resmax, resmin);
     
-    os << LogIO::NORMAL1 << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
+    os << LogIO::NORMAL << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
     converged=(finalabsmax < 1.05 * threshold());
-    os << LogIO::NORMAL1; // Loglevel INFO
+    os << LogIO::NORMAL; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;

@@ -72,6 +72,17 @@ public:
                   const std::string& mode, bool tsys=false )
   { return ScantableWrapper(STMath::unaryOperate(in.getCP(), val, mode, tsys)); }
 
+  ScantableWrapper arrayOperate( const ScantableWrapper& in, 
+                                 const std::vector<float> val,
+                                 const std::string& mode,
+                                 bool tsys=false )
+  { return ScantableWrapper(STMath::arrayOperateChannel(in.getCP(), val, mode, tsys)); }
+
+  ScantableWrapper array2dOperate( const ScantableWrapper& in, 
+                                   const std::vector< std::vector<float> > val,
+                                   const std::string& mode, bool tsys=false )
+  { return ScantableWrapper(STMath::array2dOperate(in.getCP(), val, mode, tsys)); }
+
   ScantableWrapper binaryOperate( const ScantableWrapper& left,
 				  const ScantableWrapper& right,
 				  const std::string& mode)
@@ -214,6 +225,14 @@ public:
     casa::String mode( calmode ) ;
     casa::String name( antname ) ;
     return ScantableWrapper( STMath::cwcal( tab, mode, name ) ) ;
+  }
+  // almacal
+  ScantableWrapper almacal( const ScantableWrapper &in,
+                          const std::string calmode )
+  {
+    casa::CountedPtr<Scantable> tab = in.getCP() ;
+    casa::String mode( calmode ) ;
+    return ScantableWrapper( STMath::almacal( tab, mode ) ) ;
   }
 };
 

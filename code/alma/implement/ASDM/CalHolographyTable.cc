@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -121,12 +126,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int CalHolographyTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -159,52 +163,48 @@ namespace asdm {
 		return new CalHolographyRow (*this);
 	}
 	
-	CalHolographyRow *CalHolographyTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaName. 
+ 	 * @param antennaName 
 	
- 	 * @param calDataId. 
+ 	 * @param calDataId 
 	
- 	 * @param calReductionId. 
+ 	 * @param calReductionId 
 	
- 	 * @param antennaMake. 
+ 	 * @param antennaMake 
 	
- 	 * @param startValidTime. 
+ 	 * @param startValidTime 
 	
- 	 * @param endValidTime. 
+ 	 * @param endValidTime 
 	
- 	 * @param ambientTemperature. 
+ 	 * @param ambientTemperature 
 	
- 	 * @param focusPosition. 
+ 	 * @param focusPosition 
 	
- 	 * @param frequencyRange. 
+ 	 * @param frequencyRange 
 	
- 	 * @param illuminationTaper. 
+ 	 * @param illuminationTaper 
 	
- 	 * @param numReceptor. 
+ 	 * @param numReceptor 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param polarizationTypes 
 	
- 	 * @param numPanelModes. 
+ 	 * @param numPanelModes 
 	
- 	 * @param receiverBand. 
+ 	 * @param receiverBand 
 	
- 	 * @param beamMapUID. 
+ 	 * @param beamMapUID 
 	
- 	 * @param rawRMS. 
+ 	 * @param rawRMS 
 	
- 	 * @param weightedRMS. 
+ 	 * @param weightedRMS 
 	
- 	 * @param surfaceMapUID. 
+ 	 * @param surfaceMapUID 
 	
- 	 * @param direction. 
+ 	 * @param direction 
 	
      */
 	CalHolographyRow* CalHolographyTable::newRow(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction){
@@ -250,58 +250,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	CalHolographyRow* CalHolographyTable::newRowFull(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction)	{
-		CalHolographyRow *row = new CalHolographyRow(*this);
-			
-		row->setAntennaName(antennaName);
-			
-		row->setCalDataId(calDataId);
-			
-		row->setCalReductionId(calReductionId);
-			
-		row->setAntennaMake(antennaMake);
-			
-		row->setStartValidTime(startValidTime);
-			
-		row->setEndValidTime(endValidTime);
-			
-		row->setAmbientTemperature(ambientTemperature);
-			
-		row->setFocusPosition(focusPosition);
-			
-		row->setFrequencyRange(frequencyRange);
-			
-		row->setIlluminationTaper(illuminationTaper);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
-		row->setNumPanelModes(numPanelModes);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setBeamMapUID(beamMapUID);
-			
-		row->setRawRMS(rawRMS);
-			
-		row->setWeightedRMS(weightedRMS);
-			
-		row->setSurfaceMapUID(surfaceMapUID);
-			
-		row->setDirection(direction);
-	
-		return row;				
-	}
 	
 
 
 CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
-	return new CalHolographyRow(*this, *row);
-}
-
-CalHolographyRow* CalHolographyTable::newRowCopy(CalHolographyRow* row) {
 	return new CalHolographyRow(*this, *row);
 }
 
@@ -514,27 +466,13 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 	}
 #endif
 
-	char *CalHolographyTable::toFITS() const  {
-		throw ConversionException("Not implemented","CalHolography");
-	}
-
-	void CalHolographyTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","CalHolography");
-	}
-
-	string CalHolographyTable::toVOTable() const {
-		throw ConversionException("Not implemented","CalHolography");
-	}
-
-	void CalHolographyTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","CalHolography");
-	}
-
 	
 	string CalHolographyTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\"> ");	
+		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -592,6 +530,10 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		}
 		if (!xml.isStr("</CalHolographyTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -600,11 +542,57 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 	}
 	
 	
-	string CalHolographyTable::toMIME() {
-		EndianOSStream eoss;
+	string CalHolographyTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalHolographyTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<antennaName/>\n"; 
+		oss << "<calDataId/>\n"; 
+		oss << "<calReductionId/>\n"; 
+		oss << "<antennaMake/>\n"; 
+		oss << "<startValidTime/>\n"; 
+		oss << "<endValidTime/>\n"; 
+		oss << "<ambientTemperature/>\n"; 
+		oss << "<focusPosition/>\n"; 
+		oss << "<frequencyRange/>\n"; 
+		oss << "<illuminationTaper/>\n"; 
+		oss << "<numReceptor/>\n"; 
+		oss << "<polarizationTypes/>\n"; 
+		oss << "<numPanelModes/>\n"; 
+		oss << "<receiverBand/>\n"; 
+		oss << "<beamMapUID/>\n"; 
+		oss << "<rawRMS/>\n"; 
+		oss << "<weightedRMS/>\n"; 
+		oss << "<surfaceMapUID/>\n"; 
+		oss << "<direction/>\n"; 
+
+		oss << "<numScrew/>\n"; 
+		oss << "<screwName/>\n"; 
+		oss << "<screwMotion/>\n"; 
+		oss << "<screwMotionError/>\n"; 
+		oss << "<gravCorrection/>\n"; 
+		oss << "<gravOptRange/>\n"; 
+		oss << "<tempCorrection/>\n"; 
+		oss << "<tempOptRange/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</CalHolographyTable>\n";
+
+		return oss.str();				
+	}
+	
+	string CalHolographyTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -629,13 +617,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -663,39 +645,177 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 
 	
 	void CalHolographyTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalHolography");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			CalHolographyRow* aRow = CalHolographyRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "CalHolography");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "CalHolography");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "CalHolography");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "CalHolography");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalHolography");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalHolography");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("antennaName") ; 
+     
+    attributesSeq.push_back("calDataId") ; 
+     
+    attributesSeq.push_back("calReductionId") ; 
+     
+    attributesSeq.push_back("antennaMake") ; 
+     
+    attributesSeq.push_back("startValidTime") ; 
+     
+    attributesSeq.push_back("endValidTime") ; 
+     
+    attributesSeq.push_back("ambientTemperature") ; 
+     
+    attributesSeq.push_back("focusPosition") ; 
+     
+    attributesSeq.push_back("frequencyRange") ; 
+     
+    attributesSeq.push_back("illuminationTaper") ; 
+     
+    attributesSeq.push_back("numReceptor") ; 
+     
+    attributesSeq.push_back("polarizationTypes") ; 
+     
+    attributesSeq.push_back("numPanelModes") ; 
+     
+    attributesSeq.push_back("receiverBand") ; 
+     
+    attributesSeq.push_back("beamMapUID") ; 
+     
+    attributesSeq.push_back("rawRMS") ; 
+     
+    attributesSeq.push_back("weightedRMS") ; 
+     
+    attributesSeq.push_back("surfaceMapUID") ; 
+     
+    attributesSeq.push_back("direction") ; 
+    
+     
+    attributesSeq.push_back("numScrew") ; 
+     
+    attributesSeq.push_back("screwName") ; 
+     
+    attributesSeq.push_back("screwMotion") ; 
+     
+    attributesSeq.push_back("screwMotionError") ; 
+     
+    attributesSeq.push_back("gravCorrection") ; 
+     
+    attributesSeq.push_back("gravOptRange") ; 
+     
+    attributesSeq.push_back("tempCorrection") ; 
+     
+    attributesSeq.push_back("tempOptRange") ; 
+              
+     }
+    else if (string("CalHolographyTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/CalHolographyTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "CalHolography");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/CalHolographyTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "CalHolography");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/CalHolographyTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "CalHolography");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/CalHolographyTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "CalHolography");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	CalHolographyRow* aRow = CalHolographyRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "CalHolography");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "CalHolography");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -704,7 +824,19 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/CalHolography.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "CalHolography");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "CalHolography");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/CalHolography.bin";
@@ -716,60 +848,75 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "CalHolography");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/CalHolography.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "CalHolography");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "CalHolography");
-		}
 	}
 
 	
 	void CalHolographyTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/CalHolography.bin";
-		else
-			tablename = directory + "/CalHolography.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "CalHolography");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"CalHolography");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"CalHolography");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalHolography.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalHolography.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the CalHolography table", "CalHolography");
 	}			
+
+	
+  void CalHolographyTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalHolography.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalHolography");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"CalHolography");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"CalHolography");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void CalHolographyTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalHolography.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalHolography");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "CalHolography");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "CalHolography");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

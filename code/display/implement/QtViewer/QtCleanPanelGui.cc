@@ -32,6 +32,7 @@
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
+#include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeExpr.h> 
@@ -56,7 +57,7 @@ namespace casa {
 
 	resize(700,900);
 	
-	v_->autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
+	autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
 	setStatsPrint(False);			// Turns off statistics printing.
 
 	QDockWidget *dock = new QDockWidget(this, Qt::Widget);
@@ -252,8 +253,24 @@ namespace casa {
 
 	addDockWidget(Qt::TopDockWidgetArea, dock);
 
+	QWidget *rectangle_button = mouseToolBar_->button(QtMouseToolNames::RECTANGLE);
+	if ( rectangle_button ) {
+	    rectangle_button->setEnabled(false);
+	    disabled_widgets.push_back(rectangle_button);
+	}
+	QWidget *polygon_button = mouseToolBar_->button(QtMouseToolNames::POLYGON);
+	if ( polygon_button ) {
+	    polygon_button->setEnabled(false);
+	    disabled_widgets.push_back(polygon_button);
+	}
+
+	QWidget *position_button = mouseToolBar_->button(QtMouseToolNames::POSITION);
+	if ( position_button ) position_button->setEnabled(false);
+	QWidget *polyline_button = mouseToolBar_->button(QtMouseToolNames::POLYLINE);
+	if ( polyline_button ) polyline_button->setEnabled(false);
+
 	show( );
-	v_->autoDDOptionsShow = true;
+	autoDDOptionsShow = true;
     }
 
     QtCleanPanelGui::~QtCleanPanelGui() { }
@@ -268,8 +285,11 @@ namespace casa {
 	state["panel"] = interact_id;						\
 	for ( std::list<QWidget*>::iterator iter = disabled_widgets.begin();	\
 	      iter != disabled_widgets.end(); ++iter ) {			\
-	    (*iter)->setPalette( default_palette );				\
-	    (*iter)->setEnabled(false);						\
+	    QWidget *widget = *iter;						\
+	    if ( widget ) {							\
+		widget->setPalette( default_palette );				\
+		widget->setEnabled(false);					\
+	    }									\
 	}									\
 	in_interact_mode = false;						\
 	if ( maskdd_ != 0 ) maskdd_->unlock( );					\

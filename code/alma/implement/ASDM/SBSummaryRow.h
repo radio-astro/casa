@@ -46,31 +46,22 @@ using std::set;
 using asdmIDL::SBSummaryRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Angle.h>
+using  asdm::Angle;
+
+#include <Interval.h>
+using  asdm::Interval;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <EntityRef.h>
+using  asdm::EntityRef;
 
 
 
@@ -122,28 +113,13 @@ using namespace DirectionReferenceCodeMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file SBSummary.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -152,10 +128,13 @@ namespace asdm {
 
 	
 
+class SBSummaryRow;
+typedef void (SBSummaryRow::*SBSummaryAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The SBSummaryRow class is a row of a SBSummaryTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class SBSummaryRow {
@@ -170,49 +149,6 @@ public:
 	 */
 	SBSummaryTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a SBSummaryRowIDL struct.
-	 */
-	SBSummaryRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct SBSummaryRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (SBSummaryRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the SBSummaryTable to which the row built by deserialization will be parented.
-	  */
-	 static SBSummaryRow* fromBin(EndianISStream& eiss, SBSummaryTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -784,12 +720,78 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this SBSummaryRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param sbSummaryUID
+	    
+	 * @param projectUID
+	    
+	 * @param obsUnitSetId
+	    
+	 * @param frequency
+	    
+	 * @param frequencyBand
+	    
+	 * @param sbType
+	    
+	 * @param sbDuration
+	    
+	 * @param centerDirection
+	    
+	 * @param numObservingMode
+	    
+	 * @param observingMode
+	    
+	 * @param numberRepeats
+	    
+	 * @param numScienceGoal
+	    
+	 * @param scienceGoal
+	    
+	 * @param numWeatherConstraint
+	    
+	 * @param weatherConstraint
+	    
 	 */ 
 	bool compareNoAutoInc(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param sbSummaryUID
+	    
+	 * @param projectUID
+	    
+	 * @param obsUnitSetId
+	    
+	 * @param frequency
+	    
+	 * @param frequencyBand
+	    
+	 * @param sbType
+	    
+	 * @param sbDuration
+	    
+	 * @param centerDirection
+	    
+	 * @param numObservingMode
+	    
+	 * @param observingMode
+	    
+	 * @param numberRepeats
+	    
+	 * @param numScienceGoal
+	    
+	 * @param scienceGoal
+	    
+	 * @param numWeatherConstraint
+	    
+	 * @param weatherConstraint
+	    
+	 */ 
 	bool compareRequiredValue(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint); 
 		 
 	
@@ -802,6 +804,37 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(SBSummaryRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a SBSummaryRowIDL struct.
+	 */
+	SBSummaryRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct SBSummaryRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (SBSummaryRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;	
 
 private:
 	/**
@@ -1072,6 +1105,46 @@ private:
 	// Links //
 	///////////
 	
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, SBSummaryAttributeFromBin> fromBinMethods;
+void sBSummaryIdFromBin( EndianISStream& eiss);
+void sbSummaryUIDFromBin( EndianISStream& eiss);
+void projectUIDFromBin( EndianISStream& eiss);
+void obsUnitSetIdFromBin( EndianISStream& eiss);
+void frequencyFromBin( EndianISStream& eiss);
+void frequencyBandFromBin( EndianISStream& eiss);
+void sbTypeFromBin( EndianISStream& eiss);
+void sbDurationFromBin( EndianISStream& eiss);
+void centerDirectionFromBin( EndianISStream& eiss);
+void numObservingModeFromBin( EndianISStream& eiss);
+void observingModeFromBin( EndianISStream& eiss);
+void numberRepeatsFromBin( EndianISStream& eiss);
+void numScienceGoalFromBin( EndianISStream& eiss);
+void scienceGoalFromBin( EndianISStream& eiss);
+void numWeatherConstraintFromBin( EndianISStream& eiss);
+void weatherConstraintFromBin( EndianISStream& eiss);
+
+void centerDirectionCodeFromBin( EndianISStream& eiss);
+void centerDirectionEquinoxFromBin( EndianISStream& eiss);
+	
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the SBSummaryTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SBSummaryRow* fromBin(EndianISStream& eiss, SBSummaryTable& table, const vector<string>& attributesSeq);	 
 
 };
 

@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalGainRow::~CalGainRow() {
 	}
 
@@ -696,106 +695,144 @@ namespace asdm {
 	
 	}
 	
-	CalGainRow* CalGainRow::fromBin(EndianISStream& eiss, CalGainTable& table) {
+void CalGainRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalGainRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalGainRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalGainRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalGainRow::gainFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		gain =  eiss.readFloat();
+			
+		
+	
+	
+}
+void CalGainRow::gainValidFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		gainValid =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void CalGainRow::fitFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		fit =  eiss.readFloat();
+			
+		
+	
+	
+}
+void CalGainRow::fitWeightFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		fitWeight =  eiss.readFloat();
+			
+		
+	
+	
+}
+void CalGainRow::totalGainValidFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		totalGainValid =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void CalGainRow::totalFitFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		totalFit =  eiss.readFloat();
+			
+		
+	
+	
+}
+void CalGainRow::totalFitWeightFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		totalFitWeight =  eiss.readFloat();
+			
+		
+	
+	
+}
+
+		
+	
+	CalGainRow* CalGainRow::fromBin(EndianISStream& eiss, CalGainTable& table, const vector<string>& attributesSeq) {
 		CalGainRow* row = new  CalGainRow(table);
 		
-		
-		
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->gain =  eiss.readFloat();
-			
-		
-	
-
-	
-	
-		
-			
-		row->gainValid =  eiss.readBoolean();
-			
-		
-	
-
-	
-	
-		
-			
-		row->fit =  eiss.readFloat();
-			
-		
-	
-
-	
-	
-		
-			
-		row->fitWeight =  eiss.readFloat();
-			
-		
-	
-
-	
-	
-		
-			
-		row->totalGainValid =  eiss.readBoolean();
-			
-		
-	
-
-	
-	
-		
-			
-		row->totalFit =  eiss.readFloat();
-			
-		
-	
-
-	
-	
-		
-			
-		row->totalFitWeight =  eiss.readFloat();
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, CalGainAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalGainTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1266,6 +1303,22 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["calDataId"] = &CalGainRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalGainRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalGainRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalGainRow::endValidTimeFromBin; 
+	 fromBinMethods["gain"] = &CalGainRow::gainFromBin; 
+	 fromBinMethods["gainValid"] = &CalGainRow::gainValidFromBin; 
+	 fromBinMethods["fit"] = &CalGainRow::fitFromBin; 
+	 fromBinMethods["fitWeight"] = &CalGainRow::fitWeightFromBin; 
+	 fromBinMethods["totalGainValid"] = &CalGainRow::totalGainValidFromBin; 
+	 fromBinMethods["totalFit"] = &CalGainRow::totalFitFromBin; 
+	 fromBinMethods["totalFitWeight"] = &CalGainRow::totalFitWeightFromBin; 
+		
+	
 	
 	}
 	
@@ -1330,7 +1383,22 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["calDataId"] = &CalGainRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalGainRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalGainRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalGainRow::endValidTimeFromBin; 
+		 fromBinMethods["gain"] = &CalGainRow::gainFromBin; 
+		 fromBinMethods["gainValid"] = &CalGainRow::gainValidFromBin; 
+		 fromBinMethods["fit"] = &CalGainRow::fitFromBin; 
+		 fromBinMethods["fitWeight"] = &CalGainRow::fitWeightFromBin; 
+		 fromBinMethods["totalGainValid"] = &CalGainRow::totalGainValidFromBin; 
+		 fromBinMethods["totalFit"] = &CalGainRow::totalFitFromBin; 
+		 fromBinMethods["totalFitWeight"] = &CalGainRow::totalFitWeightFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1497,6 +1565,27 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalGainAttributeFromBin> CalGainRow::initFromBinMethods() {
+		map<string, CalGainAttributeFromBin> result;
+		
+		result["calDataId"] = &CalGainRow::calDataIdFromBin;
+		result["calReductionId"] = &CalGainRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalGainRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalGainRow::endValidTimeFromBin;
+		result["gain"] = &CalGainRow::gainFromBin;
+		result["gainValid"] = &CalGainRow::gainValidFromBin;
+		result["fit"] = &CalGainRow::fitFromBin;
+		result["fitWeight"] = &CalGainRow::fitWeightFromBin;
+		result["totalGainValid"] = &CalGainRow::totalGainValidFromBin;
+		result["totalFit"] = &CalGainRow::totalFitFromBin;
+		result["totalFitWeight"] = &CalGainRow::totalFitWeightFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

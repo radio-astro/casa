@@ -13,7 +13,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Nome of input visibility file</description>
+		<description>Name of input visibility file</description>
 		<value></value>
 	</param>
 
@@ -135,7 +135,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
    <constraints>
 	<when param="selectdata">
-		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 			<default param="timerange"><value type="string"/></default>
 			<default param="uvrange"><value type="string"/></default>
@@ -143,6 +142,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="scan"><value type="string"/></default>
 			<default param="msselect"><value type="string"/></default>
 		</equals>
+		<equals type="bool" value="False"/>
 	</when>
    </constraints>
 </input>

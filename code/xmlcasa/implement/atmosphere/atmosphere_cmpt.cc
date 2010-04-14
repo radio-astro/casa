@@ -16,14 +16,15 @@
 #include <iostream>
 using namespace std;
 
-#include <ATMSkyStatus.h>
-using namespace atm;
+//#include <ATMSkyStatus.h>
+//using namespace atm;
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
 #include <xmlcasa/atmosphere/atmosphere_cmpt.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
 
+using namespace atm;
 using namespace std;
 using namespace casa;
 
@@ -64,12 +65,10 @@ atmosphere::listAtmosphereTypes()
 {
   std::vector<std::string> rtn;
   try {
-    int i = 0;
-    while (AtmosphereType::name(i) != "") {
+    typeAtm_t typeEnd = typeATM_end;
+    for (unsigned int i = 1; i < typeEnd; i++) {
       ostringstream oss;
-      //oss << i+1 << " - " << AtmosphereType::name(i++);
-      oss << i+1 << " - " << AtmosphereType::name(i);
-      i++;
+      oss << i << " - " << AtmProfile::getAtmosphereType(i);
       rtn.push_back(oss.str());
     }
   } catch (AipsError x) {
@@ -101,7 +100,7 @@ atmosphere::initAtmProfile(const Quantity& altitude,
     Pressure   Pstep((casaQuantity(dP)).getValue("mbar"), "mb");
     double PstepFact(dPm);
     Length    topAtm((casaQuantity(maxAltitude)).getValue("m"), "m");
-    Atmospheretype atmType = (Atmospheretype)atmtype;
+    unsigned int atmType = (unsigned int)atmtype;
 
     ostringstream oss;
     oss<<"BASIC ATMOSPHERIC PARAMETERS TO GENERATE REFERENCE ATMOSPHERIC PROFILE"<<endl;
@@ -263,33 +262,34 @@ atmosphere::getNumLayers()
   return rtn;
 }
 
-int
-atmosphere::getAtmTypeHPT(Quantity& Hx, Quantity& Px, Quantity& Tx)
-{
-  int rtn(-1);
-  try {
-    if (pAtmProfile) {
-      rtn = pAtmProfile->getArraySize();
-      (Hx.value).resize(rtn); Hx.units="km";
-      (Px.value).resize(rtn); Px.units="mbar";
-      (Tx.value).resize(rtn); Tx.units="K";
-      for (int i=0; i < rtn; i++) {
-	(Hx.value)[i] = pAtmProfile->getHx(i);
-	(Px.value)[i] = pAtmProfile->getPx(i);
-	(Tx.value)[i] = pAtmProfile->getTx(i);
-      }
-    } else {
-      *itsLog << LogIO::WARN
-	      << "Please initialize atmospheric profile with initAtmProfile."
-	      << LogIO::POST;
-    }
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    RETHROW(x);
-  }
-  return rtn;
-}
+
+// int
+// atmosphere::getAtmTypeHPT(Quantity& Hx, Quantity& Px, Quantity& Tx)
+// {
+//   int rtn(-1);
+//   try {
+//     if (pAtmProfile) {
+//       rtn = pAtmProfile->getArraySize();
+//       (Hx.value).resize(rtn); Hx.units="km";
+//       (Px.value).resize(rtn); Px.units="mbar";
+//       (Tx.value).resize(rtn); Tx.units="K";
+//       for (int i=0; i < rtn; i++) {
+// 	(Hx.value)[i] = pAtmProfile->getHx(i);
+// 	(Px.value)[i] = pAtmProfile->getPx(i);
+// 	(Tx.value)[i] = pAtmProfile->getTx(i);
+//       }
+//     } else {
+//       *itsLog << LogIO::WARN
+// 	      << "Please initialize atmospheric profile with initAtmProfile."
+// 	      << LogIO::POST;
+//     }
+//   } catch (AipsError x) {
+//     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+// 	    << LogIO::POST;
+//     RETHROW(x);
+//   }
+//   return rtn;
+// }
 
 Quantity
 atmosphere::getGroundWH2O()
@@ -347,7 +347,7 @@ atmosphere::getProfile(Quantity& thickness, Quantity& temperature,
 	watermassdensity.value[i]=
 	  pAtmProfile->
 	  getLayerWaterVaporMassDensity(i).get(watermassdensity.units);
-	water.value[i] = pAtmProfile->getLayerWaterVapor(i).get(water.units);
+	water.value[i] = pAtmProfile->getLayerWaterVaporNumberDensity(i).get(water.units);
 	O3.value[i] = pAtmProfile->getLayerO3(i).get(O3.units);
 	CO.value[i] = pAtmProfile->getLayerCO(i).get(CO.units);
 	N2O.value[i] = pAtmProfile->getLayerN2O(i).get(N2O.units);
@@ -418,8 +418,8 @@ atmosphere::initSpectralWindow(const int nbands, const Quantity& fCenter,
 	pSpectralGrid->add(numChan[i],refChan[i],refFreq[i],chanSep[i]);
       }
       if (pRefractiveIndexProfile != 0) delete pRefractiveIndexProfile;
-      pRefractiveIndexProfile = new RefractiveIndexProfile(*pAtmProfile,
-							   *pSpectralGrid);
+      pRefractiveIndexProfile = new RefractiveIndexProfile(*pSpectralGrid,
+							   *pAtmProfile);
       if (pSkyStatus != 0) delete pSkyStatus;
       pSkyStatus = new SkyStatus(*pRefractiveIndexProfile);
       rstat = numChan[0];
@@ -457,9 +457,8 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
       Frequency refFreq = Frequency(fCenter.value[0],fCenter.units);
       Frequency chanSep = Frequency(fRes.value[0],fRes.units);
       pSpectralGrid->add(numChan,refChan,refFreq,chanSep);
-      //pRefractiveIndexProfile->add(numChan,refChan,refFreq,chanSep);
       if (pRefractiveIndexProfile != 0)	delete pRefractiveIndexProfile;
-      pRefractiveIndexProfile = new RefractiveIndexProfile(*pAtmProfile,*pSpectralGrid);
+      pRefractiveIndexProfile = new RefractiveIndexProfile(*pSpectralGrid,*pAtmProfile);
       rstat = numChan;
     } else {
       *itsLog << LogIO::WARN
@@ -753,7 +752,7 @@ atmosphere::getDryContOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
       dryContOpacity = pRefractiveIndexProfile->getDryContOpacity(spwId,chan).get("neper");
@@ -779,7 +778,7 @@ atmosphere::getO2LinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
       o2LinesOpacity = pRefractiveIndexProfile->getO2LinesOpacity(spwId,chan).get("neper");
@@ -805,7 +804,7 @@ atmosphere::getO3LinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
       o3LinesOpacity = pRefractiveIndexProfile->getO3LinesOpacity(spwId,chan).get("neper");
@@ -831,7 +830,7 @@ atmosphere::getCOLinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
       coLinesOpacity = pRefractiveIndexProfile->getCOLinesOpacity(spwId,chan).get("neper");
@@ -857,7 +856,7 @@ atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
       n2oLinesOpacity = pRefractiveIndexProfile->getN2OLinesOpacity(spwId,chan).get("neper");
@@ -912,7 +911,7 @@ atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
       h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(spwId,chan).get("neper");
@@ -938,7 +937,7 @@ atmosphere::getH2OContOpacity(const int nc, const int spwId)
     if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
-	chan = pSpectralGrid->getRefChan();
+	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
       h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(spwId,chan).get("neper");
@@ -1020,7 +1019,7 @@ atmosphere::getDispersivePhaseDelay(const int nc, const int spwId)
 	chan = nc;
       dpd.value.resize(1);
       std::string units("deg");
-      dpd.value[0] = pSkyStatus->getDispersivePhaseDelay(spwId,chan).get(units);
+      dpd.value[0] = pSkyStatus->getDispersiveH2OPhaseDelay(spwId,chan).get(units);
       dpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1048,7 +1047,7 @@ atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       dwpd.value.resize(1);
       std::string units("deg");
-      dwpd.value[0] = pRefractiveIndexProfile->getDispersiveWetPhaseDelay(spwId,chan).get(units);
+      dwpd.value[0] = pRefractiveIndexProfile->getDispersiveH2OPhaseDelay(spwId,chan).get(units);
       dwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1076,7 +1075,7 @@ atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       ndwpd.value.resize(1);
       std::string units("deg");
-      ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveWetPhaseDelay(spwId,chan).get(units);
+      ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPhaseDelay(spwId,chan).get(units);
       ndwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1132,7 +1131,7 @@ atmosphere::getNonDispersivePhaseDelay(const int nc, const int spwId)
 	chan = nc;
       ndpd.value.resize(1);
       std::string units("deg");
-      ndpd.value[0] = pSkyStatus->getNonDispersivePhaseDelay(spwId,chan).get(units);
+      ndpd.value[0] = pSkyStatus->getNonDispersiveH2OPhaseDelay(spwId,chan).get(units);
       ndpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1161,7 +1160,7 @@ atmosphere::getDispersivePathLength(const int nc, const int spwId)
 	chan = nc;
       dpl.value.resize(1);
       std::string units("m");      
-      dpl.value[0] = pSkyStatus->getDispersivePathLength(spwId,chan).get(units);
+      dpl.value[0] = pSkyStatus->getDispersiveH2OPathLength(spwId,chan).get(units);
       // Remy's test:
       //      std::string units("neper");      
       //      dpl.value[0] = pSkyStatus->getWetOpacity(chan).get(units);
@@ -1195,7 +1194,7 @@ atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       dwpl.value.resize(1);
       std::string units("m");
-      dwpl.value[0] = pRefractiveIndexProfile->getDispersiveWetPathLength(spwId,chan).get(units);
+      dwpl.value[0] = pRefractiveIndexProfile->getDispersiveH2OPathLength(spwId,chan).get(units);
       dwpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1223,7 +1222,7 @@ atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       ndwpl.value.resize(1);
       std::string units("m");
-      ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveWetPathLength(spwId,chan).get(units);
+      ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPathLength(spwId,chan).get(units);
       ndwpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1393,7 +1392,7 @@ atmosphere::getNonDispersivePathLength(const int nc, const int spwId)
 	chan = nc;
       ndpl.value.resize(1);
       std::string units("m");
-      ndpl.value[0] = pSkyStatus->getNonDispersivePathLength(spwId,chan).get(units);
+      ndpl.value[0] = pSkyStatus->getNonDispersiveH2OPathLength(spwId,chan).get(units);
       ndpl.units = units;
     } else {
       *itsLog << LogIO::WARN

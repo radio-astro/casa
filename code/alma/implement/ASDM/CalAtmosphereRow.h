@@ -46,31 +46,28 @@ using std::set;
 using asdmIDL::CalAtmosphereRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Temperature.h>
+using  asdm::Temperature;
+
+#include <Humidity.h>
+using  asdm::Humidity;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <Length.h>
+using  asdm::Length;
+
+#include <Frequency.h>
+using  asdm::Frequency;
+
+#include <Pressure.h>
+using  asdm::Pressure;
 
 
 
@@ -152,28 +149,13 @@ using namespace SyscalMethodMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file CalAtmosphere.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -188,10 +170,13 @@ class CalReductionRow;
 class CalDataRow;
 	
 
+class CalAtmosphereRow;
+typedef void (CalAtmosphereRow::*CalAtmosphereAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The CalAtmosphereRow class is a row of a CalAtmosphereTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class CalAtmosphereRow {
@@ -206,49 +191,6 @@ public:
 	 */
 	CalAtmosphereTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a CalAtmosphereRowIDL struct.
-	 */
-	CalAtmosphereRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct CalAtmosphereRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (CalAtmosphereRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the CalAtmosphereTable to which the row built by deserialization will be parented.
-	  */
-	 static CalAtmosphereRow* fromBin(EndianISStream& eiss, CalAtmosphereTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -1422,12 +1364,126 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalAtmosphereRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param antennaName
+	    
+	 * @param receiverBand
+	    
+	 * @param calDataId
+	    
+	 * @param calReductionId
+	    
+	 * @param startValidTime
+	    
+	 * @param endValidTime
+	    
+	 * @param numFreq
+	    
+	 * @param numLoad
+	    
+	 * @param numReceptor
+	    
+	 * @param forwardEffSpectrum
+	    
+	 * @param frequencyRange
+	    
+	 * @param groundPressure
+	    
+	 * @param groundRelHumidity
+	    
+	 * @param frequencySpectrum
+	    
+	 * @param groundTemperature
+	    
+	 * @param polarizationTypes
+	    
+	 * @param powerSkySpectrum
+	    
+	 * @param powerLoadSpectrum
+	    
+	 * @param syscalType
+	    
+	 * @param tAtmSpectrum
+	    
+	 * @param tRecSpectrum
+	    
+	 * @param tSysSpectrum
+	    
+	 * @param tauSpectrum
+	    
+	 * @param tAtm
+	    
+	 * @param tRec
+	    
+	 * @param tSys
+	    
+	 * @param tau
+	    
+	 * @param water
+	    
+	 * @param waterError
+	    
 	 */ 
 	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param startValidTime
+	    
+	 * @param endValidTime
+	    
+	 * @param numFreq
+	    
+	 * @param numLoad
+	    
+	 * @param numReceptor
+	    
+	 * @param forwardEffSpectrum
+	    
+	 * @param frequencyRange
+	    
+	 * @param groundPressure
+	    
+	 * @param groundRelHumidity
+	    
+	 * @param frequencySpectrum
+	    
+	 * @param groundTemperature
+	    
+	 * @param polarizationTypes
+	    
+	 * @param powerSkySpectrum
+	    
+	 * @param powerLoadSpectrum
+	    
+	 * @param syscalType
+	    
+	 * @param tAtmSpectrum
+	    
+	 * @param tRecSpectrum
+	    
+	 * @param tSysSpectrum
+	    
+	 * @param tauSpectrum
+	    
+	 * @param tAtm
+	    
+	 * @param tRec
+	    
+	 * @param tSys
+	    
+	 * @param tau
+	    
+	 * @param water
+	    
+	 * @param waterError
+	    
+	 */ 
 	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError); 
 		 
 	
@@ -1440,6 +1496,37 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(CalAtmosphereRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a CalAtmosphereRowIDL struct.
+	 */
+	CalAtmosphereRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct CalAtmosphereRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (CalAtmosphereRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;	
 
 private:
 	/**
@@ -1907,6 +1994,63 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, CalAtmosphereAttributeFromBin> fromBinMethods;
+void antennaNameFromBin( EndianISStream& eiss);
+void receiverBandFromBin( EndianISStream& eiss);
+void calDataIdFromBin( EndianISStream& eiss);
+void calReductionIdFromBin( EndianISStream& eiss);
+void startValidTimeFromBin( EndianISStream& eiss);
+void endValidTimeFromBin( EndianISStream& eiss);
+void numFreqFromBin( EndianISStream& eiss);
+void numLoadFromBin( EndianISStream& eiss);
+void numReceptorFromBin( EndianISStream& eiss);
+void forwardEffSpectrumFromBin( EndianISStream& eiss);
+void frequencyRangeFromBin( EndianISStream& eiss);
+void groundPressureFromBin( EndianISStream& eiss);
+void groundRelHumidityFromBin( EndianISStream& eiss);
+void frequencySpectrumFromBin( EndianISStream& eiss);
+void groundTemperatureFromBin( EndianISStream& eiss);
+void polarizationTypesFromBin( EndianISStream& eiss);
+void powerSkySpectrumFromBin( EndianISStream& eiss);
+void powerLoadSpectrumFromBin( EndianISStream& eiss);
+void syscalTypeFromBin( EndianISStream& eiss);
+void tAtmSpectrumFromBin( EndianISStream& eiss);
+void tRecSpectrumFromBin( EndianISStream& eiss);
+void tSysSpectrumFromBin( EndianISStream& eiss);
+void tauSpectrumFromBin( EndianISStream& eiss);
+void tAtmFromBin( EndianISStream& eiss);
+void tRecFromBin( EndianISStream& eiss);
+void tSysFromBin( EndianISStream& eiss);
+void tauFromBin( EndianISStream& eiss);
+void waterFromBin( EndianISStream& eiss);
+void waterErrorFromBin( EndianISStream& eiss);
+
+void alphaSpectrumFromBin( EndianISStream& eiss);
+void forwardEfficiencyFromBin( EndianISStream& eiss);
+void forwardEfficiencyErrorFromBin( EndianISStream& eiss);
+void sbGainFromBin( EndianISStream& eiss);
+void sbGainErrorFromBin( EndianISStream& eiss);
+void sbGainSpectrumFromBin( EndianISStream& eiss);
+	
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the CalAtmosphereTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static CalAtmosphereRow* fromBin(EndianISStream& eiss, CalAtmosphereTable& table, const vector<string>& attributesSeq);	 
 
 };
 

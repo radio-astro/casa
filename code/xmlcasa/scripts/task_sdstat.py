@@ -5,7 +5,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile, format, overwrite):
+def sdstat(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile, format, overwrite):
 
 
         casalog.origin('sdstat')
@@ -33,7 +33,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                 raise Exception, s
 
             #load the data without averaging
-            s=sd.scantable(sdfile,False)
+            s=sd.scantable(sdfile,average=False,antenna=antenna)
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -208,7 +208,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                 del sel
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 	    # Warning for multi-IF data
@@ -623,7 +623,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
         finally:
                 casalog.post('')

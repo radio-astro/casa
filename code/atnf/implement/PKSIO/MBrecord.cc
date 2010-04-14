@@ -319,6 +319,9 @@ MBrecord &MBrecord::operator=(const MBrecord &other)
 
   refBeam = other.refBeam;
 
+  polNo = other.polNo ;
+  srcVelocity = other.srcVelocity ;
+
   return *this;
 }
 
@@ -432,6 +435,9 @@ int MBrecord::extract(const MBrecord &other, int iIF)
   strcpy(tcalTime, other.tcalTime);
 
   refBeam = other.refBeam;
+
+  polNo = other.polNo ;
+  srcVelocity = other.srcVelocity ;
 
   return 0;
 }

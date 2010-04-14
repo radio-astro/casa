@@ -37,16 +37,16 @@ namespace casa {
     class QtDBusApp {
 	public:
 	    static QDBusConnection &connection( );
-	    static QString dbusServiceName( const QString &name, const pid_t pid );
-	    static QString dbusObjectName( const QString &name, const pid_t pid );
+	    QString dbusServiceName( const QString &name, const pid_t pid );
+	    QString dbusObjectName( const QString &name, const pid_t pid );
 	    static QString serviceOwner( const QString &service );
 	    static QString serviceOwner( const std::string &service );
-	    const QString &dbusServiceName( );
-	    const QString &dbusObjectName( );
+	    const QString &dbusServiceName( const QString &name="" );
+	    const QString &dbusObjectName( const QString &name="" );
 	    static bool serviceIsAvailable(const QString &service);
 	    static bool serviceIsAvailable(const std::string &service);
 	    virtual const QString &getName( ) const = 0;
-	    QtDBusApp( ) : service_name(0), object_name(0) { }
+	    QtDBusApp( );
 	    virtual ~QtDBusApp( );
 
 	protected:
@@ -60,7 +60,9 @@ namespace casa {
 	    QString *service_name;
 	    QString *object_name;
 
-	    std::set<int> used_ids;
+/* 	    std::set<int> used_ids; */
+
+	    std::list<int> used_ids;
     };
 
     inline std::string to_string(const QString &other) { return std::string((const char*) other.toAscii().data()); }

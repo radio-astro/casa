@@ -75,7 +75,7 @@ QtProfile::~QtProfile()
 QtProfile::QtProfile(ImageInterface<Float>* img, 
         const char *name, QWidget *parent)
         :QWidget(parent), //MWCCrosshairTool(),
-         pc(0), te(0), analysis(0), 
+         pc(0), te(0), analysis(0), over(0), 
          coordinate("world"), coordinateType(""),
          fileName(name), position(""), yUnit(""), yUnitPrefix(""), 
 	 xpos(""), ypos(""),
@@ -157,6 +157,16 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     downButton->adjustSize();
     connect(downButton, SIGNAL(clicked()), this, SLOT(down()));
 
+    multiProf = new QCheckBox("Overlay", this);
+    multiProf->setCheckState(Qt::Checked);
+    connect(multiProf, SIGNAL(stateChanged(int)), 
+            this, SLOT(setMultiProfile(int)));
+
+    relative = new QCheckBox("Relative", this);
+    relative->setCheckState(Qt::Checked);
+    connect(relative, SIGNAL(stateChanged(int)), 
+            this, SLOT(setRelativeProfile(int)));
+
     autoScale = new QCheckBox("auto scale", this);
     autoScale->setCheckState(Qt::Checked);
     connect(autoScale, SIGNAL(stateChanged(int)), 
@@ -170,6 +180,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     buttonLayout->addWidget(downButton);    
     buttonLayout->addItem(new QSpacerItem(40, zoomInButton->height(),
          QSizePolicy::MinimumExpanding, QSizePolicy::Minimum));
+    buttonLayout->addWidget(multiProf);
+    buttonLayout->addWidget(relative);
     buttonLayout->addWidget(autoScale);
     buttonLayout->addWidget(writeButton);
     //buttonLayout->addWidget(printExpButton);
@@ -192,6 +204,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     chk->addItem("pixel");
     connect(chk, SIGNAL(currentIndexChanged(const QString &)), 
             this, SLOT(changeCoordinate(const QString &)));
+    
     te = new QLineEdit(this);
     te->setReadOnly(true);  
     QLabel *label = new QLabel(this);
@@ -199,25 +212,35 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     label->setAlignment((Qt::Alignment)(Qt::AlignBottom | Qt::AlignRight));
  
     ctype = new QComboBox(this);
+    frameButton_p= new QComboBox(this);
 
     // get reference frame info for freq axis label
     MFrequency::Types freqtype = determineRefFrame(img);
 
-    QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
+    frameType_p = String(MFrequency::showType(freqtype));
     //    ctype->addItem("true velocity ("+nativeRefFrameName+")");
-    ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
-    ctype->addItem("optical velocity ("+nativeRefFrameName+")");
-    ctype->addItem("frequency ("+nativeRefFrameName+")");
+    ctype->addItem("radio velocity"); 
+    ctype->addItem("optical velocity");
+    ctype->addItem("frequency ");
     ctype->addItem("channel");
+    frameButton_p->addItem("LSRK");
+    frameButton_p->addItem("BARY");
+    frameButton_p->addItem("GEO");
+    frameButton_p->addItem("TOPO");
+    Int frameindex=frameButton_p->findText(QString(frameType_p.c_str()));
+    frameButton_p->setCurrentIndex(frameindex);
 
     coordinateType = String(ctype->itemText(0).toStdString());
 
     connect(ctype, SIGNAL(currentIndexChanged(const QString &)), 
             this, SLOT(changeCoordinateType(const QString &)));
+    connect(frameButton_p, SIGNAL(currentIndexChanged(const QString &)), 
+            this, SLOT(changeFrame(const QString &)));
     displayLayout->addWidget(label);
     displayLayout->addWidget(chk);
     displayLayout->addWidget(te);
     displayLayout->addWidget(ctype);
+    displayLayout->addWidget(frameButton_p);
 
     layout()->addItem(displayLayout);
     layout()->addItem(buttonLayout);
@@ -255,6 +278,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
 
     pc->setAutoScale(autoScale->checkState());
        
+    setMultiProfile(true);
 }
 
 MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
@@ -328,6 +352,30 @@ void QtProfile::zoomOut()
 void QtProfile::zoomIn()
 {
    pc->zoomIn();
+}
+
+void QtProfile::setMultiProfile(int st)
+{
+   //qDebug() << "multiple profile state change=" << st;  
+   relative->setChecked(false);
+   if (st) {
+      relative->setEnabled(true);
+   }
+   else {
+      relative->setEnabled(false);
+   }
+   if(lastX.nelements() > 0){
+      wcChanged(coordinate, lastX, lastY);
+   }
+
+}
+
+void QtProfile::setRelativeProfile(int st)
+{
+   //qDebug() << "relative profile state change=" << st;  
+   if(lastX.nelements() > 0){
+      wcChanged(coordinate, lastX, lastY);
+   }
 }
 
 void QtProfile::setAutoScale(int st)
@@ -472,6 +520,17 @@ void QtProfile::writeText()
     for (uInt i = 0; i < z_xval.size(); i++) {
       ts << z_xval(i) << "    " << z_yval(i) << "\n";
     }
+
+    int i = pc->getLineCount();
+    for (int k = 1; k < i; k++) {
+      ts << "\n";
+      ts << "# " << pc->getCurveName(k) << "\n";
+      CurveData data = *(pc->getCurveData(k));
+      int j = data.size() / 2;
+      for (int m = 0; m < j; m++) {
+         ts << data[2 * m] << " " << data[2 * m + 1] << "\n";
+      }
+    }
    
     return ;
 }
@@ -514,6 +573,10 @@ void QtProfile::changeCoordinate(const QString &text) {
   emit coordinateChange(coordinate);
 }
 
+void QtProfile::changeFrame(const QString &text) {
+  frameType_p=String(text.toStdString());
+  changeCoordinateType(QString(coordinateType.c_str()));
+}
 void QtProfile::changeCoordinateType(const QString &text) {
     coordinateType = String(text.toStdString());
     //qDebug() << "coordinate:" << text; 
@@ -525,11 +588,11 @@ void QtProfile::changeCoordinateType(const QString &text) {
     ypos = "";
     position = QString("");
     te->setText(position);
-    pc->clearCurve(0);
+    pc->clearCurve();
 
     QString lbl = text;
-    if (text.contains("freq")) lbl.append(" (GHz)");
-    if (text.contains("velo")) lbl.append(" (km/s)");
+    if (text.contains("freq")) lbl.append(" (GHz) " + QString(frameType_p.c_str()));
+    if (text.contains("velo")) lbl.append(" (km/s) " + QString(frameType_p.c_str()));
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     pc->setPlotSettings(QtPlotSettings());
@@ -626,7 +689,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     lastY.resize(0);
     position = QString("");
     te->setText(position);
-    pc->clearCurve(0);
+    pc->clearCurve();
 }
 
 void QtProfile::wcChanged(const String c,
@@ -638,6 +701,8 @@ void QtProfile::wcChanged(const String c,
 
     //cout << "wcChanged: coordType=" << c 
     //     << " coordinate=" << coordinate << endl;
+
+    //cout << "coordinateType=" << coordinateType << endl;
 
     if (c != coordinate) {
        coordinate = c.chars();
@@ -700,7 +765,8 @@ void QtProfile::wcChanged(const String c,
     //Get Profile Flux density v/s velocity
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
-                coordinate, coordinateType);
+				coordinate, coordinateType, 
+                                0, 0, 0, "", frameType_p);
 
     // scale for better display
     // max absolute display numbers should be between 0.1 and 100.0
@@ -727,8 +793,12 @@ void QtProfile::wcChanged(const String c,
         for (uInt i = 0; i < z_yval.size(); i++) {
             z_yval(i) *= pow(10.,ordersOfM);
         }
+    }
+
+    if(ordersOfM!=0){
 	// correct unit string 
-	if(yUnit.startsWith("(")||yUnit.startsWith("[")||yUnit.startsWith("\"")){
+	if(yUnit.startsWith("(")||yUnit.startsWith("[")||
+           yUnit.startsWith("\"")){
 	    // express factor as number
 	    ostringstream oss;
 	    oss << -ordersOfM;
@@ -770,7 +840,89 @@ void QtProfile::wcChanged(const String c,
     pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
 
     // plot the graph 
-    pc->plotPolyLine(z_xval, z_yval);
+    
+    pc->clearData();
+    pc->plotPolyLine(z_xval, z_yval, fileName);
+
+    QHashIterator<QString, ImageAnalysis*> i(*over);
+    while (i.hasNext() && multiProf->isChecked()) {
+      i.next();
+      //qDebug() << i.key() << ": " << i.value();
+      QString ky = i.key();
+      ImageAnalysis* ana = i.value();
+      Vector<Float> xval(100);
+      Vector<Float> yval(100);
+      ok=ana->getFreqProfile(xv, yv, xval, yval, 
+				coordinate, coordinateType, 
+                                0, 0, 0, "", frameType_p);
+      if (ok) {
+        if(ordersOfM!=0){
+          // correct display y axis values
+          for (uInt i = 0; i < yval.size(); i++) {
+            yval(i) *= pow(10.,ordersOfM);
+          }
+        }
+        Vector<Float> xRel(yval.size());
+        Vector<Float> yRel(yval.size());
+        Int count = 0;
+        if (relative->isChecked()) {
+          ky = ky+ "_rel.";
+          for (uInt i = 0; i < yval.size(); i++) {
+            uInt k = z_yval.size() - 1;
+            //cout << xval(i) << " - " << yval(i) << endl;
+            //cout << z_xval(0) << " + " << z_xval(k) << endl;
+            if (coordinateType.contains("elocity")) {
+            if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+              for (uInt j = 0; j < k; j++) {
+                //cout << z_xval(j) << " + " 
+                //     << z_yval(j) << endl;
+                if (xval(i) <= z_xval(j) && 
+                    xval(i) > z_xval(j + 1)) {
+                  float s = z_xval(j + 1) - z_xval(j);
+                  if (s != 0) {
+                    xRel(count) = xval(i);
+                    yRel(count)= yval(i) - 
+                               (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                                (z_yval(j + 1) - z_yval(j)));
+                    count++;
+                    //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                    //           (z_yval(j + 1) - z_yval(j)));
+
+                  }
+                  break;
+                }
+              }
+            }
+            }
+            else {
+            if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
+              for (uInt j = 0; j < k; j++) {
+                if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
+                  float s = z_xval(j + 1) - z_xval(j);
+                  if (s != 0) {
+                    xRel(count) = xval(i);
+                    yRel(count)= yval(i) - 
+                               (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                                (z_yval(j + 1) - z_yval(j)));
+                    count++;
+                    //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+                    //           (z_yval(j + 1) - z_yval(j)));
+                  }
+                  break;
+                }
+              }
+            }
+            }
+          }
+          xRel.resize(count, True);
+          yRel.resize(count, True);
+          pc->addPolyLine(xRel, yRel, ky);
+        }
+        else {
+          pc->addPolyLine(xval, yval, ky);
+        }
+      }
+    }
 
     lastX.assign(xv);
     lastY.assign(yv);
@@ -806,12 +958,30 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
                    "click/press+drag the assigned button on\n"
                    "the image to get a image profile");
 
-       pc->clearCurve(0);
+       pc->clearCurve();
    }
      
    //cout << "cube=" << cube << endl;
 
 }
 
+void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
+   if (over) {
+      delete over;
+      over = 0;
+   }
+   
+   over = new QHash<QString, ImageAnalysis*>();
+   QHashIterator<QString, ImageInterface<float>*> i(hash);
+   while (i.hasNext()) {
+      i.next();
+      //qDebug() << i.key() << ": " << i.value();
+      QString ky = i.key();
+      ImageAnalysis* ana = new ImageAnalysis(i.value());
+      (*over)[ky] = ana;
+      
+   }
+
 }
 
+}

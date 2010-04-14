@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	StationRow::~StationRow() {
 	}
 
@@ -351,51 +350,68 @@ namespace asdm {
 	
 	}
 	
-	StationRow* StationRow::fromBin(EndianISStream& eiss, StationTable& table) {
+void StationRow::stationIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		stationId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void StationRow::nameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		name =  eiss.readString();
+			
+		
+	
+	
+}
+void StationRow::positionFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	position = Length::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void StationRow::typeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		type = CStationType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+
+		
+	
+	StationRow* StationRow::fromBin(EndianISStream& eiss, StationTable& table, const vector<string>& attributesSeq) {
 		StationRow* row = new  StationRow(table);
 		
-		
-		
-	
-		
-		
-		row->stationId =  Tag::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->name =  eiss.readString();
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->position = Length::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-	
-		
-			
-		row->type = CStationType::from_int(eiss.readInt());
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, StationAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "StationTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -579,6 +595,15 @@ namespace asdm {
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 type = CStationType::from_int(0);
 	
+
+	
+	
+	 fromBinMethods["stationId"] = &StationRow::stationIdFromBin; 
+	 fromBinMethods["name"] = &StationRow::nameFromBin; 
+	 fromBinMethods["position"] = &StationRow::positionFromBin; 
+	 fromBinMethods["type"] = &StationRow::typeFromBin; 
+		
+	
 	
 	}
 	
@@ -615,7 +640,15 @@ type = CStationType::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["stationId"] = &StationRow::stationIdFromBin; 
+		 fromBinMethods["name"] = &StationRow::nameFromBin; 
+		 fromBinMethods["position"] = &StationRow::positionFromBin; 
+		 fromBinMethods["type"] = &StationRow::typeFromBin; 
+			
+	
+			
 	}
 
 	
@@ -690,6 +723,20 @@ type = CStationType::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, StationAttributeFromBin> StationRow::initFromBinMethods() {
+		map<string, StationAttributeFromBin> result;
+		
+		result["stationId"] = &StationRow::stationIdFromBin;
+		result["name"] = &StationRow::nameFromBin;
+		result["position"] = &StationRow::positionFromBin;
+		result["type"] = &StationRow::typeFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

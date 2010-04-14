@@ -36,8 +36,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtDataManager;
-class QtDataOptionsPanel;
 class QtDBusViewerAdaptor;
 class QtDisplayPanelGui;
 
@@ -74,24 +72,14 @@ class QtViewer : public QtViewerBase {
 
  public:
   
-  QtViewer( bool is_server=false );
+  QtViewer( bool is_server=false, const char *dbus_name=0 );
   ~QtViewer();
-  
-  QtDataManager* dataMgr() { return qdm_;  }
 
   // name used to initialize connection to dbus
   static const QString &name( );
 
  public slots:
  
-  virtual void showDataManager();
-  virtual void hideDataManager();
- 
-  virtual void showDataOptionsPanel();
-  virtual void hideDataOptionsPanel();
-  
-  virtual void hideAllSubwindows();
-  
   // create a main display panel Gui 
   virtual QtDisplayPanelGui *createDPG();
    
@@ -109,22 +97,11 @@ class QtViewer : public QtViewerBase {
   
  protected:
  
-  QtDataManager* qdm_;		//# The window for loading data.
-  QtDataOptionsPanel* qdo_;	//# The window for controlling data display.
-
   QtDBusViewerAdaptor* dbus_;
- 
- public:
- 
-  // True by default.  Set False to disable auto-raise of the Data
-  // Options panel whenever the first DD is created.
-  //# Users want to see this panel automatically when there are DDs
-  //# to tweak.  (Apps like clean can turn v_->autoOptionsRaise off,
-  //# if desired (yes, is is (gasp!) public data)).
-  Bool autoDDOptionsShow;
- 
+
  private:
   static QString name_;
+  QString dbus_name_;
     
 };
 

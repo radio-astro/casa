@@ -32,7 +32,11 @@ def flagdata(vis = None,
              end_chan = None,
              bs_cutoff = None,
              ant_cutoff = None,
-             flag_level = None):
+             flag_level = None,
+             minrel = None,
+             maxrel = None,
+             minabs = None,
+             maxabs = None):
 
         casalog.origin('flagdata')
 
@@ -210,6 +214,23 @@ def flagdata(vis = None,
                         # do not backup existing flags
                         stats = fg.run()
                         fg.done()
+
+                        # filter out baselines/antennas/fields/spws/...
+                        # which do not fall within limits
+                        if type(stats) is dict:
+                            for x in stats.keys():
+                                if type(stats[x]) is dict:
+                                    for xx in stats[x].keys():
+                                        flagged = stats[x][xx]
+                                        assert type(flagged) is dict
+                                        assert flagged.has_key('flagged')
+                                        assert flagged.has_key('total')
+                                        if flagged['flagged'] < minabs or \
+                                           (flagged['flagged'] > maxabs and maxabs >= 0) or \
+                                           flagged['flagged']*1.0/flagged['total'] < minrel or \
+                                           flagged['flagged']*1.0/flagged['total'] > maxrel:
+                                                del stats[x][xx]
+                        
                         return stats
                 elif ( mode == 'query' ):
                         print "Sorry - not yet implemented !"
@@ -243,7 +264,7 @@ def manualflag_quack(mode, selectdata, flagbackup, **params):
         if debug: print params
 
         if not selectdata:
-                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = ''       
+                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = ''
         
         vector_mode = False         # Are we in vector mode?
         vector_length = -1          # length of all vectors

@@ -1176,7 +1176,7 @@ else:
             print >>logfile,'* Passed UVFITS max test'
         else:
             print >>logfile,'* FAILED UVFITS max test'
-        print >>logfile,'*  UVFITS MS max '+str(fitstest_immax)
+        print >>logfile,'*  UVFITS MS max '+str(fitstest_src)
     else:
         print >>logfile,'*                               *'
         print >>logfile,'* FAILED UVFITS existence test'

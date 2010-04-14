@@ -116,7 +116,7 @@ void info (const string& message) {
 }
 
 void error(const string& message) {
-	LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::SEVERE));
+	LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
   //os << LogIO::POST;
   exit(1);
 }
@@ -352,12 +352,10 @@ DConverter::DConverter() {
 }
 
 DConverter::~DConverter() {
-  //cout << "DConverter destructor" << endl;
   if (da) {
     delete[] da;
     da = 0;
   }
-  //cout << "DConverter has released space" << endl;
 }
 
 double* DConverter::to1DArray(const vector<double>& v) {
@@ -483,7 +481,6 @@ IConverter::~IConverter() {
     delete[] ia;
     ia = 0;
   }
-  // cout << "IConverter has released space" << endl;
 }
 
 int* IConverter::to1DArray(vector<int> v) {
@@ -565,7 +562,6 @@ SConverter::SConverter() {
 }
 
 SConverter::~SConverter() {
-  //cout << "SConverter destructor" << endl;
   if (sa) {
     delete[] sa;
     sa = 0;
@@ -575,7 +571,6 @@ SConverter::~SConverter() {
     delete[] ssa;
     ssa = 0;
   }
-  //cout << "SConverter has released space" << endl;
 }
 
 char* SConverter::to1DCharArray(vector<string> v) {
@@ -672,7 +667,6 @@ CConverter::~CConverter() {
     delete[] ia;
     ia = 0;
   }
-  // cout << "CConverter has released space" << endl;
 }
 
 
@@ -744,8 +738,6 @@ ComplexDataFilter::ComplexDataFilter() {
 ComplexDataFilter::~ComplexDataFilter() {
   for (unsigned int i = 0; i < storage.size(); i++) 
     delete[] storage.at(i);
-
-  // cout << "In ~ComplexDataFilter" << endl;
 }
 
 float *ComplexDataFilter::to4Pol(int numCorr, int numChan, float* cdata) {
@@ -877,16 +869,23 @@ void spher(const vector<double>& x, vector<double>& s) {
  * is the order number of the insertion of the pair (Tag, int) in the map.
  * 
  */
+
+struct TagCmp {
+  bool operator() (const Tag& t1, const Tag& t2) const {
+    return t1.getTagValue() < t2.getTagValue();
+  }
+};
+
 vector<Tag> reorderSwIds(const ASDM& ds) {
   vector<SpectralWindowRow *> swRs = ds.getSpectralWindow().get();
   vector<DataDescriptionRow *> ddRs = ds.getDataDescription().get();
-  map<Tag, bool> isInDD;
+  map<Tag, bool, TagCmp> isInDD;
 
   for (vector<SpectralWindowRow *>::size_type  i = 0; i < swRs.size(); i++) isInDD[swRs[i]->getSpectralWindowId()] = false;
   for (vector<DataDescriptionRow *>::size_type i = 0; i < ddRs.size(); i++) isInDD[ddRs[i]->getSpectralWindowId()] = true;
 
   vector<Tag> swIdsDD, swIdsNoDD;
-  for (map<Tag, bool>::iterator iter = isInDD.begin(); iter != isInDD.end(); ++iter)
+  for (map<Tag, bool, TagCmp>::iterator iter = isInDD.begin(); iter != isInDD.end(); ++iter)
     if (iter->second) swIdsDD.push_back(iter->first);
     else swIdsNoDD.push_back(iter->first);
 
@@ -940,26 +939,6 @@ EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds, const string& asdmBinary
     for (unsigned int i = 0; i < apc.size(); i++)
       result.set(apc.at(i));
   }
-  /*
-    for (unsigned int i = 0; i < mRs.size(); i++) {
-    string binaryFileName = replace_all_copy(mRs.at(i)->getDataOid().getEntityId().toString(), "/", "_");
-    replace_all(binaryFileName, ":", "_");
-    try {
-    SDMDataObjectReader sdmDataObjectReader;
-    vector<AtmPhaseCorrection> apc = sdmDataObjectReader.read(asdmBinaryPath+"/"+binaryFileName).dataStruct().apc();
-    for (unsigned int i = 0; i < apc.size(); i++)
-    result.set(apc.at(i));
-
-    sdmDataObjectReader.done();
-    }
-    catch (SDMDataObjectReaderException& e1) {
-    cout << e1.getMessage() << endl;
-    }
-    catch (SDMDataObjectException& e2) {
-    cout << e2.getMessage() << endl;
-    }
-    }
-  */
   return result;
 }
 
@@ -1078,7 +1057,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.34 2009/11/24 13:38:53 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.39 2010/02/17 12:03:08 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1476,9 +1455,10 @@ int main(int argc, char *argv[]) {
   // Read/Write the SpectralWindow table.
   //
   vector<Tag> reorderedSwIds = reorderSwIds(*ds); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
+
   map<int, int> swIdx2Idx ;                       // A map which associates old and new index of Spectral Windows before/after reordering.
   for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) swIdx2Idx[reorderedSwIds[i].getTagValue()] = i;
-  
+
   try {
     
     SpectralWindowRow* r = 0;
@@ -1735,6 +1715,7 @@ int main(int argc, char *argv[]) {
   // Read/Write the polarization table
   //
   Stokes::StokesTypes linearCorr[] = { Stokes::XX, Stokes::XY, Stokes::YX, Stokes::YY };
+  Stokes::StokesTypes circularCorr[] = { Stokes::RR, Stokes::RL, Stokes::LR, Stokes::LL };
   int corrProduct1[] = { 0, 0 };
   int corrProduct2[] = { 0, 0, 1, 1};
   int corrProduct4[] = { 0, 0, 0, 1, 1, 0, 1, 1 };
@@ -1769,7 +1750,23 @@ int main(int argc, char *argv[]) {
       }
       else {
 	numCorr  = 4;
-	corrType = linearCorr;
+	StokesParameterMod::StokesParameter sp = r->getCorrType()[0];
+	if ((sp == StokesParameterMod::RR) ||
+	    (sp == StokesParameterMod::LL) ||
+	    (sp == StokesParameterMod::RL) ||
+	    (sp == StokesParameterMod::LR))
+	  corrType = circularCorr;
+	else if ((sp == StokesParameterMod::XX) ||
+		 (sp == StokesParameterMod::XY) ||
+		 (sp == StokesParameterMod::YX) ||
+		 (sp == StokesParameterMod::YY))
+	  corrType = linearCorr;
+	else {
+	  errstream.str("");
+	  errstream << " I don't know what to do with the given Stokes parameters for autocorrelation data" << endl;
+	  error(errstream.str());
+	}
+	  
       }
       
       
@@ -2084,41 +2081,6 @@ int main(int argc, char *argv[]) {
   // Issues :
   // - pointingModelId , phaseTracking, sourceOffset and overTheTop not taken into account.
 
-#if 0
-  PointingTable& pointingT = ds->getPointing(); 
-  {
-    PointingRow* r = 0;
-    int nPointing = pointingT.size();
-    cout << "The dataset has " << nPointing << " pointing(s)..."; 
-    vector<PointingRow *> v = pointingT.get();
-
-    for (int i = 0; i < nPointing; i++) {
-      r = v.at(i);
-      
-      // For now we just adapt the types of the time related informations and compute a mid-time.
-      //
-      double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
-
-      double* pointingOffset = 0;
-      pointingOffset =  DConverter().to1DArray(r->getOffset());
-
-      msFiller->addPointing(r->getAntennaId().getTagValue(),
-			    time,
-			    interval,
-			    r->isNameExists()?r->getName().c_str(): "",
-			    DConverter().to1DArray(r->getPointingDirection()),
-			    DConverter().to1DArray(r->getTarget()),
-			    pointingOffset,
-			    DConverter().to1DArray(r->getEncoder()),
-			    r->getPointingTracking() ? 1 :0);
-
-    }
-
-    if (nPointing) cout << "converted in " << msFiller->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
-    cout << endl;
-  }
-#else
   PointingTable& pointingT = ds->getPointing();
   int nPointing = pointingT.size();
   infostream.str("");
@@ -2143,11 +2105,13 @@ int main(int argc, char *argv[]) {
 	error(errstream.str());
       }
 
+      /*
       if (v[i]->getNumTerm() != 1) {
 	errstream.str("");
-	errstream << "Found numTerm equal to " << v[i]->getNumTerm() <<" at row #" << i <<" and I was expecting 1. Can't go further" << endl;
+	errstream << "Found numTerm equal to " << v[i]->getNumTerm() <<" at row #" << i <<" and I was expecting 1. But it does not really matter..." << endl;
 	error(errstream.str());
       }
+      */
 
       numMSPointingRows += v[i]->getNumSample();
     }
@@ -2207,20 +2171,22 @@ int main(int argc, char *argv[]) {
       vector<double> spherical1(2, 0.0);
       vector<double> spherical2(2, 0.0);
       vector<vector<double> > matrix3x3;
-      for (unsigned int i = 0; i < 3; i++) {
+      for (unsigned int ii = 0; ii < 3; ii++) {
 	matrix3x3.push_back(cartesian1); // cartesian1 is used here just as a way to get a 1D vector of size 3.
       }
       double PSI = M_PI_2;
       double THETA;
       double PHI;
       
-      for (int j = 0 ; j < r->getNumSample(); j++) { // ... must be expanded in numSample MS-Pointing rows.
+      vector<ArrayTimeInterval> timeInterval ;
+      if (r->isSampledTimeIntervalExists()) timeInterval = r->getSampledTimeInterval();
+      for (int j = 0 ; j < numSample; j++) { // ... must be expanded in numSample MS-Pointing rows.
+
 	// ANTENNA_ID
 	antenna_id_[iMSPointingRow]          = antennaId;
 
 	// TIME and INTERVAL
-	if (r->isSampledTimeIntervalExists()) { //if sampledTimeInterval is present use its values.	                                         
-	  vector<ArrayTimeInterval> timeInterval = r->getSampledTimeInterval();
+	if (r->isSampledTimeIntervalExists()) { //if sampledTimeInterval is present use its values.	           
 	  // Here the size of timeInterval will have to be checked against numSample !!
 	  interval_[iMSPointingRow] = ((double) timeInterval.at(j).getDuration().get()) / ArrayTime::unitsInASecond ;
 	  time_[iMSPointingRow] = ((double) timeInterval.at(j).getStart().get()) / ArrayTime::unitsInASecond
@@ -2229,13 +2195,9 @@ int main(int argc, char *argv[]) {
 	else {                                     // otherwise compute TIMEs and INTERVALs from the first values.
 	  interval_[iMSPointingRow]            = interval;
 	  time_[iMSPointingRow]                = time + j*interval;
-	} 
+	}
 
 	// DIRECTION
-#if 0
-	direction_[2*iMSPointingRow]  = pointingDirection.at(j).at(0).get();
-	direction_[2*iMSPointingRow+1]= pointingDirection.at(j).at(1).get();
-#else
 	THETA = target.at(j).at(1).get();
 	PHI   = -M_PI_2 - target.at(j).at(0).get();
 	spherical1[0] = offset.at(j).at(0).get();
@@ -2246,7 +2208,6 @@ int main(int argc, char *argv[]) {
 	spher(cartesian2, spherical2);
 	direction_[2*iMSPointingRow]  = spherical2[0];
 	direction_[2*iMSPointingRow+1]= spherical2[1];
-#endif
 
 	// TARGET
 	target_[2*iMSPointingRow]     = target.at(j).at(0).get();
@@ -2262,9 +2223,10 @@ int main(int argc, char *argv[]) {
 
 	// TRACKING
 	tracking_[iMSPointingRow] = pointingTracking;
-
+	
 	// increment the row number in MS Pointing.
 	iMSPointingRow++;
+
       }
     }
    
@@ -2297,7 +2259,7 @@ int main(int argc, char *argv[]) {
     infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
     info(infostream.str()); 
   }
-#endif
+
 
   // Load the processor table
   //
@@ -2425,7 +2387,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < nWeather; i++) {
       r = v.at(i);      
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  ((double) r->getTimeInterval().getStart().get()) + interval / 2.0 ;
+      double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
         
       DConverter position2DArray;
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
@@ -2434,7 +2396,7 @@ int main(int argc, char *argv[]) {
 	iter->second->addWeather(-1,
 				 time,
 				 interval,
-				 r->getPressure().get(),
+				 r->getPressure().get() / 100.0,  // We consider that ASDM stores Pascals while MS expects hectoPascals
 				 r->getPressureFlag(),
 				 r->getRelHumidity().get(),
 				 r->getRelHumidityFlag(),
@@ -2586,25 +2548,17 @@ int main(int argc, char *argv[]) {
 	  /* compute the UVW */
 
 	  vector<double> uvw(3*vmsDataPtr->v_time.size());
-	  // cout << "3 * v_time.size = " << 3*vmsDataPtr->v_time.size() << endl;
 	  
 	  vector<casa::Vector<casa::Double> > vv_uvw;
 #if DDPRIORITY
-	  // cout << "About to compute UVW with DD priority" << endl;
 	  uvwCoords.uvw_bl(r, sdmBinData.timeSequence(), e_query_cm, 
 			   sdmbin::SDMBinData::dataOrder(),
 			   vv_uvw);
-	  // cout << "computed UVW with DD priority" << endl;
 #else
-	  // cout << "About to compute UVW without DD priority" << endl;
 	  uvwCoords.uvw_bl(r, vmsDataPtr->v_timeCentroid, e_query_cm, 
 			   sdmbin::SDMBinData::dataOrder(),
 			   vv_uvw);
-	  // cout << "computed UVW without DD priority" << endl;
 #endif
-	  // cout << "vv_uvw size = " << vv_uvw.size() << endl;
-
-	  // cout << "About to linearize uvw " << endl;
 	  int k = 0;
 	  for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
 	    uvw[k++] = vv_uvw[iUvw](0); 
@@ -2665,6 +2619,7 @@ int main(int argc, char *argv[]) {
 		       << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
 		       << " rows in the wvr uncorrected MS Main table." << endl;
 	    info(infostream.str());
+
 	    msFillers[AP_UNCORRECTED]->addData(complexData,
 					       (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
 					       (vector<int>&) vmsDataPtr->v_antennaId1,

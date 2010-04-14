@@ -81,10 +81,12 @@ class fitter:
             poly:    use a polynomial of the order given with nonlinear least squares fit 
             lpoly:   use polynomial of the order given with linear least squares fit
             gauss:   fit the number of gaussian specified
+            lorentz: fit the number of lorentzian specified
         Example:
-            fitter.set_function(gauss=2) # will fit two gaussians
             fitter.set_function(poly=3)  # will fit a 3rd order polynomial via nonlinear method
             fitter.set_function(lpoly=3)  # will fit a 3rd order polynomial via linear method
+            fitter.set_function(gauss=2) # will fit two gaussians
+            fitter.set_function(lorentz=2) # will fit two lorentzians
         """
         #default poly order 0
         n=0
@@ -102,6 +104,12 @@ class fitter:
             n = kwargs.get('gauss')
             self.fitfunc = 'gauss'
             self.fitfuncs = [ 'gauss' for i in range(n) ]
+            self.components = [ 3 for i in range(n) ]
+            self.uselinear = False 
+        elif kwargs.has_key('lorentz'):
+            n = kwargs.get('lorentz')
+            self.fitfunc = 'lorentz'
+            self.fitfuncs = [ 'lorentz' for i in range(n) ]
             self.components = [ 3 for i in range(n) ]
             self.uselinear = False 
         else:
@@ -159,7 +167,7 @@ class fitter:
                                                                       self.data.getcycle(i))
                 asaplog.push(out,False)
         self.fitter.setdata(self.x, self.y, self.mask)
-        if self.fitfunc == 'gauss':
+        if self.fitfunc == 'gauss' or self.fitfunc == 'lorentz':
             ps = self.fitter.getparameters()
             if len(ps) == 0 or estimate:
                 self.fitter.estimate()
@@ -177,7 +185,7 @@ class fitter:
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push(msg.message)
+                asaplog.push(str(msg))
                 print_log('ERROR')
             else:
                 raise
@@ -242,7 +250,7 @@ class fitter:
                 return
             else:
                 raise RuntimeError(msg)
-        if self.fitfunc == "gauss" and component is not None:
+        if (self.fitfunc == "gauss" or self.fitfunc == 'lorentz') and component is not None:
             if not self.fitted and sum(self.fitter.getparameters()) == 0:
                 pars = _n_bools(len(self.components)*3, False)
                 fxd = _n_bools(len(pars), False)
@@ -300,20 +308,63 @@ class fitter:
             else:
                 raise ValueError(msg)
 
+    def set_lorentz_parameters(self, peak, centre, fwhm,
+                             peakfixed=0, centrefixed=0,
+                             fwhmfixed=0,
+                             component=0):
+        """
+        Set the Parameters of a 'Lorentzian' component, set with set_function.
+        Parameters:
+            peak, centre, fwhm:  The gaussian parameters
+            peakfixed,
+            centrefixed,
+            fwhmfixed:           Optional parameters to indicate if
+                                 the paramters should be held fixed during
+                                 the fitting process. The default is to keep
+                                 all parameters flexible.
+            component:           The number of the component (Default is the
+                                 component 0)
+        """
+        if self.fitfunc != "lorentz":
+            msg = "Function only operates on Lorentzian components."
+            if rcParams['verbose']:
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
+                return
+            else:
+                raise ValueError(msg)
+        if 0 <= component < len(self.components):
+            d = {'params':[peak, centre, fwhm],
+                 'fixed':[peakfixed, centrefixed, fwhmfixed]}
+            self.set_parameters(d, component)
+        else:
+            msg = "Please select a valid  component."
+            if rcParams['verbose']:
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
+                return
+            else:
+                raise ValueError(msg)
+
     def get_area(self, component=None):
         """
-        Return the area under the fitted gaussian component.
+        Return the area under the fitted gaussian/lorentzian component.
         Parameters:
-              component:   the gaussian component selection,
+              component:   the gaussian/lorentzian component selection,
                            default (None) is the sum of all components
         Note:
-              This will only work for gaussian fits.
+              This will only work for gaussian/lorentzian fits.
         """
         if not self.fitted: return
-        if self.fitfunc == "gauss":
+        if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
             pars = list(self.fitter.getparameters())
             from math import log,pi,sqrt
-            fac = sqrt(pi/log(16.0))
+            if self.fitfunc == "gauss":
+                fac = sqrt(pi/log(16.0))
+            elif self.fitfunc == "lorentz":
+                fac = pi/2.0
             areas = []
             for i in range(len(self.components)):
                 j = i*3
@@ -345,7 +396,7 @@ class fitter:
         errs = list(self.fitter.geterrors())
         cerrs = errs
         if component is not None:
-            if self.fitfunc == "gauss":
+            if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
                 i = 3*component
                 if i < len(errs):
                     cerrs = errs[i:i+3]
@@ -372,7 +423,7 @@ class fitter:
         errs = list(self.fitter.geterrors())
         area = []
         if component is not None:
-            if self.fitfunc == "gauss":
+            if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
                 i = 3*component
                 cpars = pars[i:i+3]
                 cfixed = fixed[i:i+3]
@@ -387,7 +438,7 @@ class fitter:
             cpars = pars
             cfixed = fixed
             cerrs = errs
-            if self.fitfunc == "gauss":
+            if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
                 for c in range(len(self.components)):
                   a = self.get_area(c)
                   area += [a for i in range(3)]
@@ -412,7 +463,7 @@ class fitter:
                     out += '  p%d%s= %3.6f,' % (c,fix,pars[i])
                 c+=1
             out = out[:-1]  # remove trailing ','
-        elif self.fitfunc == 'gauss':
+        elif self.fitfunc == 'gauss' or self.fitfunc == 'lorentz':
             i = 0
             c = 0
             aunit = ''

@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalReductionRow::~CalReductionRow() {
 	}
 
@@ -720,134 +719,172 @@ namespace asdm {
 	
 	}
 	
-	CalReductionRow* CalReductionRow::fromBin(EndianISStream& eiss, CalReductionTable& table) {
-		CalReductionRow* row = new  CalReductionRow(table);
-		
-		
+void CalReductionRow::calReductionIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->calReductionId =  Tag::fromBin(eiss);
+		calReductionId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void CalReductionRow::numAppliedFromBin(EndianISStream& eiss) {
 		
-			
-		row->numApplied =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numApplied =  eiss.readInt();
+			
+		
 	
-		row->appliedCalibrations.clear();
+	
+}
+void CalReductionRow::appliedCalibrationsFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		appliedCalibrations.clear();
 		
 		unsigned int appliedCalibrationsDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < appliedCalibrationsDim1; i++)
 			
-			row->appliedCalibrations.push_back(eiss.readString());
+			appliedCalibrations.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalReductionRow::numParamFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numParam =  eiss.readInt();
+		numParam =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CalReductionRow::paramSetFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->paramSet.clear();
+		paramSet.clear();
 		
 		unsigned int paramSetDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < paramSetDim1; i++)
 			
-			row->paramSet.push_back(eiss.readString());
+			paramSet.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalReductionRow::numInvalidConditionsFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numInvalidConditions =  eiss.readInt();
+		numInvalidConditions =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CalReductionRow::invalidConditionsFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->invalidConditions.clear();
+		invalidConditions.clear();
 		
 		unsigned int invalidConditionsDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < invalidConditionsDim1; i++)
 			
-			row->invalidConditions.push_back(CInvalidatingCondition::from_int(eiss.readInt()));
+			invalidConditions.push_back(CInvalidatingCondition::from_int(eiss.readInt()));
 			
 	
 
 		
 	
+	
+}
+void CalReductionRow::timeReducedFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		timeReduced =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalReductionRow::messagesFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		messages =  eiss.readString();
+			
+		
+	
+	
+}
+void CalReductionRow::softwareFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		software =  eiss.readString();
+			
+		
+	
+	
+}
+void CalReductionRow::softwareVersionFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		softwareVersion =  eiss.readString();
+			
+		
+	
+	
+}
 
-	
-		
-		
-		row->timeReduced =  ArrayTime::fromBin(eiss);
 		
 	
-
-	
-	
+	CalReductionRow* CalReductionRow::fromBin(EndianISStream& eiss, CalReductionTable& table, const vector<string>& attributesSeq) {
+		CalReductionRow* row = new  CalReductionRow(table);
 		
-			
-		row->messages =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->software =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->softwareVersion =  eiss.readString();
-			
-		
-	
-
-		
-		
-		
-		
+		map<string, CalReductionAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalReductionTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1280,6 +1317,22 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["calReductionId"] = &CalReductionRow::calReductionIdFromBin; 
+	 fromBinMethods["numApplied"] = &CalReductionRow::numAppliedFromBin; 
+	 fromBinMethods["appliedCalibrations"] = &CalReductionRow::appliedCalibrationsFromBin; 
+	 fromBinMethods["numParam"] = &CalReductionRow::numParamFromBin; 
+	 fromBinMethods["paramSet"] = &CalReductionRow::paramSetFromBin; 
+	 fromBinMethods["numInvalidConditions"] = &CalReductionRow::numInvalidConditionsFromBin; 
+	 fromBinMethods["invalidConditions"] = &CalReductionRow::invalidConditionsFromBin; 
+	 fromBinMethods["timeReduced"] = &CalReductionRow::timeReducedFromBin; 
+	 fromBinMethods["messages"] = &CalReductionRow::messagesFromBin; 
+	 fromBinMethods["software"] = &CalReductionRow::softwareFromBin; 
+	 fromBinMethods["softwareVersion"] = &CalReductionRow::softwareVersionFromBin; 
+		
+	
 	
 	}
 	
@@ -1344,7 +1397,22 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["calReductionId"] = &CalReductionRow::calReductionIdFromBin; 
+		 fromBinMethods["numApplied"] = &CalReductionRow::numAppliedFromBin; 
+		 fromBinMethods["appliedCalibrations"] = &CalReductionRow::appliedCalibrationsFromBin; 
+		 fromBinMethods["numParam"] = &CalReductionRow::numParamFromBin; 
+		 fromBinMethods["paramSet"] = &CalReductionRow::paramSetFromBin; 
+		 fromBinMethods["numInvalidConditions"] = &CalReductionRow::numInvalidConditionsFromBin; 
+		 fromBinMethods["invalidConditions"] = &CalReductionRow::invalidConditionsFromBin; 
+		 fromBinMethods["timeReduced"] = &CalReductionRow::timeReducedFromBin; 
+		 fromBinMethods["messages"] = &CalReductionRow::messagesFromBin; 
+		 fromBinMethods["software"] = &CalReductionRow::softwareFromBin; 
+		 fromBinMethods["softwareVersion"] = &CalReductionRow::softwareVersionFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1510,6 +1578,27 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalReductionAttributeFromBin> CalReductionRow::initFromBinMethods() {
+		map<string, CalReductionAttributeFromBin> result;
+		
+		result["calReductionId"] = &CalReductionRow::calReductionIdFromBin;
+		result["numApplied"] = &CalReductionRow::numAppliedFromBin;
+		result["appliedCalibrations"] = &CalReductionRow::appliedCalibrationsFromBin;
+		result["numParam"] = &CalReductionRow::numParamFromBin;
+		result["paramSet"] = &CalReductionRow::paramSetFromBin;
+		result["numInvalidConditions"] = &CalReductionRow::numInvalidConditionsFromBin;
+		result["invalidConditions"] = &CalReductionRow::invalidConditionsFromBin;
+		result["timeReduced"] = &CalReductionRow::timeReducedFromBin;
+		result["messages"] = &CalReductionRow::messagesFromBin;
+		result["software"] = &CalReductionRow::softwareFromBin;
+		result["softwareVersion"] = &CalReductionRow::softwareVersionFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

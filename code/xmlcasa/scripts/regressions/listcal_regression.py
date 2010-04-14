@@ -769,7 +769,7 @@ else:
     tstutl.maketestdir(prefix) # create test dir, overwrite preexisting
     load_ngc4826(prefix,msname,caltableName) # Build data from scratch
 
-# Setup listvis input and run
+# Setup listcal input and run
 default(listcal)
 vis                 =     msname        #  Name of input visibility file
 caltable            = caltableName      #  Input calibration table to list
@@ -847,7 +847,7 @@ print ""
 # # If running in automated mode, remove all data files.
 # if (automate): 
 #     print "Removing all listcal_regression files..."
-#     os.system('rm -f '+regressionDir) # remove all listvis output
+#     os.system('rm -f '+regressionDir) # remove all listcal output
 
 print "END: listcal_regression.py"
 

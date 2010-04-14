@@ -49,13 +49,10 @@ using namespace std;
 #include "ATMFrequency.h"
 #include "ATMWaterVaporRadiometer.h"
 #include "ATMWVRMeasurement.h"
-#include "ATMAtmosphereType.h"
-#include "ATMType.h"
 #include "ATMProfile.h"
 #include "ATMSpectralGrid.h"
 #include "ATMRefractiveIndex.h"
 #include "ATMSkyStatus.h"
-#include "ATMTypeName.h"
 #include "ATMAngle.h"
 
 
@@ -150,7 +147,7 @@ pAtmProf
 simpleMKAtmo(void)
 {
   // Atmospheric type (to reproduce behavior above the tropopause)
-  atm::Atmospheretype atmType=atm::tropical; 
+  unsigned int  atmType=1; 
   // Ground temperature
   atm::Temperature T( 268.15,"K");
   // Ground Pressure
@@ -191,18 +188,21 @@ simpleMKAtmo(void)
 struct specWndPars
 {
   /// Number of channels per spectral window
-  static const size_t nc=25;
+  const size_t nc;
   /// The referece chanel for the spectral windows
-  static const size_t rc=13;
+  const size_t rc;
   /// LO frequency of the system
-  static const double cf=183.310;
+  const double cf;
 
   /// Filter IF Frequencies
   std::vector<double> f_cent;
   /// Filter bandwidths
   std::vector<double> f_bw;
 
-  specWndPars(void)
+  specWndPars(void):
+    nc(25),
+    rc(13),
+    cf(183.310)
   {
     const double filter_c[] = {-5.225, -3.18, -1.9475, -0.882, 0.882, 1.9475, 3.18, 5.225};
     const double filter_i[] = {2.650,  1.4, 0.845, 0.206, 0.206, 0.845, 1.4, 2.650};  

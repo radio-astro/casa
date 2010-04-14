@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalCurveRow::~CalCurveRow() {
 	}
 
@@ -1199,153 +1198,192 @@ namespace asdm {
 
 	}
 	
-	CalCurveRow* CalCurveRow::fromBin(EndianISStream& eiss, CalCurveTable& table) {
-		CalCurveRow* row = new  CalCurveRow(table);
-		
-		
+void CalCurveRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
 			
 		
+	
+	
+}
+void CalCurveRow::typeCurveFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		typeCurve = CCalCurveType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalCurveRow::receiverBandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalCurveRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalCurveRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalCurveRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalCurveRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalCurveRow::frequencyRangeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	frequencyRange = Frequency::from1DBin(eiss);	
 	
 
+		
+	
+	
+}
+void CalCurveRow::numAntennaFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->typeCurve = CCalCurveType::from_int(eiss.readInt());
+		numAntenna =  eiss.readInt();
 			
 		
 	
-
 	
-	
+}
+void CalCurveRow::numPolyFromBin(EndianISStream& eiss) {
 		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-			
-	
-	row->frequencyRange = Frequency::from1DBin(eiss);	
-	
-
-		
-	
-
 	
 	
 		
 			
-		row->numAntenna =  eiss.readInt();
+		numPoly =  eiss.readInt();
 			
 		
 	
-
 	
-	
+}
+void CalCurveRow::numReceptorFromBin(EndianISStream& eiss) {
 		
-			
-		row->numPoly =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		numReceptor =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CalCurveRow::antennaNamesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->antennaNames.clear();
+		antennaNames.clear();
 		
 		unsigned int antennaNamesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < antennaNamesDim1; i++)
 			
-			row->antennaNames.push_back(eiss.readString());
+			antennaNames.push_back(eiss.readString());
 			
 	
 
 		
 	
-
+	
+}
+void CalCurveRow::refAntennaNameFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->refAntennaName =  eiss.readString();
+		refAntennaName =  eiss.readString();
 			
 		
 	
-
+	
+}
+void CalCurveRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalCurveRow::curveFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->curve.clear();
+		curve.clear();
 			
 		unsigned int curveDim1 = eiss.readInt();
 		unsigned int curveDim2 = eiss.readInt();
@@ -1363,56 +1401,63 @@ namespace asdm {
 				}
 				curveAux2.push_back(curveAux1);
 			}
-			row->curve.push_back(curveAux2);
+			curve.push_back(curveAux2);
 		}	
 	
 
 		
 	
-
+	
+}
+void CalCurveRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->reducedChiSquared.clear();
+		reducedChiSquared.clear();
 		
 		unsigned int reducedChiSquaredDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
 			
-			row->reducedChiSquared.push_back(eiss.readDouble());
+			reducedChiSquared.push_back(eiss.readDouble());
 			
 	
 
 		
 	
+	
+}
 
+void CalCurveRow::numBaselineFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->numBaselineExists = eiss.readBoolean();
-	if (row->numBaselineExists) {
+	numBaselineExists = eiss.readBoolean();
+	if (numBaselineExists) {
 		
 	
 	
 		
 			
-		row->numBaseline =  eiss.readInt();
+		numBaseline =  eiss.readInt();
 			
 		
 	
 
 	}
-
-	row->rmsExists = eiss.readBoolean();
-	if (row->rmsExists) {
+	
+}
+void CalCurveRow::rmsFromBin(EndianISStream& eiss) {
+		
+	rmsExists = eiss.readBoolean();
+	if (rmsExists) {
 		
 	
 	
 		
 			
 	
-		row->rms.clear();
+		rms.clear();
 		
 		unsigned int rmsDim1 = eiss.readInt();
 		unsigned int rmsDim2 = eiss.readInt();
@@ -1423,7 +1468,7 @@ namespace asdm {
 			
 			rmsAux1.push_back(eiss.readFloat());
 			
-			row->rms.push_back(rmsAux1);
+			rms.push_back(rmsAux1);
 		}
 	
 	
@@ -1432,8 +1477,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	CalCurveRow* CalCurveRow::fromBin(EndianISStream& eiss, CalCurveTable& table, const vector<string>& attributesSeq) {
+		CalCurveRow* row = new  CalCurveRow(table);
 		
+		map<string, CalCurveAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalCurveTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2211,6 +2269,29 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["atmPhaseCorrection"] = &CalCurveRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["typeCurve"] = &CalCurveRow::typeCurveFromBin; 
+	 fromBinMethods["receiverBand"] = &CalCurveRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalCurveRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalCurveRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalCurveRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalCurveRow::endValidTimeFromBin; 
+	 fromBinMethods["frequencyRange"] = &CalCurveRow::frequencyRangeFromBin; 
+	 fromBinMethods["numAntenna"] = &CalCurveRow::numAntennaFromBin; 
+	 fromBinMethods["numPoly"] = &CalCurveRow::numPolyFromBin; 
+	 fromBinMethods["numReceptor"] = &CalCurveRow::numReceptorFromBin; 
+	 fromBinMethods["antennaNames"] = &CalCurveRow::antennaNamesFromBin; 
+	 fromBinMethods["refAntennaName"] = &CalCurveRow::refAntennaNameFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalCurveRow::polarizationTypesFromBin; 
+	 fromBinMethods["curve"] = &CalCurveRow::curveFromBin; 
+	 fromBinMethods["reducedChiSquared"] = &CalCurveRow::reducedChiSquaredFromBin; 
+		
+	
+	 fromBinMethods["numBaseline"] = &CalCurveRow::numBaselineFromBin; 
+	 fromBinMethods["rms"] = &CalCurveRow::rmsFromBin; 
 	
 	}
 	
@@ -2317,7 +2398,29 @@ receiverBand = CReceiverBand::from_int(0);
 		else
 			rmsExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["atmPhaseCorrection"] = &CalCurveRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["typeCurve"] = &CalCurveRow::typeCurveFromBin; 
+		 fromBinMethods["receiverBand"] = &CalCurveRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalCurveRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalCurveRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalCurveRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalCurveRow::endValidTimeFromBin; 
+		 fromBinMethods["frequencyRange"] = &CalCurveRow::frequencyRangeFromBin; 
+		 fromBinMethods["numAntenna"] = &CalCurveRow::numAntennaFromBin; 
+		 fromBinMethods["numPoly"] = &CalCurveRow::numPolyFromBin; 
+		 fromBinMethods["numReceptor"] = &CalCurveRow::numReceptorFromBin; 
+		 fromBinMethods["antennaNames"] = &CalCurveRow::antennaNamesFromBin; 
+		 fromBinMethods["refAntennaName"] = &CalCurveRow::refAntennaNameFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalCurveRow::polarizationTypesFromBin; 
+		 fromBinMethods["curve"] = &CalCurveRow::curveFromBin; 
+		 fromBinMethods["reducedChiSquared"] = &CalCurveRow::reducedChiSquaredFromBin; 
+			
+	
+		 fromBinMethods["numBaseline"] = &CalCurveRow::numBaselineFromBin; 
+		 fromBinMethods["rms"] = &CalCurveRow::rmsFromBin; 
+			
 	}
 
 	
@@ -2531,6 +2634,34 @@ receiverBand = CReceiverBand::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalCurveAttributeFromBin> CalCurveRow::initFromBinMethods() {
+		map<string, CalCurveAttributeFromBin> result;
+		
+		result["atmPhaseCorrection"] = &CalCurveRow::atmPhaseCorrectionFromBin;
+		result["typeCurve"] = &CalCurveRow::typeCurveFromBin;
+		result["receiverBand"] = &CalCurveRow::receiverBandFromBin;
+		result["calDataId"] = &CalCurveRow::calDataIdFromBin;
+		result["calReductionId"] = &CalCurveRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalCurveRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalCurveRow::endValidTimeFromBin;
+		result["frequencyRange"] = &CalCurveRow::frequencyRangeFromBin;
+		result["numAntenna"] = &CalCurveRow::numAntennaFromBin;
+		result["numPoly"] = &CalCurveRow::numPolyFromBin;
+		result["numReceptor"] = &CalCurveRow::numReceptorFromBin;
+		result["antennaNames"] = &CalCurveRow::antennaNamesFromBin;
+		result["refAntennaName"] = &CalCurveRow::refAntennaNameFromBin;
+		result["polarizationTypes"] = &CalCurveRow::polarizationTypesFromBin;
+		result["curve"] = &CalCurveRow::curveFromBin;
+		result["reducedChiSquared"] = &CalCurveRow::reducedChiSquaredFromBin;
+		
+		
+		result["numBaseline"] = &CalCurveRow::numBaselineFromBin;
+		result["rms"] = &CalCurveRow::rmsFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -33,9 +33,9 @@
 	
 	</description>
 	<input>
-		<param type="string" name="infile" mustexist="true">
+		<param type="string" name="infile" mustexist="true" allowblank='true'>
 			<description> (Optional)  Name of file to visualize.</description>
-			<value>.</value>
+			<value></value>
 		</param>
 
 		<param type="string" name="displaytype">
@@ -43,17 +43,52 @@
 			<value>raster</value>
 		</param>
 
-		<param type="bool" name="connection">
-			<description> (Optional)  Return a connection object for the newly opened viewer.</description>
+		<param type="int" name="frame">
+			<description> (Optional)  access a specific spectral frame from the image cube</description>
+			<value>0</value>
+		</param>
+
+		<param type="int" name="zoom">
+			<description> (Optional)  zoom in/out by increments</description>
+			<value>1</value>
+		</param>
+
+		<param type="string" name="outfile">
+			<description> (Optional)  name of the output file to generate</description>
+			<value></value>
+		</param>
+
+		<param type="double" name="outscale">
+			<description> (Optional)  amount to scale output bitmap formats (non-PS, non-PDF)</description>
+			<value>1.0</value>
+		</param>
+
+		<param type="int" name="outdpi">
+			<description> (Optional)  output DPI for PS/PDF</description>
+			<value>300</value>
+		</param>
+
+		<param type="string" name="outformat">
+			<description> (Optional)  format of the output e.g. jpg or pdf (this is overridden by the output files extension</description>
+			<value>jpg</value>
+		</param>
+
+		<param type="bool" name="outlandscape">
+			<description> (Optional)  should the output mode be landscape (PS or PDF)</description>
 			<value>False</value>
+		</param>
+
+		<param type="bool" name="gui">
+			<description> (Optional)  Display the panel in a GUI.</description>
+			<value>True</value>
 		</param>
 
                 <constraints>
                 </constraints>
 	</input>
-<returns type="void"/>
+	<returns type="void"/>
 
-<example>
+	<example>
 
 	examples of usage:
 
@@ -85,6 +120,6 @@
 	        example:  viewer infile='my.ms'
 		obsolete: viewer infile='my.ms', filetype='ms'
 
- </example>
- </task>
- </casaxml>
+	</example>
+</task>
+</casaxml>

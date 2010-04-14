@@ -152,7 +152,7 @@ Synopsis
 
 <xsl:template name="doparam">  
 <xsl:for-each select="aps:param">
-<xsl:value-of select="@name"/> <xsl:text disable-output-escaping="yes">&amp;</xsl:text> <xsl:if test="@units"> <xsl:value-of select="@units"/></xsl:if><xsl:text disable-output-escaping="yes">&amp;</xsl:text> \multicolumn{2}{p{3.36in}|}{<xsl:value-of select="aps:description" disable-output-escaping="yes"/>}\\
+<xsl:value-of select="@name"/> <xsl:text disable-output-escaping="yes">&amp;</xsl:text> <xsl:if test="@units"> <xsl:value-of select="@units"/></xsl:if><xsl:text disable-output-escaping="yes">&amp;</xsl:text> \multicolumn{2}{p{3.36in}|}{<xsl:value-of select="aps:description" disable-output-escaping="no"/>}\\
 <xsl:text disable-output-escaping="yes">&amp; &amp;allowed: &amp; </xsl:text><xsl:value-of select="@type"/> <xsl:if test="@units"> <xsl:value-of select="@units"/></xsl:if>\\
 <xsl:text disable-output-escaping="yes">&amp; &amp;Default: &amp; </xsl:text>
 <xsl:apply-templates select="aps:any"/>

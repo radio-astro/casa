@@ -1,57 +1,72 @@
-using namespace std;
-#include <string>
-#include "ATMTemperature.h"
+/*******************************************************************************
+ * ALMA - Atacama Large Millimiter Array
+ * (c) Institut de Radioastronomie Millimetrique, 2009
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ *
+ * "@(#) $Id: ATMTemperature.cpp,v 1.6 2010/02/19 01:49:14 dbroguie Exp $"
+ *
+ * who       when      what
+ * --------  --------  ----------------------------------------------
+ * pardo     24/03/09  created
+ */
 
-namespace atm {
-  
-  // Constructors
-  
-  Temperature::Temperature():valueIS_(0.0){}
-  Temperature::Temperature(double temperature):valueIS_(temperature){}
-  Temperature::Temperature(double temperature, string units){
-    if(units=="mK"||units=="mk"){
-      valueIS_=1.0E-3*temperature;
-    }else if(units=="K"||units=="k"){
-      valueIS_=temperature;
-    }else if(units=="C"||units=="c"){
-      valueIS_=temperature+273.16;
-    }else{
-      valueIS_=temperature;
-    }
-  }
-  Temperature::~Temperature(){}
-  
-  // Accessors
-  double Temperature::get()const{return valueIS_;}
-  double Temperature::get(string units)const{  
-    if(units=="mK"){
-      return 1.0E3*valueIS_;
-    }else if(units=="K"){
-      return valueIS_;
-    }else if(units=="C"||units=="c"){
-      return valueIS_-273.16;
-    }else{
-      return valueIS_;
-    }
-  }
-  
-  
-  Temperature& Temperature::operator=  (const Temperature & rhs){valueIS_=rhs.valueIS_; return *this;}
-  Temperature& Temperature::operator=  (const double   & rhs){valueIS_=rhs;             return *this;}
-  Temperature Temperature::operator+  (const Temperature & rhs){return Temperature(valueIS_+rhs.get());}
-  Temperature Temperature::operator-  (const Temperature & rhs){return Temperature(valueIS_-rhs.get());}
-  Temperature Temperature::operator*  (const double   & scf){return Temperature(valueIS_*scf);}
-  Temperature Temperature::operator*  (const float    & scf){return Temperature(valueIS_*(double)scf);}
-  Temperature Temperature::operator*  (const int      & scf){return Temperature(valueIS_*(double)scf);}
-  Temperature Temperature::operator/  (const double   & scf){return Temperature(valueIS_/scf);}
-  Temperature Temperature::operator/  (const float    & scf){return Temperature(valueIS_/(double)scf);}
-  Temperature Temperature::operator/  (const int      & scf){return Temperature(valueIS_/(double)scf);}
-  
-  bool      Temperature::operator<  (const Temperature & rhs)const {return (valueIS_<rhs.get());}
-  bool      Temperature::operator>  (const Temperature & rhs)const {return (valueIS_>rhs.get());}
-  bool      Temperature::operator<= (const Temperature & rhs)const {return (valueIS_<=rhs.get());}
-  bool      Temperature::operator>= (const Temperature & rhs)const {return (valueIS_>=rhs.get());}
-  bool      Temperature::operator== (const Temperature & rhs)const {return (valueIS_==rhs.get());}
-  bool      Temperature::operator!= (const Temperature & rhs)const {return (valueIS_!=rhs.get());}
-  
+#include "ATMTemperature.h"
+#include "ATMCommon.h"
+
+ATM_NAMESPACE_BEGIN
+
+Temperature::Temperature() :
+  valueIS_(0.0)
+{
 }
+
+Temperature::Temperature(double temperature) :
+  valueIS_(temperature)
+{
+}
+
+Temperature::Temperature(double temperature, const string &units)
+{
+  if(units == "mK" || units == "mk") {
+    valueIS_ = 1.0E-3 * temperature;
+  } else if(units == "K" || units == "k") {
+    valueIS_ = temperature;
+  } else if(units == "C" || units == "c") {
+    valueIS_ = temperature + 273.16;
+  } else if(units == "F" || units == "f") {
+    valueIS_ = (temperature-32.0)*(5./9.)+273.16;
+  } else {
+    // Exception: Unknown temperature unit. S.I. used (Kelvin)
+    valueIS_ = temperature;
+  }
+}
+
+double Temperature::get(const string &units) const
+{
+  if(units == "mK") {
+    return 1.0E3 * valueIS_;
+  } else if(units == "K") {
+    return valueIS_;
+  } else if(units == "C" || units == "c") {
+    return valueIS_ - 273.16;
+  } else if(units == "F" || units == "f") {
+    return (valueIS_ - 273.16)*(9./5.)+32.0;
+  } else {
+    // Exception: Unknown temperature unit. S.I. used (Kelvin)
+    return valueIS_;
+  }
+}
+ATM_NAMESPACE_END

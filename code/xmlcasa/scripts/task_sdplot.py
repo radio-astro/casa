@@ -5,8 +5,7 @@ import asap as sd
 import pylab as pl
 import Tkinter as Tk
 
-def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
-
+def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
         casalog.origin('sdplot')
 
         ###
@@ -35,7 +34,7 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                 isScantable=True
 
             #load the data without averaging
-            s=sd.scantable(sdfile,scanaverage)
+            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -236,7 +235,7 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                 s.set_selection(sel)
             except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
             del sel
 
@@ -332,8 +331,10 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 
                     # Plot final spectrum
                     # each IF is separate panel, pols stacked
-                    sd.plotter.plot(spave)
-                    sd.plotter.set_mode(stacking=stack,panelling=panel)
+		    refresh=False
+                    #sd.plotter.plot(spave)
+                    sd.plotter.set_data(spave,refresh=refresh)
+                    sd.plotter.set_mode(stacking=stack,panelling=panel,refresh=refresh)
 
 		    # Set colormap, linestyles, and linewidth of plots
 		    
@@ -369,21 +370,21 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 			    if ncolor > 1 and lines is not None:
 				    #print "WARNING: 'linestyles' is valid only for single colour plot.\n...Ignoring 'linestyles'."
                                     casalog.post( "'linestyles' is valid only for single colour plot.\n...Ignoring 'linestyles'.", priority = 'WARN' )
-			    sd.plotter.set_colors(colmap)
+			    sd.plotter.set_colors(colmap,refresh=refresh)
 		    else:
 			    if lines is not None:
 				    tmpcol="black"
 				    #print "INFO: plot colour is set to '",tmpcol,"'"
                                     casalog.post( "plot colour is set to '"+tmpcol+"'" )
-				    sd.plotter.set_colors(tmpcol)
+				    sd.plotter.set_colors(tmpcol,refresh=refresh)
 		    # set linestyles and/or linewidth
 		    # so far, linestyles can be specified only if a color is assigned
 		    #if lines is not None or linewidth is not None:
-		    #        sd.plotter.set_linestyles(lines, linewidth)
-		    sd.plotter.set_linestyles(lines, lwidth)
+		    #        sd.plotter.set_linestyles(lines, linewidth,refresh=refresh)
+		    sd.plotter.set_linestyles(lines, lwidth,refresh=refresh)
                     # Plot red x-axis at y=0 (currently disabled)
-                    sd.plotter.set_histogram(hist=histogram)
                     # sd.plotter.axhline(color='r',linewidth=2)
+		    sd.plotter.set_histogram(hist=histogram,refresh=refresh)
 
                     # Set axis ranges (if requested)
                     if len(flrange)==1:
@@ -394,15 +395,18 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                             casalog.post( "sprange needs 2 limits - ignoring" )
                     if ( len(sprange) > 1 ):
                             if ( len(flrange) > 1 ):
-                                    sd.plotter.set_range(sprange[0],sprange[1],flrange[0],flrange[1])
+                                    sd.plotter.set_range(sprange[0],sprange[1],flrange[0],flrange[1],refresh=refresh)
                             else:
-                                    sd.plotter.set_range(sprange[0],sprange[1])
+				    sd.plotter.set_range(sprange[0],sprange[1],refresh=refresh)
                     elif ( len(flrange) > 1 ):
-                            sd.plotter.set_range(ystart=flrange[0],yend=flrange[1])
+			    sd.plotter.set_range(ystart=flrange[0],yend=flrange[1],refresh=refresh)
                     else:
                     # Set default range explicitly (in case range was ever set)
-                            sd.plotter.set_range()
+                            sd.plotter.set_range(refresh=refresh)
 
+		    # Need the actual plotting before setting picker
+		    sd.plotter.plot()
+		    
 		    # Set picker to all the spectra
 		    if sd.plotter._visible:
 			    npanel=len(sd.plotter._plotter.subplots)
@@ -501,7 +505,7 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 
         except Exception, instance:
                 #print '***Error***',instance
-                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( str(instance), priority = 'ERROR' )
                 return
 
 ########################################

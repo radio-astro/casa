@@ -69,6 +69,7 @@ class PKSFITSreader : public PKSreader
     // Open the FITS file for reading.
     virtual Int open(
         const String fitsName,
+        const String antenna,
         Vector<Bool> &beams,
         Vector<Bool> &IFs,
         Vector<uInt> &nChan,

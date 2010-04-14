@@ -53,8 +53,6 @@ class atmosphere
 
     int getNumLayers();
 
-    int getAtmTypeHPT(Quantity& Hx, Quantity& Px, Quantity& Tx);
-
     Quantity getGroundWH2O();
 
     std::string getProfile(Quantity& thickness, Quantity& temperature, Quantity& watermassdensity, Quantity& water, Quantity& pressure, Quantity& O3, Quantity& CO, Quantity& N2O);

@@ -11,7 +11,7 @@ class scantable(Scantable):
         The ASAP container for scans
     """
 
-    def __init__(self, filename, average=None, unit=None, getpt=None):
+    def __init__(self, filename, average=None, unit=None, getpt=None, antenna=None):
         """
         Create a scantable from a saved one or make a reference
         Parameters:
@@ -32,15 +32,33 @@ class scantable(Scantable):
             getpt:       for MeasurementSet input data only:
                          If True, all pointing data are filled.
                          The deafult is False, which makes time to load
-                         the MS data faster in some cases. 
+                         the MS data faster in some cases.
+            antenna:     Antenna selection. integer (id) or string (name
+                         or id).
         """
         if average is None:
             average = rcParams['scantable.autoaverage']
         if getpt is None:
-            getpt = False
+            getpt = True
+        if antenna is None:
+            antenna = ''
+        elif type(antenna) == int:
+            antenna = '%s'%antenna
+        elif type(antenna) == list:
+            tmpstr = ''
+            for i in range( len(antenna) ):
+                if type(antenna[i]) == int: 
+                    tmpstr = tmpstr + ('%s,'%(antenna[i])) 
+                elif type(antenna[i]) == str:
+                    tmpstr=tmpstr+antenna[i]+','
+                else:
+                    asaplog.push('Bad antenna selection.')
+                    print_log('ERROR')
+                    return 
+            antenna = tmpstr.rstrip(',')
         varlist = vars()
         from asap._asap import stmath
-        self._math = stmath()
+        self._math = stmath( rcParams['insitu'] )
         if isinstance(filename, Scantable):
             Scantable.__init__(self, filename)
         else:
@@ -79,10 +97,10 @@ class scantable(Scantable):
                         else:
                             raise IOError(msg)
                 else:
-                    self._fill([filename], unit, average, getpt)
+                    self._fill([filename], unit, average, getpt, antenna)
             elif (isinstance(filename, list) or isinstance(filename, tuple)) \
                   and isinstance(filename[-1], str):
-                self._fill(filename, unit, average, getpt)
+                self._fill(filename, unit, average, getpt, antenna)
         self._add_history("scantable", varlist)
         print_log()
 
@@ -769,7 +787,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg.message )
+                asaplog.push( str(msg) )
                 print_log( 'ERROR' )
             else:
                 raise
@@ -818,7 +836,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg.message )
+                asaplog.push( str(msg) )
                 print_log( 'ERROR' )
                 return
             else: raise
@@ -837,12 +855,33 @@ class scantable(Scantable):
         except RuntimeError, msg:
             if rcParams['verbose']:
                 print_log()
-                asaplog.push(msg.message)
+                asaplog.push( str(msg) )
                 print_log('ERROR')
                 return
             else: raise
         self._add_history("flag_row", varlist)
         
+    def clip(self, uthres=None, dthres=None, clipoutside=True, unflag=False):
+        """
+        Flag the selected data outside a specified range (in channel-base)
+        Parameters:
+            uthres:      upper threshold.
+            dthres:      lower threshold
+            clipoutside: True for flagging data outside the range [dthres:uthres].
+                         False for glagging data inside the range.
+            unflag     : if True, unflag the data.
+        """
+        varlist = vars()
+        try:
+            self._clip(uthres, dthres, clipoutside, unflag)
+        except RuntimeError, msg:
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(str(msg))
+                print_log('ERROR')
+                return
+            else: raise
+        self._add_history("clip", varlist)
         
     def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
         """
@@ -872,7 +911,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg.message )
+                asaplog.push( str(msg) )
                 print_log( 'ERROR' )
                 return
             else: raise
@@ -1254,7 +1293,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg.message )
+                asaplog.push( str(msg) )
                 print_log( 'ERROR' )
                 return
             else: raise
@@ -1481,7 +1520,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg.message )
+                asaplog.push( str(msg) )
                 print_log( 'ERROR' )
                 return
             else:
@@ -1639,7 +1678,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg.message )
+                asaplog.push( str(msg) )
                 print_log( 'ERROR' )
                 return
             else:
@@ -1871,7 +1910,7 @@ class scantable(Scantable):
         """
         Return a scan where all spectra are scaled by the give 'factor'
         Parameters:
-            factor:      the scaling factor
+            factor:      the scaling factor (float or 1D float list)
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
@@ -1881,7 +1920,16 @@ class scantable(Scantable):
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
-        s = scantable(self._math._unaryop(self, factor, "MUL", tsys))
+        s = None
+        import numpy
+        if isinstance(factor, list) or isinstance(factor, numpy.ndarray):
+            if isinstance(factor[0], list) or isinstance(factor[0], numpy.ndarray):
+                from asapmath import _array2dOp
+                s = _array2dOp( self.copy(), factor, "MUL", tsys )
+            else:
+                s = scantable( self._math._arrayop( self.copy(), factor, "MUL", tsys ) )
+        else:
+            s = scantable(self._math._unaryop(self.copy(), factor, "MUL", tsys))
         s._add_history("scale", varlist)
         print_log()
         if insitu:
@@ -2023,68 +2071,28 @@ class scantable(Scantable):
         return
 
     def __add__(self, other):
-        varlist = vars()
-        s = None
-        if isinstance(other, scantable):
-	    s = scantable(self._math._binaryop(self, other, "ADD"))
-        elif isinstance(other, float):
-            s = scantable(self._math._unaryop(self, other, "ADD", False))
-        else:
-            raise TypeError("Other input is not a scantable or float value")
-        s._add_history("operator +", varlist)
-        print_log()
-        return s
+        """
+        implicit on all axes and on Tsys
+        """
+        return self._operation( other, "ADD" )
 
     def __sub__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        varlist = vars()
-        s = None
-        if isinstance(other, scantable):
-	    s = scantable(self._math._binaryop(self, other, "SUB"))
-        elif isinstance(other, float):
-            s = scantable(self._math._unaryop(self, other, "SUB", False))
-        else:
-            raise TypeError("Other input is not a scantable or float value")
-        s._add_history("operator -", varlist)
-        print_log()
-        return s
+        return self._operation( other, 'SUB' )
 
     def __mul__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        varlist = vars()
-        s = None
-        if isinstance(other, scantable):
-	    s = scantable(self._math._binaryop(self, other, "MUL"))
-        elif isinstance(other, float):
-            s = scantable(self._math._unaryop(self, other, "MUL", False))
-        else:
-            raise TypeError("Other input is not a scantable or float value")
-        s._add_history("operator *", varlist)
-        print_log()
-        return s
-
+        return self._operation( other, 'MUL' )
 
     def __div__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        varlist = vars()
-        s = None
-        if isinstance(other, scantable):
-	    s = scantable(self._math._binaryop(self, other, "DIV"))
-        elif isinstance(other, float):
-            if other == 0.0:
-                raise ZeroDivisionError("Dividing by zero is not recommended")
-            s = scantable(self._math._unaryop(self, other, "DIV", False))
-        else:
-            raise TypeError("Other input is not a scantable or float value")
-        s._add_history("operator /", varlist)
-        print_log()
-        return s
+        return self._operation( other, 'DIV' )
 
     def get_fit(self, row=0):
         """
@@ -2194,7 +2202,7 @@ class scantable(Scantable):
         nchans = filter(lambda t: t > 0, nchans)
         return (sum(nchans)/len(nchans) == nchans[0])
 
-    def _fill(self, names, unit, average, getpt):
+    def _fill(self, names, unit, average, getpt, antenna):
         import os
         from asap._asap import stfiller
         first = True
@@ -2222,7 +2230,7 @@ class scantable(Scantable):
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
             print_log()
-            r._open(name, -1, -1, getpt)
+            r._open(name, antenna, -1, -1, getpt)
             r._read()
             if average:
                 tbl = self._math._average((tbl, ), (), 'NONE', 'SCAN')
@@ -2259,3 +2267,32 @@ class scantable(Scantable):
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
+
+    def _operation(self, other, opmode):
+        varlist = vars()
+        s = None
+        import numpy
+        if isinstance(other, scantable):
+	    s = scantable(self._math._binaryop(self.copy(), other, opmode))
+        elif isinstance(other, float) or isinstance(other, int):
+            if opmode == 'DIV' and float(other) == 0.0:
+                raise ZeroDivisionError("Dividing by zero is not recommended")
+            s = scantable(self._math._unaryop(self.copy(), other, opmode, False))
+        elif isinstance(other, list) or isinstance(other, numpy.ndarray):
+            if isinstance(other[0], list) or isinstance(other[0], numpy.ndarray):
+                from asapmath import _array2dOp
+                s = _array2dOp( self.copy(), other, opmode, False )
+            else:
+                s = scantable(self._math._arrayop(self.copy(), other, opmode, False))
+        else:
+            raise TypeError("Other input is not a scantable or float value or float list")
+        opdic = {}
+        opdic['ADD'] = '+'
+        opdic['SUB'] = '-'
+        opdic['MUL'] = '*'
+        opdic['DIV'] = '/'
+        s._add_history("operator %s" % opdic[opmode], varlist)
+        print_log()
+        return s
+
+        

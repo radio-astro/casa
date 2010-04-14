@@ -7,17 +7,20 @@ alt = quantity(5000,'m')
 h0  = quantity(2.0,'km')
 wvl = quantity(-5.6,'K/km')
 mxA = quantity(48,'km')
-dpr = quantity(10.0,'mbar')
-dpm = 1.2
+#dpr = quantity(10.0,'mbar')
+dpr = quantity(5.0,'mbar')
+#dpm = 1.2
+dpm = 1.1
 att = 1
+
 myatm = at.initAtmProfile(alt, tmp, pre, mxA, hum, wvl, dpr, dpm, h0, att)
 print "Atmospheric type:   ", at.getBasicAtmParms()['atmType']
-print "size of Temperature Profile: ", at.getNumLayers()
+print "Number of layers returned: ", at.getNumLayers()
 print myatm
 p = at.getProfile()
 print "Layer parameters:"
 print p['return']
-w = at.getStartupWaterContent()
+w = at.getGroundWH2O()
 print "First guess precipitable water vapor content: ", w.value, w.units
 print "(This value is estimated from the relative humidity at ground level and the water vapor scale height)"
 print
@@ -37,7 +40,7 @@ for i in range(at.getNumSpectralWindows()):
 		print "Dry opacity:", at.getDryOpacity(j,i), " nepers"
 		print "Sky brightness:", at.getAverageTebbSky(j).value, at.getAverageTebbSky(j).units
 print ""
-wh2o=quantity(0.4,'mm')
+wh2o=quantity(0.45,'mm')
 print "(INPUT CHANGE) water vapor column:", wh2o.value, wh2o.units
 print "(NEW OUTPUT) T_EBB =", at.getAverageTebbSky(0,wh2o).value, at.getAverageTebbSky(0,wh2o).units
 print "(Current water vapor column in Radiance Class:", at.getUserWH2O().value,at.getUserWH2O().units
@@ -51,18 +54,27 @@ at.setUserWH2O(wh2o)
 print "(INPUT CHANGE) water vapor column:", wh2o.value, wh2o.units
 print "(NEW OUTPUT) T_EBB =", at.getAverageTebbSky().value, at.getAverageTebbSky(0,wh2o).units
 print ""
-print " TEST FOR JUST 1 SPECTRAL WINDOW WITH SEVERAL CHANNELS"
+print " TEST FOR 1 SPECTRAL WINDOW WITH SEVERAL CHANNELS"
 print " ====================================================="
 print ""
+numchan=4
+chansep = quantity(0.5,'GHz')
 nb2 = 1
-fC2 = quantity(850.00,'GHz')
-fW2 = quantity(8*1.00,'GHz')
-fR2 = quantity(1.00, 'GHz')
+fC2 = quantity(899.55,'GHz')
+fW2 = quantity(numchan*chansep.value,chansep.units)
+fR2 = chansep
 at.initSpectralWindow(nb2,fC2,fW2,fR2)
 print "water vapor column: ", at.getUserWH2O().value, at.getUserWH2O().units
 print "Air mass: ", at.getAirMass()
 print ""
 for i in range(at.getNumChan(0)):
-	print "Freq:", at.getChanFreq(i).value, at.getChanFreq(i).units, " T_EBB=", at.getTebbSky(i).value, at.getTebbSky(i).units
+	print "Freq:", at.getChanFreq(i).value, at.getChanFreq(i).units, "/ T_EBB=", at.getTebbSky(i).value, at.getTebbSky(i).units
+
+at.setAirMass(1.0)
+at.setUserWH2O(quantity(0.45,"mm"))
+print "water vapor column:", at.getUserWH2O().value, at.getUserWH2O().units
+print "Air mass          :", at.getAirMass()
+for i in range(at.getNumChan(0)):
+	print "Freq: ", at.getChanFreq(i).value, at.getChanFreq(i).units, "/ T_EBB=", at.getTebbSky(i).value, at.getTebbSky(i).units
 
 exit()

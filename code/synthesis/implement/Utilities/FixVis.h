@@ -32,8 +32,6 @@
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <msvis/MSVis/MSUVWGenerator.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
 
 // UVWMachine Does rotation, including B1950 <-> J2000, refocusing, and maybe
 // even SIN <-> (-)NCP reprojection of existing UVWs, but it does not generate
@@ -127,8 +125,12 @@ public:
   // done), but negative distances are accepted!
   void setDistances(const Vector<Double>& distances);
 
-// Calculate the (u, v, w)s and store them in ms_p.
-  Bool calc_uvw(const String& refcode);
+  // Calculate the (u, v, w)s and store them in ms_p.
+  Bool calc_uvw(const String& refcode, const Bool reuse=true);
+
+  // Convert the UVW column to a new reference frame by rotating the old
+  // baselines instead of calculating fresh ones.
+  void rotateUVW(const MDirection &indir, const MDirection::Ref& newref);
 
   // For things like rotation, differential aberration correction, etc., when
   // there already is a UVW column, using FTMachine.  Returns true if _any_
@@ -183,15 +185,6 @@ private:
   Bool getRestFreq(Vector<Double>& restFreq, const Int spw, const Int fldID);
   void setObsInfo(ObsInfo& obsinfo);
 
-  // 6/17/2009: Taken from Imager with a slight modification.  Besides the
-  // return type, in Imager.h's versions they were precluded from being
-  // static because they are declared virtual, and C++ currently doesn't
-  // allow static virtual functions.
-  //VisSet and resort 
-  //Ignore the result if you just want to create the SORTED_TABLE.
-  static VisSet makeVisSet(MeasurementSet& ms, Bool compress=False,
-                           Bool mosaicOrder=False);
-  
   void ok();
   void init();
 
@@ -240,7 +233,7 @@ private:
   Vector<String>   antennaSelStr_p;
   Vector<Double>   distances_p;	        // new distances (m) for each selected
                                         // field
-  Vector<String>   dataColNames_p;
+  Vector<MS::PredefinedColumns> dataCols_p;
   uInt             nDataCols_p;
   uInt             nchan_p;
   Vector<Int>      spectralwindowids_p;
@@ -251,7 +244,8 @@ private:
   ObsInfo            latestObsInfo_p;  
   Vector<Int>        DDIds_p;	        // DataDescription Ids to process
   Vector<Int>        FieldIds_p;        // Field Ids to process
-  Vector<MDirection> phaseDirs_p;       // new phase centers for each selected field
+  Vector<MDirection> phaseDirs_p;       // new phase centers for each selected
+                                        // field
   Int                nSpw_p;	        // Number of spws
   MPosition          mLocation_p;
   Bool               doTrackSource_p;

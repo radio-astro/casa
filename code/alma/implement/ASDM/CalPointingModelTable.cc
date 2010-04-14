@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -123,12 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int CalPointingModelTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -161,50 +165,46 @@ namespace asdm {
 		return new CalPointingModelRow (*this);
 	}
 	
-	CalPointingModelRow *CalPointingModelTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaName. 
+ 	 * @param antennaName 
 	
- 	 * @param receiverBand. 
+ 	 * @param receiverBand 
 	
- 	 * @param calDataId. 
+ 	 * @param calDataId 
 	
- 	 * @param calReductionId. 
+ 	 * @param calReductionId 
 	
- 	 * @param startValidTime. 
+ 	 * @param startValidTime 
 	
- 	 * @param endValidTime. 
+ 	 * @param endValidTime 
 	
- 	 * @param antennaMake. 
+ 	 * @param antennaMake 
 	
- 	 * @param pointingModelMode. 
+ 	 * @param pointingModelMode 
 	
- 	 * @param polarizationType. 
+ 	 * @param polarizationType 
 	
- 	 * @param numCoeff. 
+ 	 * @param numCoeff 
 	
- 	 * @param coeffName. 
+ 	 * @param coeffName 
 	
- 	 * @param coeffVal. 
+ 	 * @param coeffVal 
 	
- 	 * @param coeffError. 
+ 	 * @param coeffError 
 	
- 	 * @param coeffFixed. 
+ 	 * @param coeffFixed 
 	
- 	 * @param azimuthRMS. 
+ 	 * @param azimuthRMS 
 	
- 	 * @param elevationRms. 
+ 	 * @param elevationRms 
 	
- 	 * @param skyRMS. 
+ 	 * @param skyRMS 
 	
- 	 * @param reducedChiSquared. 
+ 	 * @param reducedChiSquared 
 	
      */
 	CalPointingModelRow* CalPointingModelTable::newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared){
@@ -248,56 +248,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	CalPointingModelRow* CalPointingModelTable::newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared)	{
-		CalPointingModelRow *row = new CalPointingModelRow(*this);
-			
-		row->setAntennaName(antennaName);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setCalDataId(calDataId);
-			
-		row->setCalReductionId(calReductionId);
-			
-		row->setStartValidTime(startValidTime);
-			
-		row->setEndValidTime(endValidTime);
-			
-		row->setAntennaMake(antennaMake);
-			
-		row->setPointingModelMode(pointingModelMode);
-			
-		row->setPolarizationType(polarizationType);
-			
-		row->setNumCoeff(numCoeff);
-			
-		row->setCoeffName(coeffName);
-			
-		row->setCoeffVal(coeffVal);
-			
-		row->setCoeffError(coeffError);
-			
-		row->setCoeffFixed(coeffFixed);
-			
-		row->setAzimuthRMS(azimuthRMS);
-			
-		row->setElevationRms(elevationRms);
-			
-		row->setSkyRMS(skyRMS);
-			
-		row->setReducedChiSquared(reducedChiSquared);
-	
-		return row;				
-	}
 	
 
 
 CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
-	return new CalPointingModelRow(*this, *row);
-}
-
-CalPointingModelRow* CalPointingModelTable::newRowCopy(CalPointingModelRow* row) {
 	return new CalPointingModelRow(*this, *row);
 }
 
@@ -516,27 +470,13 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 	}
 #endif
 
-	char *CalPointingModelTable::toFITS() const  {
-		throw ConversionException("Not implemented","CalPointingModel");
-	}
-
-	void CalPointingModelTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","CalPointingModel");
-	}
-
-	string CalPointingModelTable::toVOTable() const {
-		throw ConversionException("Not implemented","CalPointingModel");
-	}
-
-	void CalPointingModelTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","CalPointingModel");
-	}
-
 	
 	string CalPointingModelTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\"> ");	
+		buf.append("<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntm=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -594,6 +534,10 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 		}
 		if (!xml.isStr("</CalPointingModelTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -602,11 +546,50 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 	}
 	
 	
-	string CalPointingModelTable::toMIME() {
-		EndianOSStream eoss;
+	string CalPointingModelTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntm=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPointingModelTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<antennaName/>\n"; 
+		oss << "<receiverBand/>\n"; 
+		oss << "<calDataId/>\n"; 
+		oss << "<calReductionId/>\n"; 
+		oss << "<startValidTime/>\n"; 
+		oss << "<endValidTime/>\n"; 
+		oss << "<antennaMake/>\n"; 
+		oss << "<pointingModelMode/>\n"; 
+		oss << "<polarizationType/>\n"; 
+		oss << "<numCoeff/>\n"; 
+		oss << "<coeffName/>\n"; 
+		oss << "<coeffVal/>\n"; 
+		oss << "<coeffError/>\n"; 
+		oss << "<coeffFixed/>\n"; 
+		oss << "<azimuthRMS/>\n"; 
+		oss << "<elevationRms/>\n"; 
+		oss << "<skyRMS/>\n"; 
+		oss << "<reducedChiSquared/>\n"; 
+
+		oss << "<numObs/>\n"; 
+		oss << "<coeffFormula/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</CalPointingModelTable>\n";
+
+		return oss.str();				
+	}
+	
+	string CalPointingModelTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -631,13 +614,7 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -665,39 +642,163 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 
 	
 	void CalPointingModelTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalPointingModel");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			CalPointingModelRow* aRow = CalPointingModelRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "CalPointingModel");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "CalPointingModel");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "CalPointingModel");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "CalPointingModel");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalPointingModel");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalPointingModel");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("antennaName") ; 
+     
+    attributesSeq.push_back("receiverBand") ; 
+     
+    attributesSeq.push_back("calDataId") ; 
+     
+    attributesSeq.push_back("calReductionId") ; 
+     
+    attributesSeq.push_back("startValidTime") ; 
+     
+    attributesSeq.push_back("endValidTime") ; 
+     
+    attributesSeq.push_back("antennaMake") ; 
+     
+    attributesSeq.push_back("pointingModelMode") ; 
+     
+    attributesSeq.push_back("polarizationType") ; 
+     
+    attributesSeq.push_back("numCoeff") ; 
+     
+    attributesSeq.push_back("coeffName") ; 
+     
+    attributesSeq.push_back("coeffVal") ; 
+     
+    attributesSeq.push_back("coeffError") ; 
+     
+    attributesSeq.push_back("coeffFixed") ; 
+     
+    attributesSeq.push_back("azimuthRMS") ; 
+     
+    attributesSeq.push_back("elevationRms") ; 
+     
+    attributesSeq.push_back("skyRMS") ; 
+     
+    attributesSeq.push_back("reducedChiSquared") ; 
+    
+     
+    attributesSeq.push_back("numObs") ; 
+     
+    attributesSeq.push_back("coeffFormula") ; 
+              
+     }
+    else if (string("CalPointingModelTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/CalPointingModelTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "CalPointingModel");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/CalPointingModelTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "CalPointingModel");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/CalPointingModelTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "CalPointingModel");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/CalPointingModelTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "CalPointingModel");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	CalPointingModelRow* aRow = CalPointingModelRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "CalPointingModel");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "CalPointingModel");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -706,7 +807,19 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/CalPointingModel.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "CalPointingModel");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "CalPointingModel");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/CalPointingModel.bin";
@@ -718,60 +831,75 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "CalPointingModel");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/CalPointingModel.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "CalPointingModel");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "CalPointingModel");
-		}
 	}
 
 	
 	void CalPointingModelTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/CalPointingModel.bin";
-		else
-			tablename = directory + "/CalPointingModel.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "CalPointingModel");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"CalPointingModel");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"CalPointingModel");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPointingModel.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPointingModel.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the CalPointingModel table", "CalPointingModel");
 	}			
+
+	
+  void CalPointingModelTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalPointingModel.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalPointingModel");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"CalPointingModel");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"CalPointingModel");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void CalPointingModelTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalPointingModel.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalPointingModel");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "CalPointingModel");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "CalPointingModel");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

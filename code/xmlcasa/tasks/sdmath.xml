@@ -25,6 +25,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="any" name="varlist">
+        <description>Dictionary of variables and their values used in expr.</description>
+        <any type="variant" limmittype="dict"/>
+        <value type="dict">{}</value>
+    </param>
+
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
     <param type="string" name="fluxunit">
 	    <description>units for line flux (K,Jy) (''=current)</description>
 	    <value></value>
@@ -134,6 +146,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
   Keyword arguments:
         expr -- Mathematical expression using scantables 
+        varlist -- Dictionary of variables in expr and their values.
+                   Keys must be coincide with variables used in expr.
+                   Values are substituted in each value in expr.
+        antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: 'K','Jy',''
                 default: '' (keep current fluxunit)
@@ -208,6 +224,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         ASAP (scantable, MS, rpfits, and SDFITS). In the expression, 
         these file names should be put inside of sigle or double quotes.
 
+        You can use variables in the expression. If you want to use, you 
+        must define varlist dictionary. Name of variables should be simple, 
+        e.g. V0, V1, etc., to avoid unexpected error. Keys of varlist must 
+        be name of variables that you used in the expression, and their 
+        values will be substituted for variables in the expression. Allowed 
+        type for the value is numerical values, one- or two-dimensional lists 
+        (Python list or numpy.ndarray), and filename strings that indicate 
+        spectral data or ASCII text, which is space-separated list of 
+        numerical values consisting of adequate number of rows and columns.  
+
         The fluxunit, specunit, and frame can be set, otherwise, the current
         settings of the first spectral data in the expression are used.  
         Other selections (e.g. scan No, . IF, Pol) also apply to all 
@@ -227,6 +253,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         outfile='orion_cal.asap'
         sdmath()
 
+        # do on-off/off calculation using varlist
+        expr='V0/V1-V2'
+        varlist['V0']="orion_on_data.asap"
+        varlist['V1']="orion_off_data.asap"
+        varlist['V2']=1.0
+        outfile='orion_cal.asap'
+        sdmath()
+
+        # interpretation of ASCII file value for varlist
+        If the contents of input ASCII file is shown as, 
+
+           0.5 0.3 0.2
+           1.0 0.2 0.9
+
+        it is interpreted as a list [[0.5, 0.3, 0.2],[1.0, 0.2, 0.9]]. 
 
   </example>
 

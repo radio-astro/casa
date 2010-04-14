@@ -358,6 +358,10 @@ int SDFITSreader::open(
   findData(SIG,       "SIG",     TSTRING);
   findData(CAL,       "CAL",     TSTRING);
 
+  findData(RVSYS,     "RVSYS",   TDOUBLE);
+  findData(VFRAME,    "VFRAME",  TDOUBLE);
+  findData(VELDEF,    "VELDEF",  TSTRING);
+
   if (cStatus) {
     log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     close();
@@ -1859,6 +1863,16 @@ int SDFITSreader::read(
   mbrec.parAngle  *= D2R;
   mbrec.focusRot  *= D2R;
   mbrec.windAz    *= D2R;
+
+  // For GBT data, source velocity can be evaluated
+  if ( cData[RVSYS].colnum > 0 && cData[VFRAME].colnum > 0 ) {
+    float vframe;
+    readData(VFRAME, cRow, &vframe);
+    float rvsys;
+    readData(RVSYS,  cRow, &rvsys);
+    //mbrec.srcVelocity = rvsys - vframe ;
+    mbrec.srcVelocity = rvsys ;
+  }
 
   if (cStatus) {
     log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);

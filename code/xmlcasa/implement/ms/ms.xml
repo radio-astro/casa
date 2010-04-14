@@ -2396,12 +2396,12 @@ for i in range(len(tcoord)):
   <input>
     
      <param type="string" direction="in" name="outputms">
-     <description>The name of the measurement split into</description>
+     <description>The name of the resulting measurement set</description>
      <value></value>
      </param>
     
      <param type="variant" direction="in" name="field">
-     <description>Field ids  (0-based) or fieldnames to split out</description>
+     <description>Fields to include, by names or 0-based ids.  ('' =&gt; all)</description>
      <value></value>
      </param>
     
@@ -2411,34 +2411,32 @@ for i in range(len(tcoord)):
      </param>
     
      <param type="intArray" direction="in" name="step">
-     <description>number of input channels to average to make 1
-     output channel - Int vector of length 1 or same as spw</description>
+     <description>number of input per output channels - Int vector of length 1 or same as spw</description>
      <value>1</value>
      </param>
 
      <param type="variant" direction="in" name="baseline">
-     <description>Antenna names or Antenna indices to select</description>
+     <description>Antenna names or indices to select  ('' =&gt; all)</description>
      <value></value>
      </param>
 
      <param type="variant" direction="in" name="timebin">
-     <description>Value to average the data to, 0s means keep the data as is sampled, which is the  default</description>
+     <description>Duration for averaging.  Defaults to no averaging.</description>
      <value>-1s</value>
      </param>
     
      <param type="string" direction="in" name="time">
-     <description>Limit data selected to be within a given time range. Syntax is defined in the msselection link</description>
+     <description>Only use data in the given time range, using the msselection syntax.</description>
      <value></value>
      </param>
 
      <param type="variant" name="scan">
-     <description>Limit data selected on scan numbers. Syntax is defined in the msselection link</description>
+     <description>Only use the scan numbers requested using the msselection syntax.</description>
      <value></value>
      </param>
      
      <param type="variant" name="uvrange">
-     <description>Limit data selected on uv distance. Syntax is defined in 
-     the msselection link</description>
+     <description>Limit data by uv distance using the msselection syntax.</description>
      <value></value>
      </param>
 
@@ -2448,7 +2446,7 @@ for i in range(len(tcoord)):
      </param>
       
      <param type="string" direction="in" name="whichcol">
-     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA'</description>
+     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA', 'FLOAT_DATA', 'LAG_DATA', and/or 'all'</description>
      <value>DATA</value>
      </param>
 
@@ -2465,16 +2463,21 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="bool" name="averchan">
-     <description>If true, width will be used to average channels.  Otherwise it will be used to skip channels.</description>
+     <description>If true, step will be used to average channels.  Otherwise it will be used to skip channels.</description>
      <value>true</value>
+     </param>
+
+     <param type="string" direction="in" name="ignorables">
+     <description>Columns (array, scan, and/or state) to ignore when time averaging.</description>
+     <value></value>
      </param>
   </input>
   <returns type="bool"/>
 
   <description>
-    This function splits out part of the MS into a new MS. Spectral
-    averaging is available on splitting. More transformations
-    are in the works (like time averaging). 
+    This function splits out part of the MS into a new MS. Time and
+    channel averaging can be performed in the process (but not in
+    the same call).
     
     When splitting multiple spectral windows, the parameters {\tt
     nchan, start, step} can be vectors, so that each spectral window
@@ -2483,13 +2486,12 @@ for i in range(len(tcoord)):
     parameters means that it will be replicated for all the spectral
     windows selected.
     
-   
   </description>
   <example>
   
   \begin{verbatim}
       
-  ms.open("multiwin.ms", nomodify=False)
+  ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
   \end{verbatim}
@@ -2501,7 +2503,7 @@ for i in range(len(tcoord)):
 
  \begin{verbatim}
       
-  ms.open("multiwin.ms", nomodify=False)
+  ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
  \end{verbatim}
@@ -2513,7 +2515,7 @@ at channel 0 and averaging every 5.
 
 \begin{verbatim}
       
-  ms.open("multiwin.ms", nomodify=False)
+  ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10,10,30,40],
            start=[0,4,9,9], step=[1,10,5,2], whichcol='CORRECTED_DATA') 
 \end{verbatim}
@@ -2527,7 +2529,20 @@ averaging, of the input spwid 0. The second output spectral window
 will consists of 10 channels and is formed by picking 100 channels
 from spwid 1 of the input data, starting at channel 4, and every
 10 channels to make one output channel.
-   
+
+\begin{verbatim}     
+  ms.open("WSRT.ms")
+  ms.split('subms.ms', timebin='20s', whichcol='all', ignorables='scan')
+  ms.close()
+\end{verbatim}
+
+This example averages a WSRT MS into 20s bins, selecting whichever of
+DATA, MODEL_DATA, CORRECTED_DATA, or FLOAT_DATA, or LAG_DATA is present.
+Normally the bins would not cross scans, but in this MS the scan number
+goes up with each integration, making it redundant enough with time that
+it would defeat any time averaging.  Therefore the SCAN column is
+ignored for setting the bins.
+
   </example>
 </method>
 

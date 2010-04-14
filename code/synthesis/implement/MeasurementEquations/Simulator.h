@@ -277,6 +277,11 @@ public:
 	       const Quantity& startTime, 
 	       const Quantity& stopTime);
 
+  Bool observemany(const Vector<String>& sourcenames, const String& spwname,
+		   const Vector<Quantity>& startTimes, 
+		   const Vector<Quantity>& stopTimes,
+		   const Vector<MDirection>& directions);
+
   // Given a model image, predict the visibilities onto the (u,v) coordinates
   // of our MS
   Bool predict(const Vector<String>& modelImage, 

@@ -1,6 +1,16 @@
 AC_INIT(AATM,
-	0.06,
-	"Bojan Nikolic" <b.nikolic@mrao.cam.ac.uk>)
+	0.3b3,
+	b.nikolic@mrao.cam.ac.uk)
+
+dnl Library versioning (current:revision:age)
+dnl See the libtool manual for an explanation of the numbers
+dnl
+dnl aatm-0.2 libatm 0:0:0
+dnl aatm-0.3 libatm 1:0:0
+
+AATM_LT_VERSION="1:0:0"
+AC_SUBST(AATM_LT_VERSION)
+
 
 AC_CONFIG_AUX_DIR(config)
 
@@ -16,9 +26,8 @@ AC_PROG_LIBTOOL
 AC_PROG_CC
 AC_PROG_CXX
 
-AX_BOOST(1.34.0,
-	[echo "GOOD: You have BOOST ... we will be using that!" ],		     
-	AC_MSG_ERROR(["ERROR: No BOOST  ... ; you can find it at  http://www.boost.org/ "])  )
+AX_BOOST_BASE(1.34.0)
+AX_BOOST_PROGRAM_OPTIONS
 
 AC_OUTPUT(Makefile 
           src/Makefile

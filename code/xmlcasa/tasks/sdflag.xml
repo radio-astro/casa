@@ -14,7 +14,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
   <description>
-        ASAP SD spectral flagging task (based on the ALMATST5 recommendations):
+        ASAP SD spectral/row flagging task (based on the ALMATST5 recommendations):
 
         Task Version 2008-01-31 TT
 </description>
@@ -25,6 +25,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
+
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
 
     <param type="intArray" name="scanlist">
 	    <description>list of scans to use (e.g. [1,2,3,4])</description>
@@ -55,6 +61,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="intArray" name="flagrow">
             <description>list of row numbers to apply row-based flagging/unflagging</description>
             <value></value>
+    </param>
+
+    <param type="bool" name="clip">
+            <description>flag data outside a specified range</description>
+            <value>False</value>
+    </param>
+
+    <param type="any" name="clipminmax" subparam="true">
+            <description>range of data that will NOT be flagged</description>
+            <any type="variant" limittypes="doubleArray doubleArrayArray"/>
+            <value type="doubleArray"></value>
+    </param>
+
+    <param type="any" name="clipoutside" subparam="true">
+            <description>clip outside the range, or within it</description>
+            <any type="variant" limittypes="bool boolArray"/>
+            <value type="bool">True</value>
     </param>
 
     <param type="string" name="flagmode">
@@ -96,6 +119,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <constraints>
+            <when param="clip">
+                    <equals type="bool" value="False"/>
+                    <equals type="bool" value="True">
+                            <default param="clipminmax"><value type="doubleArray"></value></default>
+                            <default param="clipoutside"><value type="bool">True</value></default>
+                    </equals>
+            </when>
     </constraints>
 
     </input>
@@ -105,6 +135,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
         Keyword arguments:
         sdfile -- name of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
         scanlist -- list of scan numbers to process
                 default: [] (use all scans)
                 example: [21,22,23,24]
@@ -128,13 +159,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         maskflag -- list of mask regions to apply flag/unflag 
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
-                WARNING: if one or more rows are given in flagrow, 
-                         this parameter is ignored
-        flagrow -- list of row numbers to apply flag/unflag (row-based)
+                WARNING: if one or more rows are given in flagrow, or 
+                         clip=True, this parameter is ignored
+        flagrow -- list of row numbers to apply flag/unflag
                 default: [] (no row selection)
                 example: [0, 2, 3]
                 WARNING: this parameter is effective only when 
-                         one or more row numbers are given explicitly
+                         one or more row numbers are given explicitly 
+                         and also clip=False
+        clip -- flag data that are outside a specified range
+                options: (bool)True,False
+                default: False
+             >>> clip expandable parameters
+                clipminmax -- range of data that will NOT be flagged
+                        default: [] means do not use clip option
+                        example: [0.0,1.5]
+                clipoutside -- clip OUTSIDE the range ?
+                        options: (bool)True,False
+                        default: True
+                        example: clipoutside=False means flag data WITHIN the range.
         flagmode -- flag mode
                 default: 'flag'
                 options: 'flag','unflag','restore'
@@ -167,14 +210,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         DESCRIPTION:
 
         Task sdflag performs simple channel/row based flagging on spectra.
-        Channel based flagging and row based flagging can not be executed
-        simultaneously: channel based flagging can be executed using the 
-        flag regions specified in maskflag if no row is given in flagrow,
-        whereas row based flagging is executed when one or more rows are
-        specified in flagrow.
-        This is not interactive flagging. If plotlevel&gt;=1, the task asks
-        you if you really apply the flags before it is actually written 
-        to the data with a plot indicating flagged regions.
+        Currently, the available ways of flagging include: (1) channel 
+        based flagging by specifying regions in channel, (2) channel 
+        based flagging by specifying a range of spectral value, and (3) 
+        row based flagging by specifying a list of row numbers. 
+        These three ways of flagging can not be executed simultaneously. 
+        The first one (channel based) can be executed by giving flag 
+        regions in maskflag, no row in flagrow (=[]), and setting 
+        clip=False. The second one (channel based intensity clipping) 
+        can run when you set clip=True and specify a range in clipminmax 
+        (the values given in maskflag and flagrow are ignored). The third 
+        one (row based flagging) is executed when one or more rows are 
+        specified in flagrow and clip is set False. This is not 
+        interactive flagging. 
+        If plotlevel&gt;=1, the task asks you if you really apply the 
+        flags before it is actually written to the data with a plot 
+        indicating flagged regions.
         The flags are not written to the current (input) datasets unless 
         outfile='none'.
         Please note that this task is still experimental.

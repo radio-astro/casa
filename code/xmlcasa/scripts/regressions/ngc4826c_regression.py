@@ -60,7 +60,7 @@ print '--Feather cube - create synth image--'
 #    NRAO 12m OTF cube: NGC4826.12motf.chan.fits
 default('clean')
 clean(vis='n4826_both.ms', imagename='mosaic',
-      nchan=30, start=46, width=4, spw='0~2',
+      nchan=30, start=45, width=4, spw='0~2',
       field='0~6',
       cell=[1., 1.], imsize=[256, 256],
       stokes='I',
@@ -91,7 +91,7 @@ print '--Single Dish as Model--'
 #    NRAO 12m OTF cube: n4826_t12mchan.im
 default('clean')
 clean(vis='n4826_both.ms', imagename='n4826_tjoint1',
-      nchan=30, start=46, width=4, spw='0~2',
+      nchan=30, start=45, width=4, spw='0~2',
       field='0~6',
       cell=[1., 1.], imsize=[256, 256],
       stokes='I',
@@ -136,7 +136,7 @@ default('clean')
 ##### Mosaic the interferometer data...use model from obtain from deconvolve
 ##### SD image as starting model
 clean(vis='n4826_both.ms', imagename='n4826_tjoint2',
-      nchan=30, start=46, width=4, spw='0~2',
+      nchan=30, start=45, width=4, spw='0~2',
       field='0~6',
       cell=[1., 1.], imsize=[256, 256],
       stokes='I',
@@ -193,22 +193,40 @@ joint2_flux=jc2_stats['flux'][0]
 #the noise at the edges; should do stats on central region (soon)
 ###these numbers are really fragile to minor changes...like the total flux
 ### makes no sense at all. better crieria needed
-f1_max=153.3498
-f1_flux=1523.515
-f2_max=1.8816
-f2_flux=105.4628
+f1_max=153.3498 # < 12/1/2009
+f1_flux=1523.515 # < 12/1/2009
+f2_max=1.8816 # < 12/1/2009
+f2_flux=105.4628 # < 12/1/2009
+
 #f3_max=1.67
 #f3_max=1.52
 f3_max=1.60     # 12/1/2009.  Are we converging?
-f3_flux=104.25
-jc1_max=1.67
+#f3_max=1.6825   # 3/17/2010
+#f3_max = 1.457553 # 3/19/2010, after increasing clean's start by width/2
+
+f3_flux=81.45 # < 12/1/2009
+#f3_flux=110.44684 # 3/17/2010
+#f3_flux=99.4 # 3/19/2010     (adjusted clean's start by +1)
+#f3_flux=83.27245 # 3/19/2010 (adjusted clean's start by another +1 (width/2 total))
+
+jc1_max=1.67 # < 12/1/2009
 #jc1_max=1.71
+
 #jc1_flux=168.87
-jc1_flux=224.1
+jc1_flux=212.11 # < 12/1/2009
+#jc1_flux=223.033 # 3/17/2010
+#jc1_flux=224.495 # 3/19/2010 (adjusted clean's start by +1)
+#jc1_flux=212.652 # 3/19/2010 (adjusted clean's start by another +1 (width/2 total)
+                 #            Note that it's almost back to 12/1/2009.)
+
 #jc2_max=1.68
-jc2_max=1.53
+jc2_max=1.53 # < 12/1/2009
+
 #jc2_flux=67.27
-jc2_flux=147.7
+jc2_flux=127.87 # < 12/1/2009
+#jc2_flux=144.9498 # 3/17/2010
+#jc2_flux=145.09 # 3/19/2010  (adjusted clean's start by +1)
+#jc2_flux=135.89555 # 3/19/2010  (adjusted clean's start by another +1 (width/2 total))
 
 diff_f1=abs((f1_max-feather1_immax)/f1_max)
 diff_f1f=abs((f1_flux-feather1_flux)/f1_flux)
@@ -258,28 +276,36 @@ print >>logfile,'*********************************'
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
-if (diff_f1 < 0.05): print >>logfile,'* Passed Feather 1 image max test '
+status = {False: "! FAILED", True: "* Passed"}
+print >>logfile, status[diff_f1 < 0.05], 'Feather 1 image max test '
 print >>logfile,'*--  Feather 1: Image max '+str(feather1_immax)+','+str(f1_max)
-if (diff_f2 < 0.05): print >>logfile,'* Passed Feather 2 image max test'
+print >>logfile, status[diff_f2 < 0.05], 'Feather 2 image max test'
 print >>logfile,'*--  Feather 2: Image max '+str(feather2_immax)+','+str(f2_max)
-if (diff_f3 < 0.05): print >>logfile,'* Passed Feather 3 image max test'
+print >>logfile, status[diff_f3 < 0.05], 'Feather 3 image max test'
 print >>logfile,'*--  Feather 3: Image max '+str(feather3_immax)+','+str(f3_max)
-if (diff_jc1 < 0.05): print >>logfile,'* Passed Joint Deconvolution 1 image max test' 
+print >>logfile, status[diff_jc1 < 0.05], 'Joint Deconvolution 1 image max test' 
 print >>logfile,'*--  Joint Decon1: Image max '+str(jc1_immax)+','+str(jc1_max)
-if (diff_jc2 < 0.05): print >>logfile,'* Passed Joint Deconvolution 2 image max test'
+print >>logfile, status[diff_jc2 < 0.05], 'Joint Deconvolution 2 image max test'
 print >>logfile,'*--  Joint Decon2: Image max '+str(jc2_immax)+','+str(jc2_max)
-if (diff_f1f < 0.05): print >>logfile,'* Passed Feather 1 flux test '
+print >>logfile, status[diff_f1f < 0.05], 'Feather 1 flux test '
 print >>logfile,'*--  Feather 1: Flux '+str(feather1_flux)+','+str(f1_flux)
-if (diff_f2f < 0.05): print >>logfile,'* Passed Feather 2 flux test'
+print >>logfile, status[diff_f2f < 0.05], 'Feather 2 flux test'
 print >>logfile,'*--  Feather 2: Flux '+str(feather2_flux)+','+str(f2_flux)
-if (diff_f3f < 0.05): print >>logfile,'* Passed Feather 3 flux test'
+print >>logfile, status[diff_f3f < 0.05], 'Feather 3 flux test'
 print >>logfile,'*--  Feather 3: Flux '+str(feather3_flux)+','+str(f3_flux)
-if (diff_jc1f < 0.05): print >>logfile,'* Passed Joint Deconvolution flux test'
+print >>logfile, status[diff_jc1f < 0.05], 'Joint Deconvolution flux test'
 print >>logfile,'*--  Joint Decon1: Flux '+str(joint1_flux)+','+str(jc1_flux)
-if (diff_jc2f < 0.05): print >>logfile,'* Passed Joint Deconvolution flux test'
+print >>logfile, status[diff_jc2f < 0.05], 'Joint Deconvolution flux test'
 print >>logfile,'*--  Joint Decon2: Flux '+str(joint2_flux)+','+str(jc2_flux)
 
-if ((diff_f1<0.05) & (diff_f2<0.05) & (diff_f3<0.05) & (diff_jc1<0.05) & (diff_f1f<0.05) & (diff_f2f<0.05) & (diff_f3f<0.05) & (diff_jc1f<0.05)): 
+if (diff_f1 < 0.05 and
+    diff_f2 < 0.05 and
+    diff_f3 <0.05 and
+    diff_jc1 < 0.05 and
+    diff_f1f < 0.05 and
+    diff_f2f < 0.05 and
+    diff_f3f < 0.05 and
+    diff_jc1f < 0.05): 
 	regstate=True
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for NGC4826'

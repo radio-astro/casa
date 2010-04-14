@@ -446,7 +446,11 @@ void VLAFiller::fill(Int verbose){
 Bool VLAFiller::fillOne() { 
   if (!itsRecord.read()) return False;
   if (stopFilling(itsRecord)) return False;
-  if (!itsInputFilters.passThru(itsRecord)) return True;
+  if (!itsInputFilters.passThru(itsRecord)){
+	  // OK here we mark a new scan if we skip anything.
+	  itsNewScan=True;
+	  return True;
+  }
 
   fillStarted = True;
   const VLARCA& rca = itsRecord.RCA();
@@ -1555,11 +1559,7 @@ emptyMS(const Path& tableName, const Bool overwrite) {
 		     columnName(MeasurementSet::TIME_CENTROID), incrMan);
   }
   //Experimental tiledShapeStMan
-  //4 pol, 1024 channels
-  IPosition dataShape(2,4,1024);
-  //IPosition tileShape = MSTileLayout::tileShape(dataShape,0, "VLA");
-  //4 pol 100 channel 351 tiles
-  IPosition tileShape(3, 4, 100, 351);
+  IPosition tileShape(3, 4, 128, 16);
   // These columns contain the bulk of the data so save them in a tiled way
   {
     //TiledDataStMan dataMan(dataCol);
