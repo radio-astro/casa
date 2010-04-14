@@ -372,7 +372,7 @@ namespace casa {
     Vector<Bool> antFlagged;
     Double Chisq, dChisq, bestChisq, sumWt, Time, AzHDiag, ElHDiag,localGain, coVar1, coVar2, 
       stepSize0,stepSize1;
-    Int iPol=0, nPol, iter, axis0=0,axis1=0;
+    Int iPol=0, nPol, iter, axis0=0,axis1=0, iCorr;
     Bool Converged=False;
     Timer timer;
 
@@ -383,218 +383,240 @@ namespace casa {
     dElVj.resize(nAnt);
 	
     epj.guessPar();
-//     for(Int ia=0;ia<nAnt;ia++)
-//       {
-// 	epj.solveRPar()(0,0,ia) = -0.001;
-// 	epj.solveRPar()(2,0,ia) =  0.001;
-// 	epj.solveRPar()(1,0,ia) =  0.001;
-// 	epj.solveRPar()(3,0,ia) = -0.001;
-//       }
+    for(Int ia=0;ia<nAnt;ia++)
+      {
+	// epj.solveRPar()(0,0,ia) = -0.001;
+	// epj.solveRPar()(2,0,ia) =  0.001;
+	// epj.solveRPar()(1,0,ia) =  0.001;
+	// epj.solveRPar()(3,0,ia) = -0.001;
+	//
+	// Solved values for the squint
+	//
+	// epj.solveRPar()(0,0,ia) = -0.000139;
+	// epj.solveRPar()(2,0,ia) =  5.25e-6;
+	// epj.solveRPar()(1,0,ia) =  4.96e-5;
+	// epj.solveRPar()(3,0,ia) = -0.000139;
+      }
     for(Int ip=0;ip<nPol;ip++)
       {
 	Converged=False;
 	localGain = gain();
+
 	iPol=polMap_p[ip];
-	//@#$%@#$%@#%@#%@#%@#%@#%
-	//	iPol = ip;
-	//@#$%@#$%@#%@#%@#%@#%@#%
-
-	epj.diffResiduals(vi,ve,residual_p, gradient0_p, gradient1_p, flags);
-	Chisq = getGOF(residual_p,iPol,sumWt,"Init");
-	if (sumWt == 0) return -Chisq;
-
-        bestChisq = Chisq;
-	bestSolution.resize(epj.solveRPar().shape());
-        bestSolution = epj.solveRPar();	
-	//epj.guessPar();
-	Time = getCurrentTimeStamp(residual_p);
-	timer.mark();
-	antFlagged.resize(nAnt);
-	logIO() << LogOrigin("PointingCal","SDS::solve2") 
-		<< "Solution interval = " << SlotNo 
-		<< " Initial Chisq = " << Chisq 
-		<< " Polarization = " << iPol 
-		<< " SumOfWt = " << sumWt 
-		<< LogIO::NORMAL << LogIO::POST;
-	if (iPol==0) {axis0=0;axis1=2;}
-	else {axis0=1; axis1=3;}
-	if (iPol==0) {axis0=1;axis1=3;}
-	else {axis0=0; axis1=2;}
-	iter=-1;
-	for (iter=0;iter<numberIterations();iter++)
+	if (iPol >= 0) 
 	  {
-            //
-            // Update the current position
-            //
-	    for(Int ant=0;ant<nAnt;ant++)
+	    iCorr=iPol;
+	    iCorr=iPol=ip;
+	    //@#$%@#$%@#%@#%@#%@#%@#%
+	    // iPol = ip;
+	    //@#$%@#$%@#%@#%@#%@#%@#%
+	    
+	    epj.diffResiduals(vi,ve,residual_p, gradient0_p, gradient1_p, flags);
+	    Chisq = getGOF(residual_p,iCorr,sumWt,"Init");
+	    if (sumWt == 0) return -Chisq;
+	    
+	    bestChisq = Chisq;
+	    bestSolution.resize(epj.solveRPar().shape());
+	    bestSolution = epj.solveRPar();	
+	    //epj.guessPar();
+	    Time = getCurrentTimeStamp(residual_p);
+	    timer.mark();
+	    antFlagged.resize(nAnt);
+	    logIO() << LogOrigin("PointingCal","SDS::solve2") 
+		    << "Solution interval = " << SlotNo 
+		    << " Initial Chisq = " << Chisq 
+		    << " Polarization = " << iPol 
+		    << " SumOfWt = " << sumWt 
+		    << LogIO::NORMAL << LogIO::POST;
+	    if (iPol==0) {axis0=0;axis1=2;}
+	    else {axis0=1; axis1=3;}
+	    if (iPol==0) {axis0=1;axis1=3;}
+	    else {axis0=0; axis1=2;}
+	    iter=-1;
+	    for (iter=0;iter<numberIterations();iter++)
 	      {
-		ResidualVj = getVj(residual_p, nAnt,ant,iPol,sumWt,0,0);
-		dAzVj      = getVj(gradient0_p,nAnt,ant,iPol,sumWt,0,1);
-		dElVj      = getVj(gradient1_p,nAnt,ant,iPol,sumWt,0,1);
-		
-		antFlagged[ant]=False;
-		if (sumWt > 0)
+		//
+		// Update the current position
+		//
+		for(Int ant=0;ant<nAnt;ant++)
 		  {
-		    stepSize0 = stepSize1 = coVar1 = coVar2 = 0;
-		    if (sumWt > 0) 
-		      {
-			coVar1 = real(innerProduct(dAzVj,dAzVj))/(sumWt*sumWt);
-			coVar2 = real(innerProduct(dElVj,dElVj))/(sumWt*sumWt);
-		      }
-		    AzHDiag = ElHDiag = 0;
+		    // cerr << "Init: " << ant << " " 
+		    // 	 << epj.solveRPar()(axis0,0,ant) << "  "
+		    // 	 << epj.solveRPar()(axis1,0,ant) << endl;
+		    ResidualVj = getVj(residual_p, nAnt,ant,iCorr,sumWt,0,0);
+		    dAzVj      = getVj(gradient0_p,nAnt,ant,iCorr,sumWt,0,1);
+		    dElVj      = getVj(gradient1_p,nAnt,ant,iCorr,sumWt,0,1);
 		    
-		    if (coVar1 > 0)
+		    antFlagged[ant]=False;
+		    if (sumWt > 0)
 		      {
-			AzHDiag  = 1.0/coVar1;
-			stepSize0 = real(innerProduct(ResidualVj,dAzVj))/sumWt;
-			stepSize0 *= -2*AzHDiag*localGain;
-			epj.solveRPar()(axis0,0,ant) = epj.solveRPar()(axis0,0,ant) + stepSize0;
-			//			epj.solveRPar()(axis0,0,ant) = 0.001;
+			stepSize0 = stepSize1 = coVar1 = coVar2 = 0;
+			if (sumWt > 0) 
+			  {
+			    coVar1 = real(innerProduct(dAzVj,dAzVj))/(sumWt*sumWt);
+			    coVar2 = real(innerProduct(dElVj,dElVj))/(sumWt*sumWt);
+			  }
+			AzHDiag = ElHDiag = 0;
+			
+			if (coVar1 > 0)
+			  {
+			    AzHDiag  = 1.0/coVar1;
+			    stepSize0 = real(innerProduct(ResidualVj,dAzVj))/sumWt;
+			    //			    cerr << "Ant:"  << ant << " " << stepSize0 << " ";
+			    stepSize0 *= -2*AzHDiag*localGain;
+			    //			    cerr << stepSize0 << "    ";
+			    epj.solveRPar()(axis0,0,ant) = epj.solveRPar()(axis0,0,ant) + stepSize0;
+			    //			epj.solveRPar()(axis0,0,ant) = 0.001;
+			  }
+			if (coVar2 > 0)
+			  {
+			    ElHDiag  = 1.0/coVar2;
+			    stepSize1 = real(innerProduct(ResidualVj,dElVj))/sumWt;
+			    //			    cerr << stepSize1 << " ";
+			    stepSize1 *= -2*ElHDiag*localGain;
+			    epj.solveRPar()(axis1,0,ant) = epj.solveRPar()(axis1,0,ant) + stepSize1;
+			    // cerr << stepSize1 << "     " 
+			    // 	 << epj.solveRPar()(axis0,0,ant) << "  "
+			    // 	 << epj.solveRPar()(axis1,0,ant) << endl;
+			    //			epj.solveRPar()(axis1,0,ant) = -0.001;
+			  }
+			/*
+			  cout << "SDS Sol Loop = " 
+			  << iPol << " " << iter << " " << ant << " " << axis0 << " " << axis1 << " " 
+			  << epj.solveRPar()(axis0,0,ant) << " "
+			  << epj.solveRPar()(axis1,0,ant) << " "
+			  << stepSize0 << " " << stepSize1 << " "
+			  << endl;
+			*/
 		      }
-		    if (coVar2 > 0)
+		    else
 		      {
-			ElHDiag  = 1.0/coVar2;
-			stepSize1 = real(innerProduct(ResidualVj,dElVj))/sumWt;
-			stepSize1 *= -2*ElHDiag*localGain;
-			epj.solveRPar()(axis1,0,ant) = epj.solveRPar()(axis1,0,ant) + stepSize1;
-			//			epj.solveRPar()(axis1,0,ant) = -0.001;
+			antFlagged[ant]=True;
+			epj.solveRPar()(axis0,0,ant)=0.0;//0.001;
+			epj.solveRPar()(axis1,0,ant)=0.0;//-0.001;
 		      }
-/*
-		    cout << "SDS Sol Loop = " 
-			 << iPol << " " << iter << " " << ant << " " << axis0 << " " << axis1 << " " 
-			 << epj.solveRPar()(axis0,0,ant) << " "
-			 << epj.solveRPar()(axis1,0,ant) << " "
-			 << stepSize0 << " " << stepSize1 << " "
-			 << endl;
-*/
+		    //epj.solveRPar()(axis0,0,ant)=0.001;
+		    //epj.solveRPar()(axis1,0,ant)=-0.001;
+		    
+		  }
+		//
+		// Compute the residuals and the gradients with the
+		// updated solutions and check for convergence.
+		//
+		epj.diffResiduals(vi,ve,residual_p, gradient0_p, gradient1_p, flags);
+		Chisq  = getGOF(residual_p,iCorr,sumWt,"Final");
+		/*
+		  for(Int kk=0;kk<nAnt;kk++)
+		  cout << "SDS Sol Iter = " 
+		  << iPol << " " << iter << " " << axis0 << " " << axis1 << " " << kk << " "
+		  << epj.solveRPar()(axis0,0,kk) << " "
+		  << epj.solveRPar()(axis1,0,kk) 
+		  << Chisq << " " << bestChisq
+		  << endl;
+		*/
+		dChisq = (bestChisq-Chisq);
+		/*
+		  cout << iter << " " << iPol << " " << Chisq << " " << bestChisq
+		  << " " << dChisq << " " << " " << bestChisq << " " << localGain << endl;
+		*/
+		
+		if ((fabs(dChisq) < tolerance()))
+		  {
+		    Converged=True;
+		    epj.setRPar(bestSolution);
+		    Chisq = bestChisq;
+		    break;
+		  }
+		if (Chisq >= bestChisq)
+		  {
+		    // Backtracking....
+		    localGain /= 2.0;
+		    epj.setRPar(bestSolution); //oldOffsets;
+		    
+		    // 		IPosition shp(bestSolution.shape());
+		    // 		for(Int ii=0;ii<shp(2);ii++)
+		    // 		  for(Int jj=0;jj<shp(0);jj++)
+		    // 		    cout << "BT: " << bestSolution(jj,0,ii) << " " 
+		    // 			 << epj.solveRPar()(jj,0,ii) << endl;
+		    
+		    epj.diffResiduals(vi,ve,residual_p, gradient0_p, gradient1_p, flags);
+		    
+		    Chisq  = getGOF(residual_p,iCorr,sumWt,"BACK");
+		    
+		    // 		cout << "BT Chisq: " << Chisq << " " 
+		    // 		     << sum(bestSolution-epj.solveRPar()) 
+		    // 		     << " " << residual.nRow() << endl;
+		    // 		if (Chisq != bestChisq)
+		    // 		  {
+		    // 		    IPosition ndx(3,0);
+		    
+		    // 		    for(Int i=0;i<residual.nRow();i++)
+		    // 		      {
+		    // 			ndx(2)=i;
+		    // 			//        if (residual.flag()(0,i) == 0)
+		    // 			for(Int xx=0;xx<2;xx++)
+		    // 			  {
+		    // 			    ndx(0)=xx;
+		    // 			    if (
+		    // 				(!residual.flagCube()(ndx))   &&
+		    // 				(!residual.flag()(xx,ndx(2)))  &&
+		    // 				(!residual.flagRow()(ndx(2))) &&
+		    // 				(residual.antenna1()(ndx(2)) != residual.antenna2()(ndx(2)))
+		    // 				)
+		    // 			      cout << xx<<"*";
+		    // 			  }
+		    
+		    // 			cout << "SDS: Residual: " << i    
+		    // 			     << " " << residual.modelVisCube()(0,0,i) 
+		    // 			     << " " << residual.modelVisCube()(1,0,i)
+		    // 			     << " " << residual.visCube()(0,0,i) 
+		    // 			     << " " << residual.visCube()(1,0,i)
+		    // 			     << " " << residual.flagRow()(i) 
+		    // 			     << " " << residual.flag()(0,i) 
+		    // 			     << " " << residual.flag()(1,i) 
+		    // 			     << " " << residual.flagCube()(0,0,i) 
+		    // 			     << " " << residual.flagCube()(1,0,i) 
+		    // 			     << " " << residual.antenna1()(i) 
+		    // 			     << " " << residual.antenna2()(i) 
+		    // 			     << endl;
+		    // 		      }
+		    // 		    exit(0);
+		    // 		  }
 		  }
 		else
 		  {
-		    antFlagged[ant]=True;
-		    epj.solveRPar()(axis0,0,ant)=0.0;//0.001;
-		    epj.solveRPar()(axis1,0,ant)=0.0;//-0.001;
+		    bestSolution = epj.solveRPar();
+		    bestChisq = Chisq;
 		  }
-		//epj.solveRPar()(axis0,0,ant)=0.001;
-		//epj.solveRPar()(axis1,0,ant)=-0.001;
+		if (localGain < 1e-20) {Converged = True; break;};
+	      }
+	    //         epj.solveRPar() = bestSolution;	
+	    // 	{
+	    // 	  IPosition shp(bestSolution.shape());
+	    // 	  cout << "-------------------------------------------------------------------------" << endl;
+	    // 	  for(Int ii=0;ii<shp(2);ii++)
+	    // 	    {
+	    // 	      cout << "Sol: ";
+	    // 	      for(Int jj=0;jj<shp(0);jj++)
+	    // 		cout << ii << " " << jj << " " << bestSolution(jj,0,ii);
+	    // 	      cout << " " << endl;
+	    // 	    }
+	    // 	}
+	    epj.diffResiduals(vi,ve,residual_p,gradient0_p,gradient1_p,flags);
+	    Chisq = getGOF(residual_p,iCorr,sumWt);
+	    logIO() << LogOrigin("PointingCal","SDS::solve2") 
+		    << "Solution interval = " << SlotNo 
+		    << " Final Chisq = " << Chisq 
+		    << " Polarization = " << iPol 
+		    << " NIter = " << iter
+		    << LogIO::NORMAL << LogIO::POST;
+	    logIO() << LogIO::NORMAL3 << "No. of iterations used: " 
+		    << iter
+		    << " Time total, per iteration:  " 
+		    << timer.all() << ", " << timer.all()/(iter+1) << " sec" << LogIO::POST;
 	    
-	      }
-	    //
-	    // Compute the residuals and the gradients with the
-	    // updated solutions and check for convergence.
-	    //
-	    epj.diffResiduals(vi,ve,residual_p, gradient0_p, gradient1_p, flags);
-	    Chisq  = getGOF(residual_p,iPol,sumWt,"Final");
-	    /*
-	    for(Int kk=0;kk<nAnt;kk++)
-	      cout << "SDS Sol Iter = " 
-		   << iPol << " " << iter << " " << axis0 << " " << axis1 << " " << kk << " "
-		   << epj.solveRPar()(axis0,0,kk) << " "
-		   << epj.solveRPar()(axis1,0,kk) 
-		   << Chisq << " " << bestChisq
-		   << endl;
-	    */
-	    dChisq = (bestChisq-Chisq);
-/*
-            cout << iter << " " << iPol << " " << Chisq << " " << bestChisq
-		 << " " << dChisq << " " << " " << bestChisq << " " << localGain << endl;
-*/
-
-	    if ((fabs(dChisq) < tolerance()))
-	      {
-		Converged=True;
-		epj.setRPar(bestSolution);
-		Chisq = bestChisq;
-		break;
-	      }
-	    if (Chisq >= bestChisq)
-	      {
-                // Backtracking....
-		localGain /= 2.0;
-		epj.setRPar(bestSolution); //oldOffsets;
-
-// 		IPosition shp(bestSolution.shape());
-// 		for(Int ii=0;ii<shp(2);ii++)
-// 		  for(Int jj=0;jj<shp(0);jj++)
-// 		    cout << "BT: " << bestSolution(jj,0,ii) << " " 
-// 			 << epj.solveRPar()(jj,0,ii) << endl;
-
-		epj.diffResiduals(vi,ve,residual_p, gradient0_p, gradient1_p, flags);
-		
-		Chisq  = getGOF(residual_p,iPol,sumWt,"BACK");
-
-// 		cout << "BT Chisq: " << Chisq << " " 
-// 		     << sum(bestSolution-epj.solveRPar()) 
-// 		     << " " << residual.nRow() << endl;
-// 		if (Chisq != bestChisq)
-// 		  {
-// 		    IPosition ndx(3,0);
-		    
-// 		    for(Int i=0;i<residual.nRow();i++)
-// 		      {
-// 			ndx(2)=i;
-// 			//        if (residual.flag()(0,i) == 0)
-// 			for(Int xx=0;xx<2;xx++)
-// 			  {
-// 			    ndx(0)=xx;
-// 			    if (
-// 				(!residual.flagCube()(ndx))   &&
-// 				(!residual.flag()(xx,ndx(2)))  &&
-// 				(!residual.flagRow()(ndx(2))) &&
-// 				(residual.antenna1()(ndx(2)) != residual.antenna2()(ndx(2)))
-// 				)
-// 			      cout << xx<<"*";
-// 			  }
-			
-// 			cout << "SDS: Residual: " << i    
-// 			     << " " << residual.modelVisCube()(0,0,i) 
-// 			     << " " << residual.modelVisCube()(1,0,i)
-// 			     << " " << residual.visCube()(0,0,i) 
-// 			     << " " << residual.visCube()(1,0,i)
-// 			     << " " << residual.flagRow()(i) 
-// 			     << " " << residual.flag()(0,i) 
-// 			     << " " << residual.flag()(1,i) 
-// 			     << " " << residual.flagCube()(0,0,i) 
-// 			     << " " << residual.flagCube()(1,0,i) 
-// 			     << " " << residual.antenna1()(i) 
-// 			     << " " << residual.antenna2()(i) 
-// 			     << endl;
-// 		      }
-// 		    exit(0);
-// 		  }
-	      }
-	    else
-	      {
-		bestSolution = epj.solveRPar();
-		bestChisq = Chisq;
-	      }
-            if (localGain < 1e-20) {Converged = True; break;};
-	  }
-//         epj.solveRPar() = bestSolution;	
-// 	{
-// 	  IPosition shp(bestSolution.shape());
-// 	  cout << "-------------------------------------------------------------------------" << endl;
-// 	  for(Int ii=0;ii<shp(2);ii++)
-// 	    {
-// 	      cout << "Sol: ";
-// 	      for(Int jj=0;jj<shp(0);jj++)
-// 		cout << ii << " " << jj << " " << bestSolution(jj,0,ii);
-// 	      cout << " " << endl;
-// 	    }
-// 	}
-        epj.diffResiduals(vi,ve,residual_p,gradient0_p,gradient1_p,flags);
-        Chisq = getGOF(residual_p,iPol,sumWt);
-	logIO() << LogOrigin("PointingCal","SDS::solve2") 
-		<< "Solution interval = " << SlotNo 
-		<< " Final Chisq = " << Chisq 
-		<< " Polarization = " << iPol 
-	        << " NIter = " << iter
-		<< LogIO::NORMAL << LogIO::POST;
-	logIO() << LogIO::NORMAL3 << "No. of iterations used: " 
-		<< iter
-		<< " Time total, per iteration:  " 
-		<< timer.all() << ", " << timer.all()/(iter+1) << " sec" << LogIO::POST;
-	
-      }
+	  } // if (iPol >= 0)
+      } // for(Int ip=0; ip<nPol; ip++)
     //    return (Chisq < tolerance()? Chisq:-Chisq);
     return (Converged ? Chisq: -Chisq);
   }

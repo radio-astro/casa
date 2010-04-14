@@ -564,10 +564,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //    l_off = pointingOffsets(Slicer(IPosition(4,0,0,0,0),IPosition(4,1,1,NAnt+1,0)));
     //    m_off = pointingOffsets(Slicer(IPosition(4,1,0,0,0),IPosition(4,1,1,NAnt+1,0)));
-    for(Int j=0;j<NAnt;j++)
+    IPosition tndx(3,0,0,0), sndx(4,0,0,0,0);
+    for(tndx(2)=0;tndx(2)<NAnt; tndx(2)++,sndx(2)++)
+      //    for(Int j=0;j<NAnt;j++)
       {
-	l_off(IPosition(3,0,0,j)) = pointingOffsets(IPosition(4,0,0,j,0));
-	m_off(IPosition(3,0,0,j)) = pointingOffsets(IPosition(4,1,0,j,0));
+	// l_off(IPosition(3,0,0,j)) = pointingOffsets(IPosition(4,0,0,j,0));
+	// m_off(IPosition(3,0,0,j)) = pointingOffsets(IPosition(4,1,0,j,0));
+
+	sndx(0)=0; l_off(tndx) = pointingOffsets(sndx);
+	sndx(0)=2; m_off(tndx) = pointingOffsets(sndx);
       }
     return NAnt;
     if (!Evaluate) return NAnt;
@@ -841,6 +846,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    << LogIO::NORMAL;
     
     localPB.resize(image.shape()); localPB.setCoordinateInfo(image.coordinates());
+    localPB.setMaximumCacheSize(cachesize);
+    // cerr << "Max. cache size = " << localPB.maximumCacheSize() << " " << cachesize << endl;
     //
     // If this is the first time, resize the average PB
     //
@@ -870,7 +877,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     IPosition twoDPBShape(localPB.shape());
     TempImage<Complex> localTwoDPB(twoDPBShape,localPB.coordinates());
-    
+    localTwoDPB.setMaximumCacheSize(cachesize);
     Float peak=0;
     Int NAnt;
     noOfPASteps++;
@@ -1315,8 +1322,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     sampling*=Double(convSampling);
     sampling*=Double(nx)/Double(convSize);
 
-    cerr << "Sampling on the sky = " << dc.increment() << " " << nx << "x" << ny << endl;
-    cerr << "Sampling on the PB  = " << sampling << " " << convSize << "x" << convSize << endl;
+    // cerr << "Sampling on the sky = " << dc.increment() << " " << nx << "x" << ny << endl;
+    // cerr << "Sampling on the PB  = " << sampling << " " << convSize << "x" << convSize << endl;
     dc.setIncrement(sampling);
     
     Vector<Double> unitVec(2);
@@ -1378,8 +1385,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfUVScale(1)=Float(twoDPB.shape()(1))*sampling(1);
     cfUVOffset(0)=Float(twoDPB.shape()(0))/2;
     cfUVOffset(1)=Float(twoDPB.shape()(1))/2;
-    cerr << uvScale << " " << cfUVScale << endl;
-    cerr << uvOffset << " " << cfUVOffset << endl;
+    // cerr << uvScale << " " << cfUVScale << endl;
+    // cerr << uvOffset << " " << cfUVOffset << endl;
     ConvolveGridder<Double, Complex>
       //      ggridder(IPosition(2, inner, inner), cfUVScale, cfUVOffset, "SF");
       ggridder(IPosition(2, inner, inner), uvScale, uvOffset, "SF");
