@@ -2,62 +2,61 @@ from tasks import *
 from taskinit import *
 from __main__ import inp
 import os
+import unittest
+
+#     Unit tests of visstat 
+#
+# # This example shows who to run it manually from outside casapy.
+# casapy -c runUnitTest test_visstat
+#
+# or
+#
+# # This example shows who to run it manually from with casapy.
+# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
+# import runUnitTest
+# runUnitTest.main(['test_visstat'])
+#
 
 epsilon = 0.0001
 
-def description():
-    return "Test of visstat task"
+fits='ngc5921.fits'
+vis = 'ngc5921.ms'
 
-def run():
-    expected = {'ngc5921.ms':
-                {'DATA': {'rms': 16.493364334106445,
-                          'medabsdevmed': 0.043623808771371841,
-                          'min': 2.2130521756480448e-05,
-                          'max': 73.75,
-                          'sum': 12927749.2227745,
-                          'quartile': 0.28097864985466003,
-                          'median': 0.052413057535886765,
-                          'sumsq': 776452297.33716965,
-                          'stddev': 15.859288085070023,
-                          'var': 251.517018565244,
-                          'npts': 2854278.0,
-                          'mean': 4.5292537106667607}},
-                'flagdatatest.ms':
-                {'DATA': {'rms': 0.20008489489555359,
-                          'medabsdevmed': 0.036651238799095154,
-                          'min': 0.051132798194885254,
-                          'max': 0.32321548461914062,
-                          'sum': 386384.63405715674,
-                          'quartile': 0.073822185397148132,
-                          'median': 0.19779442250728607,
-                          'sumsq': 79473.508742821141,
-                          'stddev': 0.046371191135460586,
-                          'var': 0.0021502873673214184,
-                          'npts': 1985152.0,
-                          'mean': 0.19463730437626778}}}
+class visstat_test(unittest.TestCase):
+    def setUp(self):
+        if(os.path.exists(fits)):
+            os.system('rm -rf ' +fits)
 
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ngc5921/'
+        os.system('cp -r ' +datapath + fits +' ' + fits)
 
-
-
-
-
-    for vis in ['ngc5921.ms', 'flagdatatest.ms']:
-
-        # ngc5921.ms is unflagged
-        # flagdatatest.ms is partially flagged
-
+    def tearDown(self):
+        os.system('rm -rf ' +fits)        
+        os.system('rm -rf ' +vis+'*')        
+    
+    def test_run(self):
+        '''Visstat: Test several modes'''
+    
+        expected = {'ngc5921.ms':
+                    {'DATA': {'max': 73.75,
+                              'mean': 4.8371031336376049,
+                              'medabsdevmed': 0.045013353228569031,
+                              'median': 0.053559452295303345,
+                              'min': 2.2130521756480448e-05,
+                              'npts': 2660994.0,
+                              'quartile': 0.30496686697006226,
+                              'rms': 17.081207275390625,
+                              'stddev': 16.382008275102407,
+                              'sum': 12871502.415990865,
+                              'sumsq': 776391995.30866611,
+                              'var': 268.37019512552371}}}
+            
         print "Getting data", vis, "..."
         
-        if vis == 'ngc5921.ms':
-            importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                         '/data/regression/ngc5921/ngc5921.fits', \
-                         vis)
-        else:
-            os.system('cp -R ' + os.environ.get('CASAPATH').split()[0] +\
-                      '/data/regression/flagdata/flagdatatest.ms ' + vis)
-
+        importuvfits(fits, vis)
         listobs(vis=vis)
-
+        
+        flagdata(vis=vis, antenna='17')
         flagdata(vis=vis, mode='summary')
 
         s = visstat(vis=vis, axis='amp', datacolumn='data')
@@ -85,23 +84,20 @@ def run():
                 raise Exception("Numbers differ, expected %s, got %s" % \
                       (str(expected[vis]['DATA'][e]), str(s['DATA'][e])))
 
-
         # Check of channel selection
-        if vis == 'ngc5921.ms':
-            for ch in [1, 2, 4, 7, 13, 62]:
-              for corr in ['ll', 'rr', 'll,rr']:
-                print "Call with spw='0:1~"+str(ch)+"', correlation="+corr
-                s = visstat(vis=vis, axis='amp', datacolumn='data', spw='0:1~'+str(ch), correlation=corr)
-                print s
-                n_expected = 2854278/63 * ch
-
-                if corr in ['ll', 'rr']:
-                    n_expected /= 2
-                
-                n = int(s['DATA']['npts'])
-                print "Checking npts: %s vs %s" % (n, n_expected)
-                if n != n_expected:
-                    raise Exception(str(n_expected) + " points expected, but npts = " + str(n))
+        for ch in [1, 2, 4, 7, 13, 62]:
+          for corr in ['ll', 'rr', 'll,rr']:
+            print "Call with spw='0:1~"+str(ch)+"', correlation="+corr
+            s = visstat(vis=vis, axis='amp', datacolumn='data', spw='0:1~'+str(ch), correlation=corr)
+            print s
+            n_expected = 2660994/63 * ch   
+            if corr in ['ll', 'rr']:
+                n_expected /= 2
+            
+            n = int(s['DATA']['npts'])
+            print "Checking npts: %s vs %s" % (n, n_expected)
+            if n != n_expected:
+                raise Exception(str(n_expected) + " points expected, but npts = " + str(n))
 
             
         # Test running on all columns
@@ -153,7 +149,6 @@ def run():
                     if dc != '' and not dc.upper() in s.keys():
                         raise Exception("Missing key " + dc.upper() + " in result")
 
-
         # Few tests of special cases
         for a in range(1, 5):
             s = visstat(vis=vis, axis='ANTENNA1', antenna=str(a)+'&26')
@@ -197,8 +192,9 @@ def run():
         print "min = ", s['SCAN_NUMBER']['min']
         if abs(s['SCAN_NUMBER']['min'] - 1) > epsilon:
             raise Exception("Error")
+    
 
-    return []
-
-def data():
-    return []
+def suite():
+    return [visstat_test]
+    
+    
