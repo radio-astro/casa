@@ -153,7 +153,7 @@ ImageInputParameters::ImageInputParameters(const ImageInterface<Float>& image) :
     	sort.sortKey (arrMax, TpUInt, 0, Sort::Descending);
     	Vector<uInt> inxvec;
     	Vector<uInt> consol(0);
-    	uInt nr = sort.sort(inxvec, arrSize);
+    	sort.sort(inxvec, arrSize);
     	for (uInt i=0; i<arrSize; i++) {
     		uInt idx = inxvec(i);
     		if (i==0) {
