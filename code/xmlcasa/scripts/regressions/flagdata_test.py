@@ -67,6 +67,47 @@ class test_case(unittest.TestCase):
         len(fg.getflagversionlist()) == 6
         fg.done()
 
+class test_flagmanager(unittest.TestCase):
+
+    def setUp(self):
+        self.vis = "ngc5921.ms"
+        if os.path.exists(self.vis):
+            print "The MS is already exists"
+        else:
+            print "Importing %s..." % (self.vis)
+            importuvfits(os.environ.get('CASAPATH').split()[0] + \
+                         '/data/regression/ngc5921/ngc5921.fits', \
+                         self.vis)
+
+        flagdata(vis=self.vis, unflag=True)
+
+    def test1(self):
+        """Create, then restore autoflag"""
+
+        flagdata(vis = self.vis, mode='summary')
+        flagmanager(vis = self.vis)
+        
+        flagdata(vis = self.vis, antenna="2")
+        
+        flagmanager(vis = self.vis)
+        ant2 = flagdata(vis = self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 there were", ant2, "flags"
+
+        # Change flags, then restore
+        flagdata(vis = self.vis, antenna="3")
+        flagmanager(vis = self.vis)
+        ant3 = flagdata(vis = self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 and 3 there were", ant3, "flags"
+
+        flagmanager(vis = self.vis, mode='restore', versionname='manualflag_3')
+        restore2 = flagdata(vis = self.vis, mode='summary')['flagged']
+
+        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags"
+
+        assert restore2 == ant2
+
 
 class test_statistics_queries(unittest.TestCase):
 
@@ -75,7 +116,6 @@ class test_statistics_queries(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Importing data..."
-            os.system('rm -rf ' + vis)
             importuvfits(os.environ.get('CASAPATH').split()[0] + \
                          '/data/regression/ngc5921/ngc5921.fits', \
                          vis)
@@ -175,8 +215,9 @@ class test_statistics_queries(unittest.TestCase):
         flagdata(vis=vis, unflag=true)
 
 def main():
-   
-    # Run the test class through PyUnit (this would be done by the unit test driver)
+
+    unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_flagmanager))
+
     unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_case))
 
     global vis  # make the variable visible from the test class
