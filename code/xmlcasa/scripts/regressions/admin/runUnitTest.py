@@ -26,9 +26,7 @@ import nose
 
 
 # List of tests to run
-OLD_TESTS = ['imregrid_test',
-#             'imval_test',
-#             'visstat_test',
+OLD_TESTS = ['imregrid_test'
              ]
 
 NEW_TESTS = ['test_asdm-import',
@@ -49,7 +47,8 @@ NEW_TESTS = ['test_asdm-import',
              'test_plotants',
              'test_report',
              'test_smoothcal',
-             'test_vishead']
+             'test_vishead',
+             'test_visstat']
 
 whichtests = 0
 
