@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import tempfile
 from taskinit import *
 from update_spw import *
