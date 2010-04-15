@@ -222,7 +222,8 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/tget.py
   scripts/update_spw.py
   scripts/viewertool.py
-  scripts/vishead_util.py )
+  scripts/vishead_util.py
+  scripts/task_msmoments.py )
 
 casa_add_tasks( xmlcasa xmlcasa_tasks 
   tasks/accum.xml
@@ -316,7 +317,8 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/viewer.xml
   tasks/vishead.xml
   tasks/visstat.xml
-  tasks/widefield.xml )
+  tasks/widefield.xml
+  tasks/msmoments.xml )
 
 casa_add_tools( tools_idl tools_sources 
   implement/alma/asdm2msfillertask.xml

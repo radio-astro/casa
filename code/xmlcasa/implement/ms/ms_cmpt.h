@@ -18,6 +18,7 @@
 #include <xmlcasa/record.h>
 #include <xmlcasa/variant.h>
 #include <xmlcasa/ms/ms_forward.h>
+#include <xmlcasa/tables/table_cmpt.h>
 
 // put includes here
 
@@ -156,6 +157,23 @@ class ms
 
     bool uvsub(const bool reverse = false);
 
+    //bool 
+    ::casac::table *
+      moments(const std::vector<int>& moments, 
+              //const ::casac::variant& vmask,
+              //const ::casac::variant& stokes,
+              //const std::vector<std::string>& in_method,
+              //const std::vector<int>& smoothaxes,
+              //const ::casac::variant& smoothtypes,
+              //const std::vector<double>& smoothwidths,
+              const std::vector<int>& d_includepix,
+              const std::vector<int>& d_excludepix,
+              const double peaksnr, const double stddev,
+              const std::string& velocityType, const std::string& out,
+              //const std::string& smoothout, 
+              //const std::string& pgdevice,
+              //const int nx, const int ny, const bool yind,
+              const bool overwrite, const bool async=false);
     private:
 
 #include <xmlcasa/ms/ms_private.h>

@@ -654,6 +654,13 @@ class par(str):
 		"""
 
 	@staticmethod
+	def excluderow():
+		"""
+        	excluderow -- List of rows to exclude
+                default: [-1] (don't exclude pixels); example=[100,200]
+		"""
+
+	@staticmethod
 	def expr():
 		"""
 		expr -- mathematical expression using scantables
@@ -1066,6 +1073,14 @@ class par(str):
 		"""
 	        includepix -- Range of pixel values to include
                 default: [-1] (all pixels); example=[0.02,100.0]
+		"""
+
+	@staticmethod
+	def includerow():
+		"""
+                (for msmoments)
+	        includepix -- List of rows to include
+                default: [-1] (all pixels); example=[2,100]
 		"""
 
 	@staticmethod
@@ -1529,6 +1544,14 @@ class par(str):
 		"""
 
 	@staticmethod
+	def msname():
+		"""
+                (for msmoments)
+                Name of input MS data
+		default: none; example: msname=&quot;OrionS_rawACSmod&quot;
+		"""
+
+	@staticmethod
 	def multicolor():
 		"""
        		multicolor -- Multi-color plotting of channels and polarizations
@@ -1674,6 +1697,13 @@ class par(str):
 
 		(for immoments)
         	outfile -- output image file name (or root for multiple moments)
+                default: '' (input+auto-determined suffix)
+		example: outfile='source_moment'
+
+		----------------------------------------------------------------
+
+		(for msmoments)
+        	outfile -- output MS file name (or root for multiple moments)
                 default: '' (input+auto-determined suffix)
 		example: outfile='source_moment'
 
