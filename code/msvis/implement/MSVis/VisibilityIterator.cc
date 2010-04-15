@@ -544,42 +544,47 @@ void ROVisibilityIterator::setTileCache(){
 	if(columns[k]==MS::columnName(MS::WEIGHT_SPECTRUM))
 	  if(!existsWeightSpectrum())
 	    dataManType="";
-	
+     
 	if(dataManType.contains("Tiled") ){
-	  ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
-							 cdesc.dataManagerGroup());
-	  
-	  /*
-	  //This is for the data columns, weight_spectrum and flag only 
-	  if((columns[k] != MS::columnName(MS::WEIGHT)) && 
-                                    (columns[k] != MS::columnName(MS::UVW))){
-	  uInt nHyper = tacc.nhypercubes();
-	  // Find smallest tile shape
-	  Int lowestProduct = 0;
-	  Int lowestId = 0;
-	  Bool firstFound = False;
-	  for (uInt id=0; id < nHyper; id++) {
+	  try {
+	    
+	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
+							   cdesc.dataManagerGroup());
+	    
+	    /*
+	    //This is for the data columns, weight_spectrum and flag only 
+	    if((columns[k] != MS::columnName(MS::WEIGHT)) && 
+	    (columns[k] != MS::columnName(MS::UVW))){
+	    uInt nHyper = tacc.nhypercubes();
+	    // Find smallest tile shape
+	    Int lowestProduct = 0;
+	    Int lowestId = 0;
+	    Bool firstFound = False;
+	    for (uInt id=0; id < nHyper; id++) {
 	    Int product = tacc.getTileShape(id).product();
 	    if (product > 0 && (!firstFound || product < lowestProduct)) {
-	      lowestProduct = product;
-	      lowestId = id;
-	      if (!firstFound) firstFound = True;
+	    lowestProduct = product;
+	    lowestId = id;
+	    if (!firstFound) firstFound = True;
 	    }
-	  }
-	  Int nchantile=tacc.getTileShape(lowestId)(1);
-	  if(nchantile > 0)
+	    }
+	    Int nchantile=tacc.getTileShape(lowestId)(1);
+	    if(nchantile > 0)
 	    nchantile=channelGroupSize_p/nchantile+1;
-	  if(nchantile<3)
+	    if(nchantile<3)
 	    nchantile=10;
-          
-	  
-	  tacc.setCacheSize (0, nchantile);
+	    
+	    
+	    tacc.setCacheSize (0, nchantile);
+	    }
+	    else
+	    */
+	    //One tile only for now ...seems to work faster
+	    tacc.setCacheSize (0, 1);
+	  } catch (AipsError x) {
+	    //It failed so leave the caching as is
+	    continue;
 	  }
-          else
-	  */
-	  //One tile only for now ...seems to work faster
-	  tacc.setCacheSize (0, 1);
-	  
 	  
 	}
       }
