@@ -314,7 +314,6 @@ class clean_test2(unittest.TestCase):
     def tearDown(self):
         if (os.path.exists(self.msfile)):
             os.system('rm -rf ' + self.msfile)
-        pass
         
     def test1a(self):
         """Clean 1a: Non-default mode velocity"""
