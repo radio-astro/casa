@@ -66,7 +66,16 @@ void MSAnalysis::init( const MeasurementSet *inMS )
   tableName_ = tableIn_ ;
 
   ms_p = new MeasurementSet( tableName_ ) ;
-}
+  
+  if ( !(ms_p->isColumn( MSMainEnums::FLOAT_DATA )) ) {
+    delete ms_p ;
+    ms_p = 0 ;
+    *itsLog << LogIO::SEVERE 
+            << "MSAnalysis only accepts MS with FLOAT_DATA" 
+            << LogIO::EXCEPTION ;
+    return ;
+  }
+} 
 
 // setMS
 void MSAnalysis::setMS( MeasurementSet *inMS ) 
@@ -171,8 +180,9 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
 
     // include/exclude rows
     if ( includepix.nelements() != 0 && excludepix.nelements() != 0 ) {
-      *itsLog << LogIO::SEVERE 
-              << "You can only give one of arguments include or exclude" << LogIO::EXCEPTION ;
+//       *itsLog << LogIO::SEVERE 
+//               << "You can only give one of arguments include or exclude" << LogIO::EXCEPTION ;
+      throw AipsError( "You can only give one of arguments include or exclude" ) ;
     } 
     else if ( includepix.nelements() != 0 ) {
       // include rows
@@ -361,7 +371,8 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
         msconcat = 0 ;
         // output MS
         if ( idx == -1 ) {
-          *itsLog << LogIO::SEVERE << "Failed to generate moments." << LogIO::EXCEPTION ;
+          //*itsLog << LogIO::SEVERE << "Failed to generate moments." << LogIO::EXCEPTION ;
+          throw AipsError( "Failed to generate moments." ) ;
           return 0 ;
         }
         String msName = msMoments[idx]->tableName() ;
@@ -379,7 +390,8 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
         if ( !overwrite ) {
           File fOut( outTable ) ;
           if ( fOut.exists() ) {
-            *itsLog << LogIO::SEVERE << outTable << " exists." << LogIO::EXCEPTION ;
+            //*itsLog << LogIO::SEVERE << outTable << " exists." << LogIO::EXCEPTION ;
+            throw AipsError( outTable + " exists." ) ;
           }
         }          
         msMoments[i]->deepCopy( outTable, Table::New, True ) ;
@@ -391,7 +403,8 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
     else {
       for ( uInt i = 0 ; i < numMoments ; i++ ) {
         if ( msMoments[i] == 0 ) {
-          *itsLog << LogIO::SEVERE << "Failed to generate moments." << LogIO::EXCEPTION ;
+          //*itsLog << LogIO::SEVERE << "Failed to generate moments." << LogIO::EXCEPTION ;
+          throw AipsError( "Failed to generate moments." ) ;
           return 0 ;
         }
         // output MS
@@ -410,7 +423,8 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
         if ( !overwrite ) {
           File fOut( outTable ) ;
           if ( fOut.exists() ) {
-            *itsLog << LogIO::SEVERE << outTable << " exists." << LogIO::EXCEPTION ;
+            //*itsLog << LogIO::SEVERE << outTable << " exists." << LogIO::EXCEPTION ;
+            throw AipsError( outTable + " exists." ) ;
           }
         }          
         msMoments[i]->deepCopy( outTable, Table::New, True ) ;
