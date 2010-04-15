@@ -2,6 +2,8 @@
 """ Script to run unit tests from the command line as: 
     casapy [casa-options] -c runUnitTest.py testname1 testname2...
     casapy [casa-options] -c runUnitTest.py testname1[test_r,test23] testname2...
+    casapy [casa-options] -c runUnitTest.py --help
+    casapy [casa-options] -c runUnitTest.py --short
     casapy [casa-options] -c runUnitTest.py
     
     or from inside casapy:
@@ -29,7 +31,7 @@ import nose
 OLD_TESTS = [
             ]
 
-NEW_TESTS = ['test_asdm-import',
+FULL_LIST = ['test_asdm-import',
              'test_boxit',
              'test_clean',
              'test_clearstat',
@@ -51,13 +53,37 @@ NEW_TESTS = ['test_asdm-import',
              'test_vishead',
              'test_visstat']
 
-whichtests = 0
+SHORT_LIST = ['test_asdm-import',
+             'test_boxit',
+             'test_clean',
+#             'test_exportasdm',
+             'test_imfit',
+             'test_imhead',
+             'test_imregrid',
+             'test_imstat',
+             'test_imval',
+             'test_plotants',
+             'test_smoothcal',
+             'test_vishead']
 
+def usage():
+    print '*************************************************************************'
+    print '\nRunUnitTest will execute unit test(s) of CASA tasks.'
+    print 'Usage:\n'
+    print 'casapy [casapy-options] -c runUnitTest.py [options]\n'
+    print 'options:'
+    print 'no option: will run all tests defined in FULL_LIST list'
+    print 'test_name: will run only this test (more tests are separated by spaces)'
+    print '--short:   will run only a short list of tests defined in SHORT_LIST'
+    print '--help:    prints this message\n'
+    print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
+    print '**************************************************************************'
+    
 def is_old(name):
     '''Check if the test is old or new'''
     if (OLD_TESTS.__contains__(name)):
         return True
-    elif (NEW_TESTS.__contains__(name)):
+    elif (FULL_LIST.__contains__(name)):
         return False
     else:
         return None
@@ -87,14 +113,23 @@ def gettests(testfile):
         temp = testfile[n0+1:n1]
         tests = temp.split(',')
         return tests
-    
+
+# Define which tests to run    
+whichtests = 0
 
 def main(testnames=[]):
+
+    if whichtests == 0:
+        listtests = []
+    if whichtests == 1:
+        listtests = testnames
+    if whichtests == 2:
+        listtests = SHORT_LIST
     
-    if testnames == []:
-        whichtests = 0
-    else:
-        whichtests = 1
+#    if testnames == []:
+#        whichtests = 0
+#    else:
+#        whichtests = 1
         
 
     # Directories
@@ -122,15 +157,15 @@ def main(testnames=[]):
         os.makedirs(xmldir)
     
     
-    # RUN THE TESTS
+    # ASSEMBLE and RUN the TESTS
     '''Run all tests'''
     if not whichtests:
-        print "Starting unit tests for %s%s: " %(OLD_TESTS,NEW_TESTS)
+        print "Starting unit tests for %s%s: " %(OLD_TESTS,FULL_LIST)
         
         # Assemble the old tests       
-        testnames = OLD_TESTS
+        listtests = OLD_TESTS
         list = []
-        for f in testnames:
+        for f in listtests:
             try:
                 testcase = UnitTest(f).getFuncTest()
                 list = list+[testcase]
@@ -138,8 +173,8 @@ def main(testnames=[]):
                 traceback.print_exc()
         
         # Assemble the new tests
-        testnames = NEW_TESTS        
-        for f in testnames:
+        listtests = FULL_LIST        
+        for f in listtests:
             try:
                 tests = UnitTest(f).getUnitTest()
                 list = list+tests
@@ -147,23 +182,22 @@ def main(testnames=[]):
                 traceback.print_exc()
                 
         # Run all tests and create a XML report
-        xmlfile = xmldir+'nose.xml'
-        try:
-            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                                  suite=list)
-        except:
-            print "Exception: failed to run the test"
-            traceback.print_exc()
-            
-        else:
-            os.chdir(PWD)
+#        xmlfile = xmldir+'nose.xml'
+#        try:
+#            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+#                                  suite=list)
+#        except:
+#            print "Exception: failed to run the test"
+#            traceback.print_exc()            
+#        else:
+#            os.chdir(PWD)
     
-    else:
+    elif (whichtests == 1):
         '''Run specific tests'''
         # is this an old or a new test?
         oldlist = []
         newlist = []
-        for f in testnames:
+        for f in listtests:
             if not haslist(f):
                 if is_old(f):
                     oldlist.append(f)
@@ -208,19 +242,44 @@ def main(testnames=[]):
                     list = list+testcases
             except:
                 traceback.print_exc()
-
-                 
+                                 
         # Run the tests and create a XML report
-        xmlfile = xmldir+'nose.xml'
-        try:
-            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                                  suite=list)
-        except:
-            print "Exception: failed to run the test"
-            traceback.print_exc()
+#        xmlfile = xmldir+'nose.xml'
+#        try:
+#            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+#                                  suite=list)
+#        except:
+#            print "Exception: failed to run the test"
+#            traceback.print_exc()            
+#        else:
+#            os.chdir(PWD)
             
-        else:
-            os.chdir(PWD)
+    elif(whichtests == 2):
+        '''Run the SHORT_LIST of tests only'''
+        print "Starting unit tests for %s: " %SHORT_LIST
+        
+        # Assemble the short list of tests
+        listtests = SHORT_LIST        
+        list = []    
+        for f in listtests:
+            try:
+                tests = UnitTest(f).getUnitTest()
+                list = list+tests
+            except:
+                traceback.print_exc()
+                
+    # Run all tests and create a XML report
+    xmlfile = xmldir+'nose.xml'
+    try:
+        result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+                              suite=list)
+    except:
+        print "Exception: failed to run the test"
+        traceback.print_exc()
+        
+    else:
+        os.chdir(PWD)
+
 
 if __name__ == "__main__":
     # Get command line arguments
@@ -236,13 +295,20 @@ if __name__ == "__main__":
         # Will run all tests
         whichtests = 0
     elif sys.argv.__len__() > i+2:
-        # Will run specific tests
+        # Will run specific tests.
         whichtests = 1
         
         while len(la) > 0:
             elem = la.pop()
+            if elem == '--help':
+                usage()
+                sys.exit()
+            if elem == '--short':
+                # run only the SHORT_LIST
+                whichtests = 2
+                break    
             if elem == this_file:
-                break           
+                break
             
             testnames.append(elem)
         
