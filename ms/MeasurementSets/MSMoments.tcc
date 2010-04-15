@@ -382,7 +382,6 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
 
   // Prepare output files
   Vector<String> suffixes( moments_p.nelements() ) ;
-  Vector<Unit> momentUnits( moments_p.nelements() ) ;
   ROArrayColumn<Float> floatDataCol( *ms_p, "FLOAT_DATA" ) ;
   ColumnDesc desc = floatDataCol.columnDesc() ;
   TableRecord rec = desc.rwKeywordSet() ;
@@ -392,10 +391,11 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
   for ( uInt i = 0 ; i < moments_p.nelements() ; i++ ) {
     // Loop over desired output moments
     String suffix ;
+    Unit momentUnits ;
 
     // Set moment data units and assign pointer to output moments array
     // Value of goodUnits is the same for each output moment
-    goodUnits = setOutThings( suffix, momentUnits[i], dataUnits, 
+    goodUnits = setOutThings( suffix, momentUnits, dataUnits, 
                               momentAxisUnits, moments_p( i ),
                               convertToVelocity_p ) ;
     // create output MSs
@@ -495,7 +495,7 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
     colDesc.setName( "FLOAT_DATA" ) ;
     if ( goodUnits ) {
       // TODO: Set unit for MS?
-      colDesc.rwKeywordSet().define( colDesc.rwKeywordSet().fieldNumber( "UNIT" ), momentUnits[i].getName() ) ;
+      colDesc.rwKeywordSet().define( colDesc.rwKeywordSet().fieldNumber( "UNIT" ), momentUnits.getName() ) ;
     }
     else {
       if ( giveMessage ) {
