@@ -97,7 +97,7 @@ if ($release_dir[0] =~ /^http/) {
     }
 }
 else {
-    sys_exe("ln -s $release_dir/$latest_release $prefix/$latest_release");
+    sys_exe("ln -s $release_dir[0]/$latest_release $prefix/$latest_release");
 }
 
 if (! -d $result_dir) {
