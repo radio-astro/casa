@@ -1,6 +1,6 @@
-//# QtPlotServer.qo.h: main class for plotting; panels are created from here
+//# QtPlotHistogram.h: QwtPlotItem specialization for histograms
 //# with surrounding Gui functionality
-//# Copyright (C) 2005
+//# Copyright (C) 2010
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -26,37 +26,40 @@
 //#
 //# $Id: QtPlotServer.qo.h,v 1.7 2006/10/10 21:42:05 dking Exp $
 
-#ifndef QTDBUSPLOTSERVER_QO_H_
-#define QTDBUSPLOTSERVER_QO_H_
+#ifndef QTPLOTHISTOGRAM_H_
+#define QTPLOTHISTOGRAM_H_
 
-#include <QObject>
+#include <qglobal.h>
+#include <qcolor.h>
+#include <qwt_plot_item.h>
+#include <qwt_interval_data.h>
+
+class QtPlotHistogram: public QwtPlotItem {
+    public:
+	explicit QtPlotHistogram( const QString &label = QString::null );
+	explicit QtPlotHistogram( const QwtText &title );
+	~QtPlotHistogram( ) { }
+
+	void setData( const QwtIntervalData &data );
+	const QwtIntervalData &data( ) const { return data_; }
+
+	QwtDoubleRect boundingRect( ) const;
+	int rtti( ) const { return QwtPlotItem::Rtti_PlotHistogram; }
+
+	void draw( QPainter *, const QwtScaleMap &xMap, const QwtScaleMap &yMap, const QRect & ) const;
+
+	void setBaseline(double reference);
+	double baseline() const { return reference_; }
+
+	void setColor(const QColor &c);
+	QColor color() const { return color_; }
 
 
-namespace casa {
-
-    class QtDBusPlotSvrAdaptor;
-    class QtPlotSvrPanel;
-
-    class QtPlotServer : public QObject {
-    Q_OBJECT
-	public:
-
-	    QtPlotServer( const char *dbus_name=0 );
-	    ~QtPlotServer( );
-
-	    // name used to initialize connection to dbus
-	    static const QString &name( );
-
-	    QtPlotSvrPanel *panel( const QString &title, const QString &xlabel="", const QString &ylabel="",
-				   const QString &window_title="", const QString &legend="bottom" );
-
-	private:
-	    static QString name_;
-	    QString dbus_name_;
-	    QtDBusPlotSvrAdaptor* dbus_;
-
-  };
-
-}
+    private:
+	virtual void draw_bar( QPainter *, Qt::Orientation orientation, const QRect & ) const;
+	QwtIntervalData data_;
+	double reference_;
+	QColor color_;
+};
 
 #endif

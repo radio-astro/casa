@@ -184,8 +184,7 @@ public:
     
     // Connects to the DBus server using the dbusName() method with the current
     // process ID.  Returns whether the connection succeeded or not.
-    bool connectToDBus();
-    
+    bool connectToDBus( const QString &dbus_name="" );
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().
     void parametersHaveChanged(const PlotMSWatchedParameters& params,

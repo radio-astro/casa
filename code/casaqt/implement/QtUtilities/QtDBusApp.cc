@@ -42,13 +42,18 @@ namespace casa {
 	return bus;
     }
 
+    QString QtDBusApp::generateServiceName( const QString &name, const pid_t pid ) {
+	QString result;
+	QTextStream(&result) << service_base << name << "_" << pid;
+	return result;
+    }
+
     QString QtDBusApp::dbusServiceName( const QString &name, const pid_t pid ) {
 
 	if ( service_name )
 	    return *service_name;
 
-	service_name = new QString( );
-	QTextStream(service_name) << service_base << name << "_" << pid;
+	service_name = new QString( generateServiceName(name,pid) );
 	return *service_name;
     }
 
@@ -107,12 +112,13 @@ namespace casa {
 	if ( service_name )
 	    return *service_name;
 
-	service_name = new QString( );
 
-	if ( name.size( ) > 0 )
+	if ( name.size( ) > 0 ) {
+	    service_name = new QString( );
 	    QTextStream(service_name) << service_base << name;
-	else
-	    QTextStream(service_name) << service_base << getName( ) << "_" << getpid( );
+	} else {
+	    service_name = new QString( generateServiceName(getName(), getpid( )) );
+	}
 
 	return *service_name;
     }
@@ -160,6 +166,26 @@ namespace casa {
 	used_ids.push_back(rn);
 	return rn;
     }
+
+    bool QtDBusApp::connectToDBus( QObject *object,  const QString &dbus_name ) {
+
+	bool dbusRegistered = false;
+
+	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(dbus_name)) )
+	    return false;
+
+	try {
+	    // Register service and object.
+	    dbusRegistered = connection().isConnected() &&
+			     connection().registerService(dbusServiceName(dbus_name)) &&
+			     connection().registerObject(dbusObjectName(dbus_name), object,
+							 QDBusConnection::ExportAdaptors);
+
+	} catch(...) { dbusRegistered = false; }
+
+	return dbusRegistered;
+    }
+
 
 }
 

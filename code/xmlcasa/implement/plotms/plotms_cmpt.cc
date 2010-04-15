@@ -405,7 +405,7 @@ void plotms::launchApp() {
                NULL);
         
     } else {
-	app.dbusName( ) = to_string(app.dbusServiceName(app.getName( ),pid));
+        app.dbusName( ) = to_string(QtDBusApp::generateServiceName(app.getName( ),pid));
         
         // Wait for it to have launched...
         unsigned int slept = 0;

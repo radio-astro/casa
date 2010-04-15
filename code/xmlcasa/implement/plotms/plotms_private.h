@@ -34,7 +34,7 @@ private:
     plotms *p;
 };
 
-class plotms_app : public QtDBusApp {
+class plotms_app  {
 public:
   plotms_app( ) { }
   const String &dbusName( ) const { return itsDBusName_; }

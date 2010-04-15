@@ -35,6 +35,14 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
+    <method name="histogram">
+      <arg direction="in" type="ad" name="values" />
+      <arg direction="in" type="i" name="bins" />
+      <arg direction="in" type="s" name="color" />
+      <arg direction="in" type="s" name="label" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
     <method name="raster">
       <arg direction="in" type="ad" name="matrix" />
       <arg direction="in" type="i" name="sizex" />

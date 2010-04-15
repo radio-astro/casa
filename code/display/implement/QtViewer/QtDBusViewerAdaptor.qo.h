@@ -32,10 +32,10 @@
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <casa/namespace.h>
 #include <QVariantMap>
+#include <display/QtViewer/QtViewer.qo.h>
 
 namespace casa {
 
-    class QtViewer;
     class QtDisplayData;
     class QtDisplayPanel;
     class QtDisplayPanelGui;
@@ -45,13 +45,10 @@ namespace casa {
 	Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.viewer")
 
     public:    
-	// Connects to the DBus server using the name provided (if non-null). Otherwise, the
-	// dbusName() method with the current process ID is used.  Returns a boolean which
-	// indicates whether the connection succeeded or not.
-	bool connectToDBus( const QString &dbus_name="" );
 
-	static const QString &name( );
-	const QString &getName( ) const { return name( ); }
+	const QString &getName( ) const { return QtViewer::name( ); }
+	bool connectToDBus( const QString &dbus_name )
+			{ return QtDBusApp::connectToDBus( parent(), dbus_name ); }
 
 	// Constructor which takes the application.
 	QtDBusViewerAdaptor( QtViewer * );

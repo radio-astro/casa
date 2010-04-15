@@ -106,7 +106,7 @@ PlotMSDBusApp::~PlotMSDBusApp() {
 
 // Public Methods //
 
-bool PlotMSDBusApp::connectToDBus() {
+bool PlotMSDBusApp::connectToDBus( const QString & ) {
     bool res = dbusRegisterSelf(dbusName(getpid()));
     log(!res ? "Could not register!" :
         "Successfully registered with name " + dbusSelfRegisteredName() + "!");
