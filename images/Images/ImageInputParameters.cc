@@ -30,7 +30,7 @@
 
 namespace casa {
 
-ImageInputParameters::ImageInputParameters(const ImageInterface<Float>& image) :
+	ImageInputParameters::ImageInputParameters(const ImageInterface<Float>& image) :
 		_metaData(ImageMetaData(image)), _spectralRanges(Vector<uInt>(0)) {}
 
 
