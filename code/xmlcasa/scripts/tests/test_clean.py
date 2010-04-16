@@ -340,6 +340,6 @@ class clean_test2(unittest.TestCase):
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 def suite():
-    return [clean_test1,clean_test2]
+    return [clean_test1]
 
 
