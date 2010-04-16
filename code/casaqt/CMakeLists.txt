@@ -179,6 +179,7 @@ casa_add_library( casaqt
   implement/QtPlotServer/QtDBusPlotSvrAdaptor.cc
   implement/QtPlotServer/QtPlotFrame.cc
   implement/QtPlotServer/QtPlotServer.cc
+  implement/QtPlotServer/QtPlotHistogram.cc
   implement/QtPlotServer/QtPlotSvrPanel.cc
   implement/QtPlotServer/QtRasterData.cc
   implement/QtProgressMeter/progress.cc
