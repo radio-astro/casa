@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMCubeBuff.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TSMCubeBuff.cc 20874 2010-03-30 06:28:34Z gervandiepen $
 
 
 //# Includes
@@ -55,13 +55,20 @@ TSMCubeBuff::TSMCubeBuff (TiledStMan* stman, TSMFile* file,
                           const Record& values,
                           Int64 fileOffset,
                           uInt bufferSize)
-  : TSMCube (stman, file, cubeShape, tileShape, values, fileOffset),
+  : TSMCube (stman, file, cubeShape, tileShape, values, fileOffset, True),
     cache_p (0),
     bufferSize_p (bufferSize)
-{}
+{
+  // Note that the TSMCube constructor calls setShape.
+  // However, because it is in the constructor TSMCube's setShape is called.
+  // Hence we have to make the cache here.
+  if (fileOffset < 0  &&  nrTiles_p > 0) {
+    makeCache();
+  }
+}
 
 TSMCubeBuff::TSMCubeBuff (TiledStMan* stman, AipsIO& ios, uInt bufferSize)
-  : TSMCube (stman, ios),
+  : TSMCube (stman, ios, True),
     cache_p (0),
     bufferSize_p (bufferSize)
 {}
@@ -108,6 +115,13 @@ void TSMCubeBuff::deleteCache()
 {
     delete cache_p;
     cache_p = 0;
+}
+
+void TSMCubeBuff::setShape (const IPosition& cubeShape,
+                            const IPosition& tileShape)
+{
+  TSMCube::setShape (cubeShape, tileShape);
+  makeCache();
 }
 
 void TSMCubeBuff::extend (uInt nr, const Record& coordValues,
