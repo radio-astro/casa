@@ -31,7 +31,7 @@ namespace casa {
 	    Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.editlinegui")
 	public:
 	    const QString &getName( ) const { static QString name("editlinegui"); return name; }
-	    bool connectToDBus( const QString &dbus_name )
+	    bool connectToDBus( const QString &dbus_name="" )
 			{ return QtDBusApp::connectToDBus( parent(), dbus_name ); }
 
 	    EditlineGuiAdaptor( EditlineGui *elg ) : QDBusAbstractAdaptor(new QObject()), editline_(elg) { }
@@ -45,7 +45,7 @@ namespace casa {
 	    EditlineGui *editline_;
     };
 
-    inline EditlineGui::~EditlineGui( ) { delete adaptor; }
+    Inline EditlineGui::~EditlineGui( ) { delete adaptor; }
 
     inline EditlineGui::EditlineGui( QWidget *parent ) : QMainWindow(parent), le(new QLineEdit("*some*text*",this)),
 							 adaptor(new EditlineGuiAdaptor(this)) {
