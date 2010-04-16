@@ -30,7 +30,12 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
+
+#include <sys/types.h>
+#include <unistd.h>
+
 
 namespace casa {
 
@@ -61,6 +66,15 @@ const String PlotMSDBusApp::PARAM_TRANSFORMATIONS = "transformations";
 const String PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY = "updateImmediately";
 const String PlotMSDBusApp::PARAM_WIDTH = "width";
 
+const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "exportfilename";
+const String PlotMSDBusApp::PARAM_EXPORT_FORMAT = "exportformat";
+const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "exporthighres";
+const String PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE = "exportinteractive";
+const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
+
+
+
+
 const String PlotMSDBusApp::METHOD_GETLOGPARAMS = "getLogParams";
 const String PlotMSDBusApp::METHOD_SETLOGPARAMS = "setLogParams";
 
@@ -79,6 +93,11 @@ const String PlotMSDBusApp::METHOD_SHOW   = "show";
 const String PlotMSDBusApp::METHOD_HIDE   = "hide";
 const String PlotMSDBusApp::METHOD_UPDATE = "update";
 const String PlotMSDBusApp::METHOD_QUIT   = "quit";
+
+const String PlotMSDBusApp::METHOD_SAVE   = "save";
+const String PlotMSDBusApp::METHOD_ISDRAWING   = "isDrawing";
+
+
 
 
 String PlotMSDBusApp::dbusName(pid_t pid) {
@@ -138,9 +157,10 @@ void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
 
 // Protected Methods //
 
-void PlotMSDBusApp::dbusRunXmlMethod(const String& methodName,
-        const Record& parameters, Record& retValue, const String& callerName,
-        bool isAsync) {
+void PlotMSDBusApp::dbusRunXmlMethod(
+	const String& methodName, const Record& parameters, Record& retValue,
+	const String& callerName, bool isAsync
+) {
     // Common parameters: plot index.
     int index = -1;
     bool indexSet = parameters.isDefined(PARAM_PLOTINDEX) &&
@@ -169,8 +189,8 @@ void PlotMSDBusApp::dbusRunXmlMethod(const String& methodName,
         ret.define(PARAM_PRIORITY, LogMessage::toString(
                    itsPlotms_.getLogger()->filterMinPriority()));
         retValue.defineRecord(0, ret);
-        
-    } else if(methodName == METHOD_SETLOGPARAMS) {
+    }
+    else if(methodName == METHOD_SETLOGPARAMS) {
         if(parameters.isDefined(PARAM_FILENAME) &&
            parameters.dataType(PARAM_FILENAME) == TpString)
             itsPlotms_.getLogger()->setSinkLocation(parameters.asString(
@@ -337,19 +357,88 @@ void PlotMSDBusApp::dbusRunXmlMethod(const String& methodName,
         
     } else if(methodName == METHOD_SHOW || methodName == METHOD_HIDE) {
         itsPlotms_.showGUI(methodName == METHOD_SHOW);
-        if(itsPlotms_.guiShown() && itsUpdateFlag_) update();        
-        
+        if(itsPlotms_.guiShown() && itsUpdateFlag_) {
+        	update();
+        }
     } else if(methodName == METHOD_UPDATE) {
         update();
-        
     } else if(methodName == METHOD_QUIT) {
         PlotMSAction(PlotMSAction::QUIT).doAction(&itsPlotms_);
-        
-    } else {
+    }
+    else if(methodName == METHOD_SAVE) {
+    	update();
+    	if (!_savePlot(parameters)) {
+    		callError = true;
+    	}
+    }
+    else if (methodName == METHOD_ISDRAWING) {
+    	retValue.define(0, itsPlotms_.isDrawing());
+    }
+    else {
         log("Unknown method: " + methodName);
     }
-    
     if(callError) log("Method " + methodName + " was called incorrectly.");
+}
+
+bool PlotMSDBusApp::_savePlot(const Record& parameters) {
+	bool ok = true;
+	String methodName = "_savePlot";
+	PlotMSAction action(PlotMSAction::PLOT_EXPORT);
+	String filename;
+	if(parameters.isDefined(PARAM_EXPORT_FILENAME)) {
+		filename = parameters.asString(PARAM_EXPORT_FILENAME);
+		if (filename.empty()) {
+			ok = false;
+			log("Method " + methodName + ": file name not specified");
+		}
+	}
+	else {
+		ok = false;
+		log("Method " + methodName + ": file name not defined ");
+	}
+
+	if (ok) {
+		String format;
+		PlotExportFormat::Type type;
+		if (
+			! parameters.isDefined(PARAM_EXPORT_FORMAT)
+			|| (format = parameters.asString(PARAM_EXPORT_FORMAT)).empty()
+		) {
+			type = PlotExportFormat::typeForExtension(filename, &ok);
+			if (!ok) {
+				log(
+					"Method " + methodName
+					+ ": failed to save plot to file: unknown format from file name "
+					+ filename
+				);
+			}
+		}
+		else {
+			type = PlotExportFormat::exportFormat(format, &ok);
+			if (! ok) {
+				log(
+					"Method " + methodName
+					+ ": failed to save plot to file: unknown format " + format
+				);
+			}
+		}
+		if(ok) {
+			PlotExportFormat format(type, filename);
+			format.resolution = (
+						parameters.isDefined(PARAM_EXPORT_HIGHRES)
+						&& parameters.asBool(PARAM_EXPORT_HIGHRES)
+					)
+					? PlotExportFormat::HIGH : PlotExportFormat::SCREEN;
+			bool interactive = ! (
+				parameters.isDefined(PARAM_EXPORT_INTERACTIVE)
+				&& ! parameters.asBool(PARAM_EXPORT_INTERACTIVE)
+			);
+			if (! (ok = itsPlotms_.save(format, interactive))) {
+				log("Method " + methodName + ": failed to save plot to file ");
+			}
+		}
+	}
+	return ok;
 }
 
 void PlotMSDBusApp::dbusXmlReceived(const QtDBusXML& xml) {
@@ -401,6 +490,7 @@ bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
 }
 
 void PlotMSDBusApp::update() {
+	// single threaded here
     itsUpdateFlag_ = false;
     itsPlotms_.showGUI(true);
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();

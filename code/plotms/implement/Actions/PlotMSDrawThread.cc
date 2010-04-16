@@ -180,6 +180,10 @@ void PlotMSDrawThread::resume() {
     cout << "PlotMSDrawThread::resume() not yet implemented." << endl;
 }
 
+bool PlotMSDrawThread::isDrawing() const {
+	return isRunning_;
+}
+
 void PlotMSDrawThread::cancel() {
     itsOperationsMutex_.lock();
     if(!isRunning_) {

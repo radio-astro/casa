@@ -1043,8 +1043,9 @@ Execution Methods
   
   <description />
   
-  <input />
-  
+  <input>
+
+  </input>
   <example />
   
   <returns />
@@ -1076,6 +1077,60 @@ Execution Methods
   <example />
   
   <returns />
+</method>
+
+<method type="function" name="save">
+  <keyword>save</keyword>
+
+  <shortdescription>save plot to file</shortdescription>
+  
+  <description>Save the plot to a file</description>
+    <input>
+    <param type="string" name="plotfile">
+      <description>name of plot file</description>
+    </param>
+    <param type="string" name="format">
+        <description>Format type, if not provided, attempt will be made to guess from plotfile extension</description>
+     </param>
+     <param type="bool" name="highres">
+         <description>Use high resolution? Always true for jpg and png.</description>
+         <value>false</value>
+     </param>
+     <param type="bool" name="interactive">
+         <description>Interactive mode (will pop up confirmation window if true, set false for automated scripts to prevent blocking).</description>
+         <value>false</value>
+     </param>
+  </input>
+  
+  <example />
+  
+  <returns type="bool">
+    <description>True if save successful, false if not.</description>
+  </returns>
+</method>
+
+<!--
+###############################################################################
+State Methods
+###############################################################################
+-->
+
+<method type="function" name="isDrawing">
+  <keyword>isDrawing</keyword>
+  
+  <shortdescription>Is the plot being drawn?</shortdescription>
+  
+  <description />
+  
+  <input>
+
+  </input>
+  <example />
+  
+  <returns type='bool'>
+      <description>True if drawing, false if not</description>
+  
+  </returns>
 </method>
 
 

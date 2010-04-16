@@ -525,8 +525,11 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
             m_layers.value(layer)->drawCache(painter, rect);
         }
     }
-    
     m_parent->logMethod(CLASS_NAME, "drawItems", false);
+}
+
+Bool QPLayeredCanvas::isDrawing() const {
+    return m_drawThread != NULL && (m_drawThread->isRunning() ||  !m_drawThread->isFinished());
 }
 
 void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
