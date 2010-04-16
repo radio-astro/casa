@@ -47,7 +47,7 @@ namespace casa {
     public:    
 
 	const QString &getName( ) const { return QtViewer::name( ); }
-	bool connectToDBus( const QString &dbus_name )
+	bool connectToDBus( const QString &dbus_name="" )
 			{ return QtDBusApp::connectToDBus( parent(), dbus_name ); }
 
 	// Constructor which takes the application.
