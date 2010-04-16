@@ -286,11 +286,12 @@ protected:
   using MomentsBase<T>::convertToVelocity_p;
   using MomentsBase<T>::velocityType_p;
   using MomentsBase<T>::checkMethod;
-  using MomentsBase<T>::setMoments;
-  using MomentsBase<T>::setWinFitMethod;
   using MomentsBase<T>::setInExCludeRange;
-  using MomentsBase<T>::setSnr;
+ public:
   using MomentsBase<T>::setVelocityType;
+  using MomentsBase<T>::setSnr;
+  using MomentsBase<T>::setWinFitMethod;
+  using MomentsBase<T>::setMoments;
   using MomentsBase<T>::errorMessage;
 };
 } //# NAMESPACE CASA - END
