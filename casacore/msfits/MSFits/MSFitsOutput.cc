@@ -902,7 +902,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
       else{
         os << LogIO::NORMAL
            << outFITSFile << " will be "
-           << 100.0 * (1.0 - nrow / static_cast<Float>(nOutRow * nif));
+           << 100.0 * (1.0 - nrow / static_cast<Float>(nOutRow * nif))
            << "% padded by flags to fit into IFs."
            << LogIO::POST;
       }
