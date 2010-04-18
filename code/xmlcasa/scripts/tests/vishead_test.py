@@ -1,1 +1,0 @@
-../regressions/tests/vishead_test.py

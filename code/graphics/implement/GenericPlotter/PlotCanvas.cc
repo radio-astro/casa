@@ -385,7 +385,8 @@ void PlotCanvas::removeLastPlotItem() {
 void PlotCanvas::clearItems() { removePlotItems(allPlotItems()); }
 
 void PlotCanvas::clearLayer(PlotCanvasLayer layer) {
-    removePlotItems(layerPlotItems(layer)); }
+    removePlotItems(layerPlotItems(layer));
+}
 
 
 PlotOperationPtr PlotCanvas::operationDraw() {

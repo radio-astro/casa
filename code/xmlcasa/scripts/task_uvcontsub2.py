@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import tempfile
 from taskinit import *
 from update_spw import *
@@ -23,9 +24,11 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         myfitspw = fitspw
         myspw = spw
 
-        # We only need the spws (but potentially all the channels) listed
-        # in fitspw.
-        tempspw = re.sub(r':[^,]+', '', fitspw)
+        tempspw = ''  # Conservatively default to keeping everything.
+        if 'spw' not in combine:
+            # We only need the spws (but potentially all the channels) listed
+            # in fitspw.
+            tempspw = re.sub(r':[^,]+', '', fitspw)
         if tempspw:
             # The split will reindex the spws.  Update spw and fitspw.
             # Do fitspw first because the spws in spw are supposed to be
@@ -115,7 +118,7 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         cb.selectvis(field=field, spw=myspw)
         aspwmap=-1
         # if we combined on spw in solve, fanout the result with spwmap=-999;
-        if (combine.find('spw')==0):
+        if 'spw' in combine:
             aspwmap = -999
         cb.setapply(table=amuellertab, spwmap=aspwmap)
 

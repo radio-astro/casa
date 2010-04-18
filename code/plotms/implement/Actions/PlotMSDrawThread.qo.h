@@ -61,6 +61,8 @@ public:
     // Implements PlotMSThread::startOperation().
     void startOperation();
     
+    bool isDrawing() const;
+
     // Implements PlotOperationWatcher::operationChanged().
     void operationChanged(const PlotOperation& operation);
     

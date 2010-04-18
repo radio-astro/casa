@@ -43,6 +43,7 @@
 #include <QProcess>
 #include <QSet>
 #include <QSplitter>
+#include <QThread>
 
 namespace casa {
 
@@ -102,17 +103,21 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
         itsThreadProgress_->move(rect.topLeft());
         itsThreadProgress_->setVisible(true);
         itsThreadProgress_->setEnabled(true);
-        
         itsCurrentThread_->startOperation();
-        
     } else {
         // there is a currently running thread, so add to waiting list
         itsWaitingThreads_.push_back(t);
     }
 }
 
-bool PlotMSPlotter::canvasDrawBeginning(PlotOperationPtr drawOperation,
-        bool drawingIsThreaded, int drawnLayersFlag) {
+bool PlotMSPlotter::isDrawing() const {
+	return itsCurrentThread_ != NULL && itsCurrentThread_->thread()->isRunning();
+}
+
+bool PlotMSPlotter::canvasDrawBeginning(
+	PlotOperationPtr drawOperation,
+    bool drawingIsThreaded, int drawnLayersFlag
+) {
     if(!drawingIsThreaded) {
         cout << "PlotMSPlotter does not currently support threading for "
              << "plotter implementations that do not do threaded drawing "
@@ -146,40 +151,51 @@ bool PlotMSPlotter::canvasDrawBeginning(PlotOperationPtr drawOperation,
 
 
 void PlotMSPlotter::showIterationButtons(bool show) {
-    if(!show && actionIterationToolbar->isChecked())
+    if(!show && actionIterationToolbar->isChecked()) {
         actionIterationToolbar->setChecked(false);
+    }
     actionIterationToolbar->setEnabled(show);
     iterationToolBar->setEnabled(show);
     itsToolsTab_->showIterationButtons(show);
 }
 
 bool PlotMSPlotter::showQuestion(const String& message, const String& title) {
-    return QMessageBox::question(this, title.c_str(), message.c_str(),
-           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
+    return QMessageBox::question(
+    	this, title.c_str(), message.c_str(),
+           QMessageBox::Yes | QMessageBox::No
+        ) == QMessageBox::Yes;
 }
 
 void PlotMSPlotter::holdDrawing() {
     vector<PlotCanvasPtr> canvases = currentCanvases();
-    for(unsigned int i = 0; i < canvases.size(); i++)
+    for(unsigned int i = 0; i < canvases.size(); i++) {
         canvases[i]->holdDrawing();
+    }
 }
 
 void PlotMSPlotter::releaseDrawing() {
     vector<PlotCanvasPtr> canvases = currentCanvases();
-    for(unsigned int i = 0; i < canvases.size(); i++)
+    for(unsigned int i = 0; i < canvases.size(); i++) {
         canvases[i]->releaseDrawing();
+    }
 }
 
 bool PlotMSPlotter::allDrawingHeld() const {
-    if(itsPlotter_.null() || itsPlotter_->canvasLayout().null()) return false;
+    if(itsPlotter_.null() || itsPlotter_->canvasLayout().null()) {
+    	return false;
+    }
     vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
-    for(unsigned int i = 0; i < canvases.size(); i++)
-        if(!canvases[i].null() && !canvases[i]->drawingIsHeld()) return false;
+    for(unsigned int i = 0; i < canvases.size(); i++) {
+        if(!canvases[i].null() && !canvases[i]->drawingIsHeld()) {
+        	return false;
+        }
+    }
     return true;
 }
 
 vector<PlotCanvasPtr> PlotMSPlotter::currentCanvases() {
-	return itsPlotter_->canvasLayout()->allCanvases(); }
+	return itsPlotter_->canvasLayout()->allCanvases();
+}
 
 
 void PlotMSPlotter::setWindowTitle(const String& windowTitle) {
@@ -187,64 +203,89 @@ void PlotMSPlotter::setWindowTitle(const String& windowTitle) {
 }
 
 void PlotMSPlotter::setStatusText(const String& statusText) {
-    if(statusText.empty()) statusBar()->clearMessage();
-    else                   statusBar()->showMessage(statusText.c_str());
+    if(statusText.empty()) {
+    	statusBar()->clearMessage();
+    }
+    else {
+    	statusBar()->showMessage(statusText.c_str());
+    }
 }
 
 void PlotMSPlotter::setToolButtonStyle(Qt::ToolButtonStyle style) {
     QMainWindow::setToolButtonStyle(style);
-    for(int i = 0; i < itsToolButtons_.size(); i++)
+    for(int i = 0; i < itsToolButtons_.size(); i++) {
         itsToolButtons_[i]->setToolButtonStyle(style);
+    }
 }
 
 
-const QMap<PlotMSAction::Type, QAction*>& PlotMSPlotter::plotActionMap() const{
-    return itsActionMap_; }
+const QMap<PlotMSAction::Type, QAction*>& PlotMSPlotter::plotActionMap() const {
+    return itsActionMap_;
+}
 
-void PlotMSPlotter::synchronizeAction(PlotMSAction::Type action,
-        QAbstractButton* button) {
+void PlotMSPlotter::synchronizeAction(
+	PlotMSAction::Type action, QAbstractButton* button
+) {
     itsActionSynchronizer_.synchronize(itsActionMap_.value(action), button);
 }
 
 String PlotMSPlotter::actionText(PlotMSAction::Type type) {
     QAction* action = itsActionMap_.value(type);
-    if(action != NULL) return action->text().toStdString();
-    else               return "";
+    if(action != NULL) {
+    	return action->text().toStdString();
+    }
+    else {
+    	return "";
+    }
 }
 
-void PlotMSPlotter::setActionText(PlotMSAction::Type type, const String& text){
+void PlotMSPlotter::setActionText(PlotMSAction::Type type, const String& text) {
     QAction* action = itsActionMap_.value(type);
-    if(action != NULL) action->setText(text.c_str());
+    if(action != NULL) {
+    	action->setText(text.c_str());
+    }
 }
 
 bool PlotMSPlotter::actionIsChecked(PlotMSAction::Type type) const {
     QAction* action = itsActionMap_.value(type);
-    if(action != NULL) return action->isChecked();
-    else               return false;
+    return (action != NULL && action->isChecked());
 }
 
-void PlotMSPlotter::setActionIsChecked(PlotMSAction::Type type, bool checked,
-        bool alsoTriggerAction) {
+void PlotMSPlotter::setActionIsChecked(
+	PlotMSAction::Type type, bool checked, bool alsoTriggerAction
+) {
     QAction* action = itsActionMap_.value(type);
-    if(action == NULL) return;
-    if(action->isCheckable()) action->setChecked(checked);
-    if(alsoTriggerAction) action->trigger();
+    if(action != NULL) {
+    	if(action->isCheckable()) {
+    		action->setChecked(checked);
+    	}
+    	if(alsoTriggerAction) {
+    		action->trigger();
+    	}
+    }
 }
 
 
 // Public Slots //
 
-void PlotMSPlotter::showError(const String& message, const String& title,
-        bool isWarning) {
-    if(isWarning) QMessageBox::warning( this, title.c_str(), message.c_str());
-    else          QMessageBox::critical(this, title.c_str(), message.c_str());
+void PlotMSPlotter::showError(
+	const String& message, const String& title, bool isWarning
+)  {
+    if(isWarning) {
+    	QMessageBox::warning( this, title.c_str(), message.c_str());
+    }
+    else {
+    	QMessageBox::critical(this, title.c_str(), message.c_str());
+    }
 }
 
 void PlotMSPlotter::showMessage(const String& message, const String& title) {
-    QMessageBox::information(this, title.c_str(), message.c_str()); }
+    QMessageBox::information(this, title.c_str(), message.c_str());
+}
 
 void PlotMSPlotter::showAbout() {
-    QMessageBox::about(this, "About PlotMS", itsAboutString_); }
+    QMessageBox::about(this, "About PlotMS", itsAboutString_);
+}
 
 
 // Protected Methods //
@@ -474,6 +515,13 @@ void PlotMSPlotter::action(QAction* act) {
     
     // Set up the generic PlotMS action mapped to the QAction.
     PlotMSAction::Type type = itsActionMap_.key(act);
+
+    if(type == PlotMSAction::PLOT_EXPORT) {
+        // export plot triggers an action so return immediately
+        exportPlot(itsPlotTab_->currentlySetExportFormat(), true, true);
+        return;
+    }
+
     PlotMSAction action(type);
     
     // Set required parameters for actions that need them.
@@ -489,21 +537,39 @@ void PlotMSPlotter::action(QAction* act) {
     else if(type == PlotMSAction::CACHE_RELEASE)
         action.setParameter(PlotMSAction::P_AXES,
                 itsPlotTab_->selectedReleaseAxes());
-    else if(type == PlotMSAction::PLOT_EXPORT) {
-        PlotExportFormat format = itsPlotTab_->currentlySetExportFormat();
-        action.setParameter(PlotMSAction::P_FILE, format.location);
-        action.setParameter(PlotMSAction::P_FORMAT,
-                PlotExportFormat::exportFormat(format.type));
-        action.setParameter(PlotMSAction::P_HIGHRES,
-                format.resolution == PlotExportFormat::HIGH);
-        action.setParameter(PlotMSAction::P_DPI, format.dpi);
-        action.setParameter(PlotMSAction::P_WIDTH, format.width);
-        action.setParameter(PlotMSAction::P_HEIGHT, format.height);
-    }
+
     
     // Trigger the action.
+    _triggerAction(action);
+
+}
+
+bool PlotMSPlotter::_triggerAction(PlotMSAction& action) {
     bool result = action.doAction(itsParent_);
-    if(!result)	showError(action.doActionResult(), "Action Failed!", false);
+    if(!result) {
+    	showError(action.doActionResult(), "Action Failed!", false);
+    }
+    return result;
+}
+
+bool PlotMSPlotter::exportPlot(
+		const PlotExportFormat& format, const bool interactive, const bool async
+) {
+	PlotMSAction action(PlotMSAction::PLOT_EXPORT);
+	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
+	action.setParameter(PlotMSAction::P_FILE, format.location);
+	action.setParameter(
+		PlotMSAction::P_FORMAT, PlotExportFormat::exportFormat(format.type)
+	);
+	action.setParameter(
+		PlotMSAction::P_HIGHRES, format.resolution == PlotExportFormat::HIGH
+	);
+	action.setParameter(PlotMSAction::P_DPI, format.dpi);
+	action.setParameter(PlotMSAction::P_WIDTH, format.width);
+	action.setParameter(PlotMSAction::P_HEIGHT, format.height);
+	action.setParameter(PlotMSAction::P_INTERACTIVE, interactive);
+
+	_triggerAction(action);
 }
 
 void PlotMSPlotter::currentThreadFinished() {

@@ -32,12 +32,12 @@
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <QVariantMap>
 #include <QString>
+#include <casaqt/QtPlotServer/QtPlotServer.qo.h>
 
-class QwtPlotCurve;
+class QwtPlotItem;
 
 namespace casa {
 
-    class QtPlotServer;
     class QtPlotSvrPanel;
 
     class QtDBusPlotSvrAdaptor : public QDBusAbstractAdaptor, public QtDBusApp {
@@ -45,13 +45,10 @@ namespace casa {
 	Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.plotserver")
     public:
 
-	// Connects to the DBus server using the dbusName() method with the current
-	// process ID.  Returns whether the connection succeeded or not.
-	bool connectToDBus();
-
 	// name used to initialize connection to dbus
-	static const QString &name( );
-	const QString &getName( ) const { return name( ); }
+	const QString &getName( ) const { return QtPlotServer::name( ); }
+	bool connectToDBus( const QString &dbus_name="" )
+			{ return QtDBusApp::connectToDBus( parent(), dbus_name ); }
 
         QtDBusPlotSvrAdaptor( QtPlotServer * );
 	~QtDBusPlotSvrAdaptor( );
@@ -66,6 +63,7 @@ namespace casa {
 			   const QString &label="", int panel=0 );
 	QDBusVariant scatter( const QList<double> &x, const QList<double> &y, const QString &color="black",
 			      const QString &label="", const QString &symbol="", int symbol_size=-1, int dot_size=-1, int panel=0 );
+	QDBusVariant histogram( const QList<double> &values, int bins=0, const QString &color="blue", const QString &label="", int panel=0 );
 	QDBusVariant raster( const QList<double> &matrix, int sizex, int sizey, int panel=0 );
 
 	QDBusVariant erase( int data=0 );
@@ -78,6 +76,12 @@ namespace casa {
 	bool done( );
 
     private:
+
+	inline QDBusVariant error( const QString &message ) {
+	    QMap<QString,QVariant> err;
+	    err["*error*"] = message;
+	    return QDBusVariant(QVariant(err));
+	}
 
 	class panel_desc {
 	public:
@@ -98,18 +102,18 @@ namespace casa {
 	class data_desc {
 	public:
 
-	    data_desc( int index, QtPlotSvrPanel *panel, QwtPlotCurve *data ) : id_(index), data_(data), panel_(panel) { }
+	    data_desc( int index, QtPlotSvrPanel *panel, QwtPlotItem *data ) : id_(index), data_(data), panel_(panel) { }
 
 	    int &id( ) { return id_; }
 	    int id( ) const { return id_; }
-	    QwtPlotCurve *&data( ) { return data_; }
-	    const QwtPlotCurve *data( ) const { return data_; }
+	    QwtPlotItem *&data( ) { return data_; }
+	    const QwtPlotItem *data( ) const { return data_; }
 	    QtPlotSvrPanel *&panel( ) { return panel_; }
 	    const QtPlotSvrPanel *panel( ) const { return panel_; }
 
 	private:
 	    int id_;
-	    QwtPlotCurve *data_;
+	    QwtPlotItem *data_;
 	    QtPlotSvrPanel *panel_;
 
 	    // QtDisplayData does not have a copy constructor...
@@ -119,7 +123,7 @@ namespace casa {
 	};
 
 	int get_id( QtPlotSvrPanel *panel );
-	int get_id( QtPlotSvrPanel *panel, QwtPlotCurve *data );
+	int get_id( QtPlotSvrPanel *panel, QwtPlotItem *data );
 
 	void close_everything( );
 	void release_everything( );

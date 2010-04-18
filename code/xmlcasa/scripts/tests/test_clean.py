@@ -26,13 +26,13 @@ Unit tests for task clean. It tests the following parameters:
     
     Other tests: check the value of a pixel.
 '''
-class clean_test(unittest.TestCase):
-    print '-------------- Unit Tests of clean_test ---------------'
+class clean_test1(unittest.TestCase):
 
     # Input and output names
-    msfile = 'ngc7538_ut.ms'
+#    msfile = 'ngc7538_ut.ms'
+    msfile = 'ngc7538_ut1.ms'
     res = None
-    img = 'cleantest_im'
+    img = 'cleantest1'
 
     def setUp(self):
         self.res = None
@@ -48,6 +48,7 @@ class clean_test(unittest.TestCase):
             os.system('rm -rf ' + self.msfile)
 
         os.system('rm -rf ' + self.img+'*')
+     
 
     def getpixval(self,img,pixel):
         ia.open(img)
@@ -109,12 +110,29 @@ class clean_test(unittest.TestCase):
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
 
-# DOES NOT WORK WITH THESE DATA
-#    def test11(self):
-#        """Clean 11: Non-default mode velocity"""
-#        self.res = clean(vis=self.msfile,imagename=self.img,mode='velocity')
-#        self.assertEqual(self.res,None)
-#        self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
+    def test11(self):
+        """Clean 11: Non-default mode velocity"""
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
+        res = clean(vis=self.msfile,imagename=self.img,mode='velocity',restfreq='23600MHz')
+        if(res != None):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: Failed to run in velocity mode."
+        if(not os.path.exists(self.img+'.image')):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: Failed to create output image."
+                         
+        # Verify if there are blank planes at the edges
+        vals = imval(self.img+'.image')
+        size = len(vals['data'])
+        if (vals['data'][0]==0 or vals['data'][size-1]==0):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: There are blank planes in the edges of the image."
+                    
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
         
     def test12(self):
         """Clean 12: Non-default mode frequency"""
@@ -238,8 +256,10 @@ class clean_test(unittest.TestCase):
         
     def test32(self):
         '''Clean 32: Non-default subparameters of selectdata'''
+#        self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
+#                         timerange='>11:30:00',antenna='VA12')
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>11:30:00',antenna='VA12')
+                         timerange='>11:30:00',antenna='VA01')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
@@ -258,7 +278,8 @@ class clean_test(unittest.TestCase):
         os.system('cp -r ' + self.img+'.image' + ' myimage.im')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
-        ref = 0.007161217276006937
+#        ref = 0.007161217276006937
+        ref = 0.011824539862573147
         value = self.getpixval(self.img+'.image',50)
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-5,'Something changed the flux values. ref_val=%s, new_val=%s'
@@ -274,9 +295,51 @@ class clean_test(unittest.TestCase):
         self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=2)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
+class clean_test2(unittest.TestCase):
     
+    # Input and output names
+    msfile = 'split1scan.ms'
+    res = None
+    img = 'cleantest2'
+
+    def setUp(self):
+        self.res = None
+        default(clean)
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+            
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        shutil.copytree(datapath+self.msfile, self.msfile)
+    
+    def tearDown(self):
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+        
+    def test1a(self):
+        """Clean 1a: Non-default mode velocity"""
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
+        res = clean(vis=self.msfile,imagename=self.img,mode='velocity',restfreq='231901MHz')
+        if(res != None):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: Failed to run in velocity mode."
+        if(not os.path.exists(self.img+'.image')):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: Failed to create output image."
+                         
+        # Verify if there are blank planes at the edges
+        vals = imval(self.img+'.image')
+        size = len(vals['data'])
+        if (vals['data'][0]==0.0 or vals['data'][size-1]==0.0):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: There are blank planes in the edges of the image."
+                    
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 def suite():
-    return [clean_test]
+    return [clean_test1]
 
 

@@ -343,8 +343,8 @@ void RFFlagCube::getMSFlags()
   {
     const Cube<Bool>   & fc( chunk.visBuf().flagCube() );
 
-    if (fc.shape()(0) != num(CORR) ||
-	fc.shape()(1) != num(CHAN))
+    if (fc.shape()(0) != (Int) num(CORR) ||
+	fc.shape()(1) != (Int) num(CHAN))
       {
 	stringstream ss;
 	ss << "The shape of FLAGs has changed (from (" << num(CORR) << ", " << num(CHAN)

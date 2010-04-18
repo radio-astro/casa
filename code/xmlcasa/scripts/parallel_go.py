@@ -668,6 +668,9 @@ class cluster(object):
       x=c.pad_task_id('basename', [3, 5, 8])
       x
       {3: 'basename-3', 5: 'basename-5', 8: 'basename-8'}
+      y=c.pad_task_id(x)
+      y
+      {0: 'a-0-0', 1: 'b-1-1', 2: 'c-2-2', 3: 'd-3-3'}
      
       '''
 
@@ -686,6 +689,10 @@ class cluster(object):
          task_id=list(xrange(0, len(self.__engines))) 
       for j in task_id:
          base[j]=b+'-'+str(j)
+      if type(b)==dict:
+          for i in b.keys():
+             base[i]=b[i]+'-'+str(i)
+
       return base
        
    def one_to_n(self, arg, task_id=[]):
@@ -795,8 +802,26 @@ class cluster(object):
       return base
        
    def pgc(self,*args,**kwargs):
-      '''Parallel execution of commands and/or dictionary of commands
+      '''Parallel execution of commands and/or dictionary 
+         of commands
 
+      @param *args any number of commands or dictionary of
+             commands (where the key of the dictionary is the
+             engine id)
+      @param **kwargs available options are
+             job=<str> or jobname=<str>
+             block=<True/False>
+
+      Example:
+      c.pgc({0:'ya=3',1:'ya="b"'})
+      c.pull('ya')
+      {0: 3, 1: 'b'}
+
+      c.pgc('xa=-1')
+      c.pull('xa')
+      {0: -1, 1: -1, 2: -1, 3: -1}
+      c.pull('job')
+      Out[23]: {0:'xa=-1', 1:'xa=-1', 2:'xa=-1', 3:'xa=-1'}
 
       '''
 
@@ -810,7 +835,8 @@ class cluster(object):
          if type(i)==types.DictType:
             for j in i.keys():
                if type(j)!=types.IntType or j<0:
-                  print 'task id', j , 'must be a positive integer'
+                  print ('task id', j , 
+                         'must be a positive integer')
                   #return None
                   pass
                else:
@@ -829,9 +855,15 @@ class cluster(object):
             for j in xrange(0, len(self.__engines)): 
                tasks[j].append(i)
          else:
-            print 'command', i, 'must be a string or a dictionary'
+            print ('command', i, 
+                   'must be a string or a dictionary')
 
-      #may be better to use non-block mode and catch the result
+      #may be better to use non-block mode and catch 
+      #the result
+
+      #how to give name, say 'cmd_name', to a set of 
+      #commands a name such that cluster.pull('cmd_name')
+      #returns the script is excuteded?
      
       keys = kwargs.keys()
       job='NoName'
@@ -846,16 +878,22 @@ class cluster(object):
       #print "tasks", tasks
       for i in tasks.keys():      
          cmd=string.join(tasks[i], '\n')
+         #marker=compile('"'+job=cmd+'"','<string>','eval')
+         #self.__client.execute('eval(job+"="+cmd)',targets=i)
          self.__client.push(dict(job=cmd), i)
          #print 'cmd:', cmd, 'i:', i
          #self.__client.execute(cmd, block=False, i)
 
-      return self.__client.execute('exec(job)',block=block,targets=tasks.keys())
-      #self.__result[job]=self.__client.execute('exec(job)',block=block,targets=tasks.keys())
-      #return self.__client.execute('exec(job)',block=False,targets=tasks.keys())
+      return self.__client.execute('exec(job)',
+              block=block,targets=tasks.keys())
+      #self.__result[job]=self.__client.execute('exec(job)',
+      #        block=block,targets=tasks.keys())
+      #return self.__client.execute('exec(job)',
+      #        block=False,targets=tasks.keys())
 
    def parallel_go_commands(self,*args,**kwargs):
-      '''Parallel execution of commands and/or dictionary of commands
+      '''Parallel execution of commands and/or dictionary 
+         of commands
 
 
       '''
@@ -864,12 +902,28 @@ class cluster(object):
    def pgk(self, **kwargs):
       '''Parallel execution to set keywords
 
+      @param **kwargs available 
+          special keyword options are
+             job=<str> or jobname=<str>
+             block=<True/False>
+
+      Example:
+      c.pgk(xx={0:5,2:'c'},action='write')
+      action : write
+      xx : {0: 5, 2: 'c'}
+      0 xx=5
+      1
+      2 xx='c'
+      3
+
+      c.pgk(xx={0:5,2:'c'},action='run')
+      c.pull('xx')
+      {0: 5, 2: 'c'}
 
       '''
 
       # set default action
       pgTask=None
-      pgTimer=False
       pgAction='run'
       pgBlock=False
       pgJob="NoName"
@@ -886,16 +940,18 @@ class cluster(object):
          #print kw
          if kw.lower()=='action':
             pgAction=kwargs[kw]
-         if kw.lower()=='timer':
-            pgTimer=True
-         if kw.lower()=='task' and type(kwargs[kw])==types.StringType:
-            pgTask=kwargs[kw]
+         if kw.lower()=='task' and \
+            type(kwargs[kw])==types.StringType:
+             pgTask=kwargs[kw]
          if kw.lower()=='block' and kwargs[kw]==True:
-            pgBlock=True
-         if (kw.lower()=='job' or kw.lower()=='jobname') and type(kwargs[kw])==types.StringType :
-            pgJob=kwargs[kw]
+             pgBlock=True
+         if (kw.lower()=='job' or kw.lower()=='jobname') and \
+            type(kwargs[kw])==types.StringType :
+             pgJob=kwargs[kw]
 
-      if type(pgAction)!=types.StringType or (pgAction.lower()!='run' and pgAction.lower()!='check'):
+      if type(pgAction)!=types.StringType or \
+        (pgAction.lower()!='run' and \
+        pgAction.lower()!='check'):
          pgAction='write'
       #print 'pgAction', pgAction
 
@@ -905,7 +961,8 @@ class cluster(object):
          if type(vals)==types.DictType:
             for j in vals.keys():
                if type(j)!=types.IntType or j<0:
-                  print 'task id', j , 'must be a positive integer'
+                  print ('task id', j, 
+                         'must be a positive integer')
                   return None
                else:
                   st=kw+'='
@@ -917,7 +974,7 @@ class cluster(object):
          else:
             if kw=='task':
                pgTask=vals
-            elif kw=='action' or kw=='timer':
+            elif kw=='action':
                pass
             else:
                for i in xrange(0, len(self.__engines)): 
@@ -934,16 +991,10 @@ class cluster(object):
                print i, string.join(tasks[i], ',') 
          else:
             for i in tasks.keys():      
-               print i, pgTask+"("+string.join(tasks[i], ',')+")" 
+               print i, pgTask+"("+ \
+                     string.join(tasks[i], ',')+")" 
          return None
       
-      if pgAction=='check':
-         if (pgTask!=None and pgTask!=''):
-            print 'use update_params or like to check params for each task'
-            for i in tasks.keys():      
-               cmd=pgTask+"("+string.join(tasks[i], ',')+")" 
-         return None
-               
       if pgAction=='run':
          #print 'run keyword'
          if (pgTask==None or pgTask==''):
@@ -954,8 +1005,10 @@ class cluster(object):
                self.__client.push(dict(job=cmd), i)
 
             #print 'cmd', cmd
-            return self.__client.execute('exec(job)',block=pgBlock,targets=tasks.keys())
-            #self.__result[job]=self.__client.execute('exec(job)',block=pgBlock,targets=tasks.keys())
+            return self.__client.execute('exec(job)',
+                         block=pgBlock,targets=tasks.keys())
+            #self.__result[job]=self.__client.execute(
+            #  'exec(job)',block=pgBlock,targets=tasks.keys())
            
          else:
             for i in tasks.keys():      
@@ -964,8 +1017,10 @@ class cluster(object):
                self.__client.push(dict(job=cmd), i)
 
             #print 'cmd', cmd
-            #self.__result[job]=self.__client.execute('exec(job)',block=pgBlock,targets=tasks.keys())
-            return self.__client.execute('exec(job)',block=pgBlock,targets=tasks.keys())
+            #self.__result[job]=self.__client.execute(
+            #  'exec(job)',block=pgBlock,targets=tasks.keys())
+            return self.__client.execute(
+               'exec(job)',block=pgBlock,targets=tasks.keys())
          return
                
    def parallel_go_keywords(self, **kwargs):
@@ -1072,12 +1127,75 @@ class cluster(object):
       '''
       return self.__client.clear_queue()
 
+   def get_timer(self, timer=''):
+      '''get the eleapsed time for a timer
+
+      '''
+
+      base={}
+      prop=self.__client.get_properties() 
+      for i in self.get_ids():
+          try:
+             ky=prop[i]['timertype']
+             if ky=='proc':
+                end=time.clock()
+             else:
+                end=time.time()
+             base[i]='%.2f sec' % (end-prop[i][timer])
+          except:
+             pass
+         
+      print 'Timer:\n', base 
+      return
+
+   def set_timer(self,timer='timer',type='proc',
+                 targets=None,block=None):
+      '''set a timer 
+
+
+      '''
+      if self.__client==None:
+          return
+
+      properties={}
+      if type=='proc':
+          properties[timer]=time.clock()
+      else:
+          properties[timer]=time.time()
+
+      properties['timertype']=type
+
+      self.__client.set_properties(properties,
+               targets, block)
+
+   def del_timer(self, timer=['']):
+      '''delete a timer
+
+      '''
+
+      for i in self.get_ids():
+          self.__client.del_properties(timer, i)
+          print 'delete timer', timer, i 
+
+      return
+
    def get_properties(self):
       '''get the set properties from all engines
 
 
       '''
       return self.__client.get_properties()
+
+   def set_properties(self, properties, 
+                      targets=None, block=None):
+      '''set properties for target engines
+
+      @param properties a dictionary its keys are 
+
+
+      '''
+      self.__client.set_properties(
+                properties, targets, block)
 
    def keys(self):
       '''get all keys from all engines
@@ -1090,10 +1208,42 @@ class cluster(object):
       '''get the value of a key
       @param key the var of interest
       @param targets, the engines of interest
-
+      Example:
+      c.pgc({0:'ya=3',1:'ya="b"'})
+      c.pull('ya')
+      {0: 3, 1: 'b'}
+      c.pull('ya',[1])
+      {1: 'b'}
+      c.pull('ya',1)
+      {1: 'b'}
 
       '''
-      return self.__client.pull(key,targets)
+      base={} 
+      tgt=[]
+      if targets=='all' or \
+         type(targets)==list and len(targets)==0:
+          tgt=list(xrange(0, len(self.__engines))) 
+      elif type(targets)==list:
+          for j in targets:
+              if type(j)==types.IntType and j>=0:
+                  tgt.append(j)
+      elif type(targets)==int and targets>=0:
+          tgt.append(targets)
+           
+      if len(tgt)==0:
+           print 'no target engines'
+           return base
+
+      for i in tgt: 
+          rslt=None
+          try:
+              rslt=self.__client.pull(key,i)
+          except:
+              pass 
+          if rslt!=None:
+              base[i]=rslt[0]
+
+      return base
 
    def get_result(self, i):
       '''get the result of previous execution
@@ -1109,6 +1259,119 @@ class cluster(object):
   
       '''
       return self.__client.activate()
+
+
+   def parallel_go_task(self,taskname=None,outfile='',
+                   target=[],ipython_globals=None):
+       ''' Make parallel tasks using current input values 
+
+
+       '''
+       self.pgt(taskname,outfile,target,ipython_globals)
+
+   def pgt(self, taskname=None,outfile='',
+                    target=[],ipython_globals=None):
+       #parameter_printvalues(arg_names,arg_values,arg_types)
+       ''' Make parallel tasks using current input values 
+   
+       taskname -- Name of task
+           default: None = current active task; 
+           example: taskname='bandpass'
+           <Options: type tasklist() for the complete list>
+       outfile -- Output file for the task inputs
+           default: '' = taskname.parallel;
+           example: outfile=taskname.orion
+       target -- List of integer parallel engine ids
+           default: [] = all current active engines;
+           example: target=[0,2,4]
+   
+       '''
+       base={} 
+       for j in target:
+           if type(j)!=types.IntType or j<0:
+               print ('engine id', j, 
+                      'must be a positive integer')
+               return base
+
+       if len(target)==0:
+           target=list(xrange(0, len(self.__engines))) 
+       if len(target)==0:
+           print 'no target engines'
+           return base
+
+       try:
+           if ipython_globals == None:
+               t=len(inspect.stack())-1 
+               myf=sys._getframe(t).f_globals
+           else:
+               myf=ipython_globals
+   
+           if taskname==None or taskname=='' or \
+              type(taskname)!=str:
+               taskname=myf['taskname']
+   
+           if outfile=='' or outfile==None or \
+              type(outfile)!=str:
+               outfile=taskname+'.parallel'
+   
+           tname=myf[taskname]
+           if not myf.has_key(taskname) and \
+              str(type(tname))!="<type 'instance'>" and \
+              not hasattr(tname,"defaults"):
+               raise TypeError("task %s is not defined " %
+                               taskname)
+           else:
+               myf['taskname']=taskname
+               myf['update_params'](func=myf['taskname'],
+                     printtext=False, ipython_globals=myf)
+           
+           #f=zip(myf[taskname].__call__.func_code.co_varnames,
+           #      myf[taskname].__call__.func_defaults) 
+           #print f
+
+           #pfile=open(outfile,'w')
+           for j in target:
+               script=taskname+'('
+               for k in myf[taskname].parameters:
+                   par=myf[taskname].parameters[k]
+                   if type(par)==dict:  
+                     #val=myf[taskname].__call__.func_defaults
+                       val=par
+                       #print ('j=', j, 'k=', k, 'par=', par, 
+                       #       'val=', val)
+                       for v in par.keys():
+                           if type(v)==types.IntType and j==v:
+                               #print v, 'par[v]', par[v]
+                               val=par[v]
+                               break
+                           elif type(v)==str:
+                               #print v, '-par[v]', par[v]
+                               a=-1
+                               try:
+                                   a=int(v)
+                               except:
+                                   pass
+                               if a!=-1 and a==j:
+                                   val=par[v]
+                                   break
+                       if type(val)==str:
+                           script=script+k+"='"+val+"',"
+                       else:
+                           script=script+k+"="+str(val)+","
+                   elif type(par)==str:
+                       script=script+k+"='"+par+"',"
+                   else:
+                       script=script+k+"="+str(par)+","
+               script=script.rstrip(',')
+               script=script+')'
+               base[j]=script
+           #    print >>pfile,script
+
+           #pfile.close()
+           return base
+       except TypeError, e:
+           print "parallele_go_task --error: ", e
+
 
    def check_job(self, job, verbose=True):
       '''check the status of an asynch job
@@ -1192,6 +1455,52 @@ c.get_result(1)
 #pg.activate()
 #px 'from casa_in_py import *'
 '''
+
+   def example(self):
+      print """example: run clean on 4 engines
+
+from parallel_go import *
+c=cluster()
+c.start_engine('casa-dev-08', 4,
+               '/home/casa-dev-08/hye/cluster')
+default clean
+mspath='/home/casa-dev-09/hye/test/ngc6503/ngc6503_output/'
+msname='ngc6503.ms.contsub'
+vis=mspath+msname
+wpath=[]
+for i in c.pull('work_dir'):
+   wpath.append(i+'/'+msname+'.clean')
+
+imagename=c.pad_task_id(wpath)
+mode='channel'
+start=c.split_int(9, 127)
+nchan=40
+width=1
+calready=False
+gain=0.1
+msize=[370,250]
+psfmode='clark'
+cell=[4.,4.]
+niter=10000
+threshold=0.0003
+taskghting='briggs'
+#rmode = 'norm'
+robust=0.5
+mask = ''
+s=c.pgt()
+job=[]
+for i in c.get_ids():
+    job.append(c.odo(s[i], i))
+
+c.check_job(job[0])
+
+c.get_result(0)
+
+"""
+
+
+cluster=cluster()
+
 
 '''
 for i in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16;

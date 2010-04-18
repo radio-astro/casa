@@ -33,8 +33,8 @@ def putchanimage(cubimage,inim,chan):
     """
     ia.open(inim)
     inimshape=ia.shape()
-    imdata=ia.getchunk()
-    immask=ia.getchunk(getmask=True)
+    ####imdata=ia.getchunk()
+    ####immask=ia.getchunk(getmask=True)
     ia.close()
     ia.open(cubimage)
     cubeshape=ia.shape()
@@ -43,11 +43,11 @@ def putchanimage(cubimage,inim,chan):
     if( not (cubeshape[3] > (chan+inimshape[3]-1))):
         return False
 
-    rg0=ia.setboxregion(blc=blc,trc=trc)
+    ####rg0=ia.setboxregion(blc=blc,trc=trc)
     if inimshape[0:3]!=cubeshape[0:3]: 
         return False
-    #ia.putchunk(pixels=imdata,blc=blc)
-    ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+    ####ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+    ia.insert(infile=inim, locate=blc)
     ia.close()
     ia.removefile(inim)
     return True
@@ -214,11 +214,11 @@ def copyimage(inimage='', outimage='', init=False, initval=0.0):
     if(init):
         ia.set(initval)
     else:
-        ib=iatool.create()
-        ib.open(inimage)
-        arr=ib.getchunk()
-        ib.done()
-        ia.putchuck(arr)
+        ####ib=iatool.create()
+        ####ib.open(inimage)
+        ####arr=ib.getchunk()
+        ####ib.done()
+        ia.insert(inimage, locate=[0,0,0,0])
     ia.done()
 
 def pcont(msname=None, imagename=None, imsize=[1000, 1000], 

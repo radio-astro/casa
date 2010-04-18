@@ -33,7 +33,6 @@
 #include <QTextStream>
 #include <display/QtViewer/QtDBusViewerAdaptor.qo.h>
 #include <display/QtViewer/QtApp.h>
-#include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/QtViewer/QtCleanPanelGui.qo.h>
@@ -47,32 +46,6 @@ namespace casa {
 
     static void launch_ghostview( const char *printer_file );
     static void launch_lpr( const char *printer_file, const char *printer );
-
-    const QString &QtDBusViewerAdaptor::name( ) {
-	return QtViewer::name( );
-    }
-
-    bool QtDBusViewerAdaptor::connectToDBus(const QString &dbus_name) {
-
-	bool dbusRegistered = false;
-
-	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(dbus_name)) )
-	    return false;
-
-	try {
-	    // Register service and object.
-	    QObject *xparent = parent();
-	    dbusRegistered = connection().isConnected() &&
-			     connection().registerService(dbusServiceName(dbus_name)) &&
-			     connection().registerObject(dbusObjectName(dbus_name), xparent,
-// 			     connection().registerObject(dbusObjectName(), parent(),
-// 			     connection().registerObject(dbusObjectName(), this,
-							 QDBusConnection::ExportAdaptors);
-
-	} catch(...) { dbusRegistered = false; }
-
-	return dbusRegistered;
-    }
 
     void QtDBusViewerAdaptor::handle_interact( QVariant v ) {
 	emit interact(QDBusVariant(v));

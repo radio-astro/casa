@@ -103,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Add scratch columns
     if (init) {
-      message.message("Adding MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns");
+      message.message("Adding MODEL_DATA (initialized to unity), CORRECTED_DATA (initialized to DATA) and IMAGING_WEIGHT columns");
       logSink.post(message);
       
       removeCalSet(ms);
@@ -124,10 +124,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt spw=0; spw<selection_p.ncolumn(); spw++) {
       iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
     }
-    
-    // Initialize MODEL_DATA and CORRECTED_DATA
-    if (init) initCalSet(0);
-    
   }
 
   VisSet::VisSet(MeasurementSet& ms,const Block<Int>& columns, 
@@ -179,7 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Add scratch columns
     if (addScratch && init) {
-      message.message("Adding MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns");
+      message.message("Adding MODEL_DATA (initialized to unity), CORRECTED_DATA (initialized to DATA) and IMAGING_WEIGHT columns");
       logSink.post(message);
       
       removeCalSet(ms);
@@ -200,10 +196,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt spw=0; spw<selection_p.ncolumn(); spw++) {
       iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
     }
-    
-    // Initialize MODEL_DATA and CORRECTED_DATA
-    if (addScratch && init) initCalSet(0);
-    
   }
   
   VisSet::VisSet(Block<MeasurementSet>& mss,const Block<Int>& columns, 
@@ -404,7 +396,6 @@ void VisSet::resetVisIter(const Block<Int>& columns, Double timeInterval)
 
 void VisSet::initCalSet(Int calSet)
 {
-
   LogSink logSink;
   LogMessage message(LogOrigin("VisSet","VisSet"));
 
@@ -415,30 +406,38 @@ void VisSet::initCalSet(Int calSet)
   Vector<Bool> zero;
   Int nRows(0);
   for (iter_p->originChunks(); iter_p->moreChunks(); iter_p->nextChunk()) {
-    // figure out which correlations to set to 1. and 0. for the model.
-    Vector<Int> corrType; iter_p->corrType(corrType);
-    uInt nCorr = corrType.nelements();
-    if (nCorr!=lastCorrType.nelements() ||
-	!allEQ(corrType,lastCorrType)) {
-      lastCorrType.resize(nCorr); lastCorrType=corrType;
-      zero.resize(nCorr);
-      for (uInt i=0; i<nCorr; i++) {
-	zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
-		 corrType[i]==Stokes::XY || corrType[i]==Stokes::YX);
+
+      // figure out which correlations to set to 1. and 0. for the model.
+      Vector<Int> corrType; iter_p->corrType(corrType);
+      uInt nCorr = corrType.nelements();
+      if (nCorr != lastCorrType.nelements() ||
+          !allEQ(corrType, lastCorrType)) {
+
+        lastCorrType.resize(nCorr); 
+        lastCorrType=corrType;
+        zero.resize(nCorr);
+
+        for (uInt i=0; i<nCorr; i++) 
+          {
+            zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
+                     corrType[i]==Stokes::XY || corrType[i]==Stokes::YX);
+          }
       }
-    }
-    for (iter_p->origin(); iter_p->more(); (*iter_p)++) {
-      Cube<Complex> data;
-      nRows+=iter_p->nRow();
-      iter_p->setVis(iter_p->visibility(data,VisibilityIterator::Observed),
-		     VisibilityIterator::Corrected);
-      data=Complex(1.0,0.0);
-      for (uInt i=0; i<nCorr; i++) {
-	if (zero[i]) data(Slice(i),Slice(),Slice())=Complex(0.0,0.0);
+      for (iter_p->origin(); iter_p->more(); (*iter_p)++) {
+          Cube<Complex> data;
+          nRows+=iter_p->nRow();
+          iter_p->setVis(iter_p->visibility(data, VisibilityIterator::Observed),
+                         VisibilityIterator::Corrected);
+
+          data = Complex(1.0,0.0);
+
+          for (uInt i=0; i < nCorr; i++) {
+              if (zero[i]) data(Slice(i), Slice(), Slice()) = Complex(0.0,0.0);
+          }
+          iter_p->setVis(data,
+                         VisibilityIterator::Model);
       }
-      iter_p->setVis(data,VisibilityIterator::Model);
-    };
-  };
+  }
   flush();
 
   iter_p->originChunks();
@@ -573,12 +572,13 @@ Int VisSet::numberCoh() const
 }
 
 void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
-  // Add a calibration set (comprising a set of CORRECTED_DATA, 
+  // Add and initialize calibration set (comprising a set of CORRECTED_DATA, 
   // MODEL_DATA and IMAGING_WEIGHT columns) to the MeasurementSet.
-  
+
   // Define a column accessor to the observed data
   ROTableColumn* data;
-  if (ms.tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA))) {
+  const bool data_is_float = ms.tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA));
+  if (data_is_float) {
     data = new ROArrayColumn<Float> (ms, MS::columnName(MS::FLOAT_DATA));
   } else {
     data = new ROArrayColumn<Complex> (ms, MS::columnName(MS::DATA));
@@ -594,7 +594,6 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
   IPosition dataTileShape;
   Bool tiled = (dataManType.contains("Tiled"));
   Bool simpleTiling = False;
-
   
 
   if (tiled) {
@@ -693,6 +692,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
     ms.addColumn(tdCorr, corrStMan);
   };
   MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
+
   // Add the IMAGING_WEIGHT column
   TableDesc tdImWgt, tdImWgtComp, tdImWgtScale;
   CompressFloat* ccImWgt=NULL;
@@ -725,16 +725,103 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
   if (ccCorr) delete ccCorr;
   if (ccImWgt) delete ccImWgt;
 
-  // Set the shapes for each row
+  /* Set the shapes for each row
+     and initialize CORRECTED_DATA to DATA
+     and MODEL_DATA to one 
+  */
   ArrayColumn<Complex> modelData(ms, "MODEL_DATA");
   ArrayColumn<Complex> correctedData(ms, "CORRECTED_DATA");
   ArrayColumn<Float> imagingWeight(ms, "IMAGING_WEIGHT");
+
+  // Get data description column
+  ROScalarColumn<Int> dd_col = MSMainColumns(ms).dataDescId();
+
+  // Get polarization column in dd table
+  ROScalarColumn<Int> pol_col = MSDataDescColumns(ms.dataDescription()).polarizationId();
+
+  // Get correlation column
+  ROArrayColumn<Int> corr_col(MSColumns(ms).polarization().corrType());
+
+  Matrix<Complex> model_vis;
+  Int last_dd_id = 0;
+  /* Initialize last_dd_id to something that
+     causes the model_vis to be (re-)computed
+     for the first MS row
+  */
+  if (ms.nrow() > 0) {
+    last_dd_id = dd_col(0) + 1;
+  }
+
   for (uInt row=0; row < ms.nrow(); row++) {
-    IPosition rowShape=data->shape(row);
-    modelData.setShape(row,rowShape);
-    correctedData.setShape(row,rowShape);
-    imagingWeight.setShape(row,rowShape.getLast(1));
-  };
+
+    IPosition rowShape=data->shape(row);  // shape of (FLOAT_)DATA column
+
+    correctedData.setShape(row, rowShape);
+    modelData.setShape(row, rowShape);
+    imagingWeight.setShape(row, rowShape.getLast(1));
+
+    Matrix<Complex> vis(rowShape);
+
+    if (data_is_float) {
+      /* Convert to complex for the CORRECTED_DATA column */
+      Matrix<Float> f(rowShape);
+      dynamic_cast<ROArrayColumn<Float>*>(data)->get(row, f);
+
+      for (unsigned i = 0; (int)i < f.shape()(0); i++)
+      for (unsigned j = 0; (int)j < f.shape()(1); j++)
+        vis(i, j) = f(i, j);
+    } 
+    else {
+      dynamic_cast<ROArrayColumn<Complex>*>(data)->get(row, vis);
+    }
+
+    correctedData.put(row, vis);
+
+    // figure out which correlations to set to 1. and 0. for the model.
+    // Only do that, if the ddid changed since the last row
+    Int dd_id = dd_col(row);
+
+    if (dd_id != last_dd_id) {
+      
+      last_dd_id = dd_id;
+
+      model_vis.resize(rowShape);
+
+      Int pol_id = pol_col(dd_id);
+      Vector<Int> corrType = corr_col(pol_id);
+      
+      //cerr << "row = " << row << ", dd = " << dd_id << ", pol = " << pol_id << ", corr = " << corrType << endl;
+      
+      Vector<Int> lastCorrType;
+      Vector<Bool> zero;
+      
+      uInt nCorr = corrType.nelements();
+      if (nCorr != lastCorrType.nelements() ||
+          !allEQ(corrType, lastCorrType)) {
+        
+        lastCorrType.resize(nCorr); 
+        lastCorrType = corrType;
+        zero.resize(nCorr);
+        
+        for (uInt i=0; i<nCorr; i++) 
+          {
+            zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
+                     corrType[i]==Stokes::XY || corrType[i]==Stokes::YX);
+          }
+      }
+      
+      model_vis = Complex(1.0,0.0);
+      
+      for (uInt i=0; i < nCorr; i++) {
+        if (zero[i]) {
+          model_vis(Slice(i), Slice()) = Complex(0.0, 0.0);
+        }
+      }
+    } // endif ddid changed
+
+    modelData.put(row, model_vis);
+  } 
+
   delete data;
 }
 
@@ -791,7 +878,7 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress){
 
   // Add scratch columns
   if (init) {
-    message.message("Adding MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns");
+    message.message("Adding MODEL_DATA (initialized to unity), CORRECTED_DATA (initialized to DATA) and IMAGING_WEIGHT columns");
     logSink.post(message);
     
     removeCalSet(ms);
@@ -806,13 +893,6 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress){
     if (ms.keywordSet().isDefined("SORTED_TABLE")) 
       ms.rwKeywordSet().removeField("SORTED_TABLE");
   }
-
-  
-  // Initialize MODEL_DATA and CORRECTED_DATA
-  if (init) initCalSet(0);
-
-
-
 }
 
 String VisSet::msName(){

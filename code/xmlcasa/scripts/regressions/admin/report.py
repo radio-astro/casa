@@ -35,7 +35,9 @@ known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 2.3.1 (build #6826)",
                   "CASA Version 2.4.0 (build #8115)",
                   "CASA Version 3.0.0 (r9861)", # for Mac...
-                  "CASA Version 3.0.0 (r9888)"] # for Linux...
+                  "CASA Version 3.0.0 (r9888)", # for Linux...
+                  "CASA Version 3.0.1 (r11099)"]
+
 
 exclude_host = []
 exclude_test = {}
@@ -418,6 +420,9 @@ class report:
                 a += len('(r')
                 b = latest_on_stable.find(')', a)
                 revision = latest_on_stable[a:b]
+                if len(revision) < 1:
+                    raise Exception, "Could not parse revision number '%s'" \
+                          % (latest_on_stable)
             else:
                 a = latest_on_stable.find('build #')
                 if a >=0:

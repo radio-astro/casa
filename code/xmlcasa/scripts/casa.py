@@ -173,6 +173,7 @@ from viewer import  viewer
 from vishead import  vishead
 from visstat import  visstat
 from widefield import  widefield
+from msmoments import msmoments
 
 
 ##

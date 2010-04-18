@@ -73,6 +73,7 @@ The latest version of this script can be found at:
 # Updated      STM 2008-07-06 (Beta Patch 2.0) regression version        #
 # Updated      STM 2009-05-26 (Beta Patch 4.0) McMaster demo             #
 # Updated      STM 2009-12-02 (Release 0)                                #
+# Revised      JO  2010-04-13 (Release 3.0.1) edit viewer call           #
 #                                                                        #
 # Features Tested:                                                       #
 #    The script illustrates end-to-end processing with CASA              #
@@ -997,7 +998,7 @@ clnimage = imname+'.image'
 if scriptmode:
     print '--View image--'
     print "Use Spectral Profile Tool to get line profile in box in center"
-    viewer(clnimage,'image')
+    viewer(clnimage)
     user_check=raw_input('Return to continue script\n')
 
 #=====================================================================
@@ -1332,6 +1333,7 @@ The latest version of this script can be found at:
 # Updated STM 2008-12-24 (Beta Patch 3.0) extendflags                #
 # Updated STM 2009-05-29 (Beta Patch 4.0) for mcmaster tutorial      #
 # Updated STM 2009-12-20 (Release 0)      for Version 3.0.0          #
+# Revised JO  2010-04-13 (Release 3.0.1) edit viewer call            #
 #                                                                    #
 # This is a VLA 6cm dataset that was observed in 1999 to set the     #
 # flux scale for calibration of the VLA.  Included in the program    #
@@ -2753,7 +2755,7 @@ print "Close viewer panel when done"
 #---------------------------------------------------------------------
 #
 # If you did not do interactive clean, bring up viewer manually
-viewer(clnimage1,'image')
+viewer(clnimage1)
 
 # Pause script if you are running in scriptmode
 if scriptmode:
@@ -3006,7 +3008,7 @@ print "Close viewer panel when done"
 #---------------------------------------------------------------------
 #
 # If you did not do interactive clean, bring up viewer manually
-viewer(clnimage2,'image')
+viewer(clnimage2)
 
 # Pause script if you are running in scriptmode
 if scriptmode:
@@ -3238,7 +3240,7 @@ off_statistics['POLI'] = imstat()
 # Display clean I image in viewer but with polarization vectors
 #
 # If you did not do interactive clean, bring up viewer manually
-viewer(polimage,'image')
+viewer(polimage)
 
 print "Displaying pol I now.  You should overlay pola vectors"
 print "Bring up the Load Data panel:"

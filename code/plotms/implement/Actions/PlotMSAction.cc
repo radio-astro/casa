@@ -53,6 +53,8 @@ const String PlotMSAction::P_HIGHRES = "highres";
 const String PlotMSAction::P_DPI = "dpi";
 const String PlotMSAction::P_WIDTH = "width";
 const String PlotMSAction::P_HEIGHT = "height";
+const String PlotMSAction::P_INTERACTIVE = "interactive";
+
 
 bool PlotMSAction::requires(Type type, const String& parameter) {
     switch(type) {
@@ -598,20 +600,21 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    }
 
 	    PlotExportFormat format(t, file);
-	    format.resolution = isDefinedBool(P_HIGHRES) && valueBool(P_HIGHRES) ?
-	    	                PlotExportFormat::HIGH : PlotExportFormat::SCREEN;
+	    format.resolution = isDefinedBool(P_HIGHRES) && valueBool(P_HIGHRES)
+	    		? PlotExportFormat::HIGH : PlotExportFormat::SCREEN;
 	    format.dpi = isDefinedInt(P_DPI) ? valueInt(P_DPI) : -1;
 	    if(format.dpi <= 0) format.dpi = -1;
 	    format.width = isDefinedInt(P_WIDTH) ? valueInt(P_WIDTH) : -1;
 	    if(format.width <= 0) format.width = -1;
 	    format.height = isDefinedInt(P_HEIGHT) ? valueInt(P_HEIGHT) : -1;
 	    if(format.height <= 0) format.height = -1;
-
-
+	    Bool interactive = ! (
+	    	isDefinedBool(P_INTERACTIVE) && ! valueBool(P_INTERACTIVE)
+	    );
 	    plotms->getPlotter()->doThreadedOperation(
-	    		new PlotMSExportThread(valuePlot(P_PLOT), format));
-
-		return true;
+	    	new PlotMSExportThread(valuePlot(P_PLOT), format, interactive)
+	    );
+	    return true;
 	}
 
 	case HOLD_RELEASE_DRAWING: {

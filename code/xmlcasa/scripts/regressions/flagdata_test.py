@@ -18,6 +18,13 @@ def test_eq(result, total, flagged):
 class test_case(unittest.TestCase):
     def runTest(self):
 
+        # Import data
+        vis = 'flagdatatest.ms'
+        
+        os.system('cp -r ' + \
+                  os.environ.get('CASAPATH').split()[0] +
+                  "/data/regression/flagdata/" + vis + ' ' + vis)
+
         print "Test of vector mode"
         
         default(flagdata)
@@ -60,16 +67,46 @@ class test_case(unittest.TestCase):
         len(fg.getflagversionlist()) == 6
         fg.done()
 
+class test_flagmanager(unittest.TestCase):
 
-# Import data
-vis = 'flagdatatest.ms'
+    def setUp(self):
+        self.vis = "ngc5921.ms"
+        if os.path.exists(self.vis):
+            print "The MS is already exists"
+        else:
+            print "Importing %s..." % (self.vis)
+            importuvfits(os.environ.get('CASAPATH').split()[0] + \
+                         '/data/regression/ngc5921/ngc5921.fits', \
+                         self.vis)
 
-os.system('cp -r ' + \
-          os.environ.get('CASAPATH').split()[0] +
-          "/data/regression/flagdata/" + vis + ' ' + vis)
+        flagdata(vis=self.vis, unflag=True)
 
-# Run the test class through PyUnit (this would be done by the unit test driver)
-unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_case))
+    def test1(self):
+        """Create, then restore autoflag"""
+
+        flagdata(vis = self.vis, mode='summary')
+        flagmanager(vis = self.vis)
+        
+        flagdata(vis = self.vis, antenna="2")
+        
+        flagmanager(vis = self.vis)
+        ant2 = flagdata(vis = self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 there were", ant2, "flags"
+
+        # Change flags, then restore
+        flagdata(vis = self.vis, antenna="3")
+        flagmanager(vis = self.vis)
+        ant3 = flagdata(vis = self.vis, mode='summary')['flagged']
+
+        print "After flagging antenna 2 and 3 there were", ant3, "flags"
+
+        flagmanager(vis = self.vis, mode='restore', versionname='manualflag_3')
+        restore2 = flagdata(vis = self.vis, mode='summary')['flagged']
+
+        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags"
+
+        assert restore2 == ant2
 
 
 class test_statistics_queries(unittest.TestCase):
@@ -79,12 +116,15 @@ class test_statistics_queries(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Importing data..."
-            os.system('rm -rf ' + vis)
             importuvfits(os.environ.get('CASAPATH').split()[0] + \
                          '/data/regression/ngc5921/ngc5921.fits', \
                          vis)
             
         flagdata(vis=vis, unflag=true)
+
+    #def test_cas2021(self):
+    #    print "Test antenna selection"
+    #    flagdata(vis=vis, antenna='!5') # should not crash
     
     def test21(self):
         print "Test of flagging statistics and queries"
@@ -173,103 +213,91 @@ class test_statistics_queries(unittest.TestCase):
         flagdata(vis=vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
         test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1762236)
         flagdata(vis=vis, unflag=true)
-        
-vis='ngc5921.ms'
 
-unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_statistics_queries))
+def main():
 
-flagdata(vis=vis, unflag=true)
+    unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_flagmanager))
 
-flagmanager(vis=vis, mode='list')
+    unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_case))
 
-print "Test of mode='rfi'"
-vis='flagdatatest.ms'
-flagdata(vis=vis, unflag=true)
-flagdata(vis=vis, mode='rfi')
-test_eq(flagdata(vis=vis, mode='summary'), 2000700, 9142)
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 148200, 354)
-flagdata(vis=vis, unflag=true)
+    global vis  # make the variable visible from the test class
+    vis='ngc5921.ms'
+    
+    unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_statistics_queries))
+    
+    flagdata(vis=vis, unflag=true)
+    
+    flagmanager(vis=vis, mode='list')
 
-print "Test of mode = 'shadow'"
-flagdata(vis=vis, mode='shadow', diameter=40)
-test_eq(flagdata(vis=vis, mode='summary'), 2000700, 38610)
-flagdata(vis=vis, unflag=true)
+    print "Test of mode='rfi'"
+    vis='flagdatatest.ms'
+    flagdata(vis=vis, unflag=true)
+    flagdata(vis=vis, mode='rfi')
+    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 9142)
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 148200, 354)
+    flagdata(vis=vis, unflag=true)
 
-flagdata(vis=vis, mode='shadow')
-test_eq(flagdata(vis=vis, mode='summary'), 2000700, 15860)
-flagdata(vis=vis, unflag=true)
+    print "Test of mode = 'shadow'"
+    flagdata(vis=vis, mode='shadow', diameter=40)
+    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 38610)
+    flagdata(vis=vis, unflag=true)
 
-flagdata(vis=vis, mode='shadow', correlation='LL')
-test_eq(flagdata(vis=vis, mode='summary'), 2000700, 7930)
-flagdata(vis=vis, unflag=true)
+    flagdata(vis=vis, mode='shadow')
+    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 15860)
+    flagdata(vis=vis, unflag=true)
 
-flagmanager(vis=vis, mode='list')
+    flagdata(vis=vis, mode='shadow', correlation='LL')
+    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 7930)
+    flagdata(vis=vis, unflag=true)
 
-print "Test various selections"
-vis='ngc5921.ms'
-flagdata(vis=vis, antenna='2')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-flagdata(vis=vis, unflag=true)
+    flagmanager(vis=vis, mode='list')
 
-flagdata(vis=vis, spw='0')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-flagdata(vis=vis, unflag=true)
+    print "Test various selections"
+    vis='ngc5921.ms'
+    flagdata(vis=vis, antenna='2')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
+    flagdata(vis=vis, unflag=true)
 
-flagdata(vis=vis, correlation='LL')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 98217)
-flagdata(vis=vis, correlation='LL,RR')
-flagdata(vis=vis, correlation='LL RR')
-flagdata(vis=vis, correlation='LL ,, ,  ,RR')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-flagdata(vis=vis, unflag=true)
+    flagdata(vis=vis, spw='0')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
+    flagdata(vis=vis, unflag=true)
 
-flagdata(vis=vis, field='0')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 39186)
-flagdata(vis=vis, unflag=true)
-
-flagdata(vis=vis, uvrange='200~400m')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 55944)
-flagdata(vis=vis, unflag=true)
-
-flagdata(vis=vis, timerange='09:50:00~10:20:00')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 6552)
-flagdata(vis=vis, unflag=true)
-
-flagdata(vis=vis, scan='3')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 52416)
-flagdata(vis=vis, unflag=true)
-
-# feed not implemented flagdata(vis=vis, feed='27')
-# flagdata(vis=vis, unflag=true)
-
-flagdata(vis=vis, array='0')
-test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-flagdata(vis=vis, unflag=true)
-
-flagmanager(vis=vis, mode='list')
+    flagdata(vis=vis, correlation='LL')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 98217)
+    flagdata(vis=vis, correlation='LL,RR')
+    flagdata(vis=vis, correlation='LL RR')
+    flagdata(vis=vis, correlation='LL ,, ,  ,RR')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
+    flagdata(vis=vis, unflag=true)
+    
+    flagdata(vis=vis, field='0')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 39186)
+    flagdata(vis=vis, unflag=true)
+    
+    flagdata(vis=vis, uvrange='200~400m')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 55944)
+    flagdata(vis=vis, unflag=true)
+    
+    flagdata(vis=vis, timerange='09:50:00~10:20:00')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 6552)
+    flagdata(vis=vis, unflag=true)
+    
+    flagdata(vis=vis, scan='3')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 52416)
+    flagdata(vis=vis, unflag=true)
+    
+    # feed not implemented flagdata(vis=vis, feed='27')
+    # flagdata(vis=vis, unflag=true)
+    
+    flagdata(vis=vis, array='0')
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
+    flagdata(vis=vis, unflag=true)
+    
+    flagmanager(vis=vis, mode='list')
 
 
 def suite():
-    s1 = unittest.makeSuite(test_case)
-    s2 = unittest.makeSuite(test_statistics_queries)
-    return unittest.TestSuite((s1, s2))
+    return [test_case, test_statistics_queries]
 
-
-if False: 
-    print "Test of mode = 'alma'"
-    vis='cwilson2.ms'
-    for r in ['vla_recipe', 'pdb_recipe']:
-        os.system('rm -rf ' + vis)
-        shutil.copytree(os.environ.get('CASAPATH').split()[0] +
-                        "/data/regression/flagdata/" + vis,
-                        vis)
-        listobs(vis=vis, verbose=false)
-        flagdata(vis=vis, unflag=true)
-        flagdata(vis=vis, mode='alma', recipe=r, gain=['1'], flux=['0'], bpass=['0'], source=['2'])
-        if r == 'vla_recipe':
-            expected = 89334
-        else:
-            expected = 90846
-        test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 261450, expected)
-
-    flagmanager(vis=vis, mode='list')
+if __name__ == "__main__":
+    main()

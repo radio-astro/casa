@@ -81,9 +81,14 @@ public:
     static const String PARAM_TRANSFORMATIONS; // Record (see PlotMSTransformations)
     static const String PARAM_UPDATEIMMEDIATELY; // bool
     static const String PARAM_WIDTH; // int or uInt
+    static const String PARAM_EXPORT_FILENAME; // String
+    static const String PARAM_EXPORT_FORMAT; //String
+    static const String PARAM_EXPORT_HIGHRES; // bool
+    static const String PARAM_EXPORT_INTERACTIVE; // bool
+    static const String PARAM_EXPORT_ASYNC; // bool
+
     // </group>
 
-    
     // DBus method name for getting the log parameters, including: the sink
     // filename (PARAM_FILENAME) and the filter priority (PARAM_PRIORITY).
     // PARAMETERS: none.
@@ -95,7 +100,6 @@ public:
     // PARAMETERS: value (Record).
     // RETURNS: none.
     static const String METHOD_SETLOGPARAMS;
-    
     
     // DBus method name for getting the plotms parameters, including: the
     // "clear selections on axes change" flag (PARAM_CLEARSELECTIONS), and the
@@ -116,7 +120,6 @@ public:
     // RETURNS: none.
     static const String METHOD_SETCACHEDIMAGESIZETOSCREENRES;
     
-    
     // DBus method name for getting the plot parameters at the given index
     // (PARAM_PLOTINDEX), including: the MS filename (PARAM_FILENAME), the x
     // axis (PARAM_AXIS_X) and data column (PARAM_DATACOLUMN_X), the y axis
@@ -134,7 +137,6 @@ public:
     // RETURNS: none.
     static const String METHOD_SETPLOTPARAMS;
     
-    
     // DBus method name for getting the flag extension parameters
     // (PARAM_FLAGGING).
     // PARAMETERS: none.
@@ -145,7 +147,6 @@ public:
     // PARAMETERS: flagging value.
     // RETURNS: none.
     static const String METHOD_SETFLAGGING;
-    
     
     // DBus method names for showing/hiding the window.  Does NOT quit the
     // entire application.
@@ -167,11 +168,16 @@ public:
     // RETURNS: none.
     static const String METHOD_QUIT;
     
+    //DBus method name for exporting plot file.
+
+    static const String METHOD_SAVE;
+
+    //DBus method name for determining if a plot is being drawn
+    static const String METHOD_ISDRAWING;
     
     // Returns the name that the plotms in the process with the given ID is (or
     // would be) registered with in the CASA DBus server.
     static String dbusName(pid_t pid);
-    
     
     // Non-Static //
     
@@ -181,23 +187,24 @@ public:
     // Destructor.
     ~PlotMSDBusApp();
     
-    
     // Connects to the DBus server using the dbusName() method with the current
     // process ID.  Returns whether the connection succeeded or not.
-    bool connectToDBus();
-    
+    bool connectToDBus( const QString &dbus_name="" );
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().
-    void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag);
+    void parametersHaveChanged(
+    	const PlotMSWatchedParameters& params, int updateFlag
+    );
     
     // Implements PlotMSPlotManagerWatcher::plotsChanged().
     void plotsChanged(const PlotMSPlotManager& manager);
     
 protected:
     // Implements QtDBusXmlApp::dbusRunXmlMethod().
-    void dbusRunXmlMethod(const String& methodName, const Record& parameters,
-            Record& retValue, const String& callerName, bool isAsync);
+    void dbusRunXmlMethod(
+    	const String& methodName, const Record& parameters,
+        Record& retValue, const String& callerName, bool isAsync
+    );
     
     // Overrides QtDBusXmlApp::dbusXmlReceived() to print the message to the log
     // as needed.
@@ -219,7 +226,6 @@ private:
     // true if the user updates something while the GUI is hidden.
     bool itsUpdateFlag_;
 
-
     // Helper method for posting log messages.
     void log(const String& message);
     
@@ -229,6 +235,11 @@ private:
     
     // Helper for updating.
     void update();
+
+    // helper for saving
+    bool _savePlot(const Record& parameters);
+
+
 };
 
 }

@@ -114,6 +114,10 @@ class plotms
 
     void hide();
 
+    bool save(const string& filename, const string& format, const bool highres, const bool interactive);
+
+	bool isDrawing();
+
     private:
 
     #include <xmlcasa/plotms/plotms_private.h>

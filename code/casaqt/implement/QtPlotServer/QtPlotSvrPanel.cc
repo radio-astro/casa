@@ -153,6 +153,56 @@ namespace casa {
 	return curve;
     }
 
+    QtPlotHistogram *QtPlotSvrPanel::histogram( const QList<double> &srcValues, int bins, const QString &color, const QString &label ) {
+	QtPlotHistogram *histogram = new QtPlotHistogram(label);
+	histogram->setColor(QColor(color));
+
+	if ( label.length( ) == 0 ) {
+	    histogram->setItemAttribute( QwtPlotItem::Legend, false );
+	}
+
+	const int numBins = (bins > 0 ? bins : 25);
+	double minimumValue = (double) LONG_MAX;
+	double maximumValue = (double) LONG_MIN;
+	for ( int x = 0; x < srcValues.size( ); ++x ) {
+	    if ( srcValues[x] < minimumValue ) minimumValue = srcValues[x];
+	    if ( srcValues[x] > maximumValue ) maximumValue = srcValues[x];
+	}
+
+	QwtArray<QwtDoubleInterval> intervals(numBins);
+	QwtArray<double> values(numBins);
+	double pos = (double) minimumValue;
+	double bucketWidth = (double) (maximumValue - minimumValue) / (double) numBins;
+	for ( int i = 0; i < (int) intervals.size(); ++i ) {
+	    intervals[i] = QwtDoubleInterval(pos, pos + bucketWidth);
+	    values[i] = 0.0;
+	    pos += bucketWidth;
+	}
+
+	for ( int x = 0; x < srcValues.size( ); ++x ) {
+	    int bucket = (int) (srcValues[x] / bucketWidth);
+
+	    if ( bucket < 0 ) { bucket = 0; }
+	    if ( bucket >= numBins ) { bucket = numBins-1; }
+	    values[bucket] += 1.0;
+	}
+
+	double maximumBar = 0.0;
+	for ( int x = 0; x < (int) values.size(); ++x ) {
+	    values[x] = (((double) values[x] / (double) srcValues.size( )) * 100.0);
+	    if ( values[x] > maximumBar ) maximumBar = values[x];
+	}
+
+	histogram->setData(QwtIntervalData(intervals, values));
+	histogram->attach(plot);
+	plot->setAxisScale(QwtPlot::yLeft, 0.0, maximumBar + (0.1 * maximumBar));
+	plot->setAxisScale(QwtPlot::xBottom, (double) minimumValue, pos);
+
+	plot->replot( );
+	zoomer->setZoomBase( );
+	return histogram;
+    }
+
     QwtPlotSpectrogram *QtPlotSvrPanel::raster( const QList<double> &matrix, int sizex, int sizey ) {
 	QwtPlotSpectrogram *result = new QwtPlotSpectrogram( );
 	QtRasterData data(result);

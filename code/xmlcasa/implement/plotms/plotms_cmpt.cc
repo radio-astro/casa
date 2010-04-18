@@ -157,10 +157,14 @@ int plotms::getCachedImageHeight() {
     GETSINGLEINT(GETPLOTMSPARAMS, HEIGHT) }
 
 
-void plotms::setPlotMSFilename(const string& msFilename,
-        const bool updateImmediately, const int plotIndex) {
+void plotms::setPlotMSFilename(
+		const string& msFilename,
+        const bool updateImmediately, const int plotIndex
+) {
     launchApp();
-    SETSINGLEPLOT(FILENAME, msFilename) }
+    SETSINGLEPLOT(FILENAME, msFilename)
+}
+
 string plotms::getPlotMSFilename(const int plotIndex) {
     launchApp();
     GETSINGLEPLOTSTR(FILENAME) }
@@ -368,10 +372,47 @@ record* plotms::getFlagExtension() {
 }
 
 
-void plotms::update() { callAsync(PlotMSDBusApp::METHOD_UPDATE); }
-void plotms::show()   { callAsync(PlotMSDBusApp::METHOD_SHOW);   }
+void plotms::update() {
+	callAsync(PlotMSDBusApp::METHOD_UPDATE);
+}
+
+void plotms::show()   {
+ 	callAsync(PlotMSDBusApp::METHOD_SHOW);
+ 	/*
+	Record result;
+	QtDBusXmlApp::dbusXmlCall(dbus::FROM_NAME, app.dbusName( ),
+	            PlotMSDBusApp::METHOD_SHOW, Record(), result);
+	            */
+}
+
 void plotms::hide()   { callAsync(PlotMSDBusApp::METHOD_HIDE);   }
 
+bool plotms::save(const string& filename, const string& format, const bool highres, const bool interactive) {
+    launchApp();
+    Record params;
+    bool retValue;
+    params.define(PlotMSDBusApp::PARAM_EXPORT_FILENAME, filename);
+    params.define(PlotMSDBusApp::PARAM_EXPORT_FORMAT, format);
+    params.define(PlotMSDBusApp::PARAM_EXPORT_HIGHRES, highres);
+    params.define(PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE, interactive);
+    params.define(PlotMSDBusApp::PARAM_EXPORT_ASYNC, false);
+    QtDBusXmlApp::dbusXmlCall(
+    	dbus::FROM_NAME, app.dbusName( ),
+        PlotMSDBusApp::METHOD_SAVE, params, retValue
+    );
+    return retValue;
+}
+
+bool plotms::isDrawing() {
+	launchApp();
+	Record params;
+	bool retValue;
+	QtDBusXmlApp::dbusXmlCall(
+		dbus::FROM_NAME, app.dbusName(),
+	    PlotMSDBusApp::METHOD_ISDRAWING, params, retValue
+	);
+	return retValue;
+}
 
 // Private Methods //
 
@@ -405,7 +446,7 @@ void plotms::launchApp() {
                NULL);
         
     } else {
-	app.dbusName( ) = to_string(app.dbusServiceName(app.getName( ),pid));
+        app.dbusName( ) = to_string(QtDBusApp::generateServiceName(app.getName( ),pid));
         
         // Wait for it to have launched...
         unsigned int slept = 0;

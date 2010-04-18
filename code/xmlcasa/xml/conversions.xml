@@ -18,6 +18,7 @@
     <substitute  interface="casacomponentlist" as="componentlist" in="componentlist" />
     <substitute  interface="casaimagepol" as="imagepol" in="imagepol" />
     <substitute  interface="casaimage" as="image" in="imagepol" />
+    <substitute  interface="casatable" as="table" in="ms" />
 
 
     <conversion type="complex">

@@ -214,6 +214,8 @@ public:
     static const String P_DPI;     // Type: int
     static const String P_WIDTH;   // Type: int
     static const String P_HEIGHT;  // Type: int
+    static const String P_INTERACTIVE;  // Type: bool
+
     // </group>
     
     

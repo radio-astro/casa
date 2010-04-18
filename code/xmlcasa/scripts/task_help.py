@@ -77,7 +77,7 @@ def tasklist():
     print 'uvcontsub           clearcal      (autoclean)              '
     print 'uvsub               cvel          (boxit)                  '
     print '(uvcontsub2)        fluxscale                               '
-    print '                    fixvis                                  '
+    print 'msmoments           fixvis                                  '
     print '                    gaincal                                 '
     print '                    gencal                                  '
     print '                    listcal                                 '
@@ -109,6 +109,7 @@ def tasklist():
     print '                                                sdstat '
     print '                                                sdtpimaging '
     print '                                                (sdsim)'
+    print '                                                (msmoments)'
     if globals().has_key('mytasks') :
         print ''
         print 'User defined tasks'

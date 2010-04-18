@@ -89,8 +89,9 @@ public:
     PlotMSFlaggingTab* getFlaggingTab() { return itsFlaggingTab_; }
     PlotMSAnnotator& getAnnotator() { return itsAnnotator_; }
     // </group>
-    
-    
+
+    bool isDrawing() const;
+
     // Execution Methods //
     
     // Shows/hides the GUI.
@@ -187,6 +188,8 @@ public:
             bool alsoTriggerAction = false);
     // </group>
     
+    // export a plot to a file
+    bool exportPlot(const PlotExportFormat& format, const bool interactive, const bool async);
     
 public slots:
     // Shows the given error/warning message in a GUI window.
@@ -259,6 +262,7 @@ private:
     // "About" string.
     QString itsAboutString_;
     
+    bool _triggerAction(PlotMSAction& action);
     
     // Initializes the plotter with the given implementation.  MUST be called
     // from constructors.
@@ -270,7 +274,7 @@ private slots:
     
     // Method for when the given action has been triggered.
     void action(QAction* which);
-    
+
     // Slot for when the currently running thread is finished.  Performs
     // cleanup and starts next waiting thread if applicable.
     void currentThreadFinished();

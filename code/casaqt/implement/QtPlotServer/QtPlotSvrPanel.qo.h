@@ -33,6 +33,7 @@
 #include <QStringList>
 #include <qwt_plot_curve.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
+#include <casaqt/QtPlotServer/QtPlotHistogram.h>
 
 class QwtPlotCurve;
 class QwtPlotSpectrogram;
@@ -58,6 +59,7 @@ namespace casa {
 	    QwtPlotCurve *line( const QList<double> &x, const QList<double> &y, const QString &color="black", const QString &label="" );
 	    QwtPlotCurve *scatter( const QList<double> &x, const QList<double> &y, const QString &color="black", const QString &label="",
 				   const QString &symbol="", int symbol_size=-1, int dot_size=-1 );
+	    QtPlotHistogram *histogram( const QList<double> &y, int bins=0, const QString &color="blue", const QString &label="" );
 	    QwtPlotSpectrogram *raster( const QList<double> &matrix, int sizex, int sizey );
 
 	    void replot( );
