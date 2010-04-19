@@ -2158,19 +2158,11 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
   Record stringLengths; // no strings
   Record units;
   
-  // Eric says it should be TpDouble, but that gives
-  // 2010-04-19 17:13:18     SEVERE  exportuvfits::ms::open  Exception
-  // Reported: RecordRep::get_pointer - incorrect data type used for field TIME
-  // *** Error *** RecordRep::get_pointer - incorrect data type used for
-  // field TIME
-  // **** Error ****  RecordRep::get_pointer - incorrect data type used for
-  // field TIME
-  desc.addField("TIME", TpFloat);
-
+  desc.addField("TIME", TpDouble);
   units.define ("TIME", "DAYS");
   desc.addField("TIME_INTERVAL", TpFloat);
   units.define ("TIME_INTERVAL", "DAYS");
-  desc.addField("ANTENNA_NO.", TpInt);
+  desc.addField("ANTENNA_NO", TpInt);
   desc.addField("SUBARRAY", TpInt);
   desc.addField("TEMPERATURE", TpFloat);
   units.define ("TEMPERATURE", "CENTIGRADE");
@@ -2189,9 +2181,9 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
 
   FITSTableWriter writer(output, desc, stringLengths,
 			 nrow, header, units, False);
-  RecordFieldPtr<Float> time(writer.row(), "TIME");
-  RecordFieldPtr<Float> interval(writer.row(), "TIME INTERVAL");
-  RecordFieldPtr<Int> antenna(writer.row(), "ANTENNA NO.");
+  RecordFieldPtr<Double> time(writer.row(), "TIME");
+  RecordFieldPtr<Float> interval(writer.row(), "TIME_INTERVAL");
+  RecordFieldPtr<Int> antenna(writer.row(), "ANTENNA_NO");
   RecordFieldPtr<Int> arrayId(writer.row(), "SUBARRAY");
   RecordFieldPtr<Float> temperature(writer.row(), "TEMPERATURE");
   RecordFieldPtr<Float> pressure(writer.row(), "PRESSURE");
