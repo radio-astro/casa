@@ -628,7 +628,7 @@ void PlainTable::addRow (uInt nrrw, Bool initialize)
 {
     if (nrrw > 0) {
         if (! isWritable()) {
-	    throw (TableInvOper ("Table::addRow; table is not writable"));
+	    throw (TableInvOper ("Table::addRow; table " + tableName() + " is not writable"));
 	}
 	//# Locking has to be done here, otherwise nrrow_p is not up-to-date
 	//# when autoReleaseLock releases the lock and writes the data.
