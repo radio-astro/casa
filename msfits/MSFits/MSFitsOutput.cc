@@ -2157,7 +2157,16 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
   RecordDesc desc;
   Record stringLengths; // no strings
   Record units;
-  desc.addField("TIME", TpDouble);
+  
+  // Eric says it should be TpDouble, but that gives
+  // 2010-04-19 17:13:18     SEVERE  exportuvfits::ms::open  Exception
+  // Reported: RecordRep::get_pointer - incorrect data type used for field TIME
+  // *** Error *** RecordRep::get_pointer - incorrect data type used for
+  // field TIME
+  // **** Error ****  RecordRep::get_pointer - incorrect data type used for
+  // field TIME
+  desc.addField("TIME", TpFloat);
+
   units.define ("TIME", "DAYS");
   desc.addField("TIME_INTERVAL", TpFloat);
   units.define ("TIME_INTERVAL", "DAYS");
