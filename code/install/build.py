@@ -446,6 +446,7 @@ def build_casa(b, url, revision, type, ops, architecture):
             b.do("", "echo \"baseurl=https://svn.cv.nrao.edu/casa/repo/el5/", arch, "\" >> casa.repo")
             b.do("", "echo \"gpgkey=https://svn.cv.nrao.edu/casa/RPM-GPG-KEY-casa http://ww.jpackage.org/jpackage.asc http://svn.cv.nrao.edu/casa/repo/el5/RPM-GPG-KEY-EPEL\" >> casa.repo")
             b.do("Move the file to /etc/yum.repos.d/ as superuser", "sudo mv casa.repo /etc/yum.repos.d/")
+            b.do("Your yum configuration should now look like this,", "cat /etc/yum.repos.d/casa.repo")
                         
             b.do("This is to avoid conflicts with qt434-devel-4.3.4,",
                  "sudo yum -y erase qt4-devel")
@@ -487,7 +488,7 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.comment("It is essential that 3rd-party/bin comes before other stuff in your $PATH.")
         b.set_env('PATH', prefix, "/../", third, "/bin:$PATH")
         b.set_env('PATH', "$PATH:/Applications/CMake\\ 2.8-0.app/Contents/bin")
-        b.comment("This is a workaround for QWT and CASACore libraries not containing the proper rpaths (Note: Do not set DYLD_LIBRARY_PATH or something else might break.)")
+        b.comment("This is a workaround for QWT and CASACore libraries not containing the proper rpaths (Note: Do not define the environment variable named DYLD_LIBRARY_PATH or something else might break.)")
         if architecture == "10.5":
             qwtdir = "qwt-5.2.0"
         else:
@@ -594,7 +595,7 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.do("Create a link to the local data repository checkout (if the link does not already exists)", "rm -rf ", prefix, "/data")
         b.do("", "ln -s ", datadir, " ", prefix, "/data")
 
-        b.do("Run the python unit tests,", "casapy --nologger --log2term -c ", prefix, "/code/xmlcasa/scripts/regressions/admin/runUnitTest.py")
+        b.do("Run the python unit tests,", "casapy --nogui --log2term -c ", prefix, "/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --short")
         #
         # Does not seem to return here... 
         #
