@@ -18,6 +18,7 @@ def lsms(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or', remind=True):
     mspat:    A filename pattern, relative to the current directory, that the
               directory names matching of the MSes must match.
               Default: '*[-_.][Mm][Ss]'
+              Tip: Try '**/*.ms' for -R like grooviness.
 
     combine:  Controls whether the conditions of musthave are combined with
               'or' (default) or 'and'.
