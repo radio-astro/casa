@@ -848,18 +848,18 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
       }
     }
 
-    if (ndds > 1) {             // Don't bother counting all the inspwinids
-      Vector<uInt> nperdd;      // unless there is > 1 kind.
+    if (nif > 1) {             // Don't bother counting all the inspwinids
+      Vector<uInt> nperIF;     // unless there is > 1 kind.
       
-      nperdd.resize(ndds);
-      nperdd.set(0);
+      nperIF.resize(nif);
+      nperIF.set(0);
 
       uInt rownr = 0;
       while(rownr < nrow){
         for(uInt m = 0; m < nif; ++m){
           Int inspw = inspwinid(rownr);
         
-          ++nperdd[inspw];
+          ++nperIF[spwidMap[inspw]];
           if(padWithFlags && inspw != expectedDDIDs[m])
             ++nOutRow;
           else
@@ -879,8 +879,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
       
       if(!padWithFlags){
         Bool haveProblem = false;
-        for(uInt dd = 1; dd < ndds; ++dd){
-          if(nperdd[dd] != nperdd[0]){
+        for(uInt m = 1; m < nif; ++m){
+          if(nperIF[m] != nperIF[0]){
             haveProblem = true;
             break;
           }
@@ -889,11 +889,9 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
         if(haveProblem){
           os << LogIO::SEVERE
              << "The number of rows per spectral window varies:\n"
-             << "  SpW   # of rows\n";
-          for(uInt dd = 0; dd < ndds; ++dd){
-            if(dd < spwidMap.nelements() && spwidMap[dd] >= 0)
-              os << "   " << dd << "     " << nperdd[dd] << "\n";
-          }
+             << " Output SpW   # of rows\n";
+          for(uInt m = 0; m < nif; ++m)
+            os << "    " << m << "       " << nperIF[m] << "\n";
           os << " the spectral windows cannot be combined without padwithflags."
              << LogIO::POST;
           return 0;
@@ -2395,7 +2393,7 @@ Table MSFitsOutput::handleSysCal (const MeasurementSet& ms,
   map:    (output) map from allids to 0,1,...,nr
   selids: (output) inverse of map
 
-  returns: nr, number of different IDs in allids
+  returns: nr, number of selected IDs in allids
  */
 Int MSFitsOutput::makeIdMap (Block<Int>& map, Vector<Int>& selids,
 			     const Vector<Int>& allids)
