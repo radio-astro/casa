@@ -38,7 +38,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
         <tool name="ms" module="ms">
-           <needs>table</needs>
         <shortdescription>Operations on measurement sets</shortdescription>
        
 
@@ -963,7 +962,7 @@ the ms definition itself. -->
      </param>
     
      <param type="bool" direction="in" name="combinespw">
-     <description>Export spectral windows as IFs</description>
+     <description>Handle spectral window as IF</description>
      <value>false</value>
      </param>
     
@@ -971,29 +970,23 @@ the ms definition itself. -->
      <description>Write station name instead of antenna name</description>
      <value>false</value>
      </param>    
-
-     <param type="bool" direction="in" name="padwithflags">
-     <description>If combinespw==True, pad data with flags to fit IFs</description>
-     <value>false</value>
-     </param>
   </input>
   <returns type="bool"/>
 
   <description>
-    This function writes a \uvfits\ file that contains the data in
+    This functions writes a \uvfits\ file that contains the data in
     the measurement set associated with this tool. The \fits\ file is
-    always written in floating point format and the data are always
+    always written in floating point format and the data is always
     stored in the primary array of the \fits\ file.
 
-    If the measurement set has been imaged or calibrated in CASA, it
-    may contain additional data columns. You need to select ONE of
-    these columns to be written to the \fits\ file. The possible
-    options are:
+    If the measurement set has been processed by many of the imaging
+    tools, including imager and calibrator, it may contain additional
+    data columns. You need to select which of these data columns will
+    be written to the \fits\ file. The possible options are:
     \begin{description}
       \item[observed] This is the raw data as collected by the
                       telescope. All interferometric measurement sets must
-                      contain this column. A synonym for 'observed' is
-                      'data'.
+                      contain this column. A synonym for 'observed' is 'data'.
       \item[corrected] This is the calibrated data. A synonym for
                        'corrected' is 'corrected\_data'.
       \item[model] This is the visibilites that would be measured using
@@ -1014,27 +1007,17 @@ the ms definition itself. -->
     The combinespw argument is used to control whether data from
     different spectral windows will be written as different entries in
     the \fits\ FQ (frequency) table or combined as different IF's
-    within one entry in the FQ table. You should normally only set
-    this to True if you know that the data from different spectral
-    windows were observed simultaneously, and the data in the
-    measurement set can be equally divided between all the spectral
-    windows (i.e.\ each window should have the same width).  Use of
-    this switch is recommended for data to be processed in classic
-    AIPS and difmap (if possible, e.g., standard dual IF observations).
+    within one entry in the FQ table. You should set this to True only if
+    you know that the data from different spectral windows was
+    observed simultaneously, and the data in the measurement set can
+    be equally divided between all the spectral windows.
+    Use of this switch is recommended for data to be processed in classic
+    AIPS (if possible, e.g., standard dual IF observations).
 
-    The padwithflags argument is only relevant if combinespw is True.
-    If true, it will fill in data that is 'missing' with flags to fit
-    the IF structure.  This is appropriate if the MS had a few
-    frequency-dependent flags applied, and was then time-averaged by
-    split.  If the spectral windows were observed at different times,
-    padwithflags=True will add a large number of flags, making the 
-    output file significantly longer.  It does not yet support spectral
-    windows with different widths.
-
-    The \fits\ GC (gain curve) and TY (system temperature) tables can
-    be optionally written by setting the writesyscal argument to True.
-    This is a rather WSRT-specific operation at the moment and may not
-    work correctly for measurement sets from other telescopes.
+    The \fits\ GC (gain curve) and TY (system temperature) tables
+    can be optionally written by setting the writesyscal argument to
+    True.  This is a rather WSRT-specific operation at the moment and may
+    not work correctly for measurement sets from other telescopes.
 
     The three parameters 'start', 'nchan', 'width' are for channel
     averaging while outputing the data to the fits file. The default
@@ -3451,186 +3434,6 @@ in spectral window 1.
   </example>
 </method>
 
-  <method type="function" name="moments">
-  <shortdescription>Calculate moments from MS with FLOAT_DATA column.</shortdescription>
-  <keyword>moments</keyword>
-  <input>
-    <param type="intArray" direction="in" name="moments">
-       <description>A list of moments that you want to compute. Default is an integrarted spectrum.</description>
-    </param>
-<!--
-    <param type="any" direction="in" name="mask">
-      <any type="variant"/>
-      <value></value>
-    </param>
-    <param type="any" direction="in" name="stokes">
-      <any type="variant"/>
-      <value></value>
-    </param>
-    <param type="stringArray" direction="in" name="method">
-    </param>
-    <param type="intArray" direction="in" name="smoothaxes">
-    </param>
-    <param type="any" direction="in" name="smoothtypes">
-      <any type="variant"/>
-      <value></value>
-    </param>
-    <param type="doubleArray" direction="in" name="smoothwidths">
-    </param>
--->
-    <param type="intArray" direction="in" name="includerow">
-      <description>A list of rows that you want to compute moments. 
-      Default is -1 (all rows).</description>
-    </param>
-    <param type="intArray" direction="in" name="excluderow">
-      <description>A list of rows that you do not want to compute moments. 
-      Default is -1 (do not exclude rows).</description>
-    </param>
-    <param type="double" direction="in" name="peaksnr">
-      <description>The SNR ratio that is a lower limit to be included a 
-      moment calculation (not implemented yet).</description>
-      <value>0.0</value>
-    </param>
-    <param type="double" direction="in" name="stddev">
-      <description>Standard deviation of the noise signal in the spectra 
-      (used by the window and fit functions only).</description>
-      <value>0.0</value>
-    </param>
-    <param type="string" direction="in" name="doppler">
-      <description>Velocity doppler definition for velocity computations 
-      along spectral axes.</description>
-      <value></value>
-    </param>
-    <param type="string" direction="in" name="outfile">
-     <description>Output MS file name (or root for multiple moments).
-     Default is input + an auto-determined suffix.</description>
-      <value></value>
-    </param>
-<!--
-    <param type="string" direction="in" name="smoothout">
-      <value></value>
-    </param>
-    <param type="string" direction="in" name="plotter">
-      <value></value>
-    </param>
-    <param type="int" direction="in" name="nx">
-      <value>1</value>
-    </param>
-    <param type="int" direction="in" name="ny">
-      <value>1</value>
-    </param>
-    <param type="bool" direction="in" name="yind">
-      <value>false</value>
-    </param>
--->
-    <param type="bool" direction="in" name="overwrite">
-      <description>Overwrite existing output file.</description>
-      <value>false</value>
-    </param>
-<!--
-    <param type="bool" direction="in" name="drop">
-      <value>false</value>
-    </param>
--->
-    <param type="bool" direction="in" name="async">
-      <description>Run asynchronously?</description>
-      <value>false</value>
-    </param>
-  </input>
-  <returns type="casatable"/>
-
-  <description>
-     This function generates moments from the MS data. It is only applicable 
-     for single-dish MS, i.e., the MS must have FLOAT_DATA column. Results are 
-     stored separate MSs for each moment. The function returns a table object 
-     of the MS that stores a first moment in its FLOAT_DATA column.
-
-     This is defined by analogy with ia.moments(). It allows to generate moments 
-     along any axis (spectral axis, direction, and polarization), while ms.moments() 
-     only accepts to generate moments along the spectral axis.
-
-     The available moments are:
-
-     \begin{itemize}
-     \item{$-1$} -- the mean value of the spectrum 
-     \begin{displaymath}
-     { {1\over n}  {\sum {I_i}}}
-     \end{displaymath}
-     \medskip
-
-     \item{0} -- the integrated value of the spectrum 
-     \begin{displaymath}
-     M_0 = \Delta v \sum I_i
-     \end{displaymath}
-
-     where $\Delta v$ is the width (in world coordinate units) of a pixel
-     along the moment axis  
-     \medskip
-
-     \item{1} -- the intensity weighted coordinate (this is
-     traditionally used to get 'velocity fields')
-
-     \begin{displaymath}
-     M_1 = { {\sum {I_i v_i}} \over {M_0}}
-     \end{displaymath}
-     \medskip
-
-     \item{2} -- the intensity weighted dispersion of the coordinate 
-     (this is traditionally used to get 'velocity dispersion fields')
-
-     \begin{displaymath}
-     \sqrt{ { {\sum {I_i \left(v_i - M_1\right)^2}} \over {M_0}}}
-     \end{displaymath}
-     \medskip
-
-     \item{3} -- the median of $I$
-     \medskip
-
-     \item{4} -- the median coordinate.  Here we treat the spectrum as a
-     probability distribution, generate the cumulative distribution, and then
-     find the coordinate corresponding to the 50\% value.  This moment is not
-     very robust, but it is useful for quickly generating a velocity field in
-     a way that is not sensitive to noise.  However, it will only give
-     sensible results under certain conditions.  The generation of the
-     cumulative distribution and the finding of the 50\% level really only
-     makes sense if the cumulative distribution is monotonic.  This
-     essentially means only selecting pixels which are positive or negative. 
-     For this reason, this moment type is only supported with the basic
-     method (see below -- i.e.  no smoothing, no windowing, no fitting) with
-     a pixel selection range that is either all positive, or all negative
-     \medskip
-
-     \item{5} -- the standard deviation about the mean of the spectrum 
-     \begin{displaymath}
-     \sqrt{ {1\over {\left(n-1\right)}}  \sum{\left(I_i - \bar{I}\right)^2 }}
-     \end{displaymath}
-     \medskip
-
-     \item{6} -- the root mean square of the spectrum 
-     \begin{displaymath}
-     \sqrt{ {1 \over n} \sum{I_i^2}}
-     \end{displaymath}
-     \medskip
-
-     \item{7} -- the absolute mean deviation of the spectrum 
-     \begin{displaymath}
-     {1 \over n} \sum {|(I_i - \bar{I})|}
-     \end{displaymath}
-     \medskip
-
-     \item{8} -- the maximum value of the spectrum
-     \medskip
-     \item{9} -- the coordinate of the maximum value of the spectrum
-     \medskip
-     \item{10} -- the minimum value of the spectrum
-     \medskip
-     \item{11} -- the coordinate of the minimum value of the spectrum
-     \medskip
-     \end{itemize}
-
-  </description>
-
-  </method>
 
 </tool>
 

@@ -39,6 +39,7 @@ macro( casa_add_tasks module _target )
   set( _xmls ${ARGN} )
 
   set( _out_py "" )
+  set( _out_taskinfo "" )
   set( _out_latex "" )
   set( _out_html "" )
   set( _out_pdf "" )
@@ -73,6 +74,18 @@ macro( casa_add_tasks module _target )
       COMMAND ${SAXON} -o ${_py} ${_xml} ${_xsl}
       DEPENDS ${_xml} ${_xsl} )
 
+    # Create intermediate file for the generation of tasks.py and tasksinfo.py
+    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2tsum2.xsl )
+    set( _out ${_base}_tasksinfo.py )
+    add_custom_command( 
+      OUTPUT ${_out}
+      COMMAND ${SAXON} -o ${_out} ${_xml} ${_xsl}
+      COMMAND echo >> ${_out}
+      DEPENDS ${_xml} ${_xsl}
+      )
+    
+    set( _out_taskinfo ${_out_taskinfo} ${_out} )
+
     # Keep track of generated files
     set( _out_py ${_out_py} ${_py} ${_cli} ${_pg} )
 
@@ -100,25 +113,29 @@ macro( casa_add_tasks module _target )
     DESTINATION python/${PYTHONV} 
     )
 
-  # Create tasks.py, tasksinfo.py
-  # This is a lousy implementation, which
-  # runs saxon on every .xml file, if any of them changed.
-  set( _tasks     ${CMAKE_CURRENT_BINARY_DIR}/tasks.py )
+  # Create tasksinfo.py
   set( _tasksinfo ${CMAKE_CURRENT_BINARY_DIR}/tasksinfo.py )
-  set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2tsum2.xsl )
   add_custom_command( 
-    OUTPUT ${_tasks} ${_tasksinfo}
-    COMMAND echo > taskinfo
-    COMMAND for task in ${CMAKE_CURRENT_SOURCE_DIR}/tasks/*.xml \; do echo \$\$task \;  ${SAXON} \$\$task ${_xsl} >> taskinfo \;  done
-    COMMAND echo >> taskinfo
-    COMMAND echo "from tget import *" >> taskinfo
-    COMMAND echo "from taskmanager import tm" >> taskinfo
-    COMMAND grep "^from" taskinfo > ${_tasks}
+    OUTPUT ${_tasksinfo}
     COMMAND echo "from odict import odict" > ${_tasksinfo}
     COMMAND echo "mytasks = odict\\(\\)" >> ${_tasksinfo}
     COMMAND echo "tasksum = odict\\(\\)" >> ${_tasksinfo}
-    COMMAND grep -Ev "^#?from" taskinfo >> ${_tasksinfo}
-    DEPENDS ${_xmls}
+
+    COMMAND for x in ${_out_taskinfo} \; do grep -Ev "\"(^#?from|^\$\$)\"" $$x >> ${_tasksinfo} \; done
+    DEPENDS ${_out_taskinfo}
+    )
+
+  # Create tasks.py
+  set( _tasks ${CMAKE_CURRENT_BINARY_DIR}/tasks.py )
+  add_custom_command( 
+    OUTPUT ${_tasks}
+    COMMAND echo > ${_tasks}
+    COMMAND for x in ${_out_taskinfo} \; do grep -E "\"^from\"" $$x >> ${_tasks} \; done
+    DEPENDS ${_out_taskinfo}
+    COMMAND echo >> ${_tasks}
+    COMMAND echo "from tget import *" >> ${_tasks}
+    COMMAND echo "from taskmanager import tm" >> ${_tasks}
+    DEPENDS ${_out_taskinfo}
     )
 
   add_custom_target( tasks ALL DEPENDS ${_tasks} ${_tasksinfo} )
