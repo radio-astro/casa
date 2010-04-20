@@ -1,13 +1,3 @@
-# (partial) TODO list 
-# RI todo Find timerange when at least one of the inputs is up, limit the
-#       observing time to it, and warn or abort (printing the valid
-#       timerange) depending on how badly the user missed it.
-# RI todo look for antenna list in default repository also
-# RI todo allow user to report statistics in Jy/bm instead of Jy/pixel
-# RI todo Pad input image to a composite number of pixels on a side. 
-
-
-
 import os
 from clean import clean
 from taskinit import *
@@ -15,423 +5,454 @@ from simutil import *
 import pylab as pl
 import pdb
 
+def simdata2(
+    project=None, 
+    modifymodel=None,
+    modelimage=None, inbright=None, direction=None, incell=None, 
+    incenter=None, inwidth=None, innchan=None,
+    setpointings=None,
+    ptgfile=None, integration=None, totaltime=None, mapsize=None, 
+    maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
+    predict=None, 
+    refdate=None, complist=None, antennalist=None, sdantlist=None, sdant=None,
+    thermalnoise=None,
+    user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
+    image=None,
+    ms=None, cleanmode=None, cell=None, imsize=None, niter=None, threshold=None,
+    weighting=None, outertaper=None, stokes=None,     
+    analyze=None, 
+    showarray=None, showuv=None, showpsf=None, showmodel=None, 
+    showconvolved=None, showclean=None, showresidual=None, showdifference=None, 
+    showfidelity=None,
+    graphics=None,
+    verbose=None, 
+    overwrite=None,
+    async=False):
 
-def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, complist=None, antennalist=None, plotfield=None, predict=None, ptgfile=None, project=None, refdate=None, totaltime=None, integration=None, scanlength=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, noise_mode=None, user_pwv=None, t_ground=None, t_sky=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
 
+    # RI TODO for inbright=unchanged, need to scale input image to jy/pix
 
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
 
-    # this is the output desired bandwidth:
-    bandwidth=qa.mul(qa.quantity(nchan),qa.quantity(chanwidth))
+    # some hardcoded variables that may be reintroduced in future development
+    relmargin=.5  # number of PB between edge of model and pointing centers
+    scanlength=1  # number of integrations per scan
+
 
     # create the utility object:
-    util=simutil(direction,startfreq=qa.quantity(startfreq),
-                 bandwidth=bandwidth)
+    util=simutil(direction)
     if verbose: util.verbose=True
     msg=util.msg
     
-    msg("this task is a mockup for testing",priority="error")
-    return False
-
     if((not os.path.exists(modelimage)) and (not os.path.exists(complist))):
         msg("No sky input found.  At least one of modelimage or complist must be set.",priority="error")
-        return
+        return False
+
+    currfignum=0
+    util.currfignum=0
+
+    grscreen=False
+    grfile=False
+    if graphics=="both":
+        grscreen=True
+        grfile=True
+    if graphics=="screen":
+        grscreen=True
+    if graphics=="file":
+        grfile=True
     
     try:
 
-        nbands = 1;    
-        fband  = 'band'+startfreq
-        msfile=project+'.ms'
-
         ##################################################################
-        # read antenna file:
-
-        stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
-        if stnx==False:
-            return
-        antnames=[]
-        for k in range(0,nant): antnames.append('A%02d'%k)
-        aveant=stnd.mean()
-
-        # (set back to simdata after calls to util -
-        #   there must be an automatic way to do this)
-        casalog.origin('simdata')
-
-
-
-
-
-
-        ##################################################################
-        # if needed, make a model image from the input clean component list
-        # (make it the desired 4d output shape)
-        # visibilities will be calculated from the component list - this
-        # image is just for display and fidelity
-
-        if (modelimage == ''):
-            
-            if cell=="incell":
-                msg("You can't use the input header for the pixel size if you don't have an input header!",priority="error")
-                return False
+        # set up modelimage
+        if os.path.exists(modelimage):
+            # leave .image off names for now to facilitate appending
+            default_model=project+".model"
+            if modelimage==default_model+".image":
+                newmodel=project+".newmodel"
             else:
-                out_cell=qa.convert(cell,'arcsec')
-                
-            # if we are going to create an image we need a shape:
-            if imsize.__len__()==1:
-                imsize=[imsize,imsize]            
-            out_nstk=stokes.__len__()
-            out_shape=[imsize[0],imsize[1],out_nstk,nchan]
-            
-            if verbose: msg("creating an image from your clean components",origin="setup model")
-            components_only=True
-            modelimage=project+'.ccmodel'
-            ia.fromshape(modelimage,out_shape,overwrite=True)
-            cs=ia.coordsys()
-            # use output direction to create model image:
-            epoch,ra,dec=util.direction_splitter(direction)
-            cs.setunits(['rad','rad','','Hz'])
-            # use output cell size to create model image:
-            # this is okay - if none of the clean components fit in the output
-            # image, then the simulated image will be blank.  user error.
-            cell_rad=qa.convert(qa.quantity(out_cell),"rad")['value']
-            cs.setincrement([cell_rad,cell_rad],'direction')
-            #cs.setlineartransform('direction',pl.array([[-1,0],[0,1]]))
-            cs.setreferencevalue([qa.convert(ra,'rad')['value']
-                                   ,qa.convert(dec,'rad')['value']],type="direction")
-            cs.setreferencevalue(startfreq,'spectral')
-            ia.setcoordsys(cs.torecord())
-            cl.open(complist)
-            ia.setbrightnessunit("Jy/pixel")
-            ia.modify(cl.torecord(),subtract=False)
-            cl.done()
-            ia.done() # to make sure its saved to disk at the start
-
-        else:  # we have a model image already
+                newmodel=default_model
+            if os.path.exists(newmodel+".image"):
+                if overwrite:
+                    shutil.rmtree(newmodel+".image")
+                else:
+                    msg(newmodel+".image exists -- please delete or rename and try again",priority="error")
+                    return False
+            modelflat=newmodel+".flat"
             components_only=False
 
+            (model_refdir,model_cell,model_size,
+             model_nchan,model_center,model_width,
+             model_stokes) = util.modifymodel(modelimage,
+                newmodel+".image",
+                modifymodel,inbright,direction,incell,incenter,inwidth,innchan,
+                flatimage=modelflat+".image") 
 
+            casalog.origin('simdata')
 
+            # set startfeq and bandwidth in util object after modifymodel
+            bandwidth=qa.mul(qa.quantity(model_nchan),qa.quantity(model_width))
+            util.bandwidth=bandwidth
 
+            if len(mapsize)==0:
+                mapsize=model_size
 
-        ##################################################################
-        # convert original model image to 4d shape:
-
-        out_cell=cell
-        # if cell="incell", this will be changed to an
-        # actual value by simutil.image4d below
-
-
-        if not ignorecoord:
-            # we are going to use the input coordinate system, so we
-            # don't calculate pointings until we know the input pixel
-            # size.
-            # image4d will return in_cell and out_cell
-            in_cell='0arcsec'
-            ra=qa.quantity("0.deg")
-            dec=qa.quantity("0.deg")
         else:
-            # if we're ignoreing coord, then we need to calculate where
-            # the pointings will be now, to move the model image there
-            
-            if cell=="incell":
-                msg("You can't use the input header for the pixel size and also ignore the input header information!",priority="error")
+            # if there are only components, modifymodel=T doesn't 
+            # make sense
+            if modifymodel:
+                msg("can't find model image "+modelimage+" to modify",priority="error")
                 return False
-            else:
-                in_cell=qa.convert(cell,'arcsec')
+            components_only=True
+            # if only components, will create an image from them during
+            # analysis, but for now we don't need one.  the pointings 
+            # can be displayed on blank sky, with symbols at the locations 
+            # of components.
 
-            if type(out_cell) == list:
-                cellx, celly = map(qa.quantity, out_cell)
-            else:
-                cellx = qa.quantity(out_cell)
-                celly = cellx
+            # TODO we need model_center below for calibrator, so get that from 
+            # components
 
-            out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
 
-            if type(direction) == list:
-                # manually specified pointings            
-                nfld = direction.__len__()
-                if nfld > 1 :
-                    pointings = direction
-                    if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction",priority="warn")
+
+
+
+        ##################################################################
+        # set up pointings
+        if setpointings:
+            if verbose:
+                util.msg("calculating map pointings centered at "+str(model_refdir))
+            pointings = util.calc_pointings2(pointingspacing,mapsize,direction=model_refdir)
+            nfld=len(pointings)
+            etime = qa.convert(qa.quantity(integration),"s")['value']
+            ptgfile = project+".ptg.txt"
+        else:
+            nfld, pointings, etime = util.read_pointings(ptgfile)
+            if max(etime) <=0:
+                etime = qa.convert(qa.quantity(integration),"s")['value']
+
+        # find imcenter - phase center
+        imcenter , offsets = util.average_direction(pointings)        
+        epoch, ra, dec = util.direction_splitter(imcenter)
+
+        if setpointings:
+            if os.path.exists(ptgfile):
+                if overwrite:
+                    os.remove(ptgfile)
                 else:
-                    # calculate pointings for the user 
-                    nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-            else:
-                # check here if "direction" is a filename, and load it in that case
-                # util.read_pointings(filename)
-                # calculate pointings for the user 
-                nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-            
-                
-            # find imcenter=average central point, and centralpointing
-            # (to be used for phase center)
-            imcenter , offsets = util.average_direction(pointings)
+                    util.msg("pointing file "+ptgfile+" already exists and user does not want to overwrite",priority="error")
+            util.write_pointings(ptgfile,epoch,ra,dec,etime)
 
-            minoff=1e10
-            central=-1
-        
-            for i in range(nfld):
-                o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
-                if o<minoff:
-                    minoff=o
-                    central=i
-            centralpointing=pointings[central]
-            
-            epoch, ra, dec = util.direction_splitter(centralpointing)
-            
+        msg("phase center = " + imcenter)
+        if nfld>1 and verbose:
+            for dir in pointings:
+                msg("   "+dir)
+ 
 
-        # truncate model image name to craete new images in current dir:
-        (modelimage_path,modelimage_local) = os.path.split(os.path.normpath(modelimage))
-        modelimage_local=modelimage_local.strip()
-        if modelimage_local.endswith(".fits"):
-            modelimage_local=modelimage_local.replace(".fits","")
-        if modelimage_local.endswith(".FITS"):
-            modelimage_local=modelimage_local.replace(".FITS","")
-        if modelimage_local.endswith(".fit"):
-            modelimage_local=modelimage_local.replace(".fit","")
-
-        # recast into 4d form
-        modelimage4d=project+"."+modelimage_local+'.coord'        
-        # need this filename whether or not we create the output image
-        modelregrid=project+"."+modelimage_local+".flat"        
-        # modelflat should be the moment zero of that
-        modelflat=project+"."+modelimage_local+".flat0" 
-
-        # this will get set by image4d if required
-        out_nstk=1
-
-        # *** ra is expected and returned in angular quantity/dict
-        (ra,dec,in_cell,out_cell,
-         nchan,startfreq,chanwidth,bandwidth,
-         out_nstk) = util.image4d(modelimage,modelimage4d,
-                                  inbright,ignorecoord,
-                                  ra,dec,
-                                  in_cell,out_cell,
-                                  nchan,startfreq,chanwidth,bandwidth,
-                                  out_nstk,
-                                  flatimage=modelflat)
-        
-        # (set back to simdata after calls to util)
-        casalog.origin('simdata')
-
-        if verbose:
-            out_shape=[imsize[0],imsize[1],out_nstk,nchan]
-            msg("simulated image desired shape= %s" % out_shape,origin="setup model")
-            msg("simulated image desired center= %f %f" % (qa.convert(ra,"deg")['value'],qa.convert(dec,"deg")['value']),origin="setup model")
 
 
 
 
         ##################################################################
-        # set imcenter to the center of the mosaic
-        # in clean, we also set to phase center; cleaning with no pointing
-        # at phase center causes issues
-
-        if type(out_cell) == list:
-            cellx, celly = map(qa.quantity, out_cell)
+        # calibrator is not explicitly contained in the pointing file
+        # but interleaved with etime=intergration
+        util.isquantity(calflux)
+        calfluxjy=qa.convert(calflux,'Jy')['value']
+        # XML returns a list even for a string:
+        if type(caldirection)==type([]): caldirection=caldirection[0]
+        if len(caldirection)<4: caldirection=""
+        if calfluxjy > 0 and caldirection != "":            
+            docalibrator=True
+            util.isdirection(caldirection)
+            cl.done()
+            cl.addcomponent(flux=calfluxjy,dir=caldirection,label="phase calibrator")
+            # set reference freq to center freq of model
+            cl.rename(project+'.cal.cclist')
+            cl.done()
         else:
-            cellx = qa.quantity(out_cell)
-            celly = cellx
-        
-        out_size = [qa.mul(imsize[0], cellx),qa.mul(imsize[1], celly)]
+            docalibrator=False
 
-        if type(direction) == list:
-            # manually specified pointings            
-            nfld = direction.__len__()
-            if nfld > 1 :
-                pointings = direction
-                if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction",priority="warn")
-            else:
-                # calculate pointings for the user 
-                nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-        else:
-            # check here if "direction" is a filename, and load it in that case
-            # util.read_pointings(filename)
-            # calculate pointings for the user 
-            nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,direction,relmargin)
-            
-                
 
-        # find imcenter=average central point, and centralpointing
-        # (to be used for phase center)
-        imcenter , offsets = util.average_direction(pointings)
-
-        minoff=1e10
-        central=-1
-        
-        for i in range(nfld):
-            o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
-            if o<minoff:
-                minoff=o
-                central=i
-        centralpointing=pointings[central]
-            
-        # (set back to simdata after calls to util)
-        casalog.origin('simdata')
-
-        if nfld==1:
-            imagermode=''
-            ftmachine="ft"
-            msg("phase center = " + centralpointing)
-        else:
-            imagermode="mosaic"
-            ftmachine="mosaic"
-            msg("mosaic center = " + imcenter + "; phase center = " + centralpointing)
-            if verbose: 
-                for dir in pointings:
-                    msg("   "+dir)
 
 
 
         ##################################################################
-        # check inputs - need to add atmospheric window, better display of
-        # where the actual observation block lies on the ephemeris window
-        # RI todo this should use modelflat
+        # read antenna file here to get Primary Beam
+        predict_uv=False
+        predict_sd=False
+        aveant=-1
+
+        if os.path.exists(antennalist):
+            stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
+            antnames=[]
+            for k in range(0,nant): antnames.append('A%02d'%k)
+            aveant=stnd.mean()
+            # TODO use max ant = min PB instead?  
+            # (set back to simdata - there must be an automatic way to do this)
+            casalog.origin('simdata')
+            predict_uv=True
+            
+        if os.path.exists(sdantlist):
+            tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
+            tp_antnames=[]
+            for k in range(0,tp_nant): tp_antnames.append('B%02d'%k)
+            tp_aveant=tpd.mean()
+            casalog.origin('simdata')
+            predict_sd=True
+            if not predict_uv:
+                aveant=tp_aveant
         
-        if checkinputs=="yes" or checkinputs=="only":
-            currfignum=0
-            pl.figure(currfignum)
-            pl.ion()
+
+
+
+
+
+        ##################################################################
+        # create one figure for model and pointings - need antenna diam 
+        # to determine primary beam
+        if grfile:            
+            file=project+".model.png"
+        else:
+            file=""
+        if grscreen:
+            util.newfig(filename=file)
+        else:
+            if grfile:
+                util.newfig(filename=file,show=False)
+
+        if grscreen or grfile:
             pl.clf()
-            pl.subplot(121)
-            model_min,model_max, model_rms = util.statim(modelimage,plot=display,incell=in_cell)
+            if components_only:
+                pl.plot()
+                # TODO add symbols at locations of components
+            else:
+                model_min,model_max, model_rms = util.statim(modelflat+".image",plot=True,incell=model_cell)            
             lims=pl.xlim(),pl.ylim()
-            tt=pl.array(range(25))*pl.pi/12
-            pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
-            if max(max(lims)) > pb/2:
-                plotcolor='w'
-            else:
-                plotcolor='k'
-            for i in range(offsets.shape[1]):
-                pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,plotcolor)
-            xlim=max(abs(pl.array(lims[0])))
-            ylim=max(abs(pl.array(lims[1])))
-            # show entire pb: (statim doesn't by default)
-            pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
-            pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])
-            pl.text(0,max([ylim,pb/2])*1.2,"regridded model:",horizontalalignment='center')
-            # ephemeris:
-            pl.subplot(222)
-            util.ephemeris(refdate)  # util already knows the direction from above
-            
-            pl.subplot(224)
-            util.plotants(stnx, stny, stnz, stnd, padnames)
-#            pl.plot(range(2),'o')
-            ax=pl.gca()
-            l=ax.get_xticklabels()
-            pl.setp(l,fontsize="x-small")
-            l=ax.get_yticklabels()
-            pl.setp(l,fontsize="x-small")
-#            pl.xlabel("coming soon",fontsize="x-small")
-            pl.xlabel(telescopename,fontsize="x-small")
-            
-            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
-            
-            if checkinputs=="only":
-                msg("Stopping after checking inputs as requested",priority="warn")
-                return
-            else:
-                if display==True:
-                    pl.figure(currfignum+1)
-                    pl.clf()
+            tt=pl.array(range(25))*pl.pi/12            
+            pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
+            if pb>0:
+                if max(max(lims)) > pb/2:
+                    plotcolor='w'
+                else:
+                    plotcolor='k'
+                for i in range(offsets.shape[1]):
+                    pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,plotcolor)
+                xlim=max(abs(pl.array(lims[0])))
+                ylim=max(abs(pl.array(lims[1])))
+                # show entire pb: (statim doesn't by default)
+                pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
+                pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])
+
+            pl.xlabel("resized model sky",fontsize="x-small")
+            util.endfig(remove=(not grscreen))
         else:
-            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=in_cell)
+            # need these stats later - TODO make sure we need to do this
+            if not components_only:
+                model_min,model_max, model_rms = util.statim(modelflat+",image",plot=False,incell=model_cell)
+
+
+
+
+
+
 
 
 
 
         ##################################################################
-        # set up observatory, feeds, etc
-        # (has to be here since we may have changed nchan)
-        
-        if verbose:
-            msg("preparing empty measurement set",priority="warn")
+        # set up observatory, feeds, etc        
 
-        sm.open(msfile)
-        posobs=me.observatory(telescopename)
-        diam=stnd;
-        sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
-                 dishdiameter=diam.tolist(), 
-                 mount=['alt-az'], antname=antnames, padname=padnames, 
-                 coordsystem='global', referencelocation=posobs)
-        # sm.setspwindow now expects startfreq as argument
-        # midfreq=qa.add(qa.quantity(startfreq),qa.div(bandwidth,qa.quantity("2")))
-        if str.upper(telescopename).find('VLA')>0:
-            sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
-                           freqresolution=chanwidth, nchannels=nchan, 
-                           stokes='RR LL')
-            sm.setfeed(mode='perfect R L',pol=[''])
-        else:            
-            sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
-                           freqresolution=chanwidth, nchannels=nchan, 
-                           stokes='XX YY')
-            sm.setfeed(mode='perfect X Y',pol=[''])
-            
-        if verbose: msg(" spectral window set at %s" % str(startfreq))
-        sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
-        sm.setauto(0.0)
-        for k in range(0,nfld):
-            src=project+'_%d'%k
-            sm.setfield(sourcename=src, sourcedirection=pointings[k],
-                    calcode="C", distance='0m')
-        reftime = me.epoch('TAI', refdate)
-        sm.settimes(integrationtime=integration, usehourangle=True, 
-                referencetime=reftime)
-        totalsec=qa.convert(qa.quantity(totaltime),'s')['value']
-        scantime=qa.mul(qa.quantity(integration),str(scanlength))
-        scansec=qa.convert(qa.quantity(scantime),'s')['value']
-        nscan=int(totalsec/scansec)
-        kfld=0
-        # RI todo progress meter for simdata Sim::observe
-        # print "calculating ";
-        
-        for k in range(0,nscan) :
-            sttime=-totalsec/2.0+scansec*k
-            endtime=sttime+scansec
-            src=project+'_%d'%kfld
-#        for k in range(0,nfld) :
-#            sttime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*k
-#            endtime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*(k+1)
-#            src=project+'_%d'%k
-            # this only creates blank uv entries
-            sm.observe(sourcename=src, spwname=fband,
-                   starttime=qa.quantity(sttime, "s"),
-                   stoptime=qa.quantity(endtime, "s"));
-            kfld=kfld+1
-            if kfld==nfld: kfld=0
-        sm.setdata(fieldid=range(0,nfld))
-        sm.setvp()
+        if predict:
+            if not(predict_uv or predict_sd):
+                util.msg("must specify at least one of antennalist, sdantlist",priority="error")
 
-        msg("done setting up observations (blank visibilities)")
-        if verbose:
-            sm.summary()
+        # TODO check for position overlap here - if zero stop
+        # TODO check for frequency overlap here - if zero stop
+        # because modifymodel will have already extended with flat 
+        # spectral index
 
-
-            
-        ##################################################################
-        # do actual calculation of visibilities from the model image:
-
-        if not components_only:
-            # if we only have components,
-            # we have created modelimage4d from them but if
-            # we have components and model image they are not yet combined
-            if len(complist)>1:
-                msg("predicting from "+modelimage4d+" and "+complist,priority="warn")
+            # create figure here to give user something to look at
+            if grfile:            
+                file=project+".predict.png"
             else:
-                msg("predicting from "+modelimage4d,priority="warn")
-            sm.predict(imagename=[modelimage4d],complist=complist)
-        else:   # if we're doing only components
-            msg("predicting from "+complist,priority="warn")
-            sm.predict(complist=complist)
+                file=""
+            if grscreen:
+                util.newfig(multi=[2,2,1],filename=file)
+            else:
+                if grfile:
+                    util.newfig(multi=[2,2,1],filename=file,show=False)
+            if grscreen or grfile:
+                util.ephemeris(refdate,direction=model_refdir,telescope=telescopename)  # util already knows direction but this doesn't hurt
+                util.nextfig()
+                util.plotants(stnx, stny, stnz, stnd, padnames)                
 
-        sm.done()
+            if verbose:
+                msg("preparing empty measurement set",origin="simdata",priority="warn")
+            else:
+                msg("preparing empty measurement set",origin="simdata")
+
+            nbands = 1;    
+            fband  = 'band'+qa.tos(model_center,prec=1)
+            msfile=project+'.ms'
+
+            if os.path.exists(msfile):
+                if not overwrite:
+                    util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
+            sm.open(msfile)
+            posobs=me.observatory(telescopename)
+            diam=stnd;
+            # WARNING: sm.setspwindow is not consistent with clean::center
+            model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+
+            sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
+                         dishdiameter=diam.tolist(), 
+                         mount=['alt-az'], antname=antnames, padname=padnames, 
+                         coordsystem='global', referencelocation=posobs)
+            if str.upper(telescopename).find('VLA')>0:
+                sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
+                               deltafreq=qa.tos(model_width), 
+                               freqresolution=qa.tos(model_width), 
+                               nchannels=model_nchan, 
+                               stokes='RR LL')
+                sm.setfeed(mode='perfect R L',pol=[''])
+            else:            
+                sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
+                               deltafreq=qa.tos(model_width), 
+                               freqresolution=qa.tos(model_width), 
+                               nchannels=model_nchan, 
+                               stokes='XX YY')
+                sm.setfeed(mode='perfect X Y',pol=[''])
+
+            # WARNING: sm.setspwindow is not consistent with clean::center
+
+            if verbose: msg(" spectral window set at %s" % qa.tos(model_center))
+            sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
+            sm.setauto(0.0)
+            for k in range(0,nfld):
+                src=project+'_%d'%k
+                sm.setfield(sourcename=src, sourcedirection=pointings[k],
+                            calcode="OBJ", distance='0m')
+                if k==0:
+                    sourcefieldlist=src
+                else:
+                    sourcefieldlist=sourcefieldlist+','+src
+            if docalibrator:
+                sm.setfield(sourcename="phase calibrator", 
+                            sourcedirection=caldirection,calcode='C',
+                            distance='0m')
+            reftime = me.epoch('TAI', refdate)
+            sm.settimes(integrationtime=integration, usehourangle=True, 
+                        referencetime=reftime)
+            totalsec=qa.convert(qa.quantity(totaltime),'s')['value']
+            scantime=qa.mul(qa.quantity(integration),str(scanlength))
+            scansec=qa.convert(qa.quantity(scantime),'s')['value']
+            nscan=int(totalsec/scansec)
+            kfld=0
+            # RI todo progress meter for simdata Sim::observe
+            # print "calculating ";
+
+            if nscan<nfld:
+                msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
+                return
         
-        msg('generation of measurement set ' + msfile + ' complete')
+            # TODO sm.observemany
+
+            for k in range(0,nscan) :
+                sttime=-totalsec/2.0+scansec*k
+                endtime=sttime+scansec
+                src=project+'_%d'%kfld
+                # this only creates blank uv entries
+                sm.observe(sourcename=src, spwname=fband,
+                           starttime=qa.quantity(sttime, "s"),
+                           stoptime=qa.quantity(endtime, "s"));
+                kfld=kfld+1
+                if kfld==nfld: 
+                    if docalibrator:
+                        sttime=-totalsec/2.0+scansec*k
+                        endtime=sttime+scansec
+                        sm.observe(sourcename="phase calibrator", spwname=fband,
+                                   starttime=qa.quantity(sttime, "s"),
+                                   stoptime=qa.quantity(endtime, "s"));
+                    kfld=kfld+1                
+                if kfld > nfld: kfld=0
+            sm.setdata(fieldid=range(0,nfld))
+            sm.setvp()
+
+            msg("done setting up observations (blank visibilities)")
+            if verbose:
+                sm.summary()
+
+
+            # we can show uv coverage now
+            if grscreen or grfile:
+                util.nextfig()
+                tb.open(msfile)  # is this a lock problem with sm?            
+                rawdata=tb.getcol("UVW")
+                tb.done()
+                pl.box()
+                maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                klam_m=300/qa.convert(model_center,'GHz')['value']
+                pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
+                pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
+                ax=pl.gca()
+                ax.yaxis.LABELPAD=-4
+                pl.xlabel('u[klambda]',fontsize='x-small')
+                pl.ylabel('v[klambda]',fontsize='x-small')
+                pl.axis('equal')
+
+
+
+            ##################################################################
+            # do actual calculation of visibilities:
+
+            if not components_only:                
+                if len(complist)>1:
+                    msg("predicting from "+newmodel+".image and "+complist,priority="warn")
+                else:
+                    msg("predicting from "+newmodel+".image",priority="warn")
+                sm.predict(imagename=newmodel+".image",complist=complist)
+            else:   # if we're doing only components
+                msg("predicting from "+complist,priority="warn")
+                sm.predict(complist=complist)
+            
+            sm.done()        
+            msg('generation of measurement set ' + msfile + ' complete')
+
+            # dirty beam from observed uv coverage only
+            # but instead lets get it from thje here:
+            if grscreen or grfile:                
+                util.nextfig()
+                im.open(msfile)
+                im.defineimage(cellx=model_cell)  # TODO spectral parms
+                im.makeimage(type='psf',image=project+".quick.psf")
+                im.done()
+                ia.open(project+".quick.psf")            
+                beamcs=ia.coordsys()
+                beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                xextent=imsize[0]*pixsize*0.5
+                xextent=[xextent,-xextent]
+                yextent=imsize[1]*pixsize*0.5
+                yextent=[-yextent,yextent]
+                flipped_array=beam_array.transpose()
+                ttrans_array=flipped_array.tolist()
+                ttrans_array.reverse()
+                pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                pl.title(project+"quick.psf",fontsize="x-small")
+                b=qa.convert(beam['major'],'arcsec')['value']
+                pl.xlim([-3*b,3*b])
+                pl.ylim([-3*b,3*b])
+                pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                ia.done()
+
+                util.endfig(remove=(not grscreen))
 
 
 
 
+
+        print "WARNING: task is not complete yet :)"
+        pdb.set_trace()
 
 
         ######################################################################
@@ -439,11 +460,14 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
 
         noise_any=False
     
-        if noise_thermal:
+        if thermalnoise!="":
             if not (util.telescopename == 'ALMA' or util.telescopename == 'ACA'):
                 msg("thermal noise only works properly for ALMA/ACA",origin="noise",priority="warn")
                 
             noise_any=True
+
+            # TODO change this to move noiseless to .noiseless.ms or something
+            # then always image from project.ms 
 
             noisymsfile = project + ".noisy.ms"
             noisymsroot = project + ".noisy"
@@ -461,21 +485,21 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
 
+            sm.done() # simulator hangs onto previous versions of the MS
             if os.path.exists(noisymsfile):
-                cu.removetable(noisymsfile)
-            os.system("cp -r "+msfile+" "+noisymsfile)
-            # RI todo check for and copy flagversions file as well
-            
-            sm.openfromms(noisymsfile);    # an existing MS
-            sm.setdata();                # currently defaults to fld=0,spw=0
-            # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
-            # visibilities referenced to above atmosphere 
-            # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
+                shutil.rmtree(noisymsfile)                
+            shutil.copytree(msfile,noisymsfile)
+            if sm.name()!='':
+                msg("table persistence error on %s" % sm.name(),priority="error")
+                return
+
+            sm.openfromms(noisymsfile)    # an existing MS
+            sm.setdata()                # currently defaults to fld=0,spw=0
+# use ANoise version - deprecated but required for AC / SD
 #            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
 #                        antefficiency=eta_a,trx=t_rx,
 #                        tau=tau0,tatmos=t_sky,tcmb=t_cmb,
 #                        mode="calculate")
-# use ANoise version
             if noise_mode=="tsys-manual":
                 if verbose:
                     msg("sm.setnoise(spillefficiency="+str(eta_s)+
@@ -483,7 +507,7 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
                         ",trx="+str(t_rx)+",tau="+str(tau0)+
                         ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-                    msg("** this may take a few minutes, but will be faster in the next CASA release",priority="warn")
+                    msg("** this may take a few minutes, but will be faster in future releases",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
                             tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
@@ -508,27 +532,14 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             if verbose: msg("done corrupting with thermal noise",origin="noise")
 
             
-        # not yet implemented:
-        #        noise_phase=True
-        #
-        #        if noise_phase:
-        #            # phase noise
-        #            # noise_any=True
-        #            noisycalfile = project + ".atmos.cal"
-        #            casalog.post('adding phase noise to ' + noisycalfile)
-        #            gaincal_defaults()
-        #            # make cal file to be modified
-        #            gaincal(vis=msfile,caltable=noisycalfile,solint=-1)
-            
 
 
-
+        # calculate psf to suggest a cell size
 
 
 
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
-        # do we want to invert the noiseless one anyway for comparison?
 
         if psfmode.upper() == "NONE" or psfmode == "" :
             doclean=False
@@ -541,20 +552,20 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             mstoimage = msfile
 
         if fidelity == True and doclean == False:
-            msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",origin="deconvolve",priority="warn")
+            msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",priority="warn")
             fidelity=False
 
         if display == True and doclean == False:
-            msg("Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",origin="deconvolve",priority="warn")
+            msg("Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",priority="warn")
             display=False
 
         if doclean: 
             if niter == 0:
                 image=project+'.dirty'
-                msg("inverting to "+image,origin="deconvolve")
+                msg("inverting to "+image)
             else:
                 image=project+'.clean'
-                msg("cleaning to "+image,origin="deconvolve")
+                msg("cleaning to "+image)
         else:
             image=project+'.clean'
 
@@ -566,49 +577,148 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             cleanmode="mfs"
         else:
             cleanmode="channel"
+
+        # for clean
+        if nfld==1:
+            imagermode=''
+            ftmachine="ft"        
+        else:
+            imagermode="mosaic"
+            ftmachine="mosaic"   
+
+# if padding is implemented the pad amount in pixels needs to be preserved and 
+# passed to statim, which needs to zoom to the original size, _and_ use the 
+# original size for the rms calculation. 
+#            # is image large enough?
+#            cleanimsize=[qa.mul(out_cell[0],imsize[0]),qa.mul(out_cell[1],imsize[1])]
+#           if type(mosaicsize)!=type([]):
+#               mosaicsize=[mosaicsize,mosaicsize]
+#           else:
+#               if len(mosaicsize)==1:
+#                   mosaicsize=[mosaicsize[0],mosaicsize[0]]
+#           xmosas=qa.convert(mosaicsize[0],"arcsec")['value']
+#           xclnas=qa.convert(cleanimsize[0],"arcsec")['value']
+#           spcas=qa.convert(pointingspacing,"arcsec")['value']
+#           if xclnas<(xmosas+spcas)*2:
+#               imsize[0]=int(round(((xmosas+spcas)*2)/(qa.convert(out_cell[0],"arcsec")['value'])))
+#               xnewas=qa.convert(qa.mul(out_cell[0],imsize[0]),"arcsec")['value']
+#               msg("Your image size of %g arcsec is not very large - I will pad it to %g arcsec to avoid FFT aliasing effects." %(xclnas,xnewas),priority="warn")
+#           ymosas=qa.convert(mosaicsize[1],"arcsec")['value']
+#           yclnas=qa.convert(cleanimsize[1],"arcsec")['value']
+#           if yclnas<(ymosas+spcas)*2:
+#               imsize[1]=int(round(((ymosas+spcas)*2)/(qa.convert(out_cell[1],"arcsec")['value'])))
+
         
         # print clean inputs no matter what, so user can use them.
-        msg("clean inputs:",origin="deconvolve")
+        # and write a clean.last file
+        cleanlast=open("clean.last","write")
+        cleanlast.write('taskname            = "clean"\n')
+
+        msg("clean inputs:")
         cleanstr="clean(vis='"+mstoimage+"',imagename='"+image+"'"
-        #+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',"
+        cleanlast.write('vis                 = "'+mstoimage+'"\n')
+        cleanlast.write('imagename           = "'+image+'"\n')
+        cleanlast.write('outlierfile         = ""\n')
+        if docalibrator:
+            cleanlast.write('field               = "'+sourcefieldlist+'"\n')
+        else:
+            cleanlast.write('field               = ""\n')
+        cleanlast.write('spw                 = ""\n')
+        cleanlast.write('selectdata          = False\n')
+        cleanlast.write('timerange           = ""\n')
+        cleanlast.write('uvrange             = ""\n')
+        cleanlast.write('antenna             = ""\n')
+        cleanlast.write('scan                = ""\n')
         if nchan>1:
             cleanstr=cleanstr+",mode='"+cleanmode+"',nchan="+str(nchan)
+            cleanlast.write('mode                = "'+cleanmode+'"\n')
+            cleanlast.write('nchan               = "'+str(nchan)+'"\n')
+        else:
+            cleanlast.write('mode                = "mfs"\n')
+            cleanlast.write('nchan               = -1\n')
+        cleanlast.write('gridmode                = ""\n')
+        cleanlast.write('wprojplanes             = 1\n')
+        cleanlast.write('facets                  = 1\n')
+        cleanlast.write('cfcache                 = "cfcache.dir"\n')
+        cleanlast.write('painc                   = 360.0\n')
+        cleanlast.write('epjtable                = ""\n')
+        cleanlast.write('interpolation           = "nearest"\n')
         cleanstr=cleanstr+",niter="+str(niter)
-        #+",gain=0.1,"
+        cleanlast.write('niter                   = '+str(niter)+'\n')
+        cleanlast.write('gain                    = 0.1\n')
         cleanstr=cleanstr+",threshold='"+str(threshold)+"'"
+        cleanlast.write('threshold               = "'+str(threshold)+'"\n')
         if doclean and psfmode!="clark":
             cleanstr=cleanstr+",psfmode='"+psfmode+"'"
+        if doclean:
+            cleanlast.write('psfmode                 = "'+psfmode+'"\n')
         if imagermode != "":
             cleanstr=cleanstr+",imagermode='"+imagermode+"'"
+        cleanlast.write('imagermode              = "'+imagermode+'"\n')
         cleanstr=cleanstr+",ftmachine='"+ftmachine+"'"
-        #",ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],start=0,width=1,"
-        cleanstr=cleanstr+",imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"'"
-        #",restfreq=''"
+        cleanlast.write('ftmachine               = "'+ftmachine+'"\n')
+        cleanlast.write('mosweight               = False\n')
+        cleanlast.write('scaletype               = "SAULT"\n')
+        cleanlast.write('multiscale              = []\n')
+        cleanlast.write('negcomponent            = -1\n')
+        cleanlast.write('smallscalebias          = 0.6\n')
+        cleanlast.write('interactive             = False\n')
+        cleanlast.write('mask                    = []\n')
+        cleanlast.write('start                   = 0\n')
+        cleanlast.write('width                   = 1\n')
+        cleanlast.write('outframe                = ""\n')
+        cleanlast.write('veltype                 = "radio"\n')
+        cleanstr=cleanstr+",imsize="+str(imsize)+",cell="+str(map(qa.tos,out_cell))+",phasecenter='"+str(imcenter)+"'"
+        cleanlast.write('imsize                  = '+str(imsize)+'\n');
+        cleanlast.write('cell                    = '+str(map(qa.tos,out_cell))+'\n');
+        cleanlast.write('phasecenter             = "'+str(imcenter)+'"\n');
+        cleanlast.write('restfreq                = ""\n');
         if stokes != "I":
             cleanstr=cleanstr+",stokes='"+stokes+"'"
+        cleanlast.write('stokes                  = "'+stokes+'"\n');
+        cleanlast.write('weighting               = "'+weighting+'"\n');
         if weighting != "natural":
             cleanstr=cleanstr+",weighting='"+weighting+"',robust="+str(robust)+",noise='"+str(noise)+"',npixels="+str(npixels)
+        cleanlast.write('robust                  = '+str(robust)+'\n');
+        cleanlast.write('uvtaper                 = '+str(uvtaper)+'\n');
         if uvtaper:
             cleanstr=cleanstr+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)
+        cleanlast.write('outertaper              = "'+str(outertaper)+'"\n');
+        cleanlast.write('innertaper              = "'+str(innertaper)+'"\n');
+        cleanlast.write('modelimage              = ""\n');
+        cleanlast.write("restoringbeam           = ['']\n");
+        cleanlast.write("pbcor                   = False\n");
+        cleanlast.write("minpb                   = 0.1\n");
+        cleanlast.write("calready                = True\n");
+        cleanlast.write('noise                   = "'+str(noise)+'"\n');
+        cleanlast.write('npixels                 = '+str(npixels)+'\n');
+        cleanlast.write('npercycle               = 100\n');
+        cleanlast.write('cyclefactor             = 1.5\n');
+        cleanlast.write('cyclespeedup            = -1\n');
+        cleanlast.write('nterms                  = 1\n');
+        cleanlast.write('reffreq                 = ""\n');
+        cleanlast.write('chaniter                = False\n');
         #+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,"        
         #+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
         cleanstr=cleanstr+")"
-        msg(cleanstr,origin="deconvolve")
+        msg(cleanstr,priority="warn")
+        cleanlast.write("#"+cleanstr+"\n")
+        cleanlast.close()
 
-        if doclean: 
+        if doclean:
+            # clean insists on using an existing model if it's present
+            if os.path.exists(image+".image"): shutil.rmtree(image+".image")
+            if os.path.exists(image+".model"): shutil.rmtree(image+".model")
             clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
                   niter=niter, threshold=threshold, selectdata=False,
                   psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
-                  imsize=imsize, cell=cell, phasecenter=centralpointing,
+                  imsize=imsize, cell=map(qa.tos,out_cell), phasecenter=imcenter,
                   stokes=stokes, weighting=weighting, robust=robust,
                   uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,
                   noise=noise, npixels=npixels)
         else:
             msg("(not actually cleaning or inverting, as requested by user)")
             image=project
-
-
-
 
 
 
@@ -648,7 +758,6 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
                 foo.done()
                 po.done()
                 shutil.rmtree(outflat+".tmp")
-
             # be sure to get outflatcoordsys from outflat
             ia.open(outflat)
             outflatcoordsys=ia.coordsys()
@@ -657,11 +766,27 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
     
             # regrid flat input to flat output shape, for convolution, etc
             ia.open(modelflat)
-            imrr = ia.regrid(outfile=modelregrid, overwrite=True,
+            ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
                              csys=outflatcoordsys.torecord(),shape=outflatshape)
+            # im.regrid assumes a surface brightness, or more accurately doesnt
+            # pay attention to units at all, so we now have to scale 
+            # by the pixel size to have the right values in jy/pixel, 
+            # which is what the immath assumes below.            
+            factor  = (qa.convert(out_cell[0],"arcsec")['value'])  
+            factor *= (qa.convert(out_cell[1],"arcsec")['value']) 
+            factor /= (qa.convert(model_cell[0],"arcsec")['value']) 
+            factor /= (qa.convert(model_cell[1],"arcsec")['value']) 
+
+            imrr = ia.imagecalc(modelregrid, 
+                                "'%s'*%g" % (modelregrid+'.tmp',factor), 
+                                overwrite = True)
+            shutil.rmtree(modelregrid+".tmp")
+            if verbose:
+                msg("scaling model by pixel area ratio %g" % factor)
 
             # add clean components and model image; 
             # it'll be convolved to restored beam in the fidelity calc below
+            # components are in jy/pix so should be added to the scaled iamge
             if (os.path.exists(complist)):
                 cl.open(complist)
                 imrr.modify(cl.torecord(),subtract=False)
@@ -687,11 +812,8 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             beam=ia.restoringbeam()
             ia.done()
 
-
-
         #####################################################################
         # fidelity  
-
 
         if os.path.exists(modelimage) and fidelity == True: 
             # from math import sqrt
@@ -702,16 +824,24 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                           pa=beam['positionangle'],overwrite=True)
 
+            # imagecalc is interpreting outflat in Jy/pix - 
+            # the diff is v. negative.
+            bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
+            bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
+            msg("synthesized beam area in output pixels = %f" % bmarea)
             # Make difference image.
             difference = project + '.diff.im'
-            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
-            ia.done()
+            ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
             # Get rms of difference image.
             ia.open(difference)
             diffstats = ia.statistics(robust = True)
-            ia.done()
-            maxdiff=diffstats['medabsdevmed']
+            maxdiff=diffstats['medabsdevmed']            
             if maxdiff!=maxdiff: maxdiff=0.
+            if type(maxdiff)!=type(0.):
+                if maxdiff.__len__()>0: 
+                    maxdiff=maxdiff[0]
+                else:
+                    maxdiff=0.
             # Make fidelity image.
             absdiff = project + '.absdiff.im'
             ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
@@ -722,10 +852,12 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
 
             msg("fidelity image calculated",origin="analysis")
 
+        else:
+            bmarea=1.
+
             # clean up moment zero maps if we don't need them anymore
 #            if nchan==1:
 #                sh.rmtree(outflat) 
-
 
 
 
@@ -743,8 +875,10 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             else:
                 pl.subplot(222)
         if doclean:
-            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display)
-
+            max_cleanim=[] # mutable so can be returned
+            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim)
+            # max_cleanim returned in outflat units i.e. Jy/bm > jy/pix
+            max_cleanim[0]/=bmarea
         # plot model image if exists
         if os.path.exists(modelimage) and display==True:
             if fidelity == True:
@@ -769,9 +903,9 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
-                if display: pl.subplot(233)
-                util.statim(project+".diff.im",plot=display)
-                if display: pl.subplot(234)
+                if display: pl.subplot(233)                
+                util.statim(project+".diff.im",plot=display,disprange=max_cleanim)
+                if display: pl.subplot(234)                
                 fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display)
 
         if display:
@@ -806,7 +940,10 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
                 ia.open(image+".psf")
                 beamcs=ia.coordsys()
                 beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                pixsize=(qa.convert(qa.quantity(cell),'arcsec')['value'])
+                if type(cell)==type([]):
+                    pixsize=(qa.convert(qa.quantity(cell[0]),'arcsec')['value'])
+                else:
+                    pixsize=(qa.convert(qa.quantity(cell),'arcsec')['value'])
                 xextent=imsize[0]*pixsize*0.5
                 xextent=[xextent,-xextent]
                 yextent=imsize[1]*pixsize*0.5
@@ -836,7 +973,7 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
         # if not displaying still print stats:
         if doclean:
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-            bmarea=bmarea/(out_cell['value'])**2 # bm area in pix
+            bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
             msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
                 str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
             msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
@@ -846,7 +983,6 @@ def simdata2(modelimage=None, ignorecoord=None, inbright=None, incell=None, comp
             msg('Model rms: '+str(model_rms)+" Jy/pix",origin="analysis")
             msg('Model max: '+str(model_max)+" Jy/pix",origin="analysis")
             msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
-
 
 
 
