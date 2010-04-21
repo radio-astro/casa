@@ -44,8 +44,9 @@ namespace casa {
     public:
 
 	static const char **execArgs( );
+	static std::string dbusName( ) { return "view_server"; }
 
-	ViewerProxy( const std::string &name="view_server" );
+	ViewerProxy( const std::string &name=dbusName( ) );
 
 	dbus::variant start_interact( const dbus::variant &input, int panel )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::start_interact(dbus::fromVariant(input), panel) ); }

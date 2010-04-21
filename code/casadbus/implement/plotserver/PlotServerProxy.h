@@ -44,8 +44,9 @@ namespace casa {
     public:
 
 	static const char **execArgs( );
+	static std::string dbusName( ) { return "view_server"; }
 
-	PlotServerProxy( );
+	PlotServerProxy( const std::string &name=dbusName( ) );
 
 	dbus::variant panel( const std::string& title, const std::string &xlabel="", const std::string &ylabel="",
 			     const std::string &window_title="", const std::string& legend="bottom", const bool& hidden=false )

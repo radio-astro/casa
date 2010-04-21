@@ -26,7 +26,7 @@
 //# $Id: $
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
-#include <casa/Exceptions/Error.h>
+#include <cstring>
 #include <sys/time.h>
 #include <vector>
 
@@ -36,6 +36,84 @@
 
 namespace casa {
     namespace dbus {
+
+	static char *generate_proxy_suffix( int len ) {
+	    char *suffix = 0;
+	    static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	    suffix = new char[len+1];
+	    for (int i = 0; i < len; ++i) {
+	      suffix[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+	    }
+	    suffix[len] = 0;
+	    return suffix;
+	}
+
+	static char *generate_casa_proxy_name(bool unique_name, const std::string &dbusname, const std::string &defaultname ) {
+	    const int suffix_length = 12;
+
+	    if ( dbusname.size( ) == 0 && defaultname.size( ) == 0 )
+		return generate_proxy_suffix( suffix_length * 2 );
+
+	    char *suffix = ( unique_name ? generate_proxy_suffix(suffix_length) : 0 );
+	    char *result = 0;
+
+	    if ( dbusname.size( ) > 0 ) {
+		result = new char [dbusname.size() + (suffix ? strlen(suffix) : 0) + 2];
+		sprintf(result, (suffix ? "%s_%s" : "%s"), dbusname.c_str( ), suffix);
+	    } else if ( defaultname.size( ) > 0 ) {
+		result = new char [defaultname.size() + (suffix ? strlen(suffix) : 0) + 2];
+		sprintf(result, (suffix ? "%s_%s" : "%s"), defaultname.c_str( ), suffix);
+	    }
+	    if ( suffix ) delete [] suffix;
+	    return result;
+	}
+
+
+	char *launch_casa_proxy( bool unique_name, const std::string &dbusname,
+				 const std::string &default_name,  const char **args ) {
+
+	    if ( ! args[0] ) { return 0; }
+
+	    // if we cannot locate the executable, return 0
+	    int arg0len = strlen(args[0]);
+	    char *path=getenv("PATH");
+	    if ( ! path ) { return 0; }
+	    char *pathptr = path = strdup(path);
+	    int exe_path_len = 2048;
+	    char *exe_path = (char*) malloc(sizeof(char) * exe_path_len);
+	    while ( char *p = strsep(&pathptr, ":") ) {
+		if ( (strlen(p) + arg0len + 4) > exe_path_len ) {
+		    while ( (strlen(p) + arg0len + 4) > exe_path_len ) { exe_path_len *= 2; }
+		    exe_path = (char*) realloc(exe_path,exe_path_len);
+		}
+		sprintf(exe_path, "%s/%s", p, args[0]);
+		if ( access(exe_path, X_OK) == 0 ) break;
+		else *exe_path = '\0';
+	    }
+
+	    bool found = (strlen(exe_path) > 0);
+	    free(path);
+	    free(exe_path);
+	    if ( ! found ) { return 0; }
+
+	    
+	    int argc = 0;
+	    while ( args[argc] ) ++argc;
+	    const char **arguments = (const char**) malloc(sizeof(char*) * (argc + 3));
+	    int count;
+	    for ( count=0; count < argc; ++count )
+		arguments[count] = args[count];
+	    arguments[count++] = "--dbusname";
+	    char *dbus_name = generate_casa_proxy_name(unique_name, dbusname, default_name);
+	    arguments[count++] = dbus_name;
+	    arguments[count] = '\0';
+	    if ( ! fork( ) ) {
+		execvp( args[0], (char* const*) arguments );
+		perror( "launch<>(...) child process exec failed" );
+	    }
+	    free(arguments);
+	    return dbus_name;
+	}
 
 	std::string path( const std::string &name ) {
 
@@ -54,7 +132,7 @@ namespace casa {
 
 		casa::DBusSession &session = casa::DBusSession::instance( );
 		std::vector<std::string> name_list(session.listNames( ));
-		std::string prefix( CASA_PREFIX + name + "_");
+		std::string prefix( CASA_PREFIX + name );
 		std::vector<std::string> objects;
 		for ( std::vector<std::string>::iterator iter = name_list.begin(); iter != name_list.end( ); ++iter ) {
 		    if ( ! iter->compare(0,prefix.size(),prefix) ) {

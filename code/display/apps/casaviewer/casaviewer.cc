@@ -279,6 +279,17 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 		    dbus_name = name;
 		}
 	    }
+	} else if ( ! strncmp(argv[x],"--dbusname",10) ) {
+	    if ( argv[x][10] == '=' ) {
+		char *name = strdup( &argv[x][11] );
+		if ( strlen(name) <= 0 ) {
+		    free( name );
+		} else {
+		    dbus_name = name;
+		}
+	    } else if ( x + 1 < argc ) {
+		dbus_name = strdup(argv[++x]);
+	    }
 	} else if ( ! strcmp(argv[x],"--persist") ) {
 	    persistent = true;
 	} else if ( ! strcmp(argv[x],"--casapy") ) {
