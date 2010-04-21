@@ -520,11 +520,11 @@ casa_find( DBUS
 # ATM
 casa_find( ATM
   VERSION 0.3
-  INCLUDES ATMEnumerations.h
+  INCLUDES ATMEnumerations.h ATMVersion.h
   INCLUDES_HINTS /usr/include/ATM
   LIBS aatm
-  #CPP_VERSION ATM_VERSION
-  #RUN_VERSION "atm::getVersion()" 
+  #CPP_VERSION ATM_VERSION  to be uncommented when ATM_VERSION is defined in devel-RPMs
+  RUN_VERSION "atm::getVersion()" 
 )
 
 # XML2
