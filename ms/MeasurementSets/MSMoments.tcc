@@ -28,7 +28,6 @@
 
 #include <ms/MeasurementSets/MSMoments.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <images/Images/ImageMomentsProgress.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Exceptions/Error.h>
