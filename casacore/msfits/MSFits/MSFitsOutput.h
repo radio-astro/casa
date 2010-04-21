@@ -49,22 +49,52 @@ template<class T> class Vector;
 class MSFitsOutput
 {
 public:
-  // Convert a MeasurementSet to random group UVFITS,
-  // specifying the column to write ("observed", "calibrated", "model") and
-  // whether to write the system calibration table.
-  // <br>If asMultiSource=True a multi-source UVFits file is written.
-  // <br>If combineSpw=True, all spectral-windows of a frequency group
-  // are combined.
+  /** Convert a MeasurementSet to random group UVFITS.
+      @param fitsfile      Output filename
+      @param ms            input
+      @param column        specifies which "data" column to write
+                           ("observed", "calibrated", "model")
+      @param startchan     1st channel
+      @param nchan         # of channels
+      @param stepchan      # of channels to stride by
+      @param writeSysCal   whether to write the system calibration table
+      @param asMultiSource If true a multi-source UVFits file is written.
+      @param combineSpw    If true it attempts to write the spectral windows as
+                           IFs.  This is necessary for many aips tasks, and difmap.
+      @param writeStation  If true uses pad instead of antenna names.
+      @param sensitivity   
+      @param padWithFlags  If true and combineSpw==true, fill spws with flags
+                           as needed to fit the IF structure.  Does not yet
+                           support spws with different shapes.
+  */
   static Bool writeFitsFile(const String& fitsfile, const MeasurementSet& ms,
 			    const String& column, Int startchan=-1, 
 			    Int nchan=-1, Int stepchan=-1, 
 			    Bool writeSysCal = False,
 			    Bool asMultiSource = False, Bool combineSpw=False,
-			    Bool writeStation=False, Double sensitivity = 1.0);
-
+			    Bool writeStation=False, Double sensitivity = 1.0,
+                            const Bool padWithFlags=false);
 
 private:
-  // Write the main table.
+  /** Write the main table.
+      @param refPixelFreq 
+      @param refFreq      
+      @param chanbw       
+      @param outFITSFile  
+      @param rawms        
+      @param spwidMap       spwidMap[inp_spw] = output_spw, if inp_spw is selected
+                                                -1 otherwise.
+      @param nrspw          # of selected spws.
+      @param startchan      First channel
+      @param nchan          # of channels
+      @param stepchan       channel stride
+      @param fieldidMap     fieldidMap[inp_fld] = output_fld, if inp_fld is selected
+                                                  -1 otherwise.
+      @param asMultiSource  If true, write a multisource UVFITS file.
+      @param combineSpw     If true, export the spectral window(s) as IF(s).
+      @param padWithFlags   If true && combineSpw==true, pad the spws with
+                            flags as necessary to fit the IF structure.
+   */
   static FitsOutput *writeMain(Int& refPixelFreq, Double& refFreq,
 			       Double& chanbw,
 			       const String& outFITSFile,
@@ -75,7 +105,8 @@ private:
 			       Int startchan, Int nchan, Int stepchan,
 			       const Block<Int>& fieldidMap,
 			       Bool asMultiSource,
-			       Bool combineSpw);
+			       const Bool combineSpw,
+                               const Bool padWithFlags=true);
 
   // Write the FQ table.
   // If combineSpw is True, all spectral-windows are written in one
@@ -124,19 +155,19 @@ private:
   static Table handleSysCal (const MeasurementSet& ms,
 			     const Vector<Int>& spwids, Bool isSubset);
 
-  // Determine which ids are selected in the main table
-  // (used for fields and spectral-window).
-  // It fills a block for all possible ids, where -1 tells that the
-  // id is not selected. Furthermore it fills a vector with the
-  // selected id numbers.
-  // The input is a vector containing all ids in the main table.
-  // If isSubset is False the main table is not a selection, but
-  // represents an entire MS. In that case the map and selids are
-  // simply filled with values 0-nrid.
+  /** Determine which ids are selected in the main table
+      (used for fields and spectral-window).
+      @param map    (Really an output here, not an input.)
+                    spwidMap[inp_id] = output_id, if inp_id is selected
+                                       -1 otherwise.
+      @param selids (Really an output here, not an input.)
+                    A list of the selected input IDs.
+      @param allids (Really is an input, not an output!)
+                    IDs to consider.
+      @return number of selected IDs in allids
+  */
   static Int makeIdMap (Block<Int>& map, Vector<Int>& selids,
 			const Vector<Int>& allids);
-
-
 };
 
 
