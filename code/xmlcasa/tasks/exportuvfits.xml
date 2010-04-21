@@ -79,7 +79,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="bool" name="combinespw">
-		<description> Combine all spectral windows at one time</description>
+		<description>Export the spectral windows as IFs</description>
 		<value>True</value>
 	</param>
 
@@ -88,15 +88,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<value>True</value>
 	</param>
 
+	<param type="bool" name="padwithflags" subparam="true">
+		<description>EXPERIMENTAL: fill in missing data with flags to fit IFs</description>
+		<value>False</value>
+	</param>
+
+        <constraints>
+          <when param="combinespw">
+	    <equals type="bool" value="False"/>
+	    <equals type="bool" value="True">
+	      <default param="padwithflags"><value type="bool">False</value>
+	      </default>
+	    </equals>
+          </when>
+        </constraints>
 </input>
 <example>
 
-        This task write a UVFITS file, a general format data set used
+        This task writes a UVFITS file, a general format data set used
         to transfer data between different software systems.  It is
-        written in floating point format.  Many spectral windows can
-        be exported to UVFITS only if they have the same shape.  For
-        transferral to the AIPS interferometric packages, multi-source
-        and combinesp options should be set to true.
+        written in floating point format.  Different programs have different
+        restrictions on what forms of UVFITS files they will use, especially
+        whether they will accept multiple sources and/or spectral windows in
+        the same file.  See the spw, multisource, and combinespw descriptions
+        below.
 
         Keyword arguments:
         vis -- Name of input visibility file
@@ -115,7 +130,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                field='0,4,5~7'; field ids 0,4,5,6,7
                field='3C286,3C295'; field named 3C286 adn 3C295
                field = '3,4C*'; field id 3, all names starting with 4C
-       spw -- Select spectral window/channels 
+        spw -- Select spectral window/channels 
                  type 'help par.selection' for more examples.
                spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
@@ -158,10 +173,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         multisource -- Write in multi-source format
                 default: =&gt; True;
                    false if one source is selected
-        combinespw -- Combine all spectral windows at one time
+                True works with AIPS, but not difmap.
+        combinespw -- If True, export the spectral windows as IFs.
+                      Otherwise multiple windows will use multiple FREQIDs.
                 default: =&gt;  True;
                    all spectral windows must have same shape.
-                   successful aips transferral must have default=True
+                True is recommended for AIPS, and mandatory for difmap.
+        padwithflags -- If True, and combinespw is True, fill in missing
+                        data as needed to fit the IF structure.  This is
+                        appropriate if the MS had a few frequency-dependent
+                        flags applied, and was then time-averaged by split.  If
+                        the spectral windows were observed at different times,
+                        padwithflags=True will add a large number of flags,
+                        making the output file significantly longer.  It does
+                        not yet support spectral windows with different widths.
         writestation -- Write station name instead of antenna name
                 default: True;
         async --  Run asynchronously

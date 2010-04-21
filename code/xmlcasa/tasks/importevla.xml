@@ -102,6 +102,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>1.0</value>
     </param> 
 
+    <param type="bool" name="flagzero">
+	    <description>Flag low amplitude/zero points</description>
+	    <value>False</value>
+    </param>
+
+    <param type="double" name="cliplevel" subparam="true">
+            <description>zero clipping level</description>
+            <value>1.0E-8</value>
+    </param> 
+
+    <param type="bool" name="flagpol" subparam="true">
+            <description>flag cross-hand corrs also?</description>
+            <value>False</value>
+    </param> 
+
+    <param type="bool" name="shadow">
+	    <description>Flag shadowed data</description>
+	    <value>False</value>
+    </param>
+
+    <param type="double" name="diameter" subparam="true">
+            <description>diameter to use for shadowing (-1=antenna dia.)</description>
+            <value>-1.</value>
+    </param> 
+
     <constraints>
             <when param="singledish">
                 <equals type="bool" value="False"/>
@@ -115,6 +140,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <default param="tbuff"><value type="double">1.0</value></default>
                 </equals>
                 <equals type="bool" value="False"/>
+            </when>
+
+            <when param="flagzero">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="cliplevel"><value type="double">1.0E-8</value></default>
+                    <default param="flagpol"><value type="bool">False</value></default>
+                </equals>
+            </when>
+
+            <when param="shadow">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="diameter"><value type="double">-1.</value></default>
+                </equals>
             </when>
     </constraints>
 
@@ -194,6 +234,20 @@ applyflags -- apply the online flags from the SDM Flag.xml table to the MS
             &gt;&gt;&gt; applyflags expandable parameter
                  tbuff -- (float) time padding buffer (seconds, default=1.0)
  
+flagzero -- clip out visibilities with low amplitude ("zeroes")
+             (default: False)
+ 
+            &gt;&gt;&gt; flagzero expandable parameter(s)
+                 cliplevel -- (float) level below which to clip (default=1.0E-8)
+ 
+                 flagpol -- (boolean) also zero-clip on cross-hands (default=False)
+ 
+shadow -- flag baselines that are shadowed
+             (default: False)
+ 
+            &gt;&gt;&gt; shadow expandable parameter
+                 diameter -- (float) effective diameter (m) to use (default=-1 use antenna diameter)
+ 
             Examples:
 
                  importevla(asdm='CLowTest_000',ocorr_mode='ca',applyflags=False)
@@ -214,7 +268,12 @@ applyflags -- apply the online flags from the SDM Flag.xml table to the MS
 
                      As above, but uses a more conservative 2sec buffer
                      before the start and after the end timeranges.
- 
+
+                 importevla(asdm='CLowTest_000',flagzero=True,shadow=True)
+
+                     This will flag using online flags, will clip zeros,
+                     and will flag shadowed data.
+
   </example>
 
 </task>

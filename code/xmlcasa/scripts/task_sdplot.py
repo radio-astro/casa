@@ -5,8 +5,7 @@ import asap as sd
 import pylab as pl
 import Tkinter as Tk
 
-def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotfile, overwrite):
-#def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, layout, plotfile, overwrite):
+def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, layout, plotfile, overwrite):
 
         casalog.origin('sdplot')
 
@@ -240,7 +239,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
 	    # For printing header information
-	    if header: ssel='***Selections***\n'+(sel.__str__() or 'none')
+	    ssel=sel.__str__()
             del sel
 
 	    # Save the previous plotter settings
@@ -249,6 +248,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    oldpanel = sd.plotter._panelling
 	    oldstack = sd.plotter._stacking
 	    oldhist = sd.plotter._hist
+	    oldlayout = sd.plotter._panellayout
 	    # Line properties
 	    colormapold=sd.plotter._plotter.colormap
 	    linestylesold=sd.plotter._plotter.linestyles
@@ -262,7 +262,11 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
 		    sd.plotter._plotter.figmgr.sdplotbar=CustomToolbarTkAgg(figmgr=sd.plotter._plotter.figmgr)
 
+	    # Set panel layout
+	    if layout != oldlayout: sd.plotter.set_panellayout(layout=layout,refresh=False)
+	    
             # Plotting
+	    asaplot=False
             if plottype=='pointing':
                     if plotfile != '': 
                            sd.plotter.plotpointing(s,plotfile)
@@ -274,8 +278,10 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     else:
                            sd.plotter.plotazel(s)
             elif plottype=='totalpower':
+		    asaplot=True
                     sd.plotter.plottp(s)
             else:
+		    asaplot=True
                     if s.nchan()==1:
                            errmsg="Trying to plot the continuum/total power data in 'spectra' mode,\
                                    please use other plottype options" 
@@ -455,37 +461,13 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                     sd.plotter.plot_lines(linc,doppler=linedop)
 
 	    # List observation header
-	    if header: 
-		    ssum=spave._summary()
-		    #ssel=ssum[ssum.find('Selection:'):ssum.find('\n\nScan Source')]
-		    srest=ssum[ssum.find('Rest Freqs:'):ssum.find('Abcissa:')]
-		    shead=ssum[ssum.find('Beams:'):ssum.find('Flux Unit:')]
-		    headstr=shead.split('\n\n')
-		    headstr[1]='Data File:   '+sdfile+'\n'+headstr[1]
-		    headstr[0]=headstr[0]+'\n'+srest
-		    headstr.reverse()
-		    headstr.append(ssel)
-		    # Print Observation header to the upper-left corner of plot
-		    nstcol=len(headstr)
-		    #nstrow=1+len(headstr[0].split('\n'))
-		    #top=(nstrow*headsize)/sd.plotter._plotter.canvas.get_width_height()[1]
-		    sd.plotter._plotter.hold()
+	    if not plotstyle or layout==[]:
+		    # automatic layout
 		    sd.plotter._plotter.figure.subplots_adjust(top=0.8)
-		    for i in range(nstcol):
-			    sd.plotter.figtext(0.03+float(i)/nstcol,0.98,
-					       headstr[i],
-					       horizontalalignment='left',
-					       verticalalignment='top',
-					       fontsize=headsize)
-		    import time
-		    sd.plotter.figtext(0.99,0.0,
-				       time.strftime("%a %d %b %Y  %H:%M:%S %Z"),
-				       horizontalalignment='right',
-				       verticalalignment='bottom',fontsize=8)
-		    sd.plotter._plotter.release()
-		    casalog.post("----------------\n  Plot Summary\n----------------")
-		    casalog.post("Data File:     "+filename)
-		    casalog.post(ssum[ssum.find('Beams:'):])
+	    datname='Data File:     '+sdfile
+	    sd.plotter.print_header(plot=(header and asaplot),fontsize=headsize,
+				    logger=True,selstr=ssel,extrastr=datname)
+	    del ssel, datname
 
             # Hardcopy
             if ( plottype in ['spectra','totalpower'] and plotfile != '' ):
@@ -510,6 +492,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    sd.plotter._panelling = oldpanel
 	    sd.plotter._stacking = oldstack
 	    sd.plotter._hist = oldhist
+	    sd.plotter._panellayout = oldlayout
 
 	    # Define Pick event
 	    if sd.plotter._visible:

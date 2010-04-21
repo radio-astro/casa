@@ -223,17 +223,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>9</value>
     </param>
 
-<!--
     <param type="bool" name="plotstyle">
-	    <description>set custom plot settings</description>
+	    <description>customise plot settings</description>
 	    <value>False</value>
     </param>
 
     <param type="doubleArray" name="layout" subparam='true'>
-            <description>plot layout in [left, bottom, right, top, horizontal space, vertical space]</description>
+            <description>subplot layout in [left, bottom, right, top, horizontal space, vertical space]</description>
             <value type="vector"></value>
     </param>
--->
 
     <param type="string" name="plotfile">
 	    <description>file name for hardcopy output</description>
@@ -310,14 +308,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <equals type="bool" value="False"/>
             </when>
 
-<!--
             <when param="plotstyle">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
                         <default param="layout"><value type="vector"></value></default>
                 </equals>
             </when>
--->
 
 
     </constraints>
@@ -480,13 +476,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 histogram -- plot histogram
                         options: (bool) True, False
                         default: False
-        header -- print header information on plot
+        header -- print header information on the plot
                 options: (bool) True, False
                 default: True
+                The header information is printed only on the logger when 
+                plottype = 'azel' and 'pointing'. 
             &gt;&gt;&gt; header expandable parameter
                 headsize -- header font size
                         options: (int)
                         default: 9
+        plotstyle -- customise plot settings
+                options: (bool) True, False
+                default: True
+            &gt;&gt;&gt; plotstyle expandable parameter
+                layout -- a list of subplots layout in figure coordinate (0-1), 
+                          i.e., fraction of the figure width or height.
+                          The order of elements should be:
+                          [left, bottom, right, top, horizontal space btw panels,
+                          vertical space btw panels]
         plotfile -- file name for hardcopy output
                 options: (str) filename.eps,.ps,.png
                 default: '' (no hardcopy)

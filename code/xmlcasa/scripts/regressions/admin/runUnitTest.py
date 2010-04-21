@@ -8,7 +8,10 @@
     
     or from inside casapy:
     import runUnitTest.py
-    runUnitTest.main(['testname']) """
+    runUnitTest.main(['testname']) 
+    runUnitTest.main()
+    runUnitTest.main(['--short'])
+    """
 
 # The main class in testwrapper.py is:
 # class UnitTest, methods: getUnitTest(), getFuncTest()
@@ -118,21 +121,20 @@ def gettests(testfile):
 
 # Define which tests to run    
 whichtests = 0
+        
 
 def main(testnames=[]):
-
-    if whichtests == 0:
-        listtests = []
-    if whichtests == 1:
-        listtests = testnames
-    if whichtests == 2:
-        listtests = SHORT_LIST
-    
-#    if testnames == []:
-#        whichtests = 0
-#    else:
-#        whichtests = 1
         
+    listtests = testnames
+    if listtests == []:
+        whichtests = 0
+    elif (listtests == SHORT_LIST or listtests == ['--short']
+          or listtests == ['SHORT_LIST']):
+        whichtests = 2
+        listtests = SHORT_LIST
+    else:
+        whichtests = 1
+           
 
     # Directories
     PWD = os.getcwd()
@@ -182,18 +184,7 @@ def main(testnames=[]):
                 list = list+tests
             except:
                 traceback.print_exc()
-                
-        # Run all tests and create a XML report
-#        xmlfile = xmldir+'nose.xml'
-#        try:
-#            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-#                                  suite=list)
-#        except:
-#            print "Exception: failed to run the test"
-#            traceback.print_exc()            
-#        else:
-#            os.chdir(PWD)
-    
+                    
     elif (whichtests == 1):
         '''Run specific tests'''
         # is this an old or a new test?
@@ -244,18 +235,7 @@ def main(testnames=[]):
                     list = list+testcases
             except:
                 traceback.print_exc()
-                                 
-        # Run the tests and create a XML report
-#        xmlfile = xmldir+'nose.xml'
-#        try:
-#            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-#                                  suite=list)
-#        except:
-#            print "Exception: failed to run the test"
-#            traceback.print_exc()            
-#        else:
-#            os.chdir(PWD)
-            
+                                             
     elif(whichtests == 2):
         '''Run the SHORT_LIST of tests only'''
         print "Starting unit tests for %s: " %SHORT_LIST
@@ -296,6 +276,7 @@ if __name__ == "__main__":
     if sys.argv.__len__() == i+2:
         # Will run all tests
         whichtests = 0
+        testnames = []
     elif sys.argv.__len__() > i+2:
         # Will run specific tests.
         whichtests = 1
@@ -308,10 +289,12 @@ if __name__ == "__main__":
             if elem == '--short':
                 # run only the SHORT_LIST
                 whichtests = 2
+                testnames = SHORT_LIST
                 break    
             if elem == this_file:
                 break
             
+            print whichtests
             testnames.append(elem)
         
 #    sys.exit(main(testnames))

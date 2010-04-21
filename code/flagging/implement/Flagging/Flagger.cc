@@ -594,6 +594,13 @@ namespace casa {
       }
     /* BASELINE */
     Matrix<Int> baselinelist = msselection_p->getBaselineList();
+
+    /* Here, it may be necessary to convert negative indices to positive ones
+       (see CAS-2021).
+       
+       For now, fail cleanly if getBaselineList returned negative indices.
+    */
+
     if (baselinelist.nelements())
       {
 	IPosition shp = baselinelist.shape();
@@ -603,9 +610,13 @@ namespace casa {
 	Matrix<Int> blist(transposed);
 
 	for(Int i=0; i < shp[0]; i++)
-	  for(Int j=0; j < shp[1]; j++)
-	    blist(j, i) = baselinelist(i, j);
-	// need to add 1 because RFASelector expects 1-based indices.
+            for(Int j=0; j < shp[1]; j++) {
+
+                if (baselinelist(i, j) < 0) {
+                    throw AipsError("Sorry, negated antenna selection (such as '!2') is not supported by flagger (CAS-2021)");
+                }
+                blist(j, i) = baselinelist(i, j);
+            }
 	
 	RecordDesc flagDesc;       
 	flagDesc.addField(RF_BASELINE, TpArrayInt);
@@ -1843,7 +1854,7 @@ namespace casa {
 				iter_mode(ival) = res;
 				active(ival) = False;
 				if ( --ndry <= 0 )
-				  break;
+                                    break;
 			      }
 			  }
 		    }
@@ -2294,7 +2305,27 @@ namespace casa {
       }
     return True;
   }
+
+
+
+
+  void Flagger::reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant)
+  {
+      for (unsigned i = 0; (int)i < baselinelist.shape()(1); i++) {
+          int a1 = baselinelist(0, i);
+          if (a1 < 0) {
+              for (unsigned a = 0; a < nant; a++) {
+                  if (a != (unsigned) (-a1)) {
+                      IPosition longer = baselinelist.shape();
+                      longer(1) += 1;
+                      baselinelist.resize(longer);
+                      baselinelist(0, longer(1)-1) = a;
+                      baselinelist(1, longer(1)-1) = baselinelist(1, i);
+                  }
+              }
+          }
+      }
+  }
   
-  
-  
+    
 } //#end casa namespace

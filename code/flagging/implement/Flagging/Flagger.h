@@ -292,6 +292,9 @@ public:
 			 Vector<Int>& dataStart, 
 			 Vector<Int>& dataEnd, Vector<Int>& dataStep);
 */			 
+
+  /* Get rid of negative indices (meaning negation of antenna) in baselinelist */
+  static void reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant);
   
 private:
     
