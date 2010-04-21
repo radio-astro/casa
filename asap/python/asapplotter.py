@@ -17,6 +17,9 @@ class asapplotter:
         if visible is not None:
             self._visible = visible
         self._plotter = self._newplotter()
+        if self._visible and matplotlib.get_backend() == "TkAgg":
+            from asap.casatoolbar import CustomToolbarTkAgg
+            self._plotter.figmgr.casabar = CustomToolbarTkAgg(self)
 
         self._panelling = None
         self._stacking = None
@@ -38,6 +41,7 @@ class asapplotter:
         self._maskselection = None
         self._selection = selector()
         self._hist = rcParams['plotter.histogram']
+        self._panellayout = self.set_panellayout(refresh=False)
 
     def _translate(self, instr):
         keys = "s b i p t".split()
@@ -48,8 +52,15 @@ class asapplotter:
         return None
 
     def _newplotter(self):
-        if self._visible:
+        backend=matplotlib.get_backend()
+        if not self._visible:
+            from asap.asaplot import asaplot
+        elif backend == 'TkAgg':
             from asap.asaplotgui import asaplotgui as asaplot
+        elif backend == 'Qt4Agg':
+            from asap.asaplotgui_qt4 import asaplotgui as asaplot
+        elif backend == 'GTkAgg':
+            from asap.asaplotgui_gtk import asaplotgui as asaplot
         else:
             from asap.asaplot import asaplot
         return asaplot()
@@ -82,6 +93,7 @@ class asapplotter:
         self._plot(self._data)
         if self._minmaxy is not None:
             self._plotter.set_limits(ylim=self._minmaxy)
+        if self._plotter.figmgr.casabar: self._plotter.figmgr.casabar.enable_button()
         self._plotter.release()
         self._plotter.tidy()
         self._plotter.show(hardrefresh=False)
@@ -476,6 +488,35 @@ class asapplotter:
             rcp('font', size=size)
         if refresh and self._data: self.plot(self._data)
 
+    def set_panellayout(self,layout=[],refresh=True):
+        """
+        Set the layout of subplots.
+        Parameters:
+            layout:   a list of subplots layout in figure coordinate (0-1),
+                      i.e., fraction of the figure width or height. 
+                      The order of elements should be:
+                      [left, bottom, right, top, horizontal space btw panels,
+                      vertical space btw panels]. 
+            refresh:  True (default) or False. If True, the plot is
+                      replotted based on the new parameter setting(s). 
+                      Otherwise,the parameter(s) are set without replotting.
+        Note
+        * When layout is not specified, the values are reset to the defaults
+          of matplotlib.
+        * If any element is set to be None, the current value is adopted. 
+        """
+        if layout == []: self._panellayout=self._reset_panellayout()
+        else: 
+            self._panellayout=[None]*6
+            self._panellayout[0:len(layout)]=layout
+        #print "panel layout set to ",self._panellayout
+        if refresh and self._data: self.plot(self._data)
+
+    def _reset_panellayout(self):
+        ks=map(lambda x: 'figure.subplot.'+x,
+               ['left','bottom','right','top','hspace','wspace'])
+        return map(matplotlib.rcParams.get,ks)
+
     def plot_lines(self, linecat=None, doppler=0.0, deltachan=10, rotate=90.0,
                    location=None):
         """
@@ -692,11 +733,14 @@ class asapplotter:
             if self._rows and self._cols:
                 n = min(n,self._rows*self._cols)
                 self._plotter.set_panels(rows=self._rows,cols=self._cols,
-                                         nplots=n,ganged=ganged)
+#                                         nplots=n,ganged=ganged)
+                                         nplots=n,layout=self._panellayout,ganged=ganged)
             else:
-                self._plotter.set_panels(rows=n,cols=0,nplots=n,ganged=ganged)
+#                self._plotter.set_panels(rows=n,cols=0,nplots=n,ganged=ganged)
+                self._plotter.set_panels(rows=n,cols=0,nplots=n,layout=self._panellayout,ganged=ganged)
         else:
-            self._plotter.set_panels()
+#            self._plotter.set_panels()
+            self._plotter.set_panels(layout=self._panellayout)
         r=0
         nr = scan.nrow()
         a0,b0 = -1,-1
@@ -855,6 +899,12 @@ class asapplotter:
         PL.cla()
         #PL.ioff()
         PL.clf()
+        # Adjust subplot layouts
+        if len(self._panellayout) !=6: self.set_panellayout(refresh=False)
+        lef, bot, rig, top, wsp, hsp = self._panellayout
+        PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
+                                 wspace=wsp,hspace=hsp)
+        
         tdel = max(t) - min(t)
         ax = PL.subplot(2,1,1)
         el = array(self._data.get_elevation())*180./pi
@@ -941,6 +991,11 @@ class asapplotter:
         PL.cla()
         #PL.ioff()
         PL.clf()
+        # Adjust subplot layouts
+        if len(self._panellayout) !=6: self.set_panellayout(refresh=False)
+        lef, bot, rig, top, wsp, hsp = self._panellayout
+        PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
+                                 wspace=wsp,hspace=hsp)
         ax = PL.axes([0.1,0.1,0.8,0.8])
         ax = PL.axes([0.1,0.1,0.8,0.8])
         ax.set_aspect('equal')
@@ -986,6 +1041,13 @@ class asapplotter:
         #    self._minmaxy = None
         #    self._abcunit = self._data.get_unit()
         #    self._datamask = None
+
+        # Adjust subplot layouts
+        if len(self._panellayout) !=6: self.set_panellayout(refresh=False)
+        lef, bot, rig, top, wsp, hsp = self._panellayout
+        self._plotter.figure.subplots_adjust(
+            left=lef,bottom=bot,right=rig,top=top,wspace=wsp,hspace=hsp)
+        if self._plotter.figmgr.casabar: self._plotter.figmgr.casabar.disable_button()
         self._plottp(self._data)
         if self._minmaxy is not None:
             self._plotter.set_limits(ylim=self._minmaxy)
@@ -1050,4 +1112,57 @@ class asapplotter:
         """
         self._plotter.text(*args, **kwargs)
     # end matplotlib.Figure.text forwarding function
+
+
+    # printing header information
+    def print_header(self, plot=True, fontsize=9, logger=False, selstr='', extrastr=''):
+        """
+        print data (scantable) header on the plot and/or logger.
+        Parameters:
+            plot:      whether or not print header info on the plot. 
+            fontsize:  header font size (valid only plot=True)
+            autoscale: whether or not autoscale the plot (valid only plot=True)
+            logger:    whether or not print header info on the logger.
+            selstr:    additional selection string (not verified)
+            extrastr:  additional string to print (not verified)
+        """
+        if not plot and not logger: return
+        if not self._data: raise RuntimeError("No scantable has been set yet.")
+        # Now header will be printed on plot and/or logger. 
+        # Get header information and format it. 
+        ssum=self._data.__str__()
+        # Print Observation header to the upper-left corner of plot
+        if plot:
+            srest=ssum[ssum.find('Rest Freqs:'):ssum.find('Abcissa:')]
+            shead=ssum[ssum.find('Beams:'):ssum.find('Flux Unit:')]
+            headstr=shead.split('\n\n')
+            if extrastr != '': headstr[1]=extrastr+'\n'+headstr[1]
+            #headstr[1]='Data File:     '+(filestr or 'unknown')+'\n'+headstr[1]
+            headstr[0]=headstr[0]+'\n'+srest
+            headstr.reverse()
+            ssel='***Selections***\n'+(selstr+self._data.get_selection().__str__() or 'none')
+            headstr.append(ssel)
+            nstcol=len(headstr)
+            
+            self._plotter.hold()
+            for i in range(nstcol):
+                self._plotter.figure.text(0.03+float(i)/nstcol,0.98,
+                             headstr[i],
+                             horizontalalignment='left',
+                             verticalalignment='top',
+                             fontsize=fontsize)
+            import time
+            self._plotter.figure.text(0.99,0.0,
+                            time.strftime("%a %d %b %Y  %H:%M:%S %Z"),
+                            horizontalalignment='right',
+                            verticalalignment='bottom',fontsize=8)
+            self._plotter.release()
+            del srest, shead, headstr, ssel
+        if logger:
+            asaplog.push("----------------\n  Plot Summary\n----------------")
+            asaplog.push(extrastr)
+            asaplog.push(ssum[ssum.find('Beams:'):])
+            print_log()
+        del ssum
+
 

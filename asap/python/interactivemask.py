@@ -158,6 +158,8 @@ class interactivemask:
 		if self.scan != self.p._data:
 			# Need replot
 			self.p.plot(self.scan)
+			# disable casa toolbar
+			if self.p._plotter.figmgr.casabar:  self.p._plotter.figmgr.casabar.disable_button()
 			for panel in self.p._plotter.subplots:
 				xmin, xmax = panel['axes'].get_xlim()
 				marg = 0.05*abs(xmax-xmin)
