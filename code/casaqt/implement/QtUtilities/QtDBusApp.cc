@@ -117,7 +117,7 @@ namespace casa {
 	    service_name = new QString( );
 	    QTextStream(service_name) << service_base << name;
 	} else {
-	    service_name = new QString( generateServiceName(getName(), getpid( )) );
+	    service_name = new QString( generateServiceName(dbusName(), getpid( )) );
 	}
 
 	return *service_name;
@@ -133,7 +133,7 @@ namespace casa {
 	if ( name.size( ) > 0 )
 	    QTextStream(object_name) << object_base << name;
 	else
-	    QTextStream(object_name) << object_base << getName( ) << "_" << getpid( );
+	    QTextStream(object_name) << object_base << dbusName( ) << "_" << getpid( );
 
 	return *object_name;
     }

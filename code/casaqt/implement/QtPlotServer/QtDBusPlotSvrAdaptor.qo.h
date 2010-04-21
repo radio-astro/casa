@@ -46,7 +46,7 @@ namespace casa {
     public:
 
 	// name used to initialize connection to dbus
-	const QString &getName( ) const { return QtPlotServer::name( ); }
+	QString dbusName( ) const { return QtPlotServer::name( ); }
 	bool connectToDBus( const QString &dbus_name="" )
 			{ return QtDBusApp::connectToDBus( parent(), dbus_name ); }
 
