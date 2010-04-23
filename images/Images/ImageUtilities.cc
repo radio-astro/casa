@@ -215,7 +215,7 @@ String ImageUtilities::shortAxisName (const String& axisName)
 
 
 SkyComponent ImageUtilities::encodeSkyComponent(
-    LogIO&, Double& facToJy, const ImageInfo& ii,
+    LogIO& logIO, Double& facToJy, const ImageInfo& ii,
     const CoordinateSystem& cSys, const Unit& brightnessUnit,
     ComponentType::Shape type, const Vector<Double>& parameters,
     Stokes::StokesTypes stokes, Bool xIsLong
@@ -235,6 +235,7 @@ SkyComponent ImageUtilities::encodeSkyComponent(
     Vector<Double> pars = parameters.copy();
     if (!xIsLong) {
         Double tmp = pars(0);
+
         pars(0) = pars(1);
         pars(1) = tmp;
 
@@ -244,10 +245,41 @@ SkyComponent ImageUtilities::encodeSkyComponent(
         pars(5) = pa.radian();
     }
 
-    Vector<Quantum<Double> > beam = ii.restoringBeam();
+    Vector<Quantity> beam = ii.restoringBeam();
+    if (brightnessUnit.getName().contains("beam") && beam.size() != 3) {
+    	beam = makeFakeBeam(logIO, cSys);
+    }
     sky.fromPixel(facToJy, pars, brightnessUnit, beam, cSys, type, stokes);
     return sky;
 } 
+
+Vector<Quantity> ImageUtilities::makeFakeBeam(
+		LogIO& logIO, const CoordinateSystem& csys, Bool suppressWarnings
+	) {
+    Int dirCoordinate = csys.findCoordinate(Coordinate::DIRECTION);
+    if (dirCoordinate==-1) {
+        logIO << "CoordinateSystem does not contain "
+            << "a DirectionCoordinate" << LogIO::EXCEPTION;
+    }
+    const DirectionCoordinate& dirCoord = csys.directionCoordinate(dirCoordinate);
+
+    Vector<Quantity> beam;
+    beam.resize(3);
+    Vector<Double> inc = dirCoord.increment();
+    beam[0] = Quantity(abs(inc[0]), "rad");
+    beam[1] = Quantity(abs(inc[1]), "rad");
+    beam[2] = Quantity(0,"rad");
+    if (! suppressWarnings) {
+    	logIO << LogIO::WARN
+    			<< "No restoring beam defined even though the "
+    			<< "image brightness units contain a beam. Assuming "
+    			<< "the restoring beam is one pixel. To avoid this non-fatal message "
+    			<< "and subsequent related messages, add a restoring beam to your image's "
+    			<< "header."
+    			<< LogIO::POST;
+    }
+    return beam;
+}
 
 // moved from ImageAnalysis. See comments in ImageUtilities.h
 SkyComponent ImageUtilities::encodeSkyComponent(
@@ -279,9 +311,10 @@ SkyComponent ImageUtilities::encodeSkyComponent(
 	const CoordinateSystem& cSys = subIm.coordinates();
 	const Unit& bU = subIm.units();
 	SkyComponent sky = ImageUtilities::encodeSkyComponent(
-        os, facToJy, ii, cSys, bU, model,
-        parameters, stokes, xIsLong
-    );
+		os, facToJy, ii, cSys, bU, model,
+		parameters, stokes, xIsLong
+	);
+
 	if (!deconvolveIt) {
 		return sky;
     }
