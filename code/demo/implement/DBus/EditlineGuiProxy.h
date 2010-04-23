@@ -3,6 +3,8 @@
 #define DBUS_EDITLINEGUIPROXY_H_
 
 #include <string>
+#include <casadbus/utilities/BusAccess.h>
+#include <casadbus/session/DBusSession.h>
 #include "EditlineGuiProxy.dbusproxy.h"
 
 namespace casa {

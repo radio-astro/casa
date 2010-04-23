@@ -172,16 +172,17 @@ namespace casa {
 
     bool QtDBusApp::connectToDBus( QObject *object,  const QString &dbus_name ) {
 
+	QString name(dbus_name.size() == 0 ? dbusName() : dbus_name);
 	bool dbusRegistered = false;
 
-	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(dbus_name)) )
+	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(name)) )
 	    return false;
 
 	try {
 	    // Register service and object.
 	    dbusRegistered = connection().isConnected() &&
-			     connection().registerService(dbusServiceName(dbus_name)) &&
-			     connection().registerObject(dbusObjectName(dbus_name), object,
+			     connection().registerService(dbusServiceName(name)) &&
+			     connection().registerObject(dbusObjectName(name), object,
 							 QDBusConnection::ExportAdaptors);
 
 	} catch(...) { dbusRegistered = false; }

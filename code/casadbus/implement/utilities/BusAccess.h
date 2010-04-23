@@ -34,6 +34,8 @@
 
 namespace casa {
     namespace dbus {
+	std::string object( const std::string &name );
+	std::string path( const std::string &name );
 
 	char *launch_casa_proxy( bool unique_name, const std::string &dbusname, const std::string &default_name,  const char **args );
 
@@ -54,8 +56,6 @@ namespace casa {
 	    return result;
 	}
 
-	std::string object( const std::string &name );
-	std::string path( const std::string &name );
     }
 }
 
