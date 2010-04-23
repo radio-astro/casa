@@ -18,4 +18,5 @@ int main ( int argc, char *argv[ ] ) {
 	el->set( buf );
 	sleep(1);
     }
+    el->set( v );
 }
