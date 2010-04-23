@@ -390,7 +390,7 @@ casa_find( LAPACK
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
 casa_find( CASACORE
-           VERSION 0.0.2
+           VERSION 1.0.6
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
