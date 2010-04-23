@@ -129,6 +129,11 @@ class ImageMetaData {
  
         Int stokesPixelNumber(const String& stokesString) const;
 
+        // get the stokes parameter at the specified pixel value on the polarization axis.
+        // returns "" if the specified pixel is out of range or if no polarization axis.
+
+        String stokesAtPixel(const uInt pixel) const;
+
         // Get the number of stokes parameters in this image.
 	    uInt nStokes() const;
 
