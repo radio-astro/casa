@@ -99,12 +99,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
         Int polCoordNum = polarizationCoordinateNumber();
         StokesCoordinate stokesCoord = itsCoordinates.stokesCoordinate(polCoordNum);
-        Int stokesPix;
-        stokesCoord.toPixel(stokesPix, Stokes::type(stokesString));
-        if (stokesPix < 0 || stokesPix >= (Int)nStokes()) {
+        Int stokesPix = -1;
+        if (
+        	!stokesCoord.toPixel(stokesPix, Stokes::type(stokesString))
+        	|| stokesPix < 0 || stokesPix >= (Int)nStokes()
+        ) {
             return -1;
         }
         return stokesPix;
+    }
+
+    String ImageMetaData::stokesAtPixel(const uInt pixel) const {
+        if (! hasPolarizationAxis() || pixel >= nStokes()) {
+             return "";
+        }
+        Int polCoordNum = polarizationCoordinateNumber();
+        StokesCoordinate stokesCoord = itsCoordinates.stokesCoordinate(polCoordNum);
+        Int stokes = stokesCoord.stokes()[pixel];
+        Stokes::StokesTypes stokesType = Stokes::type(stokes);
+        return Stokes::name(stokesType);
     }
 
     Bool ImageMetaData::isStokesValid(const String& stokesString) const {
