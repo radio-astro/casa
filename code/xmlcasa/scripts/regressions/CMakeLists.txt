@@ -22,8 +22,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   3c129_tutorial_regression.py
   3C219D_regression.py
   accum_regression.py
-  asdm-import_regression.py
-  asdmv1-import_regression.py
   async-segfault_regression.py
   b0319_regression.py
   b1608_demo_regression.py
@@ -41,7 +39,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   ic2233_regression.py
   imagepoltest_regression.py
   imagetest_regression.py
-  imregrid_regression.py
   irc_cs_regression.py
   irc_cs_task_regression.py
   irc_hc3n_regression.py
@@ -69,14 +66,12 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   orion_regression.py
   ori_sio_regression.py
   ori_sio_task_regression.py
-  plotants_regression.py
   plotxy_regression.py
   pointing_regression.py
   polcal_20080224_cband_regression.py
   ppdisk_regression.py
   run_orionmos4sim.py
   sdtpimaging_regression.py
-  smoothcal_regression.py
   testcube_regression.py
   wf_regression.py
   wproj3ddat_regression.py
