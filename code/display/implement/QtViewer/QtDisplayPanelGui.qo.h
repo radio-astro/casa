@@ -33,7 +33,9 @@
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
 #  include <QtGui>
+#include <QTextEdit>
 #include <QHash>
+#include <QFont>
    //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
    //#   because they'll have Qt includes.
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
@@ -199,6 +201,10 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void hideImageProfile();
   
   virtual void hideAllSubwindows();
+  virtual void hideImageMenus();
+
+  virtual void showStats(const String&);
+  virtual void hideStats();
   //</group>
  
  
@@ -256,8 +262,10 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   // Respond to QDP::registrationChange() signal
   virtual void ddRegChange_() {
+    //hideImageMenus();
     updateDDMenus_();
-    arrangeTrackBoxes_();  }
+    arrangeTrackBoxes_();  
+  }
 
   // Respond to registration/close menu clicks.
   //<group>
@@ -371,6 +379,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   MakeRegion* qmr_;
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
+  QTextEdit* qst_;
   
   QtProfile* profile_;		//# Profile window
   String savedTool_;		//# (for restoring left button)

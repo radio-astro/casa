@@ -49,7 +49,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 		   QtPanelBase(parent), qdm_(0), qdo_(0), qfb_(0),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
-		   qsm_(0), profile_(0), savedTool_(QtMouseToolNames::NONE),
+		   qsm_(0), qst_(0),
+                   profile_(0), savedTool_(QtMouseToolNames::NONE),
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
 		   showdataoptionspanel_enter_count(0) {
     
@@ -546,7 +547,8 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
 
   // FINAL INITIALIZATIONS
   
-  
+  connect(qdp_,      SIGNAL(registrationChange()),
+                     SLOT(hideImageMenus()));
   updateDDMenus_();
 
   resize(QSize(600, 770).expandedTo(minimumSizeHint()));
@@ -701,7 +703,6 @@ void QtDisplayPanelGui::updateAnimUi_() {
   // (QtDisplayPanel's animator state).  It assumes that the animator
   // model is in a valid state (and this routine should not emit signals
   // that would cause state-setting commands to be fed back to that model).
-
   // Prevent the signal-feedback recursion mentioned above.
   // (The signal used from text boxes is only emitted on user edits).
   Bool nrbSav = normalRB_->blockSignals(True),
@@ -799,6 +800,7 @@ void QtDisplayPanelGui::updateAnimUi_() {
   rateSlider_->blockSignals(rslSav),
   frameSlider_->blockSignals(fslSav);  
 
+//cout << "updataAni============" << endl;
 }
 
 
@@ -810,6 +812,48 @@ void QtDisplayPanelGui::frameNumberEdited_() {
 // Public slots: may be safely operated programmatically (i.e.,
 // scripted, when available), or via gui actions.
 
+void QtDisplayPanelGui::hideImageMenus() {
+   List<QtDisplayData*> rdds = qdp_->registeredDDs();
+   for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+      QtDisplayData* pdd = qdds.getRight();
+      if(pdd != 0){
+         ImageInterface<float>* img = pdd->imageInterface();
+         //cout << "img=" << img << endl;
+         //cout << "dataType=" << pdd->dataType() << endl;
+         PanelDisplay* ppd = qdp_->panelDisplay();
+         //cout << "ppd->isCSmaster=" 
+         //      << ppd->isCSmaster(pdd->dd()) << endl;
+         if (ppd != 0 && ppd->isCSmaster(pdd->dd())) { 
+            if (pdd->dataType() == "image" && img !=0) {
+               fboxAct_->setEnabled(True);
+               mkRgnAct_->setEnabled(True);
+               annotAct_->setEnabled(True);
+               profileAct_->setEnabled(True);
+               shpMgrAct_->setEnabled(True);
+               break;
+            }
+            if (pdd->dataType() == "ms" || img ==0) {
+               
+               hideRegionManager();
+               hideAnnotatorPanel();
+               hideFileBoxPanel();
+               hideMakeRegionPanel();
+               hideImageProfile();  
+               hideShapeManager();
+               hideStats();
+
+               fboxAct_->setEnabled(False);
+               mkRgnAct_->setEnabled(False);
+               annotAct_->setEnabled(False);
+               profileAct_->setEnabled(False);
+               shpMgrAct_->setEnabled(False);
+               //cout << "hide image menus" << endl;
+               break;
+            }
+          }
+       }
+    }
+}
 
 void QtDisplayPanelGui::hideAllSubwindows() {
   hidePrintManager();
@@ -821,6 +865,7 @@ void QtDisplayPanelGui::hideAllSubwindows() {
   hideImageProfile();  
   hideDataManager();
   hideDataOptionsPanel();
+  hideStats();
 }
   
 void QtDisplayPanelGui::showDataManager() {
@@ -881,7 +926,37 @@ void QtDisplayPanelGui::hideCanvasManager() {
   if(qcm_==0) return;
   qcm_->hide();  }
 
+void QtDisplayPanelGui::showStats(const String& stats) {
+  QFont font("Monospace");
+  if(qst_==0) {
+     qst_ = new QTextEdit;
+     qst_->setWindowTitle(QObject::tr("Image Statistics"));
+     //qst_->setLineWrapMode(QPlainTextEdit::WidgetWidth);
+     font.setStyleHint(QFont::TypeWriter);
+     qst_->setCurrentFont(font);
+     qst_->setReadOnly(1);
+     qst_->setMinimumWidth(600);
+  }
+  QString s;
+  s=stats.c_str();
+  QFontMetrics fm(font);
+  int len=s.length();
+  int last = s.lastIndexOf('\n', len - 3);
+  //cout << "length=" << len << " last=" << last << endl;
+  QString lastLine=s.right(max(len - last,0));
+  //cout << "lastLine=" << lastLine.toStdString() 
+  //     << "<<<==========\n" << endl;
+  int width=fm.width(lastLine);
+  //cout << "width=" << width << endl;
+  qst_->resize(width, qst_->size().height());
+  qst_->append(s);
+  qst_->showNormal();
+  qst_->raise();  
+}
 
+void QtDisplayPanelGui::hideStats() {
+  if(qst_==0) return;
+  qst_->hide();  }
 
 void QtDisplayPanelGui::showRegionManager() {
   if(qrm_==0) return;
@@ -911,8 +986,20 @@ void QtDisplayPanelGui::hideRegionManager() {
 
 void QtDisplayPanelGui::showShapeManager() {
   if(qsm_==0) qsm_ = new QtRegionShapeManager(qdp_);
-  qsm_->showNormal();
-  qsm_->raise();  }
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           qsm_->showNormal();
+           qsm_->raise();  
+        }
+      }
+  }
+}
 
 void QtDisplayPanelGui::hideShapeManager() {
   if(qsm_==0) return;
@@ -1006,19 +1093,12 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
-           connect(qmr_,  SIGNAL(hideRegionInImage()),
-                          SLOT(hideMakeRegionPanel()));
-           connect(pdd, 
-                   SIGNAL(axisChanged4(String, String, String, int)),
-                   qmr_, 
-                   SLOT(changeAxis(String, String, String, int)));
+           qmr_->showNormal();
+           qmr_->raise();  
+           break;
         }
       }
   }
-  qmr_->showNormal();
-  qmr_->raise();  
-  fboxAct_->setEnabled(False);
-  annotAct_->setEnabled(False);
 
 }
 
@@ -1663,8 +1743,9 @@ void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
     ddCloseMenu_->addSeparator();  }  
 
   // Enable/disable shape manager
-  shpMgrAct_->setEnabled(anyRdds);
-  if(qsm_->isVisible() && !anyRdds) qsm_->close();  
+  // That is not right, if dd is ms, crashes!
+  //shpMgrAct_->setEnabled(anyRdds);
+  //if(qsm_->isVisible() && !anyRdds) qsm_->close();  
 
   
   // For unregistered DDs:...
