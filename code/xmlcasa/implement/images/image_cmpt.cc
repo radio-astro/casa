@@ -734,9 +734,12 @@ image::convertflux(const ::casac::variant& qvalue, const ::casac::variant& major
 
     //
     
+    Bool noBeam = False;
     casa::Quantity rtn =
-      itsImage->convertflux(value, majorAxis,
-			    minorAxis, type, toPeak);
+      itsImage->convertflux(
+    		  noBeam, value, majorAxis,
+			    minorAxis, type, toPeak
+      );
     rstat = recordFromQuantity(rtn);
     
   } catch (AipsError x) {
