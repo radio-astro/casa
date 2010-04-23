@@ -41,7 +41,7 @@ FULL_LIST = ['test_asdm-import',
              'test_boxit',
              'test_clean',
              'test_clearstat',
-#             'test_exportasdm',
+             'test_exportasdm',
              'test_hanningsmooth',
              'test_imcontsub',
              'test_imfit',
@@ -64,7 +64,7 @@ FULL_LIST = ['test_asdm-import',
 SHORT_LIST = ['test_asdm-import',
              'test_boxit',
              'test_clean',
-#             'test_exportasdm',
+             'test_exportasdm',
              'test_imfit',
              'test_imhead',
              'test_imregrid',
@@ -282,10 +282,14 @@ def main(testnames=[]):
             except:
                 traceback.print_exc()
                 
+    global regstate # Global variable used by regression framework to determine pass/failure status
+    regstate = False
+
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
     try:
-        result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+        
+        regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile],
                               suite=list)
     except:
         print "Exception: failed to run the test"
@@ -298,18 +302,24 @@ def main(testnames=[]):
 if __name__ == "__main__":
     # Get command line arguments
     
-    # Get the tests to run
-    i = sys.argv.index("-c")
+    if "-c" in sys.argv:
+        i = sys.argv.index("-c")
+    else:
+        # Called from iPython session
+        i = 1
+        
     this_file = sys.argv[i+1]
+
+    # Get the tests to run
     testnames = []
     
     la = [] + sys.argv
     
-    if sys.argv.__len__() == i+2:
+    if len(sys.argv) == i+2:
         # Will run all tests
         whichtests = 0
         testnames = []
-    elif sys.argv.__len__() > i+2:
+    elif len(sys.argv) > i+2:
         # Will run specific tests.
         whichtests = 1
         
