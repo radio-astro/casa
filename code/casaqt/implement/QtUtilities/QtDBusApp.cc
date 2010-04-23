@@ -26,6 +26,9 @@
 //# $Id: $
 
 #include <stdlib.h>
+#include <climits>
+#include <algorithm>
+
 #include <QTextStream>
 #include <QDBusConnectionInterface>
 #include <casaqt/QtUtilities/QtDBusApp.h>

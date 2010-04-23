@@ -765,8 +765,8 @@ void QtProfile::wcChanged(const String c,
     //Get Profile Flux density v/s velocity
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
-				coordinate, coordinateType, 
-                                0, 0, 0, "", frameType_p);
+                                coordinate, coordinateType, 
+                                0, 0, 0, String(""), frameType_p);
 
     // scale for better display
     // max absolute display numbers should be between 0.1 and 100.0

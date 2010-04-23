@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <cstring>
+#include <cstdlib>
 #include <casadbus/types/variant.h>
 #include <casadbus/types/record.h>
 

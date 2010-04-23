@@ -29,6 +29,7 @@
 #include <cstring>
 #include <sys/time.h>
 #include <vector>
+#include <cstring>
 
 #define CASA_PREFIX "edu.nrao.casa."
 #define CASA_PATH "/casa/"

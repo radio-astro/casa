@@ -28,6 +28,7 @@
 #ifndef DBUS_BUSACCESS_H_
 #define DBUS_BUSACCESS_H_
 #include <string>
+#include <cstdio>
 #include <unistd.h>
 #include <casa/Exceptions/Error.h>
 
