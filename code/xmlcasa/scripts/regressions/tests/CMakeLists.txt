@@ -22,6 +22,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   3C129.py
   3C219D_test.py
   accum_test.py
+  asdmv1-import.py
   async-segfault.py
   b1608.py
   calstat_test.py
