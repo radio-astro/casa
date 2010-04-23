@@ -1119,6 +1119,198 @@ Bool LatticeStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
    return True;
 }
 
+template <class T>
+Bool LatticeStatistics<T>::getLayerStats(
+        String& stats, Int layer) {
+
+   if (!goodParameterStatus_p) {
+     return False;
+   }
+
+   if (needStorageLattice_p) {
+      if (!generateStorageLattice()) 
+         return False;
+   }
+
+   if (displayAxes_p.nelements() == 0) {
+     //summStats ();
+     return True;
+   }
+
+   const uInt n1 = pStoreLattice_p->shape()(0);
+   Matrix<AccumType> ord(n1,NSTATS);
+
+   IPosition cursorShape(pStoreLattice_p->ndim(),1);
+   cursorShape(0) = pStoreLattice_p->shape()(0);
+   cursorShape(pStoreLattice_p->ndim()-1) = 
+       pStoreLattice_p->shape()(pStoreLattice_p->ndim()-1);
+
+   IPosition matrixAxes(2);
+   matrixAxes(0) = 0; 
+   matrixAxes(1) = pStoreLattice_p->ndim()-1;
+
+   LatticeStepper 
+       stepper(pStoreLattice_p->shape(), cursorShape, matrixAxes, 
+                IPosition::makeAxisPath(pStoreLattice_p->ndim()));
+   RO_LatticeIterator<AccumType> 
+       pixelIterator(*pStoreLattice_p, stepper);
+
+   Double beamArea;
+   Bool hasBeam = getBeamArea(beamArea);
+
+   ostringstream os;
+   for (pixelIterator.reset(); 
+        !pixelIterator.atEnd(); pixelIterator++) {
+ 
+      Matrix<AccumType>  matrix(pixelIterator.matrixCursor());  
+      for (uInt i=0; i<n1; i++) {
+         const AccumType& nPts = matrix(i,NPTS);
+         if (LattStatsSpecialize::hasSomePoints(nPts)) {
+            ord(i,MEAN) = 
+               LattStatsSpecialize::getMean(matrix(i,SUM), nPts);
+            if (hasBeam) ord(i,FLUX) = matrix(i,SUM) / beamArea;
+            ord(i,VARIANCE) = LattStatsSpecialize::getVariance(
+                              matrix(i,SUM), matrix(i,SUMSQ), nPts);
+            ord(i,SIGMA) = LattStatsSpecialize::getSigma(
+                              ord(i,VARIANCE));
+            ord(i,RMS) =  LattStatsSpecialize::getRms(
+                              matrix(i,SUMSQ), nPts);  
+          }
+      }
+
+      for (uInt i=0; i<LatticeStatsBase::NACCUM; i++) {
+         for (uInt j=0; j<n1; j++) ord(j,i) = matrix(j,i);
+      }
+
+      listLayerStats(hasBeam, pixelIterator.position(), ord,
+                     os, layer);
+   }
+   stats += os.str();
+   stats += '\n';
+
+   return True;
+}
+
+template <class T>
+Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam, 
+    const IPosition& dPos, const Matrix<AccumType>& stats,
+    ostringstream& os, Int layer)
+{
+
+   const uInt nDisplayAxes = displayAxes_p.nelements();
+   const uInt nStatsAxes = cursorAxes_p.nelements();
+
+   Int oDWidth = 15;
+   T* dummy = 0;
+   DataType type = whatType(dummy);
+   if (type==TpComplex) {
+      oDWidth = 2*oDWidth + 3; 
+   }
+
+   Int oPrec = 6;   
+
+   //Write the pixel and world coordinate of the higher order 
+   //display axes to the logger
+
+   if (nDisplayAxes > 1) {
+      Vector<String> sWorld(1);
+      Vector<Double> pixels(1);
+      IPosition blc(pInLattice_p->ndim(),0);
+      IPosition trc(pInLattice_p->shape()-1);
+
+      for (uInt j=1; j<nDisplayAxes; j++) {
+         os <<  "Axis " << displayAxes_p(j) + 1 << " = " 
+              << locInLattice(dPos,True)(j)+1;
+         if (j < nDisplayAxes-1) 
+            os << ", ";
+      }
+   }
+   os << endl;
+
+   setStream(os, oPrec);
+   Vector<String> sWorld(1);
+   Vector<Double> pixels(1);
+   pixels(0) = 1.0;
+   IPosition blc(pInLattice_p->ndim(),0);
+   IPosition trc(pInLattice_p->shape()-1);
+
+   Int len0;
+   if (nStatsAxes == 1) {
+      len0 = 8;
+      os << setw(len0) << "Profile ";
+   }
+   else if (nStatsAxes == 2) {
+      len0 = 6;
+      os << setw(len0) << "Plane ";
+   }
+   else if (nStatsAxes == 3) {
+      len0 = 5;
+      os << setw(len0) << "Cube ";
+   }
+   else {
+      len0 = 11;
+      os << setw(len0) << "Hyper-cube ";
+   }
+
+   os << setw(oDWidth) << "Npts";
+   os << setw(oDWidth) << "Sum";
+   if (hasBeam) 
+      os << setw(oDWidth) << "FluxDensity";
+   os << setw(oDWidth) << "Mean";  
+   if (doRobust_p) 
+      os << setw(oDWidth) << "Median"; 
+   os << setw(oDWidth) << "Rms";
+   os << setw(oDWidth) << "Std dev";
+   os << setw(oDWidth) << "Minimum";
+   os << setw(oDWidth) << "Maximum" << endl;
+
+   //Write statistics to logger.  We write the pixel location
+   //relative to the parent lattice
+
+   const uInt n1 = stats.shape()(0);
+   for (uInt j=0; j<n1; j++) {
+      os << setw(len0)     
+         << j+blcParent_p(displayAxes_p(0))+1;
+      setStream(os, oPrec);
+      os << setw(oDWidth)
+         << stats.column(NPTS)(j);
+
+      if(LattStatsSpecialize::hasSomePoints(stats.column(NPTS)(j))){
+
+         setStream(os, oPrec);
+         os << setw(oDWidth)
+            << stats.column(SUM)(j);
+         if (hasBeam) { 
+            setStream(os, oPrec);
+            os << setw(oDWidth)
+               << stats.column(FLUX)(j);
+         }
+         setStream(os, oPrec);
+         os << setw(oDWidth)
+            << stats.column(MEAN)(j);
+         if (doRobust_p){ 
+            setStream(os, oPrec);
+            os << setw(oDWidth)
+               << stats.column(MEDIAN)(j);
+         }
+         setStream(os, oPrec);
+         os << setw(oDWidth)
+            << stats.column(RMS)(j);
+         setStream(os, oPrec);
+         os << setw(oDWidth)
+            << stats.column(SIGMA)(j);
+         setStream(os, oPrec);
+         os << setw(oDWidth)
+            << stats.column(MIN)(j);
+         setStream(os, oPrec);
+         os << setw(oDWidth)
+            << stats.column(MAX)(j);
+      }
+      os << endl;
+   }
+   
+   return True;
+}
 
 template <class T>
 IPosition LatticeStatistics<T>::locInLattice(const IPosition& storagePosition,
@@ -1210,6 +1402,7 @@ Bool LatticeStatistics<T>::display()
 // statistics as a function of the display axes
 
 {
+
    if (!goodParameterStatus_p) {
      return False;
    }
@@ -1239,7 +1432,6 @@ Bool LatticeStatistics<T>::display()
    }
 
 // If we don't have any display axes just summarise the lattice statistics
-
    if (displayAxes_p.nelements() == 0) {
      summStats ();
      
@@ -1316,6 +1508,8 @@ Bool LatticeStatistics<T>::display()
          if (!listStats(hasBeam, pixelIterator.position(), ord)) return False;
       }
    }
+
+
 
 
 // Finish up
