@@ -130,11 +130,12 @@ namespace casa {
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, results;
             Vector<String> fixed;
-            Bool logfileAppend, fitConverged, fitDone;
+            Bool logfileAppend, fitConverged, fitDone, _noBeam;
             Vector<Quantity> peakIntensities, fluxDensities, majorAxes, minorAxes, positionAngles;
             Vector<Vector<Double> > pixelPositions;
             Record residStats, inputStats;
             Double chiSquared;
+            String _kludgedStokes;
 
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.
@@ -152,8 +153,10 @@ namespace casa {
 
             ImageRegion _boxRegion(String blc1, String blc2, String trc1, String trc2);
 
-            // check the validity of the image-related parameters.
-            void _checkImageParameterValidity() const;
+            // check the validity of the image-related parameters. If stokes not specified
+            // and image contains a single stokes plane, stokesString will be set to the
+            // stokes parameter of that plane.
+            void _checkImageParameterValidity();
 
             // summarize the results in a nicely formatted string
             String _resultsToString();
@@ -190,6 +193,7 @@ namespace casa {
 
             // Set the flux densities and peak intensities of the fitted components.
             void _setFluxes();
+
             // Set the convolved sizes of the fitted components.
             void _setSizes();
 
