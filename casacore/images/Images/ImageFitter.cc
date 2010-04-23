@@ -71,7 +71,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), peakIntensities(), pixelPositions(), _noBeam(False) {
+		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
         _construct(imagename, box, region, 0, estimatesFilename);
     }
 
@@ -88,7 +88,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), peakIntensities(), pixelPositions(), _noBeam(False) {
+		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
         _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
@@ -502,7 +502,6 @@ namespace casa {
     	Vector<Quantity> fluxQuant;
 		ImageAnalysis ia;
 		ia.open(image->name());
-		Bool fakeBeam = False;
 
     	for(uInt i=0; i<results.nelements(); i++) {
     		results.getFlux(fluxQuant, i);
