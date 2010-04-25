@@ -32,7 +32,6 @@
 //# Includes
 #include <casa/aips.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <casa/Quanta/QMath.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDoppler.h>
 #include <casa/System/PGPlotter.h>
@@ -43,13 +42,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-template <class T> class Matrix;
 template <class T> class MomentCalcBase;
-template <class T> class SubImage;
-template <class T> class ImageInterface;
-template <class T> class MaskedLattice;
-template <class T> class Lattice;
-template <class T> class PtrHolder;
 class IPosition;
 class String;
 class Unit;

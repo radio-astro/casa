@@ -37,13 +37,11 @@
 #include <ms/MeasurementSets/StokesConverter.h>
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSSelectionKeywords.h>
-#include <images/Images/MomentCalculator.h>
 #include <images/Images/MomentsBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T> class MomentCalcBase;
- template<class T> class MSMomentCalcBase;
 template<class T> class MomentsBase;
 
 
@@ -161,7 +159,6 @@ template<class T> class MSMoments : public MomentsBase<T>
 public:
   
    friend class MomentCalcBase<T>;
-   friend class MSMomentCalcBase<T>;
   
    // construct from an MS, the MS will supply the range of the various
    // parameters that can be selected on.

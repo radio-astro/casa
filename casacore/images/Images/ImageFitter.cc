@@ -71,7 +71,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), peakIntensities(), pixelPositions() {
+		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
         _construct(imagename, box, region, 0, estimatesFilename);
     }
 
@@ -88,7 +88,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), peakIntensities(), pixelPositions() {
+		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
         _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
@@ -114,8 +114,8 @@ namespace casa {
 
         String errmsg;
         Record estimatesRecord;
-        estimates.toRecord(errmsg, estimatesRecord);
 
+        estimates.toRecord(errmsg, estimatesRecord);
 		try {
         	results = myImage.fitsky(
             	residPixels, residMask, converged,
@@ -126,10 +126,11 @@ namespace casa {
             	fit, deconvolve, list, residual, model
         	);
 		}
-		catch (AipsError) {
+		catch (AipsError err) {
+    		*itsLog << LogIO::WARN << "Fit failed to converge because of exception: "
+			<< err.getMesg() << LogIO::POST;
 			converged = false;
 		}
-
         fitDone = True;
         fitConverged = converged;
         if(converged) {
@@ -197,7 +198,6 @@ namespace casa {
         // Register the functions to create a FITSImage or MIRIADImage object.
         FITSImage::registerOpenFunction();
         MIRIADImage::registerOpenFunction();
-
         ImageUtilities::openImage(image, imagename, *itsLog);
         if (image == 0) {
             throw(AipsError("Unable to open image " + imagename));
@@ -221,15 +221,30 @@ namespace casa {
         }
     }
 
-    void ImageFitter::_checkImageParameterValidity() const {
+    void ImageFitter::_checkImageParameterValidity() {
         *itsLog << LogOrigin("ImageFitter", "_checkImageParameterValidity");
         String error;
         ImageMetaData md(*image);
         if (md.hasPolarizationAxis()) {
+        	if(stokesString.empty()) {
+        		if (md.nStokes() == 1) {
+        			// stokes not specified, but only one stokes axis so use that polarization
+        			stokesString = md.stokesAtPixel(0);
+        		}
+        		else {
+        			*itsLog << "No stokes specified but image has multiple polarizations. Please specify"
+        					<< "which stokes plane on which you want the fit performed"
+        					<< LogIO::EXCEPTION;
+        		}
+        	}
         	if (! md.isStokesValid(stokesString)) {
         		*itsLog << "This image has no stokes " << stokesString << LogIO::EXCEPTION;
         	}
         }
+        // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
+        String iquv = "IQUV";
+        _kludgedStokes = (iquv.index(stokesString) == String::npos) ? "I" : stokesString;
+        // </todo>
         if (md.hasSpectralAxis()) {
         	if (! md.isChannelNumberValid(chan)) {
         		*itsLog << "Spectral channel number " << chan << " is not valid for this image." << LogIO::EXCEPTION;
@@ -357,6 +372,11 @@ namespace casa {
     	summary << "       --- initial estimates:   " << estimatesString << endl;
 
     	if (converged()) {
+        	if (_noBeam) {
+        		*itsLog << LogIO::WARN << "Flux density not reported because "
+        				<< "there is no clean beam in image header so these quantities cannot "
+        				<< "be calculated" << LogIO::POST;
+        	}
     		summary << _statisticsToString() << endl;
     		for (uInt i = 0; i < results.nelements(); i++) {
     			summary << "Fit on " << image->name(True) << " component " << i << endl;
@@ -480,7 +500,6 @@ namespace casa {
     	fluxDensities.resize(results.nelements());
     	peakIntensities.resize(results.nelements());
     	Vector<Quantity> fluxQuant;
-
 		ImageAnalysis ia;
 		ia.open(image->name());
 
@@ -488,17 +507,17 @@ namespace casa {
     		results.getFlux(fluxQuant, i);
     		// TODO there is probably a better way to get the flux component we want...
     		Vector<String> polarization = results.getStokes(i);
-    		for(uInt j = 0; j < polarization.size(); j++) {
-    			if (polarization[j] == stokesString) {
+    		for (uInt j=0; j<polarization.size(); j++) {
+    			if (polarization[j] == _kludgedStokes) {
     				fluxDensities[i] = fluxQuant[j];
     				break;
     			}
     		}
     		const ComponentShape* compShape = results.getShape(i);
     		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
-    		peakIntensities[i] = ia.convertflux(
-    			fluxDensities[i], majorAxes[i], minorAxes[i], "Gaussian", True
-    		);
+            peakIntensities[i] = ia.convertflux(
+    	        _noBeam, fluxDensities[i], majorAxes[i], minorAxes[i], "Gaussian", True, True
+            );
     	}
     }
 
@@ -740,14 +759,13 @@ namespace casa {
        	Quantity fluxDensityError;
 		Vector<String> polarization = results.getStokes(compNumber);
 		for (uInt i=0; i<polarization.nelements(); i++) {
-            if (polarization[i] == stokesString) {
+            if (polarization[i] == _kludgedStokes) {
             	complex<double> error = results.component(compNumber).flux().errors()[i];
             	fluxDensityError.setValue(sqrt(error.real()*error.real() + error.imag()*error.imag()));
             	fluxDensityError.setUnit(fluxDensity.getUnit());
             	break;
             }
 		}
-        fluxes << "Flux ---" << endl;
         String unit;
         for (uInt i=0; i<unitPrefix.size(); i++) {
         	unit = unitPrefix[i] + "Jy";
@@ -760,12 +778,6 @@ namespace casa {
         Vector<Double> fd(2);
         fd[0] = fluxDensity.getValue();
         fd[1] = fluxDensityError.getValue();
-        uInt precision = _precision(fd, Vector<Double>());
-        fluxes << std::fixed << setprecision(precision);
-        fluxes << "       --- Integrated:   " << fluxDensity.getValue()
-			<< " +/- " << fluxDensityError.getValue() << " "
-			<< fluxDensity.getUnit() << endl;
-
     	Quantity peakIntensity = peakIntensities[compNumber];
     	Quantity intensityToFluxConversion = peakIntensity.getUnit().contains("/beam")
     		? Quantity(1.0, "beam")
@@ -777,6 +789,17 @@ namespace casa {
         Quantity peakIntensityError = peakIntensity*fluxDensityError/fluxDensity;
         Quantity tmpFluxError = peakIntensityError * intensityToFluxConversion;
 
+        uInt precision = 0;
+        fluxes << "Flux ---" << endl;
+
+        if (! _noBeam) {
+        	precision = _precision(fd, Vector<Double>());
+        	fluxes << std::fixed << setprecision(precision);
+        	fluxes << "       --- Integrated:   " << fluxDensity.getValue()
+					<< " +/- " << fluxDensityError.getValue() << " "
+					<< fluxDensity.getUnit() << endl;
+        }
+
         for (uInt i=0; i<unitPrefix.size(); i++) {
         	String unit = unitPrefix[i] + tmpFlux.getUnit();
          	if (tmpFlux.getValue(unit) > 1) {
@@ -785,9 +808,11 @@ namespace casa {
          		break;
          	}
         }
-        String newUnit = tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit();
+        //String newUnit = tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit();
         peakIntensity = Quantity(tmpFlux.getValue(), tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit());
         peakIntensityError = Quantity(tmpFluxError.getValue(), peakIntensity.getUnit());
+
+
         Vector<Double> pi(2);
         pi[0] = peakIntensity.getValue();
         pi[1] = peakIntensityError.getValue();
