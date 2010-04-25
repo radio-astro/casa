@@ -1,5 +1,4 @@
 import os
-from clean import clean
 from taskinit import *
 from simutil import *
 import pylab as pl
@@ -18,7 +17,7 @@ def simdata2(
     thermalnoise=None,
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
     image=None,
-    ms=None, cleanmode=None, cell=None, imsize=None, niter=None, threshold=None,
+    vis=None, cleanmode=None, cell=None, imsize=None, niter=None, threshold=None,
     weighting=None, outertaper=None, stokes=None,     
     analyze=None, 
     showarray=None, showuv=None, showpsf=None, showmodel=None, 
@@ -67,15 +66,18 @@ def simdata2(
         ##################################################################
         # set up modelimage
         if os.path.exists(modelimage):
-            # leave .image off names for now to facilitate appending
-            default_model=project+".model"
-            if modelimage==default_model+".image":
+
+            # TODO if modelimage==default_model AND, is already in the canonical
+            # 4d form, then don't create newmodel.  just work from skymodel!!
+
+            default_model=project+".skymodel"
+            if modelimage==default_model:
                 newmodel=project+".newmodel"
             else:
                 newmodel=default_model
-            if os.path.exists(newmodel+".image"):
+            if os.path.exists(newmodel):
                 if overwrite:
-                    shutil.rmtree(newmodel+".image")
+                    shutil.rmtree(newmodel)
                 else:
                     msg(newmodel+".image exists -- please delete or rename and try again",priority="error")
                     return False
@@ -85,9 +87,9 @@ def simdata2(
             (model_refdir,model_cell,model_size,
              model_nchan,model_center,model_width,
              model_stokes) = util.modifymodel(modelimage,
-                newmodel+".image",
+                newmodel,
                 modifymodel,inbright,direction,incell,incenter,inwidth,innchan,
-                flatimage=modelflat+".image") 
+                flatimage=modelflat) 
 
             casalog.origin('simdata')
 
@@ -95,8 +97,10 @@ def simdata2(
             bandwidth=qa.mul(qa.quantity(model_nchan),qa.quantity(model_width))
             util.bandwidth=bandwidth
 
-            if len(mapsize)==0:
+            if len(mapsize)==0 or len(mapsize[0])==0:
                 mapsize=model_size
+                if verbose:
+                    msg("setting map size to "+str(model_size))
 
         else:
             # if there are only components, modifymodel=T doesn't 
@@ -127,6 +131,9 @@ def simdata2(
             etime = qa.convert(qa.quantity(integration),"s")['value']
             ptgfile = project+".ptg.txt"
         else:
+            if type(ptgfile)==type([]):
+                ptgfile=ptgfile[0]
+            ptgfile=ptgfile.replace('$project',project)
             nfld, pointings, etime = util.read_pointings(ptgfile)
             if max(etime) <=0:
                 etime = qa.convert(qa.quantity(integration),"s")['value']
@@ -181,6 +188,7 @@ def simdata2(
         predict_uv=False
         predict_sd=False
         aveant=-1
+        stnx=[]  # for later, to know if we read an array in or not
 
         if os.path.exists(antennalist):
             stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
@@ -210,46 +218,50 @@ def simdata2(
         ##################################################################
         # create one figure for model and pointings - need antenna diam 
         # to determine primary beam
-        if grfile:            
-            file=project+".model.png"
-        else:
-            file=""
-        if grscreen:
-            util.newfig(filename=file)
-        else:
+        if modifymodel or setpointings:
             if grfile:
-                util.newfig(filename=file,show=False)
-
-        if grscreen or grfile:
-            pl.clf()
-            if components_only:
-                pl.plot()
-                # TODO add symbols at locations of components
+                file=project+".skymodel.png"
             else:
-                model_min,model_max, model_rms = util.statim(modelflat+".image",plot=True,incell=model_cell)            
-            lims=pl.xlim(),pl.ylim()
-            tt=pl.array(range(25))*pl.pi/12            
-            pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
-            if pb>0:
+                file=""
+            if grscreen:
+                util.newfig(filename=file)
+            else:
+                if grfile:
+                    util.newfig(filename=file,show=False)
+    
+            if grscreen or grfile:
+                if components_only:
+                    pl.plot()
+                    # TODO add symbols at locations of components
+                else:
+                    model_min,model_max, model_rms = util.statim(modelflat,plot=True,incell=model_cell)            
+                lims=pl.xlim(),pl.ylim()
+                tt=pl.array(range(25))*pl.pi/12            
+                pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
+                # if we don't know the ant size, plot small circles
+                if pb<0:
+                    if verbose:
+                        msg("unknown primary beam size for plot",priority="warn")
+                    pb=3.*(qa.convert(model_cell[0],'arcsec')['value']) # 3 pixels diam
                 if max(max(lims)) > pb/2:
                     plotcolor='w'
                 else:
                     plotcolor='k'
                 for i in range(offsets.shape[1]):
                     pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,plotcolor)
+                    
                 xlim=max(abs(pl.array(lims[0])))
                 ylim=max(abs(pl.array(lims[1])))
                 # show entire pb: (statim doesn't by default)
                 pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
-                pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])
-
-            pl.xlabel("resized model sky",fontsize="x-small")
-            util.endfig(remove=(not grscreen))
-        else:
-            # need these stats later - TODO make sure we need to do this
-            if not components_only:
-                model_min,model_max, model_rms = util.statim(modelflat+",image",plot=False,incell=model_cell)
-
+                pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])            
+                pl.xlabel("resized model sky",fontsize="x-small")
+                util.endfig(remove=(not grscreen))
+            else:
+                # need these stats later - TODO make sure we need to do this
+                if not components_only:
+                    model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=model_cell)
+    
 
 
 
@@ -400,6 +412,39 @@ def simdata2(
                 pl.ylabel('v[klambda]',fontsize='x-small')
                 pl.axis('equal')
 
+            # show dirty beam from observed uv coverage
+            if grscreen or grfile:
+                util.nextfig()
+                im.open(msfile)  
+                # TODO spectral parms
+                im.defineimage(cellx=qa.tos(model_cell[0]))  
+                #im.makeimage(type='psf',image=project+".quick.psf")
+                if os.path.exists(project+".quick.psf"):
+                    shutil.rmtree(project+".quick.psf")
+                im.approximatepsf(psf=project+".quick.psf")
+                beam=im.fitpsf(psf=project+".quick.psf")
+                im.done()
+                ia.open(project+".quick.psf")            
+                beamcs=ia.coordsys()
+                beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                xextent=128*pixsize*0.5
+                xextent=[xextent,-xextent]
+                yextent=128*pixsize*0.5
+                yextent=[-yextent,yextent]
+                flipped_array=beam_array.transpose()
+                ttrans_array=flipped_array.tolist()
+                ttrans_array.reverse()
+                pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                pl.title(project+".quick.psf",fontsize="x-small")
+                b=qa.convert(beam['bmaj'],'arcsec')['value']
+                pl.xlim([-3*b,3*b])
+                pl.ylim([-3*b,3*b])
+                ax=pl.gca()
+                pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                ia.done()
+                util.endfig(remove=(not grscreen))
+
 
 
             ##################################################################
@@ -407,10 +452,10 @@ def simdata2(
 
             if not components_only:                
                 if len(complist)>1:
-                    msg("predicting from "+newmodel+".image and "+complist,priority="warn")
+                    msg("predicting from "+newmodel+" and "+complist,priority="warn")
                 else:
-                    msg("predicting from "+newmodel+".image",priority="warn")
-                sm.predict(imagename=newmodel+".image",complist=complist)
+                    msg("predicting from "+newmodel,priority="warn")
+                sm.predict(imagename=newmodel,complist=complist)
             else:   # if we're doing only components
                 msg("predicting from "+complist,priority="warn")
                 sm.predict(complist=complist)
@@ -418,41 +463,6 @@ def simdata2(
             sm.done()        
             msg('generation of measurement set ' + msfile + ' complete')
 
-            # dirty beam from observed uv coverage only
-            # but instead lets get it from thje here:
-            if grscreen or grfile:                
-                util.nextfig()
-                im.open(msfile)
-                im.defineimage(cellx=model_cell)  # TODO spectral parms
-                im.makeimage(type='psf',image=project+".quick.psf")
-                im.done()
-                ia.open(project+".quick.psf")            
-                beamcs=ia.coordsys()
-                beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                xextent=imsize[0]*pixsize*0.5
-                xextent=[xextent,-xextent]
-                yextent=imsize[1]*pixsize*0.5
-                yextent=[-yextent,yextent]
-                flipped_array=beam_array.transpose()
-                ttrans_array=flipped_array.tolist()
-                ttrans_array.reverse()
-                pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
-                pl.title(project+"quick.psf",fontsize="x-small")
-                b=qa.convert(beam['major'],'arcsec')['value']
-                pl.xlim([-3*b,3*b])
-                pl.ylim([-3*b,3*b])
-                pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                ia.done()
-
-                util.endfig(remove=(not grscreen))
-
-
-
-
-
-        print "WARNING: task is not complete yet :)"
-        pdb.set_trace()
 
 
         ######################################################################
@@ -485,7 +495,6 @@ def simdata2(
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
 
-            sm.done() # simulator hangs onto previous versions of the MS
             if os.path.exists(noisymsfile):
                 shutil.rmtree(noisymsfile)                
             shutil.copytree(msfile,noisymsfile)
@@ -534,307 +543,236 @@ def simdata2(
             
 
 
-        # calculate psf to suggest a cell size
-
-
 
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
+        # todo suggest a cell size from psf?
 
-        if psfmode.upper() == "NONE" or psfmode == "" :
-            doclean=False
-        else:
-            doclean=True
+        if image:
+            # parse ms parameter and check for existance
+            # TODO if noisy ms was created, switch automagically?  probably best do 
+            # do that in the xml defaults instead so the user can change it if they want
+            # if noise_any:
+            #     mstoimage = noisymsfile
+            # else:
+            #     mstoimage = msfile            
+                        
+            mslist=vis.split(',')
+            mstoimage=[]
+            for ms0 in mslist:
+                ms1=ms0.replace('$project',project)
+                if os.path.exists(ms1):
+                    mstoimage.append(ms1)
+                else:
+                    if verbose:
+                        msg("measurement set "+ms1+" not found -- removing from clean list",priority="warn")
+                    else:
+                        msg("measurement set "+ms1+" not found -- removing from clean list")
+            if len(mstoimage)<=0:
+                msg("no measurement sets found to image",priority="warn")
+                image=False
 
-        if noise_any:
-            mstoimage = noisymsfile
-        else:
-            mstoimage = msfile
+            if not predict:
+                # get nfld, sourcefieldlist, from ms if it was not just created
+                tb.open(mstoimage[0]+"/SOURCE")
+                code=tb.getcol("CODE")
+                sourcefieldlist=pl.where(code=='OBJ')[0]
+                nfld=len(sourcefieldlist)
+                tb.done()
+                msfile=mstoimage[0]
 
-        if fidelity == True and doclean == False:
-            msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",priority="warn")
-            fidelity=False
-
-        if display == True and doclean == False:
-            msg("Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",priority="warn")
-            display=False
-
-        if doclean: 
-            if niter == 0:
-                image=project+'.dirty'
-                msg("inverting to "+image)
+            # make sure cleanmode is appropriate:
+            if nfld==1:
+                if cleanmode=="mosaic":
+                    msg("cleanmode=mosaic but your simulation has one pointing -- changing to csclean",priority="warn")
+                    cleanmode="csclean"
             else:
-                image=project+'.clean'
-                msg("cleaning to "+image)
-        else:
-            image=project+'.clean'
+                if cleanmode!="mosaic":
+                    msg("your simulation has more than one pointing -- changing cleanmode to mosaic",priority="warn")
+                    cleanmode="mosaic"
 
-        if uvtaper == False:
-            outertaper=[]
-            innertaper=[]
-
-        if nchan==1:
-            cleanmode="mfs"
-        else:
-            cleanmode="channel"
-
-        # for clean
-        if nfld==1:
-            imagermode=''
-            ftmachine="ft"        
-        else:
-            imagermode="mosaic"
-            ftmachine="mosaic"   
-
-# if padding is implemented the pad amount in pixels needs to be preserved and 
-# passed to statim, which needs to zoom to the original size, _and_ use the 
-# original size for the rms calculation. 
-#            # is image large enough?
-#            cleanimsize=[qa.mul(out_cell[0],imsize[0]),qa.mul(out_cell[1],imsize[1])]
-#           if type(mosaicsize)!=type([]):
-#               mosaicsize=[mosaicsize,mosaicsize]
-#           else:
-#               if len(mosaicsize)==1:
-#                   mosaicsize=[mosaicsize[0],mosaicsize[0]]
-#           xmosas=qa.convert(mosaicsize[0],"arcsec")['value']
-#           xclnas=qa.convert(cleanimsize[0],"arcsec")['value']
-#           spcas=qa.convert(pointingspacing,"arcsec")['value']
-#           if xclnas<(xmosas+spcas)*2:
-#               imsize[0]=int(round(((xmosas+spcas)*2)/(qa.convert(out_cell[0],"arcsec")['value'])))
-#               xnewas=qa.convert(qa.mul(out_cell[0],imsize[0]),"arcsec")['value']
-#               msg("Your image size of %g arcsec is not very large - I will pad it to %g arcsec to avoid FFT aliasing effects." %(xclnas,xnewas),priority="warn")
-#           ymosas=qa.convert(mosaicsize[1],"arcsec")['value']
-#           yclnas=qa.convert(cleanimsize[1],"arcsec")['value']
-#           if yclnas<(ymosas+spcas)*2:
-#               imsize[1]=int(round(((ymosas+spcas)*2)/(qa.convert(out_cell[1],"arcsec")['value'])))
-
-        
-        # print clean inputs no matter what, so user can use them.
-        # and write a clean.last file
-        cleanlast=open("clean.last","write")
-        cleanlast.write('taskname            = "clean"\n')
-
-        msg("clean inputs:")
-        cleanstr="clean(vis='"+mstoimage+"',imagename='"+image+"'"
-        cleanlast.write('vis                 = "'+mstoimage+'"\n')
-        cleanlast.write('imagename           = "'+image+'"\n')
-        cleanlast.write('outlierfile         = ""\n')
-        if docalibrator:
-            cleanlast.write('field               = "'+sourcefieldlist+'"\n')
-        else:
-            cleanlast.write('field               = ""\n')
-        cleanlast.write('spw                 = ""\n')
-        cleanlast.write('selectdata          = False\n')
-        cleanlast.write('timerange           = ""\n')
-        cleanlast.write('uvrange             = ""\n')
-        cleanlast.write('antenna             = ""\n')
-        cleanlast.write('scan                = ""\n')
-        if nchan>1:
-            cleanstr=cleanstr+",mode='"+cleanmode+"',nchan="+str(nchan)
-            cleanlast.write('mode                = "'+cleanmode+'"\n')
-            cleanlast.write('nchan               = "'+str(nchan)+'"\n')
-        else:
-            cleanlast.write('mode                = "mfs"\n')
-            cleanlast.write('nchan               = -1\n')
-        cleanlast.write('gridmode                = ""\n')
-        cleanlast.write('wprojplanes             = 1\n')
-        cleanlast.write('facets                  = 1\n')
-        cleanlast.write('cfcache                 = "cfcache.dir"\n')
-        cleanlast.write('painc                   = 360.0\n')
-        cleanlast.write('epjtable                = ""\n')
-        cleanlast.write('interpolation           = "nearest"\n')
-        cleanstr=cleanstr+",niter="+str(niter)
-        cleanlast.write('niter                   = '+str(niter)+'\n')
-        cleanlast.write('gain                    = 0.1\n')
-        cleanstr=cleanstr+",threshold='"+str(threshold)+"'"
-        cleanlast.write('threshold               = "'+str(threshold)+'"\n')
-        if doclean and psfmode!="clark":
-            cleanstr=cleanstr+",psfmode='"+psfmode+"'"
-        if doclean:
-            cleanlast.write('psfmode                 = "'+psfmode+'"\n')
-        if imagermode != "":
-            cleanstr=cleanstr+",imagermode='"+imagermode+"'"
-        cleanlast.write('imagermode              = "'+imagermode+'"\n')
-        cleanstr=cleanstr+",ftmachine='"+ftmachine+"'"
-        cleanlast.write('ftmachine               = "'+ftmachine+'"\n')
-        cleanlast.write('mosweight               = False\n')
-        cleanlast.write('scaletype               = "SAULT"\n')
-        cleanlast.write('multiscale              = []\n')
-        cleanlast.write('negcomponent            = -1\n')
-        cleanlast.write('smallscalebias          = 0.6\n')
-        cleanlast.write('interactive             = False\n')
-        cleanlast.write('mask                    = []\n')
-        cleanlast.write('start                   = 0\n')
-        cleanlast.write('width                   = 1\n')
-        cleanlast.write('outframe                = ""\n')
-        cleanlast.write('veltype                 = "radio"\n')
-        cleanstr=cleanstr+",imsize="+str(imsize)+",cell="+str(map(qa.tos,out_cell))+",phasecenter='"+str(imcenter)+"'"
-        cleanlast.write('imsize                  = '+str(imsize)+'\n');
-        cleanlast.write('cell                    = '+str(map(qa.tos,out_cell))+'\n');
-        cleanlast.write('phasecenter             = "'+str(imcenter)+'"\n');
-        cleanlast.write('restfreq                = ""\n');
-        if stokes != "I":
-            cleanstr=cleanstr+",stokes='"+stokes+"'"
-        cleanlast.write('stokes                  = "'+stokes+'"\n');
-        cleanlast.write('weighting               = "'+weighting+'"\n');
-        if weighting != "natural":
-            cleanstr=cleanstr+",weighting='"+weighting+"',robust="+str(robust)+",noise='"+str(noise)+"',npixels="+str(npixels)
-        cleanlast.write('robust                  = '+str(robust)+'\n');
-        cleanlast.write('uvtaper                 = '+str(uvtaper)+'\n');
-        if uvtaper:
-            cleanstr=cleanstr+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)
-        cleanlast.write('outertaper              = "'+str(outertaper)+'"\n');
-        cleanlast.write('innertaper              = "'+str(innertaper)+'"\n');
-        cleanlast.write('modelimage              = ""\n');
-        cleanlast.write("restoringbeam           = ['']\n");
-        cleanlast.write("pbcor                   = False\n");
-        cleanlast.write("minpb                   = 0.1\n");
-        cleanlast.write("calready                = True\n");
-        cleanlast.write('noise                   = "'+str(noise)+'"\n');
-        cleanlast.write('npixels                 = '+str(npixels)+'\n');
-        cleanlast.write('npercycle               = 100\n');
-        cleanlast.write('cyclefactor             = 1.5\n');
-        cleanlast.write('cyclespeedup            = -1\n');
-        cleanlast.write('nterms                  = 1\n');
-        cleanlast.write('reffreq                 = ""\n');
-        cleanlast.write('chaniter                = False\n');
-        #+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,"        
-        #+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
-        cleanstr=cleanstr+")"
-        msg(cleanstr,priority="warn")
-        cleanlast.write("#"+cleanstr+"\n")
-        cleanlast.close()
-
-        if doclean:
-            # clean insists on using an existing model if it's present
-            if os.path.exists(image+".image"): shutil.rmtree(image+".image")
-            if os.path.exists(image+".model"): shutil.rmtree(image+".model")
-            clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
-                  niter=niter, threshold=threshold, selectdata=False,
-                  psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
-                  imsize=imsize, cell=map(qa.tos,out_cell), phasecenter=imcenter,
-                  stokes=stokes, weighting=weighting, robust=robust,
-                  uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,
-                  noise=noise, npixels=npixels)
-        else:
-            msg("(not actually cleaning or inverting, as requested by user)")
-            image=project
-
-
-
-
-        # flat output -- needed even if fidelity is not calculated
-        if doclean:
-            ia.open(image+".image")
-            outimsize=ia.shape()
-            outimcsys=ia.coordsys()
-            ia.done()
-            outspectax=outimcsys.findcoordinate('spectral')['pixel']
-            outnchan=outimsize[outspectax]
-            outstokesax=outimcsys.findcoordinate('stokes')['pixel']
-            outnstokes=outimsize[outstokesax]
-
-            outflat=image+".flat"
-            if outnchan>1:
-                if verbose: msg("creating moment zero output image",origin="analysis")
-                ia.open(image+".image")
-                ia.moments(moments=[-1],outfile=outflat,overwrite=True)
-                ia.done()
+            # make sure cell is defined
+            if type(cell)==type([]):
+                if len(cell)>0:
+                    cell0=cell[0]
+                else:
+                    cell0=""
             else:
-                if verbose: msg("removing degenerate output image axes",origin="analysis")
-                # just remove degenerate axes from image
-                ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
-                # seems no way to just drop the spectral and keep the stokes. 
-                if outnstokes<=1:
-                    os.rename(outflat,outflat+".tmp")
-                    ia.open(outflat+".tmp")
-                    ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
-                    ia.done()
-                    shutil.rmtree(outflat+".tmp")
-            if outnstokes>1:
-                os.rename(outflat,outflat+".tmp")
-                po.open(outflat+".tmp")
-                foo=po.stokesi(outfile=outflat,stokes='I')
-                foo.done()
-                po.done()
-                shutil.rmtree(outflat+".tmp")
-            # be sure to get outflatcoordsys from outflat
-            ia.open(outflat)
-            outflatcoordsys=ia.coordsys()
-            outflatshape=ia.shape()
-            ia.done()            
-    
-            # regrid flat input to flat output shape, for convolution, etc
-            ia.open(modelflat)
-            ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
-                             csys=outflatcoordsys.torecord(),shape=outflatshape)
-            # im.regrid assumes a surface brightness, or more accurately doesnt
-            # pay attention to units at all, so we now have to scale 
-            # by the pixel size to have the right values in jy/pixel, 
-            # which is what the immath assumes below.            
-            factor  = (qa.convert(out_cell[0],"arcsec")['value'])  
-            factor *= (qa.convert(out_cell[1],"arcsec")['value']) 
-            factor /= (qa.convert(model_cell[0],"arcsec")['value']) 
-            factor /= (qa.convert(model_cell[1],"arcsec")['value']) 
+                cell0=cell
+            if len(cell0)<=0:
+                cell=model_cell
+            if type(cell)==type([]):
+                if len(cell)==1:
+                    cell=[cell[0],cell[0]]
+            else:
+                cell=[cell,cell]
 
-            imrr = ia.imagecalc(modelregrid, 
-                                "'%s'*%g" % (modelregrid+'.tmp',factor), 
-                                overwrite = True)
-            shutil.rmtree(modelregrid+".tmp")
-            if verbose:
-                msg("scaling model by pixel area ratio %g" % factor)
 
-            # add clean components and model image; 
-            # it'll be convolved to restored beam in the fidelity calc below
-            # components are in jy/pix so should be added to the scaled iamge
-            if (os.path.exists(complist)):
-                cl.open(complist)
-                imrr.modify(cl.torecord(),subtract=False)
-                cl.done()
+            # and imsize
+            if type(imsize)==type([]):
+                if len(imsize)>0:
+                    imsize0=imsize[0]
+                else:
+                    imsize0=-1
+            else:
+                imsize0=imsize
+            if imsize0<=0:
+                imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
+                          int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
 
-            imrr.done()
-    
+        outflat_current=False
+        convsky_current=False
+        imagename=project
 
-    
-            ia.done()
-            outflatcoordsys.done()
-            del outflatcoordsys
-            del imrr
-    
+        if image:
+            if not docalibrator:
+                sourcefieldlist=""  # sourcefieldlist should be ok, but this is safer
             
-            shutil.rmtree(modelflat)  # no need to keep this
-                    
-            msg("done inverting and cleaning")
+            # clean insists on using an existing model if its present
+            if os.path.exists(imagename+".image"): shutil.rmtree(imagename+".image")
+            if os.path.exists(imagename+".model"): shutil.rmtree(imagename+".model")
 
+            # TODO add imcenter param instead of just using the model_center?
+            util.image(mstoimage,imagename,
+                       cleanmode,cell,imsize,model_refdir,
+                       niter,threshold,weighting,
+                       outertaper,stokes,sourcefieldlist=sourcefieldlist)
+
+            # create imagename.flat and imagename.residual.flat:
+            util.flatimage(imagename,cell,model_cell,complist=complist,verbose=verbose,flatresidual=True)
+            outflat_current=True
+
+            msg("done inverting and cleaning")
+            
             # get beam from output clean image
-            if verbose: msg("getting beam from "+image+".image",origin="analysis")
-            ia.open(image+".image")
+            if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
+            ia.open(imagename+".image")
             beam=ia.restoringbeam()
             ia.done()
+            # model has units of Jy/pix - calculate beam area from clean image
+            # (even if we are not plotting graphics)
+            bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
+            bmarea=bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
+            msg("synthesized beam area in output pixels = %f" % bmarea)
+
+
+            # show model, convolved model, clean image, and residual 
+            # todo consider difference image instead of one of the others
+            if grfile:            
+                file=project+".image.png"
+            else:
+                file=""
+            if grscreen:
+                util.newfig(multi=[2,2,1],filename=file)
+            else:
+                if grfile:
+                    util.newfig(multi=[2,2,1],filename=file,show=False)
+                    
+            if grscreen or grfile:
+                # TODO if components_only create a sky model image here!!!
+
+                # create regridded and convolved sky model image
+                util.convimage(modelflat,imagename+".image.flat")
+                convsky_current=True # don't remake this for analysis in this run
+
+                disprange=[]  # passing empty list causes return of disprange
+                # set scale based on residual image
+                discard = util.statim(imagename+".residual.flat",disprange=disprange,plot=False)
+                # and set its units
+                disprange=[disprange[0]/bmarea,disprange[1]/bmarea]
+
+                # original sky regridded to output pixels but not convolved
+                discard = util.statim(modelflat+".regrid",disprange=disprange)
+                util.nextfig()
+
+                # convolved sky model
+                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
+                util.nextfig()
+
+                # imagecalc is interpreting outflat in Jy/pix 
+                disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
+                # clean image
+                discard = util.statim(imagename+".image.flat",disprange=disprange)
+                util.nextfig()
+
+                # clean residual image
+                discard = util.statim(imagename+".residual.flat",disprange=disprange)
+                util.endfig(remove=(not grscreen))            
+        
+
+
 
         #####################################################################
-        # fidelity  
+        # analysis
 
-        if os.path.exists(modelimage) and fidelity == True: 
-            # from math import sqrt
+        if analyze:
+            # will need skymodel, so modelimage has to be set:
+            if not os.path.exists(modelimage):
+                msg("modelimage "+str(modelimage)+" not found",priority="warn")
+                msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the modelimage parameter",priority="error")
+            tmpname=modelimage.replace(project,'$project')
+            #if tmpname=="$project.skymodel":
+                # TODO clarify the logic for newmodel vs skymodel
+                # i.e. here, if util.is4d(skymodel) then use skymodel
+                # unchanged, otherwise newmodel will have been created 
+                # above, and use that
+                # for now, we're *always* creating newmodel, so use newmodel here
+                # whether tmpname is skymodel or not.
+            modelim=newmodel
+            modelflat=modelim+".flat"
+
+            if not os.path.exists(modelim):
+                msg("sky model image"+str(modelim)+" not found",priority="error")
+
+            # so we should have modelim and modelim.flat created above, 
+            # whether modifymodel is true or not.
+
+            # what about the output image?
+            outim=project+".image"
+            if not os.path.exists(outim):
+                msg("output image"+str(outim)+" not found",priority="warn")
+                msg("you may need to run simdata.image, or if you deconvolved manually, rename your output to "+outim,priority="error")
+
+            # flat output:?  if the user manually cleaned, this may not exist
+            outflat=imagename+".image.flat"
+            if (not outflat_current) or (not os.path.exists(outflat)):
+                # create imagename.flat and imagename.residual.flat
+                if not image:
+                    # get cell from outim
+                    cell=cellsize(outim)
+                # model_cell has to be set even if not modifyimage
+                util.flatimage(imagename,cell,model_cell,complist=complist,verbose=verbose,flatresidual=True)
+                outflat_current=True
+                
+            # regridded and convolved output:?
+            if not convsky_current:
+                util.convimage(modelflat,imagename+".image.flat")
+                convsky_current=True
             
-            # Convolve model with beam.
-            convolved = project + '.convolved.im'
-            ia.open(modelregrid)
-            ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
-                          pa=beam['positionangle'],overwrite=True)
+            # now we should have all the flat, convolved etc even if 
+            # we didn't run "image" this time.  still need beam in that case
+                
+            if not image:
+                # get beam from output clean image
+                if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
+                ia.open(imagename+".image")
+                beam=ia.restoringbeam()
+                ia.done()
+                # model has units of Jy/pix - calculate beam area from clean image
+                # (even if we are not plotting graphics)
+                bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
+                bmarea=bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
+                msg("synthesized beam area in output pixels = %f" % bmarea)
 
-            # imagecalc is interpreting outflat in Jy/pix - 
-            # the diff is v. negative.
-            bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-            bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
-            msg("synthesized beam area in output pixels = %f" % bmarea)
+
             # Make difference image.
-            difference = project + '.diff.im'
+            # imagecalc is interpreting outflat in Jy/pix - 
+            convolved = modelflat+".regrid.conv"
+            difference = imagename + '.diff'
             ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
             # Get rms of difference image.
             ia.open(difference)
-            diffstats = ia.statistics(robust = True)
+            diffstats = ia.statistics(robust=True, verbose=False,list=False)
             maxdiff=diffstats['medabsdevmed']            
             if maxdiff!=maxdiff: maxdiff=0.
             if type(maxdiff)!=type(0.):
@@ -843,149 +781,183 @@ def simdata2(
                 else:
                     maxdiff=0.
             # Make fidelity image.
-            absdiff = project + '.absdiff.im'
+            absdiff = imagename + '.absdiff'
             ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
                                                           maxdiff/pl.sqrt(2.0)), overwrite = True)
-            fidelityim = project + '.fidelity.im'
+            fidelityim = imagename + '.fidelity'
             ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite = True)
             ia.done()
 
             msg("fidelity image calculated",origin="analysis")
 
-        else:
-            bmarea=1.
-
-            # clean up moment zero maps if we don't need them anymore
-#            if nchan==1:
-#                sh.rmtree(outflat) 
 
 
+            # now, what does the user want to actually display?
 
+            if len(stnx)<=0:
+                showarray=False
+            if not (predict or image):
+                msfile=project+".ms"
 
-
-        #####################################################################
-        # display and statistics:
-
-        # plot whichever image we have - preference is for noisy and cleaned
-        if display==True:
-            pl.ion()
-            pl.clf()
-            if fidelity == True:
-                pl.subplot(232)
+            # if the order in the task input changes, change it here too
+            figs=[showarray,showuv,showpsf,showmodel,showconvolved,showclean,showresidual,showdifference,showfidelity]
+            nfig=figs.count(True)
+            if nfig>6:
+                msg("only displaying first 6 selected panels in graphic output",priority="warn")
+            if nfig<=0:
+                return True
+            if nfig<4:
+                multi=[1,nfig,1]
             else:
-                pl.subplot(222)
-        if doclean:
-            max_cleanim=[] # mutable so can be returned
-            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim)
-            # max_cleanim returned in outflat units i.e. Jy/bm > jy/pix
-            max_cleanim[0]/=bmarea
-        # plot model image if exists
-        if os.path.exists(modelimage) and display==True:
-            if fidelity == True:
-                pl.subplot(231)
-            else:
-                pl.subplot(221)
-            # modelregrid might not exist if there's no display or fidelity
-            if os.path.exists(modelregrid):
-                model_min,model_max, model_rms = util.statim(modelregrid,plot=display)
-                xlim=max(pl.xlim())
-                ylim=max(pl.ylim())
-            if display==True:
-                tt=pl.array(range(25))*pl.pi/12
-                pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
-                # RI todo change this to use tb.open(ms/POINTINGS)/direction
-                # and them make it a helper function
-                for i in range(offsets.shape[1]):
-                    pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,'w')
-                pl.xlim([xlim,-xlim])
-                pl.ylim([-ylim,ylim])
-
-            
-            # fidelity image would only exist if there's a model image
-            if modelimage != '' and fidelity == True:
-                if display: pl.subplot(233)                
-                util.statim(project+".diff.im",plot=display,disprange=max_cleanim)
-                if display: pl.subplot(234)                
-                fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display)
-
-        if display:
-            tb.open(mstoimage)
-            # RI todo use rob's FFT of the PB instead
-            rawdata=tb.getcol("UVW")
-            tb.done()
-            if fidelity == True:
-                pl.subplot(235)
-            else:
-                pl.subplot(223)
-            pl.box()
-            maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-            klam_m=300/qa.convert(qa.quantity(startfreq),'GHz')['value']
-            pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
-            pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
-            ax=pl.gca()
-            ax.yaxis.LABELPAD=-4
-            l=ax.get_xticklabels()
-            pl.setp(l,fontsize="x-small")
-            l=ax.get_yticklabels()
-            pl.setp(l,fontsize="x-small")
-            pl.xlabel('u[klambda]',fontsize='x-small')
-            pl.ylabel('v[klambda]',fontsize='x-small')
-            pl.axis('equal')
-
-            if modelimage != '' and doclean:   
-                if fidelity == True:
-                    pl.subplot(236)
+                if nfig==4:
+                    multi=[2,2,1]
                 else:
-                    pl.subplot(224)
-                ia.open(image+".psf")
-                beamcs=ia.coordsys()
-                beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                if type(cell)==type([]):
-                    pixsize=(qa.convert(qa.quantity(cell[0]),'arcsec')['value'])
-                else:
-                    pixsize=(qa.convert(qa.quantity(cell),'arcsec')['value'])
-                xextent=imsize[0]*pixsize*0.5
-                xextent=[xextent,-xextent]
-                yextent=imsize[1]*pixsize*0.5
-                yextent=[-yextent,yextent]
-                flipped_array=beam_array.transpose()
-                ttrans_array=flipped_array.tolist()
-                ttrans_array.reverse()
-                pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
-                pl.title(image+".psf",fontsize="x-small")
-                b=qa.convert(beam['major'],'arcsec')['value']
-                pl.xlim([-3*b,3*b])
-                pl.ylim([-3*b,3*b])
-                ax=pl.gca()
-                l=ax.get_xticklabels()
-                pl.setp(l,fontsize="x-small")
-                l=ax.get_yticklabels()
-                pl.setp(l,fontsize="x-small")
-                #from matplotlib.font_manager import fontManager, FontProperties
-                #font= FontProperties(size='x-small');
-                #pl.legend(("bmaj=%7.1e" % beam['major']['value'],"bmin=%7.1e" % beam['minor']['value']),prop=font)                
-                pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                ia.done()
+                    multi=[2,3,1]
+                    
+            if grfile:            
+                file=project+".analysis.png"
+            else:
+                file=""
+            if grscreen:
+                util.newfig(multi=multi,filename=file)
+            else:
+                if grfile:
+                    util.newfig(multi=multi,filename=file,show=False)
 
+            if grscreen or grfile:
+                # if order in task parameters changes, change here too
+                if showarray:
+                    util.plotants(stnx, stny, stnz, stnd, padnames)
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                if showuv:
+                    tb.open(msfile)  
+                    rawdata=tb.getcol("UVW")
+                    tb.done()
+                    pl.box()
+                    maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                    klam_m=300/qa.convert(model_center,'GHz')['value']
+                    pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
+                    pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
+                    ax=pl.gca()
+                    ax.yaxis.LABELPAD=-4
+                    pl.xlabel('u[klambda]',fontsize='x-small')
+                    pl.ylabel('v[klambda]',fontsize='x-small')
+                    pl.axis('equal')
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                if showpsf:
+                    if image:
+                        psfim=imagename+".psf"
+                    else:
+                        psfim=project+".quick.psf"
+                        if not quickpsf_current:
+                            im.open(msfile)  
+                            # TODO spectral parms
+                            im.defineimage(cellx=qa.tos(model_cell[0]))  
+                            if os.path.exists(psfim):
+                                shutil.rmtree(psfim)
+                            im.approximatepsf(psf=psfim)
+                            # beam is already set above (even in "analyze" only)
+                            #beam=im.fitpsf(psf=psfim)  
+                            im.done()
+                    ia.open(psfim)            
+                    beamcs=ia.coordsys()
+                    beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                    xextent=128*pixsize*0.5
+                    xextent=[xextent,-xextent]
+                    yextent=128*pixsize*0.5
+                    yextent=[-yextent,yextent]
+                    flipped_array=beam_array.transpose()
+                    ttrans_array=flipped_array.tolist()
+                    ttrans_array.reverse()
+                    pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                    pl.title(psfim,fontsize="x-small")
+                    if image:
+                        b=qa.convert(beam['major'],'arcsec')['value']
+                        pl.xlim([-3*b,3*b])
+                        pl.ylim([-3*b,3*b])
+                        ax=pl.gca()
+                        pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                    else:
+                        b=qa.convert(beam['bmaj'],'arcsec')['value']
+                        pl.xlim([-3*b,3*b])
+                        pl.ylim([-3*b,3*b])
+                        ax=pl.gca()
+                        pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                    ia.done()
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                disprange=[]  # first plot will define range
+
+                # TODO set range with diff image if we're showing it
+                #if showdifference and (showmodel or showconvolved or showclean or showresidual):
+
+                if showmodel:
+                    discard = util.statim(modelflat,incell=model_cell,disprange=disprange)
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                if showconvolved:
+                    discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                # imagecalc is interpreting outflat in Jy/pix 
+                if len(disprange)>0:
+                    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
                 
-            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.08,top=0.96,hspace=0.1,wspace=0.2)
-        
-        # if not displaying still print stats:
-        if doclean:
-            bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-            bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
-            msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
-                str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
-            msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
-                str(sim_max*bmarea)+" Jy/bm",origin="analysis")
-        
-        if display == True or fidelity == True:
-            msg('Model rms: '+str(model_rms)+" Jy/pix",origin="analysis")
-            msg('Model max: '+str(model_max)+" Jy/pix",origin="analysis")
-            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
+                if showclean:
+                    discard = util.statim(imagename+".image.flat",disprange=disprange)
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                if showresidual:
+                    # it gets its own scaling.
+                    discard = util.statim(imagename+".residual.flat")
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                if showdifference:
+                    # it gets its own scaling.
+                    discard = util.statim(imagename+".diff")
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+                if showfidelity:
+                    # it gets its own scaling.
+                    discard = util.statim(imagename+".fidelity")
+                    util.nextfig()
+                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                        util.endfig(remove=(not grscreen))            
+
+            else:
+                sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
+                # if not displaying still print stats:
+                msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
+                    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
+                msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
+                    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
+                msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
 
 
 
+
+
+        # TODO cleanup - delete newmodel, newmodel.flat etc
+        # shutil.rmtree(modelflat)  
 
 
     except TypeError, e:

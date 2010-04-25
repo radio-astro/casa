@@ -1000,6 +1000,9 @@ void MakeMask::zPlaneChanged(){
       qdds.toEnd();
       qdds--;
       QtDisplayData* qdd = qdds.getRight();
+      //cout << "img=" << qdd->imageInterface() << endl;
+      if (qdd->imageInterface()==0)
+         return;
       zIndex = qdd->dd()->activeZIndex();
    }
    if (cb == 0) {

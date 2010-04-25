@@ -19,8 +19,11 @@ class plotms_test(unittest.TestCase):
     plotfile_minsize = 120000
 
     def _cleanUp(self):
-        os.system('rm -rf ' + self.ms)
-        os.system('rm -rf ' + self.plotfile_jpg)
+        if os.path.exists(self.ms):
+            shutil.rmtree(self.ms)
+        if os.path.exists(self.plotfile_jpg):
+            os.remove(self.plotfile_jpg)
+
 
 
     def setUp(self):

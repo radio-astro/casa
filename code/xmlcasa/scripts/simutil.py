@@ -91,7 +91,8 @@ class simutil:
         if self.pmulti!=0:
             self.pmulti[2] += 1
             multi=self.pmulti
-            pl.subplot(multi[0],multi[1],multi[2])
+            if multi[2] <= multi[0]*multi[1]:
+                pl.subplot(multi[0],multi[1],multi[2])
 
 
     def endfig(self,remove=False): # set margins to smaller, save to file if required        
@@ -187,21 +188,23 @@ class simutil:
     ###########################################################
     # plot an image (optionally), and calculate its statistics
 
+    # TODO make ia.histogram quieter to the logger
+
     def statim(self,image,plot=True,incell=None,disprange=None):
+        pix=self.cellsize(image)
+        pixarea=abs(qa.convert(pix[0],'arcsec')['value']*
+                    qa.convert(pix[1],'arcsec')['value'])
         ia.open(image)       
-        imunit=ia.summary()['header']['unit']            
-        if imunit == 'Jy/beam':            
-            if len(ia.restoringbeam())>0:
-                bm=ia.summary()['header']['restoringbeam']['restoringbeam']
-                toJyarcsec=1./(qa.convert(bm['major'],'arcsec')['value']*
-                               qa.convert(bm['minor'],'arcsec')['value']*pl.pi/4)
+        imunit=ia.brightnessunit()
+        if imunit == 'Jy/beam':
+            bm=ia.restoringbeam()
+            if len(bm)>0:
+                toJyarcsec=1./pixarea
             else:
                 toJyarcsec=1.
-            pix=ia.summary()['header']['incr']
-            toJypix=toJyarcsec*abs(pix[0]*pix[1])*206265.0**2
+            toJypix=toJyarcsec*pixarea
         elif imunit == 'Jy/pixel':
-            pix=ia.summary()['header']['incr']
-            toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
+            toJyarcsec=1./pixarea
             toJypix=1.
         else:
             self.msg("%s: unknown units" % image,origin="statim")
@@ -226,29 +229,17 @@ class simutil:
         ttrans_array=tdata_array.tolist()
         ttrans_array.reverse()
         if (plot):
-            csys=ia.coordsys()            
-            xpix=qa.quantity(csys.increment(type="direction")["numeric"][0],csys.units(type="direction")[0])
-            ypix=qa.quantity(csys.increment(type="direction")["numeric"][1],csys.units(type="direction")[1])
-            xpix=qa.convert(xpix,'arcsec')['value']
-            ypix=qa.convert(ypix,'arcsec')['value']
-            xform=csys.lineartransform(type="direction")
-            offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
-            if offdiag > 1e-4:
-                self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",origin="statim",priority="error")
-            factor=pl.sqrt(abs(pl.det(xform)))
-            xpix=abs(xpix*factor)
-            ypix=abs(ypix*factor)
-            #if abs(xpix-ypix)/(xpix+ypix) < 1e-4:
-            #    self.msg("WARN: image %s doesn't have square pixels" % image,origin="statim")
-            pixsize=[xpix,ypix]
             if incell != None:
                 if type(incell)==type(""):
-                    incell=qa.quantity(incell)
-                if type(incell)==type([]): incell=qa.sqrt(qa.mul(incell[0],incell[1]))                
-                pixsize=qa.convert(incell,'arcsec')['value']+pl.zeros(2)
-                xpix=pixsize[0]
-                ypix=pixsize[1]
-            if self.verbose: self.msg("plotting image with pixel size %f x %f arcsec" % (xpix,ypix),origin="statim")
+                    incell=[incell,incell]
+                if type(incell)==type([]):
+                    if len(incell)<2:
+                        incell=[incell[0],incell[0]]
+            else:
+                incell=pix
+            incell=[qa.tos(incell[0]),qa.tos(incell[1])]
+            pixsize=[qa.convert(pix[0],'arcsec')['value'],qa.convert(pix[1],'arcsec')['value']]
+            if self.verbose: self.msg("plotting image with pixel size %fx%f arcsec" % (pixsize[0],pixsize[1]),origin="statim")
             xextent=imsize[0]*abs(pixsize[0])*0.5
             yextent=imsize[1]*abs(pixsize[1])*0.5
             if self.verbose: self.msg("plotting image with field size %f x %f arcsec" % (xextent,yextent),origin="statim")
@@ -257,6 +248,11 @@ class simutil:
         # remove top .5% of pixels:
         nbin=200
         imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
+        ii=0
+        lowcounts=imhist['counts'][ii]
+        while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
+            ii=ii+1
+        lowvalue=imhist['values'][ii]
         ii=nbin-1
         highcounts=imhist['counts'][ii]
         while imhist['counts'][ii]>0.995*highcounts and ii>0: 
@@ -264,25 +260,26 @@ class simutil:
         highvalue=imhist['values'][ii]
         if disprange != None:
             if type(disprange)==type([]):
-                n=len(disprange)
-                if n>0:
-                    highvalue=disprange[n-1]
-                else:
-                    disprange.append(highvalue)  # return highvalue
+                if len(disprange)>0:
+                    highvalue=disprange[-1]
+                    if len(disprange)>1:
+                        lowvalue=disprange[0]
+                        if len(disprange)>2:
+                            throw("internal error disprange="+str(disprange)+" has too many elements")
+                else:  # if passed an empty list [], return low.high
+                    disprange.append(lowvalue)
+                    disprange.append(highvalue)
             else:
-                highvalue=disprange
+                highvalue=disprange  # assume if scalar passed its the max
             
-        if (plot):
-            pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue)
+        if plot:
+            pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue,vmin=lowvalue)
             ax=pl.gca()
             l=ax.get_xticklabels()
             pl.setp(l,fontsize="x-small")
             l=ax.get_yticklabels()
             pl.setp(l,fontsize="x-small")
             pl.title(image,fontsize="x-small")
-            # from matplotlib.font_manager import fontManager, FontProperties
-            # font= FontProperties(size='x-small');
-            # pl.legend(("min=%7.1e" % im_min,"max=%7.1e" % im_max,"RMS=%7.1e" % im_rms),pad=0.15,prop=font)
             pl.text(0.05,0.95,"min=%7.1e\nmax=%7.1e\nRMS=%7.1e" % (im_min,im_max,im_rms),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
         ia.done()
         return im_min,im_max,im_rms
@@ -2057,8 +2054,21 @@ class simutil:
 
 
 
-
-
+    # helper function to get the pixel size from an image
+    def cellsize(self,image):
+        ia.open(image)
+        mycs=ia.coordsys()
+        ia.done()
+        increments=mycs.increment(type="direction")['numeric']
+        cellx=qa.quantity(abs(increments[0]),mycs.units(type="direction")[0])
+        celly=qa.quantity(abs(increments[1]),mycs.units(type="direction")[1])
+        xform=mycs.lineartransform(type="direction")
+        offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
+        if offdiag > 1e-4:
+            self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
+        cellx=qa.mul(cellx,abs(xform[0,0]))
+        celly=qa.mul(celly,abs(xform[1,1]))
+        return [qa.tos(cellx),qa.tos(celly)]
 
 
 
@@ -2453,3 +2463,325 @@ class simutil:
         return model_refdir,model_cell,model_size,model_nchan,model_center,model_step,model_stokes
 
 
+
+
+
+
+
+
+
+
+
+
+
+    ##################################################################
+    # image/clean subtask
+
+    def image(self,mstoimage,image,
+              cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
+              outertaper,stokes,sourcefieldlist=""):
+        from clean import clean
+
+        # determine channelization from (first) ms:
+        if type(mstoimage)==type([]):
+            ms0=mstoimage[0]
+        else:
+            ms0=mstoimage
+        
+        tb.open(ms0+"/SPECTRAL_WINDOW")
+        if tb.nrows() > 1:
+            self.msg("determining output cube parameters from FIRST of several SPW in MS "+ms0)
+        freq=tb.getvarcol("CHAN_FREQ")['r1'][0]
+        nchan=len(freq)
+        tb.done()
+
+        if nchan==1:
+            chanmode="mfs"
+        else:
+            chanmode="channel"
+        
+        psfmode="clark"
+        ftmachine="ft"
+
+        if cleanmode=="csclean":
+            imagermode='csclean'
+        if cleanmode=="clark":
+            imagermode=""
+        if cleanmode=="mosaic":
+            imagermode="mosaic"
+            ftmachine="mosaic" 
+
+        
+        # print clean inputs no matter what, so user can use them.
+        # and write a clean.last file
+        cleanlast=open("clean.last","write")
+        cleanlast.write('taskname            = "clean"\n')
+
+        self.msg("clean inputs:")
+        cleanstr="clean(vis='"+', '.join(mstoimage)+"',imagename='"+image+"'"
+        cleanlast.write('vis                 = "'+', '.join(mstoimage)+'"\n')
+        cleanlast.write('imagename           = "'+image+'"\n')
+        cleanlast.write('outlierfile         = ""\n')
+        cleanlast.write('field               = "'+sourcefieldlist+'"\n')
+        cleanlast.write('spw                 = ""\n')
+        cleanlast.write('selectdata          = False\n')
+        cleanlast.write('timerange           = ""\n')
+        cleanlast.write('uvrange             = ""\n')
+        cleanlast.write('antenna             = ""\n')
+        cleanlast.write('scan                = ""\n')
+        if nchan>1:
+            cleanstr=cleanstr+",mode='"+chanmode+"',nchan="+str(nchan)
+            cleanlast.write('mode                = "'+chanmode+'"\n')
+            cleanlast.write('nchan               = "'+str(nchan)+'"\n')
+        else:
+            cleanlast.write('mode                = "mfs"\n')
+            cleanlast.write('nchan               = -1\n')
+        cleanlast.write('gridmode                = ""\n')
+        cleanlast.write('wprojplanes             = 1\n')
+        cleanlast.write('facets                  = 1\n')
+        cleanlast.write('cfcache                 = "cfcache.dir"\n')
+        cleanlast.write('painc                   = 360.0\n')
+        cleanlast.write('epjtable                = ""\n')
+        cleanlast.write('interpolation           = "nearest"\n')
+        cleanstr=cleanstr+",niter="+str(niter)
+        cleanlast.write('niter                   = '+str(niter)+'\n')
+        cleanlast.write('gain                    = 0.1\n')
+        cleanstr=cleanstr+",threshold='"+str(threshold)+"'"
+        cleanlast.write('threshold               = "'+str(threshold)+'"\n')
+        cleanstr=cleanstr+",psfmode='"+psfmode+"'"
+        cleanlast.write('psfmode                 = "'+psfmode+'"\n')
+        if imagermode != "":
+            cleanstr=cleanstr+",imagermode='"+imagermode+"'"
+        cleanlast.write('imagermode              = "'+imagermode+'"\n')
+        cleanstr=cleanstr+",ftmachine='"+ftmachine+"'"
+        cleanlast.write('ftmachine               = "'+ftmachine+'"\n')
+        cleanlast.write('mosweight               = False\n')
+        cleanlast.write('scaletype               = "SAULT"\n')
+        cleanlast.write('multiscale              = []\n')
+        cleanlast.write('negcomponent            = -1\n')
+        cleanlast.write('smallscalebias          = 0.6\n')
+        cleanlast.write('interactive             = False\n')
+        cleanlast.write('mask                    = []\n')
+        cleanlast.write('start                   = 0\n')
+        cleanlast.write('width                   = 1\n')
+        cleanlast.write('outframe                = ""\n')
+        cleanlast.write('veltype                 = "radio"\n')
+        cleanstr=cleanstr+",imsize="+str(imsize)+",cell="+str(map(qa.tos,cell))+",phasecenter='"+str(imcenter)+"'"
+        cleanlast.write('imsize                  = '+str(imsize)+'\n');
+        cleanlast.write('cell                    = '+str(map(qa.tos,cell))+'\n');
+        cleanlast.write('phasecenter             = "'+str(imcenter)+'"\n');
+        cleanlast.write('restfreq                = ""\n');
+        if stokes != "I":
+            cleanstr=cleanstr+",stokes='"+stokes+"'"
+        cleanlast.write('stokes                  = "'+stokes+'"\n');
+        cleanlast.write('weighting               = "'+weighting+'"\n');
+        cleanstr=cleanstr+",weighting='"+weighting+"'"
+        if weighting == "briggs":
+            cleanstr=cleanstr+",robust=0.5"
+            cleanlast.write('robust                  = 0.5\n');
+            robust=0.5
+        else:
+            cleanlast.write('robust                  = 0.0\n');
+            robust=0.
+            
+        if outertaper != []:
+            uvtaper=True
+            cleanlast.write('uvtaper                 = True\n');
+            cleanlast.write('outertaper              = "'+str(outertaper)+'"\n');
+            cleanstr=cleanstr+",uvtaper=True,outertaper="+str(outertaper)+",innertaper=[]"
+        else:
+            uvtaper=False            
+            cleanlast.write('uvtaper                 = False\n');
+            cleanlast.write('outertaper              = []\n');
+            cleanstr=cleanstr+",uvtaper=False"
+        cleanlast.write('innertaper              = []\n');
+        cleanlast.write('modelimage              = ""\n');
+        cleanlast.write("restoringbeam           = ['']\n");
+        cleanlast.write("pbcor                   = False\n");
+        cleanlast.write("minpb                   = 0.1\n");
+        cleanlast.write("calready                = True\n");
+        cleanlast.write('noise                   = ""\n');
+        cleanlast.write('npixels                 = 0\n');
+        cleanlast.write('npercycle               = 100\n');
+        cleanlast.write('cyclefactor             = 1.5\n');
+        cleanlast.write('cyclespeedup            = -1\n');
+        cleanlast.write('nterms                  = 1\n');
+        cleanlast.write('reffreq                 = ""\n');
+        cleanlast.write('chaniter                = False\n');
+        cleanstr=cleanstr+")"
+        self.msg(cleanstr,priority="warn")
+        cleanlast.write("#"+cleanstr+"\n")
+        cleanlast.close()
+        
+        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, nchan=nchan,
+                  niter=niter, threshold=threshold, selectdata=False,
+                  psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
+                  imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
+                  stokes=stokes, weighting=weighting, robust=robust,
+                  uvtaper=uvtaper,outertaper=outertaper)
+
+
+
+
+
+
+    def flatimage(self,image,cell,model_cell,complist="",verbose=False,flatresidual=True):
+
+        # flat output -- needed even if fidelity is not calculated
+        ia.open(image+".image")
+        outimsize=ia.shape()
+        outimcsys=ia.coordsys()
+        ia.done()
+        outspectax=outimcsys.findcoordinate('spectral')['pixel']
+        outnchan=outimsize[outspectax]
+        outstokesax=outimcsys.findcoordinate('stokes')['pixel']
+        outnstokes=outimsize[outstokesax]
+        
+        outflat=image+".image.flat"
+        if outnchan>1:
+            if verbose: self.msg("creating moment zero output image",origin="analysis")
+            ia.open(image+".image")
+            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+            ia.done()
+        else:
+            if verbose: self.msg("removing degenerate output image axes",origin="analysis")
+            # just remove degenerate axes from image
+            ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
+            # seems no way to just drop the spectral and keep the stokes. 
+            if outnstokes<=1:
+                os.rename(outflat,outflat+".tmp")
+                ia.open(outflat+".tmp")
+                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+                ia.done()
+                shutil.rmtree(outflat+".tmp")
+        if outnstokes>1:
+            os.rename(outflat,outflat+".tmp")
+            po.open(outflat+".tmp")
+            foo=po.stokesi(outfile=outflat,stokes='I')
+            foo.done()
+            po.done()
+            shutil.rmtree(outflat+".tmp")
+
+        outimcsys.done()
+        del outimcsys
+
+        if not flatresidual:
+            return True
+
+        # flat clean residual image
+        ia.open(image+".residual")
+        outimsize=ia.shape()
+        outimcsys=ia.coordsys()
+        ia.done()
+        outspectax=outimcsys.findcoordinate('spectral')['pixel']
+        outnchan=outimsize[outspectax]
+        outstokesax=outimcsys.findcoordinate('stokes')['pixel']
+        outnstokes=outimsize[outstokesax]
+        
+        outflat=image+".residual.flat"
+        if outnchan>1:
+            if verbose: self.msg("creating moment zero output image",origin="analysis")
+            ia.open(image+".image")
+            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+            ia.done()
+        else:
+            if verbose: self.msg("removing degenerate output image axes",origin="analysis")
+            # just remove degenerate axes from image
+            ia.newimagefromimage(infile=image+".residual",outfile=outflat,dropdeg=True,overwrite=True)
+            # seems no way to just drop the spectral and keep the stokes. 
+            if outnstokes<=1:
+                os.rename(outflat,outflat+".tmp")
+                ia.open(outflat+".tmp")
+                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+                ia.done()
+                shutil.rmtree(outflat+".tmp")
+        if outnstokes>1:
+            os.rename(outflat,outflat+".tmp")
+            po.open(outflat+".tmp")
+            foo=po.stokesi(outfile=outflat,stokes='I')
+            foo.done()
+            po.done()
+            shutil.rmtree(outflat+".tmp")
+
+
+
+
+    def convimage(self,modelflat,outflat,complist=""):
+        # regrid flat input to flat output shape and convolve
+        # todo noconvolve option?
+        modelregrid = modelflat+".regrid"
+
+        # get outflatcoordsys from outflat
+        ia.open(outflat)
+        outflatcs=ia.coordsys()
+        outflatshape=ia.shape()
+        # and beam TODO is beam the same in flat as a cube?
+        beam=ia.restoringbeam()
+        ia.done()            
+
+        ia.open(modelflat)
+        modelflatcs=ia.coordsys()
+        modelflatshape=ia.shape()
+        ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
+                  csys=outflatcs.torecord(),shape=outflatshape)
+        # im.regrid assumes a surface brightness, or more accurately doesnt
+        # pay attention to units at all, so we now have to scale 
+        # by the pixel size to have the right values in jy/pixel, 
+        # which is what the immath assumes below.
+
+        # get pixel size from model image coordsys
+        increments=outflatcs.increment(type="direction")['numeric']
+        incellx=qa.quantity(abs(increments[0]),outflatcs.units(type="direction")[0])
+        incelly=qa.quantity(abs(increments[1]),outflatcs.units(type="direction")[1])
+        xform=outflatcs.lineartransform(type="direction")
+        offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
+        if offdiag > 1e-4:
+            self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
+        incellx=qa.mul(incellx,abs(xform[0,0]))
+        incelly=qa.mul(incelly,abs(xform[1,1]))
+        model_cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
+
+        # and from outflat (the clean image)
+        increments=outflatcs.increment(type="direction")['numeric']
+        incellx=qa.quantity(abs(increments[0]),outflatcs.units(type="direction")[0])
+        incelly=qa.quantity(abs(increments[1]),outflatcs.units(type="direction")[1])
+        xform=outflatcs.lineartransform(type="direction")
+        offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
+        if offdiag > 1e-4:
+            self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
+        incellx=qa.mul(incellx,abs(xform[0,0]))
+        incelly=qa.mul(incelly,abs(xform[1,1]))
+        cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
+
+        # image scaling
+        factor  = (qa.convert(cell[0],"arcsec")['value'])  
+        factor *= (qa.convert(cell[1],"arcsec")['value']) 
+        factor /= (qa.convert(model_cell[0],"arcsec")['value']) 
+        factor /= (qa.convert(model_cell[1],"arcsec")['value']) 
+        
+        imrr = ia.imagecalc(modelregrid, 
+                            "'%s'*%g" % (modelregrid+'.tmp',factor), 
+                            overwrite = True)
+        shutil.rmtree(modelregrid+".tmp")
+        if self.verbose:
+            self.msg("scaling model by pixel area ratio %g" % factor)
+
+        # add clean components and model image; 
+        # it'll be convolved to restored beam in the fidelity calc below
+        # components are in jy/pix so should be added to the scaled iamge
+        if (os.path.exists(complist)):
+            cl.open(complist)
+            imrr.modify(cl.torecord(),subtract=False)
+            cl.done()
+            
+        imrr.done()    
+        ia.done()
+        del imrr
+
+        # Convolve model with beam.
+        convolved = modelregrid + '.conv'
+        ia.open(modelregrid)
+        ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
+                      pa=beam['positionangle'],overwrite=True)
+
+        ia.done()

@@ -1,5 +1,6 @@
 #ifndef _DDBUS_QO_H_
 #define _DDBUS_QO_H_
+#include <string>
 #include <QtCore/QObject>
 #include <QtGui/QMainWindow>
 #include <QtGui/QLineEdit>
@@ -14,7 +15,7 @@ namespace casa {
     class EditlineGui : public QMainWindow {
 	Q_OBJECT
 	public:
-	    EditlineGui( QWidget *parent = 0 );
+	    EditlineGui( const std::string &dbus_name="", QWidget *parent = 0 );
 	    ~EditlineGui( );
 
 	    void set( const QString &txt ) { le->setText(txt); }
@@ -30,7 +31,7 @@ namespace casa {
 	    Q_OBJECT
 	    Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.editlinegui")
 	public:
-	    const QString &getName( ) const { static QString name("editlinegui"); return name; }
+	    QString dbusName( ) const { return "editlinegui"; }
 	    bool connectToDBus( const QString &dbus_name="" )
 			{ return QtDBusApp::connectToDBus( parent(), dbus_name ); }
 
@@ -45,15 +46,16 @@ namespace casa {
 	    EditlineGui *editline_;
     };
 
-    Inline EditlineGui::~EditlineGui( ) { delete adaptor; }
+    inline EditlineGui::~EditlineGui( ) { delete adaptor; }
 
-    inline EditlineGui::EditlineGui( QWidget *parent ) : QMainWindow(parent), le(new QLineEdit("*some*text*",this)),
-							 adaptor(new EditlineGuiAdaptor(this)) {
+    inline EditlineGui::EditlineGui( const std::string &dbus_name, QWidget *parent ) : QMainWindow(parent),
+							le(new QLineEdit("*some*text*",this)),
+							adaptor(new EditlineGuiAdaptor(this)) {
 	le->setMinimumWidth(200);
 	setCentralWidget(le);
 	setFixedHeight(30);
 
-	adaptor->connectToDBus("editlinegui");
+	adaptor->connectToDBus( dbus_name.c_str( ) );
     }
 
 }

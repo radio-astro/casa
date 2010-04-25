@@ -49,7 +49,7 @@ class PlotMSDBusApp: public QtDBusXmlApp, public PlotMSParametersWatcher,
 public:
 
     static const QString &name( );
-    const QString &getName( ) const { return name( ); }
+    QString dbusName( ) const { return QString(name( )); }
 
     // Static //
     

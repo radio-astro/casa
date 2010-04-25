@@ -24,6 +24,8 @@ import os
 import sys
 import traceback
 import unittest
+import string
+import shutil
 sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
 import testwrapper
 from testwrapper import *
@@ -35,10 +37,11 @@ OLD_TESTS = [
             ]
 
 FULL_LIST = ['test_asdm-import',
+             'test_asdmv1-import',
              'test_boxit',
              'test_clean',
              'test_clearstat',
-#             'test_exportasdm',
+             'test_exportasdm',
              'test_hanningsmooth',
              'test_imcontsub',
              'test_imfit',
@@ -60,7 +63,7 @@ FULL_LIST = ['test_asdm-import',
 SHORT_LIST = ['test_asdm-import',
              'test_boxit',
              'test_clean',
-#             'test_exportasdm',
+             'test_exportasdm',
              'test_imfit',
              'test_imhead',
              'test_imregrid',
@@ -80,6 +83,7 @@ def usage():
     print 'no option: will run all tests defined in FULL_LIST list'
     print 'test_name: will run only this test (more tests are separated by spaces)'
     print '--short:   will run only a short list of tests defined in SHORT_LIST'
+    print '--file:    followed by a text file with each test on a line'
     print '--help:    prints this message\n'
     print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
     print '**************************************************************************'
@@ -119,6 +123,21 @@ def gettests(testfile):
         tests = temp.split(',')
         return tests
 
+def readfile(FILE):
+    if(not os.path.exists(FILE)):
+        print 'List of tests does not exist'
+        return []
+    
+    List = []
+    infile = open(FILE, "r")
+    for newline in infile:
+        line=newline.rstrip('\n')
+        List.append(line)
+    
+    infile.close()
+    return List
+
+
 # Define which tests to run    
 whichtests = 0
         
@@ -132,6 +151,18 @@ def main(testnames=[]):
           or listtests == ['SHORT_LIST']):
         whichtests = 2
         listtests = SHORT_LIST
+    elif (type(testnames) != type([])):
+        if (os.path.isfile(testnames)):
+            # How to prevent it from opening a real test???
+            whichtests = 1
+            listtests = readfile(testnames)
+            if listtests == []:
+                print 'List of tests does not exist'
+                sys.exit()
+        else:
+            print 'List of tests does not exist'
+            sys.exit()
+            
     else:
         whichtests = 1
            
@@ -250,10 +281,14 @@ def main(testnames=[]):
             except:
                 traceback.print_exc()
                 
+    global regstate # Global variable used by regression framework to determine pass/failure status
+    regstate = False
+
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
     try:
-        result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
+        
+        regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile],
                               suite=list)
     except:
         print "Exception: failed to run the test"
@@ -266,18 +301,24 @@ def main(testnames=[]):
 if __name__ == "__main__":
     # Get command line arguments
     
-    # Get the tests to run
-    i = sys.argv.index("-c")
+    if "-c" in sys.argv:
+        i = sys.argv.index("-c")
+    else:
+        # Called from iPython session
+        i = 1
+        
     this_file = sys.argv[i+1]
+
+    # Get the tests to run
     testnames = []
     
     la = [] + sys.argv
     
-    if sys.argv.__len__() == i+2:
+    if len(sys.argv) == i+2:
         # Will run all tests
         whichtests = 0
         testnames = []
-    elif sys.argv.__len__() > i+2:
+    elif len(sys.argv) > i+2:
         # Will run specific tests.
         whichtests = 1
         
@@ -286,6 +327,14 @@ if __name__ == "__main__":
             if elem == '--help':
                 usage()
                 sys.exit()
+            if elem == '--file':
+                # read list from a text file
+                index = i + 3
+                testnames = sys.argv[index]
+#                testnames = readfile(filelist)
+#                if (testnames == []):
+#                    sys.exit()
+                break
             if elem == '--short':
                 # run only the SHORT_LIST
                 whichtests = 2
@@ -294,7 +343,6 @@ if __name__ == "__main__":
             if elem == this_file:
                 break
             
-            print whichtests
             testnames.append(elem)
         
 #    sys.exit(main(testnames))

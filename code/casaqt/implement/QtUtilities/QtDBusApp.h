@@ -45,8 +45,8 @@ namespace casa {
 	    const QString &dbusObjectName( const QString &name="" );
 	    static bool serviceIsAvailable(const QString &service);
 	    static bool serviceIsAvailable(const std::string &service);
-	    virtual const QString &getName( ) const = 0;
 
+	    virtual QString dbusName( ) const = 0;
 	    static QString generateServiceName( const QString &name, const pid_t pid );
 
 

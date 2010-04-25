@@ -28,36 +28,34 @@
 #ifndef DBUS_BUSACCESS_H_
 #define DBUS_BUSACCESS_H_
 #include <string>
+#include <cstdio>
 #include <unistd.h>
+#include <casa/Exceptions/Error.h>
 
 namespace casa {
     namespace dbus {
+	std::string object( const std::string &name );
+	std::string path( const std::string &name );
 
-	template<class proxy> proxy *launch( int trys=60, unsigned long delay=500000 ) {
+	char *launch_casa_proxy( bool unique_name, const std::string &dbusname, const std::string &default_name,  const char **args );
+
+	template<class proxy> proxy *launch( bool unique_name=true, const std::string &name="", int trys=60, unsigned long delay=500000 ) {
+	    char *dbname = launch_casa_proxy( unique_name, name, proxy::dbusName( ), proxy::execArgs( ) );
+	    if ( dbname == 0 ) { throw AipsError("launch failed"); }
 	    proxy *result = 0;
-	    try {
-		result = new proxy( );
-	    } catch (...) {
-		const char **args = proxy::execArgs( );
-		if ( ! fork( ) ) {
-		    execvp( args[0], (char* const*) args );
-		    perror( "launch<>(...) child process exec failed" );
-		}
-		int count = trys;
-		while ( count > 0 ) {
- 		    usleep(delay);
-		    try {
-		      result = new proxy( );
-		      break;
-		    } catch (...) { }
-		    --count;
-		}
+	    int count = trys;
+	    while ( count > 0 ) {
+		usleep(delay);
+		try {
+		  result = new proxy(dbname);
+		  break;
+		} catch (...) { }
+		--count;
 	    }
+	    delete [] dbname;
 	    return result;
 	}
 
-	std::string object( const std::string &name );
-	std::string path( const std::string &name );
     }
 }
 

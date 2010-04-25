@@ -26,6 +26,9 @@
 //# $Id: $
 
 #include <stdlib.h>
+#include <climits>
+#include <algorithm>
+
 #include <QTextStream>
 #include <QDBusConnectionInterface>
 #include <casaqt/QtUtilities/QtDBusApp.h>
@@ -117,7 +120,7 @@ namespace casa {
 	    service_name = new QString( );
 	    QTextStream(service_name) << service_base << name;
 	} else {
-	    service_name = new QString( generateServiceName(getName(), getpid( )) );
+	    service_name = new QString( generateServiceName(dbusName(), getpid( )) );
 	}
 
 	return *service_name;
@@ -133,7 +136,7 @@ namespace casa {
 	if ( name.size( ) > 0 )
 	    QTextStream(object_name) << object_base << name;
 	else
-	    QTextStream(object_name) << object_base << getName( ) << "_" << getpid( );
+	    QTextStream(object_name) << object_base << dbusName( ) << "_" << getpid( );
 
 	return *object_name;
     }
@@ -169,16 +172,17 @@ namespace casa {
 
     bool QtDBusApp::connectToDBus( QObject *object,  const QString &dbus_name ) {
 
+	QString name(dbus_name.size() == 0 ? dbusName() : dbus_name);
 	bool dbusRegistered = false;
 
-	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(dbus_name)) )
+	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(name)) )
 	    return false;
 
 	try {
 	    // Register service and object.
 	    dbusRegistered = connection().isConnected() &&
-			     connection().registerService(dbusServiceName(dbus_name)) &&
-			     connection().registerObject(dbusObjectName(dbus_name), object,
+			     connection().registerService(dbusServiceName(name)) &&
+			     connection().registerObject(dbusObjectName(name), object,
 							 QDBusConnection::ExportAdaptors);
 
 	} catch(...) { dbusRegistered = false; }

@@ -33,10 +33,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <!-- all parms default to keep what's in the image, if the param=="" -->
 
-    <param type="string" name="modelimage" subparam='true' mustexist="true">
+    <param type="string" name="modelimage" subparam='true'>
       <!-- modifying the description in constraints doesn't work yet -->
       <description>model image to observe or modify</description>
-      <value type="string">$project.model.image</value>
+      <value type="string">$project.skymodel</value>
     </param>
 
     <param type="string" name="inbright" subparam='true'>
@@ -92,7 +92,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="ptgfile" subparam="true">
       <description>list of pointing positions</description>
-      <value>"$project.ptg.txt"</value>
+      <value type="string">$project.ptg.txt</value>
     </param>
 
     <param type="string" name="integration" subparam="true">
@@ -167,7 +167,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 <!--*************************************************************-->
-<!--  predict always reads from $project.model.image file now -->
+<!--  predict always reads from $project.skymodel file now -->
 
     <param type="bool" name="predict">
       <description>calculate visibilites using ptgfile</description>
@@ -274,7 +274,7 @@ it'll do them for the same amount of time -->
       <value type="bool">False</value>
     </param>    
 
-    <param type="string" name="ms" subparam='true'>
+    <param type="string" name="vis" subparam='true'>
       <description>Measurement Set(s) to image</description>
       <value>$project.ms,$project.sd.ms</value>
     </param>
@@ -295,7 +295,7 @@ it'll do them for the same amount of time -->
     </param>
     
     <param type="intArray" name="imsize" subparam="true">
-      <description>output image size in pixels (x,y) </description>
+      <description>output image size in pixels (x,y) or 0 to match model</description>
       <value type="vector"><value>128</value><value>128</value></value>
     </param>
 
@@ -472,11 +472,11 @@ if that's not the file the user is using.
 	</equals>
 	<!-- ******************** -->
 	<equals type="bool" value="True">
-	  <default param="modelimage" mustexist="true">
+	  <default param="modelimage">
 <!--  
 modifying the description doesn't work yet but its an improvement ticket.
 -->
-	    <description>original model (modified will be $project.model.image)</description>
+	    <description>original model (modified will be $project.skymodel)</description>
 	    <value type="string"></value>
 	  </default>
 	  <default param="inbright"><value>""</value></default>
@@ -525,7 +525,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  <default param="calflux"><value type="string">1Jy</value></default>
 	</equals>
 	<equals type="bool" value="False">
-	  <default param="ptgfile" mustexist="True"><value>"$project.ptg.txt"</value></default>
+	  <default param="ptgfile"><value type="string">$project.ptg.txt</value></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->
@@ -567,10 +567,10 @@ modifying the description doesn't work yet but its an improvement ticket.
       <when param="image">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
-	  <default param="ms"><value type="string">$project.ms</value></default>
+	  <default param="vis"><value type="string">$project.ms</value></default>
 	  <default param="cleanmode"><value type="string">mosaic</value></default>
 	  <default param="imsize">
-	    <value type="vector"><value>128</value><value>128</value></value>
+	    <value>0</value>
 	  </default>
 	  <default param="cell"><value>"0.1arcsec"</value></default>
 <!--
@@ -623,7 +623,7 @@ mosaic simulation task (prototype):
        * if graphics selected, display the rescaled model image
     modelimage -- if modifymodel=False, use this as the sky model. 
        * if modifyimage=True, use this as the starting point, modify it 
-         write the output to a different image (default $project.model.image)
+         write the output to a different image (default $project.skymodel)
          and use that new image as the sky model
     inbright -- peak brightness in Jy/pixel, or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
@@ -723,7 +723,7 @@ mosaic simulation task (prototype):
        or Mosaic gridding (with Clark PSF calculation in minor cycles).
     cell -- cell size e.g '10arcsec'.  "" defaults to the modelimage cell
     imsize -- image size in spatial pixels (x,y)
-       default = [250,250]; example: imsize=[500,500]
+       0 or -1 will use the model image size; example: imsize=[500,500]
     niter -- mumber of clean/deconvolution iterations, 0 for no cleaning
     threshold -- flux level to stop cleaning
     weighting -- weighting to apply to visibilities

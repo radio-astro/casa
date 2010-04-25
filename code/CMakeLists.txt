@@ -131,7 +131,7 @@ endif()
 set( CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} )
 
 if( NOT CMAKE_CXX_FLAGS )
-  set( CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" )
+  set( CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${EXTRA_CXX_FLAGS}" )
 endif()
 
 
@@ -390,7 +390,7 @@ casa_find( LAPACK
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
 casa_find( CASACORE
-           VERSION 0.0.2
+           VERSION 1.0.6
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -444,7 +444,14 @@ if( APPLE )
     set( python_library python2.6 )  
   endif()
 else()
-  set( python_library python2.5 )
+  if( EXISTS /usr/include/python2.6/Python.h )
+    set( PV 26 )
+    set( PYTHONV 2.6 )
+    set( PYTHONVERS 2.6.4 )
+    set( python_library python2.6 )  
+  else()
+    set( python_library python2.5 )
+  endif()
 endif()
 
 casa_find( PYTHON
@@ -457,6 +464,7 @@ casa_find( PYTHON
     ${casa_packages}/lib/python${PYTHONV}/site-packages/numpy/core/include
     ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/include/python${PYTHONV}
     ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core/include
+    /usr/include/python${PYTHONV}
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
 
@@ -520,11 +528,13 @@ casa_find( DBUS
 # ATM
 casa_find( ATM
   VERSION 0.3
-  INCLUDES ATMEnumerations.h
-  INCLUDES_HINTS /usr/include/ATM
+  INCLUDES ATMEnumerations.h ATMVersion.h
+  INCLUDES_HINTS
+    /usr/include/ATM
+    /usr/local/include
   LIBS aatm
-  #CPP_VERSION ATM_VERSION
-  #RUN_VERSION "atm::getVersion()" 
+  #CPP_VERSION ATM_VERSION  to be uncommented when ATM_VERSION is defined in devel-RPMs
+  RUN_VERSION "atm::getVersion()" 
 )
 
 # XML2
@@ -573,6 +583,7 @@ casa_find( CCMTOOLS
            WX/Utils/error.h
            WX/Utils/type.h
   LIBS ${_ccmtools_libs}
+  LIBS_HINTS /home/rob/casa/gnuactive/build/lib
   PROGRAMS ccmtools
   PROG_VERSION "--version" 
   EXTRA_TEST " 
@@ -619,6 +630,7 @@ casa_find( QWT
   INCLUDES qwt_global.h
   INCLUDES_HINTS 
     /usr/include/qwt
+    /usr/include/qwt-qt4
     ${casa_packages}/qwt-5.2.0/include
     ${casa_packages}/qwt-5.2.1-svn/include
   LIBS qwt

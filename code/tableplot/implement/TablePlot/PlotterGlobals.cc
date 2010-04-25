@@ -36,7 +36,7 @@
 //# Includes
 
 #include <Python.h>
-#include <iostream.h>
+#include <iostream>
 #include <casa/aipstype.h>
 #include <casa/Arrays/Vector.h>
 

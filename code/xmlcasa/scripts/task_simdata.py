@@ -807,6 +807,9 @@ def simdata(
         if doclean:
             max_cleanim=[] # mutable so can be returned
             sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim)
+            # 20100422 statim returns [min,max] now, so this is for 
+            # backward compatibility in simdata1
+            max_cleanim=[max_cleanim[1]]
             # max_cleanim returned in outflat units i.e. Jy/bm > jy/pix
             max_cleanim[0]/=bmarea
         # plot model image if exists

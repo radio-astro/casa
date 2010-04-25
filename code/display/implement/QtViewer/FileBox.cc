@@ -671,7 +671,6 @@ void FileBox::deleteAll() {
 }
 
 void FileBox::reDraw() {
-
    List<QtDisplayData*> DDs = qdp_->registeredDDs();
    ListIter<QtDisplayData*> qdds(DDs);
    if (qdds.len() == 0)
@@ -680,7 +679,7 @@ void FileBox::reDraw() {
    qdds.toEnd();
    qdds--;
    QtDisplayData* qdd = qdds.getRight();
-   
+
    qdp_->hold();
    qdp_->panelDisplay()->removeDisplayData(*regData);
    //if (regData) {
@@ -690,7 +689,6 @@ void FileBox::reDraw() {
 
    //qDebug() << "showHide=" << showHide->text();
    //cout << "elem=" << unionRegions_p.nelements() << endl;
-   
    if (unionRegions_p.nelements() > 0 &&
       showHide->text() == "Hide" && cb != 0) {
       WCUnion leUnion(unionRegions_p);
@@ -713,8 +711,8 @@ RSComposite* FileBox::regionToShape(
 
         const WCRegion* wcreg = reg->asWCRegionPtr();
         CoordinateSystem csys;
+        //cout << "img=" << qdd->imageInterface() << endl;
         csys = (qdd->imageInterface())->coordinates();
-        //cout << "before showreg csys" << endl;
         Int dirInd =
               csys.findCoordinate(Coordinate::DIRECTION);
         MDirection::Types dirType = csys.
@@ -1159,6 +1157,9 @@ void FileBox::zPlaneChanged(){
       qdds.toEnd();
       qdds--;
       QtDisplayData* qdd = qdds.getRight();
+      //cout << "img=" << qdd->imageInterface() << endl;
+      if (qdd->imageInterface()==0)
+         return;
       zIndex = qdd->dd()->activeZIndex();
    }
    if (cb == 0) {

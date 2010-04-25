@@ -446,6 +446,9 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
     
     connect( panel_, SIGNAL(colorBarOrientationChange()),
                    SLOT(setColorBarOrientation_()) );
+
+    connect(this, SIGNAL(statsReady(const String&)),
+            panel_,  SLOT(showStats(const String&)));
       
     setColorBarOrientation_();  }  }
 
@@ -1192,9 +1195,49 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
 }
 
         
+Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
+  // Compute and print statistics on DD's image for 
+  // given region in all layers.  
+
+  if(im_==0) return False;
+    
+  //cout << "imgReg=" << imgReg.toRecord("") << endl;
+  try {  
+    
+    SubImage<Float> subImg(*im_, imgReg);
+  
+    ImageStatistics<Float> stats(subImg, False);
+    
+    Vector<Int> cursorAxes(2);
+    cursorAxes(0) = 0; //display axis 1
+    cursorAxes(1) = 1; //display axis 2
+    //cout << "cursorAxes=" << cursorAxes << endl;;
+    if (!stats.setAxes(cursorAxes)) return False;
+    stats.setList(True);
+    String layerStats;
+    Int layerId = 3;
+    stats.getLayerStats(layerStats, layerId);
+    //cout << layerStats << endl;
+    //cout << "done getLayerStats" << endl ;
+    
+    emit statsReady(layerStats);
+    return True;
+
+  }
+  catch (const casa::AipsError& err) {
+    errMsg_ = err.getMesg();
+    return False;  
+  }
+  catch (...) { 
+    errMsg_ = "Unknown error computing region statistics.";
+    return False;  
+  }
+    
+}
 
 
 Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
+
   // Compute and print statistics on DD's image for given region.
   // Current plane only.  Returns False if it can't compute for
   // various reasons.
@@ -1205,6 +1248,7 @@ Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
 	// imgReg should be conpatible with im_.  In most cases, imgReg
 	// will have been provided by mouseToImageRegion(), above.
     
+  //cout << "imgReg=" << imgReg.toRecord("") << endl;
   try {  
     
   
