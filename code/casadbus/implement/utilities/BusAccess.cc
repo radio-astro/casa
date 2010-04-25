@@ -26,10 +26,10 @@
 //# $Id: $
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
+#include <cstdlib>
 #include <cstring>
 #include <sys/time.h>
 #include <vector>
-#include <cstring>
 
 #define CASA_PREFIX "edu.nrao.casa."
 #define CASA_PATH "/casa/"

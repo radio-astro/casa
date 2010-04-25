@@ -310,6 +310,7 @@ casa_find( CFITSIO
   VERSION 3.006
   INCLUDES fitsio.h fitsio2.h
   INCLUDES_HINTS /usr/include/cfitsio
+  INCLUDES_HINTS /usr/include
   LIBS cfitsio
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
@@ -372,7 +373,10 @@ casa_find( WCSLIB
   INCLUDES wcslib/wcsconfig.h
   LIBS wcs
        pgsbox
-  CPP_VERSION WCSLIB_VERSION
+  # RR commented out the next line because cout << 4.4.4 complains
+  # that there are too many decimal points, but quoting the version
+  # breaks the cfitsio detection.
+  #CPP_VERSION WCSLIB_VERSION 
   DEFINITIONS -DSIGNBIT 
   DEPENDS PGPLOT )
 
@@ -455,7 +459,7 @@ else()
 endif()
 
 casa_find( PYTHON
-  VERSION EXACT ${PYTHONVERS}
+  VERSION ${PYTHONVERS}
   INCLUDES Python.h 
      numpy/npy_interrupt.h   # for numpy
     # Does not exist on 10.5.5: numpy/numpyconfig.h
@@ -583,7 +587,6 @@ casa_find( CCMTOOLS
            WX/Utils/error.h
            WX/Utils/type.h
   LIBS ${_ccmtools_libs}
-  LIBS_HINTS /home/rob/casa/gnuactive/build/lib
   PROGRAMS ccmtools
   PROG_VERSION "--version" 
   EXTRA_TEST " 
