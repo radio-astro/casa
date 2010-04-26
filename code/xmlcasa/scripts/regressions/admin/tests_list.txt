@@ -61,7 +61,7 @@ ppdisk_regression               rindebet nrao.edu
 pylabmem                        kgolap aoc.nrao.edu
 secondNGC4826                   rreid nrao.edu
 testcube_regression             rindebet nrao.edu
-third4826                       nelias nrao.edu
+third4826                       rreid nrao.edu
 time_then_chan_avg              rreid nrao.edu
 unit_tests                      scastro eso.org
 wproject_regression             kgolap aoc.nrao.edu
