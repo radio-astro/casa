@@ -41,55 +41,12 @@
 #include <ostream>
 #include <casa/System/Aipsrc.h>
 
-
-//
-//  helper function to create ~/.casa/ipython/security
-//
-/*
- * Not needed as it's done in the python driver script
-static int make_it_a_dir( const char *path ) {
-    struct stat buf;
-    if ( stat( path, &buf ) == 0 ) {
-	if ( ! S_ISDIR(buf.st_mode) ) {
-	    char *savepath = (char*) malloc(sizeof(char) * (strlen(path) + 12));
-	    int count = 0;
-
-	    do {
-		count += 1;
-		sprintf( savepath, "%s_SAV%03d", path, count );
-	    } while ( stat( savepath, &buf ) == 0 );
-
-	    if ( rename( path, savepath ) != 0 ) {
-		return 1;
-	    }
-	    if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
-		return 1;
-	    }
-	    free(savepath);
-	}
-    } else {
-	if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
-	    return 1;
-	}
-    }
-    return 0;
-}
-*/
-
-//#include <display/QtViewer/QtApp.h>
-
 int main( int argc, char **argv ) {
-
-    static const char file_separator = '/';
 
     char *argv_mod[argc];
 
-    char *path = 0;
-    int path_size = 0;
-    int path_len = 0;
-
     //
-    //This bit of code, copies the old casapy.log file to one with a 
+    //This bit of code, copies the old casapy.log file to one with a
     //date string based on the last entry and then blows away the casapy.log
     //after creating a hard link
     //
@@ -110,8 +67,8 @@ int main( int argc, char **argv ) {
 	oldlog.fill('0');
         casa::String beg = logname.before(".log");
         if (beg == "")
-           beg = "casapy"; 
-	oldlog << beg << "-" << 
+           beg = "casapy";
+	oldlog << beg << "-" <<
 		       	last_mod->tm_year+1900 << "-";
        	oldlog.width(2);
 	oldlog << last_mod->tm_mon+1 << "-";
@@ -128,72 +85,29 @@ int main( int argc, char **argv ) {
 		perror("Oh no...");
     }
 
-#define PLACE_PATH(SOURCE)							\
-    int add_len = strlen(SOURCE);						\
-    if ( add_len > 0 && SOURCE[add_len-1] == file_separator ) --add_len;	\
-    if ( path_len + add_len + 2 > path_size ) {					\
-	while ( path_len + add_len > path_size )				\
-	    path_size = (path_size ? path_size : 2) * 2;			\
-	path = (char *) (path ? realloc(path, path_size) : malloc(path_size));	\
-    }										\
-										\
-    memcpy( &path[path_len], SOURCE, add_len );					\
-    path_len += add_len;							\
-    path[path_len++] = ':';
-
-#define CHECK_PATHS_BOUNDARY							\
-    if ( ipython_paths_len == ipython_paths_max ) {				\
-	ipython_paths_max *= 2;							\
-	ipython_paths = (const char**)						\
-		realloc( ipython_paths, sizeof(char*) * ipython_paths_max );	\
-    }
-
-
-    /**************** needed to make ipython work on linux... huh? ****************/
-#ifndef PYTHONROOT
-#define PYTHONROOT "/usr/lib/casapy"
-#endif
-#ifndef PYTHONVER
-#define PYTHONVER "2.5"
-#endif
-
-#ifndef AIPS_DARWIN
-
-#ifdef CASAPYROOT
-    const char *ipython_path = ""CASAPYROOT"/lib/python24.zip:"CASAPYROOT"/lib/python"PYTHONVER":"CASAPYROOT"/lib/python"PYTHONVER"/plat-linux2:"CASAPYROOT"/lib/python"PYTHONVER"/lib-tk:"CASAPYROOT"/lib/python"PYTHONVER"/lib-dynload:"CASAPYROOT"/lib/python"PYTHONVER"/site-packages:"CASAPYROOT"/lib/python"PYTHONVER"/site-packages/Numeric:"CASAPYROOT"/lib/python"PYTHONVER"/site-packages/PyObjC:"PYTHONROOT"/bin:"PYTHONROOT"/lib/python24.zip:"PYTHONROOT"/lib/python"PYTHONVER":"PYTHONROOT"/lib/python"PYTHONVER"/plat-linux2:"PYTHONROOT"/lib/python"PYTHONVER"/lib-tk:"PYTHONROOT"/lib/python"PYTHONVER"/lib-dynload:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages/Numeric:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages/PyObjC:"PYTHONROOT"/lib/python"PYTHONVER"/dist-packages:"PYTHONROOT"/lib/pymodules/python"PYTHONVER"";
-#else
-    const char *ipython_path = ""PYTHONROOT"/bin:"PYTHONROOT"/lib/python24.zip:"PYTHONROOT"/lib/python"PYTHONVER":"PYTHONROOT"/lib/python"PYTHONVER"/plat-linux2:"PYTHONROOT"/lib/python"PYTHONVER"/lib-tk:"PYTHONROOT"/lib/python"PYTHONVER"/lib-dynload:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages/Numeric:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages/PyObjC:"PYTHONROOT"/lib/python"PYTHONVER"/dist-packages:"PYTHONROOT"/lib/pymodules/python"PYTHONVER"";
-#endif
-
-#else
-    const char *ipython_path = ""PYTHONROOT"/bin:"PYTHONROOT"/lib/python24.zip:"PYTHONROOT"/lib/python"PYTHONVER":"PYTHONROOT"/lib/python"PYTHONVER"/plat-mac:"PYTHONROOT"/lib/python"PYTHONVER"/plat-darwin:"PYTHONROOT"/lib/python"PYTHONVER"/lib-tk:"PYTHONROOT"/lib/python"PYTHONVER"/lib-dynload:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages/Numeric:"PYTHONROOT"/lib/python"PYTHONVER"/site-packages/PyObjC";
-#endif
-
-    int ipython_paths_max = 10;
-    int ipython_paths_len = 0;
-    const char **ipython_paths = (const char**) malloc(sizeof(char*) * ipython_paths_max);
-    ipython_paths[ipython_paths_len++] = ipython_path;
-
     // --- --- --- process command line arguments first --- --- ---
     // ------------------------------------------------------------
     // move past executable name
     argv_mod[0] = argv[0];
     argv++;
 
+    char *paths[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    int path_max = (int) (sizeof(paths) / sizeof(char*));
+    int path_index = 0;
+
+    const char *arg_prepend_path = 0;
+    const char *arg_path = 0;
+
     while ( argc >= 3 ) {
 
 	if ( ! strcmp( argv[0], "--prepend-path" )) {
 	    // specifies load path
-	    CHECK_PATHS_BOUNDARY
-	    memmove(ipython_paths+1, ipython_paths, sizeof(char*) * ipython_paths_len);
-	    ipython_paths[0] = argv[1];
-	    ipython_paths_len += 1;
+	    arg_prepend_path = argv[1];
 	    argc -= 2;
 	    argv += 2;
 	} else if ( ! strcmp( argv[0], "--path" )) {
 	    // specifies load path
-	    CHECK_PATHS_BOUNDARY
-	    ipython_paths[ipython_paths_len++] = argv[1];
+	    arg_path = argv[1];
 	    argc -= 2;
 	    argv += 2;
 	} else if ( ! strcmp( argv[0], "--" )) {
@@ -206,128 +120,54 @@ int main( int argc, char **argv ) {
 	}
     }
 
-    //
-    // first configure the path (above), and
-    // then construct the string (here)...
-    //
-    for ( int x = 0; x < ipython_paths_len; ++x ) {
-	PLACE_PATH(ipython_paths[x])
+    if ( arg_prepend_path ) {
+	if ( path_index > 0 ) paths[path_index++] = strdup(":");
+	paths[path_index++] = strdup(arg_prepend_path);
     }
-
-    char *dbg = getenv("CASA_DEBUG");
-    if ( dbg && atoi(dbg))
-	std::cerr << ipython_path << std::endl;
 
     // move over the rest of the non-casa parameters
     for ( int i=1; i < argc; ++i ) {
 	argv_mod[i] = argv[i-1];
     }
 
-    // --- --- --- process $CASAROOT                    --- --- ---
+    // --- --- --- process $CASAPATH                    --- --- ---
     // ------------------------------------------------------------
-    char *casaroot = getenv( "CASAROOT" );
-    if ( casaroot ) {
-	char *buf = (char *) malloc( strlen(casaroot) + 11 );
-	sprintf( buf, "%s/python/%%V", casaroot );
-	PLACE_PATH(buf);
-	free(buf);
-    }
+    char *CASAPATH = getenv( "CASAPATH" );
+    if ( CASAPATH ) {
 
+	char *cpath = strdup( CASAPATH );
+	const char *ctmp = strtok( cpath, " \t" );
+	char *croot = ctmp ? strdup(ctmp) : NULL;
+	ctmp = strtok( NULL, " \t");
+	char *carch = ctmp ? strdup(ctmp) : NULL;
 
-    // --- --- --- process $AIPSROOT                    --- --- ---
-    // ------------------------------------------------------------
-    char *aipspath = getenv( "CASAPATH" );
-    if ( aipspath ) {
-
-	char *apath = strdup( aipspath );
-	const char *atmp = strtok( apath, " \t" );
-	char *aptr = atmp ? strdup(atmp) : NULL;
-	atmp = strtok( NULL, " \t");
-	char *aarch = atmp ? strdup(atmp) : NULL;
-
-	if ( aptr && aarch ) {
-	    char *buf = (char*) malloc( strlen(aptr)+strlen(aarch) + 12 );
-	    sprintf( buf, "%s/%s/python/%%V", aptr, aarch );
-	    PLACE_PATH(buf);
-	}
-
-	if (aptr) free( aptr );
-	if (aarch) free( aarch );
-	free( apath );
-    }
-
-    if ( path ) {
-	if ( path_len > 0 && path[path_len-1] == ':' )
-	    path[path_len-1] = '\0';
-	else
-	    path[path_len]='\0';
-    } else {
-	path= strdup("");
-    }
-    /*
-     * Now done in the casapy.py script
-
-    //
-    //  setup ~/.casa/ state directory...
-    //  ----------------------------------------------------------------------
-    char *homepath = getenv( "HOME" );
-    if ( ! homepath ) {
-	std::cerr << "error: 'HOME' environment variable is not set" << std::endl;
-	std::cerr << "       please set it to your home directory." << std::endl;
-	exit(1);
-    }
-
-    char *ipythonpath = (char *) malloc(sizeof(char) * (strlen(homepath) + 50));
-    char *ipythonenv = (char *) malloc(sizeof(char) * (strlen(homepath) + 30));
-    if ( ! ipythonpath || ! ipythonenv ) {
-	std::cerr << "error: failed allocation (ipythonpath)" << std::endl;
-	exit(1);
-    }
-
-    sprintf( ipythonenv, "IPYTHONDIR=%s/.casa/ipython", homepath );
-    putenv( ipythonenv );
-    
-    struct stat rcstats;
-    sprintf( ipythonpath, "%s/.casa/ipython/security", homepath );
-    if ( stat(ipythonpath, &rcstats) != 0 ) {
-	if ( stat( homepath, &rcstats ) != 0 ) {
-	    std::cerr << "error: your home directory '" << homepath << "'" << std::endl;
-	    std::cerr << "       does not exist, please create it." << std::endl;
-	    exit(1);
-	}
-	sprintf( ipythonpath, "%s/.casa", homepath );
-	if ( make_it_a_dir( ipythonpath ) != 0 ) {
-	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
-	    exit(1);
-	}
-	sprintf( ipythonpath, "%s/.casa/ipython", homepath );
-	if ( make_it_a_dir( ipythonpath ) != 0 ) {
-	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
-	    exit(1);
-	}
-	sprintf( ipythonpath, "%s/.casa/ipython/security", homepath );
-	if ( make_it_a_dir( ipythonpath ) != 0 ) {
-	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
-	    exit(1);
-	}
-    } else {
-	if ( make_it_a_dir( ipythonpath ) != 0 ) {
-	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
-	    exit(1);
+	if ( croot && carch ) {
+	    char *buf = (char*) malloc( strlen(croot)+strlen(carch) + 34 );
+	    sprintf( buf, "%s/%s/python%d.%d", croot, carch, PY_MAJOR_VERSION, PY_MINOR_VERSION );
+	    if ( ! stat( buf, &thestats ) && S_ISDIR(thestats.st_mode) ) {
+		if ( path_index > 0 ) paths[path_index++] = strdup(":");
+		paths[path_index++] = buf;
+	    } else {
+		sprintf( buf, "%s/%s/python/%d.%d", croot, carch, PY_MAJOR_VERSION, PY_MINOR_VERSION );
+		if ( ! stat( buf, &thestats ) && S_ISDIR(thestats.st_mode) ) {
+		    if ( path_index > 0 ) paths[path_index++] = strdup(":");
+		    paths[path_index++] = buf;
+		}
+	    }
 	}
     }
 
-    free(ipythonpath);
-    //  ----------------------------------------------------------------------
-    //
-    */
+    if ( arg_path ) {
+	if ( path_index > 0 ) paths[path_index++] = strdup(":");
+	paths[path_index++] = strdup(arg_path);
+    }    
 
-    /*
-    std::cout << "CASA Version ";
-    casa::VersionInfo::report(std::cout);
-    std::cout << std::endl << "  Built on: "<< casa::VersionInfo::date() << std::endl;
-    std::cout << std::endl;
-    */
+    int path_len = 0;
+    for ( int i=0; paths[i] && i < path_max; ++i ) path_len += strlen(paths[i]);
+    char *path = (char*) malloc(sizeof(char) * (path_len + 1));
+    path[0] = '\0';
+    for ( int i=0; paths[i] && i < path_max; ++i ) strcat( path, paths[i] );
+
     CCM_Python::Py::init( argc, argv_mod, path );
     CCM_Python::Py py;
 
