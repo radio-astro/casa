@@ -433,21 +433,21 @@ endif()
 
 # First determine which python version to search for,
 # then do the actual search
-if( NOT PYTHON_FOUND AND NOT PYTHONV )
-  # Allow user to define PYTHONV, otherwise:
+if( NOT PYTHON_FOUND AND NOT PYTHON_LIBNAME )
+  # Allow user to define PYTHON_LIBNAME, otherwise:
 
   # Set PYTHONV to the latest of the following versions
   # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
   foreach( _v 2.9 2.8 2.7 2.6 2.5.2 2.5 )
 
-    string( SUBSTRING ${_v} 0 3 PYTHONV )
+    set( PYTHON_LIBNAME ${_v} )
 
     casa_find( 
       PYTHON${_v} 
       LIBS python${_v} 
       NO_REQUIRE )
 
-    # dump( PYTHON${_v}_VERSION PYTHONV PYTHON${_v}_FOUND )
+    # dump( PYTHON${_v}_VERSION PYTHON_LIBNAME PYTHON${_v}_FOUND )
 
     if( PYTHON${_v}_FOUND )
       break()
@@ -459,13 +459,14 @@ if( NOT PYTHON_FOUND AND NOT PYTHONV )
 
 endif()
 
-if( NOT PYTHONV )
-  # Found Python, but PYTHONV is undefined, that is impossible.
-  message( FATAL_ERROR "The variable PYTHONV is undefined. Probably CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON* ..\")")
+if( NOT PYTHON_LIBNAME )
+  # Found Python, but PYTHON_LIBNAME is undefined, that is impossible.
+  message( FATAL_ERROR "The variable PYTHON_LIBNAME is undefined. Probably CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON* ..\")")
 endif()
 
+string( SUBSTRING ${PYTHON_LIBNAME} 0 3 PYTHONV )
 string( REPLACE "." "" PV ${PYTHONV} )
-set( python_library python${PYTHONV} )
+set( python_library python${PYTHON_LIBNAME} )
 
 if( NOT PYTHON_FOUND )
   message( STATUS "Looking for PYTHON version ${PYTHONV}.x" )
@@ -486,7 +487,7 @@ casa_find( PYTHON
   CPP_VERSION PY_VERSION )
 
 # Store PYTHONV in the cache
-set( PYTHONV ${PYTHONV} CACHE STRING "Python major and minor version to use" FORCE )
+set( PYTHON_LIBNAME ${PYTHON_LIBNAME} CACHE STRING "Python major and minor version to use" FORCE )
 
 # Define pyroot to two directory levels above Python.h.
 string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
