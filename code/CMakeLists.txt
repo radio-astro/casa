@@ -309,8 +309,7 @@ find_package( Perl )
 casa_find( CFITSIO
   VERSION 3.006
   INCLUDES fitsio.h fitsio2.h
-  INCLUDES_HINTS /usr/include/cfitsio
-  INCLUDES_HINTS /usr/include
+  INCLUDES_HINTS /usr/include/cfitsio               
   LIBS cfitsio
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
