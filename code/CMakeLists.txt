@@ -308,7 +308,7 @@ find_package( Perl )
 # CFITSIO
 casa_find( CFITSIO
   VERSION 3.006
-  INCLUDES fitsio.h fitsio2.h hest.h
+  INCLUDES fitsio.h fitsio2.h
   INCLUDES_SUFFIXES cfitsio
   LIBS cfitsio
   CPP_VERSION CFITSIO_VERSION
