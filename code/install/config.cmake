@@ -51,7 +51,7 @@ macro( casa_check_version error p actual )
       set( ${error} "${p} version is not ${_v}. Please check!" )
     endif()
   else()
-    if( ${p} STREQUAL CFITSIO )
+    if( ${p} MATCHES "^CFITSIO" )
       set( _cmp GREATER )
     else()
       set( _cmp VERSION_GREATER )
@@ -250,8 +250,8 @@ macro( casa_find package )
         ${_includes_hints}
 	${CMAKE_INSTALL_PREFIX}/include
         ${casa_packages}/include
-        /usr/local/include
-        /usr/include
+        #/usr/local/include
+        #/usr/include
        )
     endif()
     set( ${package}_INCLUDE_DIRS "" )
