@@ -84,6 +84,7 @@ endmacro()
 #               [ EXTRA_TEST extra_test ]
 #               [ DEFINITIONS flag1 ... ]
 #               [ DEPENDS package1 ... ]
+#               [ NO_REQUIRE ]
 #             )
 #
 #   Sets the following variables
@@ -130,6 +131,8 @@ endmacro()
 #       DEPENDS: Include directories and libraries from dependency
 #                packages will be used when compiling and linking
 #
+#    NO_REQUIRE: If defined, it is not a fatal error if the package
+#                is not found
 macro( casa_find package )
   
   # Parse arguments
@@ -146,32 +149,36 @@ macro( casa_find package )
   set( _extra_test "" )
   set( _definitions "" )
   set( _depends "" )
+  set( _no_require False )
   foreach ( _a ${ARGN} )
     
     if(${_a} STREQUAL VERSION)
       set( _current _version )
-    elseif (${_a} STREQUAL PROGRAMS)
+    elseif (${_a} STREQUAL PROGRAMS )
       set( _current _programs )
-    elseif (${_a} STREQUAL PROG_VERSION)
+    elseif (${_a} STREQUAL PROG_VERSION )
       set( _current _prog_version )
-    elseif (${_a} STREQUAL INCLUDES)
+    elseif (${_a} STREQUAL INCLUDES )
       set( _current _includes )
     elseif (${_a} STREQUAL INCLUDES_HINTS )
       set( _current _includes_hints )
     elseif (${_a} STREQUAL LIBS)
       set( _current _libs )
-    elseif (${_a} STREQUAL LIBS_HINTS)
+    elseif (${_a} STREQUAL LIBS_HINTS )
       set( _current _libs_hints )
-    elseif (${_a} STREQUAL CPP_VERSION)
+    elseif (${_a} STREQUAL CPP_VERSION )
       set( _current _cpp_version )
-    elseif (${_a} STREQUAL RUN_VERSION)
+    elseif (${_a} STREQUAL RUN_VERSION )
       set( _current _run_version )
     elseif( ${_a} STREQUAL EXTRA_TEST )
       set( _current _extra_test )
-    elseif (${_a} STREQUAL DEFINITIONS)
+    elseif (${_a} STREQUAL DEFINITIONS )
       set( _current _definitions )
-    elseif (${_a} STREQUAL DEPENDS)
+    elseif (${_a} STREQUAL DEPENDS )
       set( _current _depends )
+    elseif (${_a} STREQUAL NO_REQUIRE )
+      set( _no_require True )
+      set( _current "illegal" )
     elseif( ${_a} STREQUAL "illegal" )
       message( FATAL_ERROR "Illegal macro invocation ${ARGN}" )
     else()
@@ -260,6 +267,12 @@ macro( casa_find package )
         PATHS ${_hints}
         NO_DEFAULT_PATH
         )
+
+      # If not found, search CMake's default paths
+      if( ${package}_${_include} MATCHES "NOTFOUND$" )
+        find_path( ${package}_${_include} NAMES ${_include} )
+      endif()
+
       if( ${package}_${_include} MATCHES "NOTFOUND$" )
         message( STATUS "Looking for ${package} header ${_include} -- NOT FOUND" )
         set( _found FALSE )
@@ -418,7 +431,12 @@ macro( casa_find package )
           PATHS ${_hints}
           NO_DEFAULT_PATH
           )
-    
+        
+        # If not found, search CMake's default paths
+        if( ${package}_${_lib} MATCHES "NOTFOUND$" )
+          find_library( ${package}_${_lib} NAMES ${_lib} )
+        endif()
+
         if( ${package}_${_lib} MATCHES "NOTFOUND$" )
           message( STATUS "Looking for ${package} library ${_lib} -- NOT FOUND" )
           set( _found FALSE )
@@ -646,14 +664,14 @@ macro( casa_find package )
 
   set( ${package}_FOUND ${_found} CACHE BOOL "Was ${package} found?" FORCE )
 
-  if( NOT ${package}_FOUND)
+  if( NOT ${package}_FOUND AND NOT ${_no_require} )
     unset( ${package}_INCLUDE_DIRS CACHE )
     unset( ${package}_LIBRARIES CACHE )
     message( FATAL_ERROR "${package} could not be found. Please check!" )
   endif()
 
   else()
-    #message( STATUS "${package} already found" )
+    #message( STATUS "${package} already found or not required" )
   endif()
   
   #dump( ${package}_FOUND     ${package}_INCLUDE_DIRS    ${package}_LIBRARIES    ${package}_DEFINITIONS )
