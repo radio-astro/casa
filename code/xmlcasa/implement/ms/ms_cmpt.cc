@@ -347,7 +347,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	 subselect = mssSetData(*itsMS, *mssel, "", timeS, baselineS, fieldS,
 				  spwS, uvrangeS, taqlS, "", scanS);
 
-         if(subselect && mssel->nrow()< itsMS->nrow()){
+         if(subselect && mssel->nrow() < itsMS->nrow()){
 	   if(mssel->nrow()==0){
 	     if(!mssel)
 	       delete mssel; 

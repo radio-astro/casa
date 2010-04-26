@@ -1779,7 +1779,7 @@ class cleanhelper:
                 tmppath.append(os.path.dirname(imname)+'/'+tmpdir)
             # clean up old directory
             if os.path.isdir(tmppath[-1]):
-                os.system('rm -rf '+tmppath[-1])
+                shutil.rmtree(tmppath[-1])
             os.mkdir(tmppath[-1])
         #internally converted to frequency mode for mode='channel'
         #to ensure correct frequency axis for output image
@@ -1969,10 +1969,8 @@ class cleanhelper:
 
                 self.convertmodelimage(modelimages=chanmodimg,
                                         outputmodel=self.imagelist.values()[0]+'.model')
-            # clean up tempoarary channel model image
-            for img in chanmodimg:
-                if os.path.exists(img):
-                    os.system('rm -rf ' + img)
+            # clean up temporary channel model image
+            self.cleanupTempFiles(chanmodimg)
 
     def storeCubeImages(self,cubeimageroot,chanimageroot,chan,imagermode):
         """
@@ -1993,13 +1991,15 @@ class cleanhelper:
                     outim=ia.newimagefromimage(cubeimagerootname+'.model',cubeimage)
             self.putchanimage(cubeimage, chanimage,chan)
 
-    def cleanupTempFiles(self,tmppath):
+    def cleanupTempFiles(self, tmppath):
         """
-        clean up temporary files created for chaniter=T clean
+        Remove the directories listed by tmppath.
         """
+        # Created to deal with temporary dirs created by chaniter=T clean,
+        # now used elsewhere too.
         for dir in tmppath:
             if os.path.exists(dir):
-               os.system('rm -rf '+dir)
+               shutil.rmtree(dir)
 
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
