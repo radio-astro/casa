@@ -37,8 +37,7 @@
 #
 #     23.2  >  23.03
 #
-# Use the heuristics, that if the version string contains ".0"
-# then float comparison is used, otherwise integer
+# Use the heuristics, that float comparison is used only for CFITSIO
 
 macro( casa_check_version error p actual )
   set( desired ${ARGN} )
@@ -52,7 +51,7 @@ macro( casa_check_version error p actual )
       set( ${error} "${p} version is not ${_v}. Please check!" )
     endif()
   else()
-    if( ${actual} MATCHES "\\.0" OR ${_v} MATCHES "\\.0" )
+    if( ${p} STREQUAL CFITSIO )
       set( _cmp GREATER )
     else()
       set( _cmp VERSION_GREATER )
