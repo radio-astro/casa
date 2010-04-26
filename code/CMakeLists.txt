@@ -314,7 +314,6 @@ casa_find( CFITSIO
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
 
-
 # X11.
 find_package( X11 REQUIRED )
 # Rename
@@ -375,7 +374,7 @@ casa_find( WCSLIB
   # RR commented out the next line because cout << 4.4.4 complains
   # that there are too many decimal points, but quoting the version
   # breaks the cfitsio detection.
-  #CPP_VERSION WCSLIB_VERSION 
+  #CPP_VERSION "WCSLIB_VERSION"
   DEFINITIONS -DSIGNBIT 
   DEPENDS PGPLOT )
 
@@ -431,34 +430,49 @@ endif()
 
 
 # Python
-#
-# Using different versions of Python depending on platform!
-# The shared libraries have version dependent names.
-set( PV 25 )
-set( PYTHONV 2.5 )
-set( PYTHONVERS 2.5.2 )
-if( APPLE )
-  if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-    set( python_library python2.5.2 )
-  else()
-    set( PV 26 )
-    set( PYTHONV 2.6 )
-    set( PYTHONVERS 2.6.4 )
-    set( python_library python2.6 )  
-  endif()
-else()
-  if( EXISTS /usr/include/python2.6/Python.h )
-    set( PV 26 )
-    set( PYTHONV 2.6 )
-    set( PYTHONVERS 2.6.4 )
-    set( python_library python2.6 )  
-  else()
-    set( python_library python2.5 )
-  endif()
+
+# First determine which python version to search for,
+# then do the actual search
+if( NOT PYTHON_FOUND AND NOT PYTHONV )
+  # Allow user to define PYTHONV, otherwise:
+
+  # Set PYTHONV to the latest of the following versions
+  # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
+  foreach( _v 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+
+    string( SUBSTRING ${_v} 0 3 PYTHONV )
+
+    casa_find( 
+      PYTHON${_v} 
+      LIBS python${_v} 
+      NO_REQUIRE )
+
+    # dump( PYTHON${_v}_VERSION PYTHONV PYTHON${_v}_FOUND )
+
+    if( PYTHON${_v}_FOUND )
+      break()
+    elseif( _v STREQUAL 2.5 )
+      message( FATAL_ERROR "Could not find any PYTHON library with version between 2.5 <= version < 3.0. Please check!" )
+    endif()
+
+  endforeach()
+
+endif()
+
+if( NOT PYTHONV )
+  # Found Python, but PYTHONV is undefined, that is impossible.
+  message( FATAL_ERROR "The variable PYTHONV is undefined. Probably CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON* ..\")")
+endif()
+
+string( REPLACE "." "" PV ${PYTHONV} )
+set( python_library python${PYTHONV} )
+
+if( NOT PYTHON_FOUND )
+  message( STATUS "Looking for PYTHON version ${PYTHONV}.x" )
 endif()
 
 casa_find( PYTHON
-  VERSION ${PYTHONVERS}
+  VERSION 2.5    # minimum required
   INCLUDES Python.h 
      numpy/npy_interrupt.h   # for numpy
     # Does not exist on 10.5.5: numpy/numpyconfig.h
@@ -470,6 +484,9 @@ casa_find( PYTHON
     /usr/include/python${PYTHONV}
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
+
+# Store PYTHONV in the cache
+set( PYTHONV ${PYTHONV} CACHE STRING "Python major and minor version to use" FORCE )
 
 # Define pyroot to two directory levels above Python.h.
 string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
