@@ -423,6 +423,21 @@
 				<equals value="real">
 					<default param="datacolumn"><value type="string">data</value></default>
 				</equals>
+				<equals value="time"/>
+				<equals value="uvdist"/>
+				<equals value="chan"/>
+				<equals value="corr"/>
+				<equals value="freq"/>
+				<equals value="velo"/>
+				<equals value="u"/>
+				<equals value="v"/>
+				<equals value="w"/>
+				<equals value="azimuth"/>
+				<equals value="elevation"/>
+				<equals value="baseline"/>
+				<equals value="hourangle"/>
+				<equals value="parallacticangle"/>
+				<equals value="weight"/>
 			</when>
 			<when param="selectdata">
 				<equals type="bool" value="True">
