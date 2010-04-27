@@ -77,7 +77,7 @@ def tasklist():
     print 'uvcontsub           clearcal      (autoclean)              '
     print 'uvsub               cvel          (boxit)                  '
     print '(uvcontsub2)        fluxscale                               '
-    print 'msmoments           fixvis                                  '
+    print '(msmoments)         fixvis                                  '
     print '                    gaincal                                 '
     print '                    gencal                                  '
     print '                    listcal                                 '
