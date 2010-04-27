@@ -165,6 +165,16 @@ set( CMAKE_INSTALL_PREFIX ${_casaroot}/${arch} )
 dump( CMAKE_INSTALL_PREFIX )
 
 #
+# casacore can be built as a single library
+##
+if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so )
+  set( CMAKE_CASACORE_LIBS casacore )
+else()
+  set( CMAKE_CASACORE_LIBS casa_casa casa_components casa_coordinates casa_fits casa_images casa_lattices casa_measures casa_ms casa_msfits casa_scimath casa_scimath_f casa_tables )
+endif()
+
+
+#
 # Targets for creating doxygen documentation
 #
 find_package( LATEX )
@@ -397,18 +407,8 @@ casa_find( CASACORE
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
            INCLUDES_SUFFIXES casacore
-           LIBS casa_casa
-                casa_components
-                casa_coordinates
-                casa_fits
-                casa_images
-                casa_lattices
-                casa_measures
-                casa_ms
-                casa_msfits
-                casa_scimath
-                casa_scimath_f
-                casa_tables 
+	   PREFIX_HINTS ${_casaroot}
+	   LIBS ${CMAKE_CASACORE_LIBS}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB )
@@ -445,7 +445,8 @@ if( NOT PYTHON_FOUND AND NOT PYTHON_LIBNAME )
     casa_find( 
       PYTHON${_v} 
       LIBS python${_v} 
-      NO_REQUIRE )
+      NO_REQUIRE 
+      PREFIX_HINTS /opt/local)
 
     # dump( PYTHON${_v}_VERSION PYTHON_LIBNAME PYTHON${_v}_FOUND )
 
