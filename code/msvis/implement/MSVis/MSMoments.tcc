@@ -26,7 +26,7 @@
 //#
 //# $Id: MSMoments.tcc 19950 2007-02-27 12:25:11Z Malte.Marquarding $
 
-#include <ms/MeasurementSets/MSMoments.h>
+#include <msvis/MSVis/MSMoments.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>

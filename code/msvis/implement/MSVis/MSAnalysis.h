@@ -27,7 +27,7 @@
 #define _MS_MSANALYSIS_H_
 
 // includes
-#include <ms/MeasurementSets/MSMoments.h>
+#include <msvis/MSVis/MSMoments.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Logging/LogIO.h>
 

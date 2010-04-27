@@ -24,10 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 
 // include
+#include <msvis/MSVis/MSAnalysis.h>
+#include <msvis/MSVis/MSMoments.h>
 #include <casa/Exceptions/Error.h>
-#include <ms/MeasurementSets/MSAnalysis.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMoments.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
