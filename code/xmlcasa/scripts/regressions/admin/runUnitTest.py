@@ -25,6 +25,7 @@ import sys
 import traceback
 import unittest
 import string
+import re
 import shutil
 sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
 import testwrapper
@@ -302,54 +303,56 @@ if __name__ == "__main__":
     # Get command line arguments
     
     if "-c" in sys.argv:
+        # If called with ... -c runUnitTest.py from the command line,
+        # then parse the command line parameters
         i = sys.argv.index("-c")
-    else:
-        # Called from iPython session
-        i = 1
-        
-    this_file = sys.argv[i+1]
+        if len(sys.argv) >= i + 2 and \
+               re.compile("runUnitTest\.py$").search(sys.argv[i + 1]):
 
-    # Get the tests to run
-    testnames = []
+            this_file = sys.argv[i+1]
+
+            # Get the tests to run
+            testnames = []
     
-    la = [] + sys.argv
-    
-    if len(sys.argv) == i+2:
-        # Will run all tests
-        whichtests = 0
-        testnames = []
-    elif len(sys.argv) > i+2:
-        # Will run specific tests.
-        whichtests = 1
-        
-        while len(la) > 0:
-            elem = la.pop()
-            if elem == '--help':
-                usage()
-                sys.exit()
-            if elem == '--file':
-                # read list from a text file
-                index = i + 3
-                testnames = sys.argv[index]
-#                testnames = readfile(filelist)
-#                if (testnames == []):
-#                    sys.exit()
-                break
-            if elem == '--short':
-                # run only the SHORT_LIST
-                whichtests = 2
-                testnames = SHORT_LIST
-                break    
-            if elem == this_file:
-                break
+            la = [] + sys.argv
             
-            testnames.append(elem)
-        
-#    sys.exit(main(testnames))
+            if len(sys.argv) == i+2:
+                # Will run all tests
+                whichtests = 0
+                testnames = []
+            elif len(sys.argv) > i+2:
+                # Will run specific tests.
+                whichtests = 1
+                
+                while len(la) > 0:
+                    elem = la.pop()
+                    if elem == '--help':
+                        usage()
+                        sys.exit()
+                    if elem == '--file':
+                        # read list from a text file
+                        index = i + 3
+                        testnames = sys.argv[index]
+                        #                testnames = readfile(filelist)
+                        #                if (testnames == []):
+                        #                    sys.exit()
+                        break
+                    if elem == '--short':
+                        # run only the SHORT_LIST
+                        whichtests = 2
+                        testnames = SHORT_LIST
+                        break    
+                    if elem == this_file:
+                        break
+                
+                    testnames.append(elem)
+        else:
+            testnames = []
+    else:
+        # Not called with -c (but possibly execfile() from iPython)
+        testnames = []
+
     try:
         main(testnames)
     except:
         traceback.print_exc()
-        
-
-
