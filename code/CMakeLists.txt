@@ -480,6 +480,8 @@ casa_find( PYTHON
     # Does not exist on 10.5.5: numpy/numpyconfig.h
   INCLUDES_SUFFIXES python${PYTHONV}
   PREFIX_HINTS
+    /opt/local
+    /opt/local/lib/python${PYTHONV}/site-packages/numpy/core
     ${casa_packages}/lib/python${PYTHONV}/site-packages/numpy/core
     ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
     ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
@@ -518,9 +520,15 @@ set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/xmlcasa/install/saxo
 
 # C++ DBus
 if( APPLE )
-  set( DBUSARCH_INCLUDE_DIRS
-    ${casa_packages}/lib/dbus-1.0/include
-    )
+  if( EXISTS /opt/local/lib/dbus-1.0 )
+    set( DBUSARCH_INCLUDE_DIRS
+      /opt/local/lib/dbus-1.0/include
+      )
+  else()
+    set( DBUSARCH_INCLUDE_DIRS
+      ${casa_packages}/lib/dbus-1.0/include
+      )
+  endif()
 else()
   set( DBUSARCH_INCLUDE_DIRS 
     /usr/lib/qt-4.3.4/dbus/lib/dbus-1.0/include
@@ -719,7 +727,9 @@ casa_find( READLINE
   INCLUDES readline/readline.h #depends on <cstdio> to compile
   LIBS readline ncurses
   CPP_VERSION "RL_VERSION_MAJOR << '.' << RL_VERSION_MINOR"
-  RUN_VERSION rl_library_version )
+  RUN_VERSION rl_library_version
+  PREFIX_HINTS /opt/local
+)
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
