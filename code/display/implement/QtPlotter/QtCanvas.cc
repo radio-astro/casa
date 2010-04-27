@@ -62,15 +62,32 @@ QtCanvas::QtCanvas(QWidget *parent)
     
     setPlotSettings(QtPlotSettings());
     setMarkMode(false);
-    autoScale = 2;
+    autoScaleX = 2;
+    autoScaleY = 2;
     
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
 {
-    zoomStack.resize(1);
-    zoomStack[0] = settings;
-    curZoom = 0;
+    if (autoScaleX != 0 && autoScaleY != 0) {
+       zoomStack.resize(1);
+       zoomStack[0] = settings;
+       curZoom = 0;
+    }
+    else {
+       //cout << "set setting" << endl;
+       //cout << "minX=" << settings.minX 
+       //     << " maxX=" << settings.maxX 
+       //     << " minY=" << settings.minY 
+       //     << " maxY=" << settings.maxY 
+       //     << endl;
+       if (zoomStack.size() < 1) {
+          zoomStack.resize(1);
+          curZoom = 0;
+       }
+       zoomStack[curZoom] = settings;
+    }
+
     
     curMarker = 0;
     refreshPixmap();
@@ -137,7 +154,7 @@ void QtCanvas::setCurveData(int id, const CurveData &data,
 }
 void QtCanvas::setDataRange()
 {
-    if (autoScale == 0)
+    if (autoScaleX == 0 && autoScaleY == 0)
        return;
 
     double xmin = 1000000000000000000000000.;
@@ -163,6 +180,12 @@ void QtCanvas::setDataRange()
     }
 
     QtPlotSettings settings;
+    if (zoomStack.size() > 0) {
+       settings.minX = zoomStack[curZoom].minX;
+       settings.maxX = zoomStack[curZoom].maxX;
+       settings.minY = zoomStack[curZoom].minY;
+       settings.maxY = zoomStack[curZoom].maxY;
+    }
     if (xmax == xmin)
     {
         xmax = xmax + 0.5;
@@ -173,10 +196,14 @@ void QtCanvas::setDataRange()
         ymax = ymax + 0.5;
         ymin = ymin - 0.5;
     }
-    settings.minX = xmin;
-    settings.maxX = xmax;
-    settings.minY = ymin;
-    settings.maxY = ymax;
+    if (autoScaleX) {
+       settings.minX = xmin;
+       settings.maxX = xmax;
+    }
+    if (autoScaleY) {
+       settings.minY = ymin;
+       settings.maxY = ymax;
+    }
     settings.adjust();
     setPlotSettings(settings);
 
