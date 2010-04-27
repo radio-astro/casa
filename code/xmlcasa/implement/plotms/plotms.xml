@@ -1133,6 +1133,24 @@ State Methods
   </returns>
 </method>
 
+<method type="function" name="isClosed">
+  <keyword>isClosed</keyword>
+  
+  <shortdescription>Has the plot received a closeEvent?</shortdescription>
+  
+  <description />
+  
+  <input>
+
+  </input>
+  <example />
+  
+  <returns type='bool'>
+      <description>True if widget is closed, false if not</description>
+  
+  </returns>
+</method>
+
 
 <!--
 ###############################################################################

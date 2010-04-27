@@ -118,6 +118,8 @@ class plotms
 
 	bool isDrawing();
 
+    bool isClosed();
+
     private:
 
     #include <xmlcasa/plotms/plotms_private.h>
