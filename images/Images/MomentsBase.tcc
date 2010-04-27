@@ -26,7 +26,7 @@
 //# $Id: MomentsBase.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 //   
 
-#include <images/Images/ImageMoments.h>
+//#include <images/Images/ImageMoments.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
@@ -38,6 +38,7 @@
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/BasicSL/String.h>
+#include <casa/Utilities/LinearSearch.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/Lattices/LatticeStatsBase.h>
