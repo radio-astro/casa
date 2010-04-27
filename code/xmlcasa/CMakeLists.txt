@@ -88,6 +88,8 @@ casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
 casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
 casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
+casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
+
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
   scripts/assignmentFilter.py
