@@ -55,11 +55,11 @@
 
 		<param type="stringArray" name="restoringbeam">
 			<description>Output Gaussian restoring beam for CLEAN image</description>
-	    <value type="vector"><value>0.5</value><value>0.5</value></value>
+	    <value></value>
 		</param>
 
 		<param type="bool" name="interactive">
-			<description>Use interactive clean (with GUI viewer)</description>
+			<description>Create a mask interactively or not.</description>
 			<value>False</value>
 		</param>
 
@@ -135,19 +135,8 @@
                         restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
                         at 45 degrees
 	
-	interactive -- True expandable parameters
-               npercycle -- this is the  number of iterations between each
-                 interactive update of the mask.  It is important to modify
-                 this number interactively during the cleaning, starting with
-                 a low number like 20, but then increasing as more extended
-                 emission is encountered.
-               chaniter -- specify how interactive CLEAN is performed, 
-                 default: chaniter=False;
-                 example: chaniter=True; step through channels 
-                  WARNING: The interactive clean with chaniter=True for
-                    optical velocity mode
-                    (mode='velocity' and veltype='optical') is
-                    NOT YET IMPLEMENTED.
+	interactive -- Create a mask interactively or not.
+        		default=False; example: interactive=True
 	
  </example>
  </task>

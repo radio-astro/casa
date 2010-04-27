@@ -4,26 +4,29 @@ from cleanhelper import *
 from taskinit import *
 
 def getbeams(restoringbeam):
-	beams = []
-	if((restoringbeam == ['']) or (len(restoringbeam) ==0)):
-		return []
-	resbmaj=''
-	resbmin=''
-	resbpa='0deg'
-	if((type(restoringbeam) == list)  and len(restoringbeam)==1):
-		restoringbeam=restoringbeam[0]
+    beams = []
+    if((restoringbeam == ['']) or (len(restoringbeam) ==0)):
+        return []
+    resbmaj=''
+    resbmin=''
+    resbpa='0deg'
+    if((type(restoringbeam) == list)  and len(restoringbeam)==1):
+        # circular
+        print 'HERE0'
+        resbmaj = restoringbeam[0]
+        resbmin = restoringbeam[0]
         
-	if((type(restoringbeam)==str)):
-		if(qa.quantity(restoringbeam)['unit'] == ''):
-			restoringbeam=restoringbeam+'arcsec'
-		resbmaj=qa.quantity(restoringbeam, 'arcsec')
-		resbmin=qa.quantity(restoringbeam, 'arcsec')
+    if((type(restoringbeam)==str)):
+        if(qa.quantity(restoringbeam)['unit'] == ''):
+            restoringbeam=restoringbeam+'arcsec'
+        resbmaj=qa.quantity(restoringbeam, 'arcsec')
+        resbmin=qa.quantity(restoringbeam, 'arcsec')
         
-	if(type(restoringbeam)==list):        
-		resbmaj=qa.quantity(restoringbeam[0], 'arcsec')
-		resbmin=qa.quantity(restoringbeam[1], 'arcsec')
-		if(resbmaj['unit']==''):
-			resbmaj=restoringbeam[0]+'arcsec'
+    if(type(restoringbeam)==list):        
+        resbmaj=qa.quantity(restoringbeam[0], 'arcsec')
+        resbmin=qa.quantity(restoringbeam[1], 'arcsec')
+        if(resbmaj['unit']==''):
+            resbmaj=restoringbeam[0]+'arcsec'
         if(resbmin['unit']==''):
             resbmin=restoringbeam[1]+'arcsec'
         if(len(restoringbeam)==3):
@@ -31,16 +34,14 @@ def getbeams(restoringbeam):
             if(resbpa['unit']==''):
                 resbmin=restoringbeam[2]+'deg'
 
-	if((resbmaj != '') and (resbmin != '')): 
-		im.setbeam(resbmaj, resbmin, resbpa)  
+    if((resbmaj != '') and (resbmin != '')): 
         beams = [resbmaj,resbmin, resbpa]
         print '**************************************************'
-        print beams
-        return beams
+    
+    print beams
+    
+    return beams
             
-#	im.setbeam(resbmaj, resbmin, resbpa)  #
-	beams = [resbmaj,resbmin, resbpa]#
-	return beams
 
 def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restoringbeam, interactive):
 
@@ -119,25 +120,14 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
                             restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
                             at 45 degrees
         
-        interactive -- True expandable parameters - Not yet implemented!!!
-                   npercycle -- this is the  number of iterations between each
-                     interactive update of the mask.  It is important to modify
-                     this number interactively during the cleaning, starting with
-                     a low number like 20, but then increasing as more extended
-                     emission is encountered.
-                   chaniter -- specify how interactive CLEAN is performed, 
-                     default: chaniter=False;
-                     example: chaniter=True; step through channels 
-                      WARNING: The interactive clean with chaniter=True for
-                        optical velocity mode
-                        (mode='velocity' and veltype='optical') is
-                        NOT YET IMPLEMENTED.
+        interactive -- Create a mask interactively or not.
+                        default=False; example: interactive=True
             
     """
     
 
-    #Python script	
-	
+    #Python script    
+    
     try:
         casalog.origin('csvclean')
     
@@ -146,6 +136,7 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         parsummary += 'imsize="'+str(imsize)+'", niter="'+str(niter)+'", '
         parsummary += 'weighting="'+str(weighting)+'", '
         parsummary += 'restoringbeam="'+str(restoringbeam)+'", '
+        parsummary += 'interactive="'+str(interactive)+'"'
         casalog.post(parsummary,'INFO')    
         
         if ((type(vis)==str) & (os.path.exists(vis))):
@@ -177,14 +168,35 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         cellx=cell[0]
         celly=cell[1]
         if((type(cell[0])==int) or (type(cell[0])==float)):
-        	cellx=qa.quantity(cell[0], 'arcsec')
-        	celly=qa.quantity(cell[1], 'arcsec')
+            cellx=qa.quantity(cell[0], 'arcsec')
+            celly=qa.quantity(cell[1], 'arcsec')
 
-#        imCln=imtool.create()
-#        imset=cleanhelper(imCln, vis)
-#        imset.setrestoringbeam(restoringbeam)
-           
-        	
+        if restoringbeam == '':
+        	# calculate from fit
+            bmaj = ''
+            bmin = ''
+            bpa = ''
+        else:        	
+	        if (type(restoringbeam)==str):
+	            restoringbeam=[restoringbeam,restoringbeam,'0deg']
+	        if (type(restoringbeam)==list and (len(restoringbeam)==1)):
+	            restoringbeam=[restoringbeam[0],restoringbeam[0],'0deg']
+	        if (type(restoringbeam)==list and (len(restoringbeam)==2)):
+	            restoringbeam=[restoringbeam[0],restoringbeam[1],'0deg']
+	        if (type(restoringbeam)==list and (len(restoringbeam)==2)):
+	            restoringbeam=[restoringbeam[0],restoringbeam[1],restoringbeam[2]]
+	
+	        if(qa.quantity(restoringbeam[0])['unit'] == ''):
+	        	restoringbeam[0]=restoringbeam[0]+'arcsec'
+	        if(qa.quantity(restoringbeam[1])['unit'] == ''):
+	        	restoringbeam[1]=restoringbeam[1]+'arcsec'
+	        if(qa.quantity(restoringbeam[2])['unit'] == ''):
+	        	restoringbeam[2]=restoringbeam[2]+'deg'
+	        
+	        bmaj = restoringbeam[0]
+	        bmin = restoringbeam[1]
+	        bpa = restoringbeam[2]
+                   
         # Create output names based on imagename parameter
         dirtyim = imagename+'dirty.image'
         psfim = imagename+'psf.image'
@@ -195,55 +207,37 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         im.selectvis(vis=vis, spw=spw, field=field, usescratch=True)
         im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly)
         im.weight(weighting)
-        comp = getbeams(restoringbeam)
-        if (comp == []):
-            raise Exception, "restoringbeam is empty or invalid"
-        bmaj = comp[0]
-        bmin = comp[1]
-        bpa = comp[2]
-        im.setbeam(bmaj,bmin,bpa)
         im.makeimage(type='corrected', image=dirtyim)
         im.makeimage(type='psf', image=psfim)
         im.done()
-    
+
+        # Make a mask
+        maskname=''
+        if(interactive):
+            maskname=imagename+'.mask'
+            im.drawmask(dirtyim, maskname)
+
         # use deconvolver to do image plane deconvolution
         # using a mask image as the mask
         dc.open(dirty=dirtyim, psf=psfim)
-        dc.clean(niter=niter, model=modelname)
+        # NOTE: use the parameter mask which can be an empty
+        #       string if no mask
+        dc.clean(niter=niter, model=modelname, mask=maskname)
         
         # create the restored image
         dc.restore(model=modelname, image=imname, bmaj=bmaj, bmin=bmin, bpa=bpa)    
-#        dc.restore(model=modelname, image=imname)    
-#        del imCln
-
-        # Write history to output MS
-#        ms.open(outputvis, nomodify=False)
-#        ms.writehistory(message='taskname=csvclean', origin='csvclean')
-#        ms.writehistory(message='vis         = "'+str(vis)+'"',
-#                origin='csvclean')
-#        ms.writehistory(message='imagename   = "'+str(imagename)+'"',
-#                origin='csvclean')
-#        ms.writehistory(message='field       = "'+str(field)+'"',
-#                origin='csvclean')
-#        ms.writehistory(message='spw         = '+str(spw), origin='csvclean')
-#        ms.writehistory(message='nx     = "'+str(x)+'"',
-#                origin='csvclean')
-#        ms.writehistory(message='ny   = "'+str(ny)+'"',
-#                origin='csvclean')
-#        ms.writehistory(message='cellx        = '+str(cellx), origin='csvclean')
-#        ms.writehistory(message='celly       = '+str(celly), origin='csvclean')
-#        ms.writehistory(message='weight       = '+str(weight), origin='csvclean')
-#        ms.writehistory(message='algorithm       = '+str(algorithm), origin='csvclean')
-#        ms.close()
     
         return True
 
     except Exception, instance:
+        print '*** Error *** ',instance
         casalog.post("Error ...", 'SEVERE')
-        try:
-            ms.close()
-        except:
-            casalog.post("MS closed.", 'INFO')
-    raise Exception, instance
+        raise Exception, instance
+
+#    except Exception:
+#        casalog.post("Error ...", 'SEVERE')
+#        traceback.print_exc()
+
+#        raise Exception
     
 
