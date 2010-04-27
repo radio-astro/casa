@@ -37,6 +37,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class String;
 class FitsOutput;
 class MeasurementSet;
+template<class T> class ROScalarColumn;
 class Table;
 template<class T> class Block;
 template<class T> class Vector;
@@ -168,6 +169,30 @@ private:
   */
   static Int makeIdMap (Block<Int>& map, Vector<Int>& selids,
 			const Vector<Int>& allids);
+
+  /** Find the end of a group of rows with the same
+      time(_centroid) (within 0.25 * ininterval(rownr)), 
+      baseline #,
+      and, if asMultiSource, field ID.
+      @param rownr          Row # to start from.
+      @param nrow           # of rows in the columns.
+      @param timec          time(_centroid) col
+      @param ininterval     used to set tolerance on changes in timec.
+      @param ant1           ID of baseline's antenna 1.
+      @param ant2           ID of baseline's antenna 2.
+      @param asMultiSource  If false, treat fieldid as unattached + prone to segfault
+      @param fieldid        
+      @return Last row # with the same time, baseline, and apparent field as rownr.
+      @warning Assumes that the columns are sorted by time(_centroid), ant1,
+               ant2 (, field, DDID).
+  */
+  static uInt get_tbf_end(const uInt rownr, const uInt nrow, const uInt nif,
+                          const ROScalarColumn<Double>& timec,
+                          const ROScalarColumn<Double>& ininterval,
+                          const ROScalarColumn<Int>& ant1,
+                          const ROScalarColumn<Int>& ant2,
+                          const Bool asMultiSource,
+                          const ROScalarColumn<Int>& fieldid);
 };
 
 

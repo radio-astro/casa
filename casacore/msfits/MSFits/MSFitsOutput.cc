@@ -276,6 +276,35 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
   return ok;
 }
 
+uInt MSFitsOutput::get_tbf_end(const uInt rownr, const uInt nrow, const uInt nif, 
+                               const ROScalarColumn<Double>& intimec,
+                               const ROScalarColumn<Double>& ininterval,
+                               const ROScalarColumn<Int>& inant1,
+                               const ROScalarColumn<Int>& inant2,
+                               const Bool asMultiSource,
+                               const ROScalarColumn<Int>& infieldid)
+{
+  const Double startTC = intimec(rownr);
+  const Double timeTol = 0.25 * ininterval(rownr);
+  const Int startant1 = inant1(rownr);
+  const Int startant2 = inant2(rownr);
+  Int startfld = 0;
+  
+  if(asMultiSource)
+    startfld = infieldid(rownr);
+  
+  uInt tbfend = rownr;
+  for(uInt currrow = rownr + 1; currrow - rownr < nif && currrow < nrow; ++currrow){
+    if(intimec(currrow) - startTC <= timeTol &&
+       inant1(currrow) == startant1 &&
+       inant2(currrow) == startant2 &&
+       (!asMultiSource || infieldid(currrow) == startfld))
+      tbfend = currrow;
+    else
+      break;
+  }
+  return tbfend;
+}
 
 FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 				    Double& chanbw,
@@ -288,7 +317,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 				    const Block<Int>& fieldidMap,
 				    Bool asMultiSource,
 				    const Bool combineSpw,
-                                    const Bool padWithFlags)
+                                    Bool padWithFlags)
 {
   FitsOutput *outfile = 0;
   LogIO os(LogOrigin("MSFitsOutput", "writeMain"));
@@ -804,29 +833,37 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
   ROScalarColumn<Bool> inrowflag(sortTable, MS::columnName(MS::FLAG_ROW));
   ROArrayColumn<Bool> indataflag(sortTable, MS::columnName(MS::FLAG));
   ROArrayColumn<Double> inuvw(sortTable, MS::columnName(MS::UVW));
-  ROScalarColumn<Double> intime(sortTable, MS::columnName(MS::TIME));
+  ROScalarColumn<Double> intimec(sortTable, MS::columnName(MS::TIME_CENTROID));
   ROScalarColumn<Int> inant1(sortTable, MS::columnName(MS::ANTENNA1));
   ROScalarColumn<Int> inant2(sortTable, MS::columnName(MS::ANTENNA2));
   ROScalarColumn<Int> inarray(sortTable, MS::columnName(MS::ARRAY_ID));
   ROScalarColumn<Int> inspwinid(sortTable,
 				MS::columnName(MS::DATA_DESC_ID));
-  ROScalarColumn<Int> infieldid;
+
   ROScalarColumn<Double> inexposure;
+  ROScalarColumn<Int> infieldid;
   if (asMultiSource) {
     infieldid.attach (sortTable, MS::columnName(MS::FIELD_ID));
     // Why is exposure only done for multisource files?
     inexposure.attach (sortTable, MS::columnName(MS::EXPOSURE));
   }
 
+  uInt nif = 1;
+  if(combineSpw)
+    nif = nrspw;
+  if(nif < 2)
+    padWithFlags = false;
+
+  ROScalarColumn<Double> ininterval;
+  if(padWithFlags)
+    ininterval.attach(sortTable, MS::columnName(MS::INTERVAL));
+
   // (another) check whether the SPWs naturally fit the IF paradigm.  Do this
   // before creating the writer so that a partial UVFITS file isn't left on
   // disk if this exits.
-  uInt nif = 1;
   Vector<Int> expectedDDIDs;
   uInt nOutRow = nrow;
   if (combineSpw){
-    nif = nrspw;
-
     // Prepare a list of the expected DDIDs as a function of rownr % nif.
     // If inspwinid(rownr) != expectedDDIDs[rownr % nif], something has gone
     // wrong (probably combinespw && multiple tunings, CAS-2048).
@@ -856,16 +893,24 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 
       uInt rownr = 0;
       while(rownr < nrow){
-        for(uInt m = 0; m < nif; ++m){
-          Int inspw = inspwinid(rownr);
+        uInt tbfend = rownr + nif - 1;
         
-          ++nperIF[spwidMap[inspw]];
-          if(padWithFlags && inspw != expectedDDIDs[m])
-            ++nOutRow;
-          else
-            ++rownr;
-        }        
+        if(padWithFlags){
+          tbfend = get_tbf_end(rownr, nrow, nif, intimec, ininterval,
+                               inant1, inant2,
+                               asMultiSource, infieldid);
+          nOutRow += nif - (tbfend + 1 - rownr); // Increment by # of padded rows.
+        }
+        else if(tbfend >= nrow)
+          tbfend = nrow - 1;
+        
+        for(;rownr <= tbfend; ++rownr)
+          ++nperIF[spwidMap[inspwinid(rownr)]];
       }
+      os << LogIO::DEBUG1 << "rownr   = " << rownr << LogIO::POST;
+      os << LogIO::DEBUG1 << "nrow    = " << nrow << LogIO::POST;
+      os << LogIO::DEBUG1 << "nOutRow = " << nOutRow << LogIO::POST;
+      
       if(nOutRow % nif){
         os << LogIO::SEVERE
            << "The expected # of output rows, " << nOutRow
@@ -951,28 +996,50 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
   handleAntNumbers(rawms,antnumbers);
 
   // Loop through all rows.
-  ProgressMeter meter(0.0, nrow*1.0, "UVFITS Writer", "Rows copied", "", "",
-		      True, nrow/100);
+  ProgressMeter meter(0.0, nOutRow*1.0, "UVFITS Writer", "Rows copied", "", "",
+		      True, nOutRow/100);
 
-  uInt rownr = 0;
-  Double lasttime(0.0);
-  while(rownr < nrow){
+  uInt tbfrownr = 0;  // Input row # of (time, baseline, field).
+  uInt outrownr = 0;  // Output row #.
+  
+  //Double lasttime(0.0);
+  Vector<Float> realcorr(numcorr0);
+  Vector<Float> imagcorr(numcorr0);
+  Vector<Float> wgtaver(numcorr0);
+  Int old_nspws_found = -1;             // Just for debugging curiosity.
+  while(tbfrownr < nrow){
+    if(outrownr >= nOutRow){      // Shouldn't happen, but just in case...
+      os << LogIO::WARN
+         << "The loop over output rows failed to stop when expected...stopping it now."
+         << LogIO::POST;
+      break;
+    }
+
     // Will only write a record if some non-flagged data found
     //    Bool dowrite(True);   // temporarily disable, because FITSGroupWriter chokes
 
-    meter.update((rownr+1)*1.0);
     Float* outptr = optr;           // reset for each spectral-window
-    for (uInt m=0; m<nif; m++) {
+
+    // Loop over the IFs, whether or not the corresponding spws are present for
+    // this (time, baseline, field).
+    // rownr should only be used inside this loop; use tbfrownr outside.
+    uInt rownr = tbfrownr;     // Essentially tbfrownr + m - # of missing spws
+                               // so far.
+    uInt tbfend = tbfrownr + nif - 1;
+    if(padWithFlags)
+      tbfend = get_tbf_end(tbfrownr, nrow, nif, intimec, ininterval,
+                           inant1, inant2, asMultiSource, infieldid);
+
+    for(uInt m = 0; m < nif; ++m){
       Bool rowFlag;           // FLAG_ROW
 
-      // All operations using rownr must happen inside this if...else!
-      if(combineSpw && inspwinid(rownr) != expectedDDIDs[m]){
+      if(combineSpw && (rownr >= nrow // flag remaining IFs in tbfrownr
+                        || inspwinid(rownr) != expectedDDIDs[m])){
         if(padWithFlags){
           // Save this row for the next one, and fill in with flagged junk.
-          // So don't increment rownr.
           
-          //indatatmp.set(0.0);   // DATA matrix
-          indata.get(rownr, indatatmp);   // DATA matrix
+          indatatmp.set(0.0);   // DATA matrix
+          //indata.get(rownr, indatatmp);   // DATA matrix
           rowFlag = true;
           inflagtmp.set(true);
           inwttmp.set(0.0);
@@ -987,7 +1054,14 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
           return 0;
         }        
       }
-      else{
+      else{  // The spw is present, use it.
+        if(rownr >= nrow){      // Shouldn't happen, but just in case...
+          os << LogIO::WARN
+             << "The loop over input rows failed to stop when expected...stopping it now."
+             << LogIO::POST;
+          break;
+        }
+
         indata.get(rownr, indatatmp);   // DATA matrix
         rowFlag = inrowflag(rownr);
         indataflag.get(rownr, inflagtmp);      // FLAG
@@ -1008,29 +1082,30 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
           }
         }
         /*
-          Double rtime(86400.0*floor(intime(0)/86400.0));
-          cout << "rtime = " << rtime << " " << "nrows = " << intime.nrow()
+          Double rtime(86400.0*floor(intimec(0)/86400.0));
+          cout << "rtime = " << rtime << " " << "nrows = " << intimec.nrow()
                << endl;
-          cout << "time = " << intime(rownr)-rtime;
-          if (intime(rownr)!=lasttime)
+          cout << "time = " << intimec(rownr)-rtime;
+          if (intimec(rownr)!=lasttime)
             cout << " ***NEW*** ";
           cout << endl;
         */
-        lasttime = intime(rownr);
+        // lasttime = intimec(rownr);
 
-        ++rownr;
+        if(!padWithFlags || rownr <= tbfend)
+          ++rownr;  // register that the spw was present.
       }
 
       // We should optimize this loop more, probably do frequency as
       // the inner loop?
-      Vector<Float> realcorr(numcorr0); realcorr.set(0);
-      Vector<Float> imagcorr(numcorr0); imagcorr.set(0);
-      Vector<Float> wgtaver(numcorr0);  wgtaver.set(0);
+      realcorr.set(0);
+      imagcorr.set(0);
+      wgtaver.set(0);
       Int chancounter=0;
       for (Int k=chanstart; k< (nchan*chanstep+chanstart); k++) {
 
   /*
-	cout << "row = " << rownr << " "
+	cout << "row = " << tbfrownr << " "
 	  //	<< outptr << " " << optr << " " << outptr-optr << " ";
 	     << "ddi = " << m << " (" << inspwinid(i) << ") "
 	     << "chan = " << k << " / "
@@ -1050,9 +1125,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 	}
 	++chancounter;
 	for (Int j=0; j<numcorr0; j++) {
-	  
-	  
 	  Int offset = indptr[j] + k*numcorr0;
+
 	  if(!fptr[offset]){
 	    //	    dowrite=True;
 	    realcorr[j] += iptr[offset].real()*wptr[offset];
@@ -1078,49 +1152,87 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 	    }
 	    outptr += 3;
 	  }
-
 	}
-
       }
+
+      // if(nOutRow - outtbfrownr < 5)
+      //   os << LogIO::DEBUG1 << "(outtbfrownr, m) = (" << outtbfrownr
+      //      << ", " << m << ")" << LogIO::POST;
+
     }   // Ends loop over IFs.
 
     // If found data at this timestamp, write it out
     //    if (dowrite) {
     // Random parameters
     // UU VV WW
-    inuvw.get(i, uvw);
+    inuvw.get(tbfrownr, uvw);
     *ouu = uvw(0) * oneOverC;
     *ovv = uvw(1) * oneOverC;
     *oww = uvw(2) * oneOverC;
       
     // TIME
-    timeToDay(day, dayFraction, intime(i));
+    timeToDay(day, dayFraction, intimec(tbfrownr));
     *odate1 = day;
     *odate2 = dayFraction;
       
     // BASELINE
-    *obaseline = antnumbers(inant1(i))*256 + antnumbers(inant2(i)) + inarray(i)*0.01;
+    *obaseline = antnumbers(inant1(tbfrownr))*256 + antnumbers(inant2(tbfrownr)) + inarray(tbfrownr)*0.01;
       
     // FREQSEL (in the future it might be FREQ_GRP+1)
     //    *ofreqsel = inddid(i) + 1;
     if (combineSpw) {
       *ofreqsel = 1;
     } else {
-      *ofreqsel = 1 + spwidMap[inspwinid(i)];
+      *ofreqsel = 1 + spwidMap[inspwinid(tbfrownr)];
     }
       
     // SOURCE
     // INTTIM
     if (asMultiSource) {
-      *osource = 1 + fieldidMap[infieldid(i)];
-      *ointtim = inexposure(i);
+      *osource = 1 + fieldidMap[infieldid(tbfrownr)];
+      *ointtim = inexposure(tbfrownr);
     }
       
     writer.write();
+    meter.update(outrownr + 1.0);
+    ++outrownr;
 
+    // How many spws showed up for this (time_centroid, ant1, ant2, field)?
+    if(rownr == tbfrownr){
+      os << LogIO::WARN
+         << "No spectral windows were present for row # " << rownr << "\n"
+         << " input (time_centroid, ant1, ant2, field) =\n"
+         << "  (" << intimec(tbfrownr) << ", " << inant1(tbfrownr) << ", "
+         << inant2(tbfrownr) << ", " << infieldid(tbfrownr) << ")"
+         << LogIO::POST;
+    }
+    else{
+      Int nspws_found = rownr - tbfrownr;  // Just for debugging curiosity.
+      
+      if(nspws_found != old_nspws_found){
+        old_nspws_found = nspws_found;
+        os << LogIO::DEBUG1 << "row # " << rownr << LogIO::POST;
+        os << LogIO::DEBUG1
+           << " input (time_centroid, ant1, ant2, field) =" << LogIO::POST;
+        os << LogIO::DEBUG1
+           << "  (" << intimec(tbfrownr) << ", " << inant1(tbfrownr) << ", "
+           << inant2(tbfrownr) << ", "
+          // infieldid is unattached and segfaultable if !asMultiSource.
+           << (asMultiSource ? infieldid(tbfrownr) : 0) << "):" << LogIO::POST;
+        os << "  found " << nspws_found << " spws out of " << nif << " IFs."
+           << LogIO::POST;
+      }
+        
+      tbfrownr = rownr;  // Increment it by the # of spws found.
+    }
+    
     //    } // dowrite
-
   }
+  os << LogIO::DEBUG1 << "tbfrownr = " << tbfrownr << LogIO::POST;
+  os << LogIO::DEBUG1 << "outrownr = " << outrownr << LogIO::POST;
+  os << LogIO::DEBUG1 << "nrow     = " << nrow << LogIO::POST;
+  os << LogIO::DEBUG1 << "nOutRow  = " << nOutRow << LogIO::POST;
+
   // changing chanbw to output one
   chanbw=bw0;
 
