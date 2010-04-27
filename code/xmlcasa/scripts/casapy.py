@@ -4,6 +4,17 @@ import time
 import signal
 
 ##
+## tweak path... where necessary...
+##
+path_addition = [ ]
+for p in sys.path :
+    if p.startswith(sys.prefix) :
+        if os.path.isdir( p + os.sep + 'lib-tk') :
+            path_addition.append(p + os.sep + 'lib-tk')
+
+sys.path = sys.path + path_addition
+
+##
 ## watchdog... which is *not* in the casapy process group
 ##
 if os.fork( ) == 0 :

@@ -5884,29 +5884,33 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
                 avgImgWts.set(0.0);
                 oproxyImgWtsP = avgImgWts.getStorage(idelete);
             
-		for(Int r=0; r < rowsnow; ++r)
-		  for(Int c=0; c < nchan_p[spw]; ++c)
-		    {
-		      Int outImgWtsoffset=r*nchan_p[spw]+c,
-			imgWtsCounter=0,
-			whichChan=chanStart_p[spw]+ c*chanStep_p[spw];
-		      if(!averageChannel_p)
-			avgImgWts(r,c) = inImgWts(r,whichChan);
-		      else
-			for (Int m=0; m < chanStep_p[spw]; ++m)
-			  {
-			    Int inImgWtsoffset=r*inNumChan_p[spw]+(c*chanStep_p[spw]+m);
-			    oproxyImgWtsP[outImgWtsoffset] += iproxyImgWtsP[inImgWtsoffset];
-			    imgWtsCounter++;
-			  }
-		      
-		      if(averageChannel_p)
-			if(imgWtsCounter >0)
-			  oproxyImgWtsP[outImgWtsoffset] /= imgWtsCounter;
-			else
-			  oproxyImgWtsP[outImgWtsoffset]=0;
-		    }
-		msc_p->imagingWeight().putColumnCells(rowstoadd,avgImgWts);
+                for(Int r = 0; r < rowsnow; ++r){
+                  for(Int c = 0; c < nchan_p[spw]; ++c){
+                    Int outImgWtsoffset = r * nchan_p[spw] + c;
+                    Int imgWtsCounter = 0;
+                    Int whichChan = chanStart_p[spw] + c * chanStep_p[spw];
+
+                    if(!averageChannel_p){
+                      avgImgWts(r, c) = inImgWts(r, whichChan);
+                    }
+                    else{
+                      for(Int m = 0; m < chanStep_p[spw]; ++m){
+                        Int inImgWtsoffset = r * inNumChan_p[spw] + c * chanStep_p[spw] + m;
+
+                        oproxyImgWtsP[outImgWtsoffset] += iproxyImgWtsP[inImgWtsoffset];
+                        ++imgWtsCounter;
+                      }
+                    }
+                    
+                    if(averageChannel_p){
+                      if(imgWtsCounter > 0)
+                        oproxyImgWtsP[outImgWtsoffset] /= imgWtsCounter;
+                      else
+                        oproxyImgWtsP[outImgWtsoffset] = 0;
+                    }
+                  }
+                }
+                msc_p->imagingWeight().putColumnCells(rowstoadd, avgImgWts);
 	      }
 	    //----------------------------------------------------------------------
 	    

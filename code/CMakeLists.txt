@@ -309,11 +309,10 @@ find_package( Perl )
 casa_find( CFITSIO
   VERSION 3.006
   INCLUDES fitsio.h fitsio2.h
-  INCLUDES_HINTS /usr/include/cfitsio
+  INCLUDES_SUFFIXES cfitsio
   LIBS cfitsio
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
-
 
 # X11.
 find_package( X11 REQUIRED )
@@ -372,7 +371,10 @@ casa_find( WCSLIB
   INCLUDES wcslib/wcsconfig.h
   LIBS wcs
        pgsbox
-  CPP_VERSION WCSLIB_VERSION
+  # RR commented out the next line because cout << 4.4.4 complains
+  # that there are too many decimal points, but quoting the version
+  # breaks the cfitsio detection.
+  #CPP_VERSION "WCSLIB_VERSION"
   DEFINITIONS -DSIGNBIT 
   DEPENDS PGPLOT )
 
@@ -394,7 +396,7 @@ casa_find( CASACORE
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
-           INCLUDES_HINTS ${CMAKE_INSTALL_PREFIX}/include/casacore
+           INCLUDES_SUFFIXES casacore
            LIBS casa_casa
                 casa_components
                 casa_coordinates
@@ -428,46 +430,66 @@ endif()
 
 
 # Python
-#
-# Using different versions of Python depending on platform!
-# The shared libraries have version dependent names.
-set( PV 25 )
-set( PYTHONV 2.5 )
-set( PYTHONVERS 2.5.2 )
-if( APPLE )
-  if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-    set( python_library python2.5.2 )
-  else()
-    set( PV 26 )
-    set( PYTHONV 2.6 )
-    set( PYTHONVERS 2.6.4 )
-    set( python_library python2.6 )  
-  endif()
-else()
-  if( EXISTS /usr/include/python2.6/Python.h )
-    set( PV 26 )
-    set( PYTHONV 2.6 )
-    set( PYTHONVERS 2.6.4 )
-    set( python_library python2.6 )  
-  else()
-    set( python_library python2.5 )
-  endif()
+
+# First determine which python version to search for,
+# then do the actual search
+if( NOT PYTHON_FOUND AND NOT PYTHON_LIBNAME )
+  # Allow user to define PYTHON_LIBNAME, otherwise:
+
+  # Set PYTHONV to the latest of the following versions
+  # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
+  foreach( _v 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+
+    set( PYTHON_LIBNAME ${_v} )
+
+    casa_find( 
+      PYTHON${_v} 
+      LIBS python${_v} 
+      NO_REQUIRE )
+
+    # dump( PYTHON${_v}_VERSION PYTHON_LIBNAME PYTHON${_v}_FOUND )
+
+    if( PYTHON${_v}_FOUND )
+      break()
+    elseif( _v STREQUAL 2.5 )
+      message( FATAL_ERROR "Could not find any PYTHON library with version between 2.5 <= version < 3.0. Please check!" )
+    endif()
+
+  endforeach()
+
+endif()
+
+if( NOT PYTHON_LIBNAME )
+  # Found Python, but PYTHON_LIBNAME is undefined, that is impossible.
+  message( FATAL_ERROR "The variable PYTHON_LIBNAME is undefined. Most likely, CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON* ..\")")
+endif()
+
+string( SUBSTRING ${PYTHON_LIBNAME} 0 3 PYTHONV )
+string( REPLACE "." "" PV ${PYTHONV} )
+set( python_library python${PYTHON_LIBNAME} )
+
+if( NOT PYTHON_FOUND )
+  message( STATUS "Looking for PYTHON version ${PYTHONV}.x" )
 endif()
 
 casa_find( PYTHON
-  VERSION EXACT ${PYTHONVERS}
+  VERSION 2.5    # minimum required
   INCLUDES Python.h 
      numpy/npy_interrupt.h   # for numpy
     # Does not exist on 10.5.5: numpy/numpyconfig.h
-  INCLUDES_HINTS
-    ${casa_packages}/include/python${PYTHONV} 
-    ${casa_packages}/lib/python${PYTHONV}/site-packages/numpy/core/include
-    ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/include/python${PYTHONV}
-    ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core/include
-    /usr/include/python${PYTHONV}
+  INCLUDES_SUFFIXES python${PYTHONV}
+  PREFIX_HINTS
+    ${casa_packages}/lib/python${PYTHONV}/site-packages/numpy/core
+    ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
+    ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
 
+# Store PYTHON_LIBNAME in the cache
+set( PYTHON_LIBNAME ${PYTHON_LIBNAME} CACHE STRING "Python major and minor version to use" FORCE )
+
+# Define pyroot to two directory levels above Python.h.
+string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
 
 if( APPLE )
     if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
@@ -511,16 +533,11 @@ casa_find( DBUS
   1.0
   INCLUDES dbus/dbus.h
            dbus-c++/dbus.h # dbus/dbus-arch-deps.h
-  INCLUDES_HINTS
-    /usr/lib/qt-4.3.4/dbus/include/dbus-1.0
-    /usr/lib/qt-4.3.4/dbus/include/dbus-c++-1
-    /usr/include/dbus-1.0
-    /usr/include/dbus-c++-1
-    ${casa_packages}/dbus-1.0/include
-    ${casa_packages}/include/dbus-1.0
-    ${casa_packages}/include/dbus-c++-1
+  INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
+  PREFIX_HINTS
+    /usr/lib/qt-4.3.4/dbus
+    ${casa_packages}/dbus-1.0
   LIBS dbus-c++-1
-  LIBS_HINTS /usr/lib/qt-4.3.4/dbus/lib
   PROGRAMS dbusxx-xml2cpp
   DEPENDS DBUSARCH
 )
@@ -529,9 +546,7 @@ casa_find( DBUS
 casa_find( ATM
   VERSION 0.3
   INCLUDES ATMEnumerations.h ATMVersion.h
-  INCLUDES_HINTS
-    /usr/include/ATM
-    /usr/local/include
+  INCLUDES_SUFFIXES ATM
   LIBS aatm
   #CPP_VERSION ATM_VERSION  to be uncommented when ATM_VERSION is defined in devel-RPMs
   RUN_VERSION "atm::getVersion()" 
@@ -541,7 +556,7 @@ casa_find( ATM
 casa_find( LIBXML2
   VERSION 2.6.16
   INCLUDES libxml/xmlversion.h
-  INCLUDES_HINTS /usr/include/libxml2
+  INCLUDES_SUFFIXES libxml2
   LIBS xml2
   CPP_VERSION LIBXML_DOTTED_VERSION 
   RUN_VERSION "LIBXML_DOTTED_VERSION; LIBXML_TEST_VERSION;" 
@@ -583,7 +598,6 @@ casa_find( CCMTOOLS
            WX/Utils/error.h
            WX/Utils/type.h
   LIBS ${_ccmtools_libs}
-  LIBS_HINTS /home/rob/casa/gnuactive/build/lib
   PROGRAMS ccmtools
   PROG_VERSION "--version" 
   EXTRA_TEST " 
@@ -628,14 +642,11 @@ set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 casa_find( QWT
   VERSION 5.1.1
   INCLUDES qwt_global.h
-  INCLUDES_HINTS 
-    /usr/include/qwt
-    /usr/include/qwt-qt4
-    ${casa_packages}/qwt-5.2.0/include
-    ${casa_packages}/qwt-5.2.1-svn/include
+  INCLUDES_SUFFIXES qwt qwt-qt4
+  PREFIX_HINTS 
+    ${casa_packages}/qwt-5.2.0
+    ${casa_packages}/qwt-5.2.1-svn
   LIBS qwt
-  LIBS_HINTS ${casa_packages}/qwt-5.2.0/lib 
-             ${casa_packages}/qwt-5.2.1-svn/lib
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )
 

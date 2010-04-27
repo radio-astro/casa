@@ -37,8 +37,7 @@
 #
 #     23.2  >  23.03
 #
-# Use the heuristics, that if the version string contains ".0"
-# then float comparison is used, otherwise integer
+# Use the heuristics, that float comparison is used only for CFITSIO
 
 macro( casa_check_version error p actual )
   set( desired ${ARGN} )
@@ -52,7 +51,7 @@ macro( casa_check_version error p actual )
       set( ${error} "${p} version is not ${_v}. Please check!" )
     endif()
   else()
-    if( ${actual} MATCHES "\\.0" OR ${_v} MATCHES "\\.0" )
+    if( ${p} MATCHES "^CFITSIO" )
       set( _cmp GREATER )
     else()
       set( _cmp VERSION_GREATER )
@@ -76,8 +75,9 @@ endmacro()
 #      casa_find(  package
 #               [ VERSION version ]
 #               [ INCLUDES include1 ... ]
+#               [ INCLUDES_SUFFIX suffix1 ... ]
+#               [ PREFIX_HINTS dir1 ... ]
 #               [ LIBS lib1 ... ]
-#               [ LIBS_HINTS dir1 ... ]
 #               [ PROGRAMS program1 ... ]
 #               [ CPP_VERSION cpp_version ]
 #               [ RUN_VERSION run_version ]
@@ -85,6 +85,7 @@ endmacro()
 #               [ EXTRA_TEST extra_test ]
 #               [ DEFINITIONS flag1 ... ]
 #               [ DEPENDS package1 ... ]
+#               [ NO_REQUIRE ]
 #             )
 #
 #   Sets the following variables
@@ -99,11 +100,16 @@ endmacro()
 #
 #      INCLUDES: Header file names to search for
 #
-# INCLUDES_HINTS: (Optional) extra directories where to search for headers
+# INCLUDES_SUFFIXES: Possible extra suffix directory which are appended to the 
+#                    candidate include paths.
+#                    Passed to CMake's find_path as PATH_SUFFIXES
+#
+#  PREFIX_HINTS: Extra (package-specific) prefix directories to search for
+#                libraries and headers. Passed to find_path() as PATHS after
+#                appending "/include". Passed to find_library() as PATHS after
+#                appending "/lib".
 #
 #          LIBS: Library names to search for (without prefix and suffix)
-#
-#    LIBS_HINTS: (Optional) Extra directories where to search for libraries
 #
 #   CPP_VERSION: A piece of C++ code, which when plugged into
 #                "std::cout << ${cpp_version};" will
@@ -131,6 +137,47 @@ endmacro()
 #       DEPENDS: Include directories and libraries from dependency
 #                packages will be used when compiling and linking
 #
+#    NO_REQUIRE: If defined, it is not a fatal error if the package
+#                is not found
+#
+#
+#  
+#  In addition to the given PREFIX_HINTS, this macro also searches in
+#  the build directory ${CMAKE_INSTALL_PREFIX}, and
+#  in /usr/lib(64)/casapy (Linux) or /opt/casa/core2-apple-darwin8/3rd-party (Mac)
+#
+#  For example:    casa_find( CFITSIO
+#                             INCLUDES fits.h
+#                             INCLUDES_SUFFIXES cfitsio somewhere
+#                             PREFIX_HINTS /usr2
+#                           )
+#
+#  will search for header "fits.h" in an exponential number of locations:
+#      /usr2/include/fits.h
+#      /usr2/include/cfitsio/fits.h
+#      /usr2/include/somewhere/fits.h
+#      ${CMAKE_INSTALL_PREFIX}/include/fits.h
+#      ${CMAKE_INSTALL_PREFIX}/cfitsio/fits.h
+#      ${CMAKE_INSTALL_PREFIX}/somewhere/fits.h
+#      /usr/lib/casapy/include/fits.h
+#      /usr/lib/casapy/include/cfitsio/fits.h
+#      /usr/lib/casapy/include/somewhere/fits.h
+#   and at CMake's default search paths:
+#      /usr/include/fits.h
+#      /usr/include/cfitsio/fits.h
+#      /usr/include/somewhere/fits.h
+#      /usr/local/include/fits.h
+#      /usr/local/include/cfitsio/fits.h
+#      /usr/local/include/somewhere/fits.h
+#      /opt/include/fits.h
+#      /opt/include/cfitsio/fits.h
+#      /opt/include/somewhere/fits.h
+#      /opt/local/include/fits.h
+#      /opt/local/include/cfitsio/fits.h
+#      /opt/local/include/somewhere/fits.h
+#      ... cut, more CMake built-ins ...
+#
+
 macro( casa_find package )
   
   # Parse arguments
@@ -139,40 +186,44 @@ macro( casa_find package )
   set( _programs "" )
   set( _prog_version "" )
   set( _includes "" )
-  set( _includes_hints "" )
+  set( _includes_suffixes "" )
   set( _libs "" )
-  set( _libs_hints "" )
+  set( _prefix_hints "" )
   set( _cpp_version "" )
   set( _run_version "" )
   set( _extra_test "" )
   set( _definitions "" )
   set( _depends "" )
+  set( _no_require False )
   foreach ( _a ${ARGN} )
     
     if(${_a} STREQUAL VERSION)
       set( _current _version )
-    elseif (${_a} STREQUAL PROGRAMS)
+    elseif (${_a} STREQUAL PROGRAMS )
       set( _current _programs )
-    elseif (${_a} STREQUAL PROG_VERSION)
+    elseif (${_a} STREQUAL PROG_VERSION )
       set( _current _prog_version )
-    elseif (${_a} STREQUAL INCLUDES)
+    elseif (${_a} STREQUAL INCLUDES )
       set( _current _includes )
-    elseif (${_a} STREQUAL INCLUDES_HINTS )
-      set( _current _includes_hints )
+    elseif (${_a} STREQUAL INCLUDES_SUFFIXES )
+      set( _current _includes_suffixes )
     elseif (${_a} STREQUAL LIBS)
       set( _current _libs )
-    elseif (${_a} STREQUAL LIBS_HINTS)
-      set( _current _libs_hints )
-    elseif (${_a} STREQUAL CPP_VERSION)
+    elseif (${_a} STREQUAL PREFIX_HINTS )
+      set( _current _prefix_hints )
+    elseif (${_a} STREQUAL CPP_VERSION )
       set( _current _cpp_version )
-    elseif (${_a} STREQUAL RUN_VERSION)
+    elseif (${_a} STREQUAL RUN_VERSION )
       set( _current _run_version )
     elseif( ${_a} STREQUAL EXTRA_TEST )
       set( _current _extra_test )
-    elseif (${_a} STREQUAL DEFINITIONS)
+    elseif (${_a} STREQUAL DEFINITIONS )
       set( _current _definitions )
-    elseif (${_a} STREQUAL DEPENDS)
+    elseif (${_a} STREQUAL DEPENDS )
       set( _current _depends )
+    elseif (${_a} STREQUAL NO_REQUIRE )
+      set( _no_require True )
+      set( _current "illegal" )
     elseif( ${_a} STREQUAL "illegal" )
       message( FATAL_ERROR "Illegal macro invocation ${ARGN}" )
     else()
@@ -237,15 +288,19 @@ macro( casa_find package )
     # If user has already defined _INCLUDE_DIRS (but not _FOUND), then
     # look for headers only there
     if( ${package}_INCLUDE_DIRS ) 
-      set( _hints ${${package}_INCLUDE_DIRS} )
-      message( STATUS "Looking for ${package} headers in ${_hints}" )
+      set( _paths ${${package}_INCLUDE_DIRS} )
+      message( STATUS "Looking for ${package} headers in ${_paths}" )
     else()
-      set( _hints
-        ${_includes_hints}
+
+      set( _prefix_hints_include "" )
+      foreach( _p ${_prefix_hints} )
+        list( APPEND _prefix_hints_include "${_p}/include" )
+      endforeach()
+
+      set( _paths
+        ${_prefix_hints_include}
 	${CMAKE_INSTALL_PREFIX}/include
         ${casa_packages}/include
-        /usr/local/include
-        /usr/include
        )
     endif()
     set( ${package}_INCLUDE_DIRS "" )
@@ -258,9 +313,16 @@ macro( casa_find package )
 
       find_path( ${package}_${_include}
         NAMES ${_include}
-        PATHS ${_hints}
+        PATHS ${_paths}
+        PATH_SUFFIXES ${_includes_suffixes}
         NO_DEFAULT_PATH
         )
+
+      # If not found, search CMake's default paths
+      if( ${package}_${_include} MATCHES "NOTFOUND$" )
+        find_path( ${package}_${_include} NAMES ${_include} PATH_SUFFIXES ${_includes_suffixes} )
+      endif()
+
       if( ${package}_${_include} MATCHES "NOTFOUND$" )
         message( STATUS "Looking for ${package} header ${_include} -- NOT FOUND" )
         set( _found FALSE )
@@ -396,12 +458,16 @@ macro( casa_find package )
       # ... and add any dependency libraries below
       message( STATUS "Using ${package} libraries ${${package}_LIBRARY}" )
     else()
-      set( _hints
-        ${_libs_hints}
+
+      set( _prefix_hints_lib "" )
+      foreach( _p ${_prefix_hints} )
+        list( APPEND _prefix_hints_lib "${_p}/lib" )
+      endforeach()
+
+      set( _paths
+        ${_prefix_hints_lib}       # append lib to each?
 	${CMAKE_INSTALL_PREFIX}/lib
         ${casa_packages}/lib
-        /usr/local/lib
-        /usr/lib
         )
       # Note: find_library() automatically searches in and prefers
       # a lib64 variant of these paths, if it exists (see man cmake).
@@ -416,10 +482,15 @@ macro( casa_find package )
 
         find_library( ${package}_${_lib}
           NAMES ${_lib} 
-          PATHS ${_hints}
+          PATHS ${_paths}
           NO_DEFAULT_PATH
           )
-    
+        
+        # If not found, search CMake's default paths
+        if( ${package}_${_lib} MATCHES "NOTFOUND$" )
+          find_library( ${package}_${_lib} NAMES ${_lib} )
+        endif()
+
         if( ${package}_${_lib} MATCHES "NOTFOUND$" )
           message( STATUS "Looking for ${package} library ${_lib} -- NOT FOUND" )
           set( _found FALSE )
@@ -647,14 +718,14 @@ macro( casa_find package )
 
   set( ${package}_FOUND ${_found} CACHE BOOL "Was ${package} found?" FORCE )
 
-  if( NOT ${package}_FOUND)
+  if( NOT ${package}_FOUND AND NOT ${_no_require} )
     unset( ${package}_INCLUDE_DIRS CACHE )
     unset( ${package}_LIBRARIES CACHE )
     message( FATAL_ERROR "${package} could not be found. Please check!" )
   endif()
 
   else()
-    #message( STATUS "${package} already found" )
+    #message( STATUS "${package} already found or not required" )
   endif()
   
   #dump( ${package}_FOUND     ${package}_INCLUDE_DIRS    ${package}_LIBRARIES    ${package}_DEFINITIONS )

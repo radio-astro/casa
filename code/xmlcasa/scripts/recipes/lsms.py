@@ -35,6 +35,7 @@ def lsms(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or', remind=True):
     """
     if type(musthave) == str:
         musthave = [s.replace(',', '') for s in musthave.split()]
+        
     msdict, use_tb = matchingMSes(musthave, mspat, combine)
     mses = msdict.keys()
     
@@ -401,24 +402,12 @@ mstables = {
 
 possible_subtables = set(mstables['req'].keys() + mstables['opt'].keys())
 
-def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
+
+def find_needed_items(musthave=set([]), listall=False):
     """
-    Returns a dict of MSes that match musthave and mspat as in
-    lsms(musthave, mspat, combine), and whether or not it found the tb tool.
+    Given the set of "must have" items, fill out needed_subtables and needed_items,
+    and determine whether or not to use tb.
     """
-    retval = {}
-
-    use_and = False
-    if(combine.lower() == 'and'):
-        use_and = True
-
-    musthave = [s.upper() for s in musthave]
-    musthave = set(musthave)
-    listall = False
-    if not musthave:
-        listall = True
-        use_and = False
-
     needed_subtables = musthave.intersection(possible_subtables)
     needed_items = {'anywhere': set([])}  # cols and keywords
     for mh in musthave:
@@ -453,9 +442,66 @@ def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
         if need_tb and not use_tb:
             print "Removing", ', '.join(need_tb), "from the criteria for matching."
             musthave.difference_update(need_tb)
+
+    return needed_subtables, needed_items, use_tb
     
-    mses = glob(mspat)
+
+
+def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
+    """
+    Returns a dict of MSes that match musthave and mspat as in
+    lsms(musthave, mspat, combine), and whether or not it found the tb tool.
+    """
+        
+    holderdict = {'musthave': set([s.upper() for s in musthave]),
+                  'mspat':    mspat,
+                  'msdict':   {},
+                  'use_and':  combine.lower() == 'and',
+                  'use_tb':   None,
+                  'listall':  False}
+
+    if not musthave:
+        holderdict['listall'] = True
+        holderdict['use_and'] = False
+
+    nsit = find_needed_items(holderdict['musthave'], holderdict['listall'])
+    holderdict['needed_subtables'] = nsit[0]
+    holderdict['needed_items']     = nsit[1]
+    holderdict['use_tb']           = nsit[2]
+    
+    splitatdoubleglob = mspat.split('**/')
+    if len(splitatdoubleglob) > 1:
+        if splitatdoubleglob[0] == '':
+            splitatdoubleglob[0] = '.'
+        holderdict['mspat'] = splitatdoubleglob[1]
+        os.path.walk(splitatdoubleglob[0], checkMSes, holderdict)
+    else:
+        checkMSes(holderdict, '', [])
+
+    return holderdict['msdict'], holderdict['use_tb']
+
+        
+def checkMSes(holderdict, dir, files):
+    """
+    Updates holderdict['msdict'] with a list of MSes in dir that match
+    holderdict['musthave'] and holderdict['mspat'] as in
+    lsms(musthave, mspat, combine).
+    """        
+    # Yup, ignore files.  It's just a os.path.walk()ism.
+    mses = glob(os.path.join(dir, holderdict['mspat']))
+
+    musthave = holderdict.get('musthave', set([]))
+    use_and = holderdict.get('use_and', False)
+    listall = holderdict.get('listall', False)
+    retval  = holderdict.get('msdict', {})
+    needed_subtables = holderdict.get('needed_subtables', set([]))
+    needed_items = holderdict.get('needed_items', {})
+    use_tb  = holderdict.get('use_tb', False)
+    
     for currms in mses:
+        if currms[:2] == './':  # strip off leading ./, if present.
+            currms = currms[2:]    # cosmetic.
+        
         retval[currms] = {'MAIN': {}}
         keep_currms = listall
 
@@ -519,8 +565,8 @@ def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
             
         if not keep_currms:
             del retval[currms]
-        
-    return retval, use_tb
+
+
 
 # following, sort of, from Python cookbook, #475186
 def termprops(stream):

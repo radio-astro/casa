@@ -253,7 +253,7 @@
            set a_temp = `/bin/echo $a_temp[1] | awk '{ print $1 }' | awk -F/ '{ print $(NF-1) }'`
            set a_ext = `/bin/echo $a_temp | sed -e 's/.*_//'`
            unset noglob
-           if ( ("$a_ext" != "64b" || "`uname -p`" == "x86_64") && "$a_ext" != "*") set a_arch = ${a_arch}_$a_ext
+           if ( ("$a_ext" != "64b" || "`uname -m`" == "x86_64") && "$a_ext" != "*") set a_arch = ${a_arch}_$a_ext
         endif
      endif
 

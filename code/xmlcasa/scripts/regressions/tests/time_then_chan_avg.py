@@ -494,7 +494,7 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True,
     if zaptemp:
         shutil.rmtree(tms)
     if zaporig:
-        casalog.post("Following your instruction to rm -rf %s" % inms, 'WARN')
+        casalog.post("Following your instruction to shutil.rmtree(" + inms + ")", 'WARN')
         shutil.rmtree(inms)
     return nrows_aft_tavg, nrows_aft_cavg, shape_aft_cavg
 
