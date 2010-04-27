@@ -125,6 +125,7 @@ public:
     PlotMSMultiPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
     
     bool isDrawing() const;
+    bool isClosed() const;
 
     // save plot  to file using specified format. If interactive, pop up confirm window, if not, no confirm windowl
     bool save(const PlotExportFormat& format, const bool interactive);

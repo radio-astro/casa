@@ -96,6 +96,7 @@ const String PlotMSDBusApp::METHOD_QUIT   = "quit";
 
 const String PlotMSDBusApp::METHOD_SAVE   = "save";
 const String PlotMSDBusApp::METHOD_ISDRAWING   = "isDrawing";
+const String PlotMSDBusApp::METHOD_ISCLOSED  = "isClosed";
 
 
 
@@ -373,6 +374,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     }
     else if (methodName == METHOD_ISDRAWING) {
     	retValue.define(0, itsPlotms_.isDrawing());
+    }
+    else if (methodName == METHOD_ISCLOSED) {
+    	retValue.define(0, itsPlotms_.isClosed());
     }
     else {
         log("Unknown method: " + methodName);
