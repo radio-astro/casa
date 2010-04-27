@@ -132,45 +132,24 @@ class csvclean_test1(unittest.TestCase):
         for w in weights:
             out = self.img+'.'+w
             self.res = csvclean(vis=self.msfile,imagename=out, imsize=500,weighting=w)
-            print out
-            if not self.res:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Failed for weighting=%s."%w
-            if not (os.path.exists(out+'image')):
+            if not (os.path.exists(out+'.image')):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Failed to create image=%s when weighting=%s."%(out+'.image',w)
-
-#            shutil.rmtree(out+'.image',ignore_errors=True)
-#            shutil.rmtree(out+'.model',ignore_errors=True)
-            
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
-
-    def test16(self):
-        '''Csvlean 16: Default weighting briggs'''
-        self.res = csvclean(vis=self.msfile,imagename=self.img, weighting='briggs')
-        self.assertTrue(self.res)
-        self.assertTrue(os.path.exists(self.img+'.image'))
-
-    def test31(self):
-        '''Clean 31: Non-default weighting radial'''
-        self.res = csvclean(vis=self.msfile,imagename=self.img, weighting='radial')
-        self.assertEqual(self.res, None)
-        self.assertTrue(os.path.exists(self.img+'.image'))
         
-    def test34(self):
-        '''Clean 34: Verify the value of pixel 50'''
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        
+    def test16(self):
+        '''Csvclean 16: Verify the value of pixel 200'''
         #run csvclean with some parameters
-        self.res = csvclean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
+        self.res = csvclean(vis=self.msfile,imagename=self.img,field='0',imsize=[500,500],
+                            niter=10, restoringbeam=['0.5arcsec'],cell='0.35arcsec')
         
         os.system('cp -r ' + self.img+'.image' + ' myimage.im')
-        self.assertEqual(self.res, None)
+        self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.img+'.image'))
-#        ref = 0.007161217276006937
-        ref = 0.011824539862573147
-        value = self.getpixval(self.img+'.image',50)
+        ref = 4.00378412451e-05
+        value = self.getpixval(self.img+'.image',200)
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-5,'Something changed the flux values. ref_val=%s, new_val=%s'
                                         %(ref,value))
