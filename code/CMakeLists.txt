@@ -446,7 +446,7 @@ if( NOT PYTHON_FOUND AND NOT PYTHON_LIBNAME )
       PYTHON${_v} 
       LIBS python${_v} 
       NO_REQUIRE 
-      PREFIX_HINTS /opt/local)
+    )
 
     # dump( PYTHON${_v}_VERSION PYTHON_LIBNAME PYTHON${_v}_FOUND )
 
