@@ -553,7 +553,7 @@ set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/xmlcasa/install/saxo
 # Form all possible DBus prefixes and use them as hints to casa_find()
 #
 set( dbus_prefix "" )
-foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages} /opt/local /usr/local /sw /opt /usr )
+foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages}  /sw /opt/local /usr/local /opt /usr )
   foreach( _l lib lib64 )
     list( APPEND dbus_prefix ${_p}/dbus-1.0 )
     list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
@@ -763,7 +763,6 @@ casa_find( READLINE
   LIBS readline ncurses
   CPP_VERSION "RL_VERSION_MAJOR << '.' << RL_VERSION_MINOR"
   RUN_VERSION rl_library_version
-  PREFIX_HINTS /opt/local
 )
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )

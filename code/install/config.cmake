@@ -312,6 +312,7 @@ macro( casa_find package )
         ${_prefix_hints_include}
 	${CMAKE_INSTALL_PREFIX}/include
         ${casa_packages}/include
+        /opt/local/include
         /sw/include
         /opt/include
        )
@@ -484,6 +485,7 @@ macro( casa_find package )
         ${_prefix_hints_lib}       # append lib to each?
 	${CMAKE_INSTALL_PREFIX}/lib
         ${casa_packages}/lib
+        /opt/local/lib
         /sw/lib
         /opt/lib
         )
@@ -702,6 +704,7 @@ macro( casa_find package )
       endforeach()
       list( APPEND _paths ${CMAKE_INSTALL_PREFIX}/bin )
       list( APPEND _paths ${casa_packages}/bin )
+      list( APPEND _paths /opt/local/bin )
       list( APPEND _paths /sw/bin )
       list( APPEND _paths /opt/bin )
 
