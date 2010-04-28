@@ -166,6 +166,15 @@ endmacro()
 #      /usr/lib/casapy/include/fits.h
 #      /usr/lib/casapy/include/cfitsio/fits.h
 #      /usr/lib/casapy/include/somewhere/fits.h
+#      /sw/include/fits.h
+#      /sw/include/cfitsio/fits.h
+#      /sw/include/somewhere/fits.h
+#      /opt/local/include/fits.h
+#      /opt/local/include/cfitsio/fits.h
+#      /opt/local/include/somewhere/fits.h
+#      /opt/include/fits.h
+#      /opt/include/cfitsio/fits.h
+#      /opt/include/somewhere/fits.h
 #   and at CMake's default search paths:
 #      /usr/include/fits.h
 #      /usr/include/cfitsio/fits.h
@@ -173,12 +182,6 @@ endmacro()
 #      /usr/local/include/fits.h
 #      /usr/local/include/cfitsio/fits.h
 #      /usr/local/include/somewhere/fits.h
-#      /opt/include/fits.h
-#      /opt/include/cfitsio/fits.h
-#      /opt/include/somewhere/fits.h
-#      /opt/local/include/fits.h
-#      /opt/local/include/cfitsio/fits.h
-#      /opt/local/include/somewhere/fits.h
 #      ... cut, more CMake built-ins ...
 #
 
@@ -309,6 +312,7 @@ macro( casa_find package )
         ${_prefix_hints_include}
 	${CMAKE_INSTALL_PREFIX}/include
         ${casa_packages}/include
+        /sw/include
         /opt/include
        )
     endif()
@@ -480,6 +484,7 @@ macro( casa_find package )
         ${_prefix_hints_lib}       # append lib to each?
 	${CMAKE_INSTALL_PREFIX}/lib
         ${casa_packages}/lib
+        /sw/lib
         /opt/lib
         )
       # Note: find_library() automatically searches in and prefers
@@ -697,6 +702,7 @@ macro( casa_find package )
       endforeach()
       list( APPEND _paths ${CMAKE_INSTALL_PREFIX}/bin )
       list( APPEND _paths ${casa_packages}/bin )
+      list( APPEND _paths /sw/bin )
       list( APPEND _paths /opt/bin )
 
       unset( ${package}_${_program}_EXECUTABLE CACHE )
