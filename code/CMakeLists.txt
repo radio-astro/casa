@@ -397,7 +397,7 @@ if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
     EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so OR
     EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so )
   set( casacore_libs casacore )
-  set( casacore_prefix ${_casaroot}/.. )
+  set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
 else()
   set( casacore_libs
        casa_casa 
