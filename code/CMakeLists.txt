@@ -397,6 +397,7 @@ if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
     EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so OR
     EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so )
   set( casacore_libs casacore )
+  set( casacore_prefix ${_casaroot}/.. )
 else()
   set( casacore_libs
        casa_casa 
@@ -420,6 +421,7 @@ casa_find( CASACORE
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
            INCLUDES_SUFFIXES casacore
            LIBS ${casacore_libs}
+           PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB )
