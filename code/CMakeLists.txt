@@ -487,12 +487,12 @@ set( python_library python${PYTHON_LIBNAME} )
 
 # Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from 
 # the full python library path
-string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHONV}_LIBRARIES} )
+string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
 if( _match )
-  string( REGEX REPLACE "/lib(64)?/lib${python_library}.*" "" python_prefix ${PYTHON${PYTHONV}_LIBRARIES} )
+  string( REGEX REPLACE "/lib(64)?/lib${python_library}.*" "" python_prefix ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
 else()
   # Python library was not in a lib(64) directory!
-  message( WARNING "Python library path \"${PYTHON${PYTHONV}_LIBRARIES}\" does not contain \"/lib(64)/lib${python_library}\"" )
+  message( WARNING "Python library path \"${PYTHON${PYTHON_LIBNAME}_LIBRARIES}\" does not contain \"/lib(64)/lib${python_library}\"" )
   set( python_prefix ${casa_packages} )
 endif()
 
@@ -551,7 +551,7 @@ set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/xmlcasa/install/saxo
 # Form all possible DBus prefixes and use them as hints to casa_find()
 #
 set( dbus_prefix "" )
-foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages} /opt/local /usr/local /opt /usr )
+foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages} /opt/local /usr/local /sw /opt /usr )
   foreach( _l lib lib64 )
     list( APPEND dbus_prefix ${_p}/dbus-1.0 )
     list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
