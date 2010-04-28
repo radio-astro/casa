@@ -1,47 +1,9 @@
 import os
 import shutil
+import traceback
 from cleanhelper import *
 from taskinit import *
 
-def getbeams(restoringbeam):
-    beams = []
-    if((restoringbeam == ['']) or (len(restoringbeam) ==0)):
-        return []
-    resbmaj=''
-    resbmin=''
-    resbpa='0deg'
-    if((type(restoringbeam) == list)  and len(restoringbeam)==1):
-        # circular
-        print 'HERE0'
-        resbmaj = restoringbeam[0]
-        resbmin = restoringbeam[0]
-        
-    if((type(restoringbeam)==str)):
-        if(qa.quantity(restoringbeam)['unit'] == ''):
-            restoringbeam=restoringbeam+'arcsec'
-        resbmaj=qa.quantity(restoringbeam, 'arcsec')
-        resbmin=qa.quantity(restoringbeam, 'arcsec')
-        
-    if(type(restoringbeam)==list):        
-        resbmaj=qa.quantity(restoringbeam[0], 'arcsec')
-        resbmin=qa.quantity(restoringbeam[1], 'arcsec')
-        if(resbmaj['unit']==''):
-            resbmaj=restoringbeam[0]+'arcsec'
-        if(resbmin['unit']==''):
-            resbmin=restoringbeam[1]+'arcsec'
-        if(len(restoringbeam)==3):
-            resbpa=qa.quantity(restoringbeam[2], 'deg')
-            if(resbpa['unit']==''):
-                resbmin=restoringbeam[2]+'deg'
-
-    if((resbmaj != '') and (resbmin != '')): 
-        beams = [resbmaj,resbmin, resbpa]
-        print '**************************************************'
-    
-    print beams
-    
-    return beams
-            
 
 def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restoringbeam, interactive):
 
@@ -139,9 +101,7 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         parsummary += 'interactive="'+str(interactive)+'"'
         casalog.post(parsummary,'INFO')    
         
-        if ((type(vis)==str) & (os.path.exists(vis))):
-            im.open(vis)
-        else:
+        if (not (type(vis)==str) & (os.path.exists(vis))):
             raise Exception, 'Visibility data set not found - please verify the name'
     
         if (imagename == ""):
@@ -149,6 +109,12 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         
         if os.path.exists(imagename):
             raise Exception, "Output image %s already exists - will not overwrite." % imagename
+           
+        if (field == ''):
+        	field = '*'
+        	
+        if (spw == ''):
+        	spw = '*'
 
         if ((type(imsize)==int)):
             imsize=[imsize,imsize]
@@ -171,8 +137,8 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
             cellx=qa.quantity(cell[0], 'arcsec')
             celly=qa.quantity(cell[1], 'arcsec')
 
-        if restoringbeam == '':
-        	# calculate from fit
+        if restoringbeam == [''] or len(restoringbeam) == 0:
+        	# calculate from fit below
             bmaj = ''
             bmin = ''
             bpa = ''
@@ -203,14 +169,46 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         modelname = imagename+'.model'
         imname = imagename+'.image'
         
+        # Add scratch columns if they don't exist
+        tb.open(vis)
+        hasit = tb.colnames().count('CORRECTED_DATA')>0
+        tb.close()
+        if not hasit:
+        	cb.open(vis)
+        	cb.close()
+        		
         # make the dirty image and psf
         im.selectvis(vis=vis, spw=spw, field=field, usescratch=True)
         im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly)
         im.weight(weighting)
+        
         im.makeimage(type='corrected', image=dirtyim)
         im.makeimage(type='psf', image=psfim)
         im.done()
 
+        # Calculate bpa, bmin, bmaj if not given
+        if restoringbeam == [''] or len(restoringbeam) == 0:
+        	cx = nx/2
+        	cy = ny/2
+        	box = ''
+
+        	if (nx > 100 and ny > 100):
+        		rg = [cx-10, cy-10, cx+10, cy+10]
+        		box = '%s,%s,%s,%s'%(rg[0],rg[1],rg[2],rg[3])
+            	ia.open(psfim)            	
+            	coords = ia.fitcomponents(box=box)
+            	ia.close()
+            	if(coords['converged'] == True):
+	            	bmaj = coords['results']['component0']['shape']['majoraxis']['value']
+	            	bmin = coords['results']['component0']['shape']['minoraxis']['value']
+	            	bpa = coords['results']['component0']['shape']['positionangle']['value']
+	            	bmaj = str(bmaj)+'arcsec'
+	            	bmin = str(bmin)+'arcsec'
+	            	bpa = str(bpa)+'deg'
+            	
+        parsummary = 'restoringbeam values = [\'%s\',\'%s\',\'%s\']'%(bmaj,bmin,bpa)
+        casalog.post(parsummary,'INFO')
+        
         # Make a mask
         maskname=''
         if(interactive):
@@ -225,19 +223,18 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         dc.clean(niter=niter, model=modelname, mask=maskname)
         
         # create the restored image
-        dc.restore(model=modelname, image=imname, bmaj=bmaj, bmin=bmin, bpa=bpa)    
+        if restoringbeam == [''] or len(restoringbeam) == 0:
+        	dc.restore(model=modelname, image=imname)
+        else:
+			dc.restore(model=modelname, image=imname, bmaj=bmaj, bmin=bmin, bpa=bpa)    
     
         return True
 
     except Exception, instance:
         print '*** Error *** ',instance
         casalog.post("Error ...", 'SEVERE')
+        traceback.print_exc()
         raise Exception, instance
 
-#    except Exception:
-#        casalog.post("Error ...", 'SEVERE')
-#        traceback.print_exc()
-
-#        raise Exception
     
 

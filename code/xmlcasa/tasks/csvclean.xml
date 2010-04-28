@@ -51,6 +51,14 @@
 		<param type="string" name="weighting">
 			<description>Type of weighting</description>
 			<value>natural</value>
+		    <allowed kind="enum">
+		      <value>natural</value>
+		      <value>uniform</value>
+		      <value>briggs</value>
+		      <value>briggsabs</value>
+		      <value>radial</value>
+		      <value>superuniform</value>
+		    </allowed>
 		</param>
 
 		<param type="stringArray" name="restoringbeam">
