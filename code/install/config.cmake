@@ -309,6 +309,7 @@ macro( casa_find package )
         ${_prefix_hints_include}
 	${CMAKE_INSTALL_PREFIX}/include
         ${casa_packages}/include
+        /opt/include
        )
     endif()
     set( ${package}_INCLUDE_DIRS "" )
@@ -328,7 +329,10 @@ macro( casa_find package )
 
       # If not found, search CMake's default paths
       if( ${package}_${_include} MATCHES "NOTFOUND$" )
-        find_path( ${package}_${_include} NAMES ${_include} PATH_SUFFIXES ${_includes_suffixes} )
+        find_path( ${package}_${_include} 
+          NAMES ${_include}
+          PATH_SUFFIXES ${_includes_suffixes} 
+          )
       endif()
 
       if( ${package}_${_include} MATCHES "NOTFOUND$" )
@@ -476,6 +480,7 @@ macro( casa_find package )
         ${_prefix_hints_lib}       # append lib to each?
 	${CMAKE_INSTALL_PREFIX}/lib
         ${casa_packages}/lib
+        /opt/lib
         )
       # Note: find_library() automatically searches in and prefers
       # a lib64 variant of these paths, if it exists (see man cmake).
@@ -496,7 +501,8 @@ macro( casa_find package )
         
         # If not found, search CMake's default paths
         if( ${package}_${_lib} MATCHES "NOTFOUND$" )
-          find_library( ${package}_${_lib} NAMES ${_lib} )
+          find_library( ${package}_${_lib}
+            NAMES ${_lib} )
         endif()
 
         if( ${package}_${_lib} MATCHES "NOTFOUND$" )
@@ -684,12 +690,14 @@ macro( casa_find package )
     foreach ( _program ${_programs} )
       message( STATUS "Looking for ${package} program ${_program}" )
       
+      # Append /bin to given PREFIX_HINTS 
       set( _paths "" )
       foreach( _p ${_prefix_hints} )
         list( APPEND _paths "${_p}/bin" )
       endforeach()
       list( APPEND _paths ${CMAKE_INSTALL_PREFIX}/bin )
       list( APPEND _paths ${casa_packages}/bin )
+      list( APPEND _paths /opt/bin )
 
       unset( ${package}_${_program}_EXECUTABLE CACHE )
       find_program( ${package}_${_program}_EXECUTABLE
