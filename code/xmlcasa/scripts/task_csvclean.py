@@ -77,7 +77,7 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
                    default units are in arc-seconds for bmaj,bmin, degrees
                    for bpa default: restoringbeam=[]; Use PSF calculated
                    from dirty beam. 
-                   example: restoringbeam=['10arcsec'] circular Gaussian 
+                   example: restoringbeam=['10arcsec'] or '10arcsec' circular Gaussian 
                             FWHM 10 arcseconds example:
                             restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
                             at 45 degrees
@@ -168,6 +168,12 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         psfim = imagename+'psf.image'
         modelname = imagename+'.model'
         imname = imagename+'.image'
+
+        # Make sure all tables and images are closed
+        tb.close()
+        im.close()
+        ia.close()
+        dc.close()
         
         # Add scratch columns if they don't exist
         tb.open(vis)
