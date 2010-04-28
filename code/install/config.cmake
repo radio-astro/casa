@@ -86,6 +86,7 @@ endmacro()
 #               [ DEFINITIONS flag1 ... ]
 #               [ DEPENDS package1 ... ]
 #               [ NO_REQUIRE ]
+#               [ NO_CHECK ]
 #             )
 #
 #   Sets the following variables
@@ -139,6 +140,9 @@ endmacro()
 #
 #    NO_REQUIRE: If defined, it is not a fatal error if the package
 #                is not found
+#
+#      NO_CHECK: If defined, the check on whether the headers compile
+#                is skipped
 #
 #
 #  
@@ -195,6 +199,7 @@ macro( casa_find package )
   set( _definitions "" )
   set( _depends "" )
   set( _no_require False )
+  set( _no_check False )
   foreach ( _a ${ARGN} )
     
     if(${_a} STREQUAL VERSION)
@@ -223,6 +228,9 @@ macro( casa_find package )
       set( _current _depends )
     elseif (${_a} STREQUAL NO_REQUIRE )
       set( _no_require True )
+      set( _current "illegal" )
+    elseif (${_a} STREQUAL NO_CHECK )
+      set( _no_check True )
       set( _current "illegal" )
     elseif( ${_a} STREQUAL "illegal" )
       message( FATAL_ERROR "Illegal macro invocation ${ARGN}" )
@@ -349,8 +357,8 @@ macro( casa_find package )
       message( STATUS "Checking whether ${package} headers compile")
         
       # CCMTOOLS headers define (not declare) symbols (!) and thus do not compile without linking.
-      if( ${package} STREQUAL CCMTOOLS )
-        message( STATUS "Checking whether ${package} headers compile -- skipped, they never do")
+      if( _no_check )
+        message( STATUS "Checking whether ${package} headers compile -- skipped")
       else()
         
         file( WRITE ${_try}
