@@ -2109,6 +2109,10 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     this->writeCommand(os);
 
     os << LogIO::NORMAL << "Selecting data" << LogIO::POST; // Loglevel PROGRESS
+    //Need delete the ft machine as the channel flag may change
+    if(ft_p)
+      delete ft_p;
+    ft_p=0;
     nullSelect_p=False;
     dataMode_p=mode;
     dataNchan_p.resize();
@@ -2263,7 +2267,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       }
       dataspectralwindowids_p=selspw;
 	}
-	//cout<<"spwchansels_p="<<spwchansels_p<<endl;
+	
 
     // Map the selected spectral window ids to data description ids
     if(dataspectralwindowids_p.nelements()==0){
@@ -5963,6 +5967,7 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   try {
     
     if(sm_p) destroySkyEquation();
+    
     if(incremental) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Fourier transforming: adding to MODEL_DATA column" << LogIO::POST;
@@ -8267,6 +8272,7 @@ void Imager::destroySkyEquation()
   if(gvp_p) delete gvp_p; gvp_p=0;
   
   if(componentList_p) delete componentList_p; componentList_p=0;
+ 
   
   for (Int model=0;model<Int(nmodels_p); ++model) {
     //As these are CountedPtrs....just assigning them to NULL 
