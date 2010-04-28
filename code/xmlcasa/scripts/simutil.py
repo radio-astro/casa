@@ -212,16 +212,17 @@ class simutil:
             toJypix=1.
         stats=ia.statistics(robust=True,verbose=False,list=False)
         im_min=stats['min']*toJypix
-        if type(im_min)==type([]):
+        plarr=pl.zeros(1)
+        if type(im_min)==type([]) or type(im_min)==type(plarr):
             if len(im_min)<1: im_min=0.
         im_max=stats['max']*toJypix
-        if type(im_max)==type([]):
+        if type(im_max)==type([]) or type(im_min)==type(plarr):
             if len(im_max)<1: im_max=1.
         imsize=ia.shape()[0:2]
         reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
         stats=ia.statistics(region=reg1,verbose=False,list=False)
         im_rms=stats['rms']*toJypix
-        if type(im_rms)==type([]):
+        if type(im_rms)==type([]) or type(im_min)==type(plarr):
             if len(im_rms)==0: im_rms=0.
         data_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
         data_array=pl.array(data_array)
