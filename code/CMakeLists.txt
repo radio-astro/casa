@@ -296,8 +296,6 @@ if( NOT is_big_endian )
     )
 endif()
 
-
-
 #
 # External packages
 #
@@ -318,9 +316,6 @@ casa_find( CFITSIO
 find_package( X11 REQUIRED )
 # Rename
 set( X11_INCLUDE_DIRS ${X11_INCLUDE_DIR} )
-
-#X11LIB   := -lXt -lXmu -lX11 -lXext
-
 
 # Since we are using the C++ linker, the Fortran runtime libraries must be explicitly
 # linked in.
@@ -371,10 +366,13 @@ casa_find( WCSLIB
   INCLUDES wcslib/wcsconfig.h
   LIBS wcs
        pgsbox
-  # RR commented out the next line because cout << 4.4.4 complains
-  # that there are too many decimal points, but quoting the version
-  # breaks the cfitsio detection.
-  #CPP_VERSION "WCSLIB_VERSION"
+  # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
+  # hence "cout << WCSLIB_VERSION" would not work. The following
+  # code makes a string out of WCSLIB_VERSION.
+  CPP_VERSION "\"\";
+#define CASA_STRINGIFY(x) #x
+#define CASA_TOSTRING(x) CASA_STRINGIFY(x)
+  std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
   DEFINITIONS -DSIGNBIT 
   DEPENDS PGPLOT )
 
