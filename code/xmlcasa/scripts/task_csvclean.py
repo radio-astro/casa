@@ -178,7 +178,8 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         	cb.close()
         		
         # make the dirty image and psf
-        im.selectvis(vis=vis, spw=spw, field=field, usescratch=True)
+        im.open(vis)
+        im.selectvis(spw=spw, field=field, usescratch=True)
         im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly)
         im.weight(weighting)
         
@@ -226,8 +227,9 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         if restoringbeam == [''] or len(restoringbeam) == 0:
         	dc.restore(model=modelname, image=imname)
         else:
-			dc.restore(model=modelname, image=imname, bmaj=bmaj, bmin=bmin, bpa=bpa)    
-    
+			dc.restore(model=modelname, image=imname, bmaj=bmaj, bmin=bmin, bpa=bpa)  
+			
+        dc.done()  
         return True
 
     except Exception, instance:
