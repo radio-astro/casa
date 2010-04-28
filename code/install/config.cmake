@@ -684,12 +684,17 @@ macro( casa_find package )
     foreach ( _program ${_programs} )
       message( STATUS "Looking for ${package} program ${_program}" )
       
+      set( _paths "" )
+      foreach( _p ${_prefix_hints} )
+        list( APPEND _paths "${_p}/bin" )
+      endforeach()
+      list( APPEND _paths ${CMAKE_INSTALL_PREFIX}/bin )
+      list( APPEND _paths ${casa_packages}/bin )
+
       unset( ${package}_${_program}_EXECUTABLE CACHE )
       find_program( ${package}_${_program}_EXECUTABLE
         ${_program}
-        PATHS 
-        /usr/lib/qt-4.3.4/dbus/bin/
-        ${casa_packages}/bin
+        PATHS ${_paths}
         )
       
       if( ${package}_${_program}_EXECUTABLE MATCHES "NOTFOUND$" )
