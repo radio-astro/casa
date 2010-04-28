@@ -141,17 +141,25 @@ int main( int argc, char **argv ) {
 	ctmp = strtok( NULL, " \t");
 	char *carch = ctmp ? strdup(ctmp) : NULL;
 
-	if ( croot && carch ) {
-	    char *buf = (char*) malloc( strlen(croot)+strlen(carch) + 34 );
-	    sprintf( buf, "%s/%s/python%d.%d", croot, carch, PY_MAJOR_VERSION, PY_MINOR_VERSION );
+	// here we want to only find the path to casa's python scripts...
+	char *buf = (char*) malloc( (croot ? strlen(croot) : 0) + (carch ? strlen(carch) : 0) + 34 );
+
+	if ( croot ) {
+	    sprintf( buf, "%s/lib/python%d.%d", croot, PY_MAJOR_VERSION, PY_MINOR_VERSION );
 	    if ( ! stat( buf, &thestats ) && S_ISDIR(thestats.st_mode) ) {
 		if ( path_index > 0 ) paths[path_index++] = strdup(":");
 		paths[path_index++] = buf;
-	    } else {
-		sprintf( buf, "%s/%s/python/%d.%d", croot, carch, PY_MAJOR_VERSION, PY_MINOR_VERSION );
+	    } else if ( carch ) {
+		sprintf( buf, "%s/%s/python%d.%d", croot, carch, PY_MAJOR_VERSION, PY_MINOR_VERSION );
 		if ( ! stat( buf, &thestats ) && S_ISDIR(thestats.st_mode) ) {
 		    if ( path_index > 0 ) paths[path_index++] = strdup(":");
 		    paths[path_index++] = buf;
+		} else {
+		    sprintf( buf, "%s/%s/python/%d.%d", croot, carch, PY_MAJOR_VERSION, PY_MINOR_VERSION );
+		    if ( ! stat( buf, &thestats ) && S_ISDIR(thestats.st_mode) ) {
+			if ( path_index > 0 ) paths[path_index++] = strdup(":");
+			paths[path_index++] = buf;
+		    }
 		}
 	    }
 	}
