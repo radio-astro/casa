@@ -165,16 +165,6 @@ set( CMAKE_INSTALL_PREFIX ${_casaroot}/${arch} )
 dump( CMAKE_INSTALL_PREFIX )
 
 #
-# casacore can be built as a single library
-##
-if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so )
-  set( CMAKE_CASACORE_LIBS casacore )
-else()
-  set( CMAKE_CASACORE_LIBS casa_casa casa_components casa_coordinates casa_fits casa_images casa_lattices casa_measures casa_ms casa_msfits casa_scimath casa_scimath_f casa_tables )
-endif()
-
-
-#
 # Targets for creating doxygen documentation
 #
 find_package( LATEX )
@@ -401,14 +391,35 @@ casa_find( LAPACK
 # CASACore
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
+# - There are several, incompatible, ways of building CASACore.
+
+if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
+    EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so OR
+    EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so )
+  set( casacore_libs casacore )
+else()
+  set( casacore_libs
+       casa_casa 
+       casa_components
+       casa_coordinates 
+       casa_fits
+       casa_images
+       casa_lattices
+       casa_measures
+       casa_ms
+       casa_msfits
+       casa_scimath
+       casa_scimath_f
+       casa_tables )
+endif()
+
 casa_find( CASACORE
            VERSION 1.0.8
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
            INCLUDES_SUFFIXES casacore
-	   PREFIX_HINTS ${_casaroot}
-	   LIBS ${CMAKE_CASACORE_LIBS}
+           LIBS ${casacore_libs}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB )
@@ -433,58 +444,72 @@ endif()
 
 # First determine which python version to search for,
 # then do the actual search
-if( NOT PYTHON_FOUND AND NOT PYTHON_LIBNAME )
-  # Allow user to define PYTHON_LIBNAME, otherwise:
+if( NOT PYTHON_FOUND )
 
-  # Set PYTHONV to the latest of the following versions
-  # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
-  foreach( _v 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+  if ( NOT PYTHON_LIBNAME )
+    set( _names 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+    # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
+  else()
+    set( _names ${PYTHON_LIBNAME} )
+  endif()
 
-    set( PYTHON_LIBNAME ${_v} )
+  set( _found False )
+  foreach( _v ${_names} )
 
     casa_find( 
       PYTHON${_v} 
       LIBS python${_v} 
       NO_REQUIRE 
-    )
-
-    # dump( PYTHON${_v}_VERSION PYTHON_LIBNAME PYTHON${_v}_FOUND )
+      )
 
     if( PYTHON${_v}_FOUND )
+      set( PYTHON_LIBNAME ${_v} )
+      set( _found True )
       break()
-    elseif( _v STREQUAL 2.5 )
-      message( FATAL_ERROR "Could not find any PYTHON library with version between 2.5 <= version < 3.0. Please check!" )
     endif()
 
   endforeach()
+  
+  if( NOT _found )
+    message( FATAL_ERROR "Could not find any PYTHON library with version one of ${_names}. Please check!" )
+  endif()
 
 endif()
 
 if( NOT PYTHON_LIBNAME )
   # Found Python, but PYTHON_LIBNAME is undefined, that is impossible.
-  message( FATAL_ERROR "The variable PYTHON_LIBNAME is undefined. Most likely, CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON* ..\")")
+  message( FATAL_ERROR "The variable PYTHON_LIBNAME is undefined. Most likely, CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON*\")")
 endif()
 
 string( SUBSTRING ${PYTHON_LIBNAME} 0 3 PYTHONV )
 string( REPLACE "." "" PV ${PYTHONV} )
 set( python_library python${PYTHON_LIBNAME} )
 
+# Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from 
+# the full python library path
+string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHONV}_LIBRARIES} )
+if( _match )
+  string( REGEX REPLACE "/lib(64)?/lib${python_library}.*" "" python_prefix ${PYTHON${PYTHONV}_LIBRARIES} )
+else()
+  # Python library was not in a lib(64) directory!
+  message( WARNING "Python library path \"${PYTHON${PYTHONV}_LIBRARIES}\" does not contain \"/lib(64)/lib${python_library}\"" )
+  set( python_prefix ${casa_packages} )
+endif()
+
+# The python version and prefix is known, do the actual search
 if( NOT PYTHON_FOUND )
-  message( STATUS "Looking for PYTHON version ${PYTHONV}.x" )
+  message( STATUS "Looking for PYTHON version ${PYTHONV}.x in ${python_prefix}" )
 endif()
 
 casa_find( PYTHON
   VERSION 2.5    # minimum required
   INCLUDES Python.h 
      numpy/npy_interrupt.h   # for numpy
-    # Does not exist on 10.5.5: numpy/numpyconfig.h
   INCLUDES_SUFFIXES python${PYTHONV}
-  PREFIX_HINTS
-    /opt/local
-    /opt/local/lib/python${PYTHONV}/site-packages/numpy/core
-    ${casa_packages}/lib/python${PYTHONV}/site-packages/numpy/core
-    ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
-    ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
+  PREFIX_HINTS 
+     ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
+     ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
+     ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
 
@@ -519,34 +544,40 @@ casa_find( Java
 set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/xmlcasa/install/saxon8.jar )
 
 # C++ DBus
-if( APPLE )
-  if( EXISTS /opt/local/lib/dbus-1.0 )
-    set( DBUSARCH_INCLUDE_DIRS
-      /opt/local/lib/dbus-1.0/include
-      )
-  else()
-    set( DBUSARCH_INCLUDE_DIRS
-      ${casa_packages}/lib/dbus-1.0/include
-      )
-  endif()
-else()
-  set( DBUSARCH_INCLUDE_DIRS 
-    /usr/lib/qt-4.3.4/dbus/lib/dbus-1.0/include
-    /usr/lib/dbus-1.0/include
-    )
+#
+# The header file dbus/dbus-arch-deps.h exists on some but not all systems, in a directory
+# for itself
+#
+# Form all possible DBus prefixes and use them as hints to casa_find()
+#
+set( dbus_prefix "" )
+foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages} /opt/local /usr/local /opt /usr )
+  foreach( _l lib lib64 )
+    list( APPEND dbus_prefix ${_p}/dbus-1.0 )
+    list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
+    list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus )
+    list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus/${_l}/dbus-1.0 )
+  endforeach()
+endforeach()
+
+casa_find( DBUSARCH
+  INCLUDES dbus/dbus-arch-deps.h
+  PREFIX_HINTS ${dbus_prefix}
+  NO_CHECK   # This header does not compile if included directly
+  NO_REQUIRE
+)
+if( DBUSARCH_FOUND )
+  set( dbus_depends DBUSARCH )
 endif()
 
 casa_find( DBUS
-  1.0
   INCLUDES dbus/dbus.h
-           dbus-c++/dbus.h # dbus/dbus-arch-deps.h
+           dbus-c++/dbus.h
   INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
-  PREFIX_HINTS
-    /usr/lib/qt-4.3.4/dbus
-    ${casa_packages}/dbus-1.0
+  PREFIX_HINTS ${dbus_prefix}
   LIBS dbus-c++-1
   PROGRAMS dbusxx-xml2cpp
-  DEPENDS DBUSARCH
+  DEPENDS ${dbus_depends}
 )
 
 # ATM
@@ -604,6 +635,7 @@ casa_find( CCMTOOLS
            CCM_Python/Py.h
            WX/Utils/error.h
            WX/Utils/type.h
+  NO_CHECK             # The headers are not compilable without linking
   LIBS ${_ccmtools_libs}
   PROGRAMS ccmtools
   PROG_VERSION "--version" 
@@ -663,7 +695,8 @@ casa_find( XERCES
   INCLUDES xercesc/util/XercesVersion.hpp
   LIBS xerces-c
   CPP_VERSION XERCES_FULLVERSIONDOT 
-  RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" )
+  RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" 
+)
 if( XERCES_VERSION VERSION_EQUAL   3.0 OR
     XERCES_VERSION VERSION_GREATER 3.0 )
   message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
