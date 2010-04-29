@@ -1077,6 +1077,11 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))-0.5);
       chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
     }
+    if(end < start){
+      Double tempoo=start;
+      start=end;
+      end=tempoo;
+    }
 
     Block<Vector<Int> > spwb;
     Block<Vector<Int> > startb;
