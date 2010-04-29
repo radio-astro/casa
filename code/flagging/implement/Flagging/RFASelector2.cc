@@ -622,7 +622,11 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
         }
         else
         {
-          sel_ifr(chunk.antToIfr(ant(0,i),ant(1,i))) = True;
+          unsigned indx = chunk.antToIfr(ant(0,i),ant(1,i));
+
+          assert( indx < sel_ifr.nelements() );
+
+          sel_ifr(indx) = True;
           addString(ifrdesc,names(ant(0,i))+"-"+names(ant(1,i)),",");
         }
       }
