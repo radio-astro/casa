@@ -90,7 +90,7 @@ class __viewer_class(object):
 		except:
 			vwr = None
 
-		if vwr == None:
+		if type(vwr) == type(None):
 			need_gui = True
 			if type(gui) == bool and gui == False:
 				need_gui = False
@@ -108,7 +108,7 @@ class __viewer_class(object):
 					vwr = viewertool.viewertool( False, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
 					self.local_ving = vwr
 
-		if type(vwr) == type(None) :
+		if type(vwr) != type(None) :
 			##
 			## (1) save current *viewer*server* path
 			## (2) have viewer() task follow casapy/python's cwd
