@@ -82,8 +82,15 @@
 	vis -- Name of input visibility file
         	default: none; example: vis='ngc5921.ms' 
         	
-	imagename -- Name of output CASA image
-		         default: none; example: imagename='3C273XC1.image'
+	imagename -- Name of output CASA image. (only the prefix)
+                   default: none; example: imagename='m2'
+                   output images are:
+                 m2.image; cleaned and restored image
+                        With or without primary beam correction
+                 m2dirty.image; dirty image
+                 m2psf.image; point-spread function (dirty beam)
+                 m2.model; image of clean components
+                 m2.mask; image containing clean regions, when interative=True
 		         
 	field -- Select fields in mosaic.  Use field id(s) or field name(s).
                   ['go listobs' to obtain the list id's or names]
@@ -98,7 +105,7 @@
               
 	spw -- Select spectral window/channels
            NOTE: This selects the data passed as the INPUT to mode
-           default: ''=all spectral windows and channels
+           default: ''= all spectral windows and channels
                 spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                 spw='0:5~61'; spw 0, channels 5 to 61
                 spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
@@ -112,9 +119,7 @@
                       
 	imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
                default = [256,256]; example: imsize=[350,350]
-               imsize = 500 is equivalent to [500,500]
-               If include outlier fields, e.g., [[400,400],[100,100]] or
-               use outlierfile.
+               imsize = 500 is equivalent to [500,500].
                Avoid odd-numbered imsize.
 
 	cell -- Cell size (x,y)
@@ -124,7 +129,7 @@
                cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
                NOTE:cell = 2.0 => ['2arcsec', '2arcsec']
 
-	niter -- Maximum number iterations,
+	niter -- Maximum number of iterations,
                if niter=0, then no CLEANing is done ("invert" only)
                default: 500; example: niter=5000
 
@@ -134,17 +139,19 @@
                        'superuniform','briggsabs','radial'
 
 	restoringbeam -- Output Gaussian restoring beam for CLEAN image
-               [bmaj, bmin, bpa] elliptical Gaussian restoring beam
-               default units are in arc-seconds for bmaj,bmin, degrees
-               for bpa default: restoringbeam=[]; Use PSF calculated
+               [bmaj, bmin, bpa] elliptical Gaussian restoring beam.
+               Default units are in arc-seconds for bmaj and bmin, and in degrees
+               for bpa. Default: restoringbeam=[]; Use PSF calculated
                from dirty beam. 
-               example: restoringbeam=['10arcsec'] circular Gaussian 
+               example: restoringbeam=['10arcsec'] or restorinbeam='10arcsec', circular Gaussian.
                         FWHM 10 arcseconds example:
                         restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
                         at 45 degrees
 	
 	interactive -- Create a mask interactively or not.
         		default=False; example: interactive=True
+        		The viewer will open with the image displayed. Select the
+        		region for the mask and double click in the middle of it.
 	
  </example>
  </task>
