@@ -1205,18 +1205,35 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
   try {  
     
     SubImage<Float> subImg(*im_, imgReg);
-  
+
+    //cout << "subImg=" << subImg.shape() << endl;
     ImageStatistics<Float> stats(subImg, False);
+    PrincipalAxesDD* padd =
+          dynamic_cast<PrincipalAxesDD*>(dd_);
+
+    if (padd == 0)
+        return False;
+
+    Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
+    IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
+    const CoordinateSystem& cs = 
+      (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+					   
+    Int zIndex = padd->activeZIndex();
+    IPosition pos = padd->fixedPosition();
+    Vector<Int> dispAxes = padd->displayAxes();
+    //cout << "dispAxes=" << dispAxes << endl;
     
     Vector<Int> cursorAxes(2);
-    cursorAxes(0) = 0; //display axis 1
-    cursorAxes(1) = 1; //display axis 2
+    cursorAxes(0) = dispAxes[0]; //display axis 1
+    cursorAxes(1) = dispAxes[1]; //display axis 2
     //cout << "cursorAxes=" << cursorAxes << endl;;
     if (!stats.setAxes(cursorAxes)) return False;
     stats.setList(True);
     String layerStats;
-    Int layerId = 3;
-    stats.getLayerStats(layerStats, layerId);
+    Vector<String> nm = cs.worldAxisNames();
+    //cout << "cs=" << nm << endl;
+    stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
     //cout << layerStats << endl;
     //cout << "done getLayerStats" << endl ;
     
