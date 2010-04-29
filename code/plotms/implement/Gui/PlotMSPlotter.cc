@@ -69,6 +69,7 @@ PlotMSPlotter::~PlotMSPlotter() {
 // Public Methods //
 
 void PlotMSPlotter::showGUI(bool show) {
+    isClosed_ = false;
     setVisible(show);
     itsPlotter_->showGUI(show);
 }
@@ -112,6 +113,10 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
 
 bool PlotMSPlotter::isDrawing() const {
 	return itsCurrentThread_ != NULL && itsCurrentThread_->thread()->isRunning();
+}
+
+bool PlotMSPlotter::isClosed() const {
+	return isClosed_;
 }
 
 bool PlotMSPlotter::canvasDrawBeginning(
@@ -303,7 +308,7 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
         itsWaitingThreads_.clear();
         itsCurrentThread_->terminateOperation();
     }
-    
+    isClosed_ = true;
     // Close plotter separately if not Qt-based.
     if(!isQt_) itsPlotter_->close();
 }
@@ -480,6 +485,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
         splitter->addWidget(w);
         itsEnableWidgets_ << w;
     }
+
+    isClosed_ = false;
     
     // Force window to set size before drawing to avoid unnecessary redraws.
     QApplication::processEvents();

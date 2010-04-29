@@ -86,6 +86,7 @@ endmacro()
 #               [ DEFINITIONS flag1 ... ]
 #               [ DEPENDS package1 ... ]
 #               [ NO_REQUIRE ]
+#               [ NO_CHECK ]
 #             )
 #
 #   Sets the following variables
@@ -140,6 +141,9 @@ endmacro()
 #    NO_REQUIRE: If defined, it is not a fatal error if the package
 #                is not found
 #
+#      NO_CHECK: If defined, the check on whether the headers compile
+#                is skipped
+#
 #
 #  
 #  In addition to the given PREFIX_HINTS, this macro also searches in
@@ -162,6 +166,15 @@ endmacro()
 #      /usr/lib/casapy/include/fits.h
 #      /usr/lib/casapy/include/cfitsio/fits.h
 #      /usr/lib/casapy/include/somewhere/fits.h
+#      /sw/include/fits.h
+#      /sw/include/cfitsio/fits.h
+#      /sw/include/somewhere/fits.h
+#      /opt/local/include/fits.h
+#      /opt/local/include/cfitsio/fits.h
+#      /opt/local/include/somewhere/fits.h
+#      /opt/include/fits.h
+#      /opt/include/cfitsio/fits.h
+#      /opt/include/somewhere/fits.h
 #   and at CMake's default search paths:
 #      /usr/include/fits.h
 #      /usr/include/cfitsio/fits.h
@@ -169,12 +182,6 @@ endmacro()
 #      /usr/local/include/fits.h
 #      /usr/local/include/cfitsio/fits.h
 #      /usr/local/include/somewhere/fits.h
-#      /opt/include/fits.h
-#      /opt/include/cfitsio/fits.h
-#      /opt/include/somewhere/fits.h
-#      /opt/local/include/fits.h
-#      /opt/local/include/cfitsio/fits.h
-#      /opt/local/include/somewhere/fits.h
 #      ... cut, more CMake built-ins ...
 #
 
@@ -195,6 +202,7 @@ macro( casa_find package )
   set( _definitions "" )
   set( _depends "" )
   set( _no_require False )
+  set( _no_check False )
   foreach ( _a ${ARGN} )
     
     if(${_a} STREQUAL VERSION)
@@ -223,6 +231,9 @@ macro( casa_find package )
       set( _current _depends )
     elseif (${_a} STREQUAL NO_REQUIRE )
       set( _no_require True )
+      set( _current "illegal" )
+    elseif (${_a} STREQUAL NO_CHECK )
+      set( _no_check True )
       set( _current "illegal" )
     elseif( ${_a} STREQUAL "illegal" )
       message( FATAL_ERROR "Illegal macro invocation ${ARGN}" )
@@ -301,6 +312,9 @@ macro( casa_find package )
         ${_prefix_hints_include}
 	${CMAKE_INSTALL_PREFIX}/include
         ${casa_packages}/include
+        /opt/local/include
+        /sw/include
+        /opt/include
        )
     endif()
     set( ${package}_INCLUDE_DIRS "" )
@@ -320,7 +334,10 @@ macro( casa_find package )
 
       # If not found, search CMake's default paths
       if( ${package}_${_include} MATCHES "NOTFOUND$" )
-        find_path( ${package}_${_include} NAMES ${_include} PATH_SUFFIXES ${_includes_suffixes} )
+        find_path( ${package}_${_include} 
+          NAMES ${_include}
+          PATH_SUFFIXES ${_includes_suffixes} 
+          )
       endif()
 
       if( ${package}_${_include} MATCHES "NOTFOUND$" )
@@ -349,8 +366,8 @@ macro( casa_find package )
       message( STATUS "Checking whether ${package} headers compile")
         
       # CCMTOOLS headers define (not declare) symbols (!) and thus do not compile without linking.
-      if( ${package} STREQUAL CCMTOOLS )
-        message( STATUS "Checking whether ${package} headers compile -- skipped, they never do")
+      if( _no_check )
+        message( STATUS "Checking whether ${package} headers compile -- skipped")
       else()
         
         file( WRITE ${_try}
@@ -468,6 +485,9 @@ macro( casa_find package )
         ${_prefix_hints_lib}       # append lib to each?
 	${CMAKE_INSTALL_PREFIX}/lib
         ${casa_packages}/lib
+        /opt/local/lib
+        /sw/lib
+        /opt/lib
         )
       # Note: find_library() automatically searches in and prefers
       # a lib64 variant of these paths, if it exists (see man cmake).
@@ -488,7 +508,8 @@ macro( casa_find package )
         
         # If not found, search CMake's default paths
         if( ${package}_${_lib} MATCHES "NOTFOUND$" )
-          find_library( ${package}_${_lib} NAMES ${_lib} )
+          find_library( ${package}_${_lib}
+            NAMES ${_lib} )
         endif()
 
         if( ${package}_${_lib} MATCHES "NOTFOUND$" )
@@ -676,12 +697,21 @@ macro( casa_find package )
     foreach ( _program ${_programs} )
       message( STATUS "Looking for ${package} program ${_program}" )
       
+      # Append /bin to given PREFIX_HINTS 
+      set( _paths "" )
+      foreach( _p ${_prefix_hints} )
+        list( APPEND _paths "${_p}/bin" )
+      endforeach()
+      list( APPEND _paths ${CMAKE_INSTALL_PREFIX}/bin )
+      list( APPEND _paths ${casa_packages}/bin )
+      list( APPEND _paths /opt/local/bin )
+      list( APPEND _paths /sw/bin )
+      list( APPEND _paths /opt/bin )
+
       unset( ${package}_${_program}_EXECUTABLE CACHE )
       find_program( ${package}_${_program}_EXECUTABLE
         ${_program}
-        PATHS 
-        /usr/lib/qt-4.3.4/dbus/bin/
-        ${casa_packages}/bin
+        PATHS ${_paths}
         )
       
       if( ${package}_${_program}_EXECUTABLE MATCHES "NOTFOUND$" )

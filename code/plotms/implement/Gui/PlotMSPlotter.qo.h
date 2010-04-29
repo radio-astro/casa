@@ -91,6 +91,7 @@ public:
     // </group>
 
     bool isDrawing() const;
+    bool isClosed() const;
 
     // Execution Methods //
     
@@ -213,6 +214,9 @@ private:
     
     // Flag for whether the underlying Plotter is Qt-based or not.
     bool isQt_;
+
+    // Flag for whether the widget is open or not
+    bool isClosed_;
     
     // Plot factory.
     PlotFactoryPtr itsFactory_;

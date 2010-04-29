@@ -118,6 +118,11 @@ bool PlotMS::isDrawing() const {
 	return itsPlotter_->isDrawing();
 }
 
+bool PlotMS::isClosed() const {
+	return itsPlotter_ == NULL ||
+               itsPlotter_->isClosed();
+}
+
 bool PlotMS::save(const PlotExportFormat& format, const bool interactive) {
 	return itsPlotter_->exportPlot(format, interactive, false);
 }

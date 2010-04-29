@@ -414,6 +414,17 @@ bool plotms::isDrawing() {
 	return retValue;
 }
 
+bool plotms::isClosed() {
+	launchApp();
+	Record params;
+	bool retValue;
+	QtDBusXmlApp::dbusXmlCall(
+		dbus::FROM_NAME, app.dbusName(),
+	    PlotMSDBusApp::METHOD_ISCLOSED, params, retValue
+	);
+	return retValue;
+}
+
 // Private Methods //
 
 bool plotms::displaySet() {

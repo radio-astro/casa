@@ -23,19 +23,23 @@ Unit tests for task csvclean. It tests the following parameters:
 class csvclean_test1(unittest.TestCase):
 
     # Input and output names
-    msfile = 'J1058+015.ms'
+#    msfile = 'J1058+015.ms'
+    msfile = 'ngc5921.ms'
+    fits = 'ngc5921.fits'
     res = None
     img = 'csvcleantest1'
 
     def setUp(self):
         self.res = None
-        default(csvclean)
-        if (os.path.exists(self.msfile)):
-            shutil.rmtree(self.msfile)
+        if (os.path.exists(self.fits)):
+#            shutil.rmtree(self.msfile)
+            os.remove(self.fits)
             
-        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/csvclean/'
-        shutil.copytree(datapath+self.msfile, self.msfile)
-    
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/ngc5921/'
+        shutil.copyfile(datapath+self.fits, self.fits)
+        importuvfits(fitsfile=self.fits, vis=self.msfile)
+        default(csvclean)
+
     def tearDown(self):
         if (os.path.exists(self.msfile)):
             shutil.rmtree(self.msfile)
@@ -48,6 +52,29 @@ class csvclean_test1(unittest.TestCase):
         px = ia.pixelvalue(pixel)
         ia.close()
         return px['value']['value']
+    
+    def verify_stats(self,stats):
+        results = {'success': True, 'msgs': "", 'error_msgs': '' }            
+        # Reference statistical values
+        ref = {'flux': ([-1.28087772]),
+               'max': ([ 0.00011397]),
+               'mean': ([ -1.18477533e-05]),
+               'min': ([-0.00013796]),
+               'npts': ([ 250000.]),
+               'rms': ([  4.25508006e-05]),
+               'sigma': ([  4.08681795e-05]),
+               'sum': ([-2.96193832]),
+               'sumsq': ([ 0.00045264])}
+        
+        for r in ref:
+            diff = abs(ref[r] - stats[r][0])
+            if (diff > 10e-5):
+                results['success']=False
+                results['error_msgs']=results['error_msgs']\
+                     +"\nError: Statistics failed for %s. "%r
+                        
+        return results
+                    
         
     def test1(self):
         '''Csvclean 1: Default values'''
@@ -61,7 +88,7 @@ class csvclean_test1(unittest.TestCase):
         self.assertFalse(self.res)
         
     def test3(self):
-        """Csvclean 3: Good input should return None"""
+        """Csvclean 3: Good input should return True"""
         self.res = csvclean(vis=self.msfile,imagename=self.img)
         self.assertTrue(self.res)
         
@@ -77,7 +104,7 @@ class csvclean_test1(unittest.TestCase):
         
     def test6(self):
         """Csvclean 6: Non-default field value"""
-        self.res = csvclean(vis=self.msfile,imagename=self.img,field='0')
+        self.res = csvclean(vis=self.msfile,imagename=self.img,field='2')
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.img+'.image'))           
         
@@ -90,7 +117,6 @@ class csvclean_test1(unittest.TestCase):
         """Csvclean 8: Non-default spw value"""
         self.res = csvclean(vis=self.msfile,imagename=self.img,spw='0')
         self.assertTrue(os.path.exists(self.img+'.image'))
-
                      
     def test9(self):
         """Csvclean 9: Wrong niter type"""
@@ -132,49 +158,53 @@ class csvclean_test1(unittest.TestCase):
         for w in weights:
             out = self.img+'.'+w
             self.res = csvclean(vis=self.msfile,imagename=out, imsize=500,weighting=w)
-            print out
-            if not self.res:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Failed for weighting=%s."%w
-            if not (os.path.exists(out+'image')):
+            if not (os.path.exists(out+'.image')):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Failed to create image=%s when weighting=%s."%(out+'.image',w)
+                     
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+       
+    def test16(self):
+        '''Csvclean 16: Test parameter restoringbeam'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
+        p = ['0.5arcsec','0.25arcsec','0.3']
+        out = 'myimg'
+        self.res = csvclean(vis=self.msfile,imagename=out, imsize=500,restoringbeam='0.5arcsec')
+        if not (os.path.exists(out+'.image')):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: Failed to create image=%s when restoringbeam=\'0.25arcsec\'."%out+'.image'
+        os.system('rm -rf myimg.image')
 
-#            shutil.rmtree(out+'.image',ignore_errors=True)
-#            shutil.rmtree(out+'.model',ignore_errors=True)
-            
+        beam = ['0.5arcsec','0.25arcsec']
+        self.res = csvclean(vis=self.msfile,imagename=out, imsize=500,restoringbeam=beam)
+        if not (os.path.exists(out+'.image')):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: Failed to create image=%s when restoringbeam=%s."%(out+'.image',beam)
+        os.system('rm -rf myimg.image')
+
+        beam = ['0.5arcsec','0.25arcsec','0.3deg']
+        self.res = csvclean(vis=self.msfile,imagename=out, imsize=500,restoringbeam=beam)
+        if not (os.path.exists(out+'.image')):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                     +"\nError: Failed to create image=%s when restoringbeam=%s."%(out+'.image',beam)
+        os.system('rm -rf myimg.image')
+        
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-    def test16(self):
-        '''Csvlean 16: Default weighting briggs'''
-        self.res = csvclean(vis=self.msfile,imagename=self.img, weighting='briggs')
-        self.assertTrue(self.res)
-        self.assertTrue(os.path.exists(self.img+'.image'))
-
-    def test31(self):
-        '''Clean 31: Non-default weighting radial'''
-        self.res = csvclean(vis=self.msfile,imagename=self.img, weighting='radial')
-        self.assertEqual(self.res, None)
-        self.assertTrue(os.path.exists(self.img+'.image'))
+    def test17(self):
+        '''Csvclean 17: Verify statistics of image'''
+        self.res = csvclean(vis=self.msfile,imagename=self.img,field='2',imsize=[500,500],
+                            niter=10, restoringbeam=['0.5arcsec'],cell='0.35arcsec')
+        ia.open(self.img+'.image')
+        stats = ia.statistics()
+        ia.close()
+        retValue = self.verify_stats(stats)
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
         
-    def test34(self):
-        '''Clean 34: Verify the value of pixel 50'''
-        #run csvclean with some parameters
-        self.res = csvclean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
-        
-        os.system('cp -r ' + self.img+'.image' + ' myimage.im')
-        self.assertEqual(self.res, None)
-        self.assertTrue(os.path.exists(self.img+'.image'))
-#        ref = 0.007161217276006937
-        ref = 0.011824539862573147
-        value = self.getpixval(self.img+'.image',50)
-        diff = abs(ref - value)
-        self.assertTrue(diff < 10e-5,'Something changed the flux values. ref_val=%s, new_val=%s'
-                                        %(ref,value))
-                
 
 def suite():
     return [csvclean_test1]

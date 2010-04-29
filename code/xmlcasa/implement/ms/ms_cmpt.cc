@@ -41,7 +41,7 @@
 #include <ms/MeasurementSets/MSConcat.h>
 #include <ms/MeasurementSets/MSFlagger.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSAnalysis.h>
+#include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
 #include <casa/Arrays/Vector.h>

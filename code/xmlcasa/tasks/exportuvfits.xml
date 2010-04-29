@@ -89,15 +89,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="bool" name="padwithflags" subparam="true">
-		<description>EXPERIMENTAL: fill in missing data with flags to fit IFs</description>
-		<value>False</value>
+		<description>Fill in missing data with flags to fit IFs</description>
+		<value>True</value>
 	</param>
 
         <constraints>
           <when param="combinespw">
-	    <equals type="bool" value="False"/>
 	    <equals type="bool" value="True">
-	      <default param="padwithflags"><value type="bool">False</value>
+	      <default param="padwithflags"><value type="bool">True</value>
 	      </default>
 	    </equals>
           </when>
@@ -182,8 +181,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         padwithflags -- If True, and combinespw is True, fill in missing
                         data as needed to fit the IF structure.  This is
                         appropriate if the MS had a few frequency-dependent
-                        flags applied, and was then time-averaged by split.  If
-                        the spectral windows were observed at different times,
+                        flags applied, and was then time-averaged by split, or
+                        when exporting for use by difmap.  If the spectral
+                        windows were observed at different times,
                         padwithflags=True will add a large number of flags,
                         making the output file significantly longer.  It does
                         not yet support spectral windows with different widths.

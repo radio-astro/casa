@@ -117,7 +117,8 @@ public:
     void setWelcome(const QString &text, int fontSize = 14, 
                     double color = 1, 
                     const QString &font = "Helvetica [Cronyx]");
-    void setAutoScale(int a) {autoScale = a; }
+    void setAutoScaleX(int a) {autoScaleX = a; }
+    void setAutoScaleY(int a) {autoScaleY = a; }
 
 public slots:
     void zoomIn();
@@ -168,7 +169,8 @@ protected:
     QPixmap backBuffer;
     Matrix<uInt> *pMask;
 
-    int autoScale;
+    int autoScaleX;
+    int autoScaleY;
 
 };
 

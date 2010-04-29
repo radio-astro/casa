@@ -38,6 +38,7 @@ casa_add_library( msvis
   implement/MSVis/VisSet.cc
   implement/MSVis/VisSetUtil.cc
   implement/MSVis/VisTimeAverager.cc
+  implement/MSVis/MSAnalysis.cc
    )
 
 casa_add_executable( msvis casasplit apps/casasplit/casasplit.cc )

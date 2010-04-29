@@ -88,6 +88,8 @@ casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
 casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
 casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
+casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
+
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
   scripts/assignmentFilter.py
@@ -136,6 +138,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_clearplot.py
   scripts/task_clearstat.py
   scripts/task_concat.py
+  scripts/task_csvclean.py
   scripts/task_cvel.py
   scripts/task_deconvolve.py
   scripts/task_exportasdm.py
@@ -239,6 +242,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/clearplot.xml
   tasks/clearstat.xml
   tasks/concat.xml
+  tasks/csvclean.xml
   tasks/cvel.xml
   tasks/deconvolve.xml
   tasks/exportasdm.xml

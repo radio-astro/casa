@@ -175,6 +175,9 @@ public:
     //DBus method name for determining if a plot is being drawn
     static const String METHOD_ISDRAWING;
     
+    //is the top widget still shown
+    static const String METHOD_ISCLOSED;
+
     // Returns the name that the plotms in the process with the given ID is (or
     // would be) registered with in the CASA DBus server.
     static String dbusName(pid_t pid);
