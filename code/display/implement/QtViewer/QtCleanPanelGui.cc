@@ -264,8 +264,6 @@ namespace casa {
 	    disabled_widgets.push_back(polygon_button);
 	}
 
-	QWidget *position_button = mouseToolBar_->button(QtMouseToolNames::POSITION);
-	if ( position_button ) position_button->setEnabled(false);
 	QWidget *polyline_button = mouseToolBar_->button(QtMouseToolNames::POLYLINE);
 	if ( polyline_button ) polyline_button->setEnabled(false);
 
