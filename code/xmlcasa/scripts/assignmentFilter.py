@@ -32,14 +32,15 @@ _asf_enabled = True
 _af_msg_keys = {
 	types.FunctionType		  : 0,
 	types.MethodType		  : 0,
-	types.BuiltinFunctionType : 0,
-	types.BuiltinMethodType   : 0,
+	types.BuiltinFunctionType         : 0,
+	types.BuiltinMethodType           : 0,
 	types.ObjectType		  : 1,
 	types.InstanceType		  : 1,
 	types.ModuleType		  : 1,
-	"casac"				      : 2,
-	"builtin"				  : 3,
-	"parameter"			      : 4
+	"casac"				  : 2,
+	"viewertool"                      : 2,
+	"builtin"			  : 3,
+	"parameter"			  : 4
 }
 
 _af_msgs = (
@@ -146,7 +147,7 @@ def assignmentFilter(self,line):
 						lvar_type = "parameter"
 						lineOK = _af_validate_parameter(token)
 					else:
-						debugMsg(type(__builtins__))
+						debugMsg('builtin', type(__builtins__))
 						isBuiltin = False
 						try:
 							isBuiltin = __builtins__.__dict__.has_key(token)
@@ -160,6 +161,7 @@ def assignmentFilter(self,line):
 							lineOK = False
 						else:
 							lvar_type = type(global_lookup(token))
+							debugMsg('global',lvar_type)
 							if _af_msg_keys.has_key(lvar_type):
 								lineOK = False
 							else:
