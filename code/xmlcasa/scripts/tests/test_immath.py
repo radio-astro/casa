@@ -178,7 +178,7 @@ class immath_test1(unittest.TestCase):
             for img in imageList:
                 os.system('rm -rf ' +img)
             
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList:
             os.system('cp -RL ' +datapath + img +' ' + img)
             
@@ -851,7 +851,7 @@ class immath_test2(unittest.TestCase):
                 os.system('rm -rf ' +img)
                 
         # FIXME: add links to repository
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList2:
             os.system('cp -RL ' +datapath + img +' ' + img)
             
@@ -862,7 +862,7 @@ class immath_test2(unittest.TestCase):
                        
     def copy_img(self):
         '''Copy images to local disk'''
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList3:
             os.system('cp -r ' +datapath + img +' ' + img)
 
