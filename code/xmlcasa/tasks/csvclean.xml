@@ -6,8 +6,10 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
       <task type="function" name="csvclean" category="utilities">
-	<shortdescription>Make a clean image using Hogbom and restore the residuals - For ALMA Commissioning</shortdescription>
-	<description>Make a clean image and restore the residuals - For ALMA Commissioning
+	<shortdescription>This task does an invert of the visibilities and deconvolve in the image plane.</shortdescription>
+	<description>This task does an invert of the visibilities and deconvolve in the
+			image plane. It does not do a uvdata subtraction (aka Cotton-Schwab
+			major cycle) of model visibility as in clean. - For ALMA Commissioning
 	</description>
 	<input>
 		<param type="string" vis="true" name="vis" mustexist="true">
@@ -76,7 +78,8 @@
 
 <example>
 
-        Make a clean image using Hogbom and restore the residuals
+        This task does not do a uvdata subtraction (aka Cotton-Schwab major cycle) 
+        of model visibility as in clean. - For ALMA Commissioning
 
 	Keyword arguments:
 	vis -- Name of input visibility file

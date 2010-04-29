@@ -7,7 +7,9 @@ from taskinit import *
 
 def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restoringbeam, interactive):
 
-    """ Create a clean image using Hogbom and restore the residuals
+    """ This task does an invert of the visibilities and deconvolve in the
+	    image plane. It does not do a uvdata subtraction (aka Cotton-Schwab
+		major cycle) of model visibility as in clean. - For ALMA Commissioning
     
          vis -- Name of input visibility file
                default: none; example: vis='ngc5921.ms'    
