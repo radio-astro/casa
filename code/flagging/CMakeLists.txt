@@ -42,3 +42,4 @@ casa_add_library( flagging
 
 casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
 casa_add_test( flagging implement/Flagging/test/tRFASelector.cc )
+casa_add_test( flagging implement/Flagging/test/tFlagger.cc )
