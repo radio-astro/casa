@@ -47,7 +47,12 @@ except ImportError, e:
     print "failed to load casa:\n", e
     exit(1)
 
-import matplotlib
+try:
+    import matplotlib
+except ImportError, e:
+    print "failed to load matplotlib:\n", e
+    print "sys.path =", "\n\t".join(sys.path)
+    
 from asap_init import *
 
 
@@ -993,7 +998,7 @@ class casaDocHelper(pydoc.Helper):
 pydoc.help = casaDocHelper(sys.stdin, sys.stdout)
 
 ##
-## /CASASUBST/python_library_directory/  is substitued at build time
+## /CASASUBST/python_library_directory/  is substituted at build time
 ##
 fullpath='/CASASUBST/python_library_directory/' + '/assignmentFilter.py'
 
