@@ -1391,16 +1391,33 @@ if benchmarking:
 ## model_sum = 71.171693
 ## model_pbcor_sum = 66.882499 # was 61.853749 Peak hits a channel better?
 
-# slight change in regression values - reason not known yet.
-# Remy's changes to cleanhelper, or something from Sanjay or Kumar?
-testdate = '2010-04-24 (RR)'
-testvers = 'CASA Version 3.0.2 (build #11181)'
+## # slight change in regression values - reason not known yet.
+## # Remy's changes to cleanhelper, or something from Sanjay or Kumar?
+## testdate = '2010-04-24 (RR)'
+## testvers = 'CASA Version 3.0.2 (build #11181)'
+## clean_image_max = 1.615747
+## clean_offsrc_rms = 0.058497
+## clean_offline_rms = 0.055416
+## clean_momentzero_max = 163.726852
+## clean_momentzero_rms = 15.206372
+## clean_momentone_median = 423.6954 # was 429.6588; change << 1 chanwidth.
+## clean_momentone_planezero = 696.702393
+## clean_momentone_planelast = 127.786629
+## vis_mean_cal = 194.915085
+## vis_mean_src = 54.627020
+## model_sum = 71.171693
+## model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
+
+# slight change in 1 regression value - Kumar fixed a bug in setjy with
+# multiple spws, which could affect this script.
+testdate = '2010-04-29 (RR)'
+testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
 clean_momentzero_max = 163.726852
 clean_momentzero_rms = 15.206372
-clean_momentone_median = 423.6954 # was 429.6588; change << 1 chanwidth.
+clean_momentone_median = 422.142792 # was 423.6954; change << 1 chanwidth.
 clean_momentone_planezero = 696.702393
 clean_momentone_planelast = 127.786629
 vis_mean_cal = 194.915085
