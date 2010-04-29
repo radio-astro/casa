@@ -1121,7 +1121,7 @@ Bool LatticeStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 
 template <class T>
 Bool LatticeStatistics<T>::getLayerStats(
-        String& stats, Int layer) {
+        String& stats, Vector<String>& zName, Int zAxis, Int layer) { 
 
    if (!goodParameterStatus_p) {
      return False;
@@ -1138,6 +1138,10 @@ Bool LatticeStatistics<T>::getLayerStats(
    }
 
    const uInt n1 = pStoreLattice_p->shape()(0);
+   //cout << "pStoreLattice_p->shape()=" 
+   //     << pStoreLattice_p->shape() << endl;
+   //cout << "n1=" << n1 << endl;
+
    Matrix<AccumType> ord(n1,NSTATS);
 
    IPosition cursorShape(pStoreLattice_p->ndim(),1);
@@ -1161,7 +1165,7 @@ Bool LatticeStatistics<T>::getLayerStats(
    ostringstream os;
    for (pixelIterator.reset(); 
         !pixelIterator.atEnd(); pixelIterator++) {
- 
+
       Matrix<AccumType>  matrix(pixelIterator.matrixCursor());  
       for (uInt i=0; i<n1; i++) {
          const AccumType& nPts = matrix(i,NPTS);
@@ -1183,7 +1187,7 @@ Bool LatticeStatistics<T>::getLayerStats(
       }
 
       listLayerStats(hasBeam, pixelIterator.position(), ord,
-                     os, layer);
+                     os, zName, zAxis, layer);
    }
    stats += os.str();
    stats += '\n';
@@ -1194,11 +1198,22 @@ Bool LatticeStatistics<T>::getLayerStats(
 template <class T>
 Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam, 
     const IPosition& dPos, const Matrix<AccumType>& stats,
-    ostringstream& os, Int layer)
+    ostringstream& os, Vector<String>& zName,
+    Int zAxis, Int layer) 
 {
 
    const uInt nDisplayAxes = displayAxes_p.nelements();
    const uInt nStatsAxes = cursorAxes_p.nelements();
+   const uInt n1 = stats.shape()(0);
+
+   //cout << "displayAxes_p=" << displayAxes_p << endl;
+   uInt zAx = -1;
+   for (uInt j=0; j<nDisplayAxes; j++) {
+      if (zAxis == displayAxes_p(j))
+         zAx = j;
+   }
+   //cout << "zAx=" << zAx << " zAxis=" << zAxis
+   //     << " layer=" << layer << endl;
 
    Int oDWidth = 15;
    T* dummy = 0;
@@ -1209,23 +1224,37 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
 
    Int oPrec = 6;   
 
+   Int lyr = locInLattice(dPos,True)(zAx);
    //Write the pixel and world coordinate of the higher order 
    //display axes to the logger
+   //if (nDisplayAxes > 1) {
+   //   Vector<String> sWorld(1);
+   //   Vector<Double> pixels(1);
+   //   IPosition blc(pInLattice_p->ndim(),0);
+   //   IPosition trc(pInLattice_p->shape()-1);
 
-   if (nDisplayAxes > 1) {
-      Vector<String> sWorld(1);
-      Vector<Double> pixels(1);
-      IPosition blc(pInLattice_p->ndim(),0);
-      IPosition trc(pInLattice_p->shape()-1);
+   //   Int lyr = locInLattice(dPos,True)(1);
+   //   if (lyr != layer)
+   //      return 0; 
+      //os << "zIndex=" << layer << endl;
+      //os <<  "Axis " << displayAxes_p(j) + 1 << " = " 
+      //   << locInLattice(dPos,True)(j)+1;
+   //}
+   if (zAx != 0 && lyr != layer)
+         return 0; 
 
-      for (uInt j=1; j<nDisplayAxes; j++) {
-         os <<  "Axis " << displayAxes_p(j) + 1 << " = " 
-              << locInLattice(dPos,True)(j)+1;
-         if (j < nDisplayAxes-1) 
-            os << ", ";
-      }
+   for (uInt s = 0; s < nDisplayAxes; s++) { 
+      if (s == zAx)
+         os << zName[displayAxes_p(s)] 
+            << "=" << layer;
+      else 
+         os << zName[displayAxes_p(s)] 
+            << "=" << locInLattice(dPos, True)(s);
+      if (s < nDisplayAxes - 1)
+         os << ", ";
    }
    os << endl;
+   //os << "zIndex=" << layer << endl;
 
    setStream(os, oPrec);
    Vector<String> sWorld(1);
@@ -1252,7 +1281,7 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
       os << setw(len0) << "Hyper-cube ";
    }
 
-   os << setw(oDWidth) << "Npts";
+   os << setw(10) << "Npts";
    os << setw(oDWidth) << "Sum";
    if (hasBeam) 
       os << setw(oDWidth) << "FluxDensity";
@@ -1266,13 +1295,18 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
 
    //Write statistics to logger.  We write the pixel location
    //relative to the parent lattice
-
-   const uInt n1 = stats.shape()(0);
    for (uInt j=0; j<n1; j++) {
+      if (zAx != 0 || layer == j) {
+
       os << setw(len0)     
-         << j+blcParent_p(displayAxes_p(0))+1;
-      setStream(os, oPrec);
-      os << setw(oDWidth)
+         << j+blcParent_p(displayAxes_p(0));
+
+      //setStream(os, oPrec);
+      os.fill(' '); 
+      os.precision(0);
+      os.setf(ios::fixed, ios::floatfield);
+      os.setf(ios::left, ios::adjustfield);
+      os << setw(10)
          << stats.column(NPTS)(j);
 
       if(LattStatsSpecialize::hasSomePoints(stats.column(NPTS)(j))){
@@ -1307,6 +1341,7 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
             << stats.column(MAX)(j);
       }
       os << endl;
+      }
    }
    
    return True;
