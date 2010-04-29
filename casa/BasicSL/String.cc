@@ -118,15 +118,17 @@ void String::trim() {
     ) {
         erase(iter);
     }
-    iter = end() - 1;
-    while (
-        iter != begin() && (
-            *iter == ' ' || *iter == '\t'
-            || *iter == '\n' || *iter == '\r'
-        )
-    ) {
-        erase(iter);
-        iter--;
+    if (length() > 0) {
+    	iter = end() - 1;
+    	while (
+    			iter != begin() && (
+    				*iter == ' ' || *iter == '\t'
+    				|| *iter == '\n' || *iter == '\r'
+    			)
+    	) {
+    		erase(iter);
+    		iter--;
+    	}
     }
 }
 

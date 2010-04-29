@@ -413,6 +413,9 @@ void trim() {
     myString = "\n \t\t\r  ";
     myString.trim();
     assert(myString.empty());
+    myString = "    ";
+    myString.trim();
+    assert(myString.empty());
 }
 
 /* void hashtest()
