@@ -409,12 +409,12 @@ protected:
 
 // Take the user's data inclusion and exclusion data ranges and
 // generate the range and Booleans to say what sort it is
-   virtual Bool setIncludeExclude (Vector<T>& range,
-                                   Bool& noInclude,
-                                   Bool& noExclude,
-                                   const Vector<T>& include,
-                                   const Vector<T>& exclude,
-                                   ostream& os);
+   Bool setIncludeExclude (Vector<T>& range,
+                           Bool& noInclude,
+                           Bool& noExclude,
+                           const Vector<T>& include,
+                           const Vector<T>& exclude,
+                           ostream& os);
 
 // Set the output image suffixes and units
    Bool setOutThings(String& suffix,
