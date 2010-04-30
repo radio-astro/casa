@@ -3458,6 +3458,21 @@ in spectral window 1.
     <param type="intArray" direction="in" name="moments">
        <description>A list of moments that you want to compute. Default is an integrarted spectrum.</description>
     </param>
+    <param type="any" direction="in" name="antenna">
+      <description>antenna name or id</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+    <param type="any" direction="in" name="field">
+      <description>field name or id</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+    <param type="any" direction="in" name="spw">
+      <description>spectral window id</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
 <!--
     <param type="any" direction="in" name="mask">
       <any type="variant"/>
@@ -3478,13 +3493,13 @@ in spectral window 1.
     <param type="doubleArray" direction="in" name="smoothwidths">
     </param>
 -->
-    <param type="intArray" direction="in" name="includerow">
-      <description>A list of rows that you want to compute moments. 
-      Default is -1 (all rows).</description>
+    <param type="doubleArray" direction="in" name="includemask">
+      <description>A range of masks to be included when moments are computed. 
+      Default is -1 (all channels).</description>
     </param>
-    <param type="intArray" direction="in" name="excluderow">
-      <description>A list of rows that you do not want to compute moments. 
-      Default is -1 (do not exclude rows).</description>
+    <param type="doubleArray" direction="in" name="excludemask">
+      <description>A range of masks to be excluded when moments are computed. 
+      Default is -1 (do not exclude channels).</description>
     </param>
     <param type="double" direction="in" name="peaksnr">
       <description>The SNR ratio that is a lower limit to be included a 

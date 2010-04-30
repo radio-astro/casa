@@ -1,8 +1,7 @@
 import os
 from taskinit import *
 
-#def msmoments( msname, moments, mask, stokes, mask, includerow, excluderow, outfile, overwrite):
-def msmoments( msname, moments, includerow, excluderow, outfile, overwrite):
+def msmoments( msname, moments, antenna, field, spw, includemask, excludemask, outfile, overwrite):
     
     retValue=None
     casalog.origin('msmoments')
@@ -12,7 +11,7 @@ def msmoments( msname, moments, includerow, excluderow, outfile, overwrite):
             if ( os.path.exists(outfile) ):
                 raise Exception( outfile+" exists." ) 
         ms.open( msname ) 
-        retValue = ms.moments( moments=moments,includerow=includerow,excluderow=excluderow,outfile=outfile,overwrite=overwrite)
+        retValue = ms.moments( moments=moments,antenna=antenna,field=field,spw=spw,includemask=includemask,excludemask=excludemask,outfile=outfile,overwrite=overwrite)
 	ms.close()
         return retValue
     except Exception, instance:

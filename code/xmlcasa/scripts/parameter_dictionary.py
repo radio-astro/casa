@@ -654,10 +654,10 @@ class par(str):
 		"""
 
 	@staticmethod
-	def excluderow():
+	def excludemask():
 		"""
-        	excluderow -- List of rows to exclude
-                default: [-1] (don't exclude pixels); example=[100,200]
+        	excludemask -- Range of masks to exclude
+                default: [-1] (don't exclude channels); example=[100,200]
 		"""
 
 	@staticmethod
@@ -1076,11 +1076,11 @@ class par(str):
 		"""
 
 	@staticmethod
-	def includerow():
+	def includemask():
 		"""
                 (for msmoments)
-	        includepix -- List of rows to include
-                default: [-1] (all pixels); example=[2,100]
+	        includemask -- Range of masks to include
+                default: [-1] (include all channels); example=[2,100]
 		"""
 
 	@staticmethod

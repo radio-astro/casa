@@ -68,13 +68,16 @@ public:
 
   // moment calculation
   MeasurementSet *moments( const Vector<Int> &whichmoments,
-                           const String &mask,
+                           //const String &mask,
+                           const String &antenna,
+                           const String &field,
+                           const String &spw,
                            const Vector<String> &method,
                            const Vector<Int> &smoothAxes,
                            const Vector<String> &kernels,
                            const Vector<Quantity> &kernelWidths,
-                           const Vector<Int> &includerow,
-                           const Vector<Int> &excluderow,
+                           const Vector<Float> &includemask,
+                           const Vector<Float> &excludemask,
                            const Double peaksnr,
                            const Double stddev,
                            const String &velocityType,
@@ -94,7 +97,7 @@ private:
   // </group>
 
   // Select data from input MS
-  void selectMS( const Int antenna, const Int field, const Int spw ) ;
+  void selectMS( const String antenna, const String field, const String spw ) ;
 
   // Clean up temporary files
   void cleanup() ;

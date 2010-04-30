@@ -2142,14 +2142,17 @@ ms::uvsub(Bool reverse)
 //bool
 table * 
 ms::moments(const std::vector<int>& moments, 
+            const ::casac::variant& antenna,
+            const ::casac::variant& field,
+            const ::casac::variant& spw,
             //const ::casac::variant& vmask,
             //const ::casac::variant& stokes,
             //const std::vector<std::string>& in_method,
             //const std::vector<int>& smoothaxes,
             //const ::casac::variant& smoothtypes,
             //const std::vector<double>& smoothwidths,
-            const std::vector<int>& d_includepix,
-            const std::vector<int>& d_excludepix,
+            const std::vector<double>& d_includepix,
+            const std::vector<double>& d_excludepix,
             const double peaksnr, const double stddev,
             const std::string& velocityType, const std::string& out,
             //const std::string& smoothout, 
@@ -2162,10 +2165,33 @@ ms::moments(const std::vector<int>& moments,
      *itsLog << LogOrigin("ms", "moments");
 
      Vector<Int> whichmoments( moments ) ;
+
+     String strAnt ;
+     if ( antenna.type() == ::casac::variant::INT ) {
+       strAnt = String::toString( antenna.toInt() ) ;
+     }
+     else if ( antenna.type() == ::casac::variant::STRING ) {
+       strAnt = String( antenna.toString() ) ;
+     }
+     String strField ;
+     if ( field.type() == ::casac::variant::INT ) {
+       strField = String::toString( field.toInt() ) ;
+     }
+     else if ( field.type() == ::casac::variant::STRING ) {
+       strField = String( field.toString() ) ;
+     }
+     String strSpw ;
+     if ( spw.type() == ::casac::variant::INT ) {
+       strSpw = String::toString( spw.toInt() ) ;
+     }
+     else if ( spw.type() == ::casac::variant::STRING ) {
+       strSpw = String( spw.toString() ) ;
+     }
+
 //      String mask = vmask.toString() ;
 //      if ( mask == "[]" ) 
 //        mask = "" ;
-     String mask = "" ;
+     //String mask = "" ;
 //     Vector<String> method = toVectorString( in_method ) ;
      Vector<String> method( 0 ) ;
 
@@ -2193,7 +2219,7 @@ ms::moments(const std::vector<int>& moments,
 //        kernelwidths[i] = casa::Quantity( smoothwidths[i], u ) ;
 //      }
 
-     Vector<Int> includepix ;
+     Vector<Float> includepix ;
      num = d_includepix.size() ;
      if ( !(num == 1 && d_includepix[0] == -1) ) {
        includepix.resize( num ) ;
@@ -2201,7 +2227,7 @@ ms::moments(const std::vector<int>& moments,
          includepix[i] = d_includepix[i] ;
      }
 
-     Vector<Int> excludepix ;
+     Vector<Float> excludepix ;
      num = d_excludepix.size() ;
      if ( !(num == 1 && d_excludepix[0] == -1) ) {
        excludepix.resize( num ) ;
@@ -2220,7 +2246,10 @@ ms::moments(const std::vector<int>& moments,
      Vector<Int> smoothAxes( 0 ) ;
      String smoothout = "" ;
      MeasurementSet *mMS = momentMaker.moments( whichmoments,
-                                                mask,
+                                                //mask,
+                                                strAnt,
+                                                strField,
+                                                strSpw,
                                                 method,
                                                 smoothAxes,
                                                 kernels,

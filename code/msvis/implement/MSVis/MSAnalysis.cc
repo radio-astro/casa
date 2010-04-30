@@ -122,13 +122,16 @@ void MSAnalysis::cleanup()
 
 // moment calculation
 MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
-                                     const String &mask,
+                                     //const String &mask,
+                                     const String &antenna,
+                                     const String &field,
+                                     const String &spw,
                                      const Vector<String> &method,
                                      const Vector<Int> &smoothAxes,
                                      const Vector<String> &kernels,
                                      const Vector<Quantity> &kernelWidths,
-                                     const Vector<Int> &includepix,
-                                     const Vector<Int> &excludepix,
+                                     const Vector<Float> &includepix,
+                                     const Vector<Float> &excludepix,
                                      const Double peaksnr,
                                      const Double stddev,
                                      const String &velocityType,
@@ -154,6 +157,9 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
     if ( ms_p == 0 ) {
       *itsLog << "No MS data set" << LogIO::EXCEPTION ;
     }
+
+    // data selection
+    selectMS( antenna, field, spw ) ;
     
     // smoothing is not implemented yet
     Bool doSmooth = False ;
@@ -177,60 +183,6 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
 
     // doTemp
     Bool doTemp = True ;
-
-    // include/exclude rows
-    if ( includepix.nelements() != 0 && excludepix.nelements() != 0 ) {
-//       *itsLog << LogIO::SEVERE 
-//               << "You can only give one of arguments include or exclude" << LogIO::EXCEPTION ;
-      throw AipsError( "You can only give one of arguments include or exclude" ) ;
-    } 
-    else if ( includepix.nelements() != 0 ) {
-      // include rows
-      Vector<uInt> rows( ms_p->nrow() ) ;
-      Int idInc = 0 ;
-      for ( uInt i = 0 ; i < ms_p->nrow() ; i++ ) {
-        if ( allNE( includepix, (Int)i ) ) {
-          rows[idInc] = i ;
-          idInc++ ;
-        }
-      }
-      rows.resize( idInc, True ) ;
-      String tmpName = ms_p->tableName() + ".MS_ANALYSIS_tmp" ;
-      ms_p->deepCopy( tmpName, Table::New ) ;
-      Table *tab = new Table( tmpName, Table::Update ) ;
-      //Table *tab = new Table( ms_p->tableName(), Table::Update ) ;
-      ScalarColumn<Bool> flagRowCol( *tab, "FLAG_ROW" ) ;
-      for ( uInt i = 0 ; i < rows.nelements() ; i++ ) {
-        flagRowCol.put( rows[i], True ) ;
-      }
-      tab->flush() ;
-      delete tab ;
-      tab = 0 ;
-      setMS( tmpName ) ;
-    }
-    else if ( excludepix.nelements() != 0 ) {
-      // exclude rows 
-      Vector<uInt> rows( ms_p->nrow() ) ;
-      Int idEx = 0 ;
-      for ( uInt i = 0 ; i < ms_p->nrow() ; i++ ) {
-        if ( anyEQ( excludepix, (Int)i ) ) {
-          rows[idEx] = i ;
-          idEx++ ;
-        }
-      }
-      rows.resize( idEx, True ) ;
-      String tmpName = ms_p->tableName() + "_MS_ANALYSIS_tmp" ;
-      ms_p->deepCopy( tmpName, Table::New ) ;
-      Table *tab = new Table( tmpName, Table::Update ) ;
-      ScalarColumn<Bool> flagRowCol( *tab, "FLAG_ROW" ) ;
-      for ( uInt i = 0 ; i < rows.nelements() ; i++ ) {
-        flagRowCol.put( rows[i], True ) ;
-      }
-      tab->flush() ;
-      delete tab ;
-      tab = 0 ;
-      setMS( tmpName ) ;
-    }
 
     //
     // loop on FIELD_ID, DATA_DESC_ID, ANTENNA1
@@ -409,7 +361,7 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
         }
         // output MS
         String msName = msMoments[i]->tableName() ;
-        String suffix = msName.substr( msName.rfind( "." ) ) ;
+        String suffix = msName.substr(  msName.rfind( '.', msName.size()-1 ), msName.size()-1 ) ;
         String outTable = "" ;
         if ( out == "" ) {
           outTable = tableIn_ + suffix ;
@@ -461,74 +413,54 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
   return moments[0] ;
 }
   
-void MSAnalysis::selectMS( const Int antenna, const Int field, const Int spw )
+void MSAnalysis::selectMS( const String antenna, const String field, const String spw )
 {
+  // Parse antenna, field, spw
+  MSSelection sel ;
+  Bool doAntenna = False ;
+  Bool doField = False ;
+  Bool doSpw = False ;
+//   *itsLog << "antenna = " << antenna << "(" << antenna.size() 
+//           << "), field = " << field << "(" << field.size() 
+//           << "), spw = " << spw << "(" << spw.size() << ")" << LogIO::POST ; 
+  if ( antenna.size() != 0 ) {
+    doAntenna = True ;
+    sel.setAntennaExpr( antenna ) ;
+  }
+  if ( field.size() != 0 ) {
+    doField = True ;
+    sel.setFieldExpr( field ) ;
+  }
+  if ( spw.size() != 0 ) {
+    doSpw = True ;
+    sel.setSpwExpr( spw ) ;
+  }
+
+  // no selection
+  if ( !doAntenna && !doField && !doSpw ) 
+    return ;
+
   // selected MS name
   ostringstream sstr ;
   sstr << tableIn_ 
-       << ".ant" << antenna  
-       << ".field" << field
-       << ".spw" << spw ;
+       << ".select" ;
   String tableSel( sstr ) ;
 
-  // get current time for temporary name
-  Time tNow = Time() ;
-  tNow.now() ;
-  String timeStr = tNow.ISODate() ;
-  for ( String::iterator pos = timeStr.begin() ; pos != timeStr.end() ; pos++ ) 
-{
-    if ( *pos == ' ' ) {
-      timeStr.replace( pos, pos+1, '_' ) ;
-    }
-  }
-  String tableTemp = tableName_ + timeStr ;
-
   try {
-    // new temporary data
-    //ms_p->deepCopy( tableTemp, Table::New, True ) ;
-    MeasurementSet msorg( tableIn_ ) ;
-    msorg.deepCopy( tableTemp, Table::New, True ) ;
-    MeasurementSet tmpMS( tableTemp ) ;
-    
-    // select data
-    MSSelection sel ;
-    ostringstream ss ;
-    ss << antenna ;
-    sel.setAntennaExpr( String( ss ) ) ;
-    ss.str( "" ) ;
-    ss << field ;
-    sel.setFieldExpr( String( ss ) ) ;
-    ss.str( "" ) ;
-    uInt ddid ;
-    ROScalarColumn<Int> spwCol( tmpMS.dataDescription(), "SPECTRAL_WINDOW_ID" ) ;
-    for (  ddid = 0 ; ddid <= spwCol.nrow() ; ddid++ ) {
-      if ( ddid > spwCol.nrow() ) {
-        *itsLog << LogIO::WARN
-                << "No corresponding row in DATA_DESCRIPTION table for spwid " 
-                << spw << LogIO::EXCEPTION ;
-      }
-      if ( spw == spwCol( ddid ) ) 
-        break ;
-    }
-    ss << "DATA_DESC_ID == " << ddid ;
-    sel.setTaQLExpr( String( ss ) ) ;
-    ss.str( "" ) ;
-    TableExprNode node = sel.toTableExprNode( &tmpMS ) ;
-    Table tablesel( tableTemp, Table::Update ) ;
-    Table tablesel2 = tablesel( node, node.nrow() ) ;
-    tablesel2.deepCopy( tableSel, Table::New, True ) ;
+    TableExprNode node = sel.toTableExprNode( ms_p ) ;
+    //*itsLog << "ms_p->nrow() = " << ms_p->nrow() << LogIO::POST ;
+    //*itsLog << "node.nrow() = " << node.nrow() << LogIO::POST ;
+    Table subtable = (*ms_p)( node, node.nrow() ) ;
+    //*itsLog << "subtable.nrow() = " << subtable.nrow() << LogIO::POST ; 
+    subtable.deepCopy( tableSel, Table::New, True ) ;
     
     // replace ms_p and tableName
     setMS( tableSel ) ;
   }
   catch ( AipsError e ) {
-    Table::deleteTable( tableTemp, True ) ;
     cleanup() ;
     RETHROW( e ) ;
   }
-
-  // clean up
-  Table::deleteTable( tableTemp, True ) ;    
 }
 
 }
