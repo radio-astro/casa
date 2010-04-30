@@ -77,7 +77,7 @@
 namespace casa {
 
   const bool Flagger::dbg = false;
-  
+    
   LogIO Flagger::os( LogOrigin("Flagger") );
   static char str[1024];
   // uInt debug_ifr=9999,debug_itime=9999;
@@ -361,7 +361,7 @@ namespace casa {
     
     /* Row-Selection */
     
-    if (!spw.length() && uvrange.length()) {
+    if (spw.length() == 0 && uvrange.length() > 0) {
 	spw = String("*");
     }
     
@@ -383,7 +383,8 @@ namespace casa {
 				    dummyExpr, // corrExpr
 				    (const String)scan,
 				    (const String)array);
-    spw_selection = (spw != "");
+    spw_selection = ((spw != "" && spw != "*") || uvrange.length() > 0);
+    // multiple spw agents are also needed for uvrange selections...
 
     selectdata_p = True;
     /* Print out selection info - before selecting ! */
@@ -554,7 +555,7 @@ namespace casa {
     //  selected subset start from zero - and throw everything into confusion.
     Vector<Int> spwlist = msselection_p->getSpwList();
     
-    if ( spwlist.nelements()) {// && spw_selection ){
+    if ( spwlist.nelements() && spw_selection ) {
       Matrix<Int> spwchan = msselection_p->getChanList();
       IPosition cshp = spwchan.shape();
       if ( (Int)spwlist.nelements() > (spwchan.shape())[0] )
@@ -763,7 +764,7 @@ namespace casa {
        then no need to make separate records for each spw. */
     bool separatespw = False;
     Int nrec;
-    if (spwlist.nelements()) { // && spw_selection) {
+    if (spwlist.nelements() && spw_selection) {
 	separatespw = True; 
 	nrec = spwlist.nelements();
     }

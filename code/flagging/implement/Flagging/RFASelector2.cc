@@ -835,11 +835,11 @@ void RFASelector::startData()
     
     if( flag_everything && !shadow)
         {
-          /* jmlarsen: Why is this useful/necessary?? */
+          /* jmlarsen: This does not seem useful nor necessary */
           
-          if( !have_subset && !unflag)
-            os<<"FLAG ALL requested, but no MS subset specified.\n"
-              "Refusing to flag the whole measurement set!\n"<<LogIO::EXCEPTION;
+            if (false) if( !have_subset && !unflag)
+                os<<"FLAG ALL requested, but no MS subset specified.\n"
+                    "Refusing to flag the whole measurement set!\n"<<LogIO::EXCEPTION;
         }
     
     return;

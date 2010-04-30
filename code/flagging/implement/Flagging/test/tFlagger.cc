@@ -101,7 +101,7 @@ void loop_flagger(MeasurementSet &ms)
     string baseline = "";
 
     baseline = "";
-    flagger.setdata("", "", "", "", "0~99",
+    flagger.setdata("", "", "", "", "",
                     baseline, "", "", ""); 
     
     cout << "setmanualflags..." << endl;
