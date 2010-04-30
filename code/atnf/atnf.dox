@@ -1,4 +1,4 @@
-//# xmlcasa.dox: doxygen description of simulators package
+//# atnf.dox: doxygen description of graphics package
 //# Copyright (C) 2006
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,6 +23,6 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: xmlcasa.dox,v 1.1 2006/12/13 01:34:36 wyoung Exp $
+//# $Id: atnf.dox,v 1.1 2006/12/13 01:37:50 gvandiep Exp $
 
-// \defgroup xlmcasa xlmcasa package (libxlmcasa)
+// \defgroup atnf atnf package (libatnf)
