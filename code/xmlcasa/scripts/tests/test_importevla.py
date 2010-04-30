@@ -2,7 +2,7 @@
 # $Id:$
 # Test Name:                                                                #
 #    Regression Test Script for ASDM version 1.0 import to MS               #
-#    and the "inverse filler" task exportasdm 
+#    and the "inverse filler" task importevla 
 #                                                                           #
 # Rationale for Inclusion:                                                  #
 #    The conversion of ASDM to MS and back needs to be verified.            #
@@ -30,20 +30,6 @@ from tasks import *
 from taskinit import *
 import unittest
 
-myname = 'asdmv1-import_regression'
-
-# default ASDM dataset name
-myasdm_dataset_name = 'uid___X5f_X18951_X1'
-myms_dataset_name = 'M51.ms'
-
-# name of the resulting MS
-msname = myasdm_dataset_name+'.ms'
-
-# name of the exported ASDM
-asdmname = myms_dataset_name+'.asdm'
-
-# name of the reimported MS
-reimp_msname = 'reimported-'+myms_dataset_name
 
 def checktable(thename, theexpectation):
     global msname, myname
@@ -144,39 +130,49 @@ def verify_asdm(asdmname, withPointing):
 
 ###########################
 # beginning of actual test 
+myname = 'importevla_ut'
+
+# default ASDM dataset name
+myasdm_dataset_name = 'TOSR0001_sb1308595_1.55294.83601028935'
+myms_dataset_name = 'M51.ms'
+
+# name of the resulting MS
+msname = myasdm_dataset_name+'.ms'
+flagname = msname+'.flagversions'
+
+# name of the exported ASDM
+asdmname = myms_dataset_name+'.asdm'
+
+# name of the reimported MS
+reimp_msname = 'reimported-'+myms_dataset_name
 
 class importevla_test(unittest.TestCase):
     
     def setUp(self):
         res = None
-        if(os.path.exists(myasdm_dataset_name)):
-            shutil.rmtree(myasdm_dataset_name)
 
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/asdm-import/input/'
-        shutil.copytree(datapath + myasdm_dataset_name, myasdm_dataset_name)
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/exportasdm/input/'
-        shutil.copytree(datapath + myms_dataset_name, myms_dataset_name)
+        if(not os.path.exists(myasdm_dataset_name)):
+            datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/evla/'
+            shutil.copytree(datapath + myasdm_dataset_name, myasdm_dataset_name)
+
         default(importevla)
         
     def tearDown(self):
-        shutil.rmtree(myasdm_dataset_name)
-        shutil.rmtree(myms_dataset_name)
-        shutil.rmtree(msname,ignore_errors=True)
-        shutil.rmtree(msname+'.flagversions',ignore_errors=True)
+        pass
         
     def test1(self):
-        '''Importevla: Default values'''
+        '''Importevla 1: Default values'''
         self.res = importevla()
         self.assertFalse(self.res)
 
     def test2(self):
-        '''Importevla: Bad input asdm'''
-        asdm = 'uid'
+        '''Importevla 2: Bad input asdm'''
+        asdm = 'TOSR0001'
         self.res = importevla(asdm)
         self.assertFalse(self.res)
         
     def test3(self):
-        '''Importevla: Good input asdm'''
+        '''Importevla 3: Good input asdm'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
         self.res = importevla(myasdm_dataset_name)
@@ -205,6 +201,7 @@ class importevla_test(unittest.TestCase):
                             "SPECTRAL_WINDOW/table.dat",
                             "STATE/table.dat",
                             "SYSCAL/table.dat",
+                            "WEATHER/table.dat",
                             "ANTENNA/table.f0",
                             "DATA_DESCRIPTION/table.f0",
                             "FEED/table.f0",
@@ -218,7 +215,8 @@ class importevla_test(unittest.TestCase):
                             "SOURCE/table.f0",
                             "SPECTRAL_WINDOW/table.f0",
                             "STATE/table.f0",
-                            "SYSCAL/table.f0"
+                            "SYSCAL/table.f0",
+                            "WEATHER/table.f0"
                             ])
         for name in mscomponents:
             if not os.access(msname+"/"+name, os.F_OK):
@@ -242,9 +240,9 @@ class importevla_test(unittest.TestCase):
             name = ""
             #             col name, row number, expected value, tolerance
             expected = [
-                         ['UVW',       42, [ 0., 0., 0. ], 1E-8],
-                         ['EXPOSURE',  42, 1.008, 0],
-                         ['DATA',      42, [ [10.5526886+0.0j] ], 1E-7]
+                         ['UVW',       42, [  48.25171233, 61.3060688 , -141.98716716], 1E-8],
+                         ['EXPOSURE',  42, 1.0, 0]
+#                         ['DATA',      42, [ [10.5526886+0.0j] ], 1E-7]
                          ]
             results = checktable(name, expected)
             if not results:
@@ -255,9 +253,9 @@ class importevla_test(unittest.TestCase):
     
             expected = [
     # old values using TAI     ['UVW',       638, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
-                         ['UVW',       638, [-65.14758508, 1.13423277, -33.51712451], 1E-8],
-                         ['EXPOSURE',  638, 1.008, 0],
-                         ['DATA',      638, [ [0.00362284+0.00340279j] ], 1E-8]
+                         ['UVW',       638, [-73.58347062, 240.2761609 , -154.59922965], 1E-8],
+                         ['EXPOSURE',  638, 1.0, 0]
+#                         ['DATA',      638, [ [0.00362284+0.00340279j] ], 1E-8]
                          ]
             results = checktable(name, expected)
             if not results:
@@ -268,8 +266,8 @@ class importevla_test(unittest.TestCase):
             
             name = "ANTENNA"
             expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
-                         ['POSITION',     1, [2202242.5520, -5445215.1570, -2485305.0920], 0.0001],
-                         ['DISH_DIAMETER',1, 12.0, 0]
+                         ['POSITION',     1, [-1601150.0595, -5042000.6198, 3554860.7294], 0.0001],
+                         ['DISH_DIAMETER',1, 25.0, 0]
                          ]
             results = checktable(name, expected)
             if not results:
@@ -279,13 +277,13 @@ class importevla_test(unittest.TestCase):
                 retValue['success']=True
             
             name = "POINTING"
-            expected = [ ['DIRECTION',       10, [[ 1.94681283],[ 1.19702955]], 1E-8],
-                         ['INTERVAL',        10, 0.048, 0],
-                         ['TARGET',          10, [[ 1.94681283], [ 1.19702955]], 1E-8],
-                         ['TIME',            10, 4758823736.016000, 0],
+            expected = [ ['DIRECTION',       10, [[ 0.],[0.]], 1E-8],
+                         ['INTERVAL',        10, 4.7672248320000001, 0],
+                         ['TARGET',          10, [[ 0.], [ 0.]], 1E-8],
+                         ['TIME',            10, 4777473956.000001, 0],
                          ['TIME_ORIGIN',     10, 0., 0],
                          ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
-                         ['ENCODER',         10, [ 1.94851533,  1.19867576], 1E-8 ]
+                         ['ENCODER',         10, [ 0.,  0.], 1E-8 ]
                          ]
             results = checktable(name, expected)
             if not results:
@@ -295,54 +293,22 @@ class importevla_test(unittest.TestCase):
                 retValue['success']=True
                 
         self.assertTrue(results)
-                
-# ENABLE the following when exportasdm works in Mac 10.6
-            
-#        myvis = myms_dataset_name
-#        os.system('rm -rf exportasdm-output.asdm myinput.ms')
-#        os.system('cp -R ' + myvis + ' myinput.ms')
-#        default('exportasdm')
-#        try:
-#            print "\n>>>> Test of exportasdm: input MS  is ", myvis
-#            print "(a simulated input MS with pointing table)"
-#            rval = exportasdm(
-#                vis = 'myinput.ms',
-#                asdm = 'exportasdm-output.asdm',
-#                archiveid="S002",
-#                apcorrected=False
-#                )
-#            print "rval is ", rval
-#            if not rval:
-#                raise Exception
-#            os.system('rm -rf '+asdmname+'; mv exportasdm-output.asdm '+asdmname)
-#            verify_asdm(asdmname, True)
-#        except:
-#            print myname, ': *** Unexpected error exporting MS to ASDM, regression failed ***'   
-#            raise
-#            
-#        try:
-#            print "Reimporting the created ASDM ...."
-#            importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no')
-#            print "Testing existence of reimported MS ...."
-#            if(not os.path.exists(reimp_msname)):
-#                print "MS ", reimp_msname, " doesn't exist."
-#                raise Exception
-#            print "Testing equivalence of the original and the reimported MS."
-#            tb.open(myms_dataset_name)
-#            nrowsorig = tb.nrows()
-#            print "Original MS contains ", nrowsorig, "integrations."
-#            tb.close()
-#            tb.open(reimp_msname)
-#            nrowsreimp = tb.nrows()
-#            print "Reimported MS contains ", nrowsreimp, "integrations."
-#            if(not nrowsreimp==nrowsorig):
-#                print "Numbers of integrations disagree."
-#                raise Exception
-#        except:
-#            print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
-#            raise
+
+class importevla_test2(unittest.TestCase):
     
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        shutil.rmtree(myasdm_dataset_name, ignore_errors=True)
+        shutil.rmtree(msname,ignore_errors=True)
+        shutil.rmtree(flagname, ignore_errors=True)
+        
+    def test1a(self):
+        '''Importevla: Cleanup'''
+        pass
+                    
 def suite():
-    return [importevla_test]        
+    return [importevla_test, importevla_test2]        
         
     
