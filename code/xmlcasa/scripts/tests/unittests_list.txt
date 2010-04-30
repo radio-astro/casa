@@ -17,7 +17,7 @@ test_imcontsub                  dmehring nrao.edu
 test_imfit                      dmehring nrao.edu
 test_imhead                     dmehring nrao.edu
 test_immath                     dmehring nrao.edu
-test_immoment                   dmehring nrao.edu
+test_immoments                  dmehring nrao.edu
 test_imregrid                   jmlarsen eso.org
 test_imsmooth                   dmehring nrao.edu
 test_imstat                     dmehring nrao.edu
