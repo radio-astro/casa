@@ -75,54 +75,6 @@ except ImportError, e:
 from asap_init import *
 
 
-def termination_handler(signum, frame):
-
-    # Switch off this handler in order to avoid
-    # infinite looping
-    signal.signal(signum, signal.SIG_DFL)
-
-    # SIGTERM everything in this process' process group,
-    # and ignore SIGTERM
-    print "Clean up subprocesses..."
-
-    signal.signal(signal.SIGTERM, signal.SIG_IGN)
-    os.killpg(os.getpgid(0), signal.SIGTERM)
-    signal.signal(signal.SIGTERM, signal.SIG_DFL)
-
-    # Reraise the incoming signal, this time it
-    # will be handled by the default signal handler
-    os.kill(os.getpid(), signum)
-
-# Clean up child processes and terminate if any
-# of the following POSIX signals happen
-signal.signal(signal.SIGQUIT, termination_handler)
-signal.signal(signal.SIGABRT, termination_handler)
-signal.signal(signal.SIGTERM, termination_handler)
-signal.signal(signal.SIGHUP, termination_handler)
-
-# Unfortunately, trying to catch SIGSEGV/SIGBUS (with even
-# the most trivial signal handler) might trigger a mode of
-# infinite looping where another SIGSEGV/-BUS happens already
-# before the user signal handler is invoked (in the python
-# interpreter?). The effect is infinite looping, which is
-# even worse than segfaulting. Therefore do not catch SIGSEGV
-# or SIGBUS. Also SIGILL + SIGFPE may be unsafe to catch.
-# The remaining signals should be safe to handle because
-# they do not cause the process to go into an undefined state.
-
-# Do not handle the following POSIX signals
-#signal.signal(signal.SIGALRM, termination_handler)
-#signal.signal(signal.SIGPIPE, termination_handler)
-#signal.signal(signal.SIGUSR1, termination_handler)
-#signal.signal(signal.SIGUSR2, termination_handler)
-#signal.signal(signal.SIGKILL, termination_handler)
-#signal.signal(signal.SIGSTOP, termination_handler)
-#signal.signal(signal.SIGCONT, termination_handler)
-#signal.signal(signal.SIGTSTP, termination_handler)
-#signal.signal(signal.SIGTTIN, termination_handler)
-#signal.signal(signal.SIGTTOU, termination_handler)
-
-
 homedir = os.getenv('HOME')
 if homedir == None :
    print "Environment variable HOME is not set, please set it"
