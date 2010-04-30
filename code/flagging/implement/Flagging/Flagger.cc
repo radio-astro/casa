@@ -76,7 +76,7 @@
 
 namespace casa {
 
-  const bool Flagger::dbg = true;
+  const bool Flagger::dbg = false;
   
   LogIO Flagger::os( LogOrigin("Flagger") );
   static char str[1024];
