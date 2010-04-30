@@ -101,7 +101,7 @@ void loop_flagger(MeasurementSet &ms)
     string baseline = "";
 
     baseline = "";
-    flagger.setdata("", "", "", "", "",
+    flagger.setdata("", "", "", "", "0~99",
                     baseline, "", "", ""); 
     
     cout << "setmanualflags..." << endl;
@@ -117,8 +117,8 @@ void loop_flagger(MeasurementSet &ms)
 
 int main()
 {
-    //MeasurementSet ms("/tmp/n7538_usb.ms", Table::Update);
-    MeasurementSet ms("/tmp/field3.ms", Table::Update);
+    MeasurementSet ms("/tmp/n7538_usb.ms", Table::Update);
+    //MeasurementSet ms("/tmp/field3.ms", Table::Update);
     
     loop_visiter(ms);
 

@@ -1,4 +1,4 @@
-//# RFCubeLattice.h: this defines RFCubeLattice
+//# RFFloatLattice.h: this defines RFFloatLattice
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-#ifndef FLAGGING_RFCUBELATTICE_H
-#define FLAGGING_RFCUBELATTICE_H
+#ifndef FLAGGING_RFFLOATLATTICE_H
+#define FLAGGING_RFFLOATLATTICE_H
     
 #include <casa/Arrays/Matrix.h> 
 #include <lattices/Lattices/TempLattice.h> 
@@ -37,7 +37,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // <summary>
-// RFCubeLatticeIterator: iterator over a cubic buffer
+// RFFloatLatticeIterator: iterator over a cubic buffer
 // </summary>
 
 // <use visibility=local>
@@ -50,12 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <synopsis>
-// See RFCubeLattice, below
+// See RFFloatLattice, below
 // </synopsis>
-//
-// <templating arg=T>
-//    <li> same as Matrix
-// </templating>
 //
 // <todo asof="2001/04/16">
 //   <li> add this feature
@@ -63,15 +59,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> start discussion of this possible extension
 // </todo>
 
-template<class T>
-class RFCubeLattice;
+class RFFloatLattice;
 
-template<class T> class RFCubeLatticeIterator
+class RFFloatLatticeIterator
 {
   private:
     std::vector<boost::dynamic_bitset<> > *lattice;
 
-    Matrix<T> curs;
+    Matrix<Float> curs;
 
     unsigned int iter_pos;
 
@@ -81,38 +76,38 @@ template<class T> class RFCubeLatticeIterator
   
   public:
     // default constructor creates empty iterator
-    RFCubeLatticeIterator();
+    RFFloatLatticeIterator();
     
     // creates and attaches to lattice
-    RFCubeLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat, 
+    RFFloatLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat, 
 			  unsigned nchan, unsigned nifr, 
 			  unsigned ntime, unsigned nbit, unsigned ncorr);
     
     // destructor
-    ~RFCubeLatticeIterator();
+    ~RFFloatLatticeIterator();
 
     // resets the lattice iterator to beginning, returns cursor
-    Matrix<T> * reset();
+    Matrix<Float> * reset();
     
     // advances internal iterator to specified slot along the Z axis, returns cursor
-    Matrix<T> * advance( uInt iz );
+    Matrix<Float> * advance( uInt iz );
     
     // returns position of internal iterator
     uInt position ()                 
       { return iter_pos; }
     
     //  returns internal cursor
-    Matrix<T> * cursor();
+    Matrix<Float> * cursor();
     
     // returns element at i,j of cursor
-    T & operator () ( uInt i,uInt j );
+    Float & operator () ( uInt i,uInt j );
 
     void flush_curs();
 };
 
 
 // <summary>
-// RFCubeLatice: a cubic lattice
+// RFFloatLatice: a cubic lattice
 // </summary>
 
 // <use visibility=local>
@@ -125,7 +120,7 @@ template<class T> class RFCubeLatticeIterator
 // </prerequisite>
 //
 // <synopsis>
-// RFCubeLattice is a [NX,NY,NZ] vector of Matrices which 
+// RFFloatLattice is a [NX,NY,NZ] vector of Matrices which 
 // is iterated over the Z axis. 
 // While a vector of Matrices may not be localized in memory, it has the
 // advantage that the total amount of memory allocated can exceed
@@ -133,7 +128,7 @@ template<class T> class RFCubeLatticeIterator
 // single giant block.
 // Each element of the matrices is a few bits, therefore (in order to
 // save memory), the full matrix is represented as a bitsequence, which
-// is converted to Matrix<T> on the fly.
+// is converted to Matrix<Float> on the fly.
 //
 // The buffer is no longer implemented using a TempLattice because the
 // template parameter to TempLattice is restricted to certain types, and
@@ -162,42 +157,42 @@ template<class T> class RFCubeLatticeIterator
 //   <li> start discussion of this possible extension
 // </todo>
 
-template<class T> class RFCubeLattice
+class RFFloatLattice
 {
 protected:
   IPosition                              lat_shape;
   std::vector<boost::dynamic_bitset<> >  lat;
-  RFCubeLatticeIterator<T>               iter;
+  RFFloatLatticeIterator                 iter;
   unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
 
 public:
 // default constructor creates empty cube
-  RFCubeLattice();
+  RFFloatLattice();
 // creates NX x NY x NZ cube
-  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1 );
+  RFFloatLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1 );
 // creates NX x NY x NZ cube and fills with initial value
-  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val,Int maxmem=-1 );
+  RFFloatLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const Float &init_val,Int maxmem=-1 );
 // destructor
-  ~RFCubeLattice();
+  ~RFFloatLattice();
 
 // creates NX x NY x NZ cube
 // tile_mb is the tile size, in MB (when using paging)
   void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1,Int tile_mb=2 );
 // creates NX x NY x NZ cube and fills with initial value
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val,Int maxmem=-1,Int tile_mb=2 );
+  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const Float &init_val,Int maxmem=-1,Int tile_mb=2 );
 // destroys cube
   void cleanup ();
 // returns size of cube
   static uInt estimateMemoryUse ( uInt nx,uInt ny,uInt nz )
-        { return nx*ny*nz*sizeof(T)/(1024*1024) + 1; }
+        { return nx*ny*nz*sizeof(Float)/(1024*1024) + 1; }
 
 // resets the lattice iterator to beginning. 
-  Matrix<T> * reset( Bool will_read=True,
+  Matrix<Float> * reset( Bool will_read=True,
                      Bool will_write=True );  
   
 // advances internal iterator to specified slot along the Z axis, returns cursor
-  Matrix<T> * advance( Int iz )   { return iter.advance(iz); };
+  Matrix<Float> * advance( Int iz )   { return iter.advance(iz); };
   
 // returns position of internal iterator
   Int position ()                 { return iter.position(); }
@@ -206,26 +201,23 @@ public:
   const IPosition & shape ()      { return lat_shape; }
 
 //  returns internal cursor
-  Matrix<T> * cursor()              { return iter.cursor(); }
+  Matrix<Float> * cursor()              { return iter.cursor(); }
   
 // returns element at i,j of cursor
-  T & operator () ( uInt i,uInt j )  { return (*iter.cursor())(i,j); }
+  Float & operator () ( uInt i,uInt j )  { return (*iter.cursor())(i,j); }
   
 // provides access to lattice itself  
 //  std::vector<boost::dynamic_bitset<> > & lattice()    { return lat; }
 
 // provides access to iterator  
-  RFCubeLatticeIterator<T> & iterator()    { return iter; }
+  RFFloatLatticeIterator & iterator()    { return iter; }
 
 // creates a new iterator for this lattice
-  RFCubeLatticeIterator<T>  newIter();
+  RFFloatLatticeIterator newIter();
 };
 
 
 
 } //# NAMESPACE CASA - END
 
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <flagging/Flagging/RFCubeLattice.tcc>
-#endif //# AIPS_NO_TEMPLATE_SRC
 #endif

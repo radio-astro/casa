@@ -25,19 +25,19 @@
 //#
 //# $Id$
 #include <lattices/Lattices/LatticeStepper.h>
-#include <flagging/Flagging/RFCubeLattice.h>
+#include <flagging/Flagging/RFFloatLattice.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ()
+RFFloatLatticeIterator::RFFloatLatticeIterator ()
   : n_chan(0), n_ifr(0), n_time(0), n_bit(0), n_corr(0)
 {
   iter_pos = 0;
-  curs = Matrix<T>();
+  curs = Matrix<Float>();
   lattice = NULL;
 }
 
- template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat,
+ RFFloatLatticeIterator::RFFloatLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat,
 								   unsigned nchan, unsigned nifr, 
 								   unsigned ntime, unsigned nbit,
 								   unsigned ncorr)
@@ -49,7 +49,7 @@ template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ()
   update_curs();
 }
 
-template<class T> RFCubeLatticeIterator<T>::~RFCubeLatticeIterator()
+RFFloatLatticeIterator::~RFFloatLatticeIterator()
 {
   flush_curs();
 }
@@ -69,7 +69,7 @@ template<class T> RFCubeLatticeIterator<T>::~RFCubeLatticeIterator()
 
 */
 
-template<class T> void RFCubeLatticeIterator<T>::update_curs()
+void RFFloatLatticeIterator::update_curs()
 {
   if (lattice != NULL && iter_pos < lattice->size()) {
     curs.resize(IPosition(2, n_chan, n_ifr));
@@ -114,7 +114,7 @@ template<class T> void RFCubeLatticeIterator<T>::update_curs()
 /* Write cursor back to buffer, convert from Matrix<uInt> to bitset.
    See above for an explanation of the format.
 */
-template<class T> void RFCubeLatticeIterator<T>::flush_curs()
+void RFFloatLatticeIterator::flush_curs()
 {
   if (lattice != NULL && iter_pos < lattice->size()) {
 
@@ -167,7 +167,7 @@ template<class T> void RFCubeLatticeIterator<T>::flush_curs()
   }
 }
 
-template<class T> Matrix<T> * RFCubeLatticeIterator<T>::reset()
+Matrix<Float> * RFFloatLatticeIterator::reset()
 {
   if (iter_pos != 0) flush_curs();
   iter_pos = 0;
@@ -175,7 +175,7 @@ template<class T> Matrix<T> * RFCubeLatticeIterator<T>::reset()
   return cursor();
 }
 
-template<class T> Matrix<T> * RFCubeLatticeIterator<T>::advance(uInt t1)
+Matrix<Float> * RFFloatLatticeIterator::advance(uInt t1)
 {
   if (iter_pos != t1) flush_curs();
   iter_pos = t1;
@@ -183,13 +183,13 @@ template<class T> Matrix<T> * RFCubeLatticeIterator<T>::advance(uInt t1)
   return cursor();
 }
 
-template<class T> Matrix<T> * RFCubeLatticeIterator<T>::cursor()
+Matrix<Float> * RFFloatLatticeIterator::cursor()
 {
   return &curs;
   //return &((*lattice)[iter_pos]);
 }
 
-template<class T> T & RFCubeLatticeIterator<T>::operator()(uInt i,uInt j)
+Float & RFFloatLatticeIterator::operator()(uInt i,uInt j)
 { 
   return curs(i, j);
   //return (*lattice)[iter_pos](i, j);
@@ -198,79 +198,79 @@ template<class T> T & RFCubeLatticeIterator<T>::operator()(uInt i,uInt j)
 
 
 
-template<class T> RFCubeLattice<T>::RFCubeLattice ()
+RFFloatLattice::RFFloatLattice ()
 {
 }
 
-template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
-                                                    uInt nifr,
-                                                    uInt ntime,
-                                                    uInt ncorr,
-                                                    uInt nAgent,
-                                                    Int maxmem )
+RFFloatLattice::RFFloatLattice ( uInt nchan,
+                                 uInt nifr,
+                                 uInt ntime,
+                                 uInt ncorr,
+                                 uInt nAgent,
+                                 Int maxmem )
 {
   init(nchan, nifr, ntime, ncorr, nAgent, maxmem);
 }
-template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
-                                                    uInt nifr,
-                                                    uInt ntime,
-                                                    uInt ncorr,
-                                                    uInt nAgent,
-                                                    const T &init_val,
-                                                    Int maxmem )
+RFFloatLattice::RFFloatLattice ( uInt nchan,
+                                 uInt nifr,
+                                 uInt ntime,
+                                 uInt ncorr,
+                                 uInt nAgent,
+                                 const Float &init_val,
+                                 Int maxmem )
 {
-  init(nchan, nifr, ntime, ncorr, nAgent, init_val, maxmem);
+    init(nchan, nifr, ntime, ncorr, nAgent, init_val, maxmem);
 }
-template<class T> RFCubeLattice<T>::~RFCubeLattice ()
+RFFloatLattice::~RFFloatLattice ()
 {
   cleanup();
 }
 
-template<class T> void 
-RFCubeLattice<T>::init(uInt nchan,
-                       uInt nifr,
-                       uInt ntime,
-		       uInt ncorr,
-		       uInt nAgent,
-                       Int maxmem,
-                       Int tile_mb)
+void 
+RFFloatLattice::init(uInt nchan,
+                     uInt nifr,
+                     uInt ntime,
+                     uInt ncorr,
+                     uInt nAgent,
+                     Int maxmem,
+                     Int tile_mb)
 {
   n_bit = ncorr + nAgent;
-
+  
   if (n_bit > 32) {
-    stringstream ss;
-    ss << 
-      "Sorry, too many polarizations (" << ncorr <<
-      ") and agents (" << nAgent << "). Max supported number is 32 in total.";
-    cerr << ss.str();
-    abort();
-    throw AipsError(ss.str());
+      stringstream ss;
+      ss << 
+          "Sorry, too many polarizations (" << ncorr <<
+          ") and agents (" << nAgent << "). Max supported number is 32 in total.";
+      cerr << ss.str();
+      abort();
+      throw AipsError(ss.str());
   }
-
+  
   lat_shape = IPosition(3,nchan,nifr,ntime);
-
+  
   lat = std::vector<boost::dynamic_bitset<> >(ntime);
   for (unsigned i = 0; i < ntime; i++) {
-    //lat[i] = Matrix<T>(IPosition(2, nchan, nifr));
-    lat[i] = boost::dynamic_bitset<>(nchan * nifr * (ncorr+nAgent));
+      //lat[i] = Matrix<Float>(IPosition(2, nchan, nifr));
+      lat[i] = boost::dynamic_bitset<>(nchan * nifr * (ncorr+nAgent));
   }
-
-  iter = RFCubeLatticeIterator<T>(&lat, nchan, nifr, ntime, ncorr+nAgent, ncorr);
+  
+  iter = RFFloatLatticeIterator(&lat, nchan, nifr, ntime, ncorr+nAgent, ncorr);
 }
 
-template<class T> RFCubeLatticeIterator<T> RFCubeLattice<T>::newIter()
+RFFloatLatticeIterator RFFloatLattice::newIter()
 {
-  return RFCubeLatticeIterator<T>(&lat, n_chan, n_ifr, n_time, n_bit, n_corr);
+  return RFFloatLatticeIterator(&lat, n_chan, n_ifr, n_time, n_bit, n_corr);
 }
 
-template<class T> void RFCubeLattice<T>::init(uInt nchan,
-                                              uInt nifr,
-                                              uInt ntime,
-					      uInt ncorr,
-					      uInt nAgent,
-                                              const T &init_val,
-                                              Int maxmem,
-                                              Int tile_mb)
+void RFFloatLattice::init(uInt nchan,
+                                            uInt nifr,
+                                            uInt ntime,
+                                            uInt ncorr,
+                                            uInt nAgent,
+                                            const Float &init_val,
+                                            Int maxmem,
+                                            Int tile_mb)
 {
   n_chan = nchan;
   n_ifr = nifr;
@@ -284,7 +284,7 @@ template<class T> void RFCubeLattice<T>::init(uInt nchan,
 
   /* Write init_val to every matrix element.
      See above for description of format */
-  boost::dynamic_bitset<> val((int)(nbits+1), (unsigned) init_val);
+  boost::dynamic_bitset<> val((int)(nbits+1), reinterpret_cast<const unsigned &>(init_val));
   for (unsigned i = 0; i < ntime; i++) {
     for (unsigned chan = 0; chan < nchan; chan++) {
       for (unsigned ifr = 0; ifr < nifr; ifr++) {
@@ -310,16 +310,16 @@ template<class T> void RFCubeLattice<T>::init(uInt nchan,
   }
 }
 
-template<class T> void RFCubeLattice<T>::cleanup ()
+void RFFloatLattice::cleanup ()
 {
   iter.flush_curs();
   iter.cursor()->resize(IPosition(2, 0, 0));
-  iter = RFCubeLatticeIterator<T>();
+  iter = RFFloatLatticeIterator();
   lat.resize(0);
   lat_shape.resize(0);
 }
 
-template<class T> Matrix<T> * RFCubeLattice<T>::reset ( Bool r,Bool w )
+Matrix<Float> * RFFloatLattice::reset ( Bool r,Bool w )
 {
   return iter.reset();
 }

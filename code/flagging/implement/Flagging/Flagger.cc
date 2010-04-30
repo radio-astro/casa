@@ -1,4 +1,4 @@
-//# Flagger.cc: this defines Flagger
+///# Flagger.cc: this defines Flagger
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -75,6 +75,8 @@
 #include <algorithm>
 
 namespace casa {
+
+  const bool Flagger::dbg = true;
   
   LogIO Flagger::os( LogOrigin("Flagger") );
   static char str[1024];
@@ -86,9 +88,9 @@ namespace casa {
   // -----------------------------------------------------------------------
   Flagger::Flagger ():mssel_p(0), vs_p(0)
   {
-    dbg = false;
-    
     msselection_p = new MSSelection();
+    spw_selection = false;
+
     agents_p = NULL;
     agentCount_p=0;
     opts_p = NULL;
@@ -114,9 +116,9 @@ namespace casa {
   // -----------------------------------------------------------------------
   Flagger::Flagger ( MeasurementSet &mset ) : mssel_p(0), vs_p(0)
   {
-    dbg = false;
-    
     msselection_p = new MSSelection();
+    spw_selection = false;
+
     agents_p = NULL;
     agentCount_p=0;
     opts_p = NULL;
@@ -162,7 +164,7 @@ namespace casa {
 	
 	if (msselection_p) delete msselection_p;
 	msselection_p = 0;
-	
+
 	if (agents_p) delete agents_p;
 	agents_p = NULL;
 	
@@ -367,6 +369,8 @@ namespace casa {
     if (msselection_p) {
 	delete msselection_p;
 	msselection_p = NULL;
+        spw_selection = false;
+
     }
     msselection_p = new MSSelection(*tms,
 				    MSSelection::PARSE_NOW, 
@@ -379,7 +383,8 @@ namespace casa {
 				    dummyExpr, // corrExpr
 				    (const String)scan,
 				    (const String)array);
-    
+    spw_selection = (spw != "");
+
     selectdata_p = True;
     /* Print out selection info - before selecting ! */
     if (dbg)
@@ -546,10 +551,10 @@ namespace casa {
     /* Set channel selection per spectral window - from msselection_p->getChanList(); */
     // this is needed when "setdata" is used to select data for autoflag algorithms 
     // This should not be done for manual flagging, because the channel indices for the
-    //  selected subset start from zero - and throw everything into confusion. 
+    //  selected subset start from zero - and throw everything into confusion.
     Vector<Int> spwlist = msselection_p->getSpwList();
     
-    if ( spwlist.nelements() ){
+    if ( spwlist.nelements()) {// && spw_selection ){
       Matrix<Int> spwchan = msselection_p->getChanList();
       IPosition cshp = spwchan.shape();
       if ( (Int)spwlist.nelements() > (spwchan.shape())[0] )
@@ -758,12 +763,17 @@ namespace casa {
        then no need to make separate records for each spw. */
     bool separatespw = False;
     Int nrec;
-    if (spwlist.nelements()) {
+    if (spwlist.nelements()) { // && spw_selection) {
 	separatespw = True; 
 	nrec = spwlist.nelements();
     }
     else { 
 	separatespw = False; nrec = 1; 
+    }
+
+    if (dbg) {
+        cout << "separatespw = " << separatespw << endl;
+        cout << spwlist << endl;
     }
     
     for ( Int i=0; i < nrec; i++ ) {
@@ -1501,6 +1511,8 @@ namespace casa {
       }
     Record agents = *agents_p;
     
+    if (dbg) cout << agents << endl;
+
     if (!opts_p)
       {
 	opts_p = new Record();
@@ -1694,6 +1706,8 @@ namespace casa {
 		  availmem = maxmem>0 ? maxmem : 0;
 		}
 	    }
+          if (dbg) cout << "Active for this chunk: " << sum(active) << endl;
+
 	  if ( !sum(active) )
 	    {
 	       //os<<LogIO::WARN<<"Unable to process this chunk with any active method.\n"<<LogIO::POST;
