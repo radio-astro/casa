@@ -342,7 +342,7 @@ public:
     // Converts the given double into a String in date format
     // (year-month-day-hour:min:sec).  The input double should be in modified
     // julian seconds.
-    static String date(double d, int numDecimals = -1);
+    static String date(const double d, const int numDecimals = -1);
     
     // Holds the default number of decimals displayed in a number.
     static const int DEFAULT_DECIMALS;

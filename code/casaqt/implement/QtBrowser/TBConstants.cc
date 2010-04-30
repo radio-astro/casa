@@ -599,7 +599,7 @@ double TBConstants::date(String str) {
     } else return -1;
 }
 
-String TBConstants::date(double d, int numDecimals) {
+String TBConstants::date(const double d, const int numDecimals) {
     stringstream ss;
     // d is in modified julian day seconds, but Time::Time() takes julian days.
     Time t((d / 86400) + 2400000.5);
@@ -610,14 +610,14 @@ String TBConstants::date(double d, int numDecimals) {
     if(t.dayOfMonth() < 10) ss << '0';
     ss << t.dayOfMonth() << '-';
     
-    if(t.hours() < 10) ss << '0';
-    ss << t.hours() << ':';
-    if(t.minutes() < 10) ss << '0';
+    if(t.hours() < 10) ss << '0';    // Time stores things internally as days.
+    ss << t.hours() << ':';          // Do we really want to use it for sub-day units
+    if(t.minutes() < 10) ss << '0';  // when we start with d in s?
     ss << t.minutes() << ':';
     
     double sec;
-    sec = modf(d, &sec);
-    sec += t.seconds();
+    sec = fmod(d, 60.0);   // Don't do modf() + Time::seconds()!  It can be off by
+    // sec += t.seconds(); // a second if d is close to an integer.
     
     if(sec < 10) ss << '0';
     if(numDecimals >= 0)
