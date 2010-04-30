@@ -1223,6 +1223,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     IPosition pos = padd->fixedPosition();
     Vector<Int> dispAxes = padd->displayAxes();
     //cout << "dispAxes=" << dispAxes << endl;
+
     
     Vector<Int> cursorAxes(2);
     cursorAxes(0) = dispAxes[0]; //display axis 1
