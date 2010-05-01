@@ -1,0 +1,32 @@
+#
+# List of persons responsible for tests
+#
+# Format of this file:
+#       1st column      = name of test script excluding .py
+#       2nd+3rd columns = email notification
+
+test_asdm-import                dpetry eso.org
+test_asdmv1-import              dpetry eso.org
+test_boxit                      dmehring nrao.edu
+test_clearstat                  scastro eso.org
+test_clean                      scastro eso.org
+test_csvclean                   scastro eso.org
+test_exportasdm                 dpetry eso.org
+test_hanningsmooth              scastro eso.org
+test_imcontsub                  dmehring nrao.edu
+test_imfit                      dmehring nrao.edu
+test_imhead                     dmehring nrao.edu
+test_immath                     dmehring nrao.edu
+test_immoments                  dmehring nrao.edu
+test_imregrid                   jmlarsen eso.org
+test_imsmooth                   dmehring nrao.edu
+test_imstat                     dmehring nrao.edu
+test_imval                      dmehring nrao.edu
+test_listcal                    jmlarsen eso.org
+test_listhistory                scastro eso.org
+test_plotants                   scastro eso.org
+test_plotms                     dmehring nrao.edu
+test_report                     jmlarsen eso.org
+test_smoothcal                  scastro eso.org
+test_vishead                    jmlarsen eso.org
+test_visstat                    jmlarsen eso.org

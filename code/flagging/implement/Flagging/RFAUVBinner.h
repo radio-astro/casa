@@ -29,6 +29,7 @@
 
 #include <flagging/Flagging/RFAFlagCubeBase.h> 
 #include <flagging/Flagging/RFDataMapper.h> 
+#include <flagging/Flagging/RFFloatLattice.h>
 #include <flagging/Flagging/RFFlagCube.h> 
 #include <flagging/Flagging/RFRowClipper.h> 
 #include <flagging/Flagging/RFDebugPlot.h> 
@@ -104,7 +105,7 @@ protected:
   Vector< RigidVector<Double,3> > *puvw;
 
 // lattice of yvalues [NCH,NIFR,NTIME]
-  RFCubeLattice<Float> yvalue;
+  RFFloatLattice yvalue;
 // matrix of UV distances [NIFR,NTIME]
   Matrix<Float> uvdist;
 

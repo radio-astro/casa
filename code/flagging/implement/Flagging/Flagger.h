@@ -312,6 +312,7 @@ private:
   
   // MS Selection
   MSSelection *msselection_p;
+  bool spw_selection;  //non-trivial spw-selection
 
   // List of Agents
   Record *agents_p;
@@ -321,7 +322,7 @@ private:
   Record *opts_p;
 
   // Debug Message flag
-  Bool dbg;
+  static const bool dbg;
 
   Bool quack_agent_exists;
   /* More initialization is required, if there exists a quacking agent */

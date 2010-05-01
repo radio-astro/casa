@@ -71,14 +71,13 @@ class test_flagmanager(unittest.TestCase):
 
     def setUp(self):
         self.vis = "ngc5921.ms"
-        if os.path.exists(self.vis):
-            print "The MS is already exists"
-        else:
-            print "Importing %s..." % (self.vis)
-            importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                         '/data/regression/ngc5921/ngc5921.fits', \
-                         self.vis)
+        os.system("rm -rf " + self.vis + "*")
 
+        print "Importing %s..." % (self.vis)
+        importuvfits(os.environ.get('CASAPATH').split()[0] + \
+                     '/data/regression/ngc5921/ngc5921.fits', \
+                     self.vis)
+        
         flagdata(vis=self.vis, unflag=True)
 
     def test1(self):
@@ -112,15 +111,17 @@ class test_flagmanager(unittest.TestCase):
 class test_statistics_queries(unittest.TestCase):
 
     def setUp(self):
-        if os.path.exists(vis):
+        self.vis = "ngc5921.ms"
+
+        if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
             print "Importing data..."
             importuvfits(os.environ.get('CASAPATH').split()[0] + \
                          '/data/regression/ngc5921/ngc5921.fits', \
-                         vis)
+                         self.vis)
             
-        flagdata(vis=vis, unflag=true)
+        flagdata(vis=self.vis, unflag=true)
 
     #def test_cas2021(self):
     #    print "Test antenna selection"
@@ -129,102 +130,97 @@ class test_statistics_queries(unittest.TestCase):
     def test21(self):
         print "Test of flagging statistics and queries"
         
-        flagdata(vis=vis, correlation='LL')
-        flagdata(vis=vis, spw='0:17~19')
-        flagdata(vis=vis, antenna='5&&9')
-        flagdata(vis=vis, antenna='14')
-        flagdata(vis=vis, field='1')
-        s = flagdata(vis=vis, mode='summary', minrel=0.9)
+        flagdata(vis=self.vis, correlation='LL')
+        flagdata(vis=self.vis, spw='0:17~19')
+        flagdata(vis=self.vis, antenna='5&&9')
+        flagdata(vis=self.vis, antenna='14')
+        flagdata(vis=self.vis, field='1')
+        s = flagdata(vis=self.vis, mode='summary', minrel=0.9)
         assert s['antenna'].keys() == ['14']
         assert '5&&9' in s['baseline'].keys()
         assert set(s['channel'].keys()) == set(['17', '18', '19'])
         assert s['correlation'].keys() == ['1']  # LL
         assert s['field'].keys() == ['1']
         assert set(s['scan'].keys()) == set(['2', '4', '5', '7']) # field 1
-        s = flagdata(vis=vis, mode='summary', maxrel=0.8)
+        s = flagdata(vis=self.vis, mode='summary', maxrel=0.8)
         assert set(s['field'].keys()) == set(['0', '2'])
-        s = flagdata(vis=vis, mode='summary', minabs=400000)
+        s = flagdata(vis=self.vis, mode='summary', minabs=400000)
         assert set(s['scan'].keys()) == set(['3', '6'])
-        s = flagdata(vis=vis, mode='summary', minabs=400000, maxabs=450000)
+        s = flagdata(vis=self.vis, mode='summary', minabs=400000, maxabs=450000)
         assert s['scan'].keys() == ['3']
 
     def test2(self):
         print "Test of autoflag, algorithm=timemed"
-        flagdata(vis=vis, mode='autoflag', algorithm='timemed', window=3)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 4725)
+        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 4725)
 
     def test3(self):
         print "Test of autoflag, algorithm=freqmed"
-        flagdata(vis=vis, mode='autoflag', algorithm='freqmed')
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 28916)
+        flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 28916)
 
     def test4(self):
         print "Test of channel average"
-        flagdata(vis=vis, channelavg=False, clipminmax=[30, 60])
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1414186)
+        flagdata(vis=self.vis, channelavg=False, clipminmax=[30, 60])
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1414186)
 
     def test5(self):
-        flagdata(vis=vis, channelavg=True, clipminmax=[30, 60])
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1347822)
+        flagdata(vis=self.vis, channelavg=True, clipminmax=[30, 60])
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1347822)
 
     def test6(self):
-        flagdata(vis=vis, channelavg=False, clipminmax=[30, 60], spw='0:0~10')
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 242053)
+        flagdata(vis=self.vis, channelavg=False, clipminmax=[30, 60], spw='0:0~10')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 242053)
 
     def test7(self):
-        flagdata(vis=vis, channelavg=True, clipminmax=[30, 60], spw='0:0~10')
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 231374)
+        flagdata(vis=self.vis, channelavg=True, clipminmax=[30, 60], spw='0:0~10')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 231374)
                
 
     def test8(self):
         print "Test of mode = 'quack'"
         print "parallel quack"
-        flagdata(vis=vis, mode='quack', quackinterval=[1.0, 5.0], antenna=['2', '3'], correlation='RR')
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 22365)
+        flagdata(vis=self.vis, mode='quack', quackinterval=[1.0, 5.0], antenna=['2', '3'], correlation='RR')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 22365)
 
     def test9(self):
-        flagdata(vis=vis, mode='quack', quackmode='beg', quackinterval=1)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 329994)
+        flagdata(vis=self.vis, mode='quack', quackmode='beg', quackinterval=1)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 329994)
 
     def test10(self):
-        flagdata(vis=vis, unflag=true)
-        flagdata(vis=vis, mode='quack', quackmode='endb', quackinterval=1)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 333396)
+        flagdata(vis=self.vis, mode='quack', quackmode='endb', quackinterval=1)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 333396)
 
     def test11(self):
-        flagdata(vis=vis, mode='quack', quackmode='end', quackinterval=1)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 2520882)
+        flagdata(vis=self.vis, mode='quack', quackmode='end', quackinterval=1)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 2520882)
 
     def test12(self):
-        flagdata(vis=vis, mode='quack', quackmode='tail', quackinterval=1)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 2524284)
+        flagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 2524284)
 
     def test13(self):
         print "quack mode quackincrement"
-        flagdata(vis=vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 571536)
+        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 571536)
 
-        flagdata(vis=vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=true)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 857304)
+        flagdata(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=true)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 857304)
         
-        flagdata(vis=vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=true)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1571724)
+        flagdata(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=true)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1571724)
         
-        flagdata(vis=vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
-        test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1762236)
-        flagdata(vis=vis, unflag=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1762236)
+        flagdata(vis=self.vis, unflag=true)
 
 def main():
 
-    unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_flagmanager))
+    for t in [test_statistics_queries, test_case, test_flagmanager]:
+        assert unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(t)).wasSuccessful()
 
-    unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_case))
-
-    global vis  # make the variable visible from the test class
     vis='ngc5921.ms'
-    
-    unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(test_statistics_queries))
-    
+
     flagdata(vis=vis, unflag=true)
     
     flagmanager(vis=vis, mode='list')
@@ -297,7 +293,7 @@ def main():
 
 
 def suite():
-    return [test_case, test_statistics_queries]
+    return [test_case, test_statistics_queries, test_flagmanager]
 
 if __name__ == "__main__":
     main()

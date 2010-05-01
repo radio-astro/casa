@@ -550,7 +550,20 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
     floatDataCol.attach( *ms_p, "FLOAT_DATA" ) ;
   }
   ArrayLattice<T> arrLatIn( floatDataCol.getColumn().nonDegenerate( IPosition( 2, 0, 1 ) ) ) ;
+  ROArrayColumn<Bool> flagCol( *ms_p, "FLAG" ) ;
+  Array<Bool> flagArr = flagCol.getColumn() ;
+  ROScalarColumn<Bool> flagRowCol( *ms_p, "FLAG_ROW" ) ;
+  for ( uInt irow = 0 ; irow < flagRowCol.nrow() ; irow++ ) {
+    if ( flagRowCol( irow ) ) {
+      flagArr[irow].set( False ) ;
+    }
+    else {
+      flagArr[irow].assign( !flagArr[irow] ) ;
+    }
+  }
+  const ArrayLattice<Bool> mskLatIn( flagArr.nonDegenerate( IPosition( 2, 0, 1 ) ) ) ;
   MaskedLattice<T> *mskArrIn = new SubLattice<T>( arrLatIn, False) ;
+  ((SubLattice<T> *)mskArrIn)->setPixelMask( mskLatIn, False ) ; 
   PtrBlock< MaskedLattice<T>* > arrLatOutPts( moments_p.nelements() ) ;
   IPosition outDataShape ;
   CoordinateSystem cSysOut = makeOutputCoordinates( outDataShape, 
@@ -859,70 +872,6 @@ Bool MSMoments<T>::setMomentAxis (const Int& momentAxisU)
    return True;
 }
 
-
-template<class T>
-Bool MSMoments<T>::setIncludeExclude (Vector<T>& range,
-                                      Bool& noInclude,
-                                      Bool& noExclude,
-                                      const Vector<T>& include,
-                                      const Vector<T>& exclude,
-                                      ostream& os)
-{
-  if ( include.nelements() != 0 && exclude.nelements() != 0 ) {
-    os << "You can only give one of arguments include or exclude" << endl;
-    return False;
-  }
-
-  vector<T> stlInc( 0 ) ;
-  vector<uInt> stlExc( 0 ) ;
-  noInclude = True ;
-  if ( include.nelements() != 0 ) {
-    for ( uInt i = 0 ; i < ms_p->nrow() ; i++ ) {
-      if ( allNE( include, (T)i ) ) {
-        stlExc.push_back( i ) ;
-      }
-      else {
-        stlInc.push_back( (T)i ) ;
-      }
-    }
-    noInclude = False ;
-  }
-  noExclude = True ;
-  if ( exclude.nelements() != 0 ) {
-    for ( uInt i = 0 ; i < ms_p->nrow() ; i++ ) {
-      if ( allNE( exclude, (T)i ) ) {
-        stlInc.push_back( (T)i ) ;
-      }
-      else {
-        stlExc.push_back( i ) ;
-      }
-    }
-    noExclude = False ;
-  }
-
-  range = Vector<T>( stlInc ) ;
-
-  if ( !noInclude || !noExclude ) {
-    String tmpName = ms_p->tableName() + ".MS_MOMENTS_TMP" ;
-    if ( msSel_p ) {
-      delete msSel_p ;
-      msSel_p = 0 ;
-      Table::deleteTable( tmpName, True ) ;
-    }
-    ms_p->deepCopy( tmpName, Table::New, True ) ;
-    Table *tab = new Table( tmpName, Table::Update ) ;
-    ScalarColumn<Bool> flagRowCol( *tab, "FLAG_ROW" ) ;
-    for ( uInt i = 0 ; i < stlExc.size() ; i++ ) {
-      flagRowCol.put( stlExc[i], True ) ;
-    }
-    tab->flush() ;
-    delete tab ;
-    tab = 0 ;
-    msSel_p = new MeasurementSet( tmpName ) ;
-  }
-
-  return True ;
-}
 
 } //# NAMESPACE CASA - END
 

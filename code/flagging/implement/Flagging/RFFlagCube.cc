@@ -188,11 +188,13 @@ void RFFlagCube::cleanup ()
 	}
 }
 
-FlagMatrix * RFFlagCube::reset ()
+void RFFlagCube::reset ()
 {
     fl_raised=fl_cleared=row_fl_raised=row_fl_cleared=0;
     my_corrflagmask = corr_flagmask(corrmask);
-    return flag.reset();
+    flag.reset();
+
+    return;
 }
 
 String RFFlagCube::getSummary ()
@@ -220,99 +222,100 @@ Bool RFFlagCube::setFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
 {
     //cerr << __FILE__ << " " << __LINE__ << endl;
     if (dbg) cerr << "flag for " << ich << "," << ifr;
-    RFlagWord oldfl = (*iter.cursor())(ich,ifr);
+    RFlagWord oldfl = iter(ich,ifr);
     if (dbg) cerr << " : " << oldfl << "," << flagmask;
     if ( !(oldfl&flagmask) ) {
 	tot_fl_raised++;
 	fl_raised++;
 	if (dbg) cerr << " setting " << oldfl << " | " << flagmask << endl;
-	(*iter.cursor())(ich,ifr) = oldfl | flagmask;
+	iter.set(ich, ifr, oldfl | flagmask);
 	//if( !oldfl ) // first flag for this pixel?
 	//{
 	//  chunk.nfIfrTime(ifr,iter.position())++;
 	//  chunk.nfChanIfr(ich,ifr)++;
 	//}
-	if (dbg) cerr << " -----> true --> " << (*iter.cursor())(ich,ifr) << endl;
+	if (dbg) cerr << " -----> true --> " << iter(ich,ifr) << endl;
 	return True;
     }
-    if (dbg) cerr << " -----> false --> " << (*iter.cursor())(ich,ifr) << endl;
+    if (dbg) cerr << " -----> false --> " << iter(ich,ifr) << endl;
     return False;
 }
 
 // Clears flag at (ich,iifr). Returns True if flag was up before.
 Bool RFFlagCube::clearFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
 {
-        if(dbg)cerr << "unflag for " << ich << "," << ifr;
-  RFlagWord oldfl = (*iter.cursor())(ich,ifr);
-        if(dbg)cerr << " : " << oldfl << "," << flagmask;
-// all flags cleared for this point - update global stats
-  //if( oldfl&flagmask )
-  if( !(oldfl&flagmask) )
-  {
-    tot_fl_raised--;
-    fl_cleared++;
-    (*iter.cursor())(ich,ifr) = oldfl & flagmask;
-    if(dbg)cerr << " -----> true --> " << (*iter.cursor())(ich,ifr) << endl;
-    return True;
-  }
-  if(dbg)cerr << " -----> false --> " << (*iter.cursor())(ich,ifr) << endl;
-  return False;
+    if(dbg)cerr << "unflag for " << ich << "," << ifr;
+    RFlagWord oldfl = iter(ich,ifr);
+    if(dbg)cerr << " : " << oldfl << "," << flagmask;
+
+    // all flags cleared for this point - update global stats
+    
+    if( !(oldfl&flagmask) ) {
+        tot_fl_raised--;
+        fl_cleared++;
+        iter.set(ich, ifr, oldfl & flagmask);
+        if(dbg)cerr << " -----> true --> " << iter(ich,ifr) << endl;
+        return True;
+    }
+    if(dbg)cerr << " -----> false --> " << iter(ich,ifr) << endl;
+    return False;
 }
 
 // Sets flag at (ifr,itime). Returns True if flag has not been raised
 // previously.
-Bool RFFlagCube::setRowFlag ( uInt ifr,uInt itime )
+Bool RFFlagCube::setRowFlag ( uInt ifr, uInt itime )
 {
-        if(dbg)cerr << " flag row for " << ifr << "," << itime;
-  RFlagWord oldfl = flagrow(ifr,itime);
-        if(dbg)cerr << " : " << oldfl << "," << flagmask;
-// first flag raised for this row - update global stats
-  if( !(oldfl&flagmask) )
-  {
-    tot_row_fl_raised++;
-    row_fl_raised++;
-    flagrow(ifr,itime) = oldfl | flagmask;
-    //if( !oldfl ) // first flag for this row?
-    //{
-    //  chunk.nrfIfr(ifr)++;
-    //  chunk.nrfTime(itime)++;
-    //}
-    if(dbg) cerr << " -----> true --> " <<  flagrow(ifr,itime)<< endl;
-    return True;
-  }
-  if(dbg) cerr << " -----> false --> " <<  flagrow(ifr,itime)<< endl;
-  return False;
+    if(dbg)cerr << " flag row for " << ifr << "," << itime;
+    RFlagWord oldfl = flagrow(ifr,itime);
+    if(dbg)cerr << " : " << oldfl << "," << flagmask;
+
+    // first flag raised for this row - update global stats
+    if( !(oldfl&flagmask) )
+        {
+            tot_row_fl_raised++;
+            row_fl_raised++;
+            flagrow(ifr,itime) = oldfl | flagmask;
+            //if( !oldfl ) // first flag for this row?
+            //{
+            //  chunk.nrfIfr(ifr)++;
+            //  chunk.nrfTime(itime)++;
+            //}
+            if(dbg) cerr << " -----> true --> " <<  flagrow(ifr,itime)<< endl;
+            return True;
+        }
+    if(dbg) cerr << " -----> false --> " <<  flagrow(ifr,itime)<< endl;
+    return False;
 }
 
 // Clears row flag for (iifr,it). Returns True if flag was up before.
 Bool RFFlagCube::clearRowFlag ( uInt ifr,uInt itime )
 {
-       if(dbg) cerr << " unflag row for " << ifr << "," << itime;
-  RFlagWord oldfl = flagrow(ifr,itime);
-        if(dbg)cerr << " : " << oldfl << "," << flagmask;
-// all flags cleared for this point - update global stats
-  //if( oldfl&flagmask )
-  if( !(oldfl&flagmask) )
-  {
-    tot_row_fl_raised--;
-    row_fl_cleared++;
-    flagrow(ifr,itime) = oldfl & flagmask;
-    if(dbg)cerr << " -----> true --> " << flagrow(ifr,itime) << endl;
-    return True;
-  }
-  if(dbg)cerr << " -----> false --> " << flagrow(ifr,itime) << endl;
-  return False;
+    if(dbg) cerr << " unflag row for " << ifr << "," << itime;
+    RFlagWord oldfl = flagrow(ifr,itime);
+    if(dbg)cerr << " : " << oldfl << "," << flagmask;
+
+    // all flags cleared for this point - update global stats
+    //if( oldfl&flagmask )
+    if( !(oldfl&flagmask) )  {
+        tot_row_fl_raised--;
+        row_fl_cleared++;
+        flagrow(ifr,itime) = oldfl & flagmask;
+        if(dbg)cerr << " -----> true --> " << flagrow(ifr,itime) << endl;
+        return True;
+    }
+    if(dbg)cerr << " -----> false --> " << flagrow(ifr,itime) << endl;
+    return False;
 }
 
 // Advances the global flag lattice iterator to the specified time.
 // If pfr and pfc are specified, fills in data
-FlagMatrix * RFFlagCube::advance( uInt it,Bool getFlags )
+void RFFlagCube::advance( uInt it,Bool getFlags )
 {
   if( flag.position() != (Int)it )
     flag.advance(it);
   if( getFlags )
     getMSFlags();
-  return flag.cursor();
+  return;
 }
 
 
@@ -336,7 +339,7 @@ void RFFlagCube::getMSFlags()
       // clear row flag
       fl_row(ifr) &= ~(RowAbsent|RowFlagged); // 0000 0011 & 1111 1100 = 0000 0000
       // clear pixel flags
-      flag.cursor()->column(ifr).set(0); // 0000 0000
+      flag.set_column(ifr, 0); // 0000 0000
     }
   }
   else // HONOR/IGNORE policy: faithfully copy flags from FLAG and FLAG_ROW
@@ -353,7 +356,7 @@ void RFFlagCube::getMSFlags()
 	throw AipsError(ss.str());
       }
 
-    for( uInt i=0; i<fr.nelements(); i++ )
+    for( uInt i=0; i < fr.nelements(); i++ )
     {
       uInt ifr = chunk.ifrNum(i);
       fl_row(ifr) &= ~RowAbsent; // 0000 0011 & 11111101 = 0000 0001
@@ -369,15 +372,18 @@ void RFFlagCube::getMSFlags()
       ///... read in chan flags for all rows......
       ///...  because all may need to be written back.
       
-      for( uInt ich=0; ich<num(CHAN); ich++ ) {
-        for( uInt icorr=0; icorr<num(CORR); icorr++ ) {
-          /* The lattice was initialized to all flags set,
-             Now clear as appropriate (if not FLAG_ROW and not FLAG)
-          */
-          if( !fl_row(ifr) && !fc(icorr,ich,i) ) {
-            (*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
+      for (uInt ich=0; ich<num(CHAN); ich++ ) {
+          for (uInt icorr=0; icorr<num(CORR); icorr++ ) {
+     
+              /* The lattice was initialized to all flags set,
+                 Now clear as appropriate (if not FLAG_ROW and not FLAG)
+              */
+              if( !fl_row(ifr) && !fc(icorr, ich, i) ) {
+                  //(*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
+
+                  flag.set(ich, ifr, icorr, 0);
+              }
           }
-        }
       }
     }
   }
@@ -441,7 +447,7 @@ void RFFlagCube::setMSFlags(uInt itime)
 	  //F
 	  chunk.nfChanIfr(ich, ifr) = 0;
 
-	  RFlagWord fw = (*flag.cursor())(ich,ifr);
+	  RFlagWord fw = flag(ich, ifr);
 
 	  if (fw) {
 	      // if anything was raised for this channel

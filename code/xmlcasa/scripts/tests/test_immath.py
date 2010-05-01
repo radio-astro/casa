@@ -116,6 +116,18 @@ im8im = 'immath8.im'
 im9im = 'immath9.im'
 im10im = 'immath10.im'
 
+IQU_im = '3C129IQU.im'
+IQUV_im = '3C129IQUV.im' 
+POLA_im = '3C129_POLA.im'
+POLL_im = '3C129_POLL.im'  
+POLT_im = '3C129_POLT.im'  
+Q_im = '3C129Q.im'
+QU_im = '3C129QU.im'
+U_im = '3C129U.im'  
+UV_im = '3C129UV.im'  
+V_im = '3C129V.im'
+
+
 imageList =['ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image']
 
 imageList2 =['ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image',
@@ -123,6 +135,9 @@ cas1910_im,cas1452_1_im, cas1830_im]
 
 imageList3 =['immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
 'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im']
+
+imageList4 = [IQU_im, IQUV_im, POLA_im, POLL_im, POLT_im, Q_im, QU_im, U_im, UV_im, V_im]
+
 
 ################      HELPER FUNCTIONS      ###################
 
@@ -178,7 +193,7 @@ class immath_test1(unittest.TestCase):
             for img in imageList:
                 os.system('rm -rf ' +img)
             
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList:
             os.system('cp -RL ' +datapath + img +' ' + img)
             
@@ -851,7 +866,7 @@ class immath_test2(unittest.TestCase):
                 os.system('rm -rf ' +img)
                 
         # FIXME: add links to repository
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList2:
             os.system('cp -RL ' +datapath + img +' ' + img)
             
@@ -862,7 +877,7 @@ class immath_test2(unittest.TestCase):
                        
     def copy_img(self):
         '''Copy images to local disk'''
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/immath/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList3:
             os.system('cp -r ' +datapath + img +' ' + img)
 
@@ -1149,7 +1164,10 @@ class immath_test2(unittest.TestCase):
             errors += "\nError: Failed to create polarization angle image."
 
         self.assertTrue(success,errors)
-    
+   
+
+               
+ 
     # verification of fix to CAS-1678
     # https://bugs.aoc.nrao.edu/browse/CAS-1678
     def test_many_images(self):
@@ -1301,8 +1319,130 @@ class immath_test2(unittest.TestCase):
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 
+class immath_test3(unittest.TestCase):
+
+    def setUp(self):
+            
+        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
+        for img in imageList4:
+            shutil.copytree(datapath + img, img)
+    
+    def tearDown(self):
+        for img in imageList4:
+            shutil.rmtree(img)        
+
+    def _comp(self, imagename, mode, outfile, expected, match=True):
+        immath(imagename=imagename, outfile=outfile, mode=mode)
+        self.assertTrue(os.path.exists(outfile))
+        ia.open(outfile)
+        got = ia.getchunk()
+        ia.done()
+        diff = expected - got
+        if (match):
+            self.assertTrue((numpy.abs(got - expected) == 0).all())        
+        else:
+            self.assertFalse((numpy.abs(got - expected) == 0).all())
+
+    def test_CAS2120(self):
+        '''immath: verification of old functionality and similar new functionality introduced by CAS-2120'''
+
+        # POLA
+        mode = 'pola'
+        ia.open(POLA_im)
+        expected = ia.getchunk()
+        ia.done()
+
+        # pola the old way
+        self._comp([Q_im, U_im], mode, 'pola_1.im', expected)  
+
+        # test that order of Q, U doesn't matter
+        self._comp([U_im, Q_im], mode, 'pola_2.im', expected)  
+        outfile = 'pola_2.im'
+
+        # test making pola image from multi-stokes image
+        self._comp(IQUV_im, mode, 'pola_3.im', expected)  
+
+        # test making pola image from multi-stokes image without V
+        self._comp(IQU_im, mode, 'pola_4.im', expected)  
+
+        # test making pola image from multi-stokes image without I and V
+        self._comp(QU_im, mode, 'pola_5.im', expected)  
+
+        # no Q, this should fail
+        outfile = 'pola6.im'
+        try:
+            immath(imagename=UV_im, outfile=outfile, mode=mode)
+            # should not get here
+            self.assertTrue(false)
+        except:
+            self.assertFalse(os.path.exists(outfile))
+
+        # no U, this should fail
+        outfile = 'pola7.im'
+        try:
+            immath(imagename=Q_im, outfile=outfile, mode=mode)
+            # should not get here
+            self.assertTrue(false)
+        except:
+            self.assertFalse(os.path.exists(outfile))
+
+        # no U, this should fail
+        outfile = 'pola7.im'
+        try:
+            immath(imagename=[Q_im, V_im], outfile=outfile, mode=mode)
+            # should not get here
+            self.assertTrue(false)
+        except:
+            self.assertFalse(os.path.exists(outfile))
+
+        # POLI
+        mode = 'poli'
+        ia.open(POLL_im)
+        poll = ia.getchunk()
+        ia.done()
+
+        ia.open(POLT_im)
+        polt = ia.getchunk()
+        ia.done()
+
+        # linear polarization the old way
+        self._comp([Q_im, U_im], mode, 'poli_1.im', poll)  
+
+        # Q, U order shouldn't matter
+        self._comp([Q_im, U_im], mode, 'poli_2.im', poll)  
+
+        # new way, one multi-stokes image
+        self._comp(IQU_im, mode, 'poli_3.im', poll)  
+
+        # new way, one multi-stokes image with only Q and U
+        self._comp(QU_im, mode, 'poli_4.im', poll)  
+       
+        # poli for IQUV image will produce a total, not linear, polarization image 
+        self._comp([Q_im, U_im, V_im], mode, 'poli_5.im', polt)  
+        self._comp(IQUV_im, mode, 'poli_6.im', polt)
+
+        # fail, no U
+        outfile = 'poli7.im'
+        try:
+            immath(imagename=[Q_im, V_im], outfile=outfile, mode=mode)
+            # should not get here
+            self.assertTrue(false)
+        except:
+            self.assertFalse(os.path.exists(outfile))
+
+        # fail, no Q
+        outfile = 'poli8.im'
+        try:
+            immath(imagename=UV_im, outfile=outfile, mode=mode)
+            # should not get here
+            self.assertTrue(false)
+        except:
+            self.assertFalse(os.path.exists(outfile))
+
+  
+
 def suite():
-    return [immath_test1,immath_test2]
+    return [immath_test1, immath_test2, immath_test3]
     
     
     

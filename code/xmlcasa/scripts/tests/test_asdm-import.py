@@ -174,7 +174,7 @@ class asdm_import(unittest.TestCase):
 #                print myname, ": Error  Cannot open MS table", tablename
 #                raise
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+                retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
             else:
                 ms.close()
                 print myname, ": OK. Checking tables in detail ..."

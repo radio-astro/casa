@@ -288,29 +288,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     outfile='ngc5921.masked.image'
     go
 
-    # Creating a Polarization Itensity image from an [Q, U, V] image.
+    # Creating a total polarization intensity image from an multi-stokes image
+    # containing IQUV.
     default('immath')
-    outfile='Q.im'; imagename='3C138_pcal'; expr='IM0'; stokes='Q'; go();
-    outfile='U.im'; imagename='3C138_pcal'; expr='IM0'; stokes='U'; go();
-    outfile='V.im'; imagename='3C138_pcal'; expr='IM0'; stokes='V'; go();
-    #
     outfile='pol_intensity'
     stokes=''
-    imagename=['Q.im', 'U.im', 'V.im']
-    expr='sqrt(IM0*IM0 + IM1*IM1 + IM2*IM2)'
-    go
-    # or using pre-defined expression 
-    default('immath')
-    outfile='pol_intensity'
-    mode='poli' 
-    imagename=['Q.im','U.im','V.im']
+    # in imagename, you can also specify a list containing single stokes images
+    # of Q and U (for linear polarization intensity) and V (for total
+    # polarization intensity)
+    imagename='3C138_pcal'
+    mode='poli'
     go
 
     # Creating a polarization position angle image 
     default('immath')
     outfile='pol_angle.im'
     mode='pola'
-    imagename=['Q.im','U.im'] # order of the two Stokes images does not matter 
+    # you can also do imagename=['Q.im','U.im'] for single stokes images, order of
+    # the two Stokes images does not matter
+    imagename='3C138_pcal' # multi-stokes image containing at least Q and U stokes 
     go 
 
     # Creating a spectral index image from the images at two different observing frequencies

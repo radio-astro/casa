@@ -227,16 +227,6 @@ private:
    Bool whatIsTheNoise (T& noise,
                         MeasurementSet &ms);
 
-   // Take the user's data inclusion and exclusion. The <src>include</src>
-   // or <src>exclude</src> specifies a list of row numbers to be included 
-   // or excluded.
-   Bool setIncludeExclude (Vector<T>& range,
-                           Bool& noInclude,
-                           Bool& noExclude,
-                           const Vector<T>& include,
-                           const Vector<T>& exclude,
-                           ostream& os);   
-
    // Data
    MeasurementSet *ms_p; 
 

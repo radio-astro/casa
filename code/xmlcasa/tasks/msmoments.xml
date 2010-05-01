@@ -26,7 +26,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>List of moments you want to compute</description>
         <value>0</value>
     </param>
-
+    <param type="any" name="antenna">
+        <description>antenna name or id</description>
+        <any type="variant" limittype="int string"/>
+        <value type="string"></value>
+    </param>
+    <param type="any" name="field">
+        <description>field name or id</description>
+        <any type="variant" limittype="int string"/>
+        <value type="string"></value>
+    </param>
+    <param type="any" name="spw">
+        <description>spectral window id</description>
+        <any type="variant" limittype="int string"/>
+        <value type="string"></value>
+    </param>
 <!--
     <param type="string" name="mask" >
 	<description>Select the channel(spectral) range</description>
@@ -44,16 +58,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 -->
 
-    <param type="any" name="includerow">
-    	<description>List of rows to include</description>
-	<any type="variant" limittypes="int intArray"/>
-	<value type="int">-1</value>
+    <param type="any" name="includemask">
+    	<description>Range of rows to include</description>
+	<any type="variant" limittypes="double doubleArray"/>
+	<value type="double">-1</value>
     </param>
 
-    <param type="any" name="excluderow">
-    	<description>List of rows to exclude</description>
-	<any type="variant" limittypes="int intArray"/>
-	<value type="int">-1</value>
+    <param type="any" name="excludemask">
+    	<description>Range of rows to exclude</description>
+	<any type="variant" limittypes="double doubleArray"/>
+	<value type="double">-1</value>
     </param>
 
     <param type="string" name="outfile">
@@ -95,12 +109,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	moments=10  - minimum value of the spectrum
 	moments=11  - coordinate of the minimum value of the spectrum
 
+        Note that includemask and excludemask cannot set simultaneously. 
+
 	Keyword arguments:
 	msname -- Name of input MS data
 		default: none; example: msname=&quot;OrionS_rawACSmod&quot;
 	moments -- List of moments you would like to compute
 		default: 0 (integrated spectrum);example: moments=[0,1]
 		see list above
+	antenna -- antenna name or id that the user wants to compute moments
+		default: '' (all antennae)
+	field -- field name or id that the user wants to compute moments
+		default: '' (all fields)
+	spw -- spectral window id that the user wants to compute moments
+		default: '' (all spectral windows)
 <!--
         mask - - Mask applied to the image before calculating the moments.
                 Default &quot;&quot; means no mask;  
@@ -108,15 +130,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                 Full description of the syntax can be found at
                 http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series
--->
-	stokes -- Stokes parameters to analyze.
+	stokes - - Stokes parameters to analyze.
                 Default: none (all); Example: stokes=&quot;IQUV&quot;;  
                                      Example:stokes=&quot;I,Q&quot;
                 Options: &quot;I&quot;,&quot;Q&quot;,&quot;U&quot;,&quot;V&quot;,&quot;RR&quot;,&quot;RL&quot;,&quot;LR&quot;,&quot;LL&quot;,&quot;XX&quot;,&quot;YX&quot;,&quot;XY&quot;,&quot;YY&quot;, ...
-	includerow -- List of rows to include
-		default: [-1] (all rows); example=[2,100]
-	excluderow -- List of rows to exclude
-		default: [-1] (don&quot;t exclude rows); example=[100,200]
+-->
+	includemask -- List of masks to include
+		default: [-1] (include all channels); example=[2,100]
+	excludemask -- List of masks to exclude
+		default: [-1] (don&quot;t exclude channels); example=[100,200]
 	outfile -- Output MS file name (or root for multiple moments)
 		default: &quot;&quot; (input+auto-determined suffix);example: outfile=&quot;source_moment&quot;
         overwrite -- Overwrite existing output files

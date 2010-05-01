@@ -90,7 +90,7 @@ class __viewer_class(object):
 		except:
 			vwr = None
 
-		if vwr == None:
+		if type(vwr) == type(None):
 			need_gui = True
 			if type(gui) == bool and gui == False:
 				need_gui = False
@@ -108,12 +108,20 @@ class __viewer_class(object):
 					vwr = viewertool.viewertool( False, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
 					self.local_ving = vwr
 
-		if vwr != None :
+		if type(vwr) != type(None) :
 			##
 			## (1) save current *viewer*server* path
 			## (2) have viewer() task follow casapy/python's cwd
-			old_path = vwr.cwd( )
-			vwr.cwd(os.path.abspath(os.curdir))
+			try:
+				old_path = vwr.cwd( )
+			except:
+				raise Exception, "viewer() failed to get the current working directory"
+
+			try:
+				vwr.cwd(os.path.abspath(os.curdir))
+			except:
+				raise Exception, "viewer() failed to change to the new working directory"
+				
 
 			panel = vwr.panel("viewer")
 			data = None
@@ -150,7 +158,10 @@ class __viewer_class(object):
 				vwr.close(panel)
 
 			## (3) restore original path
-			vwr.cwd(old_path)
+			try:
+				vwr.cwd(old_path)
+			except:
+				raise Exception, "viewer() failed to restore the old working directory"
 
 		else:
 			viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py

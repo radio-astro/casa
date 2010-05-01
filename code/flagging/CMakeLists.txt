@@ -37,8 +37,11 @@ casa_add_library( flagging
   implement/Flagging/RFDebugPlot.cc
   implement/Flagging/RFFlagCube.cc
   implement/Flagging/RFRowClipper.cc
+  implement/Flagging/RFFloatLattice.cc
   implement/MSPlot/MsPlot.cc
    )
 
 casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
 casa_add_test( flagging implement/Flagging/test/tRFASelector.cc )
+casa_add_test( flagging implement/Flagging/test/tFlagger.cc )
+casa_add_test( flagging implement/Flagging/test/tRFCubeLattice.cc )

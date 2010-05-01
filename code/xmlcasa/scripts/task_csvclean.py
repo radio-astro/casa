@@ -7,23 +7,22 @@ from taskinit import *
 
 def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restoringbeam, interactive):
 
-    """ Create a clean image using Hogbom and restore the residuals
+    """ This task does an invert of the visibilities and deconvolve in the
+	    image plane. It does not do a uvdata subtraction (aka Cotton-Schwab
+		major cycle) of model visibility as in clean. - For ALMA Commissioning
     
          vis -- Name of input visibility file
                default: none; example: vis='ngc5921.ms'    
     
-         imagename -- Pre-name of output images:
-               default: none; example: imagename='m2'
-               output images are:
+	     imagename -- Name of output CASA image. (only the prefix)
+                   default: none; example: imagename='m2'
+                   output images are:
                  m2.image; cleaned and restored image
                         With or without primary beam correction
-                 m2.psf; point-spread function (dirty beam)
-                 m2.flux;  relative sky sensitivity over field
-                 m2.flux.pbcoverage;  relative pb coverage over field 
-                                      (gets created only for ft='mosaic')
+                 m2dirty.image; dirty image
+                 m2psf.image; point-spread function (dirty beam)
                  m2.model; image of clean components
-                 m2.residual; image of residuals
-                 m2.interactive.mask; image containing clean regions
+                 m2.mask; image containing clean regions, when interative=True
 
     
          field -- Select fields in MS.  Use field id(s) or field name(s).
@@ -77,13 +76,15 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
                    default units are in arc-seconds for bmaj,bmin, degrees
                    for bpa default: restoringbeam=[]; Use PSF calculated
                    from dirty beam. 
-                   example: restoringbeam=['10arcsec'] or '10arcsec' circular Gaussian 
+                   example: restoringbeam=['10arcsec'] or restorinbeam='10arcsec', circular Gaussian.
                             FWHM 10 arcseconds example:
                             restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
                             at 45 degrees
         
-        interactive -- Create a mask interactively or not.
-                        default=False; example: interactive=True
+	    interactive -- Create a mask interactively or not.
+        		   default=False; example: interactive=True
+        		   The viewer will open with the image displayed. Select the
+        		   region for the mask and double click in the middle of it.
             
     """
     

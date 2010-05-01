@@ -23,7 +23,6 @@ Unit tests for task csvclean. It tests the following parameters:
 class csvclean_test1(unittest.TestCase):
 
     # Input and output names
-#    msfile = 'J1058+015.ms'
     msfile = 'ngc5921.ms'
     fits = 'ngc5921.fits'
     res = None
@@ -32,8 +31,7 @@ class csvclean_test1(unittest.TestCase):
     def setUp(self):
         self.res = None
         if (os.path.exists(self.fits)):
-#            shutil.rmtree(self.msfile)
-            os.remove(self.fits)
+            os.system('rm -rf '+ self.fits)
             
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/ngc5921/'
         shutil.copyfile(datapath+self.fits, self.fits)
