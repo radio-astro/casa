@@ -1443,6 +1443,7 @@ class cleanhelper:
         # will give spw=[0] and len(spw) not equal to len(chanids)
         chanindi=chanind0
         spwi=spw0
+        unsorted=False
         for isel in range(1,len(chaninds)):
             chanindi=chaninds[isel]
             spwi=chanindi[0]
@@ -1450,6 +1451,8 @@ class cleanhelper:
             chanfreqsi = chanfreqs[0]  
             if len(chanfreqsi)<1:
                 raise Exception, 'spw parameter '+spw+' selected spw '+str(spwinds[isel]+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
+            if chanfreqsi[0] < chanfreqs0[0]: 
+                unsorted = True 
             for ci in range(chanindi[1],chanindi[2]+1,chanindi[3]):
                 chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqsi[ci])
          
@@ -1596,7 +1599,11 @@ class cleanhelper:
             nchan = int(round(bw/abs(finc)))+1   # XXX could argue for ceil here
 
         # sanity checks:
-        fend = fstart + finc*(nchan-1) 
+        # unsorted case
+        if mode=="channel" and unsorted and start!='':
+            fend = fstart - finc*(nchan-1)
+        else:
+           fend = fstart + finc*(nchan-1) 
         if fend >= (chanfreqs1d[-1]+abs(finc)):
             self._casalog.post("your values of spw, start, and width appear to exceed the spectral range available.  Blank channels may result","WARN")
         if fend <= 0:
@@ -1613,7 +1620,6 @@ class cleanhelper:
 
         # here are the output channels in Hz
         freqlist = numpy.array(range(nchan)) * finc + fstart
-
         retnchan=len(freqlist)
     
         #print bw,freqlist[0],freqlist[-1]
