@@ -996,8 +996,9 @@ class asapplotter:
         lef, bot, rig, top, wsp, hsp = self._panellayout
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
                                  wspace=wsp,hspace=hsp)
-        ax = PL.axes([0.1,0.1,0.8,0.8])
-        ax = PL.axes([0.1,0.1,0.8,0.8])
+        ax = PL.gca()
+        #ax = PL.axes([0.1,0.1,0.8,0.8])
+        #ax = PL.axes([0.1,0.1,0.8,0.8])
         ax.set_aspect('equal')
         PL.plot(ra,dec, 'b,')
         PL.xlabel('RA [deg.]')
