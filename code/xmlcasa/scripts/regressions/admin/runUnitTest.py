@@ -148,6 +148,9 @@ whichtests = 0
         
 
 def main(testnames=[]):
+
+    global regstate  # Global variable used by regression framework to determine pass/failure status
+    regstate = False
         
     listtests = testnames
     if listtests == []:
@@ -286,9 +289,6 @@ def main(testnames=[]):
             except:
                 traceback.print_exc()
                 
-    global regstate # Global variable used by regression framework to determine pass/failure status
-    regstate = False
-
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
     try:
