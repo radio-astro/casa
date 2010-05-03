@@ -31,7 +31,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_imfit.py
   test_imhead.py
   test_immath.py
-  test_immoment.py
+  test_immoments.py
   test_importevla.py
   test_imregrid.py
   test_imsmooth.py
