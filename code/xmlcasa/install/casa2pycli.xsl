@@ -75,7 +75,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>
         """</xsl:text>
 <xsl:text disable-output-escaping="yes">
-        self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
+	if not hasattr(self, "__globals__") or self.__globals__ == None :
+           self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
         self.__globals__['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         self.__globals__['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###
@@ -217,7 +218,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         Opens a parameter GUI for this task.  If useGlobals is true, then any relevant global parameter settings are used.
         """
         import paramgui
-        self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
+	if not hasattr(self, "__globals__") or self.__globals__ == None :
+           self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
 
         if useGlobals:
 	    if ipython_globals == None:
@@ -236,7 +238,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
 #
     def defaults(self, param=None, ipython_globals=None, paramvalue=None, subparam=None):
-        self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
+	if not hasattr(self, "__globals__") or self.__globals__ == None :
+           self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
         if ipython_globals == None:
             myf=self.__globals__
         else:
