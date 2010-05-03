@@ -1008,10 +1008,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    if (ok) {
 	        int status = 0;
-		if ((status=wcssptr (&wcsDest, &index, ctype))) {
+		if ((status=wcssptr(&wcsDest, &index, ctype))) {
 		    os << LogIO::WARN << "Failed to convert Spectral coordinate to Frequency, error status = "
-		       << status << LogIO::POST;
-		    ok = False;	     
+		       
+		       << status << ": " << endl << "   " << wcs_errmsg[status] << endl;
+		    switch(status){
+		    case 4:
+		    case 5:
+		    case 6:
+		    case 7:
+		      os << "Will try to continue ...";
+		      break;
+		    default:
+		      os << "Will not try to continue ...";
+		      ok = False;
+		    }
+		    os << LogIO::POST;
 		} else {
 		  // throws exception if wcsset() fails
 		  setWCS (wcsDest);
