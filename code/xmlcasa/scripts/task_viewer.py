@@ -14,7 +14,7 @@ class __viewer_class(object):
 		self.local_vi = None
 		self.local_ving = None
 
-	def __call__(self, infile=None,displaytype=None,frame=None,zoom=None,outfile=None,outscale=None,outdpi=None,outformat=None,outlandscape=None,gui=None):
+	def __call__(self, infile=None,displaytype=None,channel=None,zoom=None,outfile=None,outscale=None,outdpi=None,outformat=None,outlandscape=None,gui=None):
 		""" The viewer will display images in raster, contour, vector or
 		marker form.  Images can be blinked, and movies are available
 		for spectral-line image cubes.  For measurement sets, many
@@ -131,8 +131,8 @@ class __viewer_class(object):
 				else:
 					data = vwr.load( infile, panel=panel )
 
-				if type(frame) == int and frame > 0 :
-					vwr.frame(frame,panel=panel)
+				if type(channel) == int and channel > 0 :
+					vwr.channel(channel,panel=panel)
 				if type(zoom) == int and zoom != 1 :
 					vwr.zoom(zoom,panel=panel)
 				if type(outfile) == str and len(outfile) > 0 :

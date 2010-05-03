@@ -368,7 +368,7 @@ namespace casa {
 	return QDBusVariant(QVariant(true));
     }
 
-    QDBusVariant QtDBusViewerAdaptor::frame( int num, int panel ) {
+    QDBusVariant QtDBusViewerAdaptor::channel( int num, int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
 	    return error("could not find requested panel");

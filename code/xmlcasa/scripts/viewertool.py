@@ -259,14 +259,14 @@ class viewertool(object):
 
         return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].output, device, devicetype, panel, scale, dpi, format, orientation, media )
 
-    def frame( self, num=-1, panel=0 ):
+    def channel( self, num=-1, panel=0 ):
         if type(num) != int or type(panel) != int:
             raise Exception, "frame() takes (int,int); each argument is optional..."
 
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return self.__invoke( dbus.Int32, int, self.__state['proxy'].frame, num, panel )
+        return self.__invoke( dbus.Int32, int, self.__state['proxy'].channel, num, panel )
 
     def zoom( self, level, panel=0 ):
         if type(level) != int or type(panel) != int:

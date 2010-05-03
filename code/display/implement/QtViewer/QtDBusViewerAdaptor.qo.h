@@ -70,7 +70,7 @@ namespace casa {
 	QDBusVariant close( int panel=0 );
 	QDBusVariant popup( const QString &what, int panel=0 );
 
-	QDBusVariant frame( int num=-1, int panel=0 );
+	QDBusVariant channel( int num=-1, int panel=0 );
 	QDBusVariant zoom( int level, int panel=0 );
 
 	// like "close()", but leaves the closing up to the user if the window is not hidden
