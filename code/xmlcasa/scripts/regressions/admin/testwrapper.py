@@ -25,7 +25,7 @@ if not os.access(SCRIPT_REPOS, os.F_OK):
         UTILS_DIR = SCRIPT_REPOS+'admin'
     else:            #Mac release
         SCRIPT_REPOS = AIPS_DIR+'/Resources/python/tests/'
-        UTILS_DIR = AIPS_DIR+'/Resources/python/regressions/'+'admin'        
+        UTILS_DIR = AIPS_DIR+'/Resources/python/regressions/admin'        
 
 sys.path.append(UTILS_DIR)
 
