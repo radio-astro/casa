@@ -136,6 +136,7 @@ protected:
   //new added
   MeasurementSet *mssel_p;
   VisSet *vs_p;
+  bool scan_looping;     /* Is scan number part of visiter looping? */
   String msname_p;
   Bool nullSelect_p;
   Bool setdata_p;

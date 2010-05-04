@@ -127,9 +127,9 @@ Bool RFATimeFreqCrop :: newChunk (Int &i)
 
 
 /* Called at the beginning of each PASS */
-void RFATimeFreqCrop :: startData () 
+void RFATimeFreqCrop :: startData (bool verbose) 
 {
-	RFAFlagCubeBase::startData();
+	RFAFlagCubeBase::startData(verbose);
 	iterTimecnt=0; // running count of visbuffers gone by.
 	timecnt=0;
   

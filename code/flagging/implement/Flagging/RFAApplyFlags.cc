@@ -340,21 +340,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 // Called before starting a data pass on a chunk. 
-  void RFAApplyFlags::startData () {
+  void RFAApplyFlags::startData (bool verbose) {
       LOC; 
-      RFAFlagCubeBase::startData();
+      RFAFlagCubeBase::startData(verbose);
   }
 
 // Called before starting a dry pass on a chunk. 
-  void RFAApplyFlags::startDry  () { 
+  void RFAApplyFlags::startDry  (bool verbose) { 
       LOC; 
-      RFAFlagCubeBase::startDry();
+      RFAFlagCubeBase::startDry(verbose);
   }
 
 // Called before starting the fetch-flags pass.
-  void RFAApplyFlags::startFlag () 
+  void RFAApplyFlags::startFlag (bool verbose) 
   {
-      RFAFlagCubeBase::startFlag();
+      RFAFlagCubeBase::startFlag(verbose);
       LOC; 
   }
 
