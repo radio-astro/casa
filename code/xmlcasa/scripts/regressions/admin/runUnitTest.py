@@ -7,7 +7,8 @@
     casapy [casa-options] -c runUnitTest.py
     
     or from inside casapy:
-    import runUnitTest.py
+    sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
+    import runUnitTest
     runUnitTest.main(['testname']) 
     runUnitTest.main()
     runUnitTest.main(['--short'])
@@ -51,6 +52,7 @@ FULL_LIST = ['test_asdm-import',
              'test_immath',
              'test_immoments',
 #             'test_importevla',
+#             'test_importfitsidi',
              'test_imregrid',
              'test_imsmooth',
              'test_imstat',

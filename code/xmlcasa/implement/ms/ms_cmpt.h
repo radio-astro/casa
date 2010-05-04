@@ -45,6 +45,8 @@ class ms
 
     bool fromfits(const std::string& msfile = "", const std::string& fitsfile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0, const std::string& host = "", const bool forcenewserver = false, const std::string& antnamescheme = "old");
 
+    bool fromfitsidi(const std::string& msfile = "", const std::string& fitsidifile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0);
+
     int nrow(const bool selected = false);
 
     bool iswritable();
