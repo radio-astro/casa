@@ -72,6 +72,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <value>0.0mJy/beam</value>
         </param>
 
+        <param type="string" name="polithresh" subparam="true">
+            <description>Threshold in linear polarization intensity image below which to mask pixels.</description>
+            <value type="string"/>
+        </param>
+
    	<param type="string" name="mask">
         	<description>Mask to be applied to the images</description>
         	<value></value>
@@ -103,18 +108,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	</param>
 
 	<constraints>
-                <when param="mode">
-                    <equals value="evalexpr">
-                        <default param="expr"><value>""</value></default>
-                        <default param="varnames"><value>""</value></default>
-                    </equals>
-                    <equals value="poli">
-                        <default param="sigma"><value>"0.0mJy/beam"</value></default>
-                    </equals>
-		    <equals value="pola"/>
+        <when param="mode">
+            <equals value="evalexpr">
+                <default param="expr"><value>""</value></default>
+                <default param="varnames"><value>""</value></default>
+            </equals>
+            <equals value="poli">
+                <default param="sigma"><value>"0.0mJy/beam"</value></default>
+            </equals>
+		    <equals value="pola">
+                <default param="polithresh">
+                    <value>""</value>
+                </default>
+            </equals>
 		    <equals value="spix"/>
-                </when>
-
+        </when>
 	</constraints>
 </input>
 
@@ -145,12 +153,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                mode='spix'; imagename=['image1.im','image2.im'] will calculate 
                        an image of log(S1/S2)/log(f1/f2), where S1 and S2 are fluxes and 
                        f1 and f2 are frequencies
-               mode='pola'; imagename=['imageQ.im','imageU.im'] will calculate 
+               mode='pola'; imagename='multistokes.im' (where that image contains both Q and U
+                       stokes planes) or imagename=['imageQ.im','imageU.im'] will calculate 
                        an image of polarization angle distribution, where imageQ.im and 
                        imageU.im are Stokes Q and U images, respectively. Calculate 0.5*arctan(U/Q).
                mode='poli'; imagename=['imageQ.im','imageU.im','imageV.im'] will calculate
                        total polarization intensity image, where imageQ.im, imageU.im, imageV.im
-                       are Stokes Q, U, and V images, respectively.
+                       are Stokes Q, U, and V images, respectively. Alternatively, with
+                       imagename = ['imageQ.im','imageU.im'] the linear polarization intensity
+                       image will be calculated. In the case where imagename is a single multi-stokes
+                       image, the total polarization image will be calculated if all of the Q, U, and
+                       V stokes planes are present, and the linear polarization intensity image will
+                       be calculated if the Q and U (but not V) planes are present. 
 
     mode -- mode for mathematical operation
             Default: evalexpr
@@ -162,6 +176,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             sigma - (for mode='poli') standard deviation of noise of Stokes images with unit such as
                     Jy/beam to correct for bias 
               Default: '0.0Jy/beam' (= no debiasing)
+            polithresh - (for mode='pola') Quantity (eg '30uJy/beam') describing the linear (not total;
+                    the stokes V contribution is not included) polarization threshold. A mask ('mask0')
+                    is written to the output image and is False for all corresponding linear polarization
+                    values below this threshold. This parameter overrides the mask input parameter
+                    (below). Default ('') means use the value given in mask, or no masking if that
+                    value is empty as well.
 
             expr -- (for mode='evalexpr') A mathematical expression with images.
 	      Image file names are specified in the imagenames paramter, and
@@ -189,7 +209,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		are stored.  Overwriting an existing outfile is not permitted.
 	    Default: immath_results.im;  Example: outfile='results.im'
     mask -- Name of mask applied to each image in the calculation
-            Default '' means no mask;  Example: mask='orion.mask'.  
+            Default '' means no mask;  Example: mask='orion.mask'. This parameter is not used
+            in the case of mode='pola' and polithresh not empty.  
     region -- File path to an ImageRegion file.
             An ImageRegion file can be created with the CASA
             viewer's region manager.  Typically ImageRegion files
@@ -208,6 +229,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             by commas but best if you use commas.
             Default: none (all); Example: stokes='IQUV';
             Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+            Not used in for cases of mode='poli' or mode='pola'
 
     Available functions in the <i>expr</i> and <i>mask</i> paramters:
     pi(), e(), sin(), sinh(), asinh(), cos(), cosh(), tan(), tanh(),
@@ -308,6 +330,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     # the two Stokes images does not matter
     imagename='3C138_pcal' # multi-stokes image containing at least Q and U stokes 
     go 
+
+    # same as before but write a mask with values of False for pixels for which the
+    # corresponding linear polarization ( sqrt(Q*Q+U*U)) is less than 30 microJy/beam
+    polithresh='30uJy/beam'
+    go
 
     # Creating a spectral index image from the images at two different observing frequencies
     default('immath')
