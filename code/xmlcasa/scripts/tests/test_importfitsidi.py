@@ -27,7 +27,7 @@ import unittest
 myname = 'importfitsidi-unit-test'
 
 # default dataset name
-my_dataset_name = 'n09q2_1_1.IDI1'
+my_dataset_name = 'n09q2_1_1-shortened.IDI1'
 
 # name of the resulting MS
 msname = my_dataset_name+'.ms'
