@@ -222,7 +222,7 @@ file( WRITE ${_casaroot}/casainit.sh
       "then\n"
       "    case `uname -s` in\n"
       "    Linux)\n"
-      "        case `uname -p` in\n"
+      "        case `uname -m` in\n"
       "        x86_64)\n"
       "            a_arch=linux_64b\n"
       "            ;;\n"
