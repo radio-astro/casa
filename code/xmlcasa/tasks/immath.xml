@@ -343,7 +343,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     imagename=['mySource_5GHz.im','mySource_8GHz.im']
     go
     
-     
+    TEMPORARY IMAGES
+
+    At this time, it is usually necessary for this task to create intermediate, temporary disk images.
+    The names of these images start with '_immath' and are created in the directory in which the task
+    is run. The task makes reasonable attempts to remove these images before it exits, but there are
+    conceivably instances where the temporary images may not be automatically deleted. It is generally
+    safe to delete them by hand, assuming no immath instance is currently in progress.
+
+    The hope and plan is that the necessity of these images will decrease in the future (ie the computations
+    will require only RAM and not temporary persistent storage of intermediate results).
+
+ 
 </example>
 
 </task>
