@@ -44,9 +44,9 @@ def taql(query, tbinst=None, cols=None):
     tmpnam = tempfile.mkdtemp(suffix="_tb", dir='.')
     if cols:
         cols = cols.rstrip() + ' '
-        restab = tbinst.queryC(query, tmpnam, columns=cols)
+        restab = tbinst.query(query, tmpnam, columns=cols)
     else:
-        restab = tbinst.queryC(query, tmpnam)
+        restab = tbinst.query(query, tmpnam)
     try:
         yield restab
     finally:

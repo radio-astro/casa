@@ -424,6 +424,10 @@ private:
   PlotMSAveraging averaging_;
   PlotMSTransformations transformations_;
 
+  Vector<String> antnames_;
+  Vector<String> fldnames_;
+  Vector<String> corrnames_;
+
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;
 

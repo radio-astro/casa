@@ -71,9 +71,7 @@ template<class T> class RFCubeLatticeIterator
   private:
     std::vector<boost::dynamic_bitset<> > *lattice;
 
-    Matrix<T> curs;
-
-    unsigned int iter_pos;
+    unsigned int iter_pos;   // current time
 
     unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
 
@@ -91,21 +89,21 @@ template<class T> class RFCubeLatticeIterator
     // destructor
     ~RFCubeLatticeIterator();
 
-    // resets the lattice iterator to beginning, returns cursor
-    Matrix<T> * reset();
-    
-    // advances internal iterator to specified slot along the Z axis, returns cursor
-    Matrix<T> * advance( uInt iz );
+    // resets the lattice iterator to beginning
+    void reset();
+
+    // advances internal iterator to specified slot along the Z axis
+    void advance( uInt iz );
     
     // returns position of internal iterator
     uInt position ()                 
       { return iter_pos; }
-    
-    //  returns internal cursor
-    Matrix<T> * cursor();
-    
+        
     // returns element at i,j of cursor
-    T & operator () ( uInt i,uInt j );
+    T operator () ( uInt i,uInt j ) const;
+
+    void set( uInt i, uInt j, const T &val );
+    void set( uInt ichan, uInt ifr, uInt icorrs, bool val );
 
     void flush_curs();
 };
@@ -193,24 +191,32 @@ public:
         { return nx*ny*nz*sizeof(T)/(1024*1024) + 1; }
 
 // resets the lattice iterator to beginning. 
-  Matrix<T> * reset( Bool will_read=True,
-                     Bool will_write=True );  
+  //Matrix<T> * reset( Bool will_read=True,
+  //                   Bool will_write=True );  
+  void reset( Bool will_read = True,
+              Bool will_write = True );
   
-// advances internal iterator to specified slot along the Z axis, returns cursor
-  Matrix<T> * advance( Int iz )   { return iter.advance(iz); };
+// advances internal iterator to specified slot along the Z axis
+  void advance( Int iz )   { iter.advance(iz); };
   
 // returns position of internal iterator
   Int position ()                 { return iter.position(); }
   
 // returns shape
   const IPosition & shape ()      { return lat_shape; }
-
-//  returns internal cursor
-  Matrix<T> * cursor()              { return iter.cursor(); }
   
 // returns element at i,j of cursor
-  T & operator () ( uInt i,uInt j )  { return (*iter.cursor())(i,j); }
+  T operator () ( uInt i,uInt j ) const { return iter(i,j); }
   
+  // sets element at i, j of cursor
+  void set( uInt i, uInt j, const T &val ) 
+    { iter.set(i, j, val); }
+
+  void set( uInt ichan, uInt ifr, uInt icorr, bool val) 
+    { iter.set(ichan, ifr, icorr, val); }
+
+  void set_column( uInt ifr, const T &val );
+
 // provides access to lattice itself  
 //  std::vector<boost::dynamic_bitset<> > & lattice()    { return lat; }
 

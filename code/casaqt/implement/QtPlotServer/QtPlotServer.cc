@@ -42,9 +42,10 @@ namespace casa {
 	return name_;
     }
 
-    QtPlotServer::QtPlotServer( ) {
+    QtPlotServer::QtPlotServer( const char *dbus_name ) {
+	dbus_name_ = (dbus_name ? dbus_name : 0);
 	dbus_ = new QtDBusPlotSvrAdaptor(this);
-	dbus_->connectToDBus();
+	dbus_->connectToDBus(dbus_name_);
     }
 
     QtPlotServer::~QtPlotServer( ) {

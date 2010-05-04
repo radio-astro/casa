@@ -3,9 +3,10 @@ from taskinit import *
 
 import asap as sd
 import pylab as pl
-import Tkinter as Tk
+#import Tkinter as Tk
 
-def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
+def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, layout, plotfile, overwrite):
+
         casalog.origin('sdplot')
 
         ###
@@ -237,6 +238,8 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
+	    # For printing header information
+	    ssel=sel.__str__()
             del sel
 
 	    # Save the previous plotter settings
@@ -245,6 +248,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    oldpanel = sd.plotter._panelling
 	    oldstack = sd.plotter._stacking
 	    oldhist = sd.plotter._hist
+	    oldlayout = sd.plotter._panellayout
 	    # Line properties
 	    colormapold=sd.plotter._plotter.colormap
 	    linestylesold=sd.plotter._plotter.linestyles
@@ -255,10 +259,14 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    sd.plotter._plotter = sd.plotter._newplotter()
 
 	    # The new toolbar
-	    if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
-		    sd.plotter._plotter.figmgr.sdplotbar=CustomToolbarTkAgg(figmgr=sd.plotter._plotter.figmgr)
+	    #if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
+	    #	    sd.plotter._plotter.figmgr.sdplotbar=CustomToolbarTkAgg(figmgr=sd.plotter._plotter.figmgr)
 
+	    # Set panel layout
+	    if layout != oldlayout: sd.plotter.set_panellayout(layout=layout,refresh=False)
+	    
             # Plotting
+	    asaplot=False
             if plottype=='pointing':
                     if plotfile != '': 
                            sd.plotter.plotpointing(s,plotfile)
@@ -270,8 +278,10 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     else:
                            sd.plotter.plotazel(s)
             elif plottype=='totalpower':
+		    asaplot=True
                     sd.plotter.plottp(s)
             else:
+		    asaplot=True
                     if s.nchan()==1:
                            errmsg="Trying to plot the continuum/total power data in 'spectra' mode,\
                                    please use other plottype options" 
@@ -450,26 +460,14 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                     # use doppler offset
                                     sd.plotter.plot_lines(linc,doppler=linedop)
 
-		    # List observation header
-		    # Get antena name
-		    antennaname=spave.get_antennaname()
-		    # Get an observed source list
-		    srclist=spave.get_sourcename()
-		    srcset=set([srclist[0]])
-		    for i in range(len(srclist)): srcset.add(srclist[i])
-		    comma_space=", "
-		    srcname=comma_space.join(list(srcset))
-		    # Get start date & time of observation
-		    obstime=spave.get_time(row=0)
-		    # Output strings
-		    headdata='Antenna: '+antennaname+\
-			      '\nStart time: '+str(obstime)+\
-			      '\nSource: '+srcname
-		    # Add Observation header to the upper-left corner of plot
-		    sd.plotter.figtext(0.03,0.98,headdata,
-					horizontalalignment='left',
-					verticalalignment='top',
-					fontsize=11)
+	    # List observation header
+	    if not plotstyle or layout==[]:
+		    # automatic layout
+		    sd.plotter._plotter.figure.subplots_adjust(top=0.8)
+	    datname='Data File:     '+sdfile
+	    sd.plotter.print_header(plot=(header and asaplot),fontsize=headsize,
+				    logger=True,selstr=ssel,extrastr=datname)
+	    del ssel, datname
 
             # Hardcopy
             if ( plottype in ['spectra','totalpower'] and plotfile != '' ):
@@ -494,12 +492,13 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    sd.plotter._panelling = oldpanel
 	    sd.plotter._stacking = oldstack
 	    sd.plotter._hist = oldhist
+	    sd.plotter._panellayout = oldlayout
 
 	    # Define Pick event
-	    if sd.plotter._visible:
-		    sd.plotter._plotter.register('button_press',None)
-		    if plottype=='spectra':
-			    sd.plotter._plotter.register('button_press',_event_switch)
+	    #if sd.plotter._visible:
+	    #	    sd.plotter._plotter.register('button_press',None)
+	    #	    if plottype=='spectra':
+	    #		    sd.plotter._plotter.register('button_press',_event_switch)
 
             # DONE
 
@@ -508,199 +507,3 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
 
-########################################
-##    Helper functions for sdplot     ##
-########################################
-### Add a custom toolbar to ASAP plotter
-class CustomToolbarTkAgg:
-	def __init__(self,figmgr=None):
-		if figmgr is None: return
-		self.figmgr=figmgr
-		self.custombar=None
-		self._add_custom_toolbar()
-
-	def _add_custom_toolbar(self):
-		self.custombar=Tk.Frame(master=self.figmgr.window)
-		self.bSpec=self._NewButton(master=self.custombar,
-				      text='spec value',
-				      command=self.spec_show)
-		self.bStat=self._NewButton(master=self.custombar,
-				      text='statistics',
-				      command=self.stat_cal)
-		self.bQuit=self._NewButton(master=self.custombar,
-				      text='Quit',
-				      command=self.quit,
-				      side=Tk.RIGHT)
-		self.custombar.pack(side=Tk.BOTTOM,fill=Tk.BOTH)
-
-		### temporary added
-		#self.bStat.config(state=Tk.DISABLED)
-		###
-		self.bSpec.config(relief='sunken')
-		self.bStat.config(relief='raised')
-		self.mode='spec'
-		self.spec_show()
-		return self
-
-	def _NewButton(self, master, text, command, side=Tk.LEFT):
-		if(os.uname()[0] == 'Darwin'):
-			b = Tk.Button(master=master, text=text, command=command)
-		else:
-			b = Tk.Button(master=master, text=text, padx=2, pady=2, command=command)
-		b.pack(side=side)
-		return b
-	
-	def spec_show(self):
-		self.figmgr.toolbar.set_message('spec value: drag on a spec')
-		if self.mode == 'spec': return
-		self.bStat.config(relief='raised')
-		self.bSpec.config(relief='sunken')
-		self.mode='spec'
-
-	def stat_cal(self):
-		self.figmgr.toolbar.set_message('statistics: select a region')
-		if self.mode == 'stat': return
-		self.bSpec.config(relief='raised')
-		self.bStat.config(relief='sunken')
-		self.mode='stat'
-
-	def quit(self):
-		self.delete_bar()
-		sd.plotter._plotter.unmap()
-
-	def delete_bar(self):
-		self.custombar.destroy()
-		self.custombar=None		
-
-### callback a function according to the selected mode. 
-def _event_switch(event):
-        # Do not fire event when in zooming/panning mode
-	if not sd.plotter._plotter.figmgr.toolbar.mode == '': return
-        # When selected point is out of panels
-        if event.inaxes == None:
-		return
-	# Now acutual callback
-	if sd.plotter._plotter.figmgr.sdplotbar.mode == 'stat':
-		_single_mask(event)
-	else: _select_spectrum(event)
-
-### select the nearest spectrum in pick radius
-###    and display spectral value on the toolbar. 
-def _select_spectrum(event):
-        # Do not fire event when in zooming/panning mode
-        mode = sd.plotter._plotter.figmgr.toolbar.mode
-        if not mode =='':
-		return
-        # When selected point is out of panels
-        if event.inaxes == None:
-		return
-        # If not left button
-        if event.button != 1:
-		return
-
-        xclick=event.xdata
-        yclick=event.ydata
-        dist2=1000.
-        pickline=None
-	# If the pannel has picable objects
-	pflag=False
-        for lin in event.inaxes.lines:
-		if not lin.pickable(): continue
-		pflag=True
-		flag,pind = lin.contains(event)
-		if not flag: continue
-		# Get nearest point
-		inds = pind['ind']
-		xlin = lin.get_xdata()
-		ylin = lin.get_ydata()
-		for i in inds:
-			d2=(xlin[i]-xclick)**2+(ylin[i]-yclick)**2
-			if dist2 >= d2:
-				dist2 = d2
-				pickline = lin
-	# No pickcable line in the pannel
-	if not pflag: return
-	# Pickable but too far from mouse position
-	elif pickline is None:
-		picked='No line selected.'
-		sd.plotter._plotter.figmgr.toolbar.set_message(picked)
-		return
-        del pind, inds, xlin, ylin
-	# Spectra are Picked
-	theplot=sd.plotter._plotter
-	thetoolbar = theplot.figmgr.toolbar
-	thecanvas = theplot.figmgr.canvas
-	# Disconnect the default motion notify event
-	# Notice! the other buttons are also diabled!!!
-	thecanvas.mpl_disconnect(thetoolbar._idDrag)
-        # Get picked spectrum
-        xdata = pickline.get_xdata()
-        ydata = pickline.get_ydata()
-        titl=pickline.get_label()
-        titp=event.inaxes.title.get_text()
-        panel0=event.inaxes
-	picked="Selected: '"+titl+"' in panel '"+titp+"'."
-	thetoolbar.set_message(picked)
-	# Generate a navigation window
-        #naviwin=Navigationwindow(titp,titl)
-        #------------------------------------------------------#
-        # Show spectrum data at mouse position
-        def spec_data(event):
-		# Getting spectrum data of neiboring point
-		xclick=event.xdata
-		if event.inaxes != panel0:
-			return
-		ipoint=len(xdata)-1
-		for i in range(len(xdata)-1):
-			xl=xclick-xdata[i]
-			xr=xclick-xdata[i+1]
-			if xl*xr <= 0.:
-				ipoint = i
-				break
-		# Output spectral value on the navigation window
-		posi='[ %s, %s ]:  x = %.2f   value = %.2f'\
-		      %(titl,titp,xdata[ipoint],ydata[ipoint])
-		#naviwin.posi.set(posi)
-		thetoolbar.set_message(posi)
-        #------------------------------------------------------#
-        # Disconnect from mouse events
-        def discon(event):
-		#naviwin.window.destroy()
-		theplot.register('motion_notify',None)
-		# Re-activate the default motion_notify_event
-		thetoolbar._idDrag=thecanvas.mpl_connect('motion_notify_event', thetoolbar.mouse_move)
-		theplot.register('button_release',None)
-		return
-        #------------------------------------------------------#
-        # Show data value along with mouse movement
-	theplot.register('motion_notify',spec_data)
-        # Finish events when mouse button is released
-        theplot.register('button_release',discon)
-
-
-### Calculate statistics of the selected area. 
-def _single_mask(event):
-	if event.button ==1: baseinv=True
-	elif event.button == 3: baseinv=False
-	else: return
-
-	def _calc_stats():
-		msk=mymask.get_mask()
-		mymask.scan.stats(stat='max',mask=msk)
-		mymask.scan.stats(stat='min',mask=msk)
-		mymask.scan.stats(stat='sum',mask=msk)
-		mymask.scan.stats(stat='mean',mask=msk)
-		mymask.scan.stats(stat='median',mask=msk)
-		mymask.scan.stats(stat='rms',mask=msk)
-		mymask.scan.stats(stat='stddev',mask=msk)
-
-	# Interactive mask definition
- 	mymask=sd.interactivemask(plotter=sd.plotter,scan=sd.plotter._data)
- 	# Create initial mask
- 	mymask.set_basemask(invert=baseinv)
-	# Inherit event
-	mymask.set_startevent(event)
-	# Set callback func
-	mymask.set_callback(_calc_stats)
-	# Selected mask
-	mymask.select_mask(once=True,showmask=False)

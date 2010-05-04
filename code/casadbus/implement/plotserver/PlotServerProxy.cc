@@ -37,7 +37,7 @@ namespace casa {
 	return args;
     }
 
-    PlotServerProxy::PlotServerProxy( ) : 
-		DBus::ObjectProxy( DBusSession::instance().connection( ), dbus::object("plot_server").c_str(), dbus::path("plot_server").c_str() ) { }
+  PlotServerProxy::PlotServerProxy( const std::string &name ) : 
+		DBus::ObjectProxy( DBusSession::instance().connection( ), dbus::object(name).c_str(), dbus::path(name).c_str() ) { }
 
 }

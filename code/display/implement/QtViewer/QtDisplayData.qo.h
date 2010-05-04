@@ -139,6 +139,7 @@ class QtDisplayData : public QObject {
   // Print statistics on image for given region.
   // Returns False if unable to do so. 
   virtual Bool printRegionStats(ImageRegion& imgReg);
+  virtual Bool printLayerStats(ImageRegion& imgReg);
   
 
   // Return the number of the spectral axis within the DD's original
@@ -279,6 +280,7 @@ class QtDisplayData : public QObject {
  
   void axisChanged(String, String, String);
   void axisChanged4(String, String, String, int);
+  void statsReady(const String&);
 
  protected slots:
   

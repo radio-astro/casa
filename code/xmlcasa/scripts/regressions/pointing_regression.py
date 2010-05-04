@@ -3,6 +3,7 @@ import time
 import regression_utility as regutl
 
 REGNAME    = "pointing";
+#MS         = "pointingSquintPointing.ms"
 MS         = "pointingtest.ms";
 MODELIMAGE = "pointingmodel50m.im";
 EPJTABLE   = "epjones2.tab";
@@ -15,6 +16,7 @@ TOTALTIME  = '*+1:0:0';  # Select only first 1hr worth of data to solve (keep ru
 EPS        = 1E-4;       # Logical "zero"
 
 TEMPLATEEPJ='template2.epj'; # The template EP-Jones table to check the results against.
+#TEMPLATEEPJ='template_twoaxis.epj';
 
 REPOSNAME  = os.environ.get('CASAPATH').split()[0]+"/data/regression/"+REGNAME+'/';
 #REPOSNAME  = 'DataRepos/';
@@ -22,9 +24,10 @@ REUSELOCALREPOS = False;
 #
 #--------------------------------------------------------------
 #
+MYMS      = THISHOME + MS;
+MYIMAGE   = THISHOME + MODELIMAGE;
+MYTEMPLATEEPJ = THISHOME + TEMPLATEEPJ;
 def pointing_reg():
-    MYMS      = THISHOME + MS;
-    MYIMAGE   = THISHOME + MODELIMAGE;
     if (REUSELOCALREPOS):
         os.system("rm -rf " + THISHOME+EPJTABLE);
     else:
@@ -32,6 +35,7 @@ def pointing_reg():
         os.mkdir(THISHOME);
         os.system("cp -r " + REPOSNAME+MS         + " " + MYMS);
         os.system("cp -r " + REPOSNAME+MODELIMAGE + " " + MYIMAGE);
+        os.system("cp -r " + REPOSNAME+TEMPLATEEPJ + " " + MYTEMPLATEEPJ);
 
     cb.open(MYMS);
     
@@ -48,19 +52,22 @@ def pointing_reg():
     cb.solve();
 #
 #--------------------------------------------------------------
-# The objective truth!
-#
-tb.open(REPOSNAME+TEMPLATEEPJ);
-tmp_sol=tb.getcol('GAIN');
-tb.close();
-#
-#--------------------------------------------------------------
 #
 try:
     startTime = time.time();
     startProc = time.clock();
     regstate = False;
+#
+#--------------------------------------------------------------
+# Run the solver (and generate the subjective truth)
     pointing_reg();
+#
+#--------------------------------------------------------------
+# The objective truth!
+#
+    tb.open(MYTEMPLATEEPJ);
+    tmp_sol=tb.getcol('GAIN');
+    tb.close();
     endTime = time.time();
     endProc = time.clock();
     #
@@ -75,7 +82,8 @@ try:
     # Get the statistics
     #
     nt=this_sol.shape[2];
-    dsol=tmp_sol[[0,1],0,0:nt]-this_sol[[0,1],0,0:nt];
+#    dsol=tmp_sol[[0,1],0,0:nt]-this_sol[[0,1],0,0:nt];
+    dsol=tmp_sol[[0,2],0,0:nt]-this_sol[[0,2],0,0:nt];
     dMax=dsol.max();
     dMin=dsol.min();
     dVar=dsol.var();

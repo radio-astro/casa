@@ -25,7 +25,6 @@
 //#
 //# $Id: $
 #include <casaqt/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h>
-#include <casaqt/QtPlotServer/QtPlotServer.qo.h>
 #include <casaqt/QtPlotServer/QtPlotSvrPanel.qo.h>
 
 namespace casa {
@@ -34,10 +33,6 @@ namespace casa {
 
     QtDBusPlotSvrAdaptor::~QtDBusPlotSvrAdaptor( ) { }
 
-
-    const QString &QtDBusPlotSvrAdaptor::name( ) {
-	return QtPlotServer::name( );
-    }
 
     QDBusVariant QtDBusPlotSvrAdaptor::panel( const QString &title, const QString &xlabel, const QString &ylabel,
 					      const QString &window_title, const QString &legend, bool hidden ) {
@@ -62,7 +57,7 @@ namespace casa {
 	if ( panel_id != 0 && managed_panels.find( panel_id ) == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel_id );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
+	    return error(QString("panel '") + buf + "' not found");
 	}
 
 	panel_desc *paneldesc = 0;
@@ -91,7 +86,7 @@ namespace casa {
 	if ( panel_id != 0 && managed_panels.find( panel_id ) == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel_id );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
+	    return error(QString("panel '") + buf + "' not found");
 	}
 
 	panel_desc *paneldesc = 0;
@@ -114,6 +109,34 @@ namespace casa {
 	return QDBusVariant(QVariant(data_id));
     }
 
+    QDBusVariant QtDBusPlotSvrAdaptor::histogram( const QList<double> &values, int bins, const QString &color, const QString &label, int panel_id ) {
+
+	if ( panel_id != 0 && managed_panels.find( panel_id ) == managed_panels.end( ) ) {
+	    char buf[50];
+	    sprintf( buf, "%d", panel_id );
+	    return error(QString("panel '") + buf + "' not found");
+	}
+
+	panel_desc *paneldesc = 0;
+
+	if ( panel_id == 0 ) {
+	    if ( managed_panels.size( ) == 0 ) {
+		QtPlotSvrPanel *panel = server->panel( "", "bottom" );
+		panel_id = get_id(panel);					// adds it to the map of managed panels
+		paneldesc = managed_panels.find( panel_id )->second;
+	    } else {
+		paneldesc = managed_panels.begin( )->second;
+	    }
+	} else {
+	    paneldesc = managed_panels.find( panel_id )->second;
+	}
+
+	QwtPlotItem *plot = paneldesc->panel( )->histogram( values, bins, color, label );
+	int data_id = get_id(paneldesc->panel( ),plot);
+	paneldesc->data( ).push_back(data_id);
+	return QDBusVariant(QVariant(data_id));
+    }
+
     QDBusVariant QtDBusPlotSvrAdaptor::erase( int data ) {
 	if ( data == 0 ) {
 	    for ( datamap::iterator iter = managed_datas.begin();
@@ -132,7 +155,7 @@ namespace casa {
 	    if ( paneliter == managed_panels.end( ) ) {
 		char buf[50];
 		sprintf( buf, "%d", data );
-		return QDBusVariant(QVariant(QString("*error* data (or panel) '") + buf + "' not found"));
+		return error(QString("data (or panel) '") + buf + "' not found");
 	    } else {
 		// fish through the data assigned to this panel and erase these plots...
 		std::list<int> &datas = paneliter->second->data( );
@@ -163,7 +186,7 @@ namespace casa {
 	if ( panel_id != 0 && managed_panels.find( panel_id ) == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel_id );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
+	    return error(QString("panel '") + buf + "' not found");
 	}
 
 	panel_desc *paneldesc = 0;
@@ -195,7 +218,7 @@ namespace casa {
 
 	panelmap::iterator iter = managed_panels.find( panel );
 	if ( iter == managed_panels.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	    return error(QString("could now find requested panel"));
 	}
 
 	iter->second->panel( )->hide( );
@@ -212,7 +235,7 @@ namespace casa {
 
 	panelmap::iterator iter = managed_panels.find( panel );
 	if ( iter == managed_panels.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	    return error(QString("could now find requested panel"));
 	}
 
 	iter->second->panel( )->show( );
@@ -228,7 +251,7 @@ namespace casa {
 
 	panelmap::iterator iter = managed_panels.find( panel );
 	if ( iter == managed_panels.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	    return error(QString("could now find requested panel"));
 	}
 
 	// fish through the data assigned to this panel and remove
@@ -262,7 +285,7 @@ namespace casa {
 
 	panelmap::iterator iter = managed_panels.find( panel );
 	if ( iter == managed_panels.end( ) ) {
-	    return QDBusVariant(QVariant("*error* could now find requested panel"));
+	    return error(QString("could now find requested panel"));
 	}
 
 	release( iter );
@@ -339,7 +362,7 @@ namespace casa {
 	return index;
     }
 
-    int QtDBusPlotSvrAdaptor::get_id( QtPlotSvrPanel *panel, QwtPlotCurve *data ) {
+    int QtDBusPlotSvrAdaptor::get_id( QtPlotSvrPanel *panel, QwtPlotItem *data ) {
       
 	for ( datamap::iterator iter = managed_datas.begin(); iter != managed_datas.end(); ++iter ) {
 	    if ( iter->second->data() == data )
@@ -350,27 +373,6 @@ namespace casa {
 	data_desc *dd = new data_desc(index, panel, data );
 	managed_datas.insert(datamap::value_type(index, dd));
 	return index;
-    }
-
-
-    bool QtDBusPlotSvrAdaptor::connectToDBus() {
-
-	bool dbusRegistered = false;
-
-	if( dbusRegistered || serviceIsAvailable(dbusServiceName()) )
-	    return false;
-
-	try {
-	    // Register service and object.
-	    QObject *xparent = parent();
-	    dbusRegistered = connection().isConnected() &&
-			     connection().registerService(dbusServiceName()) &&
-			     connection().registerObject(dbusObjectName(), xparent,
-							 QDBusConnection::ExportAdaptors);
-
-	} catch(...) { dbusRegistered = false; }
-
-	return dbusRegistered;
     }
 
 }

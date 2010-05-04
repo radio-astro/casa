@@ -35,7 +35,9 @@ known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 2.3.1 (build #6826)",
                   "CASA Version 2.4.0 (build #8115)",
                   "CASA Version 3.0.0 (r9861)", # for Mac...
-                  "CASA Version 3.0.0 (r9888)"] # for Linux...
+                  "CASA Version 3.0.0 (r9888)", # for Linux...
+                  "CASA Version 3.0.1 (r11099)"]
+
 
 exclude_host = []
 exclude_test = {}
@@ -418,6 +420,9 @@ class report:
                 a += len('(r')
                 b = latest_on_stable.find(')', a)
                 revision = latest_on_stable[a:b]
+                if len(revision) < 1:
+                    raise Exception, "Could not parse revision number '%s'" \
+                          % (latest_on_stable)
             else:
                 a = latest_on_stable.find('build #')
                 if a >=0:
@@ -1310,33 +1315,58 @@ class report:
         #
         #  Convert logfiles in a list of dictionaries
         #
-        #alllogs=os.listdir(result_dir)
 
-        find_cmd = 'find '+result_dir+' -name result\*.txt'
-        findout = commands.getoutput(find_cmd)
-        alllogs = ['']
-        if(findout != ''):
-            alllogs=findout.split('\n')
-
-        print "Parsing %s logfiles..." % str(len(alllogs))
-        # It takes some time, seems to be dominated by i/o
+        # Read from a single (monolithic) file of concatenated logfiles?
+        monofile = result_dir + "/../all-result.txt"
+        mono = os.path.exists(monofile)
         
-        #print alllogs
+        if mono:
+            fd = open(monofile)
+            line = fd.readline().rstrip()
+            print "Parsing monolithic logfile, %s..." % (monofile)
+
+        else:
+            # ... or recursively find all log files
+            # This is very expensive in I/O when there are
+            # ~10,000 to ~100,000 small log files
+            find_cmd = 'find '+result_dir+' -name result\*.txt'
+            findout = commands.getoutput(find_cmd)
+            alllogs = ['']
+            if(findout != ''):
+                alllogs=findout.split('\n')
+
+            log_index = 0
+            print "Parsing %s logfiles..." % str(len(alllogs))
+
+            #print alllogs
 
         data = []
         i = 0
-        for logfile in alllogs:
+        while True:
+            if mono:
+                if line:
+                    logfile = line
+                else:
+                    break
+            else:
+                if log_index < len(alllogs):
+                    logfile = alllogs[log_index]
+                    log_index += 1
+                    fd = open(logfile, "r")
+                else:
+                    break
+
             i += 1
             if (i % 100) == 0:
                 sys.stdout.write('.')
                 sys.stdout.flush()
             #print "match:", logfile
-            fd = open(logfile, "r")
+
             data_file = {}
             lineno = 0
             line = fd.readline().rstrip() ; lineno += 1
             data_file['logfile'] = logfile.split(result_dir)[1].lstrip('/')
-            while line:
+            while line and (len(line) == 0 or line[0] != "/"):
                 #print line
 
                 # workarounds for casapyinfo not returning
@@ -1369,10 +1399,10 @@ class report:
                 data_file[k] = v
                 
                 # next line
-                line = fd.readline().rstrip()
-                lineno += 1
-                
-            fd.close()
+                line = fd.readline().rstrip() ; lineno += 1
+
+            if not mono:
+                fd.close()
 
             # Test for mandatory entries' existence
             is_valid = True

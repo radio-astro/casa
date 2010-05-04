@@ -476,12 +476,16 @@ Bool SkyCompRep::ok() const {
   return True;
 }
 
-void SkyCompRep::fromPixel (Double& facToJy, const Vector<Double>& parameters,
-                            const Unit& brightnessUnitIn,
-                            const Vector<Quantum<Double> >& restoringBeam,
-                            const CoordinateSystem& cSys,
-                            ComponentType::Shape componentShape,
-                            Stokes::StokesTypes stokes)
+
+
+void SkyCompRep::fromPixel (
+		Double& facToJy, const Vector<Double>& parameters,
+		const Unit& brightnessUnitIn,
+        const Vector<Quantum<Double> >& restoringBeam,
+        const CoordinateSystem& cSys,
+        ComponentType::Shape componentShape,
+        Stokes::StokesTypes stokes
+) {
 // 
 // pars(0) = Flux    Jy
 // pars(1) = x cen   abs pix
@@ -490,7 +494,6 @@ void SkyCompRep::fromPixel (Double& facToJy, const Vector<Double>& parameters,
 // pars(4) = minor   pix
 // pars(5) = pa radians
 //
-{
    LogIO os(LogOrigin("SkyCompRep", "fromPixel()"));
       
 // Find DirectionCoordinate
@@ -595,12 +598,10 @@ void SkyCompRep::fromPixel (Double& facToJy, const Vector<Double>& parameters,
    setSpectrum(constSpec);
 }
 
-
-
 Vector<Double> SkyCompRep::toPixel (const Unit& brightnessUnitOut,
                                     const Vector<Quantum<Double> >& restoringBeam,
                                     const CoordinateSystem& cSys,
-                                    Stokes::StokesTypes stokes) const
+                                    Stokes::StokesTypes stokes)
 //  
 // pars(0) = FLux     Jy
 // pars(1) = x cen    abs pix
@@ -639,7 +640,7 @@ Vector<Double> SkyCompRep::toPixel (const Unit& brightnessUnitOut,
 // Define /beam and /pixel units.
 
       Bool integralInJy = True;
-      Unit brightnessUnits = SkyCompRep::defineBrightnessUnits(os, brightnessUnitOut, dirCoord,
+      Unit brightnessUnits = defineBrightnessUnits(os, brightnessUnitOut, dirCoord,
                                                                restoringBeam, integralInJy);
                                               
 // Get Flux (integral) for particular Stokes. 
@@ -678,65 +679,60 @@ Vector<Double> SkyCompRep::toPixel (const Unit& brightnessUnitOut,
    return parameters;
 }   
    
+Unit SkyCompRep::defineBrightnessUnits (
+		LogIO& os, const Unit& brightnessUnitIn,
+		const DirectionCoordinate& dirCoord,
+		const Vector<Quantum<Double> >& restoringBeam,
+		Bool integralIsJy
+) {
+	Unit unitOut = brightnessUnitIn;
 
+	// Define "pixel" units
 
-Unit SkyCompRep::defineBrightnessUnits (LogIO& os, 
-                                        const Unit& brightnessUnitIn,
-                                        const DirectionCoordinate& dirCoord,
-                                        const Vector<Quantum<Double> >& restoringBeam,
-                                        Bool integralIsJy)
-{
-   Unit unitOut = brightnessUnitIn;
-              
-// Define "pixel" units 
-                  
-   Vector<Double> inc;
-   Vector<String> units(2); 
-   units.set("rad");
-   DirectionCoordinate dirCoord2(dirCoord);
-   dirCoord2.setWorldAxisUnits(units);
-   inc = dirCoord2.increment();
-   UnitMap::putUser("pixel", UnitVal(abs(inc(0)*inc(1)), String("rad2")));
+	Vector<String> units(2);
+	units.set("rad");
+	DirectionCoordinate dirCoord2(dirCoord);
+	dirCoord2.setWorldAxisUnits(units);
+	Vector<Double> inc = dirCoord2.increment();
+	UnitMap::putUser("pixel", UnitVal(abs(inc(0)*inc(1)), String("rad2")));
 
-// Define "beam" units if needed
+	// Define "beam" units if needed
 
-   if (unitOut.getName().contains("beam")) {
-      if (restoringBeam.nelements()==3) {
-         Vector<Quantum<Double> > rB = restoringBeam.copy();
-         Double fac = C::pi / 4.0 / log(2.0) * rB(0).getValue(Unit("rad")) * rB(1).getValue(Unit("rad"));
-         UnitMap::putUser("beam", UnitVal(fac,String("rad2")));
-      } else {
-         os << LogIO::WARN
-            << "No restoring beam defined even though the image brightness units contain a beam"
-            << endl << "Assuming the restoring beam is one pixel" << LogIO::POST;
-         UnitMap::putUser("beam", UnitVal(abs(inc(0)*inc(1)), String("rad2")));
-      }
-   }
+	if (unitOut.getName().contains("beam")) {
+		if (restoringBeam.nelements()==3) {
+			Vector<Quantum<Double> > rB = restoringBeam.copy();
+			Double fac = C::pi / 4.0 / log(2.0) * rB(0).getValue(Unit("rad")) * rB(1).getValue(Unit("rad"));
+			UnitMap::putUser("beam", UnitVal(fac,String("rad2")));
+		}
+		else {
+			throw AipsError("No beam defined even though the image brightness units are " + unitOut.getName());
+		}
+	}
 
-// We must tell the old unit that it has been redefined
-        
-   unitOut = Unit(unitOut.getName());
-     
-// Check integral units
+	// We must tell the old unit that it has been redefined
 
-   if (integralIsJy) {
-     if (unitOut.empty()) {
-        unitOut = Unit("Jy/pixel"); 
-        os << LogIO::WARN << "There are no image brightness units, assuming Jy/pixel" << LogIO::POST;
-        unitOut = Unit("Jy/pixel");
-     } else {
-        Quantum<Double> t0(1.0, unitOut);
-        Quantum<Double> t1(1.0, Unit("rad2"));
-        Quantum<Double> t2 = t0 * t1;
-        if (!t2.isConform(Unit("Jy"))) {
-           os << LogIO::WARN << "The image units '" << unitOut.getName() << "' are not consistent " << endl;
-           os << "with Jy when integrated over the sky.  Assuming Jy/pixel" << LogIO::POST;
-           unitOut = Unit("Jy/pixel");
-        }
-     }
-   }
-//
-   return unitOut;
+	unitOut = Unit(unitOut.getName());
+
+	// Check integral units
+
+	if (integralIsJy) {
+		if (unitOut.empty()) {
+			unitOut = Unit("Jy/pixel");
+			os << LogIO::WARN << "There are no image brightness units, assuming Jy/pixel" << LogIO::POST;
+			unitOut = Unit("Jy/pixel");
+		} else {
+			Quantum<Double> t0(1.0, unitOut);
+			Quantum<Double> t1(1.0, Unit("rad2"));
+			Quantum<Double> t2 = t0 * t1;
+			if (!t2.isConform(Unit("Jy"))) {
+				os << LogIO::WARN << "The image units '" << unitOut.getName() << "' are not consistent " << endl;
+				os << "with Jy when integrated over the sky.  Assuming Jy/pixel" << LogIO::POST;
+				unitOut = Unit("Jy/pixel");
+			}
+		}
+	}
+	//
+	return unitOut;
 }  
 
 void SkyCompRep::undefineBrightnessUnits()
@@ -745,8 +741,6 @@ void SkyCompRep::undefineBrightnessUnits()
    UnitMap::removeUser("pixel");
    UnitMap::clearCache();
 }          
-
-
 
 Quantum<Double> SkyCompRep::peakToIntegralFlux (const DirectionCoordinate& dirCoord,
                                                 ComponentType::Shape componentShape,
@@ -794,57 +788,58 @@ Quantum<Double> SkyCompRep::peakToIntegralFlux (const DirectionCoordinate& dirCo
    return fluxIntegral;
 }
 
+Quantity SkyCompRep::integralToPeakFlux (
+		const DirectionCoordinate& dirCoord,
+		ComponentType::Shape componentShape,
+		const Quantity& integralFlux,
+		const Unit& brightnessUnit,
+		const Quantity& majorAxis,
+		const Quantity& minorAxis,
+		const Vector<Quantity>& restoringBeam
+) {
+	LogIO os(LogOrigin("SkyCompRep", "integralToPeakFlux()"));
+	Quantity tmp(integralFlux);
+	if (tmp.isConform(Unit("Jy"))) {
+		tmp.convert("Jy");
+	}
+	else {
+		os << "Cannot convert units of Flux integral (" + integralFlux.getUnit() + ") to Jy"
+				<< LogIO::EXCEPTION;
+	//	tmp.setUnit(Unit("Jy"));
+	}
 
-Quantum<Double> SkyCompRep::integralToPeakFlux (const DirectionCoordinate& dirCoord,
-                                                ComponentType::Shape componentShape,
-                                                const Quantum<Double>& integralFlux,
-                                                const Unit& brightnessUnit,                     
-                                                const Quantum<Double>& majorAxis,
-                                                const Quantum<Double>& minorAxis,
-                                                const Vector<Quantum<Double> >& restoringBeam)
-{
-   LogIO os(LogOrigin("SkyCompRep", "integralToPeakFlux()"));
-      
-// Define /beam and /pixel units.
+	// Define /beam and /pixel units.
 
-   Bool integralIsJy = True;
-   Unit unitIn = SkyCompRep::defineBrightnessUnits(os, brightnessUnit, dirCoord,
-                                                   restoringBeam, integralIsJy);
-      
-// Convert integral to Jy
+	Bool integralIsJy = True;
+	Unit unitIn = SkyCompRep::defineBrightnessUnits(os, brightnessUnit, dirCoord,
+			restoringBeam, integralIsJy);
 
-   Quantum<Double> tmp(integralFlux);
-   if (tmp.isConform(Unit("Jy"))) {
-      tmp.convert("Jy");
-   } else {
-      os << LogIO::SEVERE << "Cannot convert units of Flux integral to Jy - will assume Jy"
-         << LogIO::POST;
-      tmp.setUnit(Unit("Jy"));
-   }   
+	// Convert integral to Jy
 
-// Now scale
 
-   if (componentShape==ComponentType::GAUSSIAN) {  
-      tmp.scale(4.0 * log(2.0) / C::pi);
-   } else if (componentShape==ComponentType::DISK) { 
-      tmp.scale(1.0 / C::pi);
-   } else {
-     os << "Unrecognized shape for flux density conversion" << LogIO::EXCEPTION;
-   }
+	// Now scale
 
-// And divide out shape
+	if (componentShape==ComponentType::GAUSSIAN) {
+		tmp.scale(4.0 * log(2.0) / C::pi);
+	} else if (componentShape==ComponentType::DISK) {
+		tmp.scale(1.0 / C::pi);
+	} else {
+		os << "Unrecognized shape for flux density conversion" << LogIO::EXCEPTION;
+	}
 
-   Quantum<Double> peakFlux;
-   Quantum<Double> majorAxis2(majorAxis);
-   Quantum<Double> minorAxis2(minorAxis);
-   majorAxis2.convert(Unit("rad"));
-   minorAxis2.convert(Unit("rad"));
-   peakFlux = tmp / majorAxis2 / minorAxis2;
-   peakFlux.convert(unitIn);
-//
-   SkyCompRep::undefineBrightnessUnits();
-//
-   return peakFlux;
+	// And divide out shape
+
+	Quantity peakFlux;
+	Quantity majorAxis2(majorAxis);
+	Quantity minorAxis2(minorAxis);
+	majorAxis2.convert(Unit("rad"));
+	minorAxis2.convert(Unit("rad"));
+	peakFlux = tmp / majorAxis2 / minorAxis2;
+	peakFlux.convert(unitIn);
+	//
+	SkyCompRep::undefineBrightnessUnits();
+	//
+	return peakFlux;
 }
 
 

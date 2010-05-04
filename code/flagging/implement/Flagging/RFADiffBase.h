@@ -27,14 +27,14 @@
 #ifndef FLAGGING_RFADIFFBASE_H
 #define FLAGGING_RFADIFFBASE_H
 
-#include <casa/Arrays/LogiVector.h>
-#include <casa/Containers/RecordInterface.h>
 #include <flagging/Flagging/RFAFlagCubeBase.h> 
 #include <flagging/Flagging/RFDataMapper.h> 
-#include <flagging/Flagging/RFCubeLattice.h>
+#include <flagging/Flagging/RFFloatLattice.h>
 #include <flagging/Flagging/RFRowClipper.h>
 #include <flagging/Flagging/RFDebugPlot.h>
 #include <scimath/Mathematics/MedianSlider.h> 
+#include <casa/Arrays/LogiVector.h>
+#include <casa/Containers/RecordInterface.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -123,7 +123,7 @@ protected:
   Bool   disable_row_clip; // flag: row clipping _disabled_ globally
   Bool   clipping_rows;    // flag: row clipping active for this chunk
   
-  RFCubeLattice<Float>   diff;   // (Nchan,Nifr,Nt) lattice of deviations
+  RFFloatLattice diff;   // (Nchan,Nifr,Nt) cube of deviations
   FlagCubeIterator *     pflagiter; // flag iterator used by setDiff()
   RFRowClipper          rowclipper;
   

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the MS statitics task                         -->
+
+<task type="function" name="msmoments" category="ms analysis">
+<shortdescription>Compute moments from an MS</shortdescription>
+
+<description>
+</description>
+
+<input>
+    <param type="string" name="msname" kind="ms" mustexist="true" >
+    	<description>Name of the input MS data</description>
+    	<value></value>
+        <example>msname='OrionS_rawACSmod'</example>
+    </param>
+
+    <param type="intArray" name="moments">
+        <description>List of moments you want to compute</description>
+        <value>0</value>
+    </param>
+    <param type="any" name="antenna">
+        <description>antenna name or id</description>
+        <any type="variant" limittype="int string"/>
+        <value type="string"></value>
+    </param>
+    <param type="any" name="field">
+        <description>field name or id</description>
+        <any type="variant" limittype="int string"/>
+        <value type="string"></value>
+    </param>
+    <param type="any" name="spw">
+        <description>spectral window id</description>
+        <any type="variant" limittype="int string"/>
+        <value type="string"></value>
+    </param>
+<!--
+    <param type="string" name="mask" >
+	<description>Select the channel(spectral) range</description>
+    	<value></value>
+	<example>1.4126GHz~1.428GHz  # between 2 frequency</example>
+	<example>1.4km/s             # above the given velocity</example>
+        <example>!1~5                # Select all but the range of channel numbers</example>
+    </param>
+
+    <param type="string" name="stokes">
+	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
+	    <value></value>
+	    <example>stokes=&quot;IQ&quot;</example>
+	    <example>stokes=&quot;RR,LL&quot;</example>
+    </param>
+-->
+
+    <param type="any" name="includemask">
+    	<description>Range of rows to include</description>
+	<any type="variant" limittypes="double doubleArray"/>
+	<value type="double">-1</value>
+    </param>
+
+    <param type="any" name="excludemask">
+    	<description>Range of rows to exclude</description>
+	<any type="variant" limittypes="double doubleArray"/>
+	<value type="double">-1</value>
+    </param>
+
+    <param type="string" name="outfile">
+	    <description>Output file name (or root for multiple moments) </description>
+	<value></value>
+    </param>
+
+    <param type="bool" name="overwrite">
+       <description>Overwrite existing output files</description>
+       <value>False</value>
+    </param>     
+
+</input>
+<returns type="void"/>
+
+<example>
+	The spectral moment distributions at each row in input MS are
+	determined. Input MS must have FLOAT_DATA column, i.e. 
+        autocorrelation data.  
+        See the cookbook and User Reference Manual for
+	mathematical details.
+
+	The main control of the calculation is given by parameter
+	moments:
+	
+        moments=-1  - mean value of the spectrum
+	moments=0   - integrated value of the spectrum
+	moments=1   - intensity weighted coordinate;traditionally used to get 
+		      'velocity fields'
+   	moments=2   - intensity weighted dispersion of the coordinate; traditionally
+		      used to get &quot;velocity dispersion&quot;
+	moments=3   - median of I
+	moments=4   - median coordinate
+	moments=5   - standard deviation about the mean of the spectrum
+	moments=6   - root mean square of the spectrum
+	moments=7   - absolute mean deviation of the spectrum
+	moments=8   - maximum value of the spectrum
+	moments=9   - coordinate of the maximum value of the spectrum
+	moments=10  - minimum value of the spectrum
+	moments=11  - coordinate of the minimum value of the spectrum
+
+        Note that includemask and excludemask cannot set simultaneously. 
+
+	Keyword arguments:
+	msname -- Name of input MS data
+		default: none; example: msname=&quot;OrionS_rawACSmod&quot;
+	moments -- List of moments you would like to compute
+		default: 0 (integrated spectrum);example: moments=[0,1]
+		see list above
+	antenna -- antenna name or id that the user wants to compute moments
+		default: '' (all antennae)
+	field -- field name or id that the user wants to compute moments
+		default: '' (all fields)
+	spw -- spectral window id that the user wants to compute moments
+		default: '' (all spectral windows)
+<!--
+        mask - - Mask applied to the image before calculating the moments.
+                Default &quot;&quot; means no mask;  
+                Example: mask=&quot;orion.mask&quot;.  
+
+                Full description of the syntax can be found at
+                http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series
+	stokes - - Stokes parameters to analyze.
+                Default: none (all); Example: stokes=&quot;IQUV&quot;;  
+                                     Example:stokes=&quot;I,Q&quot;
+                Options: &quot;I&quot;,&quot;Q&quot;,&quot;U&quot;,&quot;V&quot;,&quot;RR&quot;,&quot;RL&quot;,&quot;LR&quot;,&quot;LL&quot;,&quot;XX&quot;,&quot;YX&quot;,&quot;XY&quot;,&quot;YY&quot;, ...
+-->
+	includemask -- List of masks to include
+		default: [-1] (include all channels); example=[2,100]
+	excludemask -- List of masks to exclude
+		default: [-1] (don&quot;t exclude channels); example=[100,200]
+	outfile -- Output MS file name (or root for multiple moments)
+		default: &quot;&quot; (input+auto-determined suffix);example: outfile=&quot;source_moment&quot;
+        overwrite -- Overwrite existing output files
+                default: false
+
+        Example for finding the 1-momment, intensity-weighted
+        coordinate, often used for finding velocity fields.
+        msmoments( msname=&quot;mydata&quot;, moment=1, outfile=&quot;velocityfields&quot; )
+
+</example>
+
+</task>
+
+</casaxml>

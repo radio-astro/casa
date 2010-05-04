@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, polaverage, outfile, outform, overwrite):
+def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
 
         casalog.origin('sdcoadd')
 
@@ -172,14 +172,20 @@ def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppl
             
             # Average in time if desired
             if ( timeaverage ):
-                stave=sd.average_time(merged,weight='tintsys')
+                if tweight=='none':
+                    errmsg = "Please specify weight type of time averaging"
+                    raise Exception,errmsg
+                stave=sd.average_time(merged,weight=tweight)
                 #print "Averaged scans in time"
                 casalog.post( "Averaged scans in time" )
                 # Now average over polarizations;Tsys-weighted (1/Tsys**2) average
                 if ( polaverage ):
+                    if pweight=='none':
+                        errmsg = "Please specify weight type of polarization averaging"
+                        raise Exception,errmsg
                     np = stave.npol()
                     if ( np > 1 ):
-                        spave=stave.average_pol(weight='tsys')
+                        spave=stave.average_pol(weight=pweight)
                         #print "Averaged polarization"
                         casalog.post( "Averaged polarization" )
                     else:
@@ -192,19 +198,28 @@ def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppl
 
                 del stave
             else:
+                if ( scanaverage ):
+                    # scan average if the input is a scantable
+                    stave=sd.average_time(merged,scanav=True)
+                else:
+                    stave=merged.copy()
                 if ( polaverage ):
-                    np = merged.npol()
+                    np = stave.npol()
+                    if pweight=='none':
+                        errmsg = "Please specify weight type of polarization averaging"
+                        raise Exception,errmsg
                     if ( np > 1 ):
-                        spave=merged.average_pol(weight='tsys')
+                        spave=stave.average_pol(weight=pweight)
                         #print "Averaged polarization"
                         casalog.post( "Averaged polarization" )
                     else:
                         # only single polarization
                         #print "Single polarization data - no need to average"
                         casalog.post( "Single polarization data - no need to average" )
-                        spave=merged.copy()
+                        spave=stave.copy()
                 else:
-                    spave=merged.copy()
+                    spave=stave.copy()
+                del stave
             
             #if outfile=='':
             #    outfile=sdfilelist[0]+'_coadd'

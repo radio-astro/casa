@@ -26,6 +26,9 @@
 //#
 //# $Id: QtPlotServer.qo.h,v 1.7 2006/10/10 21:42:05 dking Exp $
 
+#ifndef QTDBUSPLOTSERVER_QO_H_
+#define QTDBUSPLOTSERVER_QO_H_
+
 #include <QObject>
 
 
@@ -38,7 +41,7 @@ namespace casa {
     Q_OBJECT
 	public:
 
-	    QtPlotServer( );
+	    QtPlotServer( const char *dbus_name=0 );
 	    ~QtPlotServer( );
 
 	    // name used to initialize connection to dbus
@@ -49,8 +52,11 @@ namespace casa {
 
 	private:
 	    static QString name_;
+	    QString dbus_name_;
 	    QtDBusPlotSvrAdaptor* dbus_;
 
   };
 
 }
+
+#endif

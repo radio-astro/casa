@@ -36,12 +36,16 @@ namespace casa {
 // PLOTMSEXPORTTHREAD DEFINITIONS //
 ////////////////////////////////////
 
-PlotMSExportThread::PlotMSExportThread(PlotMSPlot* plot,
-        const PlotExportFormat& format, PMSPTMethod postThreadMethod,
-        PMSPTObject postThreadObject) :
-        PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
-        postThreadMethod, postThreadObject), itsPlot_(plot),
-        itsFormat_(format), itsHelper_(new PlotMSExportThreadHelper(*this)) {
+PlotMSExportThread::PlotMSExportThread(
+		PlotMSPlot* plot, const PlotExportFormat& format, bool interactive,
+		PMSPTMethod postThreadMethod, PMSPTObject postThreadObject
+	)
+	: PlotMSThread(
+			plot->parent()->getPlotter()->getProgressWidget(),
+			postThreadMethod, postThreadObject
+		), itsPlot_(plot), itsFormat_(format), _interactive(interactive),
+		itsHelper_(new PlotMSExportThreadHelper(*this))
+{
     if(plot != NULL) {
         vector<PlotCanvasPtr> canvases = plot->canvases();
         itsOperations_.resize(canvases.size());
@@ -138,16 +142,18 @@ void PlotMSExportThread::threadFinished() {
     itsMutex_.lock();
     
     finalizeProgressWidget();
-    
-    if(itsHelper_->itsExportResult_)
-        itsPlot_->parent()->getPlotter()->showMessage(
+    if(_interactive) {
+    	if(itsHelper_->itsExportResult_) {
+    		itsPlot_->parent()->getPlotter()->showMessage(
                 "Successfully exported plot to " + itsFormat_.location + "!",
                 "Export Success");
-    else
-        itsPlot_->parent()->getPlotter()->showError(
+    	}
+    	else {
+    		itsPlot_->parent()->getPlotter()->showError(
                 "There was a problem exporting to file " + itsFormat_.location+
                 "!", "Export Error", false);
-    
+    	}
+    }
     itsMutex_.unlock();
     
     emit finishedOperation(this);

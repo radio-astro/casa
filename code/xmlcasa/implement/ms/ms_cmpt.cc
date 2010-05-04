@@ -41,6 +41,7 @@
 #include <ms/MeasurementSets/MSConcat.h>
 #include <ms/MeasurementSets/MSFlagger.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+#include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
 #include <casa/Arrays/Vector.h>
@@ -294,7 +295,14 @@ ms::command(const std::string& msfile, const std::string& command, const bool no
 */
 
 bool
-ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac::variant& field, const ::casac::variant& spw, const int nchan, const int start, const int width, const ::casac::variant& baseline, const std::string& time, const ::casac::variant& scan, const ::casac::variant& uvrange, const std::string& taql,const bool writesyscal, const bool multisource, const bool combinespw, const bool writestation)
+ms::tofits(const std::string& fitsfile, const std::string& column,
+           const ::casac::variant& field, const ::casac::variant& spw,
+           const int nchan, const int start, const int width,
+           const ::casac::variant& baseline, const std::string& time,
+           const ::casac::variant& scan, const ::casac::variant& uvrange,
+           const std::string& taql, const bool writesyscal,
+           const bool multisource, const bool combinespw,
+           const bool writestation, const bool padwithflags)
 {
   Bool rstat(True);
   try{
@@ -339,7 +347,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
 	 subselect = mssSetData(*itsMS, *mssel, "", timeS, baselineS, fieldS,
 				  spwS, uvrangeS, taqlS, "", scanS);
 
-         if(subselect && mssel->nrow()< itsMS->nrow()){
+         if(subselect && mssel->nrow() < itsMS->nrow()){
 	   if(mssel->nrow()==0){
 	     if(!mssel)
 	       delete mssel; 
@@ -364,7 +372,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
  
          if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
                                           inchan, iwidth, writesyscal,
-                                          multisource, combinespw, writestation)) {
+                                          multisource, combinespw,
+                                          writestation, 1.0, padwithflags)) {
            *itsLog << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
            rstat = False;
          }
@@ -391,7 +400,12 @@ ms::summary(::casac::record& header, const bool verbose)
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
        MSSummary mss(itsMS);
-       mss.list(*itsLog, verbose);
+       casa::Record outRec;
+       mss.list(*itsLog, outRec, verbose, True);
+       casac::record* cOutRec=fromRecord(outRec);
+       header=*cOutRec;
+       if(cOutRec)
+	 delete cOutRec;
        rstat = True;
      }
    } catch (AipsError x) {
@@ -2122,6 +2136,152 @@ ms::uvsub(Bool reverse)
     RETHROW(x);
   }
   Table::relinquishAutoLocks();
+  return rstat;
+}
+
+//bool
+table * 
+ms::moments(const std::vector<int>& moments, 
+            const ::casac::variant& antenna,
+            const ::casac::variant& field,
+            const ::casac::variant& spw,
+            //const ::casac::variant& vmask,
+            //const ::casac::variant& stokes,
+            //const std::vector<std::string>& in_method,
+            //const std::vector<int>& smoothaxes,
+            //const ::casac::variant& smoothtypes,
+            //const std::vector<double>& smoothwidths,
+            const std::vector<double>& d_includepix,
+            const std::vector<double>& d_excludepix,
+            const double peaksnr, const double stddev,
+            const std::string& velocityType, const std::string& out,
+            //const std::string& smoothout, 
+            //const std::string& pgdevice,
+            //const int nx, const int ny, const bool yind,
+            const bool overwrite, const bool async)
+{
+  table *rstat = 0 ;
+  try {
+     *itsLog << LogOrigin("ms", "moments");
+
+     Vector<Int> whichmoments( moments ) ;
+
+     String strAnt ;
+     if ( antenna.type() == ::casac::variant::INT ) {
+       strAnt = String::toString( antenna.toInt() ) ;
+     }
+     else if ( antenna.type() == ::casac::variant::STRING ) {
+       strAnt = String( antenna.toString() ) ;
+     }
+     String strField ;
+     if ( field.type() == ::casac::variant::INT ) {
+       strField = String::toString( field.toInt() ) ;
+     }
+     else if ( field.type() == ::casac::variant::STRING ) {
+       strField = String( field.toString() ) ;
+     }
+     String strSpw ;
+     if ( spw.type() == ::casac::variant::INT ) {
+       strSpw = String::toString( spw.toInt() ) ;
+     }
+     else if ( spw.type() == ::casac::variant::STRING ) {
+       strSpw = String( spw.toString() ) ;
+     }
+
+//      String mask = vmask.toString() ;
+//      if ( mask == "[]" ) 
+//        mask = "" ;
+     //String mask = "" ;
+//     Vector<String> method = toVectorString( in_method ) ;
+     Vector<String> method( 0 ) ;
+
+     Vector<String> kernels ;
+     kernels.resize( 0 ) ;
+//      if ( smoothtypes.type() == ::casac::variant::BOOLVEC ) {
+//        kernels.resize( 0 ) ; // unset
+//      }
+//      else if ( smoothtypes.type() == ::casac::variant::STRING ) {
+//        sepCommaEmptyToVectorStrings( kernels, smoothtypes.toString() ) ;
+//      }
+//      else if ( smoothtypes.type() == ::casac::variant::STRINGVEC ) {
+//        kernels = toVectorString( smoothtypes.toStringVec() ) ;
+//      }
+//      else {
+//        *itsLog << LogIO::WARN << "Unrecognized smoothetypes datatype" 
+//                << LogIO::POST ;
+//      }
+
+     int num = kernels.size() ;
+
+     Vector< Quantum<Double> > kernelwidths( num ) ;
+//      Unit u( "pix" ) ;
+//      for ( int i = 0 ; i < num ; i++ ) {
+//        kernelwidths[i] = casa::Quantity( smoothwidths[i], u ) ;
+//      }
+
+     Vector<Float> includepix ;
+     num = d_includepix.size() ;
+     if ( !(num == 1 && d_includepix[0] == -1) ) {
+       includepix.resize( num ) ;
+       for ( int i = 0 ; i < num ; i++ )
+         includepix[i] = d_includepix[i] ;
+     }
+
+     Vector<Float> excludepix ;
+     num = d_excludepix.size() ;
+     if ( !(num == 1 && d_excludepix[0] == -1) ) {
+       excludepix.resize( num ) ;
+       for ( int i = 0 ; i < num ; i++ ) 
+         excludepix[i] = d_excludepix[i] ;
+     }
+
+     // if MS doesn't have FLOAT_DATA column, throw exception
+     if ( !(itsMS->isColumn( MSMainEnums::FLOAT_DATA )) ) {
+       throw AipsError( "ms::moments() is only applicable for MS with FLOAT_DATA" ) ; 
+       return rstat ;
+     }
+
+     MSAnalysis momentMaker( itsMS ) ;
+     //Vector<Int> smoothAxes( smoothaxes ) ;
+     Vector<Int> smoothAxes( 0 ) ;
+     String smoothout = "" ;
+     MeasurementSet *mMS = momentMaker.moments( whichmoments,
+                                                //mask,
+                                                strAnt,
+                                                strField,
+                                                strSpw,
+                                                method,
+                                                smoothAxes,
+                                                kernels,
+                                                kernelwidths,
+                                                includepix,
+                                                excludepix,
+                                                peaksnr,
+                                                stddev,
+                                                velocityType,
+                                                out,
+                                                smoothout,
+                                                //pgdevice,
+                                                //nx, 
+                                                //ny,
+                                                //yind,
+                                                overwrite ) ;
+
+     if ( mMS != 0 ) {
+       rstat = new table() ;
+       rstat->open( mMS->tableName() ) ;
+       delete mMS ;
+       mMS = 0 ;
+     }
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+
   return rstat;
 }
 

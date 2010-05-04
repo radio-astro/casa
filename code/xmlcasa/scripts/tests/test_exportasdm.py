@@ -1,6 +1,7 @@
 # unit test for the exportasdm task
 
 import os
+import shutil
 
 from __main__ import default
 from tasks import *
@@ -41,11 +42,6 @@ class exportasdm_test(unittest.TestCase):
 
     def tearDown(self):
         os.system('rm -rf myinput.ms')
-        os.system('rm -rf ' + self.vis_b)
-        os.system('rm -rf ' + self.vis_d)
-        os.system('rm -rf ' + self.vis_e)
-        os.system('rm -rf ' + self.vis_f)
-        os.system('rm -rf ' + self.vis_g)
         os.system('rm -rf ' + self.out)
 
 
@@ -187,6 +183,30 @@ class exportasdm_test(unittest.TestCase):
         os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
         self.verify_asdm(omsname, True)
 
+
+class exportasdm_test2(unittest.TestCase):
+    
+    vis_b = 'test.ms'
+    vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
+    vis_e = 'g19_d2usb_targets_line-shortened.ms'
+    vis_f = 'Itziar.ms'
+    vis_g = 'M51.ms'
+    
+    def setUp(self):  
+        pass
+
+    def tearDown(self):
+        # It will ignore errors in case the files don't exist
+        shutil.rmtree(self.vis_b,ignore_errors=True)
+        shutil.rmtree(self.vis_d,ignore_errors=True)
+        shutil.rmtree(self.vis_e,ignore_errors=True)
+        shutil.rmtree(self.vis_f,ignore_errors=True)
+        shutil.rmtree(self.vis_g,ignore_errors=True)
+    
+    def test1a(self):
+        '''Exportasdm: Cleanup'''
+        pass
+
 def suite():
-    return [exportasdm_test]
+    return [exportasdm_test,exportasdm_test2]
 

@@ -290,6 +290,8 @@ traceEvent(1,"Entering imager::defaults",25);
   smallScaleBias_p=0.6;
   freqFrame_p=MFrequency::LSRK;
   imageTileVol_p=0;
+  singlePrec_p=False;
+  spwchansels_p.resize();
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -2108,6 +2110,10 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     this->writeCommand(os);
 
     os << LogIO::NORMAL << "Selecting data" << LogIO::POST; // Loglevel PROGRESS
+    //Need delete the ft machine as the channel flag may change
+    if(ft_p)
+      delete ft_p;
+    ft_p=0;
     nullSelect_p=False;
     dataMode_p=mode;
     dataNchan_p.resize();
@@ -2210,8 +2216,60 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       indgen(datafieldids_p);
     }
     //Now lets see what was selected as spw and match it with datadesc
+    //
+    // getSpwList could return duplicated spw ids
+    // when multiple channel ranges are specified.
+    //dataspectralwindowids_p.resize();
+    //dataspectralwindowids_p=thisSelection.getSpwList();
+    //get channel selection in spw
+    Matrix<Int> chansels=thisSelection.getChanList();
+    //cout<<"chansels="<<chansels<<endl;
+    //convert the selection into flag
+    uInt nms = 1;
+    uInt nrow = chansels.nrow();
     dataspectralwindowids_p.resize();
-    dataspectralwindowids_p=thisSelection.getSpwList();
+    const ROMSSpWindowColumns spwc(ms_p->spectralWindow());
+    uInt nspw = spwc.nrow();
+    const ROScalarColumn<Int> spwNchans(spwc.numChan());
+    Vector<Int> nchanvec = spwNchans.getColumn();
+    Int maxnchan = 0;
+    for (uInt i=0;i<nchanvec.nelements();i++) {
+      maxnchan=max(nchanvec[i],maxnchan);
+    }	  
+    
+    spwchansels_p.resize(nms,nspw,maxnchan);
+    spwchansels_p.set(0);
+    uInt nselspw=0;
+    if (nrow==0) {
+      //no channel selection, select all channels
+      spwchansels_p=1;
+      dataspectralwindowids_p=thisSelection.getSpwList();
+    }
+    else {
+      spwchansels_p=0; //deselect
+      Int prvspwid=-1;
+      Vector<Int> selspw;
+      for (uInt i=0;i<nrow;i++) {
+	Vector<Int> sel = chansels.row(i);
+	Int spwid = sel[0];
+	if (spwid != prvspwid){
+	  nselspw++;
+	  selspw.resize(nselspw,True);
+	  selspw[nselspw-1]=spwid;
+	}
+	uInt minc= sel[1];
+	uInt maxc = sel[2];
+	uInt step = sel[3];
+	// step as the same context as in im.selectvis
+	// select channels 
+	for (uInt k=minc;k<(maxc+1);k+=step) {
+	  spwchansels_p(0,spwid,k)=1;
+	}
+	prvspwid=spwid;
+      }
+      dataspectralwindowids_p=selspw;
+    }
+    
     // Map the selected spectral window ids to data description ids
     if(dataspectralwindowids_p.nelements()==0){
       Int nspwinms=ms_p->spectralWindow().nrow();
@@ -2226,27 +2284,72 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       os << LogIO::NORMAL4<< "Multiple fields specified" << LogIO::POST;
       multiFields_p = True;
     }
-
-
+    
+    
     if(mode=="none"){
+      // Now channel selection from spw already stored in chansel,
+      // no need for this- TT
       //check if we can find channel selection in the spw string
-      Matrix<Int> chanselmat=thisSelection.getChanList();
-      if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
-
+      //Matrix<Int> chanselmat=thisSelection.getChanList();
+      //
+      // This not correct for multiple channel ranges TT
+      //if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
+      if(nselspw==dataspectralwindowids_p.nelements()){
+	
 	dataMode_p="channel";
 	dataStep_p.resize(dataspectralwindowids_p.nelements());
 	dataStart_p.resize(dataspectralwindowids_p.nelements());
 	dataNchan_p.resize(dataspectralwindowids_p.nelements());
+	Cube<Int> spwchansels_tmp=spwchansels_p;
+	
 	for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
-	  dataStep_p[k]=chanselmat.row(k)(3);
-	  if(dataStep_p[k] < 1)
+	  uInt curspwid=dataspectralwindowids_p[k];
+	  //dataStep_p[k]=1;
+	  if (nrow > 0) {
+	    dataStep_p[k]=chansels.row(k)(3);
+	  }
+	  else {
 	    dataStep_p[k]=1;
-	  dataStart_p[k]=chanselmat.row(k)(1);
-	  dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k])/Double(dataStep_p[k])))+1;
-
-	  if(dataNchan_p[k]<1)
-	    dataNchan_p[k]=1;	  
+	  }
+	  //dataStart_p[k]=chanselmat.row(k)(1);
+	  dataStart_p[k]=0;
+	  dataNchan_p[k]=nchanvec(curspwid);
+	  //find start
+	  Bool first =True;
+	  uInt nchn = 0;
+	  uInt lastchan = 0;
+	  for (uInt j=0 ; j < nchanvec(curspwid); j++) {
+	    if (spwchansels_p(0,curspwid,j)==1) {
+	      if (first) {
+		dataStart_p[k]=j;
+		first = False;
+	      }
+	      lastchan=j;
+	      nchn++;
+	    }	
+	  }
+	  dataNchan_p[k]=Int(ceil(Double(lastchan-dataStart_p[k])/Double(dataStep_p[k])))+1;
+	  //dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k])/Double(dataStep_p[k])))+1;
+	  
+	  //if(dataNchan_p[k]<1)
+	  //  dataNchan_p[k]=1;	  
+	  
+	  //cout<<"modified start="<<dataStart_p[k]<<endl;
+	  //cout<<"modified nchan="<<dataNchan_p[k]<<endl;
+	  //
+	  //Since msselet will be applied to the data before flags from spwchansels_p
+	  //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
+	  //for (uInt j=0  ; j < nchanvec(k)-dataStart_p[k]; j++){
+	  for (uInt j=0  ; j < nchanvec(curspwid); j++){
+	    if (j<nchanvec(curspwid)-dataStart_p[k]) {
+	      spwchansels_tmp(0,curspwid,j) = spwchansels_p(0,curspwid,j+dataStart_p[k]);
+	    }
+	    else {
+	      spwchansels_tmp(0,curspwid,j) = 0;
+	    }
+	  }
 	}
+	spwchansels_p = spwchansels_tmp;
       }
     }
     if(!(exprNode.isNull())){
@@ -2280,9 +2383,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	multiFields_p = False;
       }
     }
-
+    
     uInt nvis_all = ms_p->nrow();
-
+    
     // Now create the VisSet
     this->makeVisSet(*mssel_p); 
     AlwaysAssert(rvi_p, AipsError);
@@ -2436,7 +2539,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Bool applyPointingOffsets,
 			const Bool doPointingCorrection,
 			const String& cfCacheDirName,const Float& paStep, 
-			const Float& pbLimit, const String& interpMeth, const Int imageTileVol)
+			const Float& pbLimit, const String& interpMeth, const Int imageTileVol,
+			const Bool singprec)
 {
 
 #ifdef PABLO_IO
@@ -2485,6 +2589,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   pbLimit_p = pbLimit;
   freqInterpMethod_p=interpMeth;
   imageTileVol_p=imageTileVol;
+  singlePrec_p=singprec;
 
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
@@ -5862,6 +5967,7 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   try {
     
     if(sm_p) destroySkyEquation();
+    
     if(incremental) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Fourier transforming: adding to MODEL_DATA column" << LogIO::POST;
@@ -7523,7 +7629,7 @@ Bool Imager::createFTMachine()
   Bool useDoublePrecGrid=False;
   //few channels use Double precision
   //till we find a better algorithm to determine when to use Double prec gridding
-  if(imageNchan_p < 5)
+  if((imageNchan_p < 5) && !(singlePrec_p))
     useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
@@ -7851,6 +7957,8 @@ Bool Imager::createFTMachine()
   if(doTrackSource_p){
     ft_p->setMovingSource(trackDir_p);
   }
+  ft_p->setSpwChanSelection(spwchansels_p);
+
   return True;
 }
 
@@ -7942,7 +8050,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 			       const Vector<String>& fluxMask,
 			       const String complist)
 {
-  
+ 
   if(!valid()) return False;
 
   LogIO os(LogOrigin("imager", "createSkyEquation()", WHERE));
@@ -8164,6 +8272,7 @@ void Imager::destroySkyEquation()
   if(gvp_p) delete gvp_p; gvp_p=0;
   
   if(componentList_p) delete componentList_p; componentList_p=0;
+ 
   
   for (Int model=0;model<Int(nmodels_p); ++model) {
     //As these are CountedPtrs....just assigning them to NULL 

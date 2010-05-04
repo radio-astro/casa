@@ -35,7 +35,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 IPosition MSTileLayout::tileShape(const IPosition& dataShape,
 				  Int observationType, Int nIfr, Int)
 {
-  const Int ioBlockSize = 16384; // 16384 * sizeOf(Complex) = 128 kByte
+  const Int ioBlockSize = 4096; // 4096 * sizeOf(Complex) = 32 kByte
   IPosition tileShape(3,0,0,0);
   if (dataShape.nelements()==2 && dataShape(0)>0 && dataShape(1)>0) {
     // Always read all polarizations, since we'll often want to do conversion

@@ -1,29 +1,39 @@
 #!/usr/bin/env python
 
+# TODO: Add du -sh output after the ms name if use_tb.
+
+# Known bug: if called from outside a casapy session, tb.open(currms) will bomb
+# if the given pathname for currms is too long.  "Too long" is not long enough.
+
 from glob import glob
 import locale
 import os
 
-def lsms(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or', remind=True):
+def lsms(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or', remind=True,
+         sortfirst=False):
     """
     Summarize measurement sets matching certain criteria.
 
     Arguments:
 
-    musthave: A list of columns, subtables, or keywords that must be in the MS.
-              If [] (default), the list of optional columns, subtables, and
-              keywords of each MS will be printed.  Any entries will be
-              internally uppercased.
+    musthave:  A list of columns, subtables, or keywords that must be in the MS.
+               If [] (default), the list of optional columns, subtables, and
+               keywords of each MS will be printed.  Any entries will be
+               internally uppercased.
 
-    mspat:    A filename pattern, relative to the current directory, that the
-              directory names matching of the MSes must match.
-              Default: '*[-_.][Mm][Ss]'
+    mspat:     A filename pattern, relative to the current directory, that the
+               directory names matching of the MSes must match.
+               Default: '*[-_.][Mm][Ss]'
+               Tip: Try '**/*.ms' to find *.ms in . and all its subdirectories.
 
-    combine:  Controls whether the conditions of musthave are combined with
-              'or' (default) or 'and'.
+    combine :  Controls whether the conditions of musthave are combined with
+               'or' (default) or 'and'.
 
-    remind:   If True (default), print all columns and keywords of optional
-              subtables, not just the optional ones.
+    remind:    If True (default), print all columns and keywords of optional
+               subtables, not just the optional ones.
+
+    sortfirst: If sortfirst=True, print the matching MSes in alphabetical order.
+               Otherwise, print each one as soon as it is found.
 
     Note that to fit in better with *sh behavior the argument order is reversed
     when calling from a non-python shell.  i.e. if you enter
@@ -34,86 +44,98 @@ def lsms(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or', remind=True):
     """
     if type(musthave) == str:
         musthave = [s.replace(',', '') for s in musthave.split()]
-    msdict, use_tb = matchingMSes(musthave, mspat, combine)
-    mses = msdict.keys()
-    
-    # Do a locale sensitive sort of mses - this and some other niceties were
-    # cribbed from an implementation by Padraig Brady of ls in python at
-    # http://www.pixelbeat.org/talks/python/ls.py.html
-    locale.setlocale(locale.LC_ALL, '')
-    mses.sort(locale.strcoll)
-
-    # have_colors, termwidth = termprops(sys.stdout)
-
+        
     listall = True
     if musthave:
         listall = False
 
-    for currms in mses:
-        currmsstr = ''
-        if listall:                # List all its optional things
-            notindefn = []
-            subtabs = msdict[currms].keys()
-            subtabs.sort()
-            for st in subtabs:
-                ststr = ''
-                if use_tb:
-                    if st in mstables['req']:
-                        optcols = set(msdict[currms][st]['cols']).difference(mstables['req'][st]['req']['cols'])
-                        if optcols:
-                            ststr = "    Optional column"
-                            ststr += string_from_list_or_set(optcols)
+    msdict, use_tb = matchingMSes(musthave, mspat, combine, remind,
+                                  not sortfirst, not sortfirst)
 
-                        optkws = msdict[currms][st]['kws'].difference(mstables['req'][st]['req']['kws'])
-                        if optkws:
-                            ststr += "    Optional keyword"
-                            ststr += string_from_list_or_set(optkws)
+    if sortfirst:
+        mses = msdict.keys()
 
-                    elif st in mstables['opt']:
-                        reqcols = mstables['opt'][st]['req']['cols']
-                        if remind and reqcols:
-                            ststr = '    Required column'
-                            ststr += string_from_list_or_set(reqcols)
+        # Do a locale sensitive sort of mses - this and some other niceties were
+        # cribbed from an implementation by Padraig Brady of ls in python at
+        # http://www.pixelbeat.org/talks/python/ls.py.html
+        locale.setlocale(locale.LC_ALL, '')
+        mses.sort(locale.strcoll)
 
-                        optcols = set(msdict[currms][st]['cols']).difference(reqcols)
-                        if optcols:
-                            ststr += "    Optional column"
-                            ststr += string_from_list_or_set(optcols)
+        # have_colors, termwidth = termprops(sys.stdout)
 
-                        reqkws = mstables['opt'][st]['req']['kws']
-                        if remind and reqkws:
-                            ststr = '    Required keyword'
-                            ststr += string_from_list_or_set(reqkws)
+        for currms in mses:
+            print_ms(currms, msdict[currms], listall, use_tb, remind)
+        
 
-                        optkws = msdict[currms][st]['kws']
-                        optkws.difference_update(reqkws)
-                        if optkws:
-                            ststr += "    Optional keyword"
-                            ststr += string_from_list_or_set(optkws)
-
-                        if not ststr:
-                            currmsstr += "  " + st + "\n"
-                    else:
-                        notindefn.append(st)
-                elif st not in mstables['req']:
-                    notindefn.append(st)
-                    
-                if ststr:
-                    currmsstr += "  " + st + ":\n" + ststr
-
-            if notindefn:
-                notindefn.sort()
-                if use_tb:
-                    currmsstr += "  Not in MS def'n V. 2.0: "
-                currmsstr += ', '.join(notindefn) + "\n"                        
-
-        if currmsstr:
+def print_ms(currms, msdict, listall=False, use_tb=False, remind=True):
+    """
+    Prints the blurb in msdict, which is nominally about currms.
+    """
+    currmsstr = ''
+    if listall:                # List all its optional things
+        notindefn = []
+        subtabs = msdict.keys()
+        subtabs.sort()
+        for st in subtabs:
+            ststr = ''
             if use_tb:
-                print currms + ":\n" + currmsstr
-            else:
-                print currms + ": " + currmsstr.strip()
+                if st in mstables['req']:
+                    optcols = set(msdict[st]['cols']).difference(mstables['req'][st]['req']['cols'])
+                    if optcols:
+                        ststr = "    Optional column"
+                        ststr += string_from_list_or_set(optcols)
+
+                    optkws = msdict[st]['kws'].difference(mstables['req'][st]['req']['kws'])
+                    if optkws:
+                        ststr += "    Optional keyword"
+                        ststr += string_from_list_or_set(optkws)
+
+                elif st in mstables['opt']:
+                    reqcols = mstables['opt'][st]['req']['cols']
+                    if remind and reqcols:
+                        ststr = '    Required column'
+                        ststr += string_from_list_or_set(reqcols)
+
+                    optcols = set(msdict[st]['cols']).difference(reqcols)
+                    if optcols:
+                        ststr += "    Optional column"
+                        ststr += string_from_list_or_set(optcols)
+
+                    reqkws = mstables['opt'][st]['req']['kws']
+                    if remind and reqkws:
+                        ststr = '    Required keyword'
+                        ststr += string_from_list_or_set(reqkws)
+
+                    optkws = msdict[st]['kws']
+                    optkws.difference_update(reqkws)
+                    if optkws:
+                        ststr += "    Optional keyword"
+                        ststr += string_from_list_or_set(optkws)
+
+                    if not ststr:
+                        currmsstr += "  " + st + "\n"
+                else:
+                    notindefn.append(st)
+            elif st not in mstables['req']:
+                notindefn.append(st)
+
+            if ststr:
+                currmsstr += "  " + st + ":\n" + ststr
+
+        if notindefn:
+            notindefn.sort()
+            if use_tb:
+                currmsstr += "  Not in MS def'n V. 2.0: "
+            currmsstr += ', '.join(notindefn) + "\n"                        
+
+    if currmsstr:
+        if use_tb:
+            print currms + ":\n" + currmsstr
         else:
-            print currms
+            print currms + ": " + currmsstr.strip()
+    else:
+        print currms
+
 
 def string_from_list_or_set(li):
     retstr = ''
@@ -400,24 +422,12 @@ mstables = {
 
 possible_subtables = set(mstables['req'].keys() + mstables['opt'].keys())
 
-def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
+
+def find_needed_items(musthave=set([]), listall=False):
     """
-    Returns a dict of MSes that match musthave and mspat as in
-    lsms(musthave, mspat, combine), and whether or not it found the tb tool.
+    Given the set of "must have" items, fill out needed_subtables and needed_items,
+    and determine whether or not to use tb.
     """
-    retval = {}
-
-    use_and = False
-    if(combine.lower() == 'and'):
-        use_and = True
-
-    musthave = [s.upper() for s in musthave]
-    musthave = set(musthave)
-    listall = False
-    if not musthave:
-        listall = True
-        use_and = False
-
     needed_subtables = musthave.intersection(possible_subtables)
     needed_items = {'anywhere': set([])}  # cols and keywords
     for mh in musthave:
@@ -434,27 +444,124 @@ def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
 
     use_tb = False
     need_tb = musthave.difference(needed_subtables)
+    mytb = None
     if need_tb or listall:
         try:
             use_tb = hasattr(tb, 'colnames')
         except:
             try:
-                #import sys
-                ## sys.path.append(os.environ["CASAPATH"].split()[0] +
-                ##                 '/code/xmlcasa/scripts/recipes')
+                try:
+                    import casac
+                except:
+                    casacpath = glob(os.sep.join(os.environ["CASAPATH"].split() +
+                                                 ['python', '2.*']))  # devs
+                    casacpath.sort()
+                    casacpath.reverse()
+                    casacpath.extend(glob(os.sep.join([os.environ["CASAPATH"].split()[0],
+                                                       'lib', 'python2.*'])))  # users
+                    #print "casacpath =", "\n".join(casacpath)
+                    import sys
+                    sys.path.extend(casacpath)
+                    import casac
                 ## from taskutil import get_global_namespace
                 ## my_globals = get_global_namespace()
                 ## tb = my_globals['tb']
-                from casa import table as tb
-                use_tb = hasattr(tb, 'colnames')
+                #from casa import table as tb
+                tablehome = casac.homefinder.find_home_by_name('tableHome')
+                mytb = tablehome.create()
+                use_tb = hasattr(mytb, 'colnames')
             except:
-                print "Could not find the tb tool.  Try running inside a casapy session or setting PYTHONPATH to /usr/lib/casapy/.../lib/python2.5."
+                print "Could not find the tb tool.  Try running inside a casapy session or setting PYTHONPATH to /usr/lib/casapy/.../lib/python2.*."
         if need_tb and not use_tb:
             print "Removing", ', '.join(need_tb), "from the criteria for matching."
             musthave.difference_update(need_tb)
+
+    return needed_subtables, needed_items, use_tb, mytb
     
-    mses = glob(mspat)
+
+
+def matchingMSes(musthave=[], mspat="*.ms", combine='or', doprint=False,
+                 freemem=False, remind=True):
+    """
+    Returns a dict of MSes that match musthave and mspat as in
+    lsms(musthave, mspat, combine, sortfirst, remind), and whether or not it
+    found the tb tool.
+
+    If doprint=False a blurb about each ms will be printed as it is found,
+    using remind as in lsms().
+
+    If freemem=True the return dict will NOT be updated.  Note that usually
+    you want freemem == doprint.
+    """
+        
+    holderdict = {'musthave': set([s.upper() for s in musthave]),
+                  'mspat':    mspat,
+                  'msdict':   {},
+                  'use_and':  combine.lower() == 'and',
+                  'use_tb':   None,
+                  'listall':  False,
+                  'doprint':  doprint,
+                  'remind':   remind}
+
+    if not musthave:
+        holderdict['listall'] = True
+        holderdict['use_and'] = False
+
+    nsit = find_needed_items(holderdict['musthave'], holderdict['listall'])
+    holderdict['needed_subtables'] = nsit[0]
+    holderdict['needed_items']     = nsit[1]
+    holderdict['use_tb']           = nsit[2]
+    holderdict['mytb']             = nsit[3]
+    
+    splitatdoubleglob = mspat.split('**/')
+    if len(splitatdoubleglob) > 1:
+        if splitatdoubleglob[0] == '':
+            splitatdoubleglob[0] = '.'
+        holderdict['mspat'] = splitatdoubleglob[1]
+        os.path.walk(splitatdoubleglob[0], checkMSes, holderdict)
+    else:
+        checkMSes(holderdict, '', [])
+
+    return holderdict['msdict'], holderdict['use_tb']
+
+        
+def checkMSes(holderdict, dir, files):
+    """
+    Updates holderdict['msdict'] with a list of MSes in dir that match
+    holderdict['musthave'] and holderdict['mspat'] as in
+    lsms(musthave, mspat, combine, sortfirst, remind).
+
+    If holderdict['doprint']=True a blurb about each ms will be printed as
+    it is found, using holderdict['remind'] like remind in lsms().
+
+    If holderdict['freemem']=True holderdict['msdict'] will NOT be updated.
+    Note that usually you want holderdict['freemem'] == holderdict['doprint'].
+    """        
+    # Yup, ignore files.  It's just a os.path.walk()ism.
+    mses = glob(os.path.join(dir, holderdict['mspat']))
+
+    musthave = holderdict.get('musthave', set([]))
+    use_and = holderdict.get('use_and', False)
+    listall = holderdict.get('listall', False)
+
+    if holderdict.get('freemem'):
+        retval = {}
+    else:
+        if not holderdict.get('msdict'):   # Initialize it so retval
+            holderdict['msdict'] = {}      # can be tied to it.
+        retval = holderdict['msdict']
+    
+    needed_subtables = holderdict.get('needed_subtables', set([]))
+    needed_items = holderdict.get('needed_items', {})
+    use_tb  = holderdict.get('use_tb', False)
+
+    if holderdict.get('mytb'):
+        tb = holderdict['mytb']
+    
     for currms in mses:
+        if currms[:2] == './':  # strip off leading ./, if present.
+            currms = currms[2:]    # cosmetic.
+        
         retval[currms] = {'MAIN': {}}
         keep_currms = listall
 
@@ -518,8 +625,10 @@ def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
             
         if not keep_currms:
             del retval[currms]
-        
-    return retval, use_tb
+
+        if holderdict.get('doprint'):
+            print_ms(currms, retval[currms], listall, use_tb, holderdict['remind'])
+
 
 # following, sort of, from Python cookbook, #475186
 def termprops(stream):

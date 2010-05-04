@@ -32,6 +32,8 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferUtil.h>
@@ -243,6 +245,14 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
     const ColumnDescSet cds=Table(msname).tableDesc().columnDescSet();
     scrcolOk=cds.isDefined("CORRECTED_DATA");
 
+  }
+
+  // Get various names
+  {
+    MSAntenna msant(msname+"/ANTENNA");
+    MSField msfld(msname+"/FIELD");
+    antnames_=ROMSAntennaColumns(msant).name().getColumn();
+    fldnames_=ROMSFieldColumns(msfld).name().getColumn();
   }
 
   stringstream ss;
@@ -1672,7 +1682,13 @@ vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {
 void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
   ss << "Scan=" << getScan() << " ";
-  ss << "Field=" << getField() << " ";
+
+  Int fld=Int(getField());
+  if (fld<0)
+    ss << "Field=" << "*" << " ";
+  else
+    ss << "Field=" << fldnames_(fld) << "(" << fld << ")" << " ";
+
   ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD,7) << " ";
   ss << "BL=";
 
@@ -1680,13 +1696,15 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
   if (!netAxesMask_(2) || ant1<0)
     ss << "*-";
   else
-    ss << ant1 << "-";
+    //    ss << ant1 << "-";
+    ss << antnames_(ant1) << "(" << ant1 << ")" << "-";
 
   Int ant2=Int(getAnt2());
   if (!netAxesMask_(2) || ant2<0)
     ss << "* ";
   else
-    ss << ant2 << " ";
+    //    ss << ant2 << " ";
+    ss << antnames_(ant2) << "(" << ant2 << ")" << " ";
 
   Int spw=Int(getSpw());
   ss << "Spw=";
@@ -1718,7 +1736,8 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
   ss << "Corr=";
   if (netAxesMask_(0))
-    ss << getCorr() << " ";
+    //    ss << getCorr() << " ";
+    ss << Stokes::name(Stokes::type(uInt(getCorr()))) << " ";
   else
     ss << "* ";
   ss << "X=" << x << " ";

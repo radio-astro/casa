@@ -654,6 +654,13 @@ class par(str):
 		"""
 
 	@staticmethod
+	def excludemask():
+		"""
+        	excludemask -- Range of masks to exclude
+                default: [-1] (don't exclude channels); example=[100,200]
+		"""
+
+	@staticmethod
 	def expr():
 		"""
 		expr -- mathematical expression using scantables
@@ -950,6 +957,22 @@ class par(str):
 		"""
 
 	@staticmethod
+	def header():
+		"""
+		header -- print header information on plot
+                options: (bool) True, False
+                default: True
+		"""
+	
+	@staticmethod
+	def headsize():
+		"""
+		headsize -- header font size
+		options: (int)
+		default: 9
+		"""
+
+	@staticmethod
 	def highres():
 		""" Name of high resolution (interferometer) image: """
 
@@ -1050,6 +1073,14 @@ class par(str):
 		"""
 	        includepix -- Range of pixel values to include
                 default: [-1] (all pixels); example=[0.02,100.0]
+		"""
+
+	@staticmethod
+	def includemask():
+		"""
+                (for msmoments)
+	        includemask -- Range of masks to include
+                default: [-1] (include all channels); example=[2,100]
 		"""
 
 	@staticmethod
@@ -1513,6 +1544,14 @@ class par(str):
 		"""
 
 	@staticmethod
+	def msname():
+		"""
+                (for msmoments)
+                Name of input MS data
+		default: none; example: msname=&quot;OrionS_rawACSmod&quot;
+		"""
+
+	@staticmethod
 	def multicolor():
 		"""
        		multicolor -- Multi-color plotting of channels and polarizations
@@ -1658,6 +1697,13 @@ class par(str):
 
 		(for immoments)
         	outfile -- output image file name (or root for multiple moments)
+                default: '' (input+auto-determined suffix)
+		example: outfile='source_moment'
+
+		----------------------------------------------------------------
+
+		(for msmoments)
+        	outfile -- output MS file name (or root for multiple moments)
                 default: '' (input+auto-determined suffix)
 		example: outfile='source_moment'
 

@@ -152,10 +152,13 @@ class ImageAnalysis
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
 
-    Quantity convertflux(const Quantity& value, const Quantity& major, 
+    // the output <src>fakeBeam</src> indicates if there was no beam in the header and a fake one
+    // was assumed to do the conversion.
+    Quantity convertflux(Bool& fakeBeam, const Quantity& value, const Quantity& major,
                          const Quantity& minor, 
                          const String& type = "Gaussian", 
-                         const Bool topeak = True);
+                         const Bool topeak = True,
+                         Bool supressNoBeamWarnings = False);
 
     ImageInterface<Float> * convolve2d(const String& outfile, 
                                        const Vector<Int>& axes, 

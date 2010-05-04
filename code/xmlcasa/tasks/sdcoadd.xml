@@ -77,9 +77,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
     </param>
 
+    <param type="string" name="tweight" subparam="true">
+            <description>weighting for time averaging</description>
+            <value>none</value>
+	    <allowed kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+	    <value>tint</value>
+	    <value>tintsys</value>
+	    <value>median</value>
+            </allowed>
+    </param>
+
     <param type="bool" name="polaverage">
             <description>average over polarizations (True,False)</description>
             <value>False</value>
+    </param>
+
+    <param type="string" name="pweight" subparam="true">
+            <description>weighting for polarization averaging</description>
+            <value>none</value>
+	    <allowed kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+            </allowed>
     </param>
 
     <param type="string" name="outfile">
@@ -126,6 +149,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="telescopeparm"><value type='string'></value></default>
 	        </equals>
 	    </when>
+
+	    <when param="timeaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="tweight"><value type='string'>none</value></default>
+                </equals>
+            </when>
+	    <when param="polaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="pweight"><value type='string'>none</value></default>
+                </equals>
+            </when>
     </constraints>
 
     </input>
@@ -175,9 +211,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (bool) True,False
                 default: False
                 example: if True, this happens after calibration
+            &gt;&gt;&gt;timeaverage expandable parameter
+                 tweight -- weighting for time average
+                         options: 'none' 
+                                  'var'   (1/var(spec) weighted)
+                                  'tsys'  (1/Tsys**2 weighted)
+                                  'tint'  (integration time weighted)
+                                  'tintsys'  (Tint/Tsys**2)
+                                  'median'  ( median averaging)
+                         default: 'none'
         polaverage -- average polarizations
                 options: (bool) True,False
                 default: False
+            &gt;&gt;&gt;polaverage expandable parameter
+                 pweight -- weighting for polarization average
+                         options: 'none'
+                                  'var'  (1/var(spec) weighted)
+                                  'tsys' (1/Tsys**2 weighted)
+                         default: 'none'
         outfile -- Name of output file
                 default: '' (scantable)
                 example:

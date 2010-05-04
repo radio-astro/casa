@@ -30,6 +30,7 @@
 #include <flagging/Flagging/RFAFlagCubeBase.h> 
 #include <flagging/Flagging/RFDataMapper.h> 
 #include <flagging/Flagging/RFFlagCube.h> 
+#include <flagging/Flagging/RFFloatLattice.h> 
 #include <flagging/Flagging/RFRowClipper.h> 
 #include <flagging/Flagging/RFDebugPlot.h> 
 #include <casa/System/PGPlotter.h>
@@ -95,7 +96,7 @@ protected:
   MedianSlider * msl;
 
   // lattice of evaluated values [NCH,NIFR,NTIME]
-  RFCubeLattice<Float> evalue;
+  RFFloatLattice evalue;
   // matrix of standard deviation [NCH,NIFR]
   Matrix<Float> stdev;
   Bool stdeved;

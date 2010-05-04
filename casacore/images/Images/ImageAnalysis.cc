@@ -1238,18 +1238,19 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
 	return rstat;
 }
 
-casa::Quantity ImageAnalysis::convertflux(const Quantity& value,
+casa::Quantity ImageAnalysis::convertflux(
+		Bool& fakeBeam, const Quantity& value,
 		const Quantity& majorAxis, const Quantity& minorAxis,
-		const String& type, const Bool toPeak) {
+		const String& type, const Bool toPeak, Bool suppressNoBeamWarnings
+	) {
 	*itsLog << LogOrigin("ImageAnalysis", "convertflux");
 	Quantum<Double> valueOut;
-
-	//
+	fakeBeam = False;
 	const Unit& brightnessUnit = pImage_p->units();
 	const ImageInfo& info = pImage_p->imageInfo();
 	const CoordinateSystem& cSys = pImage_p->coordinates();
 	//
-	Vector<Quantum<Double> > beam = info.restoringBeam();
+	Vector<Quantity> beam = info.restoringBeam();
 	//
 	if (majorAxis.getValue() > 0.0 && minorAxis.getValue() > 0.0) {
 		Unit rad("rad");
@@ -1271,14 +1272,23 @@ casa::Quantity ImageAnalysis::convertflux(const Quantity& value,
 	}
 	const DirectionCoordinate& dirCoord = cSys.directionCoordinate(iC);
 	ComponentType::Shape shape = ComponentType::shape(type);
-	//
-	if (toPeak) {
-		valueOut = SkyCompRep::integralToPeakFlux(dirCoord, shape, value,
-				brightnessUnit, majorAxis, minorAxis, beam);
-	} else {
-		valueOut = SkyCompRep::peakToIntegralFlux(dirCoord, shape, value,
-				majorAxis, minorAxis, beam);
+
+	if(brightnessUnit.getName().contains("/beam") && beam.size() != 3) {
+		beam = ImageUtilities::makeFakeBeam(*itsLog, cSys, suppressNoBeamWarnings);
+		fakeBeam = True;
 	}
+
+	SkyCompRep skyComp;
+	valueOut = (toPeak)
+		? skyComp.integralToPeakFlux(
+			dirCoord, shape, value,
+			brightnessUnit, majorAxis, minorAxis, beam
+		)
+		: skyComp.peakToIntegralFlux(
+			dirCoord, shape, value,
+			majorAxis, minorAxis, beam
+		);
+
 	return valueOut;
 }
 
@@ -1529,8 +1539,9 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 	// Set auto-threshold at 5-sigma
 	if (threshold <= 0.0) {
 		LatticeStatistics<Float> stats(subImage);
-		Array<Float> out;
+		Array<Double> out;
 		//Bool ok = stats.getSigma (out, True); //what did this do?
+		Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
 		threshold = 5.0 * out(IPosition(subImage.ndim(), 0));
 	}
 
@@ -2236,7 +2247,6 @@ ComponentList ImageAnalysis::fitsky(
     const String& residImageName, const String& modelImageName
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
-
 	String error;
 
 	Vector<SkyComponent> estimate;
@@ -2373,7 +2383,6 @@ ComponentList ImageAnalysis::fitsky(
 			fixedParameters(j) = String("");
 		}
 	}
-
 	// Add models
 
 	Vector<String> modelTypes(models.copy());
@@ -2449,21 +2458,25 @@ ComponentList ImageAnalysis::fitsky(
 
 	Vector<SkyComponent> result(nModels);
 	Double facToJy;
+
 	for (uInt i = 0; i < models.nelements(); i++) {
 		ComponentType::Shape modelType = convertModelType(
 			Fit2D::type(modelTypes(i))
 		);
+
 		Vector<Double> solution = fitter.availableSolution(i);
 		Vector<Double> errors = fitter.availableErrors(i);
 
-		result(i) = ImageUtilities::encodeSkyComponent(
-			*itsLog, facToJy, subImage, modelType,
+	    result(i) = ImageUtilities::encodeSkyComponent(
+		    *itsLog, facToJy, subImage, modelType,
 			solution, stokes, xIsLong, deconvolveIt
 		);
+
 		encodeSkyComponentError(
 			*itsLog, result(i), facToJy, subImage,
 			solution, errors, stokes, xIsLong
 		);
+
 		cl.add(result(i));
 	}
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
@@ -4787,7 +4800,7 @@ Bool ImageAnalysis::sethistory(const String& origin,
 	for (uInt i = 0; i < History.nelements(); i++) {
 		if (History(i).length() > 0) {
 			LogMessage msg(History(i), lor);
-			sink.postLocally(msg);
+            sink.postLocally(msg);
 		}
 	}
 	return True;
@@ -6020,9 +6033,7 @@ void ImageAnalysis::encodeSkyComponentError(LogIO& os, SkyComponent& sky,
 		} else if (stokes == Stokes::V) {
 			tmp(3) = valueInt(3) * rat;
 		} else {
-			os << LogIO::WARN << "Can only properly handle I,Q,U,V presently."
-					<< endl;
-			os << "The brightness is assumed to be Stokes I" << LogIO::POST;
+			// TODO handle stokes in addition to I,Q,U,V. For now, treat other stokes like stokes I.
 			tmp(0) = valueInt(0) * rat;
 		}
 		flux.setErrors(tmp(0), tmp(1), tmp(2), tmp(3));
@@ -6287,7 +6298,7 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 			String fields[4];
 			Int num = split(var, fields, 4, String(" "));
 			String fitsfile;
-			if (num == 1 || num == 4) {
+			if (num >= 1) {
 				if (imagetype.contains("cube"))
 					fitsfile = fields[0] + "/data/demo/Images/test_image.fits";
 				else if (imagetype.contains("2d"))

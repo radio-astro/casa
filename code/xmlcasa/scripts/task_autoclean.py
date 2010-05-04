@@ -1,12 +1,13 @@
 from taskinit import *
 from clean import clean
 from cleanhelper import *
-from immath import immath
-from sys import stdout
+from immath import immath   # Not needed?
+from sys import stdout      # Not needed?
 from math import ceil
 from math import floor
 from math import sqrt
 import numpy
+import shutil
 
 #####################################################################
 # iterative cleaning while automatically selecting new clean regions
@@ -44,7 +45,8 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
         imset.datselweightfilter(field=field, spw=spw, timerange=timerange,
                                  uvrange=uvrange, antenna=antenna, scan=scan,
                                  wgttype=weighting, robust=robust, noise=noise,
-                                 npixels=npixels, mosweight=mosweight,
+                                 npixels=npixels,
+                                 #mosweight=mosweight,
                                  innertaper=innertaper, outertaper=outertaper,
                                  calready=False)
         inputmask = '__temporary.mask'
@@ -191,7 +193,7 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
         concat_images(imagename, '.residual', nchan)
         concat_regions(imagename, '.rgn', nchan)
         # The individual .channel. tables are no longer needed
-        os.system('rm -rf '+imagename+'.channel.*' )
+        shutil.rmtree(imagename + '.channel.*')
 
     if(pbcor):
         # user wants primary beam corrected .image file and .residual file
@@ -387,7 +389,7 @@ def get_islands(imagename='', Npeak=3, island_threshold=0, peak_threshold=0,
 # instead of surrounding them by a box-shaped or circular clean region
 def mask_island(imagename='', island=None, pixels=None):
     ia.open(imagename+'.mask')
-    csys = ia.coordsys()
+    csys = ia.coordsys()   # Not needed?
     mask = ia.getregion()
     mask[pixels['x'], pixels['y']] = 1
     ia.putchunk(mask)

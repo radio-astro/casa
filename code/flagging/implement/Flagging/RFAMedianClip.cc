@@ -105,7 +105,6 @@ void RFATimeMedian::endChunk ()
 {
   RFADiffMapBase::endChunk();
 // create local flag iterator
-  flag_iter.cursor()->resize(IPosition(2, 0, 0));
   flag_iter = FlagCubeIterator();
   if( msl ) delete [] msl;
   msl = NULL;

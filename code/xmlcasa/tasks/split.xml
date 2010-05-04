@@ -106,7 +106,7 @@ channels of the input data set and time averaging is also available.
         <constraints>
 	  <when param="timebin">
             <notequals type="string" value="0s">
-              <default param="ignorables"><value>""</value></default>
+              <default param="ignorables"><value type="string"></value></default>
             </notequals>
           </when>
         </constraints>

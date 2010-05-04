@@ -50,7 +50,7 @@ class CubeSkyEquation : public SkyEquation {
   CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
 
   virtual ~CubeSkyEquation();
-  virtual void predict(Bool incremental=False);
+  virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
   
   virtual void initializePutSlice(const VisBuffer& vb, Int cubeSlice=0, Int nCubeSlice=1);

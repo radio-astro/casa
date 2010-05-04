@@ -44,10 +44,10 @@ const QString &QtViewer::name( ) {
 QtViewer::QtViewer( bool is_server, const char *dbus_name ) :
 	QtViewerBase(is_server), dbus_(NULL) {
 
-  name_ = (is_server ? "view_server" : "viewer");
-  dbus_name_ = (dbus_name ? strdup(dbus_name) : 0);
+    name_ = (is_server ? "view_server" : "viewer");
+    dbus_name_ = (dbus_name ? dbus_name : 0);
 
-  qInitResources_QtViewer();
+    qInitResources_QtViewer();
 	// Makes QtViewer icons, etc. available via Qt resource system.
 	//
 	// You would normally use this macro for the purpose instead:  
@@ -63,8 +63,8 @@ QtViewer::QtViewer( bool is_server, const char *dbus_name ) :
 	//   casa::qInitResources_QtViewer()     :-)   dk
 
   
-  dbus_ = new QtDBusViewerAdaptor(this);
-  dbus_->connectToDBus(dbus_name_);
+    dbus_ = new QtDBusViewerAdaptor(this);
+    dbus_->connectToDBus(dbus_name_);
 }
 
 

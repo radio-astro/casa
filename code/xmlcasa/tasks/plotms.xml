@@ -358,6 +358,32 @@ Flag Extension Parameters
     
 -->
 
+    <param type="string" name="plotfile">
+      <description>Name of plot file to save automatically.</description>
+    </param>
+    <param type="string" name="format" subparam="true">
+        <description>Format type (jpg, png, ps, pdf), if not provided, plotfile extension will be used.</description>
+        <allowed kind="enum">
+            <value />
+            <value>jpg</value>
+            <value>png</value>
+            <value>pdf</value>
+            <value>ps</value>
+        </allowed>
+     </param>
+     <param type="bool" name="highres" subparam="true">
+         <description>Use high resolution? Always true for jpg and png.</description>
+         <value>False</value>
+     </param>
+     <param type="bool" name="interactive" subparam="true">
+         <description>Interactive mode (pop up confirmation window if true, set false for automated scripts to prevent blocking).</description>
+         <value>False</value>
+     </param>
+     <param type="bool" name="overwrite" subparam="true">
+         <description>Overwrite plot file if it already exists?</description>
+         <value>False</value>
+     </param>
+     
 <!--
 ###############################################################################
 Plotxy Compliance Parameters
@@ -643,6 +669,15 @@ Constraints
         <default param="extfield"><value type="bool">False</value></default>
 -->
       </equals>
+    </when>
+    
+    <when param="plotfile">
+        <notequals type="string" value="">
+            <default param="format"><value type="string"/></default>
+            <default param="highres"><value type="bool">False</value></default>
+            <default param="interactive"><value type="bool">False</value></default>
+            <default param="overwrite"><value type="bool">False</value></default>
+        </notequals>
     </when>
 
 <!--    

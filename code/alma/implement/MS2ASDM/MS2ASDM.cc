@@ -3489,7 +3489,7 @@ namespace casa {
       
       // while(scan not finished)
       while( mainTabRow<nMainTabRows && 
-	     (rowTime = timestampStartSecs(mainTabRow)) < MSTimeSecs(scanEndTime) ){ // presently one scan per exec block ???
+	     MSTimeSecs(scanEndTime) - (rowTime = timestampStartSecs(mainTabRow)) > 1E-3 ){ // presently one scan per exec block ???
 	
 	// parameters for the new SubScan table row
 	Double subScanEnd = rowTime + subscanDuration_p; 

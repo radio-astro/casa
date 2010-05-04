@@ -71,7 +71,6 @@ class runTest:
         self.imdir=WORKING_DIR+'/IMAGES/'
         self.tester=testbase(WORKING_DIR)
         self.imagertests=[]
-        self.resultRow=[]
         self.result=[]
         self.numTests=0
         ####Get the directories right
@@ -177,7 +176,6 @@ class runTest:
                     exec_success = False
                     print >> sys.stderr, "%s failed, dumping traceback:" % testName
                     traceback.print_exc() # print and swallow exception
-                    self.resultRow.append([self.tester.testname(k), 'Failed with exception', 0, '', ''])
 
                 time2=time.time()
                 time2=(time2-time1)/60.0
@@ -240,8 +238,6 @@ class runTest:
                 #print str(profileplot_pid) + ' exit: ' + str(status)
 
                 pagename=time.strftime('%Y_%m_%d/')+testName+'_profile.html'
-                self.resultRow.append([testName, 'Time of run %f mins'%time2, 2, pagename,
-                                       'memory profile usage for '+testName])
 
                 # entries common for all tests based on this run
                 self.result_common = {}
@@ -384,14 +380,6 @@ class runTest:
                 self.result = exec_result
                 self.create_log("")
 
-                #publ=tableMaker(RESULT_DIR, testName, \
-                #                UTILS_DIR+'/stdcasaheader.phtm', \
-                #                UTILS_DIR+'/stdcasatrail.phtm')
-
-                #publ.addRows(self.resultRow)
-                #laPage=publ.done()
-                #os.system('\cp -f '+laPage+' %s/index.html'%RESULT_DIR)
-
                 # Restore stdout/stderr
                 sys.stderr = save_stderr
                 sys.stdout = save_stdout
@@ -407,13 +395,6 @@ class runTest:
                 fsock.close()
                 casalog.setlogfile("casapy.log")
                 os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
-
-                self.resultRow.append([self.tester.testname(0), 'Failed with exception', 0, '', ''])
-                # Lets try close the page with those tests that worked
-                #publ=tableMaker(RESULT_DIR, testName, UTILS_DIR+'/stdcasaheader.phtm',UTILS_DIR+'/stdcasatrail.phtm' )
-                #publ.addRows(self.resultRow)
-                #laPage=publ.done()
-                #os.system('\cp -f '+laPage+' %sindex.html'%RESULT_DIR)
 
                 print "Unexpected error:", sys.exc_info()[0]
                 raise
@@ -521,9 +502,6 @@ class runTest:
         quickresult+='</pre>'
         page=a.done()
         b.done()
-        page=string.split(page, RESULT_DIR)[1]
-        self.resultRow.append([testName, quickresult, status, page,
-                               'polImageTest on'+string.split(imageName, WORKING_DIR)[1]])
         
         self.result['status'] = ['fail', 'pass'][status==1], "result of regression test"
        
@@ -547,8 +525,6 @@ class runTest:
         quickresult+='</pre>'
         page=a.done()
         #b.done()
-        page=string.split(page, RESULT_DIR)[1]
-        self.resultRow.append([testname, quickresult, status, page, 'Statistics on '+string.split(imageName, WORKING_DIR)[1]])
 
         self.result['status'] = ['fail', 'pass'][status==1], "result of regression test"
         self.result['image_min'] = min2, "image min"
@@ -581,8 +557,6 @@ class runTest:
         quickresult+='</pre>'
         page=a.done()
 #        b.done()
-        page=string.split(page, RESULT_DIR)[1]
-        self.resultRow.append([testname, quickresult, status, page, 'Cubefit on '+string.split(imageName,WORKING_DIR)[1]])
 
         self.result['status'] = ['fail', 'pass'][status==1], "result of regression test"
 

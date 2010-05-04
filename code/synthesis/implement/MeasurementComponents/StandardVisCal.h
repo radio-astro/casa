@@ -753,6 +753,102 @@ private:
 
 
 
+// **********************************************************
+//  X: position angle calibration (for circulars!)
+//
+class XJones : public SolvableVisJones {
+public:
+
+  // Constructor
+  XJones(VisSet& vs);
+  XJones(const Int& nAnt);
+
+  virtual ~XJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::X; };
+
+  // Return type name as string
+  virtual String typeName()     { return "X Jones"; };
+  virtual String longTypeName() { return "X Jones (antenna-based)"; };
+
+  // Type of Jones matrix according to nPar()
+  virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
+
+  // Local setApply
+  using SolvableVisCal::setApply;
+  virtual void setApply(const Record& apply);
+
+  // Local setSolve
+  using SolvableVisCal::setSolve;
+  void setSolve(const Record& solvepar);
+
+  // X is normalizable by the model
+  virtual Bool normalizable() { return True; };
+
+  // X solves for itself
+  virtual Bool standardSolve() { return False; };
+
+  // X solves for itself 
+  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
+
+  virtual void keep(const Int& slot);
+
+protected:
+
+  // X has just 1 complex parameter, storing a phase
+  virtual Int nPar() { return 1; };
+
+  // Jones matrix elements are trivial
+  virtual Bool trivialJonesElem() { return False; };
+
+  // Calculate the X matrix for all ants
+  virtual void calcAllJones();
+
+  // Solve in one VB for the position angle
+  void solveOneVB(const VisBuffer& vb);
+
+private:
+
+  // <nothing>
+
+};
+
+
+// **********************************************************
+//  Xf: position angle calibration (for circulars!)
+//     (channel-dependent)
+class XfJones : public XJones {
+public:
+
+  // Constructor
+  XfJones(VisSet& vs);
+  XfJones(const Int& nAnt);
+
+  virtual ~XfJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::X; };
+
+  // Return type name as string
+  virtual String typeName()     { return "Xf Jones"; };
+  virtual String longTypeName() { return "Xf Jones (antenna-based)"; };
+
+  // This is the freq-dep version of X 
+  //   (this is the ONLY fundamental difference from X)
+  virtual Bool freqDepPar() { return True; };
+
+protected:
+
+  // Use nchan>=1 shaping
+  //  (TBD: this should be generalized!)
+  void initSolvePar();
+
+
+};
+
+
 // K Jones provides support for SBD delays
 class KJones : public GJones {
 public:

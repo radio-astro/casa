@@ -155,7 +155,7 @@ class ImageTest:
         dat=self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
         self.show(dat)
         a={'return':{}}
-        residual = self.imTool.name() + '.resid'
+        residual = 'framework.resid.tmp'
         
         try:
             a = self.imTool.fitcomponents(region=reg, residual=residual)

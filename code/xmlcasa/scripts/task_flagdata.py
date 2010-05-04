@@ -361,28 +361,33 @@ def rename_params(params):
 
 def backup_flags(mode):
 
-        # put time stamp in versionname
-        # resolution = second might not be sufficient, if the user calls
-        # this task in a script using a small MS, hence put also miliseconds
-        # in the time stamp
+        # Create names like this:
+        # before_manualflag_1,
+        # before_manualflag_2,
+        # before_manualflag_3,
+        # etc
+        #
+        # Generally  before_<mode>_<i>, where i is the smallest
+        # integer giving a name, which does not already exist
+       
+        existing = fg.getflagversionlist(printflags=False)
 
-        time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
-
-	existing = fg.getflagversionlist(printflags=False)
 	# remove comments from strings
 	existing = [x[0:x.find(' : ')] for x in existing]
 	i = 1
 	while True:
-		versionname = mode+"_" + str(i)
+		versionname = mode +"_" + str(i)
 
 		if not versionname in existing:
 			break
 		else:
 			i = i + 1
 
-        #casalog.post("Backing up flags under versionname = " + versionname)
+        time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+
+        casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
         fg.saveflagversion(versionname=versionname,
-                           comment='flagdata autosave on ' + time_string,
+                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
                            merge='replace')
 

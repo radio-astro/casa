@@ -450,29 +450,30 @@ autoflag::help(const std::string& names)
 bool
 autoflag::reset(const std::vector<std::string>& methods)
 {
-
- Bool rstat(False);
- try {
-    /* for all the methods in in methods, remove them from the agents record */
-    for(unsigned int i=0; i<methods.size();i++){
-        if(agents->isDefined(methods[i])){
-           agents->removeField(RecordFieldId(String(methods[i])));
-           *itsLog << LogIO::NORMAL3 << "Field " << methods[i] << " removed from agents record." << LogIO::POST;
-        } else {
-           *itsLog << LogIO::WARN << "Field " << methods[i] << " not found in agents record, not reset." << LogIO::POST;
-        }
-        if(itsSelect && itsSelect->isDefined(methods[i])){
-           itsSelect->removeField(RecordFieldId(String(methods[i])));
-           *itsLog << LogIO::NORMAL3 << "Field " << methods[i] << " removed from agents record." << LogIO::POST;
-        } else {
-           *itsLog << LogIO::WARN << "Field " << methods[i] << " not found in agents record, not reset." << LogIO::POST;
+    Bool rstat(False);
+    if (agents != NULL) {
+        try {
+            /* for all the methods in in methods, remove them from the agents record */
+            for(unsigned int i=0; i<methods.size();i++){
+                if(agents->isDefined(methods[i])){
+                    agents->removeField(RecordFieldId(String(methods[i])));
+                    *itsLog << LogIO::NORMAL3 << "Field " << methods[i] << " removed from agents record." << LogIO::POST;
+                } else {
+                    *itsLog << LogIO::WARN << "Field " << methods[i] << " not found in agents record, not reset." << LogIO::POST;
+                }
+                if(itsSelect && itsSelect->isDefined(methods[i])){
+                    itsSelect->removeField(RecordFieldId(String(methods[i])));
+                    *itsLog << LogIO::NORMAL3 << "Field " << methods[i] << " removed from agents record." << LogIO::POST;
+                } else {
+                    *itsLog << LogIO::WARN << "Field " << methods[i] << " not found in agents record, not reset." << LogIO::POST;
+                }
+            }
+        } catch (AipsError x) {
+            *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            RETHROW(x);
         }
     }
- } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
- }
- return rstat;
+    return rstat;
 }
 
 bool

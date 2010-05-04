@@ -2,11 +2,16 @@
 """ Script to run unit tests from the command line as: 
     casapy [casa-options] -c runUnitTest.py testname1 testname2...
     casapy [casa-options] -c runUnitTest.py testname1[test_r,test23] testname2...
+    casapy [casa-options] -c runUnitTest.py --help
+    casapy [casa-options] -c runUnitTest.py --short
     casapy [casa-options] -c runUnitTest.py
     
     or from inside casapy:
     import runUnitTest.py
-    runUnitTest.main(['testname']) """
+    runUnitTest.main(['testname']) 
+    runUnitTest.main()
+    runUnitTest.main(['--short'])
+    """
 
 # The main class in testwrapper.py is:
 # class UnitTest, methods: getUnitTest(), getFuncTest()
@@ -19,6 +24,9 @@ import os
 import sys
 import traceback
 import unittest
+import string
+import re
+import shutil
 sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
 import testwrapper
 from testwrapper import *
@@ -26,32 +34,70 @@ import nose
 
 
 # List of tests to run
-#OLD_TESTS = ['asdm-import','boxit_test',
-#             'imcontsub_test','imfit_test','imhead_test','immath_test',
-#             'immoment_test','imregrid_test',
-#             'imsmooth_test','imval_test','vishead_test',
-#             'visstat_test']
-OLD_TESTS = ['asdm-import','boxit_test',
-             'imfit_test',
-             'imregrid_test',
-             'imval_test','vishead_test']
-NEW_TESTS = ['test_listhistory',
+OLD_TESTS = [
+            ]
+
+FULL_LIST = ['test_asdm-import',
+             'test_asdmv1-import',
+             'test_boxit',
              'test_clean',
-             'test_report',
-             #'test_exportasdm',
-             'test_plotants',
-             'test_smoothcal',
-             'test_hanningsmooth',
              'test_clearstat',
-             'test_imstat']
+             'test_csvclean',
+             'test_exportasdm',
+             'test_hanningsmooth',
+             'test_imcontsub',
+             'test_imfit',
+             'test_imhead',
+             'test_immath',
+             'test_immoments',
+#             'test_importevla',
+             'test_imregrid',
+             'test_imsmooth',
+             'test_imstat',
+             'test_imval',
+             'test_listhistory',             
+             'test_plotants',
+             'test_plotms',
+             'test_report',
+             'test_smoothcal',
+             'test_vishead',
+             'test_visstat']
 
-whichtests = 0
+SHORT_LIST = ['test_asdm-import',
+             'test_boxit',
+             'test_clean',
+             'test_csvclean',
+             'test_exportasdm',
+             'test_imfit',
+             'test_imhead',
+             'test_importevla',
+             'test_imregrid',
+             'test_imstat',
+             'test_imval',
+             'test_plotants',
+             'test_plotms',
+             'test_smoothcal',
+             'test_vishead']
 
+def usage():
+    print '*************************************************************************'
+    print '\nRunUnitTest will execute unit test(s) of CASA tasks.'
+    print 'Usage:\n'
+    print 'casapy [casapy-options] -c runUnitTest.py [options]\n'
+    print 'options:'
+    print 'no option: will run all tests defined in FULL_LIST list'
+    print 'test_name: will run only this test (more tests are separated by spaces)'
+    print '--short:   will run only a short list of tests defined in SHORT_LIST'
+    print '--file:    followed by a text file with each test on a line'
+    print '--help:    prints this message\n'
+    print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
+    print '**************************************************************************'
+    
 def is_old(name):
     '''Check if the test is old or new'''
     if (OLD_TESTS.__contains__(name)):
         return True
-    elif (NEW_TESTS.__contains__(name)):
+    elif (FULL_LIST.__contains__(name)):
         return False
     else:
         return None
@@ -81,15 +127,50 @@ def gettests(testfile):
         temp = testfile[n0+1:n1]
         tests = temp.split(',')
         return tests
+
+def readfile(FILE):
+    if(not os.path.exists(FILE)):
+        print 'List of tests does not exist'
+        return []
     
+    List = []
+    infile = open(FILE, "r")
+    for newline in infile:
+        line=newline.rstrip('\n')
+        List.append(line)
+    
+    infile.close()
+    return List
+
+
+# Define which tests to run    
+whichtests = 0
+        
 
 def main(testnames=[]):
-    
-    if testnames == []:
+        
+    listtests = testnames
+    if listtests == []:
         whichtests = 0
+    elif (listtests == SHORT_LIST or listtests == ['--short']
+          or listtests == ['SHORT_LIST']):
+        whichtests = 2
+        listtests = SHORT_LIST
+    elif (type(testnames) != type([])):
+        if (os.path.isfile(testnames)):
+            # How to prevent it from opening a real test???
+            whichtests = 1
+            listtests = readfile(testnames)
+            if listtests == []:
+                print 'List of tests does not exist'
+                sys.exit()
+        else:
+            print 'List of tests does not exist'
+            sys.exit()
+            
     else:
         whichtests = 1
-        
+           
 
     # Directories
     PWD = os.getcwd()
@@ -116,15 +197,15 @@ def main(testnames=[]):
         os.makedirs(xmldir)
     
     
-    # RUN THE TESTS
+    # ASSEMBLE and RUN the TESTS
     '''Run all tests'''
     if not whichtests:
-        print "Starting unit tests for %s%s: " %(OLD_TESTS,NEW_TESTS)
+        print "Starting unit tests for %s%s: " %(OLD_TESTS,FULL_LIST)
         
         # Assemble the old tests       
-        testnames = OLD_TESTS
+        listtests = OLD_TESTS
         list = []
-        for f in testnames:
+        for f in listtests:
             try:
                 testcase = UnitTest(f).getFuncTest()
                 list = list+[testcase]
@@ -132,32 +213,20 @@ def main(testnames=[]):
                 traceback.print_exc()
         
         # Assemble the new tests
-        testnames = NEW_TESTS        
-        for f in testnames:
+        listtests = FULL_LIST        
+        for f in listtests:
             try:
                 tests = UnitTest(f).getUnitTest()
                 list = list+tests
             except:
                 traceback.print_exc()
-                
-        # Run all tests and create a XML report
-        xmlfile = xmldir+'nose.xml'
-        try:
-            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                                  suite=list)
-        except:
-            print "Exception: failed to run the test"
-            traceback.print_exc()
-            
-        else:
-            os.chdir(PWD)
-    
-    else:
+                    
+    elif (whichtests == 1):
         '''Run specific tests'''
         # is this an old or a new test?
         oldlist = []
         newlist = []
-        for f in testnames:
+        for f in listtests:
             if not haslist(f):
                 if is_old(f):
                     oldlist.append(f)
@@ -202,49 +271,92 @@ def main(testnames=[]):
                     list = list+testcases
             except:
                 traceback.print_exc()
+                                             
+    elif(whichtests == 2):
+        '''Run the SHORT_LIST of tests only'''
+        print "Starting unit tests for %s: " %SHORT_LIST
+        
+        # Assemble the short list of tests
+        listtests = SHORT_LIST        
+        list = []    
+        for f in listtests:
+            try:
+                tests = UnitTest(f).getUnitTest()
+                list = list+tests
+            except:
+                traceback.print_exc()
+                
+    global regstate # Global variable used by regression framework to determine pass/failure status
+    regstate = False
 
-                 
-        # Run the tests and create a XML report
-        xmlfile = xmldir+'nose.xml'
-        try:
-            result = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile], 
-                                  suite=list)
-        except:
-            print "Exception: failed to run the test"
-            traceback.print_exc()
-            
-        else:
-            os.chdir(PWD)
+    # Run all tests and create a XML report
+    xmlfile = xmldir+'nose.xml'
+    try:
+        
+        regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile],
+                              suite=list)
+    except:
+        print "Exception: failed to run the test"
+        traceback.print_exc()
+        
+    else:
+        os.chdir(PWD)
+
 
 if __name__ == "__main__":
     # Get command line arguments
     
-    # Get the tests to run
-    i = sys.argv.index("-c")
-    this_file = sys.argv[i+1]
-    testnames = []
+    if "-c" in sys.argv:
+        # If called with ... -c runUnitTest.py from the command line,
+        # then parse the command line parameters
+        i = sys.argv.index("-c")
+        if len(sys.argv) >= i + 2 and \
+               re.compile("runUnitTest\.py$").search(sys.argv[i + 1]):
+
+            this_file = sys.argv[i+1]
+
+            # Get the tests to run
+            testnames = []
     
-    la = [] + sys.argv
-    
-    if sys.argv.__len__() == i+2:
-        # Will run all tests
-        whichtests = 0
-    elif sys.argv.__len__() > i+2:
-        # Will run specific tests
-        whichtests = 1
-        
-        while len(la) > 0:
-            elem = la.pop()
-            if elem == this_file:
-                break           
+            la = [] + sys.argv
             
-            testnames.append(elem)
-        
-#    sys.exit(main(testnames))
+            if len(sys.argv) == i+2:
+                # Will run all tests
+                whichtests = 0
+                testnames = []
+            elif len(sys.argv) > i+2:
+                # Will run specific tests.
+                whichtests = 1
+                
+                while len(la) > 0:
+                    elem = la.pop()
+                    if elem == '--help':
+                        usage()
+                        sys.exit()
+                    if elem == '--file':
+                        # read list from a text file
+                        index = i + 3
+                        testnames = sys.argv[index]
+                        #                testnames = readfile(filelist)
+                        #                if (testnames == []):
+                        #                    sys.exit()
+                        break
+                    if elem == '--short':
+                        # run only the SHORT_LIST
+                        whichtests = 2
+                        testnames = SHORT_LIST
+                        break    
+                    if elem == this_file:
+                        break
+                
+                    testnames.append(elem)
+        else:
+            testnames = []
+    else:
+        # Not called with -c (but possibly execfile() from iPython)
+        testnames = []
+
     try:
         main(testnames)
     except:
         traceback.print_exc()
-        
-
-

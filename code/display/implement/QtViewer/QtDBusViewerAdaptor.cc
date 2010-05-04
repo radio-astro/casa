@@ -33,7 +33,6 @@
 #include <QTextStream>
 #include <display/QtViewer/QtDBusViewerAdaptor.qo.h>
 #include <display/QtViewer/QtApp.h>
-#include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/QtViewer/QtCleanPanelGui.qo.h>
@@ -48,33 +47,6 @@ namespace casa {
     static void launch_ghostview( const char *printer_file );
     static void launch_lpr( const char *printer_file, const char *printer );
 
-    const QString &QtDBusViewerAdaptor::name( ) {
-	return QtViewer::name( );
-    }
-
-    bool QtDBusViewerAdaptor::connectToDBus(const QString &dbus_name) {
-
-	bool dbusRegistered = false;
-
-	if ( dbusRegistered || serviceIsAvailable(dbusServiceName(dbus_name)) )
-	    return false;
-
-	try {
-	    // Register service and object.
-	    QObject *xparent = parent();
-	    dbusRegistered = connection().isConnected() &&
-			     connection().registerService(dbusServiceName(dbus_name)) &&
-			     connection().registerObject(dbusObjectName(dbus_name), xparent,
-// 			     connection().registerObject(dbusObjectName(), parent(),
-// 			     connection().registerObject(dbusObjectName(), this,
-							 QDBusConnection::ExportAdaptors);
-
-	} catch(...) { dbusRegistered = false; }
-
-	return dbusRegistered;
-    }
-
-
     void QtDBusViewerAdaptor::handle_interact( QVariant v ) {
 	emit interact(QDBusVariant(v));
     }
@@ -84,12 +56,12 @@ namespace casa {
 	if ( iter == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
+	    return error(QString("panel '") + buf + "' not found");
 	}
 	if ( ! iter->second->panel()->supports( QtDisplayPanelGui::INTERACT ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' does not support 'interact'"));
+	    return error(QString("panel '") + buf + "' does not support 'interact'");
 	};
 	return QDBusVariant(iter->second->panel()->start_interact(input.variant(),panel));
     }
@@ -101,12 +73,12 @@ namespace casa {
 	if ( iter == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
+	    return error(QString("panel '") + buf + "' not found");
 	}
 	if ( ! iter->second->panel()->supports( QtDisplayPanelGui::SETOPTIONS ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel );
-	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' does not support 'interact'"));
+	    return error(QString("panel '") + buf + "' does not support 'interact'");
 	};
 
 	QVariant v = input.variant( );
@@ -124,12 +96,12 @@ namespace casa {
 	struct stat buf;
 	if ( stat(path.toAscii().constData(),&buf) < 0 ) {
 	    // file (or dir) does not exist
-	    return QDBusVariant(QVariant("*error* path '" + path + "' not found"));
+	    return error("path '" + path + "' not found");
 	}
 
 	QtDisplayPanelGui *dpg = findpanel( panel );
 	if ( ! dpg ) {
-	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return error("could not find requested panel");
 	}
 
 	String datatype = viewer_->filetype(path.toStdString()).chars();
@@ -149,7 +121,7 @@ namespace casa {
 		return QDBusVariant(QVariant(get_id( dpg, result, path, displaytype )));
 	    }
 	}
-	return QDBusVariant(QVariant(QString("*error* datatype '") + datatype.c_str( ) + "' not yet implemented"));
+	return error(QString("datatype '") + datatype.c_str( ) + "' not yet implemented");
     }
 
     void QtDBusViewerAdaptor::unload_data( QtDisplayPanelGui *panel, int index, bool erase ) {
@@ -219,7 +191,7 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::reload( int panel_or_data ) {
 
 	if ( panel_or_data == 0 ) {
-	    return QDBusVariant(QVariant("*error* no panel (i.e. '0') provided"));
+	    return error("no panel (i.e. '0') provided");
 	}
 
 	panelmap::iterator dpiter = managed_panels.find( panel_or_data );
@@ -248,7 +220,7 @@ namespace casa {
 	    } else {
 	      char buf[50];
 	      sprintf( buf, "%d", panel_or_data );
-	      return QDBusVariant(QVariant(QString("*error* id (") + buf + ") does not reference a panel or data"));
+	      return error(QString("id (") + buf + ") does not reference a panel or data");
 	    }
 	}
 	return QDBusVariant(QVariant(true));
@@ -260,7 +232,7 @@ namespace casa {
 	if ( dmiter == managed_datas.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%", data );
-	    return QDBusVariant(QVariant(QString("*error* data id (") + buf + ") not found"));
+	    return error(QString("data id (") + buf + ") not found");
 	}
 	if ( dmiter->second->id() != data ) {
 	    fprintf( stderr, "error: internal error (data id mismatch)" );
@@ -276,12 +248,12 @@ namespace casa {
 	const char *path = qpatha.constData();
 	if ( stat(path,&buf) < 0 || ! S_ISREG(buf.st_mode) ) {
 	    // file (or dir) does not exist
-	    QDBusVariant(QVariant("*error* file or dir(" + qpath + ") does not exist"));
+	    return error("file or dir(" + qpath + ") does not exist");
 	}
 
 	QtDisplayPanelGui *dpg = findpanel( panel );
 	if ( ! dpg ) {
-	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return error("could not find requested panel");
 	}
 
 	bool result = dpg->displayPanel()->restorePanelState(path);
@@ -352,7 +324,7 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::hide( int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
-	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return error("could not find requested panel");
 	}
 	dpg->hide( );
 	return QDBusVariant(QVariant(true));
@@ -361,7 +333,7 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::show( int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
-	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return error("could not find requested panel");
 	}
 	dpg->show( );
 	dpg->displayPanel( )->refresh( );
@@ -371,12 +343,12 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::close( int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
-	    return panel == 0 ? QDBusVariant(QVariant(true)) : QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return panel == 0 ? QDBusVariant(QVariant(true)) : error("could not find requested panel");
 	}
 
 	QtDisplayPanelGui *win = erase_panel( panel );
 	if ( win == 0 ) {
-	    return QDBusVariant(QVariant("*error* internal error closing panel"));
+	    return error("internal error closing panel");
 	}
 
 	win->closeMainPanel( );
@@ -386,12 +358,12 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::popup( const QString &what, int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
-	    return panel == 0 ? QDBusVariant(QVariant(true)) : QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return panel == 0 ? QDBusVariant(QVariant(true)) : error("could not find requested panel");
 	}
 	if ( what == "open" ) {
 	    dpg->showDataManager();
 	} else {
-	    return QDBusVariant(QVariant("*error* unknown popup-widow name, expected 'open'"));
+	    return error("unknown popup-widow name, expected 'open'");
 	}
 	return QDBusVariant(QVariant(true));
     }
@@ -399,7 +371,7 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::frame( int num, int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
-	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return error("could not find requested panel");
 	}
 
 	if ( num >= 0 ) { dpg->displayPanel()->goTo(num); }
@@ -411,7 +383,7 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::zoom( int level, int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
-	    return QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return error("could not find requested panel");
 	}
 
 	if ( level == 0 )
@@ -428,12 +400,12 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::release( int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
-	    return panel == 0 ? QDBusVariant(QVariant(true)) : QDBusVariant(QVariant("*error* could not find requested panel"));
+	    return panel == 0 ? QDBusVariant(QVariant(true)) : error("could not find requested panel");
 	}
 
 	QtDisplayPanelGui *win = erase_panel( panel );
 	if ( win == 0 ) {
-	    return QDBusVariant(QVariant("*error* internal error releasing panel"));
+	    return error("internal error releasing panel");
 	}
 
 	win->releaseMainPanel( );
@@ -665,16 +637,22 @@ namespace casa {
 	return true;
     }
 
-    QString QtDBusViewerAdaptor::cwd( const QString &new_path ) {
+    QDBusVariant QtDBusViewerAdaptor::cwd( const QString &new_path ) {
 	if ( new_path != "" ) {
 	    struct stat buf;
 	    const char *p = new_path.toAscii().constData();
 	    if ( stat(p,&buf) == 0 && S_ISDIR(buf.st_mode) )
 		chdir(p);
+	    else if ( stat(p,&buf) != 0 )
+		return error( new_path + " does not exist" );
+	    else if ( ! S_ISDIR(buf.st_mode) )
+		return error( new_path + " is not a directory" );
+	    else
+		return error( "cannot change to " + new_path );
 	}
 	char buf[MAXPATHLEN+1];
 	getcwd(buf,MAXPATHLEN+1);
-	return QString((const char*)buf);
+	return QDBusVariant(QVariant(QString((const char*)buf)));
     }
 
     QStringList QtDBusViewerAdaptor::keyinfo( int key ) {

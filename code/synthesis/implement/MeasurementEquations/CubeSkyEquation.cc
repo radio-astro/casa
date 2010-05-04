@@ -88,7 +88,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
 
 void CubeSkyEquation::init(FTMachine& ft){
   Int nmod=sm_->numberOfModels();
-  
+
   //if(sm_->getAlgorithm()=="MSMFS") 
   if(sm_->numberOfTaylorTerms()>1) 
     {
@@ -196,14 +196,21 @@ CubeSkyEquation::~CubeSkyEquation(){
 
 }
 
-void  CubeSkyEquation::predict(Bool incremental) {
+void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 
+  VisibilityIterator::DataColumn visCol=VisibilityIterator::Model;
+  if(col==MS::DATA){
+    visCol=VisibilityIterator::Observed;
+  } 
+  if(col==MS::CORRECTED_DATA){
+    visCol=VisibilityIterator::Corrected;
+  }
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
   //AlwaysAssert(vs_, AipsError);
   if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
   if(noModelCol_p)
-        throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
+    throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
   // Initialize 
   VisIter& vi=*wvi_p;
   //Lets get the channel selection for later use
@@ -217,47 +224,47 @@ void  CubeSkyEquation::predict(Bool incremental) {
   Bool initialized=False;
   predictComponents(incremental, initialized);
   //set to zero then loop over model...check for size...subimage then loop over  subimages
-
-
+  
+  
   Bool isEmpty=True;
   for (Int model=0; model < (sm_->numberOfModels());++model){
     isEmpty=isEmpty &&  (sm_->isEmpty(model));                
-
+    
   }
-
- 
+  
+  
   if( (sm_->numberOfModels() >0) && isEmpty  && !initialized && !incremental){ 
-      // We are at the begining with an empty model as starting point
-      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-	for (vi.origin(); vi.more(); vi++) {
-	  vb.setModelVisCube(Complex(0.0,0.0));
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
-	}
+    // We are at the begining with an empty model as starting point
+    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+      for (vi.origin(); vi.more(); vi++) {
+	vb.setModelVisCube(Complex(0.0,0.0));
+	vi.setVis(vb.modelVisCube(),visCol);
       }
+    }
   }
-
-  //If all model is zero...no need to continue
+  
+    //If all model is zero...no need to continue
   if(isEmpty) 
     return;
-
   
-
+  
+  
   // Now do the images
   for (Int model=0; model < (sm_->numberOfModels());++model){ 
-      // Change the model polarization frame
-      if(vb.polFrame()==MSIter::Linear) {
-	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::LINEAR);
-      }
-      else {
-	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::CIRCULAR);
-      }
-      ft_=&(*ftm_p[model]);
-      scaleImage(model, incremental);
+    // Change the model polarization frame
+    if(vb.polFrame()==MSIter::Linear) {
+      StokesImageUtil::changeCStokesRep(sm_->cImage(model),
+					SkyModel::LINEAR);
+    }
+    else {
+      StokesImageUtil::changeCStokesRep(sm_->cImage(model),
+					SkyModel::CIRCULAR);
+    }
+    ft_=&(*ftm_p[model]);
+    scaleImage(model, incremental);
   }
   ft_=&(*ftm_p[0]);
-      // Reset the various SkyJones
+  // Reset the various SkyJones
   resetSkyJones();
   Int nCubeSlice=1;
   isLargeCube(sm_->cImage(0), nCubeSlice);
@@ -275,25 +282,25 @@ void  CubeSkyEquation::predict(Bool incremental) {
 	}
 	// get the model visibility and write it to the model MS
 	getSlice(vb,incremental, cubeSlice, nCubeSlice);
-	vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	vi.setVis(vb.modelVisCube(),visCol);
       }
     }
     finalizeGetSlice();
     if(!incremental&&!initialized) initialized=True;
   }
-
+  
   for(Int model=0; model < sm_->numberOfModels(); ++model){
-    //For now unscale test on name of ft_
+      //For now unscale test on name of ft_
     ft_=&(*ftm_p[model]);
     unScaleImage(model, incremental);
   }
   ft_=&(*ftm_p[0]);
-
+  
   //lets return original selection back to iterator
   if(changedVI)
     vi.selectChannel(blockNumChanGroup_p, blockChanStart_p, 
 		     blockChanWidth_p, blockChanInc_p, blockSpw_p); 
-
+  
 }
 
 void CubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs) 
@@ -864,7 +871,7 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 					   Int nCubeSlice){
   imGetSlice_p.resize(sm_->numberOfModels(), True, False);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
-     //the different apply...jones use ft_ and ift_
+     //the different apply...jones user ft_ and ift_
     ft_=&(*ftm_p[model]);
     ift_=&(*iftm_p[model]);
     if(cubeSlice==0){
@@ -1069,6 +1076,11 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
       specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))-0.5);
       chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
+    }
+    if(end < start){
+      Double tempoo=start;
+      start=end;
+      end=tempoo;
     }
 
     Block<Vector<Int> > spwb;

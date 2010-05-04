@@ -18,6 +18,7 @@
 #include <xmlcasa/record.h>
 #include <xmlcasa/variant.h>
 #include <xmlcasa/ms/ms_forward.h>
+#include <xmlcasa/tables/table_cmpt.h>
 
 // put includes here
 
@@ -54,7 +55,7 @@ class ms
 
     std::string name();
 
-    bool tofits(const std::string& fitsfile = "", const std::string& column = "corrected", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const int nchan = -1, const int start = 0, const int width = 1, const ::casac::variant& baseline = ::casac::initialize_variant(""), const std::string& time = "", const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const bool writesyscal = false, const bool multisource = false, const bool combinespw = false, const bool writestation = false);
+  bool tofits(const std::string& fitsfile = "", const std::string& column = "corrected", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const int nchan = -1, const int start = 0, const int width = 1, const ::casac::variant& baseline = ::casac::initialize_variant(""), const std::string& time = "", const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const bool writesyscal = false, const bool multisource = false, const bool combinespw = false, const bool writestation = false, const bool padwithflags=false);
 
     bool summary(::casac::record& header, const bool verbose = false);
 
@@ -156,6 +157,26 @@ class ms
 
     bool uvsub(const bool reverse = false);
 
+    //bool 
+    ::casac::table *
+      moments(const std::vector<int>& moments, 
+              const ::casac::variant& antenna,
+              const ::casac::variant& field,
+              const ::casac::variant& spw,
+              //const ::casac::variant& vmask,
+              //const ::casac::variant& stokes,
+              //const std::vector<std::string>& in_method,
+              //const std::vector<int>& smoothaxes,
+              //const ::casac::variant& smoothtypes,
+              //const std::vector<double>& smoothwidths,
+              const std::vector<double>& d_includepix,
+              const std::vector<double>& d_excludepix,
+              const double peaksnr, const double stddev,
+              const std::string& velocityType, const std::string& out,
+              //const std::string& smoothout, 
+              //const std::string& pgdevice,
+              //const int nx, const int ny, const bool yind,
+              const bool overwrite, const bool async=false);
     private:
 
 #include <xmlcasa/ms/ms_private.h>

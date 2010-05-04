@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import tempfile
 from taskinit import *
 from update_spw import *
@@ -131,7 +132,7 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         cb.close()
 
         # Delete the temporary caltable
-        os.system('rm -rf '+amuellertab)
+        shutil.rmtree(amuellertab)
 
         if do_resplit:                   # Do final filtering by spw.
             ms.open(csvis)

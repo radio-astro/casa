@@ -364,9 +364,10 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
   
     if(itsSim !=0){
       MPosition mpos;
-      if(!casaMPosition(referencelocation, mpos)){
+      if(!casaMPosition(referencelocation, mpos) && referencelocation.toString() != "[]"){
 	*itsLog << LogIO::SEVERE 
-		<< "Could not convert referencelocation to a Position Measures"
+		<< "Could not convert referencelocation "
+		<< referencelocation.toString() << " to a Position Measures"
 		<< LogIO::POST;
 
 	
@@ -597,9 +598,10 @@ simulator::setoptions(const std::string& ftmachine, const int cache,
     if(itsSim !=0){
       
       MPosition mpos;
-      if (!casaMPosition(location, mpos)){
+      if (!casaMPosition(location, mpos) && (location.toString()!="[]")){
 	*itsLog << LogIO::SEVERE 
-		<< "Could not convert location to a Position Measures"
+		<< "Could not convert location "
+		<< location.toString() << " to a Position Measures"
 		<< LogIO::POST;
       }
       rstat=itsSim->setoptions(ftmachine, cache, tile, gridfunction, mpos, padding, facets, maxdata, wprojplanes);

@@ -1097,14 +1097,10 @@ with the first two lines containing a format description.
  
 
  
-   <method type="function" name="query">
-   <shortdescription>!!!PARTIAL IMPLEMENTATION!!! Make a table from a query</shortdescription>
+<method type="function" name="query">
+  <shortdescription>Make a table from a query</shortdescription>
    
 <description>
-!!!ONLY PARTIALLY IMPLEMENTED!!!.
-
-The function tb.queryC() apprears to be a more complete implementation.
-
 Make a table from a query applied to the current table. <!-- The query
 is the qualification part of the <link
 anchor="table:tablecommand">tablecommand</link>.--> It is possible to
@@ -1146,7 +1142,7 @@ interactively.-->
      </param>
 </input>
 <returns type="casatable">
-<shortdescription>table tool
+<shortdescription>a table tool with the query results
 </shortdescription>
 </returns>
 <example>
@@ -1199,90 +1195,38 @@ E.g.:
 </method>
 
 <method type="function" name="queryC">
-   <shortdescription>Alternative table query function</shortdescription>
+   <shortdescription>Clone of query.  Will disappear soon!</shortdescription>
 
-<description>
-Make a table from a query applied to the current table. <!-- The query
-is the qualification part of the <link
-anchor="table:tablecommand">tablecommand</link>.--> It is possible to
-specify column(s) and/or expressions to sort on and to specify the
-columns to be contained in the output table.  See the example below.
-A new "on-the-fly" table tool is returned. The new (reference) table
-can be given a name and will then be written to disk. Note that the
-resulting table is just a reference to the original table.  One can
-make a deep copy of the query result using the <link
-anchor="table:table.copy.function">copy</link> function (see example).
-</description>
-
-
+   <description>
+     This has been merged with query() and will disappear in the next release.
+     Update your scripts now!
+   </description>
    <input>
-	   <param type="string" name="query">
-		   <description>the query expression</description>
-		   <value></value>
-           </param>
-	   <param type="string" name="resultTable">
-		   <description>Name of the results table</description>
-		   <value></value>
-           </param>
-	   <param type="string" name="sortlist">
-		   <description>Sort list of the results table</description>
-		   <value></value>
-           </param>
-	   <param type="string" name="columns">
-		   <description>Columns to return in the sort table, leave blank for all</description>
-		   <value></value>
-           </param>
+     <param type="string" name="query">
+       <description>the query expression</description>
+       <value></value>
+     </param>
+     <param type="string" name="resultTable">
+       <description>Name of the results table</description>
+       <value></value>
+     </param>
+     <param type="string" name="sortlist">
+       <description>Sort list of the results table</description>
+       <value></value>
+     </param>
+     <param type="string" name="columns">
+       <description>Columns to return in the sort table, leave blank for all</description>
+       <value></value>
+     </param>
    </input>
    <returns type="casatable">
-	   <shortdescription>a table tool with the query results
-   </shortdescription>
+     <shortdescription>a table tool with the query results
+     </shortdescription>
    </returns>
 
 <example>
-\begin{verbatim}
-  tb.open("3C273XC1.MS")
-  subt=tb.queryC("OBSERVATION_ID==0",
-                sortlist="ARRAY_ID", columns="TIME, DATA, UVW")
-  print subt.ncols()
-# 23
-  tb.close()
-  copyt = subt.copy ("3C273XC1_spw1.MS", True)
-  subt.close()
-  copyt.close()
-\end{verbatim}
-
-From the original table corresponding to the disk file 3C273XC1.MS,
-only rows with OBSERVATION\_ID equal to 0 are selected and sorted
-by ARRAY\_ID. Only
-the columns TIME DATA UVW are written. Thereafter a deep copy of the
-result is made.
-The table queryC command is equivalent to:
-\begin{verbatim}
-  SELECT TIME, DATA, UVW
-  FROM 3C273XC1.MS
-  WHERE OBSERVATION_ID==0
-  ORDERBY ARRAY_ID
-\end{verbatim}
-
+See tb.query.
 </example>
-
-<example>
-The sortlist argument can be used to sort in ascending or descending
-order (or a mix of them) on one or more columns. Default is ascending.
-It is also possible to remove duplicate values using the word
-NODUPLICATES at the beginning.
-
-E.g.:
-
-\begin{verbatim}
-  sortlist='TIME desc'
-  sortlist='noduplicates ANTENNA1,ANTENNA2'
-  sortlist='ANTENNA1 desc, ANTENNA2 asc'
-  sortlist='desc ANTENNA1, ANTENNA2, TIME'
-\end{verbatim}
-</example>
-
-
 </method>
  
    <method type="function" name="calc">

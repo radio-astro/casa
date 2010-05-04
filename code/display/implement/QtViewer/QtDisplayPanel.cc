@@ -333,7 +333,10 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
     
     if(imReg==0) continue;
      
-    if(printStats) qdd->printRegionStats(*imReg);	// stats.
+    if(printStats) {
+       qdd->printRegionStats(*imReg);	// stats.
+       qdd->printLayerStats(*imReg);	// stats.
+    }
     
     
     //if(!rgnSaved) {
