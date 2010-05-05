@@ -960,7 +960,7 @@ $(LASTVERSION): VERSION
 		 `(ls -1 $(LIBDIR)/lib*$$version* 2> /dev/null | sed "s|\.$$version||") || exit 0`; do \
 		rm $$i; \
 	done
-	$(call mkpath,$(dir $(LASTVERSION)))
+	@$(call mkpath,$(dir $(LASTVERSION)))
 	@cp VERSION $(LASTVERSION)
 
 ###
