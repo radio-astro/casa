@@ -590,17 +590,17 @@ $(BINDIR)/% : measures/apps/measuresdata/%.cc
 .SECONDEXPANSION:
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.cc|")
-	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call make-depend,$<,$(subst .o,.dep,$@))
 	$(C++) $(CXXFLAGS) -fPIC $(COREINC2) $(INC) -c $< -o $@
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.c|")
-	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call make-depend,$<,$(subst .o,.dep,$@))
 	$(CC) $(CLAGS) -fPIC $(COREINC2) $(INC) -c $< -o $@
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.f|")
-	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	$(FC) $(FFLAGS) -fPIC $(COREINC2) $(INC) -c $< -o $@
 
 ifeq "$(FC)" ""
