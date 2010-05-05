@@ -94,7 +94,6 @@ class simutil:
             if multi[2] <= multi[0]*multi[1]:
                 pl.subplot(multi[0],multi[1],multi[2])
 
-
     def endfig(self,remove=False): # set margins to smaller, save to file if required        
         ax=pl.gca()
         l=ax.get_xticklabels()
@@ -108,7 +107,7 @@ class simutil:
             pl.savefig(name)
         if remove:
             pl.close(self.currfignum)
-            self.fignames[self.currfignum]=""
+            self.fignames[self.currfignum-1]=""
             self.currfignum -= 1  # think about this
             self.pmulti=0
         # otherwise just leave it open
@@ -2262,7 +2261,7 @@ class simutil:
                 
         if add_spectral_coord:
             if inwidth=="" or incenter=="":
-                self.msg("modelimage "+str(modelimage)+" appears to have no spectral axis -- you must modifymodel=True and set incenter, inwidth, innchan",priority="error")
+                self.msg("modelimage "+str(inimage)+" appears to have no spectral axis -- you must modifymodel=True and set incenter, inwidth, innchan",priority="error")
             axmap[3]=extra_axis
             axassigned[extra_axis]=3
             model_nchan=arr.shape[extra_axis]
