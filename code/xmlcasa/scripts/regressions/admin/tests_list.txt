@@ -52,7 +52,7 @@ ori_hc3n_regression             kana.sugi nao.ac.jp
 ori_hc3n_task_regression        kana.sugi nao.ac.jp
 ori_sio_regression              kana.sugi nao.ac.jp
 ori_sio_task_regression         kana.sugi nao.ac.jp
-orionmos4sim                    nelias nrao.edu
+orionmos4sim                    rreid nrao.edu
 orionmosaic                     kgolap aoc.nrao.edu
 plotxy_regression               hye aoc.nrao.edu
 pointing_regression             sbhatnag aoc.nrao.edu
