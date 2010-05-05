@@ -38,9 +38,7 @@ import nose
 OLD_TESTS = [
             ]
 
-FULL_LIST = ['test_asdm-import',
-             'test_asdmv1-import',
-             'test_boxit',
+FULL_LIST = ['test_boxit',
              'test_clean',
              'test_clearstat',
              'test_csvclean',
@@ -51,8 +49,10 @@ FULL_LIST = ['test_asdm-import',
              'test_imhead',
              'test_immath',
              'test_immoments',
-#             'test_importevla',
+             'test_importasdm',
+             'test_importevla',
 #             'test_importfitsidi',
+             'test_importoldasdm',
              'test_imregrid',
              'test_imsmooth',
              'test_imstat',
@@ -65,13 +65,13 @@ FULL_LIST = ['test_asdm-import',
              'test_vishead',
              'test_visstat']
 
-SHORT_LIST = ['test_asdm-import',
-             'test_boxit',
+SHORT_LIST = ['test_boxit',
              'test_clean',
              'test_csvclean',
              'test_exportasdm',
              'test_imfit',
              'test_imhead',
+             'test_importasdm',
              'test_importevla',
              'test_imregrid',
              'test_imstat',
@@ -151,7 +151,8 @@ whichtests = 0
 
 def main(testnames=[]):
 
-    global regstate  # Global variable used by regression framework to determine pass/failure status
+    # Global variable used by regression framework to determine pass/failure status
+    global regstate  
     regstate = False
         
     listtests = testnames
@@ -167,11 +168,9 @@ def main(testnames=[]):
             whichtests = 1
             listtests = readfile(testnames)
             if listtests == []:
-                print 'List of tests does not exist'
-                sys.exit()
+                raise Exception, 'List of tests is empty'
         else:
-            print 'List of tests does not exist'
-            sys.exit()
+            raise Exception, 'List of tests does not exist'
             
     else:
         whichtests = 1
@@ -294,13 +293,13 @@ def main(testnames=[]):
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
     try:
-        
         regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile],
                               suite=list)
+    
+        os.chdir(PWD)
     except:
-        print "Exception: failed to run the test"
+        print "Failed to run one or more tests"
         traceback.print_exc()
-        
     else:
         os.chdir(PWD)
 
