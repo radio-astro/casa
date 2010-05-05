@@ -562,12 +562,14 @@ void PlotCal::getAxisTaQL(const String& axis,
 
   LogIO os(LogOrigin("PlotCal", "getAxisTaQL", WHERE));
   //
-  // Extract the frequency selection info. and use it plot the selected channels only.
+  // Extract the frequency selection info. and use it plot the
+  // selected channels only.
   // 
   String chansel("");
   ostringstream chanlist;
-  chanlist << chanId_p(0,1)+1 << ":" << chanId_p(0,2)+1;
-  //  cerr << "Chan Id = " << chanId_p << " " << chanlist.str() << endl;
+  //  cerr << "Chan Id = " << chanId_p << endl;
+  if (chanId_p.shape()(0) > 0)
+    chanlist << chanId_p(0,1)+1 << ":" << chanId_p(0,2)+1;
   chansel=chanlist.str();
   
   if (axis.contains("TIME")) {
