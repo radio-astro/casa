@@ -48,6 +48,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/System/AppInfo.h>
+#include <casa/System/ProgressMeter.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
@@ -6186,7 +6187,7 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       Int numrows = mssel_p.nrow();
       const Vector<Int>&    ant1         = mscIn_p->antenna1().getColumn();
       const Vector<Int>&    ant2         = mscIn_p->antenna2().getColumn();
-      const Vector<Double>& timeRows     = mscIn_p->time().getColumn();
+      const Vector<Double>& timeRows     = mscIn_p->timeCentroid().getColumn();
       const Vector<Double>& intervalRows = mscIn_p->interval().getColumn();
       const Vector<Int>&    datDesc      = mscIn_p->dataDescId().getColumn();
       const Vector<Int>&    fieldId      = mscIn_p->fieldId().getColumn();
@@ -6526,7 +6527,12 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
   Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
   //Float oldMemUse = -1.0;
-  for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
+
+  uInt n_tbns = bin_slots_p.nelements();
+  ProgressMeter meter(0.0, n_tbns * 1.0, "split", "bins averaged", "", "",
+		      True, n_tbns / 100);
+
+  for(uInt tbn = 0; tbn < n_tbns; ++tbn){
     // Float memUse = Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0);
     // if(memUse != oldMemUse){
     //   oldMemUse = memUse;
@@ -6867,6 +6873,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.
+
+    meter.update(tbn);
   }
   os << LogIO::NORMAL << "Data binned." << LogIO::POST; 
 
