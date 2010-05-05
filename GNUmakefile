@@ -428,6 +428,10 @@ define run-test
 endef
 endif
 
+define mkpath
+  perl -e "use File::Path; mkpath('$1')"
+endef
+
 ###
 ### object files whose source files have been removed or renamed
 ###
@@ -451,7 +455,7 @@ endef
 
 
 define install-header
-	if test ! -d $(dir $2); then mkdir -p $(dir $2); fi
+	if test ! -d $(dir $2); then $(call mkpath,$(dir $2)); fi
 	cp $1 $2
 endef
 
@@ -537,7 +541,7 @@ $(INCDIR)/casacore/mirlib/%.h: mirlib/%.h
 	$(call install-header,$<,$@)
 
 $(INCDIR)/casacore/%.tcc: %.tcc
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	cp $< $@
 
 %.o : %.cc
@@ -590,17 +594,17 @@ $(BINDIR)/% : measures/apps/measuresdata/%.cc
 .SECONDEXPANSION:
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.cc|")
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call make-depend,$<,$(subst .o,.dep,$@))
 	$(C++) $(CXXFLAGS) -fPIC $(COREINC2) $(INC) -c $< -o $@
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.c|")
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call make-depend,$<,$(subst .o,.dep,$@))
 	$(CC) $(CLAGS) -fPIC $(COREINC2) $(INC) -c $< -o $@
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.f|")
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	$(FC) $(FFLAGS) -fPIC $(COREINC2) $(INC) -c $< -o $@
 
 ifeq "$(FC)" ""
@@ -623,7 +627,7 @@ $(CORELIB_PATH): $(LASTVERSION) $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(
 			$(SCIMATHFLIB) $(MEASURESLIB) $(MEASURESFLIB) $(MSLIB) $(FITSLIB) $(MSFITSLIB) $(MIRLIB) \
 			$(CASAINC) $(COMPONENTSINC) $(COORDINATESINC) $(LATTICESINC) $(IMAGESINC) $(TABLESINC) $(SCIMATHINC) \
 			$(MEASURESINC) $(MSINC) $(FITSINC) $(MSFITSINC) $(MIRINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),.)
 	@$(call orphan-headers,$(INCDIR),.)
 ifeq "$(os)" "darwin"
@@ -639,7 +643,7 @@ endif
 casa: $(CASALNK_PATH)
 
 $(CASALIB_PATH): $(LASTVERSION) $(CASALIB) $(CASAINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),casa)
 	@$(call orphan-headers,$(INCDIR),casa)
 ifeq "$(os)" "darwin"
@@ -655,7 +659,7 @@ endif
 components: coordinates tables $(COMPONENTSLNK_PATH)
 
 $(COMPONENTSLIB_PATH): $(LASTVERSION) $(COORDINATESLNK_PATH) $(TABLESLNK_PATH) $(COMPONENTSLIB) $(COMPONENTSINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),components)
 	@$(call orphan-headers,$(INCDIR),components)
 ifeq "$(os)" "darwin"
@@ -671,7 +675,7 @@ endif
 coordinates: measures fits $(COORDINATESLNK_PATH)
 
 $(COORDINATESLIB_PATH): $(LASTVERSION) $(MEASURESLNK_PATH) $(FITSLNK_PATH) $(COORDINATESLIB) $(COORDINATESINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),coordinates)
 	@$(call orphan-headers,$(INCDIR),coordinates)
 ifeq "$(os)" "darwin"
@@ -687,7 +691,7 @@ endif
 lattices: scimath $(LATTICESLNK_PATH) 
 
 $(LATTICESLIB_PATH): $(LASTVERSION) $(SCIMATHFLNK_PATH) $(TABLESLNK_PATH) $(LATTICESLIB) $(LATTICESINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),lattices)
 	@$(call orphan-headers,$(INCDIR),lattices)
 ifeq "$(os)" "darwin"
@@ -703,7 +707,7 @@ endif
 images: components lattices fits mirlib $(IMAGESLNK_PATH)
 
 $(IMAGESLIB_PATH): $(LASTVERSION) $(COMPONENTSLNK_PATH) $(LATTICESLNK_PATH) $(FITSLNK_PATH) $(MIRLNK_PATH) $(IMAGESLIB) $(IMAGESINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),images)
 	@$(call orphan-headers,$(INCDIR),images)
 ifeq "$(os)" "darwin"
@@ -719,7 +723,7 @@ endif
 tables: casa $(TABLESLNK_PATH)
 
 $(TABLESLIB_PATH): $(LASTVERSION) $(CASALNK_PATH)  $(SCIMATHLNK_PATH) $(TABLESLIB) $(TABLESINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),tables)
 	@$(call orphan-headers,$(INCDIR),tables)
 ifeq "$(os)" "darwin"
@@ -735,7 +739,7 @@ endif
 scimath: casa $(SCIMATHLNK_PATH)
 
 $(SCIMATHLIB_PATH): $(LASTVERSION) $(CASALNK_PATH) $(SCIMATHLIB) $(SCIMATHFLNK_PATH) $(SCIMATHINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),scimath)
 	@$(call orphan-headers,$(INCDIR),scimath)
 ifeq "$(os)" "darwin"
@@ -746,7 +750,7 @@ ifeq "$(os)" "linux"
 endif
 
 $(SCIMATHFLIB_PATH): $(SCIMATHFLIB) $(CASALNK_PATH)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),scimath)
 ifeq "$(os)" "darwin"
 	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) -lcasa_casa -llapack -lblas -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads $(FC_LIB)
@@ -762,7 +766,7 @@ endif
 measures: scimath tables $(MEASURESLNK_PATH)
 
 $(MEASURESLIB_PATH):  $(LASTVERSION) $(SCIMATHFLNK_PATH) $(TABLESLNK_PATH) $(MEASURESLIB) $(MEASURESFLNK_PATH) $(MEASURESINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),measures)
 	@$(call orphan-headers,$(INCDIR),measures)
 ifeq "$(os)" "darwin"
@@ -773,7 +777,7 @@ ifeq "$(os)" "linux"
 endif
 
 $(MEASURESFLIB_PATH):  $(MEASURESFLIB) $(SCIMATHLNK_PATH) $(TABLESLNK_PATH)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),measures)
 ifeq "$(os)" "darwin"
 	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
@@ -788,7 +792,7 @@ endif
 ms: measures tables $(MSLNK_PATH)
 
 $(MSLIB_PATH): $(LASTVERSION) $(MEASURESLNK_PATH) $(TABLESLNK_PATH) $(MSLIB) $(MSINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),ms)
 	@$(call orphan-headers,$(INCDIR),ms)
 ifeq "$(os)" "darwin"
@@ -805,7 +809,7 @@ endif
 fits: scimath tables $(FITSLNK_PATH)
 
 $(FITSLIB_PATH): $(LASTVERSION) $(SCIMATHLNK_PATH) $(TABLESLNK_PATH) $(MEASURESLNK_PATH) $(MEASURESFLNK_PATH) $(FITSLIB) $(FITSINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),fits)
 	@$(call orphan-headers,$(INCDIR),fits)
 ifeq "$(os)" "darwin"
@@ -821,7 +825,7 @@ endif
 msfits: ms fits $(MSFITSLNK_PATH)
 
 $(MSFITSLIB_PATH): $(LASTVERSION) $(MSLNK_PATH) $(FITSLNK_PATH) $(MSFITSLIB) $(MSFITSINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),msfits)
 	@$(call orphan-headers,$(INCDIR),msfits)
 ifeq "$(os)" "darwin"
@@ -838,7 +842,7 @@ endif
 mirlib: $(MIRLNK_PATH) 
 
 $(MIRLIB_PATH): $(LASTVERSION) $(MIRLIB) $(MIRINC)
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),mirlib)
 	@$(call orphan-headers,$(INCDIR),mirlib)
 ifeq "$(os)" "darwin"
@@ -956,7 +960,7 @@ $(LASTVERSION): VERSION
 		 `(ls -1 $(LIBDIR)/lib*$$version* 2> /dev/null | sed "s|\.$$version||") || exit 0`; do \
 		rm $$i; \
 	done
-	@mkdir -p $(dir $(LASTVERSION))
+	$(call mkpath,$(dir $(LASTVERSION)))
 	@cp VERSION $(LASTVERSION)
 
 ###
