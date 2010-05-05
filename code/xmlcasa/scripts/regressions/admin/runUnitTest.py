@@ -333,7 +333,7 @@ if __name__ == "__main__":
                     elem = la.pop()
                     if elem == '--help':
                         usage()
-                        sys.exit()
+                        os._exit(0)
                     if elem == '--file':
                         # read list from a text file
                         index = i + 3
