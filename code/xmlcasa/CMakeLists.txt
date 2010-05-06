@@ -30,6 +30,17 @@ add_custom_command( OUTPUT version.cc
       || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
 )
 
+# Compile time definitions
+#add_custom_command( OUTPUT casadef.py
+#  COMMAND echo task_directory           = ${PYTHON_TASKD} > casadef.py 
+#  COMMAND echo python_library_directory = ${PYTHON_LIBD}  >> casadef.py
+#  COMMAND echo build_time               = ${BUILDTIME}    >> casadef.py
+#  COMMAND echo subversion_revision      = ${SVNREVISION}  >> casadef.py
+#  COMMAND echo subversion_url           = ${SVNURL}       >> casadef.py
+#  COMMAND echo casa_version             = ${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION} >> casadef.py
+#  COMMAND echo casa_build               = ${CASABUILD}    >> casadef.py
+#)
+
 casa_add_library( xmlcasa
   implement/alma/asdm2msfillertask_cmpt.cc
   implement/atmosphere/atmosphere_cmpt.cc
@@ -89,6 +100,10 @@ casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
 casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
+
+
+
+#install( PROGRAMS casadef.py  DESTINATION python/${PYTHONV} )
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
@@ -165,6 +180,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_importasdm.py
   scripts/task_importevla.py
   scripts/task_importfits.py
+  scripts/task_importfitsidi.py
   scripts/task_importgmrt.py
   scripts/task_importoldasdm.py
   scripts/task_importuvfits.py
@@ -268,6 +284,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/importasdm.xml
   tasks/importevla.xml
   tasks/importfits.xml
+  tasks/importfitsidi.xml
   tasks/importgmrt.xml
   tasks/importoldasdm.xml
   tasks/importuvfits.xml
@@ -382,6 +399,7 @@ casa_add_pymodule( interrupt modules/interrupt/interrupt_python.cc )
 add_custom_target( idl SOURCES ${tools_idl} )
 add_dependencies( casac idl )
 
+add_subdirectory( scripts/tests )
 add_subdirectory( scripts/regressions )
 add_subdirectory( scripts/regressions/tests )
 add_subdirectory( scripts/usecases )

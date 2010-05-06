@@ -86,7 +86,7 @@ namespace casa {
   // -----------------------------------------------------------------------
   // Default Constructor
   // -----------------------------------------------------------------------
-  Flagger::Flagger ():mssel_p(0), vs_p(0)
+    Flagger::Flagger ():mssel_p(0), vs_p(0), scan_looping(false)
   {
     msselection_p = new MSSelection();
     spw_selection = false;
@@ -114,7 +114,7 @@ namespace casa {
   // Constructor
   // constructs and attaches to MS
   // -----------------------------------------------------------------------
-  Flagger::Flagger ( MeasurementSet &mset ) : mssel_p(0), vs_p(0)
+    Flagger::Flagger ( MeasurementSet &mset ) : mssel_p(0), vs_p(0), scan_looping(false)
   {
     msselection_p = new MSSelection();
     spw_selection = false;
@@ -776,6 +776,8 @@ namespace casa {
         cout << "separatespw = " << separatespw << endl;
         cout << spwlist << endl;
     }
+
+    scan_looping = false;
     
     for ( Int i=0; i < nrec; i++ ) {
 	Record selrec;
@@ -950,12 +952,13 @@ namespace casa {
 	    
 	/* Quack! */
 	if (quackinterval > 0.0) {
-            //Reset the Visiter to have SCAN on top of sort
+            //Reset the Visiter to have SCAN before time
+            scan_looping = true;
             Block<int> sort2(5);
-            sort2[0] = MS::SCAN_NUMBER;
-            sort2[1] = MS::ARRAY_ID;
-            sort2[2] = MS::FIELD_ID;
-            sort2[3] = MS::DATA_DESC_ID;
+            sort2[0] = MS::ARRAY_ID;
+            sort2[1] = MS::FIELD_ID;
+            sort2[2] = MS::DATA_DESC_ID;
+            sort2[3] = MS::SCAN_NUMBER;
             sort2[4] = MS::TIME;
             Double timeInterval = 7.0e9; //a few thousand years
             
@@ -1550,7 +1553,7 @@ namespace casa {
     
     try { // all exceptions to be caught below
       
-      uInt didSomething=0;
+      bool didSomething=0;
       // create iterator, visbuffer & chunk manager
       // Block<Int> sortCol(1);
       // sortCol[0] = MeasurementSet::SCAN_NUMBER;
@@ -1647,11 +1650,15 @@ namespace casa {
       // begin iterating over chunks
       uInt nchunk=0;
 
-      for (vi.originChunks(); 
+      bool new_field_spw = true;   /* Is the current chunk the first chunk for this (field,spw)? */
+
+      Int inRowFlags=0, outRowFlags=0, totalRows=0, inDataFlags=0, outDataFlags=0, totalData=0;
+
+      for (vi.originChunks();
 	   vi.moreChunks(); 
-	   vi.nextChunk(), nchunk++) {
+	   ) { //vi.nextChunk(), nchunk++) {
 	  //Start of loop over chunks
-	  didSomething = 0;
+	  didSomething = false;
 	  for (uInt i = 0; i < acc.nelements(); i++) {
             acc[i]->initialize();
           }
@@ -1709,11 +1716,6 @@ namespace casa {
 	    }
           if (dbg) cout << "Active for this chunk: " << sum(active) << endl;
 
-	  if ( !sum(active) )
-	    {
-	       //os<<LogIO::WARN<<"Unable to process this chunk with any active method.\n"<<LogIO::POST;
-	      continue;
-	    }
 	  // initially active agents
 	  Vector<Bool> active_init = active;
 	  // start executing passes    
@@ -1722,7 +1724,25 @@ namespace casa {
 	  String title(subtitle);
           //cout << "--------title=" << title << endl;
 
-	  Int inRowFlags=0, outRowFlags=0, totalRows=0, inDataFlags=0, outDataFlags=0, totalData=0;
+	  if ( !sum(active) )
+	    {
+	       //os<<LogIO::WARN<<"Unable to process this chunk with any active method.\n"<<LogIO::POST;
+
+                goto end_of_loop;  
+                /* Oh no, an evil goto statement...
+                   This used to be a 
+                      continue;
+                   which (in this context) is just as evil. But goto is used because some
+                   looping code (the visIter update) needs to be always executed at the
+                   end of this loop.
+
+                   The good solution would be to
+                   -  make the remainder of this loop
+                      work also in the special case with sum(active) == 0
+                   -  simplify this overly long loop
+                */
+	    }
+
 	  for( uInt npass=0; anyNE(iter_mode,(Int)RFA::STOP); npass++ ) // repeat passes while someone is active
 	    {
 	      uInt itime=0;
@@ -1750,9 +1770,9 @@ namespace casa {
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 		    if ( active(ival) )
 		      if ( iter_mode(ival) == RFA::DATA )
-			acc[ival]->startData();
+			acc[ival]->startData(new_field_spw);
 		      else if ( iter_mode(ival) == RFA::DRY )
-			acc[ival]->startDry();
+			acc[ival]->startDry(new_field_spw);
 		  // iterate over visbuffers
 		  for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
 
@@ -1853,7 +1873,7 @@ namespace casa {
 		  // start pass for all active agents
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 		    if ( iter_mode(ival) == RFA::DRY )
-		      acc[ival]->startDry();
+		      acc[ival]->startDry(new_field_spw);
 		  for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
 		    {
 		      progmeter.update(itime);
@@ -1891,7 +1911,7 @@ namespace casa {
 	      ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq);
 	      for (uInt i = 0; i<acc.nelements(); i++)
 		if (active_init(i))
-		  acc[i]->startFlag();
+		  acc[i]->startFlag(new_field_spw);
 	      uInt itime=0;
 	      for( vi.origin(); vi.more(); vi++,itime++ ) {
 		  progmeter.update(itime);
@@ -1928,39 +1948,12 @@ namespace casa {
 		      for(Int kk = 0; kk < vb.flagCube().shape()(2); kk++)
 			if (vb.flagCube()(ii, jj, kk)) outDataFlags++;
 
-	      }  // for (vi ... )
+	      }  // for (vi ... ) loop over time
 	      if (didSomething) {
-		  for (uInt i = 0; i < acc.nelements(); i++)
+		  for (uInt i = 0; i < acc.nelements(); i++) {
 		      if (acc[i]) acc[i]->finalize();
-		  LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
-		  
-		  osss << "Field = " << chunk.visBuf().fieldId() << " , Spw Id : " 
-		       << chunk.visBuf().spectralWindow() 
-		       << "  Total rows = " << totalRows
-		       << endl;
-		  osss << "Input:    "
-		       << "  Rows flagged = " << inRowFlags << " " //" / " << totalRows << " "
-		       << "(" << 100.0*inRowFlags/totalRows << " %)."
-		       << "  Data flagged = " << inDataFlags << " " //" / " << totalData << " "
-		       << "(" << 100.0*inDataFlags/totalData << " %)."
-		       << endl;
-		  osss << "This run: "
-		       << "  Rows flagged = " << outRowFlags - inRowFlags << " " //" / " << totalRows << " "
-		       << "(" << 100.0*(outRowFlags-inRowFlags)/totalRows << " %)."
-		       << "  Data flagged = "  << outDataFlags - inDataFlags << " " //" / " << totalData << " " 
-		       << "(" << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
-		       << endl;
-		  osss << LogIO::POST;
-
-// 		  osss << "InRowFlags = " << inRowFlags << " " 
-// 		       << "outRowFlags = " << outRowFlags << " " 
-// 		       << "DiffRowFlags = " << outRowFlags - inRowFlags << " "
-// 		       << "Sum = " << sum(chunk.nrfIfr())  << " "
-// 		       << "Total Rows = " << totalRows << " "
-// 		       << "inDataFlags = " << inDataFlags << " "
-// 		       << "outDataFlags = " << outDataFlags << " "
-// 		       << endl;
-		}
+                  }
+              }
 	      for (uInt i = 0; i < acc.nelements(); i++) {
 
 		if ( active_init(i) ) {
@@ -1979,9 +1972,51 @@ namespace casa {
 	      }
 	    } /* end if not trial run and some agent is active */
 
+      end_of_loop:
+
 	  // call endChunk on all agents
 	  for( uInt i = 0; i<acc.nelements(); i++ ) 
 	    acc[i]->endChunk();
+
+          int field_id = chunk.visBuf().fieldId();
+          int spw_id = chunk.visBuf().spectralWindow();
+          int scan_number = chunk.visBuf().scan()(0);
+
+          vi.nextChunk(); nchunk++;
+
+          /* Is this the end of the current (field, spw)? */
+          new_field_spw = ( !vi.moreChunks() || 
+                            !scan_looping ||
+                            ! (chunk.visBuf().fieldId() == field_id &&
+                               chunk.visBuf().spectralWindow() == spw_id &&
+                               chunk.visBuf().scan()(0) > scan_number )
+                            );
+
+          if (didSomething && new_field_spw) {
+              
+              LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
+              
+              osss << "Field = " << chunk.visBuf().fieldId() << " , Spw Id : " 
+                   << chunk.visBuf().spectralWindow()
+                   << "  Total rows = " << totalRows
+                   << endl;
+              osss << "Input:    "
+                   << "  Rows flagged = " << inRowFlags << " "
+                   << "(" << 100.0*inRowFlags/totalRows << " %)."
+                   << "  Data flagged = " << inDataFlags << " "
+                   << "(" << 100.0*inDataFlags/totalData << " %)."
+                   << endl;
+              osss << "This run: "
+                   << "  Rows flagged = " << outRowFlags - inRowFlags << " "
+                   << "(" << 100.0*(outRowFlags-inRowFlags)/totalRows << " %)."
+                   << "  Data flagged = "  << outDataFlags - inDataFlags << " "
+                   << "(" << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
+                   << endl;
+              osss << LogIO::POST;
+
+              /* Reset counters */
+              inRowFlags = outRowFlags = totalRows = inDataFlags = outDataFlags = totalData = 0;
+          }
 
       } // end loop over chunks
       

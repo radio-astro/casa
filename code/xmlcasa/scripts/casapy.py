@@ -4,36 +4,6 @@ import time
 import signal
 
 ##
-## tweak path... where necessary...
-##
-path_addition = [ ]
-for p in sys.path :
-    if p.startswith(sys.prefix):
-        # According to
-        # http://www.debian.org/doc/packaging-manuals/python-policy/ch-python.html
-        # "Python modules not handled by python-central or python-support must
-        # be installed in the system Python modules directory,
-        # /usr/lib/pythonX.Y/dist-packages for python2.6 and later, and
-        # /usr/lib/pythonX.Y/site-packages for python2.5 and earlier."
-        #
-        # I am not sure if this is general Python policy, or just Debian policy.
-        # In any case, dist-packages is a more honestly named site-packages, since
-        # nominally site stuff goes in /usr/local or /opt.
-        #
-        for wanted in ['lib-tk', 'dist-packages']:
-            newpath = p + os.sep + wanted
-            if os.path.isdir(newpath):
-                path_addition.append(newpath)
-
-sys.path = sys.path + path_addition
-
-# i.e. /usr/lib/pymodules/python2.6, needed for matplotlib in Debian and its derivatives.
-pymodules_dir = sys.prefix + '/lib/pymodules/python' + '.'.join(map(str, sys.version_info[:2]))
-
-if os.path.isdir(pymodules_dir) and pymodules_dir not in sys.path:
-    sys.path.append(pymodules_dir)
-
-##
 ## watchdog... which is *not* in the casapy process group
 ##
 if os.fork( ) == 0 :

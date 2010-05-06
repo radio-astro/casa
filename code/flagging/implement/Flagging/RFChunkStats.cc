@@ -135,7 +135,7 @@ void RFChunkStats::newChunk(bool init_quack)
  // Flagger::logSink()<<s<<LogIO::POST;
 
   if (init_quack) {
-      // figure out all scan's start and end times
+      // figure out this scan's start and end times
       // for use in quack mode
       for (visiter.origin(); 
            visiter.more(); 

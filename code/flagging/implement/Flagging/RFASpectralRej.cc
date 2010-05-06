@@ -240,9 +240,9 @@ void RFASpectralRej::endChunk ()
   rowclipper.cleanup();
 }
 
-void RFASpectralRej::startData ()
+void RFASpectralRej::startData (bool verbose)
 {
-  RFAFlagCubeBase::startData();
+  RFAFlagCubeBase::startData(verbose);
   rowclipper.reset();
 }
 

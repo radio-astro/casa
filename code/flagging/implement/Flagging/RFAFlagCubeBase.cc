@@ -140,7 +140,7 @@ void RFAFlagCubeBase::endChunk ()
 // RFAFlagCubeBase::startData
 // Prepares for an data pass over a VisIter chunk
 // -----------------------------------------------------------------------
-void RFAFlagCubeBase::startData ()
+void RFAFlagCubeBase::startData (bool verbose)
 {
   flag.reset();
 }
@@ -149,7 +149,7 @@ void RFAFlagCubeBase::startData ()
 // RFAFlagCubeBase::startDry
 // Prepares for an dry pass 
 // -----------------------------------------------------------------------
-void RFAFlagCubeBase::startDry ()
+void RFAFlagCubeBase::startDry (bool verbose)
 {
   flag.reset();
 }
@@ -158,7 +158,7 @@ void RFAFlagCubeBase::startDry ()
 // RFAFlagCubeBase::startFlag
 // Prepares for a flag-copy pass
 // -----------------------------------------------------------------------
-void RFAFlagCubeBase::startFlag ()
+void RFAFlagCubeBase::startFlag (bool verbose)
 {
   flag.reset();
 }

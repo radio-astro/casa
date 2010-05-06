@@ -66,7 +66,7 @@ public:
 
   virtual Bool newChunk (Int &maxmem);
   virtual void endChunk ();
-  virtual void startData ();
+  virtual void startData (bool verbose);
   virtual IterMode iterTime (uInt itime);
   virtual IterMode iterRow  (uInt irow);
   virtual IterMode endData  ();

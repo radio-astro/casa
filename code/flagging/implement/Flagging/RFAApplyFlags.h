@@ -49,9 +49,9 @@ class RFAApplyFlags : public RFAFlagCubeBase {
   virtual RFABase::IterMode iterTime ( uInt it );
   virtual RFABase::IterMode iterRow  ( uInt ir );
   virtual void iterFlag(uInt it);
-  virtual void startData ();
-  virtual void startDry ();
-  virtual void startFlag ();
+  virtual void startData (bool verbose);
+  virtual void startDry (bool verbose);
+  virtual void startFlag (bool verbose);
   virtual void endChunk ();
   virtual void endFlag ();
   virtual RFABase::IterMode endData();

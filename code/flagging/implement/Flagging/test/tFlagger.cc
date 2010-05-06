@@ -18,14 +18,12 @@ void loop_visiter(MeasurementSet &ms)
 
     Block<int> sort(4);
 
-    //sort2[0] = MS::SCAN_NUMBER;
-    // Do scan priority only if quacking
 
     sort[0]= MS::ARRAY_ID;
     sort[1]= MS::FIELD_ID;
     sort[2]= MS::DATA_DESC_ID;
-    sort[3] = MS::TIME;
-
+    sort[3] = MS::SCAN_NUMBER;
+    sort[4] = MS::TIME;
 
 
     Double timeInterval = 7.0e9; //a few thousand years
@@ -42,8 +40,6 @@ void loop_visiter(MeasurementSet &ms)
         
     VisibilityIterator &vi(vs_p->iter()); 
     
-    //VisBuffer vb(vi);
-
     Vector<Int> scans;
     Cube<Bool> flags;
 
@@ -99,9 +95,10 @@ void loop_flagger(MeasurementSet &ms)
     bool reset = false;
 
     string baseline = "";
+    string field = "";
 
     baseline = "";
-    flagger.setdata("", "", "", "", "",
+    flagger.setdata(field, "", "", "", "",
                     baseline, "", "", ""); 
     
     cout << "setmanualflags..." << endl;
@@ -109,7 +106,8 @@ void loop_flagger(MeasurementSet &ms)
     //cliprange[0] = 0.5;
     //cliprange[1] = 1.0;
 
-    flagger.setmanualflags(false, false, "", cliprange, "", false, false);
+    double quackinterval = 0.0001;
+    flagger.setmanualflags(false, false, "", cliprange, "", false, false, quackinterval);
 
     cout << "run..." << endl;
     flagger.run(trial, reset);

@@ -129,7 +129,7 @@ public:
     // This information is NOT prepended with "AIPS++ version:" or anything
     // like that. You may wish to add this yourself. The date is also not
     // included.
-    static void report(std::ostream &os);
+    static void report(std::ostream &os, bool nobuild=True);
 };
 
 //# Inlines ------------------------------------------------------------------
