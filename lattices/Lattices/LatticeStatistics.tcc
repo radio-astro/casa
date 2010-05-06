@@ -884,7 +884,7 @@ template <class T>
 void LatticeStatistics<T>::generateRobust ()
 {
    Bool showMsg = haveLogger_p && doRobust_p && displayAxes_p.nelements()==0;
-   if (showMsg) os_p << LogIO::NORMAL1 << "Computing robust statistics" << LogIO::POST;
+   if (showMsg) os_p << LogIO::DEBUG1 << "Computing robust statistics" << LogIO::POST;
 //
    const uInt nCursorAxes = cursorAxes_p.nelements();
    const IPosition latticeShape(pInLattice_p->shape());
