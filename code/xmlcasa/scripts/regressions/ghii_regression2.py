@@ -26,7 +26,7 @@ project="ghii2m"
 os.system('rm -rf '+project+'*')
 
 cl.done()
-cl.addcomponent(dir="J2000 05h18m48.6s -68d42m00s",flux=0.5,freq="650GHz")
+cl.addcomponent(dir="J2000 05h18m48.586s -68d42m00.05s",flux=0.5,freq="650GHz")
 cl.rename(project+".cl")
 cl.done()
 

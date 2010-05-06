@@ -237,10 +237,11 @@ class simutil:
                 incell=pix
             incell=[qa.tos(incell[0]),qa.tos(incell[1])]
             pixsize=[qa.convert(pix[0],'arcsec')['value'],qa.convert(pix[1],'arcsec')['value']]
-            if self.verbose: self.msg("plotting image with pixel size %fx%f arcsec" % (pixsize[0],pixsize[1]),origin="statim")
             xextent=imsize[0]*abs(pixsize[0])*0.5
             yextent=imsize[1]*abs(pixsize[1])*0.5
-            if self.verbose: self.msg("plotting image with field size %f x %f arcsec" % (xextent,yextent),origin="statim")
+            if self.verbose: 
+                self.msg("plotting %fx%f\" im with %fx%f\" pix" % 
+                         (xextent,yextent,pixsize[0],pixsize[1]),origin="statim")
             xextent=[xextent,-xextent]
             yextent=[-yextent,yextent]
         # remove top .5% of pixels:
@@ -2779,7 +2780,7 @@ class simutil:
 
         # add clean components and model image; 
         # it'll be convolved to restored beam in the fidelity calc below
-        # components are in jy/pix so should be added to the scaled iamge
+        # components are unresolved, in jy/pix
         if (os.path.exists(complist)):
             cl.open(complist)
             imrr.modify(cl.torecord(),subtract=False)

@@ -125,6 +125,8 @@ def simdata2(
 
         ##################################################################
         # set up pointings
+        # TODO *** deal with calibrator here, not later, so it can go into the pointing file
+
         if setpointings:
             if verbose:
                 util.msg("calculating map pointings centered at "+str(model_refdir))
@@ -139,6 +141,7 @@ def simdata2(
             nfld, pointings, etime = util.read_pointings(ptgfile)
             if max(etime) <=0:
                 etime = qa.convert(qa.quantity(integration),"s")['value']
+            # expects that the cal is separate, and this is just one round of the mosaic
 
         # find imcenter - phase center
         imcenter , offsets = util.average_direction(pointings)        
@@ -368,42 +371,47 @@ def simdata2(
                 return
         
             # sm.observemany
-            srces=[]
-            starttimes=[]
-            stoptimes=[]
-            dirs=[]
+            observemany=True
+            if observemany:
+                srces=[]
+                starttimes=[]
+                stoptimes=[]
+                dirs=[]
 
             for k in range(0,nscan) :
                 sttime=-totalsec/2.0+scansec*k
                 endtime=sttime+scansec
                 src=project+'_%d'%kfld
+                if observemany:
+                    srces.append(src)
+                    starttimes.append(str(sttime)+"s")
+                    stoptimes.append(str(endtime)+"s")
+                    dirs.append(pointings[kfld])
+                else:
                 # this only creates blank uv entries
-                #sm.observe(sourcename=src, spwname=fband,
-                #           starttime=qa.quantity(sttime, "s"),
-                #           stoptime=qa.quantity(endtime, "s"));
-                srces.append(src)
-                starttimes.append(str(sttime)+"s")
-                stoptimes.append(str(endtime)+"s")
-                dirs.append(pointings[kfld])
+                    sm.observe(sourcename=src, spwname=fband,
+                               starttime=qa.quantity(sttime, "s"),
+                               stoptime=qa.quantity(endtime, "s"));
                 kfld=kfld+1
                 if kfld==nfld: 
                     if docalibrator:
                         sttime=-totalsec/2.0+scansec*k
                         endtime=sttime+scansec
-                        # sm.observe(sourcename="phase calibrator", spwname=fband,
-                        #            starttime=qa.quantity(sttime, "s"),
-                        #            stoptime=qa.quantity(endtime, "s"));
-                        srces.append(src)
-                        starttimes.append(str(sttime)+"s")
-                        stoptimes.append(str(endtime)+"s")
-                        dirs.append(caldirection)
+                        if observemany:
+                            srces.append(src)
+                            starttimes.append(str(sttime)+"s")
+                            stoptimes.append(str(endtime)+"s")
+                            dirs.append(caldirection)
+                        else:
+                            sm.observe(sourcename="phase calibrator", spwname=fband,
+                                       starttime=qa.quantity(sttime, "s"),
+                                       stoptime=qa.quantity(endtime, "s"));
                     kfld=kfld+1                
                 if kfld > nfld: kfld=0
-            pdb.set_trace()
-            # if directions is unset, NewMSSimulator::observemany should 
-            # look up the direction in the field table.
-            sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
-            #sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,directions=dirs)
+            # if directions is unset, NewMSSimulator::observemany 
+            # looks up the direction in the field table.
+            if observemany:
+                sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
 
             sm.setdata(fieldid=range(0,nfld))
             sm.setvp()
@@ -692,7 +700,6 @@ def simdata2(
 
 
             # show model, convolved model, clean image, and residual 
-            # todo consider difference image instead of one of the others
             if grfile:            
                 file=project+".image.png"
             else:
@@ -706,13 +713,13 @@ def simdata2(
             if grscreen or grfile:
                 # TODO if components_only create a sky model image here!!!
 
-                # add components into skyflat
+                # add components into modelflat
                 if len(complist)>0:
                     ia.open(modelflat)
                     if not os.path.exists(complist):
-                        msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+                        msg("sky component list "+str(complist)+" not found",priority="error")
                     cl.open(complist)
-                    # ia.setbrightnessunit("Jy/pixel")
+                    ia.setbrightnessunit("Jy/pixel")
                     ia.modify(cl.torecord(),subtract=False) 
                     cl.done()
                     ia.done()
@@ -722,30 +729,26 @@ def simdata2(
                 convsky_current=True # don't remake this for analysis in this run
 
                 disprange=[]  # passing empty list causes return of disprange
-                # set scale based on residual image
-                discard = util.statim(imagename+".residual.flat",disprange=disprange,plot=False)
-                # and set its units
-                disprange=[disprange[0]/bmarea,disprange[1]/bmarea]
 
-                # same scaling is not producing very good results 20100505
-                disprange=[]
-                # original sky regridded to output pixels but not convolved
+                # original sky regridded to output pixels but not convolved with beam
                 discard = util.statim(modelflat+".regrid",disprange=disprange)
                 util.nextfig()
 
-                # convolved sky model
-                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
+                # disprange from skymodel.regrid is in Jy/pix, but convolved im is in Jy/bm
+                # bmarea is in units of output image pixels
+                disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
+
+                # convolved sky model - units of Jy/bm
+                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)                
                 util.nextfig()
                 
-                # imagecalc is interpreting outflat in Jy/pix 
-                disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
-                # scaling is not working well 20100505
+                # clean image - also in Jy/beam
+                # although because of DC offset, better to reset disprange
                 disprange=[]
-                # clean image
                 discard = util.statim(imagename+".image.flat",disprange=disprange)
                 util.nextfig()
 
-                # clean residual image
+                # clean residual image - Jy/bm
                 discard = util.statim(imagename+".residual.flat",disprange=disprange)
                 util.endfig(remove=(not grscreen))            
         
@@ -814,10 +817,10 @@ def simdata2(
                 # add components into modelflat
                 if len(complist)>0:
                     if not os.path.exists(complist):
-                        msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+                        msg("sky component list "+str(complist)+" not found",priority="error")
                     ia.open(modelflat)
                     cl.open(complist)
-                    # ia.setbrightnessunit("Jy/pixel")
+                    ia.setbrightnessunit("Jy/pixel")
                     ia.modify(cl.torecord(),subtract=False) 
                     cl.done()
                     ia.done()
@@ -830,9 +833,11 @@ def simdata2(
     
             # Make difference image.
             # imagecalc is interpreting outflat in Jy/pix - 
+            # 201005 not any more.... now it does Jy/bm
             convolved = modelflat+".regrid.conv"
             difference = imagename + '.diff'
-            ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
+            #ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
+            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
             # Get rms of difference image.
             ia.open(difference)
             diffstats = ia.statistics(robust=True, verbose=False,list=False)
@@ -960,35 +965,31 @@ def simdata2(
 
                 disprange=[]  # first plot will define range
 
-                # TODO show model and output on same disprange, taking into
-                # account pix differences, and jy/bm vs jy/pix
-
                 if showmodel:
-                    discard = util.statim(modelflat,incell=model_cell,disprange=disprange)
+                    discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange)
+                    # modelflat is in Jy/pix, we want disprange in Jy/bm
+                    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
                     util.nextfig()
                     if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showconvolved:
                     discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
+                    # if disprange gets set here, it'll be Jy/bm
                     util.nextfig()
                     if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
-                # imagecalc is interpreting outflat in Jy/pix 
-                #if len(disprange)>0:
-                #    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
-                # for now, let output and input be on different scales
-                disprange=[]
-                
                 if showclean:
+                    # own scaling because of DC/zero spacing offset
+                    dipsrange=[]
                     discard = util.statim(imagename+".image.flat",disprange=disprange)
                     util.nextfig()
                     if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showresidual:
-                    # it gets its own scaling.
+                    # it gets its own scaling
                     discard = util.statim(imagename+".residual.flat")
                     util.nextfig()
                     if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
@@ -1011,12 +1012,16 @@ def simdata2(
             else:
                 sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
                 # if not displaying still print stats:
-                msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
-                    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
-                msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
-                    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
+                # 20100505 ia.stats changed to return Jy/bm:
+                msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
+                    str(sim_rms)+" Jy/bm",origin="analysis")
+                msg('Simulation max: '+str(sim_max/bmarea)+" Jy/pix = "+
+                    str(sim_max)+" Jy/bm",origin="analysis")
+                #msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
+                #    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
+                #msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
+                #    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
                 msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
-
 
 
 
