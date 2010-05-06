@@ -1339,7 +1339,10 @@ class immath_test3(unittest.TestCase):
         got = ia.getchunk()
         ia.done()
         diff = expected - got
-        self.assertTrue((numpy.abs(diff)/got < epsilon).all())        
+        if (epsilon == 0):
+            self.assertTrue((got == expected).all())        
+        else:
+            self.assertTrue((numpy.abs(diff)/got < epsilon).all())        
 
     def test_CAS2120(self):
         '''immath: verification of old functionality and similar new functionality introduced by CAS-2120'''
