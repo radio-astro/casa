@@ -1116,8 +1116,8 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
   // are in chronological order.  There is not (yet) any checking that 
   // e.g. startTimes[2] not be less than stopTimes[1]
 
-  LogIO os(LogOrigin("NewMSSimulator", "observe()", WHERE));
-  //LogIO os(LogOrigin("NewMSSimulator", "observe()"));
+  //LogIO os(LogOrigin("NewMSSimulator", "observe()", WHERE));
+  LogIO os(LogOrigin("NewMSSimulator", "observe()"));
 
   MSColumns msc(*ms_p);
   
@@ -1212,14 +1212,14 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
   if(existingFieldID<0) {
     os << "Field named " << sourceNames[iSrc] << " not yet defined" << LogIO::EXCEPTION;
   }
-  baseFieldID=existingFieldID;
   Vector<MDirection> fcs(1);
-  fieldc.phaseDirMeasCol().get(baseFieldID,fcs);
+  fieldc.phaseDirMeasCol().get(existingFieldID,fcs);
   msd.setFieldCenter(fcs(0));
   MDirection fieldCenter=fcs(0);
   {
-    os << "Observing source : "<< sourceNames[iSrc]
-       << " in direction : " << formatDirection(fieldCenter)<<LogIO::DEBUG1;
+    os << LogIO::DEBUG1
+       << "Observing source : "<< sourceNames[iSrc]
+       << " in direction : " << formatDirection(fieldCenter) << endl;
   }
 
 
@@ -1271,11 +1271,12 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
     
     Tstart = qStartTimes(0).getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
-    Tend = qStopTimes(nPts).getValue("s") + 
+    Tend = qStopTimes(nPts-1).getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
-//    os << "Time range : " << endl
-//       << "     start : " << formatTime(Tstart) << endl
-//       << "     stop  : " << formatTime(Tend) << endl << LogIO::DEBUG1;
+    os << LogIO::DEBUG1 
+       << "   Time range : " 
+       << formatTime(Tstart) << "  --  "
+       << formatTime(Tend) << endl;
   
 
 
@@ -1399,7 +1400,9 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 
 
  
-  os << "Calculating uvw coordinates for " << nIntegrations << " integrations" << LogIO::DEBUG1;
+  os << LogIO::DEBUG1
+     << "  Calculating uvw coordinates for " << nIntegrations << " integrations" << endl 
+     << LogIO::POST;
 
   for(Int feed=0; feed<nFeed; feed++) {
     //if (nFeed) 
@@ -1428,19 +1431,24 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 
       // MDirection fc = msc.field().phaseDirMeas(baseFieldID);
 
+      // sadly, the default direction is the north pole - if we observe
+      // there we're going to have problems....
+      MDirection northPole;
+
       // One call to observe corresponds to at least one scan, depending on whether sourceName has different values or not.
       if (pointing==0) {
 	scan++; 
       } else {
-	if (not(sourceNames[pointing]==sourceNames[0])) {
+	if (not(sourceNames(pointing)==sourceNames(0))) {
 	  scan++;
 
 	  // Check for existing field with correct name
+	  existingFieldID=-1;
 	  if(baseFieldID>0) {
 	    Vector<String> fieldNames;
 	    fieldc.name().getColumn(fieldNames);
 	    for(uInt i=0;i<fieldNames.nelements();i++) {
-	      if (fieldNames(i)==sourceNames[pointing]) {
+	      if (fieldNames(i)==sourceNames(pointing)) {
 		existingFieldID=i;
 		break;
 	      }
@@ -1448,20 +1456,17 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 	  }
 	  
 	  if(existingFieldID<0) {
-	    os << "Field named " << sourceNames[pointing] << " not yet defined" << LogIO::EXCEPTION;
+	    os << "Field named " << sourceNames(pointing) << " not yet defined" << LogIO::EXCEPTION;
 	  }
-	  baseFieldID=existingFieldID;	  
-	  fieldc.phaseDirMeasCol().get(baseFieldID,fcs);
-	  //msd.setFieldCenter(fcs(0));
-	  fieldCenter=fcs(0);	  	
+	  fcs=northPole;
+	  fieldc.phaseDirMeasCol().get(existingFieldID,fcs);
+	  //msd.setFieldCenter(fcs(0)); // do this below
+	  //fieldCenter=fcs(0);	  	
 	}
       }
 
       // RI 201001 
       // if direction is nonzero use that instead of baseFieldID direction
-      // sadly, the default direction is the north pole - if we observe
-      // there we're going to have problems....
-      MDirection northPole;
       // RI TODO there doesn't seem to be a way to compare two measures
       // i'll compare the angles for now but if the frames are different...
       if (directions.shape()(0)>0) {
@@ -1470,7 +1475,12 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 	}
       }
       msd.setFieldCenter(fcs(0));
-
+      fieldCenter=fcs(0);	  	
+      
+      os << LogIO::DEBUG1 
+	 << "Observing source : "<< sourceNames(pointing)
+	 << " in direction : " << formatDirection(fieldCenter) << endl
+	 << LogIO::POST;
 
 
     for(Int integration=0; integration<nIntegrations; integration++) {
@@ -1497,7 +1507,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
     
       // Do the first row outside the loop
       msc.scanNumber().put(row+1,scan);
-      msc.fieldId().put(row+1,baseFieldID);
+      msc.fieldId().put(row+1,existingFieldID);
       msc.dataDescId().put(row+1,baseSpWID);
       msc.time().put(row+1,Time+Tint/2);
       msc.timeCentroid().put(row+1,Time+Tint/2);
