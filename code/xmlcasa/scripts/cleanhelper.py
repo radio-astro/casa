@@ -4,6 +4,7 @@ import commands
 import math
 import pdb
 import numpy
+import shutil
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
