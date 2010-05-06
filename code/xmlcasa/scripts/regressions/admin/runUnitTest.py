@@ -38,9 +38,7 @@ import nose
 OLD_TESTS = [
             ]
 
-FULL_LIST = ['test_asdm-import',
-             'test_asdmv1-import',
-             'test_boxit',
+FULL_LIST = ['test_boxit',
              'test_clean',
              'test_clearstat',
              'test_csvclean',
@@ -51,8 +49,10 @@ FULL_LIST = ['test_asdm-import',
              'test_imhead',
              'test_immath',
              'test_immoments',
-#             'test_importevla',
+             'test_importasdm',
+             'test_importevla',
 #             'test_importfitsidi',
+             'test_importoldasdm',
              'test_imregrid',
              'test_imsmooth',
              'test_imstat',
@@ -65,13 +65,13 @@ FULL_LIST = ['test_asdm-import',
              'test_vishead',
              'test_visstat']
 
-SHORT_LIST = ['test_asdm-import',
-             'test_boxit',
+SHORT_LIST = ['test_boxit',
              'test_clean',
              'test_csvclean',
              'test_exportasdm',
              'test_imfit',
              'test_imhead',
+             'test_importasdm',
              'test_importevla',
              'test_imregrid',
              'test_imstat',
@@ -87,13 +87,20 @@ def usage():
     print 'Usage:\n'
     print 'casapy [casapy-options] -c runUnitTest.py [options]\n'
     print 'options:'
-    print 'no option: will run all tests defined in FULL_LIST list'
-    print 'test_name: will run only this test (more tests are separated by spaces)'
-    print '--short:   will run only a short list of tests defined in SHORT_LIST'
-    print '--file:    followed by a text file with each test on a line'
-    print '--help:    prints this message\n'
+    print 'no option:        runs all tests defined in FULL_LIST list'
+    print '<test_name>:      runs only <test_name> (more tests are separated by spaces)'
+    print '--short:          runs only a short list of tests defined in SHORT_LIST'
+    print '--file <list>:    runs the tests defined in <list>; one test per line'
+    print '--list:           prints the full list of available tests'
+    print '--help:           prints this message\n'
     print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
     print '**************************************************************************'
+
+def list_tests():
+    print 'Full list of unit tests'
+    print '-----------------------'
+    for t in FULL_LIST:
+        print t
     
 def is_old(name):
     '''Check if the test is old or new'''
@@ -151,10 +158,17 @@ whichtests = 0
 
 def main(testnames=[]):
 
-    global regstate  # Global variable used by regression framework to determine pass/failure status
+    # Global variable used by regression framework to determine pass/failure status
+    global regstate  
     regstate = False
         
     listtests = testnames
+    if listtests == '--help':
+        usage()
+        sys.exit()
+    if listtests == '--list':
+        list_tests()
+        sys.exit()
     if listtests == []:
         whichtests = 0
     elif (listtests == SHORT_LIST or listtests == ['--short']
@@ -167,11 +181,9 @@ def main(testnames=[]):
             whichtests = 1
             listtests = readfile(testnames)
             if listtests == []:
-                print 'List of tests does not exist'
-                sys.exit()
+                raise Exception, 'List of tests is empty'
         else:
-            print 'List of tests does not exist'
-            sys.exit()
+            raise Exception, 'List of tests does not exist'
             
     else:
         whichtests = 1
@@ -294,13 +306,13 @@ def main(testnames=[]):
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
     try:
-        
         regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile],
                               suite=list)
+    
+        os.chdir(PWD)
     except:
-        print "Exception: failed to run the test"
+        print "Failed to run one or more tests"
         traceback.print_exc()
-        
     else:
         os.chdir(PWD)
 
@@ -334,7 +346,10 @@ if __name__ == "__main__":
                     elem = la.pop()
                     if elem == '--help':
                         usage()
-                        sys.exit()
+                        os._exit(0)
+                    if elem == '--list':
+                        list_tests()
+                        os._exit(0)
                     if elem == '--file':
                         # read list from a text file
                         index = i + 3

@@ -1417,7 +1417,10 @@ clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
 clean_momentzero_max = 163.726852
 clean_momentzero_rms = 15.206372
-clean_momentone_median = 422.142792 # was 423.6954; change << 1 chanwidth.
+#
+#  32 bits gets 423.6954 and 64 bits gets 422.142792
+#  diff << 1 chanwidth.
+clean_momentone_median = 422.92
 clean_momentone_planezero = 696.702393
 clean_momentone_planelast = 127.786629
 vis_mean_cal = 194.915085
@@ -1648,7 +1651,7 @@ results['clean_momentone_median'] = {}
 results['clean_momentone_median']['name'] = 'Moment 1 image median'
 results['clean_momentone_median']['value'] = momone_median
 results['clean_momentone_median']['op'] = op
-results['clean_momentone_median']['tol'] = tol
+results['clean_momentone_median']['tol'] = 1.0 # km/s.  Was 0.1 before CAS-2163.
 
 #
 # Added these sanity checks STM 2008-06-30

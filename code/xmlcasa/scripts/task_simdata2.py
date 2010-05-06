@@ -61,7 +61,8 @@ def simdata2(
     if graphics=="file":
         grfile=True
     
-    try:
+#    try:
+    if True:
 
         ##################################################################
         # set up modelimage
@@ -69,6 +70,7 @@ def simdata2(
 
             # TODO if modelimage==default_model AND, is already in the canonical
             # 4d form, then don't create newmodel.  just work from skymodel!!
+            # TODO parse modelimage better and have it default to $project.skymodel            
 
             default_model=project+".skymodel"
             if modelimage==default_model:
@@ -79,7 +81,7 @@ def simdata2(
                 if overwrite:
                     shutil.rmtree(newmodel)
                 else:
-                    msg(newmodel+".image exists -- please delete or rename and try again",priority="error")
+                    msg(newmodel+" exists -- please delete it, change modeimage, or set overwrite=True",priority="error")
                     return False
             modelflat=newmodel+".flat"
             components_only=False
@@ -185,6 +187,7 @@ def simdata2(
 
         ##################################################################
         # read antenna file here to get Primary Beam
+        # todo remove need to have config file if already predicted - read telescopenae and beam from the ms.
         predict_uv=False
         predict_sd=False
         aveant=-1
@@ -249,7 +252,6 @@ def simdata2(
                     plotcolor='k'
                 for i in range(offsets.shape[1]):
                     pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,plotcolor)
-                    
                 xlim=max(abs(pl.array(lims[0])))
                 ylim=max(abs(pl.array(lims[1])))
                 # show entire pb: (statim doesn't by default)
@@ -270,10 +272,10 @@ def simdata2(
 
 
 
-
         ##################################################################
         # set up observatory, feeds, etc        
 
+        msfile=project+'.ms'
         if predict:
             if not(predict_uv or predict_sd):
                 util.msg("must specify at least one of antennalist, sdantlist",priority="error")
@@ -305,7 +307,6 @@ def simdata2(
 
             nbands = 1;    
             fband  = 'band'+qa.tos(model_center,prec=1)
-            msfile=project+'.ms'
 
             if os.path.exists(msfile):
                 if not overwrite:
@@ -463,7 +464,14 @@ def simdata2(
             sm.done()        
             msg('generation of measurement set ' + msfile + ' complete')
 
-
+        else:
+            # get telescopename from ms
+            tb.open(project+".ms/OBSERVATION")
+            n=tb.getcol("TELESCOPE_NAME")
+            telescopename=n[0]
+            util.telescopename=telescopename
+            # todo add check that all column is the same
+            tb.done()
 
         ######################################################################
         # noisify
@@ -471,7 +479,7 @@ def simdata2(
         noise_any=False
     
         if thermalnoise!="":
-            if not (util.telescopename == 'ALMA' or util.telescopename == 'ACA'):
+            if not (telescopename == 'ALMA' or telescopename == 'ACA'):
                 msg("thermal noise only works properly for ALMA/ACA",origin="noise",priority="warn")
                 
             noise_any=True
@@ -503,13 +511,14 @@ def simdata2(
                 return
 
             sm.openfromms(noisymsfile)    # an existing MS
-            sm.setdata()                # currently defaults to fld=0,spw=0
+            #sm.setdata()                # currently defaults to fld=0,spw=0
+            sm.setdata(fieldid=[]) # force to get all fields
 # use ANoise version - deprecated but required for AC / SD
 #            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
 #                        antefficiency=eta_a,trx=t_rx,
 #                        tau=tau0,tatmos=t_sky,tcmb=t_cmb,
 #                        mode="calculate")
-            if noise_mode=="tsys-manual":
+            if thermalnoise=="tsys-manual":
                 if verbose:
                     msg("sm.setnoise(spillefficiency="+str(eta_s)+
                         ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
@@ -643,12 +652,18 @@ def simdata2(
             outflat_current=True
 
             msg("done inverting and cleaning")
+            if not type(cell)==type([]):
+                cell=[cell,cell]
+            if len(cell)<=1:
+                cell=[qa.quantity(cell[0]),qa.quantity(cell[0])]
+            else:
+                cell=[qa.quantity(cell[0]),qa.quantity(cell[1])]
             
             # get beam from output clean image
             if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
             ia.open(imagename+".image")
             beam=ia.restoringbeam()
-            ia.done()
+            ia.done()            
             # model has units of Jy/pix - calculate beam area from clean image
             # (even if we are not plotting graphics)
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
@@ -706,6 +721,7 @@ def simdata2(
         # analysis
 
         if analyze:
+            # TODO add component into skymodel!!!
             # will need skymodel, so modelimage has to be set:
             if not os.path.exists(modelimage):
                 msg("modelimage "+str(modelimage)+" not found",priority="warn")
@@ -829,7 +845,7 @@ def simdata2(
                 if showarray:
                     util.plotants(stnx, stny, stnz, stnd, padnames)
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showuv:
@@ -847,7 +863,7 @@ def simdata2(
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showpsf:
@@ -892,7 +908,7 @@ def simdata2(
                         pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                     ia.done()
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 disprange=[]  # first plot will define range
@@ -903,13 +919,13 @@ def simdata2(
                 if showmodel:
                     discard = util.statim(modelflat,incell=model_cell,disprange=disprange)
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showconvolved:
                     discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 # imagecalc is interpreting outflat in Jy/pix 
@@ -919,28 +935,28 @@ def simdata2(
                 if showclean:
                     discard = util.statim(imagename+".image.flat",disprange=disprange)
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showresidual:
                     # it gets its own scaling.
                     discard = util.statim(imagename+".residual.flat")
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showdifference:
                     # it gets its own scaling.
                     discard = util.statim(imagename+".diff")
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
                 if showfidelity:
                     # it gets its own scaling.
                     discard = util.statim(imagename+".fidelity")
                     util.nextfig()
-                    if util.pmulti[2]>= util.pmulti[0]*util.pmulti[1]: 
+                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
                         util.endfig(remove=(not grscreen))            
 
             else:
@@ -960,12 +976,12 @@ def simdata2(
         # shutil.rmtree(modelflat)  
 
 
-    except TypeError, e:
-        msg("task_simdata -- TypeError: %s" % e,priority="error")
-        return
-    except ValueError, e:
-        print "task_simdata -- OptionError: ", e
-        return
-    except Exception, instance:
-        print '***Error***',instance
-        return
+#    except TypeError, e:
+#        msg("task_simdata -- TypeError: %s" % e,priority="error")
+#        return
+#    except ValueError, e:
+#        print "task_simdata -- OptionError: ", e
+#        return
+#    except Exception, instance:
+#        print '***Error***',instance
+#        return

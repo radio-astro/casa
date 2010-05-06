@@ -93,6 +93,7 @@ import random
 import time
 import casac
 import numpy
+import struct
 from tasks import *
 from taskinit import *
 import unittest
@@ -1331,18 +1332,23 @@ class immath_test3(unittest.TestCase):
         for img in imageList4:
             shutil.rmtree(img)        
 
-    def _comp(self, imagename, mode, outfile, expected, polithresh=''):
+    def _comp(self, imagename, mode, outfile, expected, epsilon, polithresh=''):
         immath(imagename=imagename, outfile=outfile, mode=mode, polithresh=polithresh)
         self.assertTrue(os.path.exists(outfile))
         ia.open(outfile)
         got = ia.getchunk()
         ia.done()
         diff = expected - got
-        self.assertTrue((numpy.abs(got - expected) == 0).all())        
+        self.assertTrue((numpy.abs(diff)/got < epsilon).all())        
 
     def test_CAS2120(self):
         '''immath: verification of old functionality and similar new functionality introduced by CAS-2120'''
 
+        sysbits = struct.calcsize("P") * 8
+        # epsilon necessary because of differences between 32 and 64 bit images
+        epsilon = 0
+        if (sysbits == 32):
+            epsilon = 3e-7
         # POLA
         mode = 'pola'
         ia.open(POLA_im)
@@ -1350,20 +1356,20 @@ class immath_test3(unittest.TestCase):
         ia.done()
 
         # pola the old way
-        self._comp([Q_im, U_im], mode, 'pola_1.im', expected)  
+        self._comp([Q_im, U_im], mode, 'pola_1.im', expected, epsilon)  
 
         # test that order of Q, U doesn't matter
-        self._comp([U_im, Q_im], mode, 'pola_2.im', expected)  
+        self._comp([U_im, Q_im], mode, 'pola_2.im', expected, epsilon)  
         outfile = 'pola_2.im'
 
         # test making pola image from multi-stokes image
-        self._comp(IQUV_im, mode, 'pola_3.im', expected)  
+        self._comp(IQUV_im, mode, 'pola_3.im', expected, epsilon)  
 
         # test making pola image from multi-stokes image without V
-        self._comp(IQU_im, mode, 'pola_4.im', expected)  
+        self._comp(IQU_im, mode, 'pola_4.im', expected, epsilon)  
 
         # test making pola image from multi-stokes image without I and V
-        self._comp(QU_im, mode, 'pola_5.im', expected)  
+        self._comp(QU_im, mode, 'pola_5.im', expected, epsilon)  
 
         # no Q, this should fail
         outfile = 'pola6.im'
@@ -1394,7 +1400,7 @@ class immath_test3(unittest.TestCase):
 
         # with a linear polarization threshold applied
         outfile = 'pola_8.im'
-        self._comp(QU_im, mode, outfile, expected, polithresh='30uJy/beam')
+        self._comp(QU_im, mode, outfile, expected, epsilon, polithresh='30uJy/beam')
         mask_tbl = outfile + os.sep + 'mask0'
         self.assertTrue(os.path.exists(mask_tbl))
         
@@ -1418,20 +1424,20 @@ class immath_test3(unittest.TestCase):
         ia.done()
 
         # linear polarization the old way
-        self._comp([Q_im, U_im], mode, 'poli_1.im', poll)  
+        self._comp([Q_im, U_im], mode, 'poli_1.im', poll, epsilon)  
 
         # Q, U order shouldn't matter
-        self._comp([Q_im, U_im], mode, 'poli_2.im', poll)  
+        self._comp([Q_im, U_im], mode, 'poli_2.im', poll, epsilon)  
 
         # new way, one multi-stokes image
-        self._comp(IQU_im, mode, 'poli_3.im', poll)  
+        self._comp(IQU_im, mode, 'poli_3.im', poll, epsilon)  
 
         # new way, one multi-stokes image with only Q and U
-        self._comp(QU_im, mode, 'poli_4.im', poll)  
+        self._comp(QU_im, mode, 'poli_4.im', poll, epsilon)  
        
         # poli for IQUV image will produce a total, not linear, polarization image 
-        self._comp([Q_im, U_im, V_im], mode, 'poli_5.im', polt)  
-        self._comp(IQUV_im, mode, 'poli_6.im', polt)
+        self._comp([Q_im, U_im, V_im], mode, 'poli_5.im', polt, epsilon)  
+        self._comp(IQUV_im, mode, 'poli_6.im', polt, epsilon)
 
         # fail, no U
         outfile = 'poli7.im'
@@ -1450,8 +1456,6 @@ class immath_test3(unittest.TestCase):
             self.assertTrue(false)
         except:
             self.assertFalse(os.path.exists(outfile))
-
-  
 
 def suite():
     return [immath_test1, immath_test2, immath_test3]

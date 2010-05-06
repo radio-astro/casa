@@ -52,6 +52,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
 #include <casa/iostream.h>
+#include <casa/sstream.h>
 #include <graphics/Graphics/PGPlotterLocal.h>
 #include <graphics/Graphics/PGPLOT.h>
 #include <casa/Logging/LogIO.h>
@@ -295,7 +296,8 @@ Bool PlotCal::selectCal(const String& antenna,
   Vector<Int> antId; 
   Vector<Int> fldId;
   Vector<Int> spwId;
-  
+  //  Matrix<Int> chanId;
+
   Bool antSel=False;
   Bool fldSel=False;
   Bool spwSel=False;
@@ -326,7 +328,7 @@ Bool PlotCal::selectCal(const String& antenna,
     if(fldId.nelements()>0 && fldId(0)!=-1)
       fldSel=True;
     
-    spwId=getSpwIdx(spw);
+    spwId=getSpwIdx(spw,chanId_p);
     if (spw.length()>0 && spwId.nelements()==0)
       throw(AipsError("Specified spw(s) select no calibration solutions."));
     if(spwId.nelements()>0 && spwId(0)!=-1) 
@@ -559,6 +561,16 @@ void PlotCal::getAxisTaQL(const String& axis,
 			  String& label) {
 
   LogIO os(LogOrigin("PlotCal", "getAxisTaQL", WHERE));
+  //
+  // Extract the frequency selection info. and use it plot the
+  // selected channels only.
+  // 
+  String chansel("");
+  ostringstream chanlist;
+  //  cerr << "Chan Id = " << chanId_p << endl;
+  if (chanId_p.shape()(0) > 0)
+    chanlist << chanId_p(0,1)+1 << ":" << chanId_p(0,2)+1;
+  chansel=chanlist.str();
   
   if (axis.contains("TIME")) {
     taql=String("(TIME/86400.0)+678576.0");
@@ -593,19 +605,19 @@ void PlotCal::getAxisTaQL(const String& axis,
       
       String defval("0.0");
       if (axis.contains("AMP") ) {
-	taql = "(AMPLITUDE(GAIN[1,]/GAIN[2,]))";
+	taql = "(AMPLITUDE(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
 	label = "Gain Amplitude POLN Ratio";
       }
       else if (axis.contains("REAL") ) {
-	taql = "(REAL(GAIN[1,]/GAIN[2,]))";
+	taql = "(REAL(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
 	label = "Gain: Real Part POLN Ratio";
       }
       else if (axis.contains("IMAG") ) {
-	taql = "(IMAG(GAIN[1,]/GAIN[2,]))";
+	taql = "(IMAG(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
 	label = "Gain: Imaginary Part POLN Ratio";
       }
       else if (axis.contains("PHASE")) {
-	taql = "((180.0/PI())*ARG(GAIN[1,]/GAIN[2,]))";
+	taql = "((180.0/PI())*ARG(GAIN[1,"+chansel+"]/GAIN[2,"+chansel+"]))";
 	label = "Gain Phase POLN Difference (deg)";
       }
       else if (axis.contains("SNR") ) {
@@ -632,21 +644,21 @@ void PlotCal::getAxisTaQL(const String& axis,
 	polsel="1";
       if (polType_p=="L" || polType_p=="Y")
 	polsel="2";
-      
+
       if (axis.contains("AMP") ) {
-	taql = "(AMPLITUDE(GAIN["+polsel+",]))";
+	taql = "(AMPLITUDE(GAIN["+polsel+","+chansel+"]))";
 	label = "Gain Amplitude";
       }
       else if (axis.contains("REAL") ) {
-	taql = "(REAL(GAIN["+polsel+",]))";
+	taql = "(REAL(GAIN["+polsel+","+chansel+"]))";
 	label = "Gain: Real Part";
       }
       else if (axis.contains("IMAG") ) {
-	taql = "(IMAG(GAIN["+polsel+",]))";
+	taql = "(IMAG(GAIN["+polsel+","+chansel+"]))";
 	label = "Gain: Imaginary Part";
       }
       else if (axis.contains("PHASE")) {
-	taql = "((180.0/PI())*ARG(GAIN["+polsel+",]))";
+	taql = "((180.0/PI())*ARG(GAIN["+polsel+","+chansel+"]))";
 	label = "Gain Phase (deg)";
       }
       else if (axis.contains("SNR") ) {
@@ -1452,12 +1464,13 @@ Int PlotCal::multiTables(const Table& tablein,
   }
 
   // Get cal_desc indices (via MSSelection on spws)
-  Vector<Int> PlotCal::getSpwIdx(const String& spw) {
+  Vector<Int> PlotCal::getSpwIdx(const String& spw, Matrix<Int>& chanId) {
 
     if (msName_p!="" && Table::isReadable(msName_p)) {
       MeasurementSet ms(msName_p);
       MSSelection mssel;
       mssel.setSpwExpr(spw);
+      chanId=mssel.getChanList(&ms);
       return mssel.getSpwList(&ms);
     }
     else {

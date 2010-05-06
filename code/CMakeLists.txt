@@ -621,17 +621,17 @@ file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
       "print 'Successfully launched IPython from C++.'\n" 
       "sys.exit(0)\n")
 #
-# The names of CCMTools libraries changed.
+# The names of CCMTools libraries have changed.
 # Need to support both naming conventions, until the new
 # version is universally available. (This implementation
 # would be cleaner if CCM exported a version number.)
 #
-if( EXISTS ${casa_packages}/lib/libCCM_Python.so OR
-    EXISTS ${casa_packages}/lib64/libCCM_Python.so OR
-    EXISTS ${casa_packages}/lib/libCCM_Python.dylib )
-  set( _ccmtools_libs CCM_Python CCM_Local_HomeFinder WX_Utils_error WX_Utils_code WX_Utils_types )
-else()
+if( EXISTS ${casa_packages}/lib/libccmtools_local.so OR
+    EXISTS ${casa_packages}/lib64/libccmtools_local.so OR
+    EXISTS ${casa_packages}/lib/libccmtools_local.dylib )
   set( _ccmtools_libs ccmtools_local )
+else()
+  set( _ccmtools_libs CCM_Python CCM_Local_HomeFinder WX_Utils_error WX_Utils_code WX_Utils_types )
 endif()
 
 casa_find( CCMTOOLS

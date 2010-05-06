@@ -29,6 +29,17 @@ if not os.access(SCRIPT_REPOS, os.F_OK):
 
 sys.path.append(UTILS_DIR)
 
+class Helper():
+    # This class is called when a test is not found. It will
+    # raise an exception and make nose fail. This way, the not
+    # found test will be counted as an error and won't be ignored.
+    def __init__(self, name):
+        self.tname = name
+    
+    def test_dummy(self):
+        '''Helper function'''
+        raise Exception, "Cannot find test %s"%self.tname
+
 class UnitTest:
     def __init__(self,testname=''):
         """Take the name of a test file (without .py), wrap it and run"""
@@ -107,9 +118,13 @@ class UnitTest:
         # search for script in repository
         testscript = self.searchscript(self.testname, self.scriptdir)
 
-        # avoid creating a _work directory
         if (testscript == ""):
-            return
+            testlist = []
+            # Create a dummy list and return it so that nose
+            # includes this test in the list of erroneous tests
+            # instead of ignoring it.
+            t = unittest.FunctionTestCase(Helper(self.testname).test_dummy)
+            return [t]
 
         # copy test to local directory
         self.workdir = os.getcwd()
@@ -226,7 +241,9 @@ class UnitTest:
                 numOfScript += 1  
                       
         if numOfScript == 0:
-            raise Exception, 'Could not find test %s' %TestName       
+#            raise Exception, 'Could not find test %s' %TestName 
+            print 'ERROR: Could not find test %s' %TestName
+            return ""  
             
         if( numOfScript > 1) :
             print 'More than 1 scripts found for name '+TestName
@@ -282,5 +299,10 @@ class ExecTest(unittest.TestCase,UnitTest):
         
         execfile(self.testscript, gl)   
         
+
+
+
+
+
 
         

@@ -45,7 +45,7 @@ def ft(vis=None,field=None,spw=None,model=None,complist=None,incremental=None):
                else:
                        raise Exception, 'Visibility data set not found - please verify the name'
                im.selectvis(field=field,spw=spw, usescratch=True)
-               im.setimage()
+               im.defineimage()
                im.ft(model=model,complist=complist,incremental=incremental)
                im.close()
 
