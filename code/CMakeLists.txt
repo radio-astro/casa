@@ -664,7 +664,6 @@ set( CCMTOOLS_ccmtools_FLAGS -Xms1024M -Xmx1024M )
 find_package(
   Qt4 4.3.4
   COMPONENTS QtCore QtGui QtDBus QtXml ) #QtOpenGL )
-# Version checking not supported...
 
 set( QT4_INCLUDE_DIRS ${QT_INCLUDES} CACHE PATH "QT4 include directories" FORCE )
 set( QT4_DEFINITIONS ${QT_DEFINITIONS} -DQT_NO_DEBUG CACHE STRING "QT4 preprocessor flags" FORCE )
@@ -675,6 +674,8 @@ set( QT4_LIBRARIES
   ${QT_QTXML_LIBRARY} 
   # ${QT_QTOPENGL_LIBRARY}
   CACHE FILEPATH "QT4 libraries" FORCE )
+list( REMOVE_ITEM QT4_LIBRARIES "optimized" )
+list( REMOVE_ITEM QT4_LIBRARIES "debug" )
 set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 
 # Detecting QT4 takes a bit of time, but does not seem possible to skip.
@@ -769,8 +770,10 @@ casa_find( READLINE
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
+casa_config_end()
+
 #
-# ASAP depends on something called a makedefs file. Fake one of those.
+# ASAP's build depends on something called a makedefs file. Fake one of those.
 #
 
 # Get path from first of rpfits libraries.
@@ -813,8 +816,9 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
-
+#
 # The following variables are substitued into python scripts
+#
 set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
 set( PYTHON_TASKD ${PYTHON_LIBD} )
 
