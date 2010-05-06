@@ -90,7 +90,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	<param type="bool" name="padwithflags" subparam="true">
 		<description>Fill in missing data with flags to fit IFs</description>
-		<value>True</value>
+		<value>False</value>
 	</param>
 
         <constraints>
