@@ -187,7 +187,6 @@ def simdata2(
 
         ##################################################################
         # read antenna file here to get Primary Beam
-        # todo remove need to have config file if already predicted - read telescopenae and beam from the ms.
         predict_uv=False
         predict_sd=False
         aveant=-1
@@ -368,26 +367,44 @@ def simdata2(
                 msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
                 return
         
-            # TODO sm.observemany
+            # sm.observemany
+            srces=[]
+            starttimes=[]
+            stoptimes=[]
+            dirs=[]
 
             for k in range(0,nscan) :
                 sttime=-totalsec/2.0+scansec*k
                 endtime=sttime+scansec
                 src=project+'_%d'%kfld
                 # this only creates blank uv entries
-                sm.observe(sourcename=src, spwname=fband,
-                           starttime=qa.quantity(sttime, "s"),
-                           stoptime=qa.quantity(endtime, "s"));
+                #sm.observe(sourcename=src, spwname=fband,
+                #           starttime=qa.quantity(sttime, "s"),
+                #           stoptime=qa.quantity(endtime, "s"));
+                srces.append(src)
+                starttimes.append(str(sttime)+"s")
+                stoptimes.append(str(endtime)+"s")
+                dirs.append(pointings[kfld])
                 kfld=kfld+1
                 if kfld==nfld: 
                     if docalibrator:
                         sttime=-totalsec/2.0+scansec*k
                         endtime=sttime+scansec
-                        sm.observe(sourcename="phase calibrator", spwname=fband,
-                                   starttime=qa.quantity(sttime, "s"),
-                                   stoptime=qa.quantity(endtime, "s"));
+                        # sm.observe(sourcename="phase calibrator", spwname=fband,
+                        #            starttime=qa.quantity(sttime, "s"),
+                        #            stoptime=qa.quantity(endtime, "s"));
+                        srces.append(src)
+                        starttimes.append(str(sttime)+"s")
+                        stoptimes.append(str(endtime)+"s")
+                        dirs.append(caldirection)
                     kfld=kfld+1                
                 if kfld > nfld: kfld=0
+            pdb.set_trace()
+            # if directions is unset, NewMSSimulator::observemany should 
+            # look up the direction in the field table.
+            sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
+            #sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,directions=dirs)
+
             sm.setdata(fieldid=range(0,nfld))
             sm.setvp()
 
@@ -631,6 +648,7 @@ def simdata2(
 
         outflat_current=False
         convsky_current=False
+        beam_current=False
         imagename=project
 
         if image:
@@ -648,7 +666,8 @@ def simdata2(
                        outertaper,stokes,sourcefieldlist=sourcefieldlist)
 
             # create imagename.flat and imagename.residual.flat:
-            util.flatimage(imagename,cell,model_cell,complist=complist,verbose=verbose,flatresidual=True)
+            # does complist so don't add that to the output
+            util.flatimage(imagename,cell,model_cell,complist="",verbose=verbose,flatresidual=True)
             outflat_current=True
 
             msg("done inverting and cleaning")
@@ -663,7 +682,8 @@ def simdata2(
             if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
             ia.open(imagename+".image")
             beam=ia.restoringbeam()
-            ia.done()            
+            beam_current=True
+            ia.done()
             # model has units of Jy/pix - calculate beam area from clean image
             # (even if we are not plotting graphics)
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
@@ -686,6 +706,17 @@ def simdata2(
             if grscreen or grfile:
                 # TODO if components_only create a sky model image here!!!
 
+                # add components into skyflat
+                if len(complist)>0:
+                    ia.open(modelflat)
+                    if not os.path.exists(complist):
+                        msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+                    cl.open(complist)
+                    # ia.setbrightnessunit("Jy/pixel")
+                    ia.modify(cl.torecord(),subtract=False) 
+                    cl.done()
+                    ia.done()
+
                 # create regridded and convolved sky model image
                 util.convimage(modelflat,imagename+".image.flat")
                 convsky_current=True # don't remake this for analysis in this run
@@ -696,6 +727,8 @@ def simdata2(
                 # and set its units
                 disprange=[disprange[0]/bmarea,disprange[1]/bmarea]
 
+                # same scaling is not producing very good results 20100505
+                disprange=[]
                 # original sky regridded to output pixels but not convolved
                 discard = util.statim(modelflat+".regrid",disprange=disprange)
                 util.nextfig()
@@ -703,9 +736,11 @@ def simdata2(
                 # convolved sky model
                 discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                 util.nextfig()
-
+                
                 # imagecalc is interpreting outflat in Jy/pix 
                 disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
+                # scaling is not working well 20100505
+                disprange=[]
                 # clean image
                 discard = util.statim(imagename+".image.flat",disprange=disprange)
                 util.nextfig()
@@ -721,7 +756,6 @@ def simdata2(
         # analysis
 
         if analyze:
-            # TODO add component into skymodel!!!
             # will need skymodel, so modelimage has to be set:
             if not os.path.exists(modelimage):
                 msg("modelimage "+str(modelimage)+" not found",priority="warn")
@@ -738,10 +772,24 @@ def simdata2(
             modelflat=modelim+".flat"
 
             if not os.path.exists(modelim):
-                msg("sky model image"+str(modelim)+" not found",priority="error")
+                msg("sky model image "+str(modelim)+" not found",priority="error")
 
             # so we should have modelim and modelim.flat created above, 
             # whether modifymodel is true or not.
+
+            if not image:
+                # get beam from output clean image
+                if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
+                ia.open(imagename+".image")
+                beam=ia.restoringbeam()
+                beam_current=True
+                ia.done()
+                # model has units of Jy/pix - calculate beam area from clean image
+                # (even if we are not plotting graphics)
+                bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
+                bmarea=bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
+                msg("synthesized beam area in output pixels = %f" % bmarea)
+
 
             # what about the output image?
             outim=project+".image"
@@ -757,30 +805,29 @@ def simdata2(
                     # get cell from outim
                     cell=cellsize(outim)
                 # model_cell has to be set even if not modifyimage
-                util.flatimage(imagename,cell,model_cell,complist=complist,verbose=verbose,flatresidual=True)
+                # does complist too so set that to zero
+                util.flatimage(imagename,cell,model_cell,complist="",verbose=verbose,flatresidual=True)
                 outflat_current=True
                 
             # regridded and convolved output:?
             if not convsky_current:
+                # add components into modelflat
+                if len(complist)>0:
+                    if not os.path.exists(complist):
+                        msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+                    ia.open(modelflat)
+                    cl.open(complist)
+                    # ia.setbrightnessunit("Jy/pixel")
+                    ia.modify(cl.torecord(),subtract=False) 
+                    cl.done()
+                    ia.done()
+
                 util.convimage(modelflat,imagename+".image.flat")
                 convsky_current=True
             
             # now we should have all the flat, convolved etc even if 
-            # we didn't run "image" this time.  still need beam in that case
-                
-            if not image:
-                # get beam from output clean image
-                if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
-                ia.open(imagename+".image")
-                beam=ia.restoringbeam()
-                ia.done()
-                # model has units of Jy/pix - calculate beam area from clean image
-                # (even if we are not plotting graphics)
-                bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-                bmarea=bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
-                msg("synthesized beam area in output pixels = %f" % bmarea)
-
-
+            # we didn't run "image" this time. 
+    
             # Make difference image.
             # imagecalc is interpreting outflat in Jy/pix - 
             convolved = modelflat+".regrid.conv"
@@ -913,8 +960,8 @@ def simdata2(
 
                 disprange=[]  # first plot will define range
 
-                # TODO set range with diff image if we're showing it
-                #if showdifference and (showmodel or showconvolved or showclean or showresidual):
+                # TODO show model and output on same disprange, taking into
+                # account pix differences, and jy/bm vs jy/pix
 
                 if showmodel:
                     discard = util.statim(modelflat,incell=model_cell,disprange=disprange)
@@ -929,8 +976,10 @@ def simdata2(
                         util.endfig(remove=(not grscreen))            
 
                 # imagecalc is interpreting outflat in Jy/pix 
-                if len(disprange)>0:
-                    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
+                #if len(disprange)>0:
+                #    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
+                # for now, let output and input be on different scales
+                disprange=[]
                 
                 if showclean:
                     discard = util.statim(imagename+".image.flat",disprange=disprange)

@@ -281,18 +281,33 @@ Bool rstat(False);
       Vector<String> sstoptimes(toVectorString(stoptimes));
       Vector<String> sdirections(toVectorString(directions));
 
-      uInt nptg=ssourcenames.nelements();
+      uInt nptg=sstarttimes.nelements();
+      AlwaysAssert(sstoptimes.nelements() == nptg, AipsError);
+      if (ssourcenames.nelements() == 1 ) {
+	ssourcenames.resize(nptg,True);
+      }
+      AlwaysAssert(ssourcenames.nelements() == nptg, AipsError);
+
+      if (sdirections.nelements() == 1) {
+	sdirections.resize(nptg,"");
+      }
+      AlwaysAssert(sdirections.nelements() == nptg, AipsError);
+
       casa::Vector<casa::Quantity> qstarttimes(nptg);
       casa::Vector<casa::Quantity> qstoptimes(nptg);
       casa::Vector<casa::MDirection> mdirections(nptg);
-      MDirection mdir;
+      MDirection mdir,northPole;
       for (uInt i=0; i<nptg; i++) {
 	qstarttimes[i]=casaQuantity(sstarttimes[i]);
 	qstoptimes[i]=casaQuantity(sstoptimes[i]);
-	if (!casaMDirection(sdirections[i], mdir)){
-	  *itsLog << LogIO::SEVERE 
-		  << "Could not convert direction to a Direction Measure."
-		  << LogIO::POST;
+	if (sdirections[i].length() >0) {
+	  if (!casaMDirection(sdirections[i], mdir)){
+	    *itsLog << LogIO::SEVERE 
+		    << "Could not convert direction to a Direction Measure."
+		    << LogIO::POST;
+	  }
+	} else {
+	  mdir=northPole;
 	}
 	mdirections[i]=mdir;
       }

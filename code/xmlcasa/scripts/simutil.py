@@ -187,8 +187,6 @@ class simutil:
     ###########################################################
     # plot an image (optionally), and calculate its statistics
 
-    # TODO make ia.histogram quieter to the logger
-
     def statim(self,image,plot=True,incell=None,disprange=None):
         pix=self.cellsize(image)
         pixarea=abs(qa.convert(pix[0],'arcsec')['value']*
@@ -247,7 +245,7 @@ class simutil:
             yextent=[-yextent,yextent]
         # remove top .5% of pixels:
         nbin=200
-        imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
+        imhist=ia.histograms(cumu=True,nbins=nbin,list=False)['histout']
         ii=0
         lowcounts=imhist['counts'][ii]
         while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
@@ -1054,12 +1052,15 @@ class simutil:
                     self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",priority="error")
                     return -1
                 
-                # if self.verbose: foo=self.getdatum(datum,verbose=True)
+                vsave=self.verbose
                 for i in range(len(inx)):
                     x,y,z = self.utm2xyz(inx[i],iny[i],inz[i],int(zone),datum,nors)
+                    if i==1: 
+                        self.verbose=False
                     stnx.append(x)
                     stny.append(y)
-                    stnz.append(z)                
+                    stnz.append(z)
+                self.verbose=vsave
             else:
                 if (params["coordsys"].upper()[0:3]=="LOC"):
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
@@ -2665,6 +2666,17 @@ class simutil:
         outimcsys.done()
         del outimcsys
 
+        # add components into skyflat
+        if len(complist)>0:
+            ia.open(outflat)
+            if not os.path.exists(complist):
+                msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+            cl.open(complist)
+            #ia.setbrightnessunit("Jy/pixel")
+            ia.modify(cl.torecord(),subtract=False) 
+            cl.done()
+            ia.done()
+
         if not flatresidual:
             return True
 
@@ -2752,13 +2764,12 @@ class simutil:
         incellx=qa.mul(incellx,abs(xform[0,0]))
         incelly=qa.mul(incelly,abs(xform[1,1]))
         cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
-
+        
         # image scaling
-        factor  = (qa.convert(cell[0],"arcsec")['value'])  
+        factor  = (qa.convert(cell[0],"arcsec")['value'])
         factor *= (qa.convert(cell[1],"arcsec")['value']) 
         factor /= (qa.convert(model_cell[0],"arcsec")['value']) 
-        factor /= (qa.convert(model_cell[1],"arcsec")['value']) 
-        
+        factor /= (qa.convert(model_cell[1],"arcsec")['value'])         
         imrr = ia.imagecalc(modelregrid, 
                             "'%s'*%g" % (modelregrid+'.tmp',factor), 
                             overwrite = True)
