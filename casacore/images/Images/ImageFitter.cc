@@ -864,47 +864,36 @@ namespace casa {
 
     void ImageFitter::_writeLogfile(const String& output) const {
     	File log(logfileName);
-    	if(log.exists()) {
-    		if (log.isWritable()) {
-    			if (logfileAppend) {
-    				Int fd = open(logfileName.c_str(), O_RDWR | O_APPEND);
-    				FiledesIO fio(fd, logfileName.c_str());
-    				fio.write(output.length(), output.c_str());
-    				FiledesIO::close(fd);
-
-    				*itsLog << LogIO::NORMAL << "Appended results to file "
-    						<< logfileName << LogIO::POST;
-    			}
-    			else {
-    				if (log.canCreate()) {
-    					Int fd = FiledesIO::create(logfileName.c_str());
-    					FiledesIO fio (fd, logfileName.c_str());
-    					fio.write(output.length(), output.c_str());
-    					FiledesIO::close(fd);
-    					*itsLog << LogIO::NORMAL << "Overwrote file "
-    							<< logfileName << " with new log file"
-    							<< LogIO::POST;
-    				}
-    			}
-    		}
-    		else {
-    			*itsLog << LogIO::WARN << "Unable to write to file "
+    	switch (File::FileWriteStatus status = log.getWriteStatus()) {
+    	case File::OVERWRITABLE:
+    		if (logfileAppend) {
+    			Int fd = open(logfileName.c_str(), O_RDWR | O_APPEND);
+    			FiledesIO fio(fd, logfileName.c_str());
+    			fio.write(output.length(), output.c_str());
+    			FiledesIO::close(fd);
+    			*itsLog << LogIO::NORMAL << "Appended results to file "
     					<< logfileName << LogIO::POST;
     		}
-    	}
-    	else {
-    		if (log.canCreate()) {
+    	case File::CREATABLE:
+    		if (status == File::CREATABLE || ! logfileAppend) {
+    			String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
     			Int fd = FiledesIO::create(logfileName.c_str());
     			FiledesIO fio (fd, logfileName.c_str());
     			fio.write(output.length(), output.c_str());
     			FiledesIO::close(fd);
-    			*itsLog << LogIO::NORMAL << "Created log file "
-    					<< logfileName << LogIO::POST;
+    			*itsLog << LogIO::NORMAL << action << " file "
+    					<< logfileName << " with new log file"
+    					<< LogIO::POST;
     		}
-    		else {
-    			*itsLog << LogIO::WARN << "Cannot create log file "
-    					<< logfileName << LogIO::POST;
-    		}
+    		break;
+    	case File::NOT_OVERWRITABLE:
+    		*itsLog << LogIO::WARN << "Unable to write to file "
+    		<< logfileName << LogIO::POST;
+    		break;
+    	case File::NOT_CREATABLE:
+    		*itsLog << LogIO::WARN << "Cannot create log file "
+    		<< logfileName << LogIO::POST;
+    		break;
     	}
     }
 
@@ -918,34 +907,24 @@ namespace casa {
     	}
     	String output = out.str();
     	File estimates(newEstimatesFileName);
-    	if(estimates.exists()) {
-    		if (estimates.isWritable()) {
-    			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
-    			FiledesIO fio(fd, logfileName.c_str());
-    			fio.write(output.length(), output.c_str());
-    			FiledesIO::close(fd);
-    			*itsLog << LogIO::NORMAL << "Overwrote file "
-    					<< newEstimatesFileName << " with new estimates file"
-    					<< LogIO::POST;
-    		}
-    		else {
-    			*itsLog << LogIO::WARN << "Unable to write to file "
-    					<< newEstimatesFileName << LogIO::POST;
-    		}
-    	}
-    	else {
-    		if (estimates.canCreate()) {
-    			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
-    			FiledesIO fio (fd, logfileName.c_str());
-    			fio.write(output.length(), output.c_str());
-    			FiledesIO::close(fd);
-    			*itsLog << LogIO::NORMAL << "Created estimates file "
-    					<< newEstimatesFileName << LogIO::POST;
-    		}
-    		else {
-    			*itsLog << LogIO::WARN << "Cannot create estimates file "
-    					<< newEstimatesFileName << LogIO::POST;
-    		}
+    	switch (File::FileWriteStatus status = estimates.getWriteStatus()) {
+    	case File::NOT_OVERWRITABLE:
+    		*itsLog << LogIO::WARN << "Unable to write to file "
+				<< newEstimatesFileName << LogIO::POST;
+    		break;
+    	case File::NOT_CREATABLE:
+    		*itsLog << LogIO::WARN << "Cannot create estimates file "
+				<< newEstimatesFileName << LogIO::POST;
+    		break;
+    	default:
+    		String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
+    		Int fd = FiledesIO::create(newEstimatesFileName.c_str());
+    		FiledesIO fio(fd, logfileName.c_str());
+    		fio.write(output.length(), output.c_str());
+    		FiledesIO::close(fd);
+    		*itsLog << LogIO::NORMAL << action << " file "
+    				<< newEstimatesFileName << " with new estimates file"
+    				<< LogIO::POST;
     	}
     }
 }
