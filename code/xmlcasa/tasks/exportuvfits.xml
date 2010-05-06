@@ -96,9 +96,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <constraints>
           <when param="combinespw">
 	    <equals type="bool" value="True">
-	      <default param="padwithflags"><value type="bool">True</value>
-	      </default>
+	      <default param="padwithflags"><value type="bool">True</value> </default>
 	    </equals>
+	    <equals type="bool" value="False"/>
           </when>
         </constraints>
 </input>
