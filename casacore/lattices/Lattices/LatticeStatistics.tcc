@@ -837,7 +837,7 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     Double useMemory = Double(memory)/10.0;
     if (forceDisk_p) useMemory = 0.0;
     if (haveLogger_p) {
-       os_p << LogIO::NORMAL1
+       os_p << LogIO::DEBUG1
             << "Creating new statistics storage lattice of shape " << storeLatticeShape << endl << LogIO::POST;
     }
 //
