@@ -34,6 +34,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Containers/RecordDesc.h>
 #include <casa/Containers/RecordField.h>
+#include <casa/OS/Time.h>
 #include <fits/FITS/hdu.h>
 #include <fits/FITS/fitsio.h>
 #include <fits/FITS/FITSTable.h>
@@ -278,26 +279,24 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
 
 uInt MSFitsOutput::get_tbf_end(const uInt rownr, const uInt nrow, const uInt nif, 
                                const ROScalarColumn<Double>& intimec,
-                               const ROScalarColumn<Double>& ininterval,
+                               const ROScalarColumn<Double>& timewidthcol,
                                const ROScalarColumn<Int>& inant1,
                                const ROScalarColumn<Int>& inant2,
                                const Bool asMultiSource,
                                const ROScalarColumn<Int>& infieldid)
 {
-  const Double startTC = intimec(rownr);
-  const Double timeTol = 0.25 * ininterval(rownr);
+  const Double maxTime = intimec(rownr) + 0.2 * timewidthcol(rownr);
   const Int startant1 = inant1(rownr);
   const Int startant2 = inant2(rownr);
-  Int startfld = 0;
-  
+
+  Int startfld = 0;  
   if(asMultiSource)
     startfld = infieldid(rownr);
   
   uInt tbfend = rownr;
   for(uInt currrow = rownr + 1; currrow - rownr < nif && currrow < nrow; ++currrow){
-    if(intimec(currrow) - startTC <= timeTol &&
-       inant1(currrow) == startant1 &&
-       inant2(currrow) == startant2 &&
+    if(intimec(currrow) <= maxTime &&
+       inant1(currrow) == startant1 && inant2(currrow) == startant2 &&
        (!asMultiSource || infieldid(currrow) == startfld))
       tbfend = currrow;
     else
@@ -814,12 +813,16 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 
   // Sort the table in order of TIME, ANTENNA1, ANTENNA2, FIELDID, SPWID.
   // Iterate through the table on the first 4 fields.
-  Block<String> sortNames(5);
+  Block<String> sortNames(combineSpw ? 4 : 5);
   sortNames[0] = MS::columnName(MS::TIME_CENTROID);
   sortNames[1] = MS::columnName(MS::ANTENNA1);
   sortNames[2] = MS::columnName(MS::ANTENNA2);
   sortNames[3] = MS::columnName(MS::FIELD_ID);
-  sortNames[4] = MS::columnName(MS::DATA_DESC_ID);
+  Vector<uInt> sortIndex;
+  if(combineSpw)                   // combineSpw will do its own
+    sortIndex.resize(nrow);        // DATA_DESC_ID sorting.
+  else
+    sortNames[4] = MS::columnName(MS::DATA_DESC_ID);
   Table sortTable = rawms.sort (sortNames);
 
   // Make objects for the various columns.
@@ -862,7 +865,10 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
   // before creating the writer so that a partial UVFITS file isn't left on
   // disk if this exits.
   Vector<Int> expectedDDIDs;
+
   uInt nOutRow = nrow;
+  Vector<uInt> tbfends;
+    
   if (combineSpw){
     // Prepare a list of the expected DDIDs as a function of rownr % nif.
     // If inspwinid(rownr) != expectedDDIDs[rownr % nif], something has gone
@@ -886,17 +892,19 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     }
 
     if (nif > 1) {             // Don't bother counting all the inspwinids
-      Vector<uInt> nperIF;     // unless there is > 1 kind.
-      
+      Vector<uInt> nperIF;     // unless there is > 1 kind.      
       nperIF.resize(nif);
       nperIF.set(0);
+
+      tbfends.resize(nrow);
 
       uInt rownr = 0;
       while(rownr < nrow){
         uInt tbfend = rownr + nif - 1;
         
-        if(padWithFlags){
-          tbfend = get_tbf_end(rownr, nrow, nif, intimec, ininterval,
+        if(padWithFlags){          
+          tbfend = get_tbf_end(rownr, nrow, nif, intimec,
+                               asMultiSource ? inexposure : ininterval,
                                inant1, inant2,
                                asMultiSource, infieldid);
           nOutRow += nif - (tbfend + 1 - rownr); // Increment by # of padded rows.
@@ -904,12 +912,26 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
         else if(tbfend >= nrow)
           tbfend = nrow - 1;
         
-        for(;rownr <= tbfend; ++rownr)
-          ++nperIF[spwidMap[inspwinid(rownr)]];
+        Vector<Int>  miniDDIDs;
+        Vector<uInt> miniSort;
+        uInt nrowsThisTBF = tbfend + 1 - rownr;
+        
+        miniDDIDs.resize(nrowsThisTBF);
+        miniSort.resize(nrowsThisTBF);
+        for(uInt rowInTBF = 0; rowInTBF < nrowsThisTBF; ++rowInTBF){
+          miniDDIDs[rowInTBF] = spwidMap[inspwinid(rownr + rowInTBF)];
+          ++nperIF[miniDDIDs[rowInTBF]];
+        }
+        GenSortIndirect<Int>::sort(miniSort, miniDDIDs);
+        for(uInt rowInTBF = 0; rowInTBF < nrowsThisTBF; ++rowInTBF){
+          sortIndex[rownr] = rownr + miniSort[rowInTBF] - rowInTBF;
+          tbfends[rownr] = tbfend;
+          ++rownr;
+        }
       }
-      os << LogIO::DEBUG1 << "rownr   = " << rownr << LogIO::POST;
-      os << LogIO::DEBUG1 << "nrow    = " << nrow << LogIO::POST;
-      os << LogIO::DEBUG1 << "nOutRow = " << nOutRow << LogIO::POST;
+      os << LogIO::DEBUG1 << "rownr         = " << rownr << LogIO::POST;
+      os << LogIO::DEBUG1 << "nrow          = " << nrow << LogIO::POST;
+      os << LogIO::DEBUG1 << "nOutRow * nif = " << nOutRow << LogIO::POST;
       
       if(nOutRow % nif){
         os << LogIO::SEVERE
@@ -1023,12 +1045,14 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     // Loop over the IFs, whether or not the corresponding spws are present for
     // this (time, baseline, field).
     // rownr should only be used inside this loop; use tbfrownr outside.
-    uInt rownr = tbfrownr;     // Essentially tbfrownr + m - # of missing spws
-                               // so far.
+    uInt rawrownr = tbfrownr;     // Essentially tbfrownr + m - # of missing spws
+                                  // so far.
+    uInt rownr = rawrownr;
     uInt tbfend = tbfrownr + nif - 1;
-    if(padWithFlags)
-      tbfend = get_tbf_end(tbfrownr, nrow, nif, intimec, ininterval,
-                           inant1, inant2, asMultiSource, infieldid);
+    if(combineSpw && nif > 1){
+      tbfend = tbfends[rownr];
+      rownr = sortIndex[rawrownr];
+    }
 
     for(uInt m = 0; m < nif; ++m){
       Bool rowFlag;           // FLAG_ROW
@@ -1092,8 +1116,13 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
         */
         // lasttime = intimec(rownr);
 
-        if(!padWithFlags || rownr <= tbfend)
-          ++rownr;  // register that the spw was present.
+        if(!padWithFlags || rawrownr <= tbfend){
+          ++rawrownr;  // register that the spw was present.
+          if(combineSpw && nif > 1)
+            rownr = sortIndex[rawrownr];
+          else
+            rownr = rawrownr;
+        }
       }
 
       // We should optimize this loop more, probably do frequency as
@@ -1194,36 +1223,59 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     }
       
     writer.write();
-    meter.update(outrownr + 1.0);
     ++outrownr;
+    meter.update(outrownr);
 
     // How many spws showed up for this (time_centroid, ant1, ant2, field)?
-    if(rownr == tbfrownr){
+    if(rawrownr == tbfrownr){
       os << LogIO::WARN
-         << "No spectral windows were present for row # " << rownr << "\n"
+         << "No spectral windows were present for row # " << tbfrownr << "\n"
          << " input (time_centroid, ant1, ant2, field) =\n"
          << "  (" << intimec(tbfrownr) << ", " << inant1(tbfrownr) << ", "
          << inant2(tbfrownr) << ", " << infieldid(tbfrownr) << ")"
          << LogIO::POST;
     }
     else{
-      Int nspws_found = rownr - tbfrownr;  // Just for debugging curiosity.
+      Int nspws_found = rawrownr - tbfrownr;  // Just for debugging curiosity.
       
       if(nspws_found != old_nspws_found){
         old_nspws_found = nspws_found;
-        os << LogIO::DEBUG1 << "row # " << rownr << LogIO::POST;
+        os << LogIO::DEBUG1 << "Beginning with row # " << tbfrownr << LogIO::POST;
         os << LogIO::DEBUG1
            << " input (time_centroid, ant1, ant2, field) =" << LogIO::POST;
+
+        // intimec is in modified julian day seconds, but Time::Time() takes
+        // julian days.
+        Double mjd_in_s = intimec(tbfrownr);
+        Time juldate(2400000.5 + mjd_in_s / 86400.0);
         os << LogIO::DEBUG1
-           << "  (" << intimec(tbfrownr) << ", " << inant1(tbfrownr) << ", "
+           << "  (" << juldate.year() << "-";
+        if(juldate.month() < 10)
+          os << "0";
+        os << juldate.month() << "-";
+        if(juldate.dayOfMonth() < 10)
+          os << "0";
+        os << juldate.dayOfMonth() << "-";
+    
+        if(juldate.hours() < 10)               // Time stores things internally as days.
+          os << "0";                           // Do we really want to use it for sub-day units
+        os << juldate.hours() << ":";          // when we start with intimec in s?
+        if(juldate.minutes() < 10)
+          os << "0";
+        os << juldate.minutes() << ":";
+        mjd_in_s -= 60.0 * static_cast<Int>(mjd_in_s / 60.0);
+        os << mjd_in_s;
+        
+        os << ", " << inant1(tbfrownr) << ", "
            << inant2(tbfrownr) << ", "
           // infieldid is unattached and segfaultable if !asMultiSource.
            << (asMultiSource ? infieldid(tbfrownr) : 0) << "):" << LogIO::POST;
-        os << "  found " << nspws_found << " spws out of " << nif << " IFs."
+        os << LogIO::DEBUG1
+           << nspws_found << " spws present out of " << nif << " IFs."
            << LogIO::POST;
       }
         
-      tbfrownr = rownr;  // Increment it by the # of spws found.
+      tbfrownr = rawrownr;  // Increment it by the # of spws found.
     }
     
     //    } // dowrite
