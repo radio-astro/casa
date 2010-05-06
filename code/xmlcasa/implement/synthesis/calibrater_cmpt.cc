@@ -743,6 +743,30 @@ calibrater::listcal(const std::string& tablein,
 
 }
 
+bool 
+calibrater::fromaipscal(const std::string& tableout, 
+			const std::string& fitsfile, 
+			const std::string& extension, 
+			const std::string& whichhdu)
+{
+
+  Bool rstat(False);
+  try {
+
+    *itsLog << LogIO::NORMAL << "Transforming AIPS calibration table in extension " << extension
+	    << " of file " << fitsfile << " into calibration table " << tableout << LogIO::POST;
+    // call CalTables code here
+
+    rstat = True;
+
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+
+}
+
 
 
 bool

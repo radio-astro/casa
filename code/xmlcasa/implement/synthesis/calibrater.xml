@@ -1825,6 +1825,45 @@ Listed 108 antenna solutions.
 </example>
 </method>
 
+<method type="function" name="fromaipscal">
+   <shortdescription> Convert an AIPS calibration table (FITS format) to a CASA calibration table
+   </shortdescription>
+
+<input>
+
+     <param type="string" direction="in" name="fitsfile">
+     <description>AIPS calibration table file (FITS format) to read</description>
+     </param>
+     <param type="string" direction="in" name="caltable">
+     <description>Calibration table to write</description>
+     </param>
+     <param type="string" direction="in" name="extension">
+     <description>Name of the extension to read inside the fits file</description>
+     </param>
+     <param type="string" direction="in" name="whichhdu">
+     <description>Index of the HDU to read in case there are several with the same name</description>
+     </param>
+
+
+</input>
+<returns type="bool"/>
+
+<description>
+
+The fromaipscal method will translate a AIPS CL type calibration table (FITS format)
+into a CASA  calibration table.
+
+</description>
+
+<example>
+
+\begin{verbatim}
+cb.fromaipscal(fitsfile='n09m1.tasav.FITS',caltable='n09m1.gcal',extension='CL',whichhdu='')
+\end{verbatim}
+
+</example>
+</method>
+
 
 
  
