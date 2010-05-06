@@ -628,8 +628,12 @@ if( EXISTS ${casa_packages}/lib/libccmtools_local.so OR
     EXISTS ${casa_packages}/lib64/libccmtools_local.so OR
     EXISTS ${casa_packages}/lib/libccmtools_local.dylib )
   set( _ccmtools_libs ccmtools_local )
-else()
+elseif( EXISTS ${casa_packages}/lib/libCCM_Python.so OR
+        EXISTS ${casa_packages}/lib64/libCCM_Python.so OR
+        EXISTS ${casa_packages}/lib/libCCM_Python.dylib )
   set( _ccmtools_libs CCM_Python CCM_Local_HomeFinder WX_Utils_error WX_Utils_code WX_Utils_types )
+else()
+  set( _ccmtools_libs ccmtools_local )
 endif()
 
 casa_find( CCMTOOLS
