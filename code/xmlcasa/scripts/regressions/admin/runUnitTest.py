@@ -87,13 +87,20 @@ def usage():
     print 'Usage:\n'
     print 'casapy [casapy-options] -c runUnitTest.py [options]\n'
     print 'options:'
-    print 'no option: will run all tests defined in FULL_LIST list'
-    print 'test_name: will run only this test (more tests are separated by spaces)'
-    print '--short:   will run only a short list of tests defined in SHORT_LIST'
-    print '--file:    followed by a text file with each test on a line'
-    print '--help:    prints this message\n'
+    print 'no option:        runs all tests defined in FULL_LIST list'
+    print '<test_name>:      runs only <test_name> (more tests are separated by spaces)'
+    print '--short:          runs only a short list of tests defined in SHORT_LIST'
+    print '--file <list>:    runs the tests defined in <list>; one test per line'
+    print '--list:           prints the full list of available tests'
+    print '--help:           prints this message\n'
     print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
     print '**************************************************************************'
+
+def list_tests():
+    print 'Full list of unit tests'
+    print '-----------------------'
+    for t in FULL_LIST:
+        print t
     
 def is_old(name):
     '''Check if the test is old or new'''
@@ -156,6 +163,12 @@ def main(testnames=[]):
     regstate = False
         
     listtests = testnames
+    if listtests == '--help':
+        usage()
+        sys.exit()
+    if listtests == '--list':
+        list_tests()
+        sys.exit()
     if listtests == []:
         whichtests = 0
     elif (listtests == SHORT_LIST or listtests == ['--short']
@@ -333,6 +346,9 @@ if __name__ == "__main__":
                     elem = la.pop()
                     if elem == '--help':
                         usage()
+                        os._exit(0)
+                    if elem == '--list':
+                        list_tests()
                         os._exit(0)
                     if elem == '--file':
                         # read list from a text file
