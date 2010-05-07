@@ -473,6 +473,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   <description>Width of output channel relative to MS channel (# to average)</description>
 		</default>
 		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>
 	      </equals>
@@ -485,6 +486,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		  <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
 		</default>
 		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value>
 		  <description>Velocity reference frame of output image; \'\' =input</description>
                 </default>
@@ -501,6 +503,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		  <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
 		</default>
 		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>
 	      </equals>
@@ -539,7 +542,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 		      <default param="npercycle"><value>100</value></default>
-                      <default param="chaniter"><value type='bool'>False</value></default>
+			  <!--                      <default param="chaniter"><value type='bool'>False</value></default>
+			  -->
 	        </equals>
             </when>
 	    <when param="imagermode">
@@ -777,6 +781,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'nearest'  HOWEVER, 'linear' is generally recommended
+               chaniter -- specify how spectral CLEAN is performed, 
+                 default: chaniter=False;
+                 example: chaniter=True; step through channels 
+                  WARNING: The interactive clean with chaniter=True for
+                    optical velocity mode
+                    (mode='velocity' and veltype='optical') is
+                    NOT YET IMPLEMENTED.
                outframe -- For mode='velocity', 'frequency', or 'channel':  velocity
                  reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
@@ -975,13 +986,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  this number interactively during the cleaning, starting with
                  a low number like 20, but then increasing as more extended
                  emission is encountered.
-               chaniter -- specify how interactive CLEAN is performed, 
-                 default: chaniter=False;
-                 example: chaniter=True; step through channels 
-                  WARNING: The interactive clean with chaniter=True for
-                    optical velocity mode
-                    (mode='velocity' and veltype='optical') is
-                    NOT YET IMPLEMENTED.
 
        mask -- Specification of cleanbox(es), mask image(s), and/or
                region(s) to be used for CLEANing. As long as the image has

@@ -205,7 +205,9 @@ class cleanhelper:
                 # for now just make for a main field 
                 ###need to get the pointing so select the fields
                 self.im.selectvis(field=field)
-		self.im.setvp(dovp=True)
+                # set to default minpb(=0.1), should use input minpb?
+                self.im.setmfcontrol()
+                self.im.setvp(dovp=True)
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
@@ -1911,8 +1913,8 @@ class cleanhelper:
         retparms['imagename']=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(chan)
                    for indx, imn in enumerate(finalimagename)]
 
-        print "Processing for channel %s starts..." % chan
-        self._casalog.post("Processing channel %s "% chan)
+        #print "Processing channel %s " % chan
+        #self._casalog.post("Processing channel %s "% chan)
 
         # Select only subset of vis data if possible.
         # It does not work well for multi-spw so need
@@ -1991,12 +1993,18 @@ class cleanhelper:
             cubeimagerootname=cubeimageroot[n]
             chanimagerootname=chanimageroot[n]
         for ext in imagext:
+            nomaskim=False
             cubeimage=cubeimagerootname+ext
             chanimage=chanimagerootname+ext
             if not os.path.exists(cubeimage):
                 if os.path.exists(chanimage):
                     outim=ia.newimagefromimage(cubeimagerootname+'.model',cubeimage)
-            self.putchanimage(cubeimage, chanimage,chan)
+                elif ext=='.mask':
+                    # unless mask image is given or in interactive mode
+                    # there is no mask image
+                    nomaskim=True
+            if not nomaskim: 
+                self.putchanimage(cubeimage, chanimage,chan)
 
     def cleanupTempFiles(self, tmppath):
         """
