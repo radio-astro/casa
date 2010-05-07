@@ -266,6 +266,10 @@ void MSLister::listHeader()
     if( datacolumn.empty() || datacolumn == "data") {
         dataColSel(0) = "amplitude";
         dataColSel(1) = "phase";
+    } else if (datacolumn == "float_data"){
+    	dataColSel(0) = "float_data";
+    	dataColSel(1) = "";
+    	is_float = True;
     } else if (datacolumn == "corrected") {
         dataColSel(0) = "corrected_amplitude";
         dataColSel(1) = "corrected_phase";
@@ -543,7 +547,9 @@ void MSLister::listData(const int pageRows,
 
     logStream_p << LogIO::DEBUG1 << "Begin: MSLister::listData" << LogIO::POST;
   
-    items_p.resize(11,False);
+    // FLOAT_DATA of single dish has only Amplitude
+    if (is_float) {items_p.resize(10,False);}
+    else {items_p.resize(11,False);}
     items_p(0)="time";
     items_p(1)="antenna1";            
     items_p(2)="antenna2";            
@@ -552,10 +558,16 @@ void MSLister::listData(const int pageRows,
     items_p(4)="data_desc_id";  
     items_p(5)="field_id";            
     items_p(6)=dataColSel(0);
-    items_p(7)=dataColSel(1);         
-    items_p(8)="weight";        
-    items_p(9)="flag";
-    items_p(10)="uvw";
+    if (is_float){
+        items_p(7)="weight";
+        items_p(8)="flag";
+        items_p(9)="uvw";
+    } else {
+    	items_p(7)=dataColSel(1);
+    	items_p(8)="weight";
+    	items_p(9)="flag";
+    	items_p(10)="uvw";
+    }
   
     // Get ranges of selected data to ranges_p for use in field-width/precision 
     // setting
@@ -671,12 +683,14 @@ void MSLister::listData(const int pageRows,
         return;
       }
       //  dataColSel(1) (the data identified by this variable)
-      if (dataRecords_p.isDefined(dataColSel(1))) {
-        phase = dataRecords_p.asArrayFloat(RecordFieldId(dataColSel(1)));
-      } else {
-        logStream_p << LogIO::SEVERE << "Column " << dataColSel(1) 
+      if (! is_float){
+    	  if (dataRecords_p.isDefined(dataColSel(1))) {
+    		  phase = dataRecords_p.asArrayFloat(RecordFieldId(dataColSel(1)));
+    	  } else {
+    		  logStream_p << LogIO::SEVERE << "Column " << dataColSel(1)
                     << " (for phase) isn't defined." << LogIO::POST;
-        return;
+    		  return;
+    	  }
       }
       //  weight
       weight = dataRecords_p.asArrayFloat(RecordFieldId("weight"));
@@ -688,7 +702,7 @@ void MSLister::listData(const int pageRows,
     
       // Convert units of some params:
       rowTime = rowTime/C::day;        // time now in days
-      phase = phase/C::degree;   // phase now in degrees
+      if (!is_float) {phase = phase/C::degree;}   // phase now in degrees
       // For each row: translate Data Description IDs to Spectral Window IDs
       // This must be done before column widths can be calculated, before
       // data can be written.
@@ -721,11 +735,15 @@ void MSLister::listData(const int pageRows,
       //  MaskedArray, if all elements of phase are 0.0f.  A 0-element
       //  array will crash function min.
       //logStream_p << LogIO::DEBUG2 << "  Setting data phase min and max values" << LogIO::POST;
-      Vector<Float> phminmax(2);
-      phminmax(0) = min(abs(phase));
-      phminmax(1) = max(abs(phase));
-      if(phminmax(0) == phminmax(1)) 
-        { myout << "All selected data has PHASE = " << phminmax(0) << endl; }
+      if (! is_float){
+		  Vector<Float> phminmax(2);
+		  phminmax(0) = min(abs(phase));
+		  phminmax(1) = max(abs(phase));
+		  if(phminmax(0) == phminmax(1))
+			{ myout << "All selected data has PHASE = " << phminmax(0) << endl; }
+
+		  ranges_p.define(dataColSel(1),phminmax);
+      }
 
       // HERE LIES CODE THAT I THINK IS NO LONGER NEEDED!  For some reason, when the mins and maxs
       // were originally computed, the author looked only at the data not equal to 0.0.  I don't think
@@ -753,7 +771,7 @@ void MSLister::listData(const int pageRows,
       //      logStream_p << LogIO::NORMAL1 << "All selected data has phase = 0.0" << LogIO::POST;
       //      myout << "All selected data has phase = 0.0" << endl;
       //    }
-      ranges_p.define(dataColSel(1),phminmax);
+//      if (!is_float) {ranges_p.define(dataColSel(1),phminmax);}
   
       //logStream_p << LogIO::DEBUG2 << "Setting the weight min and max." << LogIO::POST;
       Vector<Float> wtminmax(2);
@@ -813,13 +831,13 @@ void MSLister::listData(const int pageRows,
   
       // From this point on, don't change scaling in list arrays, since the
       // field sizes are determined directly from the data.
-      logStream_p << LogIO::DEBUG1 
-                  << "(Min, max) uvdist: " << uvminmax[0] << ", " << uvminmax[1] << endl
-                  << "(Min, max) uvw:    " << uvwminmax[0] << ", " << uvwminmax[1] << endl
-                  << "(Min, max) amp:    " << amplminmax[0] << ", " << amplminmax[1] << endl
-                  << "(Min, max) phase:  " << phminmax[0] << ", " << phminmax[1] << endl
-                  << "(Min, max) weight: " << wtminmax[0] << ", " << wtminmax[1] 
-                  << LogIO::POST;
+//      logStream_p << LogIO::DEBUG1
+//                  << "(Min, max) uvdist: " << uvminmax[0] << ", " << uvminmax[1] << endl
+//                  << "(Min, max) uvw:    " << uvwminmax[0] << ", " << uvwminmax[1] << endl
+//                  << "(Min, max) amp:    " << amplminmax[0] << ", " << amplminmax[1] << endl
+//                  << "(Min, max) phase:  " << phminmax[0] << ", " << phminmax[1] << endl
+//                  << "(Min, max) weight: " << wtminmax[0] << ", " << wtminmax[1]
+//                  << LogIO::POST;
   
       // Set order of magnitude and precision (for field width setting):
       // If prec*_p < 0, then enforce >=0 (detect minimum decimal places to show is NYI)
@@ -842,12 +860,14 @@ void MSLister::listData(const int pageRows,
       if ( precAmpl_p < 0 ) precAmpl_p = 3;  // mJy
       if ( precAmpl_p > 0 ) oAmpl_p++;  // add space for decimal
   
-      oPhase_p = (uInt)max(1,(Int)rint(abs(log10(max(phase))+0.5)));
-      if(min(phase) < 0) { oPhase_p+=2; } // add space for sign and column border
-      else { oPhase_p++; } // add space for column border
-      //oPhase_p = 3;  // 100s of degs 
-      if ( precPhase_p < 0 ) precPhase_p = 0; 
-      if ( precPhase_p > 0 ) oPhase_p++; // add space for decimal
+      if (!is_float){
+		  oPhase_p = (uInt)max(1,(Int)rint(abs(log10(max(phase))+0.5)));
+		  if(min(phase) < 0) { oPhase_p+=2; } // add space for sign and column border
+		  else { oPhase_p++; } // add space for column border
+		  //oPhase_p = 3;  // 100s of degs
+		  if ( precPhase_p < 0 ) precPhase_p = 0;
+		  if ( precPhase_p > 0 ) oPhase_p++; // add space for decimal
+      }
   
       oWeight_p = (uInt)max(1,(Int)rint(log10(max(weight))+0.5));  // order
       if ( precWeight_p < 0 ) precWeight_p = 0;
@@ -871,7 +891,7 @@ void MSLister::listData(const int pageRows,
       wUVDist_p = oUVDist_p + precUVDist_p;  
       wUVW_p = oUVW_p + precUVW_p;
       wAmpl_p   = oAmpl_p + precAmpl_p;  
-      wPhase_p  = oPhase_p + precPhase_p;  
+      if (!is_float) {wPhase_p  = oPhase_p + precPhase_p;}
       wWeight_p = oWeight_p + precWeight_p;
   
       // Enforce minimum field widths,
@@ -883,15 +903,16 @@ void MSLister::listData(const int pageRows,
       wIntrf_p  = wAnt1_p+1+wAnt2_p;                             wTotal_p+=wIntrf_p;
       if (doFld_p) { wFld_p = max(wFld_p,(uInt)3);  wFld_p++;    wTotal_p+=wFld_p; }
       if (doSpW_p) { wSpW_p = max(wSpW_p,(uInt)3);  wSpW_p++;    wTotal_p+=wSpW_p;}
-      if (doChn_p) { wChn_p = max(wChn_p,(uInt)3);  wChn_p++;    wTotal_p+=wChn_p;}
+      if (doChn_p) { wChn_p = max(wChn_p,(uInt)4);  wChn_p++;    wTotal_p+=wChn_p;}
   
       wTime_p   = max(wTime_p,  (uInt)12);
       wUVDist_p = max(wUVDist_p,(uInt)6);           wUVDist_p++; wTotal_p+=wUVDist_p;
       wAmpl_p   = max(wAmpl_p,  (uInt)4);           wAmpl_p++; 
-      wPhase_p  = max(wPhase_p, (uInt)4); 
+      if (!is_float) {wPhase_p  = max(wPhase_p, (uInt)4); }
       wWeight_p = max(wWeight_p,(uInt)3);           wWeight_p++;
   
-      wVis_p = wAmpl_p+wPhase_p+wWeight_p+wFlag_p;
+      if (!is_float) {wVis_p = wAmpl_p+wPhase_p+wWeight_p+wFlag_p;}
+      else {wVis_p = wAmpl_p+wWeight_p+wFlag_p;}
       wTotal_p+=wTime_p+nIndexPols_p*wVis_p+1;
       wUVW_p = max(wUVW_p, (uInt)4);               wUVW_p++; wTotal_p+=3*wUVW_p;
   
@@ -1024,8 +1045,10 @@ void MSLister::listData(const int pageRows,
               for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
                 myout.precision(precAmpl_p);
                 myout.width(wAmpl_p);     myout << ampl(IPosition(3,indexPols_p(ipol),ichan,tableRow));
-                myout.precision(precPhase_p);
-                myout.width(wPhase_p);    myout << phase(IPosition(3,indexPols_p(ipol),ichan,tableRow));
+                if (!is_float){
+                	myout.precision(precPhase_p);
+                    myout.width(wPhase_p);    myout << phase(IPosition(3,indexPols_p(ipol),ichan,tableRow));
+                }
                 myout.precision(precWeight_p);
                 myout.width(wWeight_p);   myout << weight(IPosition(2,indexPols_p(ipol),tableRow));
                 myout.setf(ios::right); myout.width(2);
@@ -1114,7 +1137,7 @@ void MSLister::listColumnHeader(ostream& cout) {
   cout << " ";
   for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
     cout.width(wAmpl_p);      cout << "Amp";
-    cout.width(wPhase_p);     cout << "Phs";
+    if (!is_float) {cout.width(wPhase_p);     cout << "Phs";}
     cout.width(wWeight_p);    cout << "Wt";
                               cout << " F"; // flag column
   }

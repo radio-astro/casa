@@ -292,8 +292,8 @@ private:
   // for assigning desired columns from the ms
   Vector <String> items_p;
 
-  // Bools for column showing
-  Bool doFld_p, doSpW_p, doChn_p;
+  // Bools for column showing and to identify FLOAT_DATA column of single dish
+  Bool doFld_p, doSpW_p, doChn_p, is_float;
 
   // Data selections
   // data --> "amplitude", "phase"
