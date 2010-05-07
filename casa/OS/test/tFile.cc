@@ -64,6 +64,7 @@ void doIt (Bool doExcp)
     File bin("/bin");
     File nocreate("/bin/afsferwrfasd");
     File creatable("tFile_tmp/idaasdfasdfa");
+    File creatable2("tFile_tmp/xxxx/idaasdfasdfa");
 
     // Test assignment.
     File isFile2;
@@ -166,6 +167,7 @@ void doIt (Bool doExcp)
     AlwaysAssertExit (bin.getWriteStatus() == File::NOT_OVERWRITABLE);
     AlwaysAssertExit (nocreate.getWriteStatus() == File::NOT_CREATABLE);
     AlwaysAssertExit (creatable.getWriteStatus() == File::CREATABLE);
+    AlwaysAssertExit (creatable2.getWriteStatus() == File::NOT_CREATABLE);
     AlwaysAssertExit (isFile.getWriteStatus() == File::OVERWRITABLE);
 
     cout << "<<<" << endl;
