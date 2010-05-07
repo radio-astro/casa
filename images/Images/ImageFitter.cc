@@ -25,6 +25,9 @@
 //#
 //# $Id: $
 
+#include <casa/Containers/HashMap.h>
+#include <casa/Containers/HashMapIter.h>
+
 #include <casa/IO/FilebufIO.h>
 #include <casa/IO/FiledesIO.h>
 
@@ -203,6 +206,8 @@ namespace casa {
             throw(AipsError("Unable to open image " + imagename));
         }
         _checkImageParameterValidity();
+        *itsLog << LogOrigin("ImageFitter", "_construct");
+
         _doRegion(box, regionName, regionPtr);
         if(estimatesFilename.empty()) {
         	*itsLog << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
@@ -219,6 +224,39 @@ namespace casa {
         	*itsLog << LogIO::NORMAL << "File " << estimatesFilename << " has " << estimates.nelements()
         		<< " specified, so will attempt to fit that many gaussians " << LogIO::POST;
         }
+        if (! residual.empty() || ! model.empty()) {
+        	HashMap<String, String> map, map2;
+        	map("residual") = residual;
+        	map("model") = model;
+        	map2 = map;
+        	ConstHashMapIter<String, String> iter(map);
+        	for (iter.toStart(); ! iter.atEnd(); iter++) {
+        		String key = iter.getKey();
+        		String name = iter.getVal();
+        		if (! name.empty()) {
+        			File f(name);
+        			switch (f.getWriteStatus()) {
+        			case File::NOT_CREATABLE:
+        				*itsLog << LogIO::WARN << "Requested " << key << " image "
+							<< name << " cannot be created so will not be written" << LogIO::POST;
+        				map2(key) = "";
+        				break;
+        			case File::NOT_OVERWRITABLE:
+        				*itsLog << LogIO::WARN << "Requested " << key
+							<< " image: There is already a file or directory named "
+							<< name << " which cannot be overwritten so the " << iter.getKey()
+							<< " image will not be written" << LogIO::POST;
+        				map2(key) = "";
+        				break;
+        			default:
+        				continue;
+        			}
+            	}
+            }
+        	residual = map2("residual");
+        	model = map2("model");
+        }
+
     }
 
     void ImageFitter::_checkImageParameterValidity() {
