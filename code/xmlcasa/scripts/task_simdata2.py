@@ -38,12 +38,18 @@ def simdata2(
     relmargin=.5  # number of PB between edge of model and pointing centers
     scanlength=1  # number of integrations per scan
 
+    # as of 20100507, newfig will delete the previous one
+
 
     # create the utility object:
     util=simutil(direction)
     if verbose: util.verbose=True
     msg=util.msg
     
+    if type(modelimage)==type([]):
+        modelimage=modelimage[0]
+    modelimage=modelimage.replace('$project',project)
+            
     if((not os.path.exists(modelimage)) and (not os.path.exists(complist))):
         msg("No sky input found.  At least one of modelimage or complist must be set.",priority="error")
         return False
@@ -70,7 +76,6 @@ def simdata2(
 
             # TODO if modelimage==default_model AND, is already in the canonical
             # 4d form, then don't create newmodel.  just work from skymodel!!
-            # TODO parse modelimage better and have it default to $project.skymodel            
 
             default_model=project+".skymodel"
             if modelimage==default_model:
@@ -91,8 +96,10 @@ def simdata2(
              model_stokes) = util.modifymodel(modelimage,
                 newmodel,
                 modifymodel,inbright,direction,incell,incenter,inwidth,innchan,
-                flatimage=modelflat) 
+                flatimage=False) 
 
+            # create and add components into modelflat with util.flatimage()
+            util.flatimage(newmodel,complist=complist,verbose=verbose)
             casalog.origin('simdata')
 
             # set startfeq and bandwidth in util object after modifymodel
@@ -111,10 +118,10 @@ def simdata2(
                 msg("can't find model image "+modelimage+" to modify",priority="error")
                 return False
             components_only=True
-            # if only components, will create an image from them during
-            # analysis, but for now we don't need one.  the pointings 
+            # if only components, the pointings 
             # can be displayed on blank sky, with symbols at the locations 
-            # of components.
+            # of components, but if analysis is going to be peformed, 
+            # TODO create a sky model image here!!!
 
             # TODO we need model_center below for calibrator, so get that from 
             # components
@@ -239,7 +246,7 @@ def simdata2(
                     pl.plot()
                     # TODO add symbols at locations of components
                 else:
-                    model_min,model_max, model_rms = util.statim(modelflat,plot=True,incell=model_cell)            
+                    discard = util.statim(modelflat,plot=True,incell=model_cell)
                 lims=pl.xlim(),pl.ylim()
                 tt=pl.array(range(25))*pl.pi/12            
                 pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
@@ -260,13 +267,8 @@ def simdata2(
                 pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
                 pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])            
                 pl.xlabel("resized model sky",fontsize="x-small")
-                util.endfig(remove=(not grscreen))
-            else:
-                # need these stats later - TODO make sure we need to do this
-                if not components_only:
-                    model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=model_cell)
+                util.endfig()
     
-
 
 
 
@@ -276,6 +278,7 @@ def simdata2(
 
         ##################################################################
         # set up observatory, feeds, etc        
+        quickpsf_current=False
 
         msfile=project+'.ms'
         if predict:
@@ -338,8 +341,6 @@ def simdata2(
                                stokes='XX YY')
                 sm.setfeed(mode='perfect X Y',pol=[''])
 
-            # WARNING: sm.setspwindow is not consistent with clean::center
-
             if verbose: msg(" spectral window set at %s" % qa.tos(model_center))
             sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
             sm.setauto(0.0)
@@ -364,7 +365,6 @@ def simdata2(
             nscan=int(totalsec/scansec)
             kfld=0
             # RI todo progress meter for simdata Sim::observe
-            # print "calculating ";
 
             if nscan<nfld:
                 msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
@@ -424,7 +424,7 @@ def simdata2(
             # we can show uv coverage now
             if grscreen or grfile:
                 util.nextfig()
-                tb.open(msfile)  # is this a lock problem with sm?            
+                tb.open(msfile)  
                 rawdata=tb.getcol("UVW")
                 tb.done()
                 pl.box()
@@ -448,6 +448,7 @@ def simdata2(
                 if os.path.exists(project+".quick.psf"):
                     shutil.rmtree(project+".quick.psf")
                 im.approximatepsf(psf=project+".quick.psf")
+                quickpsf_current=True
                 beam=im.fitpsf(psf=project+".quick.psf")
                 im.done()
                 ia.open(project+".quick.psf")            
@@ -469,7 +470,7 @@ def simdata2(
                 ax=pl.gca()
                 pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                 ia.done()
-                util.endfig(remove=(not grscreen))
+                util.endfig()
 
 
 
@@ -562,7 +563,7 @@ def simdata2(
                         ",trx="+str(t_rx)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
                         ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
-                    msg("** this may take a few minutes, but will be faster in the next CASA release",priority="warn")
+                    msg("** this may take a few minutes, but will be faster in the future",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
                             tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
@@ -625,34 +626,34 @@ def simdata2(
                     msg("your simulation has more than one pointing -- changing cleanmode to mosaic",priority="warn")
                     cleanmode="mosaic"
 
-            # make sure cell is defined
-            if type(cell)==type([]):
-                if len(cell)>0:
-                    cell0=cell[0]
-                else:
-                    cell0=""
+        # make sure cell is defined
+        if type(cell)==type([]):
+            if len(cell)>0:
+                cell0=cell[0]
             else:
-                cell0=cell
-            if len(cell0)<=0:
-                cell=model_cell
-            if type(cell)==type([]):
-                if len(cell)==1:
-                    cell=[cell[0],cell[0]]
-            else:
-                cell=[cell,cell]
+                cell0=""
+        else:
+            cell0=cell
+        if len(cell0)<=0:
+            cell=model_cell
+        if type(cell)==type([]):
+            if len(cell)==1:
+                cell=[cell[0],cell[0]]
+        else:
+            cell=[cell,cell]
 
 
-            # and imsize
-            if type(imsize)==type([]):
-                if len(imsize)>0:
-                    imsize0=imsize[0]
-                else:
-                    imsize0=-1
+        # and imsize
+        if type(imsize)==type([]):
+            if len(imsize)>0:
+                imsize0=imsize[0]
             else:
-                imsize0=imsize
-            if imsize0<=0:
-                imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
-                          int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+                imsize0=-1
+        else:
+            imsize0=imsize
+        if imsize0<=0:
+            imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
+                      int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
 
         outflat_current=False
         convsky_current=False
@@ -667,15 +668,15 @@ def simdata2(
             if os.path.exists(imagename+".image"): shutil.rmtree(imagename+".image")
             if os.path.exists(imagename+".model"): shutil.rmtree(imagename+".model")
 
-            # TODO add imcenter param instead of just using the model_center?
+            # todo add imcenter param instead of just using the model_center?
             util.image(mstoimage,imagename,
                        cleanmode,cell,imsize,model_refdir,
                        niter,threshold,weighting,
                        outertaper,stokes,sourcefieldlist=sourcefieldlist)
 
             # create imagename.flat and imagename.residual.flat:
-            # does complist so don't add that to the output
-            util.flatimage(imagename,cell,model_cell,complist="",verbose=verbose,flatresidual=True)
+            util.flatimage(imagename+".image",verbose=verbose)
+            util.flatimage(imagename+".residual",verbose=verbose)
             outflat_current=True
 
             msg("done inverting and cleaning")
@@ -711,19 +712,6 @@ def simdata2(
                     util.newfig(multi=[2,2,1],filename=file,show=False)
                     
             if grscreen or grfile:
-                # TODO if components_only create a sky model image here!!!
-
-                # add components into modelflat
-                if len(complist)>0:
-                    ia.open(modelflat)
-                    if not os.path.exists(complist):
-                        msg("sky component list "+str(complist)+" not found",priority="error")
-                    cl.open(complist)
-                    ia.setbrightnessunit("Jy/pixel")
-                    ia.modify(cl.torecord(),subtract=False) 
-                    cl.done()
-                    ia.done()
-
                 # create regridded and convolved sky model image
                 util.convimage(modelflat,imagename+".image.flat")
                 convsky_current=True # don't remake this for analysis in this run
@@ -750,7 +738,7 @@ def simdata2(
 
                 # clean residual image - Jy/bm
                 discard = util.statim(imagename+".residual.flat",disprange=disprange)
-                util.endfig(remove=(not grscreen))            
+                util.endfig()
         
 
 
@@ -764,6 +752,7 @@ def simdata2(
                 msg("modelimage "+str(modelimage)+" not found",priority="warn")
                 msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the modelimage parameter",priority="error")
             tmpname=modelimage.replace(project,'$project')
+
             #if tmpname=="$project.skymodel":
                 # TODO clarify the logic for newmodel vs skymodel
                 # i.e. here, if util.is4d(skymodel) then use skymodel
@@ -772,7 +761,6 @@ def simdata2(
                 # for now, we're *always* creating newmodel, so use newmodel here
                 # whether tmpname is skymodel or not.
             modelim=newmodel
-            modelflat=modelim+".flat"
 
             if not os.path.exists(modelim):
                 msg("sky model image "+str(modelim)+" not found",priority="error")
@@ -806,39 +794,25 @@ def simdata2(
                 # create imagename.flat and imagename.residual.flat
                 if not image:
                     # get cell from outim
-                    cell=cellsize(outim)
-                # model_cell has to be set even if not modifyimage
-                # does complist too so set that to zero
-                util.flatimage(imagename,cell,model_cell,complist="",verbose=verbose,flatresidual=True)
+                    cell=util.cellsize(outim)
+                util.flatimage(imagename+".image",verbose=verbose)
+                util.flatimage(imagename+".residual",verbose=verbose)
                 outflat_current=True
                 
-            # regridded and convolved output:?
-            if not convsky_current:
-                # add components into modelflat
-                if len(complist)>0:
-                    if not os.path.exists(complist):
-                        msg("sky component list "+str(complist)+" not found",priority="error")
-                    ia.open(modelflat)
-                    cl.open(complist)
-                    ia.setbrightnessunit("Jy/pixel")
-                    ia.modify(cl.torecord(),subtract=False) 
-                    cl.done()
-                    ia.done()
-
-                util.convimage(modelflat,imagename+".image.flat")
+            # regridded and convolved input:?
+            if not convsky_current:                
+                util.convimage(modelim+".flat",imagename+".image.flat")
                 convsky_current=True
             
-            # now we should have all the flat, convolved etc even if 
-            # we didn't run "image" this time. 
-    
-            # Make difference image.
-            # imagecalc is interpreting outflat in Jy/pix - 
-            # 201005 not any more.... now it does Jy/bm
-            convolved = modelflat+".regrid.conv"
+            # now should have all the flat, convolved etc even if didn't run "image" 
+
+            # make difference image.
+            # immath does Jy/bm if image but only if ia.setbrightnessunit("Jy/beam") in convimage()
+            convolved = modelim+".flat.regrid.conv"
             difference = imagename + '.diff'
-            #ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
             ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
-            # Get rms of difference image.
+            
+            # get rms of difference image for fidelity calculation
             ia.open(difference)
             diffstats = ia.statistics(robust=True, verbose=False,list=False)
             maxdiff=diffstats['medabsdevmed']            
@@ -861,7 +835,6 @@ def simdata2(
 
 
             # now, what does the user want to actually display?
-
             if len(stnx)<=0:
                 showarray=False
             if not (predict or image):
@@ -897,8 +870,6 @@ def simdata2(
                 if showarray:
                     util.plotants(stnx, stny, stnz, stnd, padnames)
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
                 if showuv:
                     tb.open(msfile)  
@@ -915,8 +886,6 @@ def simdata2(
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
                 if showpsf:
                     if image:
@@ -930,8 +899,10 @@ def simdata2(
                             if os.path.exists(psfim):
                                 shutil.rmtree(psfim)
                             im.approximatepsf(psf=psfim)
-                            # beam is already set above (even in "analyze" only)
-                            #beam=im.fitpsf(psf=psfim)  
+                            # beam is set above (even in "analyze" only)
+                            # note that if image, beam has fields 'major' whereas if not, it 
+                            # has fields like 'bmaj'.  
+                            # beam=im.fitpsf(psf=psfim)  
                             im.done()
                     ia.open(psfim)            
                     beamcs=ia.coordsys()
@@ -946,69 +917,45 @@ def simdata2(
                     ttrans_array.reverse()
                     pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
                     pl.title(psfim,fontsize="x-small")
-                    if image:
-                        b=qa.convert(beam['major'],'arcsec')['value']
-                        pl.xlim([-3*b,3*b])
-                        pl.ylim([-3*b,3*b])
-                        ax=pl.gca()
-                        pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                    else:
-                        b=qa.convert(beam['bmaj'],'arcsec')['value']
-                        pl.xlim([-3*b,3*b])
-                        pl.ylim([-3*b,3*b])
-                        ax=pl.gca()
-                        pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                    b=qa.convert(beam['major'],'arcsec')['value']
+                    pl.xlim([-3*b,3*b])
+                    pl.ylim([-3*b,3*b])
+                    ax=pl.gca()
+                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                     ia.done()
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
                 disprange=[]  # first plot will define range
-
                 if showmodel:
                     discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange)
-                    # modelflat is in Jy/pix, we want disprange in Jy/bm
-                    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
                 if showconvolved:
                     discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                     # if disprange gets set here, it'll be Jy/bm
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
-
+                
                 if showclean:
                     # own scaling because of DC/zero spacing offset
-                    dipsrange=[]
-                    discard = util.statim(imagename+".image.flat",disprange=disprange)
+                    discard = util.statim(imagename+".image.flat")
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
                 if showresidual:
                     # it gets its own scaling
                     discard = util.statim(imagename+".residual.flat")
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
                 if showdifference:
                     # it gets its own scaling.
                     discard = util.statim(imagename+".diff")
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
                 if showfidelity:
                     # it gets its own scaling.
                     discard = util.statim(imagename+".fidelity")
                     util.nextfig()
-                    if util.pmulti[2]> util.pmulti[0]*util.pmulti[1]: 
-                        util.endfig(remove=(not grscreen))            
 
+                util.endfig()
             else:
                 sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
                 # if not displaying still print stats:

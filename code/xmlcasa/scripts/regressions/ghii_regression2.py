@@ -21,7 +21,7 @@ cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"30dor.fits",imagename="30dor.image")
 default("simdata2")
 
-project="ghii2m"
+project="ghii2"
 # Clear out results from previous runs.
 os.system('rm -rf '+project+'*')
 
@@ -45,7 +45,7 @@ mapsize="17arcsec"  # input is 16.3, relmargin=0.5
 pointingspacing="4.5arcsec"
 
 predict=True
-complist="ghii2.cl"
+complist=project+".cl"
 refdate="2012/06/21/03:25:00"
 antennalist=cfgdir+"alma.out05.cfg"
 
@@ -226,7 +226,7 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-msfstat = os.stat('ghii2.ms')
+msfstat = os.stat(project+'.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*  deconvolution with %d iterations took %8.3fs.' % ( niter,

@@ -150,7 +150,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 -->
 
-    <param type="string" name="caldirection" subparam="true">
+    <param type="string" name="caldirection" subparam="false">
       <description>pt source calibrator [experimental]</description>
       <value type="string"></value>
     </param>
@@ -467,7 +467,7 @@ note for help: a symlink will be created from this to $project.model.image
 if that's not the file the user is using.   
 -->
 	    <description>model image</description>
-	    <value type="string"></value>
+	    <value type="string">"$project.skymodel"</value>
 	  </default>
 	</equals>
 	<!-- ******************** -->
@@ -521,8 +521,6 @@ modifying the description doesn't work yet but its an improvement ticket.
 	    <value type="string">hexagonal</value>
 	  </default>
 	  <default param="pointingspacing"><value type="string">1arcmin</value></default>
-	  <default param="caldirection"><value type="string"></value></default>
-	  <default param="calflux"><value type="string">1Jy</value></default>
 	</equals>
 	<equals type="bool" value="False">
 	  <default param="ptgfile"><value type="string">$project.ptg.txt</value></default>
@@ -537,6 +535,8 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  </default>
 	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
+	  <default param="caldirection"><value type="string"></value></default>
+	  <default param="calflux"><value type="string">1Jy</value></default>
 	  <default param="sdantlist"><value type="string"></value></default>
 	  <default param="sdant"><value type="int">0</value></default>
 	</equals>
@@ -544,14 +544,6 @@ modifying the description doesn't work yet but its an improvement ticket.
       </when>
       <!-- **********************************************************  -->
       <when param="thermalnoise">
-<!--
-	<notequals type="string" value="">
-	  <default param="user_pwv"><value>1.</value></default>
-	  <default param="t_ground"><value>269.</value></default>
-	  <default param="t_sky"><value>263.</value></default>
-	  <default param="tau0"><value>0.1</value></default>
-	</notequals>
--->
 	<equals type="string" value=""/>
 	<equals type="string" value="tsys-atm">
 	  <default param="user_pwv"><value>1.</value></default>
@@ -648,6 +640,10 @@ mosaic simulation task (prototype):
          J2000 23h59m28.10 -019d52m12.35 10.0
        * if the time column is not present in the file, it will use
          "integration" for all pointings.
+       * NOTE: at this time the file should contain only science pointings:
+         simdata will observe these, then optionally the calibrator, 
+         then the list of science pointings again, etc, until totaltime
+         is used up. 
     integration --- Time interval for each integration e.g '10s'
     totaltime --- total time of observation e.g '7200s'
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
@@ -658,11 +654,6 @@ mosaic simulation task (prototype):
        * set to "" to span the model image
     maptype -- hexagonal or linear 
     pointingspacing -- spacing in between beams e.g '1arcsec'    
-    caldirection -- *NEW* an unresolved calibrator can be observed 
-         interleaved with the science pointings.  This feature is 
-         experimental, so please contact us with any questions.
-       * The calibrator is implemented as a point source clean component 
-         with this direction and flux=calflux
     -------------------------------
     predict -- calculate visibilities from modelimage (which may have been 
          modified above, (optionally) complist, and $ptgfile (which 
@@ -682,6 +673,11 @@ mosaic simulation task (prototype):
        * standard arrays are found in your CASA data repository, 
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
        * if "", will not not produce an interferometric MS
+    caldirection -- *NEW* an unresolved calibrator can be observed 
+         interleaved with the science pointings.  This feature is 
+         experimental, so please contact us with any questions.
+       * The calibrator is implemented as a point source clean component 
+         with this direction and flux=calflux
     sdantlist -- antenna position file with antennas to be used for 
          single dish or total power simulation 
        * if "", will not produce a total power MS
