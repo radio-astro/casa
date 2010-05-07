@@ -1469,8 +1469,17 @@ Int PlotCal::multiTables(const Table& tablein,
     if (msName_p!="" && Table::isReadable(msName_p)) {
       MeasurementSet ms(msName_p);
       MSSelection mssel;
+      //
+      // Do this to keep it re-entrant.  Without this, if chanId has a
+      // finite shape, assignment to chanId below will generate an
+      // exception unless the new shape is same as the old shape.
+      //
+      chanId.resize(); 
+
       mssel.setSpwExpr(spw);
-      chanId=mssel.getChanList(&ms);
+      if ((calType_p == "B") || (calType_p == "BPOLY"))
+	  chanId=mssel.getChanList(&ms);
+
       return mssel.getSpwList(&ms);
     }
     else {
