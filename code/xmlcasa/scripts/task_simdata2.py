@@ -76,40 +76,62 @@ def simdata2(
 
             # TODO if modelimage==default_model AND, is already in the canonical
             # 4d form, then don't create newmodel.  just work from skymodel!!
+            # also important for coming back to analyze - 
+            # we want skymodel, with components added, not newmodel, which 
+            # can't have components added  because if we're not predicting
+            # we don't know what the complist is!
 
-            default_model=project+".skymodel"
-            if modelimage==default_model:
-                newmodel=project+".newmodel"
-            else:
-                newmodel=default_model
-            if os.path.exists(newmodel):
-                if overwrite:
-                    shutil.rmtree(newmodel)
-                else:
-                    msg(newmodel+" exists -- please delete it, change modeimage, or set overwrite=True",priority="error")
-                    return False
-            modelflat=newmodel+".flat"
             components_only=False
 
+            # if the modelimage is okay, work from it directly
+            if util.is4d(modelimage) and not modifymodel:
+                newmodel=modelimage
+            else:
+                # otherwise create $newmodel
+                default_model=project+".skymodel"
+                if modelimage==default_model:
+                    newmodel=project+".newmodel"
+                else:
+                    newmodel=default_model
+                if os.path.exists(newmodel):
+                    if overwrite:
+                        shutil.rmtree(newmodel)
+                    else:
+                        msg(newmodel+" exists -- please delete it, change modeimage, or set overwrite=True",priority="error")
+                        return False
+
+            # modifymodel just collects info if modelimage==newmodel
             (model_refdir,model_cell,model_size,
              model_nchan,model_center,model_width,
              model_stokes) = util.modifymodel(modelimage,
-                newmodel,
-                modifymodel,inbright,direction,incell,incenter,inwidth,innchan,
-                flatimage=False) 
+             newmodel,modifymodel,inbright,direction,incell,
+             incenter,inwidth,innchan,
+             flatimage=False) 
 
-            # create and add components into modelflat with util.flatimage()
-            util.flatimage(newmodel,complist=complist,verbose=verbose)
+            modelflat=newmodel+".flat"
+            if os.path.exists(modelflat) and not predict:
+                msg("flat sky model "+modelflat+" exists, predict not requested",priority="warn")
+                msg(" working from existing image - please delete it if you wish to overwrite.",priority="warn")
+            else:
+                # create and add components into modelflat with util.flatimage()
+                util.flatimage(newmodel,complist=complist,verbose=verbose)
+                # if we're not predicting, then we want to use the previously
+                # created modelflat, because it may have components added 
+
             casalog.origin('simdata')
 
             # set startfeq and bandwidth in util object after modifymodel
             bandwidth=qa.mul(qa.quantity(model_nchan),qa.quantity(model_width))
             util.bandwidth=bandwidth
 
-            if len(mapsize)==0 or len(mapsize[0])==0:
+            if len(mapsize)==0:
                 mapsize=model_size
-                if verbose:
-                    msg("setting map size to "+str(model_size))
+                if verbose: msg("setting map size to "+str(model_size))
+            else:
+                 if type(mapsize)==type([]):
+                     if len(mapsize[0])==0:
+                         mapsize=model_size
+                         if verbose: msg("setting map size to "+str(model_size))
 
         else:
             # if there are only components, modifymodel=T doesn't 

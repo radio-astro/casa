@@ -2080,7 +2080,33 @@ class simutil:
         return [qa.tos(cellx),qa.tos(celly)]
 
 
+    # helper function to get the spectral size from an image
+    def spectral(self,image):
+        ia.open(image)
+        cs=ia.coordsys()
+        sh=ia.shape()
+        ia.done()
+        spc=cs.findcoordinate("spectral")
+        if not spc['return']: return (0,0)
+        model_width=str(cs.increment(type="spectral")['numeric'][0])+cs.units(type="spectral")
+        model_nchan=sh[spc['pixel']]
+        return model_nchan,model_width
 
+    def is4d(self, image):
+        ia.open(image)
+        s=ia.shape()
+        if len(s)!=4: return False
+        cs=ia.coordsys()
+        ia.done()
+        dir=cs.findcoordinate("direction")
+        spc=cs.findcoordinate("spectral")
+        stk=cs.findcoordinate("stokes")
+        if not (dir['return'] and spc['return'] and stk['return']): return False
+        if dir['pixel'].__len__() != 2: return False
+        if type(spc['pixel']) == type([]): return False
+        if type(stk['pixel']) == type([]): return False
+        cs.done()
+        return True
 
     ##################################################################
     # fit modelimage into a 4 coordinate image defined by the parameters
@@ -2143,9 +2169,11 @@ class simutil:
         in_spc=in_csys.findcoordinate("spectral")
         in_stk=in_csys.findcoordinate("stokes")
 
-
-        if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
-        arr=in_ia.getchunk()
+        if outimage!=inimage:
+            if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
+            arr=in_ia.getchunk()
+        else:
+            arr=pl.zeros(in_shape)
         axmap=[-1,-1,-1,-1]
         axassigned=[-1,-1,-1,-1]
 
@@ -2153,7 +2181,6 @@ class simutil:
         if in_nax<2:
             self.msg("Your input model has fewer than 2 dimensions.  Can't proceed",priority="error")
             return False
-
 
 
         # we have at least two axes:
@@ -2270,7 +2297,7 @@ class simutil:
                 
         if add_spectral_coord:
             if inwidth=="" or incenter=="":
-                self.msg("modelimage "+str(inimage)+" appears to have no spectral axis -- you must modifymodel=True and set incenter, inwidth, innchan",priority="error")
+                self.msg("model image "+str(inimage)+" appears to have no spectral axis -- you must modifymodel=True and set incenter, inwidth, innchan",priority="error")
             axmap[3]=extra_axis
             axassigned[extra_axis]=3
             model_nchan=arr.shape[extra_axis]
@@ -2354,8 +2381,11 @@ class simutil:
                      (axmap[0],axmap[1],axmap[2],axmap[3]),origin="setup model")
 
         modelshape=[in_shape[axmap[0]], in_shape[axmap[1]],out_nstk,model_nchan]
-        ia.fromshape(outimage,modelshape,overwrite=True)
-        modelcsys=ia.coordsys()        
+        if outimage!=inimage:
+            ia.fromshape(outimage,modelshape,overwrite=True)
+            modelcsys=ia.coordsys()        
+        else:
+            modelcsys=in_ia.coordsys()        
         modelcsys.setunits(['rad','rad','','Hz'])
         modelcsys.setincrement([-1*qa.convert(model_cell[0],modelcsys.units()[0])['value'],
                                 qa.convert(model_cell[1],modelcsys.units()[1])['value']],
@@ -2395,10 +2425,10 @@ class simutil:
             self.msg("have "+foo.take(axmap).__str__()+", want "+in_shape.__str__(),priority="error")
             return False
 
-        ia.setcoordsys(modelcsys.torecord())
-        ia.done()
-        ia.open(outimage)
-
+        if outimage!=inimage:
+            ia.setcoordsys(modelcsys.torecord())
+            ia.done()
+            ia.open(outimage)
 
         for ax in range(4):
             if axmap[ax] != ax:
@@ -2410,63 +2440,32 @@ class simutil:
 
 
         # there's got to be a better way to remove NaNs: :)
-        for i0 in range(arr.shape[0]):
-            for i1 in range(arr.shape[1]):
-                for i2 in range(arr.shape[2]):
-                    for i3 in range(arr.shape[3]):
-                        foo=arr[i0,i1,i2,i3]
-                        if foo!=foo: arr[i0,i1,i2,i3]=0.0
+        if outimage!=inimage:
+            for i0 in range(arr.shape[0]):
+                for i1 in range(arr.shape[1]):
+                    for i2 in range(arr.shape[2]):
+                        for i3 in range(arr.shape[3]):
+                            foo=arr[i0,i1,i2,i3]
+                            if foo!=foo: arr[i0,i1,i2,i3]=0.0
 
-        if self.verbose:
+        if self.verbose and outimage!=inimage:
             self.msg("model array minmax= %e %e" % (arr.min(),arr.max()),origin="setup model")        
             self.msg("scaling model brightness by a factor of %f" % scalefactor,origin="setup model")
             self.msg("image channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
             if arr.nbytes > 5e7:
                 msg("your model is large - predicting visibilities may take a while.",priority="warn")
 
-
-        ia.putchunk(arr*scalefactor)
-        ia.setbrightnessunit("Jy/pixel")
-        ia.close()
+        if outimage!=inimage:
+            ia.putchunk(arr*scalefactor)
+            ia.setbrightnessunit("Jy/pixel")
+            ia.close()
         in_ia.close()
-
         # outimage should now have correct Coordsys and shape
 
         # make a moment 0 image
-        if flatimage:
+        if flatimage and outimage!=inimage:
             self.flatimage(outimage,verbose=self.verbose)
             
-#            inspectax=modelcsys.findcoordinate('spectral')['pixel']
-#            # todo check that this agrees with previous determination of nchan
-#            model_nchan=modelshape[inspectax] 
-#            
-#            stokesax=modelcsys.findcoordinate('stokes')['pixel']
-#            innstokes=modelshape[stokesax]
-#
-#            if model_nchan>1:
-#                if self.verbose: self.msg("creating moment zero input image",origin="setup model")
-#                # actually run ia.moments
-#                ia.open(outimage)
-#                ia.moments(moments=[-1],outfile=flatimage,overwrite=True)
-#                ia.done()
-#            else:            
-#                if self.verbose: self.msg("removing degenerate input image axes",origin="setup model")
-#                # just remove degenerate axes from modelimage4d
-#                ia.newimagefromimage(infile=outimage,outfile=flatimage,dropdeg=True,overwrite=True)
-#                if innstokes<=1:
-#                    os.rename(flatimage,flatimage+".tmp")
-#                    ia.open(flatimage+".tmp")
-#                    ia.adddegaxes(outfile=flatimage,stokes='I',overwrite=True)
-#                    ia.done()
-#                    shutil.rmtree(flatimage+".tmp")
-#            if innstokes>1:
-#                os.rename(flatimage,flatimage+".tmp")
-#                po.open(flatimage+".tmp")
-#                foo=po.stokesi(outfile=flatimage,stokes='I')
-#                foo.done()
-#                po.done()
-#                shutil.rmtree(flatimage+".tmp")
-
         model_size=[qa.mul(modelshape[0],model_cell[0]),
                     qa.mul(modelshape[1],model_cell[1])]
 

@@ -150,7 +150,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 -->
 
-    <param type="string" name="caldirection" subparam="false">
+    <param type="string" name="caldirection" subparam="true">
       <description>pt source calibrator [experimental]</description>
       <value type="string"></value>
     </param>
