@@ -537,16 +537,16 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.svn_exe(url + "/casacore", revision, "casacore")
     
     if type == "full":
-        if ops == "Linux":
-            b.comment("We need ", prefix, "/data/geodetic and ", prefix, "/data/ephemerides in order to build CASACore.")
-            b.do("", "mkdir -p ./data")
-            b.chdir("./data")
-            b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/ephemerides ephemerides")
-            b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/geodetic geodetic")
-            b.chdir("..")
-        else:
-            b.do("Make sure that /opt/casa/data/ephemerides and /opt/casa/data/geodetic exist. They are needed for building CASACore.", "ls /opt/casa/data/")
+        b.comment("We need ", prefix, "/data/geodetic and ", prefix, "/data/ephemerides in order to build CASACore.")
+        if ops == "Darwin":
             b.comment("The location of the data repository at /opt/casa/data is fixed on Mac.")
+        b.do("", "rm -rf ", prefix, "/data")
+        b.do("", "mkdir -p ./data")
+        b.chdir("./data")
+        b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/ephemerides ephemerides")
+        b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/geodetic geodetic")
+        b.chdir("..")
+
 
     b.comment("Compile CASACore.")
 
@@ -592,7 +592,7 @@ def build_casa(b, url, revision, type, ops, architecture):
    
     if type == "test":
 
-        b.do("Create a link to the local data repository checkout (if the link does not already exists)", "rm -rf ", prefix, "/data")
+        b.do("Create a link to the local data repository checkout (if the link does not already exists)", "rm ", prefix, "/data")
         b.do("", "ln -s ", datadir, " ", prefix, "/data")
 
         b.do("Run the python unit tests,", "casapy --nogui --log2term -c ", prefix, "/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --short")

@@ -99,6 +99,8 @@ endmacro()
 #     <package>_<program>_EXECUTABLE   for each program
 #     <package>_VERSION   (if version info is available)
 #
+#   All detected files are added to the variable casa_find_found.
+#
 #      INCLUDES: Header file names to search for
 #
 # INCLUDES_SUFFIXES: Possible extra suffix directory which are appended to the 
@@ -185,6 +187,8 @@ endmacro()
 #      ... cut, more CMake built-ins ...
 #
 
+set( casa_find_found "" )  # Accumulated list of libraries and executables found by casa_find
+
 macro( casa_find package )
   
   # Parse arguments
@@ -243,6 +247,10 @@ macro( casa_find package )
     endif()
 
   endforeach()
+
+  if( casa_config_is_over )
+    message( FATAL_ERROR "Internal error! casa_find() must not be called after casa_config_end()" )
+  endif()
 
   # Done parsing
 
@@ -757,10 +765,65 @@ macro( casa_find package )
   else()
     #message( STATUS "${package} already found or not required" )
   endif()
+
+  #
+  # Append to casa_find_found all libraries + programs files for this package
+  #
+  foreach( _f ${${package}_LIBRARIES} )
+    if( NOT ${_f} MATCHES "^-l" ) # ignore libraries given as -l
+      if( NOT EXISTS ${_f} )
+        message( WARNING "The file \"${_f}\" was detected by casa_find() but does not exist" )
+      endif()
+      list( APPEND casa_find_found ${_f} )
+    endif()
+  endforeach()
   
+  foreach ( _program ${_programs} )
+    set( _f ${${package}_${_program}_EXECUTABLE} )
+    if( NOT EXISTS ${_f} )
+      message( WARNING "The file \"${_f}\" was detected by casa_find() but does not exist" )
+    endif()
+    list( APPEND casa_find_found ${_f} )
+  endforeach()
+
   #dump( ${package}_FOUND     ${package}_INCLUDE_DIRS    ${package}_LIBRARIES    ${package}_DEFINITIONS )
   #foreach( _p ${_programs} )
   #  dump( ${package}_${_p}_EXECUTABLE )
   #endforeach()
    
 endmacro( casa_find )
+
+
+
+#
+# This macro is to be run after invocations of casa_find().
+#
+# It causes a compilation error to happen if files listed in
+# ${casa_find_found} no longer exist.
+#
+macro( casa_config_end )
+
+  set( casa_config_is_over TRUE )
+  # Flag used to enforce that casa_find() must not be called
+  # after this macro
+
+  list( REMOVE_DUPLICATES casa_find_found )
+  
+  foreach( _f ${casa_find_found} )
+
+    add_custom_command( 
+      OUTPUT ${_f}
+      COMMAND ${CMAKE_COMMAND} -E echo "ERROR: The file ${_f} has disappeared since it was detected by cmake. Cannot continue. It might help to clear CMake's cache (rm CMakeCache.txt) and rerun cmake"
+      COMMAND exit 1
+      COMMENT ""
+      VERBATIM
+      )
+
+  endforeach()
+  
+  add_custom_target( 
+    config_check ALL
+    DEPENDS ${casa_find_found} 
+    )
+
+endmacro( casa_config_end )

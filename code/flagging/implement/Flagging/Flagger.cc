@@ -238,6 +238,7 @@ namespace casa {
     // obtain number of distinct time slots
     ROMSColumns msc(ms);
     Vector<Double> time( msc.time().getColumn() );
+	
     uInt nrows = time.nelements();
     unsigned ntime;
 
@@ -386,7 +387,7 @@ namespace casa {
     spw_selection = ((spw != "" && spw != "*") || uvrange.length() > 0);
     // multiple spw agents are also needed for uvrange selections...
 
-    selectdata_p = True;
+    selectdata_p = False;
     /* Print out selection info - before selecting ! */
     if (dbg)
       {
@@ -431,6 +432,7 @@ namespace casa {
     
     if (dbg) cout << "Correlations : " << correlations_p << endl;
     
+    selectdata_p = True;
     return True;
   }
   
@@ -447,17 +449,16 @@ namespace casa {
         << " uvrange=" << uvrange << " time=" << time
         << " correlation=" << correlation << endl;
 
-    setdata_p = True;
     LogIO os(LogOrigin("Flagger", "setdata()", WHERE));
-    
+    setdata_p = False;
+
+  
     /* check the MS */
     if (ms.isNull()) {
       os << LogIO::SEVERE << "NO MeasurementSet attached"
 	 << LogIO::POST;
       return False;
     }
-    
-    nullSelect_p=False;
     
     /* Parse selection parameters */
     if (!spw.length()) spw = String("*");
@@ -490,8 +491,13 @@ namespace casa {
 	//mssel_p->flush();
     }
     else {
-	os << LogIO::WARN << "Selected MS has zero rows" << LogIO::POST;
-	mssel_p = &originalms;
+		os << LogIO::WARN << "Selected MS has zero rows" << LogIO::POST;
+		//mssel_p = &originalms;
+		if (mssel_p) {
+			delete mssel_p; 
+			mssel_p=NULL;
+		}
+		return False;
     }
     
     /* Print out selection info - before selecting ! */
@@ -522,7 +528,7 @@ namespace casa {
     sort2[2]= MS::DATA_DESC_ID;
     sort2[3] = MS::TIME;
     Double timeInterval = 7.0e9; //a few thousand years
-    
+
     if (vs_p) {
 	delete vs_p; vs_p = NULL;
     }
@@ -542,8 +548,11 @@ namespace casa {
     selectDataChannel();
     ms = *mssel_p;
     
+    
+    setdata_p = True;
     return True;
   }
+	
 
   Bool Flagger::selectDataChannel(){
 
@@ -1528,7 +1537,7 @@ namespace casa {
     
     if (!setdata_p) {
       os << LogIO::SEVERE << "Please run setdata with/without arguments before any setmethod"
-	 << LogIO::POST;
+	 << LogIO::POST;      
       return Record();
     }
     

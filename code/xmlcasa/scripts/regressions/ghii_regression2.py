@@ -4,8 +4,7 @@
 
 import os, time
 
-# Clear out results from previous runs.
-os.system('rm -rf ghii* 30dor.image')
+os.system('rm -rf 30dor.image')
 
 startTime = time.time()
 startProc = time.clock()
@@ -21,11 +20,14 @@ datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"30dor.fits",imagename="30dor.image")
 default("simdata2")
+
 project="ghii2"
+# Clear out results from previous runs.
+os.system('rm -rf '+project+'*')
 
 cl.done()
-cl.addcomponent(dir="J2000 05h18m48.6s -68d42m00s",flux=0.5,freq="650GHz")
-cl.rename("ghii.cl")
+cl.addcomponent(dir="J2000 05h18m48.586s -68d42m00.05s",flux=0.5,freq="650GHz")
+cl.rename(project+".cl")
 cl.done()
 
 modifymodel=True # but only brightness
@@ -39,21 +41,20 @@ setpointings=True
 integration="10s"
 totaltime="7200s"
 direction="J2000 05h18m48.0s -68d42m00s"
-mapsize="15arcsec"
+mapsize="17arcsec"  # input is 16.3, relmargin=0.5
 pointingspacing="4.5arcsec"
 
 predict=True
-complist="ghii.cl"
+complist=project+".cl"
 refdate="2012/06/21/03:25:00"
 antennalist=cfgdir+"alma.out05.cfg"
 
-thermalnoise="tsys-atm"
-user_pwv=0.1
+thermalnoise="tsys-atm" # simdata2 default=off
 
 image=True
 vis="$project.noisy.ms"
 imsize=[300,300]
-cell="0.05arcsec" 
+cell="0.05arcsec"
 niter=5000
 threshold="0.1mJy"
 weighting="briggs"
@@ -79,7 +80,7 @@ endProc = time.clock()
 test_name = """simdata observation of 30 Doradus"""
 
 ia.open(project + '.image')
-hii_stats=ia.statistics()
+hii_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # on ghii.clean.image
@@ -103,15 +104,23 @@ refstats = { 'sum': 520.5,
              'rms': 0.0349,
              'sigma': 0.0344 }
 
-# simdata2
-refstats = { 'sum': 611.89, 
-             'max': 0.6172,
-             'min': -0.06674,
-             'rms': 0.0414,
-             'sigma': 0.0413 }
+# simdata1 20100505 robust=0.5
+refstats = { 'sum': 673.4, 
+             'max': 0.5978,
+             'min': -0.06423,
+             'rms': 0.0504,
+             'sigma': 0.0498 }
+
+
+# simdata2 with component
+refstats = { 'sum': 664.6, 
+             'max': 0.59377,
+             'min': -0.0630,
+             'rms': 0.0503,
+             'sigma': 0.0497 }
 
 ia.open(project + '.diff')
-hiidiff_stats=ia.statistics()
+hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # on ghii.diff.im
@@ -128,12 +137,19 @@ diffstats = {'sum': 67.1,
              'rms': 0.000940,
              'sigma': 0.000573 }
 
+# 20100505 robust=0.5
+diffstats = {'sum': 68.9,
+             'max': 0.004645,
+             'min': -0.00117,
+             'rms': 0.000946,
+             'sigma': 0.000556 }
+
 # simdata2
-diffstats = {'sum': 202.1,
-             'max': 0.04766,
-             'min': -0.01456,
-             'rms': 0.00619,
-             'sigma': 0.00482 }
+diffstats = {'sum': 370.59,
+             'max': 0.05948,
+             'min': -0.50600,
+             'rms': 0.00719,
+             'sigma': 0.00589 }
 
 ### tight 
 reftol   = {'sum':  1e-2,
@@ -162,12 +178,12 @@ print >> logfile, ms.statistics('DATA','amp')
 print >> logfile, "Noiseless MS, phase stats:"
 print >> logfile, ms.statistics('DATA','phase')
 ms.close()
-ms.open(project+".noisy.ms")
-print >> logfile, "Noisy MS, amp stats:"
-print >> logfile, ms.statistics('DATA','amp')
-print >> logfile, "Noisy MS, phase stats:"
-print >> logfile, ms.statistics('DATA','phase')
-ms.close()
+#ms.open(project+".noisy.ms")
+#print >> logfile, "Noisy MS, amp stats:"
+#print >> logfile, ms.statistics('DATA','amp')
+#print >> logfile, "Noisy MS, phase stats:"
+#print >> logfile, ms.statistics('DATA','phase')
+#ms.close()
 
 
 regstate = True
@@ -210,7 +226,7 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-msfstat = os.stat('ghii2.ms')
+msfstat = os.stat(project+'.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*  deconvolution with %d iterations took %8.3fs.' % ( niter,

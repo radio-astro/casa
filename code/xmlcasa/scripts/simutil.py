@@ -61,7 +61,10 @@ class simutil:
 
 
     def newfig(self,multi=0,filename="",show=True):  # new graphics window/file
-        self.currfignum += 1   # matlab fignum counts from 1
+        # self.currfignum += 1   # matlab fignum counts from 1
+        # overwrite old fig's window 20100507
+        self.currfignum = 1   # matlab fignum counts from 1
+
         if len(self.fignames) < self.currfignum:
             self.fignames.append(filename)
         else:
@@ -80,6 +83,7 @@ class simutil:
                 self.msg("internal error setting multi-panel figure with multi="+str(multi),priority="warn")
             self.pmulti=multi
             pl.subplot(multi[0],multi[1],multi[2])
+            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
 
 
     def nextfig(self): # advance subwindow
@@ -94,14 +98,14 @@ class simutil:
             if multi[2] <= multi[0]*multi[1]:
                 pl.subplot(multi[0],multi[1],multi[2])
 
+
     def endfig(self,remove=False): # set margins to smaller, save to file if required        
         ax=pl.gca()
         l=ax.get_xticklabels()
         pl.setp(l,fontsize="x-small")
         l=ax.get_yticklabels()
         pl.setp(l,fontsize="x-small")
-        #pl.xlabel(telescopename,fontsize="x-small")    
-        pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
+        #pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
         name=self.fignames[self.currfignum-1]
         if len(name)>0:
             pl.savefig(name)
@@ -187,8 +191,6 @@ class simutil:
     ###########################################################
     # plot an image (optionally), and calculate its statistics
 
-    # TODO make ia.histogram quieter to the logger
-
     def statim(self,image,plot=True,incell=None,disprange=None):
         pix=self.cellsize(image)
         pixarea=abs(qa.convert(pix[0],'arcsec')['value']*
@@ -239,15 +241,16 @@ class simutil:
                 incell=pix
             incell=[qa.tos(incell[0]),qa.tos(incell[1])]
             pixsize=[qa.convert(pix[0],'arcsec')['value'],qa.convert(pix[1],'arcsec')['value']]
-            if self.verbose: self.msg("plotting image with pixel size %fx%f arcsec" % (pixsize[0],pixsize[1]),origin="statim")
             xextent=imsize[0]*abs(pixsize[0])*0.5
             yextent=imsize[1]*abs(pixsize[1])*0.5
-            if self.verbose: self.msg("plotting image with field size %f x %f arcsec" % (xextent,yextent),origin="statim")
+            if self.verbose: 
+                self.msg("plotting %fx%f\" im with %fx%f\" pix" % 
+                         (xextent,yextent,pixsize[0],pixsize[1]),origin="statim")
             xextent=[xextent,-xextent]
             yextent=[-yextent,yextent]
         # remove top .5% of pixels:
         nbin=200
-        imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
+        imhist=ia.histograms(cumu=True,nbins=nbin,list=False)['histout']
         ii=0
         lowcounts=imhist['counts'][ii]
         while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
@@ -273,14 +276,17 @@ class simutil:
                 highvalue=disprange  # assume if scalar passed its the max
             
         if plot:
-            pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue,vmin=lowvalue)
+            img=pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue,vmin=lowvalue)            
             ax=pl.gca()
-            l=ax.get_xticklabels()
-            pl.setp(l,fontsize="x-small")
-            l=ax.get_yticklabels()
-            pl.setp(l,fontsize="x-small")
+            #l=ax.get_xticklabels()
+            #pl.setp(l,fontsize="x-small")
+            #l=ax.get_yticklabels()
+            #pl.setp(l,fontsize="x-small")
             pl.title(image,fontsize="x-small")
             pl.text(0.05,0.95,"min=%7.1e\nmax=%7.1e\nRMS=%7.1e" % (im_min,im_max,im_rms),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+            cb=pl.colorbar(pad=0)#img)
+            cl = pl.getp(cb.ax,'yticklabels')
+            pl.setp(cl,fontsize='x-small')
         ia.done()
         return im_min,im_max,im_rms
 
@@ -1054,12 +1060,15 @@ class simutil:
                     self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",priority="error")
                     return -1
                 
-                # if self.verbose: foo=self.getdatum(datum,verbose=True)
+                vsave=self.verbose
                 for i in range(len(inx)):
                     x,y,z = self.utm2xyz(inx[i],iny[i],inz[i],int(zone),datum,nors)
+                    if i==1: 
+                        self.verbose=False
                     stnx.append(x)
                     stny.append(y)
-                    stnz.append(z)                
+                    stnz.append(z)
+                self.verbose=vsave
             else:
                 if (params["coordsys"].upper()[0:3]=="LOC"):
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
@@ -2071,7 +2080,33 @@ class simutil:
         return [qa.tos(cellx),qa.tos(celly)]
 
 
+    # helper function to get the spectral size from an image
+    def spectral(self,image):
+        ia.open(image)
+        cs=ia.coordsys()
+        sh=ia.shape()
+        ia.done()
+        spc=cs.findcoordinate("spectral")
+        if not spc['return']: return (0,0)
+        model_width=str(cs.increment(type="spectral")['numeric'][0])+cs.units(type="spectral")
+        model_nchan=sh[spc['pixel']]
+        return model_nchan,model_width
 
+    def is4d(self, image):
+        ia.open(image)
+        s=ia.shape()
+        if len(s)!=4: return False
+        cs=ia.coordsys()
+        ia.done()
+        dir=cs.findcoordinate("direction")
+        spc=cs.findcoordinate("spectral")
+        stk=cs.findcoordinate("stokes")
+        if not (dir['return'] and spc['return'] and stk['return']): return False
+        if dir['pixel'].__len__() != 2: return False
+        if type(spc['pixel']) == type([]): return False
+        if type(stk['pixel']) == type([]): return False
+        cs.done()
+        return True
 
     ##################################################################
     # fit modelimage into a 4 coordinate image defined by the parameters
@@ -2082,7 +2117,7 @@ class simutil:
     def modifymodel(self, inimage, outimage, 
                 modifymodel,inbright,
                 direction,incell,incenter,inwidth,innchan,
-                flatimage=""):  # if nonzero, create mom -1 image named this
+                flatimage=False):  # if nonzero, create mom -1 image 
 
         # new ia tool
         in_ia=ia.newimagefromfile(inimage)            
@@ -2134,9 +2169,11 @@ class simutil:
         in_spc=in_csys.findcoordinate("spectral")
         in_stk=in_csys.findcoordinate("stokes")
 
-
-        if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
-        arr=in_ia.getchunk()
+        if outimage!=inimage:
+            if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
+            arr=in_ia.getchunk()
+        else:
+            arr=pl.zeros(in_shape)
         axmap=[-1,-1,-1,-1]
         axassigned=[-1,-1,-1,-1]
 
@@ -2144,7 +2181,6 @@ class simutil:
         if in_nax<2:
             self.msg("Your input model has fewer than 2 dimensions.  Can't proceed",priority="error")
             return False
-
 
 
         # we have at least two axes:
@@ -2261,7 +2297,7 @@ class simutil:
                 
         if add_spectral_coord:
             if inwidth=="" or incenter=="":
-                self.msg("modelimage "+str(inimage)+" appears to have no spectral axis -- you must modifymodel=True and set incenter, inwidth, innchan",priority="error")
+                self.msg("model image "+str(inimage)+" appears to have no spectral axis -- you must modifymodel=True and set incenter, inwidth, innchan",priority="error")
             axmap[3]=extra_axis
             axassigned[extra_axis]=3
             model_nchan=arr.shape[extra_axis]
@@ -2345,8 +2381,11 @@ class simutil:
                      (axmap[0],axmap[1],axmap[2],axmap[3]),origin="setup model")
 
         modelshape=[in_shape[axmap[0]], in_shape[axmap[1]],out_nstk,model_nchan]
-        ia.fromshape(outimage,modelshape,overwrite=True)
-        modelcsys=ia.coordsys()        
+        if outimage!=inimage:
+            ia.fromshape(outimage,modelshape,overwrite=True)
+            modelcsys=ia.coordsys()        
+        else:
+            modelcsys=in_ia.coordsys()        
         modelcsys.setunits(['rad','rad','','Hz'])
         modelcsys.setincrement([-1*qa.convert(model_cell[0],modelcsys.units()[0])['value'],
                                 qa.convert(model_cell[1],modelcsys.units()[1])['value']],
@@ -2386,10 +2425,10 @@ class simutil:
             self.msg("have "+foo.take(axmap).__str__()+", want "+in_shape.__str__(),priority="error")
             return False
 
-        ia.setcoordsys(modelcsys.torecord())
-        ia.done()
-        ia.open(outimage)
-
+        if outimage!=inimage:
+            ia.setcoordsys(modelcsys.torecord())
+            ia.done()
+            ia.open(outimage)
 
         for ax in range(4):
             if axmap[ax] != ax:
@@ -2401,62 +2440,32 @@ class simutil:
 
 
         # there's got to be a better way to remove NaNs: :)
-        for i0 in range(arr.shape[0]):
-            for i1 in range(arr.shape[1]):
-                for i2 in range(arr.shape[2]):
-                    for i3 in range(arr.shape[3]):
-                        foo=arr[i0,i1,i2,i3]
-                        if foo!=foo: arr[i0,i1,i2,i3]=0.0
+        if outimage!=inimage:
+            for i0 in range(arr.shape[0]):
+                for i1 in range(arr.shape[1]):
+                    for i2 in range(arr.shape[2]):
+                        for i3 in range(arr.shape[3]):
+                            foo=arr[i0,i1,i2,i3]
+                            if foo!=foo: arr[i0,i1,i2,i3]=0.0
 
-        if self.verbose:
+        if self.verbose and outimage!=inimage:
             self.msg("model array minmax= %e %e" % (arr.min(),arr.max()),origin="setup model")        
             self.msg("scaling model brightness by a factor of %f" % scalefactor,origin="setup model")
             self.msg("image channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
             if arr.nbytes > 5e7:
                 msg("your model is large - predicting visibilities may take a while.",priority="warn")
 
-
-        ia.putchunk(arr*scalefactor)
-        ia.close()
+        if outimage!=inimage:
+            ia.putchunk(arr*scalefactor)
+            ia.setbrightnessunit("Jy/pixel")
+            ia.close()
         in_ia.close()
-
-        # coord image should now have correct Coordsys and shape
-
+        # outimage should now have correct Coordsys and shape
 
         # make a moment 0 image
-        if flatimage != "":
+        if flatimage and outimage!=inimage:
+            self.flatimage(outimage,verbose=self.verbose)
             
-            inspectax=modelcsys.findcoordinate('spectral')['pixel']
-            # todo check that this agrees with previous determination of nchan
-            model_nchan=modelshape[inspectax] 
-            
-            stokesax=modelcsys.findcoordinate('stokes')['pixel']
-            innstokes=modelshape[stokesax]
-
-            if model_nchan>1:
-                if self.verbose: self.msg("creating moment zero input image",origin="setup model")
-                # actually run ia.moments
-                ia.open(outimage)
-                ia.moments(moments=[-1],outfile=flatimage,overwrite=True)
-                ia.done()
-            else:            
-                if self.verbose: self.msg("removing degenerate input image axes",origin="setup model")
-                # just remove degenerate axes from modelimage4d
-                ia.newimagefromimage(infile=outimage,outfile=flatimage,dropdeg=True,overwrite=True)
-                if innstokes<=1:
-                    os.rename(flatimage,flatimage+".tmp")
-                    ia.open(flatimage+".tmp")
-                    ia.adddegaxes(outfile=flatimage,stokes='I',overwrite=True)
-                    ia.done()
-                    shutil.rmtree(flatimage+".tmp")
-            if innstokes>1:
-                os.rename(flatimage,flatimage+".tmp")
-                po.open(flatimage+".tmp")
-                foo=po.stokesi(outfile=flatimage,stokes='I')
-                foo.done()
-                po.done()
-                shutil.rmtree(flatimage+".tmp")
-
         model_size=[qa.mul(modelshape[0],model_cell[0]),
                     qa.mul(modelshape[1],model_cell[1])]
 
@@ -2625,90 +2634,157 @@ class simutil:
 
 
 
-    def flatimage(self,image,cell,model_cell,complist="",verbose=False,flatresidual=True):
+#    def flatimage0(self,image,cell,model_cell,complist="",verbose=False,flatresidual=True):
+#
+#        # TODO turn this from something tailored for clean image and residual into a general
+#        # helper function
+#
+#        # flat output -- needed even if fidelity is not calculated
+#        ia.open(image+".image")
+#        outimsize=ia.shape()
+#        outimcsys=ia.coordsys()
+#        ia.done()
+#        outspectax=outimcsys.findcoordinate('spectral')['pixel']
+#        outnchan=outimsize[outspectax]
+#        outstokesax=outimcsys.findcoordinate('stokes')['pixel']
+#        outnstokes=outimsize[outstokesax]
+#        
+#        outflat=image+".image.flat"
+#        if outnchan>1:
+#            if verbose: self.msg("creating moment zero output image",origin="analysis")
+#            ia.open(image+".image")
+#            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+#            ia.done()
+#        else:
+#            if verbose: self.msg("removing degenerate output image axes",origin="analysis")
+#            # just remove degenerate axes from image
+#            ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
+#            # seems no way to just drop the spectral and keep the stokes. 
+#            if outnstokes<=1:
+#                os.rename(outflat,outflat+".tmp")
+#                ia.open(outflat+".tmp")
+#                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+#                ia.done()
+#                shutil.rmtree(outflat+".tmp")
+#        if outnstokes>1:
+#            os.rename(outflat,outflat+".tmp")
+#            po.open(outflat+".tmp")
+#            foo=po.stokesi(outfile=outflat,stokes='I')
+#            foo.done()
+#            po.done()
+#            shutil.rmtree(outflat+".tmp")
+#
+#        outimcsys.done()
+#        del outimcsys
+#
+#        # add components into skyflat
+#        if len(complist)>0:
+#            ia.open(outflat)
+#            if not os.path.exists(complist):
+#                msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+#            cl.open(complist)
+#            ia.modify(cl.torecord(),subtract=False) 
+#            cl.done()
+#            ia.done()
+#
+#        if not flatresidual:
+#            return True
+#
+#        # flat clean residual image
+#        ia.open(image+".residual")
+#        outimsize=ia.shape()
+#        outimcsys=ia.coordsys()
+#        ia.done()
+#        outspectax=outimcsys.findcoordinate('spectral')['pixel']
+#        outnchan=outimsize[outspectax]
+#        outstokesax=outimcsys.findcoordinate('stokes')['pixel']
+#        outnstokes=outimsize[outstokesax]
+#        
+#        outflat=image+".residual.flat"
+#        if outnchan>1:
+#            if verbose: self.msg("creating moment zero output image",origin="analysis")
+#            ia.open(image+".image")
+#            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+#            ia.done()
+#        else:
+#            if verbose: self.msg("removing degenerate output image axes",origin="analysis")
+#            # just remove degenerate axes from image
+#            ia.newimagefromimage(infile=image+".residual",outfile=outflat,dropdeg=True,overwrite=True)
+#            # seems no way to just drop the spectral and keep the stokes. 
+#            if outnstokes<=1:
+#                os.rename(outflat,outflat+".tmp")
+#                ia.open(outflat+".tmp")
+#                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+#                ia.done()
+#                shutil.rmtree(outflat+".tmp")
+#        if outnstokes>1:
+#            os.rename(outflat,outflat+".tmp")
+#            po.open(outflat+".tmp")
+#            foo=po.stokesi(outfile=outflat,stokes='I')
+#            foo.done()
+#            po.done()
+#            shutil.rmtree(outflat+".tmp")
+
+
+
+
+    def flatimage(self,image,complist="",verbose=False):
 
         # flat output -- needed even if fidelity is not calculated
-        ia.open(image+".image")
-        outimsize=ia.shape()
-        outimcsys=ia.coordsys()
+        ia.open(image)
+        imsize=ia.shape()
+        imcsys=ia.coordsys()
         ia.done()
-        outspectax=outimcsys.findcoordinate('spectral')['pixel']
-        outnchan=outimsize[outspectax]
-        outstokesax=outimcsys.findcoordinate('stokes')['pixel']
-        outnstokes=outimsize[outstokesax]
+        spectax=imcsys.findcoordinate('spectral')['pixel']
+        nchan=imsize[spectax]
+        stokesax=imcsys.findcoordinate('stokes')['pixel']
+        nstokes=imsize[stokesax]
         
-        outflat=image+".image.flat"
-        if outnchan>1:
-            if verbose: self.msg("creating moment zero output image",origin="analysis")
-            ia.open(image+".image")
-            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+        flat=image+".flat"
+        if nchan>1:
+            if verbose: self.msg("creating moment zero image "+flat,origin="analysis")
+            ia.open(image)
+            ia.moments(moments=[-1],outfile=flat,overwrite=True)
             ia.done()
         else:
-            if verbose: self.msg("removing degenerate output image axes",origin="analysis")
+            if verbose: self.msg("removing degenerate image axes in "+flat,origin="analysis")
             # just remove degenerate axes from image
-            ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
+            ia.newimagefromimage(infile=image,outfile=flat,dropdeg=True,overwrite=True)
             # seems no way to just drop the spectral and keep the stokes. 
-            if outnstokes<=1:
-                os.rename(outflat,outflat+".tmp")
-                ia.open(outflat+".tmp")
-                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+            if nstokes<=1:
+                os.rename(flat,flat+".tmp")
+                ia.open(flat+".tmp")
+                ia.adddegaxes(outfile=flat,stokes='I',overwrite=True)
                 ia.done()
-                shutil.rmtree(outflat+".tmp")
-        if outnstokes>1:
-            os.rename(outflat,outflat+".tmp")
-            po.open(outflat+".tmp")
-            foo=po.stokesi(outfile=outflat,stokes='I')
+                shutil.rmtree(flat+".tmp")
+        if nstokes>1:
+            os.rename(flat,flat+".tmp")
+            po.open(flat+".tmp")
+            foo=po.stokesi(outfile=flat,stokes='I')
             foo.done()
             po.done()
-            shutil.rmtree(outflat+".tmp")
+            shutil.rmtree(flat+".tmp")
 
-        outimcsys.done()
-        del outimcsys
+        imcsys.done()
+        del imcsys
 
-        if not flatresidual:
-            return True
-
-        # flat clean residual image
-        ia.open(image+".residual")
-        outimsize=ia.shape()
-        outimcsys=ia.coordsys()
-        ia.done()
-        outspectax=outimcsys.findcoordinate('spectral')['pixel']
-        outnchan=outimsize[outspectax]
-        outstokesax=outimcsys.findcoordinate('stokes')['pixel']
-        outnstokes=outimsize[outstokesax]
-        
-        outflat=image+".residual.flat"
-        if outnchan>1:
-            if verbose: self.msg("creating moment zero output image",origin="analysis")
-            ia.open(image+".image")
-            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+        # add components 
+        if len(complist)>0:
+            if not os.path.exists(complist):
+                msg("sky component list "+str(complist)+" not found",priority="error")
+            ia.open(flat)
+            if not os.path.exists(complist):
+                msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+            cl.open(complist)
+            ia.modify(cl.torecord(),subtract=False) 
+            cl.done()
             ia.done()
-        else:
-            if verbose: self.msg("removing degenerate output image axes",origin="analysis")
-            # just remove degenerate axes from image
-            ia.newimagefromimage(infile=image+".residual",outfile=outflat,dropdeg=True,overwrite=True)
-            # seems no way to just drop the spectral and keep the stokes. 
-            if outnstokes<=1:
-                os.rename(outflat,outflat+".tmp")
-                ia.open(outflat+".tmp")
-                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
-                ia.done()
-                shutil.rmtree(outflat+".tmp")
-        if outnstokes>1:
-            os.rename(outflat,outflat+".tmp")
-            po.open(outflat+".tmp")
-            foo=po.stokesi(outfile=outflat,stokes='I')
-            foo.done()
-            po.done()
-            shutil.rmtree(outflat+".tmp")
 
 
 
 
     def convimage(self,modelflat,outflat,complist=""):
         # regrid flat input to flat output shape and convolve
-        # todo noconvolve option?
         modelregrid = modelflat+".regrid"
 
         # get outflatcoordsys from outflat
@@ -2752,13 +2828,12 @@ class simutil:
         incellx=qa.mul(incellx,abs(xform[0,0]))
         incelly=qa.mul(incelly,abs(xform[1,1]))
         cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
-
+        
         # image scaling
-        factor  = (qa.convert(cell[0],"arcsec")['value'])  
+        factor  = (qa.convert(cell[0],"arcsec")['value'])
         factor *= (qa.convert(cell[1],"arcsec")['value']) 
         factor /= (qa.convert(model_cell[0],"arcsec")['value']) 
-        factor /= (qa.convert(model_cell[1],"arcsec")['value']) 
-        
+        factor /= (qa.convert(model_cell[1],"arcsec")['value'])         
         imrr = ia.imagecalc(modelregrid, 
                             "'%s'*%g" % (modelregrid+'.tmp',factor), 
                             overwrite = True)
@@ -2766,9 +2841,8 @@ class simutil:
         if self.verbose:
             self.msg("scaling model by pixel area ratio %g" % factor)
 
-        # add clean components and model image; 
-        # it'll be convolved to restored beam in the fidelity calc below
-        # components are in jy/pix so should be added to the scaled iamge
+        # add unresolved components in Jy/pix
+        # don't do this if you've already done it in flatimage()!
         if (os.path.exists(complist)):
             cl.open(complist)
             imrr.modify(cl.torecord(),subtract=False)
@@ -2781,7 +2855,13 @@ class simutil:
         # Convolve model with beam.
         convolved = modelregrid + '.conv'
         ia.open(modelregrid)
+        ia.setbrightnessunit("Jy/pixel")
         ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                       pa=beam['positionangle'],overwrite=True)
-
         ia.done()
+        ia.open(convolved)
+        ia.setbrightnessunit("Jy/beam")
+        ia.setrestoringbeam(beam=beam)
+        ia.done()
+
+

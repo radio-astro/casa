@@ -110,14 +110,14 @@
   then
      if [ "$MODE" = brief ]
      then
-        cat $AIPSCODE/VERSION
+        sed -e "s/\$Revision: // " $AIPSCODE/VERSION
      elif [ "$MODE" = release ]
      then
-        cat $AIPSCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        sed -e "s/\$Revision: // "  $AIPSCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
      elif [ "$MODE" = release_date ]
      then
-        rdate=`cat $AIPSCODE/VERSION | awk '{print $3}'`
-        cat $AIPSCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        rdate=`cat $AIPSCODE/VERSION | awk '{print $5}'`
+        sed -e "s/\$Revision: // "  $AIPSCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
         echo "Dated: $rdate"
      else
         echo "Master:" `cat $AIPSCODE/VERSION`
@@ -126,14 +126,14 @@
   then
      if [ "$MODE" = brief ]
      then
-        cat $AIPSARCH/VERSION
+        sed =e "s/\$Revision: // " $AIPSARCH/VERSION
      elif [ "$MODE" = release ]
      then
-        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        sed -e "s/\$Revision: // "  $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
      elif [ "$MODE" = release_date ]
      then
-        rdate=`cat $AIPSARCH/VERSION | awk '{print $3}'`
-        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        rdate=`cat $AIPSARCH/VERSION | awk '{print $5}'`
+        sed -e "s/\$Revision: // "  $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
         echo "Dated: $rdate"
      else
         echo "Master:" `cat $AIPSARCH/VERSION`
@@ -144,11 +144,11 @@
         echo "($AIPSARCH/VERSION not found)"
      elif [ "$MODE" = release ]
      then
-        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        sed -e "s/\$Revision: //"  $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
      elif [ "$MODE" = release_date ]
      then
-        rdate=`cat $AIPSARCH/VERSION | awk '{print $3}'`
-        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        rdate=`cat $AIPSARCH/VERSION | awk '{print $5}'`
+        sed -e "s/\$Revision: //"  $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
         echo "Dated: $rdate"
      else
         echo "Master: ($AIPSARCH/VERSION not found)"

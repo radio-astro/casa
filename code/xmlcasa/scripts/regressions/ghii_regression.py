@@ -51,7 +51,7 @@ verbose=True
 niter=5000
 threshold="0.1mJy"
 weighting="briggs"
-robust=0.0
+robust=0.5
 
 fidelity=True  # need this or won't create diff image
 
@@ -98,6 +98,13 @@ refstats = { 'sum': 520.5,
              'rms': 0.0349,
              'sigma': 0.0344 }
 
+# 20100505 robust=0.5
+refstats = { 'sum': 673.4, 
+             'max': 0.5978,
+             'min': -0.06423,
+             'rms': 0.0504,
+             'sigma': 0.0498 }
+
 ia.open(project + '.diff.im')
 hiidiff_stats=ia.statistics()
 ia.close()
@@ -115,6 +122,13 @@ diffstats = {'sum': 67.1,
              'min': -0.00103,
              'rms': 0.000940,
              'sigma': 0.000573 }
+
+# 20100505 robust=0.5
+diffstats = {'sum': 68.9,
+             'max': 0.004645,
+             'min': -0.00117,
+             'rms': 0.000946,
+             'sigma': 0.000556 }
 
 ### tight 
 reftol   = {'sum':  1e-2,
@@ -143,12 +157,12 @@ print >> logfile, ms.statistics('DATA','amp')
 print >> logfile, "Noiseless MS, phase stats:"
 print >> logfile, ms.statistics('DATA','phase')
 ms.close()
-ms.open(project+".noisy.ms")
-print >> logfile, "Noisy MS, amp stats:"
-print >> logfile, ms.statistics('DATA','amp')
-print >> logfile, "Noisy MS, phase stats:"
-print >> logfile, ms.statistics('DATA','phase')
-ms.close()
+#ms.open(project+".noisy.ms")
+#print >> logfile, "Noisy MS, amp stats:"
+#print >> logfile, ms.statistics('DATA','amp')
+#print >> logfile, "Noisy MS, phase stats:"
+#print >> logfile, ms.statistics('DATA','phase')
+#ms.close()
 
 
 regstate = True

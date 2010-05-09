@@ -19,8 +19,8 @@
 #
 
 casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
-  test_asdm-import.py
-  test_asdmv1-import.py
+  test_importoldasdm.py
+  test_importasdm.py
   test_boxit.py
   test_clean.py
   test_clearstat.py

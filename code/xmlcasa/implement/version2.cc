@@ -38,11 +38,7 @@ void VersionInfo::report(ostream &os, bool nobuild)
     int major1 = majorVersion()/10;
     int major2 = majorVersion() - major1*10;
     os << major1 << "." << major2 << "." << minorVersion();
-       os << " (build #" << setfill('0') << setw(2) << date() << ")";
-       /*
-    if(!nobuild)
-       os << " (build #" << setfill('0') << setw(2) << patch() << ")";
-       */
+    os << " (test  build #" << setfill('0') << setw(2) << patch() << ")";
     os << setfill(' ');
 
     

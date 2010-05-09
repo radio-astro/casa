@@ -437,7 +437,7 @@ def simdata(
                         ",trx="+str(t_rx)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
                         ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
-                    msg("** this may take a few minutes, but will be faster in the next CASA release",priority="warn")
+                    msg("** this may take a few minutes, but will be faster in the future",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
                             tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
@@ -751,17 +751,23 @@ def simdata(
             # Convolve model with beam.
             convolved = project + '.convolved.im'
             ia.open(modelregrid)
+            ia.setbrightnessunit("Jy/pixel") # regridded model is jy/pix
             ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                           pa=beam['positionangle'],overwrite=True)
+            # setting these things correctly should remove the need to manually scale outflat in the 
+            # difference calculation
+            ia.done()
+            ia.open(convolved)
+            ia.setbrightnessunit("Jy/beam")
+            ia.setrestoringbeam(beam=beam)
+            ia.done()
 
-            # imagecalc is interpreting outflat in Jy/pix - 
-            # the diff is v. negative.
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
             bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
             msg("synthesized beam area in output pixels = %f" % bmarea)
             # Make difference image.
             difference = project + '.diff.im'
-            ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
+            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
             # Get rms of difference image.
             ia.open(difference)
             diffstats = ia.statistics(robust = True)
