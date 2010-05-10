@@ -7,17 +7,18 @@ import pdb
 def simdata2(
     project=None, 
     modifymodel=None,
-    modelimage=None, inbright=None, direction=None, incell=None, 
-    incenter=None, inwidth=None, innchan=None,
+    modelimage=None, inbright=None, indirection=None, incell=None, 
+    incenter=None, inwidth=None, # innchan=None,
     setpointings=None,
-    ptgfile=None, integration=None, totaltime=None, mapsize=None, 
+    ptgfile=None, integration=None, direction=None, mapsize=None, 
     maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
     predict=None, 
-    refdate=None, complist=None, antennalist=None, sdantlist=None, sdant=None,
+    refdate=None, complist=None, totaltime=None, antennalist=None, 
+    sdantlist=None, sdant=None,
     thermalnoise=None,
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
     image=None,
-    vis=None, cleanmode=None, cell=None, imsize=None, niter=None, threshold=None,
+    vis=None, cell=None, imsize=None, niter=None, threshold=None,
     weighting=None, outertaper=None, stokes=None,     
     analyze=None, 
     showarray=None, showuv=None, showpsf=None, showmodel=None, 
@@ -40,9 +41,8 @@ def simdata2(
 
     # as of 20100507, newfig will delete the previous one
 
-
     # create the utility object:
-    util=simutil(direction)
+    util=simutil(direction)  # this is the dir of the observation - could be ""
     if verbose: util.verbose=True
     msg=util.msg
     
@@ -70,17 +70,12 @@ def simdata2(
 #    try:
     if True:
 
+        if type(complist)==type([]):
+            complist=complist[0]
+
         ##################################################################
         # set up modelimage
         if os.path.exists(modelimage):
-
-            # TODO if modelimage==default_model AND, is already in the canonical
-            # 4d form, then don't create newmodel.  just work from skymodel!!
-            # also important for coming back to analyze - 
-            # we want skymodel, with components added, not newmodel, which 
-            # can't have components added  because if we're not predicting
-            # we don't know what the complist is!
-
             components_only=False
 
             # if the modelimage is okay, work from it directly
@@ -97,26 +92,27 @@ def simdata2(
                     if overwrite:
                         shutil.rmtree(newmodel)
                     else:
-                        msg(newmodel+" exists -- please delete it, change modeimage, or set overwrite=True",priority="error")
+                        msg(newmodel+" exists -- please delete it, change modelimage, or set overwrite=T",priority="error")
                         return False
 
             # modifymodel just collects info if modelimage==newmodel
+            innchan=-1
             (model_refdir,model_cell,model_size,
              model_nchan,model_center,model_width,
              model_stokes) = util.modifymodel(modelimage,
-             newmodel,modifymodel,inbright,direction,incell,
+             newmodel,modifymodel,inbright,indirection,incell,
              incenter,inwidth,innchan,
              flatimage=False) 
 
             modelflat=newmodel+".flat"
-            if os.path.exists(modelflat) and not predict:
+            if os.path.exists(modelflat) and (not predict) and analyze:
+                # if we're not predicting, then we want to use the previously
+                # created modelflat, because it may have components added 
                 msg("flat sky model "+modelflat+" exists, predict not requested",priority="warn")
                 msg(" working from existing image - please delete it if you wish to overwrite.",priority="warn")
             else:
                 # create and add components into modelflat with util.flatimage()
                 util.flatimage(newmodel,complist=complist,verbose=verbose)
-                # if we're not predicting, then we want to use the previously
-                # created modelflat, because it may have components added 
 
             casalog.origin('simdata')
 
@@ -154,12 +150,23 @@ def simdata2(
 
         ##################################################################
         # set up pointings
-        # TODO *** deal with calibrator here, not later, so it can go into the pointing file
+        dir=model_refdir
+        dir0=dir
+        if type(direction)==type([]):
+            if len(direction)>0:
+                if util.isdirection(direction[0],halt=False):
+                    dir=direction
+                    dir0=direction[0]
+        else:
+            if util.isdirection(direction,halt=False):
+                dir=direction
+                dir0=dir
+        util.direction=dir0
 
         if setpointings:
             if verbose:
-                util.msg("calculating map pointings centered at "+str(model_refdir))
-            pointings = util.calc_pointings2(pointingspacing,mapsize,direction=model_refdir)
+                util.msg("calculating map pointings centered at "+str(dir0))
+            pointings = util.calc_pointings2(pointingspacing,mapsize,direction=dir)
             nfld=len(pointings)
             etime = qa.convert(qa.quantity(integration),"s")['value']
             ptgfile = project+".ptg.txt"
@@ -176,21 +183,40 @@ def simdata2(
         imcenter , offsets = util.average_direction(pointings)        
         epoch, ra, dec = util.direction_splitter(imcenter)
 
+        # model is centered at model_refdir, and has model_size; this is the offset in 
+        # angular arcsec from the model center to the imcenter:        
+        mepoch, mra, mdec = util.direction_splitter(model_refdir)
+        shift = [ (qa.convert(ra,'deg')['value'] - 
+                   qa.convert(mra,'deg')['value'])/pl.cos(qa.convert(mdec,'rad')['value'] ), 
+                  (qa.convert(dec,'deg')['value']-qa.convert(mdec,'deg')['value']) ]
+        if verbose: 
+            msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
+        xmax=qa.convert(model_size[0],'deg')['value']
+        ymax=qa.convert(model_size[1],'deg')['value']
+        overlap=False        
+        for i in range(offsets.shape[1]):
+            xc= pl.absolute(offsets[0,i]+shift[0])  # offsets and shift are in degrees
+            yc= pl.absolute(offsets[1,i]+shift[1])
+            if xc<xmax and yc<ymax:
+                overlap=True
+                break
+
         if setpointings:
             if os.path.exists(ptgfile):
                 if overwrite:
                     os.remove(ptgfile)
                 else:
                     util.msg("pointing file "+ptgfile+" already exists and user does not want to overwrite",priority="error")
-            util.write_pointings(ptgfile,epoch,ra,dec,etime)
+            util.write_pointings(ptgfile,pointings,etime)
 
         msg("phase center = " + imcenter)
         if nfld>1 and verbose:
             for dir in pointings:
                 msg("   "+dir)
  
-
-
+        if not overlap:
+            msg("No overlap between model and pointings",priority="error")
+            return False
 
 
 
@@ -282,7 +308,8 @@ def simdata2(
                 else:
                     plotcolor='k'
                 for i in range(offsets.shape[1]):
-                    pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,plotcolor)
+                    pl.plot(pl.cos(tt)*pb/2+(offsets[0,i]+shift[0])*3600,
+                            pl.sin(tt)*pb/2+(offsets[1,i]+shift[1])*3600,plotcolor)
                 xlim=max(abs(pl.array(lims[0])))
                 ylim=max(abs(pl.array(lims[1])))
                 # show entire pb: (statim doesn't by default)
@@ -306,11 +333,8 @@ def simdata2(
         if predict:
             if not(predict_uv or predict_sd):
                 util.msg("must specify at least one of antennalist, sdantlist",priority="error")
-
-        # TODO check for position overlap here - if zero stop
-        # TODO check for frequency overlap here - if zero stop
-        # because modifymodel will have already extended with flat 
-        # spectral index
+            # TODO check for frequency overlap here - if zero stop
+            # position overlap already checked above in pointing section
 
             # create figure here to give user something to look at
             if grfile:            
@@ -323,7 +347,7 @@ def simdata2(
                 if grfile:
                     util.newfig(multi=[2,2,1],filename=file,show=False)
             if grscreen or grfile:
-                util.ephemeris(refdate,direction=model_refdir,telescope=telescopename)  # util already knows direction but this doesn't hurt
+                util.ephemeris(refdate,direction=util.direction,telescope=telescopename)  
                 util.nextfig()
                 util.plotants(stnx, stny, stnz, stnd, padnames)                
 
@@ -513,13 +537,15 @@ def simdata2(
             msg('generation of measurement set ' + msfile + ' complete')
 
         else:
+            # if not predicting this time, but are imageing or analyzing, 
             # get telescopename from ms
-            tb.open(project+".ms/OBSERVATION")
-            n=tb.getcol("TELESCOPE_NAME")
-            telescopename=n[0]
-            util.telescopename=telescopename
-            # todo add check that all column is the same
-            tb.done()
+            if image or analyze:
+                tb.open(project+".ms/OBSERVATION")
+                n=tb.getcol("TELESCOPE_NAME")
+                telescopename=n[0]
+                util.telescopename=telescopename
+                # todo add check that entire column is the same
+                tb.done()
 
         ######################################################################
         # noisify
@@ -638,15 +664,15 @@ def simdata2(
                 tb.done()
                 msfile=mstoimage[0]
 
-            # make sure cleanmode is appropriate:
+            # set cleanmode automatically
             if nfld==1:
-                if cleanmode=="mosaic":
-                    msg("cleanmode=mosaic but your simulation has one pointing -- changing to csclean",priority="warn")
-                    cleanmode="csclean"
+                #if cleanmode=="mosaic":
+                #    msg("cleanmode=mosaic but your simulation has one pointing -- changing to csclean",priority="warn")
+                cleanmode="csclean"
             else:
-                if cleanmode!="mosaic":
-                    msg("your simulation has more than one pointing -- changing cleanmode to mosaic",priority="warn")
-                    cleanmode="mosaic"
+                #if cleanmode!="mosaic":
+                #    msg("your simulation has more than one pointing -- changing cleanmode to mosaic",priority="warn")
+                cleanmode="mosaic"
 
         # make sure cell is defined
         if type(cell)==type([]):

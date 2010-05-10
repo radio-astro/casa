@@ -41,42 +41,35 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="inbright" subparam='true'>
        <description>set peak surface brightness e.g. "1.2Jy/pixel" or ""</description>
-       <value></value>
+       <value type="string"></value>
     </param>
     <!-- TODO parse Jy/pixel, MJy/Sr, eventually K, etc -->
     <!-- TODO document permitted units in online help -->
 
-    <param type="stringArray" name="direction" subparam="true">
+    <param type="string" name="indirection" subparam="true">
       <description>"J2000 19h00m00 -40d00m00" or ""</description>
-      <value></value>
-      <!-- in this context, we expect a single string.  
-	   in calcpointings, direction can be a string array -->
+      <value type="string"></value>
     </param>
 
     <param type="string" name="incell" subparam='true'>
       <description>cell/pixel size e.g. "0.1arcsec" or ""</description>
-      <value></value>
+      <value type="string"></value>
     </param>
     
     <param type="string" name="incenter" subparam="true">
       <description>frequency of center channel e.g. "89GHz" or ""</description>
-      <value></value>
+      <value type="string"></value>
     </param>    
 
     <param type="string" name="inwidth" subparam="true">
       <description>channel width e.g. "10MHz" or ""</description>
-      <value></value>
+      <value type="string"></value>
     </param>
 
+<!--
     <param type="int" name="innchan" subparam="true">
       <description>number of channels or 0 to use model image</description>
       <value>0</value>
-    </param>
-
-<!--  general "graphics" parameter instead. 
-    <param type="bool" name="showmodel" subparam="true">
-      <description></description>
-      <value>True</value>
     </param>
 -->
 
@@ -100,17 +93,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>10s</value>
     </param>
 
-    <param type="string" name="totaltime" subparam="true">
-      <description>total time of observation</description>
-      <value>7200s</value>
-    </param>
-
-<!--    
+<!--  The user can edit the ptg file to repeat ptgs if they wish a scan length
+      Longer than the integration time
     <param type="variant" name="scanlength" subparam="true">
       <description>number of integrations or time per pointing</description>
       <value type="int">5</value>
     </param>
 -->
+
+    <param type="stringArray" name="direction" subparam="true">
+      <description>"J2000 19h00m00 -40d00m00" or "" to center on model</description>
+      <value type="string"></value>
+    </param>
 
     <param type="stringArray" name="mapsize" subparam="true">
       <description>angular size of map or "" to cover model</description>
@@ -142,14 +136,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="double">1.0</value>
     </param>
 -->
-
-<!--  
-    <param type="bool" name="showmap" subparam="true">
-      <description>display the model sky and planned pointings</description>
-      <value>True</value>
-    </param>
--->
-
     <param type="string" name="caldirection" subparam="true">
       <description>pt source calibrator [experimental]</description>
       <value type="string"></value>
@@ -184,6 +170,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value></value>
     </param>
 
+    <param type="string" name="totaltime" subparam="true">
+      <description>total time of observation</description>
+      <value>7200s</value>
+    </param>
+
     <param type="string" name="antennalist" subparam="true">
       <description>antenna position file or "" for no interferometric MS</description>
       <value>alma.out10.cfg</value>
@@ -191,29 +182,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- TODO put in more than one synth_antfile to do ALMA and ACA config - 
 it'll do them for the same amount of time -->
-
-<!--
-    <param type="bool" name="showephemeris" subparam="true">
-      <description>uptime, etc</description>
-      <value>True</value>
-    </param>
-
-    <param type="bool" name="showarray" subparam="true">
-      <description>like plotants</description>
-      <value>True</value>
-    </param>
-
-    <param type="bool" name="showuv" subparam="true">
-      <description>display uv coverage</description>
-      <value>True</value>
-    </param>
-
-    <param type="bool" name="showpsf" subparam="true">
-      <description>display synthesized (dirty) beam</description>
-      <value>False</value>
-    </param>
--->
-      <!-- TODO calc PSF from fft rob's script -->
 
     <param type="string" name="sdantlist" subparam="true">
       <description>single dish antenna position file or "" for no total power MS</description>
@@ -238,6 +206,8 @@ it'll do them for the same amount of time -->
 	<value type="string"></value>
 	<value type="string">tsys-atm</value>
 	<value type="string">tsys-manual</value>
+	<value type="string">False</value>
+	<value type="string">F</value>
       </allowed>
     </param>    
     <param type="double" name="user_pwv" subparam="true">
@@ -278,7 +248,8 @@ it'll do them for the same amount of time -->
       <description>Measurement Set(s) to image</description>
       <value>$project.ms,$project.sd.ms</value>
     </param>
-    
+
+<!--    
     <param type="string" name="cleanmode" subparam="true">
       <description>clark, csclean, mosaic</description>
       <value>clark</value>
@@ -288,10 +259,11 @@ it'll do them for the same amount of time -->
 	<value>mosaic</value>
       </allowed>
     </param>
+-->
 
     <param type="string" name="cell" subparam='true'>
       <description>cell size with units or "" to equal model</description>
-      <value></value>
+      <value type="string"></value>
     </param>
     
     <param type="intArray" name="imsize" subparam="true">
@@ -358,17 +330,6 @@ it'll do them for the same amount of time -->
       </allowed>
     </param>
 
-<!--  default will be model, convolved model, clean image, and residual (diff?)
-    <param type="bool" name="showimage" subparam="true">
-      <description>display the synthesized image</description>
-      <value>True</value>
-    </param>
-
-    <param type="bool" name="showresidual" subparam="true">
-      <description>display the clean residual image</description>
-      <value>True</value>
-    </param>
--->
 
 
 
@@ -467,7 +428,7 @@ note for help: a symlink will be created from this to $project.model.image
 if that's not the file the user is using.   
 -->
 	    <description>model image</description>
-	    <value type="string">"$project.skymodel"</value>
+	    <value type="string">$project.skymodel</value>
 	  </default>
 	</equals>
 	<!-- ******************** -->
@@ -479,34 +440,32 @@ modifying the description doesn't work yet but its an improvement ticket.
 	    <description>original model (modified will be $project.skymodel)</description>
 	    <value type="string"></value>
 	  </default>
-	  <default param="inbright"><value>""</value></default>
-	  <default param="direction">
+	  <default param="inbright"><value type="string"></value></default>
+	  <default param="indirection">
 	    <description>center of model image</description>
-	    <value type="string">J2000 19h00m00s -40d00m00s</value>
+	    <value type="string"></value>
 	  </default>
-	  <default param="incell"><value>"0.1arcsec"</value></default>
+	  <default param="incell"><value type="string"></value></default>
 	  <default param="incenter">
 	    <description>center of centerchan; if 1 chan, the freq of the continuum image</description>
-	    <value>"89GHz"</value>
+	    <value type="string"></value>
 	  </default>
 	  <default param="inwidth">
 	    <description>chan width or bandwidth of 1-chan (continuum)</description>
-	    <value>"0.1arcsec"</value>
+	    <value type="string"></value>
 	  </default>
+<!--
 	  <default param="innchan">
 	    <description>1 for continuum</description>
 	    <value>0</value>
 	  </default>
+-->
 	</equals>
       </when>
       <!-- **********************************************************  -->
       <when param="setpointings">
 	<equals type="bool" value="True">	  
 	  <default param="integration"><value type="string">10s</value></default>
-	  <default param="totaltime"><value>"7200s"</value></default>
-<!--
-	  <default param="scanlength"><value>5</value></default>
--->
 	  <default param="direction">
 	    <description>center of map or "" to center on the model</description>
 	    <value type="string"></value>
@@ -533,8 +492,9 @@ modifying the description doesn't work yet but its an improvement ticket.
 	    <description>optional model componentlist file</description>
 	    <value type="string"></value>
 	  </default>
-	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
+	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
+	  <default param="totaltime"><value>"7200s"</value></default>
 	  <default param="caldirection"><value type="string"></value></default>
 	  <default param="calflux"><value type="string">1Jy</value></default>
 	  <default param="sdantlist"><value type="string"></value></default>
@@ -545,6 +505,8 @@ modifying the description doesn't work yet but its an improvement ticket.
       <!-- **********************************************************  -->
       <when param="thermalnoise">
 	<equals type="string" value=""/>
+	<equals type="string" value="False"/>
+	<equals type="string" value="F"/>
 	<equals type="string" value="tsys-atm">
 	  <default param="user_pwv"><value>1.</value></default>
 	  <default param="t_ground"><value>269.</value></default>
@@ -560,16 +522,13 @@ modifying the description doesn't work yet but its an improvement ticket.
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
 	  <default param="vis"><value type="string">$project.ms</value></default>
+<!--
 	  <default param="cleanmode"><value type="string">mosaic</value></default>
+-->
 	  <default param="imsize">
 	    <value>0</value>
 	  </default>
-	  <default param="cell"><value>"0.1arcsec"</value></default>
-<!--
-	  <default param="start"><value type="string"></value></default>
-	  <default param="width"><value type="string"></value></default>
-	  <default param="nchan"><value>-1</value></default>
--->
+	  <default param="cell"><value type="string"></value></default>
 	  <default param="niter"><value>500</value></default>
 	  <default param="threshold"><value type="string">0.1mJy</value></default>
 	  <default param="weighting"><value type="string">natural</value></default>
@@ -621,16 +580,15 @@ mosaic simulation task (prototype):
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
          in the header. 
-    direction -- central direction, or "" for unchanged
+    indirection -- central direction, or "" for unchanged
     incell -- spatial pixel size, or "" for unchanged
-    incenter -- frequency of center channel, or "" for unchanged
+    incenter -- frequency of center channel e.g. "89GHz", or "" for unchanged
     inwidth -- width of channels, or "" for unchanged - this should be a 
          string representing a quantity with units e.g. "10MHz"
-       * in development: only works reliably with frequencies, not velocities
-    innchan -- number of channels, -1 or 0 to span the model frequency range
-       * 1 for a continuum image
-       * the model image will be extended in frequency with a flat spectral
-         index (nearest channel extrapolation) to cover the desired range. 
+       * NOTE: only works reliably with frequencies, not velocities
+       * NOTE: it is not possible to change the number of spectral planes
+         of the sky model, only to relabel them with different frequencies
+         That kind of regridding can be accomplished with the CASA toolkit.
     -------------------------------
     setpointings -- calculate a map of pointings, or if false, provide ptgfile
        * if graphics selected, display the pointings shown on the model image
@@ -645,11 +603,13 @@ mosaic simulation task (prototype):
          then the list of science pointings again, etc, until totaltime
          is used up. 
     integration --- Time interval for each integration e.g '10s'
-    totaltime --- total time of observation e.g '7200s'
+       * NOTE: to simulate a "scan" longer than one integration, use 
+         setpointings to generate a pointing file, and then edit the 
+         file to repeat each pointing several times before moving to the 
+         next point.
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
        * can optionally be a list of pointings
-       * otherwise simdata will pack the input image with pointings according
-         to maptype
+       * otherwise simdata will pack mapsize according to maptype
     mapsize -- angular size of map 
        * set to "" to span the model image
     maptype -- hexagonal or linear 
@@ -662,6 +622,7 @@ mosaic simulation task (prototype):
          coverage, the synthesized (dirty) beam, and ephemeris information
     refdate -- central time of simulated observation eg: '2012/05/21/22:05:00'
        * NOTE: observations are currently centered at the nearest transit *
+    totaltime --- total time of observation e.g '7200s'
     antennalist -- ascii file containing antenna positions.
          each row has x y z coordinates and antenna diameter; 
          header lines are required to specify the observatory name
@@ -714,9 +675,9 @@ mosaic simulation task (prototype):
        * NOTE: the channelization of the output image cube will be the 
          same as that in the simulated Measurement Set.
        * if graphics selected, display the clean image and residual image
+       * uses Cotton-Schwab clean for single fields and Mosaic gridding
+         for multiple fields (with Clark PSF calculation in minor cycles).
     ms -- the simulated interferometric MS, or total-power one, or both   
-    cleanmode -- Clark clean, Cotton-Schwab clean (single fields), 
-       or Mosaic gridding (with Clark PSF calculation in minor cycles).
     cell -- cell size e.g '10arcsec'.  "" defaults to the modelimage cell
     imsize -- image size in spatial pixels (x,y)
        0 or -1 will use the model image size; example: imsize=[500,500]
