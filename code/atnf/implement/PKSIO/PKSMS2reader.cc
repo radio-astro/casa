@@ -272,7 +272,6 @@ Int PKSMS2reader::open(
   IFs = True;
 
   // Number of polarizations and channels in each IF.
-  ROScalarColumn<Int> spWinIdCol(dataDescCols.spectralWindowId());
   ROScalarColumn<Int> numChanCol(spWinCols.numChan());
 
   ROScalarColumn<Int> polIdCol(dataDescCols.polarizationId());
@@ -281,7 +280,7 @@ Int PKSMS2reader::open(
   nChan.resize(nIF);
   nPol.resize(nIF);
   for (uInt iIF = 0; iIF < nIF; iIF++) {
-    nChan(iIF) = numChanCol(spWinIdCol(iIF));
+    nChan(iIF) = numChanCol(cSpWinIdCol(iIF));
     nPol(iIF)  = numPolCol(polIdCol(iIF));
   }
 
@@ -950,6 +949,9 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
       if ( (cPointingTimeCol(PtIdx) <= time) && antIds(PtIdx) == cAntId[0] ) {
         break;
       }
+    }
+    if ( PtIdx == -1 ) {
+      PtIdx = 0 ;
     }
     //cerr << "got index=" << PtIdx << endl;
     Matrix<Double> pointingDir = cPointingCol(PtIdx);
