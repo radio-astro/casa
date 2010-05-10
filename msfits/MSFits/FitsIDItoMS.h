@@ -135,204 +135,192 @@ class FITSIDItoMS1 : public BinaryTableExtension
 {
 public: 
 
-    //
-    // The only constructor is from a FitsInput.
-    //
-  //FITSIDItoMS1(const String& msFile, const String& fitsFile);
-    FITSIDItoMS1(FitsInput&);
+  //
+  // The only constructor is from a FitsInput.
+  //
 
-    ~FITSIDItoMS1();
+  FITSIDItoMS1(FitsInput& in, const Int& obsType=0);
 
-    //
-    // Get the full table, using the supplied arguments to construct
-    // the table.  The table will contain all data from the current
-    // row to the end of the BinarTableExtension.
-    //
-    
-    Table createTable(const String& tabName);
-    Table fillTable(const String& tabName);
-    Table oldfullTable(const String& tabName);
-    
-    /*
-    // Get the full table, using the supplied arguments to construct the table.
-    // The table will contain all data from the current row to the end of the
-    // BinarTableExtension.If useMiriadSM is True, use the Miriad storage
-    // manager for all columns, otherwise AipsIO.
-    Table fullTable(const String& tabName, 
-		    const Table::TableOption = Table::NewNoReplace,
-		    Bool useMiriadSM = False);
-    */
-    //
-    // Get the full table, using the supplied arguments to construct
-    // the table.  The table will contain all data from the current
-    // row to the end of the BinarTableExtension.
-    //
-    Table createMainTable(const String& tabName);
- 
-    //
-    // Get the full table, using the supplied arguments to construct
-    // the table.  The table will contain all data from the current
-    // row to the end of the BinarTableExtension.
-    //
-    Table fillMainTable(const String& tabName);
-
-    // Fill the Observation and ObsLog tables
-    void fillObsTables();
-
-    // Read a binary table extension of type ANTENNA and create an antenna table
-    //void fillAntennaTable(BinaryTable& bt);
-    void fillAntennaTable();
-
-    // fill the Feed table with minimal info needed for synthesis processing
-    void fillFeedTable();
- 
-    //fill the Field table
-    //void fillFieldTable(Int nField);
-    void fillFieldTable();
-
-    //fill the Spectral Window table
-    void fillSpectralWindowTable();
-
-    // fix up the EPOCH MEASURE_REFERENCE keywords
-    void fixEpochReferences();
+  ~FITSIDItoMS1();
   
-    //update the Polarization table
-    void updateTables(const String& tabName);
- 
-    
-    //
-    // Get an appropriate TableDesc (this is the same TableDesc used
-    // to construct any Table objects returned by this class.
-    //
-    const TableDesc& getDescriptor();
-    
-    //
-    // Return the Table keywords (this is the same TableRecord used in
-    // any Table objects returned by this class.
-    //
-    TableRecord& getKeywords();
-    
-    //
-    // Get a Table with a single row, the current row of the FITS
-    // table.  The returned Table is a Scratch table.  The standard
-    // BinaryTableExtension manipulation functions are available to
-    // position the FITS input at the desired location.
-    //
-    const Table &thisRow();
-    
-    //
-    // Get a Table with a single row, the next row of the FITS table.
-    // The returned Table is a Scratch table.  The FITS input is
-    // positioned to the next row and the values translated and
-    // returned in a Table object.
-    //
-    const Table &nextRow();
-
-    
-    // Get the version of the archived MS. 
-    Float msVersion() const
-      { return itsVersion; }
-    
-
-    // Read all the data from the FITS file and create the MeasurementSet. Throws
-    // an exception when it has severe trouble interpreting the FITS file.
-    void readFitsFile(const String& msFile);
-
-    //is this the first UV_DATA extension
-    Bool isfirstMain(){return firstMain;}
-
+  //
+  // Get the full table, using the supplied arguments to construct
+  // the table.  The table will contain all data from the current
+  // row to the end of the BinarTableExtension.
+  //
+  
+  Table createTable(const String& tabName);
+  Table fillTable(const String& tabName);
+  Table oldfullTable(const String& tabName);
+  
+  //
+  // Get the full table, using the supplied arguments to construct
+  // the table.  The table will contain all data from the current
+  // row to the end of the BinarTableExtension.
+  //
+  Table createMainTable(const String& tabName);
+  
+  //
+  // Get the full table, using the supplied arguments to construct
+  // the table.  The table will contain all data from the current
+  // row to the end of the BinarTableExtension.
+  //
+  Table fillMainTable(const String& tabName);
+  
+  // Fill the Observation and ObsLog tables
+  void fillObsTables();
+  
+  // Read a binary table extension of type ANTENNA and create an antenna table
+  //void fillAntennaTable(BinaryTable& bt);
+  void fillAntennaTable();
+  
+  // fill the Feed table with minimal info needed for synthesis processing
+  void fillFeedTable();
+  
+  //fill the Field table
+  //void fillFieldTable(Int nField);
+  void fillFieldTable();
+  
+  //fill the Spectral Window table
+  void fillSpectralWindowTable();
+  
+  // fix up the EPOCH MEASURE_REFERENCE keywords
+  void fixEpochReferences();
+  
+  //update the Polarization table
+  void updateTables(const String& tabName);
+  
+  
+  //
+  // Get an appropriate TableDesc (this is the same TableDesc used
+  // to construct any Table objects returned by this class.
+  //
+  const TableDesc& getDescriptor();
+  
+  //
+  // Return the Table keywords (this is the same TableRecord used in
+  // any Table objects returned by this class.
+  //
+  TableRecord& getKeywords();
+  
+  //
+  // Get a Table with a single row, the current row of the FITS
+  // table.  The returned Table is a Scratch table.  The standard
+  // BinaryTableExtension manipulation functions are available to
+  // position the FITS input at the desired location.
+  //
+  const Table &thisRow();
+  
+  //
+  // Get a Table with a single row, the next row of the FITS table.
+  // The returned Table is a Scratch table.  The FITS input is
+  // positioned to the next row and the values translated and
+  // returned in a Table object.
+  //
+  const Table &nextRow();
+  
+  // Get the version of the archived MS. 
+  Float msVersion() const
+  { return itsVersion; }
+  
+  // Read all the data from the FITS file and create the MeasurementSet. Throws
+  // an exception when it has severe trouble interpreting the FITS file.
+  void readFitsFile(const String& msFile);
+  
+  //is this the first UV_DATA extension
+  Bool isfirstMain(){return firstMain;}
+  
 protected:
-    // Read the axis info, throws an exception if required axes are missing.
-    void getAxisInfo();
+  // Read the axis info, throws an exception if required axes are missing.
+  void getAxisInfo();
+  
+  // Set up the MeasurementSet, including StorageManagers and fixed columns.
+  // If useTSM is True, the Tiled Storage Manager will be used to store
+  // DATA, FLAG and WEIGHT_SPECTRUM
+  void setupMeasurementSet(const String& MSFileName, Bool useTSM=True, 
+			   Bool mainTbl=False);
+  
+  // Fill the main table from the Primary group data
+  void fillMSMainTable(const String& MSFileName, Int& nField, Int& nSpW);
+  
+ private:
+  //
+  //# Data Members
+  //
+  
+  // The scratch table containing the current row
+  Table itsCurRowTab;
+  
+  // The number of elements for each column of the
+  // BinaryTableExtension
+  Vector<Int> itsNelem;
+  
+  // For each column: is it an array?
+  Vector<Bool> itsIsArray; 
+  
+  // Table keyword set
+  TableRecord itsKwSet;
+  
+  // Table descriptor for construction
+  TableDesc itsTableDesc;
+  
+  // Table info
+  TableInfo itsTableInfo;
+  
+  // The MS version.
+  Float itsVersion;
+  
+  //
+  // Buffer for storing the MSK's, MS-specific FITS keywords.
+  //
+  uInt itsNrMSKs;
+  Vector<String> itsMSKC;
+  Vector<String> itsMSKN;
+  Vector<String> itsMSKV;
+  Vector<Bool>   itsgotMSK;
+  
+  
+  FitsInput &infile_p;
+  String msFile_p;
+  Vector<Int> nPixel_p,corrType_p;
+  Block<Int> corrIndex_p;
+  Matrix<Int> corrProduct_p;
+  Vector<String> coordType_p;
+  Vector<Double> refVal_p, refPix_p, delta_p; 
+  String array_p,object_p,timsys_p;
+  //MSPrimaryGroupHolder priGroup_p;
+  Double epoch_p;
+  Int nAnt_p;
+  Vector<Double> receptorAngle_p;
+  MFrequency::Types freqsys_p;
+  Double restfreq_p;
+  LogIO itsLog;
+  Int nIF_p;
+  Double startTime_p;
+  Double lastTime_p;
+  Int itsObsType;
+  MeasurementSet ms_p;
+  MSColumns* msc_p;
+  static Bool firstMain;
+  
 
-    // Set up the MeasurementSet, including StorageManagers and fixed columns.
-    // If useTSM is True, the Tiled Storage Manager will be used to store
-    // DATA, FLAG and WEIGHT_SPECTRUM
-    void setupMeasurementSet(const String& MSFileName, Bool useTSM=True, 
-       Bool mainTbl=False);
-
-    // Fill the main table from the Primary group data
-    void fillMSMainTable(const String& MSFileName, Int& nField, Int& nSpW);
-
-private:
-    //
-    //# Data Members
-    //
-
-    // The scratch table containing the current row
-    Table itsCurRowTab;
-
-    // The number of elements for each column of the
-    // BinaryTableExtension
-    Vector<Int> itsNelem;
-
-    // For each column: is it an array?
-    Vector<Bool> itsIsArray; 
-
-    // Table keyword set
-    TableRecord itsKwSet;
-    
-    // Table descriptor for construction
-    TableDesc itsTableDesc;
-
-    // Table info
-    TableInfo itsTableInfo;
-
-    // The MS version.
-    Float itsVersion;
-
-    
-    //
-    // Buffer for storing the MSK's, MS-specific FITS keywords.
-    //
-    uInt itsNrMSKs;
-    Vector<String> itsMSKC;
-    Vector<String> itsMSKN;
-    Vector<String> itsMSKV;
-    Vector<Bool>   itsgotMSK;
-    
-
-    FitsInput &infile_p;
-    String msFile_p;
-    Vector<Int> nPixel_p,corrType_p;
-    Block<Int> corrIndex_p;
-    Matrix<Int> corrProduct_p;
-    Vector<String> coordType_p;
-    Vector<Double> refVal_p, refPix_p, delta_p; 
-    String array_p,object_p,timsys_p;
-    //MSPrimaryGroupHolder priGroup_p;
-    Double epoch_p;
-    Int nAnt_p;
-    Vector<Double> receptorAngle_p;
-    MFrequency::Types freqsys_p;
-    Double restfreq_p;
-    LogIO itsLog;
-    Int nIF_p;
-    Double startTime_p;
-    Double lastTime_p;
-    MeasurementSet ms_p;
-    MSColumns* msc_p;
-    static Bool firstMain;
-
-    //char *theheap_p;
-
-    //
-    //# Member Functions
-    //
-
-    // Fill in each row as needed
-    void fillRow();
-
-    // Build part of the keywords of the itsCurRowTab
-    void convertKeywords();
-
-    // Convert FITS field descriptions to TableColumn descriptions.
-    void describeColumns();
-
-    // Convert the MS-specific keywords in the FITS binary table.
-    void convertMSKeywords();
+  //
+  //# Member Functions
+  //
+  
+  // Fill in each row as needed
+  void fillRow();
+  
+  // Build part of the keywords of the itsCurRowTab
+  void convertKeywords();
+  
+  // Convert FITS field descriptions to TableColumn descriptions.
+  void describeColumns();
+  
+  // Convert the MS-specific keywords in the FITS binary table.
+  void convertMSKeywords();
 };
-
+ 
 
 } //# NAMESPACE CASA - END
 

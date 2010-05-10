@@ -52,6 +52,7 @@
 #include <ms/MeasurementSets/MSObsColumns.h>
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSTileLayout.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MDoppler.h>
@@ -149,237 +150,126 @@ Bool FITSIDItoMS1::firstMain = True;
 //	
 // Constructor
 //	
-/* 
-FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin) : 
-  BinaryTableExtension(fitsin), infile_p(fitsin), firstMain(True)
+
+
+FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType)
+  : BinaryTableExtension(fitsin),
+    itsNrMSKs(10),
+    itsMSKC(itsNrMSKs," "),
+    itsMSKN(itsNrMSKs," "),
+    itsMSKV(itsNrMSKs," "),
+    itsgotMSK(itsNrMSKs,False),
+    infile_p(fitsin), 
+    itsObsType(obsType),
+    msc_p(0)
 {
-  //firstMain=True;
-  //  infile_p=fitsin;
-}
-*/
-
-
-FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin)
-: BinaryTableExtension(fitsin),
-  itsNrMSKs(10),
-  itsMSKC(itsNrMSKs," "),
-  itsMSKN(itsNrMSKs," "),
-  itsMSKV(itsNrMSKs," "),
-  itsgotMSK(itsNrMSKs,False),
-  infile_p(fitsin), 
-  msc_p(0)
-{
-  /*
-    // is there a heap
-    if (pcount()) {
-	// yes, must read the entire table in at once so that
-	// we can have access to the heap as we step through the table
-	read(nrows());
-	if (notnull(theap())) {
-	    uInt heapOffset = theap() - rowsize()*nrows();
-	    // Skip to the start of the heap
-	    // I don't see any way except to read these bogus bytes
-	    Block<Char> junk(heapOffset);
-	    ExtensionHeaderDataUnit::read(junk.storage(), heapOffset);
-	}
-	theheap_p = new char [pcount()];
-	AlwaysAssert(theheap_p, AipsError);
-	ExtensionHeaderDataUnit::read(theheap_p, pcount());
-  */
-
-
-/*
-	// and do some initial decoding of the VADesc related stuff
-	vatypes_p = new FITS::ValueType [ncols()];
-	AlwaysAssert(vatypes_p, AipsError);
-	vaptr_p = new void * [ncols()];
-	AlwaysAssert(vaptr_p, AipsError);
-	va_p = new VADescFitsField [ncols()];
-	AlwaysAssert(va_p, AipsError);
-	for (Int i=0;i<ncols();++i) {
-	    vaptr_p[i] = 0;
-	    if (field(i).fieldtype() == FITS::VADESC) {
-		int maxsize;
-		FITS::parse_vatform(tform(i), vatypes_p[i], maxsize);
-		bind(i, va_p[i]);
-		if (vatypes_p[i] == FITS::NOVALUE) {
-		    cerr << "Error in VA desc format for column " 
-			 << i << " : " << tform(i) << endl;
-		} else {
-		    switch (vatypes_p[i]) {
-		    case FITS::LOGICAL: 
-			vaptr_p[i] = (void *)(new FitsLogical[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::BIT: 
-			{
-			    Int nbytes = maxsize / 8;
-			    if (maxsize % 8) nbytes++;
-			    maxsize = nbytes;
-			}
-			// fall throught to BYTE for the actual allocation
-		    case FITS::BYTE: 
-			vaptr_p[i] = (void *)(new uChar[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::SHORT: 
-			vaptr_p[i] = (void *)(new Short[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::LONG: 
-			vaptr_p[i] = (void *)(new FitsLong[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::CHAR: 
-			vaptr_p[i] = (void *)(new Char[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::FLOAT: 
-			vaptr_p[i] = (void *)(new Float[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::DOUBLE:
-			vaptr_p[i] = (void *)(new Double[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::COMPLEX:
-			vaptr_p[i] = (void *)(new Complex[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    case FITS::DCOMPLEX:
-			vaptr_p[i] = (void *)(new DComplex[maxsize]);
-			AlwaysAssert(vaptr_p[i], AipsError);
-			break;
-		    default: 
-			cerr << "Impossible VADesc type in column " 
-			     << i << " : " << vatypes_p[i] << endl;
-			break;
-		    }
-		}
-	    } else {
-		vatypes_p[i] = FITS::NOVALUE;
-	    }
-	}
-
-    }
-
-*/
-
-
-
-
-    //
-    // Get some things to remember.
-    //
-    Int nfield = tfields();      // nr of fields in the FITS table
-    itsNelem.resize(nfield);     // nrs of elements per field
-    itsNelem = 0;
-    itsIsArray.resize(nfield);   // array flags per field
-    itsIsArray = False;          // assume scalar-type
-
-    
-    //
-    // Step 0: The mandatory and reserved FITS keywords have been read
-    // and put into the data members by the BinaryTableExtension
-    // constructor.
-    //
-    // Step 1: Now read the rest of the FITS keywords and put them
-    // into the itsMSK... buffers (the ones with names like MSK*,
-    // i.e. the MS-specific keywords) and into TableRecord itsKwSet
-    // (the rest of the FITS keywords and EXTVER).
-    //
-
-    convertKeywords();      
-
-
-    // 
-    // Step 1a: Read the table.info from the MSK table keywords TYPE,
-    // SUBTYPE and README, and clear the relevant MSK buffer entries.
-    //
-    for (uInt ikey=0; ikey<itsNrMSKs; ikey++) {
-	if (itsgotMSK(ikey) && itsMSKC(ikey)==" ") {
-	    //
-	    // This is a table keyword.
-	    //
-	    if (itsMSKN(ikey) == "TYPE") {
-		itsTableInfo.setType(itsMSKV(ikey));
-///		cout << "found MSK TYPE    = " << itsMSKV(ikey) << endl;
-	    } else if (itsMSKN(ikey) == "SUBTYPE") {
-		itsTableInfo.setSubType(itsMSKV(ikey));
-///		cout << "found MSK SUBTYPE = " << itsMSKV(ikey) << endl;
-	    } else if (itsMSKN(ikey) == "README") {
-		itsTableInfo.readmeAddLine(itsMSKV(ikey));
-///		cout << "found MSK README  = " << itsMSKV(ikey) << endl;
-	    }
-	    itsgotMSK(ikey) = False;
-	}
-    }
-
-    //
-    // Step 2: Convert the FITS field descriptions stored in the data
-    // members, into TableColumn descriptions (part of itsTableDesc).
-    // Also interpret the storage options contained in the MSKs (keys
-    // UNIT, SHAPE and OPTIONS) and clear the relevant MSK buffer
-    // entries.
-    //
-
-    describeColumns();
-
-    //
-    // Step 3: Convert the rest of the MSKs. The column-type keywords
-    // are added to the TableColumn description and the table-type
-    // ones are added to itsKwSet.
-    //
-
-    //convertMSKeywords();
-
-    //
-    // Step 3a: Move the table keywords from itsKwSet to itsTableDesc
-    // and clean out itsKwSet.
-    //
-    itsTableDesc.rwKeywordSet().merge(itsKwSet,RecordInterface::RenameDuplicates);
-    RecordDesc emptyDesc;
-    itsKwSet.restructure(emptyDesc);
-
-    //
-    // Step 4: Create a single-row scratch table, with the table
-    // description just built. It will hold the "current" row and is
-    // therefore called itsCurRowTab.
-    //
-    SetupNewTable newtab("", itsTableDesc, Table::Scratch);
-    StManAipsIO stman;
-    newtab.bindAll (stman);
-
-    
-    itsCurRowTab = Table(newtab, 1);
-
-    const Regex trailing(" *$"); // trailing blanks
   
-    String extname(FITSIDItoMS1::extname());
-    extname = extname.before(trailing);
-
-                
-    if(extname!="UV_DATA")
-      {     
-	//
-	// Fill the one row of itsCurRowTab.
-	//
-	if (nrows() > 0) {
-	  //
-	  // Read the first row of the FITS table into memory.
-	  //
-	  read(1);
-	  //
-	  // Fill the single row in itsCurRowTab from memory.
-	  //
-	  fillRow();
-	}
+  //
+  // Get some things to remember.
+  //
+  Int nfield = tfields();      // nr of fields in the FITS table
+  itsNelem.resize(nfield);     // nrs of elements per field
+  itsNelem = 0;
+  itsIsArray.resize(nfield);   // array flags per field
+  itsIsArray = False;          // assume scalar-type
+  
+  
+  //
+  // Step 0: The mandatory and reserved FITS keywords have been read
+  // and put into the data members by the BinaryTableExtension
+  // constructor.
+  //
+  // Step 1: Now read the rest of the FITS keywords and put them
+  // into the itsMSK... buffers (the ones with names like MSK*,
+  // i.e. the MS-specific keywords) and into TableRecord itsKwSet
+  // (the rest of the FITS keywords and EXTVER).
+  //
+  
+  convertKeywords();      
+  
+  
+  // 
+  // Step 1a: Read the table.info from the MSK table keywords TYPE,
+  // SUBTYPE and README, and clear the relevant MSK buffer entries.
+  //
+  for (uInt ikey=0; ikey<itsNrMSKs; ikey++) {
+    if (itsgotMSK(ikey) && itsMSKC(ikey)==" ") {
+      //
+      // This is a table keyword.
+      //
+      if (itsMSKN(ikey) == "TYPE") {
+	itsTableInfo.setType(itsMSKV(ikey));
+	///		cout << "found MSK TYPE    = " << itsMSKV(ikey) << endl;
+      } else if (itsMSKN(ikey) == "SUBTYPE") {
+	itsTableInfo.setSubType(itsMSKV(ikey));
+	///		cout << "found MSK SUBTYPE = " << itsMSKV(ikey) << endl;
+      } else if (itsMSKN(ikey) == "README") {
+	itsTableInfo.readmeAddLine(itsMSKV(ikey));
+	///		cout << "found MSK README  = " << itsMSKV(ikey) << endl;
       }
-    else 
-      {
-      }
-
-    
+      itsgotMSK(ikey) = False;
+    }
+  }
+  
+  //
+  // Step 2: Convert the FITS field descriptions stored in the data
+  // members, into TableColumn descriptions (part of itsTableDesc).
+  // Also interpret the storage options contained in the MSKs (keys
+  // UNIT, SHAPE and OPTIONS) and clear the relevant MSK buffer
+  // entries.
+  //
+  
+  describeColumns();
+  
+  //
+  // Step 3: Convert the rest of the MSKs. The column-type keywords
+  // are added to the TableColumn description and the table-type
+  // ones are added to itsKwSet.
+  //
+  
+  //convertMSKeywords();
+  
+  //
+  // Step 3a: Move the table keywords from itsKwSet to itsTableDesc
+  // and clean out itsKwSet.
+  //
+  itsTableDesc.rwKeywordSet().merge(itsKwSet,RecordInterface::RenameDuplicates);
+  RecordDesc emptyDesc;
+  itsKwSet.restructure(emptyDesc);
+  
+  //
+  // Step 4: Create a single-row scratch table, with the table
+  // description just built. It will hold the "current" row and is
+  // therefore called itsCurRowTab.
+  //
+  SetupNewTable newtab("", itsTableDesc, Table::Scratch);
+  StManAipsIO stman;
+  newtab.bindAll (stman);
+  
+  
+  itsCurRowTab = Table(newtab, 1);
+  
+  const Regex trailing(" *$"); // trailing blanks
+  
+  String extname(FITSIDItoMS1::extname());
+  extname = extname.before(trailing);
+  
+  
+  if(extname!="UV_DATA"){     
+    //
+    // Fill the one row of itsCurRowTab.
+    //
+    if (nrows() > 0) {
+      //
+      // Read the first row of the FITS table into memory.
+      //
+      read(1);
+      //
+      // Fill the single row in itsCurRowTab from memory.
+      //
+      fillRow();
+    }
+  }
 }
 
 
@@ -2009,13 +1899,14 @@ void FITSIDItoMS1::getAxisInfo()
 */
 }
 
-//void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM) {
 void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM, 
-Bool mainTbl) {
+				       Bool mainTbl) {
+  
+  Int nCorr = 0;
+  Int nChan = 0;
+  Int nIF_p = 0;
 
-   Int nCorr = 0;
-   Int nChan = 0;
-   Int nIF_p = 0;
+  String telescop;
 
   if(mainTbl) {
     nCorr = nPixel_p(getIndex(coordType_p,"STOKES"));
@@ -2026,6 +1917,7 @@ Bool mainTbl) {
     } else {
       nIF_p=1;
     }
+    // determine telescop here
   } 
   //cout << "===> nIF_p=" << nIF_p <<endl; 
   // Make the MS table
@@ -2035,75 +1927,118 @@ Bool mainTbl) {
   // still create a column that has a variable shape as this will permit MS's
   // with other shapes to be appended.
   MS::addColumnToDesc(td, MS::DATA, 2);
-
+  Vector<String> tiledDataNames;
+  String hcolName=String("Tiled")+String("DATA");
+  td.defineHypercolumn(hcolName, 3,
+		       stringToVector("DATA"));
+  tiledDataNames.resize(1);
+  tiledDataNames[0] = hcolName;
   
   // add this optional column because random group fits has a
   // weight per visibility
   MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
   
-  if(mainTbl) {
-  if (useTSM) {
-    td.defineHypercolumn("TiledData",3,
- 			 stringToVector(MS::columnName(MS::DATA)));
+  if(mainTbl && useTSM) {
+    td.defineHypercolumn("TiledDATA",3,
+			 stringToVector(MS::columnName(MS::DATA)));
     td.defineHypercolumn("TiledFlag",3,
- 			 stringToVector(MS::columnName(MS::FLAG)));
+			 stringToVector(MS::columnName(MS::FLAG)));
     td.defineHypercolumn("TiledFlagCategory",4,
- 			 stringToVector(MS::columnName(MS::FLAG_CATEGORY)));
-    td.defineHypercolumn("TiledWeight",3,
- 			 stringToVector(MS::columnName(MS::WEIGHT_SPECTRUM)));
+			 stringToVector(MS::columnName(MS::FLAG_CATEGORY)));
+    td.defineHypercolumn("TiledWgtSpectrum",3,
+			 stringToVector(MS::columnName(MS::WEIGHT_SPECTRUM)));
     td.defineHypercolumn("TiledUVW",2,
- 			 stringToVector(MS::columnName(MS::UVW)));
+			 stringToVector(MS::columnName(MS::UVW)));
+    td.defineHypercolumn("TiledWgt",2,
+			 stringToVector(MS::columnName(MS::WEIGHT)));
+    td.defineHypercolumn("TiledSigma", 2,
+			 stringToVector(MS::columnName(MS::SIGMA)));
   }
-  }
-  //if(firstMain)
-    SetupNewTable newtab(MSFileName, td, Table::New);
-  //else
-  //Table maintab(tabname,Table::Update);
-  //Table maintab(MSFileName,Table::Update);
+  SetupNewTable newtab(MSFileName, td, Table::New);
   
   // Set the default Storage Manager to be the Incr one
-  IncrementalStMan incrStMan ("ISMData");
+  uInt cache_val=32768;
+  IncrementalStMan incrStMan ("ISMData",cache_val);
   newtab.bindAll(incrStMan, True);
-  // bind ANTENNA2 to the standardStMan as it changes every row
-  StandardStMan aipsStMan;
-  newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan);
- 
-  //newtab.bindColumn(MS::columnName(MS::DATA_DESC_ID), aipsStMan);
- 
-// TT
-  if(mainTbl) {
-  if (useTSM) {
-    Int tileSize=nChan/10+1;
-    // make the tile about 128k big
-    TiledShapeStMan tiledStMan1("TiledData",
- 				IPosition(3,nCorr,tileSize,
- 					  16384/nCorr/tileSize));
-    TiledShapeStMan tiledStMan1f("TiledFlag",
-  				 IPosition(3,nCorr,tileSize,
- 					   16384/nCorr/tileSize));
+
+  // Choose an appropriate tileshape
+  IPosition dataShape(2, nCorr, nChan);
+  IPosition tshape = MSTileLayout::tileShape(dataShape, itsObsType, telescop);
+
+  if(tshape.nelements() != 3){
+    throw(AipsError("TileShape has to have 3 elememts ") );
+  }  
+
+  IPosition tileShape(tshape);
+
+  if(mainTbl){
+    IncrementalStMan incrStMan0("Array_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::ARRAY_ID), incrStMan0);
+    IncrementalStMan incrStMan1("EXPOSURE",cache_val);
+    newtab.bindColumn(MS::columnName(MS::EXPOSURE), incrStMan1);
+    IncrementalStMan incrStMan2("FEED1",cache_val);
+    newtab.bindColumn(MS::columnName(MS::FEED1), incrStMan2);
+    IncrementalStMan incrStMan3("FEED2",cache_val);
+    newtab.bindColumn(MS::columnName(MS::FEED2), incrStMan3);
+    IncrementalStMan incrStMan4("FIELD_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::FIELD_ID), incrStMan4);
+    IncrementalStMan incrStMan5("FLAG_ROW",cache_val/4);
+    newtab.bindColumn(MS::columnName(MS::FLAG_ROW), incrStMan5);
+    IncrementalStMan incrStMan6("INTERVAL",cache_val);
+    newtab.bindColumn(MS::columnName(MS::INTERVAL), incrStMan6);
+    IncrementalStMan incrStMan7("OBSERVATION_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::OBSERVATION_ID), incrStMan7);
+    IncrementalStMan incrStMan8("PROCESSOR_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::PROCESSOR_ID), incrStMan8);
+    IncrementalStMan incrStMan9("SCAN_NUMBER",cache_val);
+    newtab.bindColumn(MS::columnName(MS::SCAN_NUMBER), incrStMan9);
+    IncrementalStMan incrStMan10("STATE_ID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::STATE_ID), incrStMan10);
+    IncrementalStMan incrStMan11("TIME",cache_val);
+    newtab.bindColumn(MS::columnName(MS::TIME), incrStMan11);
+    IncrementalStMan incrStMan12("TIME_CENTROID",cache_val);
+    newtab.bindColumn(MS::columnName(MS::TIME_CENTROID), incrStMan12);
+  
+    // Bind ANTENNA1, ANTENNA2 and DATA_DESC_ID to the standardStMan 
+    // as they may change sufficiently frequently to make the
+    // incremental storage manager inefficient for these columns.
+    
+    StandardStMan aipsStMan0("ANTENNA1", cache_val);
+    newtab.bindColumn(MS::columnName(MS::ANTENNA1), aipsStMan0);
+    StandardStMan aipsStMan1("ANTENNA2", cache_val);
+    newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan1);
+    StandardStMan aipsStMan2("DATA_DESC_ID", cache_val);
+    newtab.bindColumn(MS::columnName(MS::DATA_DESC_ID), aipsStMan2);
+    
+    
+    TiledShapeStMan tiledStMan1f("TiledFlag",tileShape);
     TiledShapeStMan tiledStMan1fc("TiledFlagCategory",
-				  IPosition(4,nCorr,tileSize,1,
- 					   16384/nCorr/tileSize));
-    TiledShapeStMan tiledStMan2("TiledWeight",
- 				IPosition(3,nCorr, tileSize,
- 					  16384/nCorr/tileSize));
-    TiledColumnStMan tiledStMan3("TiledUVW",
- 				 IPosition(2,3,1024));
+				  IPosition(4,tileShape(0),tileShape(1),1,
+					    tileShape(2)));
+    TiledShapeStMan tiledStMan2("TiledWgtSpectrum",tileShape);
+    TiledColumnStMan tiledStMan3("TiledUVW",IPosition(2,3,1024));
+    TiledShapeStMan tiledStMan4("TiledWgt", 
+				IPosition(2,tileShape(0),tileShape(2)));
+    TiledShapeStMan tiledStMan5("TiledSigma", 
+				IPosition(2,tileShape(0),tileShape(2)));
+    
     // Bind the DATA, FLAG & WEIGHT_SPECTRUM columns to the tiled stman
-    newtab.bindColumn(MS::columnName(MS::DATA),tiledStMan1);
+    
+    TiledShapeStMan tiledStMan1Data("TiledDATA",tileShape);
+    
+    newtab.bindColumn(MS::columnName(MS::DATA), tiledStMan1Data);
+    
     newtab.bindColumn(MS::columnName(MS::FLAG),tiledStMan1f);
     newtab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),tiledStMan1fc);
     newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM),tiledStMan2);
+    
     newtab.bindColumn(MS::columnName(MS::UVW),tiledStMan3);
-  } else {
-    newtab.bindColumn(MS::columnName(MS::DATA),aipsStMan);
-    newtab.bindColumn(MS::columnName(MS::FLAG),aipsStMan);
-    newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM),aipsStMan);
-    newtab.bindColumn(MS::columnName(MS::UVW),aipsStMan);
-  }
+    newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
+    newtab.bindColumn(MS::columnName(MS::SIGMA),tiledStMan5);
+    
   }
   // avoid lock overheads by locking the table permanently
-  TableLock lock(TableLock::PermanentLocking);
+  TableLock lock(TableLock::AutoLocking);
   MeasurementSet ms(newtab,lock);
   //MeasurementSet ms(newtab);
 
@@ -2113,6 +2048,13 @@ Bool mainTbl) {
   // Set up the subtables for the UVFITS MS
   ms.createDefaultSubtables(option);
  
+  // add the optional Source sub table to allow for 
+  // specification of the rest frequency
+  TableDesc sourceTD=MSSource::requiredTableDesc();
+  SetupNewTable sourceSetup(ms.sourceTableName(),sourceTD,option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
+ 				 Table(sourceSetup,0));
+
   // update the references to the subtable keywords
   ms.initRefs();
  
