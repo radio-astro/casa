@@ -296,20 +296,32 @@ def simdata2(
                 else:
                     discard = util.statim(modelflat,plot=True,incell=model_cell)
                 lims=pl.xlim(),pl.ylim()
-                tt=pl.array(range(25))*pl.pi/12            
+#                tt=pl.array(range(25))*pl.pi/12            
                 pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
                 # if we don't know the ant size, plot small circles
-                if pb<0:
-                    if verbose:
-                        msg("unknown primary beam size for plot",priority="warn")
-                    pb=3.*(qa.convert(model_cell[0],'arcsec')['value']) # 3 pixels diam
-                if max(max(lims)) > pb/2:
-                    plotcolor='w'
+                pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,'w+',markeredgewidth=1)
+#                 if pb<0:
+#                     if verbose:
+#                         msg("unknown primary beam size for plot",priority="warn")
+#                     pb=3.*(qa.convert(model_cell[0],'arcsec')['value']) # 3 pixels diam
+#                 if max(max(lims)) > pb/2:
+#                     plotcolor='w'
+#                 else:
+#                     plotcolor='k'
+#                 for i in range(offsets.shape[1]):
+#                     pl.plot(pl.cos(tt)*pb/2+(offsets[0,i]+shift[0])*3600,
+#                             pl.sin(tt)*pb/2+(offsets[1,i]+shift[1])*3600,plotcol
+#                             or)
+                if offsets.shape[1] > 18: #max(max(lims)) > pb/2:
+                    plotpb(pb,pl.gca(),lims=lims)
                 else:
-                    plotcolor='k'
-                for i in range(offsets.shape[1]):
-                    pl.plot(pl.cos(tt)*pb/2+(offsets[0,i]+shift[0])*3600,
-                            pl.sin(tt)*pb/2+(offsets[1,i]+shift[1])*3600,plotcolor)
+                    from matplotlib.patches import Circle
+                    for i in range(offsets.shape[1]):
+                        pl.gca().add_artist(Circle(
+                            ((offsets[0,i]+shift[0])*3600,
+                             (offsets[1,i]+shift[1])*3600),
+                            radius=pb/2.,edgecolor='k',fill=False,
+                            label='beam',transform=pl.gca().transData))
                 xlim=max(abs(pl.array(lims[0])))
                 ylim=max(abs(pl.array(lims[1])))
                 # show entire pb: (statim doesn't by default)
@@ -632,6 +644,19 @@ def simdata2(
         # todo suggest a cell size from psf?
 
         if image:
+            tpms=None
+            tpset=False
+            if predict_sd:
+                tpms=project+'.sd.ms'
+                tpset=True
+
+            # temporary set topmodelimage something which doesn't exist
+            tpmodelimage='non-existent-file-name'
+            if not tpset and os.path.exists(tpmodelimage):
+                # should be CASA image so far. 
+                tpimage=tpmodelimage
+                tpset=True
+
             # parse ms parameter and check for existance
             # TODO if noisy ms was created, switch automagically?  probably best do 
             # do that in the xml defaults instead so the user can change it if they want
@@ -645,15 +670,51 @@ def simdata2(
             for ms0 in mslist:
                 ms1=ms0.replace('$project',project)
                 if os.path.exists(ms1):
-                    mstoimage.append(ms1)
+                    # check if the ms is tp data or not.
+                    tb.open(ms1+'/ANTENNA')
+                    antname=tb.getcol('NAME')
+                    tb.close()
+                    if antname[0].find('-TP') > -1 and not tpset:
+                        tpms=ms1
+                        tpset=True
+                    else: mstoimage.append(ms1)
                 else:
                     if verbose:
                         msg("measurement set "+ms1+" not found -- removing from clean list",priority="warn")
                     else:
                         msg("measurement set "+ms1+" not found -- removing from clean list")
-            if len(mstoimage)<=0:
+            if len(mstoimage)<=0 and not tpms:
                 msg("no measurement sets found to image",priority="warn")
                 image=False
+
+            # Do single dish imaging first if tpms exists.
+            if tpms and os.path.exists(tpms):
+                msg('creating image from generated ms: '+tpms)
+                tpimage = tpfile.rstrip('.ms').rstrip('.MS')+'.image'
+                #im.open(msfile)
+                im.open(tpms)
+                im.selectvis(nchan=nchan,start=0,step=1,spw=0)
+                im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell,celly=cell,phasecenter=imcenter,nchan=nchan,start=0,step=1,spw=0)
+                #im.setoptions(ftmachine='sd',gridfunction='pb')
+                im.setoptions(ftmachine='sd',gridfunction='pb')
+                im.makeimage(type='singledish',image=tpimage)
+                im.close()
+
+                # For single dish: manually set the primary beam
+                ia.open(tpimage)
+                beam=ia.restoringbeam()
+                if len(beam) == 0:
+                    msg('setting primary beam information to image.')
+                    pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant[0]*3600.*180/pl.pi
+                    beam['major'] = beam['minor'] = qa.quantity(pb,'arcsec')
+                    beam['positionangle'] = qa.quantity(0.0,'deg')
+                    msg('Primary beam: '+str(beam['major']))
+                    ia.setrestoringbeam(beam=beam)
+                ia.done()
+                del beam
+
+                msg('generation of total power image ' + tpimage + ' complete.')
+                # End of single dish imaging part
 
             if not predict:
                 # get nfld, sourcefieldlist, from ms if it was not just created
@@ -1034,3 +1095,40 @@ def simdata2(
 #    except Exception, instance:
 #        print '***Error***',instance
 #        return
+
+
+##### Helper functions to plot primary beam
+def plotpb(pb,axes,lims=None):
+    # This beam is automatically scaled when you zoom in/out but
+    # not anchored in plot area. We'll wait for Matplotlib 0.99
+    # for that function. 
+    #major=major
+    #minor=minor
+    #rangle=rangle
+    #bwidth=max(major*pl.cos(rangle),minor*pl.sin(rangle))*1.1
+    #bheight=max(major*pl.sin(rangle),minor*pl.cos(rangle))*1.1
+    boxsize=pb*1.1
+    if not lims: lims=axes.get_xlim(),axes.get_ylim()
+    incx=1
+    incy=1
+    if axes.xaxis_inverted(): incx=-1
+    if axes.yaxis_inverted(): incy=-1
+    #ecx=lims[0][0]+bwidth/2.*incx
+    #ecy=lims[1][0]+bheight/2.*incy
+    ccx=lims[0][0]+boxsize/2.*incx
+    ccy=lims[1][0]+boxsize/2.*incy
+    from matplotlib.patches import Rectangle, Circle #,Ellipse
+    #box=Rectangle((lims[0][0],lims[1][0]),incx*bwidth,incy*bheight,
+    box=Rectangle((lims[0][0],lims[1][0]),incx*boxsize,incy*boxsize,
+                  alpha=0.7,facecolor='w',
+                  transform=axes.transData) #Axes
+    #beam=Ellipse((ecx,ecy),major,minor,angle=rangle,
+    beam=Circle((ccx,ccy), radius=pb/2.,
+                 edgecolor='k',fill=False,
+                 label='beam',transform=axes.transData)
+    #props={'pad': 3, 'edgecolor': 'k', 'linewidth':2, 'facecolor': 'w', 'alpha': 0.5}
+    #pl.matplotlib.patches.bbox_artist(beam,axes.figure.canvas.get_renderer(),props=props)
+    axes.add_artist(box)
+    axes.add_artist(beam)
+
+ 
