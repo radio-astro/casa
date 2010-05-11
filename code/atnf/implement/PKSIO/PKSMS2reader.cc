@@ -268,8 +268,14 @@ Int PKSMS2reader::open(
   // Number of IFs.
   //uInt nIF = dataDescCols.nrow();
   uInt nIF =spWinCols.nrow();
+  Vector<Int> spWinIds = cSpWinIdCol.getColumn() ;
   IFs.resize(nIF);
   IFs = True;
+  for ( Int ispw = 0 ; ispw < nIF ; ispw++ ) {
+    if ( allNE( ispw, spWinIds ) ) {
+      IFs(ispw) = False ;
+    }
+  }
 
   // Number of polarizations and channels in each IF.
   ROScalarColumn<Int> numChanCol(spWinCols.numChan());
@@ -280,8 +286,14 @@ Int PKSMS2reader::open(
   nChan.resize(nIF);
   nPol.resize(nIF);
   for (uInt iIF = 0; iIF < nIF; iIF++) {
-    nChan(iIF) = numChanCol(cSpWinIdCol(iIF));
-    nPol(iIF)  = numPolCol(polIdCol(iIF));
+    if ( IFs(iIF) ) {
+      nChan(iIF) = numChanCol(cSpWinIdCol(iIF)) ;
+      nPol(iIF) = numPolCol(polIdCol(iIF)) ;
+    }
+    else {
+      nChan(iIF) = 0 ;
+      nPol(iIF) = 0 ;
+    }
   }
 
   // Cross-polarization data present?
