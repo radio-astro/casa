@@ -7,7 +7,7 @@ import pdb
 def simdata2(
     project=None, 
     modifymodel=None,
-    modelimage=None, inbright=None, indirection=None, incell=None, 
+    skymodel=None, inbright=None, indirection=None, incell=None, 
     incenter=None, inwidth=None, # innchan=None,
     setpointings=None,
     ptgfile=None, integration=None, direction=None, mapsize=None, 
@@ -18,7 +18,7 @@ def simdata2(
     thermalnoise=None,
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
     image=None,
-    vis=None, cell=None, imsize=None, niter=None, threshold=None,
+    vis=None, modelimage=None, cell=None, imsize=None, niter=None, threshold=None,
     weighting=None, outertaper=None, stokes=None,     
     analyze=None, 
     showarray=None, showuv=None, showpsf=None, showmodel=None, 
@@ -46,12 +46,12 @@ def simdata2(
     if verbose: util.verbose=True
     msg=util.msg
     
-    if type(modelimage)==type([]):
-        modelimage=modelimage[0]
-    modelimage=modelimage.replace('$project',project)
+    if type(skymodel)==type([]):
+        skymodel=skymodel[0]
+    skymodel=skymodel.replace('$project',project)
             
-    if((not os.path.exists(modelimage)) and (not os.path.exists(complist))):
-        msg("No sky input found.  At least one of modelimage or complist must be set.",priority="error")
+    if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
+        msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
 
     currfignum=0
@@ -74,17 +74,17 @@ def simdata2(
             complist=complist[0]
 
         ##################################################################
-        # set up modelimage
-        if os.path.exists(modelimage):
+        # set up skymodelimage
+        if os.path.exists(skymodel):
             components_only=False
 
-            # if the modelimage is okay, work from it directly
-            if util.is4d(modelimage) and not modifymodel:
-                newmodel=modelimage
+            # if the skymodel is okay, work from it directly
+            if util.is4d(skymodel) and not modifymodel:
+                newmodel=skymodel
             else:
                 # otherwise create $newmodel
                 default_model=project+".skymodel"
-                if modelimage==default_model:
+                if skymodel==default_model:
                     newmodel=project+".newmodel"
                 else:
                     newmodel=default_model
@@ -92,14 +92,14 @@ def simdata2(
                     if overwrite:
                         shutil.rmtree(newmodel)
                     else:
-                        msg(newmodel+" exists -- please delete it, change modelimage, or set overwrite=T",priority="error")
+                        msg(newmodel+" exists -- please delete it, change skymodel, or set overwrite=T",priority="error")
                         return False
 
-            # modifymodel just collects info if modelimage==newmodel
+            # modifymodel just collects info if skymodel==newmodel
             innchan=-1
             (model_refdir,model_cell,model_size,
              model_nchan,model_center,model_width,
-             model_stokes) = util.modifymodel(modelimage,
+             model_stokes) = util.modifymodel(skymodel,
              newmodel,modifymodel,inbright,indirection,incell,
              incenter,inwidth,innchan,
              flatimage=False) 
@@ -133,7 +133,7 @@ def simdata2(
             # if there are only components, modifymodel=T doesn't 
             # make sense
             if modifymodel:
-                msg("can't find model image "+modelimage+" to modify",priority="error")
+                msg("can't find model image "+skymodel+" to modify",priority="error")
                 return False
             components_only=True
             # if only components, the pointings 
@@ -296,24 +296,19 @@ def simdata2(
                 else:
                     discard = util.statim(modelflat,plot=True,incell=model_cell)
                 lims=pl.xlim(),pl.ylim()
-#                tt=pl.array(range(25))*pl.pi/12            
-                pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
-                # if we don't know the ant size, plot small circles
-                pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,'w+',markeredgewidth=1)
-#                 if pb<0:
-#                     if verbose:
-#                         msg("unknown primary beam size for plot",priority="warn")
-#                     pb=3.*(qa.convert(model_cell[0],'arcsec')['value']) # 3 pixels diam
-#                 if max(max(lims)) > pb/2:
-#                     plotcolor='w'
-#                 else:
-#                     plotcolor='k'
-#                 for i in range(offsets.shape[1]):
-#                     pl.plot(pl.cos(tt)*pb/2+(offsets[0,i]+shift[0])*3600,
-#                             pl.sin(tt)*pb/2+(offsets[1,i]+shift[1])*3600,plotcol
-#                             or)
-                if offsets.shape[1] > 18: #max(max(lims)) > pb/2:
-                    plotpb(pb,pl.gca(),lims=lims)
+                pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi                
+                if pb<=0 and verbose:
+                    msg("unknown primary beam size for plot",priority="warn")
+                if max(max(lims)) > pb/2:
+                    plotcolor='w'
+                else:
+                    plotcolor='k'
+
+                if offsets.shape[1]>18 or pb<=0:
+                    pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
+                            plotcolor+'+',markeredgewidth=1)
+                    if pb>0:
+                        plotpb(pb,pl.gca(),lims=lims)
                 else:
                     from matplotlib.patches import Circle
                     for i in range(offsets.shape[1]):
@@ -322,6 +317,7 @@ def simdata2(
                              (offsets[1,i]+shift[1])*3600),
                             radius=pb/2.,edgecolor='k',fill=False,
                             label='beam',transform=pl.gca().transData))
+
                 xlim=max(abs(pl.array(lims[0])))
                 ylim=max(abs(pl.array(lims[1])))
                 # show entire pb: (statim doesn't by default)
@@ -563,19 +559,13 @@ def simdata2(
         # noisify
 
         noise_any=False
+        msroot=project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
             if not (telescopename == 'ALMA' or telescopename == 'ACA'):
                 msg("thermal noise only works properly for ALMA/ACA",origin="noise",priority="warn")
                 
             noise_any=True
-
-            # TODO change this to move noiseless to .noiseless.ms or something
-            # then always image from project.ms 
-
-            noisymsfile = project + ".noisy.ms"
-            noisymsroot = project + ".noisy"
-            msg('adding thermal noise to ' + noisymsfile,origin="noise",priority="warn")
 
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
 
@@ -589,51 +579,113 @@ def simdata2(
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
 
-            if os.path.exists(noisymsfile):
-                shutil.rmtree(noisymsfile)                
-            shutil.copytree(msfile,noisymsfile)
-            if sm.name()!='':
-                msg("table persistence error on %s" % sm.name(),priority="error")
-                return
+            noisymsroot = msroot+".noisy"
 
-            sm.openfromms(noisymsfile)    # an existing MS
-            #sm.setdata()                # currently defaults to fld=0,spw=0
-            sm.setdata(fieldid=[]) # force to get all fields
-# use ANoise version - deprecated but required for AC / SD
-#            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
-#                        antefficiency=eta_a,trx=t_rx,
-#                        tau=tau0,tatmos=t_sky,tcmb=t_cmb,
-#                        mode="calculate")
-            if thermalnoise=="tsys-manual":
-                if verbose:
-                    msg("sm.setnoise(spillefficiency="+str(eta_s)+
-                        ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
-                        ",trx="+str(t_rx)+",tau="+str(tau0)+
-                        ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
-                        ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-                    msg("** this may take a few minutes, but will be faster in future releases",priority="warn")
-                sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
-                            antefficiency=eta_a,trx=t_rx,
-                            tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
-                            mode="tsys-manual")
-            else:
-                if verbose:
-                    msg("sm.setnoise(spillefficiency="+str(eta_s)+
-                        ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
-                        ",trx="+str(t_rx)+",tground="+str(t_ground)+
-                        ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
-                        ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
-                    msg("** this may take a few minutes, but will be faster in the future",priority="warn")
-                sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
-                            antefficiency=eta_a,trx=t_rx,
-                            tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
-                            mode="tsys-atm")
-            # don't set table, that way it won't save to disk
-#                        mode="calculate",table=noisymsroot)
-            sm.corrupt();
-            sm.done();
+            # check for interferometric ms:
+            if os.path.exists(msroot+".ms"):
+                msg('copying '+msroot+'.ms to ' + 
+                    noisymsroot+'.ms and adding thermal noise',
+                    origin="noise",priority="warn")
+                
+                if os.path.exists(noisymsroot+".ms"):
+                    shutil.rmtree(noisymsroot+".ms")                
+                shutil.copytree(msfile,noisymsroot+".ms")
+                if sm.name()!='':
+                    msg("table persistence error on %s" % sm.name(),priority="error")
+                    return
 
+                sm.openfromms(noisymsroot+".ms")    # an existing MS
+                sm.setdata(fieldid=[]) # force to get all fields
+                if thermalnoise=="tsys-manual":
+                    if verbose:
+                        msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                            ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                            ",trx="+str(t_rx)+",tau="+str(tau0)+
+                            ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
+                            ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
+                        msg("** this may take a few minutes, but will be faster in future releases",priority="warn")
+                    sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                                antefficiency=eta_a,trx=t_rx,
+                                tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
+                                mode="tsys-manual")
+                else:
+                    if verbose:
+                        msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                            ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                            ",trx="+str(t_rx)+",tground="+str(t_ground)+
+                            ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
+                            ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
+                        msg("** this may take a few minutes, but will be faster in the future",priority="warn")
+                    sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                                antefficiency=eta_a,trx=t_rx,
+                                tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
+                                mode="tsys-atm")
+                    # don't set table, that way it won't save to disk
+                    #                        mode="calculate",table=noisymsroot)
+                sm.corrupt();
+                sm.done();
+
+            # now TP ms:
+            if os.path.exists(msroot+".sd.ms"):
+                msg('copying '+msroot+'.sd.ms to ' + 
+                    noisymsroot+'.sd.ms and adding thermal noise',
+                    origin="noise",priority="warn")
+                
+                if os.path.exists(noisymsroot+".sd.ms"):
+                    shutil.rmtree(noisymsroot+".sd.ms")                
+                shutil.copytree(msfile,noisymsroot+".sd.ms")
+                if sm.name()!='':
+                    msg("table persistence error on %s" % sm.name(),priority="error")
+                    return
+
+                sm.openfromms(noisymsroot+".sd.ms")    # an existing MS
+                sm.setdata(fieldid=[]) # force to get all fields
+                if thermalnoise=="tsys-manual":
+                    if verbose:
+                        msg("sm.[old]setnoise(spillefficiency="+str(eta_s)+
+                            ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                            ",trx="+str(t_rx)+",tau="+str(tau0)+
+                            ",tatmos="+str(t_sky)+
+                            ",tcmb="+str(t_cmb));
+                    sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                                   antefficiency=eta_a,trx=t_rx,
+                                   tau=tau0,tatmos=t_sky,tcmb=t_cmb,
+                                   mode="calculate")
+                else:
+                    msg("Can't corrupt SD data using ATM library - please use tsys-manual",priority="error")
+                sm.corrupt();
+                sm.done();
+
+            msroot=noisymsroot
             if verbose: msg("done corrupting with thermal noise",origin="noise")
+
+
+        if leakage>0:
+            noise_any=True
+            if msroot==project:
+                noisymsroot = project+".noisy"
+            else:
+                noisymsroot = project+".noisier"
+            if os.path.exists(msroot+".sd.ms"):
+                msg("Can't corrupt SD data with polarization leakage",priority="warn")
+            if os.path.exists(msroot+".ms"):
+                msg('copying '+project+'.ms to ' + 
+                    noisymsroot+'.ms and adding polarization leakage',
+                    origin="noise",priority="warn")
+                if os.path.exists(noisymsroot+".ms"):
+                    shutil.rmtree(noisymsroot+".ms")                
+                shutil.copytree(msfile,noisymsroot+".ms")
+                if sm.name()!='':
+                    msg("table persistence error on %s" % sm.name(),priority="error")
+                    return
+
+                sm.openfromms(noisymsroot+".ms")    # an existing MS
+                sm.setdata(fieldid=[]) # force to get all fields
+                sm.setleakage(amplitude=leakage,table=noisymsroot+".cal")
+                sm.corrupt();
+                sm.done();
+
+                
 
             
 
@@ -643,6 +695,38 @@ def simdata2(
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
 
+        # make sure cell is defined
+        if type(cell)==type([]):
+            if len(cell)>0:
+                cell0=cell[0]
+            else:
+                cell0=""
+        else:
+            cell0=cell
+        if len(cell0)<=0:
+            cell=model_cell
+        if type(cell)==type([]):
+            if len(cell)==1:
+                cell=[cell[0],cell[0]]
+        else:
+            cell=[cell,cell]
+
+
+        # and imsize
+        if type(imsize)==type([]):
+            if len(imsize)>0:
+                imsize0=imsize[0]
+            else:
+                imsize0=-1
+        else:
+            imsize0=imsize
+        if imsize0<=0:
+            imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
+                      int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+
+
+
+        #####################################################################
         if image:
             tpms=None
             tpset=False
@@ -650,11 +734,9 @@ def simdata2(
                 tpms=project+'.sd.ms'
                 tpset=True
 
-            # temporary set topmodelimage something which doesn't exist
-            tpmodelimage='non-existent-file-name'
-            if not tpset and os.path.exists(tpmodelimage):
+            if not tpset and os.path.exists(modelimage):
                 # should be CASA image so far. 
-                tpimage=tpmodelimage
+                tpimage=modelimage
                 tpset=True
 
             # parse ms parameter and check for existance
@@ -690,11 +772,11 @@ def simdata2(
             # Do single dish imaging first if tpms exists.
             if tpms and os.path.exists(tpms):
                 msg('creating image from generated ms: '+tpms)
-                tpimage = tpfile.rstrip('.ms').rstrip('.MS')+'.image'
+                tpimage = tpms.rstrip('.ms').rstrip('.MS')+'.image'
                 #im.open(msfile)
                 im.open(tpms)
                 im.selectvis(nchan=nchan,start=0,step=1,spw=0)
-                im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell,celly=cell,phasecenter=imcenter,nchan=nchan,start=0,step=1,spw=0)
+                im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell,celly=cell,phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.makeimage(type='singledish',image=tpimage)
@@ -705,7 +787,14 @@ def simdata2(
                 beam=ia.restoringbeam()
                 if len(beam) == 0:
                     msg('setting primary beam information to image.')
-                    pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant[0]*3600.*180/pl.pi
+                    # !! aveant will only be set if modifymodel or setpointingsm and in 
+                    # any case it will the the aveant of the INTERFM array - we want the SD
+                    tb.open(tpms+"/ANTENNA")
+                    diams=tb.getcol("DISH_DIAMETER")
+                    tb.done()
+                    aveant=pl.mean(diams)
+                    # model_center should be set even if we didn't predict this execution
+                    pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
                     beam['major'] = beam['minor'] = qa.quantity(pb,'arcsec')
                     beam['positionangle'] = qa.quantity(0.0,'deg')
                     msg('Primary beam: '+str(beam['major']))
@@ -717,7 +806,7 @@ def simdata2(
                 # End of single dish imaging part
 
             if not predict:
-                # get nfld, sourcefieldlist, from ms if it was not just created
+                # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
                 tb.open(mstoimage[0]+"/SOURCE")
                 code=tb.getcol("CODE")
                 sourcefieldlist=pl.where(code=='OBJ')[0]
@@ -725,44 +814,11 @@ def simdata2(
                 tb.done()
                 msfile=mstoimage[0]
 
-            # set cleanmode automatically
+            # set cleanmode automatically (for interfm)
             if nfld==1:
-                #if cleanmode=="mosaic":
-                #    msg("cleanmode=mosaic but your simulation has one pointing -- changing to csclean",priority="warn")
                 cleanmode="csclean"
             else:
-                #if cleanmode!="mosaic":
-                #    msg("your simulation has more than one pointing -- changing cleanmode to mosaic",priority="warn")
                 cleanmode="mosaic"
-
-        # make sure cell is defined
-        if type(cell)==type([]):
-            if len(cell)>0:
-                cell0=cell[0]
-            else:
-                cell0=""
-        else:
-            cell0=cell
-        if len(cell0)<=0:
-            cell=model_cell
-        if type(cell)==type([]):
-            if len(cell)==1:
-                cell=[cell[0],cell[0]]
-        else:
-            cell=[cell,cell]
-
-
-        # and imsize
-        if type(imsize)==type([]):
-            if len(imsize)>0:
-                imsize0=imsize[0]
-            else:
-                imsize0=-1
-        else:
-            imsize0=imsize
-        if imsize0<=0:
-            imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
-                      int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
 
         outflat_current=False
         convsky_current=False
@@ -777,11 +833,12 @@ def simdata2(
             if os.path.exists(imagename+".image"): shutil.rmtree(imagename+".image")
             if os.path.exists(imagename+".model"): shutil.rmtree(imagename+".model")
 
-            # todo add imcenter param instead of just using the model_center?
+            # todo add imcenter param instead of just using the model_refdir?
             util.image(mstoimage,imagename,
                        cleanmode,cell,imsize,model_refdir,
                        niter,threshold,weighting,
-                       outertaper,stokes,sourcefieldlist=sourcefieldlist)
+                       outertaper,stokes,sourcefieldlist=sourcefieldlist,
+                       modelimage=modelimage)
 
             # create imagename.flat and imagename.residual.flat:
             util.flatimage(imagename+".image",verbose=verbose)
@@ -856,11 +913,11 @@ def simdata2(
         # analysis
 
         if analyze:
-            # will need skymodel, so modelimage has to be set:
-            if not os.path.exists(modelimage):
-                msg("modelimage "+str(modelimage)+" not found",priority="warn")
-                msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the modelimage parameter",priority="error")
-            tmpname=modelimage.replace(project,'$project')
+            # will need skymodel, so skymodel has to be set:
+            if not os.path.exists(skymodel):
+                msg("skymodel "+str(skymodel)+" not found",priority="warn")
+                msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the skymodel parameter",priority="error")
+            tmpname=skymodel.replace(project,'$project')
 
             #if tmpname=="$project.skymodel":
                 # TODO clarify the logic for newmodel vs skymodel

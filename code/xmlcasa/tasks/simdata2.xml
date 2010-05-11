@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <!-- all parms default to keep what's in the image, if the param=="" -->
 
-    <param type="string" name="modelimage" subparam='true'>
+    <param type="string" name="skymodel" subparam='true'>
       <!-- modifying the description in constraints doesn't work yet -->
       <description>model image to observe or modify</description>
       <value type="string">$project.skymodel</value>
@@ -166,7 +166,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
     <param type="string" name="complist" subparam="true">
-      <description>optional componentlist to observe with modelimage</description>
+      <description>optional componentlist to observe with skymodel</description>
       <value></value>
     </param>
 
@@ -249,18 +249,11 @@ it'll do them for the same amount of time -->
       <value>$project.ms,$project.sd.ms</value>
     </param>
 
-<!--    
-    <param type="string" name="cleanmode" subparam="true">
-      <description>clark, csclean, mosaic</description>
-      <value>clark</value>
-      <allowed kind="enum">
-	<value>clark</value>
-	<value>csclean</value>
-	<value>mosaic</value>
-      </allowed>
+    <param type="string" name="modelimage" subparam='true'>
+      <description>prior image to use in clean e.g. existing single dish image</description>
+      <value type="string"></value>
     </param>
--->
-
+    
     <param type="string" name="cell" subparam='true'>
       <description>cell size with units or "" to equal model</description>
       <value type="string"></value>
@@ -421,19 +414,19 @@ it'll do them for the same amount of time -->
     <constraints>
       <when param="modifymodel">
 	<equals type="bool" value="False">
-	  <default param="modelimage">
+	  <default param="skymodel">
 <!--  
 modifying the description doesn't work yet but its an improvement ticket.
 note for help: a symlink will be created from this to $project.model.image
 if that's not the file the user is using.   
 -->
-	    <description>model image</description>
+	    <description>model sky image</description>
 	    <value type="string">$project.skymodel</value>
 	  </default>
 	</equals>
 	<!-- ******************** -->
 	<equals type="bool" value="True">
-	  <default param="modelimage">
+	  <default param="skymodel">
 <!--  
 modifying the description doesn't work yet but its an improvement ticket.
 -->
@@ -442,7 +435,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  </default>
 	  <default param="inbright"><value type="string"></value></default>
 	  <default param="indirection">
-	    <description>center of model image</description>
+	    <description>center of model sky image</description>
 	    <value type="string"></value>
 	  </default>
 	  <default param="incell"><value type="string"></value></default>
@@ -522,9 +515,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
 	  <default param="vis"><value type="string">$project.ms</value></default>
-<!--
-	  <default param="cleanmode"><value type="string">mosaic</value></default>
--->
+	  <default param="modelimage"><value type="string"></value></default>
 	  <default param="imsize">
 	    <value>0</value>
 	  </default>
@@ -572,7 +563,7 @@ mosaic simulation task (prototype):
     -------------------------------
     modifymodel -- change the coordinate system of the model sky image?
        * if graphics selected, display the rescaled model image
-    modelimage -- if modifymodel=False, use this as the sky model. 
+    skymodel -- if modifymodel=False, use this as the sky model. 
        * if modifyimage=True, use this as the starting point, modify it 
          write the output to a different image (default $project.skymodel)
          and use that new image as the sky model
@@ -615,7 +606,7 @@ mosaic simulation task (prototype):
     maptype -- hexagonal or linear 
     pointingspacing -- spacing in between beams e.g '1arcsec'    
     -------------------------------
-    predict -- calculate visibilities from modelimage (which may have been 
+    predict -- calculate visibilities from skymodel (which may have been 
          modified above, (optionally) complist, and $ptgfile (which 
          may have been generated above)
        * if graphics selected, display the array (like plotants), the uv 
@@ -677,8 +668,9 @@ mosaic simulation task (prototype):
        * if graphics selected, display the clean image and residual image
        * uses Cotton-Schwab clean for single fields and Mosaic gridding
          for multiple fields (with Clark PSF calculation in minor cycles).
-    ms -- the simulated interferometric MS, or total-power one, or both   
-    cell -- cell size e.g '10arcsec'.  "" defaults to the modelimage cell
+    ms -- the simulated interferometric MS, or total-power one, or both
+    modelimage -- prior (e.g. SD) image to be used in clean
+    cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
     imsize -- image size in spatial pixels (x,y)
        0 or -1 will use the model image size; example: imsize=[500,500]
     niter -- mumber of clean/deconvolution iterations, 0 for no cleaning

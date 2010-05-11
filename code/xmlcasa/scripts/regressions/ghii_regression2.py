@@ -31,7 +31,7 @@ cl.rename(project+".cl")
 cl.done()
 
 modifymodel=True # but only brightness
-modelimage="30dor.image"
+skymodel="30dor.image"
 inbright=".1"
 incell=""
 incenter="652GHz"   

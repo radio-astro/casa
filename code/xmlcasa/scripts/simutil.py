@@ -1656,6 +1656,7 @@ class simutil:
                 for i in range(n):
                     pl.text(lat[i],lon[i],name[i],horizontalalignment='center',fontsize=8)
 
+        pl.axis('equal')
         #if dolam:
         #    pl.xlabel("kilolamda")
         #    pl.ylabel("kilolamda")
@@ -2458,7 +2459,7 @@ class simutil:
 
     def image(self,mstoimage,image,
               cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
-              outertaper,stokes,sourcefieldlist=""):
+              outertaper,stokes,sourcefieldlist="",modelimage=""):
         from clean import clean
 
         # determine channelization from (first) ms:
@@ -2574,7 +2575,11 @@ class simutil:
             cleanlast.write('outertaper              = []\n');
             cleanstr=cleanstr+",uvtaper=False"
         cleanlast.write('innertaper              = []\n');
-        cleanlast.write('modelimage              = ""\n');
+        if os.path.exists(modelimage):
+            cleanstr=cleanstr+",modelimage="+str(modelimage)
+            cleanlast.write('modelimage              = "'+str(modelimage)+'"\n');
+        else:
+            cleanlast.write('modelimage              = ""\n');
         cleanlast.write("restoringbeam           = ['']\n");
         cleanlast.write("pbcor                   = False\n");
         cleanlast.write("minpb                   = 0.1\n");
