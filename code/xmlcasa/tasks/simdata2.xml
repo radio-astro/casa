@@ -625,6 +625,9 @@ mosaic simulation task (prototype):
        * standard arrays are found in your CASA data repository, 
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
        * if "", will not not produce an interferometric MS
+       * NEW: a string of the form "alma;0.5arcsec" will be parsed into a full 12m ALMA
+         configuration.  This only works for full ALMA and may fail to find the 
+         standard configuration files on some systems - see casaguides.nrao.edu
     caldirection -- *NEW* an unresolved calibrator can be observed 
          interleaved with the science pointings.  This feature is 
          experimental, so please contact us with any questions.

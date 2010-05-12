@@ -1083,14 +1083,16 @@ void FTMachine::gridOk(Int convSupport){
 
   if (nx <= 2*convSupport) {
     logIO_p 
-      << "number of pixels on x axis is smaller that the gridding support "
+      << "number of pixels "
+      << nx << " on x axis is smaller that the gridding support "
       << 2*convSupport   << " Please use a larger value " 
       << LogIO::EXCEPTION;
   }
   
   if (ny <= 2*convSupport) {
     logIO_p 
-      << "number of pixels on y axis is smaller that the gridding support "
+      << "number of pixels "
+      << ny << " on y axis is smaller that the gridding support "
       << 2*convSupport   << " Please use a larger value " 
       << LogIO::EXCEPTION;
   }

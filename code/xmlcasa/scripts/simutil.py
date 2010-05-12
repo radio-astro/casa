@@ -55,26 +55,14 @@ class simutil:
         self.startfreq=startfreq
         self.bandwidth=bandwidth
         self.totaltime=totaltime
-        self.currfignum=0
-        self.pmulti=0  # for current figure, rows, cols, currsubplot
-        self.fignames=[]
+        self.pmulti=0  # rows, cols, currsubplot
 
 
-    def newfig(self,multi=0,filename="",show=True):  # new graphics window/file
-        # self.currfignum += 1   # matlab fignum counts from 1
-        # overwrite old fig's window 20100507
-        self.currfignum = 1   # matlab fignum counts from 1
-
-        if len(self.fignames) < self.currfignum:
-            self.fignames.append(filename)
-        else:
-            self.fignames[self.currfignum-1]=filename
+    def newfig(self,multi=0,show=True):  # new graphics window/file
         if show:
-            pl.ion()
-        else:
-            pl.ioff()
-        pl.figure(self.currfignum) # creates or accesses if already exists
-        pl.clf()
+            pl.ion() # creates a fig if ness
+        pl.clf() 
+        pl.ioff() # just in case
 
         if multi!=0:
             if type(multi)!=type([]):
@@ -99,26 +87,20 @@ class simutil:
             multi=self.pmulti
             if multi[2] <= multi[0]*multi[1]:
                 pl.subplot(multi[0],multi[1],multi[2])
-
+        # consider pl.draw() here - may be slow
 
     ###########################################################
 
-    def endfig(self,remove=False): # set margins to smaller, save to file if required        
+    def endfig(self,show=True,filename=""): # set margins to smaller, save to file if required        
         ax=pl.gca()
         l=ax.get_xticklabels()
         pl.setp(l,fontsize="x-small")
         l=ax.get_yticklabels()
         pl.setp(l,fontsize="x-small")
-        #pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
-        name=self.fignames[self.currfignum-1]
-        if len(name)>0:
-            pl.savefig(name)
-        if remove:
-            pl.close(self.currfignum)
-            self.fignames[self.currfignum-1]=""
-            self.currfignum -= 1  # think about this
-            self.pmulti=0
-        # otherwise just leave it open
+        if show:
+            pl.draw()
+        if len(filename)>0:
+            pl.savefig(filename)
         
 
         

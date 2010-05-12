@@ -54,9 +54,6 @@ def simdata2(
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
 
-    currfignum=0
-    util.currfignum=0
-
     grscreen=False
     grfile=False
     if graphics=="both":
@@ -250,6 +247,20 @@ def simdata2(
         aveant=-1
         stnx=[]  # for later, to know if we read an array in or not
 
+        # experimental: alma;0.4arcsec  allowed string
+        if str.upper(antennalist[0:4])=="ALMA":
+            tail=antennalist[5:]
+            if util.isquantity(tail,halt=False):
+                resl=qa.convert(tail,"arcsec")['value']
+                repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
+                if os.path.exists(repodir):
+                    confnum=(2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
+                    confnum=max(1,min(28,confnum))
+                    conf=str(int(round(confnum)))
+                    if len(conf)<2: conf='0'+conf
+                    antennalist=repodir+"alma.out"+conf+".cfg"
+                    msg("converted resolution to antennalist "+antennalist)
+
         if os.path.exists(antennalist):
             stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
             antnames=[]
@@ -285,7 +296,6 @@ def simdata2(
 
 
 
-
         ##################################################################
         # create one figure for model and pointings - need antenna diam 
         # to determine primary beam
@@ -293,14 +303,11 @@ def simdata2(
             if grfile:
                 file=project+".skymodel.png"
             else:
-                file=""
-            if grscreen:
-                util.newfig(filename=file)
-            else:
-                if grfile:
-                    util.newfig(filename=file,show=False)
+                file=""                            
     
             if grscreen or grfile:
+                util.newfig(show=grscreen)
+
                 if components_only:
                     pl.plot()
                     # TODO add symbols at locations of components
@@ -326,7 +333,7 @@ def simdata2(
                         pl.gca().add_artist(Circle(
                             ((offsets[0,i]+shift[0])*3600,
                              (offsets[1,i]+shift[1])*3600),
-                            radius=pb/2.,edgecolor='k',fill=False,
+                            radius=pb/2.,edgecolor=plotcolor,fill=False,
                             label='beam',transform=pl.gca().transData))
 
                 xlim=max(abs(pl.array(lims[0])))
@@ -335,7 +342,7 @@ def simdata2(
                 pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
                 pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])            
                 pl.xlabel("resized model sky",fontsize="x-small")
-                util.endfig()
+                util.endfig(show=grscreen,filename=file)
     
 
 
@@ -355,22 +362,6 @@ def simdata2(
                 util.msg("must specify at least one of antennalist, sdantlist",priority="error")
             # TODO check for frequency overlap here - if zero stop
             # position overlap already checked above in pointing section
-
-            # create figure here to give user something to look at
-            if grfile:            
-                file=project+".predict.png"
-            else:
-                file=""
-            if grscreen:
-                util.newfig(multi=[2,2,1],filename=file)
-            else:
-                if grfile:
-                    util.newfig(multi=[2,2,1],filename=file,show=False)
-#            if grscreen or grfile:
-            if predict_uv and (grscreen or grfile):
-                util.ephemeris(refdate,direction=util.direction,telescope=telescopename)  
-                util.nextfig()
-                util.plotants(stnx, stny, stnz, stnd, padnames)                
 
             if verbose:
                 msg("preparing empty measurement set",origin="simdata",priority="warn")
@@ -490,9 +481,40 @@ def simdata2(
                 if verbose:
                     sm.summary()
 
+                # do actual calculation of visibilities:
 
-                # we can show uv coverage now
-                if grscreen or grfile:
+                if not components_only:                
+                    if len(complist)>1:
+                        msg("predicting from "+newmodel+" and "+complist,priority="warn")
+                    else:
+                        msg("predicting from "+newmodel,priority="warn")
+                    sm.predict(imagename=newmodel,complist=complist)
+                else:   # if we're doing only components
+                    msg("predicting from "+complist,priority="warn")
+                    sm.predict(complist=complist)
+            
+                sm.done()        
+                msg('generation of measurement set ' + msfile + ' complete')
+
+            ############################################
+            # create figure 
+            if grfile:            
+                file=project+".predict.png"
+            else:
+                file=""
+            if predict_uv:
+                multi=[2,2,1]
+            else:
+                multi=0
+
+            if (grscreen or grfile):
+                util.newfig(multi=multi)
+                util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
+                if predict_uv:
+                    util.nextfig()
+                    util.plotants(stnx, stny, stnz, stnd, padnames)                
+                    
+                    # uv coverage
                     util.nextfig()
                     tb.open(msfile)  
                     rawdata=tb.getcol("UVW")
@@ -508,8 +530,7 @@ def simdata2(
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
 
-                # show dirty beam from observed uv coverage
-                if grscreen or grfile:
+                    # show dirty beam from observed uv coverage
                     util.nextfig()
                     im.open(msfile)  
                     # TODO spectral parms
@@ -540,27 +561,11 @@ def simdata2(
                     ax=pl.gca()
                     pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                     ia.done()
-                    util.endfig()
+                util.endfig()
 
 
 
             ##################################################################
-                # do actual calculation of visibilities:
-
-                if not components_only:                
-                    if len(complist)>1:
-                        msg("predicting from "+newmodel+" and "+complist,priority="warn")
-                    else:
-                        msg("predicting from "+newmodel,priority="warn")
-                    sm.predict(imagename=newmodel,complist=complist)
-                else:   # if we're doing only components
-                    msg("predicting from "+complist,priority="warn")
-                    sm.predict(complist=complist)
-            
-                sm.done()        
-                msg('generation of measurement set ' + msfile + ' complete')
-
-            ############################################
             # predict single dish observation
             if predict_sd:
                 if os.path.exists(sdmsfile):
@@ -576,14 +581,6 @@ def simdata2(
                              dishdiameter=diam.tolist(),
                              mount=['alt-az'], antname=tp_antnames, padname=tp_padnames, 
                              coordsystem='global', referencelocation=posobs)
-                #if str.upper(telescopename).find('VLA')>0:
-                #    sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
-                #                   deltafreq=qa.tos(model_width), 
-                #                   freqresolution=qa.tos(model_width), 
-                #                   nchannels=model_nchan, 
-                #                   stokes='RR LL')
-                #    sm.setfeed(mode='perfect R L',pol=[''])
-                #else:            
                 sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
                                deltafreq=qa.tos(model_width), 
                                freqresolution=qa.tos(model_width), 
@@ -673,7 +670,7 @@ def simdata2(
                 if verbose:
                     sm.summary()
 
-            ##################################################################
+                #######################################################
                 # do actual calculation of visibilities:
 
                 sm.setoptions(gridfunction='pb', ftmachine="sd", location=posobs, cache=100000)
@@ -708,7 +705,6 @@ def simdata2(
                 tb.flush()
                 tb.close()
                 
-
                 msg('generation of measurement set ' + sdmsfile + ' complete')
 
         else:
@@ -1046,13 +1042,10 @@ def simdata2(
                 file=project+".image.png"
             else:
                 file=""
-            if grscreen:
-                util.newfig(multi=[2,2,1],filename=file)
-            else:
-                if grfile:
-                    util.newfig(multi=[2,2,1],filename=file,show=False)
-                    
+
             if grscreen or grfile:
+                util.newfig(multi=[2,2,1],show=grscreen)
+
                 # create regridded and convolved sky model image
                 util.convimage(modelflat,imagename+".image.flat")
                 convsky_current=True # don't remake this for analysis in this run
@@ -1079,7 +1072,7 @@ def simdata2(
 
                 # clean residual image - Jy/bm
                 discard = util.statim(imagename+".residual.flat",disprange=disprange)
-                util.endfig()
+                util.endfig(show=grscreen,filename=file)
         
 
 
@@ -1200,13 +1193,10 @@ def simdata2(
                 file=project+".analysis.png"
             else:
                 file=""
-            if grscreen:
-                util.newfig(multi=multi,filename=file)
-            else:
-                if grfile:
-                    util.newfig(multi=multi,filename=file,show=False)
 
             if grscreen or grfile:
+                util.newfig(multi=multi,show=grscreen)
+
                 # if order in task parameters changes, change here too
                 if showarray:
                     util.plotants(stnx, stny, stnz, stnd, padnames)
@@ -1249,9 +1239,10 @@ def simdata2(
                     beamcs=ia.coordsys()
                     beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
                     pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                    xextent=128*pixsize*0.5
+                    nn=beam_array.shape
+                    xextent=nn[0]*pixsize*0.5
                     xextent=[xextent,-xextent]
-                    yextent=128*pixsize*0.5
+                    yextent=nn[1]*pixsize*0.5
                     yextent=[-yextent,yextent]
                     flipped_array=beam_array.transpose()
                     ttrans_array=flipped_array.tolist()
@@ -1272,7 +1263,7 @@ def simdata2(
                     util.nextfig()
 
                 if showconvolved:
-                    discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
+                    discard = util.statim(modelflat+".regrid.conv")
                     # if disprange gets set here, it'll be Jy/bm
                     util.nextfig()
                 
@@ -1296,7 +1287,7 @@ def simdata2(
                     discard = util.statim(imagename+".fidelity")
                     util.nextfig()
 
-                util.endfig()
+                util.endfig(show=grscreen,filename=file)
             else:
                 sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
                 # if not displaying still print stats:
