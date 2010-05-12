@@ -166,7 +166,7 @@ def simdata2(
         if setpointings:
             if verbose:
                 util.msg("calculating map pointings centered at "+str(dir0))
-            pointings = util.calc_pointings2(pointingspacing,mapsize,direction=dir)
+            pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
             nfld=len(pointings)
             etime = qa.convert(qa.quantity(integration),"s")['value']
             ptgfile = project+".ptg.txt"
@@ -263,7 +263,18 @@ def simdata2(
         if os.path.exists(sdantlist):
             tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
             tp_antnames=[]
-            for k in range(0,tp_nant): tp_antnames.append('B%02d'%k)
+            #for k in range(0,tp_nant): tp_antnames.append('TP%02d'%k)
+            #select an antenna from thelist
+            if sdant > tp_nant-1:
+                msg("antenna index %d is out of range. setting sdant=0"%sdant,priority="warn")
+                sdant=0
+            tp_antnames.append('TP%02d'%sdant)
+            tpx=[tpx[sdant]]
+            tpy=[tpy[sdant]]
+            tpz=[tpz[sdant]]
+            tpd=pl.array(tpd[sdant])
+            tp_padnames=[tp_padnames[sdant]]
+            tp_nant=1
             tp_aveant=tpd.mean()
             casalog.origin('simdata')
             predict_sd=True
@@ -338,6 +349,7 @@ def simdata2(
         quickpsf_current=False
 
         msfile=project+'.ms'
+        sdmsfile=project+'.sd.ms'
         if predict:
             if not(predict_uv or predict_sd):
                 util.msg("must specify at least one of antennalist, sdantlist",priority="error")
@@ -354,7 +366,8 @@ def simdata2(
             else:
                 if grfile:
                     util.newfig(multi=[2,2,1],filename=file,show=False)
-            if grscreen or grfile:
+#            if grscreen or grfile:
+            if predict_uv and (grscreen or grfile):
                 util.ephemeris(refdate,direction=util.direction,telescope=telescopename)  
                 util.nextfig()
                 util.plotants(stnx, stny, stnz, stnd, padnames)                
@@ -367,27 +380,210 @@ def simdata2(
             nbands = 1;    
             fband  = 'band'+qa.tos(model_center,prec=1)
 
-            if os.path.exists(msfile):
-                if not overwrite:
-                    util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
-            sm.open(msfile)
-            posobs=me.observatory(telescopename)
-            diam=stnd;
-            # WARNING: sm.setspwindow is not consistent with clean::center
-            model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+            ############################################
+            # predict interferometry observation
+            if predict_uv: 
+                if os.path.exists(msfile):
+                    if not overwrite:
+                        util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
+                sm.open(msfile)
+                posobs=me.observatory(telescopename)
+                diam=stnd;
+                # WARNING: sm.setspwindow is not consistent with clean::center
+                model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
 
-            sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
-                         dishdiameter=diam.tolist(), 
-                         mount=['alt-az'], antname=antnames, padname=padnames, 
-                         coordsystem='global', referencelocation=posobs)
-            if str.upper(telescopename).find('VLA')>0:
-                sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
-                               deltafreq=qa.tos(model_width), 
-                               freqresolution=qa.tos(model_width), 
-                               nchannels=model_nchan, 
-                               stokes='RR LL')
-                sm.setfeed(mode='perfect R L',pol=[''])
-            else:            
+                sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
+                             dishdiameter=diam.tolist(), 
+                             mount=['alt-az'], antname=antnames, padname=padnames, 
+                             coordsystem='global', referencelocation=posobs)
+                if str.upper(telescopename).find('VLA')>0:
+                    sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
+                                   deltafreq=qa.tos(model_width), 
+                                   freqresolution=qa.tos(model_width), 
+                                   nchannels=model_nchan, 
+                                   stokes='RR LL')
+                    sm.setfeed(mode='perfect R L',pol=[''])
+                else:            
+                    sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
+                                   deltafreq=qa.tos(model_width), 
+                                   freqresolution=qa.tos(model_width), 
+                                   nchannels=model_nchan, 
+                                   stokes='XX YY')
+                    sm.setfeed(mode='perfect X Y',pol=[''])
+
+                if verbose: msg(" spectral window set at %s" % qa.tos(model_center))
+                sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
+                sm.setauto(0.0)
+                for k in range(0,nfld):
+                    src=project+'_%d'%k
+                    sm.setfield(sourcename=src, sourcedirection=pointings[k],
+                                calcode="OBJ", distance='0m')
+                    if k==0:
+                        sourcefieldlist=src
+                    else:
+                        sourcefieldlist=sourcefieldlist+','+src
+                if docalibrator:
+                    sm.setfield(sourcename="phase calibrator", 
+                                sourcedirection=caldirection,calcode='C',
+                                distance='0m')
+                reftime = me.epoch('TAI', refdate)
+                sm.settimes(integrationtime=integration, usehourangle=True, 
+                            referencetime=reftime)
+                totalsec=qa.convert(qa.quantity(totaltime),'s')['value']
+                scantime=qa.mul(qa.quantity(integration),str(scanlength))
+                scansec=qa.convert(qa.quantity(scantime),'s')['value']
+                nscan=int(totalsec/scansec)
+                kfld=0
+                # RI todo progress meter for simdata Sim::observe
+
+                if nscan<nfld:
+                    msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
+                    return
+        
+                # sm.observemany
+                observemany=True
+                if observemany:
+                    srces=[]
+                    starttimes=[]
+                    stoptimes=[]
+                    dirs=[]
+
+                for k in range(0,nscan) :
+                    sttime=-totalsec/2.0+scansec*k
+                    endtime=sttime+scansec
+                    src=project+'_%d'%kfld
+                    if observemany:
+                        srces.append(src)
+                        starttimes.append(str(sttime)+"s")
+                        stoptimes.append(str(endtime)+"s")
+                        dirs.append(pointings[kfld])
+                    else:
+                    # this only creates blank uv entries
+                        sm.observe(sourcename=src, spwname=fband,
+                                   starttime=qa.quantity(sttime, "s"),
+                                   stoptime=qa.quantity(endtime, "s"));
+                    kfld=kfld+1
+                    if kfld==nfld: 
+                        if docalibrator:
+                            sttime=-totalsec/2.0+scansec*k
+                            endtime=sttime+scansec
+                            if observemany:
+                                srces.append(src)
+                                starttimes.append(str(sttime)+"s")
+                                stoptimes.append(str(endtime)+"s")
+                                dirs.append(caldirection)
+                            else:
+                                sm.observe(sourcename="phase calibrator", spwname=fband,
+                                           starttime=qa.quantity(sttime, "s"),
+                                           stoptime=qa.quantity(endtime, "s"));
+                        kfld=kfld+1                
+                    if kfld > nfld: kfld=0
+                # if directions is unset, NewMSSimulator::observemany 
+                # looks up the direction in the field table.
+                if observemany:
+                    sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
+
+                sm.setdata(fieldid=range(0,nfld))
+                sm.setvp()
+
+                msg("done setting up observations (blank visibilities)")
+                if verbose:
+                    sm.summary()
+
+
+                # we can show uv coverage now
+                if grscreen or grfile:
+                    util.nextfig()
+                    tb.open(msfile)  
+                    rawdata=tb.getcol("UVW")
+                    tb.done()
+                    pl.box()
+                    maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                    klam_m=300/qa.convert(model_center,'GHz')['value']
+                    pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
+                    pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
+                    ax=pl.gca()
+                    ax.yaxis.LABELPAD=-4
+                    pl.xlabel('u[klambda]',fontsize='x-small')
+                    pl.ylabel('v[klambda]',fontsize='x-small')
+                    pl.axis('equal')
+
+                # show dirty beam from observed uv coverage
+                if grscreen or grfile:
+                    util.nextfig()
+                    im.open(msfile)  
+                    # TODO spectral parms
+                    im.defineimage(cellx=qa.tos(model_cell[0]))  
+                    #im.makeimage(type='psf',image=project+".quick.psf")
+                    if os.path.exists(project+".quick.psf"):
+                        shutil.rmtree(project+".quick.psf")
+                    im.approximatepsf(psf=project+".quick.psf")
+                    quickpsf_current=True
+                    beam=im.fitpsf(psf=project+".quick.psf")
+                    im.done()
+                    ia.open(project+".quick.psf")            
+                    beamcs=ia.coordsys()
+                    beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                    xextent=128*pixsize*0.5
+                    xextent=[xextent,-xextent]
+                    yextent=128*pixsize*0.5
+                    yextent=[-yextent,yextent]
+                    flipped_array=beam_array.transpose()
+                    ttrans_array=flipped_array.tolist()
+                    ttrans_array.reverse()
+                    pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                    pl.title(project+".quick.psf",fontsize="x-small")
+                    b=qa.convert(beam['bmaj'],'arcsec')['value']
+                    pl.xlim([-3*b,3*b])
+                    pl.ylim([-3*b,3*b])
+                    ax=pl.gca()
+                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                    ia.done()
+                    util.endfig()
+
+
+
+            ##################################################################
+                # do actual calculation of visibilities:
+
+                if not components_only:                
+                    if len(complist)>1:
+                        msg("predicting from "+newmodel+" and "+complist,priority="warn")
+                    else:
+                        msg("predicting from "+newmodel,priority="warn")
+                    sm.predict(imagename=newmodel,complist=complist)
+                else:   # if we're doing only components
+                    msg("predicting from "+complist,priority="warn")
+                    sm.predict(complist=complist)
+            
+                sm.done()        
+                msg('generation of measurement set ' + msfile + ' complete')
+
+            ############################################
+            # predict single dish observation
+            if predict_sd:
+                if os.path.exists(sdmsfile):
+                    if not overwrite:
+                        util.msg("measurement set "+sdmsfile+" already exists and user does not wish to overwrite",priority="error")
+                sm.open(sdmsfile)
+                posobs=me.observatory(tp_telescopename)
+                diam=tpd
+                # WARNING: sm.setspwindow is not consistent with clean::center
+                model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+
+                sm.setconfig(telescopename=tp_telescopename, x=tpx, y=tpy, z=tpz, 
+                             dishdiameter=diam.tolist(),
+                             mount=['alt-az'], antname=tp_antnames, padname=tp_padnames, 
+                             coordsystem='global', referencelocation=posobs)
+                #if str.upper(telescopename).find('VLA')>0:
+                #    sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
+                #                   deltafreq=qa.tos(model_width), 
+                #                   freqresolution=qa.tos(model_width), 
+                #                   nchannels=model_nchan, 
+                #                   stokes='RR LL')
+                #    sm.setfeed(mode='perfect R L',pol=[''])
+                #else:            
                 sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
                                deltafreq=qa.tos(model_width), 
                                freqresolution=qa.tos(model_width), 
@@ -395,154 +591,125 @@ def simdata2(
                                stokes='XX YY')
                 sm.setfeed(mode='perfect X Y',pol=[''])
 
-            if verbose: msg(" spectral window set at %s" % qa.tos(model_center))
-            sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
-            sm.setauto(0.0)
-            for k in range(0,nfld):
-                src=project+'_%d'%k
-                sm.setfield(sourcename=src, sourcedirection=pointings[k],
-                            calcode="OBJ", distance='0m')
-                if k==0:
-                    sourcefieldlist=src
-                else:
-                    sourcefieldlist=sourcefieldlist+','+src
-            if docalibrator:
-                sm.setfield(sourcename="phase calibrator", 
-                            sourcedirection=caldirection,calcode='C',
-                            distance='0m')
-            reftime = me.epoch('TAI', refdate)
-            sm.settimes(integrationtime=integration, usehourangle=True, 
-                        referencetime=reftime)
-            totalsec=qa.convert(qa.quantity(totaltime),'s')['value']
-            scantime=qa.mul(qa.quantity(integration),str(scanlength))
-            scansec=qa.convert(qa.quantity(scantime),'s')['value']
-            nscan=int(totalsec/scansec)
-            kfld=0
-            # RI todo progress meter for simdata Sim::observe
+                if verbose: msg(" spectral window set at %s" % qa.tos(model_center))
+                sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
+                # auto-correlation should be unity for single dish obs.
+                sm.setauto(1.0)
+                for k in range(0,nfld):
+                    src=project+'_%d'%k
+                    sm.setfield(sourcename=src, sourcedirection=pointings[k],
+                                calcode="OBJ", distance='0m')
+                    if k==0:
+                        sourcefieldlist=src
+                    else:
+                        sourcefieldlist=sourcefieldlist+','+src
+                if docalibrator:
+                    msg("calibration is not supported for SD observation...skipped")
+                #    sm.setfield(sourcename="phase calibrator", 
+                #                sourcedirection=caldirection,calcode='C',
+                #                distance='0m')
+                reftime = me.epoch('TAI', refdate)
+                sm.settimes(integrationtime=integration, usehourangle=True, 
+                            referencetime=reftime)
+                totalsec=qa.convert(qa.quantity(totaltime),'s')['value']
+                scantime=qa.mul(qa.quantity(integration),str(scanlength))
+                scansec=qa.convert(qa.quantity(scantime),'s')['value']
+                nscan=int(totalsec/scansec)
+                kfld=0
+                # RI todo progress meter for simdata Sim::observe
 
-            if nscan<nfld:
-                msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
-                return
+                if nscan<nfld:
+                    msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
+                    return
         
-            # sm.observemany
-            observemany=True
-            if observemany:
+                # sm.observemany
+                observemany=True
+                #if observemany:
                 srces=[]
                 starttimes=[]
                 stoptimes=[]
                 dirs=[]
 
-            for k in range(0,nscan) :
-                sttime=-totalsec/2.0+scansec*k
-                endtime=sttime+scansec
-                src=project+'_%d'%kfld
-                if observemany:
+                for k in range(0,nscan) :
+                    sttime=-totalsec/2.0+scansec*k
+                    endtime=sttime+scansec
+                    src=project+'_%d'%kfld
+                    #if observemany:
                     srces.append(src)
                     starttimes.append(str(sttime)+"s")
                     stoptimes.append(str(endtime)+"s")
                     dirs.append(pointings[kfld])
-                else:
-                # this only creates blank uv entries
-                    sm.observe(sourcename=src, spwname=fband,
-                               starttime=qa.quantity(sttime, "s"),
-                               stoptime=qa.quantity(endtime, "s"));
-                kfld=kfld+1
-                if kfld==nfld: 
-                    if docalibrator:
-                        sttime=-totalsec/2.0+scansec*k
-                        endtime=sttime+scansec
-                        if observemany:
-                            srces.append(src)
-                            starttimes.append(str(sttime)+"s")
-                            stoptimes.append(str(endtime)+"s")
-                            dirs.append(caldirection)
-                        else:
-                            sm.observe(sourcename="phase calibrator", spwname=fband,
-                                       starttime=qa.quantity(sttime, "s"),
-                                       stoptime=qa.quantity(endtime, "s"));
-                    kfld=kfld+1                
-                if kfld > nfld: kfld=0
-            # if directions is unset, NewMSSimulator::observemany 
-            # looks up the direction in the field table.
-            if observemany:
+                    #else:
+                    ## this only creates blank uv entries
+                    #    sm.observe(sourcename=src, spwname=fband,
+                    #               starttime=qa.quantity(sttime, "s"),
+                    #               stoptime=qa.quantity(endtime, "s"));
+                    kfld=kfld+1
+                    if predict_uv and kfld==nfld:
+                        # calibration obs is disabled for SD but add a gap to synchronize with interferometer
+                        #if docalibrator:
+                        #    sttime=-totalsec/2.0+scansec*k
+                        #    endtime=sttime+scansec
+                        #    if observemany:
+                        #        srces.append(src)
+                        #        starttimes.append(str(sttime)+"s")
+                        #        stoptimes.append(str(endtime)+"s")
+                        #        dirs.append(caldirection)
+                        #    else:
+                        #        sm.observe(sourcename="phase calibrator", spwname=fband,
+                        #                   starttime=qa.quantity(sttime, "s"),
+                        #                   stoptime=qa.quantity(endtime, "s"));
+                        kfld=kfld+1                
+                    if kfld > nfld: kfld=0
+                # if directions is unset, NewMSSimulator::observemany 
+                # looks up the direction in the field table.
+                #if observemany:
                 sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
 
-            sm.setdata(fieldid=range(0,nfld))
-            sm.setvp()
+                sm.setdata(fieldid=range(0,nfld))
+                sm.setvp()
 
-            msg("done setting up observations (blank visibilities)")
-            if verbose:
-                sm.summary()
-
-
-            # we can show uv coverage now
-            if grscreen or grfile:
-                util.nextfig()
-                tb.open(msfile)  
-                rawdata=tb.getcol("UVW")
-                tb.done()
-                pl.box()
-                maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                klam_m=300/qa.convert(model_center,'GHz')['value']
-                pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
-                pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
-                ax=pl.gca()
-                ax.yaxis.LABELPAD=-4
-                pl.xlabel('u[klambda]',fontsize='x-small')
-                pl.ylabel('v[klambda]',fontsize='x-small')
-                pl.axis('equal')
-
-            # show dirty beam from observed uv coverage
-            if grscreen or grfile:
-                util.nextfig()
-                im.open(msfile)  
-                # TODO spectral parms
-                im.defineimage(cellx=qa.tos(model_cell[0]))  
-                #im.makeimage(type='psf',image=project+".quick.psf")
-                if os.path.exists(project+".quick.psf"):
-                    shutil.rmtree(project+".quick.psf")
-                im.approximatepsf(psf=project+".quick.psf")
-                quickpsf_current=True
-                beam=im.fitpsf(psf=project+".quick.psf")
-                im.done()
-                ia.open(project+".quick.psf")            
-                beamcs=ia.coordsys()
-                beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                xextent=128*pixsize*0.5
-                xextent=[xextent,-xextent]
-                yextent=128*pixsize*0.5
-                yextent=[-yextent,yextent]
-                flipped_array=beam_array.transpose()
-                ttrans_array=flipped_array.tolist()
-                ttrans_array.reverse()
-                pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
-                pl.title(project+".quick.psf",fontsize="x-small")
-                b=qa.convert(beam['bmaj'],'arcsec')['value']
-                pl.xlim([-3*b,3*b])
-                pl.ylim([-3*b,3*b])
-                ax=pl.gca()
-                pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                ia.done()
-                util.endfig()
-
-
+                msg("done setting up observations (blank visibilities)")
+                if verbose:
+                    sm.summary()
 
             ##################################################################
-            # do actual calculation of visibilities:
+                # do actual calculation of visibilities:
 
-            if not components_only:                
-                if len(complist)>1:
-                    msg("predicting from "+newmodel+" and "+complist,priority="warn")
-                else:
-                    msg("predicting from "+newmodel,priority="warn")
-                sm.predict(imagename=newmodel,complist=complist)
-            else:   # if we're doing only components
-                msg("predicting from "+complist,priority="warn")
-                sm.predict(complist=complist)
+                sm.setoptions(gridfunction='pb', ftmachine="sd", location=posobs, cache=100000)
+                if not components_only:                
+                    if len(complist)>1:
+                        msg("predicting from "+newmodel+" and "+complist,priority="warn")
+                    else:
+                        msg("predicting from "+newmodel,priority="warn")
+                    sm.predict(imagename=newmodel,complist=complist)
+                else:   # if we're doing only components
+                    msg("predicting from "+complist,priority="warn")
+                    sm.predict(complist=complist)
             
-            sm.done()        
-            msg('generation of measurement set ' + msfile + ' complete')
+                sm.done()
+
+                # modify STATE table information for ASAP
+                # Ugly part!! need improvement. 
+                nstate=1
+                tb.open(tablename=sdmsfile+'/STATE',nomodify=False)
+                tb.addrows(nrow=nstate)
+                tb.putcol(columnname='CAL',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
+                tb.putcol(columnname='FLAG_ROW',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
+                tb.putcol(columnname='LOAD',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
+                tb.putcol(columnname='REF',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
+                tb.putcol(columnname='SIG',value=[True]*nstate,startrow=0,nrow=nstate,rowincr=1)
+                tb.putcol(columnname='SUB_SCAN',value=[0]*nstate,startrow=0,nrow=nstate,rowincr=1)
+                tb.flush()
+                tb.close()
+            
+                tb.open(tablename=sdmsfile,nomodify=False)
+                tb.putcol(columnname='STATE_ID',value=[0]*nfld,startrow=0,nrow=nfld,rowincr=1)
+                tb.flush()
+                tb.close()
+                
+
+                msg('generation of measurement set ' + sdmsfile + ' complete')
 
         else:
             # if not predicting this time, but are imageing or analyzing, 
@@ -712,6 +879,7 @@ def simdata2(
             cell=[cell,cell]
 
 
+        #pdb.set_trace()
         # and imsize
         if type(imsize)==type([]):
             if len(imsize)>0:
@@ -756,9 +924,10 @@ def simdata2(
                     tb.open(ms1+'/ANTENNA')
                     antname=tb.getcol('NAME')
                     tb.close()
-                    if antname[0].find('-TP') > -1 and not tpset:
-                        tpms=ms1
-                        tpset=True
+                    if antname[0].find('TP') > -1:
+                        if not tpset: 
+                            tpms=ms1
+                            tpset=True
                     else: mstoimage.append(ms1)
                 else:
                     if verbose:
@@ -772,10 +941,13 @@ def simdata2(
             # Do single dish imaging first if tpms exists.
             if tpms and os.path.exists(tpms):
                 msg('creating image from generated ms: '+tpms)
-                tpimage = tpms.rstrip('.ms').rstrip('.MS')+'.image'
+                if len(mstoimage):
+                    tpimage = project+'.sd.image'
+                else:
+                    tpimage = project+'.image'
                 #im.open(msfile)
                 im.open(tpms)
-                im.selectvis(nchan=nchan,start=0,step=1,spw=0)
+                im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
                 im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell,celly=cell,phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.setoptions(ftmachine='sd',gridfunction='pb')
@@ -815,17 +987,19 @@ def simdata2(
                 msfile=mstoimage[0]
 
             # set cleanmode automatically (for interfm)
-            if nfld==1:
-                cleanmode="csclean"
-            else:
-                cleanmode="mosaic"
+            if len(mstoimage):
+                if nfld==1:
+                    cleanmode="csclean"
+                else:
+                    cleanmode="mosaic"
 
         outflat_current=False
         convsky_current=False
         beam_current=False
         imagename=project
 
-        if image:
+        #if image:
+        if image and len(mstoimage):
             if not docalibrator:
                 sourcefieldlist=""  # sourcefieldlist should be ok, but this is safer
             
@@ -852,7 +1026,8 @@ def simdata2(
                 cell=[qa.quantity(cell[0]),qa.quantity(cell[0])]
             else:
                 cell=[qa.quantity(cell[0]),qa.quantity(cell[1])]
-            
+
+        #if image:
             # get beam from output clean image
             if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
             ia.open(imagename+".image")
