@@ -449,52 +449,87 @@ class simutil:
         epoch, centx, centy = self.direction_splitter()
 
         shorttype=str.upper(maptype[0:3])
-        if not shorttype=="HEX":
-            self.msg("can't calculate map of maptype "+maptype,priority="error")
+#        if not shorttype=="HEX":
+#            self.msg("can't calculate map of maptype "+maptype,priority="error")
+        if shorttype == "HEX": 
+            # this is hexagonal grid - Kana will add other types here
+            self.isquantity(spacing)
+            spacing  = qa.quantity(spacing)
+            yspacing = qa.mul(0.866025404, spacing)
+            
+            xsize=qa.quantity(size[0])
+            ysize=qa.quantity(size[1])
 
-        # this is hexagonal grid - Kana will add other types here
-        self.isquantity(spacing)
-        spacing  = qa.quantity(spacing)
-        yspacing = qa.mul(0.866025404, spacing)
+            nrows = 1+ int(pl.floor(qa.convert(qa.div(ysize, yspacing), '')['value']
+                                    - 2.309401077 * relmargin))
+
+            availcols = 1 + qa.convert(qa.div(xsize, spacing),
+                                       '')['value'] - 2.0 * relmargin
+            ncols = int(pl.floor(availcols))
+
+            # By making the even rows shifted spacing/2 ahead, and possibly shorter,
+            # the top and bottom rows (nrows odd), are guaranteed to be short.
+            if availcols - ncols >= 0.5:                            # O O O
+                evencols = ncols                                    #  O O O
+                ncolstomin = 0.5 * (ncols - 0.5)
+            else:
+                evencols = ncols - 1                                #  O O 
+                ncolstomin = 0.5 * (ncols - 1)                      # O O O
+            pointings = []
+
+            # Start from the top because in the Southern hemisphere it sets first.
+            y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
+            for row in xrange(0, nrows):         # xrange stops early.
+                xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
+                ystr = qa.formxxx(y, format='dms')
+                
+                if row % 2:                             # Odd
+                    xmin = qa.sub(centx, qa.mul(ncolstomin, xspacing))
+                    stopcolp1 = ncols
+                else:                                   # Even (including 0)
+                    xmin = qa.sub(centx, qa.mul(ncolstomin - 0.5,
+                                                xspacing))
+                    stopcolp1 = evencols
+                for col in xrange(0, stopcolp1):        # xrange stops early.
+                    x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
+                                   format='hms')
+                    pointings.append("%s%s %s" % (epoch, x, ystr))
+                y = qa.sub(y, yspacing)
+        elif shorttype =="SQU":
+            # lattice gridding
+            self.isquantity(spacing)
+            spacing  = qa.quantity(spacing)
+            yspacing = spacing
     
-        xsize=qa.quantity(size[0])
-        ysize=qa.quantity(size[1])
+            xsize=qa.quantity(size[0])
+            ysize=qa.quantity(size[1])
 
-        nrows = 1+ int(pl.floor(qa.convert(qa.div(ysize, yspacing), '')['value']
-                                - 2.309401077 * relmargin))
+            nrows = 1+ int(pl.floor(qa.convert(qa.div(ysize, yspacing), '')['value']
+                                    - 2.0 * relmargin))
 
-        availcols = 1 + qa.convert(qa.div(xsize, spacing),
-                                   '')['value'] - 2.0 * relmargin
-        ncols = int(pl.floor(availcols))
+            availcols = 1 + qa.convert(qa.div(xsize, spacing), '')['value'] \
+                        - 2.0 * relmargin
+            ncols = int(pl.floor(availcols))
 
-        # By making the even rows shifted spacing/2 ahead, and possibly shorter,
-        # the top and bottom rows (nrows odd), are guaranteed to be short.
-        if availcols - ncols >= 0.5:                            # O O O
-            evencols = ncols                                    #  O O O
-            ncolstomin = 0.5 * (ncols - 0.5)
-        else:
-            evencols = ncols - 1                                #  O O 
-            ncolstomin = 0.5 * (ncols - 1)                      # O O O
-        pointings = []
 
-        # Start from the top because in the Southern hemisphere it sets first.
-        y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
-        for row in xrange(0, nrows):         # xrange stops early.
-            xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
-            ystr = qa.formxxx(y, format='dms')
-        
-            if row % 2:                             # Odd
+            ncolstomin = 0.5 * (ncols - 1)                           # O O O O
+            pointings = []                                           # O O O O
+
+            # Start from the top because in the Southern hemisphere it sets first.
+            y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
+            for row in xrange(0, nrows):         # xrange stops early.
+                xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
+                ystr = qa.formxxx(y, format='dms')
+
                 xmin = qa.sub(centx, qa.mul(ncolstomin, xspacing))
                 stopcolp1 = ncols
-            else:                                   # Even (including 0)
-                xmin = qa.sub(centx, qa.mul(ncolstomin - 0.5,
-                                                 xspacing))
-                stopcolp1 = evencols
-            for col in xrange(0, stopcolp1):        # xrange stops early.
-                x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
-                               format='hms')
-                pointings.append("%s%s %s" % (epoch, x, ystr))
-            y = qa.sub(y, yspacing)
+        
+                for col in xrange(0, stopcolp1):        # xrange stops early.
+                    x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
+                                   format='hms')
+                    pointings.append("%s%s %s" % (epoch, x, ystr))
+                y = qa.sub(y, yspacing)
+        
 
         # if could not fit any pointings, then return single pointing
         if(len(pointings)==0):
