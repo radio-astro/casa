@@ -310,7 +310,7 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
         
     String defaultCMName;
     Aipsrc::find(defaultCMName, "display.colormaps.defaultcolormap",
-		 "Hot Metal 1");
+		 "Rainbow 2");
     
     // ...but fall back to "Greyscale 1" unless the above is a valid
     // ('primary') name.  ('Synonym' colormap names (like "mono") are not
