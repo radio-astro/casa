@@ -191,7 +191,7 @@ def simdata2(
         xmax=qa.convert(model_size[0],'deg')['value']
         ymax=qa.convert(model_size[1],'deg')['value']
         overlap=False        
-        for i in range(offsets.shape[1]):
+        for i in xrange(offsets.shape[1]):
             xc= pl.absolute(offsets[0,i]+shift[0])  # offsets and shift are in degrees
             yc= pl.absolute(offsets[1,i]+shift[1])
             if xc<xmax and yc<ymax:
@@ -265,7 +265,7 @@ def simdata2(
         if os.path.exists(antennalist):
             stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
             antnames=[]
-            for k in range(0,nant): antnames.append('A%02d'%k)
+            for k in xrange(0,nant): antnames.append('A%02d'%k)
             aveant=stnd.mean()
             # TODO use max ant = min PB instead?  
             # (set back to simdata - there must be an automatic way to do this)
@@ -292,6 +292,7 @@ def simdata2(
             predict_sd=True
             if not predict_uv:
                 aveant=tp_aveant
+                msg("Only single-dish observation is predicted",priority="info")
                 tp_only=True
         
 
@@ -331,7 +332,7 @@ def simdata2(
                         plotpb(pb,pl.gca(),lims=lims)
                 else:
                     from matplotlib.patches import Circle
-                    for i in range(offsets.shape[1]):
+                    for i in xrange(offsets.shape[1]):
                         pl.gca().add_artist(Circle(
                             ((offsets[0,i]+shift[0])*3600,
                              (offsets[1,i]+shift[1])*3600),
@@ -407,7 +408,7 @@ def simdata2(
                 if verbose: msg(" spectral window set at %s" % qa.tos(model_center))
                 sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
                 sm.setauto(0.0)
-                for k in range(0,nfld):
+                for k in xrange(0,nfld):
                     src=project+'_%d'%k
                     sm.setfield(sourcename=src, sourcedirection=pointings[k],
                                 calcode="OBJ", distance='0m')
@@ -441,7 +442,7 @@ def simdata2(
                     stoptimes=[]
                     dirs=[]
 
-                for k in range(0,nscan) :
+                for k in xrange(0,nscan) :
                     sttime=-totalsec/2.0+scansec*k
                     endtime=sttime+scansec
                     src=project+'_%d'%kfld
@@ -595,7 +596,7 @@ def simdata2(
                 sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
                 # auto-correlation should be unity for single dish obs.
                 sm.setauto(1.0)
-                for k in range(0,nfld):
+                for k in xrange(0,nfld):
                     src=project+'_%d'%k
                     sm.setfield(sourcename=src, sourcedirection=pointings[k],
                                 calcode="OBJ", distance='0m')
@@ -630,7 +631,7 @@ def simdata2(
                 stoptimes=[]
                 dirs=[]
 
-                for k in range(0,nscan) :
+                for k in xrange(0,nscan) :
                     sttime=-totalsec/2.0+scansec*k
                     endtime=sttime+scansec
                     src=project+'_%d'%kfld
@@ -793,13 +794,14 @@ def simdata2(
 
             # now TP ms:
             if os.path.exists(msroot+".sd.ms"):
-                msg('copying '+msroot+'.sd.ms to ' + 
+                #msg('copying '+msroot+'.sd.ms to ' +
+                msg('copying '+sdmsfile+' to ' + 
                     noisymsroot+'.sd.ms and adding thermal noise',
                     origin="noise",priority="warn")
                 
                 if os.path.exists(noisymsroot+".sd.ms"):
-                    shutil.rmtree(noisymsroot+".sd.ms")                
-                shutil.copytree(msfile,noisymsroot+".sd.ms")
+                    shutil.rmtree(noisymsroot+".sd.ms")
+                shutil.copytree(sdmsfile,noisymsroot+".sd.ms")
                 if sm.name()!='':
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
@@ -821,6 +823,7 @@ def simdata2(
                     msg("Can't corrupt SD data using ATM library - please use tsys-manual",priority="error")
                 sm.corrupt();
                 sm.done();
+                sdmsfile=noisymsroot+".sd.ms"
 
             msroot=noisymsroot
             if verbose: msg("done corrupting with thermal noise",origin="noise")
@@ -898,7 +901,7 @@ def simdata2(
             tpms=None
             tpset=False
             if predict_sd:
-                tpms=project+'.sd.ms'
+                tpms=sdmsfile
                 tpset=True
 
             if not tpset and os.path.exists(modelimage):
@@ -917,6 +920,7 @@ def simdata2(
             mslist=vis.split(',')
             mstoimage=[]
             for ms0 in mslist:
+                if not len(ms0): continue
                 ms1=ms0.replace('$project',project)
                 if os.path.exists(ms1):
                     # check if the ms is tp data or not.
@@ -940,6 +944,7 @@ def simdata2(
             # Do single dish imaging first if tpms exists.
             if tpms and os.path.exists(tpms):
                 msg('creating image from generated ms: '+tpms)
+                if tp_only: msfile=tpms
                 if len(mstoimage):
                     tpimage = project+'.sd.image'
                 else:
@@ -1133,7 +1138,12 @@ def simdata2(
                     # get cell from outim
                     cell=util.cellsize(outim)
                 util.flatimage(imagename+".image",verbose=verbose)
-                util.flatimage(imagename+".residual",verbose=verbose)
+                if os.path.exists(imagename+".residual"):
+                    util.flatimage(imagename+".residual",verbose=verbose)
+                else:
+                    if showresidual:
+                        msg(imagename+".residual not found -- residual will not be plotted",priority="warn")
+                    showresidual=False
                 outflat_current=True
                 
             # regridded and convolved input:?
@@ -1173,6 +1183,7 @@ def simdata2(
 
             # now, what does the user want to actually display?
             if len(stnx)<=0:
+                if showarray: msg("input data is not an array -- the array will not be plotted",priority="warn")
                 showarray=False
             if not (predict or image):
                 msfile=project+".ms"
