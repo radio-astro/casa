@@ -661,7 +661,7 @@ def simdata2(
                         #                   starttime=qa.quantity(sttime, "s"),
                         #                   stoptime=qa.quantity(endtime, "s"));
                         kfld=kfld+1                
-                    if kfld > nfld: kfld=0
+                    if kfld > nfld-1: kfld=0
                 # if directions is unset, NewMSSimulator::observemany 
                 # looks up the direction in the field table.
                 #if observemany:
