@@ -244,6 +244,7 @@ def simdata2(
         # read antenna file here to get Primary Beam
         predict_uv=False
         predict_sd=False
+        tp_only=False
         aveant=-1
         stnx=[]  # for later, to know if we read an array in or not
 
@@ -291,6 +292,7 @@ def simdata2(
             predict_sd=True
             if not predict_uv:
                 aveant=tp_aveant
+                tp_only=True
         
 
 
@@ -509,6 +511,7 @@ def simdata2(
 
             if (grscreen or grfile):
                 util.newfig(multi=multi)
+                if tp_only: telescopename=tp_telescopename
                 util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
                 if predict_uv:
                     util.nextfig()
