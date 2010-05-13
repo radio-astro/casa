@@ -939,7 +939,6 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   pksrec.beamNo  = ibeam + 1;
 
   //pointing/azel
-  //MVPosition mvpos(antennaCols.position()(0));
   MVPosition mvpos(antennaCols.position()(cAntId[0]));
   MPosition mp(mvpos); 
   Quantum<Double> qt(time,"s");
@@ -952,14 +951,25 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   pksrec.paRate = 0.0f;
   if (cGetPointing) {
     //cerr << "get pointing data ...." << endl;
-    Vector<Double> pTimes = cPointingTimeCol.getColumn();
     ROScalarColumn<Int> pAntIdCol ;
-    pAntIdCol.attach( cPKSMS.pointing(), "ANTENNA_ID" ) ;
+    ROScalarColumn<Double> psTimeCol ;
+    Table ptTable = cPKSMS.pointing() ;
+    MSPointing selPtTab( ptTable( ptTable.col("ANTENNA_ID") == cAntId[0] ) ) ;
+    pAntIdCol.attach( selPtTab, "ANTENNA_ID" ) ;
     Vector<Int> antIds = pAntIdCol.getColumn() ;
+    psTimeCol.attach( selPtTab, "TIME" ) ;
+    Vector<Double> pTimes = psTimeCol.getColumn();
+    Bool doInterp = False ;
     Int PtIdx=-1;
     for (PtIdx = pTimes.nelements()-1; PtIdx >= 0; PtIdx--) {
-      if ( (cPointingTimeCol(PtIdx) <= time) && antIds(PtIdx) == cAntId[0] ) {
-        break;
+      if ( pTimes[PtIdx] == time ) {
+	break ;
+      }
+      else if ( pTimes[PtIdx] < time ) {
+	if ( PtIdx != pTimes.nelements()-1 ) {
+	  doInterp = True ;
+	}
+	break ;
       }
     }
     if ( PtIdx == -1 ) {
@@ -967,14 +977,40 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
     }
     //cerr << "got index=" << PtIdx << endl;
     Matrix<Double> pointingDir = cPointingCol(PtIdx);
-
-    ROMSPointingColumns PtCols(cPKSMS.pointing());
-    Vector<MDirection> vmd(1);
-    PtCols.directionMeasCol().get(PtIdx,vmd);
-    md = vmd[0];
+    ROMSPointingColumns PtCols( selPtTab ) ;
+    Vector<Double> pointingDirVec ;
+    if ( doInterp ) {
+      Double dt1 = time - pTimes[PtIdx] ;
+      Double dt2 = pTimes[PtIdx+1] - time ;
+      Vector<Double> dirVec1 = pointingDir.column(0) ;
+      Matrix<Double> pointingDir2 = cPointingCol(PtIdx+1) ;
+      Vector<Double> dirVec2 = pointingDir2.column(0) ;
+      pointingDirVec = (dt1*dirVec2+dt2*dirVec1)/(dt1+dt2) ;
+      Vector<MDirection> vmd1(1) ;
+      Vector<MDirection> vmd2(1) ;
+      PtCols.directionMeasCol().get(PtIdx,vmd1) ;
+      Vector<Double> angle1 = vmd1(0).getAngle().getValue("rad") ;
+      PtCols.directionMeasCol().get(PtIdx+1,vmd2) ;
+      Vector<Double> angle2 = vmd2(0).getAngle().getValue("rad") ;
+      Vector<Double> angle = (dt1*angle2+dt2*angle1)/(dt1+dt2) ;
+      Quantum< Vector<Double> > qangle( angle, "rad" ) ;
+      String typeStr = vmd1(0).getRefString() ;
+      //cerr << "vmd1.getRefString()=" << typeStr << endl ;
+      MDirection::Types mdType ;
+      MDirection::getType( mdType, typeStr ) ;
+      //cerr << "mdType=" << mdType << endl ;
+      md = MDirection( qangle, mdType ) ;
+      //cerr << "md=" << md.getAngle().getValue("rad") << endl ;
+    }
+    else {
+      pointingDirVec = pointingDir.column(0) ;
+      Vector<MDirection> vmd(1);
+      PtCols.directionMeasCol().get(PtIdx,vmd);
+      md = vmd[0];
+    }
     // put J2000 coordinates in "direction" 
     if (cDirRef =="J2000") {
-      pksrec.direction = pointingDir.column(0);
+      pksrec.direction = pointingDirVec ;
     }
     else {
       pksrec.direction =
