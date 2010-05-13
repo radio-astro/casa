@@ -166,7 +166,7 @@ namespace casa {
 		QtDisplayData *dp = 0;
 		if ( panel != 0 ) {
 		    if ( iter->second->data( ) != 0 ) {
-			panel->displayPanel()->unregisterDD( iter->second->data( ) );
+			panel->removeDD( iter->second->data( ) );
 			iter->second->data( ) = 0;
 		    }
 
