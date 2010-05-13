@@ -304,7 +304,8 @@ def simdata2(
         ##################################################################
         # create one figure for model and pointings - need antenna diam 
         # to determine primary beam
-        if modifymodel or setpointings:
+        #if modifymodel or setpointings:
+        if True: 
             if grfile:
                 file=project+".skymodel.png"
             else:
@@ -956,7 +957,7 @@ def simdata2(
                 #im.open(msfile)
                 im.open(tpms)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
-                im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell,celly=cell,phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
+                im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.makeimage(type='singledish',image=tpimage)
