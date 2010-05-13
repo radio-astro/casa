@@ -245,6 +245,7 @@ def simdata2(
         predict_uv=False
         predict_sd=False
         tp_only=False
+        tpset=False
         aveant=-1
         stnx=[]  # for later, to know if we read an array in or not
 
@@ -273,6 +274,7 @@ def simdata2(
             predict_uv=True
             
         if os.path.exists(sdantlist):
+            tpset=True
             tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
             tp_antnames=[]
             #for k in range(0,tp_nant): tp_antnames.append('TP%02d'%k)
@@ -677,7 +679,7 @@ def simdata2(
                 #######################################################
                 # do actual calculation of visibilities:
 
-                sm.setoptions(gridfunction='pb', ftmachine="sd", location=posobs, cache=100000)
+                sm.setoptions(gridfunction='pb', ftmachine="sd", location=posobs)
                 if not components_only:                
                     if len(complist)>1:
                         msg("predicting from "+newmodel+" and "+complist,priority="warn")
@@ -761,6 +763,10 @@ def simdata2(
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
 
+                if tp_only:
+                    msg("tp_only set to False since you have "+msroot+".ms",priority="warn")
+                    tp_only=False
+                
                 sm.openfromms(noisymsroot+".ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
                 if thermalnoise=="tsys-manual":
@@ -794,6 +800,7 @@ def simdata2(
 
             # now TP ms:
             if os.path.exists(msroot+".sd.ms"):
+                tpset=True
                 #msg('copying '+msroot+'.sd.ms to ' +
                 msg('copying '+sdmsfile+' to ' + 
                     noisymsroot+'.sd.ms and adding thermal noise',
@@ -899,10 +906,8 @@ def simdata2(
         #####################################################################
         if image:
             tpms=None
-            tpset=False
             if predict_sd:
                 tpms=sdmsfile
-                tpset=True
 
             if not tpset and os.path.exists(modelimage):
                 # should be CASA image so far. 
@@ -924,22 +929,21 @@ def simdata2(
                 ms1=ms0.replace('$project',project)
                 if os.path.exists(ms1):
                     # check if the ms is tp data or not.
-                    tb.open(ms1+'/ANTENNA')
-                    antname=tb.getcol('NAME')
-                    tb.close()
-                    if antname[0].find('TP') > -1:
-                        if not tpset: 
-                            tpms=ms1
-                            tpset=True
+                    if util.ismstp(ms1,halt=False) and tpset:
+                        tpms=ms1
+                        tpset=True
                     else: mstoimage.append(ms1)
                 else:
                     if verbose:
                         msg("measurement set "+ms1+" not found -- removing from clean list",priority="warn")
                     else:
                         msg("measurement set "+ms1+" not found -- removing from clean list")
-            if len(mstoimage)<=0 and not tpms:
-                msg("no measurement sets found to image",priority="warn")
-                image=False
+            if len(mstoimage)<=0:
+                if not tpset:
+                    msg("no measurement sets found to image",priority="warn")
+                    image=False
+                else:
+                    tp_only=True
 
             # Do single dish imaging first if tpms exists.
             if tpms and os.path.exists(tpms):
@@ -1187,6 +1191,9 @@ def simdata2(
                 showarray=False
             if not (predict or image):
                 msfile=project+".ms"
+            if showpsf and (tp_only or util.ismstp(msfile)):
+                    msg("single dish simulation -- psf will not be plotted",priority='warn')
+                    showpsf=False
 
             # if the order in the task input changes, change it here too
             figs=[showarray,showuv,showpsf,showmodel,showconvolved,showclean,showresidual,showdifference,showfidelity]
@@ -1233,7 +1240,7 @@ def simdata2(
                     util.nextfig()
 
                 if showpsf:
-                    if image:
+                    if image: 
                         psfim=imagename+".psf"
                     else:
                         psfim=project+".quick.psf"
