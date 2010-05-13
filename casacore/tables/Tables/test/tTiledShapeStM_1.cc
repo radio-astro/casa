@@ -382,7 +382,7 @@ int main (int argc, const char* argv[])
       istringstream istr(argv[7]);
       istr >> ty;
     }
-    uInt sx = 0;
+    uInt tz = 0;
     if (argc >= 9) {
       istringstream istr(argv[8]);
       istr >> tz;
