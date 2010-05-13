@@ -201,6 +201,8 @@ class TPPlotter
       // function to close the plot window......
       // PPDF : needs to be called just before the destructor.
       Bool closeWindow();
+
+      Int show(); //RI
       
    private:
       // Consolidate ranges from all BasePlots and set plot range.

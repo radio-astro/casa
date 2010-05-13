@@ -795,6 +795,7 @@ Int TPPlotter::initPlot()
       PyInterp_p = new CasaPyInterpreter(usegui_p);
 
       PyInterp_p->setupCustomGuiFeatures();
+      PyInterp_p->pyrunString("pl.ioff()\n" ); //
 #if LOG2 
       log->out(String("usegui : ")+String::toString(usegui_p),
                fnname, clname, LogMessage::DEBUG1);
@@ -866,6 +867,7 @@ Int TPPlotter::startPlot(Int panel, Int newplot)
             fnname, clname, LogMessage::DEBUG1);
 #endif
    initPlot();
+   PyInterp_p->pyrunString("pl.ioff()\n" ); //RI
    
    if (PlotPackage_p==MATPLOTLIB)
    {
@@ -876,7 +878,7 @@ Int TPPlotter::startPlot(Int panel, Int newplot)
          oldaspectratio_p = PPar_p[panel-1]->Plop.AspectRatio;
          //the windowsize and aspect ratio has never worked.
          //yet, it involves a draw, be careful not to slow it down
-         setWindowOptions(oldwindowsize_p, oldaspectratio_p);
+         //setWindowOptions(oldwindowsize_p, oldaspectratio_p); //RI
       }
 
       ostringstream buf;
@@ -914,7 +916,7 @@ Int TPPlotter::startPlot(Int panel, Int newplot)
          
       if (!newplot) 
          PyInterp_p->pyrunString("pl.cla()\n" );
-      PyInterp_p->pyrunString("pl.ioff()\n" );
+      // PyInterp_p->pyrunString("pl.ioff()\n" );  //RI
       PyInterp_p->pyrunString("starttime = time.time()\n" );
 
    }
@@ -923,6 +925,13 @@ Int TPPlotter::startPlot(Int panel, Int newplot)
    log->FnExit(fnname, clname);
 #endif 
    return 0;
+}
+
+/*********************************************************************************/
+Int TPPlotter::show() //RI
+{
+  if(usegui_p) PyInterp_p->pyrunString("pl.show()\n" );  // show sets ion()
+  return 0;
 }
 
 /*********************************************************************************/
@@ -1235,7 +1244,7 @@ Int TPPlotter::endPlot(Int panel)
       if(usegui_p) PyInterp_p->pyrunString("pl.draw()\n" );
 
       //this ion may not be necessary, but it is a quick 
-      if(usegui_p) PyInterp_p->pyrunString("pl.ion()\n" );
+      //if(usegui_p) PyInterp_p->pyrunString("pl.ion()\n" );  //RI
       //log->out("Done Plotting data.",  fnname, clname, LogMessage::DEBUG2 );
       
    }
@@ -1510,7 +1519,8 @@ Int TPPlotter::setWindowOptions(Double windowsize, Double aspectratio)
    {
       ostringstream buf;
       buf << "pl.figure(num=1, figsize=("<<windowsize<<","
-          <<windowsize*aspectratio<<"))\npl.draw()\n";
+	// <<windowsize*aspectratio<<"))\n";
+          <<windowsize*aspectratio<<"))\npl.draw()\n";  //RI
       PyInterp_p->pyrunString(buf.str().data() ); 
    }
 #if LOG0 
@@ -1632,12 +1642,12 @@ Int TPPlotter::clearPlot(Int panel, Bool delaxes)
       if(PlotPackage_p==MATPLOTLIB)
       {
 
-         PyInterp_p->pyrunString( "pf.erase_rects();\n" ); 
+	//PyInterp_p->pyrunString( "pf.erase_rects();\n" );  //RI
          PyInterp_p->pyrunString("sp = figman.canvas.figure.get_axes();\n");
          
-         PyInterp_p->pyrunString("for ss in sp:\n  figman.canvas.figure.add_subplot(ss._rows,ss._cols,ss._num+1);\n  pl.cla();\n\n");
+         //PyInterp_p->pyrunString("for ss in sp:\n  figman.canvas.figure.add_subplot(ss._rows,ss._cols,ss._num+1);\n  pl.cla();\n\n"); //RI
 
-         //PyInterp_p->pyrunString( "pl.cla()\n" ); 
+         //PyInterp_p->pyrunString( "pl.cla()\n" );  //RI
          PyInterp_p->pyrunString( "pl.clf()\n" ); 
          //PyInterp_p->pyrunString( "pf.close()\n" );
       }
@@ -1668,8 +1678,8 @@ Int TPPlotter::clearPlot(Int panel, Bool delaxes)
          PyInterp_p->pyrunString("figman.canvas.figure.subplots_adjust(top=0.9,bottom=0.1,left=0.125,right=0.9,wspace=0.3,hspace=0.7)\n" );      
          //PyInterp_p->pyrunString("pl.subplots_adjust(top=0.9,bottom=0.1,left=0.125,right=0.9,wspace=0.3,hspace=0.7)\n" );      
          
-         if(usegui_p) 
-             PyInterp_p->pyrunString("pl.ion()\n" );
+         //if(usegui_p)   //RI
+	   //PyInterp_p->pyrunString("pl.ion()\n" );
          PyInterp_p->pyrunString("pl.cla()\n" ); 
          if(delaxes) 
             PyInterp_p->pyrunString("pl.delaxes()\n" ); 
