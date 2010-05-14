@@ -71,9 +71,13 @@ namespace asdm {
 	AlmaRadiometerTable &AlmaRadiometerRow::getTable() const {
 		return table;
 	}
-	
-	void AlmaRadiometerRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool AlmaRadiometerRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void AlmaRadiometerRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

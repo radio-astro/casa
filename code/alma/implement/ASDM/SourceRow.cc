@@ -71,9 +71,13 @@ namespace asdm {
 	SourceTable &SourceRow::getTable() const {
 		return table;
 	}
-	
-	void SourceRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SourceRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SourceRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

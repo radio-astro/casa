@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string SourceTable::tableName = "Source";
-	
+	const vector<string> SourceTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -110,7 +111,6 @@ namespace asdm {
 /**
  * A destructor for SourceTable.
  */
- 
 	SourceTable::~SourceTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -130,13 +130,90 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string SourceTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> SourceTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("sourceId");
+
+		attributesNames.push_back("timeInterval");
+
+		attributesNames.push_back("spectralWindowId");
+
+
+		attributesNames.push_back("code");
+
+		attributesNames.push_back("direction");
+
+		attributesNames.push_back("properMotion");
+
+		attributesNames.push_back("sourceName");
+
+
+		attributesNames.push_back("directionCode");
+
+		attributesNames.push_back("directionEquinox");
+
+		attributesNames.push_back("calibrationGroup");
+
+		attributesNames.push_back("catalog");
+
+		attributesNames.push_back("deltaVel");
+
+		attributesNames.push_back("position");
+
+		attributesNames.push_back("numLines");
+
+		attributesNames.push_back("transition");
+
+		attributesNames.push_back("restFrequency");
+
+		attributesNames.push_back("sysVel");
+
+		attributesNames.push_back("rangeVel");
+
+		attributesNames.push_back("sourceModel");
+
+		attributesNames.push_back("frequencyRefCode");
+
+		attributesNames.push_back("numFreq");
+
+		attributesNames.push_back("numStokes");
+
+		attributesNames.push_back("frequency");
+
+		attributesNames.push_back("frequencyInterval");
+
+		attributesNames.push_back("stokesParameter");
+
+		attributesNames.push_back("flux");
+
+		attributesNames.push_back("fluxErr");
+
+		attributesNames.push_back("positionAngle");
+
+		attributesNames.push_back("positionAngleErr");
+
+		attributesNames.push_back("size");
+
+		attributesNames.push_back("sizeErr");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& SourceTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -547,7 +624,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -625,7 +702,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SourceTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -939,10 +1016,10 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 	}
 
 	
-	void SourceTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Source.xml")))
+	void SourceTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Source.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Source.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Source.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the Source table", "Source");
@@ -1031,7 +1108,7 @@ void SourceTable::setFromXMLFile(const string& directory) {
     	if (row.size() == 0) {
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -1047,7 +1124,7 @@ void SourceTable::setFromXMLFile(const string& directory) {
     			last->timeInterval.setDuration(start - last->timeInterval.getStart());
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -1063,7 +1140,7 @@ void SourceTable::setFromXMLFile(const string& directory) {
     			x->timeInterval.setDuration(first->timeInterval.getStart() - start);
     		row.insert(row.begin(), x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -1092,12 +1169,25 @@ void SourceTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
-	
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SourceTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SourceTable");	
+		}	
+
 		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
 		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
-   		x->isAdded();
+   		x->isAdded(true);
 		return x;   
     } 
     	

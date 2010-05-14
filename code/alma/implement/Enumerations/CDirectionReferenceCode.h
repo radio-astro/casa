@@ -55,7 +55,7 @@ namespace DirectionReferenceCodeMod
   //! DirectionReferenceCode.
   //! defines reference frames to qualify the measure of a direction.
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum DirectionReferenceCode

@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string SeeingTable::tableName = "Seeing";
-	
+	const vector<string> SeeingTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for SeeingTable.
  */
- 
 	SeeingTable::~SeeingTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,40 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string SeeingTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> SeeingTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("timeInterval");
+
+
+		attributesNames.push_back("numBaseLength");
+
+		attributesNames.push_back("baseLength");
+
+		attributesNames.push_back("phaseRms");
+
+		attributesNames.push_back("seeing");
+
+		attributesNames.push_back("exponent");
+
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& SeeingTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -333,7 +360,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/2/SeeingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/2/SeeingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -411,7 +438,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/2/SeeingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/2/SeeingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SeeingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -650,10 +677,10 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 	}
 
 	
-	void SeeingTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Seeing.xml")))
+	void SeeingTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Seeing.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Seeing.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Seeing.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the Seeing table", "Seeing");
@@ -742,7 +769,7 @@ void SeeingTable::setFromXMLFile(const string& directory) {
     	if (row.size() == 0) {
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -758,7 +785,7 @@ void SeeingTable::setFromXMLFile(const string& directory) {
     			last->timeInterval.setDuration(start - last->timeInterval.getStart());
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -774,7 +801,7 @@ void SeeingTable::setFromXMLFile(const string& directory) {
     			x->timeInterval.setDuration(first->timeInterval.getStart() - start);
     		row.insert(row.begin(), x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -803,12 +830,25 @@ void SeeingTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
-	
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SeeingTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SeeingTable");	
+		}	
+
 		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
 		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
-   		x->isAdded();
+   		x->isAdded(true);
 		return x;   
     } 
     	

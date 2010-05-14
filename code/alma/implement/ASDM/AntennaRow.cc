@@ -77,9 +77,13 @@ namespace asdm {
 	AntennaTable &AntennaRow::getTable() const {
 		return table;
 	}
-	
-	void AntennaRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool AntennaRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void AntennaRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

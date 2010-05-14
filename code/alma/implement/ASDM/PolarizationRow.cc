@@ -65,9 +65,13 @@ namespace asdm {
 	PolarizationTable &PolarizationRow::getTable() const {
 		return table;
 	}
-	
-	void PolarizationRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool PolarizationRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void PolarizationRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

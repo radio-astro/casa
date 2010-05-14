@@ -49,6 +49,7 @@ using namespace std;
 using namespace boost;
 
 
+/*
 typedef long long          ACTUALDURATIONSTYPE;
 typedef long long          ACTUALTIMESTYPE;     
 typedef float              AUTODATATYPE;        
@@ -57,6 +58,7 @@ typedef short int          SHORTCROSSDATATYPE;
 typedef float              FLOATCROSSDATATYPE;  
 typedef unsigned int       FLAGSTYPE; // mcaillat
 typedef float              ZEROLAGSTYPE;   
+*/
 
 namespace asdmbinaries {
   /**
@@ -228,7 +230,7 @@ namespace asdmbinaries {
     unsigned long int nZeroLags_;
     const FLAGSTYPE * flags_;
     unsigned long int nFlags_;
-    const LONGCROSSDATATYPE  * longCrossData_;
+    const INTCROSSDATATYPE  * longCrossData_;
     const SHORTCROSSDATATYPE * shortCrossData_;
     const FLOATCROSSDATATYPE * floatCrossData_;
     unsigned long int nCrossData_;

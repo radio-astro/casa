@@ -65,9 +65,13 @@ namespace asdm {
 	CorrelatorModeTable &CorrelatorModeRow::getTable() const {
 		return table;
 	}
-	
-	void CorrelatorModeRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CorrelatorModeRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CorrelatorModeRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

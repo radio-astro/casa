@@ -12,6 +12,8 @@
 #include "almaEnumerations_IFC.h"
 #endif
 
+#include "SDMDataObjectPartTypes.h"
+
 #include "CAtmPhaseCorrection.h"
 #include "CAxisName.h"
 #include "CBasebandName.h"
@@ -1303,8 +1305,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * @return the number of ActualDurations.
      *
      */
-    unsigned long int actualDurations(const long long* & ptr) const;
-
+    unsigned long int actualDurations(const ACTUALDURATIONSTYPE* & ptr) const;
 
     /**
      *
@@ -1313,7 +1314,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * @return the number of ActualTimes.
      *
      */
-    unsigned long int actualTimes(const long long* & ptr) const;
+    unsigned long int actualTimes(const ACTUALTIMESTYPE* & ptr) const;
 
     /**
      *
@@ -1322,7 +1323,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * @return the number of AutoData.
      *
      */
-    unsigned long int autoData(const float* & ptr) const ;
+    unsigned long int autoData(const AUTODATATYPE* & ptr) const ;
 
     /**
      *
@@ -1331,17 +1332,17 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * @return the number of short int CrossData values.
      *
      */
-    unsigned long int crossData(const short int* & ptr) const;
+    unsigned long int crossData(const SHORTCROSSDATATYPE* & ptr) const;
 
 
     /**
      *
-     * Set ptr to the adress of the array of long int CrossData and Returns the number of long int CrossData.
+     * Set ptr to the adress of the array of int CrossData and Returns the number of long int CrossData.
      * @param ptr a reference to a pointer on long int.
      * @return the number of long int CrossData values.
      *
      */
-    unsigned long int crossData(const int* & ptr) const;
+    unsigned long int crossData(const INTCROSSDATATYPE* & ptr) const;
 
     /**
      *
@@ -1350,7 +1351,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * @return the number of float CrossData values.
      *
      */
-    unsigned long int crossData(const float* & ptr) const;
+    unsigned long int crossData(const FLOATCROSSDATATYPE* & ptr) const;
 
     /**
      * Return the type of cross data values.
@@ -1368,7 +1369,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * @return the number of flags.
      *
      */
-    unsigned long int flags(const unsigned int* &ptr) const;
+    unsigned long int flags(const FLAGSTYPE* &ptr) const;
 
     /**
      *
@@ -1377,7 +1378,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * @return the number of autoData.
      *
      */
-    unsigned long int zeroLags(const float* & ptr) const;
+    unsigned long int zeroLags(const ZEROLAGSTYPE* & ptr) const;
 
     /**
      * Returns true if and only if this corresponds to an aborted [sub]integration.
@@ -1417,19 +1418,19 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     PrimitiveDataType crossDataType_;
     string autoDataREF_;
 
-    const long long * actualTimes_;
+    const ACTUALTIMESTYPE * actualTimes_;
     unsigned long int nActualTimes_;
-    const long long * actualDurations_;
+    const ACTUALDURATIONSTYPE * actualDurations_;
     unsigned long int nActualDurations_;
-    const float* zeroLags_;
+    const ZEROLAGSTYPE* zeroLags_;
     unsigned long int nZeroLags_;
-    const unsigned int* flags_;    
+    const FLAGSTYPE* flags_;    
     unsigned long int nFlags_;
-    const int* longCrossData_;
-    const short int* shortCrossData_;
-    const float* floatCrossData_;
+    const INTCROSSDATATYPE* longCrossData_;
+    const SHORTCROSSDATATYPE* shortCrossData_;
+    const FLOATCROSSDATATYPE* floatCrossData_;
     unsigned long int nCrossData_;
-    const float* autoData_;
+    const AUTODATATYPE* autoData_;
     unsigned long int nAutoData_;
 
     string xsiType() const;

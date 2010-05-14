@@ -56,7 +56,7 @@ namespace PositionReferenceCodeMod
   //! defines reference frames to qualify the measure of a position.
 
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum PositionReferenceCode

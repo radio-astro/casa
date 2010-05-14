@@ -65,9 +65,13 @@ namespace asdm {
 	FlagCmdTable &FlagCmdRow::getTable() const {
 		return table;
 	}
-	
-	void FlagCmdRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool FlagCmdRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void FlagCmdRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

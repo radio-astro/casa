@@ -65,9 +65,13 @@ namespace asdm {
 	SeeingTable &SeeingRow::getTable() const {
 		return table;
 	}
-	
-	void SeeingRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SeeingRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SeeingRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

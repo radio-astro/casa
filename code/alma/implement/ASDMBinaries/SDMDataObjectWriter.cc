@@ -194,7 +194,7 @@ namespace asdmbinaries {
 					 const vector<unsigned int>& flags,
 					 const vector<long long>& actualTimes,
 					 const vector<long long>& actualDurations,
-					 const vector<float>& autoData){
+					 const vector<AUTODATATYPE>& autoData){
     checkState(T_ADDTPSUBSCAN, "addTPSubscan");
     outputln("Content-Type: Multipart/Related; boundary=\""+MIMEBOUNDARY_2+"\";type=\"text/xml\"; start=\"<DataSubset.xml>\"");
     outputln("Content-Description: Data and metadata subset");
@@ -294,7 +294,7 @@ namespace asdmbinaries {
 				   unsigned long long time,
 				   unsigned long long interval,
 				   const vector<AxisName>& autoDataAxes,
-				   const vector<float>& autoData) {
+				   const vector<AUTODATATYPE>& autoData) {
     checkState(T_TPDATA, "tpData");
 
     SDMDataObject::DataStruct dataStruct;
@@ -369,7 +369,7 @@ namespace asdmbinaries {
 				   const vector<AxisName>& actualDurationsAxes,
 				   const vector<long long>& actualDurations,
 				   const vector<AxisName>& autoDataAxes,
-				   const vector<float>& autoData) {
+				   const vector<AUTODATATYPE>& autoData) {
     checkState(T_TPDATA, "tpData");
     
     SDMDataObject::DataStruct dataStruct;
@@ -658,14 +658,14 @@ namespace asdmbinaries {
 				    unsigned int subintegrationNum,
 				    unsigned long long time,
 				    unsigned long long interval,
-				    const vector<unsigned int>& flags,
-				    const vector<long long>& actualTimes,
-				    const vector<long long>& actualDurations,
-				    const vector<float>& zeroLags,
-				    const vector<int>& longCrossData,
-				    const vector<short>& shortCrossData,
-				    const vector<float>& floatCrossData,
-				    const vector<float>& autoData) {
+				    const vector<FLAGSTYPE>& flags,
+				    const vector<ACTUALTIMESTYPE>& actualTimes,
+				    const vector<ACTUALDURATIONSTYPE>& actualDurations,
+				    const vector<ZEROLAGSTYPE>& zeroLags,
+				    const vector<INTCROSSDATATYPE>& intCrossData,
+				    const vector<SHORTCROSSDATATYPE>& shortCrossData,
+				    const vector<FLOATCROSSDATATYPE>& floatCrossData,
+				    const vector<AUTODATATYPE>& autoData) {
     SDMDataSubset sdmDataSubset(&sdmDataObject_);
     sdmDataObject_.numTime_++;
     sdmDataSubsetNum_++;
@@ -681,7 +681,7 @@ namespace asdmbinaries {
     sdmDataSubset.interval_ = interval;
 
     // The crossDataType.
-    if (longCrossData.size() != 0) 
+    if (intCrossData.size() != 0) 
       sdmDataSubset.crossDataType_ = INT32_TYPE;
 
     else if (shortCrossData.size() != 0)
@@ -705,7 +705,7 @@ namespace asdmbinaries {
     sdmDataSubset.nFlags_   = flags.size();
     switch (sdmDataSubset.crossDataType_) {
     case INT32_TYPE:
-      sdmDataSubset.nCrossData_ = longCrossData.size();
+      sdmDataSubset.nCrossData_ = intCrossData.size();
       break;
     case INT16_TYPE:
       sdmDataSubset.nCrossData_ = shortCrossData.size();
@@ -717,7 +717,7 @@ namespace asdmbinaries {
       sdmDataSubset.nCrossData_ = 0;
     }
 
-    //sdmDataSubset.nCrossData_       = shortCrossData.size() ? shortCrossData.size():longCrossData.size();
+    //sdmDataSubset.nCrossData_       = shortCrossData.size() ? shortCrossData.size():intCrossData.size();
 
     sdmDataSubset.nAutoData_        = autoData.size();
 
@@ -786,10 +786,10 @@ namespace asdmbinaries {
     
     if (sdmDataObject_.correlationMode_ != AUTO_ONLY) {
       int numCrossData = sdmDataObject_.dataStruct_.crossData_.size();
-      int numCrossDataV = 0; //= longCrossData.size() ? longCrossData.size():shortCrossData.size();
+      int numCrossDataV = 0; //= intCrossData.size() ? intCrossData.size():shortCrossData.size();
       switch(sdmDataSubset.crossDataType_) {
       case INT32_TYPE:
-	numCrossDataV = longCrossData.size();
+	numCrossDataV = intCrossData.size();
 	break;
       case INT16_TYPE:
 	numCrossDataV = shortCrossData.size();
@@ -814,7 +814,7 @@ namespace asdmbinaries {
       outputln();
       switch (sdmDataSubset.crossDataType_) {
       case INT32_TYPE:
-	outputln<int>(longCrossData);
+	outputln<int>(intCrossData);
 	break;
       case INT16_TYPE:
 	outputln<short>(shortCrossData);
@@ -870,12 +870,12 @@ namespace asdmbinaries {
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
 					   unsigned long long time,
 					   unsigned long long interval,
-					   const vector<unsigned int>& flags,
-					   const vector<long long>& actualTimes,
-					   const vector<long long>& actualDurations,
-					   const vector<float>& zeroLags,
-					   const vector<int>& crossData,
-					   const vector<float>& autoData) {
+					   const vector<FLAGSTYPE>& flags,
+					   const vector<ACTUALTIMESTYPE>& actualTimes,
+					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					   const vector<ZEROLAGSTYPE>& zeroLags,
+					   const vector<INTCROSSDATATYPE>& crossData,
+					   const vector<AUTODATATYPE>& autoData) {
 
     checkState(T_ADDINTEGRATION, "addIntegration");
 
@@ -899,12 +899,12 @@ namespace asdmbinaries {
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
 					   unsigned long long time,
 					   unsigned long long interval,
-					   const vector<unsigned int>& flags,
-					   const vector<long long>& actualTimes,
-					   const vector<long long>& actualDurations,
-					   const vector<float>& zeroLags,
-					   const vector<short>& crossData,
-					   const vector<float>& autoData) {
+					   const vector<FLAGSTYPE>& flags,
+					   const vector<ACTUALTIMESTYPE>& actualTimes,
+					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					   const vector<ZEROLAGSTYPE>& zeroLags,
+					   const vector<SHORTCROSSDATATYPE>& crossData,
+					   const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDINTEGRATION, "addIntegration");
 
     vector<int> emptyLong;
@@ -926,12 +926,12 @@ namespace asdmbinaries {
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
 					   unsigned long long time,
 					   unsigned long long interval,
-					   const vector<unsigned int>& flags,
-					   const vector<long long>& actualTimes,
-					   const vector<long long>& actualDurations,
-					   const vector<float>& zeroLags,
-					   const vector<float>& crossData,
-					   const vector<float>& autoData) {
+					   const vector<FLAGSTYPE>& flags,
+					   const vector<ACTUALTIMESTYPE>& actualTimes,
+					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					   const vector<ZEROLAGSTYPE>& zeroLags,
+					   const vector<FLOATCROSSDATATYPE>& crossData,
+					   const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDINTEGRATION, "addIntegration");
 
     vector<int> emptyLong;
@@ -954,12 +954,12 @@ namespace asdmbinaries {
 					      unsigned int subIntegrationNum,
 					      unsigned long long time,
 					      unsigned long long interval,
-					      const vector<unsigned int>& flags,
-					      const vector<long long>& actualTimes,
-					      const vector<long long>& actualDurations,
-					      const vector<float>& zeroLags,
-					      const vector<short>& crossData,
-					      const vector<float>& autoData) {
+					      const vector<FLAGSTYPE>& flags,
+					      const vector<ACTUALTIMESTYPE>& actualTimes,
+					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					      const vector<ZEROLAGSTYPE>& zeroLags,
+					      const vector<SHORTCROSSDATATYPE>& crossData,
+					      const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDSUBINTEGRATION, "addSubintegration");
 
     vector<int> emptyLong;
@@ -982,12 +982,12 @@ namespace asdmbinaries {
 					      unsigned int subIntegrationNum,
 					      unsigned long long time,
 					      unsigned long long interval,
-					      const vector<unsigned int>& flags,
-					      const vector<long long>& actualTimes,
-					      const vector<long long>& actualDurations,
-					      const vector<float>& zeroLags,
-					      const vector<int>& crossData,
-					      const vector<float>& autoData) {
+					      const vector<FLAGSTYPE>& flags,
+					      const vector<ACTUALTIMESTYPE>& actualTimes,
+					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					      const vector<ZEROLAGSTYPE>& zeroLags,
+					      const vector<INTCROSSDATATYPE>& crossData,
+					      const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDSUBINTEGRATION, "addSubIntegration");
 
     vector<short> emptyShort;
@@ -1010,12 +1010,12 @@ namespace asdmbinaries {
 					      unsigned int subIntegrationNum,
 					      unsigned long long time,
 					      unsigned long long interval,
-					      const vector<unsigned int>& flags,
-					      const vector<long long>& actualTimes,
-					      const vector<long long>& actualDurations,
-					      const vector<float>& zeroLags,
-					      const vector<float>& crossData,
-					      const vector<float>& autoData) {
+					      const vector<FLAGSTYPE>& flags,
+					      const vector<ACTUALTIMESTYPE>& actualTimes,
+					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					      const vector<ZEROLAGSTYPE>& zeroLags,
+					      const vector<FLOATCROSSDATATYPE>& crossData,
+					      const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDSUBINTEGRATION, "addSubIntegration");
 
     vector<int> emptyLong;

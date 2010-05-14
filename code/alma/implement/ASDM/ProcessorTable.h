@@ -98,7 +98,7 @@ class ProcessorRow;
  * Processor characteristics. This table holds summary information for the  back-end processing devices used to generate the basic science  data.
  * <BR>
  
- * Generated from model's revision "1.53", branch "HEAD"
+ * Generated from model's revision "1.54", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Processor </CAPTION>
@@ -180,6 +180,13 @@ public:
 	 * @return the name of this table in a string.
 	 */
 	string getName() const;
+	
+	/**
+	 * Return the names of the attributes of this table.
+	 *
+	 * @return a vector of string
+	 */
+	 static const vector<string>& getAttributesNames();
 
 	/**
 	 * Return this table's Entity.
@@ -356,6 +363,16 @@ private:
 	 * The name of this table.
 	 */
 	static string tableName;
+	
+	/**
+	 * The attributes names.
+	 */
+	static const vector<string> attributesNames;
+	
+	/**
+	 * A method to fill attributesNames;
+	 */
+	static vector<string> initAttributesNames();
 
 
 	/**

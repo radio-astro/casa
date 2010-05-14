@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalDeviceTable::tableName = "CalDevice";
-	
+	const vector<string> CalDeviceTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -112,7 +113,6 @@ namespace asdm {
 /**
  * A destructor for CalDeviceTable.
  */
- 
 	CalDeviceTable::~CalDeviceTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -132,13 +132,48 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalDeviceTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalDeviceTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaId");
+
+		attributesNames.push_back("spectralWindowId");
+
+		attributesNames.push_back("timeInterval");
+
+		attributesNames.push_back("feedId");
+
+
+		attributesNames.push_back("numCalload");
+
+		attributesNames.push_back("calLoadNames");
+
+
+		attributesNames.push_back("numReceptor");
+
+		attributesNames.push_back("calEff");
+
+		attributesNames.push_back("noiseCal");
+
+		attributesNames.push_back("temperatureLoad");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalDeviceTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -453,7 +488,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -531,7 +566,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDeviceTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -782,10 +817,10 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 	}
 
 	
-	void CalDeviceTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalDevice.xml")))
+	void CalDeviceTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalDevice.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalDevice.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalDevice.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalDevice table", "CalDevice");
@@ -874,7 +909,7 @@ void CalDeviceTable::setFromXMLFile(const string& directory) {
     	if (row.size() == 0) {
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -890,7 +925,7 @@ void CalDeviceTable::setFromXMLFile(const string& directory) {
     			last->timeInterval.setDuration(start - last->timeInterval.getStart());
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -906,7 +941,7 @@ void CalDeviceTable::setFromXMLFile(const string& directory) {
     			x->timeInterval.setDuration(first->timeInterval.getStart() - start);
     		row.insert(row.begin(), x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -935,12 +970,25 @@ void CalDeviceTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
-	
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "CalDeviceTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "CalDeviceTable");	
+		}	
+
 		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
 		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
-   		x->isAdded();
+   		x->isAdded(true);
 		return x;   
     } 
     	

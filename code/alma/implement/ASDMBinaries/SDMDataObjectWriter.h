@@ -358,10 +358,10 @@ namespace asdmbinaries {
      **/
     void addTPSubscan(unsigned long long time,
 		      unsigned long long interval,
-		      const vector<unsigned int>& flags,
-		      const vector<long long>& actualTimes,
-		      const vector<long long>& actualDurations,
-		      const vector<float>& autoData);
+		      const vector<FLAGSTYPE>& flags,
+		      const vector<ACTUALTIMESTYPE>& actualTimes,
+		      const vector<ACTUALDURATIONSTYPE>& actualDurations,
+		      const vector<AUTODATATYPE>& autoData);
 
     /**
      * Writes the full content of Total Power data in their respective attachments (global XML header, local XML header and binary attachments)
@@ -402,13 +402,13 @@ namespace asdmbinaries {
 		unsigned long long time,
 		unsigned long long interval,
 		const vector<AxisName>& flagsAxes,
-		const vector<unsigned int>& flags,
+		const vector<FLAGSTYPE>& flags,
 		const vector<AxisName>& actualTimesAxes,
-		const vector<long long>& actualTimes,
+		const vector<ACTUALTIMESTYPE>& actualTimes,
 		const vector<AxisName>& actualDurationsAxes,
-		const vector<long long>& actualDurations,
+		const vector<ACTUALDURATIONSTYPE>& actualDurations,
 		const vector<AxisName>& autoDataAxes,
-		const vector<float>& autoData);
+		const vector<AUTODATATYPE>& autoData);
 
     /**
      * Writes the full content of Total Power data in their respective attachments (global XML header, local XML header and binary attachments)
@@ -443,7 +443,7 @@ namespace asdmbinaries {
 		unsigned long long time,
 		unsigned long long interval,
 		const vector<AxisName>& autoDataAxes,
-		const vector<float>& autoData);
+		const vector<AUTODATATYPE>& autoData);
 
     /**
      * Writes water vapour radiometer (WVR) data in a  MIME message conform 
@@ -498,8 +498,8 @@ namespace asdmbinaries {
 		  NetSideband  netSideband,
 		  unsigned long long time,
 		  unsigned long long interval,
-		  const vector<float>& wvrData,
-		  const vector<unsigned int>& flags);
+		  const vector<AUTODATATYPE>& wvrData,
+		  const vector<FLAGSTYPE>& flags);
   
   
     /**
@@ -553,12 +553,12 @@ namespace asdmbinaries {
     void addIntegration(unsigned int integrationNum,
 			unsigned long long time,
 			unsigned long long interval,
-			const vector<unsigned int>& flags,
-			const vector<long long>& actualTimes,
-			const vector<long long>& actualDurations,
-			const vector<float>& zeroLags,
-			const vector<int>& crossData,
-			const vector<float>& autoData);
+			const vector<FLAGSTYPE>& flags,
+			const vector<ACTUALTIMESTYPE>& actualTimes,
+			const vector<ACTUALDURATIONSTYPE>& actualDurations,
+			const vector<ZEROLAGSTYPE>& zeroLags,
+			const vector<INTCROSSDATATYPE>& crossData,
+			const vector<AUTODATATYPE>& autoData);
     
 
     /**
@@ -586,12 +586,12 @@ namespace asdmbinaries {
     void addIntegration(unsigned int integrationNum,
 			unsigned long long time,
 			unsigned long long interval,
-			const vector<unsigned int>& flags,
-			const vector<long long>& actualTimes,
-			const vector<long long>& actualDurations,
-			const vector<float>& zeroLags,
-			const vector<short>& crossData,
-			const vector<float>& autoData);
+			const vector<FLAGSTYPE>& flags,
+			const vector<ACTUALTIMESTYPE>& actualTimes,
+			const vector<ACTUALDURATIONSTYPE>& actualDurations,
+			const vector<ZEROLAGSTYPE>& zeroLags,
+			const vector<SHORTCROSSDATATYPE>& crossData,
+			const vector<AUTODATATYPE>& autoData);
 
     /**
      * Writes an integration (local header + binary attachment) on the MIME message stream.
@@ -618,12 +618,12 @@ namespace asdmbinaries {
     void addIntegration(unsigned int integrationNum,
 			unsigned long long time,
 			unsigned long long interval,
-			const vector<unsigned int>& flags,
-			const vector<long long>& actualTimes,
-			const vector<long long>& actualDurations,
-			const vector<float>& zeroLags,
-			const vector<float>& crossData,
-			const vector<float>& autoData);
+			const vector<FLAGSTYPE>& flags,
+			const vector<ACTUALTIMESTYPE>& actualTimes,
+			const vector<ACTUALDURATIONSTYPE>& actualDurations,
+			const vector<ZEROLAGSTYPE>& zeroLags,
+			const vector<FLOATCROSSDATATYPE>& crossData,
+			const vector<AUTODATATYPE>& autoData);
 
 
     /**
@@ -653,12 +653,12 @@ namespace asdmbinaries {
 			   unsigned int subintegrationNum,
 			   unsigned long long time,
 			   unsigned long long interval,
-			   const vector<unsigned int>& flags,
-			   const vector<long long>& actualTimes,
-			   const vector<long long>& actualDurations,
-			   const vector<float>& zeroLags,
-			   const vector<int>& crossData,
-			   const vector<float>& autoData);
+			   const vector<FLAGSTYPE>& flags,
+			   const vector<ACTUALTIMESTYPE>& actualTimes,
+			   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+			   const vector<ZEROLAGSTYPE>& zeroLags,
+			   const vector<INTCROSSDATATYPE>& crossData,
+			   const vector<AUTODATATYPE>& autoData);
     
 
     /**
@@ -688,12 +688,12 @@ namespace asdmbinaries {
 			   unsigned int subintegrationNum,
 			   unsigned long long time,
 			   unsigned long long interval,
-			   const vector<unsigned int>& flags,
-			   const vector<long long>& actualTimes,
-			   const vector<long long>& actualDurations,
-			   const vector<float>& zeroLags,
-			   const vector<short>& crossData,
-			   const vector<float>& autoData);
+			   const vector<FLAGSTYPE>& flags,
+			   const vector<ACTUALTIMESTYPE>& actualTimes,
+			   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+			   const vector<ZEROLAGSTYPE>& zeroLags,
+			   const vector<SHORTCROSSDATATYPE>& crossData,
+			   const vector<AUTODATATYPE>& autoData);
 
     /**
      * Writes an subintegration (local header + binary attachment) on the MIME message stream.
@@ -722,12 +722,12 @@ namespace asdmbinaries {
 			   unsigned int subintegrationNum,
 			   unsigned long long time,
 			   unsigned long long interval,
-			   const vector<unsigned int>& flags,
-			   const vector<long long>& actualTimes,
-			   const vector<long long>& actualDurations,
-			   const vector<float>& zeroLags,
-			   const vector<float>& crossData,
-			   const vector<float>& autoData);
+			   const vector<FLAGSTYPE>& flags,
+			   const vector<ACTUALTIMESTYPE>& actualTimes,
+			   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+			   const vector<ZEROLAGSTYPE>& zeroLags,
+			   const vector<FLOATCROSSDATATYPE>& crossData,
+			   const vector<AUTODATATYPE>& autoData);
 
     /**
      * Returns the number of bytes written so far.
@@ -836,14 +836,14 @@ namespace asdmbinaries {
 		 unsigned int subintegrationNum,
 		 unsigned long long time,
 		 unsigned long long interval,
-		 const vector<unsigned int>& flags,
-		 const vector<long long>& actualTimes,
-		 const vector<long long>& actualDurations,
-		 const vector<float>& zeroLags,
-		 const vector<int>& longCrossData,
-		 const vector<short>& shortCrossData,
-		 const vector<float>& floatCrossData,
-		 const vector<float>& autoData);
+		 const vector<FLAGSTYPE>& flags,
+		 const vector<ACTUALTIMESTYPE>& actualTimes,
+		 const vector<ACTUALDURATIONSTYPE>& actualDurations,
+		 const vector<ZEROLAGSTYPE>& zeroLags,
+		 const vector<INTCROSSDATATYPE>& intCrossData,
+		 const vector<SHORTCROSSDATATYPE>& shortCrossData,
+		 const vector<FLOATCROSSDATATYPE>& floatCrossData,
+		 const vector<AUTODATATYPE>& autoData);
 
     // Are we done with this ?
     bool done_;

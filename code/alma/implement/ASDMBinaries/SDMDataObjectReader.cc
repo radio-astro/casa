@@ -346,8 +346,8 @@ namespace asdmbinaries {
 	break;
 	
       case INT32_TYPE:
-	longCrossData_  = (const LONGCROSSDATATYPE*) (data_ + startAttachPosition);
-	nCrossData_ = length / sizeof (LONGCROSSDATATYPE);
+	longCrossData_  = (const INTCROSSDATATYPE*) (data_ + startAttachPosition);
+	nCrossData_ = length / sizeof (INTCROSSDATATYPE);
 	//cout << "longCrossData = " << (unsigned long int) longCrossData_ << ", nLongCrossData = " << nCrossData_ << endl;
 	break;
 
@@ -595,7 +595,7 @@ namespace asdmbinaries {
 
 	switch (integration.crossDataType()) {
 	case INT32_TYPE:
-	  crossDataTypeSize = sizeof(LONGCROSSDATATYPE);
+	  crossDataTypeSize = sizeof(INTCROSSDATATYPE);
 	  break;
 	case INT16_TYPE:
 	  crossDataTypeSize = sizeof(SHORTCROSSDATATYPE);

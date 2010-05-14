@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalAtmosphereTable::tableName = "CalAtmosphere";
-	
+	const vector<string> CalAtmosphereTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -112,7 +113,6 @@ namespace asdm {
 /**
  * A destructor for CalAtmosphereTable.
  */
- 
 	CalAtmosphereTable::~CalAtmosphereTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -132,13 +132,98 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalAtmosphereTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalAtmosphereTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaName");
+
+		attributesNames.push_back("receiverBand");
+
+		attributesNames.push_back("calDataId");
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("startValidTime");
+
+		attributesNames.push_back("endValidTime");
+
+		attributesNames.push_back("numFreq");
+
+		attributesNames.push_back("numLoad");
+
+		attributesNames.push_back("numReceptor");
+
+		attributesNames.push_back("forwardEffSpectrum");
+
+		attributesNames.push_back("frequencyRange");
+
+		attributesNames.push_back("groundPressure");
+
+		attributesNames.push_back("groundRelHumidity");
+
+		attributesNames.push_back("frequencySpectrum");
+
+		attributesNames.push_back("groundTemperature");
+
+		attributesNames.push_back("polarizationTypes");
+
+		attributesNames.push_back("powerSkySpectrum");
+
+		attributesNames.push_back("powerLoadSpectrum");
+
+		attributesNames.push_back("syscalType");
+
+		attributesNames.push_back("tAtmSpectrum");
+
+		attributesNames.push_back("tRecSpectrum");
+
+		attributesNames.push_back("tSysSpectrum");
+
+		attributesNames.push_back("tauSpectrum");
+
+		attributesNames.push_back("tAtm");
+
+		attributesNames.push_back("tRec");
+
+		attributesNames.push_back("tSys");
+
+		attributesNames.push_back("tau");
+
+		attributesNames.push_back("water");
+
+		attributesNames.push_back("waterError");
+
+
+		attributesNames.push_back("alphaSpectrum");
+
+		attributesNames.push_back("forwardEfficiency");
+
+		attributesNames.push_back("forwardEfficiencyError");
+
+		attributesNames.push_back("sbGain");
+
+		attributesNames.push_back("sbGainError");
+
+		attributesNames.push_back("sbGainSpectrum");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalAtmosphereTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -327,7 +412,7 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 
@@ -369,7 +454,7 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -541,7 +626,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -619,7 +704,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAtmosphereTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -945,10 +1030,10 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 	}
 
 	
-	void CalAtmosphereTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalAtmosphere.xml")))
+	void CalAtmosphereTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalAtmosphere.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalAtmosphere.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalAtmosphere.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalAtmosphere table", "CalAtmosphere");

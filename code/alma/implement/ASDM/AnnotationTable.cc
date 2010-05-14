@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string AnnotationTable::tableName = "Annotation";
-	
+	const vector<string> AnnotationTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for AnnotationTable.
  */
- 
 	AnnotationTable::~AnnotationTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,58 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string AnnotationTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> AnnotationTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("annotationId");
+
+
+		attributesNames.push_back("time");
+
+		attributesNames.push_back("issue");
+
+		attributesNames.push_back("details");
+
+
+		attributesNames.push_back("numAntenna");
+
+		attributesNames.push_back("basebandName");
+
+		attributesNames.push_back("numBaseband");
+
+		attributesNames.push_back("interval");
+
+		attributesNames.push_back("dValue");
+
+		attributesNames.push_back("vdValue");
+
+		attributesNames.push_back("vvdValues");
+
+		attributesNames.push_back("llValue");
+
+		attributesNames.push_back("vllValue");
+
+		attributesNames.push_back("vvllValue");
+
+		attributesNames.push_back("antennaId");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& AnnotationTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -226,7 +271,7 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -276,7 +321,7 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -384,7 +429,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/2/AnnotationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/2/AnnotationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -462,7 +507,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/2/AnnotationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/2/AnnotationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='AnnotationTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -728,10 +773,10 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 	}
 
 	
-	void AnnotationTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Annotation.xml")))
+	void AnnotationTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Annotation.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Annotation.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Annotation.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the Annotation table", "Annotation");

@@ -83,9 +83,13 @@ namespace asdm {
 	SpectralWindowTable &SpectralWindowRow::getTable() const {
 		return table;
 	}
-	
-	void SpectralWindowRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SpectralWindowRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SpectralWindowRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

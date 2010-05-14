@@ -77,9 +77,13 @@ namespace asdm {
 	CalWVRTable &CalWVRRow::getTable() const {
 		return table;
 	}
-	
-	void CalWVRRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalWVRRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalWVRRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

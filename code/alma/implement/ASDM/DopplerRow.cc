@@ -71,9 +71,13 @@ namespace asdm {
 	DopplerTable &DopplerRow::getTable() const {
 		return table;
 	}
-	
-	void DopplerRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool DopplerRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void DopplerRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

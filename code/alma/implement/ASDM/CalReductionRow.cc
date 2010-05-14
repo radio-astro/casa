@@ -65,9 +65,13 @@ namespace asdm {
 	CalReductionTable &CalReductionRow::getTable() const {
 		return table;
 	}
-	
-	void CalReductionRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalReductionRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalReductionRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

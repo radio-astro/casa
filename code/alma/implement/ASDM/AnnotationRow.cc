@@ -71,9 +71,13 @@ namespace asdm {
 	AnnotationTable &AnnotationRow::getTable() const {
 		return table;
 	}
-	
-	void AnnotationRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool AnnotationRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void AnnotationRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

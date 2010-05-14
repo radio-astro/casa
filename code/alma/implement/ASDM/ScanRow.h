@@ -110,7 +110,7 @@ using namespace AntennaMotionPatternMod;
 
 
 /*\file Scan.h
-    \brief Generated from model's revision "1.53", branch "HEAD"
+    \brief Generated from model's revision "1.54", branch "HEAD"
 */
 
 namespace asdm {
@@ -128,7 +128,7 @@ typedef void (ScanRow::*ScanAttributeFromBin) (EndianISStream& eiss);
 /**
  * The ScanRow class is a row of a ScanTable.
  * 
- * Generated from model's revision "1.53", branch "HEAD"
+ * Generated from model's revision "1.54", branch "HEAD"
  *
  */
 class ScanRow {
@@ -143,7 +143,12 @@ public:
 	 */
 	ScanTable &getTable() const;
 	
-	
+	/**
+	 * Has this row been added to its table ?
+	 * @return true if and only if it has been added.
+	 */
+	bool isAdded() const;
+		
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -830,7 +835,7 @@ private:
 	bool hasBeenAdded;
 
 	// This method is used by the Table class when this row is added to the table.
-	void isAdded();
+	void isAdded(bool added);
 
 
 	/**

@@ -89,9 +89,13 @@ namespace asdm {
 	FeedTable &FeedRow::getTable() const {
 		return table;
 	}
-	
-	void FeedRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool FeedRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void FeedRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

@@ -109,6 +109,15 @@ namespace asdm {
     ByteOrder(const string & name, int endianity);
     virtual ~ByteOrder();
     static const ByteOrder* machineEndianity(); 
-  }; 	
+  };
+
+  /**
+   * Return a string whose content is equal to the content of s
+   * but with all the repetitions of '/' characters replaced by
+   * a unique '/'.
+   *
+   * @return a string.
+   */
+  string uniqSlashes(const string& s);
 } // end namespace asdm
 #endif  // MISC_H

@@ -65,9 +65,13 @@ namespace asdm {
 	StationTable &StationRow::getTable() const {
 		return table;
 	}
-	
-	void StationRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool StationRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void StationRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	
