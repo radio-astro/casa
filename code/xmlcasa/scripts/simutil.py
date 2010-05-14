@@ -179,6 +179,26 @@ class simutil:
             return False
         return True
 
+    ###########################################################
+
+    def ismstp(self,s,halt=True):
+        try:
+            istp=False
+            # check if the ms is tp data or not.
+            tb.open(s+'/ANTENNA')
+            antname=tb.getcol('NAME')
+            tb.close()
+            if antname[0].find('TP') > -1: istp=True
+        except:
+            if halt:
+                self.msg("can't understand the file '"+str(s)+"'",priority="error")
+            return False
+        if not istp: 
+            if halt:
+                self.msg("input file '"+str(s)+"' is not a totalpower ms",priority="error")
+            return False
+        return True
+        
 
 
     ###########################################################
