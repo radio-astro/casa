@@ -128,8 +128,8 @@ def plotcal(caltable=None,xaxis=None,yaxis=None,
 		#	cp.clearplot( subplot=subplot );
 		#elif ( clearpanel.lower()=='all' ) :
 		#	cp.clearplot(); #RI
-		if clearpanel.lower()>0: 
-			cp.clearplot(0)
+		##if clearpanel.lower()>0: #DP 
+			##cp.clearplot(0) #DP
 			#pl.ion()
 			#tp.clearplot(0,0,0)
 		
