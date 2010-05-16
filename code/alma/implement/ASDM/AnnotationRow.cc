@@ -558,7 +558,7 @@ namespace asdm {
 		
 			
 		vvllValue .clear();
-		vector<long long> v_aux_vvllValue;
+		vector<int64_t> v_aux_vvllValue;
 		for (unsigned int i = 0; i < x.vvllValue.length(); ++i) {
 			v_aux_vvllValue.clear();
 			for (unsigned int j = 0; j < x.vvllValue[0].length(); ++j) {
@@ -1439,7 +1439,7 @@ void AnnotationRow::vvllValueFromBin(EndianISStream& eiss) {
 		
 		unsigned int vvllValueDim1 = eiss.readInt();
 		unsigned int vvllValueDim2 = eiss.readInt();
-		vector <long long> vvllValueAux1;
+		vector <int64_t> vvllValueAux1;
 		for (unsigned int i = 0; i < vvllValueDim1; i++) {
 			vvllValueAux1.clear();
 			for (unsigned int j = 0; j < vvllValueDim2 ; j++)			
@@ -1970,10 +1970,10 @@ void AnnotationRow::antennaIdFromBin(EndianISStream& eiss) {
 	
  	/**
  	 * Get llValue, which is optional.
- 	 * @return llValue as long long
+ 	 * @return llValue as int64_t
  	 * @throw IllegalAccessException If llValue does not exist.
  	 */
- 	long long AnnotationRow::getLlValue() const  {
+ 	int64_t AnnotationRow::getLlValue() const  {
 		if (!llValueExists) {
 			throw IllegalAccessException("llValue", "Annotation");
 		}
@@ -1982,12 +1982,12 @@ void AnnotationRow::antennaIdFromBin(EndianISStream& eiss) {
  	}
 
  	/**
- 	 * Set llValue with the specified long long.
- 	 * @param llValue The long long value to which llValue is to be set.
+ 	 * Set llValue with the specified int64_t.
+ 	 * @param llValue The int64_t value to which llValue is to be set.
  	 
  	
  	 */
- 	void AnnotationRow::setLlValue (long long llValue) {
+ 	void AnnotationRow::setLlValue (int64_t llValue) {
 	
  		this->llValue = llValue;
 	
@@ -2017,10 +2017,10 @@ void AnnotationRow::antennaIdFromBin(EndianISStream& eiss) {
 	
  	/**
  	 * Get vllValue, which is optional.
- 	 * @return vllValue as vector<long long >
+ 	 * @return vllValue as vector<int64_t >
  	 * @throw IllegalAccessException If vllValue does not exist.
  	 */
- 	vector<long long > AnnotationRow::getVllValue() const  {
+ 	vector<int64_t > AnnotationRow::getVllValue() const  {
 		if (!vllValueExists) {
 			throw IllegalAccessException("vllValue", "Annotation");
 		}
@@ -2029,12 +2029,12 @@ void AnnotationRow::antennaIdFromBin(EndianISStream& eiss) {
  	}
 
  	/**
- 	 * Set vllValue with the specified vector<long long >.
- 	 * @param vllValue The vector<long long > value to which vllValue is to be set.
+ 	 * Set vllValue with the specified vector<int64_t >.
+ 	 * @param vllValue The vector<int64_t > value to which vllValue is to be set.
  	 
  	
  	 */
- 	void AnnotationRow::setVllValue (vector<long long > vllValue) {
+ 	void AnnotationRow::setVllValue (vector<int64_t > vllValue) {
 	
  		this->vllValue = vllValue;
 	
@@ -2064,10 +2064,10 @@ void AnnotationRow::antennaIdFromBin(EndianISStream& eiss) {
 	
  	/**
  	 * Get vvllValue, which is optional.
- 	 * @return vvllValue as vector<vector<long long > >
+ 	 * @return vvllValue as vector<vector<int64_t > >
  	 * @throw IllegalAccessException If vvllValue does not exist.
  	 */
- 	vector<vector<long long > > AnnotationRow::getVvllValue() const  {
+ 	vector<vector<int64_t > > AnnotationRow::getVvllValue() const  {
 		if (!vvllValueExists) {
 			throw IllegalAccessException("vvllValue", "Annotation");
 		}
@@ -2076,12 +2076,12 @@ void AnnotationRow::antennaIdFromBin(EndianISStream& eiss) {
  	}
 
  	/**
- 	 * Set vvllValue with the specified vector<vector<long long > >.
- 	 * @param vvllValue The vector<vector<long long > > value to which vvllValue is to be set.
+ 	 * Set vvllValue with the specified vector<vector<int64_t > >.
+ 	 * @param vvllValue The vector<vector<int64_t > > value to which vvllValue is to be set.
  	 
  	
  	 */
- 	void AnnotationRow::setVvllValue (vector<vector<long long > > vvllValue) {
+ 	void AnnotationRow::setVvllValue (vector<vector<int64_t > > vvllValue) {
 	
  		this->vvllValue = vvllValue;
 	

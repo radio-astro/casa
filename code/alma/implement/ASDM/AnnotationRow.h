@@ -554,21 +554,21 @@ public:
 	
  	/**
  	 * Get llValue, which is optional.
- 	 * @return llValue as long long
+ 	 * @return llValue as int64_t
  	 * @throws IllegalAccessException If llValue does not exist.
  	 */
- 	long long getLlValue() const;
+ 	int64_t getLlValue() const;
 	
  
  	
  	
  	/**
- 	 * Set llValue with the specified long long.
- 	 * @param llValue The long long value to which llValue is to be set.
+ 	 * Set llValue with the specified int64_t.
+ 	 * @param llValue The int64_t value to which llValue is to be set.
  	 
  		
  	 */
- 	void setLlValue (long long llValue);
+ 	void setLlValue (int64_t llValue);
 		
 	
 	
@@ -595,21 +595,21 @@ public:
 	
  	/**
  	 * Get vllValue, which is optional.
- 	 * @return vllValue as vector<long long >
+ 	 * @return vllValue as vector<int64_t >
  	 * @throws IllegalAccessException If vllValue does not exist.
  	 */
- 	vector<long long > getVllValue() const;
+ 	vector<int64_t > getVllValue() const;
 	
  
  	
  	
  	/**
- 	 * Set vllValue with the specified vector<long long >.
- 	 * @param vllValue The vector<long long > value to which vllValue is to be set.
+ 	 * Set vllValue with the specified vector<int64_t >.
+ 	 * @param vllValue The vector<int64_t > value to which vllValue is to be set.
  	 
  		
  	 */
- 	void setVllValue (vector<long long > vllValue);
+ 	void setVllValue (vector<int64_t > vllValue);
 		
 	
 	
@@ -636,21 +636,21 @@ public:
 	
  	/**
  	 * Get vvllValue, which is optional.
- 	 * @return vvllValue as vector<vector<long long > >
+ 	 * @return vvllValue as vector<vector<int64_t > >
  	 * @throws IllegalAccessException If vvllValue does not exist.
  	 */
- 	vector<vector<long long > > getVvllValue() const;
+ 	vector<vector<int64_t > > getVvllValue() const;
 	
  
  	
  	
  	/**
- 	 * Set vvllValue with the specified vector<vector<long long > >.
- 	 * @param vvllValue The vector<vector<long long > > value to which vvllValue is to be set.
+ 	 * Set vvllValue with the specified vector<vector<int64_t > >.
+ 	 * @param vvllValue The vector<vector<int64_t > > value to which vvllValue is to be set.
  	 
  		
  	 */
- 	void setVvllValue (vector<vector<long long > > vvllValue);
+ 	void setVvllValue (vector<vector<int64_t > > vvllValue);
 		
 	
 	
@@ -1038,7 +1038,7 @@ private:
 	bool llValueExists;
 	
 
-	long long llValue;
+	int64_t llValue;
 
 	
 	
@@ -1051,7 +1051,7 @@ private:
 	bool vllValueExists;
 	
 
-	vector<long long > vllValue;
+	vector<int64_t > vllValue;
 
 	
 	
@@ -1064,7 +1064,7 @@ private:
 	bool vvllValueExists;
 	
 
-	vector<vector<long long > > vvllValue;
+	vector<vector<int64_t > > vvllValue;
 
 	
 	

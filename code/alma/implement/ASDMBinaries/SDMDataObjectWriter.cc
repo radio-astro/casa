@@ -87,7 +87,7 @@ namespace asdmbinaries {
   }
   
   void SDMDataObjectWriter::output(const string& s) {
-    numBytes_ += (unsigned long long) s.size();
+    numBytes_ += (uint64_t) s.size();
     switch (otype_) {
     case STDOUT:
       cout << s;
@@ -152,7 +152,7 @@ namespace asdmbinaries {
   }
 
 
-  void SDMDataObjectWriter::tpDataHeader(unsigned long long int startTime,
+  void SDMDataObjectWriter::tpDataHeader(uint64_t startTime,
 					 const string& execBlockUID,
 					 unsigned int execBlockNum,
 					 unsigned int scanNum,
@@ -189,11 +189,11 @@ namespace asdmbinaries {
     outputln("--"+MIMEBOUNDARY_1);
   }
   
-  void SDMDataObjectWriter::addTPSubscan(unsigned long long time,
-					 unsigned long long interval,
+  void SDMDataObjectWriter::addTPSubscan(uint64_t time,
+					 uint64_t interval,
 					 const vector<unsigned int>& flags,
-					 const vector<long long>& actualTimes,
-					 const vector<long long>& actualDurations,
+					 const vector<int64_t>& actualTimes,
+					 const vector<int64_t>& actualDurations,
 					 const vector<AUTODATATYPE>& autoData){
     checkState(T_ADDTPSUBSCAN, "addTPSubscan");
     outputln("Content-Type: Multipart/Related; boundary=\""+MIMEBOUNDARY_2+"\";type=\"text/xml\"; start=\"<DataSubset.xml>\"");
@@ -246,7 +246,7 @@ namespace asdmbinaries {
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualTimes.bin");
 
       outputln();
-      outputln<long long>(actualTimes);
+      outputln<int64_t>(actualTimes);
     }
 
     if (actualDurations.size() != 0) {
@@ -263,7 +263,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualDurations.bin");
       outputln();
-      outputln<long long>(actualDurations);
+      outputln<int64_t>(actualDurations);
     }
 
     unsigned int numAutoData = sdmDataObject_.dataStruct_.autoData_.size();
@@ -283,7 +283,7 @@ namespace asdmbinaries {
     outputln("--"+MIMEBOUNDARY_2+"--");
   }
 
-  void SDMDataObjectWriter::tpData(unsigned long long int startTime,
+  void SDMDataObjectWriter::tpData(uint64_t startTime,
 				   const string& execBlockUID,
 				   unsigned int execBlockNum,
 				   unsigned int scanNum,
@@ -291,8 +291,8 @@ namespace asdmbinaries {
 				   unsigned int numberOfIntegrations,
 				   unsigned int numAntenna,
 				   const vector<SDMDataObject::Baseband>& basebands,
-				   unsigned long long time,
-				   unsigned long long interval,
+				   uint64_t time,
+				   uint64_t interval,
 				   const vector<AxisName>& autoDataAxes,
 				   const vector<AUTODATATYPE>& autoData) {
     checkState(T_TPDATA, "tpData");
@@ -349,7 +349,7 @@ namespace asdmbinaries {
     outputln("--"+MIMEBOUNDARY_2+"--");
   }
 
-  void SDMDataObjectWriter::tpData(unsigned long long int startTime,
+  void SDMDataObjectWriter::tpData(uint64_t startTime,
 				   const string& execBlockUID,
 				   unsigned int execBlockNum,
 				   unsigned int scanNum,
@@ -359,15 +359,15 @@ namespace asdmbinaries {
 
 				   const vector<SDMDataObject::Baseband>& basebands,
 
-				   unsigned long long time,
-				   unsigned long long interval,
+				   uint64_t time,
+				   uint64_t interval,
 
 				   const vector<AxisName>& flagsAxes,
 				   const vector<unsigned int>& flags,
 				   const vector<AxisName>& actualTimesAxes,
-				   const vector<long long>& actualTimes,
+				   const vector<int64_t>& actualTimes,
 				   const vector<AxisName>& actualDurationsAxes,
-				   const vector<long long>& actualDurations,
+				   const vector<int64_t>& actualDurations,
 				   const vector<AxisName>& autoDataAxes,
 				   const vector<AUTODATATYPE>& autoData) {
     checkState(T_TPDATA, "tpData");
@@ -456,7 +456,7 @@ namespace asdmbinaries {
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualTimes.bin");
 
       outputln();
-      outputln<long long>(actualTimes);
+      outputln<int64_t>(actualTimes);
     }
 
     if (actualDurations.size() != 0) {
@@ -473,7 +473,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualDurations.bin");
       outputln();
-      outputln<long long>(actualDurations);
+      outputln<int64_t>(actualDurations);
     }
 
     unsigned int numAutoData = sdmDataObject_.dataStruct_.autoData_.size();
@@ -501,8 +501,8 @@ namespace asdmbinaries {
 				     unsigned int 		numAntennas,
 				     unsigned int 		numChannels,
 				     NetSideband  		netSideband,
-				     unsigned long long 	time,
-				     unsigned long long 	interval,
+				     uint64_t 	time,
+				     uint64_t 	interval,
 				     const vector<float>& 	wvrData,
 				     const vector<unsigned int>& flags) {
     checkState(T_WVRDATA, "wvrData");
@@ -612,7 +612,7 @@ namespace asdmbinaries {
   /**
    * Writes the XML global header into its attachment on the MIME message stream.
    */
-  void SDMDataObjectWriter::corrDataHeader(unsigned long long startTime,
+  void SDMDataObjectWriter::corrDataHeader(uint64_t startTime,
 					   const string& execBlockUID,
 					   unsigned int execBlockNum,
 					   unsigned int scanNum,
@@ -656,8 +656,8 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addData(unsigned int integrationNum,
 				    unsigned int subintegrationNum,
-				    unsigned long long time,
-				    unsigned long long interval,
+				    uint64_t time,
+				    uint64_t interval,
 				    const vector<FLAGSTYPE>& flags,
 				    const vector<ACTUALTIMESTYPE>& actualTimes,
 				    const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -763,7 +763,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputlnLocation("actualTimes", sdmDataSubset);
       outputln();
-      outputln<long long>(actualTimes);
+      outputln<int64_t>(actualTimes);
     }
 
     if (actualDurations.size() != 0) {
@@ -780,7 +780,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputlnLocation("actualDurations", sdmDataSubset);
       outputln();
-      outputln<long long>(actualDurations);
+      outputln<int64_t>(actualDurations);
     }
     
     
@@ -868,8 +868,8 @@ namespace asdmbinaries {
   }
 
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
-					   unsigned long long time,
-					   unsigned long long interval,
+					   uint64_t time,
+					   uint64_t interval,
 					   const vector<FLAGSTYPE>& flags,
 					   const vector<ACTUALTIMESTYPE>& actualTimes,
 					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -897,8 +897,8 @@ namespace asdmbinaries {
   
 
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
-					   unsigned long long time,
-					   unsigned long long interval,
+					   uint64_t time,
+					   uint64_t interval,
 					   const vector<FLAGSTYPE>& flags,
 					   const vector<ACTUALTIMESTYPE>& actualTimes,
 					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -924,8 +924,8 @@ namespace asdmbinaries {
   }
 
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
-					   unsigned long long time,
-					   unsigned long long interval,
+					   uint64_t time,
+					   uint64_t interval,
 					   const vector<FLAGSTYPE>& flags,
 					   const vector<ACTUALTIMESTYPE>& actualTimes,
 					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -952,8 +952,8 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addSubintegration(unsigned int integrationNum,
 					      unsigned int subIntegrationNum,
-					      unsigned long long time,
-					      unsigned long long interval,
+					      uint64_t time,
+					      uint64_t interval,
 					      const vector<FLAGSTYPE>& flags,
 					      const vector<ACTUALTIMESTYPE>& actualTimes,
 					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -980,8 +980,8 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addSubintegration(unsigned int integrationNum,
 					      unsigned int subIntegrationNum,
-					      unsigned long long time,
-					      unsigned long long interval,
+					      uint64_t time,
+					      uint64_t interval,
 					      const vector<FLAGSTYPE>& flags,
 					      const vector<ACTUALTIMESTYPE>& actualTimes,
 					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -1008,8 +1008,8 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addSubintegration(unsigned int integrationNum,
 					      unsigned int subIntegrationNum,
-					      unsigned long long time,
-					      unsigned long long interval,
+					      uint64_t time,
+					      uint64_t interval,
 					      const vector<FLAGSTYPE>& flags,
 					      const vector<ACTUALTIMESTYPE>& actualTimes,
 					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -1034,7 +1034,7 @@ namespace asdmbinaries {
 	    autoData);		
   }
 
-  unsigned long long SDMDataObjectWriter::numBytes() { return numBytes_; }
+  uint64_t SDMDataObjectWriter::numBytes() { return numBytes_; }
   
   
   bool SDMDataObjectWriter::initClass() {

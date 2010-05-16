@@ -333,7 +333,7 @@ namespace asdmbinaries {
      *
      * @throws SDMDataObjectWriterException
      */
-    void tpDataHeader(unsigned long long int startTime,
+    void tpDataHeader(uint64_t startTime,
 		      const string& execBlockUID,
 		      unsigned int execBlockNum,
 		      unsigned int scanNum,
@@ -356,8 +356,8 @@ namespace asdmbinaries {
      * @note
      * This method must called only once after a call to tpDataHeader.
      **/
-    void addTPSubscan(unsigned long long time,
-		      unsigned long long interval,
+    void addTPSubscan(uint64_t time,
+		      uint64_t interval,
 		      const vector<FLAGSTYPE>& flags,
 		      const vector<ACTUALTIMESTYPE>& actualTimes,
 		      const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -391,7 +391,7 @@ namespace asdmbinaries {
      * @note this method allows to write Total Power data in a "one-call" way. An alternate solution consists
      * in calling tpDataHeader and then addTPSubscan.
      */
-    void tpData(unsigned long long int startTime,
+    void tpData(uint64_t startTime,
 		const string& execBlockUID,
 		unsigned int execBlockNum,
 		unsigned int scanNum,
@@ -399,8 +399,8 @@ namespace asdmbinaries {
 		unsigned int numOfIntegrations,
 		unsigned int numAntenna,
 		const vector<SDMDataObject::Baseband>& basebands,
-		unsigned long long time,
-		unsigned long long interval,
+		uint64_t time,
+		uint64_t interval,
 		const vector<AxisName>& flagsAxes,
 		const vector<FLAGSTYPE>& flags,
 		const vector<AxisName>& actualTimesAxes,
@@ -432,7 +432,7 @@ namespace asdmbinaries {
      * This method is kept for backward compatibility reasons. It's recommanded to use the "long" version of tpData which
      * gives a full control of the optional attachments to be written.
      */
-    void tpData(unsigned long long int startTime,
+    void tpData(uint64_t startTime,
 		const string& execBlockUID,
 		unsigned int execBlockNum,
 		unsigned int scanNum,
@@ -440,8 +440,8 @@ namespace asdmbinaries {
 		unsigned int numOfIntegrations,
 		unsigned int numAntenna,
 		const vector<SDMDataObject::Baseband>& basebands,
-		unsigned long long time,
-		unsigned long long interval,
+		uint64_t time,
+		uint64_t interval,
 		const vector<AxisName>& autoDataAxes,
 		const vector<AUTODATATYPE>& autoData);
 
@@ -496,8 +496,8 @@ namespace asdmbinaries {
 		  unsigned int numAntennas,
 		  unsigned int numChannels,
 		  NetSideband  netSideband,
-		  unsigned long long time,
-		  unsigned long long interval,
+		  uint64_t time,
+		  uint64_t interval,
 		  const vector<AUTODATATYPE>& wvrData,
 		  const vector<FLAGSTYPE>& flags);
   
@@ -517,7 +517,7 @@ namespace asdmbinaries {
      *
      * @throws SDMDataObjectWriterException
      */
-    void corrDataHeader(unsigned long long startime,
+    void corrDataHeader(uint64_t startime,
 			const string& execBlockUID,
 			unsigned int execBlockNum,
 			unsigned int scanNum,
@@ -551,8 +551,8 @@ namespace asdmbinaries {
      * 
      */
     void addIntegration(unsigned int integrationNum,
-			unsigned long long time,
-			unsigned long long interval,
+			uint64_t time,
+			uint64_t interval,
 			const vector<FLAGSTYPE>& flags,
 			const vector<ACTUALTIMESTYPE>& actualTimes,
 			const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -584,8 +584,8 @@ namespace asdmbinaries {
      * 
      */
     void addIntegration(unsigned int integrationNum,
-			unsigned long long time,
-			unsigned long long interval,
+			uint64_t time,
+			uint64_t interval,
 			const vector<FLAGSTYPE>& flags,
 			const vector<ACTUALTIMESTYPE>& actualTimes,
 			const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -616,8 +616,8 @@ namespace asdmbinaries {
      * 
      */
     void addIntegration(unsigned int integrationNum,
-			unsigned long long time,
-			unsigned long long interval,
+			uint64_t time,
+			uint64_t interval,
 			const vector<FLAGSTYPE>& flags,
 			const vector<ACTUALTIMESTYPE>& actualTimes,
 			const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -651,8 +651,8 @@ namespace asdmbinaries {
      */
     void addSubintegration(unsigned int integrationNum,
 			   unsigned int subintegrationNum,
-			   unsigned long long time,
-			   unsigned long long interval,
+			   uint64_t time,
+			   uint64_t interval,
 			   const vector<FLAGSTYPE>& flags,
 			   const vector<ACTUALTIMESTYPE>& actualTimes,
 			   const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -686,8 +686,8 @@ namespace asdmbinaries {
      */
     void addSubintegration(unsigned int integrationNum,
 			   unsigned int subintegrationNum,
-			   unsigned long long time,
-			   unsigned long long interval,
+			   uint64_t time,
+			   uint64_t interval,
 			   const vector<FLAGSTYPE>& flags,
 			   const vector<ACTUALTIMESTYPE>& actualTimes,
 			   const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -720,8 +720,8 @@ namespace asdmbinaries {
      */
     void addSubintegration(unsigned int integrationNum,
 			   unsigned int subintegrationNum,
-			   unsigned long long time,
-			   unsigned long long interval,
+			   uint64_t time,
+			   uint64_t interval,
 			   const vector<FLAGSTYPE>& flags,
 			   const vector<ACTUALTIMESTYPE>& actualTimes,
 			   const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -740,16 +740,16 @@ namespace asdmbinaries {
      * <li>it is reset to 0 by a call to the method done.</li>
      * </ul>
      *
-     * @return an unsigned long long.
+     * @return an uint64_t.
      */
-    unsigned long long numBytes(); 
+    uint64_t numBytes(); 
       
     
     void output   (const string& s);    
     void outputln (const string& s);
     void output   (const float* data, unsigned int numData);
     void outputln (const float* data, unsigned int numData);
-    void outputln (const long long* data, unsigned int numData);
+    void outputln (const int64_t* data, unsigned int numData);
 
     template <class T> void output(const vector<T>& data) {
       numBytes_ += data.size()*sizeof(T);
@@ -834,8 +834,8 @@ namespace asdmbinaries {
 
     void addData(unsigned int integrationNum,
 		 unsigned int subintegrationNum,
-		 unsigned long long time,
-		 unsigned long long interval,
+		 uint64_t time,
+		 uint64_t interval,
 		 const vector<FLAGSTYPE>& flags,
 		 const vector<ACTUALTIMESTYPE>& actualTimes,
 		 const vector<ACTUALDURATIONSTYPE>& actualDurations,
@@ -849,7 +849,7 @@ namespace asdmbinaries {
     bool done_;
 
     // The number of bytes written so far.
-    unsigned long long numBytes_;
+    uint64_t numBytes_;
 
 
     // A small finite state automaton to control the usage of SDMDataObjectWriter.

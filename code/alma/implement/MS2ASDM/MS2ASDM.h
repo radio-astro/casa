@@ -133,14 +133,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // convert time in seconds to an array time
   ArrayTime ASDMArrayTime( const Double seconds ){ 
-    return ArrayTime((long long) (floor(seconds*ArrayTime::unitsInASecond))); }
+    return ArrayTime((int64_t) (floor(seconds*ArrayTime::unitsInASecond))); }
 
   // convert array time to time in seconds
   Double MSTimeSecs( const ArrayTime atime ){ 
     return (Double) atime.get() / (Double)ArrayTime::unitsInASecond; }
 
   asdm::Interval ASDMInterval( const Double seconds ){ 
-    return asdm::Interval((long long) (floor(seconds*ArrayTime::unitsInASecond))); }
+    return asdm::Interval((int64_t) (floor(seconds*ArrayTime::unitsInASecond))); }
 
   // convert MS style time interval to ASDM ArrayTimeInterval
   asdm::ArrayTimeInterval ASDMTimeInterval( const Quantity midpoint, const Quantity interval);

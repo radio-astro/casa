@@ -468,18 +468,18 @@ namespace sdmbin {
 
       if(numTime){  // MIME content with a structure of dimensionality 0
 
-	const SDMDataSubset      dataSubset         = dataObject.tpDataSubset();
-	unsigned long long       obsDuration        = dataSubset.interval();
+	const SDMDataSubset    dataSubset         = dataObject.tpDataSubset();
+	uint64_t               obsDuration        = dataSubset.interval();
 
-	long long                interval           = (long long)obsDuration/(long long)numTime;
-	long long                exposure;
-	long long                timeOfDump         = (long long)dataSubset.time()-(long long)obsDuration/2LL-interval/2LL; // mutable
-	long long                timeCentroid       = timeOfDump;         // default value for the first dump
+	int64_t                interval           = (int64_t)obsDuration/(int64_t)numTime;
+	int64_t                exposure;
+	int64_t                timeOfDump         = (int64_t)dataSubset.time()-(int64_t)obsDuration/2LL-interval/2LL; // mutable
+	int64_t                timeCentroid       = timeOfDump;         // default value for the first dump
 
 	// actual pointer to the data blocks and nb of pdt values found in these blocks:
 	const unsigned int*      flagsPtr           = NULL;  unsigned int long numFlags=0; // mcaillat 
-	const long long*         actualTimesPtr     = NULL;  unsigned int long numActualTimes=0;
-	const long long*         actualDurationsPtr = NULL;  unsigned int long numActualDurations=0;
+	const int64_t*         actualTimesPtr     = NULL;  unsigned int long numActualTimes=0;
+	const int64_t*         actualDurationsPtr = NULL;  unsigned int long numActualDurations=0;
 	const float*             zeroLagsPtr        = NULL;  unsigned int long numZeroLags=0;
 	const float*             autoDataPtr        = NULL;  unsigned int long numAutoData=0;
 	const short int*         crossShortDataPtr  = NULL;  unsigned int long numCrossData=0;
@@ -645,11 +645,11 @@ namespace sdmbin {
       }else{
 
 	const vector<SDMDataSubset>& v_dataSubset    = dataObject.corrDataSubsets();
-// 	unsigned long long           startTime       = dataObject.startTime();
-	long long                    interval;
-	long long                    exposure;
-	long long                    timeOfInteg;
-	long long                    timeCentroid;
+// 	unsigned int64_t           startTime       = dataObject.startTime();
+	int64_t                    interval;
+	int64_t                    exposure;
+	int64_t                    timeOfInteg;
+	int64_t                    timeCentroid;
 	unsigned int                 dumpNum;
 
 // 	interval_    = interval;
@@ -717,7 +717,7 @@ namespace sdmbin {
 
 	  if((itf=m_dc_sizeAndAxes.find(ACTUAL_TIMES))!=ite){
 	    if(coutest)cout<<"ActualTimes have been declared in the main header"<<endl;
-	    const long long* actualTimesPtr;
+	    const int64_t* actualTimesPtr;
 	    unsigned long int numActualTimes = v_dataSubset[nt].actualTimes( actualTimesPtr );
 	    if(coutest)cout<<numActualTimes<<" "<<itf->second.first<<endl;
 	    if(numActualTimes)dataDumpPtr->attachActualTimes( itf->second.first, itf->second.second,
@@ -726,7 +726,7 @@ namespace sdmbin {
 
 	  if((itf=m_dc_sizeAndAxes.find(ACTUAL_DURATIONS))!=ite){
 	    if(coutest)cout<<"ActualDurations have been declared in the main header"<<endl;
-	    const long long* actualDurationsPtr;
+	    const int64_t* actualDurationsPtr;
 	    unsigned long int numActualDurations = v_dataSubset[nt].actualDurations( actualDurationsPtr );
 	    if(coutest)cout<<numActualDurations<<" "<<itf->second.first<<endl;
 	    if(numActualDurations)dataDumpPtr->attachActualDurations( itf->second.first, itf->second.second,
@@ -1523,8 +1523,8 @@ namespace sdmbin {
 	   << endl;
     }
 
-//     vector<vector<vector<long long> > > vvv_times;
-//     vector<vector<vector<long long> > > vvv_durations;
+//     vector<vector<vector<int64_t> > > vvv_times;
+//     vector<vector<vector<int64_t> > > vvv_durations;
 
 //     int basebandIndex = v_basebandIndex_[ndd];      if(coutest)cout<<"ndd="<<ndd<<" ==> basebandIndex="<<basebandIndex<<endl;
 

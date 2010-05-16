@@ -96,12 +96,12 @@ public:
 
 	// Useful constants
 	const static int numberSigDigitsInASecond 					= 9;
-	const static long long unitsInASecond 						= 1000000000LL;
-	const static long long unitsInADayL 						= 86400000000000LL;
+	const static int64_t unitsInASecond 						= 1000000000LL;
+	const static int64_t unitsInADayL 						= 86400000000000LL;
 	const static double unitsInADay ;	
 	const static double unitsInADayDiv100 ;		
 	const static double julianDayOfBase ;	
-	const static long long julianDayOfBaseInUnitsInADayDiv100 	= 2073600432000000000LL;
+	const static int64_t julianDayOfBaseInUnitsInADayDiv100 	= 2073600432000000000LL;
 
 	static  bool isLeapYear(int year);
 	static  double getMJD(double jd);
@@ -190,10 +190,10 @@ public:
 	/**
 	 * Build an ArrayTime from a number of nanoseconds.
 	 *
-	 * @param nanoseconds a long long integer value to express a number of nanoseconds
+	 * @param nanoseconds a int64_t integer value to express a number of nanoseconds
 	 * since 17 November 1858 00:00:00 UTC.
 	 */
-	ArrayTime(long long nanoseconds); 
+	ArrayTime(int64_t nanoseconds); 
 
 	/**
 	 * Return the julian day.
@@ -286,27 +286,27 @@ public:
 	double getLocalSiderealTime(double longitudeInHours) const; 
 	double getGreenwichMeanSiderealTime() const; 
 
-	static double unitToJD(long long unit); 
-	static double unitToMJD(long long unit);
-	static long long jdToUnit(double jd); 
-	static long long mjdToUnit(double mjd); 
+	static double unitToJD(int64_t unit); 
+	static double unitToMJD(int64_t unit);
+	static int64_t jdToUnit(double jd); 
+	static int64_t mjdToUnit(double mjd); 
 
 	static double utcCorrection(double jd); 
 
 private:
 
-	static long long init(int year, int month, double day); 
-	static long long init(int year, int month, int day, int hour, int minute, double second);
-	long long FITSString(string t) const; 
+	static int64_t init(int year, int month, double day); 
+	static int64_t init(int year, int month, int day, int hour, int minute, double second);
+	int64_t FITSString(string t) const; 
 
 /*
 	static const int numberSigDigitsInASecond;
-	static const long long unitsInASecond;
-	static const long long unitsInADayL;
+	static const int64_t unitsInASecond;
+	static const int64_t unitsInADayL;
 	static const double unitsInADay;
 	static const double unitsInADayDiv100;
 	static const double julianDayOfBase;
-	static const long long julianDayOfBaseInUnitsInADayDiv100;
+	static const int64_t julianDayOfBaseInUnitsInADayDiv100;
 */
 	static const UTCCorrection *UTCCorrectionTable;
 	static const UTCCorrection UTCLast;
