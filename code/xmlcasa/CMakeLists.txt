@@ -406,6 +406,7 @@ add_subdirectory( scripts/regressions )
 add_subdirectory( scripts/regressions/tests )
 add_subdirectory( scripts/usecases )
 add_subdirectory( scripts/demos )
+add_subdirectory( scripts/recipes )
 
 # Documentation targets, which depend on the contents of casa_out_* being set
 # Latex target
