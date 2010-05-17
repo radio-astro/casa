@@ -874,6 +874,7 @@ if doimage:
     prior = ['']
     negcomponent = 2
     scales = [0, 3, 10]
+    interpolation = 'nearest'
     async = False
     
     clean()
