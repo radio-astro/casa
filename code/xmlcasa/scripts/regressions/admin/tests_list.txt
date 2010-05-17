@@ -39,7 +39,7 @@ irc_sio_regression              takeshi.nakazato nao.ac.jp
 irc_sio_task_regression         takeshi.nakazato nao.ac.jp
 l02d                            gmoellen aoc.nrao.edu
 listcal_regression              jmlarsen eso.org
-listvis_regression              jmlarsen eso.org
+listvis_regression              scastro eso.org
 ngc1333                         gmoellen aoc.nrao.edu
 ngc2403                         gmoellen aoc.nrao.edu
 ngc4826redux                    kgolap aoc.nrao.edu
