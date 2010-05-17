@@ -1692,7 +1692,8 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
       pointingc.numPoly().put(m,0);
       pointingc.interval().put(m,-1);
       pointingc.tracking().put(m,True);
-      pointingc.time().put(m,Time);
+      ///pointingc.time().put(m,Time);
+      pointingc.time().put(m,Time+Tint/2);
       pointingc.timeOrigin().put(m,Tstart);
       pointingc.interval().put(m,Tint);
       pointingc.antennaId().put(m, m-numPointing);
