@@ -84,6 +84,7 @@ casa_add_library( plotms
   implement/Actions/PlotMSDrawThread.cc
   implement/Actions/PlotMSExportThread.cc
   implement/Actions/PlotMSThread.cc
+  implement/Data/PlotCalCache.cc
   implement/Data/PlotMSCache.cc
   implement/Data/PlotMSCacheIndexer.cc
   implement/Data/PlotMSData.cc

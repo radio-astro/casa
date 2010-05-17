@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/Data/PlotMSData.h>
 
+#include <plotms/Data/PlotCalCache.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 
@@ -36,10 +37,18 @@ namespace casa {
 ////////////////////////////
 
 
-PlotMSData::PlotMSData(PlotMS* parent) : itsCache_(new PlotMSCache(parent)),
-        itsColorize_(false), itsColorizeAxis_(PMS::DEFAULT_COLOR_AXIS) {
-
+PlotMSData::PlotMSData(PlotMS* parent) : 
+  itsCache_(NULL),
+  itsMSCache_(new PlotMSCache(parent)),
+  itsCalCache_(new PlotCalCache(parent)),
+  itsColorize_(false), 
+  itsColorizeAxis_(PMS::DEFAULT_COLOR_AXIS) {
+  
   itsIndexer_ = new PlotMSCacheIndexer(&*itsCache_);
+
+  // Nominally, point to the MS Cache
+  //  (this gets updated on-demand in loadCache)
+  itsCache_=itsMSCache_;
 
 }
 
@@ -168,25 +177,50 @@ double PlotMSData::referenceValue(PMS::Axis axis) {
 
 void PlotMSData::clearCache() { itsCache_->clear(); }
 
+  /*
+
+  I think this is deprecated... (gmoellen, 10May17)
+
 void PlotMSData::loadCache(PMS::Axis xAxis, PMS::Axis yAxis,
 			   PMS::DataColumn xData, PMS::DataColumn yData,
-			   const String& msname, 
+			   const String& name, 
 			   const PlotMSSelection& selection, 
 			   const PlotMSAveraging& averaging, 
 			   const PlotMSTransformations& transformations, 
 			   PlotMSCacheThread* thread) {
-  itsCache_->load(xAxis, yAxis, xData, yData, 
-		  msname, selection,averaging,transformations, thread); }
 
+  // load the cache
+  itsCache_->load(xAxis, yAxis, xData, yData, 
+		  name, selection,averaging,transformations, thread); }
+  */
 void PlotMSData::loadCache(const vector<PMS::Axis>& axes,
 			   const vector<PMS::DataColumn>& data, 
-			   const String& msname,
+			   const String& name,
 			   const PlotMSSelection& selection,
 			   const PlotMSAveraging& averaging,
 			   const PlotMSTransformations& transformations,
 			   PlotMSCacheThread* thread) {
+
+  // Discern what was specified, ms or caltable
+  //  and point to the correct cache object
+  Table tab(name);
+
+  //  cout << "tabinfo.type() = >" << tab.tableInfo().type() << "<" << endl;
+
+  if (tab.tableInfo().type()=="Measurement Set") {
+    itsCache_=itsMSCache_; 
+    itsCalCache_->clear();   // clear the unused cache, if necessary
+  }
+  else if (tab.tableInfo().type()=="Calibration") {
+    itsCache_=itsCalCache_;
+    itsMSCache_->clear();   // clear the unused cache, if necessary
+  }
+  else
+    throw(AipsError("Specifed table is neither and MS or CalTable."));
+  
+  // Call load on the cache
   itsCache_->load(axes, data, 
-		  msname, selection,averaging,transformations, thread); }
+		  name, selection,averaging,transformations, thread); }
 
 
 #ifdef PMSINDEXER
