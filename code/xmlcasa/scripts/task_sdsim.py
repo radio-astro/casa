@@ -157,6 +157,21 @@ def sdsim(
         nant = 1
         aveant=stnd
 
+        # check for image size (need to be > 2*pb)
+        pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant[0]*3600.*180/pl.pi
+        ia.open(modelimage4d)
+        csys=ia.coordsys()
+        dirax=csys.findcoordinate(type="direction")
+        numcellx=ia.shape()[dirax['pixel'][0]]
+        numcelly=ia.shape()[dirax['pixel'][1]]
+        ia.close()
+        minsize=min(qa.mul(qa.convert(model_cell[0],'arcsec'),numcellx)['value'],qa.mul(qa.convert(model_cell[1],'arcsec'),numcelly)['value'])
+        if minsize < pb2:
+            msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
+            del pb2,minsize,csys,dirax,numcellx,numcelly
+            return
+        del pb2,minsize,csys,dirax,numcellx,numcelly
+
         # (set back to simdata - there must be an automatic way to do this)
         casalog.origin('simdata')
 
@@ -289,6 +304,9 @@ def sdsim(
             sm.observe(sourcename=src, spwname=fband,
                        starttime=qa.quantity(sttime, "s"),
                        stoptime=qa.quantity(endtime, "s"));
+        ### start mod: kana ###
+        print "number of fields to be oberved =",nfld
+        ### end mode ##########
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
 
