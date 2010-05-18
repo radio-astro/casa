@@ -352,12 +352,20 @@ class cleanhelper:
                 if(not self.maskimages.has_key(self.imagelist[k])):
                     self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
         # initialize maskimages
+        # --- use outframe or dataframe for mask creation
+        if self.usespecframe=='': 
+            maskframe=self.dataspecframe
+        else:
+            maskframe=self.usespecframe
         for k in range(len(self.imagelist)):
             if(not (os.path.exists(self.maskimages[self.imagelist[k]]))):
                 ia.fromimage(outfile=self.maskimages[self.imagelist[k]],
                         infile=self.imagelist[k])
                 ia.open(self.maskimages[self.imagelist[k]])
                 ia.set(pixels=0.0)
+                mcsys=ia.coordsys().torecord()
+                mcsys['spectral2']['conversion']['system']=maskframe
+                ia.setcoordsys(mcsys)
                 ia.done(verbose=False)
 
         # assume a file name list for each field
@@ -528,6 +536,13 @@ class cleanhelper:
         ia.open(outputmask)
         shp=ia.shape()
         self.csys=ia.coordsys().torecord()
+        # respect dataframe or outframe
+        if self.usespecframe=='': 
+            maskframe=self.dataspecframe
+        else:
+            maskframe=self.usespecframe
+        self.csys['spectral2']['conversion']['system']=maskframe
+        ia.setcoordsys(self.csys)
         ia.close()
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -1769,6 +1784,49 @@ class cleanhelper:
         #print "frame=", frame, ' f0=',f0
         fout = me.measure(f0,frame)['m0']['value']
         return fout
+
+    def setspecframe(self,spw):
+        """
+        set spectral frame for mfs to data frame based
+        on spw selection 
+        (part copied from setChannelization)
+        """
+        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        spwframe=tb.getcol('MEAS_FREQ_REF');
+        tb.close()
+
+        # first parse spw parameter:
+
+        # use MSSelect if possible
+        if spw in (-1, '-1', '*', '', ' '):
+            spw="*"
+
+        sel=ms.msseltoindex(self.vis, spw=spw)
+        # spw returned by msseletoindex, spw='0:5~10;10~20' 
+        # will give spw=[0] and len(spw) not equal to len(chanids)
+        # so get spwids from chaninds instead.
+        chaninds=sel['channel'].tolist()
+        spwinds=[]
+        for k in range(len(chaninds)):
+            spwinds.append(chaninds[k][0])
+        if(len(spwinds) == 0):
+            raise Exception, 'unable to parse spw parameter '+spw;
+            
+        # the first selected spw 
+        spw0=spwinds[0]
+
+        # set dataspecframe:
+        elspecframe=["REST",
+                     "LSRK",
+                     "LSRD",
+                     "BARY",
+                     "GEO",	    
+                     "TOPO",
+                     "GALACTO",
+                     "LGROUP",
+                     "CMB"]
+        self.dataspecframe=elspecframe[spwframe[spw0]];
+        return 
 
     def initChaniter(self,nchan,spw,start,width,imagename,mode,tmpdir='_tmpimdir/'):
         """

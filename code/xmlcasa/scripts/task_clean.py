@@ -86,6 +86,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
             (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
         else:
+            imset.setspecframe(spw)
             localnchan=nchan
             localstart=start
             localwidth=width
