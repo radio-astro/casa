@@ -45,6 +45,12 @@
 	    <value type="vector"><value>1.0</value><value>1.0</value></value>
 	    </param>
 
+        <param type="any" name="phasecenter">
+            <description>Image center: direction or field index</description>
+            <any type="variant"/>
+            <value type="string"></value>
+        </param>
+
 		<param type="int" name="niter">
 			<description>Maximum number of iterations</description>
 			<value>500</value>
@@ -131,6 +137,10 @@
                cell=['1arcmin', '1arcmin']
                cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
                NOTE:cell = 2.0 => ['2arcsec', '2arcsec']
+
+       phasecenter -- direction measure  or fieldid for the mosaic center
+                default: '' => first field selected ; example: phasecenter=6
+                or phasecenter='J2000 19h30m00 -40d00m00'
 
 	niter -- Maximum number of iterations,
                if niter=0, then no CLEANing is done ("invert" only)
