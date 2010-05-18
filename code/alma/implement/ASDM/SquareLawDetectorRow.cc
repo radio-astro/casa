@@ -65,9 +65,13 @@ namespace asdm {
 	SquareLawDetectorTable &SquareLawDetectorRow::getTable() const {
 		return table;
 	}
-	
-	void SquareLawDetectorRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SquareLawDetectorRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SquareLawDetectorRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

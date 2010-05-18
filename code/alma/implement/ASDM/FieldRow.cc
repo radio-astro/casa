@@ -83,9 +83,13 @@ namespace asdm {
 	FieldTable &FieldRow::getTable() const {
 		return table;
 	}
-	
-	void FieldRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool FieldRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void FieldRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

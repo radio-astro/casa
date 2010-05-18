@@ -65,9 +65,13 @@ namespace asdm {
 	ProcessorTable &ProcessorRow::getTable() const {
 		return table;
 	}
-	
-	void ProcessorRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool ProcessorRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void ProcessorRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

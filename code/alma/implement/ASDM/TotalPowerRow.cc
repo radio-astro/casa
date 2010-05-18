@@ -89,9 +89,13 @@ namespace asdm {
 	TotalPowerTable &TotalPowerRow::getTable() const {
 		return table;
 	}
-	
-	void TotalPowerRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool TotalPowerRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void TotalPowerRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

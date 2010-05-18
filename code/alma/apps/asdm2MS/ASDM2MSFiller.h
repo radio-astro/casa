@@ -87,6 +87,16 @@ class MeasFrame;
 class MeasurementSet;
 class MSMainColumns;
 
+//
+// A structure to define a range of rows in the Pointing table where the attribute overTheTop is defined and with which value.
+//
+struct s_overTheTop {
+  int  start;   // The index of the first row of the range. 
+  int  len;     // The number of consecutive rows in the range.
+  bool value;   // The value of overTheTop in that range.
+};
+
+//
 // Class timeMgr is a utility to help for the management
 // of time in tables with TIME and INTERVAL columns
 class timeMgr {
@@ -322,15 +332,18 @@ class ASDM2MSFiller
 		   double  encoder_[2],
 		   int     tracking_);
 
-  void addPointingSlice(unsigned int n_row_,
-			int         *antenna_id,
-			double      *time_,
-			double      *interval_,
-			double      *direction_,
-			double      *target_,
-			double      *pointing_offset_,
-			double      *encoder_,
-			bool        *tracking_);
+  void addPointingSlice(unsigned int                  n_row_,
+			int*                          antenna_id_,
+			double*                       time_,
+			double*                       interval_,
+			double*                       direction_,
+			double*                       target_,
+			double*                       pointing_offset_,
+			double*                       encoder_,
+			bool*                         tracking_,
+			bool                          overTheTopExists4All_,
+			bool*                         a_overTheTop_,
+			const vector<s_overTheTop>&   v_overTheTop_);
 
   int  addPolarization(int num_corr_,
 		       int corr_type_[],

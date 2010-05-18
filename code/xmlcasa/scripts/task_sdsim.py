@@ -52,8 +52,9 @@ def sdsim(
     try:
 
         # create the utility object:
-        util=simutil(direction,startfreq=qa.quantity(startfreq),
-                     verbose=verbose)
+        #util=simutil(direction,startfreq=qa.quantity(startfreq),
+        #             verbose=verbose)
+        util=simutil(startfreq=qa.quantity(startfreq),verbose=verbose)
         msg=util.msg
 
         # file check 
@@ -66,7 +67,8 @@ def sdsim(
         nfld, pointings, etime = _calc_lattice_pointings(util,pointingspacing,mosaicsize,direction)
 
         # find imcenter - phase center
-        imcenter , offsets = util.average_direction(pointings)        
+        imcenter , offsets = util.average_direction(pointings)
+        util.direction=imcenter
         epoch, ra, dec = util.direction_splitter(imcenter)
 
         #########################################################
@@ -151,7 +153,7 @@ def sdsim(
         stnd=[stnd[ant]]
         padnames=[padnames[ant]]
         antnames=[telescopename]
-        if nant > 1: antnames=[telescopename+('SD%02d'%ant)]
+        if nant > 1: antnames=[telescopename+('%02dTP'%ant)]
         nant = 1
         aveant=stnd
 
@@ -303,7 +305,7 @@ def sdsim(
         msg("predicting from "+modelimage4d,priority="warn")
         #sm.setoptions(gridfunction='pb', ftmachine='sd', cache=100000)
         #sm.setoptions(gridfunction='pb', ftmachine='sd', location=posobs, cache=100000)
-        sm.setoptions(gridfunction='pb', ftmachine=ftmachine, location=posobs, cache=100000)
+        sm.setoptions(gridfunction='pb', ftmachine=ftmachine, location=posobs)
         sm.predict(imagename=[modelimage4d])
         sm.done()
         sm.close()

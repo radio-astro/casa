@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string EphemerisTable::tableName = "Ephemeris";
-	
+	const vector<string> EphemerisTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for EphemerisTable.
  */
- 
 	EphemerisTable::~EphemerisTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,30 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string EphemerisTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> EphemerisTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("ephemerisId");
+
+
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& EphemerisTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -191,7 +208,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -231,7 +248,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -317,7 +334,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/2/EphemerisTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/2/EphemerisTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -395,7 +412,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/2/EphemerisTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/2/EphemerisTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='EphemerisTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -619,10 +636,10 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	}
 
 	
-	void EphemerisTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Ephemeris.xml")))
+	void EphemerisTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Ephemeris.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Ephemeris.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Ephemeris.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the Ephemeris table", "Ephemeris");

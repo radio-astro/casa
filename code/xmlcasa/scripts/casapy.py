@@ -153,6 +153,10 @@ while len(a) > 0:
             casa['flags'][c] = a.pop( )
             if c == '--rcdir':
                 casa['dirs']['rc'] = casa['flags'][c]
+
+    elif c.find('=') > 0 :
+        casa['flags'][c[0:c.find('=')]] = c[c.find('=')+1:]
+
     else :
         casa['flags'][c] = ''
 

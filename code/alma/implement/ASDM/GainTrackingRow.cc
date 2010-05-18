@@ -83,9 +83,13 @@ namespace asdm {
 	GainTrackingTable &GainTrackingRow::getTable() const {
 		return table;
 	}
-	
-	void GainTrackingRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool GainTrackingRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void GainTrackingRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

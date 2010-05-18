@@ -594,6 +594,7 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
     MSPointing::addColumnToDesc (td, MSPointing::POINTING_OFFSET);
     MSPointing::addColumnToDesc (td, MSPointing::ENCODER);
     MSPointing::addColumnToDesc (td, MSPointing::ON_SOURCE);
+    MSPointing::addColumnToDesc (td, MSPointing::OVER_THE_TOP);
     SetupNewTable tabSetup(itsMS->pointingTableName(), td, Table::New);    
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
 				      Table(tabSetup));
@@ -1482,14 +1483,17 @@ void ASDM2MSFiller::addPointing(int     antenna_id_,
 }
 
 void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
-				     int         *antenna_id_,
-				     double      *time_,
-				     double      *interval_,
-				     double      *direction_,
-				     double      *target_,
-				     double      *pointing_offset_,
-				     double      *encoder_,
-				     bool        *tracking_) {
+				     int*                         antenna_id_,
+				     double*                      time_,
+				     double*                      interval_,
+				     double*                      direction_,
+				     double*                      target_,
+				     double*                      pointing_offset_,
+				     double*                      encoder_,
+				     bool*                        tracking_,
+				     bool                         overTheTopExists4All_,
+				     bool*                        a_overTheTop_,
+				     const vector<s_overTheTop>&  v_overTheTop_) {
   Vector<Int>    antenna_id(IPosition(1, n_row_), antenna_id_, SHARE);
   Vector<Double> time(IPosition(1, n_row_), time_, SHARE);
   Vector<Double> interval(IPosition(1, n_row_), interval_, SHARE);
@@ -1527,6 +1531,22 @@ void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
   mspointingCol.encoder().putColumnRange(slicer, encoder);
   mspointingCol.tracking().putColumnRange(slicer, tracking);
 
+  // We can use the slicer only if overTheTop is present on all rows.
+  // For the time being, if this is not the case (i.e. overTheTop present only on a subset possibly empty) then we ignore overTheTop.
+  if (overTheTopExists4All_) {
+    Vector<Bool> over_the_top(IPosition(1, n_row_), a_overTheTop_, SHARE);
+    mspointingCol.overTheTop().putColumnRange(slicer, over_the_top);
+  }
+  // Otherwise we fill overTheTop range after range.
+  else {
+    for (unsigned int i = 0; i < v_overTheTop_.size(); i++) {
+      s_overTheTop saux = v_overTheTop_.at(i);
+      for (unsigned int j = saux.start; j < (saux.start + saux.len) ; j++)
+	mspointingCol.overTheTop().put(j, saux.value);
+    }
+  }
+
+  mspointing.flush();
 }
 
 

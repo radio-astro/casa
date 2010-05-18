@@ -77,9 +77,13 @@ namespace asdm {
 	CalDelayTable &CalDelayRow::getTable() const {
 		return table;
 	}
-	
-	void CalDelayRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalDelayRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalDelayRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

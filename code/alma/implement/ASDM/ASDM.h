@@ -59,7 +59,7 @@ using namespace asdmIDL;   /// <-------------------
 #endif
 
 /*\file ASDM.h
-    \brief Generated from model's revision "1.53", branch "HEAD"
+    \brief Generated from model's revision "1.54", branch "HEAD"
 */
 
 namespace asdm {
@@ -254,7 +254,7 @@ class WeatherTable;
  * creates a complete set of tables.
  *
  * 
- * Generated from model's revision "1.53", branch "HEAD"
+ * Generated from model's revision "1.54", branch "HEAD"
  */
 //class ASDM : public Representable {
 class ASDM {

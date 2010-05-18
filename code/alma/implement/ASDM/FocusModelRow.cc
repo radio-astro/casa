@@ -77,9 +77,13 @@ namespace asdm {
 	FocusModelTable &FocusModelRow::getTable() const {
 		return table;
 	}
-	
-	void FocusModelRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool FocusModelRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void FocusModelRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

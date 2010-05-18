@@ -71,9 +71,13 @@ namespace asdm {
 	ScanTable &ScanRow::getTable() const {
 		return table;
 	}
-	
-	void ScanRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool ScanRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void ScanRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

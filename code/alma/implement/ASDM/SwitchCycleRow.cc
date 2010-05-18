@@ -65,9 +65,13 @@ namespace asdm {
 	SwitchCycleTable &SwitchCycleRow::getTable() const {
 		return table;
 	}
-	
-	void SwitchCycleRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SwitchCycleRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SwitchCycleRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

@@ -77,9 +77,13 @@ namespace asdm {
 	CalFocusTable &CalFocusRow::getTable() const {
 		return table;
 	}
-	
-	void CalFocusRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalFocusRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalFocusRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

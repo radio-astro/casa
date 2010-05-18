@@ -83,9 +83,13 @@ namespace asdm {
 	CalDeviceTable &CalDeviceRow::getTable() const {
 		return table;
 	}
-	
-	void CalDeviceRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalDeviceRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalDeviceRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

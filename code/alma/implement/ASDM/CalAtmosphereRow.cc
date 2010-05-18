@@ -77,9 +77,13 @@ namespace asdm {
 	CalAtmosphereTable &CalAtmosphereRow::getTable() const {
 		return table;
 	}
-	
-	void CalAtmosphereRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalAtmosphereRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalAtmosphereRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

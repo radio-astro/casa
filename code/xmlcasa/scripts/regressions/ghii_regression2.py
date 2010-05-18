@@ -31,11 +31,12 @@ cl.rename(project+".cl")
 cl.done()
 
 modifymodel=True # but only brightness
-modelimage="30dor.image"
+skymodel="30dor.image"
 inbright=".1"
 incell=""
 incenter="652GHz"   
 inwidth="4GHz" 
+indirection=""
 
 setpointings=True
 integration="10s"
@@ -123,20 +124,6 @@ ia.open(project + '.diff')
 hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# on ghii.diff.im
-diffstats = {'sum': 66.7,
-             'max': 0.00884,
-             'min': -0.00391,
-             'rms': 0.00199,
-             'sigma': 0.00109 }
-
-#padding change, 20100325
-diffstats = {'sum': 67.1,
-             'max': 0.005628,
-             'min': -0.00103,
-             'rms': 0.000940,
-             'sigma': 0.000573 }
-
 # 20100505 robust=0.5
 diffstats = {'sum': 68.9,
              'max': 0.004645,
@@ -145,11 +132,11 @@ diffstats = {'sum': 68.9,
              'sigma': 0.000556 }
 
 # simdata2
-diffstats = {'sum': 370.59,
-             'max': 0.05948,
-             'min': -0.50600,
-             'rms': 0.00719,
-             'sigma': 0.00589 }
+diffstats = {'sum': 3273.9,
+             'max': 0.2203,
+             'min': -0.05604,
+             'rms': 0.045,
+             'sigma': 0.0265 }
 
 ### tight 
 reftol   = {'sum':  1e-2,

@@ -476,7 +476,7 @@ namespace casa {
       
       SDMDataObjectWriter sdmdow(&ofs, getCurrentUid()); // use default title
       
-      unsigned long long startTime = (unsigned long long) floor(subScanStartTime);
+      uint64_t startTime = (uint64_t) floor(subScanStartTime);
       unsigned int execBlockNum = eBlockNum; // constant for all scans
       unsigned int scanNum = theScan; // ASDM scan numbering starts at 1
       if(scanNum == 0 && !warned){
@@ -717,11 +717,11 @@ namespace casa {
 	  continue;
 	}
 	
-	unsigned long long timev = (unsigned long long) floor((time()(mainTabRow))*1E9); // what units? nanoseconds
-	unsigned long long intervalv = (unsigned long long) floor(interval()(mainTabRow)*1E9);
+	uint64_t timev = (uint64_t) floor((time()(mainTabRow))*1E9); // what units? nanoseconds
+	uint64_t intervalv = (uint64_t) floor(interval()(mainTabRow)*1E9);
 	vector< unsigned int > flags;
-	vector< long long > actualTimes;
-	vector< long long > actualDurations;
+	vector< int64_t > actualTimes;
+	vector< int64_t > actualDurations;
 	vector< float > zeroLags; // LAG_DATA, optional column, not used for the moment
 	vector< float > crossData;
 	// vector< short > crossData;
@@ -842,8 +842,8 @@ namespace casa {
 	    }
 	  }
 	  // the following two lines only needed for data blanking
-	  //	    actualTimes.push_back((long long)floor(time()(iRow))*1000.);
-	  //	    actualDurations.push_back((long long)floor(interval()(iRow))*1000.);
+	  //	    actualTimes.push_back((int64_t)floor(time()(iRow))*1000.);
+	  //	    actualDurations.push_back((int64_t)floor(interval()(iRow))*1000.);
 	}// end loop over rows in this timestamp sorted by baseline
 	
 	if(verbosity_p>1){
@@ -868,8 +868,8 @@ namespace casa {
 
 	integrationNum++;
 	datasize += flags.size() * sizeof(unsigned int)
-	  + actualTimes.size() * sizeof( long long )
-	  + actualDurations.size() * sizeof( long long )
+	  + actualTimes.size() * sizeof( int64_t )
+	  + actualDurations.size() * sizeof( int64_t )
 	  + zeroLags.size() * sizeof( float )
 	  + crossData.size() * sizeof( float )
 	  + autoData.size() * sizeof( float );

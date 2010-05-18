@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string SysCalTable::tableName = "SysCal";
-	
+	const vector<string> SysCalTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -112,7 +113,6 @@ namespace asdm {
 /**
  * A destructor for SysCalTable.
  */
- 
 	SysCalTable::~SysCalTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -132,13 +132,68 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string SysCalTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> SysCalTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaId");
+
+		attributesNames.push_back("spectralWindowId");
+
+		attributesNames.push_back("timeInterval");
+
+		attributesNames.push_back("feedId");
+
+
+		attributesNames.push_back("numReceptor");
+
+		attributesNames.push_back("numChan");
+
+
+		attributesNames.push_back("tcalFlag");
+
+		attributesNames.push_back("tcalSpectrum");
+
+		attributesNames.push_back("trxFlag");
+
+		attributesNames.push_back("trxSpectrum");
+
+		attributesNames.push_back("tskyFlag");
+
+		attributesNames.push_back("tskySpectrum");
+
+		attributesNames.push_back("tsysFlag");
+
+		attributesNames.push_back("tsysSpectrum");
+
+		attributesNames.push_back("tantFlag");
+
+		attributesNames.push_back("tantSpectrum");
+
+		attributesNames.push_back("tantTsysFlag");
+
+		attributesNames.push_back("tantTsysSpectrum");
+
+		attributesNames.push_back("phaseDiffFlag");
+
+		attributesNames.push_back("phaseDiffSpectrum");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& SysCalTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -453,7 +508,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -531,7 +586,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -812,10 +867,10 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 	}
 
 	
-	void SysCalTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/SysCal.xml")))
+	void SysCalTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/SysCal.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/SysCal.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/SysCal.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the SysCal table", "SysCal");
@@ -904,7 +959,7 @@ void SysCalTable::setFromXMLFile(const string& directory) {
     	if (row.size() == 0) {
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -920,7 +975,7 @@ void SysCalTable::setFromXMLFile(const string& directory) {
     			last->timeInterval.setDuration(start - last->timeInterval.getStart());
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -936,7 +991,7 @@ void SysCalTable::setFromXMLFile(const string& directory) {
     			x->timeInterval.setDuration(first->timeInterval.getStart() - start);
     		row.insert(row.begin(), x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -965,12 +1020,25 @@ void SysCalTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
-	
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SysCalTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SysCalTable");	
+		}	
+
 		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
 		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
-   		x->isAdded();
+   		x->isAdded(true);
 		return x;   
     } 
     	

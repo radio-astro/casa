@@ -1082,7 +1082,7 @@ namespace asdm {
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\"> ");
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\"> ");
 
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");

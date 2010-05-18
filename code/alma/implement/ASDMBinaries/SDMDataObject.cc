@@ -1109,30 +1109,30 @@ namespace asdmbinaries {
   }
 
    
-  unsigned long int SDMDataSubset::actualDurations(const long long* & ptr) const {ptr = actualDurations_; return nActualDurations_;}
-  unsigned long int SDMDataSubset::actualTimes(const long long* & ptr) const { ptr = actualTimes_; return nActualTimes_;}
-  unsigned long int SDMDataSubset::autoData(const float* & ptr)const  { ptr = autoData_; return nAutoData_; }
-  unsigned long int SDMDataSubset::crossData(const short int* & ptr) const { 
+  unsigned long int SDMDataSubset::actualDurations(const ACTUALDURATIONSTYPE* & ptr) const {ptr = actualDurations_; return nActualDurations_;}
+  unsigned long int SDMDataSubset::actualTimes(const ACTUALTIMESTYPE* & ptr) const { ptr = actualTimes_; return nActualTimes_;}
+  unsigned long int SDMDataSubset::autoData(const AUTODATATYPE* & ptr)const  { ptr = autoData_; return nAutoData_; }
+  unsigned long int SDMDataSubset::crossData(const SHORTCROSSDATATYPE* & ptr) const { 
     if (owner_ && (owner_->isTP() || owner_->correlationMode() == AUTO_ONLY)) Utils::invalidCall("SDMDataSubset::crossData", owner_);
     ptr = shortCrossData_; return nCrossData_; 
   }
   PrimitiveDataType SDMDataSubset::crossDataType() const { return crossDataType_; }
   void SDMDataSubset::crossDataType(PrimitiveDataType value) { crossDataType_ = value;}
 
-  unsigned long int SDMDataSubset::crossData(const int* & ptr) const { 
+  unsigned long int SDMDataSubset::crossData(const INTCROSSDATATYPE* & ptr) const { 
     if (owner_ && (owner_->isTP() || owner_->correlationMode() == AUTO_ONLY)) Utils::invalidCall("SDMDataSubset::crossData", owner_);
     ptr = longCrossData_; return nCrossData_; 
   }
 
 
-  unsigned long int SDMDataSubset::crossData(const float* & ptr) const { 
+  unsigned long int SDMDataSubset::crossData(const FLOATCROSSDATATYPE* & ptr) const { 
     if (owner_ && (owner_->isTP() || owner_->correlationMode() == AUTO_ONLY)) Utils::invalidCall("SDMDataSubset::crossData", owner_);
     ptr = floatCrossData_; return nCrossData_; 
   }
 
-  unsigned long int SDMDataSubset::flags(const unsigned int* & ptr) const { ptr = flags_; return nFlags_; }
+  unsigned long int SDMDataSubset::flags(const FLAGSTYPE* & ptr) const { ptr = flags_; return nFlags_; }
 
-  unsigned long int SDMDataSubset::zeroLags(const float* & ptr) const { 
+  unsigned long int SDMDataSubset::zeroLags(const ZEROLAGSTYPE* & ptr) const { 
     if (owner_ && owner_->isTP()) Utils::invalidCall("SDMDataSubset::zeroLags", owner_);
     ptr = zeroLags_; return nZeroLags_;
   }

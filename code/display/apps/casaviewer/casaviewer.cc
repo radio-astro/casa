@@ -66,12 +66,14 @@ static void launch_server( const char *origname, int numargs, char **args,
 static pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority );
 static int make_it_a_dir( const char *path );
 
+static void exiting_server( int sig ) { exit(0); }
 static void signal_manager_root( int sig ) {
     if ( manager_root_pid && ! sigterm_received ) {
 	killpg( manager_root_pid, sig );
 	sigterm_received = true;
     }
     signal( sig, signal_manager_root );
+    exit(0);
 }
 
 int main( int argc, const char *argv[] ) {
@@ -86,6 +88,8 @@ int main( int argc, const char *argv[] ) {
 
     char **args;
     int numargs;
+
+    signal( SIGTERM, exiting_server );
 
     preprocess_args( argc, argv, numargs, args, dbus_name, initial_run,
 		     server_startup, without_gui, persistent, casapy_start );

@@ -71,9 +71,13 @@ namespace asdm {
 	DelayModelTable &DelayModelRow::getTable() const {
 		return table;
 	}
-	
-	void DelayModelRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool DelayModelRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void DelayModelRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

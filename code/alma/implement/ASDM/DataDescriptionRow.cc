@@ -85,8 +85,12 @@ namespace asdm {
     return table;
   }
 	
-  void DataDescriptionRow::isAdded() {
-    hasBeenAdded = true;
+  bool DataDescriptionRow::isAdded() const {
+	  return hasBeenAdded;
+  }
+
+  void DataDescriptionRow::isAdded(bool added) {
+    hasBeenAdded = added;
   }
 	
 	

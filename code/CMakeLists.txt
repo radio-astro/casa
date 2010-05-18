@@ -386,6 +386,12 @@ casa_find( LAPACK
            LIBS lapack 
            DEPENDS BLAS )
 
+# DL
+set( DL_LIBRARIES ${CMAKE_DL_LIBS} CACHE STRING "dl libraries" FORCE )
+if( DL_LIBRARIES STREQUAL "dl" )
+  set( DL_LIBRARIES "-ldl" CACHE STRING "dl libraries" FORCE )
+endif()
+
 # CASACore
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
@@ -426,7 +432,7 @@ casa_find( CASACORE
            PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
-           DEPENDS LAPACK CFITSIO WCSLIB )
+           DEPENDS LAPACK CFITSIO WCSLIB DL )
 
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
   -DCASA_USECASAPATH
@@ -794,9 +800,7 @@ endforeach()
 
 set( _cc "" )
 foreach( _c ${CASACORE_LIBRARIES} )
-  if (_c STREQUAL dl)
-    set( _cc "${_cc} -ldl" )
-  elseif( _c MATCHES Framework )
+  if( _c MATCHES Framework )
     # skip
   else()
     set( _cc "${_cc} ${_c}" )

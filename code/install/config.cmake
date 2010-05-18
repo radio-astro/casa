@@ -286,10 +286,11 @@ macro( casa_find package )
   if( NOT ${package}_FOUND )
 
   # Check that dependencies are detected before proceeding
+  # DL libraries may be undefined on Mac
   foreach( _d ${_depends} )
     #dump( ${_d}_INCLUDE_DIRS )
     #dump( ${_d}_LIBRARIES )
-    if( NOT ${_d}_INCLUDE_DIRS AND NOT ${_d}_LIBRARIES )
+    if( NOT ${_d}_INCLUDE_DIRS AND NOT ${_d}_LIBRARIES AND NOT ${_d} STREQUAL DL )
       message( FATAL_ERROR "${_d}_INCLUDE_DIRS and ${_d}_LIBRARIES are undefined! Cannot detect ${package}" )
     endif()
   endforeach()

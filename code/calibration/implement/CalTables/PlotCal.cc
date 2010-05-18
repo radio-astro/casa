@@ -172,6 +172,7 @@ extern "C" {
     subplotToPanel(subplot, nx, ny, panel);
     
     tp_p->clearPlot(nx,ny,panel);
+    //tp_p->clearPlot();
     return True;
   }
   

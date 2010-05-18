@@ -55,7 +55,7 @@ namespace PointingMethodMod
   //! PointingMethod.
   //!  [CalDM.CalPointing] Method of pointing measurement
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum PointingMethod

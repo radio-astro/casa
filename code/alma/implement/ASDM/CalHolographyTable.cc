@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalHolographyTable::tableName = "CalHolography";
-	
+	const vector<string> CalHolographyTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -110,7 +111,6 @@ namespace asdm {
 /**
  * A destructor for CalHolographyTable.
  */
- 
 	CalHolographyTable::~CalHolographyTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -130,13 +130,82 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalHolographyTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalHolographyTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaName");
+
+		attributesNames.push_back("calDataId");
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("antennaMake");
+
+		attributesNames.push_back("startValidTime");
+
+		attributesNames.push_back("endValidTime");
+
+		attributesNames.push_back("ambientTemperature");
+
+		attributesNames.push_back("focusPosition");
+
+		attributesNames.push_back("frequencyRange");
+
+		attributesNames.push_back("illuminationTaper");
+
+		attributesNames.push_back("numReceptor");
+
+		attributesNames.push_back("polarizationTypes");
+
+		attributesNames.push_back("numPanelModes");
+
+		attributesNames.push_back("receiverBand");
+
+		attributesNames.push_back("beamMapUID");
+
+		attributesNames.push_back("rawRMS");
+
+		attributesNames.push_back("weightedRMS");
+
+		attributesNames.push_back("surfaceMapUID");
+
+		attributesNames.push_back("direction");
+
+
+		attributesNames.push_back("numScrew");
+
+		attributesNames.push_back("screwName");
+
+		attributesNames.push_back("screwMotion");
+
+		attributesNames.push_back("screwMotionError");
+
+		attributesNames.push_back("gravCorrection");
+
+		attributesNames.push_back("gravOptRange");
+
+		attributesNames.push_back("tempCorrection");
+
+		attributesNames.push_back("tempOptRange");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalHolographyTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -283,7 +352,7 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 
@@ -323,7 +392,7 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -471,7 +540,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -549,7 +618,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalHolographyTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -851,10 +920,10 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 	}
 
 	
-	void CalHolographyTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalHolography.xml")))
+	void CalHolographyTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalHolography.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalHolography.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalHolography.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalHolography table", "CalHolography");

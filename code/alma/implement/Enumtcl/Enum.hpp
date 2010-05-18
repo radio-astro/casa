@@ -1030,7 +1030,7 @@ public:
       if(bits[it->first])os<<it->second.str();
     return os.str();
   }
-  enum_type toEnumType(){
+  enum_type toEnumType() const{
     typename std::map<enum_type,EnumPar<val_type> >::iterator it, itb(map_traits::m_.begin()), ite(map_traits::m_.end());
     for(it=itb; it!=ite; ++it)
       if(bits[it->first])return it->first;

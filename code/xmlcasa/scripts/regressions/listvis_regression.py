@@ -363,6 +363,53 @@ else:
     testFailed +=1
 
 ##########################################################################                                                                        
+# TEST 5
+# Using single dish data OrionS_rawACSmod.  This data contains multiple
+# numbers of channels and DATA_FLOAT column (CAS-2138)
+#
+testNum += 1
+print ""
+print "* TEST " + str(testNum) + ": using single dish data OrionS_rawACSmod"
+print ""
+
+prefix = regressionDir+'/test'+str(testNum)+'/'
+msname = prefix+"OrionS_rawACSmod"  
+outputFilename = prefix+'listvis.orion.short.out'
+localData = pathName + '/data/regression/ATST5/OrionS/'
+standardFilename = localData+'listvis.orionshort.out'
+
+#Remove existing data or load data from scratch?
+if (not lt.resetData([msname], automate)):
+    print "Using preexisting data."
+    lt.removeOut(outputFilename)
+else:
+    print "Building data from scratch."
+    tstutl.maketestdir(prefix) # create test dir, overwrite preexisting
+    shutil.copytree(localData+'OrionS_rawACSmod', msname)
+
+# Setup listvis input and run
+default(listvis)
+vis                 = msname            #  Name of input visibility file
+options             =       'ap'        #  List options: ap only
+datacolumn          =     'float_data'  #  Column to list: data, corrected, model, residual
+field               =         ''        #  Field names or index to be listed: ''==>all
+spw                 =  '0:1200~1205'    #  Spectral window:channels: '\*'==>all, spw='1:5~57'
+selectdata          =       True        #  Other data selection parameters
+showflags           =      False        #  Show flagged data (Not yet implemented)
+pagerows            =         20        #  Rows per page
+listfile            = outputFilename   #  Output file
+async               =      False        #  If true the taskname must be started using listvis(...)
+go(listvis)
+
+comparefilename = prefix + 'compare_' + str(testNum)
+if (lt.runTests(outputFilename,standardFilename,'1.000',comparefilename)):
+    print "passed listvis output test"
+    testPassed +=1
+else:
+    print "failed listvis output test"
+    testFailed +=1
+
+##########################################################################                                                                        
 # Test complete, summarize.
 #
 
