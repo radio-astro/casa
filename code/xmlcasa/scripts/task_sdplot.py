@@ -5,7 +5,7 @@ import asap as sd
 import pylab as pl
 #import Tkinter as Tk
 
-def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, layout, plotfile, overwrite):
+def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, layout, legendloc, plotfile, overwrite):
 
         casalog.origin('sdplot')
 
@@ -414,6 +414,11 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     # Set default range explicitly (in case range was ever set)
                             sd.plotter.set_range(refresh=refresh)
 
+		    # legend position
+		    loc=1
+		    if plotstyle: loc=legendloc
+		    sd.plotter._plotter.legend(loc)
+		    
 		    # Need the actual plotting before setting picker
 		    sd.plotter.plot()
 		    
