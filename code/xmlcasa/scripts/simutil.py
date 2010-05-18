@@ -181,7 +181,7 @@ class simutil:
 
     ###########################################################
 
-    def ismstp(self,s,halt=True):
+    def ismstp(self,s,halt=False):
         try:
             istp=False
             # check if the ms is tp data or not.
@@ -204,8 +204,8 @@ class simutil:
     ###########################################################
     # plot an image (optionally), and calculate its statistics
 
-    def statim(self,image,plot=True,incell=None,disprange=None):
-        pix=self.cellsize(image)
+    def statim(self,image,plot=True,incell=None,disprange=None,bar=True):
+        pix=self.cellsize(image)  # cell positive by convention
         pixarea=abs(qa.convert(pix[0],'arcsec')['value']*
                     qa.convert(pix[1],'arcsec')['value'])
         ia.open(image)       
@@ -244,15 +244,6 @@ class simutil:
         ttrans_array=tdata_array.tolist()
         ttrans_array.reverse()
         if (plot):
-            if incell != None:
-                if type(incell)==type(""):
-                    incell=[incell,incell]
-                if type(incell)==type([]):
-                    if len(incell)<2:
-                        incell=[incell[0],incell[0]]
-            else:
-                incell=pix
-            incell=[qa.tos(incell[0]),qa.tos(incell[1])]
             pixsize=[qa.convert(pix[0],'arcsec')['value'],qa.convert(pix[1],'arcsec')['value']]
             xextent=imsize[0]*abs(pixsize[0])*0.5
             yextent=imsize[1]*abs(pixsize[1])*0.5
@@ -297,9 +288,10 @@ class simutil:
             #pl.setp(l,fontsize="x-small")
             pl.title(image,fontsize="x-small")
             pl.text(0.05,0.95,"min=%7.1e\nmax=%7.1e\nRMS=%7.1e" % (im_min,im_max,im_rms),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-            cb=pl.colorbar(pad=0)#img)
-            cl = pl.getp(cb.ax,'yticklabels')
-            pl.setp(cl,fontsize='x-small')
+            if bar:
+                cb=pl.colorbar(pad=0)
+                cl = pl.getp(cb.ax,'yticklabels')
+                pl.setp(cl,fontsize='x-small')
         ia.done()
         return im_min,im_max,im_rms
 
@@ -384,7 +376,7 @@ class simutil:
         y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
         for row in xrange(0, nrows):         # xrange stops early.
             xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
-            ystr = qa.formxxx(y, format='dms')
+            ystr = qa.formxxx(y, format='dms',prec=5)
         
             if row % 2:                             # Odd
                 xmin = qa.sub(centx, qa.mul(ncolstomin, xspacing))
@@ -395,7 +387,7 @@ class simutil:
                 stopcolp1 = evencols
             for col in xrange(0, stopcolp1):        # xrange stops early.
                 x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
-                               format='hms')
+                               format='hms',prec=5)
                 pointings.append("%s%s %s" % (epoch, x, ystr))
             y = qa.sub(y, yspacing)
         ####could not fit pointings then single pointing
@@ -447,7 +439,7 @@ class simutil:
             else: direction=direction[0]
 
 
-        # haveing elimiated other options, we need to calculate:
+        # haveing eliminated other options, we need to calculate:
         epoch, centx, centy = self.direction_splitter()
 
         shorttype=str.upper(maptype[0:3])
@@ -471,7 +463,7 @@ class simutil:
 
             # By making the even rows shifted spacing/2 ahead, and possibly shorter,
             # the top and bottom rows (nrows odd), are guaranteed to be short.
-            if availcols - ncols >= 0.5:                            # O O O
+            if availcols - ncols >= 0.5 and nrows>1:                            # O O O
                 evencols = ncols                                    #  O O O
                 ncolstomin = 0.5 * (ncols - 0.5)
             else:
@@ -483,7 +475,7 @@ class simutil:
             y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
             for row in xrange(0, nrows):         # xrange stops early.
                 xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
-                ystr = qa.formxxx(y, format='dms')
+                ystr = qa.formxxx(y, format='dms',prec=5)
                 
                 if row % 2:                             # Odd
                     xmin = qa.sub(centx, qa.mul(ncolstomin, xspacing))
@@ -494,7 +486,7 @@ class simutil:
                     stopcolp1 = evencols
                 for col in xrange(0, stopcolp1):        # xrange stops early.
                     x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
-                                   format='hms')
+                                   format='hms',prec=5)
                     pointings.append("%s%s %s" % (epoch, x, ystr))
                 y = qa.sub(y, yspacing)
         elif shorttype =="SQU":
@@ -521,14 +513,14 @@ class simutil:
             y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
             for row in xrange(0, nrows):         # xrange stops early.
                 xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
-                ystr = qa.formxxx(y, format='dms')
+                ystr = qa.formxxx(y, format='dms',prec=5)
 
                 xmin = qa.sub(centx, qa.mul(ncolstomin, xspacing))
                 stopcolp1 = ncols
         
                 for col in xrange(0, stopcolp1):        # xrange stops early.
                     x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
-                                   format='hms')
+                                   format='hms',prec=5)
                     pointings.append("%s%s %s" % (epoch, x, ystr))
                 y = qa.sub(y, yspacing)
         
@@ -595,8 +587,8 @@ class simutil:
                             time.append(float(splitline[3]))
                         else:
                             time.append(0.)
-                        xstr = qa.formxxx(qa.quantity(ra0), format='hms')
-                        ystr = qa.formxxx(qa.quantity(de0), format='dms')
+                        xstr = qa.formxxx(qa.quantity(ra0), format='hms',prec=5)
+                        ystr = qa.formxxx(qa.quantity(de0), format='dms',prec=5)
                         pointings.append("%s %s %s" % (epoch,xstr,ystr))
             except:
                 break
@@ -695,10 +687,10 @@ class simutil:
             x = self.wrapang(x, avgx, 360.0)
             offsets[:,i]=[(x-avgx)*cosdec,y-avgy]  # apply cosdec to make offsets on sky
             i+=1
-        avgx = qa.toangle('%fdeg' % avgx)
-        avgy = qa.toangle('%fdeg' % avgy)
-        avgx = qa.formxxx(avgx, format='hms')
-        avgy = qa.formxxx(avgy, format='dms')
+        avgx = qa.toangle('%17.12fdeg' % avgx)
+        avgy = qa.toangle('%17.12fdeg' % avgy)
+        avgx = qa.formxxx(avgx, format='hms',prec=5)
+        avgy = qa.formxxx(avgy, format='dms',prec=5)
         return "%s%s %s" % (epoch0, avgx, avgy), offsets
 
 
@@ -755,8 +747,8 @@ class simutil:
         if dir['type'] != 'direction':
             self.msg("converting direction measure",priority="error",origin="simutil.m2s")
             return False
-        ystr = qa.formxxx(dir['m1'], format='dms')
-        xstr = qa.formxxx(dir['m0'], format='hms')
+        ystr = qa.formxxx(dir['m1'], format='dms',prec=5)
+        xstr = qa.formxxx(dir['m0'], format='hms',prec=5)
         return "%s %s %s" % (dir['refer'], xstr, ystr)
 
     ###########################################################
@@ -1792,7 +1784,7 @@ class simutil:
         if ignorecoord:
             if self.verbose: self.msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")
             
-            model_refdir='J2000 '+qa.formxxx(ra,format='hms')+" "+qa.formxxx(dec,format='dms')
+            model_refdir='J2000 '+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
             axmap[0]=0 # direction in first two pixel axes
             axmap[1]=1
             axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
@@ -1803,7 +1795,7 @@ class simutil:
                 self.msg("You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",priority="error")
                 return False            
             ra,dec = in_csys.referencevalue(type="direction")['numeric']
-            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms')+" "+qa.formxxx(str(dec)+"rad",format='dms')
+            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms',prec=5)+" "+qa.formxxx(str(dec)+"rad",format='dms',prec=5)
             ra=qa.quantity(str(ra)+"rad")
             dec=qa.quantity(str(dec)+"rad")
             if in_dir['pixel'].__len__() != 2:
@@ -2078,7 +2070,7 @@ class simutil:
 
 
     ######################################################
-    # helper function to get the pixel size from an image
+    # helper function to get the pixel size from an image  (positive increments)
 
     def cellsize(self,image):
         ia.open(image)
@@ -2143,32 +2135,41 @@ class simutil:
         in_csys=in_ia.coordsys()
 
         # cell size:  from incell param, or from image
-        model_cell='0arcsec'
+        model_cell=qa.quantity('0arcsec')
         if modifymodel:
             if type(incell) == type([]):
-                model_cell =  map(qa.convert,incell,['arcsec','arcsec'])
-            else:
-                model_cell = qa.convert(incell,'arcsec')            
-                model_cell = [model_cell,model_cell]
+                if len(incell)>0:
+                    model_cell =  map(qa.convert,incell,['arcsec','arcsec'])
+            else:                
+                if len(incell)>0:
+                    model_cell = qa.abs(qa.convert(incell,'arcsec'))
+            model_cell = [model_cell,model_cell]
+
+            # in modifymodel ONLY, model_cell[0]<0 for RA increasing left
+            if qa.gt(qa.convert(model_cell[0],'arcsec'),"0arcsec"):
+                model_cell[0]=qa.mul(model_cell[0],-1)
+            if qa.lt(qa.convert(model_cell[1],'arcsec'),"0arcsec"):
+                model_cell[1]=qa.abs(model_cell[1])
 
         # if incell fails to convert to a sensible model_cell, or if we're not 
         # modifying the model, we need to get model_cell from the image coordsys
         if (not modifymodel) or (model_cell[1]['value']<=0):
             increments=in_csys.increment(type="direction")['numeric']
-            incellx=qa.quantity(abs(increments[0]),in_csys.units(type="direction")[0])
-            incelly=qa.quantity(abs(increments[1]),in_csys.units(type="direction")[1])
+            incellx=qa.quantity(increments[0],in_csys.units(type="direction")[0])
+            incelly=qa.quantity(increments[1],in_csys.units(type="direction")[1])
             xform=in_csys.lineartransform(type="direction")
             offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
             if offdiag > 1e-4:
                 self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
-            incellx=qa.mul(incellx,abs(xform[0,0]))
-            incelly=qa.mul(incelly,abs(xform[1,1]))
+            incellx=qa.mul(incellx,xform[0,0])
+            incelly=qa.mul(incelly,xform[1,1])
 
+            # preserve sign in case input image is backwards (RA increasing right)
             model_cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
 
         if self.verbose:
             self.msg("model image shape= %s" % in_shape,origin="setup model")
-            self.msg("model pixel size = %8.2e x %8.2e arcsec" % (model_cell[0]['value'],model_cell[1]['value']),origin="setup model")
+            self.msg("model pixel = %8.2e x %8.2e arcsec" % (model_cell[0]['value'],model_cell[1]['value']),origin="setup model")
 
 
 
@@ -2216,14 +2217,15 @@ class simutil:
 
 
         # now parse coordsys:
-
         model_refdir=""
+        #model_refpix=[]
         # look for direction coordinate, with two pixel axes:
         if in_dir['return']:
-            ra,dec = in_csys.referencevalue(type="direction")['numeric']
-            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms')+" "+qa.formxxx(str(dec)+"rad",format='dms')
-            ra=qa.quantity(str(ra)+"rad")
-            dec=qa.quantity(str(dec)+"rad")
+            # ra,dec = in_csys.referencevalue(type="direction")['numeric']
+            # model_refpix = in_csys.referencepixel(type="direction")['numeric'].tolist()            
+            # model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms',prec=5)+" "+qa.formxxx(str(dec)+"rad",format='dms',prec=5)
+            # ra=qa.quantity(str(ra)+"rad")
+            # dec=qa.quantity(str(dec)+"rad")
             in_ndir = in_dir['pixel'].__len__() 
             if in_ndir != 2:
                 if modifymodel:
@@ -2244,6 +2246,14 @@ class simutil:
                 axassigned[dirax[0]]=0
                 axassigned[dirax[1]]=0
                 if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
+
+            # move model_refdir to center of image
+            model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
+            ra,dec = in_ia.toworld(model_refpix)['numeric'][0:2]
+            ra=qa.quantity(str(ra)+"rad")
+            dec=qa.quantity(str(dec)+"rad")
+            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
+
         else:
             axmap[0]=0 # direction in first two pixel axes
             axmap[1]=1
@@ -2261,9 +2271,9 @@ class simutil:
             if self.isdirection(direction,halt=False):
                 epoch, ra, dec = self.direction_splitter(direction)
 
-                if self.verbose: self.msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")
-            
-                model_refdir='J2000 '+qa.formxxx(ra,format='hms')+" "+qa.formxxx(dec,format='dms')
+                #if self.verbose: self.msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")            
+                model_refdir='J2000 '+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
+                model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
         if model_refdir=="":
             self.msg("Model ref direction undefined.  Either set direction and modifymodel=T, or edit the image header",priority="error")
             return False        
@@ -2398,7 +2408,7 @@ class simutil:
         else:
             modelcsys=in_ia.coordsys()        
         modelcsys.setunits(['rad','rad','','Hz'])
-        modelcsys.setincrement([-1*qa.convert(model_cell[0],modelcsys.units()[0])['value'],
+        modelcsys.setincrement([qa.convert(model_cell[0],modelcsys.units()[0])['value'],    # already -1
                                 qa.convert(model_cell[1],modelcsys.units()[1])['value']],
                                 type="direction")
 
@@ -2410,8 +2420,13 @@ class simutil:
              qa.convert(deq,modelcsys.units()[1])['value']],
             type="direction")
         modelcsys.setreferencepixel(
-            [0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]],
+            model_refpix,
+#            [0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]],
             "direction")
+        if self.verbose: 
+            self.msg("sky model image direction = "+model_refdir)
+            self.msg("sky model image increment = "+str(model_cell))
+
         modelcsys.setspectral(refcode="LSRK",restfreq=model_restfreq)
         modelcsys.setreferencevalue(qa.convert(model_center,modelcsys.units()[3])['value'],type="spectral")
         modelcsys.setreferencepixel(0.5*model_nchan,type="spectral") # default is middle chan
@@ -2473,7 +2488,9 @@ class simutil:
         # make a moment 0 image
         if flatimage and outimage!=inimage:
             self.flatimage(outimage,verbose=self.verbose)
-            
+
+        # returning to the outside world we'll return a positive cell:
+        model_cell=[qa.abs(model_cell[0]),qa.abs(model_cell[1])]
         model_size=[qa.mul(modelshape[0],model_cell[0]),
                     qa.mul(modelshape[1],model_cell[1])]
 
@@ -2651,7 +2668,6 @@ class simutil:
     ###################################################
 
     def flatimage(self,image,complist="",verbose=False):
-
         # flat output 
         ia.open(image)
         imsize=ia.shape()
@@ -2692,8 +2708,6 @@ class simutil:
 
         # add components 
         if len(complist)>0:
-            if not os.path.exists(complist):
-                self.msg("sky component list "+str(complist)+" not found",priority="error")
             ia.open(flat)
             if not os.path.exists(complist):
                 self.msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
@@ -2767,6 +2781,7 @@ class simutil:
         # add unresolved components in Jy/pix
         # don't do this if you've already done it in flatimage()!
         if (os.path.exists(complist)):
+            #pdb.set_trace()
             cl.open(complist)
             imrr.modify(cl.torecord(),subtract=False)
             cl.done()

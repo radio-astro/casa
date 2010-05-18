@@ -392,12 +392,16 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
   Bool giveMessage = True ;
 
   // Prepare output files
-  Vector<String> suffixes( moments_p.nelements() ) ;
   ROArrayColumn<Float> floatDataCol( *ms_p, "FLOAT_DATA" ) ;
   ColumnDesc desc = floatDataCol.columnDesc() ;
   TableRecord rec = desc.rwKeywordSet() ;
   String inUnit ;
-  rec.get( rec.fieldNumber( "UNIT" ), inUnit ) ;
+  if ( rec.nfields() != 0 ) {
+    rec.get( rec.fieldNumber( "UNIT" ), inUnit ) ;
+  }
+  else {
+    inUnit = "K" ;
+  }
   Unit dataUnits = Unit( inUnit ) ;
   for ( uInt i = 0 ; i < moments_p.nelements() ; i++ ) {
     // Loop over desired output moments
@@ -482,7 +486,6 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
         effBWCol->put( j, dummy ) ;
         resCol->put( j, dummy ) ;
       }
-        
     }
     tab->flush() ;
     delete chanFreqCol ;
@@ -576,7 +579,7 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
     tmpLattice.set( (T)0 ) ;
     arrLatOutPts[i] = new SubLattice<T>( tmpLattice, True ) ; 
   }
-
+  
   // Create appropriate MomentCalculator object
   //os_p << LogIO::NORMAL << "Begin computation of moments" << LogIO::POST ;
   PtrHolder< MomentCalcBase<T> > pMomentCalculatorHolder ;
@@ -730,9 +733,20 @@ CoordinateSystem MSMoments<T>::coordinates()
     Bool noCorrRow = True ;
     for ( uInt i = 0 ; i < spwIds.nelements() ; i++ ) {
       if ( spwIds( i ) == spwId_ ) {
+        Bool isNull = False ;
         Vector<Double> rfs ;
-        restFreqCol.get( 0, rfs, True ) ;
-        if ( rfs.nelements() == 0 ) {
+        try {
+          restFreqCol.get( i, rfs, True ) ;
+        }
+        catch ( AipsError e ) {
+          if ( e.getMesg().find( "no array" ) != String::npos ) {
+            isNull = True ;
+          }
+          else {
+            RETHROW( e ) ;
+          }
+        }
+        if ( isNull ) {
           os_p << LogIO::WARN
                << "No rest frequency is given in SOURCE table" << endl 
                << "Rest frequency set to REF_FREQUENCY" << LogIO::POST ;
@@ -740,7 +754,7 @@ CoordinateSystem MSMoments<T>::coordinates()
           restFreq = refFreqCol( spwId_ ) ;
         }
         else {
-          restFreq = rfs( 0 ) ;
+          restFreq = rfs( i ) ;
         }
         noCorrRow = False ;
         break ;

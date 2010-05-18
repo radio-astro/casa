@@ -2104,6 +2104,12 @@ print qa.getformat('long')
      </param>
 
      
+     <param type="int" direction="in" name="prec">
+     <description># digits in fractional part of output string for dms,hms</description>
+     <value>2</value>
+     </param>
+
+     
 <!--Do we need this parameter
      <param xsi:type="bool" direction="in" name="showform">
      <description>show square brackets and separating , (not for

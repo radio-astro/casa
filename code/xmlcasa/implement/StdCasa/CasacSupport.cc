@@ -853,8 +853,14 @@ Bool casaMDirection(const ::casac::variant& theVar,
   return False;
 }
 
+//Bool ang_as_formatted_str(string& out, const casa::Quantity& qang,
+//                          const std::string& format)
+//{
+//  return ang_as_formatted_str(out,qang,format,precision=2);
+//}
+
 Bool ang_as_formatted_str(string& out, const casa::Quantity& qang,
-                          const std::string& format)
+                          const std::string& format, const Int precision=2)
 {
   Bool retval = true;
   
@@ -863,12 +869,14 @@ Bool ang_as_formatted_str(string& out, const casa::Quantity& qang,
     casa::String form(format);
     form.downcase();
 
+    Int ndig=6+precision;
+
     MVAngle ang(qang);
     if(form == "dms"){
-      out = ang(-0.5).string(MVAngle::ANGLE, 8).c_str();
+      out = ang(-0.5).string(MVAngle::ANGLE, ndig+1).c_str();
     }
     else if(form == "hms"){
-      out = ang.string(MVAngle::TIME, 8).c_str();
+      out = ang.string(MVAngle::TIME, ndig).c_str();
     }
     else if(form == "deg"){
       ostringstream os;
@@ -911,12 +919,12 @@ Bool MDirection2str(const MDirection& in, std::string& out)
   string lat("");
   Bool success;
   if(refcode == "J2000" || refcode[0] == 'B'){
-    success = ang_as_formatted_str(lon, qlon, "hms");
-    success = success && ang_as_formatted_str(lat, qlat, "dms");
+    success = ang_as_formatted_str(lon, qlon, "hms", 2);
+    success = success && ang_as_formatted_str(lat, qlat, "dms", 2);
   }
   else{
-    success = success && ang_as_formatted_str(lon, qlon, "deg");
-    success = success && ang_as_formatted_str(lat, qlat, "deg");
+    success = success && ang_as_formatted_str(lon, qlon, "deg", 2);
+    success = success && ang_as_formatted_str(lat, qlat, "deg", 2);
   }
 
   if(success)

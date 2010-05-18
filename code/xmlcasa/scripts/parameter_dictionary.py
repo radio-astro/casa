@@ -1191,6 +1191,37 @@ class par(str):
 		"""
 
 	@staticmethod
+	def layout():
+		"""
+                layout -- a list of subplots layout in figure coordinate (0-1), 
+                          i.e., fraction of the figure width or height.
+	        The order of elements should be:
+                [left, bottom, right, top, horizontal space btw panels,
+                vertical space btw panels]
+ 		"""
+
+	@staticmethod
+	def legendloc():
+		"""
+		legendloc -- legend location on the axes (0-10)
+		options: (integer) 0 -10 
+		         Note that 0 ('best') is very slow.
+			 The list of legend positions: 
+                           0: best
+			   1: upper right
+			   2: upper left
+			   3: lower left
+			   4: lower right
+			   5: right
+			   6: center left
+			   7: center right
+			   8: lower center
+			   9: upper center
+			   10: center
+	        default: 1 ('upper right')
+		"""
+
+	@staticmethod
 	def linecat():
 		"""
 		linecat -- control for line catalog plotting for spectral plotting
@@ -1848,6 +1879,14 @@ class par(str):
                	Note that if xmin=xmax the values will be ignored and a best
                	guess will be made, simlarly if ymin=ymax.
                	time axes coordinate is in Julian Days, unfortunately.
+		"""
+
+	@staticmethod
+	def plotstyle():
+		"""
+		plotstyle -- customise plot settings
+                options: (bool) True, False
+                default: True
 		"""
 
 	@staticmethod

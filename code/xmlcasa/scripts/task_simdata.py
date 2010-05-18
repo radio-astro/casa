@@ -219,7 +219,7 @@ def simdata(
             pl.ion()
             pl.clf()
             pl.subplot(121)
-            model_min,model_max, model_rms = util.statim(modelflat,plot=True,incell=model_cell)
+            model_min,model_max, model_rms = util.statim(modelflat,plot=True,incell=model_cell,bar=False)
             lims=pl.xlim(),pl.ylim()
             tt=pl.array(range(25))*pl.pi/12            
             pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
@@ -259,7 +259,7 @@ def simdata(
                     pl.clf()
         else:
 #            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=model_cell)
-            model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=in_cell)
+            model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=in_cell,bar=False)
 
         casalog.origin('simdata')
 
@@ -812,7 +812,7 @@ def simdata(
                 pl.subplot(222)
         if doclean:
             max_cleanim=[] # mutable so can be returned
-            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim)
+            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim,bar=False)
             # 20100422 statim returns [min,max] now, so this is for 
             # backward compatibility in simdata1
             max_cleanim=[max_cleanim[1]]
@@ -826,7 +826,7 @@ def simdata(
                 pl.subplot(221)
             # modelregrid might not exist if there's no display or fidelity
             if os.path.exists(modelregrid):
-                model_min,model_max, model_rms = util.statim(modelregrid,plot=display)
+                model_min,model_max, model_rms = util.statim(modelregrid,plot=display,bar=False)
                 xlim=max(pl.xlim())
                 ylim=max(pl.ylim())
             if display==True:
@@ -843,9 +843,9 @@ def simdata(
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
                 if display: pl.subplot(233)                
-                util.statim(project+".diff.im",plot=display,disprange=max_cleanim)
+                util.statim(project+".diff.im",plot=display,disprange=max_cleanim,bar=False)
                 if display: pl.subplot(234)                
-                fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display)
+                fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display,bar=False)
 
         if display:
             tb.open(mstoimage)

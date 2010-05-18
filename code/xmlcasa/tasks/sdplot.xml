@@ -233,6 +233,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="vector"></value>
     </param>
 
+    <param type="int" name="legendloc" subparam='true'>
+            <description>legend location</description>
+            <value>1</value>
+    </param>
+
     <param type="string" name="plotfile">
 	    <description>file name for hardcopy output</description>
 	    <value></value>
@@ -312,6 +317,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
                         <default param="layout"><value type="vector"></value></default>
+                        <default param="legendloc"><value type="int">1</value></default>
                 </equals>
             </when>
 
@@ -494,6 +500,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           The order of elements should be:
                           [left, bottom, right, top, horizontal space btw panels,
                           vertical space btw panels]
+                legendloc -- legend location on the axes (0-10)
+                           options: (integer) 0 -10 
+                                    see help of "sd.plotter.set_legend" for 
+                                    the detail of location. Note that 0 ('best')
+                                    is very slow. 
+                           default: 1 ('upper right')
         plotfile -- file name for hardcopy output
                 options: (str) filename.eps,.ps,.png
                 default: '' (no hardcopy)
