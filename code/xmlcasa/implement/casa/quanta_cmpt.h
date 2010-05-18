@@ -155,7 +155,7 @@ class quanta
 
     std::string getformat(const std::string& t = "");
 
-    std::string formxxx(const ::casac::variant& v, const std::string& format = "dms");
+    std::string formxxx(const ::casac::variant& v, const std::string& format = "dms", const int prec = 2);
 
     private:
 

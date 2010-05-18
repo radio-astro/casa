@@ -22,19 +22,28 @@ os.system('rm -rf '+my_project+'.* '+my_modelimage)
 tb.clearlocks()
 
 print 'I think the data repository is at '+repodir
-importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename=my_modelimage)
+#importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename=my_modelimage)
 
 default("simdata2")
 project=my_project
 skymodel=my_modelimage
-#complist=repodir+"star672GHz.cl"
+skymodel=repodir+"/data/alma/simmos/input50pc_672GHz.fits"
+direction="J2000 18h00m00.031s -22d59m59.6s"
 
-modifymodel=True
-indirection="J2000 18h00m00.03s -45d59m59.6s"
-incenter="672.0GHz" 
-inwidth="8.0GHz"
-incell="0.004arcsec" 
-inbright="unchanged"
+complist="star672GHz.cl"
+if os.path.exists(complist):
+    shutil.rmtree(complist)
+cl.done()
+cl.addcomponent(dir=direction,flux=0.0003,freq="672GHz")
+cl.rename("star672GHz.cl")
+cl.done()
+
+modifymodel=False
+#indirection="J2000 18h00m00.03s -45d59m59.6s"
+#incenter="672.0GHz" 
+#inwidth="8.0GHz"
+#incell="0.004arcsec" 
+#inbright="unchanged"
 
 setpointings=True
 mapsize="0.76arcsec"
@@ -44,7 +53,7 @@ integration="10s"
 predict=True
 antennalist=repodir+"/data/alma/simmos/alma.out20.cfg"
 refdate="2012/06/21/03:25:00"
-totaltime="7200s"
+totaltime="1200s"
 
 noise_thermal="tsys-atm"
 user_pwv=0.5
@@ -57,6 +66,8 @@ threshold="1e-7Jy"
 imsize=[192, 192]
 stokes="I"
 weighting="natural"
+
+analyze=True
 
 verbose=True
 if not l.has_key('interactive'): interactive=False

@@ -54,6 +54,10 @@ def simdata2(
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
 
+    if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
+        msg("No skymodel found.  simdata2 may not work for predicting from components only.",priority="error")
+        return False
+
     grscreen=False
     grfile=False
     if graphics=="both":
@@ -76,7 +80,7 @@ def simdata2(
             components_only=False
 
             # if the skymodel is okay, work from it directly
-            if util.is4d(skymodel) and not modifymodel:
+            if util.is4d(skymodel) and os.path.isdir(skymodel) and not modifymodel:
                 newmodel=skymodel
             else:
                 # otherwise create $newmodel
@@ -476,6 +480,7 @@ def simdata2(
                         kfld=kfld+1                
                     if kfld > nfld: kfld=0
                 # if directions is unset, NewMSSimulator::observemany 
+
                 # looks up the direction in the field table.
                 if observemany:
                     sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
@@ -888,8 +893,9 @@ def simdata2(
         else:
             cell=[cell,cell]
 
+        # cells are positive by convention
+        cell=[qa.abs(cell[0]),qa.abs(cell[1])]
 
-        #pdb.set_trace()
         # and imsize
         if type(imsize)==type([]):
             if len(imsize)>0:
@@ -901,7 +907,6 @@ def simdata2(
         if imsize0<=0:
             imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
                       int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
-
 
 
         #####################################################################
@@ -1007,8 +1012,7 @@ def simdata2(
         beam_current=False
         imagename=project
 
-        #if image:
-        if image and len(mstoimage):
+        if image and len(mstoimage)>0:
             if not docalibrator:
                 sourcefieldlist=""  # sourcefieldlist should be ok, but this is safer
             
@@ -1016,9 +1020,9 @@ def simdata2(
             if os.path.exists(imagename+".image"): shutil.rmtree(imagename+".image")
             if os.path.exists(imagename+".model"): shutil.rmtree(imagename+".model")
 
-            # todo add imcenter param instead of just using the model_refdir?
+            # use imcenter instead of model_refdir
             util.image(mstoimage,imagename,
-                       cleanmode,cell,imsize,model_refdir,
+                       cleanmode,cell,imsize,imcenter,
                        niter,threshold,weighting,
                        outertaper,stokes,sourcefieldlist=sourcefieldlist,
                        modelimage=modelimage)
@@ -1035,8 +1039,8 @@ def simdata2(
                 cell=[qa.quantity(cell[0]),qa.quantity(cell[0])]
             else:
                 cell=[qa.quantity(cell[0]),qa.quantity(cell[1])]
+            cell=[qa.abs(cell[0]),qa.abs(cell[0])]
 
-        #if image:
             # get beam from output clean image
             if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
             ia.open(imagename+".image")

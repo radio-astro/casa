@@ -144,13 +144,13 @@ quanta::getformat(const std::string& t)
 
 // form.x(v) -> format value acoording to type x
 std::string
-quanta::formxxx(const ::casac::variant& v, const std::string& format)
+quanta::formxxx(const ::casac::variant& v, const std::string& format, const int prec)
 {
   string out("");
   try {
     casa::Quantity quant = casaQuantity(v);
 
-    if(!ang_as_formatted_str(out, quant, format))
+    if(!ang_as_formatted_str(out, quant, format, prec))
       *itsLog << LogIO::WARN << "Don't understand " << format << LogIO::POST;
   }
   catch(AipsError x){
