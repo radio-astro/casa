@@ -523,9 +523,9 @@ namespace casa {
     Block<int> sort2(4);
     //sort2[0] = MS::SCAN_NUMBER;
     // Do scan priority only if quacking
-    sort2[0]= MS::ARRAY_ID;
-    sort2[1]= MS::FIELD_ID;
-    sort2[2]= MS::DATA_DESC_ID;
+    sort2[0] = MS::ARRAY_ID;
+    sort2[1] = MS::FIELD_ID;
+    sort2[2] = MS::DATA_DESC_ID;
     sort2[3] = MS::TIME;
     Double timeInterval = 7.0e9; //a few thousand years
 
@@ -1771,7 +1771,6 @@ namespace casa {
 	      // Doing a full data iteration    
 	      if ( data_pass )
 		{
-            
 		  sprintf(subtitle,"pass %d (data)",npass+1);
 		  ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq);
 		  // start pass for all active agents
@@ -2005,8 +2004,8 @@ namespace casa {
               
               LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
               
-              osss << "Field = " << chunk.visBuf().fieldId() << " , Spw Id : " 
-                   << chunk.visBuf().spectralWindow()
+              osss << "Field = " << field_id << " , Spw Id : " 
+                   << spw_id
                    << "  Total rows = " << totalRows
                    << endl;
               osss << "Input:    "

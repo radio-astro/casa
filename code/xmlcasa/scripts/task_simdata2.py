@@ -708,7 +708,7 @@ def simdata2(
                 tb.close()
             
                 tb.open(tablename=sdmsfile,nomodify=False)
-                tb.putcol(columnname='STATE_ID',value=[0]*nfld,startrow=0,nrow=nfld,rowincr=1)
+                tb.putcol(columnname='STATE_ID',value=[0]*nscan,startrow=0,nrow=nscan,rowincr=1)
                 tb.flush()
                 tb.close()
                 

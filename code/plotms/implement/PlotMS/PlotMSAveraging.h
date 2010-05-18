@@ -114,8 +114,11 @@ public:
     void getValue(Field f, String& value) const { value = getValueStr(f); }
     void setValue(Field f, const String& value);
     // </group>
-    
-    
+
+
+    // If any explicit averaging is turned ON, return True
+    bool anyAveraging() const { return (channel() || time() || 
+				  baseline() || antenna() ||spw()); }
     
     // Convenience methods for returning the standard field values.
     // <group>
