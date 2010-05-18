@@ -114,7 +114,7 @@ refstats = { 'sum': 673.4,
 
 
 # simdata2 with component
-refstats = { 'sum': 664.6, 
+refstats = { 'sum': 655.7, 
              'max': 0.59377,
              'min': -0.0630,
              'rms': 0.0503,
@@ -132,9 +132,9 @@ diffstats = {'sum': 68.9,
              'sigma': 0.000556 }
 
 # simdata2
-diffstats = {'sum': 3273.9,
-             'max': 0.2203,
-             'min': -0.05604,
+diffstats = {'sum': 3267.5,
+             'max': 0.1846,
+             'min': -0.07999,
              'rms': 0.045,
              'sigma': 0.0265 }
 

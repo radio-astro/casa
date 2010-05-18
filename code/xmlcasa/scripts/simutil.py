@@ -61,8 +61,9 @@ class simutil:
     def newfig(self,multi=0,show=True):  # new graphics window/file
         if show:
             pl.ion() # creates a fig if ness
+        else:
+            pl.ioff() 
         pl.clf() 
-        pl.ioff() # just in case
 
         if multi!=0:
             if type(multi)!=type([]):
@@ -2576,7 +2577,8 @@ class simutil:
         cleanlast.write('cfcache                 = "cfcache.dir"\n')
         cleanlast.write('painc                   = 360.0\n')
         cleanlast.write('epjtable                = ""\n')
-        cleanlast.write('interpolation           = "nearest"\n')
+        #cleanstr=cleanstr+",interpolation='nearest'"  # default change 20100518
+        cleanlast.write('interpolation           = "linear"\n')
         cleanstr=cleanstr+",niter="+str(niter)
         cleanlast.write('niter                   = '+str(niter)+'\n')
         cleanlast.write('gain                    = 0.1\n')

@@ -130,6 +130,13 @@ diffstats = {'sum': 68.9,
              'rms': 0.000946,
              'sigma': 0.000556 }
 
+# 20100518 jy/bm
+diffstats = {'sum': 3268,
+             'max': 0.2184,
+             'min': -0.0560,
+             'rms': 0.0449,
+             'sigma': 0.0264 }
+
 ### tight 
 reftol   = {'sum':  1e-2,
             'max':  1e-2,

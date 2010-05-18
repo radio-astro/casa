@@ -528,7 +528,7 @@ def simdata2(
                 multi=0
 
             if (grscreen or grfile):
-                util.newfig(multi=multi)
+                util.newfig(multi=multi,show=grscreen)
                 if tp_only: telescopename=tp_telescopename
                 util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
                 if predict_uv:
@@ -582,7 +582,7 @@ def simdata2(
                     ax=pl.gca()
                     pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                     ia.done()
-                util.endfig()
+                util.endfig(show=grscreen,filename=file)
 
 
 
