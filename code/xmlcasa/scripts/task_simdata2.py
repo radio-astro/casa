@@ -663,7 +663,7 @@ def simdata2(
                     #               starttime=qa.quantity(sttime, "s"),
                     #               stoptime=qa.quantity(endtime, "s"));
                     kfld=kfld+1
-                    if predict_uv and kfld==nfld:
+                    if predict_uv and docalibrator and kfld==nfld:
                         # calibration obs is disabled for SD but add a gap to synchronize with interferometer
                         #if docalibrator:
                         #    sttime=-totalsec/2.0+scansec*k
