@@ -308,7 +308,7 @@ void TSMCubeBuff::accessSection (const IPosition& start, const IPosition& end,
         uInt nBytes = (stBit+nrval+7) / 8;
         if (writeFlag) {
           // Read first and/or last byte if no full byte is used.
-          if (stBit != 0) {
+          if (stBit > 0 || nrval < 8) {
             cachePtr->read (tileNr, offset, 1);
           }
           if (nBytes > 1  &&  (stBit+nrval) % 8 != 0) {
