@@ -53,32 +53,44 @@ class listvis_test1(unittest.TestCase):
         reference = reffile+'1'
         listvis(vis=msfile1,datacolumn='data',listfile=output,
                 field='2',spw='0:4~5',selectdata=True,antenna='8&9')
+#        listvis(vis=msfile1,datacolumn='data',listfile=output,
+#                field='2',spw='0:4~5',selectdata=True,antenna='1&2')
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
-                        'New and reference files are different.\n %s != %s.'
-                        'See the comparison %s'%(output,reference,comp))
-        
+                        'New and reference files are different.\n %s != %s. '
+                        'See the diff file'%(output,reference))
     def test2(self):
-        '''Listvis 2: Float data column'''
+        '''Listvis 1: Data column with different selections'''
         output = out+'2'
         comp = 'compare.2'
-        reference = reffile+'2'
-        listvis(vis=msfile2,datacolumn='float_data',listfile=output,
-                spw='0:2001~2003')
+        reference = reffile+'2'        
+        listvis(vis=msfile1,field='0',spw='0:1~2',selectdata=True, antenna='2&11',
+                listfile=output)
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
-                        'New and reference files are different\n. %s != %s.'
-                        'See the comparison %s'%(output,reference,comp))
+                        'New and reference files are different.\n %s != %s. '
+                        'See the diff file'%(output,reference))
         
-
     def test3(self):
-        '''Listvis 3: Data with auto-correlation'''
+        '''Listvis 3: Float data column'''
         output = out+'3'
         comp = 'compare.3'
         reference = reffile+'3'
+        listvis(vis=msfile2,datacolumn='float_data',listfile=output,
+                spw='0:2001~2003')
+        self.assertTrue(lt.runTests(output,reference,'1.000',comp),
+                        'New and reference files are different\n. %s != %s. '
+                        'See the diff file.'%(output,reference))
+        
+
+    def test4(self):
+        '''Listvis 4: Data with auto-correlation'''
+        output = out+'4'
+        comp = 'compare.4'
+        reference = reffile+'4'
         listvis(vis=msfile1,datacolumn='data',listfile=output,
                 spw='0:1',field='1',selectdata=True,antenna='2&&2')
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
-                        'New and reference files are different\n. %s != %s.'
-                        'See the comparison %s'%(output,reference,comp))
+                        'New and reference files are different\n. %s != %s. '
+                        'See the diff file.'%(output,reference))
         
 class listvis_test2(unittest.TestCase):
 
@@ -89,7 +101,7 @@ class listvis_test2(unittest.TestCase):
         # It will ignore errors in case the files don't exist
         shutil.rmtree(msfile1,ignore_errors=True)
         shutil.rmtree(msfile2,ignore_errors=True)
-        os.system('rm -rf ' + out+'*')
+#        os.system('rm -rf ' + out+'*')
         
     def test1a(self):
         '''Listvis: Cleanup'''
