@@ -862,12 +862,12 @@ void MSLister::listData(const int pageRows,
       if ( precAmpl_p > 0 ) oAmpl_p++;  // add space for decimal
 
       if (!is_float){
-		  oPhase_p = (uInt)max(1,(Int)rint(abs(log10(max(phase))+0.5)));
-		  if(min(phase) < 0) { oPhase_p+=2; } // add space for sign and column border
+		  oPhase_p = (uInt)max(1,(Int)rint(abs(log10(max(phase)+0.5))));
+		  if(min(phase) < 0) { oPhase_p+=3; } // add space for sign and column border
 		  else { oPhase_p++; } // add space for column border
 		  //oPhase_p = 3;  // 100s of degs
-		  if ( precPhase_p < 0 ) precPhase_p = 0;
-		  if ( precPhase_p > 0 ) oPhase_p++; // add space for decimal
+		  if ( precPhase_p < 0 ) precPhase_p = 1;
+		  if ( precPhase_p > 0 ) oPhase_p+=2; // add space for decimal
       }
 
       oWeight_p = (uInt)max(1,(Int)rint(log10(max(weight))+0.5));  // order
