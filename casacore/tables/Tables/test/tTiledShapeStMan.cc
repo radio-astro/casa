@@ -510,7 +510,6 @@ void writeNoHyper(const TSMOption& tsmOpt)
 void writeFlags()
 {
     TSMOption tsmOpt = TSMOption::Buffer;
-    uInt 16 = 1;
 
     // Build the table description.
     TableDesc td ("", "1", TableDesc::Scratch);
