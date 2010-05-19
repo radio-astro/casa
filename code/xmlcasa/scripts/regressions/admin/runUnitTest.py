@@ -3,7 +3,7 @@
     casapy [casa-options] -c runUnitTest.py testname1 testname2...
     casapy [casa-options] -c runUnitTest.py testname1[test_r,test23] testname2...
     casapy [casa-options] -c runUnitTest.py --help
-    casapy [casa-options] -c runUnitTest.py --short
+    casapy [casa-options] -c runUnitTest.py --list
     casapy [casa-options] -c runUnitTest.py
     
     or from inside casapy:
@@ -57,9 +57,10 @@ FULL_LIST = ['test_boxit',
              'test_imsmooth',
              'test_imstat',
              'test_imval',
-             'test_listhistory',             
+             'test_listhistory',  
+#             'test_listvis',           
              'test_plotants',
-             'test_plotms',
+#             'test_plotms',
              'test_report',
              'test_smoothcal',
              'test_vishead',
@@ -76,6 +77,7 @@ SHORT_LIST = ['test_boxit',
              'test_imregrid',
              'test_imstat',
              'test_imval',
+             'test_listvis',
              'test_plotants',
              'test_plotms',
              'test_smoothcal',

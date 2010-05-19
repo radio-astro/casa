@@ -1750,13 +1750,37 @@ class simutil:
 
 
 
-        # deal with brightness scaling
-        if (inbright=="unchanged") or (inbright=="default"):
+        # pull data first, since ia.stats doesn't work w/o a CS:
+        if outimage!=inimage:
+            if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
+            arr=in_ia.getchunk()
+        else:
+            # TODO move rearrange to inside ia tool, and at least don't do this:
+            arr=pl.zeros(in_shape)
+        axmap=[-1,-1,-1,-1]
+        axassigned=[-1,-1,-1,-1]
+
+
+        # brightness scaling 
+        # we can in principal change inbright even if modifymodel=F
+        if (inbright=="unchanged") or (inbright==""):
             scalefactor=1.
         else:
-            stats=in_ia.statistics(verbose=False,list=False)
-            highvalue=stats['max']
-            scalefactor=float(inbright)/highvalue.max()
+            if self.isquantity(inbright,halt=False):
+                qinb=qa.quantity(inbright)
+                if qinb['unit']!='':
+                    # qa doesn't deal universally well with pixels and beams
+                    # so this may fail:
+                    try:
+                        inb=qa.convert(qinb,"Jy/pixel")['value']
+                    except:
+                        inb=qinb['value']
+                        self.msg("assuming inbright="+str(inbright)+" means "+str(inb)+" Jy/pixel",priority="warn")
+                    inbright=inb
+            #stats=in_ia.statistics(verbose=False,list=False)
+            #highvalue=stats['max']
+            #scalefactor=float(inbright)/highvalue.max()
+            scalefactor=float(inbright)/arr.max()
 
 
         # check shape characteristics of the input;
@@ -1766,11 +1790,6 @@ class simutil:
         in_spc=in_csys.findcoordinate("spectral")
         in_stk=in_csys.findcoordinate("stokes")
 
-
-        if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
-        arr=in_ia.getchunk()
-        axmap=[-1,-1,-1,-1]
-        axassigned=[-1,-1,-1,-1]
 
         in_nax=arr.shape.__len__()
         if in_nax<2:
@@ -2181,14 +2200,37 @@ class simutil:
 
 
 
+        # pull data first, since ia.stats doesn't work w/o a CS:
+        if outimage!=inimage:
+            if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
+            arr=in_ia.getchunk()
+        else:
+            # TODO move rearrange to inside ia tool, and at least don't do this:
+            arr=pl.zeros(in_shape)
+        axmap=[-1,-1,-1,-1]
+        axassigned=[-1,-1,-1,-1]
+
+
         # brightness scaling 
         # we can in principal change inbright even if modifymodel=F
         if (inbright=="unchanged") or (inbright==""):
             scalefactor=1.
         else:
-            stats=in_ia.statistics(verbose=False,list=False)
-            highvalue=stats['max']
-            scalefactor=float(inbright)/highvalue.max()
+            if self.isquantity(inbright,halt=False):
+                qinb=qa.quantity(inbright)
+                if qinb['unit']!='':
+                    # qa doesn't deal universally well with pixels and beams
+                    # so this may fail:
+                    try:
+                        inb=qa.convert(qinb,"Jy/pixel")['value']
+                    except:
+                        inb=qinb['value']
+                        self.msg("assuming inbright="+str(inbright)+" means "+str(inb)+" Jy/pixel",priority="warn")
+                    inbright=inb
+            #stats=in_ia.statistics(verbose=False,list=False)
+            #highvalue=stats['max']
+            #scalefactor=float(inbright)/highvalue.max()
+            scalefactor=float(inbright)/arr.max()
 
 
         # check shape characteristics of the input;
@@ -2198,13 +2240,6 @@ class simutil:
         in_spc=in_csys.findcoordinate("spectral")
         in_stk=in_csys.findcoordinate("stokes")
 
-        if outimage!=inimage:
-            if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
-            arr=in_ia.getchunk()
-        else:
-            arr=pl.zeros(in_shape)
-        axmap=[-1,-1,-1,-1]
-        axassigned=[-1,-1,-1,-1]
 
         # first check number of pixel axes and raise to 4 if required
         in_nax=arr.shape.__len__()

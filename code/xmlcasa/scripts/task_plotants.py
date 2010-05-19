@@ -35,6 +35,8 @@ def plotants(vis=None,figfile=''):
                      mp.open(vis)
               else:
                      raise Exception, 'Visibility data set not found - please verify the name'
+              pl.ion() # countering tableplot's inadequacies with poor practice
+              pl.clf()
               mp.plotoptions(plotsymbol='ro');
               mp.plot(type='array')
               mp.reset()

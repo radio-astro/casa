@@ -19,8 +19,6 @@
 #
 
 casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
-  test_importoldasdm.py
-  test_importasdm.py
   test_boxit.py
   test_clean.py
   test_clearstat.py
@@ -32,13 +30,16 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_imhead.py
   test_immath.py
   test_immoments.py
+  test_importasdm.py
   test_importevla.py
   test_importfitsidi.py
+  test_importoldasdm.py
   test_imregrid.py
   test_imsmooth.py
   test_imstat.py
   test_imval.py
   test_listhistory.py
+  test_listvis.py
   test_plotants.py
   test_plotms.py
   test_report.py

@@ -65,18 +65,27 @@ EGainCurve::EGainCurve(VisSet& vs) :
 
   const ROMSColumns& mscol(vs.iter().msColumns());
 
+  // The antenna names
+  const ROMSAntennaColumns& antcol(mscol.antenna());
+  antnames_ = antcol.name().getColumn();
+
   // Observation info
   const ROMSObservationColumns& obscol(mscol.observation());
 
   String telescope(obscol.telescopeName()(0));
-  if (telescope.contains("VLA")) 
+  if (telescope.contains("VLA")) {
     calTableName()=Aipsrc::aipsRoot() + "/data/nrao/VLA/GainCurves";
+    // Strip any ea/va baloney from the MS antenna names so 
+    //  they match the integers (as strings) in the GainCurves table
+    for (uInt iant=0;iant<antnames_.nelements();++iant) {
+      antnames_(iant)=antnames_(iant).from(RXint);
+      if (antnames_(iant).find('0')==0)
+	antnames_(iant)=antnames_(iant).after('0');
+    }
+  }
 
   Vector<Double> timerange(obscol.timeRange()(0));
   obstime_ = timerange(0);
-
-  const ROMSAntennaColumns& antcol(mscol.antenna());
-  antnames_ = antcol.name().getColumn();
 
   const ROMSSpWindowColumns& spwcol(mscol.spectralWindow());
   spwfreqs_ = spwcol.refFrequency().getColumn();
@@ -205,7 +214,7 @@ void EGainCurve::calcPar() {
   Vector<MDirection> antazel(vb().azel(currTime()));
   Double* a=za().data();
   for (Int iant=0;iant<nAnt();++iant,++a) 
-    (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
+    (*a)=90.0 - antazel(iant).getAngle().getValue()(1)*180.0/C::pi;
 
   // Pars now valid, matrices not yet
   validateP();
@@ -228,18 +237,17 @@ void EGainCurve::calcAllJones() {
 
   Double loss, ang;
   for (Int iant=0; iant<nAnt(); ++iant,++a)
-    if ((*a)<C::pi_2) 
-      for (Int ipol=0;ipol<2;++ipol,++J,++JOk) {
-	loss=Double(*c);
-	++c;
-	ang=1.0;
-	for (Int ipar=1;ipar<4;++ipar,++c) {
-	  ang*=(*a);
-	  loss+=((*c)*ang);
-	}
-	(*J) = Complex(loss);
-	(*JOk) = True;
+    for (Int ipol=0;ipol<2;++ipol,++J,++JOk) {
+      loss=Double(*c);
+      ++c;
+      ang=1.0;
+      for (Int ipar=1;ipar<4;++ipar,++c) {
+	ang*=(*a);
+	loss+=((*c)*ang);
       }
+      (*J) = Complex(loss);
+      (*JOk) = True;
+    }
   
 }
 
