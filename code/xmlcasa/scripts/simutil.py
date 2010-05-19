@@ -61,8 +61,9 @@ class simutil:
     def newfig(self,multi=0,show=True):  # new graphics window/file
         if show:
             pl.ion() # creates a fig if ness
+        else:
+            pl.ioff() 
         pl.clf() 
-        pl.ioff() # just in case
 
         if multi!=0:
             if type(multi)!=type([]):
@@ -1794,10 +1795,10 @@ class simutil:
             if not in_dir['return']:
                 self.msg("You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",priority="error")
                 return False            
-            ra,dec = in_csys.referencevalue(type="direction")['numeric']
-            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms',prec=5)+" "+qa.formxxx(str(dec)+"rad",format='dms',prec=5)
-            ra=qa.quantity(str(ra)+"rad")
-            dec=qa.quantity(str(dec)+"rad")
+            # ra,dec = in_csys.referencevalue(type="direction")['numeric']
+            # model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms',prec=5)+" "+qa.formxxx(str(dec)+"rad",format='dms',prec=5)
+            # ra=qa.quantity(str(ra)+"rad")
+            # dec=qa.quantity(str(dec)+"rad")
             if in_dir['pixel'].__len__() != 2:
                 self.msg("I can't understand your direction coordinates, so either edit the header or set ignorecoord=True",priority="error")
                 return False            
@@ -1807,6 +1808,13 @@ class simutil:
             axassigned[dirax[0]]=0
             axassigned[dirax[1]]=0
             if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
+
+            model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
+            ra,dec = in_ia.toworld(model_refpix)['numeric'][0:2]
+            ra=qa.quantity(str(ra)+"rad")
+            dec=qa.quantity(str(dec)+"rad")
+            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
+
 
         # if we only have 2d to start with:
         if in_nax==2:            
@@ -2576,7 +2584,8 @@ class simutil:
         cleanlast.write('cfcache                 = "cfcache.dir"\n')
         cleanlast.write('painc                   = 360.0\n')
         cleanlast.write('epjtable                = ""\n')
-        cleanlast.write('interpolation           = "nearest"\n')
+        #cleanstr=cleanstr+",interpolation='nearest'"  # default change 20100518
+        cleanlast.write('interpolation           = "linear"\n')
         cleanstr=cleanstr+",niter="+str(niter)
         cleanlast.write('niter                   = '+str(niter)+'\n')
         cleanlast.write('gain                    = 0.1\n')

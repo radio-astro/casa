@@ -843,7 +843,7 @@ def simdata(
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
                 if display: pl.subplot(233)                
-                util.statim(project+".diff.im",plot=display,disprange=max_cleanim,bar=False)
+                util.statim(project+".diff.im",plot=display,bar=False)
                 if display: pl.subplot(234)                
                 fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display,bar=False)
 

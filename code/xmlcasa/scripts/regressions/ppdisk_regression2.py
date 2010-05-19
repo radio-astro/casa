@@ -27,7 +27,7 @@ print 'I think the data repository is at '+repodir
 default("simdata2")
 project=my_project
 skymodel=my_modelimage
-skymodel=repodir+"/data/alma/simmos/input50pc_672GHz.fits"
+skymodel=repodir+"/data/regression/simdata/input50pc_672GHz.fits"
 direction="J2000 18h00m00.031s -22d59m59.6s"
 
 complist="star672GHz.cl"
@@ -92,10 +92,10 @@ ia.close()
 
 # 20100428
 refstats = { 'flux': 0.0363,
-             'max': 4.19e-04,
-             'min': -0.123e-04,
-             'rms': 1.29e-04,
-             'sigma': 0.92e-04 }
+             'max': 5.44e-04,
+             'min': -0.633e-05,
+             'rms': 1.84e-04,
+             'sigma': 1.27e-04 }
 
 reftol   = {'flux':  0.05,
             'max':   0.1,

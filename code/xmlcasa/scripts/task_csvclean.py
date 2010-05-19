@@ -5,7 +5,7 @@ from cleanhelper import *
 from taskinit import *
 
 
-def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restoringbeam, interactive):
+def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weighting, restoringbeam, interactive):
 
     """ This task does an invert of the visibilities and deconvolve in the
 	    image plane. It does not do a uvdata subtraction (aka Cotton-Schwab
@@ -61,6 +61,10 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
                    cell=['1arcmin', '1arcmin']
                    cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
                    NOTE:cell = 2.0 => ['2arcsec', '2arcsec']
+
+        phasecenter -- direction measure  or fieldid for the mosaic center
+                   default: '' => first field selected ; example: phasecenter=6
+                   or phasecenter='J2000 19h30m00 -40d00m00'
     
         niter -- Maximum number iterations,
                    if niter=0, then no CLEANing is done ("invert" only)
@@ -96,10 +100,12 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
     
         parsummary = 'vis="'+str(vis)+'", imagename="'+str(imagename)+'", '
         parsummary += 'field="'+str(field)+'", spw="'+str(spw)+'", '
-        parsummary += 'imsize="'+str(imsize)+'", niter="'+str(niter)+'", '
+        parsummary = 'cell="'+str(cell)+'",'
+        parsummary = 'phasecenter='+str(phasecenter)+','
+        parsummary += 'imsize='+str(imsize)+', niter='+str(niter)+', '
         parsummary += 'weighting="'+str(weighting)+'", '
         parsummary += 'restoringbeam="'+str(restoringbeam)+'", '
-        parsummary += 'interactive="'+str(interactive)+'"'
+        parsummary += 'interactive='+str(interactive)+''
         casalog.post(parsummary,'INFO')    
         
         if (not (type(vis)==str) & (os.path.exists(vis))):
@@ -137,6 +143,26 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         if((type(cell[0])==int) or (type(cell[0])==float)):
             cellx=qa.quantity(cell[0], 'arcsec')
             celly=qa.quantity(cell[1], 'arcsec')
+
+        if(type(phasecenter)==str):
+            ### blank means take field[0]
+            if (phasecenter==''):
+                fieldoo=field
+                if(fieldoo==''):
+                    fieldoo='0'
+                phasecenter=int(ms.msseltoindex(vis,field=fieldoo)['field'][0])
+            else:
+                tmppc=phasecenter
+                try:
+                    if(len(ms.msseltoindex(vis, field=phasecenter)['field']) > 0):
+                        tmppc = int(ms.msseltoindex(vis,
+                                                    field=phasecenter)['field'][0])
+                    ##succesful must be string like '0' or 'NGC*'
+                except Exception, instance:
+                    #failed must be a string type J2000 18h00m00 10d00m00
+                    tmppc = phasecenter
+                phasecenter = tmppc
+                
 
         if restoringbeam == [''] or len(restoringbeam) == 0:
         	# calculate from fit below
@@ -185,9 +211,10 @@ def csvclean(vis, imagename,field, spw, imsize, cell, niter, weighting, restorin
         	cb.close()
         		
         # make the dirty image and psf
+
         im.open(vis)
         im.selectvis(spw=spw, field=field, usescratch=True)
-        im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly)
+        im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter)
         im.weight(weighting)
         
         im.makeimage(type='corrected', image=dirtyim)
