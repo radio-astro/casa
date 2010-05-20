@@ -432,6 +432,11 @@ protected:
   PlotMSAveraging averaging_;
   PlotMSTransformations transformations_;
 
+  // meta info for locate output
+  Vector<String> antnames_; 	 
+  Vector<String> fldnames_; 	 
+  Vector<String> corrnames_; 	 
+
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;
 
