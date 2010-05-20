@@ -4,7 +4,8 @@ from taskinit import *
 def bandpass(vis=None,caltable=None,
 	     field=None,spw=None,
 	     selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
-	     solint=None,combine=None,refant=None,minblperant=None,solnorm=None,
+	     solint=None,combine=None,refant=None,minblperant=None,
+	     minsnr=None,solnorm=None,
 	     bandtype=None,append=None,fillgaps=None,
 	     degamp=None,degphase=None,visnorm=None,
 	     maskcenter=None,maskedge=None,
@@ -87,12 +88,12 @@ def bandpass(vis=None,caltable=None,
 		# set up for solving (
 		if (bandtype=='B'):
 			cb.setsolve(type='B',t=solint,combine=combine,refant=refant,minblperant=minblperant,
-				    solnorm=solnorm,table=caltable,append=append,fillgaps=fillgaps)
+				    solnorm=solnorm,minsnr=minsnr,table=caltable,append=append,fillgaps=fillgaps)
 		elif (bandtype=='BPOLY'):
 			cb.setsolvebandpoly(refant=refant,table=caltable,append=append,
 					    t=solint,combine=combine,
 					    degamp=degamp,degphase=degphase,visnorm=visnorm,
-					    solnorm=solnorm,maskcenter=maskcenter,maskedge=maskedge)
+					    solnorm=solnorm,minsnr=minsnr,maskcenter=maskcenter,maskedge=maskedge)
 
 		cb.solve()
 		cb.close()
