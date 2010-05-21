@@ -71,94 +71,137 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 template<class M>
-void SubMS::chanAvgSameShapes(const ROArrayColumn<M>& data,
-                              const MS::PredefinedColumns columnName,
-                              const Bool doSpWeight,
-                              ROArrayColumn<Float>& wgtSpec,
-                              Cube<Float>& outspweight,
-                              Vector<Float>& outwgtspectmp,
-                              Matrix<Float>& inwgtspectmp,
-                              const Float *inwptr,
-                              ROArrayColumn<Bool>& flag,
-                              Matrix<Bool>& inflagtmp,
-                              const Bool *iflg,
-                              const Int nrow, Cube<Bool>& outflag,
-                              const Bool writeToDataCol)
+void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
+			const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
+			const Int nrow)
 {
   Bool deleteIptr;
-  Matrix<M> indatatmp(npol_p[0], inNumChan_p[0]);
-  const M *iptr = indatatmp.getStorage(deleteIptr);
+  Matrix<M> indatatmp;
+
+  LogIO os(LogOrigin("SubMS", "filterChans()"));
 
   // Sigh, iflg itself is const, but it points at the start of inflagtmp,
   // which is continually refreshed by a row of flag.
+  ROArrayColumn<Bool> flag(mscIn_p->flag());
+  Matrix<Bool> inflagtmp;
+  Bool deleteIFptr;
+  Matrix<Bool> outflag;
   
-  Cube<M> outdata(npol_p[0], nchan_p[0], nrow);
-  Vector<M> outdatatmp(npol_p[0]);
+  Matrix<Float> inwgtspectmp;
+  Bool deleteIWptr;
+  
+  Matrix<M> outdata;
+  Vector<M> outdatatmp;
   //    const Complex *optr = outdatatmp.getStorage(deleteOptr);
 
-  for (Int row = 0; row < nrow; ++row){
+  Matrix<Float> outspweight;
+  Vector<Float> outwgtspectmp;
+  //   const Float *owptr = outwgtspectmp.getStorage(deleteOWptr);
+
+  const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
+
+  // Guarantee oldDDID != ddID on 1st iteration.
+  Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(0)]] - 1;
+
+  for(Int row = 0; row < nrow; ++row){
+    Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(row)]];
+    Bool newDDID = (ddID != oldDDID);
+
+    if(newDDID){
+      oldDDID = ddID;
+
+      if(ddID < 0){                      // Paranoia
+	if(newDDID)
+	  os << LogIO::WARN
+	     << "Treating DATA_DESCRIPTION_ID " << ddID << " as 0."
+	     << LogIO::POST;
+	ddID = 0;
+      }
+      
+      indatatmp.resize(npol_p[ddID], inNumChan_p[ddID]);
+      inwgtspectmp.resize(npol_p[ddID], inNumChan_p[ddID]);
+      inflagtmp.resize(npol_p[ddID], inNumChan_p[ddID]);
+      outflag.resize(npol_p[ddID], nchan_p[ddID]);
+      outdata.resize(npol_p[ddID], nchan_p[ddID]);
+      outdatatmp.resize(npol_p[ddID]);
+      if(doSpWeight){
+	outspweight.resize(npol_p[ddID], nchan_p[ddID]);
+	outwgtspectmp.resize(npol_p[ddID]);
+      }
+    }
+
+    // Should come after any resize()s.
+    const M *iptr = indatatmp.getStorage(deleteIptr);
+    const Float *inwptr = inwgtspectmp.getStorage(deleteIWptr);
+    const Bool *iflg = inflagtmp.getStorage(deleteIFptr);
+    outflag.set(false);
     data.get(row, indatatmp);
     flag.get(row, inflagtmp);
 
     if(doSpWeight)
       wgtSpec.get(row, inwgtspectmp);
 
-    Int ck = 0;
+    uInt outChanInd = 0;
     Int chancounter = 0;
-    Vector<Int> avcounter(npol_p[0]);
+    Vector<Int> avcounter(npol_p[ddID]);
     outdatatmp.set(0); outwgtspectmp.set(0);
     avcounter.set(0);
-      
-    for(Int k = chanStart_p[0]; k < (nchan_p[0] * chanStep_p[0] +
-                                     chanStart_p[0]); ++k){
-      if(chancounter == chanStep_p[0]){
+    
+    // chanStart_p is Int, therefore inChanInd is too.
+    for(Int inChanInd = chanStart_p[ddID];
+	inChanInd < (nchan_p[ddID] * chanStep_p[ddID] +
+		     chanStart_p[ddID]); ++inChanInd){
+      if(chancounter == chanStep_p[ddID]){
         outdatatmp.set(0); outwgtspectmp.set(0);
         chancounter = 0;
         avcounter.set(0);
       }
       ++chancounter;
-      for(Int j = 0; j < npol_p[0]; ++j){
-        Int offset = j + k * npol_p[0];
+      for(Int polInd = 0; polInd < npol_p[ddID]; ++polInd){
+        Int offset = polInd + inChanInd * npol_p[ddID];
         if(!iflg[offset]){
           if(doSpWeight){
-            outdatatmp[j] += iptr[offset] * inwptr[offset];
-            outwgtspectmp[j] += inwptr[offset];
+            outdatatmp[polInd] += iptr[offset] * inwptr[offset];
+            outwgtspectmp[polInd] += inwptr[offset];
           }
           else
-            outdatatmp[j] += iptr[offset];	   
-          ++avcounter[j];
+            outdatatmp[polInd] += iptr[offset];	   
+          ++avcounter[polInd];
         }
 
-        if(chancounter == chanStep_p[0]){
-          if(avcounter[j] != 0){
-            // Should there be a warning if one data column wants flagging
-            // and another does not?
+        if(chancounter == chanStep_p[ddID]){
+          if(avcounter[polInd] != 0){
             if(doSpWeight){
-              if(outwgtspectmp[j] != 0.0)
-                outdata(j, ck, row) = outdatatmp[j] / outwgtspectmp[j];
+              if(outwgtspectmp[polInd] != 0.0){
+                outdata(polInd,
+			outChanInd) = outdatatmp[polInd] / outwgtspectmp[polInd];
+	      }
               else{
-                outdata(j, ck, row) = 0.0;
-                outflag(j, ck, row) = True;
+                outdata(polInd, outChanInd) = 0.0;
+                outflag(polInd, outChanInd) = True;
               }
-              outspweight(j, ck, row) = outwgtspectmp[j];
+              outspweight(polInd, outChanInd) = outwgtspectmp[polInd];
             }
             else{
-              outdata(j, ck, row) = outdatatmp[j] / avcounter[j];	    
+              outdata(polInd, outChanInd) = outdatatmp[polInd] / avcounter[polInd];
             }
           }
           else{
-            outdata(j, ck, row) = 0;
-            outflag(j, ck, row) = True;
+            outdata(polInd, outChanInd) = 0;
+            outflag(polInd, outChanInd) = True;
             if(doSpWeight)
-              outspweight(j, ck, row) = 0;
+              outspweight(polInd, outChanInd) = 0;
           }	
         }
       }
-      if(chancounter == chanStep_p[0])
-        ++ck;
+      if(chancounter == chanStep_p[ddID])
+        ++outChanInd;
     }
+    outDataCol.put(row, outdata);
+    msc_p->flag().put(row, outflag);
+    if(doSpWeight)
+      msc_p->weightSpectrum().put(row, outspweight);
   }
-  putDataColumn(*msc_p, outdata, columnName, writeToDataCol);
 }
 
 template<class M>

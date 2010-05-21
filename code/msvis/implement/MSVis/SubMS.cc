@@ -50,8 +50,8 @@
 #include <casa/System/AppInfo.h>
 #include <casa/System/ProgressMeter.h>
 #include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+//#include <msvis/MSVis/VisBuffer.h>
+//#include <msvis/MSVis/VisibilityIterator.h>
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ScaColDesc.h>
@@ -350,12 +350,25 @@ namespace casa {
     }    
   }
 
+  Bool SubMS::selectCorrelations(const String& corrstr)
+  {
+    LogIO os(LogOrigin("SubMS", "selectCorrelations()"));
+    Bool cando = true;
+
+    MSSelection mssel;
+    mssel.setPolnExpr(corrstr);
+
+    corrString_p = corrstr;
+
+    return cando;
+  }
+
   // This is the one used by split.
   Bool SubMS::setmsselect(const String& spw, const String& field,
                           const String& baseline, const String& scan,
                           const String& uvrange, const String& taql,
                           const Vector<Int>& step, const Bool averchan,
-                          const String& subarray)
+                          const String& subarray, const String& correlation)
   {
     LogIO os(LogOrigin("SubMS", "setmsselect()"));
     Bool  ok;
@@ -386,6 +399,11 @@ namespace casa {
 
     if(subarray != "")
       selectArray(subarray);
+
+    if(!selectCorrelations(correlation)){
+      os << LogIO::SEVERE << "No correlations selected." << LogIO::POST;
+      ok = false;
+    }
 
     return ok;
   }
@@ -793,15 +811,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     thisSelection.setScanExpr(scanString_p);
     if(arrayExpr_p != "")
       thisSelection.setArrayExpr(arrayExpr_p);
+    if(corrString_p != "")
+      thisSelection.setPolnExpr(corrString_p);
     thisSelection.setTaQLExpr(taqlString_p);
     
     TableExprNode exprNode=thisSelection.toTableExprNode(elms);
     
     {      
-      const MSDataDescription ddtable = ms_p.dataDescription();
+      const MSDataDescription ddtable = elms->dataDescription();
       ROScalarColumn<Int> polId(ddtable, 
                                 MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
-      const MSPolarization poltable = ms_p.polarization();
+      const MSPolarization poltable = elms->polarization();
       ROArrayColumn<Int> pols(poltable, 
                               MSPolarization::columnName(MSPolarization::CORR_TYPE));
       
@@ -5165,20 +5185,21 @@ Bool SubMS::fillAccessoryMainCols(){
         msc_p->weightSpectrum().putColumn(mscIn_p->weightSpectrum());
     }
     else{
-      if(sameShape_p){
-	//
-	//Checking to make sure we have in memory capability else 
-	// use visbuffer
-	//
-	Double memAvail= Double (HostInfo::memoryTotal())*(1024);
-	//Factoring in 30% for flags and other stuff
-	if(1.3 * n_bytes() >  memAvail)
-	  sameShape_p = False;
-      }
-      if(sameShape_p)
-	writeSimilarSpwShape(colNames);
-      else
-	success = writeDiffSpwShape(colNames);
+      // if(sameShape_p){
+      // 	//
+      // 	//Checking to make sure we have in memory capability else 
+      // 	// use visbuffer
+      // 	//
+      // 	Double memAvail= Double (HostInfo::memoryTotal())*(1024);
+      // 	//Factoring in 30% for flags and other stuff
+      // 	if(4.3 * n_bytes() >  memAvail)
+      // 	  sameShape_p = False;
+      // }
+      // if(sameShape_p)
+      // 	writeSimilarSpwShape(colNames);
+      // else
+      // 	success = writeDiffSpwShape(colNames);
+      doChannelMods(colNames);
     }
     
     return success;
@@ -5655,327 +5676,310 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     return True;
   }
   
-  Bool SubMS::writeDiffSpwShape(const Vector<MS::PredefinedColumns>& datacols)
-  {
-    LogIO os(LogOrigin("SubMS", "writeDiffSpwShape()"));
+  // Bool SubMS::writeDiffSpwShape(const Vector<MS::PredefinedColumns>& datacols)
+  // {
+  //   LogIO os(LogOrigin("SubMS", "writeDiffSpwShape()"));
     
-    Vector<MS::PredefinedColumns> complexDataCols;
-    const Bool doFloat = sepFloat(datacols, complexDataCols);
-    if(doFloat){
-      os << LogIO::SEVERE
-         << "Channel averaging of FLOAT_DATA with differently shaped spws is not yet supported."
-         << LogIO::POST;
-      return false;
-    }
-    const uInt ntok = complexDataCols.nelements();
+  //   Vector<MS::PredefinedColumns> complexDataCols;
+  //   const Bool doFloat = sepFloat(datacols, complexDataCols);
+  //   if(doFloat){
+  //     os << LogIO::SEVERE
+  //        << "Channel averaging of FLOAT_DATA with differently shaped spws is not yet supported."
+  //        << LogIO::POST;
+  //     return false;
+  //   }
+  //   const uInt ntok = complexDataCols.nelements();
 
-    Bool doSpWeight = !(mscIn_p->weightSpectrum().isNull()) &&
-                      mscIn_p->weightSpectrum().isDefined(0);
+  //   Bool doSpWeight = !(mscIn_p->weightSpectrum().isNull()) &&
+  //                     mscIn_p->weightSpectrum().isDefined(0);
     
-    Int rowsdone=0;
-    Int rowsnow=0;
-    Block<Int> sort(0);
-    Matrix<Int> noselection;
-    Bool idelete;
+  //   Int rowsdone=0;
+  //   Int rowsnow=0;
+  //   Block<Int> sort(0);
+  //   //sort[0] = MS::DATA_DESC_ID; // Necessary to limit chunks to 1 DDID at a time.
     
-    // Bool needScratch = false;
-    // for(uInt ni = ntok - 1; ni >= 0; --ni){
-    //   if(complexDataCols[ni] == MS::MODEL_DATA ||
-    //      complexDataCols[ni] == MS::CORRECTED_DATA){
-    //     needScratch = true;
-    //     break;
-    //   }
-    // }
+  //   Matrix<Int> noselection;
+  //   Bool idelete;
+    
+  //   // Bool needScratch = false;
+  //   // for(uInt ni = ntok - 1; ni >= 0; --ni){
+  //   //   if(complexDataCols[ni] == MS::MODEL_DATA ||
+  //   //      complexDataCols[ni] == MS::CORRECTED_DATA){
+  //   //     needScratch = true;
+  //   //     break;
+  //   //   }
+  //   // }
         
-    // VisSet vs(mssel_p, sort, noselection, needScratch);
+  //   // VisSet vs(mssel_p, sort, noselection, needScratch);
 
-    //ROVisIter& vi(vs.iter());
-    ROVisIter vi(mssel_p, sort);
+  //   //ROVisIter& vi(vs.iter());
+  //   // WARNING: VisIter has a default sort which may not be the same as the raw
+  //   // order used outside VisIter, i.e. as already written for the auxiliary
+  //   // main columns, like DDID.  Worse, the sort is necessary to make VisIter
+  //   // break chunks at DDID boundaries, and to make the chunks reasonably large.
+  //   ROVisIter vi(mssel_p, sort);
     
-    VisBuffer vb(vi);
-    Vector<Int> spwindex(max(spw_p)+1);
-    spwindex.set(-1);
-    for(uInt k = 0; k < spw_p.nelements(); ++k)
-      spwindex[spw_p[k]] = k;
+  //   VisBuffer vb(vi);
+  //   Vector<Int> spwindex(max(spw_p)+1);
+  //   spwindex.set(-1);
+  //   for(uInt k = 0; k < spw_p.nelements(); ++k)
+  //     spwindex[spw_p[k]] = k;
     
-    Cube<Complex> vis;
-    Cube<Bool> inFlag;
-    Cube<Float> inSpWeight;
-    Matrix<Bool> chanFlag;
+  //   Cube<Complex> vis;
+  //   Cube<Bool> inFlag;
+  //   Cube<Float> inSpWeight;
+  //   Matrix<Bool> chanFlag;
 
-    Cube<Float> spWeight;
-    Matrix<Float> inImgWts;
-    Matrix<Float> avgImgWts;
-    Float *oproxyImgWtsP;
-    Float *iproxyImgWtsP;
+  //   Cube<Float> spWeight;
+  //   Matrix<Float> inImgWts;
+  //   Matrix<Float> avgImgWts;
+  //   Float *oproxyImgWtsP;
+  //   Float *iproxyImgWtsP;
     
-    Cube<Bool> locflag;
+  //   Cube<Bool> locflag;
+  //   Vector<Int> ddIds;
 
-    Int oldSpw = -1;
+  //   Int oldSpw = -1;
     
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
-      {
-	for (vi.origin(); vi.more(); vi++) 
-	  {
-	    Int spw=spwindex[vb.spectralWindow()];
-	    rowsnow=vb.nRow();
-	    RefRows rowstoadd(rowsdone, rowsdone+rowsnow-1);
-	    //	    Cube<Bool> locflag(npol_p[spw], nchan_p[spw], rowsnow);
+  //   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
+  //     {
+  // 	for (vi.origin(); vi.more(); vi++) 
+  // 	  {
+  // 	    Int spw=spwindex[vb.spectralWindow()];
+  // 	    rowsnow=vb.nRow();
+  // 	    RefRows rowstoadd(rowsdone, rowsdone+rowsnow-1);
+  // 	    //	    Cube<Bool> locflag(npol_p[spw], nchan_p[spw], rowsnow);
 
-            Cube<Complex> averdata(npol_p[spw], nchan_p[spw], rowsnow);
+  //           Cube<Complex> averdata(npol_p[spw], nchan_p[spw], rowsnow);
 		
-            locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
-            if(doSpWeight)
-              spWeight.resize(npol_p[spw], nchan_p[spw], rowsnow);              
-	    for(uInt ni=0;ni<ntok;ni++)
-	      {
-		if(complexDataCols[ni]== MS::DATA)
-		  vis.reference(vb.visCube());
-		else if(complexDataCols[ni] == MS::MODEL_DATA)
-		  vis.reference(vb.modelVisCube());
-		else
-		  vis.reference(vb.correctedVisCube());
-		
-                if(spw != oldSpw){
-                  os << LogIO::DEBUG1
-                     << "spw: " << spw << "\n"
-                     << "vis.shape(): " << vis.shape() << "\n"
-                     << "npol_p[spw]: " << npol_p[spw] << "\n"
-                     << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
-                     << "nchan_p[spw]: " << nchan_p[spw] << "\n"
-                     << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
-                     << "rowsdone: " << rowsdone << LogIO::POST;
-                  oldSpw = spw;
-                }
+  //           locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
+  //           //ddIds.resize(rowsnow);
+  //           //ddIds.fill(spw);
 
-                Int npol_cube  = vis.shape()[0];
-                Int nchan_cube = vis.shape()[1];
+  //           if(doSpWeight)
+  //             spWeight.resize(npol_p[spw], nchan_p[spw], rowsnow);              
+  // 	    for(uInt ni=0;ni<ntok;ni++)
+  // 	      {
+  // 		if(complexDataCols[ni]== MS::DATA)
+  // 		  vis.reference(vb.visCube());
+  // 		else if(complexDataCols[ni] == MS::MODEL_DATA)
+  // 		  vis.reference(vb.modelVisCube());
+  // 		else
+  // 		  vis.reference(vb.correctedVisCube());
+		
+  //               if(spw != oldSpw){
+  //                 os << LogIO::DEBUG1
+  //                    << "spw: " << spw << "\n"
+  //                    << "vis.shape(): " << vis.shape() << "\n"
+  //                    << "npol_p[spw]: " << npol_p[spw] << "\n"
+  //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
+  //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
+  //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
+  //                    << "rowsdone: " << rowsdone << LogIO::POST;
+  //                 oldSpw = spw;
+  //               }
+
+  //               Int npol_cube  = vis.shape()[0];
+  //               Int nchan_cube = vis.shape()[1];
                 
-                if(npol_cube != npol_p[spw] ||
-                   nchan_cube != inNumChan_p[spw]){
-                  // Should not happen, but can.
-                  os << LogIO::SEVERE
-                     << "The data in the current chunk does not have the expected shape!\n"
-                     << "spw: " << spw << "\n"
-                     << "vis.shape(): " << vis.shape() << "\n"
-                     << "npol_p[spw]: " << npol_p[spw] << "\n"
-                     << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
-                     << "nchan_p[spw]: " << nchan_p[spw] << "\n"
-                     << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
-                     << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
-                }
-                else if(chanStep_p[spw] > nchan_cube){
-                  // Should not happen, but can.
-                  os << LogIO::SEVERE
-                     << "chanStep is too wide for the current chunk!\n"
-                     << "spw: " << spw << "\n"
-                     << "vis.shape(): " << vis.shape() << "\n"
-                     << "npol_p[spw]: " << npol_p[spw] << "\n"
-                     << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
-                     << "nchan_p[spw]: " << nchan_p[spw] << "\n"
-                     << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
-                     << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
-                }                 
+  //               if(npol_cube != npol_p[spw] ||
+  //                  nchan_cube != inNumChan_p[spw]){
+  //                 // Should not happen, but can.
+  //                 os << LogIO::SEVERE
+  //                    << "The data in the current chunk does not have the expected shape!\n"
+  //                    << "spw: " << spw << "\n"
+  //                    << "vis.shape(): " << vis.shape() << "\n"
+  //                    << "npol_p[spw]: " << npol_p[spw] << "\n"
+  //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
+  //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
+  //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
+  //                    << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
+  //               }
+  //               else if(chanStep_p[spw] > nchan_cube){
+  //                 // Should not happen, but can.
+  //                 os << LogIO::SEVERE
+  //                    << "chanStep is too wide for the current chunk!\n"
+  //                    << "spw: " << spw << "\n"
+  //                    << "vis.shape(): " << vis.shape() << "\n"
+  //                    << "npol_p[spw]: " << npol_p[spw] << "\n"
+  //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
+  //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
+  //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
+  //                    << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
+  //               }                 
 
-		chanFlag.reference(vb.flag());
-		inFlag.reference(vb.flagCube());
- 		averdata.set(Complex(0.0, 0.0));
+  // 		chanFlag.reference(vb.flag());
+  // 		inFlag.reference(vb.flagCube());
+  // 		averdata.set(Complex(0.0, 0.0));
 		
-		Float* iweight = NULL;
-                Float* oSpWt = NULL;
-		if (doSpWeight){
-                  inSpWeight.reference(vb.weightSpectrum());
-                  iweight = inSpWeight.getStorage(idelete);
+  // 		Float* iweight = NULL;
+  //               Float* oSpWt = NULL;
+  // 		if (doSpWeight){
+  //                 inSpWeight.reference(vb.weightSpectrum());
+  //                 iweight = inSpWeight.getStorage(idelete);
 
-                  spWeight.set(0.0);
-                  oSpWt = spWeight.getStorage(idelete);
-                }
+  //                 spWeight.set(0.0);
+  //                 oSpWt = spWeight.getStorage(idelete);
+  //               }
 		
-                locflag.set(false);
-		const Bool* iflag=inFlag.getStorage(idelete);
-		const Complex* idata=vis.getStorage(idelete);
-		Complex* odata=averdata.getStorage(idelete);
-		Bool* oflag=locflag.getStorage(idelete);
+  //               locflag.set(false);
+  // 		const Bool* iflag=inFlag.getStorage(idelete);
+  // 		const Complex* idata=vis.getStorage(idelete);
+  // 		Complex* odata=averdata.getStorage(idelete);
+  // 		Bool* oflag=locflag.getStorage(idelete);
 		
-		for(Int r = 0; r < rowsnow; ++r)
-		  {
-                    uInt roffset = r * nchan_cube;
+  // 		for(Int r = 0; r < rowsnow; ++r)
+  // 		  {
+  //                   uInt roffset = r * nchan_cube;
                     
-		    for(Int c = 0; c < nchan_p[spw]; ++c)
-		      {
-                        uInt coffset = c * chanStep_p[spw];
+  // 		    for(Int c = 0; c < nchan_p[spw]; ++c)
+  // 		      {
+  //                       uInt coffset = c * chanStep_p[spw];
                     
-			for (Int pol = 0; pol < npol_cube; ++pol)
-			  {
-			    Int outoffset = (r * nchan_p[spw] + c) * npol_cube
-                                            + pol;
-			    if(!averageChannel_p)
-			      {
-				Int whichChan = chanStart_p[spw] +
-                                                c * chanStep_p[spw];
-				averdata.xyPlane(r).column(c) = vis.xyPlane(r).column(whichChan); 
-				locflag.xyPlane(r).column(c)  = inFlag.xyPlane(r).column(whichChan);
-                                if(doSpWeight)
-                                  spWeight.xyPlane(r).column(c) = inSpWeight.xyPlane(r).column(whichChan);
-			      }
-			    else{
-                              if(doSpWeight){
-                                for(Int m = 0; m < chanStep_p[spw]; ++m){
-                                  Int inoffset = (roffset +
-                                                  (coffset + m)) * 
-                                                 npol_cube + pol;
+  // 			for (Int pol = 0; pol < npol_cube; ++pol)
+  // 			  {
+  // 			    Int outoffset = (r * nchan_p[spw] + c) * npol_cube
+  //                                           + pol;
+  // 			    if(!averageChannel_p)
+  // 			      {
+  // 				Int whichChan = chanStart_p[spw] +
+  //                                               c * chanStep_p[spw];
+  // 				averdata.xyPlane(r).column(c) = vis.xyPlane(r).column(whichChan); 
+  // 				locflag.xyPlane(r).column(c)  = inFlag.xyPlane(r).column(whichChan);
+  //                               if(doSpWeight)
+  //                                 spWeight.xyPlane(r).column(c) = inSpWeight.xyPlane(r).column(whichChan);
+  // 			      }
+  // 			    else{
+  //                             if(doSpWeight){
+  //                               for(Int m = 0; m < chanStep_p[spw]; ++m){
+  //                                 Int inoffset = (roffset +
+  //                                                 (coffset + m)) * 
+  //                                                npol_cube + pol;
 				    
-                                  if(!iflag[inoffset]){
-                                    odata[outoffset] += iweight[inoffset] *
-                                                        idata[inoffset];
-                                    oSpWt[outoffset] += iweight[inoffset];
-                                  }
-                                }
-                                if(oSpWt[outoffset] != 0.0)
-                                  odata[outoffset] /= oSpWt[outoffset];
-                                else
-                                  oflag[outoffset] = True;
-                              }
-                              else{
-                                uInt counter = 0;
+  //                                 if(!iflag[inoffset]){
+  //                                   odata[outoffset] += iweight[inoffset] *
+  //                                                       idata[inoffset];
+  //                                   oSpWt[outoffset] += iweight[inoffset];
+  //                                 }
+  //                               }
+  //                               if(oSpWt[outoffset] != 0.0)
+  //                                 odata[outoffset] /= oSpWt[outoffset];
+  //                               else
+  //                                 oflag[outoffset] = True;
+  //                             }
+  //                             else{
+  //                               uInt counter = 0;
                                 
-                                for(Int m = 0; m < chanStep_p[spw]; ++m){
-                                  Int inoffset = (roffset +
-                                                  (coffset + m)) *
-                                                 npol_cube + pol;
+  //                               for(Int m = 0; m < chanStep_p[spw]; ++m){
+  //                                 Int inoffset = (roffset +
+  //                                                 (coffset + m)) *
+  //                                                npol_cube + pol;
 				    
-                                  if(!iflag[inoffset]){
-                                    odata[outoffset] += idata[inoffset];
-                                    ++counter;
-                                  }
-                                }
-                                if(counter > 0)
-				  odata[outoffset] /= counter;
-                                else
-				  oflag[outoffset] = True;
-				  // odata[outoffset]=0; // It's 0 anyway.
-                              }
-                            }
-                          }
-		      }
-		  }  
+  //                                 if(!iflag[inoffset]){
+  //                                   odata[outoffset] += idata[inoffset];
+  //                                   ++counter;
+  //                                 }
+  //                               }
+  //                               if(counter > 0)
+  // 				  odata[outoffset] /= counter;
+  //                               else
+  // 				  oflag[outoffset] = True;
+  // 				  // odata[outoffset]=0; // It's 0 anyway.
+  //                             }
+  //                           }
+  //                         }
+  // 		      }
+  // 		  }  
 		
-		if (ntok==1)
-		  msc_p->data().putColumnCells(rowstoadd, averdata);
-		else
-		  {
-		    if(complexDataCols[ni] == MS::DATA)
-		      msc_p->data().putColumnCells(rowstoadd, averdata);
-		    else if(complexDataCols[ni] == MS::MODEL_DATA)
-		      msc_p->modelData().putColumnCells(rowstoadd, averdata);
-		    else
-		      msc_p->correctedData().putColumnCells(rowstoadd, averdata);
-		  }
-	      } // End ntok loop
+  // 		if (ntok==1)
+  // 		  msc_p->data().putColumnCells(rowstoadd, averdata);
+  // 		else
+  // 		  {
+  // 		    if(complexDataCols[ni] == MS::DATA)
+  // 		      msc_p->data().putColumnCells(rowstoadd, averdata);
+  // 		    else if(complexDataCols[ni] == MS::MODEL_DATA)
+  // 		      msc_p->modelData().putColumnCells(rowstoadd, averdata);
+  // 		    else
+  // 		      msc_p->correctedData().putColumnCells(rowstoadd, averdata);
+  // 		  }
+  // 	      } // End ntok loop
 
-	    //
-	    //----------------------------------------------------------------------
-	    // Average the imaging weights - if required.
-	    //
-	    if (doImgWts_p)
-	      {
-                inImgWts.reference(vb.imagingWeight());
-                iproxyImgWtsP = inImgWts.getStorage(idelete);
-                avgImgWts.resize(nchan_p[spw], rowsnow);
-                avgImgWts.set(0.0);
-                oproxyImgWtsP = avgImgWts.getStorage(idelete);
+  // 	    //
+  // 	    //----------------------------------------------------------------------
+  // 	    // Average the imaging weights - if required.
+  // 	    //
+  // 	    if (doImgWts_p)
+  // 	      {
+  //               inImgWts.reference(vb.imagingWeight());
+  //               iproxyImgWtsP = inImgWts.getStorage(idelete);
+  //               avgImgWts.resize(nchan_p[spw], rowsnow);
+  //               avgImgWts.set(0.0);
+  //               oproxyImgWtsP = avgImgWts.getStorage(idelete);
             
-                for(Int r = 0; r < rowsnow; ++r){
-                  for(Int c = 0; c < nchan_p[spw]; ++c){
-                    Int outImgWtsoffset = r * nchan_p[spw] + c;
-                    Int imgWtsCounter = 0;
-                    Int whichChan = chanStart_p[spw] + c * chanStep_p[spw];
+  //               for(Int r = 0; r < rowsnow; ++r){
+  //                 for(Int c = 0; c < nchan_p[spw]; ++c){
+  //                   Int outImgWtsoffset = r * nchan_p[spw] + c;
+  //                   Int imgWtsCounter = 0;
+  //                   Int whichChan = chanStart_p[spw] + c * chanStep_p[spw];
 
-                    if(!averageChannel_p){
-                      avgImgWts(r, c) = inImgWts(r, whichChan);
-                    }
-                    else{
-                      for(Int m = 0; m < chanStep_p[spw]; ++m){
-                        Int inImgWtsoffset = r * inNumChan_p[spw] + c * chanStep_p[spw] + m;
+  //                   if(!averageChannel_p){
+  //                     avgImgWts(r, c) = inImgWts(r, whichChan);
+  //                   }
+  //                   else{
+  //                     for(Int m = 0; m < chanStep_p[spw]; ++m){
+  //                       Int inImgWtsoffset = r * inNumChan_p[spw] + c * chanStep_p[spw] + m;
 
-                        oproxyImgWtsP[outImgWtsoffset] += iproxyImgWtsP[inImgWtsoffset];
-                        ++imgWtsCounter;
-                      }
-                    }
+  //                       oproxyImgWtsP[outImgWtsoffset] += iproxyImgWtsP[inImgWtsoffset];
+  //                       ++imgWtsCounter;
+  //                     }
+  //                   }
                     
-                    if(averageChannel_p){
-                      if(imgWtsCounter > 0)
-                        oproxyImgWtsP[outImgWtsoffset] /= imgWtsCounter;
-                      else
-                        oproxyImgWtsP[outImgWtsoffset] = 0;
-                    }
-                  }
-                }
-                msc_p->imagingWeight().putColumnCells(rowstoadd, avgImgWts);
-	      }
-	    //----------------------------------------------------------------------
+  //                   if(averageChannel_p){
+  //                     if(imgWtsCounter > 0)
+  //                       oproxyImgWtsP[outImgWtsoffset] /= imgWtsCounter;
+  //                     else
+  //                       oproxyImgWtsP[outImgWtsoffset] = 0;
+  //                   }
+  //                 }
+  //               }
+  //               msc_p->imagingWeight().putColumnCells(rowstoadd, avgImgWts);
+  // 	      }
+  // 	    //----------------------------------------------------------------------
 	    
-	    msc_p->flag().putColumnCells(rowstoadd, locflag);
-            if(doSpWeight)
-              msc_p->weightSpectrum().putColumnCells(rowstoadd, spWeight);
-	    rowsdone += rowsnow;
-	  }
-      }
+  // 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
+  //           if(doSpWeight)
+  //             msc_p->weightSpectrum().putColumnCells(rowstoadd, spWeight);
+  // 	    rowsdone += rowsnow;
+  // 	  }
+  //     }
     
-    return True;
-  }
+  //   return True;
+  // }
 
-Bool SubMS::writeSimilarSpwShape(const Vector<MS::PredefinedColumns>& datacols){
-  Int nrow=mssel_p.nrow();
+Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
+{
+  Int nrow = mssel_p.nrow();
 
-  // Sigh, iflg itself is const, but it points at the start of inflagtmp,
-  // which is continually refreshed by a row of flag.
-  Matrix<Bool> inflagtmp(npol_p[0], inNumChan_p[0]);
-  Bool deleteIFptr;
-  const Bool *iflg = inflagtmp.getStorage(deleteIFptr);
-
-  ROArrayColumn<Bool> flag(mscIn_p->flag());
-
-  Matrix<Float> inwgtspectmp(npol_p[0], inNumChan_p[0]);
-  Bool deleteIWptr;
-  const Float *inwptr = inwgtspectmp.getStorage(deleteIWptr);
-  Vector<Float> outwgtspectmp(npol_p[0]);
-  //   const Float *owptr = outwgtspectmp.getStorage(deleteOWptr);
-  
   const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
                           mscIn_p->weightSpectrum().isDefined(0);
   ROArrayColumn<Float> wgtSpec;
-  Cube<Float> outspweight;
-  if(doSpWeight){ 
-    outspweight.resize(npol_p[0], nchan_p[0], nrow);
+  if(doSpWeight)
     wgtSpec.reference(mscIn_p->weightSpectrum());
-  }
-
-  Cube<Bool> outflag(npol_p[0], nchan_p[0], nrow);
-  outflag.set(false);
 
   const uInt ntok = datacols.nelements();
   const Bool writeToDataCol = mustConvertToData(ntok, datacols);
   
   for(uInt colind = 0; colind < ntok; colind++){
     if(datacols[colind] == MS::FLOAT_DATA){
-      chanAvgSameShapes<Float>(mscIn_p->floatData(), datacols[colind],
-                               doSpWeight, wgtSpec, outspweight,
-                               outwgtspectmp, inwgtspectmp, inwptr, flag,
-                               inflagtmp, iflg, nrow, outflag, writeToDataCol);
+      filterChans<Float>(mscIn_p->floatData(), msc_p->floatData(),
+			 doSpWeight, wgtSpec, nrow);
     }
     else
-      chanAvgSameShapes<Complex>(right_column(mscIn_p, datacols[colind]),
-                                 datacols[colind], doSpWeight, wgtSpec,
-                                 outspweight, outwgtspectmp, inwgtspectmp,
-                                 inwptr, flag, inflagtmp, iflg, nrow, outflag,
-                                 writeToDataCol);
+      filterChans<Complex>(right_column(mscIn_p, datacols[colind]),
+			   right_column(msc_p, datacols[colind], writeToDataCol),
+			   doSpWeight, wgtSpec, nrow);
   }
   
-  msc_p->flag().putColumn(outflag);
-  if(doSpWeight)
-    msc_p->weightSpectrum().putColumn(outspweight);
-
   //-----------------------------------------------------------------------------
   // Write the IMAGING_WEIGHTs column as well if required.
   if(doImgWts_p){
@@ -6336,6 +6340,22 @@ const ROArrayColumn<Complex>& SubMS::right_column(const ROMSColumns *msclala,
     return msclala->correctedData();  // default.
 }
 
+ArrayColumn<Complex>& SubMS::right_column(MSColumns *msclala,
+					  const MS::PredefinedColumns col,
+					  const Bool writeToDataCol)
+{
+  if(writeToDataCol || col == MS::DATA)
+    return msclala->data();
+  else if(col == MS::MODEL_DATA)
+    return msclala->modelData();
+  //  else if(col == MS::FLOAT_DATA) // Not complex.
+  //  return msclala->floatData();
+  else if(col == MS::LAG_DATA)
+    return msclala->lagData();
+  else                                // The honored-by-time-if-nothing-else
+    return msclala->correctedData();  // default.
+}
+
 Bool SubMS::sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
                      Vector<MS::PredefinedColumns>& complexDataCols)
 {
@@ -6452,12 +6472,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   getDataColMap(outDataCols, ntok, columnNames);
   Matrix<Float>   outFloatData;
   
-  Matrix<Float> outRowWeight(npol_p[0], outNrow);
-  outRowWeight.set(0.0);
+  Vector<Float> outRowWeight;
 
-  Vector<Float> outImagingWeight;  // Gets resized + initialized later.
-
-  Matrix<Bool> outFlag(npol_p[0], nchan_p[0]);
+  // Get resized + initialized later.
+  Vector<Float> outImagingWeight;
+  Matrix<Bool> outFlag;
 
   Vector<Int> outAnt1(outNrow);
   outAnt1.set(-1);
@@ -6499,8 +6518,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   Matrix<Double> outUVW(3, outNrow);
   outUVW.set(0.0);
 
-  Matrix<Float> outSigma(npol_p[0], outNrow);
-  outSigma.set(0.0);
+  Vector<Float> outSigma;
 
   const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
   //os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
@@ -6524,7 +6542,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   // Iterate through timebins.
   uInt orn = 0; 		      // row number in output.
   // Guarantee oldDDID != ddID on 1st iteration.
-
   Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
   //Float oldMemUse = -1.0;
 
@@ -6576,6 +6593,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
           // Refit the temp & output holders for this shape.
           unflaggedwt.resize(npol_p[ddID]);
+	  outRowWeight.resize(npol_p[ddID]);
+	  outSigma.resize(npol_p[ddID]);
           outFlag.resize(sliceShape);
           data_toikit.resize(sliceShape);
           for(uInt datacol = 0; datacol < ntok; ++datacol)
@@ -6597,6 +6616,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
       // Make any necessary initializations of the output holders for this orn.
       outFlag.set(True);
+      outRowWeight.set(0.0);	  
       for(uInt datacol = 0; datacol < ntok; ++datacol)
         outData[datacol].set(0.0);
       if(doFloat)
@@ -6648,7 +6668,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             	    // os << LogIO::DEBUG1 << "data(*toikit).shape() = "
             	    //    << data(*toikit).shape() << LogIO::POST;
 
-          outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
+          outRowWeight += unflaggedwt;
           
           totslotwt += totrowwt;
         
@@ -6762,7 +6782,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         outUVW.column(orn) = inUVW(slotv0);
 
       // Average the accumulated values.
-      //totslotwt = sum(outRowWeight.column(orn));  // Uncomment for debugging
+      //totslotwt = sum(outRowWeight);  // Uncomment for debugging
       if(totslotwt > 0.0){
         outExposure[orn] *= slotv.size() / totslotwt;
       }
@@ -6787,7 +6807,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           }
         }
         if(doImgWts_p){
-          uInt npol = outRowWeight.column(orn).nelements();          
+          uInt npol = npol_p[ddID];          
           uInt nchan = chanStop - chanStart_p[ddID];
 
           for(uInt c = 0; c < nchan; ++c){
@@ -6800,11 +6820,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         }        
       }
       else{
-        uInt npol  = outRowWeight.column(orn).nelements();
+        uInt npol  = npol_p[ddID];
         uInt nchan = chanStop - chanStart_p[ddID];
         
         for(uInt polind = 0; polind < npol; ++polind){
-          Float rowwtpol = outRowWeight.column(orn)[polind];
+          Float rowwtpol = outRowWeight[polind];
           for(uInt datacol = 0; datacol < ntok; ++datacol){
 
             if(rowwtpol != 0.0){
@@ -6824,14 +6844,14 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         }
       }
 
-      for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
-          ++polind){
-        Float orw = outRowWeight(polind, orn);
+      // npol_p is Int, therefore polind is too.
+      for(Int polind = 0; polind < npol_p[ddID]; ++polind){
+        Float orw = outRowWeight[polind];
         
         if(orw > 0.0)
-          outSigma(polind, orn) = sqrt(1.0 / orw);
+          outSigma[polind] = sqrt(1.0 / orw);
         else
-          outSigma(polind, orn) = -1.0; // Seems safer than 0.0.
+          outSigma[polind] = -1.0; // Seems safer than 0.0.
       }
 
       // Fill in the nonaveraging values from slotv0.
@@ -6862,6 +6882,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       // Columns whose shape might vary with ddID must be filled on a
       // row-by-row basis.
       msc_p->flag().put(orn, outFlag);
+      msc_p->weight().put(orn, outRowWeight);
+      msc_p->sigma().put(orn, outSigma);
       for(uInt datacol = 0; datacol < ntok; ++datacol)
         outDataCols[datacol].put(orn, outData[datacol]);
       if(doFloat)
@@ -6886,11 +6908,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
   msc_p->uvw().putColumn(outUVW);
   outUVW.resize();			// Free some memory
-
-  msc_p->weight().putColumn(outRowWeight);
-  outRowWeight.resize();
-  msc_p->sigma().putColumn(outSigma);
-  outSigma.resize();
 
   // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
   //    << "memory after putting ImagingWt: "
