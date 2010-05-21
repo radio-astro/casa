@@ -90,7 +90,7 @@ is recommended in most applications.
 	</param>
 
 	<param type="double" name="minsnr">
-		<description>Reject solutions below this SNR</description>
+		<description>Reject solutions below this SNR (only applies for bandtype = B)</description>
 		<value>0.0</value>
 	</param>
 
@@ -302,7 +302,7 @@ is recommended in most applications.
                     default: 4
                     example: minblperant=10  =&gt; Antennas participating on 10 or more 
                              baselines are included in the solve
-       minsnr -- Reject solutions below this SNR
+       minsnr -- Reject solutions below this SNR (only applies for bandtype = B)
                default: 0.0 (accept all attempted solutions)
        solnorm -- Normalize bandpass amplitudes and phase for each
                spw, pol, ant, and timestamp
