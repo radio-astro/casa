@@ -22,7 +22,7 @@ os.system('rm -rf '+my_project+'.* '+my_modelimage)
 tb.clearlocks()
 
 print 'I think the data repository is at '+repodir
-importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename=my_modelimage)
+importfits(fitsimage=repodir+"/data/regression/simdata/input50pc_672GHz.fits",imagename=my_modelimage)
 
 default("simdata")
 project=my_project

@@ -32,6 +32,8 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h> 	 
+#include <ms/MeasurementSets/MSFieldColumns.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferUtil.h>
@@ -234,6 +236,14 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
 
   }
 
+  // Get various names 	 
+  { 	 
+    MSAntenna msant(msname+"/ANTENNA"); 	 
+    MSField msfld(msname+"/FIELD"); 	 
+    antnames_=ROMSAntennaColumns(msant).name().getColumn(); 	 
+    fldnames_=ROMSFieldColumns(msfld).name().getColumn(); 	 
+  } 	 
+  
   stringstream ss;
   ss << "Caching for the new plot: " 
        << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " 
@@ -1662,21 +1672,40 @@ vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {
 void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
   ss << "Scan=" << getScan() << " ";
-  ss << "Field=" << getField() << " ";
+
+  Int fld=Int(getField()); 	 
+  if (fld<0) 	 
+    ss << "Field=" << "*" << " "; 	 
+  else 	 
+    ss << "Field=" << fldnames_(fld) << "(" << fld << ")" << " "; 	 
+  
   ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD,7) << " ";
   ss << "BL=";
 
+  // Antenna names
   Int ant1=Int(getAnt1());
   if (!netAxesMask_(2) || ant1<0)
     ss << "*-";
   else
-    ss << ant1 << "-";
+    ss << antnames_(ant1) << "-";
 
   Int ant2=Int(getAnt2());
   if (!netAxesMask_(2) || ant2<0)
-    ss << "* ";
+    ss << "*";
   else
-    ss << ant2 << " ";
+    ss << antnames_(ant2);
+
+  // (now the indices)
+  ss << "(";
+  if (!netAxesMask_(2) || ant1<0)
+    ss << "*-";
+  else
+    ss << ant1 << "-";
+  if (!netAxesMask_(2) || ant2<0)
+    ss << "*";
+  else
+    ss << ant2;
+  ss << ") ";
 
   Int spw=Int(getSpw());
   ss << "Spw=";
@@ -1708,9 +1737,10 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
   ss << "Corr=";
   if (netAxesMask_(0))
-    ss << getCorr() << " ";
+    ss << Stokes::name(Stokes::type(uInt(getCorr()))) << " ";
   else
     ss << "* ";
+
   ss << "X=" << x << " ";
   ss << "Y="  << y << " ";
   ss << "(" << (currChunk_ > 0 ? (nPoints_(currChunk_-1)+irel_) : irel_) << "/";
@@ -1896,20 +1926,6 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       }
       case PMS::CORRECTED: {
 	*amp_[vbnum] = amplitude(vb.correctedVisCube());
-
-
-	/*
-	Cube<Complex> d=vb.correctedVisCube();
-	
-	Slicer sl0(Slice(0),Slice(),Slice());
-	Slicer sl1(Slice(1),Slice(),Slice());
-	(*amp_[vbnum])(sl0)=amplitude(d(sl0)/d(sl1));
-	(*amp_[vbnum])(sl1)=0.0;
-	*/
-
-
-
-
 	break;
       }
       case PMS::RESIDUAL: {
@@ -2003,7 +2019,6 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       break;
     case PMS::PA0: {
       pa0_(vbnum) = vb.parang0(vb.time()(0))*180.0/C::pi; // in degrees
-      cout << vbnum << " " << pa0_(vbnum) << endl;
       break;
     }
     case PMS::ANTENNA: {

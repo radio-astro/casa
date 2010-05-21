@@ -2143,6 +2143,11 @@ class simutil:
         if dir['pixel'].__len__() != 2: return False
         if type(spc['pixel']) == type([]): return False
         if type(stk['pixel']) == type([]): return False
+        # they have to be in the correct order too
+        if stk['pixel']!=2: return False
+        if spc['pixel']!=3: return False
+        if dir['pixel'][0]!=0: return False
+        if dir['pixel'][1]!=1: return False
         cs.done()
         return True
 
@@ -2568,8 +2573,8 @@ class simutil:
         tb.open(ms0+"/SPECTRAL_WINDOW")
         if tb.nrows() > 1:
             self.msg("determining output cube parameters from FIRST of several SPW in MS "+ms0)
-        freq=tb.getvarcol("CHAN_FREQ")['r1'][0]
-        nchan=len(freq)
+        freq=tb.getvarcol("CHAN_FREQ")['r1']
+        nchan=freq.size
         tb.done()
 
         if nchan==1:
