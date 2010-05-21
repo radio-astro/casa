@@ -281,16 +281,12 @@ void TSMCubeBuff::accessSection (const IPosition& start, const IPosition& end,
     // that are consequtive in data and in section
     uInt n = dataLength(0);
     uInt incrDim = 1;
-    for (uInt j = 1; j < nrdim_p; j++) {
-        if (dataLength(j-1) == tileShape_p(j-1)  &&
-            dataLength(j-1) == sectionShape(j-1)) {
+    while (incrDim < nrdim_p &&
+           dataLength(incrDim-1) == tileShape_p(incrDim-1)  &&
+           dataLength(incrDim-1) == sectionShape(incrDim-1)) {
 
-            n *= dataLength(j);
-            incrDim = j+1;
-        }
-        else {
-            break;
-        }
+        n *= dataLength(incrDim);
+        incrDim++;
     }
 
     uInt nrval     = n * nrConvElem;
