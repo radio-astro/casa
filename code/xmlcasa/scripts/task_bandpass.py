@@ -93,7 +93,7 @@ def bandpass(vis=None,caltable=None,
 			cb.setsolvebandpoly(refant=refant,table=caltable,append=append,
 					    t=solint,combine=combine,
 					    degamp=degamp,degphase=degphase,visnorm=visnorm,
-					    solnorm=solnorm,minsnr=minsnr,maskcenter=maskcenter,maskedge=maskedge)
+					    solnorm=solnorm,maskcenter=maskcenter,maskedge=maskedge)
 
 		cb.solve()
 		cb.close()
