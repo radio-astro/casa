@@ -115,6 +115,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             ia.open(imagename+'.image')
             if localnchan > ia.shape()[3]:
                 nchaniter = ia.shape()[3]
+            ia.close()
             finalimagename=imagename
             if type(finalimagename)==str:
                 finalimagename=[finalimagename]
