@@ -111,6 +111,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     restoringbeam, calready, noise, npixels, padding)
 
             nchaniter=localnchan
+            # check nchan in templatecube
+            ia.open(imagename+'.image')
+            if localnchan > ia.shape()[3]:
+                nchaniter = ia.shape()[3]
             finalimagename=imagename
             if type(finalimagename)==str:
                 finalimagename=[finalimagename]
