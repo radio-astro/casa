@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template<class M>
 void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 			const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-			const Int nrow)
+			const Int nrow, const Bool calcImgWts)
 {
   Bool deleteIptr;
   Matrix<M> indatatmp;
@@ -89,6 +89,13 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
   
   Matrix<Float> inwgtspectmp;
   Bool deleteIWptr;
+  
+  ROArrayColumn<Float> inImgWts;
+  if(calcImgWts)
+    inImgWts.reference(mscIn_p->imagingWeight());
+  Float outImgWtsAccum = 0;
+  Vector<Float> inImgWtsSpectrum;
+  Vector<Float> outImgWts;
   
   Matrix<M> outdata;
   Vector<M> outdatatmp;
@@ -108,26 +115,31 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     Bool newDDID = (ddID != oldDDID);
 
     if(newDDID){
-      oldDDID = ddID;
-
       if(ddID < 0){                      // Paranoia
-	if(newDDID)
-	  os << LogIO::WARN
-	     << "Treating DATA_DESCRIPTION_ID " << ddID << " as 0."
-	     << LogIO::POST;
+        os << LogIO::WARN
+           << "Treating DATA_DESCRIPTION_ID " << ddID << " as 0."
+           << LogIO::POST;
 	ddID = 0;
       }
       
+      // resize() will return right away if the size does not change, so
+      // it is not essential to check npol_p[ddID] != npol_p[oldDDID], etc.
       indatatmp.resize(npol_p[ddID], inNumChan_p[ddID]);
-      inwgtspectmp.resize(npol_p[ddID], inNumChan_p[ddID]);
       inflagtmp.resize(npol_p[ddID], inNumChan_p[ddID]);
       outflag.resize(npol_p[ddID], nchan_p[ddID]);
       outdata.resize(npol_p[ddID], nchan_p[ddID]);
       outdatatmp.resize(npol_p[ddID]);
       if(doSpWeight){
+        inwgtspectmp.resize(npol_p[ddID], inNumChan_p[ddID]);
 	outspweight.resize(npol_p[ddID], nchan_p[ddID]);
 	outwgtspectmp.resize(npol_p[ddID]);
       }
+      if(calcImgWts){
+        inImgWtsSpectrum.resize(nchan_p[ddID]);
+        outImgWts.resize(nchan_p[ddID]);
+      }
+        
+      oldDDID = ddID;
     }
 
     // Should come after any resize()s.
@@ -137,7 +149,8 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     outflag.set(false);
     data.get(row, indatatmp);
     flag.get(row, inflagtmp);
-
+    if(calcImgWts)
+      inImgWts.get(row, inImgWtsSpectrum);
     if(doSpWeight)
       wgtSpec.get(row, inwgtspectmp);
 
@@ -154,9 +167,17 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
       if(chancounter == chanStep_p[ddID]){
         outdatatmp.set(0); outwgtspectmp.set(0);
         chancounter = 0;
+        outImgWtsAccum = 0;
         avcounter.set(0);
       }
       ++chancounter;
+
+      if(calcImgWts){
+        outImgWtsAccum += inImgWtsSpectrum[inChanInd];
+        if(chancounter == chanStep_p[0])
+          outImgWts[outChanInd] = outImgWtsAccum / chancounter;
+      }
+
       for(Int polInd = 0; polInd < npol_p[ddID]; ++polInd){
         Int offset = polInd + inChanInd * npol_p[ddID];
         if(!iflg[offset]){
@@ -201,6 +222,8 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     msc_p->flag().put(row, outflag);
     if(doSpWeight)
       msc_p->weightSpectrum().put(row, outspweight);
+    if(calcImgWts)
+      msc_p->imagingWeight().put(row, outImgWts);
   }
 }
 

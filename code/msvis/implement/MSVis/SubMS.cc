@@ -5972,55 +5972,13 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   for(uInt colind = 0; colind < ntok; colind++){
     if(datacols[colind] == MS::FLOAT_DATA){
       filterChans<Float>(mscIn_p->floatData(), msc_p->floatData(),
-			 doSpWeight, wgtSpec, nrow);
+			 doSpWeight, wgtSpec, nrow, doImgWts_p);
     }
     else
       filterChans<Complex>(right_column(mscIn_p, datacols[colind]),
 			   right_column(msc_p, datacols[colind], writeToDataCol),
-			   doSpWeight, wgtSpec, nrow);
+			   doSpWeight, wgtSpec, nrow, doImgWts_p && !colind);
   }
-  
-  //-----------------------------------------------------------------------------
-  // Write the IMAGING_WEIGHTs column as well if required.
-  if(doImgWts_p){
-    //      ROArrayColumn<Bool> rowFlag(mscIn_p->rowFlags());
-    ROArrayColumn<Float> inImgWts(mscIn_p->imagingWeight());
-
-    Float outImgWtsAccum = 0;
-    Vector<Float> inImgWtsSpectrum;
-    Matrix<Float> outImgWts(nchan_p[0], nrow);
-    Vector<Bool> rowFlag(mscIn_p->flagRow().getColumn());
-
-    for(Int row = 0; row < nrow; ++row){
-      inImgWts.get(row, inImgWtsSpectrum);
-
-      Int ck = 0;
-      Int chancounter = 0;
-      Int counter = 0;
-
-      Int chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
-      for (Int c = chanStart_p[0]; c < chanStop; c++){
-        if(chancounter == chanStep_p[0]){
-          chancounter = 0;
-          counter = 0;
-        }
-        chancounter++;
-        //	      Int offset= p + c*npol_p[0];
-        if(!rowFlag(row)){
-          outImgWtsAccum += inImgWtsSpectrum(c);
-          counter++;
-
-          if(chancounter == chanStep_p[0])
-            if(counter != 0)
-              outImgWts(ck, row) = outImgWtsAccum/counter;
-        }
-        if(chancounter == chanStep_p[0])
-          ck++;
-      }
-    }
-    msc_p->imagingWeight().putColumn(outImgWts);
-  }
-  //-----------------------------------------------------------------------------
   return True;
 }
 

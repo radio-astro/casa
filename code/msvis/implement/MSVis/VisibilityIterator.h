@@ -129,8 +129,13 @@ public:
   // Default constructor - useful only to assign another iterator later
   ROVisibilityIterator();
 
-  // Construct from MS and a Block of MS column enums specifying the 
-  // iteration order, if none are specified, time iteration is implicit.
+  // Construct from an MS and a Block of MS column enums specifying the 
+  // iteration order.  If no order is specified, it uses the default sort
+  // order of MSIter, which is not necessarily the raw order of ms!
+  // The default ordering is ARRAY_ID, FIELD_ID, DATA_DESC_ID,
+  // and TIME, but check MSIter.h to be sure.
+  // These columns will be added first if they are not specified.\
+  //
   // An optional timeInterval can be given to iterate through chunks of time.
   // The default interval of 0 groups all times together.
   // Every 'chunk' of data contains all data within a certain time interval
@@ -140,20 +145,22 @@ public:
   // At present the channel group iteration will always occur before the 
   // interval iteration.
   ROVisibilityIterator(const MeasurementSet& ms, 
-		       const Block<Int>& sortColumns, 
+		       const Block<Int>& sortColumns,
 		       Double timeInterval=0);
 
+  // Same as above, but with the option of using the raw order of ms
+  // (addDefaultSortCols=false).
   ROVisibilityIterator(const MeasurementSet& ms, 
 		       const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
 		       Double timeInterval=0);
  
- // Same as previous constructor, but with multiple MSs to iterate over.
+  // Same as previous constructors, but with multiple MSs to iterate over.
   ROVisibilityIterator(const Block<MeasurementSet>& mss,
 		       const Block<Int>& sortColumns, 
 		       Double timeInterval=0);
-   ROVisibilityIterator(const Block<MeasurementSet>& mss,
-			const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
-			Double timeInterval=0);
+  ROVisibilityIterator(const Block<MeasurementSet>& mss,
+                       const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
+                       Double timeInterval=0);
 
 
   // Copy construct. This calls the assigment operator.

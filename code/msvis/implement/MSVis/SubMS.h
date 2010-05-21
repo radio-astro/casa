@@ -388,7 +388,7 @@ class SubMS
   template<class M>
   void filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 		   const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-		   const Int nrow);
+		   const Int nrow, const Bool calcImgWts);
 
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
