@@ -136,10 +136,10 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
 
         if do_resplit:                   # Do final filtering by spw.
             ms.open(csvis)
-            # ^n averaging in spw seems slightly less likely than ^n skipping.
-            ms.split(final_csvis, spw=myspw, whichcol='all', averchan=False)
+            # Using ^ in spw is untested here!
+            ms.split(final_csvis, spw=myspw, whichcol='all')
             ms.close()
-            shutil.rmutil(csvis)
+            shutil.rmtree(csvis)
             csvis = final_csvis
 
         ms.open(csvis, nomodify=False)
