@@ -269,7 +269,7 @@ expected = {
                                                  0.005),
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         ('DATA_DESC_ID', 134): 1,
-                        ('DATA', 134): (numpy.array([[5.0+0.5j, 5.0+2.5j]]), 0.005)
+                        ('DATA', 134): (numpy.array([[14.462+0.5j, 14.462+2.5j]]), 0.005)
                         }
                 }
             }
