@@ -390,7 +390,7 @@ if rcParams['useplotter']:
         gui = os.environ.has_key('DISPLAY') and rcParams['plotter.gui']
         if gui:
             import matplotlib
-            matplotlib.use("TkAgg")
+            if not matplotlib.sys.modules['matplotlib.backends']: matplotlib.use("TkAgg")
         import pylab
         xyplotter = pylab
         plotter = asapplotter(gui)
@@ -400,7 +400,7 @@ if rcParams['useplotter']:
         asaplog.post( "Matplotlib not installed. No plotting available")
         print_log('WARN')
 
-__date__ = '$Date: 2010-01-26 17:43:10 -0700 (Tue, 26 Jan 2010) $'.split()[1]
+__date__ = '$Date: 2010-04-27 22:33:35 -0600 (Tue, 27 Apr 2010) $'.split()[1]
 __version__  = '2.3.1 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '
