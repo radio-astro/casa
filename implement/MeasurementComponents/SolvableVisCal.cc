@@ -64,6 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 SolvableVisCal::SolvableVisCal(VisSet& vs) :
   VisCal(vs),
+  corruptor_p(NULL),
   cs_(NULL),
   cint_(NULL),
   maxTimePerSolution_p(0), 
@@ -81,8 +82,6 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solved_(False),
   apmode_(""),
   solint_("inf"),
-  simint_("integration"),
-  simulated_(False),
   solnorm_(False),
   minSNR_(0.0f),
   combine_(""),
@@ -97,7 +96,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solveParSNR_(vs.numberSpw(),NULL),
   srcPolPar_(),
   chanmask_(NULL),
-  corruptor_p(NULL)
+  simulated_(False),
+  simint_("integration")
 {
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
@@ -118,6 +118,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
 
 SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   VisCal(nAnt),
+  corruptor_p(NULL),
   cs_(NULL),
   cint_(NULL),
   maxTimePerSolution_p(0), 
@@ -135,8 +136,6 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solved_(False),
   apmode_(""),
   solint_("inf"),
-  simint_("inf"),
-  simulated_(False),
   solnorm_(False),
   minSNR_(0.0),
   combine_(""),
@@ -151,7 +150,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solveParSNR_(1,NULL),
   srcPolPar_(),
   chanmask_(NULL),
-  corruptor_p(NULL)
+  simulated_(False),
+  simint_("inf")
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
@@ -189,11 +189,18 @@ void SolvableVisCal::makeCalSet(Bool newtable)
     {
     case VisCalEnum::COMPLEX:
       {
+	
 	if (newtable) 
 	  cs_ = new CalSet<Complex>(nSpw(),nPar(),Vector<Int>(1,1),nElem(),Vector<Int>(1,1));
 	//cs_ = new CalSet<Complex>(nSpw(),nPar(),nChan(),nElem(),nTime());
-	else
-	  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	else {
+	  try {
+	    cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	  }
+	  catch (AipsError x) {
+	    throw(AipsError("Error loading '"+calTableName()+"' with parsed selection: "+calTableSelect()+"."));
+	  }
+	}
 	cs().initCalTableDesc(typeName(),parType_);
 	nChanParList() = cs().nChan();
 	startChanList() = cs().startChan();
@@ -465,7 +472,7 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
   if (prtlev()>3) cout << " SpwCols accessed:" << endl;
   if (prtlev()>3) cout << "   nSpw()= " << nSpw() << " spwcols= " << nSpw() << endl;
   if (prtlev()>3) cout << "   spwcols.nrow()= " << spwcols.nrow() << endl;  
-  AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
+  AlwaysAssert(uInt(nSpw())==spwcols.nrow(),AipsError);
   // there's a member variable in Simulator nSpw, should we verify that 
   // this is the same? probably.
 
@@ -664,7 +671,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   Vector<Int> slotidx(nSpw(),-1);
 
   vi.originChunks();
-  Double t0(0.);
   
   Vector<Int> a1;
   Vector<Int> a2;
