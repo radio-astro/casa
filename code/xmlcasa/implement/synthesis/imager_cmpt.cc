@@ -192,150 +192,36 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
                    const bool interactive, const int npercycle,
                    const std::string& masktemplate, const bool async)
 {
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         Vector<String> amodel(toVectorString(model));
-         Vector<Bool>   fixed(keepfixed);
-         Vector<String> amask(toVectorString(mask));
-         Vector<String> aimage(toVectorString(image));
-         Vector<String> aresidual(toVectorString(residual));
-	 Vector<String> apsf(toVectorString(psfnames));
-	 if( (apsf.nelements()==1) && apsf[0]==String(""))
-	   apsf.resize();
-	 if(!interactive){
-	   rstat = itsImager->clean(String(algorithm), niter, gain, 
-				    casaQuantity(threshold), displayprogress, 
-				    amodel, fixed, String(complist), amask,  
-				    aimage, aresidual, apsf);
+  Bool rstat(False);
+   if(hasValidMS_p)
+     {
+       try 
+	 {
+	   Vector<String> amodel(toVectorString(model));
+	   Vector<Bool>   fixed(keepfixed);
+	   Vector<String> amask(toVectorString(mask));
+	   Vector<String> aimage(toVectorString(image));
+	   Vector<String> aresidual(toVectorString(residual));
+	   Vector<String> apsf(toVectorString(psfnames));
+	   rstat = itsImager->iClean(String(algorithm), niter, gain,
+				     casaQuantity(threshold), Bool(displayprogress),
+				     amodel, fixed, String(complist),
+				     amask, aimage, aresidual, apsf,
+				     Bool(interactive), npercycle,
+				     String(masktemplate), Bool(async));
+	 } 
+       catch  (AipsError x) 
+	 {
+	   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	   RETHROW(x);
 	 }
-	 else{
-	   /*if(amodel.nelements() > 1){
-	     throw(AipsError("Interactive clean in multifield mode is not supported yet"));
-	   }
-	   */
-	   if((amask.nelements()==0) || (amask[0]==String(""))){
-	     amask.resize(amodel.nelements());
-	     for (uInt k=0; k < amask.nelements(); ++k){
-		 amask[k]=amodel[k]+String(".mask");
-	     }
-	   }
-	   Vector<Bool> nointerac(amodel.nelements());
-	   nointerac.set(False);
-	   if(fixed.nelements() != amodel.nelements()){
-	     fixed.resize(amodel.nelements());
-	     fixed.set(False);
-	   }
-	   Bool forceReload=True;
-	   Int nloop=0;
-	   if(npercycle != 0)
-	     nloop=niter/npercycle;
-	   Int continter=0;
-	   Int elniter=npercycle;
-	   ostringstream oos;
-	   casaQuantity(threshold).print(oos);
-	   String thresh=String(oos);
-	   if(String(masktemplate) != String("")){
-	     continter=itsImager->interactivemask(masktemplate, amask[0], 
-						  elniter, nloop, thresh);
-	   }
-	   else {
-	     // do a zero component clean to get started
-	     itsImager->clean(String(algorithm), 0, gain, 
-			      casaQuantity(threshold), displayprogress,
-			      amodel, fixed, String(complist), amask,  
-			      aimage, aresidual, Vector<String>(0), false);
-	     for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
-	       if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
-		 PagedImage<Float> rest(aimage[nIm]);
-		 PagedImage<Float> resi(aresidual[nIm]);
-		 itsImager->copyMask(resi, rest, "mask0");
-	       }
-	       forceReload=forceReload || (aresidual.nelements() >1);
-	       continter=itsImager->interactivemask(aresidual[nIm], amask[nIm], 
-						    elniter, nloop,thresh, forceReload);
-	       forceReload=False;
-	       if(continter>=1)
-		 nointerac(nIm)=True;
-	       if(continter==2)
-		 fixed(nIm)=True;
-
-	     }
-	     if(allEQ(nointerac, True)){
-		   elniter=niter;
-		   //make it do one more loop/clean but with all niter 
-		   nloop=1;
-	     }
-	   }
-	   for (Int k=0; k < nloop; ++k){
-	     
-	     casa::Quantity thrsh;
-	     if(!casa::Quantity::read(thrsh, thresh)){
-	       *itsLog << LogIO::WARN << "Error interpreting threshold" 
-		       << LogIO::POST;
-	       thrsh=casa::Quantity(0, "Jy");
-	       thresh="0.0Jy";
-	     }
-	     Vector<String> elpsf(0);
-	     //Need to save psfs in interactive only once and lets do it the 
-	     //first time
-	     if(k==0)
-	       elpsf=apsf;
-	     if(anyEQ(fixed, False)){ 
-	       rstat = itsImager->clean(String(algorithm), elniter, gain, 
-					thrsh, 
-					displayprogress,
-					amodel, fixed, String(complist), 
-					amask,  
-					aimage, aresidual, elpsf, k == 0);
-	       //if clean converged... equivalent to stop
-	       if(rstat){
-		 continter=2;
-		 fixed.set(True);
-	       }
-	       if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
-		 Int remainloop=nloop-k-1;
-		 for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
-		   if(!nointerac(nIm)){
-		     continter=itsImager->interactivemask(aresidual[nIm], amask[nIm],
-							     
-							  elniter, remainloop, 
-							  thresh, (aresidual.nelements() >1));
-		     if(continter>=1)
-		       nointerac(nIm)=True;
-		     if(continter==2)
-		       fixed(nIm)=True;
-		   }
-		 }
-		 k=nloop-remainloop-1;
-		 if(allEQ(nointerac,True)){
-		   elniter=niter-(k+1)*npercycle;
-		   //make it do one more loop/clean but with remaining niter 
-		   k=nloop-2;
-		 }
-	       } 
-	     }
-	   }
-	   //Unset the mask in the residual 
-	   // Cause as requested in CAS-1768...
-	   for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
-	     if(Table::isWritable(aresidual[nIm]) ){
-		 PagedImage<Float> resi(aresidual[nIm]);
-		 if(resi.hasRegion("mask0", RegionHandler::Masks)){
-		     resi.setDefaultMask("");
-		 }
-	     }
-	   }
-	 }
-      } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
+     } 
+   else 
+     {
+       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open."
+	       << LogIO::POST;
+     }
+   return rstat;
 }
 
 bool
