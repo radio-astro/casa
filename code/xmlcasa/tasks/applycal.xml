@@ -163,11 +163,11 @@ another visibility file.
       field -- Select field id(s) or field name(s) to apply calibration.
                  [run listobs to obtain the list id's or names]
               default: ''=all fields
-              If field string is a non-negative integer, it is assumed a field index
-                otherwise, it is assumed a field name
+              If field's string is an integer &gt;=0, it is assumed to be an index
+                otherwise, it is assumed to be a field name
               field='0~2'; field ids 0,1,2
               field='0,4,5~7'; field ids 0,4,5,6,7
-              field='3C286,3C295'; field named 3C286 adn 3C295
+              field='3C286,3C295'; fields named 3C286 and 3C295
               field = '3,4C*'; field id 3, all names starting with 4C
      spw -- Select spectral window/channels 
                type 'help par.selection' for more examples.
@@ -186,19 +186,20 @@ another visibility file.
       timerange  -- Select data based on time range:
               default = '' (all); examples,
               timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
-              Note: if YYYY/MM/DD is missing dat defaults to first day in data set
+              Note: if YYYY/MM/DD is missing, date defaults to first day in
+                    data set
               timerange='09:14:0~09:54:0' picks 40 min on first day
               timerange= '25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
               timerange='09:44:00' data within one integration of time
               timerange='&gt;10:24:00' data after this time
       uvrange -- Select data within uvrange (default units meters)
               default: '' (all); example:
-              uvrange='0~1000kl'; uvrange from 0-1000 kilo-lamgda
-              uvrange='&gt;4kl';uvranges greater than 4 kilo lambda
+              uvrange='0~1000kl'; uvrange from 0-1000 kilo-lambda
+              uvrange='&gt;4kl';uvranges greater than 4 kilolambda
       antenna -- Select data based on antenna/baseline
               default: '' (all)
-              If antenna string is a non-negative integer, it is assumed an antenna index
-                otherwise, it is assumed as an antenna name
+              If antenna's string is an integer &gt;=0, it is taken to be an index
+                otherwise, it is assumed to be an antenna name
               antenna='5&amp;6'; baseline between antenna index 5 and index 6.
               antenna='VA05&amp;VA06'; baseline between VLA antenna 5 and 6.
               antenna='5&amp;6;7&amp;8'; baseline 5-6 and 7-8

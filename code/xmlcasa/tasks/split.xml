@@ -10,16 +10,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <description>
 
+<!-- THIS DOES NOT GET READ, PUT IT IN example! -->
+Split is the general purpose program to make a new data set that is a
+subset or averaged form of an existing data set.  General selection
+parameters are included, and one or all of the various data columns
+(DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
+CORRECTED_DATA) can be selected.
 
-Split is the general purpose program to make a new data set
-that is a subset of an existing data set.  General selection parameters
-are included, and any combination of the three data columns (data, model
-and/or corrected) can be selection.
-
-Split is often used after the initial calibration of the data to remove
-those sources which need additional flagging, imaging and
-self-calibration.  The data can be averaged over specified frequency
-channels of the input data set and time averaging is also available.
+Split is often used after the initial calibration of the data to make a
+smaller measurement set with only the data that will be used in
+further flagging, imaging and/or self-calibration.  split can
+average over frequency (channels) and time (integrations).
 </description>
 
 <input>
@@ -98,6 +99,12 @@ channels of the input data set and time averaging is also available.
 		<value></value>
 	</param>
 
+	<param type="any" name="correlation">
+		<description>Select correlations</description>
+		<any type="variant" limittypes="string stringArray"/>
+		<value type="string"></value>
+	</param>
+
 	<param type="any" name="ignorables" subparam="true">
 		<description>Let time bins ignore changes in array, scan, and/or state</description>
 		<any type="variant" limittypes="string stringArray"/>
@@ -113,16 +120,16 @@ channels of the input data set and time averaging is also available.
 </input>
 <example>
 
-
-     Split is the general purpose program to make a new data set
-     that is a subset of an existing data set.  General selection parameters
-     are included, and any combination of the three data columns (data, model
-     and/or corrected) can be selection.
-
-     Split is often used after the initial calibration of the data to remove
-     those sources which need additional flagging, imaging and
-     self-calibration.  The data can be averaged over specified frequency
-     channels of the input data set and time averaging is also available.
+    Split is the general purpose program to make a new data set that is a
+    subset or averaged form of an existing data set.  General selection
+    parameters are included, and one or all of the various data columns
+    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
+    CORRECTED_DATA) can be selected.
+    
+    Split is often used after the initial calibration of the data to make a
+    smaller measurement set with only the data that will be used in
+    further flagging, imaging and/or self-calibration.  split can
+    average over frequency (channels) and time (integrations).
 
 
         Keyword arguments:
@@ -136,7 +143,11 @@ channels of the input data set and time averaging is also available.
                 Options: 'data', 'model', 'corrected', 'all',
                 'float_data', 'lag_data', 'float_data,data', and
                 'lag_data,data'.
-                note: 'all' = whichever of the above that are present.
+                N.B.: 'all' = whichever of the above that are present.
+                Otherwise the selected column will go to DATA (or
+                FLOAT_DATA) in the output.
+                Splitting with the default datacolumn='corrected'
+                before clean is normally required for self-calibration!
 
         --- Data Selection (see help par.selectdata for more detailed
             information)
@@ -200,6 +211,8 @@ channels of the input data set and time averaging is also available.
             uvrange='0~1000km'; uvrange in kilometers
 	scan -- Scan number range
             default: ''=all
+        correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
+                       default '' (all).
         ignorables -- Let time bins ignore boundaries in array, scan, and/or
                       state.
                       default = '' (separate time bins by all of the above)
