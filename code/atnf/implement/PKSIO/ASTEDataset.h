@@ -42,8 +42,27 @@
 using namespace std ;
 
 // <summary>
-// Class specific for ASTE data header.
+// Accessor class for ASTE data.
 // </summary>
+//
+// <prerequisite>
+//   <li> <linkto class=ASTEReader>ASTEReader</linkto>
+//   <li> <linkto class=NRODataset>NRODataset</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// This class actually accesses data from NRO telescopes. This is specialized class 
+// for ASTE telescope. Only fillHeader method is implemented here. 
+// The fillRecord method is implemented in <linkto class=NRODataset>NRODataset</linkto>.
+// </etymology>
+//
+// <synopsis>
+// Accessor class for ASTE data.
+// </synopsis>
+//
 
 class ASTEDataset : public NRODataset
 {

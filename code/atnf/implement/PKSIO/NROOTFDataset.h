@@ -42,8 +42,27 @@
 using namespace std ;
 
 // <summary>
-// Class specific for NRO 45m OTF dataset.
+// Accessor class for NRO 45m OTF data.
 // </summary>
+//
+// <prerequisite>
+//   <li> <linkto class=NRO45Reader>NRO45Reader</linkto>
+//   <li> <linkto class=NRODataset>NRODataset</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// This class actually accesses data from NRO telescopes. This is specialized class 
+// for NRO 45m telescope with OTF observing mode. Only fillHeader method is implemented here. 
+// The fillRecord method is implemented in <linkto class=NRODataset>NRODataset</linkto>.
+// </etymology>
+//
+// <synopsis>
+// Accessor class for NRO 45m OTF data.
+// </synopsis>
+//
 
 class NROOTFDataset : public NRODataset
 {
