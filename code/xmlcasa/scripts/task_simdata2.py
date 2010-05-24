@@ -68,8 +68,8 @@ def simdata2(
     if graphics=="file":
         grfile=True
     
-#    try:
-    if True:
+    try:
+#    if True:
 
         if type(complist)==type([]):
             complist=complist[0]
@@ -208,6 +208,7 @@ def simdata2(
                     os.remove(ptgfile)
                 else:
                     util.msg("pointing file "+ptgfile+" already exists and user does not want to overwrite",priority="error")
+                    return False
             util.write_pointings(ptgfile,pointings,etime)
 
         msg("phase center = " + imcenter)
@@ -306,7 +307,7 @@ def simdata2(
             if minsize < pb2:
                 msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
                 del pb2,minsize
-                return
+                return False
             del pb2,minsize
             
         
@@ -379,6 +380,7 @@ def simdata2(
         if predict:
             if not(predict_uv or predict_sd):
                 util.msg("must specify at least one of antennalist, sdantlist",priority="error")
+                return False
             # TODO check for frequency overlap here - if zero stop
             # position overlap already checked above in pointing section
 
@@ -396,6 +398,7 @@ def simdata2(
                 if os.path.exists(msfile):
                     if not overwrite:
                         util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
+                        return False
                 sm.open(msfile)
                 posobs=me.observatory(telescopename)
                 diam=stnd;
@@ -592,6 +595,7 @@ def simdata2(
                 if os.path.exists(sdmsfile):
                     if not overwrite:
                         util.msg("measurement set "+sdmsfile+" already exists and user does not wish to overwrite",priority="error")
+                        return False
                 sm.open(sdmsfile)
                 posobs=me.observatory(tp_telescopename)
                 diam=tpd
@@ -843,6 +847,7 @@ def simdata2(
                                    mode="calculate")
                 else:
                     msg("Can't corrupt SD data using ATM library - please use tsys-manual",priority="error")
+                    return False
                 sm.corrupt();
                 sm.done();
                 sdmsfile=noisymsroot+".sd.ms"
@@ -1124,6 +1129,7 @@ def simdata2(
 
             if not os.path.exists(modelim):
                 msg("sky model image "+str(modelim)+" not found",priority="error")
+                return False
 
             # so we should have modelim and modelim.flat created above, 
             # whether modifymodel is true or not.
@@ -1147,6 +1153,7 @@ def simdata2(
             if not os.path.exists(outim):
                 msg("output image"+str(outim)+" not found",priority="warn")
                 msg("you may need to run simdata.image, or if you deconvolved manually, rename your output to "+outim,priority="error")
+                return False
 
             # flat output:?  if the user manually cleaned, this may not exist
             outflat=imagename+".image.flat"
@@ -1344,15 +1351,15 @@ def simdata2(
         # shutil.rmtree(modelflat)  
 
 
-#    except TypeError, e:
-#        msg("task_simdata -- TypeError: %s" % e,priority="error")
-#        return
-#    except ValueError, e:
-#        print "task_simdata -- OptionError: ", e
-#        return
-#    except Exception, instance:
-#        print '***Error***',instance
-#        return
+    except TypeError, e:
+        msg("task_simdata -- TypeError: %s" % e,priority="error")
+        return
+    except ValueError, e:
+        print "task_simdata -- OptionError: ", e
+        return
+    except Exception, instance:
+        print '***Error***',instance
+        return
 
 
 ##### Helper functions to plot primary beam
