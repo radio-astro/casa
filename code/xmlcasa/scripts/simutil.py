@@ -2038,7 +2038,7 @@ class simutil:
             self.msg("scaling model brightness by a factor of %f" % scalefactor,origin="setup model")
             self.msg("image channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
             if arr.nbytes > 5e7:
-                msg("your model is large - predicting visibilities may take a while.",priority="warn")
+                self.msg("your model is large - predicting visibilities may take a while.",priority="warn")
 
 
         ia.putchunk(arr*scalefactor)
@@ -2524,7 +2524,7 @@ class simutil:
             self.msg("scaling model brightness by a factor of %f" % scalefactor,origin="setup model")
             self.msg("image channel width = %8.2e GHz" % qa.convert(model_width,'GHz')['value'],origin="setup model")
             if arr.nbytes > 5e7:
-                msg("your model is large - predicting visibilities may take a while.",priority="warn")
+                self.msg("your model is large - predicting visibilities may take a while.",priority="warn")
 
         if outimage!=inimage:
             ia.putchunk(arr*scalefactor)

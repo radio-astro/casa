@@ -60,6 +60,25 @@ using namespace std ;
 // <summary>
 // Base class to read NRO 45m and ASTE data.
 // </summary>
+// <use visibility=global>
+//
+// <prerequisite>
+//   <li> <linkto class=NRODataset>NRODataset</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// <linkto class=NROReader>NROReader</linkto> is a base class for all NRO reader classes.
+// Reader classes have <linkto class=NRODataset>NRODataset</linkto> object to access 
+// actual data. These classes are a kind of interface for Scantable data filler. 
+// </etymology>
+//
+// <synopsis>
+// Abstract class that is designed as a base class for NRO reader classes. 
+// </synopsis>
+//
 
 // Open an appropriate NROreader for a NRO 45m and ASTE dataset.
 class NROReader *getNROReader( const String filename,

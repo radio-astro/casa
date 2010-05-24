@@ -991,6 +991,8 @@ class cleanhelper:
         modshape=ia.shape()
         if modshape[3]==1:
           return False
+        if modshape[3]-1 < chan:
+          return False
         blc=[0,0,modshape[2]-1,chan]
         trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,chan]
         sbim=ia.subimage(outfile=outim, region=rg.box(blc,trc), overwrite=True)
@@ -1011,6 +1013,8 @@ class cleanhelper:
         trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan]
         ia.open(cubimage)
         cubeshape=ia.shape()
+        if not (cubeshape[3] > (chan+inimshape[3]-1)):
+            return False
         rg0=ia.setboxregion(blc=blc,trc=trc)
         if inimshape[0:3]!=cubeshape[0:3]: 
             return False

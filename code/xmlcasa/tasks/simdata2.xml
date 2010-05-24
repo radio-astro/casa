@@ -493,7 +493,10 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  <default param="sdantlist"><value type="string"></value></default>
 	  <default param="sdant"><value type="int">0</value></default>
 	</equals>
-	<equals type="bool" value="False"/>
+	<equals type="bool" value="False">
+	  <default param="antennalist"><value type="string"></value>
+	  <description>antenna info can be used to calculate the primary beam</description></default>
+	</equals>
       </when>
       <!-- **********************************************************  -->
       <when param="thermalnoise">
