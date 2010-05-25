@@ -40,6 +40,13 @@ if os.fork( ) == 0 :
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+    ## close standard fds to avoid terminal interrupts
+    sys.stdin.close( )
+    sys.stdout.close( )
+    sys.stderr.close( )
+    os.close(0)
+    os.close(1)
+    os.close(2)
     ppid = os.getppid( )
     while True :
         try:
