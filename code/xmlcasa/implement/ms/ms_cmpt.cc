@@ -35,6 +35,7 @@
 #include <xmlcasa/ms/Statistics.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
+#include <msfits/MSFits/MSFitsIDI.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <ms/MeasurementSets/MSLister.h>
@@ -230,6 +231,30 @@ try {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks();
        RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return True;
+}
+
+bool
+ms::fromfitsidi(const std::string& msfile, const std::string &fitsidifile, const bool nomodify, const bool lock,
+		const int obstype)
+{
+  try {
+    *itsLog << LogIO::NORMAL3 << "Opening FITS-IDI file " << fitsidifile << LogIO::POST;
+
+    {
+      MSFitsIDI msfitsidi(String(fitsidifile), String(msfile), !nomodify, obstype); // i.e. overwrite == !nomodify
+      msfitsidi.fillMS();
+    } // let the msfitsidi go out of scope in order to close the new MS
+    
+    *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile << " to disk" << LogIO::POST;
+    
+    open(msfile, nomodify, lock);
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
   }
   Table::relinquishAutoLocks();
   return True;

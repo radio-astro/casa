@@ -146,7 +146,7 @@ namespace asdm {
 	}
 
 	ArrayTime ArrayTime::getArrayTime(StringTokenizer &t) {
-		long long value = Long::parseLong(t.nextToken());
+		int64_t value = Long::parseLong(t.nextToken());
 		return ArrayTime (value);
 	}
 
@@ -186,7 +186,7 @@ namespace asdm {
 	 * @param s The string containing the initial value.
 	 */
 	ArrayTime::ArrayTime (const string &s) {
-		long long u = 0L;
+		int64_t u = 0L;
 		if (s.find(':') != string::npos)
 			u = FITSString(s);
 		else {
@@ -268,7 +268,7 @@ namespace asdm {
 	 * nanoseconds since 17 November 1858 00:00:00 UTC, the beginning of the 
 	 * modified Julian Day.
 	 */
-	ArrayTime::ArrayTime(long long nanoseconds) : Interval (nanoseconds) {
+	ArrayTime::ArrayTime(int64_t nanoseconds) : Interval (nanoseconds) {
 	}
 
 	/**
@@ -361,14 +361,14 @@ void ArrayTime::toBin(const vector< vector<vector<ArrayTime> > >& arrayTime,  En
 }
 
 ArrayTime ArrayTime::fromBin(EndianISStream & eiss) {
-	return ArrayTime(eiss.readLongLong());
+	return ArrayTime(int64_t(int64_t(eiss.readLongLong())));
 }
 
 vector<ArrayTime> ArrayTime::from1DBin(EndianISStream & eiss) {
 	int dim1 = eiss.readInt();
 	vector<ArrayTime> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(ArrayTime(eiss.readLongLong()));
+		result.push_back(ArrayTime(int64_t(eiss.readLongLong())));
 	return result;	
 }
 
@@ -380,7 +380,7 @@ vector<vector<ArrayTime > > ArrayTime::from2DBin(EndianISStream & eiss) {
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(ArrayTime(eiss.readLongLong()));
+			aux.push_back(ArrayTime(int64_t(eiss.readLongLong())));
 		result.push_back(aux);
 	}
 	return result;	
@@ -398,7 +398,7 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(ArrayTime(eiss.readLongLong()));
+				aux2.push_back(ArrayTime(int64_t(eiss.readLongLong())));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);
@@ -422,14 +422,14 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 	 */
 	int *ArrayTime::getDateTime() const {
 		int *n = new int [7];
-		long long fractionOfADay = get() % unitsInADayL;
+		int64_t fractionOfADay = get() % unitsInADayL;
 		if (fractionOfADay < 0)
 			fractionOfADay = unitsInADayL - fractionOfADay;
-		long long nsec = fractionOfADay / unitsInASecond;
+		int64_t nsec = fractionOfADay / unitsInASecond;
 		n[6] = (int)(fractionOfADay - (nsec * 1000000000LL));
-		long long nmin = nsec / 60L;
+		int64_t nmin = nsec / 60L;
 		n[5] = (int)(nsec - nmin * 60L);
-		long long nhr = nmin / 60L;
+		int64_t nhr = nmin / 60L;
 		n[4] = (int)(nmin - nhr * 60L);
 		n[3] = (int)nhr;
 
@@ -541,7 +541,7 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 		return y;
 	}
 
-	long long ArrayTime::init(int year, int month, double day) {
+	int64_t ArrayTime::init(int year, int month, double day) {
 		// For this algorithm see Meeus, chapter 7, p. 61.
 		int iday = (int)day;
 		if (month < 1 || month > 12)
@@ -557,13 +557,13 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 		int A = year / 100;
 		int B = 2 - A + (A / 4);
 		double jd = (int)(365.25 * (year + 4716)) + (int)(30.6001 * (month + 1)) + iday + B - 1524.5;
-		long long u = jdToUnit(jd);
+		int64_t u = jdToUnit(jd);
 		// Now add the fraction of a day.
-		u += (long long)((day - iday) * unitsInADay + 0.5);
+		u += (int64_t)((day - iday) * unitsInADay + 0.5);
 		return u;
 	}
 
-	long long ArrayTime::init(int year, int month, int day, int hour, int minute, double second) {
+	int64_t ArrayTime::init(int year, int month, int day, int hour, int minute, double second) {
 		if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0.0 || second >= 60.0) {
 			throw InvalidArgumentException("Invalid time");
 		}
@@ -582,7 +582,7 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 	 * An IllegalArgumentException is thrown is the string is not a valid 
 	 * time.
 	 */
-	long long ArrayTime::FITSString(string t) const {
+	int64_t ArrayTime::FITSString(string t) const {
 		if (t.length() < 19 || t.at(4) != '-' || t.at(7) != '-' || 
 				(t.at(10) != 'T' && t.at(10) != ' ') || 
 				t.at(13) != ':' || t.at(16) != ':')
@@ -611,7 +611,7 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 	 * @param unit The unit to be converted.
 	 * @return The Julian day corresponding to the specified unit of time.
 	 */
-	double ArrayTime::unitToJD(long long unit) {
+	double ArrayTime::unitToJD(int64_t unit) {
 		return (double)(unit) / unitsInADay + julianDayOfBase;
 	}
 
@@ -620,7 +620,7 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 	 * @param unit The unit to be converted.
 	 * @return The Modified Julian day corresponding to the specified unit of time.
 	 */
-	double ArrayTime::unitToMJD(long long unit) {
+	double ArrayTime::unitToMJD(int64_t unit) {
 		return (double)(unit) / unitsInADay;
 	}
 
@@ -630,8 +630,8 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 	 * @param jd The Julian day to be converted.
 	 * @return The unit corresponding to the specified Julian day.
 	 */
-	long long ArrayTime::jdToUnit(double jd) {
-		return ((long long)(jd * unitsInADayDiv100) - julianDayOfBaseInUnitsInADayDiv100) * 100L;
+	int64_t ArrayTime::jdToUnit(double jd) {
+		return ((int64_t)(jd * unitsInADayDiv100) - julianDayOfBaseInUnitsInADayDiv100) * 100L;
 	}
 
 	/**
@@ -639,8 +639,8 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 	 * @param mjd The Modified Julian day to be converted.
 	 * @return The unit corresponding to the specified Modified Julian day.
 	 */
-	long long ArrayTime::mjdToUnit(double mjd) {
-		return (long long)(mjd * unitsInADay);
+	int64_t ArrayTime::mjdToUnit(double mjd) {
+		return (int64_t)(mjd * unitsInADay);
 	}
 
 	/**

@@ -19,8 +19,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 This task lists measurement set visibility data under a number of
 input selection conditions.  The measurement set data columns that 
-can be listed are: the raw data, corrected data, model data, and 
-residual (corrected - model) data.
+can be listed are: the raw data, float_data, corrected data, model data, 
+and residual (corrected - model) data.
 
 The output table format is dynamic.  Field, Spectral Window, and
 Channel columns are not displayed if the column contents are uniform.
@@ -56,7 +56,7 @@ options     List options: default = 'ap'
 
 datacolumn  Visibility file data column:
             default = 'data':  options are
-            data, corrected, model, residual (corrected-model)
+            data, float_data, corrected, model, residual (corrected-model)
 
 field       Select data based on field id(s) or name(s)
             default: ''==>all; example: field='1'
@@ -131,10 +131,11 @@ async       Run asynchronously
     </param>
 
     <param type="string" name="datacolumn">
-	    <description>Column to list: data, corrected, model, residual</description>
+	    <description>Column to list: data, float_data, corrected, model, residual</description>
           <value>data</value>
 	    <allowed kind="enum">
 	          <value>data</value>
+	          <value>float_data</value>
 	          <value>corrected</value>
 	          <value>model</value>
 	          <value>residual</value>
@@ -241,8 +242,8 @@ async       Run asynchronously
 
 This task lists measurement set visibility data under a number of
 input selection conditions.  The measurement set data columns that 
-can be listed are: the raw data, corrected data, model data, and 
-residual (corrected - model) data.
+can be listed are: the raw data, float_data, corrected data, model data, 
+and residual (corrected - model) data.
 
 The output table format is dynamic.  Field, Spectral Window, and
 Channel columns are not displayed if the column contents are uniform.
@@ -278,7 +279,7 @@ options     List options: default = 'ap'
 
 datacolumn  Visibility file data column:
             default = 'data':  options are
-            data, corrected, model, residual (corrected-model)
+            data, float_data, corrected, model, residual (corrected-model)
 
 field       Select data based on field id(s) or name(s)
             default: ''==>all; example: field='1'

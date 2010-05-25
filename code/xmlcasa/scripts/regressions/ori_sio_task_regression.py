@@ -159,7 +159,8 @@ mean=xstat['mean']
 # fitting
 default(sdfit)
 sdfile=localoutfile
-#sd.plotter.plot(spave)			# plot spectrum				
+#sd.plotter.plot(spave)			# plot spectrum
+fitmode='list'
 maskline=[3900,4300]	# create region around line
 nfit=1
 plotlevel=localplotlevel

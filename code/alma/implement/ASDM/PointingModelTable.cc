@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string PointingModelTable::tableName = "PointingModel";
-	
+	const vector<string> PointingModelTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -108,7 +109,6 @@ namespace asdm {
 /**
  * A destructor for PointingModelTable.
  */
- 
 	PointingModelTable::~PointingModelTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -128,13 +128,48 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string PointingModelTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> PointingModelTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaId");
+
+		attributesNames.push_back("pointingModelId");
+
+
+		attributesNames.push_back("numCoeff");
+
+		attributesNames.push_back("coeffName");
+
+		attributesNames.push_back("coeffVal");
+
+		attributesNames.push_back("polarizationType");
+
+		attributesNames.push_back("receiverBand");
+
+		attributesNames.push_back("assocNature");
+
+		attributesNames.push_back("assocPointingModelId");
+
+
+		attributesNames.push_back("coeffFormula");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& PointingModelTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -288,7 +323,7 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}	 
 		
@@ -350,7 +385,7 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -492,7 +527,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/2/PointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/2/PointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -570,7 +605,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/2/PointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/2/PointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='PointingModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -821,10 +856,10 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 	}
 
 	
-	void PointingModelTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/PointingModel.xml")))
+	void PointingModelTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/PointingModel.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/PointingModel.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/PointingModel.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the PointingModel table", "PointingModel");

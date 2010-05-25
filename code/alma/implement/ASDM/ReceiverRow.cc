@@ -71,9 +71,13 @@ namespace asdm {
 	ReceiverTable &ReceiverRow::getTable() const {
 		return table;
 	}
-	
-	void ReceiverRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool ReceiverRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void ReceiverRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

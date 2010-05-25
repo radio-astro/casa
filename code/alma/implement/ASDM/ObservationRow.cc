@@ -65,9 +65,13 @@ namespace asdm {
 	ObservationTable &ObservationRow::getTable() const {
 		return table;
 	}
-	
-	void ObservationRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool ObservationRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void ObservationRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

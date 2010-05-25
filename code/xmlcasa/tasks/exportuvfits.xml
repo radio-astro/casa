@@ -90,15 +90,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	<param type="bool" name="padwithflags" subparam="true">
 		<description>Fill in missing data with flags to fit IFs</description>
-		<value>True</value>
+		<value>False</value>
 	</param>
 
         <constraints>
           <when param="combinespw">
 	    <equals type="bool" value="True">
-	      <default param="padwithflags"><value type="bool">True</value>
-	      </default>
+	      <default param="padwithflags"><value type="bool">True</value> </default>
 	    </equals>
+	    <equals type="bool" value="False"/>
           </when>
         </constraints>
 </input>

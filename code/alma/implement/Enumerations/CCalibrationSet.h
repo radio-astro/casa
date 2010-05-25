@@ -55,7 +55,7 @@ namespace CalibrationSetMod
   //! CalibrationSet.
   //! Defines sets of calibration scans to be reduced together for a result.
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum CalibrationSet
@@ -69,6 +69,8 @@ namespace CalibrationSetMod
     PHASE_CURVE /*!< Phase calibration scan (calibration curve to be derived). */
      ,
     POINTING_MODEL /*!< Pointing calibration scan (pointing model to be derived). */
+     ,
+    ACCUMULATE /*!< Accumulate a scan in a calibration set. */
      ,
     TEST /*!< Reserved for development. */
      ,
@@ -101,6 +103,8 @@ class CCalibrationSet {
 	static const std::string& sPHASE_CURVE; /*!< A const string equal to "PHASE_CURVE".*/
 	
 	static const std::string& sPOINTING_MODEL; /*!< A const string equal to "POINTING_MODEL".*/
+	
+	static const std::string& sACCUMULATE; /*!< A const string equal to "ACCUMULATE".*/
 	
 	static const std::string& sTEST; /*!< A const string equal to "TEST".*/
 	

@@ -52,8 +52,9 @@ def sdsim(
     try:
 
         # create the utility object:
-        util=simutil(direction,startfreq=qa.quantity(startfreq),
-                     verbose=verbose)
+        #util=simutil(direction,startfreq=qa.quantity(startfreq),
+        #             verbose=verbose)
+        util=simutil(startfreq=qa.quantity(startfreq),verbose=verbose)
         msg=util.msg
 
         # file check 
@@ -66,7 +67,8 @@ def sdsim(
         nfld, pointings, etime = _calc_lattice_pointings(util,pointingspacing,mosaicsize,direction)
 
         # find imcenter - phase center
-        imcenter , offsets = util.average_direction(pointings)        
+        imcenter , offsets = util.average_direction(pointings)
+        util.direction=imcenter
         epoch, ra, dec = util.direction_splitter(imcenter)
 
         #########################################################
@@ -151,9 +153,24 @@ def sdsim(
         stnd=[stnd[ant]]
         padnames=[padnames[ant]]
         antnames=[telescopename]
-        if nant > 1: antnames=[telescopename+('SD%02d'%ant)]
+        if nant > 1: antnames=[telescopename+('%02dTP'%ant)]
         nant = 1
         aveant=stnd
+
+        # check for image size (need to be > 2*pb)
+        pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant[0]*3600.*180/pl.pi
+        ia.open(modelimage4d)
+        csys=ia.coordsys()
+        dirax=csys.findcoordinate(type="direction")
+        numcellx=ia.shape()[dirax['pixel'][0]]
+        numcelly=ia.shape()[dirax['pixel'][1]]
+        ia.close()
+        minsize=min(qa.mul(qa.convert(model_cell[0],'arcsec'),numcellx)['value'],qa.mul(qa.convert(model_cell[1],'arcsec'),numcelly)['value'])
+        if minsize < pb2:
+            msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
+            del pb2,minsize,csys,dirax,numcellx,numcelly
+            return
+        del pb2,minsize,csys,dirax,numcellx,numcelly
 
         # (set back to simdata - there must be an automatic way to do this)
         casalog.origin('simdata')
@@ -287,6 +304,9 @@ def sdsim(
             sm.observe(sourcename=src, spwname=fband,
                        starttime=qa.quantity(sttime, "s"),
                        stoptime=qa.quantity(endtime, "s"));
+        ### start mod: kana ###
+        print "number of fields to be oberved =",nfld
+        ### end mode ##########
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
 
@@ -303,7 +323,7 @@ def sdsim(
         msg("predicting from "+modelimage4d,priority="warn")
         #sm.setoptions(gridfunction='pb', ftmachine='sd', cache=100000)
         #sm.setoptions(gridfunction='pb', ftmachine='sd', location=posobs, cache=100000)
-        sm.setoptions(gridfunction='pb', ftmachine=ftmachine, location=posobs, cache=100000)
+        sm.setoptions(gridfunction='pb', ftmachine=ftmachine, location=posobs)
         sm.predict(imagename=[modelimage4d])
         sm.done()
         sm.close()

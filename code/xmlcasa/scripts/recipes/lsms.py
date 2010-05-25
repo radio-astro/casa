@@ -428,6 +428,9 @@ def find_needed_items(musthave=set([]), listall=False):
     Given the set of "must have" items, fill out needed_subtables and needed_items,
     and determine whether or not to use tb.
     """
+    #print "musthave =", ", ".join(musthave)
+    #print "listall =", listall
+    
     needed_subtables = musthave.intersection(possible_subtables)
     needed_items = {'anywhere': set([])}  # cols and keywords
     for mh in musthave:
@@ -448,6 +451,7 @@ def find_needed_items(musthave=set([]), listall=False):
     if need_tb or listall:
         try:
             use_tb = hasattr(tb, 'colnames')
+            mytb = tb
         except:
             try:
                 try:
@@ -583,7 +587,19 @@ def checkMSes(holderdict, dir, files):
 
             if listall or needed_items['anywhere'] or needed_items['MAIN']:
                 # Start with MAIN
-                tb.open(currms)
+                try:
+                    tb.open(currms)
+                except Exception, e:
+                    # Typically if we are here currms is too malformed for
+                    # tb to handle, and e is usually "currms does not exist",
+                    # which is usually incorrect.
+                    #print "mses =", ", ".join(mses)
+                    if str(e)[-15:] == " does not exist":
+                        print "tb could not open", currms
+                    else:
+                        print "Error", e, "from tb.open(", currms, ")"
+                    break
+                    
                 retval[currms]['MAIN']['cols'] = tb.colnames()
                 kws = set(tb.keywordnames())
                 retval[currms]['MAIN']['kws'] = kws.difference(possible_subtables)
@@ -625,10 +641,11 @@ def checkMSes(holderdict, dir, files):
             
         if not keep_currms:
             del retval[currms]
+        elif holderdict.get('doprint'):
+            print_ms(currms, retval[currms], listall, use_tb, holderdict['remind'])
 
         if holderdict.get('doprint'):
             print_ms(currms, retval[currms], listall, use_tb, holderdict['remind'])
-
 
 # following, sort of, from Python cookbook, #475186
 def termprops(stream):

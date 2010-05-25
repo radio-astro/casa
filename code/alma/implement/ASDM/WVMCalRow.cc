@@ -77,9 +77,13 @@ namespace asdm {
 	WVMCalTable &WVMCalRow::getTable() const {
 		return table;
 	}
-	
-	void WVMCalRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool WVMCalRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void WVMCalRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

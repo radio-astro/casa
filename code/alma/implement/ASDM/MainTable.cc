@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string MainTable::tableName = "Main";
-	
+	const vector<string> MainTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -110,7 +111,6 @@ namespace asdm {
 /**
  * A destructor for MainTable.
  */
- 
 	MainTable::~MainTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -130,13 +130,56 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string MainTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> MainTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("time");
+
+		attributesNames.push_back("configDescriptionId");
+
+		attributesNames.push_back("fieldId");
+
+
+		attributesNames.push_back("numAntenna");
+
+		attributesNames.push_back("timeSampling");
+
+		attributesNames.push_back("interval");
+
+		attributesNames.push_back("numIntegration");
+
+		attributesNames.push_back("scanNumber");
+
+		attributesNames.push_back("subscanNumber");
+
+		attributesNames.push_back("dataSize");
+
+		attributesNames.push_back("dataOid");
+
+		attributesNames.push_back("stateId");
+
+		attributesNames.push_back("execBlockId");
+
+
+		attributesNames.push_back("flagRow");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& MainTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -451,7 +494,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -529,7 +572,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='MainTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -792,10 +835,10 @@ MainRow* MainTable::newRow(MainRow* row) {
 	}
 
 	
-	void MainTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Main.xml")))
+	void MainTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Main.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Main.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Main.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the Main table", "Main");
@@ -874,7 +917,7 @@ void MainTable::setFromXMLFile(const string& directory) {
 		if (row.size() == 0) {
 			row.push_back(x);
 			privateRows.push_back(x);
-			x->isAdded();
+			x->isAdded(true);
 			return x;
 		}
 		
@@ -884,7 +927,7 @@ void MainTable::setFromXMLFile(const string& directory) {
 		if (start.get() > last->getTime().get()) {
 			row.push_back(x);
 			privateRows.push_back(x);
-			x->isAdded();
+			x->isAdded(true);
 			return x;
 		}
 		
@@ -894,7 +937,7 @@ void MainTable::setFromXMLFile(const string& directory) {
 		if (start.get() < first->getTime().get()) {
 			row.insert(row.begin(), x);
 			privateRows.push_back(x);
-			x->isAdded();
+			x->isAdded(true);
 			return x;
 		}
 		
@@ -922,9 +965,23 @@ void MainTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
+		
+		if (start.get() == row.at(k0)->getTime().get()) {
+			if (row.at(k0)->equalByRequiredValue(x))
+				return row.at(k0);
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "MainTable");	
+		}
+		else if (start.get() == row.at(k1)->getTime().get()) {
+			if (row.at(k1)->equalByRequiredValue(x))
+				return row.at(k1);
+			else
+				throw  DuplicateKey("DuplicateKey exception in ", "MainTable");	
+		}		
+		
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x; 						
 	}   	
     	

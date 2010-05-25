@@ -43,8 +43,8 @@
 			<value>raster</value>
 		</param>
 
-		<param type="int" name="frame">
-			<description> (Optional)  access a specific spectral frame from the image cube</description>
+		<param type="int" name="channel">
+			<description> (Optional)  access a specific channel in the image cube</description>
 			<value>0</value>
 		</param>
 

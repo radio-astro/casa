@@ -390,7 +390,8 @@ int main()
             lc.setRestFrequency(val, False);
             lc.setVelocity (String("m/s"), MDoppler::Z);
             String str = lc.format(unit, Coordinate::FIXED, val, 0, True, True, 4);
-            if (str != String("1400000000.0000")) {
+            if (str != String("1400000000.0000")) {	
+               cerr << str << endl;
                throw(AipsError("Failed format test 5"));
             }
          }

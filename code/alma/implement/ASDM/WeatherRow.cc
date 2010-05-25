@@ -71,9 +71,13 @@ namespace asdm {
 	WeatherTable &WeatherRow::getTable() const {
 		return table;
 	}
-	
-	void WeatherRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool WeatherRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void WeatherRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

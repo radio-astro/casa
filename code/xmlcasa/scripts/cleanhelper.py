@@ -4,6 +4,7 @@ import commands
 import math
 import pdb
 import numpy
+import shutil
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -204,7 +205,9 @@ class cleanhelper:
                 # for now just make for a main field 
                 ###need to get the pointing so select the fields
                 self.im.selectvis(field=field)
-		self.im.setvp(dovp=True)
+                # set to default minpb(=0.1), should use input minpb?
+                self.im.setmfcontrol()
+                self.im.setvp(dovp=True)
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
@@ -349,12 +352,20 @@ class cleanhelper:
                 if(not self.maskimages.has_key(self.imagelist[k])):
                     self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
         # initialize maskimages
+        # --- use outframe or dataframe for mask creation
+        if self.usespecframe=='': 
+            maskframe=self.dataspecframe
+        else:
+            maskframe=self.usespecframe
         for k in range(len(self.imagelist)):
             if(not (os.path.exists(self.maskimages[self.imagelist[k]]))):
                 ia.fromimage(outfile=self.maskimages[self.imagelist[k]],
                         infile=self.imagelist[k])
                 ia.open(self.maskimages[self.imagelist[k]])
                 ia.set(pixels=0.0)
+                mcsys=ia.coordsys().torecord()
+                mcsys['spectral2']['conversion']['system']=maskframe
+                ia.setcoordsys(mcsys)
                 ia.done(verbose=False)
 
         # assume a file name list for each field
@@ -525,6 +536,13 @@ class cleanhelper:
         ia.open(outputmask)
         shp=ia.shape()
         self.csys=ia.coordsys().torecord()
+        # respect dataframe or outframe
+        if self.usespecframe=='': 
+            maskframe=self.dataspecframe
+        else:
+            maskframe=self.usespecframe
+        self.csys['spectral2']['conversion']['system']=maskframe
+        ia.setcoordsys(self.csys)
         ia.close()
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -973,6 +991,8 @@ class cleanhelper:
         modshape=ia.shape()
         if modshape[3]==1:
           return False
+        if modshape[3]-1 < chan:
+          return False
         blc=[0,0,modshape[2]-1,chan]
         trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,chan]
         sbim=ia.subimage(outfile=outim, region=rg.box(blc,trc), overwrite=True)
@@ -993,6 +1013,8 @@ class cleanhelper:
         trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan]
         ia.open(cubimage)
         cubeshape=ia.shape()
+        if not (cubeshape[3] > (chan+inimshape[3]-1)):
+            return False
         rg0=ia.setboxregion(blc=blc,trc=trc)
         if inimshape[0:3]!=cubeshape[0:3]: 
             return False
@@ -1443,6 +1465,7 @@ class cleanhelper:
         # will give spw=[0] and len(spw) not equal to len(chanids)
         chanindi=chanind0
         spwi=spw0
+        unsorted=False
         for isel in range(1,len(chaninds)):
             chanindi=chaninds[isel]
             spwi=chanindi[0]
@@ -1450,6 +1473,8 @@ class cleanhelper:
             chanfreqsi = chanfreqs[0]  
             if len(chanfreqsi)<1:
                 raise Exception, 'spw parameter '+spw+' selected spw '+str(spwinds[isel]+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
+            if chanfreqsi[0] < chanfreqs0[0]: 
+                unsorted = True 
             for ci in range(chanindi[1],chanindi[2]+1,chanindi[3]):
                 chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqsi[ci])
          
@@ -1596,7 +1621,11 @@ class cleanhelper:
             nchan = int(round(bw/abs(finc)))+1   # XXX could argue for ceil here
 
         # sanity checks:
-        fend = fstart + finc*(nchan-1) 
+        # unsorted case
+        if mode=="channel" and unsorted and start!='':
+            fend = fstart - finc*(nchan-1)
+        else:
+           fend = fstart + finc*(nchan-1) 
         if fend >= (chanfreqs1d[-1]+abs(finc)):
             self._casalog.post("your values of spw, start, and width appear to exceed the spectral range available.  Blank channels may result","WARN")
         if fend <= 0:
@@ -1613,7 +1642,6 @@ class cleanhelper:
 
         # here are the output channels in Hz
         freqlist = numpy.array(range(nchan)) * finc + fstart
-
         retnchan=len(freqlist)
     
         #print bw,freqlist[0],freqlist[-1]
@@ -1761,6 +1789,49 @@ class cleanhelper:
         fout = me.measure(f0,frame)['m0']['value']
         return fout
 
+    def setspecframe(self,spw):
+        """
+        set spectral frame for mfs to data frame based
+        on spw selection 
+        (part copied from setChannelization)
+        """
+        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        spwframe=tb.getcol('MEAS_FREQ_REF');
+        tb.close()
+
+        # first parse spw parameter:
+
+        # use MSSelect if possible
+        if spw in (-1, '-1', '*', '', ' '):
+            spw="*"
+
+        sel=ms.msseltoindex(self.vis, spw=spw)
+        # spw returned by msseletoindex, spw='0:5~10;10~20' 
+        # will give spw=[0] and len(spw) not equal to len(chanids)
+        # so get spwids from chaninds instead.
+        chaninds=sel['channel'].tolist()
+        spwinds=[]
+        for k in range(len(chaninds)):
+            spwinds.append(chaninds[k][0])
+        if(len(spwinds) == 0):
+            raise Exception, 'unable to parse spw parameter '+spw;
+            
+        # the first selected spw 
+        spw0=spwinds[0]
+
+        # set dataspecframe:
+        elspecframe=["REST",
+                     "LSRK",
+                     "LSRD",
+                     "BARY",
+                     "GEO",	    
+                     "TOPO",
+                     "GALACTO",
+                     "LGROUP",
+                     "CMB"]
+        self.dataspecframe=elspecframe[spwframe[spw0]];
+        return 
+
     def initChaniter(self,nchan,spw,start,width,imagename,mode,tmpdir='_tmpimdir/'):
         """
         initialize for channel iteration in interactive clean
@@ -1904,8 +1975,8 @@ class cleanhelper:
         retparms['imagename']=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(chan)
                    for indx, imn in enumerate(finalimagename)]
 
-        print "Processing for channel %s starts..." % chan
-        self._casalog.post("Processing channel %s "% chan)
+        #print "Processing channel %s " % chan
+        #self._casalog.post("Processing channel %s "% chan)
 
         # Select only subset of vis data if possible.
         # It does not work well for multi-spw so need
@@ -1984,12 +2055,18 @@ class cleanhelper:
             cubeimagerootname=cubeimageroot[n]
             chanimagerootname=chanimageroot[n]
         for ext in imagext:
+            nomaskim=False
             cubeimage=cubeimagerootname+ext
             chanimage=chanimagerootname+ext
             if not os.path.exists(cubeimage):
                 if os.path.exists(chanimage):
                     outim=ia.newimagefromimage(cubeimagerootname+'.model',cubeimage)
-            self.putchanimage(cubeimage, chanimage,chan)
+                elif ext=='.mask':
+                    # unless mask image is given or in interactive mode
+                    # there is no mask image
+                    nomaskim=True
+            if not nomaskim: 
+                self.putchanimage(cubeimage, chanimage,chan)
 
     def cleanupTempFiles(self, tmppath):
         """

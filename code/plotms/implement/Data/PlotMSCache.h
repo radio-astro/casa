@@ -52,6 +52,10 @@ class PlotMSCache {
     friend class PlotMSData;
   
 public:    
+
+    // Varieties of cache
+    enum Type {MS, CAL};
+
     static const PMS::Axis METADATA[];
     static const unsigned int N_METADATA;
     
@@ -63,7 +67,10 @@ public:
   PlotMSCache(PlotMS* parent);
   
   // Destructor
-  ~PlotMSCache();
+  virtual ~PlotMSCache();
+
+  // Identify myself
+  PlotMSCache::Type cacheType() { return PlotMSCache::MS; };
 
   // Report the number of chunks
   Int nChunk() const { return nChunk_; };
@@ -90,12 +97,13 @@ public:
   // is not the case, then clear() should be called BEFORE append().  If a
   // PlotMSCacheThreadHelper object is given, it will be used to report
   // progress information.
-  void load(const vector<PMS::Axis>& axes,const vector<PMS::DataColumn>& data,
-	    const String& msname,
-            const PlotMSSelection& selection,
-            const PlotMSAveraging& averaging,
-            const PlotMSTransformations& transformations,
-            PlotMSCacheThread* thread = NULL);
+  virtual void load(const vector<PMS::Axis>& axes,
+		    const vector<PMS::DataColumn>& data,
+		    const String& msname,
+		    const PlotMSSelection& selection,
+		    const PlotMSAveraging& averaging,
+		    const PlotMSTransformations& transformations,
+		    PlotMSCacheThread* thread = NULL);
 
   // Convenience method for loading x and y axes.
   void load(PMS::Axis xAxis, PMS::Axis yAxis,
@@ -249,7 +257,7 @@ public:
   void setPlotMask(Int chunk);
 
   // Set flags in the MS
-  void flagInMS(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
+  virtual void flagToDisk(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
 
   // Returns which axes have been loaded into the cache, including metadata.
   // Also includes the size (number of points) for each axis (which will
@@ -257,7 +265,7 @@ public:
   // relative memory use of each axis).
   vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
 
-private:
+protected:
     
   // Forbid copy for now
   PlotMSCache(const PlotMSCache& mc);
@@ -424,9 +432,10 @@ private:
   PlotMSAveraging averaging_;
   PlotMSTransformations transformations_;
 
-  Vector<String> antnames_;
-  Vector<String> fldnames_;
-  Vector<String> corrnames_;
+  // meta info for locate output
+  Vector<String> antnames_; 	 
+  Vector<String> fldnames_; 	 
+  Vector<String> corrnames_; 	 
 
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;

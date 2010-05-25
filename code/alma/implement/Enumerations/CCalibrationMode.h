@@ -55,7 +55,7 @@ namespace CalibrationModeMod
   //! CalibrationMode.
   //!  Modes of calibration
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum CalibrationMode

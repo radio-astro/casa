@@ -33,7 +33,7 @@
 #include <dirent.h>
 
 #include <algorithm> //required for std::swap
-
+#include <iostream>
 namespace asdm {
   bool directoryExists(const char* dir) {
     DIR* dhandle = opendir(dir);
@@ -119,7 +119,26 @@ namespace asdm {
     return 0;
   }
 
+  string uniqSlashes(const string & s) {
+	  string result;
+	  char c;
+	  bool inslash = false;
+	  size_t indexi=0;
 
+	  while (indexi < s.size()) {
+		  if ((c = s.at(indexi)) != '/') {
+			  inslash = false;
+			  result.push_back(c);
+		  }
+		  else
+			if (inslash == false) {
+				result.push_back(c);
+				inslash = true;
+			}
+		  indexi++;
+	  }
+	  return result;
+  }
 } // end namespace asdm
  
  

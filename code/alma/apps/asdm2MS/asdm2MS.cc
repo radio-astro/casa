@@ -1,6 +1,7 @@
 #define DDPRIORITY 1
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include <vector>
 #include <assert.h>
 #include <cmath>
@@ -970,6 +971,11 @@ EnumSet<AtmPhaseCorrection>      es_apc;
 // 
 Bool                             withCompression = false;
 
+//
+// A function to determine if overTheTop is present in a given row of the Pointing table.
+//
+bool overTheTopExists(PointingRow* row) { return row->isOverTheTopExists(); }
+
 
 /**
  * The main function.
@@ -1057,7 +1063,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.39 2010/02/17 12:03:08 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.43 2010/05/13 17:54:18 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1215,7 +1221,7 @@ int main(int argc, char *argv[]) {
   //
   // Try to open an ASDM dataset whose name has been passed as a parameter on the command line
   //
-  if ( dsName.at(dsName.size()-1) == '/' ) dsName.erase(dsName.size()-1);
+  if ( (dsName.size() > 0) && dsName.at(dsName.size()-1) == '/' ) dsName.erase(dsName.size()-1);
 
 
   double cpu_time_parse_xml  = 0.0;
@@ -2047,6 +2053,8 @@ int main(int argc, char *argv[]) {
 
     vector<ExecBlockRow *> v = execBlockT.get();
     
+    char* schedule[3];
+
     for (int i = 0; i < nExecBlock; i++) {
       r = v.at(i);
       
@@ -2055,6 +2063,15 @@ int main(int argc, char *argv[]) {
 
       vector<string> observingLog;
       observingLog.push_back(r->getObservingLog());
+
+      string sbString = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
+      schedule[0] = const_cast<char *>(sbString.c_str());
+
+      string ebString = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
+      schedule[1] = const_cast<char *>(ebString.c_str());
+
+      schedule[2] = 0;
+
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
@@ -2064,7 +2081,7 @@ int main(int argc, char *argv[]) {
 				     (const char*) r->getObserverName().c_str(),
 				     (const char**) SConverter().to1DCStringArray(observingLog),
 				     (const char *) "ALMA",
-				     (const char**) 0,
+				     const_cast<const char **>(schedule), // (const char**) 0,
 				     (const char*) "T.B.D.",
 				     r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0
 				     );
@@ -2130,6 +2147,21 @@ int main(int argc, char *argv[]) {
     double *encoder_         = new double[2 * numMSPointingRows];
     bool   *tracking_        = new bool[numMSPointingRows];
 
+    //
+    // Let's check if the optional attribute overTheTop is present somewhere in the table.
+    //
+    unsigned int numOverTheTop = count_if(v.begin(), v.end(), overTheTopExists);
+    bool overTheTopExists4All = v.size() == numOverTheTop;
+
+    bool* a_overTheTop_      = 0;
+
+    vector<s_overTheTop> v_overTheTop_;
+    
+    if (overTheTopExists4All) 
+      a_overTheTop_      = new bool[numMSPointingRows];
+    else if (numOverTheTop > 0) 
+      v_overTheTop_.resize(numOverTheTop);
+
     int iMSPointingRow = 0;
     for (int i = 0; i < nPointing; i++) {     // Each row in the ASDM-Pointing ...
       r = v.at(i);
@@ -2180,10 +2212,26 @@ int main(int argc, char *argv[]) {
       
       vector<ArrayTimeInterval> timeInterval ;
       if (r->isSampledTimeIntervalExists()) timeInterval = r->getSampledTimeInterval();
-      for (int j = 0 ; j < numSample; j++) { // ... must be expanded in numSample MS-Pointing rows.
 
-	// ANTENNA_ID
-	antenna_id_[iMSPointingRow]          = antennaId;
+      // Use 'fill' from algorithm for the cases where values remain constant.
+      // ANTENNA_ID
+      fill(antenna_id_+iMSPointingRow, antenna_id_+iMSPointingRow+numSample, antennaId);
+
+      // TRACKING 
+      fill(tracking_+iMSPointingRow, tracking_+iMSPointingRow+numSample, pointingTracking);
+
+      // OVER_THE_TOP (if it's present everywhere)
+      if (overTheTopExists4All)
+	fill(a_overTheTop_+iMSPointingRow, a_overTheTop_+iMSPointingRow+numSample, r->getOverTheTop());
+      else if (r->isOverTheTopExists()) {
+	s_overTheTop saux ;
+	saux.start = iMSPointingRow; saux.len = numSample; saux.value = r->getOverTheTop();
+	v_overTheTop_.push_back(saux);
+      }
+       
+
+      // Use an explicit loop for the other values.
+      for (int j = 0 ; j < numSample; j++) { // ... must be expanded in numSample MS-Pointing rows.
 
 	// TIME and INTERVAL
 	if (r->isSampledTimeIntervalExists()) { //if sampledTimeInterval is present use its values.	           
@@ -2221,8 +2269,6 @@ int main(int argc, char *argv[]) {
 	encoder_[2*iMSPointingRow]           = encoder.at(j).at(0).get();
 	encoder_[2*iMSPointingRow+1]         = encoder.at(j).at(1).get();
 
-	// TRACKING
-	tracking_[iMSPointingRow] = pointingTracking;
 	
 	// increment the row number in MS Pointing.
 	iMSPointingRow++;
@@ -2241,7 +2287,10 @@ int main(int argc, char *argv[]) {
 				     target_,
 				     pointing_offset_,
 				     encoder_,
-				     tracking_);
+				     tracking_,
+				     overTheTopExists4All,
+				     a_overTheTop_,
+				     v_overTheTop_);
     }
 			       
     delete[] antenna_id_;

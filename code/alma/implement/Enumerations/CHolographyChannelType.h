@@ -55,7 +55,7 @@ namespace HolographyChannelTypeMod
   //! HolographyChannelType.
   //!  [ASDM.Holography] Type sof holography receiver output channels
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum HolographyChannelType

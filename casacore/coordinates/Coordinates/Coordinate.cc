@@ -406,7 +406,7 @@ String Coordinate::format(String& units,
 
 // ensure that there is enough precision... may need more tweaking...
    Vector<Double> inc(increment());
-   if ( inc.nelements( ) > 0 ) {
+   if ( inc.nelements( ) > 0 && ((worldValue - trunc(worldValue)) != 0) ) {
       static Quantum<Double> qdelta;
       qdelta.setValue(inc(0));
       qdelta.setUnit(nativeUnitU);

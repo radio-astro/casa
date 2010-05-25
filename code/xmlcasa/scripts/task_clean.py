@@ -86,13 +86,15 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
             (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
         else:
+            imset.setspecframe(spw)
             localnchan=nchan
             localstart=start
             localwidth=width
 
         #setup for 'per channel' clean
         dochaniter=False
-        if interactive and chaniter:
+        #if interactive and chaniter:
+        if chaniter:
         #    if veltype=="optical":
         #        raise Exception, 'The chaniter=True interactive clean for optical velocity mode is not implemented yet.'
             if localnchan > 1:
@@ -100,7 +102,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
         # make a template cube for interactive chanter=T
         if dochaniter:
-            #print "Now setup template cubes"
             imset.makeTemplateCubes(imagename,outlierfile, field, spw, selectdata,
                                     timerange, uvrange, antenna, scan, mode, facets, cfcache, 
                                     interpolation, imagermode, localFTMachine, mosweight, 
@@ -110,6 +111,11 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     restoringbeam, calready, noise, npixels, padding)
 
             nchaniter=localnchan
+            # check nchan in templatecube
+            ia.open(imagename+'.image')
+            if localnchan > ia.shape()[3]:
+                nchaniter = ia.shape()[3]
+            ia.close()
             finalimagename=imagename
             if type(finalimagename)==str:
                 finalimagename=[finalimagename]
@@ -125,6 +131,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # loop over channels for per-channel clean
         for j in xrange(nchaniter):
             if dochaniter:
+
+                print "Processing channel %s of %s" % (j+1, nchaniter)
+                casalog.post("Processing channel %s of %s"% (j+1, nchaniter))
                 chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
                 imagename=chaniterParms['imagename']
                 imnchan=chaniterParms['imnchan']
@@ -379,7 +388,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     else:
                         maskimage = imset.imagelist[0] + '.mask'
                         imset.maskimages[imset.imagelist[0]] = maskimage
-
             if not imset.skipclean: 
                 imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),
@@ -397,7 +405,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             
             if dochaniter:
                 imset.storeCubeImages(finalimagename,imset.imagelist,j,imagermode)
-                
+        
         imCln.close()
         #
         # If MS-MFS was used, comput alpha (spectral index)

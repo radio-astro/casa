@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string SquareLawDetectorTable::tableName = "SquareLawDetector";
-	
+	const vector<string> SquareLawDetectorTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for SquareLawDetectorTable.
  */
- 
 	SquareLawDetectorTable::~SquareLawDetectorTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,34 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string SquareLawDetectorTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> SquareLawDetectorTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("squareLawDetectorId");
+
+
+		attributesNames.push_back("numBand");
+
+		attributesNames.push_back("bandType");
+
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& SquareLawDetectorTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -220,7 +241,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -268,7 +289,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -374,7 +395,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/2/SquareLawDetectorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/2/SquareLawDetectorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -452,7 +473,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/2/SquareLawDetectorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/2/SquareLawDetectorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SquareLawDetectorTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -682,10 +703,10 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 	}
 
 	
-	void SquareLawDetectorTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/SquareLawDetector.xml")))
+	void SquareLawDetectorTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/SquareLawDetector.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/SquareLawDetector.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/SquareLawDetector.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the SquareLawDetector table", "SquareLawDetector");

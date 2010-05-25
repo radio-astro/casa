@@ -220,17 +220,17 @@ public:
 		
 
 
-	// Field type: long long
+	// Field type: int64_t
 
-	static void toXML(long long data, const string &name, string &buf);
+	static void toXML(int64_t data, const string &name, string &buf);
 
-	static void toXML(vector<long long> data, const string &name, string &buf);
+	static void toXML(vector<int64_t> data, const string &name, string &buf);
 
-	static void toXML(vector< vector<long long> > data, const string &name, string &buf);
+	static void toXML(vector< vector<int64_t> > data, const string &name, string &buf);
 	
-	static void toXML(vector< vector< vector<long long> > > data, const string &name, string &buf);
+	static void toXML(vector< vector< vector<int64_t> > > data, const string &name, string &buf);
 	
-	static void toXML(vector<vector< vector< vector<long long> > > >data, const string &name, string &buf);
+	static void toXML(vector<vector< vector< vector<int64_t> > > >data, const string &name, string &buf);
 	
 	
 	
@@ -241,19 +241,19 @@ public:
 	
 
 			
-	static long long getLong(const string &name, const string &tableName, const string &xmlDoc) ;
+	static int64_t getLong(const string &name, const string &tableName, const string &xmlDoc) ;
 	// throw (ConversionException);
 
-	static vector<long long> get1DLong(const string &name, const string &tableName, const string &xmlDoc);
+	static vector<int64_t> get1DLong(const string &name, const string &tableName, const string &xmlDoc);
 	// throw (ConversionException);
 		
-	static vector< vector<long long> > get2DLong(const string &name, const string &tableName, const string &xmlDoc);
+	static vector< vector<int64_t> > get2DLong(const string &name, const string &tableName, const string &xmlDoc);
 	// throw (ConversionException);	
 	
-	static vector< vector< vector<long long> > > get3DLong(const string &name, const string &tableName, const string &xmlDoc);
+	static vector< vector< vector<int64_t> > > get3DLong(const string &name, const string &tableName, const string &xmlDoc);
 	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<long long> > > >get4DLong(const string &name, const string &tableName, const string &xmlDoc);
+	static vector<vector< vector< vector<int64_t> > > >get4DLong(const string &name, const string &tableName, const string &xmlDoc);
 	// throw (ConversionException);	
 
 		
@@ -1197,25 +1197,25 @@ public:
 
 	
 	
-	static void toXMLBase64(vector<long long> data, const string &name, string &buf);
-	static void toXMLBase64(vector< vector<long long> > data, const string &name, string &buf);
-	static void toXMLBase64(vector< vector< vector<long long> > > data, const string &name, string &buf);
-	static void toXMLBase64(vector< vector< vector< vector<long long> > > >data, const string &name, string &buf);
+	static void toXMLBase64(vector<int64_t> data, const string &name, string &buf);
+	static void toXMLBase64(vector< vector<int64_t> > data, const string &name, string &buf);
+	static void toXMLBase64(vector< vector< vector<int64_t> > > data, const string &name, string &buf);
+	static void toXMLBase64(vector< vector< vector< vector<int64_t> > > >data, const string &name, string &buf);
 	
     
-	static vector<long long>& get1DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<long long>& attribute);
+	static vector<int64_t>& get1DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<int64_t>& attribute);
 	// throw (ConversionException);
 	
 	 
-	static vector <vector<long long> >& get2DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<long long> >& attribute);
+	static vector <vector<int64_t> >& get2DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<int64_t> >& attribute);
 	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<long long> > >& get3DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<long long> > >& attribute);
+	static vector <vector <vector<int64_t> > >& get3DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<int64_t> > >& attribute);
 	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<long long> > > >& get4DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<long long> > > >& attribute);
+	static vector <vector <vector <vector<int64_t> > > >& get4DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<int64_t> > > >& attribute);
 	// throw (ConversionException);
 	
 

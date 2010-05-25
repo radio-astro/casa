@@ -310,6 +310,18 @@ int main() {
              	modelDiff
             );
             workdir.removeRecursive();
+
+            writeTestString("test fit succeeds when model and residual cannot be written");
+            residImage = "/residualImage";
+            modelImage = "/modelImage";
+ 
+            ImageFitter fitter2(
+            	noisyImage, "", "100,100,200,200", 0, "I", "",
+            	Vector<Float>(0), Vector<Float>(0), residImage,
+            	modelImage
+            );
+            fitter2.fit();
+            AlwaysAssert(fitter2.converged(), AipsError);
         }
         String convolvedModel = "gaussian_convolved.fits";
         {

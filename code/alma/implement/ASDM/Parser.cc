@@ -961,9 +961,9 @@ namespace asdm {
 		
 
 
-	// Field type: long long
+	// Field type: int64_t
 
-	void Parser::toXML(long long data, const string &name, string &buf) {
+	void Parser::toXML(int64_t data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
 	
 		buf.append(Long::toString(data));
@@ -974,7 +974,7 @@ namespace asdm {
 	
 	
 	
-	void Parser::toXML(vector<long long> data, const string &name, string &buf) {
+	void Parser::toXML(vector<int64_t> data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
 		buf.append("1 ");
 		buf.append(Integer::toString(data.size()));
@@ -988,7 +988,7 @@ namespace asdm {
 		buf.append(" </" + name + "> ");
 	}
 
-	void Parser::toXML(vector< vector<long long> > data, const string &name, string &buf) {
+	void Parser::toXML(vector< vector<int64_t> > data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
 		buf.append("2 ");
 		buf.append(Integer::toString(data.size()));
@@ -1006,7 +1006,7 @@ namespace asdm {
 		buf.append(" </" + name + "> ");
 	}
 	
-	void Parser::toXML(vector< vector< vector<long long> > > data, const string &name, string &buf) {
+	void Parser::toXML(vector< vector< vector<int64_t> > > data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
 		buf.append("3 ");
 		buf.append(Integer::toString(data.size()));
@@ -1028,7 +1028,7 @@ namespace asdm {
 		buf.append(" </" + name + "> ");
 	}
 	
-	void Parser::toXML(vector<vector< vector< vector<long long> > > >data, const string &name, string &buf) {
+	void Parser::toXML(vector<vector< vector< vector<int64_t> > > >data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
 		buf.append("4 ");
 		buf.append(Integer::toString(data.size()));
@@ -1059,7 +1059,7 @@ namespace asdm {
 	
 		
 	
-	long long Parser::getLong(const string &name, const string &tableName, const string &xmlDoc) 
+	int64_t Parser::getLong(const string &name, const string &tableName, const string &xmlDoc) 
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
@@ -1067,7 +1067,7 @@ namespace asdm {
 				name + "\" or invalid syntax",tableName);
 	
 		try {
-			long long data = Long::parseLong(xmlField);
+			int64_t data = Long::parseLong(xmlField);
 			return data;
 		} catch (NumberFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1076,7 +1076,7 @@ namespace asdm {
 		
 	}
 
-	vector<long long> Parser::get1DLong(const string &name, const string &tableName, const string &xmlDoc)
+	vector<int64_t> Parser::get1DLong(const string &name, const string &tableName, const string &xmlDoc)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -1091,7 +1091,7 @@ namespace asdm {
 					name + "\": Invalid array format", tableName);
 			}
 			int dim0 = Integer::parseInt(t.nextToken());
-			vector<long long> value (dim0);
+			vector<int64_t> value (dim0);
 			if (dim0 == 0)
 				return value;
 			for (int i = 0; i < dim0; ++i) {
@@ -1116,7 +1116,7 @@ namespace asdm {
 		}		
 	}
 		
-	vector< vector<long long> > Parser::get2DLong(const string &name, const string &tableName, const string &xmlDoc)
+	vector< vector<int64_t> > Parser::get2DLong(const string &name, const string &tableName, const string &xmlDoc)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -1132,12 +1132,12 @@ namespace asdm {
 			}
 			int dim0 = Integer::parseInt(t.nextToken());
 			int dim1 = Integer::parseInt(t.nextToken());
-			vector< vector<long long> > value;
+			vector< vector<int64_t> > value;
 
 			if (dim0 == 0 || dim1 == 0)
 				return value;
 
-			vector<long long> v_aux;
+			vector<int64_t> v_aux;
 			for (int i = 0; i < dim0; ++i) {
 				v_aux.clear();
 				for (int j = 0; j < dim1; ++j) {
@@ -1164,7 +1164,7 @@ namespace asdm {
 		}		
 	}	
 	
-	vector< vector< vector<long long> > > Parser::get3DLong(const string &name, const string &tableName, const string &xmlDoc)
+	vector< vector< vector<int64_t> > > Parser::get3DLong(const string &name, const string &tableName, const string &xmlDoc)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -1181,12 +1181,12 @@ namespace asdm {
 			int dim0 = Integer::parseInt(t.nextToken());
 			int dim1 = Integer::parseInt(t.nextToken());
 			int dim2 = Integer::parseInt(t.nextToken());
-			vector< vector< vector<long long> > > value ;
+			vector< vector< vector<int64_t> > > value ;
 			if (dim0 == 0 || dim1 == 0 || dim2 == 0)
 				return value;
 			
-			vector<vector<long long> > vv_aux;
-			vector<long long> v_aux;
+			vector<vector<int64_t> > vv_aux;
+			vector<int64_t> v_aux;
 			for (int i = 0; i < dim0; ++i) {
 				vv_aux.clear();
 				for (int j = 0; j < dim1; ++j) {
@@ -1217,7 +1217,7 @@ namespace asdm {
 		}		
 	}
 	
-	vector< vector< vector< vector<long long> > > >Parser::get4DLong(const string &name, const string &tableName, const string &xmlDoc)
+	vector< vector< vector< vector<int64_t> > > >Parser::get4DLong(const string &name, const string &tableName, const string &xmlDoc)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -1235,13 +1235,13 @@ namespace asdm {
 			int dim1 = Integer::parseInt(t.nextToken());
 			int dim2 = Integer::parseInt(t.nextToken());
 			int dim3 = Integer::parseInt(t.nextToken());
-			vector<vector< vector< vector<long long> > > >value;
+			vector<vector< vector< vector<int64_t> > > >value;
 			if (dim0 == 0 || dim1 == 0 || dim2 == 0 ||  dim3 == 0)
 				return value;
 			
-			vector<vector<vector<long long> > >vvv_aux;
-			vector<vector< long long> > vv_aux;
-			vector<long long> v_aux;
+			vector<vector<vector<int64_t> > >vvv_aux;
+			vector<vector< int64_t> > vv_aux;
+			vector<int64_t> v_aux;
 			for (int i = 0; i < dim0; ++i) {
 				vvv_aux.clear();
 				for (int j = 0; j < dim1; ++j) {
@@ -4042,8 +4042,8 @@ namespace asdm {
 				name + "\" or invalid syntax",tableName);
 	
 		StringTokenizer t(xmlField," ");
-		long long start = Long::parseLong(t.nextToken());
-		long long duration = Long::parseLong(t.nextToken());
+		int64_t start = Long::parseLong(t.nextToken());
+		int64_t duration = Long::parseLong(t.nextToken());
 		return ArrayTimeInterval (start, duration);
 		
 	}
@@ -4068,8 +4068,8 @@ namespace asdm {
 				return value;
 			for (int i = 0; i < dim0; ++i) {
 	
-				long long start = Long::parseLong(t.nextToken());
-				long long duration = Long::parseLong(t.nextToken());
+				int64_t start = Long::parseLong(t.nextToken());
+				int64_t duration = Long::parseLong(t.nextToken());
 				value[i] = ArrayTimeInterval (start, duration);
 	
 			}
@@ -4116,8 +4116,8 @@ namespace asdm {
 				v_aux.clear();
 				for (int j = 0; j < dim1; ++j) {
 	
-					long long start = Long::parseLong(t.nextToken());
-					long long duration = Long::parseLong(t.nextToken());
+					int64_t start = Long::parseLong(t.nextToken());
+					int64_t duration = Long::parseLong(t.nextToken());
 					v_aux.push_back(ArrayTimeInterval (start, duration));					
 	
 				}
@@ -4169,8 +4169,8 @@ namespace asdm {
 					v_aux.clear();
 					for (int k = 0; k < dim2; ++k) {
 	
-						long long start = Long::parseLong(t.nextToken());
-						long long duration = Long::parseLong(t.nextToken());
+						int64_t start = Long::parseLong(t.nextToken());
+						int64_t duration = Long::parseLong(t.nextToken());
 						v_aux.push_back( ArrayTimeInterval (start, duration));
 	
 					}
@@ -4228,8 +4228,8 @@ namespace asdm {
 						v_aux.clear();
 						for (int l = 0; l < dim3; l++) {
 	
-							long long start = Long::parseLong(t.nextToken());
-							long long duration = Long::parseLong(t.nextToken());
+							int64_t start = Long::parseLong(t.nextToken());
+							int64_t duration = Long::parseLong(t.nextToken());
 							v_aux.push_back( ArrayTimeInterval (start, duration));
 	
 						}
@@ -9211,7 +9211,7 @@ namespace asdm {
 	
 	
 	
-	void Parser::toXMLBase64(vector<long long> data, const string &name, string &buf){
+	void Parser::toXMLBase64(vector<int64_t> data, const string &name, string &buf){
 		stringstream oss(stringstream::out | stringstream::binary);
   		string encoded;
   		
@@ -9224,7 +9224,7 @@ namespace asdm {
 
   		for (unsigned int i = 0; i < data.size(); i++)  {
     		
-     		long long v = data.at(i);
+     		int64_t v = data.at(i);
      		
       		oss.write((char *) &v, sizeof(v));
     	}
@@ -9236,7 +9236,7 @@ namespace asdm {
 	}
 	
 	
-	void Parser::toXMLBase64(vector< vector<long long> > data, const string &name, string &buf){
+	void Parser::toXMLBase64(vector< vector<int64_t> > data, const string &name, string &buf){
 		stringstream oss(stringstream::out | stringstream::binary);
   		string encoded;
   		
@@ -9251,7 +9251,7 @@ namespace asdm {
   		for (unsigned int i = 0; i < data.size(); i++) 
     		for (unsigned int j = 0; j < data.at(0).size(); j++) {
     		
-     			long long v = data.at(i).at(j);
+     			int64_t v = data.at(i).at(j);
      		
       			oss.write((char *) &v, sizeof(v));
     		}
@@ -9264,7 +9264,7 @@ namespace asdm {
 	}
 	
 	
-	void Parser::toXMLBase64(vector< vector< vector<long long> > > data, const string &name, string &buf){
+	void Parser::toXMLBase64(vector< vector< vector<int64_t> > > data, const string &name, string &buf){
 		stringstream oss(stringstream::out | stringstream::binary);
   		string encoded;
   		
@@ -9282,7 +9282,7 @@ namespace asdm {
     		for (unsigned int j = 0; j < data.at(0).size(); j++) 
     			for (unsigned int k = 0; k < data.at(0).at(0).size(); k++){
     		
-     				long long v = data.at(i).at(j).at(k);
+     				int64_t v = data.at(i).at(j).at(k);
      		
       				oss.write((char *) &v, sizeof(v));
     			}
@@ -9295,7 +9295,7 @@ namespace asdm {
 	}
 	
 	
-	void Parser::toXMLBase64(vector<vector< vector< vector<long long> > > >data, const string &name, string &buf){
+	void Parser::toXMLBase64(vector<vector< vector< vector<int64_t> > > >data, const string &name, string &buf){
 		stringstream oss(stringstream::out | stringstream::binary);
   		string encoded;
   		
@@ -9316,7 +9316,7 @@ namespace asdm {
     			for (unsigned int k = 0; k < data.at(0).at(0).size(); k++)
     				for (unsigned int l = 0; l < data.at(0).at(0).at(0).size(); l++){
     		
-     					long long v = data.at(i).at(j).at(k).at(l);
+     					int64_t v = data.at(i).at(j).at(k).at(l);
      		
       				oss.write((char *) &v, sizeof(v));
     				}
@@ -9331,7 +9331,7 @@ namespace asdm {
 	
 #ifndef Long_CPP
 		
-#define Long_CPP long long int
+#define Long_CPP int64_t
 		
 #endif
 	
@@ -9340,7 +9340,7 @@ namespace asdm {
 	if (_stream_.bad()) throw ConversionException("I/O error during read of " + name, tableName);
 		
     
-	vector<long long>& Parser::get1DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<long long>& attribute)
+	vector<int64_t>& Parser::get1DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<int64_t>& attribute)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -9382,7 +9382,7 @@ namespace asdm {
 	}
 	
 	 
-	vector <vector<long long> >& Parser::get2DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<long long> >& attribute)
+	vector <vector<int64_t> >& Parser::get2DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<int64_t> >& attribute)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -9418,7 +9418,7 @@ namespace asdm {
 		attribute.reserve(dim1);
 		
 		Long_CPP v;
-		vector<long long> aux2;
+		vector<int64_t> aux2;
 		aux2.reserve(dim2);
 		for (unsigned int i = 0; i < dim1; i++) {
 			aux2.clear();
@@ -9435,7 +9435,7 @@ namespace asdm {
 	}
 		
  	
-	vector <vector <vector<long long> > >& Parser::get3DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<long long> > >& attribute)
+	vector <vector <vector<int64_t> > >& Parser::get3DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<int64_t> > >& attribute)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -9474,8 +9474,8 @@ namespace asdm {
 		attribute.reserve(dim1);
 		
 		Long_CPP v;
-		vector <vector<long long> > aux2;
-		vector<long long> aux3;		
+		vector <vector<int64_t> > aux2;
+		vector<int64_t> aux3;		
 		aux2.reserve(dim2);
 		aux3.reserve(dim3);
 		
@@ -9499,7 +9499,7 @@ namespace asdm {
 	}
 	
 	
-	vector <vector <vector <vector<long long> > > >& Parser::get4DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<long long> > > >& attribute)
+	vector <vector <vector <vector<int64_t> > > >& Parser::get4DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<int64_t> > > >& attribute)
 	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
@@ -9542,9 +9542,9 @@ namespace asdm {
 		attribute.reserve(dim1);
 		
 		Long_CPP v;
-		vector <vector <vector<long long> > > aux2;
-		vector <vector<long long> > aux3;
-		vector<long long> aux4;		
+		vector <vector <vector<int64_t> > > aux2;
+		vector <vector<int64_t> > aux3;
+		vector<int64_t> aux4;		
 		aux2.reserve(dim2);
 		aux3.reserve(dim3);
 		aux4.reserve(dim4);
@@ -12270,7 +12270,7 @@ namespace asdm {
 	
 #ifndef Long_CPP
 		
-#define Long_CPP long long int
+#define Long_CPP int64_t
 		
 #endif
 	
@@ -13753,7 +13753,7 @@ namespace asdm {
 	
 #ifndef Long_CPP
 		
-#define Long_CPP long long int
+#define Long_CPP int64_t
 		
 #endif
 	

@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalFluxTable::tableName = "CalFlux";
-	
+	const vector<string> CalFluxTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -110,7 +111,6 @@ namespace asdm {
 /**
  * A destructor for CalFluxTable.
  */
- 
 	CalFluxTable::~CalFluxTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -130,13 +130,68 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalFluxTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalFluxTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("sourceName");
+
+		attributesNames.push_back("calDataId");
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("startValidTime");
+
+		attributesNames.push_back("endValidTime");
+
+		attributesNames.push_back("numFrequencyRanges");
+
+		attributesNames.push_back("numStokes");
+
+		attributesNames.push_back("frequencyRanges");
+
+		attributesNames.push_back("fluxMethod");
+
+		attributesNames.push_back("flux");
+
+		attributesNames.push_back("fluxError");
+
+		attributesNames.push_back("stokes");
+
+
+		attributesNames.push_back("direction");
+
+		attributesNames.push_back("directionCode");
+
+		attributesNames.push_back("directionEquinox");
+
+		attributesNames.push_back("PA");
+
+		attributesNames.push_back("PAError");
+
+		attributesNames.push_back("size");
+
+		attributesNames.push_back("sizeError");
+
+		attributesNames.push_back("sourceModel");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalFluxTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -255,7 +310,7 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 
@@ -295,7 +350,7 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -429,7 +484,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -507,7 +562,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFluxTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -788,10 +843,10 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 	}
 
 	
-	void CalFluxTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalFlux.xml")))
+	void CalFluxTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalFlux.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalFlux.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalFlux.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalFlux table", "CalFlux");

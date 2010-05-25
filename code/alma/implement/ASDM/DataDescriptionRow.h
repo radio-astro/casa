@@ -118,6 +118,12 @@ public:
 	 */
 	DataDescriptionTable &getTable() const;
 	
+	/**
+	 * Has this row been added to its table?
+	 * @return true if and only if it has been added.
+	 */
+	bool isAdded() const;
+
 #ifndef WITHOUT_ACS
 	/**
 	 * Return this row in the form of an IDL struct.
@@ -286,7 +292,7 @@ private:
 	bool hasBeenAdded;
 
 	// This method is used by the Table class when this row is added to the table.
-	void isAdded();
+	void isAdded(bool added);
 
 
 	/**

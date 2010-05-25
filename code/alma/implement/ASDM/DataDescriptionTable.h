@@ -174,6 +174,13 @@ public:
 	string getName() const;
 
 	/**
+	 * Return the names of the attributes of this table.
+	 *
+	 * @return a vector of string
+	 */
+	 static const vector<string>& getAttributesNames();
+
+	/**
 	 * Return this table's Entity.
 	 */
 	Entity getEntity() const;
@@ -421,6 +428,15 @@ private:
 	 */
 	static string tableName;
 
+	/**
+	 * The attributes names.
+	 */
+	static const vector<string> attributesNames;
+
+	/**
+	 * A method to fill attributesNames;
+	 */
+	static vector<string> initAttributesNames();
 
 	/**
 	 * The list of field names that make up key key.

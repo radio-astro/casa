@@ -77,9 +77,13 @@ namespace asdm {
 	ExecBlockTable &ExecBlockRow::getTable() const {
 		return table;
 	}
-	
-	void ExecBlockRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool ExecBlockRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void ExecBlockRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

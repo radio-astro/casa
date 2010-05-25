@@ -161,7 +161,7 @@ class PlotCal
 
     Vector<Int> getAntIdx(const String& antenna);
     Vector<Int> getFieldIdx(const String& field);
-    Vector<Int> getSpwIdx(const String& spw);
+    Vector<Int> getSpwIdx(const String& spw,Matrix<Int>& chanId);
     Vector<Int> getCalDescIds(const Vector<Int> selspws);
     Matrix<Double> getTimeRange(const String& time);
 
@@ -228,7 +228,7 @@ class PlotCal
     Int whichPol_p;
 
     Int nCalDesc_p;
-    Matrix<Int> tabSpws_p;
+    Matrix<Int> tabSpws_p,chanId_p;
     Vector<Double> startFreq_p;
     Vector<Double> stepFreq_p;
 

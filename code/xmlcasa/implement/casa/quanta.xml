@@ -2092,6 +2092,11 @@ print qa.getformat('long')
      <value>dms</value>
      </param>
 
+     <param type="int" direction="in" name="prec">
+     <description># digits in fractional part of output string for dms,hms</description>
+     <value>2</value>
+     </param>
+
      
 <!--Do we need this parameter
      <param type="bool" direction="in" name="showform">

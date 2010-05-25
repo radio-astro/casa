@@ -93,9 +93,14 @@ import random
 import time
 import casac
 import numpy
+import struct
 from tasks import *
 from taskinit import *
 import unittest
+
+sep = os.sep
+datapath=os.environ.get('CASAPATH').split()[0] + sep + 'data' + sep\
+    + 'regression' + sep + 'unittest' + sep + 'immath' + sep
 
 cas1452_1_im = 'CAS-1452-1.im'
 cas1910_im = 'CAS-1910.im'
@@ -126,7 +131,7 @@ QU_im = '3C129QU.im'
 U_im = '3C129U.im'  
 UV_im = '3C129UV.im'  
 V_im = '3C129V.im'
-
+thresh_mask = '30uJy_thresh_mask.tbl'
 
 imageList =['ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image']
 
@@ -136,7 +141,7 @@ cas1910_im,cas1452_1_im, cas1830_im]
 imageList3 =['immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
 'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im']
 
-imageList4 = [IQU_im, IQUV_im, POLA_im, POLL_im, POLT_im, Q_im, QU_im, U_im, UV_im, V_im]
+imageList4 = [IQU_im, IQUV_im, POLA_im, POLL_im, POLT_im, Q_im, QU_im, U_im, UV_im, V_im, thresh_mask]
 
 
 ################      HELPER FUNCTIONS      ###################
@@ -193,7 +198,6 @@ class immath_test1(unittest.TestCase):
             for img in imageList:
                 os.system('rm -rf ' +img)
             
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList:
             os.system('cp -RL ' +datapath + img +' ' + img)
             
@@ -219,8 +223,8 @@ class immath_test1(unittest.TestCase):
         else:
             if ( results != None and \
                  ( not isinstance(results, bool) or results==True ) ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
+                retValue['success'] = False
+                retValue['error_msgs'] = retValue['error_msgs']\
                      +"\nError: Invalid paramter, 'invalid', was not reported."    
         
         self.assertTrue(retValue['success'],retValue['error_msgs'])
@@ -419,7 +423,7 @@ class immath_test1(unittest.TestCase):
                               +"\nError: Bad region file, 'garbage.rgn', was not reported as missing."+"\nREsults: "+str(results)
     
         try:
-            filename = os.getcwd()+'/garbage.rgn'
+            filename = os.getcwd() + sep + 'garbage.rgn'
             fp=open( filename, 'w' )
             fp.writelines('This file does NOT contain a valid CASA region specification\n')
             fp.close()
@@ -866,7 +870,6 @@ class immath_test2(unittest.TestCase):
                 os.system('rm -rf ' +img)
                 
         # FIXME: add links to repository
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList2:
             os.system('cp -RL ' +datapath + img +' ' + img)
             
@@ -877,7 +880,6 @@ class immath_test2(unittest.TestCase):
                        
     def copy_img(self):
         '''Copy images to local disk'''
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList3:
             os.system('cp -r ' +datapath + img +' ' + img)
 
@@ -1323,7 +1325,6 @@ class immath_test3(unittest.TestCase):
 
     def setUp(self):
             
-        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/immath/'
         for img in imageList4:
             shutil.copytree(datapath + img, img)
     
@@ -1331,21 +1332,26 @@ class immath_test3(unittest.TestCase):
         for img in imageList4:
             shutil.rmtree(img)        
 
-    def _comp(self, imagename, mode, outfile, expected, match=True):
-        immath(imagename=imagename, outfile=outfile, mode=mode)
+    def _comp(self, imagename, mode, outfile, expected, epsilon, polithresh=''):
+        immath(imagename=imagename, outfile=outfile, mode=mode, polithresh=polithresh)
         self.assertTrue(os.path.exists(outfile))
         ia.open(outfile)
         got = ia.getchunk()
         ia.done()
         diff = expected - got
-        if (match):
-            self.assertTrue((numpy.abs(got - expected) == 0).all())        
+        if (epsilon == 0):
+            self.assertTrue((got == expected).all())        
         else:
-            self.assertFalse((numpy.abs(got - expected) == 0).all())
+            self.assertTrue((numpy.abs(diff)/got < epsilon).all())        
 
     def test_CAS2120(self):
         '''immath: verification of old functionality and similar new functionality introduced by CAS-2120'''
 
+        sysbits = struct.calcsize("P") * 8
+        # epsilon necessary because of differences between 32 and 64 bit images
+        epsilon = 0
+        if (sysbits == 32):
+            epsilon = 3e-7
         # POLA
         mode = 'pola'
         ia.open(POLA_im)
@@ -1353,20 +1359,20 @@ class immath_test3(unittest.TestCase):
         ia.done()
 
         # pola the old way
-        self._comp([Q_im, U_im], mode, 'pola_1.im', expected)  
+        self._comp([Q_im, U_im], mode, 'pola_1.im', expected, epsilon)  
 
         # test that order of Q, U doesn't matter
-        self._comp([U_im, Q_im], mode, 'pola_2.im', expected)  
+        self._comp([U_im, Q_im], mode, 'pola_2.im', expected, epsilon)  
         outfile = 'pola_2.im'
 
         # test making pola image from multi-stokes image
-        self._comp(IQUV_im, mode, 'pola_3.im', expected)  
+        self._comp(IQUV_im, mode, 'pola_3.im', expected, epsilon)  
 
         # test making pola image from multi-stokes image without V
-        self._comp(IQU_im, mode, 'pola_4.im', expected)  
+        self._comp(IQU_im, mode, 'pola_4.im', expected, epsilon)  
 
         # test making pola image from multi-stokes image without I and V
-        self._comp(QU_im, mode, 'pola_5.im', expected)  
+        self._comp(QU_im, mode, 'pola_5.im', expected, epsilon)  
 
         # no Q, this should fail
         outfile = 'pola6.im'
@@ -1395,6 +1401,21 @@ class immath_test3(unittest.TestCase):
         except:
             self.assertFalse(os.path.exists(outfile))
 
+        # with a linear polarization threshold applied
+        outfile = 'pola_8.im'
+        self._comp(QU_im, mode, outfile, expected, epsilon, polithresh='30uJy/beam')
+        mask_tbl = outfile + os.sep + 'mask0'
+        self.assertTrue(os.path.exists(mask_tbl))
+        
+        tb.open(thresh_mask)
+        col = 'PagedArray'
+        maskexp = tb.getcell(col, 0)
+        tb.done()
+        tb.open(mask_tbl)
+        maskgot = tb.getcell(col, 0)
+
+        self.assertTrue((maskgot == maskexp).all())
+
         # POLI
         mode = 'poli'
         ia.open(POLL_im)
@@ -1406,20 +1427,20 @@ class immath_test3(unittest.TestCase):
         ia.done()
 
         # linear polarization the old way
-        self._comp([Q_im, U_im], mode, 'poli_1.im', poll)  
+        self._comp([Q_im, U_im], mode, 'poli_1.im', poll, epsilon)  
 
         # Q, U order shouldn't matter
-        self._comp([Q_im, U_im], mode, 'poli_2.im', poll)  
+        self._comp([Q_im, U_im], mode, 'poli_2.im', poll, epsilon)  
 
         # new way, one multi-stokes image
-        self._comp(IQU_im, mode, 'poli_3.im', poll)  
+        self._comp(IQU_im, mode, 'poli_3.im', poll, epsilon)  
 
         # new way, one multi-stokes image with only Q and U
-        self._comp(QU_im, mode, 'poli_4.im', poll)  
+        self._comp(QU_im, mode, 'poli_4.im', poll, epsilon)  
        
         # poli for IQUV image will produce a total, not linear, polarization image 
-        self._comp([Q_im, U_im, V_im], mode, 'poli_5.im', polt)  
-        self._comp(IQUV_im, mode, 'poli_6.im', polt)
+        self._comp([Q_im, U_im, V_im], mode, 'poli_5.im', polt, epsilon)  
+        self._comp(IQUV_im, mode, 'poli_6.im', polt, epsilon)
 
         # fail, no U
         outfile = 'poli7.im'
@@ -1438,8 +1459,6 @@ class immath_test3(unittest.TestCase):
             self.assertTrue(false)
         except:
             self.assertFalse(os.path.exists(outfile))
-
-  
 
 def suite():
     return [immath_test1, immath_test2, immath_test3]

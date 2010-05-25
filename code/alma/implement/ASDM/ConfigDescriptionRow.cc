@@ -101,9 +101,13 @@ namespace asdm {
 	ConfigDescriptionTable &ConfigDescriptionRow::getTable() const {
 		return table;
 	}
-	
-	void ConfigDescriptionRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool ConfigDescriptionRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void ConfigDescriptionRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

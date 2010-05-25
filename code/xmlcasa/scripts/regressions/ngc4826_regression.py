@@ -136,7 +136,7 @@ split1time=time.time()
 print '--image cal - 22apr98--'
 default('clean')
 clean(vis='gcal.split.ms',imagename='tgcal',
-      cell=[1.,1.],imsize=[256,256],
+      cell=[1.,1.],imsize=[256,256],interpolation='nearest',
       field='0',spw='0',threshold=10.,ftmachine='ft',
       psfmode='clark',niter=100,stokes='I')
 imagecal1time=time.time()
@@ -145,7 +145,7 @@ imagecal1time=time.time()
 print '--image src - 22apr98--'
 default('clean')
 clean(vis='src.split.ms',imagename='tmosaicb',
-      nchan=30,start=47,width=4,
+      nchan=30,start=47,width=4,interpolation='nearest',
 #       spw=range(0,3),field=range(7),
       spw='0,1,2',field='0,1,2,3,4,5,6',
       cell=[1.,1.],imsize=[256,256],
@@ -253,7 +253,7 @@ flagdata(vis="srca.split.ms", mode='manualflag',
 print '--image cal - 16apr98 --'
 default('clean')
 clean(vis='gcala.split.ms',imagename='tgcala',
-      cell=[1.,1.],imsize=[256,256],
+      cell=[1.,1.],imsize=[256,256],interpolation='nearest',
       field='0',spw='0',threshold=10.,ftmachine='ft',
       psfmode='clark',niter=100,stokes='I')
 imagecal2time=time.time()
@@ -265,7 +265,7 @@ default('clean')
 ### mosaic data ...Sault weighting implies a noise unform image
 ### hence flux scale across image needed to be corrected to get right value
 clean(vis='srca.split.ms',imagename='tmosaica',
-       nchan=30,start=47,width=4,
+       nchan=30,start=47,width=4,interpolation='nearest',
        spw='0~2',field='0~6',
        cell=[1.,1.],imsize=[256,256],
        stokes='I',mode='channel',
@@ -291,7 +291,7 @@ ms.close()
 default('clean')
 clean(vis='n4826_tboth.ms',imagename='tmosaic',
 	 nchan=30,start=46,width=4,
-	 spw='0~2',field='0~6',
+	 spw='0~2',field='0~6',interpolation='nearest',
 	 cell=[1.,1.],imsize=[256,256],
 	 stokes='I',mode='channel',
 	 psfmode='clark',niter=500,imagermode='mosaic',ftmachine='mosaic',scaletype='SAULT',

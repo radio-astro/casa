@@ -83,9 +83,13 @@ namespace asdm {
 	SysCalTable &SysCalRow::getTable() const {
 		return table;
 	}
-	
-	void SysCalRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SysCalRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SysCalRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

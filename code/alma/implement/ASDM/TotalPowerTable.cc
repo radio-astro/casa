@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string TotalPowerTable::tableName = "TotalPower";
-	
+	const vector<string> TotalPowerTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -110,7 +111,6 @@ namespace asdm {
 /**
  * A destructor for TotalPowerTable.
  */
- 
 	TotalPowerTable::~TotalPowerTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -130,13 +130,62 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string TotalPowerTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> TotalPowerTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("time");
+
+		attributesNames.push_back("configDescriptionId");
+
+		attributesNames.push_back("fieldId");
+
+
+		attributesNames.push_back("scanNumber");
+
+		attributesNames.push_back("subscanNumber");
+
+		attributesNames.push_back("integrationNumber");
+
+		attributesNames.push_back("uvw");
+
+		attributesNames.push_back("exposure");
+
+		attributesNames.push_back("timeCentroid");
+
+		attributesNames.push_back("floatData");
+
+		attributesNames.push_back("flagAnt");
+
+		attributesNames.push_back("flagPol");
+
+		attributesNames.push_back("flagRow");
+
+		attributesNames.push_back("interval");
+
+		attributesNames.push_back("stateId");
+
+		attributesNames.push_back("execBlockId");
+
+
+		attributesNames.push_back("subintegrationNumber");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& TotalPowerTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -463,7 +512,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/2/TotalPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/2/TotalPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -541,7 +590,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/2/TotalPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/2/TotalPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='TotalPowerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -813,10 +862,10 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 	}
 
 	
-	void TotalPowerTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/TotalPower.xml")))
+	void TotalPowerTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/TotalPower.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/TotalPower.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/TotalPower.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the TotalPower table", "TotalPower");
@@ -895,7 +944,7 @@ void TotalPowerTable::setFromXMLFile(const string& directory) {
 		if (row.size() == 0) {
 			row.push_back(x);
 			privateRows.push_back(x);
-			x->isAdded();
+			x->isAdded(true);
 			return x;
 		}
 		
@@ -905,7 +954,7 @@ void TotalPowerTable::setFromXMLFile(const string& directory) {
 		if (start.get() > last->getTime().get()) {
 			row.push_back(x);
 			privateRows.push_back(x);
-			x->isAdded();
+			x->isAdded(true);
 			return x;
 		}
 		
@@ -915,7 +964,7 @@ void TotalPowerTable::setFromXMLFile(const string& directory) {
 		if (start.get() < first->getTime().get()) {
 			row.insert(row.begin(), x);
 			privateRows.push_back(x);
-			x->isAdded();
+			x->isAdded(true);
 			return x;
 		}
 		
@@ -943,9 +992,23 @@ void TotalPowerTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
+		
+		if (start.get() == row.at(k0)->getTime().get()) {
+			if (row.at(k0)->equalByRequiredValue(x))
+				return row.at(k0);
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "TotalPowerTable");	
+		}
+		else if (start.get() == row.at(k1)->getTime().get()) {
+			if (row.at(k1)->equalByRequiredValue(x))
+				return row.at(k1);
+			else
+				throw  DuplicateKey("DuplicateKey exception in ", "TotalPowerTable");	
+		}		
+		
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x; 						
 	}   	
     	

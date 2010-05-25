@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 aipspath=($CASAPATH)
 CASAROOT=${aipspath[0]}/${aipspath[1]}
 
 if test -x $CASAROOT/apps/qcasabrowser.app/Contents/MacOS/qcasabrowser; then
-    echo "Adjust this as it will cause problems for Boyd with the distro"
+    echo "Adjust this as it will cause problems with the distro"
     exec $CASAROOT/apps/qcasabrowser.app/Contents/MacOS/qcasabrowser $@
 fi
 

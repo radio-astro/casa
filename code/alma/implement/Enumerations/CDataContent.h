@@ -55,7 +55,7 @@ namespace DataContentMod
   //! DataContent.
   //!  [ASDM.Binaries] Contents of binary data attachment
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum DataContent

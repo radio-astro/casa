@@ -32,7 +32,7 @@ from tasks import *
 from taskinit import *
 import unittest
 
-myname = 'asdm-import_regression'
+myname = 'asdm-import'
 
 # default ASDM dataset name
 myasdm_dataset_name = 'uid___X54_X1418_X1'
@@ -95,7 +95,8 @@ class asdm_import(unittest.TestCase):
         
     def tearDown(self):
         os.system('rm -rf ' +myasdm_dataset_name)
-        os.system('rm -rf ' +myasdm_dataset_name+'.ms*')
+        os.system('rm -rf ' +msname)
+        os.system('rm -rf ' +msname+'.flagversions')
         
     def test1(self):
         '''Asdm-import 1: Default parameters should return False'''
@@ -109,16 +110,18 @@ class asdm_import(unittest.TestCase):
         
     def test3(self):
         '''Asdm-import 3: Good input'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' } 
+        if (not os.path.exists(myasdm_dataset_name)):
+            print myname, ': Error: Input asdm does not exist %s'%myasdm_dataset_name
         try:
             self.res = importoldasdm(myasdm_dataset_name)
         except:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Failed to run on good input.'
-#            print myname, ": Error ", sys.exc_info()[0]
-#            raise
+            print myname, ": Error ", sys.exc_info()[0]
+            raise
         else:
-#            print myname, ": Success! Now checking output ..."
+            print myname, ": Success! Now checking output ..."
             mscomponents = set(["table.dat",
                                 "table.f0",
                                 "table.f1",

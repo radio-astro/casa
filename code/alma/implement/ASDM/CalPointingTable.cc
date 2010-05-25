@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalPointingTable::tableName = "CalPointing";
-	
+	const vector<string> CalPointingTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -112,7 +113,6 @@ namespace asdm {
 /**
  * A destructor for CalPointingTable.
  */
- 
 	CalPointingTable::~CalPointingTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -132,13 +132,94 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalPointingTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalPointingTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaName");
+
+		attributesNames.push_back("receiverBand");
+
+		attributesNames.push_back("calDataId");
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("startValidTime");
+
+		attributesNames.push_back("endValidTime");
+
+		attributesNames.push_back("ambientTemperature");
+
+		attributesNames.push_back("antennaMake");
+
+		attributesNames.push_back("atmPhaseCorrection");
+
+		attributesNames.push_back("direction");
+
+		attributesNames.push_back("frequencyRange");
+
+		attributesNames.push_back("pointingModelMode");
+
+		attributesNames.push_back("pointingMethod");
+
+		attributesNames.push_back("numReceptor");
+
+		attributesNames.push_back("polarizationTypes");
+
+		attributesNames.push_back("collOffsetRelative");
+
+		attributesNames.push_back("collOffsetAbsolute");
+
+		attributesNames.push_back("collError");
+
+		attributesNames.push_back("collOffsetTied");
+
+		attributesNames.push_back("reducedChiSquared");
+
+
+		attributesNames.push_back("averagedPolarizations");
+
+		attributesNames.push_back("beamPA");
+
+		attributesNames.push_back("beamPAError");
+
+		attributesNames.push_back("beamPAWasFixed");
+
+		attributesNames.push_back("beamWidth");
+
+		attributesNames.push_back("beamWidthError");
+
+		attributesNames.push_back("beamWidthWasFixed");
+
+		attributesNames.push_back("offIntensity");
+
+		attributesNames.push_back("offIntensityError");
+
+		attributesNames.push_back("offIntensityWasFixed");
+
+		attributesNames.push_back("peakIntensity");
+
+		attributesNames.push_back("peakIntensityError");
+
+		attributesNames.push_back("peakIntensityWasFixed");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalPointingTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -291,7 +372,7 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 
@@ -333,7 +414,7 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -487,7 +568,7 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/2/CalPointingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/2/CalPointingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -565,7 +646,7 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/2/CalPointingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/2/CalPointingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPointingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -885,10 +966,10 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 	}
 
 	
-	void CalPointingTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPointing.xml")))
+	void CalPointingTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalPointing.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPointing.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalPointing.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalPointing table", "CalPointing");

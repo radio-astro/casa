@@ -77,9 +77,13 @@ namespace asdm {
 	CalPrimaryBeamTable &CalPrimaryBeamRow::getTable() const {
 		return table;
 	}
-	
-	void CalPrimaryBeamRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalPrimaryBeamRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalPrimaryBeamRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

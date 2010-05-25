@@ -77,9 +77,13 @@ namespace asdm {
 	CalCurveTable &CalCurveRow::getTable() const {
 		return table;
 	}
-	
-	void CalCurveRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalCurveRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalCurveRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

@@ -46,6 +46,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <keyword>FITS</keyword>
 <keyword>UVFITS</keyword>
 <keyword>SDFITS</keyword>
+<keyword>FITS-IDI</keyword>
+<keyword>FITSIDI</keyword>
 <code>
 <include>xmlcasa/ms/ms_forward.h</include>
 <private>
@@ -537,6 +539,69 @@ the ms definition itself. -->
     do this by overriding the default behaviour of having each ms tool
     share the same server.
 -->
+
+    Note that the variety of fits files that fromfits is able to
+    interpret correctly is limited mostly to files similar to those
+    produced by classic AIPS. In particular, it understands only binary
+    table extensions for the antenna (AN), frequency (FQ) and source
+    (SU) information and ignores other extensions.
+
+    This function returns True if it successfully attachs the ms tool
+    to a newly created Measurement Set or False if something went
+    wrong, like an error in a file name.
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.fromfits("3C273XC1.MS", "3C273XC1.fits")
+    \end{verbatim}
+  </example>
+</method>
+-->
+ 
+   <method type="function" name="fromfitsidi">
+   <shortdescription>Create a measurement set from a fits-idi file</shortdescription>
+   
+  <keyword>fromfitsidi</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>Filename for the newly created measurement set</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="fitsfile">
+     <description>fits-idi file to read</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="nomodify">
+     <description>open for read access only</description>
+     <value>true</value>
+     </param>
+    
+     <param type="bool" direction="in" name="lock">
+     <description>lock the table for exclusive use</description>
+     <value>false</value>
+     </param>
+    
+     <param type="int" direction="in" name="obstype">
+     <description>specify the observation type: 0=standard,
+  1=fastmosaic, requiring small tiles in the measurement set</description>
+     <value>0</value>
+     </param>
+
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function will convert a \uvfits\ file to a measurement set table and
+    then open the measurement set table. The newly created measurement set
+    table will continue to exist after the tool has been closed.
+
+    Setting the lock argument to True will permanently lock the table
+    preventing other processes from writing to the measurement set. Unless you
+    expect this to happen, and want to prevent it, you should leave the lock
+    argument at the default value which implies auto-locking.
 
     Note that the variety of fits files that fromfits is able to
     interpret correctly is limited mostly to files similar to those

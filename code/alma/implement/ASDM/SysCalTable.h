@@ -124,7 +124,7 @@ class SysCalRow;
  * System calibration. Gives information on the conversion  of data to temperature scale. This table is reduced to follow  the contents of the Measurement Set SysCal table. Use only spectral  values (use a single channel spectral window for single numbers).   \texttt{numChan} can be found in the SpectralWindow Table.  The contents of this table are used to scale the data in the filler.
  * <BR>
  
- * Generated from model's revision "1.53", branch "HEAD"
+ * Generated from model's revision "1.54", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SysCal </CAPTION>
@@ -327,6 +327,13 @@ public:
 	 * @return the name of this table in a string.
 	 */
 	string getName() const;
+	
+	/**
+	 * Return the names of the attributes of this table.
+	 *
+	 * @return a vector of string
+	 */
+	 static const vector<string>& getAttributesNames();
 
 	/**
 	 * Return this table's Entity.
@@ -534,6 +541,16 @@ private:
 	 * The name of this table.
 	 */
 	static string tableName;
+	
+	/**
+	 * The attributes names.
+	 */
+	static const vector<string> attributesNames;
+	
+	/**
+	 * A method to fill attributesNames;
+	 */
+	static vector<string> initAttributesNames();
 
 
 	/**

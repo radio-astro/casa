@@ -33,7 +33,8 @@ using namespace casa;
 
 int main(int argc, char* argv[]) {
   // Parse arguments.
-  if(argc < 3 || argc > 6 || argv[1] == "-h" || argv[1] == "--help"){
+  if(argc < 3 || argc > 6 || String(argv[1]) == "-h" ||
+     String(argv[1]) == "--help"){
     cout << argv[0] << ": Stand-alone executable for splitting an MS.\n"
 	 << "\nUse:\n\t" << argv[0] << " [-n] [-s spwsel] [-t timerange] [-w datacol] inputms outputms [timebin]\n\n"
 	 << "where timebin is an averaging time in seconds.\n"
@@ -41,7 +42,13 @@ int main(int argc, char* argv[]) {
 	 << "\n\t-s: Spectral window selection."
 	 << "\n\t-t: timerange selection."
 	 << "\n\t-w: Which column (i.e. data, model_data, etc.) to use." << endl;
-    return !(argv[1] == "-h" || argv[1] == "--help");
+    Int retval = 1;    // Exit with fail val unless user _asked_ for help.
+    if(argc > 1){
+      String argv1(argv[1]);
+      
+      retval = !(argv1 == "-h" || argv1 == "--help");
+    }
+    return retval;
   }
   
   // Defaults

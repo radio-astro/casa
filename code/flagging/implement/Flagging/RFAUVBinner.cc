@@ -170,11 +170,11 @@ void RFAUVBinner::endChunk ()
 //  rowclipper.cleanup();
 }
 
-void RFAUVBinner::startData ()
+void RFAUVBinner::startData (bool verbose)
 {
 // reset lattices to write-only
   yvalue.reset(False,True);
-  RFAFlagCubeBase::startData();
+  RFAFlagCubeBase::startData(verbose);
 //  rowclipper.reset();
 }
 
@@ -234,9 +234,9 @@ RFA::IterMode RFAUVBinner::endData ()
 }
 
 
-void RFAUVBinner::startDry ()
+void RFAUVBinner::startDry (bool verbose)
 {
-  RFAFlagCubeBase::startDry();
+  RFAFlagCubeBase::startDry(verbose);
 // reset lattices to read-only
   yvalue.reset(True,False);
 // create bincounts cube, if necessary

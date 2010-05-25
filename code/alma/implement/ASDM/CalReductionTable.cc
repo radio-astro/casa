@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalReductionTable::tableName = "CalReduction";
-	
+	const vector<string> CalReductionTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for CalReductionTable.
  */
- 
 	CalReductionTable::~CalReductionTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,50 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalReductionTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalReductionTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("numApplied");
+
+		attributesNames.push_back("appliedCalibrations");
+
+		attributesNames.push_back("numParam");
+
+		attributesNames.push_back("paramSet");
+
+		attributesNames.push_back("numInvalidConditions");
+
+		attributesNames.push_back("invalidConditions");
+
+		attributesNames.push_back("timeReduced");
+
+		attributesNames.push_back("messages");
+
+		attributesNames.push_back("software");
+
+		attributesNames.push_back("softwareVersion");
+
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalReductionTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -268,7 +305,7 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -332,7 +369,7 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -454,7 +491,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -532,7 +569,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalReductionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -786,10 +823,10 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 	}
 
 	
-	void CalReductionTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalReduction.xml")))
+	void CalReductionTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalReduction.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalReduction.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalReduction.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalReduction table", "CalReduction");

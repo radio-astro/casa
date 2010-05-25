@@ -102,7 +102,7 @@ using  asdm::ArrayTimeInterval;
 
 
 /*\file SysCal.h
-    \brief Generated from model's revision "1.53", branch "HEAD"
+    \brief Generated from model's revision "1.54", branch "HEAD"
 */
 
 namespace asdm {
@@ -126,7 +126,7 @@ typedef void (SysCalRow::*SysCalAttributeFromBin) (EndianISStream& eiss);
 /**
  * The SysCalRow class is a row of a SysCalTable.
  * 
- * Generated from model's revision "1.53", branch "HEAD"
+ * Generated from model's revision "1.54", branch "HEAD"
  *
  */
 class SysCalRow {
@@ -141,7 +141,12 @@ public:
 	 */
 	SysCalTable &getTable() const;
 	
-	
+	/**
+	 * Has this row been added to its table ?
+	 * @return true if and only if it has been added.
+	 */
+	bool isAdded() const;
+		
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -1052,7 +1057,7 @@ private:
 	bool hasBeenAdded;
 
 	// This method is used by the Table class when this row is added to the table.
-	void isAdded();
+	void isAdded(bool added);
 
 
 	/**

@@ -77,9 +77,13 @@ namespace asdm {
 	CalGainTable &CalGainRow::getTable() const {
 		return table;
 	}
-	
-	void CalGainRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalGainRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalGainRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

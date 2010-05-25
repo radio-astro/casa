@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string ProcessorTable::tableName = "Processor";
-	
+	const vector<string> ProcessorTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for ProcessorTable.
  */
- 
 	ProcessorTable::~ProcessorTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,36 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string ProcessorTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> ProcessorTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("processorId");
+
+
+		attributesNames.push_back("modeId");
+
+		attributesNames.push_back("processorType");
+
+		attributesNames.push_back("processorSubType");
+
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& ProcessorTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -226,7 +249,7 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -276,7 +299,7 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -384,7 +407,7 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/2/ProcessorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/2/ProcessorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -462,7 +485,7 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/2/ProcessorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/2/ProcessorTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ProcessorTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -695,10 +718,10 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 	}
 
 	
-	void ProcessorTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Processor.xml")))
+	void ProcessorTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Processor.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Processor.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Processor.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the Processor table", "Processor");

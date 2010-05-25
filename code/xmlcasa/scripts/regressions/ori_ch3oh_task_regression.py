@@ -157,7 +157,8 @@ sum=xstat['sum']
 # fitting
 default(sdfit)
 sdfile=localoutfile
-#sd.plotter.plot(spave)			# plot spectrum				
+#sd.plotter.plot(spave)			# plot spectrum
+fitmode='list'
 maskline=[2900,3150]	# create region around line
 nfit=1
 plotlevel=localplotlevel

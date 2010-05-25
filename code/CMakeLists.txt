@@ -222,7 +222,7 @@ file( WRITE ${_casaroot}/casainit.sh
       "then\n"
       "    case `uname -s` in\n"
       "    Linux)\n"
-      "        case `uname -p` in\n"
+      "        case `uname -m` in\n"
       "        x86_64)\n"
       "            a_arch=linux_64b\n"
       "            ;;\n"
@@ -386,6 +386,12 @@ casa_find( LAPACK
            LIBS lapack 
            DEPENDS BLAS )
 
+# DL
+set( DL_LIBRARIES ${CMAKE_DL_LIBS} CACHE STRING "dl libraries" FORCE )
+if( DL_LIBRARIES STREQUAL "dl" )
+  set( DL_LIBRARIES "-ldl" CACHE STRING "dl libraries" FORCE )
+endif()
+
 # CASACore
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
@@ -417,7 +423,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.8
+           VERSION 1.0.9
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -426,7 +432,7 @@ casa_find( CASACORE
            PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
-           DEPENDS LAPACK CFITSIO WCSLIB )
+           DEPENDS LAPACK CFITSIO WCSLIB DL )
 
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
   -DCASA_USECASAPATH
@@ -621,14 +627,18 @@ file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
       "print 'Successfully launched IPython from C++.'\n" 
       "sys.exit(0)\n")
 #
-# The names of CCMTools libraries changed.
+# The names of CCMTools libraries have changed.
 # Need to support both naming conventions, until the new
 # version is universally available. (This implementation
 # would be cleaner if CCM exported a version number.)
 #
-if( EXISTS ${casa_packages}/lib/libCCM_Python.so OR
-    EXISTS ${casa_packages}/lib64/libCCM_Python.so OR
-    EXISTS ${casa_packages}/lib/libCCM_Python.dylib )
+if( EXISTS ${casa_packages}/lib/libccmtools_local.so OR
+    EXISTS ${casa_packages}/lib64/libccmtools_local.so OR
+    EXISTS ${casa_packages}/lib/libccmtools_local.dylib )
+  set( _ccmtools_libs ccmtools_local )
+elseif( EXISTS ${casa_packages}/lib/libCCM_Python.so OR
+        EXISTS ${casa_packages}/lib64/libCCM_Python.so OR
+        EXISTS ${casa_packages}/lib/libCCM_Python.dylib )
   set( _ccmtools_libs CCM_Python CCM_Local_HomeFinder WX_Utils_error WX_Utils_code WX_Utils_types )
 else()
   set( _ccmtools_libs ccmtools_local )
@@ -666,7 +676,6 @@ set( CCMTOOLS_ccmtools_FLAGS -Xms1024M -Xmx1024M )
 find_package(
   Qt4 4.3.4
   COMPONENTS QtCore QtGui QtDBus QtXml ) #QtOpenGL )
-# Version checking not supported...
 
 set( QT4_INCLUDE_DIRS ${QT_INCLUDES} CACHE PATH "QT4 include directories" FORCE )
 set( QT4_DEFINITIONS ${QT_DEFINITIONS} -DQT_NO_DEBUG CACHE STRING "QT4 preprocessor flags" FORCE )
@@ -677,6 +686,8 @@ set( QT4_LIBRARIES
   ${QT_QTXML_LIBRARY} 
   # ${QT_QTOPENGL_LIBRARY}
   CACHE FILEPATH "QT4 libraries" FORCE )
+list( REMOVE_ITEM QT4_LIBRARIES "optimized" )
+list( REMOVE_ITEM QT4_LIBRARIES "debug" )
 set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 
 # Detecting QT4 takes a bit of time, but does not seem possible to skip.
@@ -771,8 +782,10 @@ casa_find( READLINE
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
+casa_config_end()
+
 #
-# ASAP depends on something called a makedefs file. Fake one of those.
+# ASAP's build depends on something called a makedefs file. Fake one of those.
 #
 
 # Get path from first of rpfits libraries.
@@ -787,9 +800,7 @@ endforeach()
 
 set( _cc "" )
 foreach( _c ${CASACORE_LIBRARIES} )
-  if (_c STREQUAL dl)
-    set( _cc "${_cc} -ldl" )
-  elseif( _c MATCHES Framework )
+  if( _c MATCHES Framework )
     # skip
   else()
     set( _cc "${_cc} ${_c}" )
@@ -813,8 +824,9 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
-
+#
 # The following variables are substitued into python scripts
+#
 set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
 set( PYTHON_TASKD ${PYTHON_LIBD} )
 

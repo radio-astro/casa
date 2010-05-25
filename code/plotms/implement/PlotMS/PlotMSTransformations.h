@@ -64,6 +64,13 @@ public:
   void fromRecord(const RecordInterface& record);
   Record toRecord() const;
   // </group>
+
+
+  // If any transformations are specified, return True
+  Bool anyTransform() const { return ((frameStr()!="") ||
+				(veldefStr()!="RADIO") ||
+				(xpcOffset()!=0.0) ||
+				(ypcOffset()!=0.0)); };
   
   // Convenience methods for returning the standard field values.
   // <group>

@@ -153,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return;
   }
   
-  void RFAFlagExaminer::startFlag ()
+  void RFAFlagExaminer::startFlag (bool verbose)
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	outTotalRowCount = 
 	outTotalRowFlags = 0;
 
-    RFAFlagCubeBase::startFlag();
+    RFAFlagCubeBase::startFlag(verbose);
 
     return;
   }

@@ -61,6 +61,7 @@ using namespace asdm;
 namespace asdm {
 
 	string DataDescriptionTable::tableName = "DataDescription";
+	const vector<string> DataDescriptionTable::attributesNames = initAttributesNames();
 
 	/**
 	 * The list of field names that make up key key.
@@ -130,6 +131,24 @@ namespace asdm {
 	string DataDescriptionTable::getName() const {
 		return tableName;
 	}
+
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> DataDescriptionTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("dataDescriptionId");
+		attributesNames.push_back("polOrHoloId");
+		attributesNames.push_back("spectralWindowId");
+
+		return attributesNames;
+	}
+
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& DataDescriptionTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -225,7 +244,7 @@ namespace asdm {
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -269,7 +288,7 @@ namespace asdm {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 

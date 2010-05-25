@@ -115,6 +115,10 @@ public:
     // Loads values into the cache using the given vis set, with the given
     // axes used for x and y values.  See PlotMSCache::load().
     // <group>
+
+  /*
+    I think this is deprecated.... (gmoellen 10May17)
+
     void loadCache(PMS::Axis xAxis, PMS::Axis yAxis,
 		   PMS::DataColumn xData, PMS::DataColumn yData,
 		   const String& msname,
@@ -122,6 +126,8 @@ public:
 		   const PlotMSAveraging& averaging,
 		   const PlotMSTransformations& transformations,
 		   PlotMSCacheThread* thread = NULL);
+  */
+
     void loadCache(const vector<PMS::Axis>& axes,
 		   const vector<PMS::DataColumn>& data,
 		   const String& msname,
@@ -157,6 +163,8 @@ private:
     
     // Cache.
     PlotMSCachePtr itsCache_;
+    PlotMSCachePtr itsMSCache_;
+    PlotMSCachePtr itsCalCache_;
 
     // Indexer
     PlotMSCacheIndexerPtr itsIndexer_;

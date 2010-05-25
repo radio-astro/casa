@@ -55,7 +55,7 @@ namespace PointingModelModeMod
   //! PointingModelMode.
   //!  [CalDM.PointingModel] Mode of Pointing Model 
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum PointingModelMode

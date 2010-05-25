@@ -14,9 +14,10 @@ Unit tests for task csvclean. It tests the following parameters:
     spw:           wrong value; non-default value
     niter:         wrong type; non-default values
     imsize:        zero value; non-default value
-    cell:        unsupported value; non-default value
+    cell:          unsupported value; non-default value
+    phasecenter:   non-default and invalid values
     weighting:     unsupported value; non-default values
-    restoringbeam:    
+    restoringbeam: non-default values
     
     Other tests: check the value of a pixel.
 '''
@@ -72,7 +73,47 @@ class csvclean_test1(unittest.TestCase):
                      +"\nError: Statistics failed for %s. "%r
                         
         return results
-                    
+
+    def verify_field(self,image,phasecenter):
+        #use ia.summary, get the coordinates from refval and
+        #compare to the ones given to csvclean
+        ia.open(image)
+        summary = ia.summary()
+        ia.close()
+        # values of refval are in radians
+        ra = summary['header']['refval'][0]
+        dec = summary['header']['refval'][1]
+        RA = qa.time(qa.quantity(ra,'rad'))
+        DEC = qa.time(qa.quantity(dec,'rad'))
+        
+        # compare RA and DEC with what comes from listobs
+        ms.open(self.msfile)
+        info = ms.summary(True)
+        ms.close()
+        if (type(phasecenter) == int):
+            fld = 'field_'+str(phasecenter)
+            ra = info['header'][fld]['direction']['m0']['value']
+            dec = info['header'][fld]['direction']['m1']['value']
+            mRA = qa.time(qa.quantity(ra,'rad'))
+            mDEC = qa.time(qa.quantity(dec,'rad'))
+#            if ((RA != mRA) or (DEC != mDEC)):
+#                print 'ERROR: MS: RA=%s, DEC=%s and IMG: RA=%s, DEC=%s'%(mRA,mDEC,RA,DEC)
+#                return False            
+        elif (type(phasecenter) == str):
+            for i in range(3):
+                fieldid = 'field_'+str(i)
+                ra = info['header'][fieldid]['direction']['m0']['value']
+                dec = info['header'][fieldid]['direction']['m1']['value']
+                mRA = qa.time(qa.quantity(ra,'rad'))
+                mDEC = qa.time(qa.quantity(dec,'rad'))
+                if ((RA == mRA) and (DEC == mDEC)):
+                    break
+
+        if ((RA != mRA) or (DEC != mDEC)):
+            print 'ERROR: MS: RA=%s, DEC=%s and IMG: RA=%s, DEC=%s'%(mRA,mDEC,RA,DEC)
+            return False
+        
+        return True
         
     def test1(self):
         '''Csvclean 1: Default values'''
@@ -196,13 +237,43 @@ class csvclean_test1(unittest.TestCase):
     def test17(self):
         '''Csvclean 17: Verify statistics of image'''
         self.res = csvclean(vis=self.msfile,imagename=self.img,field='2',imsize=[500,500],
-                            niter=10, restoringbeam=['0.5arcsec'],cell='0.35arcsec')
+                            niter=10, restoringbeam=['0.5arcsec'],cell='0.35arcsec',phasecenter=0)
         ia.open(self.img+'.image')
         stats = ia.statistics()
         ia.close()
+        print stats
         retValue = self.verify_stats(stats)
         self.assertTrue(retValue['success'],retValue['error_msgs'])
         
+    def test18(self):
+        '''Csvclean 18: Choose a non-default phasecenter'''
+        phc = 2
+        im = self.img+'.image'
+        self.res = csvclean(vis=self.msfile,imagename=self.img,imsize=[100,100],
+                            niter=10,phasecenter=phc)
+        
+        retValue = self.verify_field(im,phc)
+        self.assertTrue(retValue,'MS and image coordinates of phasecenter are not the same')
+
+    def test19(self):
+        '''Csvclean 19: Choose a non-existent phasecenter'''
+        phc = 4
+        im = self.img+'.image'
+        self.res = csvclean(vis=self.msfile,imagename=self.img,imsize=[100,100],
+                            niter=10,phasecenter=phc)
+        
+        self.assertFalse(self.res,'Phasecenter does not exist and should return an error.')
+
+    def test20(self):
+        '''Csvclean 20: Choose a string phasecenter'''
+        coord = '14h45m16 +09d58m36'
+        phc = 'J2000 '+coord
+        im = self.img+'.image'
+        self.res = csvclean(vis=self.msfile,imagename=self.img,imsize=[100,100],
+                            niter=10,phasecenter=phc)
+        
+        retValue = self.verify_field(im,coord)
+        self.assertTrue(retValue,'MS and image coordinates of phasecenter are not the same')
 
 def suite():
     return [csvclean_test1]

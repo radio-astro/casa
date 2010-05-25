@@ -83,9 +83,13 @@ namespace asdm {
 	FreqOffsetTable &FreqOffsetRow::getTable() const {
 		return table;
 	}
-	
-	void FreqOffsetRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool FreqOffsetRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void FreqOffsetRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

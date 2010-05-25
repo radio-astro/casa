@@ -124,10 +124,14 @@ def plotcal(caltable=None,xaxis=None,yaxis=None,
                         raise Exception, 'Calibration table not found - please verify the name'
 
 		# If the user wants the plot window cleared then clear it.
-		if ( clearpanel.lower()=='current' ) :
-			cp.clearplot( subplot=subplot );
-		elif ( clearpanel.lower()=='all' ) :
-			cp.clearplot();
+		#if ( clearpanel.lower()=='current' ) :
+		#	cp.clearplot( subplot=subplot );
+		#elif ( clearpanel.lower()=='all' ) :
+		#	cp.clearplot(); #RI
+		##if clearpanel.lower()>0: #DP 
+			##cp.clearplot(0) #DP
+			#pl.ion()
+			#tp.clearplot(0,0,0)
 		
 		cp.selectcal(antenna=antenna,field=field,spw=spw,time=timerange,poln=poln)
 		cp.plotoptions(subplot=subplot,

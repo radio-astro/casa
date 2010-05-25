@@ -168,8 +168,10 @@ import shutil
 from taskinit import *
 from imregion import *
 
-def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
-           region, box, chans, stokes ):
+def immath(
+    imagename, mode, outfile, expr, varnames, sigma,
+    polithresh, mask, region, box, chans, stokes
+):
     # Tell CASA who will be reporting
     casalog.origin('immath')
     retValue = False
@@ -276,6 +278,8 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     # Remove spaces from the expression.
     expr=expr.replace( ' ', '' )
 
+    doPolThresh = False
+
     # Construct expressions for the spectral and polarization modes.
     # These are common, repetitive calculations that are handled for
     # the user.
@@ -288,9 +292,30 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
         expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
     elif mode=='pola':
         expr = _doPolA(filenames, varnames, tmpFilePrefix)
+        if (polithresh):
+            if (mask != ""):
+                mask = ""
+                casalog.post("Ignoring mask parameter in favor of polithresh parameter", 'WARN')
+            if (qa.getunit(polithresh) != ""):
+                initUnit = qa.getunit(polithresh)
+                ia.open(filenames[0])
+                bunit = ia.brightnessunit()
+                polithresh = qa.convert(polithresh, bunit)
+                ia.done()
+                if (qa.getunit(polithresh) != bunit):
+                    raise Exception, "Units of polithresh " + initUnit \
+                    + " do not conform to input image units of " + bunit \
+                    + " so cannot perform thresholding. Please correct units and try again."
+                polithresh = qa.getvalue(polithresh)
+            doPolThresh = True
+            [lpolexpr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, False, False)
+            lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
+            lpolexpr = lpolexpr + ")"
+            lpol = tmpFilePrefix + "_lpol.im"
+            ia.imagecalc(pixels=lpolexpr, outfile=lpol)
 
     elif mode=='poli':
-        [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix)
+        [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
 
         sigsq=0
 
@@ -341,6 +366,8 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
                 ia.setcoordsys(csys.torecord())
                 ia.done()
             ia.done()
+            if (doPolThresh):
+                _immath_createPolMask(polithresh, lpol, outfile)
             return True
         except Exception, error:
             try:
@@ -406,6 +433,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             ia.open( filenames[i] )
             tmpFile=tmpFilePrefix+str(i)
             ia.subimage( region=reg, mask=mask, outfile=tmpFile )
+
             file_map[filenames[i]] = tmpFile
             subImages.append( tmpFile )
             ia.done()
@@ -443,9 +471,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     
     # Put the subimage names into the expression
     try:
-        print "exp1 " + expr
         expr = _immath_expr_from_varnames(expr, varnames, subImages)
-        print "exp2 " + expr
 
     except Exception, e:
         casalog.post(
@@ -467,6 +493,9 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             elif isLPol:
                 csys.setstokes('Plinear')
             ia.setcoordsys(csys.torecord())
+
+        if (doPolThresh):
+            _immath_createPolMask(polithresh, lpol, outfile)
 
         #cleanup
         ia.done()                
@@ -589,6 +618,11 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
             elif (stokes == 'U'):
                 Uimage = myfile
         ia.done()
+        # to use pass by reference semantics correctly, we have to use the same objects passed in
+        # rather than create new objects with the same names
+        filenames[0:1] = [Qimage, Uimage]
+        varnames[0:1] = ["IM0", "IM1"]
+        print "end filenames " +str(filenames) + " varnames " + str(varnames)
     else:
         if len(filenames) > 2:
             casalog.post( "More than two images. Take first two and ignore the rest. " ,'WARN' );
@@ -609,7 +643,7 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
     expr = 'pa(%s,%s)' % (Uimage, Qimage)
     return expr
 
-def _doPolI(filenames, varnames, tmpFilePrefix):
+def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
     # calculate a polarization intensity image
     # if 3 files (or 1 file with Q, U, V) total pol intensity image
     # if 2 files (or file file with Q, U) given linear pol intensity image
@@ -647,27 +681,30 @@ def _doPolI(filenames, varnames, tmpFilePrefix):
             if ((stokes == 'Q' or stokes == 'U') and stkslist[0].count(stokes) == 0):
                 raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
                 + " so poli calculation cannot be done"
-            pixNum = stkslist[0].index(stokes)
-            blc[stokesPixel] = pixNum
-            trc[stokesPixel] = pixNum
             myfile = tmpFilePrefix + '_' + stokes
-            ia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
             if (stokes == 'Q'):
                 Qimage = myfile
             elif (stokes == 'U'):
                 Uimage = myfile
-            elif (stokes == 'V'):
+            elif (stokes == 'V' and tpol):
                 Vimage = myfile
+            if createSubims:
+                pixNum = stkslist[0].index(stokes)
+                blc[stokesPixel] = pixNum
+                trc[stokesPixel] = pixNum
+                ia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
         ia.done()
         isTPol = bool(Vimage)
         isLPol = not isTPol
+        filenames = [Qimage, Uimage]
         sum = Qimage + '*' + Qimage + " + " + Uimage + '*' + Uimage
         if isTPol:
             sum = sum + " + " + Vimage + '*' + Vimage
+            filenames.append(Vimage)
         # close paren gets added after this method has been called.
         expr = 'sqrt(' + sum
 
-    elif len(filenames)==3:
+    elif len(filenames) == 3:
         for i in range(len(stkslist)):
             if type(stkslist[i])==list:
                 casalog.post("stokes " + str(stkslist[i]),'SEVERE')
@@ -686,7 +723,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix):
                 +'+'+varnames[1]+'*'+varnames[1]\
                 +'+'+varnames[2]+'*'+varnames[2]
         isTPol = True
-    elif len(filenames) ==2:
+    elif len(filenames) == 2:
         for i in range(len(stkslist)):
             if type(stkslist[i])==list:
                 raise Exception, 'Cannot handle %s, a multi-Stokes image when multiple images supplied.' % filenames[i]
@@ -703,3 +740,12 @@ def _doPolI(filenames, varnames, tmpFilePrefix):
         isLPol = True
     return [expr, isLPol, isTPol]
         
+def _immath_createPolMask(polithresh, lpol, outfile):
+    # make the linear polarization threshhold mask CAS-2120
+    myexpr = "'" + lpol + "' >= " + str(qa.getvalue(polithresh))
+    ia.open(outfile)
+    ia.calcmask(name='mask0', mask=myexpr)
+    casalog.post('Calculated mask based on linear polarization threshold ' + str(polithresh),
+        'INFO')
+    ia.done()
+            

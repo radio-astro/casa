@@ -46,7 +46,7 @@ ValueHolder      *toValueHolder(const casac::variant&);
 Bool             casaMDirection(const ::casac::variant& theVar, 
 				            MDirection& theMeas);
 Bool             ang_as_formatted_str(string& out, const casa::Quantity& qang,
-                                      const std::string& format);
+                                      const std::string& format, const Int precision);
 Bool             MDirection2str(const MDirection& in, std::string& out);
 Bool             casaMFrequency(const ::casac::variant& theVar, 
                                 MFrequency& theMeas);

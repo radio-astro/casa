@@ -73,8 +73,8 @@ public:
   virtual uInt estimateMemoryUse ();
   virtual Bool newChunk (Int &maxmem);
   virtual void endChunk ();
-  virtual void startData ();
-  virtual void startDry (); // add
+  virtual void startData (bool verbose);
+  virtual void startDry (bool verbose); // add
   virtual IterMode iterTime (uInt itime);
   virtual IterMode iterRow  (uInt irow);
   virtual IterMode iterDry  (uInt it);

@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string ConfigDescriptionTable::tableName = "ConfigDescription";
-	
+	const vector<string> ConfigDescriptionTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for ConfigDescriptionTable.
  */
- 
 	ConfigDescriptionTable::~ConfigDescriptionTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,64 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string ConfigDescriptionTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> ConfigDescriptionTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("configDescriptionId");
+
+
+		attributesNames.push_back("numAntenna");
+
+		attributesNames.push_back("numDataDescription");
+
+		attributesNames.push_back("numFeed");
+
+		attributesNames.push_back("correlationMode");
+
+		attributesNames.push_back("numAtmPhaseCorrection");
+
+		attributesNames.push_back("atmPhaseCorrection");
+
+		attributesNames.push_back("processorType");
+
+		attributesNames.push_back("spectralType");
+
+		attributesNames.push_back("antennaId");
+
+		attributesNames.push_back("feedId");
+
+		attributesNames.push_back("switchCycleId");
+
+		attributesNames.push_back("dataDescriptionId");
+
+		attributesNames.push_back("processorId");
+
+
+		attributesNames.push_back("phasedArrayList");
+
+		attributesNames.push_back("numAssocValues");
+
+		attributesNames.push_back("assocNature");
+
+		attributesNames.push_back("assocConfigDescriptionId");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& ConfigDescriptionTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -286,7 +337,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::newRow(ConfigDescriptionRow* row) 
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -356,7 +407,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::newRow(ConfigDescriptionRow* row) 
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -484,7 +535,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/2/ConfigDescriptionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/2/ConfigDescriptionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -562,7 +613,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/2/ConfigDescriptionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/2/ConfigDescriptionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ConfigDescriptionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -837,10 +888,10 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 	}
 
 	
-	void ConfigDescriptionTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/ConfigDescription.xml")))
+	void ConfigDescriptionTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/ConfigDescription.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/ConfigDescription.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/ConfigDescription.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the ConfigDescription table", "ConfigDescription");

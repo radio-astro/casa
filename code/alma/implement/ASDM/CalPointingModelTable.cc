@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalPointingModelTable::tableName = "CalPointingModel";
-	
+	const vector<string> CalPointingModelTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -112,7 +113,6 @@ namespace asdm {
 /**
  * A destructor for CalPointingModelTable.
  */
- 
 	CalPointingModelTable::~CalPointingModelTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -132,13 +132,68 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalPointingModelTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalPointingModelTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaName");
+
+		attributesNames.push_back("receiverBand");
+
+		attributesNames.push_back("calDataId");
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("startValidTime");
+
+		attributesNames.push_back("endValidTime");
+
+		attributesNames.push_back("antennaMake");
+
+		attributesNames.push_back("pointingModelMode");
+
+		attributesNames.push_back("polarizationType");
+
+		attributesNames.push_back("numCoeff");
+
+		attributesNames.push_back("coeffName");
+
+		attributesNames.push_back("coeffVal");
+
+		attributesNames.push_back("coeffError");
+
+		attributesNames.push_back("coeffFixed");
+
+		attributesNames.push_back("azimuthRMS");
+
+		attributesNames.push_back("elevationRms");
+
+		attributesNames.push_back("skyRMS");
+
+		attributesNames.push_back("reducedChiSquared");
+
+
+		attributesNames.push_back("numObs");
+
+		attributesNames.push_back("coeffFormula");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalPointingModelTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -283,7 +338,7 @@ CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 
@@ -325,7 +380,7 @@ CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -475,7 +530,7 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntm=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntm=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -553,7 +608,7 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntm=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntm=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPointingModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -834,10 +889,10 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 	}
 
 	
-	void CalPointingModelTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPointingModel.xml")))
+	void CalPointingModelTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalPointingModel.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPointingModel.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalPointingModel.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalPointingModel table", "CalPointingModel");

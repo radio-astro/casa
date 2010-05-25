@@ -77,9 +77,13 @@ namespace asdm {
 	CalHolographyTable &CalHolographyRow::getTable() const {
 		return table;
 	}
-	
-	void CalHolographyRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalHolographyRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalHolographyRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	
