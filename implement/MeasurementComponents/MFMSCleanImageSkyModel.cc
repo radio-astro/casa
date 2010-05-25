@@ -207,6 +207,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 
   Int cycle=0;
   Bool stop=False;
+  Bool lastCycleWriteModel=False;
+
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
 
     os << LogIO::NORMAL    // Loglevel PROGRESS
@@ -255,6 +257,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
          << "Reached stopping peak point source residual = "
 	 << absmax << LogIO::POST;
       stop=True;
+      if(cycle >1)
+	lastCycleWriteModel=True;
     }
     else {
       // Calculate the threshold for this cycle. Add a safety factor
@@ -429,7 +433,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
 
-  if(modified_p) {
+  if(modified_p || lastCycleWriteModel) {
     os << LogIO::NORMAL    // Loglevel PROGRESS?
        << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True);
