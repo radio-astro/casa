@@ -93,17 +93,17 @@ public:
 
 private:
     void processRow  ( uInt ifr,uInt it ) ;
-    Int totalflags,totalcount;
-    Int totalrowflags,totalrowcount;
+    uInt64 totalflags,totalcount;
+    uInt64 totalrowflags,totalrowcount;
 
     // accumulated over all chunks
-    Int 
+    uInt64 
       accumTotalFlags, accumTotalCount, accumRowFlags, 
       accumTotalRowCount, accumTotalRowFlags;
 
     // per chunk
-    Int inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
-    Int outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
+    uInt64 inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
+    uInt64 outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
     
     // Statistics per antenna, baseline, spw, etc.
     // These maps of maps is used e.g. like:
@@ -112,13 +112,13 @@ private:
     //        accumflags["spw"     ]["0"   ] == 17
     //
     // which means that there were 42 flags on baseline 2 - 7, etc.
-    std::map<std::string, std::map<std::string, unsigned int> > accumflags;
-    std::map<std::string, std::map<std::string, unsigned int> > accumtotal;
+    std::map<std::string, std::map<std::string, uInt64> > accumflags;
+    std::map<std::string, std::map<std::string, uInt64> > accumtotal;
     
-    std::vector<unsigned> accumflags_channel;
-    std::vector<unsigned> accumtotal_channel;
-    std::vector<unsigned> accumflags_correlation;
-    std::vector<unsigned> accumtotal_correlation;
+    std::vector<uInt64> accumflags_channel;
+    std::vector<uInt64> accumtotal_channel;
+    std::vector<uInt64> accumflags_correlation;
+    std::vector<uInt64> accumtotal_correlation;
 
 };
 

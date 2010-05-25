@@ -37,6 +37,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/stdio.h>
 #include <map>
+#include <sstream>
 #include <cassert>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -110,10 +111,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       /* For efficiency reasons, use arrays to collect 
          histogram data for in-row selections
       */
-      accumflags_channel = vector<unsigned>(chunk.num(CHAN), 0);
-      accumtotal_channel = vector<unsigned>(chunk.num(CHAN), 0);
-      accumflags_correlation = vector<unsigned>(chunk.num(CORR), 0);
-      accumtotal_correlation = vector<unsigned>(chunk.num(CORR), 0);
+      accumflags_channel = vector<uInt64>(chunk.num(CHAN), 0);
+      accumtotal_channel = vector<uInt64>(chunk.num(CHAN), 0);
+      accumflags_correlation = vector<uInt64>(chunk.num(CORR), 0);
+      accumtotal_correlation = vector<uInt64>(chunk.num(CORR), 0);
           
       return RFASelector::newChunk(maxmem);
     }
@@ -293,8 +294,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
                 totalrowcount++;
 
-                unsigned int f = chunk.nfIfrTime(ifrs(i), it);
-                unsigned int c = chunk.num(CORR) * chunk.num(CHAN);
+                uInt64 f = chunk.nfIfrTime(ifrs(i), it);
+                uInt64 c = chunk.num(CORR) * chunk.num(CHAN);
 
                 // need nfIfrTimeCorr
                 // need nfIfrTimeChan
@@ -444,13 +445,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(totalcount) ffrac = totalflags*100.0/totalcount;
     if(totalrowcount) rffrac = totalrowflags*100.0/totalrowcount;
 
-    os << totalrowflags << " out of " << totalrowcount <<
-	" (" << rffrac << "%) rows are flagged." <<
-	LogIO::POST;
+    // LogSink cannot handle uInt64...
+    std::stringstream ss;
+    ss << totalrowflags << " out of " << totalrowcount <<
+	" (" << rffrac << "%) rows are flagged.";
+    os << ss.str() << LogIO::POST;
 
-    os << totalflags << " out of " << totalcount <<
-	" (" << ffrac << "%) data points are flagged.\n\n" <<
-	LogIO::POST;
+    ss.str("");
+
+    ss << totalflags << " out of " << totalcount <<
+	" (" << ffrac << "%) data points are flagged.\n\n";
+
+    os << ss.str() << LogIO::POST;
     
     os << "---------------------------------------------------------------------" << LogIO::POST;
     
@@ -470,25 +476,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       Record r;
 
-      r.define("flagged", (Int) accumTotalFlags);
-      r.define("total"  , (Int) accumTotalCount);
+      r.define("flagged", (uInt) accumTotalFlags);
+      r.define("total"  , (uInt) accumTotalCount);
 
 
-      for (map<string, map<string, unsigned> >::iterator j = accumtotal.begin();
+      for (map<string, map<string, uInt64> >::iterator j = accumtotal.begin();
            j != accumtotal.end();
            j++) {
         /* Note here: loop over the keys of accumtotal, not accumflags,
            because accumflags may not have all channel keys */
         
           Record prop;
-          for (map<string, unsigned>::const_iterator i = j->second.begin();
+          for (map<string, uInt64>::const_iterator i = j->second.begin();
                i != j->second.end();
                i++) {
             
               Record t;
 
-              t.define("flagged", (Int) accumflags[j->first][i->first]);
-              t.define("total", (Int) i->second);
+              t.define("flagged", (uInt) accumflags[j->first][i->first]);
+              t.define("total", (uInt) i->second);
               
               prop.defineRecord(i->first, t);
           }
