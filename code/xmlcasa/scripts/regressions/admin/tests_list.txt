@@ -11,6 +11,7 @@
 3C129                           gmoellen aoc.nrao.edu
 3C219D_test                     scastro eso.org
 accum_test                      scastro eso.org
+asdm-imexport+analysis		dpetry eso.org
 async-segfault                  dpetry eso.org
 b0319_regression                rreid nrao.edu
 b1608                           nelias nrao.edu

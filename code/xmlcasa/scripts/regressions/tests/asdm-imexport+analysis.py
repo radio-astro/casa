@@ -1,4 +1,4 @@
-# wrapper script for ASDM v1 import regression test
+# wrapper script for the ASDM import/export and analysis regression test
 import sys
 import os
 import string
@@ -7,10 +7,13 @@ import inspect
 
 # Short description
 def description():
-    return "Test of the importasdm and exportasdm tasks, ASDM <-> MS data conversion"
+    return "Test of the importasdm and exportasdm tasks, ASDM <-> MS data conversion, including simple analysis"
 
 pass_on = { "asdm_dataset_name" : "uid___X5f_X18951_X1",
-            "ms_dataset_name" : "M51.ms" }
+            "ms_dataset_name" : "M51.ms",
+            "asdm_dataset2_name" : 'uid___X02_X56142_X1',
+            "wvr_correction_file" : 'N3256_B6_0.WVR'
+            }
 
 a=inspect.stack()
 stacklevel=0
@@ -24,7 +27,7 @@ gl=sys._getframe(stacklevel).f_globals
 def run():
     #####locate the regression script
     try: 
-        lepath=locatescript('asdmv1-import_regression.py')
+        lepath=locatescript('asdm-imexport+analysis_regression.py')
         print 'Script used is ',lepath
         execfile(lepath, gl, pass_on)
     except:
@@ -35,7 +38,11 @@ def run():
 
 def data():
     ### return the data files that are needed by the regression script
-    return [pass_on["asdm_dataset_name"], pass_on["ms_dataset_name"]]
+    return [pass_on["asdm_dataset_name"],
+            pass_on["ms_dataset_name"],
+            pass_on["asdm_dataset2_name"],
+            pass_on["wvr_correction_file"]
+            ]
 
 def doCopy():
     ### return a list of the same length as that returned by data()
@@ -44,4 +51,4 @@ def doCopy():
     ###   or 1 if the corresponding file should be really copied to
     ###   the work directory
 
-    return [0,0]
+    return [0,0,0,0]
