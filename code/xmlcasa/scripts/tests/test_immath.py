@@ -1340,7 +1340,15 @@ class immath_test3(unittest.TestCase):
         ia.done()
         diff = expected - got
         if (epsilon == 0):
-            self.assertTrue((got == expected).all())        
+            #<debug>
+            maxdiff = numpy.abs(numpy.max(got - expected))
+            maxdiffrel = numpy.abs(numpy.max(diff/got))
+            if (maxdiff > 0):
+                print "maxdiff " + str(maxdiff)
+                print "maxdiffrel " + str(maxdiffrel)
+
+                
+            self.assertTrue((diff == 0).all())     
         else:
             self.assertTrue((numpy.abs(diff)/got < epsilon).all())        
 
