@@ -113,6 +113,8 @@ and write out the fitted and residual images (see also the
 \item <link anchor="images:image.regrid.function">regrid</link> - regrid the image to the
 specified Coordinate System 
 
+\item <link anchor="images:image.reorder.function">reorder</link> - reorder the image axes
+
 \item <link anchor="images:image.rotate.function">rotate</link> - rotate the coordinate system
 and regrid the image to the rotated Coordinate System 
 
@@ -6832,7 +6834,53 @@ ia.close()
 
 </method>
 
- 
+
+   <method type="function" name="reorder">
+   <shortdescription>Reorder the image axes.</shortdescription>
+   
+<input>
+  
+     <param type="string" direction="in" name="outfile">
+     <description>Output image file name.  Default is unset.</description>
+     <value></value>
+     </param>
+  
+     <param type="string" direction="in" name="order">
+     <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
+     <value></value>
+     </param>
+  
+</input>
+<returns type="casaimage"/>
+
+<description>
+
+This method reorders (transposes) the axes in the input image to the specified
+order. The associated pixel values and coordinate system are transposed.
+
+The order parameter describes the mapping of the input axes to the output axes.
+It contains zero-based digits describing the new order of the input axes. It must
+contain the same number of (unique) digits as the number of input axes. For example,
+specifying reorder="1032" for a four axes image maps input axes 0, 1, 2, 3 to output
+axes 1, 0, 3, 2. Because of ambiguity for axes numbers greater than nine, this method
+cannot currently handle images containing more than 10 axes.
+
+</description>
+
+<example>
+\begin{verbatim}
+"""
+# swap stokes (axis 2) and spectral (axis 3) axes in a 4 dimensional image
+ia.open("myimage.fits")
+reordim = ia.reorder(outfile="my_reordered_image.im", order="0132")
+ia.done()
+"""
+\end{verbatim}
+
+</example>
+
+</method>
+
    <method type="function" name="rotate">
    <shortdescription>rotate the direction coordinate axes attached to the image and regrid the image to the rotated Coordinate System</shortdescription>
    
