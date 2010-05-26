@@ -99,12 +99,12 @@ average over frequency (channels) and time (integrations).
 		<value></value>
 	</param>
 
-	<param type="any" name="correlation">
+<!--	<param type="any" name="correlation">
 		<description>Select correlations</description>
 		<any type="variant" limittypes="string stringArray"/>
 		<value type="string"></value>
 	</param>
-
+-->
 	<param type="any" name="ignorables" subparam="true">
 		<description>Let time bins ignore changes in array, scan, and/or state</description>
 		<any type="variant" limittypes="string stringArray"/>
@@ -211,8 +211,8 @@ average over frequency (channels) and time (integrations).
             uvrange='0~1000km'; uvrange in kilometers
 	scan -- Scan number range
             default: ''=all
-        correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
-                       default '' (all).
+<!--        correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
+                       default '' (all). -->
         ignorables -- Let time bins ignore boundaries in array, scan, and/or
                       state.
                       default = '' (separate time bins by all of the above)
