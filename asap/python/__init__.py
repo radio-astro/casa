@@ -397,7 +397,7 @@ if rcParams['useplotter']:
         del gui
     except ImportError:
         #print "Matplotlib not installed. No plotting available"
-        asaplog.post( "Matplotlib not installed. No plotting available")
+        asaplog.push( "Matplotlib not installed. No plotting available")
         print_log('WARN')
 
 __date__ = '$Date: 2010-04-27 22:33:35 -0600 (Tue, 27 Apr 2010) $'.split()[1]
