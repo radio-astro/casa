@@ -181,6 +181,8 @@ public:
   inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
+  inline Double getImWt(Int chnk,Int irel) { return *(imwt_[chnk]->data()+irel); };
+
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk); };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk); };
@@ -222,6 +224,9 @@ public:
   inline Double getFlag() { return *(flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
+
+  inline Double getWt() { return *(wt_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))*nperchan_(currChunk_) + irel_%nperchan_(currChunk_)); };
+  inline Double getImWt() { return *(imwt_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanbslnmax_(currChunk_)); };
 
   // These are array-global (one value per chunk):
   inline Double getAz0() { return az0_(currChunk_); };
@@ -404,6 +409,9 @@ protected:
   PtrBlock<Array<Float>*> amp_, pha_, real_, imag_;
   PtrBlock<Array<Bool>*> flag_;
   PtrBlock<Vector<Bool>*> flagrow_;
+  
+  PtrBlock<Array<Float>*> wt_;
+  PtrBlock<Array<Float>*> imwt_;
 
   PtrBlock<Array<Bool>*> plmask_;
 
@@ -435,7 +443,6 @@ protected:
   // meta info for locate output
   Vector<String> antnames_; 	 
   Vector<String> fldnames_; 	 
-  Vector<String> corrnames_; 	 
 
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;
