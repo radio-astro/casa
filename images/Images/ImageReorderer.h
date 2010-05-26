@@ -29,7 +29,7 @@
 #ifndef IMAGEREORDERER_H_
 #define IMAGEREORDERER_H_
 
-#include <images/Images/ImageInterface.h>
+#include <images/Images/PagedImage.h>
 #include <casa/Logging/LogIO.h>
 
 namespace casa {
@@ -65,7 +65,7 @@ public:
 	~ImageReorderer();
 
 	// reorder the axes and write the output image
-	void reorder() const;
+	PagedImage<Float>* reorder() const;
 
 private:
 	LogIO *_log;
