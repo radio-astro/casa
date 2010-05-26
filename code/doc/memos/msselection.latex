@@ -179,9 +179,9 @@ expressions/patterns:
   matching.  This will also match any string which has the string
   "BAND" in it.
 
-\item The string /.+BAND.+/ will be used as a regular expression.
-  This will also match any string which as the string "BAND" in it.
-  (.+ operator has the same meaning as the '*' operator of patterns).
+\item The string /.*BAND.*/ will be used as a regular expression.
+  This will also match any string which has the string "BAND" in it.
+  (.* operator has the same meaning as the '*' operator of patterns).
 \end{itemize}
 
 \subsection{Handling of blanks}
