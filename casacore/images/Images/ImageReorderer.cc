@@ -92,7 +92,7 @@ ImageReorderer::ImageReorderer(
 	}
 }
 
-void ImageReorderer::reorder() const {
+PagedImage<Float>* ImageReorderer::reorder() const {
 	// get the image data
 	Array<Float> dataCopy;
 	_image->get(dataCopy);
@@ -106,8 +106,9 @@ void ImageReorderer::reorder() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	PagedImage<Float> output(TiledShape(newShape), newCsys, _outputImage);
-	output.put(reorderArray(dataCopy, _order));
+	PagedImage<Float>* output = new PagedImage<Float>(TiledShape(newShape), newCsys, _outputImage);
+	output->put(reorderArray(dataCopy, _order));
+	return output;
 }
 
 
