@@ -271,7 +271,7 @@ void FixVis::convertFieldCols(MSFieldColumns& msfcs,
   // old frame.
   
   uInt nOrders;
-  Array<MDirection> mdarr;              // direction for each order
+  Vector<MDirection> mdarr;              // direction for each order
   Array<Double>     darr;               // longitude and latitude for each order
   Vector<Double> dirV;
   for(uInt i = 0; i < nrows; ++i){
@@ -281,11 +281,11 @@ void FixVis::convertFieldCols(MSFieldColumns& msfcs,
 
     //pdc.put(i, pdc.doConvert(i, *converter));
     mdarr = msfcs.phaseDirMeasCol().convert(i, newFrame);
-    darr.resize(IPosition(2, nOrders, 2));
+    darr.resize(IPosition(2, 2, nOrders));
     for(uInt orderNumber = 0; orderNumber < nOrders; ++orderNumber){
-      dirV = mdarr(IPosition(1, orderNumber)).getAngle().getValue();
-      darr(IPosition(2, orderNumber, 0)) = dirV[0];
-      darr(IPosition(2, orderNumber, 1)) = dirV[1];
+      dirV = mdarr[orderNumber].getAngle().getValue();
+      darr(IPosition(2, 0, orderNumber)) = dirV[0];
+      darr(IPosition(2, 1, orderNumber)) = dirV[1];
     }
     msfcs.phaseDir().put(i, darr);
     
@@ -295,9 +295,9 @@ void FixVis::convertFieldCols(MSFieldColumns& msfcs,
       //ddc.put(i, ddc.doConvert(i, *converter));
       mdarr = msfcs.delayDirMeasCol().convert(i, newFrame);
       for(uInt orderNumber = 0; orderNumber < nOrders; ++orderNumber){
-        dirV = mdarr(IPosition(1, orderNumber)).getAngle().getValue();
-        darr(IPosition(2, orderNumber, 0)) = dirV[0];
-        darr(IPosition(2, orderNumber, 1)) = dirV[1];
+        dirV = mdarr[orderNumber].getAngle().getValue();
+        darr(IPosition(2, 0, orderNumber)) = dirV[0];
+        darr(IPosition(2, 1, orderNumber)) = dirV[1];
       }
       msfcs.delayDir().put(i, darr);
       //rdc.put(i, rdc.doConvert(i, *converter));
@@ -306,8 +306,8 @@ void FixVis::convertFieldCols(MSFieldColumns& msfcs,
       mdarr = msfcs.referenceDirMeasCol().convert(i, newFrame);
       for(uInt orderNumber = 0; orderNumber < nOrders; ++orderNumber){
         dirV = mdarr(IPosition(1, orderNumber)).getAngle().getValue();
-        darr(IPosition(2, orderNumber, 0)) = dirV[0];
-        darr(IPosition(2, orderNumber, 1)) = dirV[1];
+        darr(IPosition(2, 0, orderNumber)) = dirV[0];
+        darr(IPosition(2, 1, orderNumber)) = dirV[1];
       }
       msfcs.referenceDir().put(i, darr);      
     }
