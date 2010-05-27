@@ -2318,7 +2318,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  Bool first =True;
 	  uInt nchn = 0;
 	  uInt lastchan = 0;
-	  for (uInt j=0 ; j < nchanvec(curspwid); j++) {
+	  for (uInt j=0 ; j < uInt(nchanvec(curspwid)); j++) {
 	    if (spwchansels_p(0,curspwid,j)==1) {
 	      if (first) {
 		dataStart_p[k]=j;
@@ -2340,8 +2340,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  //Since msselet will be applied to the data before flags from spwchansels_p
 	  //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
 	  //for (uInt j=0  ; j < nchanvec(k)-dataStart_p[k]; j++){
-	  for (uInt j=0  ; j < nchanvec(curspwid); j++){
-	    if (j<nchanvec(curspwid)-dataStart_p[k]) {
+	  for (uInt j=0  ; j < uInt(nchanvec(curspwid)); j++){
+	    if ( Int(j) < nchanvec(curspwid)-dataStart_p[k]) {
 	      spwchansels_tmp(0,curspwid,j) = spwchansels_p(0,curspwid,j+dataStart_p[k]);
 	    }
 	    else {
@@ -7707,7 +7707,7 @@ Bool Imager::createFTMachine()
   else if(ftmachine_p=="mosaic") {
     os << LogIO::NORMAL << "Performing mosaic gridding" << LogIO::POST; // Loglevel PROGRESS
    
-    setMosaicFTMachine();
+    setMosaicFTMachine(useDoublePrecGrid);
 
     // VisIter& vi(vs_p->iter());
     //   vi.setRowBlocking(100);
@@ -9453,7 +9453,7 @@ void Imager::savePSF(const Vector<String>& psf){
 
 }
 
-void Imager::setMosaicFTMachine(){
+void Imager::setMosaicFTMachine(Bool useDoublePrec){
   LogIO os(LogOrigin("Imager", "setmosaicftmachine", WHERE));
   ROMSColumns msc(*ms_p);
   String telescop=msc.observation().telescopeName()(0);
@@ -9478,7 +9478,10 @@ void Imager::setMosaicFTMachine(){
     } 
     gvp_p->setThreshold(minPB_p);
   }
-  ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
+  
+  ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True, 
+		      useDoublePrec);
+
   if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
      || (kpb==PBMath::ALMA)){
     os << LogIO::NORMAL // Loglevel INFO
@@ -9610,7 +9613,7 @@ void Imager::setMosaicFTMachine(){
 	    //first time
 	    if(k==0)
 	      elpsf=apsf;
-	    if(anyEQ(fixed, False)){ 
+	    if(anyEQ(fixed, False)){
 	      rstat = clean(String(algorithm), elniter, gain, 
 			    thrsh, 
 			    displayprogress,
