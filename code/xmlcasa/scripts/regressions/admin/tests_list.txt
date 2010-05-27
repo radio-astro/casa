@@ -33,11 +33,8 @@ ic2233                          kgolap aoc.nrao.edu
 ic2233_regression               sbhatnag aoc.nrao.edu
 imagepoltest_regression         rreid nrao.edu
 imagetest_regression            dpetry eso.org
-irc_cs_regression               takeshi.nakazato nao.ac.jp
 irc_cs_task_regression          takeshi.nakazato nao.ac.jp 
-irc_hc3n_regression             takeshi.nakazato nao.ac.jp
 irc_hc3n_task_regression        takeshi.nakazato nao.ac.jp
-irc_sio_regression              takeshi.nakazato nao.ac.jp
 irc_sio_task_regression         takeshi.nakazato nao.ac.jp
 l02d                            gmoellen aoc.nrao.edu
 listcal_regression              jmlarsen eso.org
@@ -48,11 +45,8 @@ ngc4826redux                    kgolap aoc.nrao.edu
 ngc5921redux                    gmoellen aoc.nrao.edu
 ngc5921uvcontsub2               gmoellen aoc.nrao.edu
 ngc7538                         kgolap aoc.nrao.edu
-ori_ch3oh_regression            kana.sugi nao.ac.jp
 ori_ch3oh_task_regression       kana.sugi nao.ac.jp
-ori_hc3n_regression             kana.sugi nao.ac.jp
 ori_hc3n_task_regression        kana.sugi nao.ac.jp
-ori_sio_regression              kana.sugi nao.ac.jp
 ori_sio_task_regression         kana.sugi nao.ac.jp
 orionmos4sim                    rreid nrao.edu
 orionmosaic                     kgolap aoc.nrao.edu
