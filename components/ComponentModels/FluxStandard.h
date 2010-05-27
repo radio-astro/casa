@@ -89,7 +89,11 @@ class FluxStandard
     PERLEY_TAYLOR_99,
 
     // Baars scale
-    BAARS};
+    BAARS,
+
+    // Perley-Butler 2010 Scale (using VLA [not EVLA!] data)
+    PERLEY_BUTLER_2010
+  };
 
   // Default constructor, and destructor
   FluxStandard (FluxStandard::FluxScale scale = 
