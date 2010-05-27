@@ -76,7 +76,7 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
   Quantity mvfreq = mfreq.get ("MHz");
   // Flux density polynomials expressed in terms of log_10 (f/MHz)
   Double dt = log10 (mvfreq.getValue());
-  // Perley_Taylor 1999.2 coefficients are for GHz
+  // Perley_Taylor 1999.2 & Perley_Butler_2010 coefficients are for GHz
   Double dt3 = dt - 3.0;
 
   // Select on the source name
@@ -103,6 +103,10 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
     };
     case PERLEY_TAYLOR_99: {
       fluxCoeff =1.23734 + dt3 * (-0.43276 + dt3 * (-0.14223 + dt3 * 0.00345));
+      break;
+    };
+    case PERLEY_BUTLER_2010: {
+      fluxCoeff =1.2361 + dt3 * (-0.4127 + dt3 * (-0.1864 + dt3 * 0.0294));
       break;
     };
     };
@@ -132,6 +136,10 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
       fluxCoeff =1.31752 + dt3 * (-0.74090 + dt3 * (-0.16708 + dt3 * 0.01525));
       break;
     };
+    case PERLEY_BUTLER_2010: {
+      fluxCoeff =1.3197 + dt3 * (-0.7253 + dt3 * (-0.2023 + dt3 * 0.0540));
+      break;
+    };
     };
 
     // *** 3C147 ***
@@ -157,6 +165,10 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
     };
     case PERLEY_TAYLOR_99: {
       fluxCoeff =1.44856 + dt3 * (-0.67252 + dt3 * (-0.21124 + dt3 * 0.04077));
+      break;
+    };
+    case PERLEY_BUTLER_2010: {
+      fluxCoeff =1.4428 + dt3 * (-0.6300 + dt3 * (-0.3142 + dt3 * 0.1032));
       break;
     };
     };
@@ -186,6 +198,10 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
       fluxCoeff =1.00761 + dt3 * (-0.55629 + dt3 * (-0.11134 + dt3 * -0.0146));
       break;
     };
+    case PERLEY_BUTLER_2010: {
+      fluxCoeff =1.0053 + dt3 * (-0.4384 + dt3 * (-0.1855 + dt3 * 0.0511));
+      break;
+    };
     };
 
     // *** 1934-638 ***
@@ -207,7 +223,8 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
       fluxCoeff = -30.7667 + dt * (26.4908 + dt * (-7.0977 + dt * 0.605334));
       break;
     };
-    case PERLEY_TAYLOR_99: {
+    case PERLEY_TAYLOR_99: 
+    case PERLEY_BUTLER_2010: {
       if (dt<=4) 
         fluxCoeff = -30.7667 + dt * (26.4908 + dt * (-7.0977 + dt * 0.605334));
       else
@@ -239,6 +256,27 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
     };
     case PERLEY_TAYLOR_99: {
       fluxCoeff = 1.46744 + dt3 * (-0.7735 + dt3 * (-0.25912 + dt3 * 0.00752));
+      break;
+    };
+    case PERLEY_BUTLER_2010: {
+      fluxCoeff = 1.4605 + dt3 * (-0.7043 + dt3 * (-0.3951 + dt3 * 0.0815));
+      break;
+    };
+    };
+
+
+  } else if (sourceName.contains("3C196") || sourceName.contains("0809+483")
+	     || sourceName.contains("0813+482")
+             || sourceName.contains("J0813+4813")) { // Jhhmm+ddmm, CAS-2020
+
+    found = True;
+    switch (itsFluxScale) {
+    case PERLEY_BUTLER_2010: {
+      fluxCoeff = 1.2753 + dt3 * (-0.7971 + dt3 * (-0.2255 + dt3 * 0.0380));
+      break;
+    };
+    default: {
+      fluxCoeff = 1.2753 + dt3 * (-0.7971 + dt3 * (-0.2255 + dt3 * 0.0380));
       break;
     };
     };
@@ -275,6 +313,7 @@ Bool FluxStandard::matchStandard (const String& name,
 //
   // Set default enum
   stdEnum = FluxStandard::PERLEY_TAYLOR_99;
+  //  stdEnum = FluxStandard::PERLEY_BUTLER_2010;   // Not yet!
 
   // Local lowercase copy of input string
   String lname = name;
@@ -297,6 +336,11 @@ Bool FluxStandard::matchStandard (const String& name,
   else if (lname.contains("perley") && lname.contains("taylor") &&
       (lname.contains("99") || lname.contains("1999"))) {
     stdEnum = FluxStandard::PERLEY_TAYLOR_99;
+  }
+  // Perley-Butler (2010)
+  else if (lname.contains("perley") && lname.contains("butler") &&
+      (lname.contains("10") || lname.contains("2010"))) {
+    stdEnum = FluxStandard::PERLEY_BUTLER_2010;
   }
   // Baars
   else if (lname.contains("baars")) {
@@ -340,6 +384,10 @@ String FluxStandard::standardName (const FluxStandard::FluxScale& stdEnum)
   };
   case PERLEY_TAYLOR_99: {
     stdName = "Perley-Taylor 99";
+    break;
+  };
+  case PERLEY_BUTLER_2010: {
+    stdName = "Perley-Butler 2010";
     break;
   };
   };
