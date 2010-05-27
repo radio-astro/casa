@@ -703,7 +703,7 @@ protected:
   static Bool regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imagreg, const Float& value=1.0);
 
   //set the mosaic ft machine and right convolution function
-  virtual void setMosaicFTMachine(); 
+  virtual void setMosaicFTMachine(Bool useDoublePrec=False); 
  
   ComponentList* componentList_p;
 
