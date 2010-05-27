@@ -363,6 +363,21 @@ class Imager
 	     const Vector<String>& residual,
 	     const Vector<String>& psf=Vector<String>(0),
              const Bool firstrun=true);
+
+  Bool iClean(const String& algorithm, 
+	      const Int niter, 
+	      const Double gain,
+	      //const String& threshold, 
+	      const Quantity& threshold,
+	      const Bool displayprogress,
+	      const Vector<String>& model,
+	      const Vector<Bool>& keepfixed, const String& complist,
+	      const Vector<String>& mask,
+	      const Vector<String>& image,
+	      const Vector<String>& residual,
+	      const Vector<String>& psfnames,
+	      const Bool interactive, const Int npercycle,
+	      const String& masktemplate, const Bool async);
   
   // MEM algorithm
   Bool mem(const String& algorithm,
@@ -688,7 +703,7 @@ protected:
   static Bool regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imagreg, const Float& value=1.0);
 
   //set the mosaic ft machine and right convolution function
-  virtual void setMosaicFTMachine(); 
+  virtual void setMosaicFTMachine(Bool useDoublePrec=False); 
  
   ComponentList* componentList_p;
 

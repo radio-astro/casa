@@ -37,6 +37,16 @@ if os.path.isdir(pymodules_dir) and pymodules_dir not in sys.path:
 ## watchdog... which is *not* in the casapy process group
 ##
 if os.fork( ) == 0 :
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    ## close standard input to avoid terminal interrupts
+    sys.stdin.close( )
+    sys.stdout.close( )
+    sys.stderr.close( )
+    os.close(0)
+    os.close(1)
+    os.close(2)
     ppid = os.getppid( )
     while True :
         try:
@@ -213,6 +223,11 @@ if os.uname()[0] == 'Linux' :
 
         if os.fork( ) == 0 :
             os.close(r)
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
+            ## close standard input to avoid terminal interrupts
+            sys.stdin.close( )
+            os.close(0)
             args = [ 'casa-dbus-daemon' ]
             args = args + ['--print-address', str(w)]
             if dbus_conf is not None and os.path.exists(dbus_conf) :

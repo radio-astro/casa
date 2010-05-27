@@ -61,6 +61,8 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
+      <value>wt</value>
+      <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
       <value>elevation</value>
@@ -113,6 +115,8 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
+      <value>wt</value>
+      <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
       <value>elevation</value>
@@ -535,6 +539,8 @@ Constraints
       <equals value="w"/>
       <equals value="velocity"/>
        <equals value="vel"/>
+      <equals value="wt"/>
+      <equals value="imwt"/>
       <equals value="flag"/>
       <equals value="azimuth"/>
       <equals value="elevation"/>
@@ -600,6 +606,8 @@ Constraints
       <equals value="w"/>
       <equals value="velocity"/>
        <equals value="vel"/>
+      <equals value="wt"/>
+      <equals value="imwt"/>
       <equals value="flag"/>
       <equals value="azimuth"/>
       <equals value="elevation"/>

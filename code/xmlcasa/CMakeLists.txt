@@ -189,6 +189,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_imregrid.py
   scripts/task_imsmooth.py
   scripts/task_imstat.py
+  scripts/task_imtrans.py
   scripts/task_imval.py
   scripts/taskinit.py
   scripts/task_listcal.py
@@ -294,6 +295,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/imregrid.xml
   tasks/imsmooth.xml
   tasks/imstat.xml
+  tasks/imtrans.xml
   tasks/imval.xml
   tasks/listcal.xml
   tasks/listhistory.xml

@@ -187,7 +187,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
   } else {
     progress_p = 0;
   }
-
+  Bool lastCycleWriteModel=False;
   while((absmax>=threshold())&& (maxIterations<numberIterations()) &&!stop) {
 
     os << LogIO::NORMAL << "*** Starting major cycle " << cycle + 1 
@@ -235,6 +235,8 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
       os << LogIO::NORMAL         // Loglevel INFO
          << "Reached stopping peak residual = " << absmax << LogIO::POST;
       stop=True;
+      if(cycle >1)
+	lastCycleWriteModel=True;
     }
     else {
       if(oldmax < absmax){
@@ -411,7 +413,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
   if (progress_p) delete progress_p;
   
   
-  if(modified_p) {
+  if(modified_p || lastCycleWriteModel) {
     os << LogIO::NORMAL    // Loglevel INFO
        << LatticeExprNode(sum(image(0))).getFloat() 
        << " Jy is the sum of the clean components " << LogIO::POST;

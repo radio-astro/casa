@@ -2318,7 +2318,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  Bool first =True;
 	  uInt nchn = 0;
 	  uInt lastchan = 0;
-	  for (uInt j=0 ; j < nchanvec(curspwid); j++) {
+	  for (uInt j=0 ; j < uInt(nchanvec(curspwid)); j++) {
 	    if (spwchansels_p(0,curspwid,j)==1) {
 	      if (first) {
 		dataStart_p[k]=j;
@@ -2340,8 +2340,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  //Since msselet will be applied to the data before flags from spwchansels_p
 	  //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
 	  //for (uInt j=0  ; j < nchanvec(k)-dataStart_p[k]; j++){
-	  for (uInt j=0  ; j < nchanvec(curspwid); j++){
-	    if (j<nchanvec(curspwid)-dataStart_p[k]) {
+	  for (uInt j=0  ; j < uInt(nchanvec(curspwid)); j++){
+	    if ( Int(j) < nchanvec(curspwid)-dataStart_p[k]) {
 	      spwchansels_tmp(0,curspwid,j) = spwchansels_p(0,curspwid,j+dataStart_p[k]);
 	    }
 	    else {
@@ -7707,7 +7707,7 @@ Bool Imager::createFTMachine()
   else if(ftmachine_p=="mosaic") {
     os << LogIO::NORMAL << "Performing mosaic gridding" << LogIO::POST; // Loglevel PROGRESS
    
-    setMosaicFTMachine();
+    setMosaicFTMachine(useDoublePrecGrid);
 
     // VisIter& vi(vs_p->iter());
     //   vi.setRowBlocking(100);
@@ -9453,7 +9453,7 @@ void Imager::savePSF(const Vector<String>& psf){
 
 }
 
-void Imager::setMosaicFTMachine(){
+void Imager::setMosaicFTMachine(Bool useDoublePrec){
   LogIO os(LogOrigin("Imager", "setmosaicftmachine", WHERE));
   ROMSColumns msc(*ms_p);
   String telescop=msc.observation().telescopeName()(0);
@@ -9478,7 +9478,10 @@ void Imager::setMosaicFTMachine(){
     } 
     gvp_p->setThreshold(minPB_p);
   }
-  ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
+  
+  ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True, 
+		      useDoublePrec);
+
   if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
      || (kpb==PBMath::ALMA)){
     os << LogIO::NORMAL // Loglevel INFO
@@ -9489,5 +9492,182 @@ void Imager::setMosaicFTMachine(){
   }
   
 }
+
+  Bool Imager::iClean(const String& algorithm, const Int niter, const Double gain,
+		      //		      const String& threshold, 
+		      const Quantity& threshold,
+		      const Bool displayprogress,
+		      const Vector<String>& model,
+		      const Vector<Bool>& keepfixed, const String& complist,
+		      const Vector<String>& mask,
+		      const Vector<String>& image,
+		      const Vector<String>& residual,
+		      const Vector<String>& psfnames,
+		      const Bool interactive, const Int npercycle,
+		      const String& masktemplate, const Bool async)
+  {
+    Bool rstat(False);
+    QuantumHolder qhThreshold;
+    String qhError;
+      
+    logSink_p.clearLocally();
+    LogIO os(LogOrigin("imager", "setimage()"), logSink_p);
+
+    if(!ms_p.null()) {
+      //    if(hasValidMS_p){
+      try {
+	// if (!qhThreshold.fromString(qhError,threshold))
+	//   os << qhError << LogIO::EXCEPTION;
+
+	//	Vector<String> amodel(toVectorString(model));
+	Vector<String> amodel(model);
+	Vector<Bool>   fixed(keepfixed);
+	//	Vector<String> amask(toVectorString(mask));
+	Vector<String> amask(mask);
+	//	Vector<String> aimage(toVectorString(image));
+	Vector<String> aimage(image);
+	//	Vector<String> aresidual(toVectorString(residual));
+	Vector<String> aresidual(residual);
+	//	Vector<String> apsf(toVectorString(psfnames));
+	Vector<String> apsf(psfnames);
+	if( (apsf.nelements()==1) && apsf[0]==String(""))
+	  apsf.resize();
+	if(!interactive){
+	  rstat = clean(String(algorithm), niter, gain, 
+			//			qhThreshold.asQuantity(), displayprogress, 
+			threshold, displayprogress, 
+			amodel, fixed, String(complist), amask,  
+			aimage, aresidual, apsf);
+	}
+	else{
+	  /*if(amodel.nelements() > 1){
+	    throw(AipsError("Interactive clean in multifield mode is not supported yet"));
+	    }
+	  */
+	  if((amask.nelements()==0) || (amask[0]==String(""))){
+	    amask.resize(amodel.nelements());
+	    for (uInt k=0; k < amask.nelements(); ++k){
+	      amask[k]=amodel[k]+String(".mask");
+	    }
+	  }
+	  Vector<Bool> nointerac(amodel.nelements());
+	  nointerac.set(False);
+	  if(fixed.nelements() != amodel.nelements()){
+	    fixed.resize(amodel.nelements());
+	    fixed.set(False);
+	  }
+	  Bool forceReload=True;
+	  Int nloop=0;
+	  if(npercycle != 0)
+	    nloop=niter/npercycle;
+	  Int continter=0;
+	  Int elniter=npercycle;
+	  ostringstream oos;
+	  //	  qhThreshold.asQuantity().print(oos);
+	  threshold.print(oos);
+	  String thresh=String(oos);
+	  if(String(masktemplate) != String("")){
+	    continter=interactivemask(masktemplate, amask[0], 
+						 elniter, nloop, thresh);
+	  }
+	  else {
+	    // do a zero component clean to get started
+	    clean(String(algorithm), 0, gain, 
+		  //			     qhThreshold.asQuantity(), displayprogress,
+		  threshold, displayprogress,
+		  amodel, fixed, String(complist), amask,  
+		  aimage, aresidual, Vector<String>(0), false);
+	    for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
+		PagedImage<Float> rest(aimage[nIm]);
+		PagedImage<Float> resi(aresidual[nIm]);
+		copyMask(resi, rest, "mask0");
+	      }
+	      forceReload=forceReload || (aresidual.nelements() >1);
+	      continter=interactivemask(aresidual[nIm], amask[nIm], 
+						   elniter, nloop,thresh, forceReload);
+	      forceReload=False;
+	      if(continter>=1)
+		nointerac(nIm)=True;
+	      if(continter==2)
+		fixed(nIm)=True;
+	      
+	    }
+	    if(allEQ(nointerac, True)){
+	      elniter=niter;
+	      //make it do one more loop/clean but with all niter 
+	      nloop=1;
+	    }
+	  }
+	  for (Int k=0; k < nloop; ++k){
+	    
+	    casa::Quantity thrsh;
+	    if(!casa::Quantity::read(thrsh, thresh)){
+	      os << LogIO::WARN << "Error interpreting threshold" 
+		      << LogIO::POST;
+	      thrsh=casa::Quantity(0, "Jy");
+	      thresh="0.0Jy";
+	    }
+	    Vector<String> elpsf(0);
+	    //Need to save psfs in interactive only once and lets do it the 
+	    //first time
+	    if(k==0)
+	      elpsf=apsf;
+	    if(anyEQ(fixed, False)){
+	      rstat = clean(String(algorithm), elniter, gain, 
+			    thrsh, 
+			    displayprogress,
+			    amodel, fixed, String(complist), 
+			    amask,  
+			    aimage, aresidual, elpsf, k == 0);
+	      //if clean converged... equivalent to stop
+	      if(rstat){
+		continter=2;
+		fixed.set(True);
+	      }
+	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
+		Int remainloop=nloop-k-1;
+		for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+		  if(!nointerac(nIm)){
+		    continter=interactivemask(aresidual[nIm], amask[nIm],
+					      
+					      elniter, remainloop, 
+					      thresh, (aresidual.nelements() >1));
+		    if(continter>=1)
+		      nointerac(nIm)=True;
+		    if(continter==2)
+		      fixed(nIm)=True;
+		  }
+		}
+		k=nloop-remainloop-1;
+		if(allEQ(nointerac,True)){
+		  elniter=niter-(k+1)*npercycle;
+		  //make it do one more loop/clean but with remaining niter 
+		  k=nloop-2;
+		}
+	      } 
+	    }
+	  }
+	  //Unset the mask in the residual 
+	  // Cause as requested in CAS-1768...
+	  for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+	    if(Table::isWritable(aresidual[nIm]) ){
+	      PagedImage<Float> resi(aresidual[nIm]);
+	      if(resi.hasRegion("mask0", RegionHandler::Masks)){
+		resi.setDefaultMask("");
+	      }
+	    }
+	  }
+	}
+      } catch  (AipsError x) {
+	os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	RETHROW(x);
+      }
+    } else {
+      os << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+    }
+    return rstat;
+  }
+
 } //# NAMESPACE CASA - END
 

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface for imtrans          -->
+<!--                                                          -->
+
+<task type="function" name="imtrans" category="image analysis">
+
+<shortdescription>Reorder image axes</shortdescription>
+
+<input>
+    <param type="string" name="imagename" mustexist="true">
+    	<description>Name of the input image</description>
+    	<value/>
+        <example>imagenam='ngc5921.im'</example>
+    </param>
+
+    <param type="string" name="outfile">
+        <description>Name of output CASA image.</description>
+        <value/>
+        <example>outfile='reordered.im'</example>
+    </param>
+
+    <param type="string" name="order">
+        <description>New zero-based axes order.</description>
+        <value/>
+        <example>order="120"</example>
+    </param>
+
+
+</input>
+<returns type="image"/>
+
+<example>
+PARAMETER SUMMARY
+imagename        Name of the input image
+outfile          Name of output CASA image
+order            Output zero-based axes order
+
+The task imtrans transposes an image (both pixel values and coordinate
+axes) to the specified new axes order. The order parameter describes the
+mapping of the input axes to the output axes. It contains zero-based
+digits describing the new order of the input axes. It must contain the
+same number of (unique) digits as the number of input axes. For example,
+specifying reorder="1032" for a four axes image maps input axes 0, 1, 2,
+3 to output axes 1, 0, 3, 2. Because of ambiguity for axes numbers greater
+than nine, this method cannot currently handle images containing more
+than 10 axes. The task returns an image analysis tool attached to the
+new image.
+
+EXAMPLE: 
+# Swap the stokes and spectral axes in an RA-Dec-Stokes-Frequency image
+imagename = "myim.im"
+outfile = "outim.im"
+order = "0132"
+
+</example>
+
+</task>
+
+</casaxml>

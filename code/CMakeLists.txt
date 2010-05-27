@@ -93,10 +93,12 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 # Set compiler flags.
 # 
 if( APPLE )
+    set( CMAKE_Fortran_FLAGS -fno-second-underscore )
+
     if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
         set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
-      elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )
+      elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )        
         set( casa_packages /opt/casa/core2-apple-darwin10 )
         set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch i386" )
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch i386" )
@@ -105,7 +107,6 @@ if( APPLE )
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     set( arch darwin )
     set( DEFAULT_CXX_FLAGS
       "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks"
@@ -423,7 +424,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.9
+           VERSION 1.0.10
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK

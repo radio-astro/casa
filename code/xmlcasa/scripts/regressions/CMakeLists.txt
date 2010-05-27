@@ -22,7 +22,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   3c129_tutorial_regression.py
   3C219D_regression.py
   accum_regression.py
-  asdmv1-import_regression.py
+  asdm-imexport+analysis_regression.py
   async-segfault_regression.py
   b0319_regression.py
   b1608_demo_regression.py

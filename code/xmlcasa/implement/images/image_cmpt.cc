@@ -59,6 +59,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
 #include <images/Images/ImageRegrid.h>
+#include <images/Images/ImageReorderer.h>
 #include <images/Images/ImageSourceFinder.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageSummary.h>
@@ -1272,6 +1273,23 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
   }
   return rstat;
 }
+
+::casac::image * image::reorder(const std::string& outfile, const std::string& order) {
+	::casac::image *outImage = 0;
+	try {
+		*itsLog << LogOrigin("image", "reorder");
+		if (detached()) {
+			return 0;
+		}
+		ImageReorderer reorderer(itsImage->name(), order, outfile);
+		outImage = new ::casac::image(reorderer.reorder());
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+	return outImage;
+}
+
 
 
 ::casac::record* image::fitcomponents(

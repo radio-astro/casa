@@ -13,6 +13,13 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 
 	"""
 	#Python script
+	#Origninator: Steven T. Myers
+	#Written (3.0.1) STM 2010-03-11 modify importasdm to include flagging from xml
+	#Vers1.0 (3.0.1) STM 2010-03-16 add tbuff argument
+	#Vers2.0 (3.0.1) STM 2010-03-29 minor improvements
+	#Vers3.0 (3.0.2) STM 2010-04-13 add flagzero, doshadow
+	#Vers4.0 (3.0.2) STM 2010-04-20 add flagpol
+	#Vers5.0 (3.0.2) STM 2010-05-27 combine flagzero clips
 	try:
                 casalog.origin('importevla')
 		viso = ''
@@ -189,12 +196,11 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		   # from flagdata to vectorize the flagging commands
 		   print 'Flagging low-amplitude points, using clip level ',cliplevel
 		   casalog.post('Flagging low-amplitude points, using clip level '+str(cliplevel))
-		   flagdata(vis=viso,mode='manualflag',clipexpr='ABS RR',clipoutside=False,clipminmax=[0.0,cliplevel])
-		   flagdata(vis=viso,mode='manualflag',clipexpr='ABS LL',clipoutside=False,clipminmax=[0.0,cliplevel])
 		   if (flagpol):
-		      flagdata(vis=viso,mode='manualflag',clipexpr='ABS RL',clipoutside=False,clipminmax=[0.0,cliplevel])
-		      flagdata(vis=viso,mode='manualflag',clipexpr='ABS LR',clipoutside=False,clipminmax=[0.0,cliplevel])
-
+		      flagdata(vis=viso,mode='manualflag',clipexpr=['ABS RR','ABS RL','ABS LR','ABS LL'],clipoutside=False,clipminmax=[0.0,cliplevel])
+		   else:
+		      flagdata(vis=viso,mode='manualflag',clipexpr=['ABS RR','ABS LL'],clipoutside=False,clipminmax=[0.0,cliplevel])
+		
 		if shadow:
 		   # flag shadowed data
 		   # NOTE: should not call a task from within a task but
