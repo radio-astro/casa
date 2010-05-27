@@ -115,6 +115,7 @@ public:
 	      ANTENNA1,ANTENNA2,BASELINE,
 	      UVDIST,UVDIST_L,U,V,W,
 	      AMP,PHASE,REAL,IMAG,FLAG,
+	      WT,IMWT,
 	      AZ0,EL0,HA0,PA0,
 	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
 	      ROW,FLAG_ROW)
@@ -129,6 +130,7 @@ public:
 	      "Antenna1","Antenna2","Baseline",
 	      "UVDist","UVDist_L","U","V","W",
 	      "Amp","Phase","Real","Imag","Flag",
+	      "Wt","ImWt",
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAng",
 	      "Row","FlagRow")
