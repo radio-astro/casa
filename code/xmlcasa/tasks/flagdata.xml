@@ -526,9 +526,9 @@
 
         -- Vector mode --
 
-        For reasons of performance (to reduce the number loops through the MS),
-        several flagdata task invocations can be combined into a single
-        flagdata() run by giving vectors of parameters. 
+        For reasons of performance (in order to reduce the number loops through
+        the MS), several flagdata task invocations can be combined into a single
+        flagdata() run by giving vectors of parameters.
 
         This is possible for the modes 'manualflag' and 'quack', only.
 
@@ -556,6 +556,17 @@
             flagdata()
 
         Note that field='3' is equivalent to field=['3','3','3']
+
+
+        Another example of vector mode is
+
+            vis = 'my.ms'
+            mode = 'manualflag'
+            clipminmax = [0.0, 0.7]
+            clipexpr = ['ABS RR', 'ABS LL', 'ABS LR']
+
+        which will flag all data where either of the clipping expressions
+        (ABS RR, ABS LL or ABS LR) is outside the clipping range.
  </example>
  </task>
  </casaxml>
