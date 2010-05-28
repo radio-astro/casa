@@ -165,6 +165,34 @@ Vector<Int>& ROVisIterator::chanIds(Vector<Int>& chanids, Int spw) const
   return chanids;
 }
 
+void ROVisIterator::setSelTable()
+{
+    ROVisibilityIterator::setSelTable();
+
+    // The following code (which uses Table::operator() to create
+    // a new RefTable) is computationally expensive. This could
+    // be optimized by using the same method as in the
+    // VisibilityIterator base class (which is to not create
+    // RefTables but instead access the table column directly in
+    // msIter_p.table() using VisibilityIterator::selRows_p).
+
+    // Doing so would mean replacing calls like
+    //     colSigma.getColumn(newWtSlicer_p,sigmat,True);
+    // with
+    //     colSigma.getColumnCells(selRows_p,newWtSlicer_p,sigmat,True);
+    //
+    // However the ArrayColumn class does allow passing both a 
+    // Vector<Vector<Slice> > and a RefRows parameter to get-/putColumn.
+    // A solution may be to combine selRows_p and newWtSlicer_p
+    // to a single object of appropriate type, which can be passed to
+    // ArrayColumn::getColumn
+
+    Vector<uInt> rows(curNumRow_p);
+    indgen(rows,uInt(curStartRow_p));
+    selTable_p=msIter_p.table()(rows);
+    this->attachColumns();
+}
+
 
 // Return native correlation _indices_
 Vector<Int>& ROVisIterator::corrIds(Vector<Int>& corrids) const
@@ -494,6 +522,7 @@ VisIterator::operator=(const VisIterator& other)
 {
     if (this!=&other) {
 	ROVisIterator::operator=(other);
+        selTable_p=other.selTable_p;
 	RWcolFlag.reference(other.RWcolFlag);
         RWcolFlagRow.reference(other.RWcolFlagRow);
 	RWcolVis.reference(other.RWcolVis);
@@ -528,7 +557,7 @@ void VisIterator::attachColumns()
   //todo: should cache this (update once per ms)
   const ColumnDescSet& cds=selTable_p.tableDesc().columnDescSet();
   if (cds.isDefined(MS::columnName(MS::DATA))) {
-    RWcolVis.attach(selTable_p,MS::columnName(MS::DATA));
+      RWcolVis.attach(selTable_p,MS::columnName(MS::DATA));
   };
   if (cds.isDefined(MS::columnName(MS::FLOAT_DATA))) {
     floatDataFound_p=True;
@@ -643,8 +672,12 @@ void VisIterator::putDataColumn(DataColumn whichOne,
   };
 };  
 
-
-
+Vector<uInt>& ROVisIterator::rowIds(Vector<uInt>& rowids) const
+{
+  rowids.resize(curNumRow_p);
+  rowids=selTable_p.rowNumbers();
+  return rowids;
+}
 
 
 
