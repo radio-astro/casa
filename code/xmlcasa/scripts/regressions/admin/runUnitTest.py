@@ -28,10 +28,21 @@ import unittest
 import string
 import re
 import shutil
-sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
+import nose
+CASA_DIR = os.environ["CASAPATH"].split()[0]
+UTILS_DIR = CASA_DIR+'/code/xmlcasa/scripts/regressions/admin/'
+if not os.access(UTILS_DIR, os.F_OK):
+    if os.access(CASA_DIR+'/lib64', os.F_OK):
+        UTILS_DIR = CASA_DIR+'/lib64/python2.5/tests/admin'
+    elif os.access(CASA_DIR+'/lib', os.F_OK):
+        UTILS_DIR = CASA_DIR+'/lib/python2.5/tests/admin'
+    else:            #Mac release
+        UTILS_DIR = CASA_DIR+'/Resources/python/regressions/admin'        
+
+sys.path.append(UTILS_DIR)
+
 import testwrapper
 from testwrapper import *
-import nose
 
 
 # List of tests to run
