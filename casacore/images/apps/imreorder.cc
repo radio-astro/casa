@@ -41,7 +41,14 @@ Int main(Int argc, char *argv[]) {
 	String imagename = input.getString("imagename");
 	String order = input.getString("order");
 	String output = input.getString("output");
-	ImageReorderer reorderer(imagename, order, output);
+	Regex intRegex("^[0-9]+$");
+	Vector<String> orderVec;
+	if (! order.matches(intRegex)) {
+		orderVec = stringToVector(order);
+	}
+	ImageReorderer reorderer = orderVec.size() == 0
+			? ImageReorderer(imagename, order, output)
+			: ImageReorderer(imagename, orderVec, output);
 	reorderer.reorder();
     return 0;
 }
