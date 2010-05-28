@@ -48,7 +48,7 @@
 #                      exportuvfits  ------>  ngc5921.split.uvfits           #
 #                            |                                               #
 #                            v                                               #
-#                        uvcontsub2   ------>  ngc5921.ms.cont +              #
+#                        uvcontsub2   ------>  ngc5921.ms.cont +             #
 #                            |                ngc5921.ms.contsub             #
 #                            v                                               #
 #                         listvis    ------>  ngc5921.listvis.out            #
@@ -91,6 +91,8 @@
 # Updated      RRusk 2007-11-08 Added some test template info                #
 # Updated      RRusk 2007-11-08 More teplate info                            #
 # Updated  JCrossley 2008-09-17 Added listvis and listcal tests              #
+# Converted by RReid 2010-01-31 from ngc5921_regression.py                   #
+# Updated      RReid 2010-05-25 Made listvis use uvcontsub2 output           #
 ##############################################################################
 
 import os
@@ -716,18 +718,10 @@ want_cont = True
 uvcontsub2()
 
 # You will see it made two new MS:
-# ngc5921.ms.cont
-# ngc5921.ms.contsub
+# ngc5921.ms.cont         (Continuum estimate)
+# ngc5921.ms.contsub      (Continuum subtracted)
 
 srcsplitms = msfile + '.contsub'
-
-# Note that ngc5921.ms.contsub contains the uv-subtracted
-# visibilities (in its DATA column), and ngc5921.ms.cont
-# the pseudo-continuum visibilities (as fit).
-
-# The original ngc5921.ms now contains the uv-continuum
-# subtracted vis in its CORRECTED_DATA column and the continuum
-# in its MODEL_DATA column as per the fitmode='subtract'
 
 # Record continuum subtraction time
 if benchmarking:
@@ -741,8 +735,8 @@ print '--Listvis--'
 listvisOut = prefix + '.listvis.out'
 
 default('listvis')
-vis = msfile
-datacolumn = 'corrected'
+vis = srcsplitms
+datacolumn = 'corrected'  # change to 'data' when uvcontsub2 changes.
 selectdata=True
 antenna='VA03&VA04'
 listfile = listvisOut
@@ -755,8 +749,8 @@ if benchmarking:
     listvistime = time.time()
 
 # Test the listvis output
-print "Comparing listvis corrected data output with repository standard..."
-standardOut = pathname+'/data/regression/ngc5921/listvis.ant34.out'
+print "Comparing continuum subtracted listvis output with repository standard..."
+standardOut = pathname+'/data/regression/ngc5921/listvis.ant34.contsub.out'
 passlistvis = True
 
 # Test metadata
