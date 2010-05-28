@@ -215,6 +215,7 @@ public:
   void set( uInt ichan, uInt ifr, uInt icorr, bool val) 
     { iter.set(ichan, ifr, icorr, val); }
 
+  // sets element for all (ichan, icorr)
   void set_column( uInt ifr, const T &val );
 
 // provides access to lattice itself  
