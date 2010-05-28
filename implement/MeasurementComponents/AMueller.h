@@ -55,6 +55,10 @@ public:
   //  (this is the key distinguishing characteristic)
   virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag2; };
 
+  // Local setsolve (overrides preavg)
+  using SolvableVisCal::setSolve;
+  virtual void setSolve(const Record& solvepar);
+
   // We do not normalize by the model, since we are estimating
   //  directly from the data  (we should optimize here by avoiding 
   //  the model I/O)
