@@ -165,8 +165,7 @@ FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType)
     msc_p(0)
 {
 
-  if (itsLog == 0)
-    itsLog = new LogIO();
+  itsLog = new LogIO();
   
   //
   // Get some things to remember.
@@ -2265,8 +2264,8 @@ void FITSIDItoMS1::fillAntennaTable()
      String myframe = btKeywords.asString("FRAME");
      myframe=myframe.before(trailing);
      if(myframe != frame){ // presently the only defined value is the default
-       cout << "Warning: FRAME keyword in ARRAY_GEOMETRY table has unrecognized value \"" 
-	    << myframe << "\", will assume GEOCENTRIC." << endl;
+       *itsLog << LogIO::WARN << "FRAME keyword in ARRAY_GEOMETRY table has unrecognized value \"" 
+	       << myframe << "\", will assume GEOCENTRIC." << LogIO::POST;
      }
    }
 
@@ -2312,13 +2311,15 @@ void FITSIDItoMS1::fillAntennaTable()
    ROScalarColumn<Int> stid(anTab,"NOSTA");
    ROScalarColumn<Int> mntid(anTab,"MNTSTA");
    ROArrayColumn<Float> offset(anTab,"STAXOF");
-   ROScalarColumn<Double> diam(anTab,"DIAMETER"); // this column is optional
-
+   ROScalarColumn<Double> diam;
+   if(anTab.tableDesc().isColumn("DIAMETER")){
+     diam.attach(anTab,"DIAMETER"); // this column is optional
+   }
    // All "VLBI" (==arrayXYZ<1000) requires y-axis reflection:
    //  (ATCA looks like "VLBI" in UVFITS, but is already correct)
    //Bool doVLBIRefl= ((array_p!="ATCA") && allLE(abs(arrayXYZ),1000.0));     
 
- // add antenna info to table (TT)
+	// add antenna info to table (TT)
    ant.setPositionRef(MPosition::ITRF);
    Int row=ms_p.antenna().nrow()-1;
    for (Int i=0; i<nAnt; i++) {
@@ -2396,7 +2397,16 @@ void FITSIDItoMS1::fillFeedTable() {
   //access fitsidi AN table
   Table anTab = oldfullTable("");
   ROScalarColumn<Double> time(anTab, "TIME");
-  ROScalarColumn<Float> timeint(anTab, "TIME_INTERVAL");
+  ROScalarColumn<Float> timeint;
+  ROScalarColumn<Double> timeintd;
+  try{
+    timeint.attach(anTab, "TIME_INTERVAL");
+  }
+  catch(AipsError){
+    timeintd.attach(anTab, "TIME_INTERVAL");
+    *itsLog << LogIO::NORMAL << "Note: this ANTENNA table uses double precision for TIME_INTERVAL. Convention is single."
+	    << LogIO::POST;
+  }    
   ROScalarColumn<String> name(anTab, "ANNAME");
   ROScalarColumn<Int> anNo(anTab, "ANTENNA_NO");
   ROScalarColumn<Int> array(anTab, "ARRAY");
@@ -2404,11 +2414,23 @@ void FITSIDItoMS1::fillFeedTable() {
   ROScalarColumn<Int> digLev(anTab, "NO_LEVELS");
   ROScalarColumn<String> poltya(anTab, "POLTYA");
   ROArrayColumn<Float> polaa(anTab, "POLAA");
-  ROArrayColumn<Float> polcala(anTab, "POLCALA");
+  ROArrayColumn<Float> polcala;
+  if(anTab.tableDesc().isColumn("POLCALA")){
+    polcala.attach(anTab, "POLCALA");
+  }
+  else{
+    *itsLog << LogIO::WARN << "POLCALA column is missing in ANTENNA table." << LogIO::POST;
+  }
   ROScalarColumn<String> poltyb(anTab, "POLTYB");
   ROArrayColumn<Float> polab(anTab, "POLAB");
-  ROArrayColumn<Float> polcalb(anTab, "POLCALB");
-  ROArrayColumn<Float> beamfwhm(anTab, "BEAMFWHM"); // this column is optional and there is presently
+  ROArrayColumn<Float> polcalb;
+  if(anTab.tableDesc().isColumn("POLCALB")){
+    polcalb.attach(anTab, "POLCALB");
+  }
+  else{
+    *itsLog << LogIO::WARN << "POLCALB column is missing in ANTENNA table." << LogIO::POST;
+  }
+  //  ROArrayColumn<Float> beamfwhm(anTab, "BEAMFWHM"); // this column is optional and there is presently
                                                     // no place this information in the MS
   Matrix<Complex> polResponse(2,2); 
   polResponse=0.; polResponse(0,0)=polResponse(1,1)=1.;
@@ -2446,7 +2468,12 @@ void FITSIDItoMS1::fillFeedTable() {
       msfc.antennaId().put(outRow,anNo(inRow)-1);
       msfc.beamId().put(outRow,-1);
       msfc.feedId().put(outRow,0);
-      msfc.interval().put(outRow,timeint(inRow)*C::day);
+      if(!timeint.isNull()){
+	msfc.interval().put(outRow,timeint(inRow)*C::day);
+      }
+      else{ // use the double version instead
+	msfc.interval().put(outRow,timeintd(inRow)*C::day);
+      }
      //    msfc.phasedFeedId().put(outRow,-1);
      //msfc.spectralWindowId().put(outRow,-1); // all
       msfc.spectralWindowId().put(outRow,inIF); 
@@ -2619,15 +2646,19 @@ void FITSIDItoMS1::fillFieldTable()
   Table suTab=oldfullTable("");
 
   //access the columns in source FITS-IDI subtable
-  ROScalarColumn<Int> *id;
-  ROScalarColumn<Int> deprecId(suTab,"ID_NO."); // deprecated for SOURCE_ID
-  ROScalarColumn<Int> normalId(suTab,"SOURCE_ID");
-  if(deprecId.isNull()){
-    id = &normalId;
+  ROScalarColumn<Int> id;
+  if(suTab.tableDesc().isColumn("SOURCE_ID")){
+    id.attach(suTab, "SOURCE_ID");
+  }
+  else if(suTab.tableDesc().isColumn("ID_NO.")){
+    *itsLog << LogIO::WARN << "No SOURCE_ID column in input SOURCE table. Using deprecated ID_NO column."
+	    << LogIO::POST;
+    id.attach(suTab, "ID_NO.");
   }
   else{
-    id = &deprecId;
+    throw(AipsError("No SOURCE_ID column in input SOURCE table."));
   }
+
   ROScalarColumn<String> name(suTab,"SOURCE");
   ROScalarColumn<Int> qual(suTab,"QUAL");
   ROScalarColumn<String> code(suTab,"CALCODE");
@@ -2637,11 +2668,17 @@ void FITSIDItoMS1::fillFieldTable()
   ROArrayColumn<Float> uflux(suTab,"UFLUX"); // U 
   ROArrayColumn<Float> vflux(suTab,"VFLUX"); // V 
   ROArrayColumn<Float> alpha(suTab,"ALPHA"); // sp. index  
-  ROArrayColumn<Double> foffset(suTab,"FREQOFF"); // fq. offset  
+  ROArrayColumn<Float> foffset(suTab,"FREQOFF"); // fq. offset  
   ROScalarColumn<Double> ra(suTab,"RAEPO");    //degrees
   ROScalarColumn<Double> dec(suTab,"DECEPO");  //degrees
-  ROScalarColumn<String> equinox(suTab,"EQUINOX"); // string
-  ROScalarColumn<Double> epoch(suTab,"EPOCH"); //years, alternative for equinox
+  ROScalarColumn<String> equinox;
+  ROScalarColumn<Double> epoch; //years, alternative for equinox
+  if(suTab.tableDesc().isColumn("EQUINOX")){
+    equinox.attach(suTab,"EQUINOX"); // string
+  }
+  else if(suTab.tableDesc().isColumn("EPOCH")){
+    epoch.attach(suTab,"EPOCH");
+  }
   ROScalarColumn<Double> raapp(suTab,"RAAPP");    //degrees
   ROScalarColumn<Double> decapp(suTab,"DECAPP");  //degrees
   ROArrayColumn<Double> sysvel(suTab,"SYSVEL"); // sys vel. (m/s)  
@@ -2672,11 +2709,11 @@ void FITSIDItoMS1::fillFieldTable()
   }    
   msc_p->setDirectionRef(epochRefZero);
   for (Int inRow=0; inRow<(Int)suTab.nrow(); inRow++) {
-    if ((*id)(inRow) < 1) {
+    if (id(inRow) < 1) {
       *itsLog << LogIO::WARN
 	      << "Input source id < 1, invalid source id!" << LogIO::POST;     
     }
-    Int fld = (*id)(inRow)-1;
+    Int fld = id(inRow)-1;
     // temp. fix for wrong source id in sma data
     if (fld == -2) fld = fld + 2 ; 
 
@@ -2831,6 +2868,7 @@ void FITSIDItoMS1::readFitsFile(const String& msFile)
 {
 
   *itsLog << LogOrigin("FitsIDItoMS()", "readFitsFile");
+
   Int nField=0, nSpW=0;
   
   String tmpPolTab;
