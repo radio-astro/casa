@@ -59,12 +59,16 @@ class ImageReorderer {
       // </srcblock>
       // </example>
 public:
+	ImageReorderer(const String& imagename, uInt order, const String& outputImage);
+
 	ImageReorderer(const String& imagename, const String& order, const String& outputImage);
+
+	ImageReorderer(const String& imagename, const Vector<String> order, const String& outputImage);
 
 	// destructor
 	~ImageReorderer();
 
-	// reorder the axes and write the output image
+	// reorder the axes and write the output image. Returns the associated PagedImage object.
 	PagedImage<Float>* reorder() const;
 
 private:
@@ -75,7 +79,15 @@ private:
 	// Do not allow use of default constuctor
 	ImageReorderer();
 
-	//void _construct(const String& imagename, const String& order) const;
+	void _construct(const String& imagename, const String& outfile);
+
+	IPosition _getOrder(uInt order) const;
+
+	IPosition _getOrder(const String& order) const;
+
+	IPosition _getOrder(Vector<String>& order) const;
+
+	void _downcase(Vector<String>& vec) const;
 };
 }
 
