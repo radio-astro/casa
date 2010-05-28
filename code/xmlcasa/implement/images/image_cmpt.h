@@ -165,7 +165,7 @@ class image
 
     ::casac::image * regrid(const std::string& outfile = "", const std::vector<int>& shape = std::vector<int> (1, -1), const ::casac::record& csys = ::casac::initialize_record(""), const std::vector<int>& axes = std::vector<int> (1, -1), const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const std::string& method = "linear", const int decimate = 10, const bool replicate = false, const bool doref = true, const bool dropdeg = false, const bool overwrite = false, const bool force = false, const bool async = false);
 
-    ::casac::image * reorder(const std::string& outfile = "", const std::string& order = "");
+    ::casac::image * reorder(const std::string& outfile = "", const variant& order = ::casac::initialize_variant(""));
 
     ::casac::image * rotate(const std::string& outfile = "", const std::vector<int>& shape = std::vector<int> (1, -1), const ::casac::variant& pa = ::casac::initialize_variant("0deg"), const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const std::string& method = "cubic", const int decimate = 0, const bool replicate = false, const bool dropdeg = false, const bool overwrite = false, const bool async = false);
 
