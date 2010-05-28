@@ -916,8 +916,8 @@ namespace casa {
 	  comma-separated expressions
 	  and loop here, creating multiple clipRecs. 
 	  The RFASelector will handle it. */
-	if (clipexpr.length() && cliprange.nelements()==2 &&
-	    cliprange[0]<cliprange[1])
+	if (clipexpr.length() && cliprange.nelements() == 2 &&
+	    cliprange[0] <= cliprange[1])
 	    {
 		RecordDesc flagDesc;       
 		if ( outside )
