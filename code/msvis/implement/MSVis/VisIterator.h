@@ -185,13 +185,7 @@ public:
   Int numberChan(Int spw) const;
   Int numberCorr(Int pol) const;
 
-  // Return the row ids as from the original root table. This is useful 
-  // to find correspondance between a given row in this iteration to the 
-  // original ms row
-  virtual Vector<uInt>& rowIds(Vector<uInt>& rowids) const; 
-
 protected:
-  virtual void setSelTable();
 
   // update the DATA slicer
   virtual void updateSlicer();
@@ -200,8 +194,6 @@ protected:
   using ROVisibilityIterator::getDataColumn;
   virtual void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, 
 			     Cube<Complex>& data) const;
-
-  Table selTable_p;
 
   // New slicer supports multiple Slices in channel and correlation
   Vector<Vector<Slice> > chanSlices_p, corrSlices_p, newSlicer_p, newWtSlicer_p;

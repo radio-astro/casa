@@ -407,7 +407,8 @@ public:
   // Return the row ids as from the original root table. This is useful 
   // to find correspondance between a given row in this iteration to the 
   // original ms row
-  virtual Vector<uInt>& rowIds(Vector<uInt>& rowids) const; 
+
+  Vector<uInt>& rowIds(Vector<uInt>& rowids) const; 
 
   // Return the numbers of rows in the current chunk
   Int nRowChunk() const;
@@ -518,7 +519,7 @@ protected:
   // advance the iteration
   void advance();
   // set the currently selected table
-  virtual void setSelTable();
+  void setSelTable();
   // set the iteration state
   void setState();
   // get the TOPO frequencies from the selected velocities and the obs. vel.
@@ -550,7 +551,7 @@ protected:
 
   ROVisibilityIterator* This;
   MSIter msIter_p;
-  RefRows selRows_p; // currently selected rows from msIter_p.table()
+  Table selTable_p; // currently selected set of rows from curTable
   Int curChanGroup_p, curNumChanGroup_p, channelGroupSize_p, 
       curNumRow_p, curTableNumRow_p, curStartRow_p, curEndRow_p,
       nChan_p, nPol_p, nRowBlocking_p;
