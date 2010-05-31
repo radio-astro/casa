@@ -1318,13 +1318,13 @@ void FITSIDItoMS1::convertMSKeywords()
 
 void FITSIDItoMS1::getAxisInfo()
 {
-  *itsLog << LogOrigin("FitsIDItoMSMSFitsInput", "getPrimaryGroupAxisInfo");
+  *itsLog << LogOrigin("FitsIDItoMS", "getAxisInfo");
   // Extracts the axis related info. from the MAXISn fields and 
   // returns them in the form of arrays.
   const Regex trailing(" *$"); // trailing blanks
   
   ConstFitsKeywordList& kwl = kwlist();
-
+  
   //
   // Get shape vector from MAXISn fields for UV_DATA extensions
   // Also, get associated CTYPEn CRPIXn CRVALn CDELTn values
@@ -1332,74 +1332,65 @@ void FITSIDItoMS1::getAxisInfo()
   String extname(FITSIDItoMS1::extname());
   extname = extname.before(trailing);
   Vector<Int> maxis(0);
-
-  if(extname=="UV_DATA") 
-    {
-      Int nAxis = 0;
-      uInt imaxis = 0;
-      uInt idx = 0;
-      Bool setMAXIS = False;
-      const FitsKeyword* kw;
-      String kwname;
-      kwl.first();
-
-
-      //while((kw = kwl.next())&& setMAXIS == False) 
-      while((kw = kwl.next())) 
-        {
-          kwname = kw->name();
-          //cout << "kwname1=" << kwname <<endl;
-          //cout << "kwname.length=" << kwname.length() <<endl;
-          //cout << "idx=" << idx <<endl;
-          if(kwname == "MAXIS") 
-            {
-              nAxis = kw->asInt();
-              cout << "nAxis=" << nAxis << endl;;
-              setMAXIS = True;
-            }
-         }
-      if (nAxis < 1) {
-      	cout << "Data has no axes!" << LogIO::EXCEPTION;
+  
+  if(extname=="UV_DATA"){
+    Int nAxis = 0;
+    uInt imaxis = 0;
+    uInt idx = 0;
+    Bool setMAXIS = False;
+    const FitsKeyword* kw;
+    String kwname;
+    kwl.first();
+    
+    
+    //while((kw = kwl.next())&& setMAXIS == False) 
+    while((kw = kwl.next())){
+      kwname = kw->name();
+      //cout << "kwname1=" << kwname <<endl;
+      //cout << "kwname.length=" << kwname.length() <<endl;
+      //cout << "idx=" << idx <<endl;
+      if(kwname == "MAXIS"){
+	nAxis = kw->asInt();
+	cout << "nAxis=" << nAxis << endl;;
+	setMAXIS = True;
       }
-      nPixel_p.resize(nAxis);
-      refVal_p.resize(nAxis);
-      refPix_p.resize(nAxis);
-      delta_p.resize(nAxis);
-      coordType_p.resize(nAxis);
-
-      kwl.first();
-      while((kw = kwl.next()))
-        {
-          kwname = kw->name();
-          idx = kw->index() - 1; 
-          //cout << "kwname=" << kwname <<endl;
-          // Note: MAXISn are non-reserved FITS keywords
-          // so 'n' does NOT recongnized as index. 
-          if(kwname.at(0,5)=="MAXIS" && kwname.length()>5)
-            { 
-	      nPixel_p(imaxis++)=kw->asInt();
-	    }
-           if(kwname.at(0,5)=="CTYPE")
-            { 
-              coordType_p(idx)=kw->asString(); 
-              coordType_p(idx)=coordType_p(idx).before(trailing);
-            }
-          else if(kwname.at(0,5)=="CDELT")
-            {    
-              delta_p(idx)=kw->asDouble();
-            }
-          else if(kwname.at(0,5)=="CRPIX")
-            {
-              refPix_p(idx)=kw->asDouble();
-            }
-          else if(kwname.at(0,5)=="CRVAL" ) 
-            {
-              refVal_p(idx)=kw->asDouble();
-            }
-          else 
-            {}
-	}
-
+    }
+    if (nAxis < 1) {
+      throw(AipsError( "UV_DATA has no axes!"));
+    }
+    nPixel_p.resize(nAxis);
+    refVal_p.resize(nAxis);
+    refPix_p.resize(nAxis);
+    delta_p.resize(nAxis);
+    coordType_p.resize(nAxis);
+    
+    kwl.first();
+    while((kw = kwl.next())){
+      kwname = kw->name();
+      idx = kw->index() - 1; 
+      //cout << "kwname=" << kwname <<endl;
+      // Note: MAXISn are non-reserved FITS keywords
+      // so 'n' does NOT recongnized as index. 
+      if(kwname.at(0,5)=="MAXIS" && kwname.length()>5){ 
+	nPixel_p(imaxis++)=kw->asInt();
+      }
+      if(kwname.at(0,5)=="CTYPE"){ 
+	coordType_p(idx)=kw->asString(); 
+	coordType_p(idx)=coordType_p(idx).before(trailing);
+      }
+      else if(kwname.at(0,5)=="CDELT"){    
+	delta_p(idx)=kw->asDouble();
+      }
+      else if(kwname.at(0,5)=="CRPIX"){
+	refPix_p(idx)=kw->asDouble();
+      }
+      else if(kwname.at(0,5)=="CRVAL" ){
+	refVal_p(idx)=kw->asDouble();
+      }
+      else 
+	{}
+    }
+    
 
     /**
       for(Int ctr=0;ctr<nAxis;ctr++)
@@ -1417,34 +1408,34 @@ void FITSIDItoMS1::getAxisInfo()
 	}
       **/
 
-      cout << "nPixel_p=" << nPixel_p << endl;
-      cout << "coordType_p=" << coordType_p << endl;
-      cout << "refVal_p=" << refVal_p << endl;
-      cout << "refPix_p=" << refPix_p << endl;
-      cout << "delta_p=" << delta_p << endl;
-    }
-
+    cout << "nPixel_p=" << nPixel_p << endl;
+    cout << "coordType_p=" << coordType_p << endl;
+    cout << "refVal_p=" << refVal_p << endl;
+    cout << "refPix_p=" << refPix_p << endl;
+    cout << "delta_p=" << delta_p << endl;
+  }
+  
   // Check if required axes are there
   if (getIndex(coordType_p, "COMPLEX") < 0) {
-    cout << "Data does not have a COMPLEX axis" << LogIO::EXCEPTION;
+    *itsLog << "Data does not have a COMPLEX axis" << LogIO::EXCEPTION;
   }
   if (getIndex(coordType_p, "STOKES") < 0) {
-    cout << "Data does not have a STOKES axis" << LogIO::EXCEPTION;
+    *itsLog << "Data does not have a STOKES axis" << LogIO::EXCEPTION;
   }
   if (getIndex(coordType_p, "FREQ") < 0) {
-    cout << "Data does not have a FREQ axis" << LogIO::EXCEPTION;
+    *itsLog << "Data does not have a FREQ axis" << LogIO::EXCEPTION;
   }
   if ((getIndex(coordType_p, "RA") < 0) && 
       (getIndex(coordType_p, "RA---SIN") < 0) && 
       (getIndex(coordType_p, "RA---NCP") < 0) && 
       (getIndex(coordType_p, "RA---SCP") < 0)) {
-    cout << "Data does not have a RA axis" << LogIO::EXCEPTION;
+    *itsLog << "Data does not have a RA axis" << LogIO::EXCEPTION;
   }
   if ((getIndex(coordType_p, "DEC") < 0) && 
       (getIndex(coordType_p, "DEC--SIN") < 0) && 
       (getIndex(coordType_p, "DEC--NCP") < 0) && 
       (getIndex(coordType_p, "DEC--SCP") < 0)) {
-    cout << "Data does not have a DEC axis" << LogIO::EXCEPTION;
+    *itsLog << "Data does not have a DEC axis" << LogIO::EXCEPTION;
   }
 
     
@@ -1515,7 +1506,7 @@ void FITSIDItoMS1::getAxisInfo()
       corrProduct_p(0,i) = receptor;
       cout << "corrProcut_p(0,"<< i <<")=" << corrProduct_p(0,i);
     } else {
-      cout << "Cannot deduce receptor 1 for correlations of type: " 
+      *itsLog << "Cannot deduce receptor 1 for correlations of type: " 
 	     << Stokes::name(cType) << LogIO::EXCEPTION;
     }
     receptor = Stokes::receptor2(cType);
@@ -1523,7 +1514,7 @@ void FITSIDItoMS1::getAxisInfo()
       corrProduct_p(1,i) = receptor;
       cout << "corrProcut_p(1,"<< i <<")=" << corrProduct_p(1,i);
     } else {
-      cout << "Cannot deduce receptor 2 for correlations of type: " 
+      *itsLog << "Cannot deduce receptor 2 for correlations of type: " 
 	     << Stokes::name(cType) << LogIO::EXCEPTION;
     }
   }
