@@ -56,7 +56,10 @@ def checktable(thename, theexpectation):
             if mycell[3] == 0:
                 in_agreement =  (value == mycell[2]).all() 
             else:
-                in_agreement = (abs(value - mycell[2]) < mycell[3]).all() 
+                try:
+                    in_agreement = (abs(value - mycell[2]) < mycell[3]).all()
+                except:
+                    in_agreement = False
         if not in_agreement:
             print myname, ":  Error in MS subtable", thename, ":"
             print "     column ", mycell[0], " row ", mycell[1], " contains ", value
@@ -83,8 +86,7 @@ class test_importfitsidi(unittest.TestCase):
         default(importfitsidi)
         
     def tearDown(self):
-        shutil.rmtree(my_dataset_name)
-        shutil.rmtree(myms_dataset_name)
+        os.remove(my_dataset_name)
         shutil.rmtree(msname,ignore_errors=True)
         shutil.rmtree(msname+'.flagversions',ignore_errors=True)
         
@@ -156,54 +158,85 @@ class test_importfitsidi(unittest.TestCase):
             #             col name, row number, expected value, tolerance
             expected = [
                          ['UVW',       42, [ 0., 0., 0. ], 1E-8],
-                         ['EXPOSURE',  42, 1.008, 0],
-                         ['DATA',      42, [ [10.5526886+0.0j] ], 1E-7]
+                         ['EXPOSURE',  42, 0.02764447, 1E-8],
+                         ['DATA',      42, [[  5.32094546e-09 +9.37484264e-01j,
+                                                9.43301380e-01 +0.00000000e+00j,
+                                                9.37484264e-01 +9.13762391e-01j,
+                                                3.24592087e-09 +9.37484264e-01j,
+                                                9.40941751e-01 -9.31322575e-10j,
+                                                9.37484264e-01 +9.07695830e-01j,
+                                                9.31322575e-09 +9.37484264e-01j,
+                                                9.10699069e-01 -1.86264515e-09j,
+                                                9.37484264e-01 +1.00180876e+00j,
+                                                7.41426787e-09 +9.37484264e-01j,
+                                                9.88621294e-01 -1.86264515e-09j,
+                                                9.37484264e-01 +1.09973443e+00j,
+                                                -1.09088809e-08 +9.37484264e-01j,
+                                                1.12680471e+00 +5.58793545e-09j,
+                                                9.37484264e-01 +1.01711810e+00j,
+                                                -7.66970309e-09 +9.37484264e-01j]], 1E-8]
                          ]
             results = checktable(name, expected)
             if not results:
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table MAIN failed'
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
             else:
                 retValue['success']=True
     
             expected = [
-    # old values using TAI     ['UVW',       638, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
-                         ['UVW',       638, [-65.14758508, 1.13423277, -33.51712451], 1E-8],
-                         ['EXPOSURE',  638, 1.008, 0],
-                         ['DATA',      638, [ [0.00362284+0.00340279j] ], 1E-8]
+                         ['UVW',       638, [171529.37575288, -786712.70341456, 210321.20978818], 1E-8],
+                         ['EXPOSURE',  638,  0., 1E-8],
+                         ['DATA',      638, [[  7.71090447e-04+0.0023962j,
+                                                9.75148320e-01+0.00148579j,
+                                                2.78137764e-03+0.97514832j,
+                                                2.52080127e-03+0.00414553j,
+                                                9.75148320e-01+0.00409369j,
+                                                4.81047202e-03+0.97514832j,
+                                                5.20560332e-03+0.00454798j,
+                                                9.75148320e-01+0.00328651j,
+                                                4.51627094e-03+0.97514832j,
+                                                4.54078289e-03+0.00360481j,
+                                                9.75148320e-01+0.0057058j,
+                                                5.68820536e-03+0.97514832j,
+                                                2.59231543e-03+0.00398705j,
+                                                9.75148320e-01+0.00281886j,
+                                                4.98241186e-03+0.97514832j,
+                                                2.35986966e-03+0.00580851j]], 1E-8]
                          ]
             results = checktable(name, expected)
             if not results:
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table MAIN failed'
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
             else:
                 retValue['success']=True
             
             name = "ANTENNA"
             expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
-                         ['POSITION',     1, [2202242.5520, -5445215.1570, -2485305.0920], 0.0001],
-                         ['DISH_DIAMETER',1, 12.0, 0]
+                         ['POSITION',     1, [ 3370605.8469,  711917.6732,  5349830.8438], 0.0001],
+                         ['DISH_DIAMETER',1, 6.0, 0]
                          ]
             results = checktable(name, expected)
             if not results:
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table ANTENNA failed'
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
             else:
                 retValue['success']=True
             
-            name = "POINTING"
-            expected = [ ['DIRECTION',       10, [[ 1.94681283],[ 1.19702955]], 1E-8],
-                         ['INTERVAL',        10, 0.048, 0],
-                         ['TARGET',          10, [[ 1.94681283], [ 1.19702955]], 1E-8],
-                         ['TIME',            10, 4758823736.016000, 0],
-                         ['TIME_ORIGIN',     10, 0., 0],
-                         ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
-                         ['ENCODER',         10, [ 1.94851533,  1.19867576], 1E-8 ]
+            name = "SPECTRAL_WINDOW"
+            expected = [ ['NUM_CHAN',        7, 16, 0],
+                         ['TOTAL_BANDWIDTH', 7, 8E6, 0],
+                         ['CHAN_WIDTH',      7, [ 500000.,  500000.,  500000.,  500000.,  500000.,  500000.,
+                                                  500000.,  500000.,  500000.,  500000.,  500000.,  500000.,
+                                                  500000.,  500000.,  500000.,  500000.], 1E-8],
+                         ['CHAN_FREQ',       7, [  4.32184900e+10,   4.32189900e+10,   4.32194900e+10,   4.32199900e+10,
+                                                   4.32204900e+10,   4.32209900e+10,   4.32214900e+10,   4.32219900e+10,
+                                                   4.32224900e+10,   4.32229900e+10,   4.32234900e+10,   4.32239900e+10,
+                                                   4.32244900e+10,   4.32249900e+10,   4.32254900e+10,   4.32259900e+10], 1E-8]
                          ]
             results = checktable(name, expected)
             if not results:
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table POINTING failed'
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
             else:
                 retValue['success']=True
                 
