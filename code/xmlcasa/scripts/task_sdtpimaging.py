@@ -268,14 +268,13 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     me.doframe(me.observatory(telname[0]))
                     me.doframe(me.epoch('utc',str(t[0])+'s'))
                     phasecenter = me.measure(me.direction(ephemsrcname),'AZELGEO')
-                print phasecenter
-        # get number of scans 
-        tb.open(sdfile+'/STATE')
-        # assume each SUB_SCAN id represents each raster 'scan'
-        nscan=tb.nrows()
-        #if calmode=='none':
-        #print "There are %s scans in the data." % nscan
-        casalog.post( "There are %s scans in the data." % nscan )
+        # get number of scans and subscans
+        tb.open(sdfile)
+        scans = numpy.unique(tb.getcol('SCAN_NUMBER'))
+        nscan = len(scans)
+        subscans = numpy.unique(tb.getcol('STATE_ID'))
+        nsubscan = len(subscans)
+        casalog.post('There are %s scans in the data.'%nscan)
         tb.close()
 
         #print "calibration begins..."
@@ -290,27 +289,20 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             #    docalib=raw_input('Do you want to proceed with calibration?(\'y\' or \'n\' will terminate the task, then you can re-run with calmode=\'none\')\n')
             #    if docalib=='n':
             #        return 
-            data=[]
+            #data=[]
             tb.open(sdfile)
             ndat=0
             if fdataexist: 
                 datalab='FLOAT_DATA'
             else:
                 datalab='DATA'
-            if abs(plotlevel) > 0:
-                if plotlevel< 0:
-                    pl.ioff()
-                else:
-                    pl.ion()
-            else:
-                pl.ioff()
+            pl.ioff()
             # determine the size of processing data
             subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid,antid))
             nr = subtb.nrows()
             #nr = len(data)*len(data[0])
             #ndatcol = numpy.zeros((npol,nr),dtype=numpy.float)
             ndatcol = subtb.getcol('CORRECTED_DATA')
-            subtb.close()
             (l,m,n) = ndatcol.shape
             ndatcol.reshape(l,n)
             for np in range(len(selcorrtypeind)):
@@ -329,82 +321,93 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 ndat = 0
                 if selnpol==1: np = selpol
                 pl.title(sdfile+' Ant:'+antnameused+' '+corrtypestr[np])
-                for i in range(nscan):
-                    # may be need to iterate on each antenna 
-                    # identify 'scan' by STATE ID
-                    subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && STATE_ID==%s' % (antid,antid, i))
-                    datcol=subtb.getcol(datalab)
-                    subtb.close()
-                    if npol >1 and selnpol==1:
-                        #print "select %s data..." % corrtypestr[selpol]
-                        casalog.post( "select %s data..." % corrtypestr[selpol] )
-                        rdatcol=datcol[selpol].real
-                    else:
-                        rdatcol=datcol[selcorrtypeind[np]].real
-                    (m,n)=rdatcol.shape
-                    rdatcol=rdatcol.reshape(n)
-                    data.append(rdatcol)
-                    ndat0 = ndat
-                    ndat += len(rdatcol)
-                    #pl.plot(range(ndat0,ndat),rdatcol,'k.')
-                    if abs(plotlevel) > 0:
-                        pl.plot(range(ndat0,ndat),rdatcol,symbols[i%2])
-                        ax=pl.gca()
-                        #if i==0:
-                        #leg=ax.legend(['odd scan'],numpoints=1,handletextsep=0.01) 
-                        #for t in leg.get_texts():
-                        #    t.set_fontsize('small')
-                        #pl.draw()
-                        if i==1: 
-                            leg=ax.legend(('even scan no.', 'odd scan no.'),numpoints=1,handletextsep=0.01) 
-                            for t in leg.get_texts():
-                                t.set_fontsize('small')
-                        pl.draw()
+                casalog.post( "select %s data..." % corrtypestr[np] )
+                for i in xrange(nscan):
+                    idata = []
+                    for j in xrange(nsubscan):
+                        # may be need to iterate on each antenna 
+                        # identify 'scan' by STATE ID
+                        subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                        datcol=subtb.getcol(datalab)
+                        if npol >1 and selnpol==1:
+                            #casalog.post( "select %s data..." % corrtypestr[selpol] )
+                            rdatcol=datcol[selpol].real
+                        else:
+                            rdatcol=datcol[selcorrtypeind[np]].real
+                        (m,n)=rdatcol.shape
+                        rdatcol=rdatcol.reshape(n)
+                        #data.append(rdatcol)
+                        idata.append(rdatcol)
+                        ndat0 = ndat
+                        ndat += len(rdatcol)
+                    data.append(idata)
                 if abs(plotlevel) > 0:
                     pl.xlim(0,ndat)
                     t1=pl.getp(pl.gca(),'xticklabels')
                     t2=pl.getp(pl.gca(),'yticklabels')
                     pl.setp((t1,t2),fontsize='smaller')
+                    mdat = 0
+                    for i in xrange(nscan):
+                        for j in xrange(nsubscan):
+                            mdat0 = mdat
+                            mdat += len(data[i][j])
+                            if plotlevel > 0 and (i == nscan-1) and (j == nsubscan-1):
+                                pl.ion()
+                            pl.plot(xrange(mdat0,mdat),data[i][j],symbols[subscans[j]%2])
+                            ax=pl.gca()
+                            if i==1: 
+                                leg=ax.legend(('even subscan no.', 'odd subscan no.'),numpoints=1,handletextsep=0.01) 
+                                for t in leg.get_texts():
+                                    t.set_fontsize('small')
+                    pl.draw()
                 ### Calibration ############################################
                 # Do a zero-th order calibration by subtracting a baseline #
                 # from each scan to take out atmospheric effect.          #
                 # The baseline fitting range specified by masklist must be #
                 # given and is the same for all the scans.                 # 
                 ############################################################
-                #nr = len(data)*len(data[0])
-                masks=numpy.zeros(len(data[0]),dtype=numpy.int)
-                #ndatcol = numpy.zeros((npol,nr),dtype=numpy.float) 
-                msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
-                casalog.post(msg, "INFO")
-                masks[:lmask]=True
-                masks[-rmask:]=True
-                
                 f=sd.fitter()
                 f.set_function(lpoly=blpoly)
                 #print "Processing %s %s scans" % (corrtypestr[np], nscan)
                 casalog.post( "Processing %s %s scans" % (corrtypestr[np], nscan) )
-                for i in range(nscan):
-                    #print "Processing Scan#=", i
+                cdat = numpy.array([])
+                pl.subplot(312)
+                pl.ioff()
+                for i in xrange(nscan):
                     casalog.post( "Processing Scan#=%s" % i )
-                    x=range(len(data[i]))
-                    if abs(plotlevel) > 1:
-                        pl.subplot(312)
-                        pl.cla()
-                        pl.plot(x,data[i],'b')
-                    f.set_data(x,data[i],mask=masks)
-                    f.fit()
-                    #f.plot(residual=True, components=[1], plotparms=True)
-                    fitd=f.get_fit()
-                    data[i]=data[i]-fitd
-                    if abs(plotlevel) > 1:
-                        pl.plot(range(len(fitd)),fitd,'r-')
-                        pl.cla()
-                        pl.plot(x,data[i],'g')
-                        pl.title('scan %s' % i)
-                        if interactive: check=raw_input('Hit return for Next\n')
-                    cdat=numpy.concatenate(([datarr for datarr in data]))
+                    for j in xrange(nsubscan):
+                        masks=numpy.zeros(len(data[i][j]),dtype=numpy.int)
+                        msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
+                        casalog.post(msg, "INFO")
+                        masks[:lmask]=True
+                        masks[-rmask:]=True
+                        x=xrange(len(data[i][j]))
+                        if plotlevel > 1:
+                            pl.cla()
+                            pl.ioff()
+                            pl.title('scan %s subscan %s'%(scans[i],subscans[j]))
+                            pl.plot(x,data[i][j],'b')
+                        f.set_data(x,data[i][j],mask=masks)
+                        f.fit()
+                        #f.plot(residual=True, components=[1], plotparms=True)
+                        fitd=f.get_fit()
+                        data[i][j]=data[i][j]-fitd
+                        if plotlevel > 1:
+                            pl.ion()
+                            pl.plot(xrange(len(fitd)),fitd,'r-')
+                            pl.draw()
+                            pl.cla()
+                            pl.ioff()
+                            pl.title('scan %s subscan %s'%(scans[i],subscans[j]))
+                            pl.ion()
+                            pl.plot(x,data[i][j],'g')
+                            pl.draw()
+                            if interactive: check=raw_input('Hit return for Next\n')
+                        cdat=numpy.concatenate([cdat,data[i][j]])
                 ndatcol[np]=cdat
-            tb.close() 
+                del data
+            subtb.close()
+            tb.close()
             tb.open(sdfile,nomodify=False)
             # put the corrected data to CORRECTED_DATA column in MS
             # assuming the data for the vertex are stored in every other
@@ -417,10 +420,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             else:
                 startrow=0
                 rowincr=1
-            #print "Storing the corrected data to CORRECTED_DATA column in the MS..."
             casalog.post( "Storing the corrected data to CORRECTED_DATA column in the MS..." )
             cdatm=ndatcol.reshape(npol,1,len(cdat))
-            cdato=tb.getcol('CORRECTED_DATA')
             tb.putcol('CORRECTED_DATA', cdatm, startrow=startrow, rowincr=rowincr)
             tb.close() 
             # calibration end
@@ -430,21 +431,25 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
             cdatcol=subt.getcol('CORRECTED_DATA')
             (l,m,n)=cdatcol.shape
+            subt.close()
             tb.close()
-            #print "plotting corrected data..."
             casalog.post( "plotting corrected data..." )
+            pl.subplot(313)
+            pl.ioff()
             for np in range(selnpol):
                 pl.figure(np+1)
                 if selnpol==1:
-                    pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
+                    #pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
                     cdatcol2=cdatcol[selpol].reshape(n)
                 else:
-                    pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[np])
+                    #pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[np])
                     cdatcol2=cdatcol[np].reshape(n)
                     #cdatcol2=cdatcol.reshape(n)
-                if abs(plotlevel) >0:
-                    pl.subplot(313)
-                    pl.plot(range(len(cdatcol2)),cdatcol2, 'g.')
+                if abs(plotlevel) > 0:
+                    if plotlevel > 0:
+                        pl.ion()
+##                     pl.ion()
+                    pl.plot(xrange(len(cdatcol2)),cdatcol2, 'g.')
                     pl.xlim(0,ndat)
                     t1=pl.getp(pl.gca(),'xticklabels')
                     t2=pl.getp(pl.gca(),'yticklabels')
@@ -452,10 +457,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     pl.ylabel('CORRECTED_DATA',fontsize='smaller')
                     #pl.text(len(cdatcol2)*1.01,cdatcol2.min(),'[row #]',fontsize='smaller')
                     pl.xlabel('[row #]',fontsize='smaller')
+                    pl.draw()
                 if plotlevel < 0:
-                    outplfile=sdfile+'_scans_'+corrtypestr[selcorrtypeind[np]]++'.eps'
+                    outplfile=sdfile+'_scans_'+corrtypestr[selcorrtypeind[np]]+'.eps'
                     pl.savefig(outplfile,format='eps')
-                    #print "Plot was written to %s" % outplfile
                     casalog.post( "Plot was written to %s" % outplfile ) 
         else: # no calib, if requested plot raw/calibrated data 
             if abs(plotlevel) > 0:
@@ -484,10 +489,6 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                         pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[np])
                         datcol2=datcol[np].reshape(n)
                     pl.subplot(111)
-                    #To avoid error reported as CAS-1312
-                    #--2009/4/24 Takeshi Nakazato
-                    #datcol2=datcol.reshape(n)
-                    ##datcol2=datcol[0].reshape(n)
                     if plotlevel>0:
                         pl.ion()
                     pl.plot(range(len(datcol2)),datcol2, 'g.')
@@ -498,13 +499,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     pl.ylabel(datalab,fontsize='smaller')
                     #pl.text(len(datcol2)*1.01,datcol2.min(),'[row #]',fontsize='smaller')
                     pl.xlabel('row #')
-                    #if plotlevel>0:
-                    #   pl.ion()
                     pl.draw()
                     if plotlevel<0:
                         outplfile=sdfile+'_scans_'+corrtypestr[selcorrtypeind[np]]+'.eps'
                         pl.savefig(outplfile,format='eps')
-                        #print "Plot  was written to %s" % outplfile
                         casalog.post( "Plot  was written to %s" % outplfile )
                    
         #flag scans
@@ -514,7 +512,6 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             fdatcol = subtb.getcol('FLAG')
             (l,m,n) = fdatcol.shape
             fdatcol.reshape(l,n)
-            #print "Flag processing..."
             casalog.post( "Flag processing..." )
             flagscanlist=[]
             if type(antid) == int:
@@ -532,22 +529,26 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             flagscanset=set(flagscanlist) 
             for np in range(len(selcorrtypeind)):
                 fdata=[]
-                for i in range(nscan):
-                    subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && STATE_ID==%s' % (antid,antid, i))
-                    fcolall=subtb.getcol('FLAG')
-                    if npol >1 and selnpol==1:
-                        fcol=fcolall[selpol]
-                    else:
-                        fcol=fcolall[selcorrtypeind[np]]
-                    (m,n) = fcol.shape
-                    fcoln=fcol.reshape(n)
-                    if i in flagscanset:
-                        flgs=numpy.ones(n,dtype=numpy.bool)
-                        fcoln=flgs 
-                    fdata.append(fcoln)
-                    fdatac=numpy.concatenate(([datarr for datarr in fdata]))
+                fdatac = numpy.array([])
+                for i in xrange(nscan):
+                    #fdata=[]
+                    for j in xrange(nsubscan):
+                        subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                        fcolall=subtb.getcol('FLAG')
+                        if npol >1 and selnpol==1:
+                            fcol=fcolall[selpol]
+                        else:
+                            fcol=fcolall[selcorrtypeind[np]]
+                        (m,n) = fcol.shape
+                        fcoln=fcol.reshape(n)
+                        if i in flagscanset:
+                            flgs=numpy.ones(n,dtype=numpy.bool)
+                            fcoln=flgs 
+                        #fdata.append(fcoln)
+                        fdatac=numpy.concatenate([fdatac,fcoln])
                 fdatcol[np]=fdatac
                 #flagc=tb.getcol('FLAG')
+            subtb.close()
             fdatacm=fdatcol.reshape(npol,1,len(fdatac))
             tb.putcol('FLAG', fdatacm, startrow=startrow, rowincr=rowincr)
             # need flip True -> 0
