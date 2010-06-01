@@ -62,6 +62,17 @@ AMueller::~AMueller() {
   if (prtlev()>2) cout << "A::~A()" << endl;
 }
 
+void AMueller::setSolve(const Record& solvepar) {
+
+  // Call parent
+  MMueller::setSolve(solvepar);
+
+  // Override preavg 
+  // (solver will fail if we don't average completely in each solint)
+  preavg()=DBL_MAX;
+
+}
+
 void AMueller::corrupt(VisBuffer& vb) {
 
   if (prtlev()>3) cout << "  A::corrupt()" << endl;
