@@ -5,8 +5,6 @@
 #       1st column      = name of test script excluding .py
 #       2nd+3rd columns = email notification
 
-test_asdm-import                dpetry eso.org
-test_asdmv1-import              dpetry eso.org
 test_boxit                      dmehring nrao.edu
 test_clearstat                  scastro eso.org
 test_clean                      scastro eso.org
@@ -19,6 +17,9 @@ test_imfit                      dmehring nrao.edu
 test_imhead                     dmehring nrao.edu
 test_immath                     dmehring nrao.edu
 test_immoments                  dmehring nrao.edu
+test_importasdm.py              dpetry eso.org
+test_importfitsidi.py           dpetry eso.org
+test_importoldasdm.py           dpetry eso.org
 test_imregrid                   jmlarsen eso.org
 test_imsmooth                   dmehring nrao.edu
 test_imstat                     dmehring nrao.edu
