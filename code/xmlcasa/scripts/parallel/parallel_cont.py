@@ -40,7 +40,8 @@ class imagecont():
         if(not self.imageparamset):
             im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
             #im.selectvis(vis=msname, field=field, spw=spwstring, datainmemory=True)
-            im.weight('natural')
+            im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
+                  robust=self.robust)
 ####
         #imname=imname+'_%02d'%(j)
             im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
@@ -77,6 +78,7 @@ class imagecont():
                   robust=self.robust)
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True)
+        im.setscales(scalemethod='uservector', uservector=scales)
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):
