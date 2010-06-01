@@ -54,6 +54,7 @@ if os.fork( ) == 0 :
         except:
             break
         time.sleep(15)
+    time.sleep(5)
     os.killpg(ppid, signal.SIGTERM)
     time.sleep(15)
     os.killpg(ppid, signal.SIGKILL)
@@ -1059,7 +1060,6 @@ if ipython:
              os.system("rm -rf %s" % x)
              #print "Removed: ", x, "\n"
 
-    if vwrpid!=9999: os.kill(vwrpid,9)
+    ## leave killing off children to the watchdog...
+    ## so everyone has a chance to die naturally...
     print "leaving casapy..."
-    signal.signal(signal.SIGTERM, signal.SIG_IGN)
-    os.killpg(os.getpgid(0), signal.SIGTERM)
