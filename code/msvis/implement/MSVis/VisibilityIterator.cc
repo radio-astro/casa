@@ -820,7 +820,6 @@ Vector<Bool>& ROVisibilityIterator::flagRow(Vector<Bool>& rowflags) const
 {
   rowflags.resize(curNumRow_p);
   colFlagRow.getColumn(rowflags);
-  cout << curNumRow_p << " should be = " << rowflags.shape() << endl;
   return rowflags;
 }
 
