@@ -1,34 +1,34 @@
 #
-# List of persons responsible for tests
+# The following list of tests is used when no option is given
+# to run the script runUnitTest.py
 #
-# Format of this file:
-#       1st column      = name of test script excluding .py
-#       2nd+3rd columns = email notification
+# These tests are also run automatically by Hudson.
+# The second column gives the name of the person responsible for each test
+# Do not include the suffix .py
 
-test_boxit                      dmehring nrao.edu
-test_clearstat                  scastro eso.org
-test_clean                      scastro eso.org
-test_csvclean                   scastro eso.org
-test_exportasdm                 dpetry eso.org
-test_fixvis                     rreid nrao.edu
-test_hanningsmooth              scastro eso.org
-test_imcontsub                  dmehring nrao.edu
-test_imfit                      dmehring nrao.edu
-test_imhead                     dmehring nrao.edu
-test_immath                     dmehring nrao.edu
-test_immoments                  dmehring nrao.edu
-test_importasdm.py              dpetry eso.org
-test_importfitsidi.py           dpetry eso.org
-test_importoldasdm.py           dpetry eso.org
-test_imregrid                   jmlarsen eso.org
-test_imsmooth                   dmehring nrao.edu
-test_imstat                     dmehring nrao.edu
-test_imval                      dmehring nrao.edu
-test_listcal                    jmlarsen eso.org
-test_listhistory                scastro eso.org
-test_plotants                   scastro eso.org
-test_plotms                     dmehring nrao.edu
-test_report                     jmlarsen eso.org
-test_smoothcal                  scastro eso.org
-test_vishead                    jmlarsen eso.org
-test_visstat                    jmlarsen eso.org
+test_boxit                      dmehring@nrao.edu
+test_clearstat                  scastro@eso.org
+test_clean                      scastro@eso.org
+test_csvclean                   scastro@eso.org
+test_exportasdm                 dpetry@eso.org
+test_fixvis                     rreid@nrao.edu
+test_hanningsmooth              scastro@eso.org
+test_imcontsub                  dmehring@nrao.edu
+test_imfit                      dmehring@nrao.edu
+test_imhead                     dmehring@nrao.edu
+test_immath                     dmehring@nrao.edu
+test_immoments                  dmehring@nrao.edu
+test_importasdm.py              dpetry@eso.org
+#test_importfitsidi              dpetry@eso.org
+test_importoldasdm              dpetry@eso.org
+test_imregrid                   jmlarsen@eso.org
+test_imsmooth                   dmehring@nrao.edu
+test_imstat                     dmehring@nrao.edu
+test_imval                      dmehring@nrao.edu
+test_listhistory                scastro@eso.org
+test_plotants                   scastro@eso.org
+test_plotms                     dmehring@nrao.edu
+test_report                     jmlarsen@eso.org
+test_smoothcal                  scastro@eso.org
+test_vishead                    jmlarsen@eso.org
+test_visstat                    jmlarsen@eso.org
