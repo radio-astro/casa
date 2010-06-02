@@ -119,7 +119,6 @@ class test_importfitsidi(unittest.TestCase):
                             "SOURCE/table.dat",
                             "SPECTRAL_WINDOW/table.dat",
                             "STATE/table.dat",
-                            "SYSCAL/table.dat",
                             "ANTENNA/table.f0",
                             "DATA_DESCRIPTION/table.f0",
                             "FEED/table.f0",
@@ -132,8 +131,7 @@ class test_importfitsidi(unittest.TestCase):
                             "PROCESSOR/table.f0",
                             "SOURCE/table.f0",
                             "SPECTRAL_WINDOW/table.f0",
-                            "STATE/table.f0",
-                            "SYSCAL/table.f0"
+                            "STATE/table.f0"
                             ])
         for name in mscomponents:
             if not os.access(msname+"/"+name, os.F_OK):
@@ -152,13 +150,14 @@ class test_importfitsidi(unittest.TestCase):
         else:
             ms.close()
             print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
     
             # check main table first
             name = ""
             #             col name, row number, expected value, tolerance
             expected = [
                          ['UVW',       42, [ 0., 0., 0. ], 1E-8],
-                         ['EXPOSURE',  42, 0.02764447, 1E-8],
+                         ['EXPOSURE',  42, 2.0, 1E-8],
                          ['DATA',      42, [[  5.32094546e-09 +9.37484264e-01j,
                                                 9.43301380e-01 +0.00000000e+00j,
                                                 9.37484264e-01 +9.13762391e-01j,
@@ -180,12 +179,10 @@ class test_importfitsidi(unittest.TestCase):
             if not results:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-            else:
-                retValue['success']=True
     
             expected = [
                          ['UVW',       638, [171529.37575288, -786712.70341456, 210321.20978818], 1E-8],
-                         ['EXPOSURE',  638,  0., 1E-8],
+                         ['EXPOSURE',  638,  2.0, 1E-8],
                          ['DATA',      638, [[  7.71090447e-04+0.0023962j,
                                                 9.75148320e-01+0.00148579j,
                                                 2.78137764e-03+0.97514832j,
@@ -207,8 +204,6 @@ class test_importfitsidi(unittest.TestCase):
             if not results:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-            else:
-                retValue['success']=True
             
             name = "ANTENNA"
             expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
@@ -219,8 +214,6 @@ class test_importfitsidi(unittest.TestCase):
             if not results:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-            else:
-                retValue['success']=True
             
             name = "SPECTRAL_WINDOW"
             expected = [ ['NUM_CHAN',        7, 16, 0],
@@ -237,8 +230,6 @@ class test_importfitsidi(unittest.TestCase):
             if not results:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-            else:
-                retValue['success']=True
                 
         self.assertTrue(results)
                 
