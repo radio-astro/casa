@@ -27,7 +27,7 @@ test_imstat                     dmehring@nrao.edu
 test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
 test_plotants                   scastro@eso.org
-test_plotms                     dmehring@nrao.edu
+#test_plotms                     dmehring@nrao.edu
 test_report                     jmlarsen@eso.org
 test_smoothcal                  scastro@eso.org
 test_vishead                    jmlarsen@eso.org
