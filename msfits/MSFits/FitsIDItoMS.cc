@@ -99,6 +99,8 @@
 #include <casa/OS/File.h>
 #include <casa/Quanta/MVTime.h>
 
+#include <casa/iomanip.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //local debug switch 
@@ -1832,7 +1834,8 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
   *itsLog << LogIO::NORMAL << "Reading and writing visibility data"<< LogIO::POST;
 
   Int row=-1;
-  Double startTime, interval;
+  Double startTime;
+  Float interval;
   startTime=0.0; interval=1;
 
   ProgressMeter meter(0.0, nRows*1.0, "FITS-IDI Filler", "Rows copied", "",
@@ -1911,13 +1914,16 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     //cout << "uvw(2)=" << uvw(2) << endl; 
 
     time  *= C::day; 
-    //cout << "TIME=" << time << endl; 
+    //    cout << "TIME=" << setprecision(11) << time << endl; 
 
     // If integration time is available, use it:
     if (iInttim > -1) {
-      memcpy(&interval, (static_cast<Double *>(data_addr[iInttim])), sizeof(Double));
+      memcpy(&interval, (static_cast<Float *>(data_addr[iInttim])), sizeof(Float));
       interval *= tscal(iInttim);
+      // cout << "INTTIM=" << setprecision(11) << interval << endl; 
     } else {
+      *itsLog << LogIO::WARN << "UV_DATA table contains no integration time information. Will try to derive it from TIME." 
+	      << LogIO::POST;
       // make a guess at the integration time
       //if (row<0) startTime = time;
       if (row<0) {
@@ -2085,7 +2091,7 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
  	//msc.time().put(row,time);
  	//msc.timeCentroid().put(row,time);
  	msc.time().put(putrow,time);
- 	msc.timeCentroid().put(putrow,time);
+ 	msc.timeCentroid().put(putrow,time+interval/2.);
  	lastTime=time;
         lastTime_p=lastTime;
         //cout << "lastTime_p="<< lastTime <<endl;
@@ -2286,9 +2292,7 @@ void FITSIDItoMS1::fillAntennaTable()
    timsys_p=timsys;
    // Fill in some likely values
    //Float diameter=25;
-   Float diameter=6; // defalut (For SMA)  
-   if (array_p=="ATCA") diameter=22;
-   if (array_p=="VLBA") diameter=25;
+   Float diameter=6; // default (For SMA)  
 
    //Table anTab=fullTable("",Table::Scratch);
    Table anTab=oldfullTable("");
@@ -2306,11 +2310,19 @@ void FITSIDItoMS1::fillAntennaTable()
    if(anTab.tableDesc().isColumn("DIAMETER")){
      diam.attach(anTab,"DIAMETER"); // this column is optional
    }
+   else{
+     *itsLog << LogIO::WARN 
+	     << "ANTENNA input table does not contain dish DIAMETER column. Will assume default values." << LogIO::POST; 
+     if (array_p=="ATCA") diameter=22;
+     if (array_p=="VLBA") diameter=25;
+     if (array_p=="EVN")  diameter=25;
+   }
+
    // All "VLBI" (==arrayXYZ<1000) requires y-axis reflection:
    //  (ATCA looks like "VLBI" in UVFITS, but is already correct)
    //Bool doVLBIRefl= ((array_p!="ATCA") && allLE(abs(arrayXYZ),1000.0));     
 
-	// add antenna info to table (TT)
+   // add antenna info to table (TT)
    ant.setPositionRef(MPosition::ITRF);
    Int row=ms_p.antenna().nrow()-1;
    for (Int i=0; i<nAnt; i++) {
