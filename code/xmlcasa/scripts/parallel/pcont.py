@@ -4,6 +4,7 @@ from cleanhelper import *
 import numpy as np
 import time
 import os
+import shutil
 import pdb
 
 
@@ -99,9 +100,10 @@ def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e1
     totchan=endallchan-startallchan+1
     bandperproc=(allfreq[endallchan]-allfreq[startallchan])/numproc
     chanperproc=totchan/numproc
+    extrachan=0
     if((totchan%numproc) > 0):
         chanperproc=chanperproc+1
-   
+        extrachan=1
     startthissel=startallchan
     #endthissel=chanperproc+startthissel-1
     #if(endthissel > (len(allfreq))-1):
@@ -135,7 +137,7 @@ def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e1
                     else:
                         while(freqs[j][ind[cc]] > upfreq):
                             cc=cc+1
-                    #cc= (cc-1) if cc > 0 else 0 
+                    cc= (cc-extrachan) if (cc-extrachan) > 0 else 0 
                     startsel[k].append(ind[cc])
                     nchansel[k].append(chanperproc)
                 elif((lowfreq <= freqs[j][ind[0]]) and 
@@ -186,7 +188,9 @@ def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e1
         #endthissel=chanperproc+startthissel-1
         #if(endthissel > (len(allfreq))-1):
         #    enthissel=(len(allfreq))-1
+        startthissel=startthissel+chanperproc-extrachan
         lowfreq=upfreq
+        #lowfreq=upfreq if (upfreq < allfreq[startthissel]) else allfreq[startthissel]
         upfreq=lowfreq+bandperproc
     if(continuum):
         #no need to send same data to different processors
@@ -225,7 +229,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
           pixsize=['1arcsec', '1arcsec'], phasecenter='', 
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
-          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', 
+          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', weight='natural',
           contclean=False, visinmem=False,
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''):
@@ -270,11 +274,11 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     timesplit=0
     timeimage=0
     model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
-    os.system('rm -rf '+'tempmodel')
+    shutil.rmtree('tempmodel', True)
     if(not contclean):
         print "Removing ", model, 'and', imagename+'.image'
-        os.system('rm -rf '+model)
-        os.system('rm -rf '+imagename+'.image')
+        shutil.rmtree(model, True)
+        shutil.rmtree(imagename+'.image', True)
     ###num of cpu per node
     numcpu=numcpuperhost
     if((hostnames==[]) or (hostnames=='')): 
@@ -288,12 +292,14 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     ###spw and channel selection
     spwsel,startsel,nchansel=findchansel(msname, spwids, numcpu)
     
+    print 'SPWSEL ', spwsel, startsel, nchansel 
+
     out=range(numcpu)  
     c.pgc('from  parallel.parallel_cont import *')
     spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
     fieldlaunch='"'+field+'"' if (type(field) == str) else str(field)
     pslaunch='"'+phasecenter+'"' if (type(phasecenter) == str) else str(phasecenter)
-    launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+')'
+    launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'")'
     print 'launch command', launchcomm
     c.pgc(launchcomm);
     c.pgc('a.visInMem='+str(visinmem));
@@ -340,7 +346,9 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     if(contclean and os.path.exists(model)):
         for k in range(numcpu):
             copyimage(inimage=model, outimage=imlist[k]+'.model', init=False)
-    
+    else:
+        for k in range(len(imlist)):
+            shutil.rmtree(imlist[k]+'.model', True)
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
@@ -368,7 +376,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         ia.calc('"'+residual+'"'+'/'+str(len(imlist)))
         ia.done()
         #incremental clean...get rid of tempmodel
-        os.system('rm -rf '+'tempmodel')
+        shutil.rmtree('tempmodel', True)
         rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
         print 'Deconvolution command', rundecon
         out[0]=c.odo(rundecon,0)
@@ -394,8 +402,8 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         ia.calc('"'+restored+'" +  "'+imlist[k]+'.image"')
     ia.calc('"'+restored+'"'+'/'+str(len(imlist)))
     ia.done()
-    os.system('rm -rf '+imagename+'.image')
-    os.system('mv '+restored+'  '+imagename+'.image')
+    shutil.rmtree(imagename+'.image', True)
+    shutil.move(restored,  imagename+'.image')
     time2=time.time()
     
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
@@ -405,7 +413,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           pixsize=['1arcsec', '1arcsec'], phasecenter='', 
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
-          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark',
+          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', scales=[0],
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
           imagetilevol=1000000,
           contclean=False, chanchunk=1, visinmem=False, 
@@ -428,6 +436,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     majorcycles= integer number of CS major cycles to do, 
     niter= integer ...total number of clean iteration 
     alg= string  possibilities are 'clark', 'hogbom', 'multiscale' and their 'mf'
+    scales= list of scales in pixel for multiscale clean e.g [0, 3, 10]
     weight= type of weight to apply
     contclean = boolean ...if False the imagename.model is deleted if its on 
     disk otherwise clean will continue from previous run
@@ -449,23 +458,30 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     owd=wd
     model=imagename+'.model' 
     if(not contclean or (not os.path.exists(model))):
-        os.system('rm -rf '+model)
-        os.system('rm -rf '+imagename+'.image')
+        shutil.rmtree(model, True)
+        shutil.rmtree(imagename+'.image', True)
         ##create the cube
         im.selectvis(vis=msname, spw=spw, field=field)
         im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
-                       phasecenter='', mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start)
+                       phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start)
         im.setoptions(imagetilevol=imagetilevol) 
         im.make(model)
         im.done()
     ia.open(model)
-    fstart=ia.toworld([0,0,0,0],'n')['numeric'][3]
-    fstep=ia.toworld([0,0,0,1],'n')['numeric'][3]-fstart
+    csys=ia.coordsys()
+    ###as image will have conversion to LSRK...need to get original stuff
+    originsptype=csys.getconversiontype('spectral', False)
+    csys.setconversiontype(spectral=originsptype)
+    fstart=csys.toworld([0,0,0,0],'n')['numeric'][3]
+    fstep=csys.toworld([0,0,0,1],'n')['numeric'][3]-fstart
     fend=fstep*(nchan+1)+fstart
     ia.done()
-    os.system('rm -rf '+imagename+'.image')
-    os.system('cp -r '+model+'  '+imagename+'.image')
-    os.system('cp -r '+model+'  '+imagename+'.residual')
+    imepoch=csys.epoch()
+    imobservatory=csys.telescope()
+    shutil.rmtree(imagename+'.image', True)
+    shutil.rmtree(imagename+'.residual', True)
+    shutil.copytree(model, imagename+'.image')
+    shutil.copytree(model, imagename+'.residual')
     ###num of cpu per node
     numcpu=numcpuperhost
     if((hostnames==[]) or (hostnames=='')): 
@@ -517,7 +533,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
                     getchanimage(model, imagename+str(chancounter)+'.model', 
                                  chancounter*chanchunk, chanchunk)
                     donegetchan[chancounter]=True
-                runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", majcycle='+str(majorcycles)+')'
+                runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+')'
                 print 'command is ', runcomm
                 out[k]=c.odo(runcomm,k)
                 chancounter=chancounter+1

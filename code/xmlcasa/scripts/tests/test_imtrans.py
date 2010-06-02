@@ -109,56 +109,59 @@ class imtrans_test(unittest.TestCase):
         
         # not enough specified axes
         testit(good_image, "blah", "01")
+        testit(good_image, "blah", 10)
+        testit(good_image, "blah", ["r", "d"])
         
         # too many specified axes
         testit(good_image, "blah", "0123")
-        
+        testit(good_image, "blah", 1230)
+        testit(good_image, "blah", ["r", "d", "f", "s"])
+
         # Bogus axes specification
         testit(good_image, "blah", "123")
+        testit(good_image, "blah", ["r", "d", "s"])
+        testit(good_image, "blah", ["r", "d", "r"])
+        testit(good_image, "blah", 103)
         
     def test_straight_copy(self):
         """No actual transposing"""
         imagename = good_image
-        outfile = "straight_copy"
-        order = "012"
         ia.open(imagename)
         expecteddata = ia.getchunk()
         expectednames = ia.coordsys().names()
         ia.done()
-        for i in [0,1]:
-            if (i==0):
-                newim = run_reorder(imagename, outfile + str(i), order)
-            else:
-                newim = run_imtrans(imagename, outfile + str(i), order)
-            gotdata = newim.getchunk()
-            gotnames = newim.coordsys().names()
-            self.assertTrue((expecteddata == gotdata).all())
-            self.assertTrue(expectednames == gotnames)
+        count = 0
+        for order in ["012", 12, ['r', 'd', 'f'], ["righ", "declin", "freq"]]:
+            for code in [run_reorder, run_imtrans]:
+                newim = code(imagename, "straight_copy_" + str(count), order)
+                gotdata = newim.getchunk()
+                gotnames = newim.coordsys().names()
+                self.assertTrue((expecteddata == gotdata).all())
+                self.assertTrue(expectednames == gotnames)
+                count += 1
 
     def test_transpose(self):
         """Test transposing"""
         imagename = good_image
-        outfile = "transpose"
-        order = "120"
         ia.open(imagename)
         expecteddata = ia.getchunk()
         expectednames = ia.coordsys().names()
         ia.done()
-        for i in [0,1]:
-            if (i==0):
-                newim = run_reorder(imagename, outfile + str(i), order)
-            else:
-                newim = run_imtrans(imagename, outfile + str(i), order)
-            gotdata = newim.getchunk()
-            inshape = expecteddata.shape
-            for i in range(inshape[0]):
-                for j in range(inshape[1]):
-                    for k in range(inshape[2]):
-                        self.assertTrue(expecteddata[i][j][k] == gotdata[j][k][i])
-            gotnames = newim.coordsys().names()
-            self.assertTrue(expectednames[0] == gotnames[2])
-            self.assertTrue(expectednames[1] == gotnames[0])
-            self.assertTrue(expectednames[2] == gotnames[1])
+        count = 0
+        for order in ["120", 120, ['d', 'f', 'r'], ["declin", "freq", "righ"]]:
+            for code in [run_reorder, run_imtrans]:
+                newim = code(imagename, "transpose_" + str(count), order)
+                gotdata = newim.getchunk()
+                inshape = expecteddata.shape
+                for i in range(inshape[0]):
+                    for j in range(inshape[1]):
+                        for k in range(inshape[2]):
+                            self.assertTrue(expecteddata[i][j][k] == gotdata[j][k][i])
+                gotnames = newim.coordsys().names()
+                self.assertTrue(expectednames[0] == gotnames[2])
+                self.assertTrue(expectednames[1] == gotnames[0])
+                self.assertTrue(expectednames[2] == gotnames[1])
+                count += 1
 
 def suite():
     return [imtrans_test]

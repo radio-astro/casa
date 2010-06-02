@@ -15,7 +15,7 @@ def test_eq(result, total, flagged):
     assert result['flagged'] == flagged, \
            "%s flags set; %s expected" % (result['flagged'], flagged)
 
-class test_case(unittest.TestCase):
+class test_vector_flagmanager(unittest.TestCase):
     def runTest(self):
 
         # Import data
@@ -123,11 +123,15 @@ class test_statistics_queries(unittest.TestCase):
             
         flagdata(vis=self.vis, unflag=true)
 
-    #def test_cas2021(self):
-    #    print "Test antenna selection"
-    #    flagdata(vis=vis, antenna='!5') # should not crash
+    def test_CAS2021(self):
+        print "Test antenna selection"
+        flagdata(vis=self.vis, antenna='!5') # should not crash
+
+    def test_CAS2212(self):
+        print "Test scan + clipping"
+        flagdata(vis=self.vis, scan="2", clipminmax = [0.2, 0.3]) # should not crash
     
-    def test21(self):
+    def test021(self):
         print "Test of flagging statistics and queries"
         
         flagdata(vis=self.vis, correlation='LL')
@@ -214,16 +218,79 @@ class test_statistics_queries(unittest.TestCase):
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1762236)
         flagdata(vis=self.vis, unflag=true)
 
+
+
+class test_selections(unittest.TestCase):
+    """Test various selections"""
+
+    def setUp(self):
+        self.vis = "ngc5921.ms"
+        
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Importing data..."
+            importuvfits(os.environ.get('CASAPATH').split()[0] + \
+                         '/data/regression/ngc5921/ngc5921.fits', \
+                         self.vis)
+            
+        flagdata(vis=self.vis, unflag=true)
+
+    def test_scan(self):
+        
+        flagdata(vis=self.vis, scan='3')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 52416)
+        
+        # feed not implemented flagdata(vis=vis, feed='27')
+        # flagdata(vis=vis, unflag=true)
+
+    def test_antenna(self):
+
+        flagdata(vis=self.vis, antenna='2')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+
+    def test_spw(self):
+        
+        flagdata(vis=self.vis, spw='0')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+
+    def test_correlation(self):
+        flagdata(vis=self.vis, correlation='LL')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
+        flagdata(vis=self.vis, correlation='LL,RR')
+        flagdata(vis=self.vis, correlation='LL RR')
+        flagdata(vis=self.vis, correlation='LL ,, ,  ,RR')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+
+    def test_field(self):
+        
+        flagdata(vis=self.vis, field='0')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 39186)
+
+    def test_uvrange(self):
+        
+        flagdata(vis=self.vis, uvrange='200~400m')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 55944)
+
+    def test_timerange(self):
+    
+        flagdata(vis=self.vis, timerange='09:50:00~10:20:00')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 6552)
+
+    def test_array(self):
+        flagdata(vis=self.vis, array='0')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+
+def suite():
+    return [test_selections,
+            test_statistics_queries,
+            test_vector_flagmanager,
+            test_flagmanager]
+
 def main():
 
-    for t in [test_statistics_queries, test_case, test_flagmanager]:
+    for t in suite():
         assert unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(t)).wasSuccessful()
-
-    vis='ngc5921.ms'
-
-    flagdata(vis=vis, unflag=true)
-    
-    flagmanager(vis=vis, mode='list')
 
     print "Test of mode='rfi'"
     vis='flagdatatest.ms'
@@ -232,6 +299,7 @@ def main():
     test_eq(flagdata(vis=vis, mode='summary'), 2000700, 9142)
     test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 148200, 354)
     flagdata(vis=vis, unflag=true)
+
 
     print "Test of mode = 'shadow'"
     flagdata(vis=vis, mode='shadow', diameter=40)
@@ -248,52 +316,6 @@ def main():
 
     flagmanager(vis=vis, mode='list')
 
-    print "Test various selections"
-    vis='ngc5921.ms'
-    flagdata(vis=vis, antenna='2')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-    flagdata(vis=vis, unflag=true)
-
-    flagdata(vis=vis, spw='0')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-    flagdata(vis=vis, unflag=true)
-
-    flagdata(vis=vis, correlation='LL')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 98217)
-    flagdata(vis=vis, correlation='LL,RR')
-    flagdata(vis=vis, correlation='LL RR')
-    flagdata(vis=vis, correlation='LL ,, ,  ,RR')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-    flagdata(vis=vis, unflag=true)
-    
-    flagdata(vis=vis, field='0')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 39186)
-    flagdata(vis=vis, unflag=true)
-    
-    flagdata(vis=vis, uvrange='200~400m')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 55944)
-    flagdata(vis=vis, unflag=true)
-    
-    flagdata(vis=vis, timerange='09:50:00~10:20:00')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 6552)
-    flagdata(vis=vis, unflag=true)
-    
-    flagdata(vis=vis, scan='3')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 52416)
-    flagdata(vis=vis, unflag=true)
-    
-    # feed not implemented flagdata(vis=vis, feed='27')
-    # flagdata(vis=vis, unflag=true)
-    
-    flagdata(vis=vis, array='0')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
-    flagdata(vis=vis, unflag=true)
-    
-    flagmanager(vis=vis, mode='list')
-
-
-def suite():
-    return [test_case, test_statistics_queries, test_flagmanager]
 
 if __name__ == "__main__":
     main()

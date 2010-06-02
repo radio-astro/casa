@@ -523,9 +523,9 @@ namespace casa {
     Block<int> sort2(4);
     //sort2[0] = MS::SCAN_NUMBER;
     // Do scan priority only if quacking
-    sort2[0] = MS::ARRAY_ID;
-    sort2[1] = MS::FIELD_ID;
-    sort2[2] = MS::DATA_DESC_ID;
+    sort2[0]= MS::ARRAY_ID;
+    sort2[1]= MS::FIELD_ID;
+    sort2[2]= MS::DATA_DESC_ID;
     sort2[3] = MS::TIME;
     Double timeInterval = 7.0e9; //a few thousand years
 
@@ -916,8 +916,11 @@ namespace casa {
 	  comma-separated expressions
 	  and loop here, creating multiple clipRecs. 
 	  The RFASelector will handle it. */
-	if (clipexpr.length() && cliprange.nelements()==2 &&
-	    cliprange[0]<cliprange[1])
+	if (clipexpr.length() && cliprange.nelements() == 2 &&
+	    (cliprange[0] < cliprange[1] ||
+             cliprange[0] <= cliprange[1] && !outside // i.e. exact matching
+             )
+            )
 	    {
 		RecordDesc flagDesc;       
 		if ( outside )
@@ -1674,7 +1677,7 @@ namespace casa {
 
 	  chunk.newChunk(quack_agent_exists);
 
-	  // limit frequency of progmeter updates (duh!)
+	  // limit frequency of progmeter updates
 	  Int pm_update_freq = chunk.num(TIME)/200;
 
 	  // How much memory do we have?
@@ -1771,6 +1774,7 @@ namespace casa {
 	      // Doing a full data iteration    
 	      if ( data_pass )
 		{
+            
 		  sprintf(subtitle,"pass %d (data)",npass+1);
 		  ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq);
 		  // start pass for all active agents
@@ -1800,26 +1804,11 @@ namespace casa {
 			if (anyActive) acc[i]->initializeIter(itime);
 		    }
 
-		    for(uInt ii=0;ii<vb.flagRow().nelements();ii++)
-			if (vb.flagRow()(ii) == True) inRowFlags++;
+                    inRowFlags += sum(vb.flagRow());
 		    totalRows += vb.flagRow().nelements();
 		    totalData += vb.flagCube().shape().product();
-		    for(Int ii = 0;
-			ii < vb.flagCube().shape()(0);
-			ii++) {
-			
-			for(Int jj = 0;
-			    jj < vb.flagCube().shape()(1);
-			    jj++) {
-			    
-			    for(Int kk = 0;
-				kk < vb.flagCube().shape()(2);
-				kk++) {
-				
-				if (vb.flagCube()(ii,jj,kk)) inDataFlags++;
-			    }
-			}
-		    }
+
+                    inDataFlags += sum(vb.flagCube());
 		    
 		    // now, call individual VisBuffer iterators
 		    for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1948,13 +1937,9 @@ namespace casa {
 		  }
 		  
 		  //		  outRowFlags += sum(chunk.nrfIfr());
-		  
-		  for(uInt ii=0; ii < vb.flagRow().nelements(); ii++)
-		    if (vb.flagRow()(ii) == True) outRowFlags++;
-		  for(Int ii = 0; ii < vb.flagCube().shape()(0); ii++)
-		    for(Int jj = 0; jj < vb.flagCube().shape()(1); jj++)
-		      for(Int kk = 0; kk < vb.flagCube().shape()(2); kk++)
-			if (vb.flagCube()(ii, jj, kk)) outDataFlags++;
+
+		  outRowFlags += sum(vb.flagRow());
+                  outDataFlags += sum(vb.flagCube());
 
 	      }  // for (vi ... ) loop over time
 	      if (didSomething) {
@@ -2004,7 +1989,7 @@ namespace casa {
               
               LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
               
-              osss << "Field = " << field_id << " , Spw Id : " 
+              osss << "Field = " << field_id << " , Spw Id : "
                    << spw_id
                    << "  Total rows = " << totalRows
                    << endl;
