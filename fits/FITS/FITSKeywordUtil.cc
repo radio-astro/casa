@@ -498,12 +498,18 @@ Bool FITSKeywordUtil::getKeywords(RecordInterface &out,
     String baseCROTA;
 
     Int naxis = -1;
+    Int maxis = -1;
 
     while(key) {
 	String name = downcase(key->name());
 	if (name == "naxis" && !key->isindexed()) {
 	    if (key->type()==FITS::LONG) {
 		naxis = key->asInt();
+	    }
+        }
+	if (name == "maxis" && !key->isindexed()) {
+	    if (key->type()==FITS::LONG) {
+		maxis = key->asInt();
 	    }
         }
 //
@@ -545,8 +551,15 @@ Bool FITSKeywordUtil::getKeywords(RecordInterface &out,
 	if (naxis==-1) {
 	    os << LogIO::SEVERE << "Failed to decode naxis keyword" << LogIO::EXCEPTION;
 	}
-	min1D(baseCROTA) = 1;
-	max1D(baseCROTA) = naxis;
+	if (maxis==-1) {
+	  min1D(baseCROTA) = 1;
+	  max1D(baseCROTA) = naxis;
+	}
+	else{ // apparently a FITS-IDI file
+	  min1D(baseCROTA) = 1;
+	  max1D(baseCROTA) = maxis;
+	}
+
     }
 
     // OK, now step through actually writing all the keywords
@@ -556,9 +569,9 @@ Bool FITSKeywordUtil::getKeywords(RecordInterface &out,
     while(key) {
 	String fullName = downcase(key->name());
 
-	// Naxis is special - it is both a scalar keywords and an
+	// Naxis and Maxis are special - it is both a scalar keywords and an
 	// indexed keyword. If we have both ignore the scalar version.
-	if (fullName == "naxis" && !key->isindexed()) {
+	if ((fullName == "naxis" || fullName == "maxis") && !key->isindexed()) {
 	    key = in.next();
 	    continue;
 	}
