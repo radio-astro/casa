@@ -788,7 +788,6 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   if (sel_clip_row.nelements())
     addClipInfoDesc(sel_clip_row);
 
-  
 // if nothing has been specified to flag, flag everything within selection
   flag_everything = 
     (quack_si == 0 && 
@@ -1012,33 +1011,19 @@ void RFASelector::processRow(uInt ifr,uInt it)
 RFA::IterMode RFASelector::iterTime (uInt it)
 {
   RFAFlagCubeBase::iterTime(it);
+
+  // setup each correlation clip mapper
+  for (uInt i=0; i<sel_clip.nelements(); i++) 
+      if (sel_clip_active(i))
+          sel_clip[i].mapper->setVisBuffer(chunk.visBuf());
   
-// extract time
+  // extract time
   const Vector<Double> &times( chunk.visBuf().time() );
   const Vector<Double> &dtimes( chunk.visBuf().timeInterval() );
   Double t0 = times(0);
   Double dt0 = dtimes(0);
   if( !allEQ(times,t0) )
     os << "RFASelector: VisBuffer has given us different times." << LogIO::EXCEPTION;
-  bool timeselect = True;
-// is current time slot within any selected time ranges? return if not
-
-  //cout << "sel_timerng.ncolumn()=" << sel_timerng.ncolumn() << endl;
-  //what if sel_timerng=[4660370905] [4660370905] t0=4660370905.000004 ?
-
-  if( sel_timerng.ncolumn() ) {
-    //if( allEQ(sel_timerng.row(0)<=t0 && sel_timerng.row(1)>=t0,False) ) {
-    if(allEQ((sel_timerng.row(0)-0.1)<=t0 && (sel_timerng.row(1)+0.1)>=t0,False)){
-            timeselect = False;
-      //return RFA::CONT;
-    }
-    //if (timeselect) {
-    //  cout << "timeselect=" << timeselect << endl;
-    //  cout << "sel_timerng=" << std::setprecision(16) << sel_timerng.row(0) 
-    //       << " " << std::setprecision(16) << sel_timerng.row(1) << " " 
-    //       << std::setprecision(16) << t0 << endl;
-    //}
-  }
   
   // extract scan number
   const Vector<Int> &scans( chunk.visBuf().scan() );
@@ -1050,35 +1035,49 @@ RFA::IterMode RFASelector::iterTime (uInt it)
          << LogIO::EXCEPTION;
   }
 
-  // is current scan number within selected list of scan numbers ? return if not
-  bool scanselect = True;
+  // is current scan number within selected list of scan numbers?
+  bool scanselect = true;
   if (sel_scannumber.nelements()) {
-      bool sel = False;
-      for( uInt i=0;i<sel_scannumber.nelements();i++ )
-          if( sel_scannumber(i) == s0 ) sel |= True;
+      bool sel = false;
+      for (uInt i = 0;
+           i < sel_scannumber.nelements();
+           i++) {
+          if( sel_scannumber(i) == s0 ) {
+              sel = true;
+          }
+      }
     
-      if( ! sel ) scanselect = False;
+      if( ! sel ) scanselect = false;
       //if( ! sel )  return RFA::CONT;
   }
 
-  if( ! (timeselect && scanselect) ) return RFA::CONT;
+  // flag if within specific timeslots
+  bool timeselect = true;
+  if (sel_timerng.ncolumn()) {
+      timeselect = false;
+      if( anyEQ(sel_timerng.row(0) <= t0 && sel_timerng.row(1) >= t0,
+                True) ) {
+          timeselect = true;
+      }
+  }
+  
+  if ( ! (timeselect && scanselect) ) {       
+      return RFA::CONT;
+  }
   
   const Vector<Int> &ifrs( chunk.ifrNums() );
   const Vector<Int> &feeds( chunk.feedNums() );
   const Vector<casa::RigidVector<casa::Double, 3> >&uvw( chunk.visBuf().uvw() );
- // Vector<Vector<Double> > &uvw=NULL;//( chunk.visIter.uvw(uvw) );
+  // Vector<Vector<Double> > &uvw=NULL;//( chunk.visIter.uvw(uvw) );
   //chunk.visIter().uvw(uvw);
   Double uvdist=0.0;
 
   if( ifrs.nelements() != feeds.nelements() || 
       ifrs.nelements() != uvw.nelements() ) 
           cout << "RFASelector::iterTime ->  nelements mismatch " << endl;
-  
 
 // do we flag the whole selection?  
-  Bool flagall = flag_everything;
-
-  //cout << "flagall, shadow = " << flagall << ", " << shadow << endl;
+  bool flagall = flag_everything;
 
   if (!flagall) {
       if (shadow) {
@@ -1220,19 +1219,8 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 	  
       }
 
-      // flag if within specific timeslots
-      if (sel_time.ncolumn())
-	  if( anyEQ(sel_timerng.row(0)<=t0 && sel_timerng.row(1)>=t0,True) )
-	      flagall = True;
-
       // flag for specific row-based clipping expressions
       if (sel_clip_row.nelements()) {
-
-        // setup each row mapper
-        for( uInt i=0; i < sel_clip_row.nelements(); i++ ) {
-          sel_clip_row[i].mapper->setVisBuffer(chunk.visBuf());
-        }
-
 
         for( uInt i=0; i < ifrs.nelements(); i++ ) {// loop over rows
           for( uInt j=0; j < sel_clip_row.nelements(); j++ ) {
@@ -1298,8 +1286,8 @@ RFA::IterMode RFASelector::iterTime (uInt it)
           }
       }
   }
-  
-// flag whole selection, if still needed
+
+  // flag whole selection, if still needed
   if (flagall)
   {
     for (uInt i=0; i<ifrs.nelements(); i++) // loop over rows
@@ -1314,10 +1302,6 @@ RFA::IterMode RFASelector::iterTime (uInt it)
                 processRow(ifrs(i),it);
     }
   }
-// setup each correlation clip mapper
-  for (uInt i=0; i<sel_clip.nelements(); i++) 
-    if (sel_clip_active(i))
-      sel_clip[i].mapper->setVisBuffer(chunk.visBuf());
   
   return RFA::CONT;
 }
@@ -1363,23 +1347,22 @@ RFA::IterMode RFASelector::iterRow (uInt ir)
                   Float vmin = sel_clip[j].vmin;
                   Float vmax = sel_clip[j].vmax;
                   Float val = average;
+
                   if( ( sel_clip[j].clip && ( val <  vmin || val > vmax ) ) ||
                       (!sel_clip[j].clip &&   vmin <= val && val <= vmax   ) )
 
-#if 0
-                    if (!flagchan.nelements()) {
-                        /* No channel selections, flag all channels.
-                           
-                           jmlarsen: Unfortunately, clearRowFlag and setRowFlag
-                           don't seem to work, therefore don't enter this branch */
+                      /* No channel selections, flag all channels.
+                         
+                      jmlarsen: Unfortunately, clearRowFlag and setRowFlag
+                      don't seem to work, therefore don't do like this
 
-                        cout << " flag entire row " << endl;
-                        unflag ? 
-                            flag.clearRowFlag(ifr, it) :
-                            flag.setRowFlag(ifr, it);
-                    }
-#endif
-                    for (uInt ich = 0; ich < num(CHAN); ich++) {
+                      cout << " flag entire row " << endl;
+                      unflag ? 
+                      flag.clearRowFlag(ifr, it) :
+                      flag.setRowFlag(ifr, it);
+                      */
+                      
+                      for (uInt ich = 0; ich < num(CHAN); ich++) {
                         if (!flagchan.nelements() || flagchan(ich)) {
                             unflag ?
                               flag.clearFlag(ich, ifr) :
@@ -1398,6 +1381,7 @@ RFA::IterMode RFASelector::iterRow (uInt ir)
                 Float vmin = sel_clip[j].vmin;
                 Float vmax = sel_clip[j].vmax;
                 Float val  = sel_clip[j].mapper->mapValue(ich,ir);
+
                 if( ( sel_clip[j].clip && ( val<vmin || val>vmax ) ) ||
                     (!sel_clip[j].clip && val>=vmin && val<=vmax   ) )
                   unflag ? flag.clearFlag(ich,ifr) : flag.setFlag(ich,ifr);
