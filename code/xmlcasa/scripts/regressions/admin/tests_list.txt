@@ -14,7 +14,7 @@ accum_test                      scastro eso.org
 asdm-imexport+analysis		dpetry eso.org
 async-segfault                  dpetry eso.org
 b0319_regression                rreid nrao.edu
-b1608                           nelias nrao.edu
+b1608                           rreid nrao.edu
 calstat_test                    jmlarsen eso.org
 cleanhelper_test                rindebet nrao.edu
 cleanchan_test                  rindebet nrao.edu
@@ -52,7 +52,7 @@ orionmos4sim                    rreid nrao.edu
 orionmosaic                     kgolap aoc.nrao.edu
 plotxy_regression               hye aoc.nrao.edu
 pointing_regression             sbhatnag aoc.nrao.edu
-polcal_20080224_cband           nelias nrao.edu
+polcal_20080224_cband           gmoellen aoc.nrao.edu
 ppdisk_regression               rindebet nrao.edu
 ppdisk2_regression               rindebet nrao.edu
 pylabmem                        kgolap aoc.nrao.edu
