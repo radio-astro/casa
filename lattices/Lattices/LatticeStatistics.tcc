@@ -837,7 +837,7 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     Double useMemory = Double(memory)/10.0;
     if (forceDisk_p) useMemory = 0.0;
     if (haveLogger_p) {
-       os_p << LogIO::DEBUG1
+       os_p << LogIO::NORMAL1
             << "Creating new statistics storage lattice of shape " << storeLatticeShape << endl << LogIO::POST;
     }
 //
@@ -884,7 +884,7 @@ template <class T>
 void LatticeStatistics<T>::generateRobust ()
 {
    Bool showMsg = haveLogger_p && doRobust_p && displayAxes_p.nelements()==0;
-   if (showMsg) os_p << LogIO::DEBUG1 << "Computing robust statistics" << LogIO::POST;
+   if (showMsg) os_p << LogIO::NORMAL1 << "Computing robust statistics" << LogIO::POST;
 //
    const uInt nCursorAxes = cursorAxes_p.nelements();
    const IPosition latticeShape(pInLattice_p->shape());
@@ -1121,7 +1121,8 @@ Bool LatticeStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 
 template <class T>
 Bool LatticeStatistics<T>::getLayerStats(
-        String& stats, Vector<String>& zName, Int zAxis, Int layer) { 
+        String& stats, Vector<String>& zName, Int zAxis, Int layer,
+        Int hAxis, Int hLayer) { 
 
    if (!goodParameterStatus_p) {
      return False;
@@ -1162,10 +1163,31 @@ Bool LatticeStatistics<T>::getLayerStats(
    Double beamArea;
    Bool hasBeam = getBeamArea(beamArea);
 
+   uInt zAx = 0;
+   uInt hAx = 0;
+   for (uInt j=0; j<displayAxes_p.nelements(); j++) {
+      if (zAxis == displayAxes_p(j))
+         zAx = j;
+      if (hAxis == displayAxes_p(j))
+         hAx = j;
+   }
+   //cout << "zAx=" << zAx << " zAxis=" << zAxis
+   //     << " layer=" << layer << endl;
+   //cout << "hAx=" << hAx << " hAxis=" << hAxis
+   //     << " hLayer=" << hLayer << endl;
+
    ostringstream os;
    for (pixelIterator.reset(); 
         !pixelIterator.atEnd(); pixelIterator++) {
-
+      IPosition dPos = pixelIterator.position();
+      //cout << "pixelIterator.position()=" 
+      //     << dPos << endl;
+      //Int lyr = locInLattice(dPos,True)(zAx);
+      //cout << "lyr=" << lyr << endl;
+      //Int hyr = locInLattice(dPos,True)(hAx);
+      //cout << "hyr=" << hyr << endl;
+      //if (zAx == 1 && hyr != hLayer) 
+      //   continue;
       Matrix<AccumType>  matrix(pixelIterator.matrixCursor());  
       for (uInt i=0; i<n1; i++) {
          const AccumType& nPts = matrix(i,NPTS);
@@ -1187,7 +1209,7 @@ Bool LatticeStatistics<T>::getLayerStats(
       }
 
       listLayerStats(hasBeam, pixelIterator.position(), ord,
-                     os, zName, zAxis, layer);
+                     os, zName, zAxis, layer, hAxis, hLayer);
    }
    stats += os.str();
    stats += '\n';
@@ -1199,7 +1221,8 @@ template <class T>
 Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam, 
     const IPosition& dPos, const Matrix<AccumType>& stats,
     ostringstream& os, Vector<String>& zName,
-    Int zAxis, Int layer) 
+    Int zAxis, Int layer, 
+    Int hAxis, Int hLayer) 
 {
 
    const uInt nDisplayAxes = displayAxes_p.nelements();
@@ -1208,12 +1231,17 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
 
    //cout << "displayAxes_p=" << displayAxes_p << endl;
    uInt zAx = -1;
+   uInt hAx = -1;
    for (uInt j=0; j<nDisplayAxes; j++) {
       if (zAxis == displayAxes_p(j))
          zAx = j;
+      if (hAxis == displayAxes_p(j))
+         hAx = j;
    }
    //cout << "zAx=" << zAx << " zAxis=" << zAxis
    //     << " layer=" << layer << endl;
+   //cout << "hAx=" << hAx << " hAxis=" << hAxis
+   //     << " hLayer=" << hLayer << endl;
 
    Int oDWidth = 15;
    T* dummy = 0;
@@ -1225,6 +1253,9 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
    Int oPrec = 6;   
 
    Int lyr = locInLattice(dPos,True)(zAx);
+   //cout << "lyr=" << lyr << endl;
+   Int hyr = locInLattice(dPos,True)(hAx);
+   //cout << "hyr=" << hyr << endl;
    //Write the pixel and world coordinate of the higher order 
    //display axes to the logger
    //if (nDisplayAxes > 1) {
@@ -1240,9 +1271,14 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
       //os <<  "Axis " << displayAxes_p(j) + 1 << " = " 
       //   << locInLattice(dPos,True)(j)+1;
    //}
+
    if (zAx != 0 && lyr != layer)
          return 0; 
 
+   if (hAx != 0 && hyr != hLayer)
+         return 0; 
+
+   /*
    for (uInt s = 0; s < nDisplayAxes; s++) { 
       if (s == zAx)
          os << zName[displayAxes_p(s)] 
@@ -1254,6 +1290,7 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
          os << ", ";
    }
    os << endl;
+   */
    //os << "zIndex=" << layer << endl;
 
    setStream(os, oPrec);
@@ -1263,6 +1300,7 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
    IPosition blc(pInLattice_p->ndim(),0);
    IPosition trc(pInLattice_p->shape()-1);
 
+   /* 
    Int len0;
    if (nStatsAxes == 1) {
       len0 = 8;
@@ -1280,6 +1318,8 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
       len0 = 11;
       os << setw(len0) << "Hyper-cube ";
    }
+   */
+   
 
    os << setw(10) << "Npts";
    os << setw(oDWidth) << "Sum";
@@ -1296,10 +1336,10 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
    //Write statistics to logger.  We write the pixel location
    //relative to the parent lattice
    for (uInt j=0; j<n1; j++) {
-      if (zAx != 0 || layer == j) {
+      if (/*zAx != 0 && */layer == j)  {
 
-      os << setw(len0)     
-         << j+blcParent_p(displayAxes_p(0));
+      //os << setw(len0)     
+      //   << j+blcParent_p(displayAxes_p(0));
 
       //setStream(os, oPrec);
       os.fill(' '); 
