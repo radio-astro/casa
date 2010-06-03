@@ -1224,20 +1224,72 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     Vector<Int> dispAxes = padd->displayAxes();
     //cout << "dispAxes=" << dispAxes << endl;
 
-    
     Vector<Int> cursorAxes(2);
     cursorAxes(0) = dispAxes[0]; //display axis 1
     cursorAxes(1) = dispAxes[1]; //display axis 2
     //cout << "cursorAxes=" << cursorAxes << endl;;
+
+
     if (!stats.setAxes(cursorAxes)) return False;
     stats.setList(True);
     String layerStats;
     Vector<String> nm = cs.worldAxisNames();
-    //cout << "cs=" << nm << endl;
-    stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
+    //cout << "nm=" << nm << endl;
+
+    Record rec = dd_->getOptions();
+    //cout << "dd=" << rec << endl;
+    String zaxis = "";
+    String haxis = "";
+    Int hIndex = 0;
+    try {
+       //String xaxis = rec.subRecord("xaxis").asString("value");
+       //String yaxis = rec.subRecord("yaxis").asString("value");
+       zaxis = rec.subRecord("zaxis").asString("value");
+       haxis = rec.subRecord("haxis1").asString("listname");
+       hIndex = rec.subRecord("haxis1").asInt("value");
+       //cout << "z=" << zaxis << " w=" << haxis << endl;
+    }
+    catch(...){}
+
+    Int zPos = 0;
+    Int hPos = 0;
+    for (Int k = 0; k < nm.nelements(); k++) {
+       if (nm(k) == zaxis)
+          zPos = k;
+       if (nm(k) == haxis)
+          hPos = k;
+    }
+    //cout << "zPos=" << zPos << " hPos=" << hPos << endl;
+
+    Vector<Double> tPix,tWrld;
+    tPix = cs.referencePixel();
+    tPix(zPos) = zIndex;
+    tPix(hPos) = hIndex;
+    //cout << "tPix=" << tPix << endl;
+    String tStr;
+    String zLabel;
+    String hLabel;
+    if (!cs.toWorld(tWrld,tPix)) {
+    } else {
+       zLabel = ((CoordinateSystem)cs).format(tStr, 
+                 Coordinate::DEFAULT, tWrld(zPos), zPos);
+       zLabel += tStr;
+       hLabel = ((CoordinateSystem)cs).format(tStr, 
+                 Coordinate::DEFAULT, tWrld(hPos), hPos);
+       hLabel += tStr;
+    }
+    //cout << "zLabel=" << zLabel << " hLabel=" << hLabel << endl;
+    //cout << "tStr=" << tStr << endl;
+
+    String head = "Statistics at " + zaxis + "=" + zLabel + " " +
+            haxis + "=" + hLabel + "\n";
+    //stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
+    stats.getLayerStats(layerStats, nm, zPos, zIndex, hPos, hIndex); 
     //cout << layerStats << endl;
+
+    layerStats = head + layerStats;
+
     //cout << "done getLayerStats" << endl ;
-    
     emit statsReady(layerStats);
     return True;
 

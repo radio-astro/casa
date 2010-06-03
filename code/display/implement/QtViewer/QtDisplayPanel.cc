@@ -334,7 +334,9 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
     if(imReg==0) continue;
      
     if(printStats) {
-       qdd->printRegionStats(*imReg);	// stats.
+       //it is said that the stats for the cube is useless
+       //so disable it
+       //qdd->printRegionStats(*imReg);	// stats.
        qdd->printLayerStats(*imReg);	// stats.
     }
     
