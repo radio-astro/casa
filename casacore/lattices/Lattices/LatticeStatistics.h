@@ -281,7 +281,8 @@ public:
 
    Bool display();
    Bool getLayerStats(String& stats, Vector<String>& zName,
-                      Int zAxis=-1, Int layer=-1); 
+                      Int zAxis=-1, Int zLayer=-1, 
+                      Int hAxis=-1, Int hLayer=-1); 
 
 // CLose plotter
    void closePlotting();
@@ -393,7 +394,8 @@ protected:
              const IPosition& dPos, const Matrix<AccumType>& ord,
              ostringstream& rslt, 
              Vector<String>& zName,
-             Int zAxis, Int layer); 
+             Int zAxis, Int zLayer, 
+             Int hAxis, Int hLayer); 
 
 // Gets labels for higher order axes and x axis.
 // dPos is the location of the start of the cursor in the

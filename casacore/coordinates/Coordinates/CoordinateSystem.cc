@@ -2097,6 +2097,8 @@ Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units)
 
 Bool CoordinateSystem::setReferencePixel(const Vector<Double> &refPix)
 {
+    //cout << "refPix.nelements()=" << refPix.nelements() << endl;
+    //cout << "nPixelAxes()=" << nPixelAxes() << endl;
     Bool ok = (refPix.nelements()==nPixelAxes());
     if (!ok) {
       set_error("ref. pix vector must be of length nPixelAxes()");

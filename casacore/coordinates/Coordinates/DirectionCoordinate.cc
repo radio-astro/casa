@@ -603,6 +603,9 @@ Bool DirectionCoordinate::setReferencePixel(const Vector<Double> &refPix)
        return False;
     }
 //
+    //cout << "refPix[0]=" << refPix[0]
+    //     << " refPix[1]=" << refPix[1]
+    //     << endl;
     wcs_p.crpix[0] = refPix[0];
     wcs_p.crpix[1] = refPix[1];
     set_wcs(wcs_p);
