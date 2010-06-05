@@ -185,7 +185,15 @@ public:
   Int numberChan(Int spw) const;
   Int numberCorr(Int pol) const;
 
+  // Return the row ids as from the original root table. This is useful 
+  // to find correspondance between a given row in this iteration to the 
+  // original ms row
+  virtual Vector<uInt>& rowIds(Vector<uInt>& rowids) const; 
+
 protected:
+  virtual void setSelTable();
+
+  virtual const Table attachTable() const;
 
   // update the DATA slicer
   virtual void updateSlicer();
@@ -195,11 +203,26 @@ protected:
   virtual void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, 
 			     Cube<Complex>& data) const;
 
+  Table selTable_p;
+
   // New slicer supports multiple Slices in channel and correlation
   Vector<Vector<Slice> > chanSlices_p, corrSlices_p, newSlicer_p, newWtSlicer_p;
   Bool useNewSlicer_p;
   Vector<Matrix<Int> > chanAveBounds_p;
 
+  // Column access functions
+  virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
+
+  virtual void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
+  virtual void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;
+  virtual void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = False) const;
+  virtual void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = False) const;
+
+  virtual void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = False) const;
+  virtual void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
+  virtual void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
 };
 
 // <summary>
@@ -299,7 +322,7 @@ public:
   void setWeightSpectrum(const Cube<Float>& wtsp);
 
 protected:
-  virtual void attachColumns();
+  virtual void attachColumns(const Table &t);
 
   // deals with Float or Complex observed data (DATA and FLOAT_DATA).
   void putDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices,
@@ -307,6 +330,16 @@ protected:
   void putDataColumn(DataColumn whichOne, const Cube<Complex>& data);
 
   // column access functions
+  virtual void putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array);
+
+  virtual void putCol(ArrayColumn<Bool> &column, const Array<Bool> &array);
+  virtual void putCol(ArrayColumn<Float> &column, const Array<Float> &array);
+  virtual void putCol(ArrayColumn<Complex> &column, const Array<Complex> &array);
+
+  virtual void putCol(ArrayColumn<Bool> &column, const Slicer &slicer, const Array<Bool> &array);
+  virtual void putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array);
+  virtual void putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array);
+
   ArrayColumn<Complex> RWcolVis;
   ArrayColumn<Float> RWcolFloatVis;
   ArrayColumn<Complex> RWcolModelVis;
