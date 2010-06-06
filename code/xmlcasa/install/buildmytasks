@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 IAM=`basename $0`
 VERBOSE="off"

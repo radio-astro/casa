@@ -795,7 +795,8 @@ Int TPPlotter::initPlot()
       PyInterp_p = new CasaPyInterpreter(usegui_p);
 
       PyInterp_p->setupCustomGuiFeatures();
-      PyInterp_p->pyrunString("pl.ioff()\n" ); //
+      PyInterp_p->pyrunString("pl.clf()\n" ); //DP
+      PyInterp_p->pyrunString("pl.ioff()\n" ); //RI
 #if LOG2 
       log->out(String("usegui : ")+String::toString(usegui_p),
                fnname, clname, LogMessage::DEBUG1);
@@ -1632,7 +1633,7 @@ Int TPPlotter::clearPlot(Int panel, Bool delaxes)
    //TODO -make this a tighter check.
    if(!PyInterp_p) 
    {
-      log->out("No plot to clear !", fnname, clname, LogMessage::SEVERE );
+      log->out("No plot to clear !", fnname, clname, LogMessage::DEBUG1 );
       return 0;
    }
 

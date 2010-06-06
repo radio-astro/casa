@@ -124,9 +124,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/ngc5921_usecase.py
   scripts/odict.py
   scripts/parallel_go.py
-  scripts/parallel/__init__.py
-  scripts/parallel/parallel_cont.py
-  scripts/parallel/pcont.py
   scripts/parameter_check.py
   scripts/parameter_dictionary.py
   scripts/pointcal.py
@@ -409,6 +406,7 @@ add_subdirectory( scripts/regressions/tests )
 add_subdirectory( scripts/usecases )
 add_subdirectory( scripts/demos )
 add_subdirectory( scripts/recipes )
+add_subdirectory( scripts/parallel )
 
 # Documentation targets, which depend on the contents of casa_out_* being set
 # Latex target

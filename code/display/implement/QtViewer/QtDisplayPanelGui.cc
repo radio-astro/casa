@@ -927,6 +927,9 @@ void QtDisplayPanelGui::hideCanvasManager() {
   qcm_->hide();  }
 
 void QtDisplayPanelGui::showStats(const String& stats) {
+  cout << stats << endl;
+  
+  /* this print stats on to a panel
   QFont font("Monospace");
   if(qst_==0) {
      qst_ = new QTextEdit;
@@ -952,6 +955,7 @@ void QtDisplayPanelGui::showStats(const String& stats) {
   qst_->append(s);
   qst_->showNormal();
   qst_->raise();  
+  */
 }
 
 void QtDisplayPanelGui::hideStats() {

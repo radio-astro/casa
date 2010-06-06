@@ -82,8 +82,12 @@ def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e1
     numchanperms=len(allfreq)
     print 'number of channels', numchanperms
     minfreq=np.min(allfreq)
+    if(minfreq > endfreq):
+        return -1, -1, -1
     minfreq=minfreq if minfreq > beginfreq else beginfreq
     maxfreq=np.max(allfreq)
+    if(maxfreq < beginfreq):
+        return -1, -1, -1
     maxfreq=maxfreq if maxfreq < endfreq else endfreq
     startallchan=0
     while (minfreq > allfreq[startallchan]):
@@ -456,6 +460,18 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     hostname=os.getenv('HOSTNAME')
     wd=os.getcwd()
     owd=wd
+   ########################3
+    ###num of cpu per node
+    numcpu=numcpuperhost
+    if((hostnames==[]) or (hostnames=='')): 
+        hostnames=[hostname]
+    print 'Hosts ', hostnames
+    time1=time.time()
+    print 'output will be in directory', owd
+    for hostname in hostnames:
+        c.start_engine(hostname,numcpu,owd)
+    numcpu=numcpu*len(hostnames)
+    #####################
     model=imagename+'.model' 
     if(not contclean or (not os.path.exists(model))):
         shutil.rmtree(model, True)
@@ -482,16 +498,6 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     shutil.rmtree(imagename+'.residual', True)
     shutil.copytree(model, imagename+'.image')
     shutil.copytree(model, imagename+'.residual')
-    ###num of cpu per node
-    numcpu=numcpuperhost
-    if((hostnames==[]) or (hostnames=='')): 
-        hostnames=[hostname]
-    print 'Hosts ', hostnames
-    time1=time.time()
-    print 'output will be in directory', owd
-    for hostname in hostnames:
-        c.start_engine(hostname,numcpu,owd)
-    numcpu=numcpu*len(hostnames)
 
     out=range(numcpu)  
     c.pgc('from  parallel.parallel_cont import *')
