@@ -125,9 +125,11 @@ class ms
                const ::casac::variant& tileshape=::casac::initialize_variant(""),
                const ::casac::variant& subarray=::casac::initialize_variant(""),
                const bool averchan=true,
-               const std::string&      ignorables="");
+               const std::string&      ignorables="",
+               const std::string&      correlation="");
 
-    bool iterinit(const std::vector<std::string>& columns, const double interval, const int maxrows, const bool adddefaultsortcolumns = true);
+    bool iterinit(const std::vector<std::string>& columns, const double interval,
+                  const int maxrows, const bool adddefaultsortcolumns = true);
 
     bool iterorigin();
 

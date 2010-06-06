@@ -2479,7 +2479,6 @@ for i in range(len(tcoord)):
    
   <keyword>split</keyword>
   <input>
-    
      <param type="string" direction="in" name="outputms">
      <description>The name of the resulting measurement set</description>
      <value></value>
@@ -2554,6 +2553,11 @@ for i in range(len(tcoord)):
 
      <param type="string" direction="in" name="ignorables">
      <description>Columns (array, scan, and/or state) to ignore when time averaging.</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="correlation">
+     <description>Limit data to specific correlations (LL, XX, LR, XY, etc.).</description>
      <value></value>
      </param>
   </input>
