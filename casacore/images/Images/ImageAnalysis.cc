@@ -4900,12 +4900,10 @@ Bool ImageAnalysis::statistics(
 	const Vector<Float>& includepix, const Vector<Float>& excludepix,
 	const String& plotterdev, const Int nx, const Int ny, const Bool list,
 	const Bool force, const Bool disk, const Bool robust,
-	const Bool verbose) {
+	const Bool verbose
+) {
 	String pgdevice("/NULL");
 	*itsLog << LogOrigin("ImageAnalysis", "statistics");
-
-	// Convert region from Glish record to ImageRegion. Convert mask to ImageRegion
-	// and make SubImage.
 
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
@@ -4917,7 +4915,7 @@ Bool ImageAnalysis::statistics(
 			*itsLog, False);
 
 	// Reset who is logging stuff.
-	*itsLog << LogOrigin("ImageAnalysis", "statistics");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Find BLC of subimage in pixels and world coords, and output the
 	// information to the logger.
@@ -4932,24 +4930,26 @@ Bool ImageAnalysis::statistics(
 		blc = sl.start();
 		trc = sl.end();
 	}
-
 	// for precision
 	CoordinateSystem cSys = pImage_p->coordinates();
-	DirectionCoordinate dirCoord = cSys.directionCoordinate(0);
-	Vector<String> dirUnits = dirCoord.worldAxisUnits();
-	Vector<Double> dirIncs = dirCoord.increment();
+	Bool hasDirectionCoordinate = (cSys.findCoordinate(Coordinate::DIRECTION) >= 0);
 	Int precis = -1;
-	dirCoord.directionType();
-	for (uInt i=0; i< dirUnits.size(); i++) {
-		Quantity inc(dirIncs[i], dirUnits[i]);
-		inc.convert("s");
-		Int newPrecis = abs(int(floor(log10(inc.getValue()))));
-		precis = (newPrecis > 2 && newPrecis > precis) ? newPrecis : precis;
+	if (hasDirectionCoordinate) {
+		DirectionCoordinate dirCoord = cSys.directionCoordinate(0);
+		Vector<String> dirUnits = dirCoord.worldAxisUnits();
+		Vector<Double> dirIncs = dirCoord.increment();
+		for (uInt i=0; i< dirUnits.size(); i++) {
+			Quantity inc(dirIncs[i], dirUnits[i]);
+			inc.convert("s");
+			Int newPrecis = abs(int(floor(log10(inc.getValue()))));
+			precis = (newPrecis > 2 && newPrecis > precis) ? newPrecis : precis;
+		}
 	}
 
 	String blcf, trcf;
 	blcf = CoordinateUtil::formatCoordinate(blc, cSys, precis);
 	trcf = CoordinateUtil::formatCoordinate(trc, cSys, precis);
+
 	if (list) {
 		// Only write to the logger if the user wants it displayed.
 		*itsLog << LogOrigin("ImageAnalysis", "statistics") << LogIO::NORMAL;
