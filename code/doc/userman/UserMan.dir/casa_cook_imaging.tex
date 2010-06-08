@@ -23,6 +23,7 @@
 % STM 2009-11-13  boxit and autoclean from Amy Kimball
 % STM 2009-12-15  Release 3.0.0 final
 % JO 2010-01-17     Release 3.0.1 edits
+% JO 2010-05-25     Release 3.0.2 edits
 
 \chapter{Synthesis Imaging}
 \label{chapter:im}
@@ -271,7 +272,7 @@ mode              =  'channel'   #  Spectral image definition(mfs, channel, velo
    nchan          =         -1   #  Number of channels (planes) in output image
    start          =          0   #  first input channel to use
    width          =          1   #  Number of input channels to average
-   interpolation  =  'nearest'   #  Spectral interpolation(nearest, linear, cubic)
+   interpolation  =   'linear'   #  Spectral interpolation(nearest, linear, cubic)
 \end{verbatim}
 \normalsize
 The default {\tt nchan=-1} will automatically produce a cube with the
@@ -335,7 +336,7 @@ mode              = 'frequency'   #  Spectral image definition(mfs, channel, vel
    nchan          =          -1   #  Number of channels (planes) in output image
    start          =          ''   #  Frequency of first image channel: e.q. '1.4GHz'(''=default)
    width          =          ''   #  Image channel frequency width: e.g '1.0kHz'(''=default)
-   interpolation  =   'nearest'   #  Spectral interpolation(nearest, linear, cubic)
+   interpolation  =    'linear'   #  Spectral interpolation(nearest, linear, cubic)
    outframe       =          ''   #  velocity frame of output image
 \end{verbatim}
 \normalsize
@@ -398,7 +399,7 @@ mode              = 'velocity'   #  Spectral image definition(mfs, channel, velo
    nchan          =         -1   #  Number of channels (planes) in output image
    start          =         ''   #  Velocity of first image channel: e.g '0.0km/s'(''=default)
    width          =         ''   #  Image channel velocity width: e.g '-1.0km/s'(''=default)
-   interpolation  =  'nearest'   #  Spectral interpolation(nearest, linear, cubic)
+   interpolation  =  'linear'   #  Spectral interpolation(nearest, linear, cubic)
    outframe       =         ''   #  velocity reference frame of output image; '' =input
    veltype        =    'radio'   #  velocity definition
 \end{verbatim}
@@ -1006,7 +1007,7 @@ mode            =  'channel' # Type of selection (mfs, channel, velocity, freque
      nchan      =         46 # Number of channels (planes) in output image
      start      =          5 # first input channel to use
      width      =          1 # Number of input channels to average
- interpolation  =  'nearest' # Spectral interpolation (nearest, linear, cubic)
+ interpolation  =  'linear' # Spectral interpolation (nearest, linear, cubic)
 
 gridmode        =         '' # The kind gridding kernel to be used for FFT-based transforms
 niter           =       6000 # Maximum number of iterations
@@ -1514,20 +1515,16 @@ iterations of clean before stopping.
 \begin{verbatim}
 interactive    =   True   #  use interactive clean (with GUI viewer)
    npercycle   =    100   #  Number of iterations before interactive prompt
-   chaniter    =  False   #  CLEAN spectral data cube per channel instead of jointly
 \end{verbatim}
 \normalsize
 Note that {\tt npercycle} is currently the only way to control the
 breakpoints in interactive clean. 
 
 For spectral cube imaging, it is often easier to deal with each
-channel in turn, rather than cleaning all channels in each cycle.
-We therefore provide the {\tt chaniter=True} option, where it will
-clean a channel fully before moving to the next one.  You will set
-masks for each channel.  {\tt ALERT:} the {\tt veltype='optical'}
-option for {\tt mode='velocity''} 
-(\S~\ref{section:im.pars.mode.velocity}) is currently disabled for 
-interactive clean with {\tt chaniter=True} due to technical issues.
+channel in turn, rather than cleaning all channels in each cycle.  We
+therefore provide the {\tt chaniter=True} option under 'mode', where
+it will clean a channel fully before moving to the next one.  You will
+set masks for each channel. 
 
 See the example of interactive cleaning in 
 \S~\ref{section:im.clean.exampleinteractive}.

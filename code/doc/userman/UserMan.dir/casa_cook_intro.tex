@@ -23,6 +23,7 @@
 % STM 2009-11-10  release 3.0.0 editing started
 % STM 2009-12-02  release 3.0.0 change to User Reference and Cookbook
 % JO 2010-02-22 release 3.0.1 editing started
+% JO 2010-04-16 release 3.0.2 editing started
 
 \chapter{Introduction}
 \label{chapter:intro}
@@ -208,6 +209,146 @@ data delivery from the EVLA. However, many improvements to the code
 have been made and a number of bugs have been fixed. The improvements include:
 
 \begin{itemize}
+
+
+
+
+\item {\bf Flagging}
+   \begin{itemize}
+   \item up to 30\% speed improvements in {\tt flagdata}, in
+    particular for data with many spectral windows
+    \end{itemize}
+
+\item {\bf  Imaging}
+   \begin{itemize}
+   \item new task {\tt csvclean} to support ALMA commissioning. This
+  task does an invert of the visibilities and deconvolve in the image
+  plane. This task does not do a uvdata subtraction (aka Cotton-Schwab
+  major cycle) of model visibility as in clean
+     \item  {\tt clean}: 'chaniter' is now separated from the 'interactive'
+                        parameter and available for 'channel',
+                        'frequency' and 'velocity' modes. Cleaning
+                        sequencially by channel is now available not
+                        just for interactive but also for
+                        non-interactive {\tt clean}
+   \end{itemize}
+
+\item {\bf  Data examination/editing}
+   \begin{itemize}
+    \item {\tt ms.msseltoindex} now returns list of channels only those channels
+  selected by the "spw" parameter.  It also now returns the
+  baseline/antenna selection.
+    \item  {\tt listvis} can read FLOAT\_DATA columns from single dish
+MS. Also: improved listing of auto-correlation MS on a Mac
+
+    \item  In {\tt plotms}, improved "locate" output format using field and antenna
+names, instead of indices
+    \item In {\tt plotms}, new axes choices supported (when not averaging): Wt, ImWt
+
+      \item  {\tt plotms} will plot caltables.  NB: This is still under development and
+should be used with caution.  Many gui options---e.g., averaging,
+transformations, some axis options---are not supported, even though
+they appear to be available.
+
+
+ \end{itemize}
+
+\item {\bf  Calibration}
+ \begin{itemize}
+  \item new parameter 'minsnr' in {\tt bandpass} for channel based, 'B',
+  solutions. 'minsnr' defines the signal to noise threshold for a
+  solution to be valid
+  \item  The EPJones table now has separate pointing offsets for the two
+polarizations
+  \item  New gaincurves for the EVLA, and some bugs fixed in gaincurve application
+  \item  Channelized R-L phase calibration now supported in {\tt polcal} via poltype='Xf'.
+  \item  Provisional "Perley-Butler 2010" flux density scale now supported in
+   {\tt setjy}.  NB:
+the default is still "Perley-Taylor 1999", until the authors complete their
+analysis.  "Perley-Butler 2010" is recommended for high VLA/EVLA frequencies
+(> 15 GHz) as it is bootstrapped to the absolute flux density
+calibraiton of WMAP
+using planets at the higher frequencies.
+
+
+\end{itemize}
+  
+
+\item {\bf Data and Image Manipulation}
+ \begin{itemize}
+    \item  the default interpolation method in spectral gridding
+      within {\tt  clean} and {\tt cvel} is now set to 'linear' instead of
+  'nearest'
+    \item  {\tt immath}: mode  'pola' and 'poli' calculations now can be done if a single,
+     multi-stokes image is provided; added linear polarization
+    intensity  threshold for 'pola'
+    \end{itemize}
+
+\item {\bf  Simulation}
+ \begin{itemize}
+\item  introducing a new task interface {\tt simdata2}: modular / independent
+execution of subtasks: modify sky model, calculate mosaic pointings,
+predict visibilities, (re)image the data, and analyze the simulated
+image
+\item  {\tt simdata2} incorporates single dish capability from {\tt sdsim}, including
+joint deconvolution of simulated total power and interferometric data
+\item  the old {\tt simdata} and {\tt sdsim} tasks are preserved for backward capability,
+with some bugs fixed.
+ \end{itemize}
+
+\item {\bf  Data im/export}
+      \begin{itemize}
+       \item  {\tt exportuvfits} now has a parameter {\tt padwithflags}
+  which allows users to add flags to missing data sections if {\tt  combinespw} is set. With both parameters set, exportuvfits will
+  export the spectral windows as IFs
+       \item   {\tt importevla} task has now an option to write
+   autocorrelation and/or crosscorrelation data to an MS. The task can
+   also flag all data that come as zeros
+  \end{itemize}
+
+\item {\bf Single Dish}
+   \begin{itemize}
+
+    \item  header, panel layout, and legend location control for {\tt sdplot}. 
+Also a new parameter 'plotstyle' is added to allow more flexibility
+in arranging plots. 
+    \item  {\tt  sdsim} has new options 'checkinputs', 'fidelity', and
+    'display' for improved plotting flexibility.
+    \item  {\tt asapplotter} has now options to change the panel layout 
+    \item  {\tt msmoments} now also works on single-dish measurement
+   sets. Added subparameters for data selection; 'includerow' and
+   'excluderow' were renamed to 'includemask' and 'excludemask'
+     \end{itemize}
+
+
+
+\item {\bf  Other}
+   \begin{itemize}
+    \item   up to 2.5 times speed improvement in the creation of scratch columns
+  ('model' and 'corrected\_data' columns)
+    \item   'rm -r' within CASA is now calling shutil.rmtree  for cleaner
+    removal of datasets and tables
+   \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \item {\bf Flagging}
     \begin{itemize}

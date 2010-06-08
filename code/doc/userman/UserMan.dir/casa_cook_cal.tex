@@ -31,6 +31,7 @@
 % STM 2009-12-15  Release 3.0.0 cvel
 % GM  2009-12-22  Release 3.0.0 gencal (and other edits)
 % JO 2010-03-05 Release 3.0.1 edits
+% JO 2010-04-16 Release 3.0.2 editing starts
 
 \chapter{Synthesis Calibration}
 \label{chapter:cal}
@@ -1762,6 +1763,10 @@ plotxy('data.ms',xaxis='channel',datacolumn='corrected',subplot=212)
 The calibrated data is written to the {\tt CORRECTED\_DATA} column, with 
 {\tt calwt=True} by default.
 
+{\bf Alert:} {\it Current} (as of June 2010)  EVLA data has no weights
+to the data. To avoid trouble, {\tt calwt=False} should be set for
+those data sets. Older VLA data should still be calibrated with  {\tt calwt=True}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Polarization-independent Gain (T)}
 \label{section:cal.solve.gain.t}
@@ -3145,6 +3150,12 @@ This should in {\em almost all cases} be set to its default ({\tt True}).
 The weights should reflect the inverse noise variance of the
 visibility, and errors in amplitude are usually also in the weights.
 
+
+{\bf Alert:} {\it Current} (as of June 2010) EVLA data has no weights
+to the data. To avoid trouble, {\tt calwt=False} should be set for
+those data sets. Older VLA data should still be calibrated with {\tt
+  calwt=True}.
+
 For {\tt applycal}, the list of final cumulative tables is given in 
 {\tt gaintable}.  In this case you will have run {\tt accum} if you
 have done incremental calibration for any of the types, such as {\tt 'G'}. 
@@ -3624,11 +3635,6 @@ of a MS is available to aid in calibration operations (e.g.\ continuum
 subtraction) and preparation for imaging.  For this purpose, the
 {\tt cvel} task has been developed.  
 
-{\bf ALERT:} The {\tt cvel} task is in the early development phase,
-and is provided in this release for testing purposes.  There are known
-efficiency issues and bugs.  See the online Release Notes page for
-up-to-date details.
-
 The inputs are:
 \small
 \begin{verbatim}
@@ -3738,10 +3744,6 @@ cvel(vis='test_w3oh_nohann.ms',
 \normalsize
 will transform a MS into the LSRK and BARYcenter frames respectively.
 
-{\bf ALERT:} The frequency regridding in the {\tt cvel} task is not
-currently as good as that in {\tt clean}, and you may see some
-broadening of the line profile even with {\tt hanning=F}.  Use this
-mode with care.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{UV-Plane Model Fitting ({\tt uvmodelfit})}
