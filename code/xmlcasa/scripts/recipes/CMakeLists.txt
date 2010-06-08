@@ -29,4 +29,5 @@ casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   make_labelled_ms.py
   psplit.py
   taskutil.py
+  listshapes.py
 )
