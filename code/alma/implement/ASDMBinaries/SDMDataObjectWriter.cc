@@ -87,7 +87,7 @@ namespace asdmbinaries {
   }
   
   void SDMDataObjectWriter::output(const string& s) {
-    numBytes_ += (unsigned long long) s.size();
+    numBytes_ += (uint64_t) s.size();
     switch (otype_) {
     case STDOUT:
       cout << s;
@@ -152,7 +152,7 @@ namespace asdmbinaries {
   }
 
 
-  void SDMDataObjectWriter::tpDataHeader(unsigned long long int startTime,
+  void SDMDataObjectWriter::tpDataHeader(uint64_t startTime,
 					 const string& execBlockUID,
 					 unsigned int execBlockNum,
 					 unsigned int scanNum,
@@ -189,12 +189,12 @@ namespace asdmbinaries {
     outputln("--"+MIMEBOUNDARY_1);
   }
   
-  void SDMDataObjectWriter::addTPSubscan(unsigned long long time,
-					 unsigned long long interval,
+  void SDMDataObjectWriter::addTPSubscan(uint64_t time,
+					 uint64_t interval,
 					 const vector<unsigned int>& flags,
-					 const vector<long long>& actualTimes,
-					 const vector<long long>& actualDurations,
-					 const vector<float>& autoData){
+					 const vector<int64_t>& actualTimes,
+					 const vector<int64_t>& actualDurations,
+					 const vector<AUTODATATYPE>& autoData){
     checkState(T_ADDTPSUBSCAN, "addTPSubscan");
     outputln("Content-Type: Multipart/Related; boundary=\""+MIMEBOUNDARY_2+"\";type=\"text/xml\"; start=\"<DataSubset.xml>\"");
     outputln("Content-Description: Data and metadata subset");
@@ -246,7 +246,7 @@ namespace asdmbinaries {
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualTimes.bin");
 
       outputln();
-      outputln<long long>(actualTimes);
+      outputln<int64_t>(actualTimes);
     }
 
     if (actualDurations.size() != 0) {
@@ -263,7 +263,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualDurations.bin");
       outputln();
-      outputln<long long>(actualDurations);
+      outputln<int64_t>(actualDurations);
     }
 
     unsigned int numAutoData = sdmDataObject_.dataStruct_.autoData_.size();
@@ -283,7 +283,7 @@ namespace asdmbinaries {
     outputln("--"+MIMEBOUNDARY_2+"--");
   }
 
-  void SDMDataObjectWriter::tpData(unsigned long long int startTime,
+  void SDMDataObjectWriter::tpData(uint64_t startTime,
 				   const string& execBlockUID,
 				   unsigned int execBlockNum,
 				   unsigned int scanNum,
@@ -291,10 +291,10 @@ namespace asdmbinaries {
 				   unsigned int numberOfIntegrations,
 				   unsigned int numAntenna,
 				   const vector<SDMDataObject::Baseband>& basebands,
-				   unsigned long long time,
-				   unsigned long long interval,
+				   uint64_t time,
+				   uint64_t interval,
 				   const vector<AxisName>& autoDataAxes,
-				   const vector<float>& autoData) {
+				   const vector<AUTODATATYPE>& autoData) {
     checkState(T_TPDATA, "tpData");
 
     SDMDataObject::DataStruct dataStruct;
@@ -349,7 +349,7 @@ namespace asdmbinaries {
     outputln("--"+MIMEBOUNDARY_2+"--");
   }
 
-  void SDMDataObjectWriter::tpData(unsigned long long int startTime,
+  void SDMDataObjectWriter::tpData(uint64_t startTime,
 				   const string& execBlockUID,
 				   unsigned int execBlockNum,
 				   unsigned int scanNum,
@@ -359,17 +359,17 @@ namespace asdmbinaries {
 
 				   const vector<SDMDataObject::Baseband>& basebands,
 
-				   unsigned long long time,
-				   unsigned long long interval,
+				   uint64_t time,
+				   uint64_t interval,
 
 				   const vector<AxisName>& flagsAxes,
 				   const vector<unsigned int>& flags,
 				   const vector<AxisName>& actualTimesAxes,
-				   const vector<long long>& actualTimes,
+				   const vector<int64_t>& actualTimes,
 				   const vector<AxisName>& actualDurationsAxes,
-				   const vector<long long>& actualDurations,
+				   const vector<int64_t>& actualDurations,
 				   const vector<AxisName>& autoDataAxes,
-				   const vector<float>& autoData) {
+				   const vector<AUTODATATYPE>& autoData) {
     checkState(T_TPDATA, "tpData");
     
     SDMDataObject::DataStruct dataStruct;
@@ -456,7 +456,7 @@ namespace asdmbinaries {
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualTimes.bin");
 
       outputln();
-      outputln<long long>(actualTimes);
+      outputln<int64_t>(actualTimes);
     }
 
     if (actualDurations.size() != 0) {
@@ -473,7 +473,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputln("Content-Location: " + tpDataSubset.projectPath() + "actualDurations.bin");
       outputln();
-      outputln<long long>(actualDurations);
+      outputln<int64_t>(actualDurations);
     }
 
     unsigned int numAutoData = sdmDataObject_.dataStruct_.autoData_.size();
@@ -501,8 +501,8 @@ namespace asdmbinaries {
 				     unsigned int 		numAntennas,
 				     unsigned int 		numChannels,
 				     NetSideband  		netSideband,
-				     unsigned long long 	time,
-				     unsigned long long 	interval,
+				     uint64_t 	time,
+				     uint64_t 	interval,
 				     const vector<float>& 	wvrData,
 				     const vector<unsigned int>& flags) {
     checkState(T_WVRDATA, "wvrData");
@@ -612,7 +612,7 @@ namespace asdmbinaries {
   /**
    * Writes the XML global header into its attachment on the MIME message stream.
    */
-  void SDMDataObjectWriter::corrDataHeader(unsigned long long startTime,
+  void SDMDataObjectWriter::corrDataHeader(uint64_t startTime,
 					   const string& execBlockUID,
 					   unsigned int execBlockNum,
 					   unsigned int scanNum,
@@ -656,16 +656,16 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addData(unsigned int integrationNum,
 				    unsigned int subintegrationNum,
-				    unsigned long long time,
-				    unsigned long long interval,
-				    const vector<unsigned int>& flags,
-				    const vector<long long>& actualTimes,
-				    const vector<long long>& actualDurations,
-				    const vector<float>& zeroLags,
-				    const vector<int>& longCrossData,
-				    const vector<short>& shortCrossData,
-				    const vector<float>& floatCrossData,
-				    const vector<float>& autoData) {
+				    uint64_t time,
+				    uint64_t interval,
+				    const vector<FLAGSTYPE>& flags,
+				    const vector<ACTUALTIMESTYPE>& actualTimes,
+				    const vector<ACTUALDURATIONSTYPE>& actualDurations,
+				    const vector<ZEROLAGSTYPE>& zeroLags,
+				    const vector<INTCROSSDATATYPE>& intCrossData,
+				    const vector<SHORTCROSSDATATYPE>& shortCrossData,
+				    const vector<FLOATCROSSDATATYPE>& floatCrossData,
+				    const vector<AUTODATATYPE>& autoData) {
     SDMDataSubset sdmDataSubset(&sdmDataObject_);
     sdmDataObject_.numTime_++;
     sdmDataSubsetNum_++;
@@ -681,7 +681,7 @@ namespace asdmbinaries {
     sdmDataSubset.interval_ = interval;
 
     // The crossDataType.
-    if (longCrossData.size() != 0) 
+    if (intCrossData.size() != 0) 
       sdmDataSubset.crossDataType_ = INT32_TYPE;
 
     else if (shortCrossData.size() != 0)
@@ -705,7 +705,7 @@ namespace asdmbinaries {
     sdmDataSubset.nFlags_   = flags.size();
     switch (sdmDataSubset.crossDataType_) {
     case INT32_TYPE:
-      sdmDataSubset.nCrossData_ = longCrossData.size();
+      sdmDataSubset.nCrossData_ = intCrossData.size();
       break;
     case INT16_TYPE:
       sdmDataSubset.nCrossData_ = shortCrossData.size();
@@ -717,7 +717,7 @@ namespace asdmbinaries {
       sdmDataSubset.nCrossData_ = 0;
     }
 
-    //sdmDataSubset.nCrossData_       = shortCrossData.size() ? shortCrossData.size():longCrossData.size();
+    //sdmDataSubset.nCrossData_       = shortCrossData.size() ? shortCrossData.size():intCrossData.size();
 
     sdmDataSubset.nAutoData_        = autoData.size();
 
@@ -763,7 +763,7 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputlnLocation("actualTimes", sdmDataSubset);
       outputln();
-      outputln<long long>(actualTimes);
+      outputln<int64_t>(actualTimes);
     }
 
     if (actualDurations.size() != 0) {
@@ -780,16 +780,16 @@ namespace asdmbinaries {
       outputln("Content-Type: binary/octet-stream");
       outputlnLocation("actualDurations", sdmDataSubset);
       outputln();
-      outputln<long long>(actualDurations);
+      outputln<int64_t>(actualDurations);
     }
     
     
     if (sdmDataObject_.correlationMode_ != AUTO_ONLY) {
       int numCrossData = sdmDataObject_.dataStruct_.crossData_.size();
-      int numCrossDataV = 0; //= longCrossData.size() ? longCrossData.size():shortCrossData.size();
+      int numCrossDataV = 0; //= intCrossData.size() ? intCrossData.size():shortCrossData.size();
       switch(sdmDataSubset.crossDataType_) {
       case INT32_TYPE:
-	numCrossDataV = longCrossData.size();
+	numCrossDataV = intCrossData.size();
 	break;
       case INT16_TYPE:
 	numCrossDataV = shortCrossData.size();
@@ -814,7 +814,7 @@ namespace asdmbinaries {
       outputln();
       switch (sdmDataSubset.crossDataType_) {
       case INT32_TYPE:
-	outputln<int>(longCrossData);
+	outputln<int>(intCrossData);
 	break;
       case INT16_TYPE:
 	outputln<short>(shortCrossData);
@@ -868,14 +868,14 @@ namespace asdmbinaries {
   }
 
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
-					   unsigned long long time,
-					   unsigned long long interval,
-					   const vector<unsigned int>& flags,
-					   const vector<long long>& actualTimes,
-					   const vector<long long>& actualDurations,
-					   const vector<float>& zeroLags,
-					   const vector<int>& crossData,
-					   const vector<float>& autoData) {
+					   uint64_t time,
+					   uint64_t interval,
+					   const vector<FLAGSTYPE>& flags,
+					   const vector<ACTUALTIMESTYPE>& actualTimes,
+					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					   const vector<ZEROLAGSTYPE>& zeroLags,
+					   const vector<INTCROSSDATATYPE>& crossData,
+					   const vector<AUTODATATYPE>& autoData) {
 
     checkState(T_ADDINTEGRATION, "addIntegration");
 
@@ -897,14 +897,14 @@ namespace asdmbinaries {
   
 
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
-					   unsigned long long time,
-					   unsigned long long interval,
-					   const vector<unsigned int>& flags,
-					   const vector<long long>& actualTimes,
-					   const vector<long long>& actualDurations,
-					   const vector<float>& zeroLags,
-					   const vector<short>& crossData,
-					   const vector<float>& autoData) {
+					   uint64_t time,
+					   uint64_t interval,
+					   const vector<FLAGSTYPE>& flags,
+					   const vector<ACTUALTIMESTYPE>& actualTimes,
+					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					   const vector<ZEROLAGSTYPE>& zeroLags,
+					   const vector<SHORTCROSSDATATYPE>& crossData,
+					   const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDINTEGRATION, "addIntegration");
 
     vector<int> emptyLong;
@@ -924,14 +924,14 @@ namespace asdmbinaries {
   }
 
   void SDMDataObjectWriter::addIntegration(unsigned int integrationNum,
-					   unsigned long long time,
-					   unsigned long long interval,
-					   const vector<unsigned int>& flags,
-					   const vector<long long>& actualTimes,
-					   const vector<long long>& actualDurations,
-					   const vector<float>& zeroLags,
-					   const vector<float>& crossData,
-					   const vector<float>& autoData) {
+					   uint64_t time,
+					   uint64_t interval,
+					   const vector<FLAGSTYPE>& flags,
+					   const vector<ACTUALTIMESTYPE>& actualTimes,
+					   const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					   const vector<ZEROLAGSTYPE>& zeroLags,
+					   const vector<FLOATCROSSDATATYPE>& crossData,
+					   const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDINTEGRATION, "addIntegration");
 
     vector<int> emptyLong;
@@ -952,14 +952,14 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addSubintegration(unsigned int integrationNum,
 					      unsigned int subIntegrationNum,
-					      unsigned long long time,
-					      unsigned long long interval,
-					      const vector<unsigned int>& flags,
-					      const vector<long long>& actualTimes,
-					      const vector<long long>& actualDurations,
-					      const vector<float>& zeroLags,
-					      const vector<short>& crossData,
-					      const vector<float>& autoData) {
+					      uint64_t time,
+					      uint64_t interval,
+					      const vector<FLAGSTYPE>& flags,
+					      const vector<ACTUALTIMESTYPE>& actualTimes,
+					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					      const vector<ZEROLAGSTYPE>& zeroLags,
+					      const vector<SHORTCROSSDATATYPE>& crossData,
+					      const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDSUBINTEGRATION, "addSubintegration");
 
     vector<int> emptyLong;
@@ -980,14 +980,14 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addSubintegration(unsigned int integrationNum,
 					      unsigned int subIntegrationNum,
-					      unsigned long long time,
-					      unsigned long long interval,
-					      const vector<unsigned int>& flags,
-					      const vector<long long>& actualTimes,
-					      const vector<long long>& actualDurations,
-					      const vector<float>& zeroLags,
-					      const vector<int>& crossData,
-					      const vector<float>& autoData) {
+					      uint64_t time,
+					      uint64_t interval,
+					      const vector<FLAGSTYPE>& flags,
+					      const vector<ACTUALTIMESTYPE>& actualTimes,
+					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					      const vector<ZEROLAGSTYPE>& zeroLags,
+					      const vector<INTCROSSDATATYPE>& crossData,
+					      const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDSUBINTEGRATION, "addSubIntegration");
 
     vector<short> emptyShort;
@@ -1008,14 +1008,14 @@ namespace asdmbinaries {
 
   void SDMDataObjectWriter::addSubintegration(unsigned int integrationNum,
 					      unsigned int subIntegrationNum,
-					      unsigned long long time,
-					      unsigned long long interval,
-					      const vector<unsigned int>& flags,
-					      const vector<long long>& actualTimes,
-					      const vector<long long>& actualDurations,
-					      const vector<float>& zeroLags,
-					      const vector<float>& crossData,
-					      const vector<float>& autoData) {
+					      uint64_t time,
+					      uint64_t interval,
+					      const vector<FLAGSTYPE>& flags,
+					      const vector<ACTUALTIMESTYPE>& actualTimes,
+					      const vector<ACTUALDURATIONSTYPE>& actualDurations,
+					      const vector<ZEROLAGSTYPE>& zeroLags,
+					      const vector<FLOATCROSSDATATYPE>& crossData,
+					      const vector<AUTODATATYPE>& autoData) {
     checkState(T_ADDSUBINTEGRATION, "addSubIntegration");
 
     vector<int> emptyLong;
@@ -1034,7 +1034,7 @@ namespace asdmbinaries {
 	    autoData);		
   }
 
-  unsigned long long SDMDataObjectWriter::numBytes() { return numBytes_; }
+  uint64_t SDMDataObjectWriter::numBytes() { return numBytes_; }
   
   
   bool SDMDataObjectWriter::initClass() {

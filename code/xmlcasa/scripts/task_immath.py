@@ -168,8 +168,10 @@ import shutil
 from taskinit import *
 from imregion import *
 
-def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
-           region, box, chans, stokes ):
+def immath(
+    imagename, mode, outfile, expr, varnames, sigma,
+    polithresh, mask, region, box, chans, stokes
+):
     # Tell CASA who will be reporting
     casalog.origin('immath')
     retValue = False
@@ -276,6 +278,8 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     # Remove spaces from the expression.
     expr=expr.replace( ' ', '' )
 
+    doPolThresh = False
+
     # Construct expressions for the spectral and polarization modes.
     # These are common, repetitive calculations that are handled for
     # the user.
@@ -287,78 +291,32 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
 
         expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
     elif mode=='pola':
-        # calculate a polarization position angle image
-        if len(filenames) < 2:
-            raise Exception, 'Requires separate Stokes Q and U images'
-        else:
-            if len(filenames) >2:
-                casalog.post( "More than two images. Take first two and ignore the rest. " ,'WARN' );
-            stkslist=__check_stokes(filenames)
-            Uimage=Qimage=''
-            for i in range(2):
-                if type(stkslist[i])==list:
-                           raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
-                else:
-                    if stkslist[i]=='U':
-                        #Uimage=filenames[i]
-                        Uimage=varnames[i]
-                    if stkslist[i]=='Q':
-                        #Qimage=filenames[i]
-                        Qimage=varnames[i]
-            if len(Uimage)<1 or len(Qimage)<1:
-                missing = []
-                if len(Qimage)<1: missing.append('Q')
-                if len(Uimage)<1: missing.append('U')
-                raise Exception, 'Missing Stokes %s image(s)' % missing
-            expr = 'pa(%s,%s)' % (Uimage,Qimage)
+        expr = _doPolA(filenames, varnames, tmpFilePrefix)
+        if (polithresh):
+            if (mask != ""):
+                mask = ""
+                casalog.post("Ignoring mask parameter in favor of polithresh parameter", 'WARN')
+            if (qa.getunit(polithresh) != ""):
+                initUnit = qa.getunit(polithresh)
+                ia.open(filenames[0])
+                bunit = ia.brightnessunit()
+                polithresh = qa.convert(polithresh, bunit)
+                ia.done()
+                if (qa.getunit(polithresh) != bunit):
+                    raise Exception, "Units of polithresh " + initUnit \
+                    + " do not conform to input image units of " + bunit \
+                    + " so cannot perform thresholding. Please correct units and try again."
+                polithresh = qa.getvalue(polithresh)
+            doPolThresh = True
+            [lpolexpr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, False, False)
+            lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
+            lpolexpr = lpolexpr + ")"
+            lpol = tmpFilePrefix + "_lpol.im"
+            ia.imagecalc(pixels=lpolexpr, outfile=lpol)
+
     elif mode=='poli':
-        # calculate a polarization intensity image
-        # if 3 files total pol intensity image
-        # if 2 files given linear pol intensity image
-        isQim = False
-        isUim = False
-        isVim = False
-        isLPol = False
-        isTPol = False
-        stkslist=__check_stokes(filenames)
-        if len(filenames) !=3 and len(filenames)!=2:
-            raise Exception, 'Requires at two or three Stokes images'
-        if len(filenames)==3:
-            for i in range(len(stkslist)):
-                if type(stkslist[i])==list:
-                    raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
-                else:
-                    if stkslist[i]=='Q':isQim=True
-                    if stkslist[i]=='U':isUim=True
-                    if stkslist[i]=='V':isVim=True
-            if not (isUim and isQim and isVim):
-                missing = []
-                if not isQim: missing.append('Q')
-                if not isUim: missing.append('U')
-                if not isVim: missing.append('V')
-                raise Exception, 'Missing Stokes %s image(s)' % missing
-            #expr='sqrt("%s"*"%s"+"%s"*"%s"+"%s"*"%s"' % (filenames[0],filenames[0], filenames[1],filenames[1],filenames[2],filenames[2])
-            expr='sqrt('+varnames[0]+'*'+varnames[0]\
-                  +'+'+varnames[1]+'*'+varnames[1]\
-                  +'+'+varnames[2]+'*'+varnames[2]
-            isTPol = True
-        elif len(filenames) ==2:
-            for i in range(len(stkslist)):
-                if type(stkslist[i])==list:
-                    raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
-                else:
-                    if stkslist[i]=='Q':isQim=True
-                    if stkslist[i]=='U':isUim=True
-            if not (isUim and isQim):
-                missing = []
-                if not isQim: missing.append('Q')
-                if not isUim: missing.append('U')
-                raise Exception, 'Missing Stokes %s image(s)' % missing
-            #expr='sqrt("%s"*"%s"+"%s"*"%s"' % (filenames[0],filenames[0], filenames[1],filenames[1])
-            expr='sqrt('+varnames[0]+'*'+varnames[0]\
-                  +'+'+varnames[1]+'*'+varnames[1]
-            isLPol = True
-        
+        [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
+
         sigsq=0
 
         if len(sigma)>0:
@@ -408,6 +366,8 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
                 ia.setcoordsys(csys.torecord())
                 ia.done()
             ia.done()
+            if (doPolThresh):
+                _immath_createPolMask(polithresh, lpol, outfile)
             return True
         except Exception, error:
             try:
@@ -473,6 +433,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             ia.open( filenames[i] )
             tmpFile=tmpFilePrefix+str(i)
             ia.subimage( region=reg, mask=mask, outfile=tmpFile )
+
             file_map[filenames[i]] = tmpFile
             subImages.append( tmpFile )
             ia.done()
@@ -510,7 +471,8 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     
     # Put the subimage names into the expression
     try:
-            expr = _immath_expr_from_varnames(expr, varnames, subImages)
+        expr = _immath_expr_from_varnames(expr, varnames, subImages)
+
     except Exception, e:
         casalog.post(
             "Unable to construct pixel expression aborting immath: " + str(e),
@@ -531,6 +493,9 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             elif isLPol:
                 csys.setstokes('Plinear')
             ia.setcoordsys(csys.torecord())
+
+        if (doPolThresh):
+            _immath_createPolMask(polithresh, lpol, outfile)
 
         #cleanup
         ia.done()                
@@ -620,4 +585,167 @@ def _immath_expr_from_varnames(expr, varnames, filenames):
                 expr = expr.replace(varname, '"' + tmpfiles[varname] + '"')
         return(expr)
 
+def _doPolA(filenames, varnames, tmpFilePrefix):
+    # calculate a polarization position angle image
+    stkslist = __check_stokes(filenames)
+    Uimage = Qimage = ''
+    if len(filenames) == 1:
+        # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
+        if (type(stkslist[0]) != list):
+            raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do pola calculation"
+        ia.open(filenames[0])
+        stokesPixel = ia.coordsys().findcoordinate('stokes')['pixel']
+        if (type(stokesPixel) != int):
+            raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
 
+        trc = ia.shape()
+        blc = []
+        for i in range(len(trc)):
+            blc.append(0)
+            trc[i] = trc[i] - 1
+
+        for stokes in (['Q', 'U']):
+            if (stkslist[0].count(stokes) == 0):
+                raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
+                + " so pola calculation cannot be done"
+            pixNum = stkslist[0].index(stokes)
+            blc[stokesPixel] = pixNum
+            trc[stokesPixel] = pixNum
+            myfile = tmpFilePrefix + '_' + stokes
+            ia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+            if (stokes == 'Q'):
+                Qimage = myfile
+            elif (stokes == 'U'):
+                Uimage = myfile
+        ia.done()
+        # to use pass by reference semantics correctly, we have to use the same objects passed in
+        # rather than create new objects with the same names
+        filenames[0:1] = [Qimage, Uimage]
+        varnames[0:1] = ["IM0", "IM1"]
+        print "end filenames " +str(filenames) + " varnames " + str(varnames)
+    else:
+        if len(filenames) > 2:
+            casalog.post( "More than two images. Take first two and ignore the rest. " ,'WARN' );
+        for i in range(2):
+            if type(stkslist[i]) == list:
+                raise Exception, filenames[i] + " is a mult-stokes image but multiple images are given for pola calculation. " \
+                + "Only a single multi-stokes image *or* multiple single stokes images can be specified for pola calculation"
+            else:
+                if stkslist[i] == 'U':
+                    Uimage = varnames[i]
+                if stkslist[i] == 'Q':
+                    Qimage = varnames[i]
+        if len(Uimage)<1 or len(Qimage)<1:
+            missing = []
+            if len(Qimage)<1: missing.append('Q')
+            if len(Uimage)<1: missing.append('U')
+            raise Exception, 'Missing Stokes %s image(s)' % missing
+    expr = 'pa(%s,%s)' % (Uimage, Qimage)
+    return expr
+
+def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
+    # calculate a polarization intensity image
+    # if 3 files (or 1 file with Q, U, V) total pol intensity image
+    # if 2 files (or file file with Q, U) given linear pol intensity image
+    # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
+
+    if len(filenames) < 1 or len(filenames) > 3:
+        raise Exception, 'poli requires one multistokes with Q, U, and optionally V stokes or two single stokes (Q, U) images or three single Stokes (Q,U,V) images'
+
+    isQim = False
+    isUim = False
+    isVim = False
+    isLPol = False
+    isTPol = False
+    stkslist=__check_stokes(filenames)
+    if len(filenames) == 1:
+        # do multistokes image
+        if (type(stkslist[0]) != list):
+            raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
+        ia.open(filenames[0])
+        stokesPixel = ia.coordsys().findcoordinate('stokes')['pixel']
+        if (type(stokesPixel) != int):
+            raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
+
+        trc = ia.shape()
+        blc = []
+
+        for i in range(len(trc)):
+            blc.append(0)
+            trc[i] = trc[i] - 1
+        neededStokes = ['Q', 'U']
+        if (stkslist[0].count('V')):
+            neededStokes.append('V')
+        Qimage = Uimage = Vimage = ''
+        for stokes in (neededStokes):
+            if ((stokes == 'Q' or stokes == 'U') and stkslist[0].count(stokes) == 0):
+                raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
+                + " so poli calculation cannot be done"
+            myfile = tmpFilePrefix + '_' + stokes
+            if (stokes == 'Q'):
+                Qimage = myfile
+            elif (stokes == 'U'):
+                Uimage = myfile
+            elif (stokes == 'V' and tpol):
+                Vimage = myfile
+            if createSubims:
+                pixNum = stkslist[0].index(stokes)
+                blc[stokesPixel] = pixNum
+                trc[stokesPixel] = pixNum
+                ia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+        ia.done()
+        isTPol = bool(Vimage)
+        isLPol = not isTPol
+        filenames = [Qimage, Uimage]
+        sum = Qimage + '*' + Qimage + " + " + Uimage + '*' + Uimage
+        if isTPol:
+            sum = sum + " + " + Vimage + '*' + Vimage
+            filenames.append(Vimage)
+        # close paren gets added after this method has been called.
+        expr = 'sqrt(' + sum
+
+    elif len(filenames) == 3:
+        for i in range(len(stkslist)):
+            if type(stkslist[i])==list:
+                casalog.post("stokes " + str(stkslist[i]),'SEVERE')
+                raise Exception, 'Cannot handle %s, a multi-Stokes image when more than one image supplied.' % filenames[i]
+            else:
+                if stkslist[i]=='Q':isQim=True
+                if stkslist[i]=='U':isUim=True
+                if stkslist[i]=='V':isVim=True
+        if not (isUim and isQim and isVim):
+            missing = []
+            if not isQim: missing.append('Q')
+            if not isUim: missing.append('U')
+            if not isVim: missing.append('V')
+            raise Exception, 'Missing Stokes %s image(s)' % missing
+        expr='sqrt('+varnames[0]+'*'+varnames[0]\
+                +'+'+varnames[1]+'*'+varnames[1]\
+                +'+'+varnames[2]+'*'+varnames[2]
+        isTPol = True
+    elif len(filenames) == 2:
+        for i in range(len(stkslist)):
+            if type(stkslist[i])==list:
+                raise Exception, 'Cannot handle %s, a multi-Stokes image when multiple images supplied.' % filenames[i]
+            else:
+                if stkslist[i]=='Q':isQim=True
+                if stkslist[i]=='U':isUim=True
+        if not (isUim and isQim):
+            missing = []
+            if not isQim: missing.append('Q')
+            if not isUim: missing.append('U')
+            raise Exception, 'Missing Stokes %s image(s)' % missing
+        expr='sqrt('+varnames[0]+'*'+varnames[0]\
+                +'+'+varnames[1]+'*'+varnames[1]
+        isLPol = True
+    return [expr, isLPol, isTPol]
+        
+def _immath_createPolMask(polithresh, lpol, outfile):
+    # make the linear polarization threshhold mask CAS-2120
+    myexpr = "'" + lpol + "' >= " + str(qa.getvalue(polithresh))
+    ia.open(outfile)
+    ia.calcmask(name='mask0', mask=myexpr)
+    casalog.post('Calculated mask based on linear polarization threshold ' + str(polithresh),
+        'INFO')
+    ia.done()
+            

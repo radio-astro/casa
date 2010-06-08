@@ -30,6 +30,7 @@
 #include <flagging/Flagging/RFAFlagCubeBase.h> 
 #include <flagging/Flagging/RFDataMapper.h> 
 #include <flagging/Flagging/RFFlagCube.h> 
+#include <flagging/Flagging/RFFloatLattice.h> 
 #include <flagging/Flagging/RFRowClipper.h> 
 #include <flagging/Flagging/RFDebugPlot.h> 
 #include <casa/System/PGPlotter.h>
@@ -72,8 +73,8 @@ public:
   virtual uInt estimateMemoryUse ();
   virtual Bool newChunk (Int &maxmem);
   virtual void endChunk ();
-  virtual void startData ();
-  virtual void startDry (); // add
+  virtual void startData (bool verbose);
+  virtual void startDry (bool verbose); // add
   virtual IterMode iterTime (uInt itime);
   virtual IterMode iterRow  (uInt irow);
   virtual IterMode iterDry  (uInt it);
@@ -95,7 +96,7 @@ protected:
   MedianSlider * msl;
 
   // lattice of evaluated values [NCH,NIFR,NTIME]
-  RFCubeLattice<Float> evalue;
+  RFFloatLattice evalue;
   // matrix of standard deviation [NCH,NIFR]
   Matrix<Float> stdev;
   Bool stdeved;

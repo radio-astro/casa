@@ -76,7 +76,7 @@ public:
   virtual Bool newChunk ( Int &maxmem );
   virtual IterMode iterTime ( uInt it );
   virtual IterMode iterRow  ( uInt ir );
-  virtual void startData ();
+  virtual void startData(bool verbose);
 
   virtual String getDesc ();
   static const RecordInterface & getDefaults ();

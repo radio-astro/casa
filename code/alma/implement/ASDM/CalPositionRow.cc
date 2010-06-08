@@ -77,9 +77,13 @@ namespace asdm {
 	CalPositionTable &CalPositionRow::getTable() const {
 		return table;
 	}
-	
-	void CalPositionRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalPositionRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalPositionRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

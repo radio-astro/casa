@@ -33,8 +33,8 @@ def putchanimage(cubimage,inim,chan):
     """
     ia.open(inim)
     inimshape=ia.shape()
-    imdata=ia.getchunk()
-    immask=ia.getchunk(getmask=True)
+    ####imdata=ia.getchunk()
+    ####immask=ia.getchunk(getmask=True)
     ia.close()
     ia.open(cubimage)
     cubeshape=ia.shape()
@@ -43,11 +43,11 @@ def putchanimage(cubimage,inim,chan):
     if( not (cubeshape[3] > (chan+inimshape[3]-1))):
         return False
 
-    rg0=ia.setboxregion(blc=blc,trc=trc)
+    ####rg0=ia.setboxregion(blc=blc,trc=trc)
     if inimshape[0:3]!=cubeshape[0:3]: 
         return False
-    #ia.putchunk(pixels=imdata,blc=blc)
-    ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+    ####ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+    ia.insert(infile=inim, locate=blc)
     ia.close()
     ia.removefile(inim)
     return True
@@ -214,11 +214,11 @@ def copyimage(inimage='', outimage='', init=False, initval=0.0):
     if(init):
         ia.set(initval)
     else:
-        ib=iatool.create()
-        ib.open(inimage)
-        arr=ib.getchunk()
-        ib.done()
-        ia.putchuck(arr)
+        ####ib=iatool.create()
+        ####ib.open(inimage)
+        ####arr=ib.getchunk()
+        ####ib.done()
+        ia.insert(inimage, locate=[0,0,0,0])
     ia.done()
 
 def pcont(msname=None, imagename=None, imsize=[1000, 1000], 
@@ -272,6 +272,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
     os.system('rm -rf '+'tempmodel')
     if(not contclean):
+        print "Removing ", model, 'and', imagename+'.image'
         os.system('rm -rf '+model)
         os.system('rm -rf '+imagename+'.image')
     ###num of cpu per node
@@ -286,7 +287,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     numcpu=numcpu*len(hostnames)
     ###spw and channel selection
     spwsel,startsel,nchansel=findchansel(msname, spwids, numcpu)
-
+    
     out=range(numcpu)  
     c.pgc('from  parallel.parallel_cont import *')
     spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
@@ -314,14 +315,13 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     print 'number of channels', numchanperms
     minfreq=np.min(allfreq)
     band=np.max(allfreq)-minfreq
-    minfreq=minfreq-(band/2.0);
+    ##minfreq=minfreq-(band/2.0);
     ###need to get the data selection for each process here
     ## this algorithm is a poor first try
     if(minfreq <0 ):
         minfreq=0.0
-    band=band*1.5;
-    freq='"%s"'%(str(minfreq)+'Hz')
-    band='"%s"'%(str(band)+'Hz')
+    freq='"%s"'%(str((minfreq+band/2.0))+'Hz')
+    band='"%s"'%(str((band*1.1))+'Hz')
     tb.done()
     ###define image names
     imlist=[]
@@ -344,7 +344,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
-            c.pgc('a.cfcache='+'"'+str(cfcachelist[k])+'"');
+            c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
             runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel[k])+', numchan='+str(nchansel[k])+', field="'+str(field)+'", spw='+str(spwsel[k])+', freq='+freq+', band='+band+', imname='+imnam+')'
             print 'command is ', runcomm
             out[k]=c.odo(runcomm,k)
@@ -493,7 +493,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     c.pgc('a.pblimit='+str(pblimit));
     c.pgc('a.dopbcorr='+str(dopbcorr));
     c.pgc('a.applyoffsets='+str(applyoffsets));
-    c.pgc('a.epjtablename='+str(epjtablename));
+    c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
 
     chancounter=0
     nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1

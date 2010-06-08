@@ -77,9 +77,13 @@ namespace asdm {
 	CalPhaseTable &CalPhaseRow::getTable() const {
 		return table;
 	}
-	
-	void CalPhaseRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalPhaseRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalPhaseRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

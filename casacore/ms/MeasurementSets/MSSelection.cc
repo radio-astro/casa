@@ -52,7 +52,7 @@
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
-
+#include <casa/Utilities/GenSort.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   //----------------------------------------------------------------------------
@@ -710,7 +710,62 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return False;
   }
-  
+  //----------------------------------------------------------------------------
+  Matrix<Int> MSSelection::getChanList(const MeasurementSet* ms, const Int defaultStep) 
+    {
+      if (chanIDs_p.nelements() <= 0) getTEN(ms); 
+      Matrix<Int> chanIDList(0,0);
+      Int n=0,spw;
+      Int nChIds=chanIDs_p.shape()[0],
+	nSpwIds=spwIDs_p.shape()[0];
+
+      // Unless there were selected SPWs, don't do anything here.
+      if (nSpwIds != 0)
+	{
+	  if (nChIds < nSpwIds)
+	    throw(MSSelectionError("MSSelection::getChanList() found more SPW IDs than channel IDs."));
+	  //
+	  // Make a list of unique selected Spw IDs
+	  //
+	  Vector<uInt> uniqueSpw;
+	  uniqueSpw.resize(nSpwIds);
+	  for (int i=0;i<nSpwIds;i++) uniqueSpw(i)=spwIDs_p(i);
+	  {
+	    Vector<uInt> spwNdx, spwNdx1;
+	    Bool deleteit;
+	    Sort sort(uniqueSpw.getStorage(deleteit), sizeof(Int));
+	    sort.sortKey((uInt)0, TpInt); // Set internal (to Sort) defaults.
+	    sort.sort(spwNdx, nSpwIds); // Get the sorted indices.
+	    sort.unique(spwNdx1,spwNdx); // Make the sorted indices unique.
+	    //
+	    // Copy the unique SPW IDs to a temp array (uniqueSpw).
+	    //
+	    n=spwNdx1.nelements();
+	    uniqueSpw.resize(n);
+	    for (int i=0;i<n;i++) uniqueSpw(i)=spwIDs_p(spwNdx1(i));
+	    nSpwIds=uniqueSpw.nelements();
+	  }
+	  //
+	  // Now move channel selection info. for IDs in uniqueSpw
+	  // list to a temp. Matrix to be returned to the caller.
+	  //
+	  for (Int i=0;i<nChIds;i++)
+	    for(Int s=0;s<nSpwIds;s++)
+	      if (chanIDs_p(i,0) == uniqueSpw(s)) 
+		{
+		  chanIDList.resize((n=chanIDList.shape()(0))+1,4,True);
+		  chanIDList(n,0)=chanIDs_p(i,0);
+		  chanIDList(n,1)=chanIDs_p(i,1);
+		  chanIDList(n,2)=chanIDs_p(i,2);
+		  chanIDList(n,3)=chanIDs_p(i,3);
+		}
+	  n=chanIDList.shape()(0);
+	  for(Int i=0;i<n;i++) 
+	    if (chanIDList(i,3) < 0) 
+	      chanIDList(i,3)=defaultStep;
+	}
+      return chanIDList.copy();
+    }
   //----------------------------------------------------------------------------
 
   void MSSelection::getChanSlices(Vector<Vector<Slice> >& chanslices,

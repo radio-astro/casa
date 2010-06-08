@@ -135,7 +135,7 @@ void RFChunkStats::newChunk(bool init_quack)
  // Flagger::logSink()<<s<<LogIO::POST;
 
   if (init_quack) {
-      // figure out all scan's start and end times
+      // figure out this scan's start and end times
       // for use in quack mode
       for (visiter.origin(); 
            visiter.more(); 
@@ -229,13 +229,27 @@ void RFChunkStats::newTime ()
 // setup IFR numbers for every row in time slot
   ifr_nums.resize( visbuf.antenna1().nelements() );
   ifr_nums = flagger.ifrNumbers( visbuf.antenna1(),visbuf.antenna2() );
-// setup FEED CORRELATION numbers for every row in time slot
+
+  // setup FEED CORRELATION numbers for every row in time slot
   feed_nums.resize( visbuf.feed1().nelements() );
   feed_nums = flagger.ifrNumbers( visbuf.feed1(),visbuf.feed2() );
-// reset stats
-  for( uInt i=0; i<ifr_nums.nelements(); i++ )
-    rows_per_ifr(ifr_nums(i))++;
-// set start/end times
+
+  // reset stats
+  for( uInt i=0; i<ifr_nums.nelements(); i++ ) {
+
+      Int antenna_num = ifr_nums(i);
+      
+      if (antenna_num >= (Int) rows_per_ifr.nelements()) {
+          std::stringstream ss;
+          ss << "Internal error: Antenna number is " << antenna_num
+             << ", but there are only " << rows_per_ifr.nelements() << " antennas" << endl;
+          throw AipsError(ss.str());
+      }
+      
+      rows_per_ifr(ifr_nums(i))++;
+  }
+  
+  // set start/end times
   current_time = (visbuf.time()(0))/(24*3600);
   if( current_time<start_time || start_time==0 )
     start_time = current_time;
@@ -243,7 +257,7 @@ void RFChunkStats::newTime ()
     end_time = current_time;
 
   itime++;
-//  dprintf(os,"newTime: %d\n",itime);
+  //  dprintf(os,"newTime: %d\n",itime);
 }
 
 uInt RFChunkStats::antToIfr ( uInt ant1,uInt ant2 )

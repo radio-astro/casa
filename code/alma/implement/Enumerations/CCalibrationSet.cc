@@ -47,7 +47,7 @@ string CCalibrationSet::revision () {
 }
 
 unsigned int CCalibrationSet::size() {
-	return 7;
+	return 8;
 	}
 	
 	
@@ -60,6 +60,8 @@ const std::string& CCalibrationSet::sANTENNA_POSITIONS = "ANTENNA_POSITIONS";
 const std::string& CCalibrationSet::sPHASE_CURVE = "PHASE_CURVE";
 	
 const std::string& CCalibrationSet::sPOINTING_MODEL = "POINTING_MODEL";
+	
+const std::string& CCalibrationSet::sACCUMULATE = "ACCUMULATE";
 	
 const std::string& CCalibrationSet::sTEST = "TEST";
 	
@@ -77,6 +79,8 @@ const std::vector<std::string> CCalibrationSet::names() {
     enumSet.insert(enumSet.end(), CCalibrationSet::sPHASE_CURVE);
     
     enumSet.insert(enumSet.end(), CCalibrationSet::sPOINTING_MODEL);
+    
+    enumSet.insert(enumSet.end(), CCalibrationSet::sACCUMULATE);
     
     enumSet.insert(enumSet.end(), CCalibrationSet::sTEST);
     
@@ -102,6 +106,9 @@ std::string CCalibrationSet::name(const CalibrationSetMod::CalibrationSet& f) {
     
     case CalibrationSetMod::POINTING_MODEL:
       return CCalibrationSet::sPOINTING_MODEL;
+    
+    case CalibrationSetMod::ACCUMULATE:
+      return CCalibrationSet::sACCUMULATE;
     
     case CalibrationSetMod::TEST:
       return CCalibrationSet::sTEST;
@@ -136,6 +143,10 @@ CalibrationSetMod::CalibrationSet CCalibrationSet::newCalibrationSet(const std::
         return CalibrationSetMod::POINTING_MODEL;
     }
     	
+    if (name == CCalibrationSet::sACCUMULATE) {
+        return CalibrationSetMod::ACCUMULATE;
+    }
+    	
     if (name == CCalibrationSet::sTEST) {
         return CalibrationSetMod::TEST;
     }
@@ -167,6 +178,10 @@ CalibrationSetMod::CalibrationSet CCalibrationSet::literal(const std::string& na
     	
     if (name == CCalibrationSet::sPOINTING_MODEL) {
         return CalibrationSetMod::POINTING_MODEL;
+    }
+    	
+    if (name == CCalibrationSet::sACCUMULATE) {
+        return CalibrationSetMod::ACCUMULATE;
     }
     	
     if (name == CCalibrationSet::sTEST) {

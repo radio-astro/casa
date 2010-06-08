@@ -93,7 +93,8 @@ public slots:
     void right();
     void setMultiProfile(int);
     void setRelativeProfile(int);
-    void setAutoScale(int);
+    void setAutoScaleX(int);
+    void setAutoScaleY(int);
     void changeCoordinate(const QString &text); 
     void changeFrame(const QString &text);
     void changeCoordinateType(const QString &text); 
@@ -121,7 +122,8 @@ private:
     QToolButton *downButton;
     QCheckBox *multiProf;
     QCheckBox *relative;
-    QCheckBox *autoScale;
+    QCheckBox *autoScaleX;
+    QCheckBox *autoScaleY;
     
     QToolButton *printButton;
     QToolButton *saveButton;

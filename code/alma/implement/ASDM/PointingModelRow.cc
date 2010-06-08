@@ -77,9 +77,13 @@ namespace asdm {
 	PointingModelTable &PointingModelRow::getTable() const {
 		return table;
 	}
-	
-	void PointingModelRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool PointingModelRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void PointingModelRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

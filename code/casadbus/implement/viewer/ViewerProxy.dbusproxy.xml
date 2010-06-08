@@ -32,7 +32,7 @@
     </method>
     <method name="cwd">
       <arg direction="in" type="s" name="new_path" />
-      <arg direction="out" type="s" />
+      <arg direction="out" type="v" />
     </method>
     <method name="panel">
       <arg direction="in" type="s" name="type" />
@@ -70,7 +70,7 @@
       <arg direction="in" type="i" name="key" />
       <arg direction="out" type="as" />
     </method>
-    <method name="frame">
+    <method name="channel">
       <arg direction="in" type="i" name="num" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />

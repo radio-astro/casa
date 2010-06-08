@@ -170,9 +170,9 @@ void RFADiffBase::endChunk ()
 // RFADiffBase::startData
 // Prepares for an data pass over a VisIter chunk
 // -----------------------------------------------------------------------
-void RFADiffBase::startData ()
+void RFADiffBase::startData (bool verbose)
 {
-  RFAFlagCubeBase::startData();
+  RFAFlagCubeBase::startData(verbose);
   diff.reset(chunk.npass()>0,True);
   rowclipper.reset();
 
@@ -186,9 +186,9 @@ void RFADiffBase::startData ()
 // RFADiffBase::startDry
 // Prepares for an dry pass 
 // -----------------------------------------------------------------------
-void RFADiffBase::startDry ()
+void RFADiffBase::startDry (bool verbose)
 {
-  RFAFlagCubeBase::startDry();
+  RFAFlagCubeBase::startDry(verbose);
   diff.reset(chunk.npass()>0,False);
   rowclipper.reset();
   pflagiter = &flag.iterator();

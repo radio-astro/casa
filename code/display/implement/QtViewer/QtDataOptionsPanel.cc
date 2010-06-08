@@ -51,7 +51,7 @@ QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel, QWidget* parent
   tabs_->setMinimumHeight(150);	//#dk
   //#dk with auto-app:    resize(595, 705);		//#dk
   // resize(510, 705);			//#dk
-  resize(525, 705);			//#dk
+  resize(485, 665);			//#dk
   
   //if(tabs_->layout()==0) new QVBoxLayout(tabs_);	//#dk
   //tabs_->layout()->setSizeConstraint(QLayout::SetFixedSize);	//#dk

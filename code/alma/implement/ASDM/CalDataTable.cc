@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalDataTable::tableName = "CalData";
-	
+	const vector<string> CalDataTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for CalDataTable.
  */
- 
 	CalDataTable::~CalDataTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,56 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalDataTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalDataTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("calDataId");
+
+
+		attributesNames.push_back("startTimeObserved");
+
+		attributesNames.push_back("endTimeObserved");
+
+		attributesNames.push_back("execBlockUID");
+
+		attributesNames.push_back("calDataType");
+
+		attributesNames.push_back("calType");
+
+		attributesNames.push_back("numScan");
+
+		attributesNames.push_back("scanSet");
+
+
+		attributesNames.push_back("assocCalDataId");
+
+		attributesNames.push_back("assocCalNature");
+
+		attributesNames.push_back("fieldName");
+
+		attributesNames.push_back("sourceName");
+
+		attributesNames.push_back("sourceCode");
+
+		attributesNames.push_back("scanIntent");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalDataTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -250,7 +293,7 @@ CalDataRow* CalDataTable::newRow(CalDataRow* row) {
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -308,7 +351,7 @@ CalDataRow* CalDataTable::newRow(CalDataRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -424,7 +467,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/2/CalDataTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/2/CalDataTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -502,7 +545,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/2/CalDataTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/2/CalDataTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDataTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -765,10 +808,10 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 	}
 
 	
-	void CalDataTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalData.xml")))
+	void CalDataTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalData.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalData.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalData.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalData table", "CalData");

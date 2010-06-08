@@ -1,0 +1,462 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-04-15  put tools here
+
+\chapter{Synthesis Calibration}
+\label{chapter:caltool}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Calibration Philosophy}
+\label{section:caltool.intro}
+
+The visibilities measured by an instrument must be calibrated before
+formation of an image. This is becausethe wavefronts received and
+processed by the observational hardwarehave been corrupted by a
+variety of effects. These include the effects of transmission through
+the atmosphere, the imperfect details amplified electronic (digital)
+signal and transmission through thesignal processing system, and the
+effects of formation of the cross-power spectra by a
+correlator. Calibration is the process of reversing these effects to
+arrive at corrected visibilities which resemble as closely as possible
+the visibilities that would have been measured in vacuum by a perfect
+system. The subject of this chapter of the cookbook is the
+determination of these effects by using the visibility data itself. 
+
+The relationship between the observed and ideal (desired) visibilities
+on the baseline between antennas i and j may be expressed by the
+Measurement Equation: 
+
+$\vec{V}_{ij}~=~J_{ij}~\vec{V}_{ij}^{\mathrm{~IDEAL}}$
+
+where $\vec{V}_{ij}$ represents the observed visbility,
+$\vec{V}_{ij}^{\mathrm{~IDEAL}}$ represents the corresponding ideal
+visibilities, and $J_{ij}$ represents the accumulation of all
+corruptions affecting baseline $ij$. The visibilities are indicated as
+vectors spanning the four correlation combinations which can be formed
+from dual-polarization signals. These four correlations are related
+directly to the Stokes parameters which fully describe the
+radiation. The $J_{ij}$ term is therefore a 4$\times$4 matrix. 
+
+Most of the effects contained in $J_{ij}$ (indeed, the most important
+of them) are antenna-based, i.e., they arise from measurable physical
+properties of (or above) individual antenna elements in a synthesis
+array. Thus, adequate calibration of an array of $N_{ant}$ antennas
+forming $N_{ant}(N_{ant}-1)/2$ baseline visibilities is usually
+achieved through the determination of only $N_{ant}$ factors, such
+that $J_{ij} = J_i \otimes J_j^{*}$. For the rest of this chapter, we
+will usually assume that $J_{ij}$ is factorable in this way, unless
+otherwise noted. 
+
+As implied above, $J_{ij}$ may also be factored into the sequence of
+specific corrupting effects, each having their own particular
+(relative) importance and physical origin, which determines their
+unique algebra. Including the most commonly considered effects, the
+Measurement Equation can be written: 
+
+$\vec{V}_{ij}~=~M_{ij}~B_{ij}~G_{ij}~D_{ij}~E_{ij}~P_{ij}~T_{ij}~\vec{V}_{ij}^{\mathrm{~IDEAL}}$   
+
+where:
+
+\begin{itemize}
+   \item $T_{ij}~=~$ Polarization-independent multiplicative effects
+     introduced by the troposphere, such as opacity and path-length
+     variation. 
+   \item  $P_{ij}~=~$ Parallactic angle, which describes the
+     orientation of the polarization coordinates on the plane of the
+     sky. This term varies according to the type of the antenna mount. 
+   \item  $E_{ij}~=~$ Effects introduced by properties of the optical
+     components of the telescopes, such as the collecting area's
+     dependence on elevation. 
+   \item  $D_{ij}~=~$ Instrumental polarization response. "D-terms"
+     describe the polarization leakage between feeds (e.g. how much the
+     R-polarized feed picked up L-polarized emission, and vice versa). 
+   \item  $G_{ij}~=~$ Electronic gain response due to components in
+     the signal path between the feed and the correlator. This complex
+     gain term $G_{ij}$ includes the scale factor for absolute flux
+     density calibration, and may include phase and amplitude
+     corrections due to changes in the atmosphere (in lieu of
+     $T_{ij}$). These gains are polarization-dependent. 
+   \item  $B_{ij}~=~$ Bandpass (frequency-dependent) response, such as
+     that introduced by spectral filters in the electronic transmission
+     system 
+   \item  $M_{ij}~=~$ Baseline-based correlator (non-closing)
+     errors. By definition, these are not factorable into antenna-based
+     parts.  
+\end{itemize}
+
+Note that the terms are listed in the order in which they affect the
+incoming wavefront ($G$ and $B$ represent an arbitrary sequence of
+such terms depending upon the details of the particular electronic
+system). Note that $M$ differs from all of the rest in that it is not
+antenna-based, and thus not factorable into terms for each antenna. 
+
+As written above, the measurement equation is very general; not all
+observations will require treatment of all effects, depending upon the
+desired dynamic range. E.g., bandpass need only be considered for
+continuum observations if observed in a channelized mode and very high
+dynamic range is desired. Similarly, instrumental polarization
+calibration can usually be omitted when observing (only) total
+intensity using circular feeds. Ultimately, however, each of these
+effects occurs at some level, and a complete treatment will yield the
+most accurate calibration. Modern high-sensitivity instruments such as
+ALMA and EVLA will likely require a more general calibration treatment
+for similar observations with older arrays in order to reach the
+advertised dynamic ranges on strong sources. 
+
+In practice, it is usually far too difficult to adequately measure
+most calibration effects absolutely (as if in the laboratory) for use
+in calibration. The effects are usually far too changable. Instead,
+the calibration is achieved by making observations of calibrator
+sources on the appropriate timescales for the relevant effects, and
+solving the measurement equation for them using the fact that we have
+$N_{ant}(N_{ant}-1)/2$ measurements and only $N_{ant}$ factors to
+determine (except for $M$ which is only sparingly used). ({\it Note: By
+partitioning the calibration factors into a series of consecutive
+effects, it might appear that the number of free parameters is some
+multiple of $N_{ant}$, but the relative algebra and timescales of the
+different effects, as well as the the multiplicity of observed
+polarizations and channels compensate, and it can be shown that the
+problem remains well-determined until, perhaps, the effects are
+direction-dependent within the field of view. Limited solvers for such
+effects are under study; the calibrater tool currently only handles
+effects which may be assumed constant within the field of
+view. Corrections for the primary beam are handled in the imager
+tool.}) Once determined, these terms are used to correct the
+visibilities measured for the scientific target. This procedure is
+known as cross-calibration (when only phase is considered, it is
+called phase-referencing). 
+
+The best calibrators are point sources at the phase center (constant
+visibility amplitude, zero phase), with sufficient flux density to
+determine the calibration factors with adequate SNR on the relevant
+timescale. The primary gain calibrator must be sufficiently close to
+the target on the sky so that its observations sample the same
+atmospheric effects. A bandpass calibrator usually must be
+sufficiently strong (or observed with sufficient duration) to provide
+adequate per-channel sensitivity for a useful calibration. In
+practice, several calibrators are usually observed, each with
+properties suitable for one or more of the required calibrations. 
+
+Synthesis calibration is inherently a bootstrapping process. First,
+the dominant calibration term is determined, and then, using this
+result, more subtle effects are solved for, until the full set of
+required calibration terms is available for application to the target
+field. The solutions for each successive term are relative to the
+previous terms. Occasionally, when the several calibration terms are
+not sufficiently orthogonal, it is useful to re-solve for earlier
+types using the results for later types, in effect, reducing the
+effect of the later terms on the solution for earlier ones, and thus
+better isolating them. This idea is a generalization of the
+traditional concept of self-calibration, where initial imaging of the
+target source supplies the visibility model for a re-solve of the gain
+calibration ($G$ or $T$). Iteration tends toward convergence to a
+statistically optimal image. In general, the quality of each
+calibration and of the source model are mutually dependent. In
+principle, as long as the solution for any calibration component (or
+the source model itself) is likely to improve substantially through
+the use of new information (provided by other improved solutions), it
+is worthwhile to continue this process. 
+
+In practice, these concepts motivate certain patterns of calibration
+for different types of observation, and the calibrater tool in CASA is
+designed to accomodate these patterns in a general and flexible
+manner. For a spectral line total intensity observation, the pattern
+is usually: 
+
+\begin{enumerate}
+   \item Solve for $G$ on the bandpass calibrator
+   \item Solve for $B$ on the bandpass calibrator, using $G$
+   \item Solve for $G$ on the primary gain (near-target) and flux
+      density calibrators, using $B$ solutions just obtained 
+   \item Scale $G$ solutions for the primary gain calibrator according to
+      the flux density calibrator solutions 
+   \item Apply $G$ and $B$ solutions to the target data
+   \item Image the calibrated target data 
+\end{enumerate}
+
+If opacity and gain curve information are relevant and available,
+these types are incorporated in each of the steps (in future, an
+actual solve for opacity from appropriate data may be folded into this
+process): 
+ 
+\begin{enumerate}
+   \item Solve for $G$ on the bandpass calibrator, using $T$ (opacity)
+      and $E$ (gain curve) solutions already derived. 
+   \item Solve for $B$ on the bandpass calibrator, using $G$, $T$
+      (opacity), and $E$ (gain curve) solutions. 
+   \item Solve for $G$ on primary gain (near-target) and flux density
+      calibrators, using $B$, $T$ (opacity), and $E$ (gain curve)
+      solutions. 
+   \item Scale $G$ solutions for the primary gain calibrator according to
+      the flux density calibrator solutions 
+   \item Apply $T$ (opacity), $E$ (gain curve), $G$, and $B$ solutions
+      to the target data 
+   \item Image the calibrated target data 
+\end{enumerate}
+
+For continuum polarimetry, the typical pattern is:
+
+\begin{enumerate}
+   \item Solve for $G$ on the polarization calibrator, using (analytical)
+      $P$ solutions. 
+   \item Solve for $D$ on the polarization calibrator, using $P$ and $G$
+      solutions. 
+   \item Solve for $G$ on primary gain and flux density calibrators,
+      using $P$ and $D$ solutions. 
+   \item Scale $G$ solutions for the primary gain calibrator according to
+      the flux density calibrator solutions. 
+   \item Apply $P$, $D$, and $G$ solutions to target data.
+   \item Image the calibrated target data. 
+\end{enumerate}
+
+For a spectro-polarimetry observation, these two examples would be
+folded together. 
+
+In all cases the calibrator model must be adequate at each solve
+step. At high dynamic range and/or high resolution, many calibrators
+which are nominally assumed to be point sources become slightly
+resolved. If this has biased the calibration solutions, the offending
+calibrator may be imaged at any point in the process and the resulting
+model used to improve the calibration. Finally, if sufficiently
+strong, the target may be self-calibrated as well. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{General Calibrater Mechanics}
+\label{section:caltool.mech}
+
+The calibrater tasks/tool are designed to solve and apply solutions
+for all of the solution types listed above (and more are in the
+works). This leads to a single basic sequence of execution for all
+solves, regardless of type: 
+
+\begin{enumerate}
+   \item Set the calibrator model visibilities
+   \item Select the visibility data which will be used to solve for a
+      calibration type 
+   \item Arrange to apply any already-known calibration types (the first
+      time through, none may yet be available) 
+   \item Arrange to solve for a specific calibration type, including
+      specification of the solution timescale and other specifics 
+   \item Execute the solve process
+   \item Repeat 1-4 for all required types, using each result, as it
+      becomes available, in step 2, and perhaps repeating for some types
+      to improve the solutions  
+\end{enumerate}
+
+By itself, this sequence doesn't guarantee success; the data provided
+for the solve must have sufficient SNR on the appropriate timescale,
+and must provide sufficient leverage for the solution (e.g., D
+solutions require data taken over a sufficient range of parallactic
+angle in order to separate the source polarization contribution from
+the instrumental polarization). 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Baseline-based Calibration}
+\label{section:caltool.BLcal}
+
+Some calibration cannot be factored into antenna-based factors.  Such
+effects occur physically after the signals from each antenna have been
+combined in the correlator.  These may occur as a consequence of
+finite time- and frequency-averaging over other calibration factors
+before they are corrected.  Any loss of coherence in such averaging
+gives rise to residual baseline-based errors which depend on the
+details of the {\it combination} of antenna-based errors on the
+baseline.  Also, if only a single baseline is available, a single
+calibration solution for that baseline is obtainable, and short of
+additional information, it simply cannot be factored into unique terms
+for each antenna.  Therefore, such situations necessarily require
+baseline-based calibration solutions.
+
+It is important to note that source structure also introduces
+baseline-based information in the visibilities, and so it can be
+difficult to distiguish baseline-based errors from the information in
+which we are interested, namely, the astronomincal visibilities (which
+are imaged).  Therefore, baseline based calibration factors should be
+used with great care, to avoid changing the desired astrophysical
+information in ways that cannot be determined.  As indicated below,
+there are some calibration circumstances where such extreme measures
+are warranted (e.g., resolved bandpass calibrators), but the careful
+observer should always consider how different calibration factors affect
+the data, and this is especially important for baseline-based factors.
+
+\subsection{M, MF solutions (Generic Baseline-based Gain)}
+\label{section:caltool.BLcal.mmf}
+
+The calibration types M and MF provide the baseline-based analogs
+of G and B, respectively.  M provides for (per-spectral window)
+time-dependent gain calibration for each baseline independently.  MF
+provides for a frequency-dependent (within each spectral window)
+version of M.  One or the other of these types can be used to
+compensate for any residual closure errors, usually after all
+antenna-based calibrations have converged.  Since these types can
+absorb legitimate visibility information from the data, they should be
+used with great care, and usually only on sources for which there is
+no doubt about the source structure.  It is therefore largely
+meaningless to use them in self-calibration---they will only reinforce
+the current source model, and can even artifically absorb thermal
+noise in the data.
+
+To solve for M on an hourly timescale, using previously determined
+G and B solutions:
+
+\small
+\begin{verbatim}
+cb.reset()                               # Reset the calibrater tool
+cb.setdata(msselect='FIELD_ID IN [0,1]') # Restrict data selection
+cb.setapply(type='G',table='cal.G')      # Apply existing G solution
+cb.setapply(type='B',table='cal.B')      # Apply existing G solution
+
+cb.setsolve(type='M',table='cal.M',      # Setup to solve for M on
+    t=3600)                              #  an hourly timescale,
+                                         #  write solutions to a table on
+                                         #  disk called 'cal.M'
+cb.solve()                               # Solve
+\end{verbatim}
+\normalsize
+
+Note that {\tt refant} is, of course, meaningless for baseline-based
+calibration types.
+
+To apply these solutions, along with G and B:
+
+\small
+\begin{verbatim}
+cb.reset()                                  # Reset calibrater tool
+cb.setdata(msselect='FIELD_ID IN [0,1,2]')  # Restrict data selection
+cb.setapply(type='G',table='cal.G')         # Apply G solutions
+cb.setapply(type='B',table='cal.B')         # Apply B solutions
+cb.setapply(type='M',table='cal.M')         # Apply M solutions
+cb.correct()                                # Correct data and write to
+                                            #  CORRECTED_DATA column in MS
+\end{verbatim}
+\normalsize
+
+
+Use of MF is essentially identical, except that it will probably be
+used on even longer timescales than M (as for B, compared to G).
+
+An M solution can be especially useful for obtaining normalized
+bandpass solutions from significantly resolved calibrators where a
+source model adequate for pre-B G-solving is not available.  Ordinarily,
+if the bandpass calibrator is nearly point-like, we first solve for G (using
+a point-like model):
+
+$ \vec{V}_{ij}~=~G_{ij}~\vec{V}_{ij}^{\mathrm{~point}} $
+
+Then, use this G to solve for B (using the same model):
+
+$ \vec{V}_{ij}~=~B_{ij}~\left(G_{ij}~\vec{V}_{ij}^{\mathrm{~point}}\right) $
+
+However, we will get (at best) awkwardly scaled and/or poorly
+converged B solutions if our source model is not sufficient for the
+either of these solutions.  In this circumstance, we can use M to
+absorb both time-dependent gain variations during the bandpass
+calibration scan {\it and} the source structure.  First solve for M,
+using a point-like model:
+
+$ \vec{V}_{ij}~=~M_{ij}~\vec{V}_{ij}^{\mathrm{~point}} $
+
+Then, use this solution to solve for B:
+
+$ \left(M_{ij}^{-1}~\vec{V}_{ij}\right)~=~B_{ij}~\vec{V}_{ij}^{\mathrm{~point}} $
+
+The resulting B solution is nearly as good as one obtained with a
+good, resolved source model and G.  It is somewhat less sensitive
+because more free parameters have been introduced, but this technique
+can often be useful.  Note that the data for the bandpass calibrator,
+after correction by B and M, will be that of a point source, since
+M has absorbed the source structure information.  This information has
+been sacrificed for a decent bandpass calibration applicable to other
+sources.
+
+\subsection{K solutions (Baseline-based fringe-fitting)}
+\label{section:caltool.BLcal.k}
+
+Fringe-fitting is essentially a generalization of ordinary phase
+calibration (the phase part of G, B, M, and/or MF) in which
+coefficients of the Taylor expansion of the phase in time and frequency
+are solved for.  Usually, the expansion is only taken to first order
+in time and frequency.  In this case, the phase can be written:
+
+$ \phi = \phi(t_o,\nu_o) + 2\pi(\nu - \nu_o)\tau + 2\pi\nu(t - t_o)\dot{\tau}$
+
+In this equation, $t_o$ and $\nu_o$ are a fiducial time and frequency
+within the solution interval (where the phase is $\phi(t_o,\nu_o)$),
+and $\tau$ and $\dot{\tau}$ are the delay (phase slope in frequency)
+and delay-rate (phase slope in time), respectively.
+
+{\bf Note:} As written, this equation defines the {\it group delay}
+(by virtue of referring the frequency to the fiducial value) where the
+delay-rate is not necessarily the time derivative of the delay. For
+most current observations, this is the case simply because the noise
+on the delay solution far exceeds the variation implied by the
+delay-rates.  The equation can also be written in terms of the {\it
+phase delay}, where the $\nu_o$ is dropped from the second term, and
+the delay-rate is exactly the derivative of the delay.  This mode will
+be useful for the wide-bandwidth instruments of the near future, and
+will be an option available for users of K.
+
+Evidently, fringe-fitting permits more accurate phase tracking in both
+time and frequency when delay and delay-rate errors are large.  Such
+errors originate in independent clock and position errors of antennas
+and in errors in the direction to radio sources.  Fringe-fitting is
+normally associated with VLBI because these clock and geometry errors
+are more significant there than for smaller connected-element arrays,
+but the wide bandwidths and high frequencies of future instruments
+will likely find fringe-fitting useful.
+
+The current implementation of fringe-fitting in CASA is baseline-based
+and quite simple.  It solves the above equation for $\phi(t_o,\nu_o)$,
+$\tau$, and $\dot{\tau}$ for each baseline independently, assuming
+less than one cycle of phase over the bandwidth and duration of the
+solution interval.
+
+{\bf Note:} Solutions outside the first ambiguity require
+implementation of a first-guess mechanism (an FFT) to reduce the phase
+to within the first ambiguity.  This is still under development.
+
+A separate phase and delay is determined for each polarization, but
+only one rate is determined for both.
+
+{\bf Note:} This is almost always justified since the phase and delay
+correspond to signal path lengths, and the delay rate corresponds to
+the speed of the signal along the path.  The phase and delay are
+likely to be different for different polarizations since these signals
+traverse different electronics with different path lengths, but the
+speed at which the signal travels is the same.  In any case, this
+constraint will be relaxable in a future version.
+
+To obtain a scan-based K solution, with an existing MF solution
+applied: 
+
+\small
+\begin{verbatim}
+cb.setdata(msselect='FIELD_ID==0')        # select data
+cb.setapply(type='MF',table='cal.MF')     # arrange apply of MF
+cb.setsolve(type='K',table='cal.K',t=0)   # arrange solve for K
+cb.solve()                                # solve
+\end{verbatim}
+\normalsize
+
+Application is like any other type:
+
+\small
+\begin{verbatim}
+cb.setdata(msselect='FIELD_ID IN [0,1]')  # select data
+cb.setapply(type='MF',table='cal.MF')     # arrange apply of MF
+cb.setapply(type='K',table='cal.K')       # arrange apply of K
+cb.correct()                                # correct
+\end{verbatim}
+\normalsize
+
+Note that only {\it nearest} interpolation is available for
+application of K.  This will be remedied in the near future.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

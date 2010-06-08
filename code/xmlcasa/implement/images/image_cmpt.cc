@@ -669,7 +669,7 @@ image::close()
    try {
      *itsLog << LogOrigin("image", "close");
      if (itsImage != 0 ) {
-       *itsLog << LogIO::NORMAL3 << "Detaching from image" <<  LogIO::POST;
+       //*itsLog << LogIO::NORMAL3 << "Detaching from image" <<  LogIO::POST;
        delete itsImage;
      } else {
        *itsLog << LogIO::WARN << "Image is already closed" << LogIO::POST;
@@ -734,9 +734,12 @@ image::convertflux(const ::casac::variant& qvalue, const ::casac::variant& major
 
     //
     
+    Bool noBeam = False;
     casa::Quantity rtn =
-      itsImage->convertflux(value, majorAxis,
-			    minorAxis, type, toPeak);
+      itsImage->convertflux(
+    		  noBeam, value, majorAxis,
+			    minorAxis, type, toPeak
+      );
     rstat = recordFromQuantity(rtn);
     
   } catch (AipsError x) {
@@ -1987,7 +1990,7 @@ bool image::open(const std::string& infile)
     rstat= itsImage->open(infile);
 
     if(rstat) {
-	*itsLog << "Opened image " << infile << LogIO::NORMAL2 << LogIO::POST;
+      //*itsLog << LogIO::NORMAL2 << "Opened image " << infile << LogIO::POST;
     }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

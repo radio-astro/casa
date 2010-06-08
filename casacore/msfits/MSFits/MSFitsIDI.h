@@ -79,10 +79,11 @@ class MSFitsIDI
  public:
   // Construct from a tape device name and MS output file name
   MSFitsIDI(const Path& tapeDevice, const String& msOut, 
-	    const Bool& overWrite);
+	    const Bool& overWrite, const Int& obsType=0);
 
   // Construct from an input file name and an MS output file name
-  MSFitsIDI(const String& inFile, const String& msOut, const Bool& overWrite);
+  MSFitsIDI(const String& inFile, const String& msOut, 
+	    const Bool& overWrite, const Int& obsType=0);
 
   // Destructor
   ~MSFitsIDI();
@@ -96,7 +97,7 @@ class MSFitsIDI
  protected:
   // Initialization (called by all constructors)
   void init(const String& dataSource, const FITS::FitsDevice& deviceType,
-	    const String& msOut, const Bool& overWrite);
+	    const String& msOut, const Bool& overWrite, const Int& obsType);
 
   // Read and process a FITS-IDI file
   void readFITSFile(Bool& atEnd);
@@ -113,6 +114,7 @@ class MSFitsIDI
   String itsMSOut;
   MeasurementSet* itsMS;
   Bool itsMSExists, itsOverWrite;
+  Int itsObsType;  // 0=standard, 1=fastmosaic, requiring small tiles in the measurement set
 
   // Selected file numbers (1-relative)
   Vector<Int> itsSelectedFiles;

@@ -77,9 +77,13 @@ namespace asdm {
 	CalAmpliTable &CalAmpliRow::getTable() const {
 		return table;
 	}
-	
-	void CalAmpliRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalAmpliRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalAmpliRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

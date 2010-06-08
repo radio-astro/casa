@@ -1,67 +1,126 @@
-#include <flagging/Flagging/RFASelector.h>
+/*
+  Performance test of flagger iterations.
+*/
+
+
+
+#include <flagging/Flagging/Flagger.h>
 
 #include <msvis/MSVis/VisSet.h>
 
-#include <casa/aips.h>
-#include <casa/namespace.h>
-#include <cassert>
+using namespace casa;
 
-const String MSFILE = "/diska/jmlarsen/gnuactive/data/protopipe/imager/cal.3mmcont.ggtau.ms";
-const String MSFILE2 = "cal.3mmcont.ggtau.ms";
-int main (int,char *)
+
+void loop_visiter(MeasurementSet &ms)
 {
-  //construct MS and flagger 
-  assert( system(("rm -rf " + MSFILE2).c_str()) == 0);
-  assert( system(("cp -r " + MSFILE  + " .").c_str()) == 0);
-
-  MeasurementSet ms(MSFILE2, Table::Update);
-
-  Flagger flagger(ms);
-
-  flagger.setdata("", "", "", "", "", "", "", "", "");
-
-  Double time(50487.6);
-  Double exposure(30);
-  uInt ant1(4);
-  uInt ant2(3);
-  uInt spw(0);
-  uInt chan(61);
-  String corr("XX");
-  FlagIndex fi(time, exposure,
-	       ant1, ant2, 
-	       spw, chan, corr);
-
-  std::vector<FlagIndex> flagIndices;
-  flagIndices.push_back(fi);
+    Matrix<Int> noselection;
 
 
-  chan=62;
-
-  flagIndices.push_back(FlagIndex(time, exposure,
-				  ant1, ant2,
-				  spw, chan, corr));
-
-  if (1) {
-      flagger.applyFlags(flagIndices);
-  }
-  else {
-      flagger.setmanualflags(False,
-			     False, "",
-			     Vector<Double>(2,0.0),
-			     "DATA",
-			     False);
-  }
-
-  //cerr << __FILE__ << __LINE__ << "defaultAgents = " << flagger.defaultAgents() << endl;
-  //Record agents(Record::Variable); 
-
-  //cerr << __FILE__ << __LINE__ << agents << endl;
+    Block<int> sort(4);
 
 
-  //perform the flagging 
-  Bool trial = False;
-  Bool reset = True;
-  flagger.run(trial, reset);
+    sort[0]= MS::ARRAY_ID;
+    sort[1]= MS::FIELD_ID;
+    sort[2]= MS::DATA_DESC_ID;
+    sort[3] = MS::SCAN_NUMBER;
+    sort[4] = MS::TIME;
 
-  return 0;
+
+    Double timeInterval = 7.0e9; //a few thousand years
+    
+    Bool addScratch = False;
+    
+    VisSet *vs_p = new VisSet(ms, sort, noselection, 
+                              addScratch, timeInterval);
+
+    // Use default sort order - and no scratch cols....
+    //vs_p = new VisSet(*mssel_p,noselection,0.0);
+
+    vs_p->resetVisIter(sort, timeInterval);
+        
+    VisibilityIterator &vi(vs_p->iter()); 
+    
+    Vector<Int> scans;
+    Cube<Bool> flags;
+
+    unsigned nchunk = 0;
+    for (vi.originChunks(); 
+         vi.moreChunks(); 
+         vi.nextChunk(), nchunk++) {
+        
+        unsigned ntime = 0;
+
+        for( vi.origin(); 
+             vi.more(); 
+             vi++, ntime++) {
+
+        }
+        if (nchunk % 10 == 0)
+        cout << "Looping chunk = " << nchunk
+             << ", scan = " << vi.scan(scans)
+             << ", field = " << vi.fieldId() 
+             << ", spw = " << vi.spectralWindow()
+             << ", ntimes = " << ntime 
+             << ", dim = " << vi.flag(flags).shape()
+             << endl;
+    }
+}
+
+
+
+void loop_flagger(MeasurementSet &ms)
+{
+    Flagger flagger(ms);
+
+    cout << "flagger.numAnt = " << flagger.numAnt() << endl;
+    cout << "flagger.numIfr = " << flagger.numIfr() << endl;
+    cout << "flagger.numFeed = " << flagger.numFeed() << endl;
+    cout << "flagger.numFeedCorr = " << flagger.numFeedCorr() << endl;
+
+
+
+    /*
+     *  Test Flagger
+     */
+
+    cout << "Run flagger..." << endl;
+
+
+    //LogIO l(LogOrigin("Flagger","FlagCube"));
+    //    l << "helo l" << LogIO::POST;
+    //    cerr << "survived" << endl;
+
+
+    bool trial = false;
+    bool reset = false;
+
+    string baseline = "";
+    string field = "";
+
+    baseline = "";
+    flagger.setdata(field, "", "", "", "",
+                    baseline, "", "", ""); 
+    
+    cout << "setmanualflags..." << endl;
+    Vector<Double> cliprange(2);
+    //cliprange[0] = 0.5;
+    //cliprange[1] = 1.0;
+
+    double quackinterval = 0.0001;
+    flagger.setmanualflags(false, false, "", cliprange, "", false, false, quackinterval);
+
+    cout << "run..." << endl;
+    flagger.run(trial, reset);
+}
+
+int main()
+{
+    MeasurementSet ms("/tmp/n7538_usb.ms", Table::Update);
+    //MeasurementSet ms("/tmp/field3.ms", Table::Update);
+    
+    loop_visiter(ms);
+
+    loop_flagger(ms);
+
+    return 0;
 }

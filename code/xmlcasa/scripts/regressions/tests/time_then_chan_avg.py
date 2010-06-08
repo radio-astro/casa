@@ -269,7 +269,7 @@ expected = {
                                                  0.005),
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         ('DATA_DESC_ID', 134): 1,
-                        ('DATA', 134): (numpy.array([[5.0+0.5j, 5.0+2.5j]]), 0.005)
+                        ('DATA', 134): (numpy.array([[14.462+0.5j, 14.462+2.5j]]), 0.005)
                         }
                 }
             }
@@ -494,7 +494,7 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True,
     if zaptemp:
         shutil.rmtree(tms)
     if zaporig:
-        casalog.post("Following your instruction to rm -rf %s" % inms, 'WARN')
+        casalog.post("Following your instruction to shutil.rmtree(" + inms + ")", 'WARN')
         shutil.rmtree(inms)
     return nrows_aft_tavg, nrows_aft_cavg, shape_aft_cavg
 

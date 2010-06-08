@@ -54,9 +54,10 @@ class PlotMSExportThread : public PlotMSThread, public PlotOperationWatcher {
 public:
     // Constructor which takes the plot to export, the export format
     // parameters, and optional post-thread method parameters.
-    PlotMSExportThread(PlotMSPlot* plot, const PlotExportFormat& format,
-            PMSPTMethod postThreadMethod = NULL,
-            PMSPTObject postThreadObject = NULL);
+    PlotMSExportThread(
+    	PlotMSPlot* plot, const PlotExportFormat& format, bool interactive,
+        PMSPTMethod postThreadMethod = NULL, PMSPTObject postThreadObject = NULL
+    );
     
     // Destructor.
     ~PlotMSExportThread();
@@ -101,6 +102,9 @@ private:
     // Helper.
     PlotMSExportThreadHelper* itsHelper_;
     
+    // Interactive mode?
+    Bool _interactive;
+
 private slots:
     // Slot for when the QThread finishes.
     void threadFinished();

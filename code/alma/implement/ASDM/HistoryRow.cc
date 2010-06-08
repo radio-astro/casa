@@ -71,9 +71,13 @@ namespace asdm {
 	HistoryTable &HistoryRow::getTable() const {
 		return table;
 	}
-	
-	void HistoryRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool HistoryRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void HistoryRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

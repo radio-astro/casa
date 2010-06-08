@@ -2658,7 +2658,7 @@ Int TablePlot::iterMultiPlotNext(Vector<String> &labelcols,
 
             if((*OvpIters_p[0])[0].pastEnd()) { 
                 finished = -1; 
-                break;
+		break; 
              }
 
            //cout << "Pops_p.nelements()=" << Pops_p.nelements() << endl;
@@ -2749,6 +2749,7 @@ Int TablePlot::iterMultiPlotNext(Vector<String> &labelcols,
       }
       delete genericcallback;
    }// if not finished.
+   //TPLP->show();
    
    if( finished == -1 ) 
       log->out("End of iterations", fnname, clname,

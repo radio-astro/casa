@@ -103,8 +103,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Add scratch columns
     if (init) {
-      message.message("Adding MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns");
-      logSink.post(message);
       
       removeCalSet(ms);
       addCalSet(ms, compress);
@@ -124,10 +122,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt spw=0; spw<selection_p.ncolumn(); spw++) {
       iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
     }
-    
-    // Initialize MODEL_DATA and CORRECTED_DATA
-    if (init) initCalSet(0);
-    
   }
 
   VisSet::VisSet(MeasurementSet& ms,const Block<Int>& columns, 
@@ -179,9 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Add scratch columns
     if (addScratch && init) {
-      message.message("Adding MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns");
-      logSink.post(message);
-      
+
       removeCalSet(ms);
       addCalSet(ms, compress);
       
@@ -200,10 +192,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt spw=0; spw<selection_p.ncolumn(); spw++) {
       iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
     }
-    
-    // Initialize MODEL_DATA and CORRECTED_DATA
-    if (addScratch && init) initCalSet(0);
-    
   }
   
   VisSet::VisSet(Block<MeasurementSet>& mss,const Block<Int>& columns, 
@@ -404,7 +392,6 @@ void VisSet::resetVisIter(const Block<Int>& columns, Double timeInterval)
 
 void VisSet::initCalSet(Int calSet)
 {
-
   LogSink logSink;
   LogMessage message(LogOrigin("VisSet","VisSet"));
 
@@ -415,30 +402,38 @@ void VisSet::initCalSet(Int calSet)
   Vector<Bool> zero;
   Int nRows(0);
   for (iter_p->originChunks(); iter_p->moreChunks(); iter_p->nextChunk()) {
-    // figure out which correlations to set to 1. and 0. for the model.
-    Vector<Int> corrType; iter_p->corrType(corrType);
-    uInt nCorr = corrType.nelements();
-    if (nCorr!=lastCorrType.nelements() ||
-	!allEQ(corrType,lastCorrType)) {
-      lastCorrType.resize(nCorr); lastCorrType=corrType;
-      zero.resize(nCorr);
-      for (uInt i=0; i<nCorr; i++) {
-	zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
-		 corrType[i]==Stokes::XY || corrType[i]==Stokes::YX);
+
+      // figure out which correlations to set to 1. and 0. for the model.
+      Vector<Int> corrType; iter_p->corrType(corrType);
+      uInt nCorr = corrType.nelements();
+      if (nCorr != lastCorrType.nelements() ||
+          !allEQ(corrType, lastCorrType)) {
+
+        lastCorrType.resize(nCorr); 
+        lastCorrType=corrType;
+        zero.resize(nCorr);
+
+        for (uInt i=0; i<nCorr; i++) 
+          {
+            zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
+                     corrType[i]==Stokes::XY || corrType[i]==Stokes::YX);
+          }
       }
-    }
-    for (iter_p->origin(); iter_p->more(); (*iter_p)++) {
-      Cube<Complex> data;
-      nRows+=iter_p->nRow();
-      iter_p->setVis(iter_p->visibility(data,VisibilityIterator::Observed),
-		     VisibilityIterator::Corrected);
-      data=Complex(1.0,0.0);
-      for (uInt i=0; i<nCorr; i++) {
-	if (zero[i]) data(Slice(i),Slice(),Slice())=Complex(0.0,0.0);
+      for (iter_p->origin(); iter_p->more(); (*iter_p)++) {
+          Cube<Complex> data;
+          nRows+=iter_p->nRow();
+          iter_p->setVis(iter_p->visibility(data, VisibilityIterator::Observed),
+                         VisibilityIterator::Corrected);
+
+          data = Complex(1.0,0.0);
+
+          for (uInt i=0; i < nCorr; i++) {
+              if (zero[i]) data(Slice(i), Slice(), Slice()) = Complex(0.0,0.0);
+          }
+          iter_p->setVis(data,
+                         VisibilityIterator::Model);
       }
-      iter_p->setVis(data,VisibilityIterator::Model);
-    };
-  };
+  }
   flush();
 
   iter_p->originChunks();
@@ -573,169 +568,273 @@ Int VisSet::numberCoh() const
 }
 
 void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
-  // Add a calibration set (comprising a set of CORRECTED_DATA, 
-  // MODEL_DATA and IMAGING_WEIGHT columns) to the MeasurementSet.
+
+    // Add and initialize calibration set (comprising a set of CORRECTED_DATA, 
+    // MODEL_DATA and IMAGING_WEIGHT columns) to the MeasurementSet.
+    
+    LogSink logSink;
+    LogMessage message(LogOrigin("VisSet","addCalSet"));
+    
+    message.message("Adding MODEL_DATA (initialized to unity), CORRECTED_DATA (initialized to DATA) and IMAGING_WEIGHT columns");
+    logSink.post(message);
+    
+    {
+      // Define a column accessor to the observed data
+        ROTableColumn* data;
+        const bool data_is_float = ms.tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA));
+        if (data_is_float) {
+            data = new ROArrayColumn<Float> (ms, MS::columnName(MS::FLOAT_DATA));
+        } else {
+            data = new ROArrayColumn<Complex> (ms, MS::columnName(MS::DATA));
+        };
+
+        // Check if the data column is tiled and, if so, the
+        // smallest tile shape used.
+        TableDesc td = ms.actualTableDesc();
+        const ColumnDesc& cdesc = td[data->columnDesc().name()];
+        String dataManType = cdesc.dataManagerType();
+        String dataManGroup = cdesc.dataManagerGroup();
+
+        IPosition dataTileShape;
+        Bool tiled = (dataManType.contains("Tiled"));
+        Bool simpleTiling = False;
   
-  // Define a column accessor to the observed data
-  ROTableColumn* data;
-  if (ms.tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA))) {
-    data = new ROArrayColumn<Float> (ms, MS::columnName(MS::FLOAT_DATA));
-  } else {
-    data = new ROArrayColumn<Complex> (ms, MS::columnName(MS::DATA));
-  };
 
-  // Check if the data column is tiled and, if so, the
-  // smallest tile shape used.
-  TableDesc td = ms.actualTableDesc();
-  const ColumnDesc& cdesc = td[data->columnDesc().name()];
-  String dataManType = cdesc.dataManagerType();
-  String dataManGroup = cdesc.dataManagerGroup();
+        if (tiled) {
+            ROTiledStManAccessor tsm(ms, dataManGroup);
+            uInt nHyper = tsm.nhypercubes();
+            // Find smallest tile shape
+            Int lowestProduct = 0;
+            Int lowestId = 0;
+            Bool firstFound = False;
+            for (uInt id=0; id < nHyper; id++) {
+                Int product = tsm.getTileShape(id).product();
+                if (product > 0 && (!firstFound || product < lowestProduct)) {
+                    lowestProduct = product;
+                    lowestId = id;
+                    if (!firstFound) firstFound = True;
+                };
+            };
+            dataTileShape = tsm.getTileShape(lowestId);
+            simpleTiling = (dataTileShape.nelements() == 3);
+        };
 
-  IPosition dataTileShape;
-  Bool tiled = (dataManType.contains("Tiled"));
-  Bool simpleTiling = False;
 
+
+        if (!tiled || !simpleTiling) {
+            // Untiled, or tiled at a higher than expected dimensionality
+            // Use a canonical tile shape of 32 kB size
+
+            Int maxNchan = max (numberChan());
+            Int tileSize = maxNchan/10 + 1;
+            Int nCorr = data->shape(0)(0);
+            dataTileShape = IPosition(3, nCorr, tileSize, 4096/nCorr/tileSize + 1);
+        };
   
+        // Add the MODEL_DATA column
+        TableDesc tdModel, tdModelComp, tdModelScale;
+        CompressComplex* ccModel=NULL;
+        String colModel=MS::columnName(MS::MODEL_DATA);
 
-  if (tiled) {
-    ROTiledStManAccessor tsm(ms, dataManGroup);
-    uInt nHyper = tsm.nhypercubes();
-    // Find smallest tile shape
-    Int lowestProduct = 0;
-    Int lowestId = 0;
-    Bool firstFound = False;
-    for (uInt id=0; id < nHyper; id++) {
-      Int product = tsm.getTileShape(id).product();
-      if (product > 0 && (!firstFound || product < lowestProduct)) {
-	lowestProduct = product;
-	lowestId = id;
-	if (!firstFound) firstFound = True;
-      };
-    };
-    dataTileShape = tsm.getTileShape(lowestId);
-    simpleTiling = (dataTileShape.nelements() == 3);
-  };
+        tdModel.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
+        td.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
+        IPosition modelTileShape = dataTileShape;
+        if (compress) {
+            tdModelComp.addColumn(ArrayColumnDesc<Int>(colModel+"_COMPRESSED",
+                                                       "model data compressed",2));
+            tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_SCALE"));
+            tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_OFFSET"));
+            ccModel = new CompressComplex(colModel, colModel+"_COMPRESSED",
+                                          colModel+"_SCALE", colModel+"_OFFSET", True);
 
-
-
-  if (!tiled || !simpleTiling) {
-    // Untiled, or tiled at a higher than expected dimensionality
-    // Use a canonical tile shape of 32 kB size
-
-    Int maxNchan = max (numberChan());
-    Int tileSize = maxNchan/10 + 1;
-    Int nCorr = data->shape(0)(0);
-    dataTileShape = IPosition(3, nCorr, tileSize, 4096/nCorr/tileSize + 1);
-  };
-  
-  // Add the MODEL_DATA column
-  TableDesc tdModel, tdModelComp, tdModelScale;
-  CompressComplex* ccModel=NULL;
-  String colModel=MS::columnName(MS::MODEL_DATA);
-
-  tdModel.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
-  td.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
-  IPosition modelTileShape = dataTileShape;
-  if (compress) {
-    tdModelComp.addColumn(ArrayColumnDesc<Int>(colModel+"_COMPRESSED",
-					       "model data compressed",2));
-    tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_SCALE"));
-    tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_OFFSET"));
-    ccModel = new CompressComplex(colModel, colModel+"_COMPRESSED",
-				  colModel+"_SCALE", colModel+"_OFFSET", True);
-
-    StandardStMan modelScaleStMan("ModelScaleOffset");
-    ms.addColumn(tdModelScale, modelScaleStMan);
+            StandardStMan modelScaleStMan("ModelScaleOffset");
+            ms.addColumn(tdModelScale, modelScaleStMan);
    
 
-    TiledShapeStMan modelCompStMan("", modelTileShape);
-    ms.addColumn(tdModelComp, modelCompStMan);
-    ms.addColumn(tdModel, *ccModel);
+            TiledShapeStMan modelCompStMan("", modelTileShape);
+            ms.addColumn(tdModelComp, modelCompStMan);
+            ms.addColumn(tdModel, *ccModel);
 
-  } else {
-    MeasurementSet::addColumnToDesc(tdModel, MeasurementSet::MODEL_DATA, 2);
-    //MeasurementSet::addColumnToDesc(td, MeasurementSet::MODEL_DATA, 2);
-    TiledShapeStMan modelStMan("ModelTiled", modelTileShape);
-    //String hcolName=String("Tiled")+String("MODEL_DATA");
-    //tdModel.defineHypercolumn(hcolName,3,
-    //			     stringToVector(colModel));
-    //td.defineHypercolumn(hcolName,3,
-    //		     stringToVector(colModel));
-    ms.addColumn(tdModel, modelStMan);
-  };
+        } else {
+            MeasurementSet::addColumnToDesc(tdModel, MeasurementSet::MODEL_DATA, 2);
+            //MeasurementSet::addColumnToDesc(td, MeasurementSet::MODEL_DATA, 2);
+            TiledShapeStMan modelStMan("ModelTiled", modelTileShape);
+            //String hcolName=String("Tiled")+String("MODEL_DATA");
+            //tdModel.defineHypercolumn(hcolName,3,
+            //			     stringToVector(colModel));
+            //td.defineHypercolumn(hcolName,3,
+            //		     stringToVector(colModel));
+            ms.addColumn(tdModel, modelStMan);
+        };
 
  
 
-  // Add the CORRECTED_DATA column
-  TableDesc tdCorr, tdCorrComp, tdCorrScale;
-  CompressComplex* ccCorr=NULL;
-  String colCorr=MS::columnName(MS::CORRECTED_DATA);
+        // Add the CORRECTED_DATA column
+        TableDesc tdCorr, tdCorrComp, tdCorrScale;
+        CompressComplex* ccCorr=NULL;
+        String colCorr=MS::columnName(MS::CORRECTED_DATA);
 
-  tdCorr.addColumn(ArrayColumnDesc<Complex>(colCorr,"corrected data", 2));
-  IPosition corrTileShape = dataTileShape;
-  if (compress) {
-    tdCorrComp.addColumn(ArrayColumnDesc<Int>(colCorr+"_COMPRESSED",
-					      "corrected data compressed",2));
-    tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_SCALE"));
-    tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_OFFSET"));
-    ccCorr = new CompressComplex(colCorr, colCorr+"_COMPRESSED",
-				 colCorr+"_SCALE", colCorr+"_OFFSET", True);
+        tdCorr.addColumn(ArrayColumnDesc<Complex>(colCorr,"corrected data", 2));
+        IPosition corrTileShape = dataTileShape;
+        if (compress) {
+            tdCorrComp.addColumn(ArrayColumnDesc<Int>(colCorr+"_COMPRESSED",
+                                                      "corrected data compressed",2));
+            tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_SCALE"));
+            tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_OFFSET"));
+            ccCorr = new CompressComplex(colCorr, colCorr+"_COMPRESSED",
+                                         colCorr+"_SCALE", colCorr+"_OFFSET", True);
 
-    StandardStMan corrScaleStMan("CorrScaleOffset");
-    ms.addColumn(tdCorrScale, corrScaleStMan);
+            StandardStMan corrScaleStMan("CorrScaleOffset");
+            ms.addColumn(tdCorrScale, corrScaleStMan);
 
-    TiledShapeStMan corrCompStMan("", corrTileShape);
-    ms.addColumn(tdCorrComp, corrCompStMan);
-    ms.addColumn(tdCorr, *ccCorr);
+            TiledShapeStMan corrCompStMan("", corrTileShape);
+            ms.addColumn(tdCorrComp, corrCompStMan);
+            ms.addColumn(tdCorr, *ccCorr);
 
-  } else {
-    TiledShapeStMan corrStMan("", corrTileShape);
-    ms.addColumn(tdCorr, corrStMan);
-  };
-  MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
-  // Add the IMAGING_WEIGHT column
-  TableDesc tdImWgt, tdImWgtComp, tdImWgtScale;
-  CompressFloat* ccImWgt=NULL;
-  String colImWgt=MS::columnName(MS::IMAGING_WEIGHT);
+        } else {
+            TiledShapeStMan corrStMan("", corrTileShape);
+            ms.addColumn(tdCorr, corrStMan);
+        };
+        MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
 
-  tdImWgt.addColumn(ArrayColumnDesc<Float>(colImWgt,"imaging weight", 1));
-  IPosition imwgtTileShape = dataTileShape.getLast(2);
-  if (compress) {
-    tdImWgtComp.addColumn(ArrayColumnDesc<Short>(colImWgt+"_COMPRESSED",
-						 "imaging weight compressed",
-						 1));
-    tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_SCALE"));
-    tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_OFFSET"));
-    ccImWgt = new CompressFloat(colImWgt, colImWgt+"_COMPRESSED",
-				colImWgt+"_SCALE", colImWgt+"_OFFSET", True);
+        // Add the IMAGING_WEIGHT column
+        TableDesc tdImWgt, tdImWgtComp, tdImWgtScale;
+        CompressFloat* ccImWgt=NULL;
+        String colImWgt=MS::columnName(MS::IMAGING_WEIGHT);
 
-    StandardStMan imwgtScaleStMan("ImWgtScaleOffset");
-    ms.addColumn(tdImWgtScale, imwgtScaleStMan);
+        tdImWgt.addColumn(ArrayColumnDesc<Float>(colImWgt,"imaging weight", 1));
+        IPosition imwgtTileShape = dataTileShape.getLast(2);
+        if (compress) {
+            tdImWgtComp.addColumn(ArrayColumnDesc<Short>(colImWgt+"_COMPRESSED",
+                                                         "imaging weight compressed",
+                                                         1));
+            tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_SCALE"));
+            tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_OFFSET"));
+            ccImWgt = new CompressFloat(colImWgt, colImWgt+"_COMPRESSED",
+                                        colImWgt+"_SCALE", colImWgt+"_OFFSET", True);
 
-    TiledShapeStMan imwgtCompStMan("", imwgtTileShape);
-    ms.addColumn(tdImWgtComp, imwgtCompStMan);
-    ms.addColumn(tdImWgt, *ccImWgt);
+            StandardStMan imwgtScaleStMan("ImWgtScaleOffset");
+            ms.addColumn(tdImWgtScale, imwgtScaleStMan);
 
-  } else {
-    TiledShapeStMan imwgtStMan("", imwgtTileShape);
-    ms.addColumn(tdImWgt, imwgtStMan);
-  };
-  MeasurementSet::addColumnToDesc(td, MeasurementSet::IMAGING_WEIGHT, 1);
-  if (ccModel) delete ccModel;
-  if (ccCorr) delete ccCorr;
-  if (ccImWgt) delete ccImWgt;
+            TiledShapeStMan imwgtCompStMan("", imwgtTileShape);
+            ms.addColumn(tdImWgtComp, imwgtCompStMan);
+            ms.addColumn(tdImWgt, *ccImWgt);
 
-  // Set the shapes for each row
-  ArrayColumn<Complex> modelData(ms, "MODEL_DATA");
-  ArrayColumn<Complex> correctedData(ms, "CORRECTED_DATA");
-  ArrayColumn<Float> imagingWeight(ms, "IMAGING_WEIGHT");
-  for (uInt row=0; row < ms.nrow(); row++) {
-    IPosition rowShape=data->shape(row);
-    modelData.setShape(row,rowShape);
-    correctedData.setShape(row,rowShape);
-    imagingWeight.setShape(row,rowShape.getLast(1));
-  };
-  delete data;
+        } else {
+            TiledShapeStMan imwgtStMan("", imwgtTileShape);
+            ms.addColumn(tdImWgt, imwgtStMan);
+        };
+        MeasurementSet::addColumnToDesc(td, MeasurementSet::IMAGING_WEIGHT, 1);
+        if (ccModel) delete ccModel;
+        if (ccCorr) delete ccCorr;
+        if (ccImWgt) delete ccImWgt;
+
+        /* Set the shapes for each row
+           and initialize CORRECTED_DATA to DATA
+           and MODEL_DATA to one 
+        */
+        ArrayColumn<Complex> modelData(ms, "MODEL_DATA");
+        ArrayColumn<Complex> correctedData(ms, "CORRECTED_DATA");
+        ArrayColumn<Float> imagingWeight(ms, "IMAGING_WEIGHT");
+
+        // Get data description column
+        ROScalarColumn<Int> dd_col = MSMainColumns(ms).dataDescId();
+
+        // Get polarization column in dd table
+        ROScalarColumn<Int> pol_col = MSDataDescColumns(ms.dataDescription()).polarizationId();
+
+        // Get correlation column
+        ROArrayColumn<Int> corr_col(MSColumns(ms).polarization().corrType());
+
+        Matrix<Complex> model_vis;
+        Int last_dd_id = 0;
+        /* Initialize last_dd_id to something that
+           causes the model_vis to be (re-)computed
+           for the first MS row
+        */
+        if (ms.nrow() > 0) {
+            last_dd_id = dd_col(0) + 1;
+        }
+
+        for (uInt row=0; row < ms.nrow(); row++) {
+
+            IPosition rowShape=data->shape(row);  // shape of (FLOAT_)DATA column
+
+            correctedData.setShape(row, rowShape);
+            modelData.setShape(row, rowShape);
+            imagingWeight.setShape(row, rowShape.getLast(1));
+
+            Matrix<Complex> vis(rowShape);
+
+            if (data_is_float) {
+                /* Convert to complex for the CORRECTED_DATA column */
+                Matrix<Float> f(rowShape);
+                dynamic_cast<ROArrayColumn<Float>*>(data)->get(row, f);
+
+                for (unsigned i = 0; (int)i < f.shape()(0); i++)
+                    for (unsigned j = 0; (int)j < f.shape()(1); j++)
+                        vis(i, j) = f(i, j);
+            } 
+            else {
+                dynamic_cast<ROArrayColumn<Complex>*>(data)->get(row, vis);
+            }
+
+            correctedData.put(row, vis);
+
+            // figure out which correlations to set to 1. and 0. for the model.
+            // Only do that, if the ddid changed since the last row
+            Int dd_id = dd_col(row);
+
+            if (dd_id != last_dd_id) {
+      
+                last_dd_id = dd_id;
+
+                model_vis.resize(rowShape);
+
+                Int pol_id = pol_col(dd_id);
+                Vector<Int> corrType = corr_col(pol_id);
+      
+                //cerr << "row = " << row << ", dd = " << dd_id << ", pol = " << pol_id << ", corr = " << corrType << endl;
+      
+                Vector<Int> lastCorrType;
+                Vector<Bool> zero;
+      
+                uInt nCorr = corrType.nelements();
+                if (nCorr != lastCorrType.nelements() ||
+                    !allEQ(corrType, lastCorrType)) {
+        
+                    lastCorrType.resize(nCorr); 
+                    lastCorrType = corrType;
+                    zero.resize(nCorr);
+        
+                    for (uInt i=0; i<nCorr; i++) 
+                        {
+                            zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
+                                     corrType[i]==Stokes::XY || corrType[i]==Stokes::YX);
+                        }
+                }
+      
+                model_vis = Complex(1.0,0.0);
+      
+                for (uInt i=0; i < nCorr; i++) {
+                    if (zero[i]) {
+                        model_vis(Slice(i), Slice()) = Complex(0.0, 0.0);
+                    }
+                }
+            } // endif ddid changed
+
+            modelData.put(row, model_vis);
+        } 
+
+        delete data;
+    }
+
+  ostringstream os;
+  os << "Initialized " << ms.nrow() << " rows"; 
+  message.message(os.str());
+  logSink.post(message);
+
+  return;
 }
 
 void VisSet::removeCalSet(MeasurementSet& ms) {
@@ -791,8 +890,6 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress){
 
   // Add scratch columns
   if (init) {
-    message.message("Adding MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns");
-    logSink.post(message);
     
     removeCalSet(ms);
     addCalSet(ms, compress);
@@ -806,13 +903,6 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress){
     if (ms.keywordSet().isDefined("SORTED_TABLE")) 
       ms.rwKeywordSet().removeField("SORTED_TABLE");
   }
-
-  
-  // Initialize MODEL_DATA and CORRECTED_DATA
-  if (init) initCalSet(0);
-
-
-
 }
 
 String VisSet::msName(){

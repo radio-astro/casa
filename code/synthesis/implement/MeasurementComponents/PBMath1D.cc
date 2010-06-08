@@ -274,7 +274,9 @@ PBMath1D::extentguts (const CoordinateSystem& coords, const MDirection& pointDir
   MDirection pointDirE;
   if (t2 != directionCoord.directionType()) {
     MDirection::Convert converter;
-    converter.setOut( directionCoord.directionType()  );
+    ObsInfo oi=coords.obsInfo();
+    converter.setOut(MDirection::Ref(directionCoord.directionType(), 
+				     MeasFrame(oi.obsDate(), oi.telescopePosition())));
     pointDirE = converter(pointDir);
   } else {
     pointDirE = pointDir;
@@ -397,9 +399,13 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
   // convert to the EPOCH of these coords
   MDirection::Types t2 = (MDirection::Types) (pointDir.getRef().getType());
   MDirection pointDirE;
+
+
   if (t2 != directionCoord.directionType()) {
     MDirection::Convert converter;
-    converter.setOut( directionCoord.directionType()  );
+    ObsInfo oi=coords.obsInfo();
+    converter.setOut(MDirection::Ref(directionCoord.directionType(), 
+				     MeasFrame(oi.obsDate(), oi.telescopePosition())));
     pointDirE = converter(pointDir);
   } else {
     pointDirE = pointDir;
@@ -639,9 +645,12 @@ PBMath1D::apply(const ImageInterface<Float>& in,
   // convert to the EPOCH of these coords
   MDirection::Types t2 = (MDirection::Types) (pointDir.getRef().getType());
   MDirection pointDirE(pointDir);
+
   if (t2 != directionCoord.directionType()) {
     MDirection::Convert converter;
-    converter.setOut( directionCoord.directionType()  );
+    ObsInfo oi=coords.obsInfo();
+    converter.setOut(MDirection::Ref(directionCoord.directionType(), 
+				     MeasFrame(oi.obsDate(), oi.telescopePosition())));
     pointDirE = converter(pointDir);
   } else {
     pointDirE = pointDir;

@@ -77,9 +77,13 @@ namespace asdm {
 	CalFluxTable &CalFluxRow::getTable() const {
 		return table;
 	}
-	
-	void CalFluxRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalFluxRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalFluxRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

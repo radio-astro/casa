@@ -2,7 +2,7 @@ import os
 from taskinit import *
 from flagdata_cli import flagdata_cli as flagdata
 
-def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None, applyflags=None, tbuff=None):
+def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None, applyflags=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None):
 	""" Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS)
 	This version is under development and is geared to handling EVLA specific flag and
 	system files, and is otherwise identical to importasdm.
@@ -181,6 +181,32 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		else:
 		   print 'No Flag.xml in SDM'
 		   casalog.post('No Flag.xml in SDM')
+
+		if flagzero:
+		   # clip low-amp data
+		   # NOTE: should not call a task from within a task but
+		   # will do so here, otherwise would have to steal code
+		   # from flagdata to vectorize the flagging commands
+		   print 'Flagging low-amplitude points, using clip level ',cliplevel
+		   casalog.post('Flagging low-amplitude points, using clip level '+str(cliplevel))
+		   flagdata(vis=viso,mode='manualflag',clipexpr='ABS RR',clipoutside=False,clipminmax=[0.0,cliplevel])
+		   flagdata(vis=viso,mode='manualflag',clipexpr='ABS LL',clipoutside=False,clipminmax=[0.0,cliplevel])
+		   if (flagpol):
+		      flagdata(vis=viso,mode='manualflag',clipexpr='ABS RL',clipoutside=False,clipminmax=[0.0,cliplevel])
+		      flagdata(vis=viso,mode='manualflag',clipexpr='ABS LR',clipoutside=False,clipminmax=[0.0,cliplevel])
+
+		if shadow:
+		   # flag shadowed data
+		   # NOTE: should not call a task from within a task but
+		   # will do so here, otherwise would have to steal code
+		   # from flagdata to vectorize the flagging commands
+		   if diameter==-1.0:
+		      print 'Flagging shadowed data, using antenna diameter '
+		      casalog.post('Flagging shadowed data, using antenna diameter ')
+		   else:
+		      print 'Flagging shadowed data, using diameter ',diameter
+		      casalog.post('Flagging shadowed data, using diameter '+str(diameter))
+		   flagdata(vis=viso,mode='shadow',diameter=diameter)
 
 	except Exception, instance:
 		print '*** Error ***',instance

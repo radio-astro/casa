@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalPositionTable::tableName = "CalPosition";
-	
+	const vector<string> CalPositionTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -112,7 +113,6 @@ namespace asdm {
 /**
  * A destructor for CalPositionTable.
  */
- 
 	CalPositionTable::~CalPositionTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -132,13 +132,70 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalPositionTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalPositionTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaName");
+
+		attributesNames.push_back("atmPhaseCorrection");
+
+		attributesNames.push_back("calDataId");
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("startValidTime");
+
+		attributesNames.push_back("endValidTime");
+
+		attributesNames.push_back("antennaPosition");
+
+		attributesNames.push_back("stationName");
+
+		attributesNames.push_back("stationPosition");
+
+		attributesNames.push_back("positionMethod");
+
+		attributesNames.push_back("receiverBand");
+
+		attributesNames.push_back("numAntenna");
+
+		attributesNames.push_back("refAntennaNames");
+
+		attributesNames.push_back("axesOffset");
+
+		attributesNames.push_back("axesOffsetErr");
+
+		attributesNames.push_back("axesOffsetFixed");
+
+		attributesNames.push_back("positionOffset");
+
+		attributesNames.push_back("positionErr");
+
+		attributesNames.push_back("reducedChiSquared");
+
+
+		attributesNames.push_back("delayRms");
+
+		attributesNames.push_back("phaseRms");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalPositionTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -287,7 +344,7 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 
@@ -329,7 +386,7 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -481,7 +538,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -559,7 +616,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPositionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -843,10 +900,10 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 	}
 
 	
-	void CalPositionTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPosition.xml")))
+	void CalPositionTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalPosition.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPosition.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalPosition.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalPosition table", "CalPosition");

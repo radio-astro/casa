@@ -192,150 +192,36 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
                    const bool interactive, const int npercycle,
                    const std::string& masktemplate, const bool async)
 {
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         Vector<String> amodel(toVectorString(model));
-         Vector<Bool>   fixed(keepfixed);
-         Vector<String> amask(toVectorString(mask));
-         Vector<String> aimage(toVectorString(image));
-         Vector<String> aresidual(toVectorString(residual));
-	 Vector<String> apsf(toVectorString(psfnames));
-	 if( (apsf.nelements()==1) && apsf[0]==String(""))
-	   apsf.resize();
-	 if(!interactive){
-	   rstat = itsImager->clean(String(algorithm), niter, gain, 
-				    casaQuantity(threshold), displayprogress, 
-				    amodel, fixed, String(complist), amask,  
-				    aimage, aresidual, apsf);
+  Bool rstat(False);
+   if(hasValidMS_p)
+     {
+       try 
+	 {
+	   Vector<String> amodel(toVectorString(model));
+	   Vector<Bool>   fixed(keepfixed);
+	   Vector<String> amask(toVectorString(mask));
+	   Vector<String> aimage(toVectorString(image));
+	   Vector<String> aresidual(toVectorString(residual));
+	   Vector<String> apsf(toVectorString(psfnames));
+	   rstat = itsImager->iClean(String(algorithm), niter, gain,
+				     casaQuantity(threshold), Bool(displayprogress),
+				     amodel, fixed, String(complist),
+				     amask, aimage, aresidual, apsf,
+				     Bool(interactive), npercycle,
+				     String(masktemplate), Bool(async));
+	 } 
+       catch  (AipsError x) 
+	 {
+	   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	   RETHROW(x);
 	 }
-	 else{
-	   /*if(amodel.nelements() > 1){
-	     throw(AipsError("Interactive clean in multifield mode is not supported yet"));
-	   }
-	   */
-	   if((amask.nelements()==0) || (amask[0]==String(""))){
-	     amask.resize(amodel.nelements());
-	     for (uInt k=0; k < amask.nelements(); ++k){
-		 amask[k]=amodel[k]+String(".mask");
-	     }
-	   }
-	   Vector<Bool> nointerac(amodel.nelements());
-	   nointerac.set(False);
-	   if(fixed.nelements() != amodel.nelements()){
-	     fixed.resize(amodel.nelements());
-	     fixed.set(False);
-	   }
-	   Bool forceReload=True;
-	   Int nloop=0;
-	   if(npercycle != 0)
-	     nloop=niter/npercycle;
-	   Int continter=0;
-	   Int elniter=npercycle;
-	   ostringstream oos;
-	   casaQuantity(threshold).print(oos);
-	   String thresh=String(oos);
-	   if(String(masktemplate) != String("")){
-	     continter=itsImager->interactivemask(masktemplate, amask[0], 
-						  elniter, nloop, thresh);
-	   }
-	   else {
-	     // do a zero component clean to get started
-	     itsImager->clean(String(algorithm), 0, gain, 
-			      casaQuantity(threshold), displayprogress,
-			      amodel, fixed, String(complist), amask,  
-			      aimage, aresidual, Vector<String>(0), false);
-	     for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
-	       if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
-		 PagedImage<Float> rest(aimage[nIm]);
-		 PagedImage<Float> resi(aresidual[nIm]);
-		 itsImager->copyMask(resi, rest, "mask0");
-	       }
-	       forceReload=forceReload || (aresidual.nelements() >1);
-	       continter=itsImager->interactivemask(aresidual[nIm], amask[nIm], 
-						    elniter, nloop,thresh, forceReload);
-	       forceReload=False;
-	       if(continter>=1)
-		 nointerac(nIm)=True;
-	       if(continter==2)
-		 fixed(nIm)=True;
-
-	     }
-	     if(allEQ(nointerac, True)){
-		   elniter=niter;
-		   //make it do one more loop/clean but with all niter 
-		   nloop=1;
-	     }
-	   }
-	   for (Int k=0; k < nloop; ++k){
-	     
-	     casa::Quantity thrsh;
-	     if(!casa::Quantity::read(thrsh, thresh)){
-	       *itsLog << LogIO::WARN << "Error interpreting threshold" 
-		       << LogIO::POST;
-	       thrsh=casa::Quantity(0, "Jy");
-	       thresh="0.0Jy";
-	     }
-	     Vector<String> elpsf(0);
-	     //Need to save psfs in interactive only once and lets do it the 
-	     //first time
-	     if(k==0)
-	       elpsf=apsf;
-	     if(anyEQ(fixed, False)){ 
-	       rstat = itsImager->clean(String(algorithm), elniter, gain, 
-					thrsh, 
-					displayprogress,
-					amodel, fixed, String(complist), 
-					amask,  
-					aimage, aresidual, elpsf, k == 0);
-	       //if clean converged... equivalent to stop
-	       if(rstat){
-		 continter=2;
-		 fixed.set(True);
-	       }
-	       if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
-		 Int remainloop=nloop-k-1;
-		 for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
-		   if(!nointerac(nIm)){
-		     continter=itsImager->interactivemask(aresidual[nIm], amask[nIm],
-							     
-							  elniter, remainloop, 
-							  thresh, (aresidual.nelements() >1));
-		     if(continter>=1)
-		       nointerac(nIm)=True;
-		     if(continter==2)
-		       fixed(nIm)=True;
-		   }
-		 }
-		 k=nloop-remainloop-1;
-		 if(allEQ(nointerac,True)){
-		   elniter=niter-(k+1)*npercycle;
-		   //make it do one more loop/clean but with remaining niter 
-		   k=nloop-2;
-		 }
-	       } 
-	     }
-	   }
-	   //Unset the mask in the residual 
-	   // Cause as requested in CAS-1768...
-	   for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
-	     if(Table::isWritable(aresidual[nIm]) ){
-		 PagedImage<Float> resi(aresidual[nIm]);
-		 if(resi.hasRegion("mask0", RegionHandler::Masks)){
-		     resi.setDefaultMask("");
-		 }
-	     }
-	   }
-	 }
-      } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
+     } 
+   else 
+     {
+       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open."
+	       << LogIO::POST;
+     }
+   return rstat;
 }
 
 bool
@@ -405,23 +291,6 @@ imager::close()
  return rstat;
 }
 
-bool
-imager::correct(const bool doparallactic, const Quantity& timestep)
-{
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         casa::Quantity qtimestep(casaQuantity(timestep));
-         rstat = itsImager->correct(doparallactic, qtimestep);
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	 RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
-}
 
 bool
 imager::done()
@@ -793,25 +662,6 @@ imager::pb(const std::string& inimage, const std::string& outimage,
 }
 
 bool
-imager::pixon(const std::string& algorithm, const Quantity& sigma, const std::string& model, const bool async)
-{
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-	*itsLog << LogIO::WARN << "PIXON is no longer supported; will be removed  "  << LogIO::POST;
-         rstat = itsImager->pixon(algorithm, casaQuantity(sigma), model);
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	 RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
-}
-
-bool
 imager::plotsummary()
 {
    Bool rstat(False);
@@ -864,10 +714,10 @@ imager::plotvis(const std::string& type, const int increment)
    return rstat;
 }
 
-// bool
-// imager::plotweights(const bool gridded, const int increment)
-// {
-//    Bool rstat(False);
+ bool
+ imager::plotweights(const bool gridded, const int increment)
+ {
+    Bool rstat(False);
 //    if(hasValidMS_p){
 //       try {
 //         // Has a tendency to dump core.  Add to plotms, replace with
@@ -880,8 +730,8 @@ imager::plotvis(const std::string& type, const int increment)
 //    } else {
 //       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
 //    }
-//    return rstat;
-// }
+    return rstat;
+ }
 
 bool
 imager::regionmask(const std::string& mask, const ::casac::record& region, 
@@ -1205,24 +1055,6 @@ imager::setbeam(const ::casac::variant& bmaj, const ::casac::variant& bmin,
    return rstat;
 }
 
-bool
-imager::setdata(const std::string& mode, const std::vector<int>& nchan, const std::vector<int>& start, const std::vector<int>& step, const Quantity& mstart, const Quantity& mstep, const std::vector<int>& spwid, const std::vector<int>& fieldid, const std::string& msselect, const bool async)
-{
-    Bool rstat(False);
-    if(hasValidMS_p){
-       try {
-          rstat = itsImager->setdata(mode, Vector<Int>(nchan), Vector<Int>(start),
-                         Vector<Int>(step), casaQuantity(mstart), casaQuantity(mstep), Vector<Int>(spwid),
-                         Vector<Int>(fieldid), String(msselect));
-       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
-}
 
 bool
 imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
@@ -1442,42 +1274,6 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 
 
 bool
-imager::setimage(const int nx, const int ny, const Quantity& cellx, const Quantity& celly, const std::string& stokes, const bool doshift, const std::string& phasecenter, const Quantity& shiftx, const Quantity& shifty, const std::string& mode, const int nchan, const int start, const int step, const std::string& mstart, const std::string& mstep, const std::vector<int>& spwid, const int fieldid, const int facets, const Quantity& distance)
-{
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         casa::Quantity qcellx(casaQuantity(cellx));
-         casa::Quantity qcelly(casaQuantity(celly));
-         String err;
-         MDirection mphaseCenter;
-         mdFromString(mphaseCenter, phasecenter);
-         casa::Quantity qshiftx(casaQuantity(shiftx));
-         casa::Quantity qshifty(casaQuantity(shifty));
-
-//
-         casa::MRadialVelocity mmStart;
-         mrvFromString(mmStart, mstart);
-         casa::MRadialVelocity mmStep;
-         mrvFromString(mmStep, mstep);
-//
-         Vector<Int> mspwid = spwid;
-         casa::Quantity qdistance(casaQuantity(distance));
-         rstat = itsImager->setimage(nx, ny, qcellx, qcelly, stokes, doshift, mphaseCenter,
-                                qshiftx, qshifty, String(mode), nchan, start, step,
-                                mmStart, mmStep, mspwid, fieldid, facets, qdistance);
-       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
-}
-
-bool
 imager::setjy(const ::casac::variant& field, const ::casac::variant& spw, 
 	      const std::string& modimage,
 	      const std::vector<double>& fluxdensity, const std::string& standard)
@@ -1532,7 +1328,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol )
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol, const bool singprec )
 {
 
    Bool rstat(False);
@@ -1550,7 +1346,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 					applypointingoffsets, 
 					dopbgriddingcorrections, 
 					String(cfcachedirname), Float(pastep), 
-					Float(pblimit), String(freqinterp), imagetilevol);
+					Float(pblimit), String(freqinterp), imagetilevol, singprec);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);

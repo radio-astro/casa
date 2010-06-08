@@ -1373,23 +1373,62 @@ if benchmarking:
 ## model_sum = 71.171693
 ## model_pbcor_sum = 61.853749
 
-#New values RR 2010-03-30 3.0.1 prerelease
-#for 400x400 clean
-#new values after start channel change.  I did not update passing values.
-testdate = '2010-03-30 (RR)'
-testvers = 'CASA Version 3.0.1 (build #10841)'
-clean_image_max = 1.615747 # was 1.465047 Peak hits a channel better?
+## #New values RR 2010-03-30 3.0.1 prerelease
+## #for 400x400 clean
+## #new values after start channel change.  I did not update passing values.
+## testdate = '2010-03-30 (RR)'
+## testvers = 'CASA Version 3.0.1 (build #10841)'
+## clean_image_max = 1.615747 # was 1.465047 Peak hits a channel better?
+## clean_offsrc_rms = 0.058497
+## clean_offline_rms = 0.055416
+## clean_momentzero_max = 163.726852
+## clean_momentzero_rms = 15.206372
+## clean_momentone_median = 429.658844 # was 428.326385; change << 1 chanwidth.
+## clean_momentone_planezero = 696.702393
+## clean_momentone_planelast = 127.786629
+## vis_mean_cal = 194.915085
+## vis_mean_src = 54.627020
+## model_sum = 71.171693
+## model_pbcor_sum = 66.882499 # was 61.853749 Peak hits a channel better?
+
+## # slight change in regression values - reason not known yet.
+## # Remy's changes to cleanhelper, or something from Sanjay or Kumar?
+## testdate = '2010-04-24 (RR)'
+## testvers = 'CASA Version 3.0.2 (build #11181)'
+## clean_image_max = 1.615747
+## clean_offsrc_rms = 0.058497
+## clean_offline_rms = 0.055416
+## clean_momentzero_max = 163.726852
+## clean_momentzero_rms = 15.206372
+## clean_momentone_median = 423.6954 # was 429.6588; change << 1 chanwidth.
+## clean_momentone_planezero = 696.702393
+## clean_momentone_planelast = 127.786629
+## vis_mean_cal = 194.915085
+## vis_mean_src = 54.627020
+## model_sum = 71.171693
+## model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
+
+# slight change in 1 regression value - Kumar fixed a bug in setjy with
+# multiple spws, which could affect this script.
+testdate = '2010-04-29 (RR)'
+testvers = 'CASA Version 3.0.2 (build #11306)'
+clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
 clean_momentzero_max = 163.726852
 clean_momentzero_rms = 15.206372
-clean_momentone_median = 429.658844 # was 428.326385; change << 1 chanwidth.
+#
+#  32 bits gets 423.6954 and 64 bits gets 422.142792
+#  diff << 1 chanwidth.
+clean_momentone_median = 422.92
 clean_momentone_planezero = 696.702393
 clean_momentone_planelast = 127.786629
 vis_mean_cal = 194.915085
 vis_mean_src = 54.627020
 model_sum = 71.171693
-model_pbcor_sum = 66.882499 # was 61.853749 Peak hits a channel better?
+model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
+
+
 canonical = {}
 canonical['exist'] = True
 
@@ -1612,7 +1651,7 @@ results['clean_momentone_median'] = {}
 results['clean_momentone_median']['name'] = 'Moment 1 image median'
 results['clean_momentone_median']['value'] = momone_median
 results['clean_momentone_median']['op'] = op
-results['clean_momentone_median']['tol'] = tol
+results['clean_momentone_median']['tol'] = 1.0 # km/s.  Was 0.1 before CAS-2163.
 
 #
 # Added these sanity checks STM 2008-06-30

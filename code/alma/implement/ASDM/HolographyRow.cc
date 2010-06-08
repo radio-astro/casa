@@ -65,9 +65,13 @@ namespace asdm {
 	HolographyTable &HolographyRow::getTable() const {
 		return table;
 	}
-	
-	void HolographyRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool HolographyRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void HolographyRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

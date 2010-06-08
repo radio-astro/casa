@@ -509,51 +509,82 @@ void ROVisibilityIterator::updateSlicer()
 void ROVisibilityIterator::setTileCache(){
   // This function sets the tile cache because of a feature in 
   // sliced data access that grows memory dramatically in some cases
-  if(useSlicer_p){
-
+  //  if(useSlicer_p){
+  {
 
     const MeasurementSet& thems=msIter_p.ms();
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
+    /*
     ROArrayColumn<Complex> colVis;
- 
-    Vector<String> columns(3);
+    ROArrayColumn<Bool> colbool;
+    ROArrayColumn<Float> colfloat;
+    ROArrayColumn<Double> coldouble;
+    */
+    Vector<String> columns(8);
+    // complex
     columns(0)=MS::columnName(MS::DATA);
     columns(1)=MS::columnName(MS::CORRECTED_DATA);
     columns(2)=MS::columnName(MS::MODEL_DATA);
-
+    // boolean
+    columns(3)=MS::columnName(MS::FLAG);
+    // float
+    columns(4)=MS::columnName(MS::WEIGHT_SPECTRUM);
+    columns(5)=MS::columnName(MS::WEIGHT);
+    columns(6)=MS::columnName(MS::SIGMA);
+    // double
+    columns(7)=MS::columnName(MS::UVW);
+    //
     for (uInt k=0; k< columns.nelements(); ++k){
       if (cds.isDefined(columns(k))) {
-
-
-
-	colVis.attach(thems,columns(k));
-	String dataManType = colVis.columnDesc().dataManagerType();
-
-
-	if(dataManType.contains("Tiled")){
-
-	  ROTiledStManAccessor tacc(thems, 
-				    colVis.columnDesc().dataManagerGroup());
-	  uInt nHyper = tacc.nhypercubes();
-	  // Find smallest tile shape
-	  Int lowestProduct = 0;
-	  Int lowestId = 0;
-	  Bool firstFound = False;
-	  for (uInt id=0; id < nHyper; id++) {
+	const ColumnDesc& cdesc=cds[columns(k)];
+	String dataManType="";
+	dataManType=cdesc.dataManagerType();
+	//have to do something special about weight_spectrum as it tend to exist but 
+	//has no valid data
+	if(columns[k]==MS::columnName(MS::WEIGHT_SPECTRUM))
+	  if(!existsWeightSpectrum())
+	    dataManType="";
+     
+	if(dataManType.contains("Tiled") ){
+	  try {
+	    
+	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
+							   cdesc.dataManagerGroup());
+	    
+	    /*
+	    //This is for the data columns, weight_spectrum and flag only 
+	    if((columns[k] != MS::columnName(MS::WEIGHT)) && 
+	    (columns[k] != MS::columnName(MS::UVW))){
+	    uInt nHyper = tacc.nhypercubes();
+	    // Find smallest tile shape
+	    Int lowestProduct = 0;
+	    Int lowestId = 0;
+	    Bool firstFound = False;
+	    for (uInt id=0; id < nHyper; id++) {
 	    Int product = tacc.getTileShape(id).product();
 	    if (product > 0 && (!firstFound || product < lowestProduct)) {
-	      lowestProduct = product;
-	      lowestId = id;
-	      if (!firstFound) firstFound = True;
+	    lowestProduct = product;
+	    lowestId = id;
+	    if (!firstFound) firstFound = True;
 	    }
-	  }
-	  Int nchantile=tacc.getTileShape(lowestId)(1);
-	  if(nchantile > 0)
+	    }
+	    Int nchantile=tacc.getTileShape(lowestId)(1);
+	    if(nchantile > 0)
 	    nchantile=channelGroupSize_p/nchantile+1;
-	  if(nchantile<3)
+	    if(nchantile<3)
 	    nchantile=10;
-	  
-	  tacc.setCacheSize (0, nchantile);
+	    
+	    
+	    tacc.setCacheSize (0, nchantile);
+	    }
+	    else
+	    */
+	    //One tile only for now ...seems to work faster
+	    tacc.setCacheSize (0, 1);
+	  } catch (AipsError x) {
+	    //It failed so leave the caching as is
+	    continue;
+	  }
 	  
 	}
       }

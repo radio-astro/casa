@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string SpectralWindowTable::tableName = "SpectralWindow";
-	
+	const vector<string> SpectralWindowTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -106,7 +107,6 @@ namespace asdm {
 /**
  * A destructor for SpectralWindowTable.
  */
- 
 	SpectralWindowTable::~SpectralWindowTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -126,13 +126,90 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string SpectralWindowTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> SpectralWindowTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("spectralWindowId");
+
+
+		attributesNames.push_back("basebandName");
+
+		attributesNames.push_back("netSideband");
+
+		attributesNames.push_back("numChan");
+
+		attributesNames.push_back("refFreq");
+
+		attributesNames.push_back("sidebandProcessingMode");
+
+		attributesNames.push_back("totBandwidth");
+
+		attributesNames.push_back("windowFunction");
+
+
+		attributesNames.push_back("chanFreqStart");
+
+		attributesNames.push_back("chanFreqStep");
+
+		attributesNames.push_back("chanFreqArray");
+
+		attributesNames.push_back("chanWidth");
+
+		attributesNames.push_back("chanWidthArray");
+
+		attributesNames.push_back("correlationBit");
+
+		attributesNames.push_back("effectiveBw");
+
+		attributesNames.push_back("effectiveBwArray");
+
+		attributesNames.push_back("freqGroup");
+
+		attributesNames.push_back("freqGroupName");
+
+		attributesNames.push_back("lineArray");
+
+		attributesNames.push_back("measFreqRef");
+
+		attributesNames.push_back("name");
+
+		attributesNames.push_back("oversampling");
+
+		attributesNames.push_back("quantization");
+
+		attributesNames.push_back("refChan");
+
+		attributesNames.push_back("resolution");
+
+		attributesNames.push_back("resolutionArray");
+
+		attributesNames.push_back("numAssocValues");
+
+		attributesNames.push_back("assocNature");
+
+		attributesNames.push_back("assocSpectralWindowId");
+
+		attributesNames.push_back("imageSpectralWindowId");
+
+		attributesNames.push_back("dopplerId");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& SpectralWindowTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -250,7 +327,7 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 						
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 		
@@ -308,7 +385,7 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -424,7 +501,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/2/SpectralWindowTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/2/SpectralWindowTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -502,7 +579,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/2/SpectralWindowTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/2/SpectralWindowTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SpectralWindowTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -816,10 +893,10 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 	}
 
 	
-	void SpectralWindowTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/SpectralWindow.xml")))
+	void SpectralWindowTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/SpectralWindow.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/SpectralWindow.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/SpectralWindow.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the SpectralWindow table", "SpectralWindow");

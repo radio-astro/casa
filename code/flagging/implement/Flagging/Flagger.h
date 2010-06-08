@@ -136,6 +136,7 @@ protected:
   //new added
   MeasurementSet *mssel_p;
   VisSet *vs_p;
+  bool scan_looping;     /* Is scan number part of visiter looping? */
   String msname_p;
   Bool nullSelect_p;
   Bool setdata_p;
@@ -292,6 +293,9 @@ public:
 			 Vector<Int>& dataStart, 
 			 Vector<Int>& dataEnd, Vector<Int>& dataStep);
 */			 
+
+  /* Get rid of negative indices (meaning negation of antenna) in baselinelist */
+  static void reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant);
   
 private:
     
@@ -309,6 +313,7 @@ private:
   
   // MS Selection
   MSSelection *msselection_p;
+  bool spw_selection;  //non-trivial spw-selection
 
   // List of Agents
   Record *agents_p;
@@ -318,7 +323,7 @@ private:
   Record *opts_p;
 
   // Debug Message flag
-  Bool dbg;
+  static const bool dbg;
 
   Bool quack_agent_exists;
   /* More initialization is required, if there exists a quacking agent */

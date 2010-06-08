@@ -654,6 +654,13 @@ class par(str):
 		"""
 
 	@staticmethod
+	def excludemask():
+		"""
+        	excludemask -- Range of masks to exclude
+                default: [-1] (don't exclude channels); example=[100,200]
+		"""
+
+	@staticmethod
 	def expr():
 		"""
 		expr -- mathematical expression using scantables
@@ -950,6 +957,22 @@ class par(str):
 		"""
 
 	@staticmethod
+	def header():
+		"""
+		header -- print header information on plot
+                options: (bool) True, False
+                default: True
+		"""
+	
+	@staticmethod
+	def headsize():
+		"""
+		headsize -- header font size
+		options: (int)
+		default: 9
+		"""
+
+	@staticmethod
 	def highres():
 		""" Name of high resolution (interferometer) image: """
 
@@ -1050,6 +1073,14 @@ class par(str):
 		"""
 	        includepix -- Range of pixel values to include
                 default: [-1] (all pixels); example=[0.02,100.0]
+		"""
+
+	@staticmethod
+	def includemask():
+		"""
+                (for msmoments)
+	        includemask -- Range of masks to include
+                default: [-1] (include all channels); example=[2,100]
 		"""
 
 	@staticmethod
@@ -1157,6 +1188,37 @@ class par(str):
 		example: 5 or 10 seem to be popular for boxcar
 		         ignored for hanning (fixed at 5 chans)
 			 (0 will turn off gaussian or boxcar)
+		"""
+
+	@staticmethod
+	def layout():
+		"""
+                layout -- a list of subplots layout in figure coordinate (0-1), 
+                          i.e., fraction of the figure width or height.
+	        The order of elements should be:
+                [left, bottom, right, top, horizontal space btw panels,
+                vertical space btw panels]
+ 		"""
+
+	@staticmethod
+	def legendloc():
+		"""
+		legendloc -- legend location on the axes (0-10)
+		options: (integer) 0 -10 
+		         Note that 0 ('best') is very slow.
+			 The list of legend positions: 
+                           0: best
+			   1: upper right
+			   2: upper left
+			   3: lower left
+			   4: lower right
+			   5: right
+			   6: center left
+			   7: center right
+			   8: lower center
+			   9: upper center
+			   10: center
+	        default: 1 ('upper right')
 		"""
 
 	@staticmethod
@@ -1513,6 +1575,14 @@ class par(str):
 		"""
 
 	@staticmethod
+	def msname():
+		"""
+                (for msmoments)
+                Name of input MS data
+		default: none; example: msname=&quot;OrionS_rawACSmod&quot;
+		"""
+
+	@staticmethod
 	def multicolor():
 		"""
        		multicolor -- Multi-color plotting of channels and polarizations
@@ -1663,6 +1733,13 @@ class par(str):
 
 		----------------------------------------------------------------
 
+		(for msmoments)
+        	outfile -- output MS file name (or root for multiple moments)
+                default: '' (input+auto-determined suffix)
+		example: outfile='source_moment'
+
+		----------------------------------------------------------------
+
 		(for imsmooth)
 		outfile -- output image file name.
 		default: 'imsmooth_results.im'
@@ -1802,6 +1879,14 @@ class par(str):
                	Note that if xmin=xmax the values will be ignored and a best
                	guess will be made, simlarly if ymin=ymax.
                	time axes coordinate is in Julian Days, unfortunately.
+		"""
+
+	@staticmethod
+	def plotstyle():
+		"""
+		plotstyle -- customise plot settings
+                options: (bool) True, False
+                default: True
 		"""
 
 	@staticmethod

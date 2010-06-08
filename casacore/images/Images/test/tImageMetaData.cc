@@ -93,6 +93,13 @@ int main() {
         }
 
         {
+        	// stokesAtPixel
+        	AlwaysAssert(twoAxesImageMetaData.stokesAtPixel(0).empty(), AipsError);
+        	AlwaysAssert(fourAxesImageMetaData.stokesAtPixel(0) == "I", AipsError);
+        	AlwaysAssert(fourAxesImageMetaData.stokesAtPixel(1).empty(), AipsError);
+
+        }
+        {
             // TODO test image without a direction coordinate
             AlwaysAssert(fourAxesImageMetaData.directionCoordinateNumber() == 0, AipsError);
             AlwaysAssert(twoAxesImageMetaData.directionCoordinateNumber() == 0, AipsError);

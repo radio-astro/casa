@@ -62,29 +62,6 @@ std::string logsink::version(){
   os2 << "  Built on: "<< casa::VersionInfo::date();
   std::string mymess = os1.str();
 
-  // Now here's a check to see if the code/VERSION file is at the same rev
-  // as VersionInfo
-  
-  istringstream casapath(getenv("CASAPATH"));
-  string casaroot;
-  casapath >> casaroot;
-  string versionFile( casaroot + "/code/VERSION");
-  ifstream codeVERSION(versionFile.c_str());
-  if(codeVERSION.good()){
-     string versionNumber;
-     codeVERSION >> versionNumber;
-     ostringstream osv;
-     osv << casa::VersionInfo::majorVersion() << "."
-         << casa::VersionInfo::minorVersion() << "."
-         << casa::VersionInfo::patch(); 
-     if(versionNumber != osv.str()){
-	string lookout("The version in casapy "+versionNumber
-			+"  is different than in code/VERSION " + osv.str());
-        thelogsink->postLocally(LogMessage(string(""), *itsorigin, LogMessage::WARN));
-        thelogsink->postLocally(LogMessage(lookout, *itsorigin, LogMessage::WARN));
-        thelogsink->postLocally(LogMessage(string(""), *itsorigin, LogMessage::WARN));
-     }
-  }
   thelogsink->postLocally(LogMessage(mymess, *itsorigin, LogMessage::NORMAL));
   thelogsink->postLocally(LogMessage(os2.str(), *itsorigin, LogMessage::NORMAL));
   return mymess;

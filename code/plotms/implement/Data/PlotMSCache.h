@@ -52,6 +52,10 @@ class PlotMSCache {
     friend class PlotMSData;
   
 public:    
+
+    // Varieties of cache
+    enum Type {MS, CAL};
+
     static const PMS::Axis METADATA[];
     static const unsigned int N_METADATA;
     
@@ -63,7 +67,10 @@ public:
   PlotMSCache(PlotMS* parent);
   
   // Destructor
-  ~PlotMSCache();
+  virtual ~PlotMSCache();
+
+  // Identify myself
+  PlotMSCache::Type cacheType() { return PlotMSCache::MS; };
 
   // Report the number of chunks
   Int nChunk() const { return nChunk_; };
@@ -90,12 +97,13 @@ public:
   // is not the case, then clear() should be called BEFORE append().  If a
   // PlotMSCacheThreadHelper object is given, it will be used to report
   // progress information.
-  void load(const vector<PMS::Axis>& axes,const vector<PMS::DataColumn>& data,
-	    const String& msname,
-            const PlotMSSelection& selection,
-            const PlotMSAveraging& averaging,
-            const PlotMSTransformations& transformations,
-            PlotMSCacheThread* thread = NULL);
+  virtual void load(const vector<PMS::Axis>& axes,
+		    const vector<PMS::DataColumn>& data,
+		    const String& msname,
+		    const PlotMSSelection& selection,
+		    const PlotMSAveraging& averaging,
+		    const PlotMSTransformations& transformations,
+		    PlotMSCacheThread* thread = NULL);
 
   // Convenience method for loading x and y axes.
   void load(PMS::Axis xAxis, PMS::Axis yAxis,
@@ -173,6 +181,8 @@ public:
   inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
+  inline Double getImWt(Int chnk,Int irel) { return *(imwt_[chnk]->data()+irel); };
+
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk); };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk); };
@@ -215,6 +225,9 @@ public:
   inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
+  inline Double getWt() { return *(wt_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))*nperchan_(currChunk_) + irel_%nperchan_(currChunk_)); };
+  inline Double getImWt() { return *(imwt_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanbslnmax_(currChunk_)); };
+
   // These are array-global (one value per chunk):
   inline Double getAz0() { return az0_(currChunk_); };
   inline Double getEl0() { return el0_(currChunk_); };
@@ -249,7 +262,7 @@ public:
   void setPlotMask(Int chunk);
 
   // Set flags in the MS
-  void flagInMS(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
+  virtual void flagToDisk(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
 
   // Returns which axes have been loaded into the cache, including metadata.
   // Also includes the size (number of points) for each axis (which will
@@ -257,7 +270,7 @@ public:
   // relative memory use of each axis).
   vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
 
-private:
+protected:
     
   // Forbid copy for now
   PlotMSCache(const PlotMSCache& mc);
@@ -396,6 +409,9 @@ private:
   PtrBlock<Array<Float>*> amp_, pha_, real_, imag_;
   PtrBlock<Array<Bool>*> flag_;
   PtrBlock<Vector<Bool>*> flagrow_;
+  
+  PtrBlock<Array<Float>*> wt_;
+  PtrBlock<Array<Float>*> imwt_;
 
   PtrBlock<Array<Bool>*> plmask_;
 
@@ -423,6 +439,10 @@ private:
   PlotMSSelection selection_;
   PlotMSAveraging averaging_;
   PlotMSTransformations transformations_;
+
+  // meta info for locate output
+  Vector<String> antnames_; 	 
+  Vector<String> fldnames_; 	 
 
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;

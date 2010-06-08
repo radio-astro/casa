@@ -316,6 +316,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
     
   Float maxggS=0.0;
+  Bool lastCycleWriteModel=False;
 
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop && !diverging) {
     os << LogIO::NORMAL
@@ -398,6 +399,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       os << LogIO::NORMAL // Loglevel PROGRESS
          << "Reached stopping peak residual = " << absmax << LogIO::POST;
       stop=True;
+      if(cycle >1)
+	lastCycleWriteModel=True;
     }
     else if(!diverging) {
       
@@ -692,7 +695,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
   
-  if(modified_p) {
+  if(modified_p || lastCycleWriteModel) {
     os << LogIO::NORMAL2 // Loglevel PROGRESS
        << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True); //committing model to MS

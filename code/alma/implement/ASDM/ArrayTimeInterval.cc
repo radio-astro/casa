@@ -56,14 +56,14 @@ namespace asdm {
   }
 
   ArrayTimeInterval ArrayTimeInterval::fromBin(EndianISStream & eiss) {
-    long long start = eiss.readLongLong();
-    long long duration = eiss.readLongLong();
+    int64_t start = eiss.readLongLong();
+    int64_t duration = eiss.readLongLong();
     return ArrayTimeInterval(start, duration);
   }
 
   vector<ArrayTimeInterval> ArrayTimeInterval::from1DBin(EndianISStream & eiss) {
-    long long start;
-    long long duration;
+    int64_t start;
+    int64_t duration;
     int dim1 = eiss.readInt();
     vector<ArrayTimeInterval> result;
     for (int i = 0; i < dim1; i++) {
@@ -75,8 +75,8 @@ namespace asdm {
   }
 
   vector<vector<ArrayTimeInterval > > ArrayTimeInterval::from2DBin(EndianISStream & eiss) {
-    long long start;
-    long long duration;
+    int64_t start;
+    int64_t duration;
     int dim1 = eiss.readInt();
     int dim2 = eiss.readInt();
     vector< vector<ArrayTimeInterval> >result;
@@ -94,8 +94,8 @@ namespace asdm {
   }
 
   vector<vector<vector<ArrayTimeInterval > > > ArrayTimeInterval::from3DBin(EndianISStream & eiss) {
-    long long start;
-    long long duration;
+    int64_t start;
+    int64_t duration;
     int dim1 = eiss.readInt();
     int dim2 = eiss.readInt();
     int dim3 = eiss.readInt();

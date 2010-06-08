@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="csvclean" category="utilities">
+	<shortdescription>This task does an invert of the visibilities and deconvolve in the image plane.</shortdescription>
+	<description>This task does an invert of the visibilities and deconvolve in the
+			image plane. It does not do a uvdata subtraction (aka Cotton-Schwab
+			major cycle) of model visibility as in clean. - For ALMA Commissioning
+	</description>
+	<input>
+		<param type="string" vis="true" name="vis" mustexist="true">
+			<description>Name of input visibility file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="imagename">
+			<description>Name of image</description>
+			<value></value>
+		</param>
+
+        <param type="string" name="field">
+             <description>Select field using field id(s) or field name(s)</description>
+             <value type="string"></value>
+        </param>
+
+		<param type="any" name="spw">
+	     	<description>Select spectral window/channels</description>
+	     	<any type="variant" limittypes="string stringArray int intArray"/>
+	     	<value type="string"></value>
+		</param>
+
+	    <param type="intArray" name="imsize">
+		    <description>Image size in pixels (nx,ny), symmetric for single value</description>
+		    <value type="vector">
+	    <value>256</value><value>256</value>
+		    </value>
+	    </param>
+
+	    <param type="doubleArray" name="cell" units="arcsec">
+	    <description>The image cell size in arcseconds [x,y]. </description>
+	    <value type="vector"><value>1.0</value><value>1.0</value></value>
+	    </param>
+
+        <param type="any" name="phasecenter">
+            <description>Image center: direction or field index</description>
+            <any type="variant"/>
+            <value type="string"></value>
+        </param>
+
+		<param type="int" name="niter">
+			<description>Maximum number of iterations</description>
+			<value>500</value>
+		</param>
+
+		<param type="string" name="weighting">
+			<description>Type of weighting</description>
+			<value>natural</value>
+		    <allowed kind="enum">
+		      <value>natural</value>
+		      <value>uniform</value>
+		      <value>briggs</value>
+		      <value>briggsabs</value>
+		      <value>radial</value>
+		      <value>superuniform</value>
+		    </allowed>
+		</param>
+
+		<param type="stringArray" name="restoringbeam">
+			<description>Output Gaussian restoring beam for CLEAN image</description>
+	    <value></value>
+		</param>
+
+		<param type="bool" name="interactive">
+			<description>Create a mask interactively or not.</description>
+			<value>False</value>
+		</param>
+
+
+	</input>
+
+<example>
+
+        This task does not do a uvdata subtraction (aka Cotton-Schwab major cycle) 
+        of model visibility as in clean. - For ALMA Commissioning
+
+	Keyword arguments:
+	vis -- Name of input visibility file
+        	default: none; example: vis='ngc5921.ms' 
+        	
+	imagename -- Name of output CASA image. (only the prefix)
+                   default: none; example: imagename='m2'
+                   output images are:
+                 m2.image; cleaned and restored image
+                        With or without primary beam correction
+                 m2dirty.image; dirty image
+                 m2psf.image; point-spread function (dirty beam)
+                 m2.model; image of clean components
+                 m2.mask; image containing clean regions, when interative=True
+		         
+	field -- Select fields in mosaic.  Use field id(s) or field name(s).
+                  ['go listobs' to obtain the list id's or names]
+              default: ''= all fields
+              If field string is a non-negative integer, it is assumed to
+                  be a field index otherwise, it is assumed to be a 
+		  field name
+              field='0~2'; field ids 0,1,2
+              field='0,4,5~7'; field ids 0,4,5,6,7
+              field='3C286,3C295'; field named 3C286 and 3C295
+              field = '3,4C*'; field id 3, all names starting with 4C
+              
+	spw -- Select spectral window/channels
+           NOTE: This selects the data passed as the INPUT to mode
+           default: ''= all spectral windows and channels
+                spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+                spw='0:5~61'; spw 0, channels 5 to 61
+                spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
+                spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
+				   channels 3 to 45.
+                spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+                spw='0:0~10;15~60'; spectral window 0 with channels 
+				    0-10,15-60
+                spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
+                      spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+                      
+	imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
+               default = [256,256]; example: imsize=[350,350]
+               imsize = 500 is equivalent to [500,500].
+               Avoid odd-numbered imsize.
+
+	cell -- Cell size (x,y)
+               default= '1.0arcsec';
+               example: cell=['0.5arcsec,'0.5arcsec'] or
+               cell=['1arcmin', '1arcmin']
+               cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
+               NOTE:cell = 2.0 => ['2arcsec', '2arcsec']
+
+       phasecenter -- direction measure  or fieldid for the mosaic center
+                default: '' => first field selected ; example: phasecenter=6
+                or phasecenter='J2000 19h30m00 -40d00m00'
+
+	niter -- Maximum number of iterations,
+               if niter=0, then no CLEANing is done ("invert" only)
+               default: 500; example: niter=5000
+
+	weighting -- Weighting to apply to visibilities:
+               default='natural'; example: weighting='uniform';
+               Options: 'natural','uniform','briggs', 
+                       'superuniform','briggsabs','radial'
+
+	restoringbeam -- Output Gaussian restoring beam for CLEAN image
+               [bmaj, bmin, bpa] elliptical Gaussian restoring beam.
+               Default units are in arc-seconds for bmaj and bmin, and in degrees
+               for bpa. Default: restoringbeam=[]; Use PSF calculated
+               from dirty beam. 
+               example: restoringbeam=['10arcsec'] or restorinbeam='10arcsec', circular Gaussian.
+                        FWHM 10 arcseconds example:
+                        restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
+                        at 45 degrees
+	
+	interactive -- Create a mask interactively or not.
+        		default=False; example: interactive=True
+        		The viewer will open with the image displayed. Select the
+        		region for the mask and double click in the middle of it.
+	
+ </example>
+ </task>
+ </casaxml>

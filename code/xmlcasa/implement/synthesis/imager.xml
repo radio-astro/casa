@@ -67,7 +67,7 @@ imager.
 <example>
 \begin{verbatim}
 im = imager('3C273XC1.MS')      
-im.setimage(nx=256, ny=256, cellx='0.7arcsec', celly='0.7arcsec')
+im.defineimage(nx=256, ny=256, cellx='0.7arcsec', celly='0.7arcsec')
 im.image(type='corrected', image='3C273XC1.dirty')
 im.close()
 \end{verbatim}
@@ -376,7 +376,7 @@ deconvolve if the array is not coplanar over the field of view being
 imaged . The technique used is to break the field being imaged into
 smaller pieces (facets), over each of which the array appear
 planar. We implement a rectangular facetting scheme. If the number of
-facets specified in <link anchor="imager:imager.setimage.function">setimage</link> is
+facets specified in <link anchor="imager:imager.defineimage.function">defineimage</link> is
 greater than one, Either wfhogbom or wfclark algorithm has to be
 selected here to perform a wide-field decovolution. The function
 <link anchor="imager:imager.advise.function">advise</link> can be used to calculate or
@@ -572,7 +572,7 @@ im.clean('cs', model='vlac125K.cs', image='vlac125K.cs.restored',
 # CSF on 1000 by 1000, cleaning a given box
 #
 
-im.setimage(nx=2*npix, ny=2*npix, cellx=cell, celly=cell, stokes='I',
+im.defineimage(nx=2*npix, ny=2*npix, cellx=cell, celly=cell, stokes='I',
 	      spwid=[1,2]);
 reg=rg.box(blc=[400,500], trc=[450,550])
 im.regionmask('vlac125K.mask', region=reg);
@@ -583,7 +583,7 @@ im.clean('csf', model='vlac125K.csf', image='vlac125K.csf.restored',
 # CS on 1000 by 1000, cleaning entire image
 #
 
-im.setimage(nx=2*npix, ny=2*npix, cellx=cell, celly=cell, stokes='I',
+im.defineimage(nx=2*npix, ny=2*npix, cellx=cell, celly=cell, stokes='I',
 	      spwid=[1,2]);
 im.clean('cs', model='vlac125K.csl', image='vlac125K.csl.restored',
 	   mask='vlac125K.mask', niter=1000, gain=0.1);
@@ -675,45 +675,6 @@ im.close()
 </method>
 
  
-   <method type="function" name="correct">
-   <shortdescription>Correct the MeasurementSet for correctable effects</shortdescription>
-   
-<description>
-{\bf DEPRECATED donot use will be removing from imager tool}
-By default, {\tt imager} makes images from the CORRECTED\_DATA column.
-This tool function copies the data from the DATA column
-to the CORRECTED\_DATA column. The main correction that sometimes
-must be made is for parallactic angle rotation. 
-
-Note that correct is automatically invoked whenever MeasurementSet
-without a CORRECTED\_DATA columns is loaded (usually the first time
-it is processed in {\tt imager}).
-</description>
-<input>
-
-     <param type="bool" name="doparallactic">
-     <description>Do the correction for parallactic angle?</description>
-     <value>true</value>
-     <choice>T</choice>
-     </param>
-
-     <param type="double" name="timestep" units="s">
-     <description>Time step for corrections</description>
-     <value>10</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-\begin{verbatim}
-im.open('3C273XC1.ms')
-im.correct(True, '1s')
-im.clean(model='3C273XC1.clean.model')
-\end{verbatim}
-</example>
-<comments>
-</comments>
-</method>
-
  
  
    <method type="function" name="defineimage">
@@ -743,7 +704,7 @@ to an array of the required spectral windows ({\em e.g.}  {\tt
 spwid=[0,1]}).\\ WARNING: For multifrequency synthesis, 'mfs', it is
 important that the spwid's selected in <link
 anchor="imager:imager.selectvis.function">selectvis</link> be the SAME
-as the one selected in 'setimage'.  Otherwise the frequency at which
+as the one selected in {\tt defineimage}.  Otherwise the frequency at which
 the image is made is not going to be the same as to the one as the one
 used in gridding the visibility and can lead to image artifacts.  For
 {\tt mode='velocity'} and {\tt mode='frequency'} the {\tt step}
@@ -959,10 +920,10 @@ imaged, and the phasecenter will be the direction of Mars as given by
 the JPL DE-200 emphemeris. In the second, the phase center is taken
 to be that of the reference pixel of another image.
 
-The third example shows the use of setdata and setimage to setup a mosaic. In 
+The third example shows the use of selectvis and defineimage to setup a mosaic. In 
 the set data we have chosen 10 channels (for each IF) of data starting form 
 channel 3. We also have selected IF 1 and 2. We have selected data from 
-fields 3 to 10. In the setimage we decide to use the data to make a 
+fields 3 to 10. In the defineimage we decide to use the data to make a 
 multifrequency synthesis image. We center the image on the field 7 pointing.  
 
 The fourth example is use to clean regions where the user knows the
@@ -1231,7 +1192,7 @@ Apply visibility tapering to emphasize certain scale structures.  The
 imaging tapers are applied to a Table column called IMAGING\_WEIGHT,
 which may be plotted using 
 tb and pl.
-<!-- <link anchor="imager:imager.plotweights.function">plotweights</link>. -->
+<link anchor="imager:imager.plotweights.function">plotweights</link>. 
 In addition, this column
 may be accessed directly using either the <link anchor="table">table</link>
 or <link anchor="ms">ms</link> modules. Note that the taper is multiplicative and
@@ -1297,7 +1258,7 @@ This fits an elliptical Gaussian to the point spread function
 and returns the fitted beam parameters. If psf image is not specified
 then a psf is made and used. The values for the beam fit
 are saved internally and used whenever needed (for example in the functions <link anchor="imager:imager.restore.function">restore</link> or <link anchor="imager:imager.smooth.function">smooth</link>) until invalidated. The values
-are invalidated by setdata, setimage or any tool function that changes
+are invalidated by selectvis, defineimage or any tool function that changes
 the weights. Use the function <link anchor="imager:imager.summary.function">summary</link> to check if there is a valid fitted psf stored internally.
  
 </description>
@@ -1594,7 +1555,7 @@ using the full {\tt imager} equation where primary beam correction is
 performed.
 
 A position shift can be applied when specifying the image parameters
-with <link anchor="imager:imager.setimage.function">setimage</link>. If a shift is specified then
+with <link anchor="imager:imager.defineimage.function">defineimage</link>. If a shift is specified then
 the uvw coordinates are reprojected prior to gridding, and a phase
 rotation is applied. If the image is a PSF then no phase shift is
 applied but the uvw are recomputed. To see the effects of the uvw
@@ -1726,7 +1687,7 @@ non standard telescope or the beam is not in the {\tt aips++} system.
 
 The {\tt mask} is a mask image that may be needed to be used for
 clean.  This is usually the case when the dish image does not fully
-cover the field defined by <link anchor="imager:imager.setimage.function">setimage</link>.
+cover the field defined by <link anchor="imager:imager.define.function">defineimage</link>.
 
 </description>
 <input>
@@ -1919,7 +1880,7 @@ field may be imaged because the major cycles either do an exact
 subtraction from the visibilities or because PSF extent is more than
 twice the extent of the primary beam support.
 
-Before {\tt mem} can be run, you must run {\tt setdata} and {\tt setimage}.
+Before {\tt mem} can be run, you must run {\tt selectvis} and {\tt defineimage}.
 Before {\tt mem} can be run with a multi-field algorithm, you should run
 {\tt setvp}.  You may want to run {\tt setmfcontrol} before running {\tt mem}
 with a multi-field algorithm, though the default control values
@@ -2241,95 +2202,7 @@ im.pb(inimage='flat.image', outimage='pb.image', pointingcenter=F)
 </example>
 </method>
 
- 
-   <method type="function" name="pixon">
-   <shortdescription>DEPRECATED-to be removed as is not working and do not have license-Calculate a deconvolved image with the pixon
-algorithm ({\em experimental)}</shortdescription>
-<description>
-
-Makes a image using the Pixon algorithm. According to its developers,
-the pixon method is:
-
-\begin{quote}
-a new way of viewing the problem of modeling the underlying, unblurred,
-noise-free image. The goal of the [new] Pixon method model was to
-construct the simplest, i.e. smoothest, model for the image that would
-be consistent with the data, i.e. have an acceptable chi-square
-fit. Being the simplest model, the derived image would be artifact
-free, i.e. there would be no spurious sources, since by construction
-the simplest model eliminates unneeded structures. In addition, the
-model would necessarily be a "critical" model, i.e. most tightly
-constrained by the data, and consequently have the most accurately
-determined parameters.
-\end{quote}
-
-In the simplest terms, the pixon method smooths a model locally as
-much as is allowed by the specified noise level. This, like all
-high performance estimation methods, the pixon approach works
-best when the noise level is known and well-characterized.
-
-The Pixon algorithm is available via an IDL library courtesy of the
-\htmladdnormallink{Pixon LLC}{\pixonURL}. This means that you must
-have the library and IDL installed on your computer. The Pixon library
-is available free of charge for your personal scientific use direct
-from \htmladdnormallink{Pixon LLC}{info@pixon.com}. IDL is available
-commercially from \htmladdnormallink{RSI}{\rsiURL}.
-
-Before {\tt pixon} can be run, you must run {\tt setdata} and {\tt setimage}.
-
-The algorithms available are:
-
-\begin{description}
-\item[singledish] The single dish observations are fed directly to the
-pixon algorithm. Make the image cellsize considerably finer than Nyquist
-sampling. The errors are those attached to each data
-point. It is particularly important that the estimated sigmas
-attached to the data are accurate. 
-\item[synthesis] A dirty image and dirty point spread function are fed 
-to the pixon algorithm. The error is assumed to be constant across
-the image. This approach is not formally correct and gives results
-that are not optimum. Development of pixon processing for synthesis
-observations is proceeding.
-\item[test] The standard Pixon LLC test is run.
-\end{description}
-
-</description>
-<input>
-
-     <param type="string" name="algorithm">
-     <description>Algorithm to use</description>
-     <value>singledish</value>
-     <value>synthesis</value>
-     <value>test</value>
-     <choice>singledish</choice>
-     </param>
-
-     <param type="double" name="sigma" units="Jy">
-     <description>Image sigma to try to achieve</description>
-     <value>0.001</value>
-     </param>
-
-     <param type="string" name="model">
-     <description>Name of model image</description>
-     <value></value>
-     </param>
-
-     <param type="bool" name="async">
-     <description>Run asynchronously in the background?</description>
-     <value>false</value>
-     </param>
-</input>
-
-<returns type="bool"/>
-<example>
-\begin{verbatim}
-im.pixon(model='3C273XC1.pixon.model', algorithm='synthesis', 
-sigma='0.001Jy')
-\end{verbatim}
-</example>
-</method>
-
- 
+  
    <method type="function" name="plotsummary">
    <shortdescription>Plot a summary of field and spectral window  ids</shortdescription>
    
@@ -2357,7 +2230,7 @@ im.plotsummary()
 Performs a simple plot of the uv coverage of all selected data.
 
 Optionally, plotuv will rotate the uvw coordinates to the
-specified phase center (set via <link anchor="imager:setimage">setimage</link>).
+specified phase center (set via <link anchor="imager:defineimage">defineimage</link>).
 </description>
 <input>
 
@@ -2413,42 +2286,41 @@ im.plotvis(increment=10)
 </comments>
 </method>
 
-<!-- Dumps core 2/3 of the time.
-   <method type="function" name="plotweights">
-   <shortdescription>Plot the visibility weights as a function of u-v radius</shortdescription>
+<method type="function" name="plotweights">
+  <shortdescription>Plot the visibility weights as a function of u-v radius</shortdescription>
    
-<description>
-Performs a plot of the visibility weights of all selected data (stored in
-the IMAGING\_WEIGHT column of the MeasurementSet).
-The plot can be of the gridded weights (type='gridded') or
-ungridded.
-
-</description>
-<input>
-
-     <param type="bool" name="gridded">
-     <description>Do gridded plot?</description>
-     <value>false</value>
-     </param>
-
-     <param type="int" name="increment">
-     <description>Increment in points to plot</description>
-     <value>1</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-\begin{verbatim}
-im.open('3C273XC1.ms')
-im.setimage(cellx='0.7arcsec', celly='0.7arcsec')
-im.weight('briggs')
-im.plotweights(gridded=True,increment=10)
-\end{verbatim}
-</example>
-<comments>
-</comments>
+  <description>
+    Performs a plot of the visibility weights of all selected data (stored in
+    the IMAGING\_WEIGHT column of the MeasurementSet).
+    The plot can be of the gridded weights (type='gridded') or
+    ungridded.
+    
+  </description>
+  <input>
+    
+    <param type="bool" name="gridded">
+      <description>Do gridded plot?</description>
+      <value>false</value>
+    </param>
+    
+    <param type="int" name="increment">
+      <description>Increment in points to plot</description>
+      <value>1</value>
+    </param>
+  </input>
+  <returns type="bool"/>
+  <example>
+    \begin{verbatim}
+    im.open('3C273XC1.ms')
+    im.defineimage(cellx='0.7arcsec', celly='0.7arcsec')
+    im.weight('briggs')
+    im.plotweights(gridded=True,increment=10)
+    \end{verbatim}
+  </example>
+  <comments>
+  </comments>
 </method>
--->
+
  
    <method type="function" name="regionmask">
    <shortdescription>Construct a mask image from a region</shortdescription>
@@ -2867,207 +2739,13 @@ operations.
 </method>
 
  
-   <method type="function" name="setdata">
-   <shortdescription>{\bf DEPRECATED}...use selectvis instead..Set the data parameters selection for subsequent processing</shortdescription>
-   
-<description>
-This setup tool function selects which data are to be used 
-subsequently. After invocation of setdata, only the selected
-data are operated on. Thus, for example, in imaging, only the selected
-data are gridded into an image, and in plotting, only the
-selected data are plotted.
-
-Data can be selected by field and spectral window ids. Note that
-all data thus selected are passed to the imaging, and may or
-may not be imaged, depending on how the image was constructed
-using <link anchor="imager:imager.setimage.function">setimage</link>. For example,
-in mosaicing, use fieldid in setimage to control what pointing
-is used to define the field center, and use fieldid in setdata
-to control what pointings are used in the imaging.
-
-For spectral processing,  it is possible to make cubes out
-multi-spectral window selections but the selection is terse till a
-better selection scheme is devised.
-
-The selection is controlled by the mode argument:
-
-\begin{description}
-\item[none] Selection ignores channel parameters but selects all
-  channels from spectral window ids and field ids selected.
-\item[channel]   Selection in channels using the nchan, start and step
-arguments
-\end{description}
-
-For channel mode, the other fields have the following meaning:
-
-\begin{description}
-\item[nchan]   is the number of output channels selected. It
-defaults to 1 (i.e., the first channel).
-\item[start] is the first channel from input dataset that is to be used.
-It defaults to 1 (i.e. first channel).
-\item[step] gives the increment between selected input channels. 
-\end{description}
-
-The channels are centered on velocities: start, start+step,
-start+2*step, etc.  
-
-By choosing the parameters for setdata and setimage correctly,
-one may obtain various mappings of visibility channels to image
-channels. For example, to average 512 visibility channels into 64 
-image channels (producing image channels consisting of 8
-visibility channels):
-
-\begin{verbatim}
-im.setimage(mode='channel', nchan=64, start=1, step=8);
-im.setdata(mode='channel', nchan=512, start=1, step=1)
-im.clean();
-\end{verbatim}
-
-This averages the spectral channels during the gridding process. If
-one wanted to only include every 8th channel in the
-deconvolution, one would do:
-
-\begin{verbatim}
-im.setdata(mode='channel', nchan=64, start=1, step=8)
-im.setimage(mode='channel', nchan=64, start=1, step=8);
-im.clean();
-\end{verbatim}
-
-For velocity and opticalvelocity modes, the mstart and mstep
-are the start and step velocities as strings.
-
-\begin{verbatim}
-im.setimage(mode='velocity', nchan=64, mstart='20 km/s', mstep='-100m/s');
-im.setdata(mode='velocity', nchan=64, mstart='20km/s', mstep='-100m/s');
-im.clean();
-\end{verbatim}
-
-If the image and data selections differ, then averaging is done during
-the gridding and degridding process in the image deconvolution.
-
-\begin{verbatim}
-im.setimage(mode='channel', nchan=64, start=1, step=8);
-im.setdata(mode='channel', nchan=512, start=1, step=1)
-im.clean()
-\end{verbatim}
-
-Note:  The channels numbers used in {\tt setimage}
-and {\tt setdata} refers to the same channel. So if a channel is not
-selected in {\tt setdata} but is selected in {\tt setimage}, then
-blank channels image are made. The example below will result in the 
-having the first 5 channels in the image to be blank.
-
-\begin{verbatim}
-im.setdata(mode='channel', nchan=50, start=6, step=1) #selected chan 6-55
-im.setimage(mode='channel', nchan=50, start=1, step=1); 
-
-# will try to image channel 1-50. But as previously only channel 6-55 
-# was selected only channel 6-50 will have data; images of channels
-# 1-5 are blank 
-im.clean()
-\end{verbatim}
-
-For multi-spectral window cube imaging the selection of the data can
-be done as follows
-
-\begin{verbatim}
-im.setdata(mode='channel', nchan=[50,60], start=[1,1], step=[1,1],
-             spwid=[1,2]) 
-im.setimage(mode='channel', nchan=110, start=1, step=1, spwid=[1,2]); 
-
-\end{verbatim}
-
-The above means that you would make a data selection of 50 channels
-(starting from 1 steping 1) from the first spectral window and 60
-channels (starting from 1 steping 1). The setimage defines the image
-to be a cube of 110 channels. The caveat is the step size in the
-frequency direction is the step size of the first spectral window. If
-the step size of channels of the two spectral windows are different
-then one is better off defining the image cube in velocities (e.g. as below). 
-
-                                                                      
-\begin{verbatim}
-im.setdata(mode='channel', nchan=[50,60], start=[1,1], step=[1,1],
-             spwid=[1,2]) 
-im.setimage(mode='velocity', nchan=200, mstart='20km/s',
-             mstep='-100m/s'); 
-	
-
-\end{verbatim}
-
-</description>
-<input>
-
-     <param type="string" name="mode">
-     <description>Type of processing: channel or velocity</description>
-     <value>channel</value>
-     <value>none</value>
-     <choice>none</choice>
-     </param>
-
-     <param type="intArray" name="nchan">
-     <description>Number of channels to select</description>
-     <value>1</value>
-     </param>
-
-     <param type="intArray" name="start">
-     <description>Start channels (0-relative)</description>
-     <value>0</value>
-     </param>
-
-     <param type="intArray" name="step">
-     <description>Step in channel number</description>
-     <value>1</value>
-     </param>
-
-     <param type="double" name="mstart" units="km/s">
-     <description>Start velocity (e.g. '20Km/s')</description>
-     <value>0.0</value>
-     </param>
-
-     <param type="double" name="mstep" units="km/s">
-     <description>Step in velocity (e.g. '100m/s'</description>
-     <value>0.0</value>
-     </param>
-
-     <param type="intArray" name="spwid">
-     <description>Spectral Window Ids (0 relative) to select</description>
-     <value>0</value>
-     </param>
-
-     <param type="intArray" name="fieldid">
-     <description>Field Ids (0 relative) to select</description>
-     <value>0</value>
-     </param>
-
-     <param type="string" name="msselect">
-     <description>TQL select string applied as a logical "and" with the other selections</description>
-     <value></value>
-     </param>
-
-
-     <param type="bool" name="async">
-     <description>Run asynchronously in the background?</description>
-     <value>false</value>
-     </param>
-</input>
-<example>
-\begin{verbatim}
-im = imager('3C273XC1.MS');
-im.setdata(nchan=512,start=1,step=1, msselect='SCAN_NUMBER &gt; 10 &amp;&amp; FIELD_ID==2)
-\end{verbatim}
-</example>
-<returns type="bool"/>
-</method>
-
-
  
    <method type="function" name="selectvis">
    <shortdescription>Select visibilities for subsequent processing</shortdescription>
    
 <description>
 This setup tool function selects which data are to be used 
-subsequently. After invocation of setdata, only the selected
+subsequently. After invocation of selectvis, only the selected
 data are operated on. Thus, for example, in imaging, only the selected
 data are gridded into an image, and in plotting, only the
 selected data are plotted.
@@ -3076,8 +2754,8 @@ Data can be selected by field and spectral window ids. Note that
 all data thus selected are passed to imaging, and may or
 may not be imaged, depending on how the image was constructed
 using <link anchor="imager:imager.defineimage.function">defineimage</link>. For example,
-in mosaicing, use fieldid in setimage to control what pointing
-is used to define the field center, and use fieldid in setdata
+in mosaicing, use fieldid in defineimage to control what pointing
+is used to define the field center, and use fieldid in selectvis
 to control what pointings are used in the imaging.
 
 For spectral processing, it is possible to make cubes out
@@ -3136,9 +2814,9 @@ im.selectvis(nchan=512, start=1, step=1)
 im.clean()
 \end{verbatim}
 
-Note:  The channels numbers used in {\tt setimage}
-and {\tt setdata} refers to the same channel. So if a channel is not
-selected in {\tt setdata} but is selected in {\tt setimage}, then
+Note:  The channels numbers used in {\tt defineimage}
+and {\tt selectvis} refers to the same channel. So if a channel is not
+selected in {\tt selectvis} but is selected in {\tt defineimage}, then
 blank channels image are made. The example below will result in the 
 having the first 6 (0-5) channels in the image to be blank.
 
@@ -3164,7 +2842,7 @@ im.defineimage(mode='channel', nchan=110, start=0, step=1, spw=[0,1]);
 
 The above means that you would make a data selection of 50 channels
 (starting from 0 steping 1) from the first spectral window and 60
-channels (starting from 1 steping 1). The setimage defines the image
+channels (starting from 1 steping 1). The defineimage defines the image
 to be a cube of 110 channels. The caveat is the step size in the
 frequency direction is the step size of the first spectral window. If
 the step size of channels of the two spectral windows are different
@@ -3294,236 +2972,7 @@ im.selectvis(vis='myms3.ms', field=range(0,10), time='> 2002/10/15/20:30:45')
 <returns type="bool"/>
 </method>
 
- 
-   <method type="function" name="setimage">
-   <shortdescription>{\bf DEPRECATED}...use defineimage instead.Set the image parameters for subsequent processing</shortdescription>
-   
-<description>
-Define the default image parameters. If an image is to be
-made, then these parameters are used in the construction
-of the image. Thus, for example, the tool function <link anchor="imager:imager.make.function">make</link>
-makes an (empty) image using these parameters. 
-
-Note that some parameters can be specified either in canonical units
-or via measures. To establish default values, the ids for the default
-spectral window and default field id must be given.
-
-The meaning of arguments mode, nchan, step, {\em etc.} is described in
-<link anchor="imager:imager.setdata.function">setdata</link>. {\tt imager} can perform multi-frequency
-synthesis over several spectral windows (mode='mfs'). To achieve this,
-you should set spwid to an array of the required spectral windows
-({\em e.g.}  {\tt spwid=1:2}).\\
-WARNING: For multifrequency synthesis, 'mfs', it is important that the spwid's
-selected in <link anchor="imager:imager.setdata.function">setdata</link> be the SAME as the one
-selected in 'setimage'.  Otherwise the frequency at which the  image
-is made is not going to be the same as to the one as the one used in
-gridding the visibility and can lead to image artifacts.  
-
-The phase center of the image defaults to that of the specified
-fieldid (the first if none is specified). This is important if you have 
-multiple pointings in the data. The user would have used 
-<link anchor="imager:imager.setdata.function">setdata</link> to select which pointings 
-would be used in imaging. Note that the fieldid refers
-to the ordering of fields in a MeasurementSet, and has no connection
-with the number of facets in an image. A phase center may be also
-specified in an argument to setimage using any valid
-<link anchor="measures:measures.direction.function">direction</link>. If the conversion
-from the observed direction requires frame information then this
-is taken as follows:
-\begin{itemize}
-\item Direction information, including the coordinate system,
-is taken from the relevant entry in the Field table of the
-MeasurementSet.
-\item The epoch is taken from the time of observation of
-each visibility.
-\item A position is specified via the {\tt imager} tool function <link anchor="imager:imager.setoptions.function">setoptions</link>
-\end{itemize}
-
-If the specified number of facets is greater than unity then the image
-is split into facets (this number along the x and y axes) and
-processed. This is necessary when using wide-field algorithm for
-deconvolving the image, in cases of non-coplanar arrays (e.g the VLA
-at low frequencies but can be safely left at 1 for the ATCA or WSRT).
-
-Finally, a position shift may be added using the arguments shiftx,
-shifty. This will be added to whatever the phase center was set to
-as described above. The shift is a real angle on the {\tt imager} so that,
-in e.g. RA, DEC, the RA shift is divided by cos(DEC) before being
-added to the RA. The sense of the shift is that the position after
-addition of the shift gives the new phase center of the image. The
-shift is in the reference frame of the phase center.
-
-For spectral imaging {\tt setimage} and {\tt setdata} defines the
-spectral channels that are imaged. Examples are given in the
-<link anchor="imager:imager.setdata.function">setdata</link> section.
-
-For wide-field or 3D imaging see <link anchor="imager:imager.setoptions.function">setoptions</link>
-section for some examples.
-
-</description>
-<input>
-
-     <param type="int" name="nx">
-     <description>Total number of spatial pixels in x</description>
-     <value>128</value>
-     </param>
-
-     <param type="int" name="ny">
-     <description>Total number of spatial pixels in y</description>
-     <value>128</value>
-     </param>
-
-     <param type="double" name="cellx" units="arcsec">
-     <description>Cellsize in x (e.g. '1arcsec')</description>
-     <value>1.0</value>
-     </param>
-
-     <param type="double" name="celly" units="arcsec">
-     <description>Cellsize in y (e.g. '1arcsec')</description>
-     <value>1.0</value>
-     </param>
-
-     <param type="string" name="stokes">
-     <description>Stokes parameters to image (e.g. 'IQUV')</description>
-     <value>IV</value>
-     <value>IQU</value>
-     <value>IQUV</value>
-     <value>I</value>
-     </param>
-
-     <param type="bool" name="doshift">
-     <description>Use the specified phase center? T or F</description>
-     <value>false</value>
-     </param>
-
-     <param type="MDirection" name="phasecenter">
-     <description>Direction of phase center as a measure</description>
-     <value>00h00m00.00 +090d00m00.000 B1950</value>
-     </param>
-
-     <param type="double" name="shiftx" units="arcsec">
-     <description>Shift in x (e.g. '23.7arcsec')</description>
-     <value>0.0</value>
-     </param>
-
-     <param type="double" name="shifty" units="arcsec">
-     <description>Shift in y (e.g. '-54.2arcsec')</description>
-     <value>0.0</value>
-     </param>
-
-     <param type="string" name="mode">
-     <description>Type of processing</description>
-     <value>channel</value>
-     <value>velocity</value>
-     <value>mfs</value>
-     </param>
-
-     <param type="int" name="nchan">
-     <description>Number of channels</description>
-     <value>1</value>
-     </param>
-
-     <param type="int" name="start">
-     <description>Start channel (0-relative)</description>
-     <value>0</value>
-     </param>
-
-     <param type="int" name="step">
-     <description>Step in channel</description>
-     <value>1</value>
-     </param>
-
-     <param type="MRadialVelocity" name="mstart">
-     <description>Start velocity</description>
-     <value>0 km/s</value>
-     </param>
-
-     <param type="MRadialVelocity" name="mstep">
-     <description>Step in velocity</description>
-     <value>1 km/s</value>
-     </param>
-
-     <param type="intArray" name="spwid">
-     <description>Spectral Window Ids (0 relative)</description>
-     <value>0</value>
-     </param>
-
-     <param type="int" name="fieldid">
-     <description>Field Id (0 relative)</description>
-     <value>0</value>
-     </param>
-
-     <param type="int" name="facets">
-     <description>Number of facets on each axis</description>
-     <value>1</value>
-     </param>
-
-     <param type="double" name="distance" units="m">
-     <description>Distance to object: usually ignore this! (m)</description>
-     <value>0.0</value>
-     </param>
-</input>
-<example>
-\begin{verbatim}
-## Example 1
-im.setimage(nx=1024,ny=1024, cellx='30marcsec',celly='30marcsec', 
-nchan=1, stokes='IV', doshift=T, phasecenter=dm.direction('mars'));
-## Example 2
-im.setimage(nx=1024,ny=1024, cellx='30marcsec',celly='30marcsec', 
-nchan=1, stokes='IV', doshift=T, 
-phasecenter=image('othermarsimage').coordmeasures().direction);
-## Example 3
-myimager.setdata(mode='channel', nchan=10, start=3, spwid=[1,2], fieldid=[3, 4, 5, 6, 7, 9, 10])
-myimager.setimage(nx=500, ny=500, mode='mfs', spwid=[1,2], fieldid=7)
-myimager.clean(algorithm='mfclark', niter=1000, model='mosaic') 
-
-## Example 4
-
-dir1 = dm.direction('J2000', '20h00m00', '21d00m00')
-dir2 = dm.direction('J2000', '20h10m00', '21d00m00')
-dir3 = dm.direction('J2000', '20h00m00', '21d03m00')
-im.setimage(nx=100, ny=100, cellx='0.1arcsec', celly='0.1arsec',
-              doshift=T, phasecenter=dir1)
-im.make('box1')
-im.setimage(nx=100, ny=100, cellx='0.1arcsec', celly='0.1arsec',
-              doshift=T, phasecenter=dir2)
-im.make('box2')
-im.setimage(nx=100, ny=100, cellx='0.1arcsec', celly='0.1arsec',
-              doshift=T, phasecenter=dir3)
-im.make('box3')
-im.clean(algorithm='mfclark', model=['box1', 'box2', 'box3'], 
-	   image=['box1.restored', 'box2.restored', 'box3.restored'],
-	   residual=['box1.residual', 'box2.residual', 'box3.residual'])
-
-\end{verbatim}
-
-In the first example, the image parameters are set for 1024 by 1024
-pixels of 30marc, 1 channel will be made, Stokes I and V will be
-imaged, and the phasecenter will be the direction of Mars as given by
-the JPL DE-200 emphemeris. In the second, the phase center is taken
-to be that of the reference pixel of another image.
-
-The third example shows the use of setdata and setimage to setup a mosaic. In 
-the set data we have chosen 10 channels (for each IF) of data starting form 
-channel 3. We also have selected IF 1 and 2. We have selected data from 
-fields 3 to 10. In the setimage we decide to use the data to make a 
-multifrequency synthesis image. We center the image on the field 7 pointing.  
-
-The fourth example is use to clean regions where the user knows the
-sources are and ignore all the other regions. This is very efficient
-in large fields with few sources. Smaller images are made and
-deconvolved around known sources rather than making a big image
-englobing all three fields. Care should be taken in NOT overlapping
-the regions imaged this way otherwise the deconvolution will fail.
-
-</example>
-<comments>
-</comments>
-<returns type="bool"/>
-
-</method>
-
- 
+  
    <method type="function" name="setjy">
    <shortdescription>Compute the model visibility for a specified source flux density</shortdescription>
    
@@ -3859,6 +3308,14 @@ however not used yet.</description>
            meant for usage on filesystem like Lustre, the default implies 32x32x4x32 tile shape</description>
      <value>0</value>
      </param>
+     <param type="bool" name="singleprecisiononly">
+       <description> Set this value to True to force single precision all the time.
+       Otherwise imager may use double precision gridding (ft and wproject only for now) 
+       when it can and deems it fit. Setting to True can be handy  on low memory 
+       machines
+       </description>
+       <value>false</value>
+     </param>
 </input>
 <returns type="bool"/>
 <example>
@@ -3874,8 +3331,8 @@ telescope to use (the default is the one it gets from the ms).
 
 \begin{verbatim}
 im.open('n1333.ms')
-im.setdata(fieldid=[2:6, 8:12], spwid=[1:2])
-im.setimage(nx=800, ny=800, cellx='0.5arcsec', celly='0.5arcsec', mode='velocity', nchan=30, mstart='-10km/s', mstep='1.8km/s', spwid=[1,2],fieldid=3)
+im.selectvis(fieldid=[2:6, 8:12], spwid=[1:2])
+im.defineimage(nx=800, ny=800, cellx='0.5arcsec', celly='0.5arcsec', mode='velocity', nchan=30, mstart='-10km/s', mstep='1.8km/s', spwid=[1,2],fieldid=3)
 im.setoptions(ftmachine='mosaic')
 im.setvp(dovp=T)
 im.setoptions(ftmachine='mosaic')
@@ -3889,7 +3346,7 @@ primary beam of the telescope as the gridding function.
 
 \begin{verbatim}
 im.open('coma.ms')
-im.setdata(spwid=1, fieldid=1);
+im.selectvis(spwid=1, fieldid=1);
 mydir=me.direction('J2000', '12h30m48', '12d24m0')
 im.defineimage(nx=200, cellx='30arcsec', phasecenter=mydir); 
 im.make('outlier1');
@@ -3913,11 +3370,11 @@ outside of the field of interest.
 \begin{verbatim}
 pim = imager('coma.ms')
 
-pim.setdata(spwid=1, fieldid=1);
+pim.selectvis(spwid=1, fieldid=1);
 mydir = dm.direction('J2000', '12h30m48', '12d24m0')
-pim.setimage(nx=200, ny=200, cellx='30arcsec', celly='30arcsec', doshift=T, phasecenter=mydir); 
+pim.defineimage(nx=200, ny=200, cellx='30arcsec', celly='30arcsec', doshift=T, phasecenter=mydir); 
 pim.make('outlier1');
-pim.setimage(nx=3000, ny=3000, cellx='30arcsec',celly='30arcsec',facets=3);
+pim.defineimage(nx=3000, ny=3000, cellx='30arcsec',celly='30arcsec',facets=3);
 pim.setoptions(ftmachine='wproject',wprojplanes=200, padding=1.2)
 pim.make('main')
 pim.clean(algorithm='wfclark',model=['main', 'outlier1'], niter=10000)
@@ -4272,10 +3729,10 @@ default logger. This includes:
 \begin{itemize}
 \item The name of the MeasurementSet (set in construction or via the
 <link anchor="imager:imager.open.function">open</link> function.
-\item The parameters of the image (set via <link anchor="imager:imager.setimage.function">setimage</link>)
+\item The parameters of the image (set via <link anchor="imager:imager.defineimage.function">defineimage</link>)
 \item The current beam (set by <link anchor="imager:imager.fitpsf.function">fitpsf</link>
 or <link anchor="imager:imager.setbeam.function">setbeam</link>.
-\item The selection of an ms (set via <link anchor="imager:imager.setdata.function">setdata</link>)
+\item The selection of an ms (set via <link anchor="imager:imager.selectvis.function">selectvis</link>)
 \item The general processing options (set via <link anchor="imager:imager.setoptions.function">setoptions</link>)
 \end{itemize}
 </description>
@@ -4283,7 +3740,7 @@ or <link anchor="imager:imager.setbeam.function">setbeam</link>.
 <example>
 \begin{verbatim}
 - im = imager('3C273XC1.MS');
-- im.setimage(npix=[256,256])
+- im.defineimage(nx=256, ny=256)
 - im.summary()
 \end{verbatim}
 </example>
@@ -4294,7 +3751,7 @@ or <link anchor="imager:imager.setbeam.function">setbeam</link>.
    <shortdescription>Select data within the limit of a given range</shortdescription>
    
 <description>
-Apply a uvrange so that only points within a given uvrange are selected for further usage.  To be noted <link anchor="imager:imager.setdata.function">setdata</link> if used after uvrange will reset the selected range. So setdata should be used prior to uvrange or can be used 
+Apply a uvrange so that only points within a given uvrange are selected for further usage.  To be noted <link anchor="imager:imager.selectvis.function">selectvis</link> if used after uvrange will reset the selected range. So selectvis should be used prior to uvrange or can be used 
 
 to reset it if one changes one's mind. The points are not flagged! Further point to be noted for spectral line data the uv distance is calculated using the mean of the wavelengths of the different spectral channels selected. 
 
@@ -4329,7 +3786,7 @@ Apply visibility weighting to correct for the local density of
 sampling in the uv plane. The imaging weights are written into a Table
 column called IMAGING\_WEIGHT, which may be plotted using
 <link anchor="table">tb</link> and pl.
-<!-- <link anchor="imager:imager.plotweights.function">plotweights</link>. -->
+<link anchor="imager:imager.plotweights.function">plotweights</link>. 
 The column may also be directly accessed using either the
 <link anchor="table">table</link> or <link anchor="ms">ms</link> modules.
 

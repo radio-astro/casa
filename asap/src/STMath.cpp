@@ -2321,7 +2321,9 @@ CountedPtr< Scantable >
   while ( it != in.end() ){
     if ( ! (*it)->conformant(*out) ) {
       // non conformant.
-      pushLog(String("Warning: Can't merge scantables as header info differs."));
+      //pushLog(String("Warning: Can't merge scantables as header info differs."));
+      LogIO os( LogOrigin( "STMath", "merge()", WHERE ) ) ;
+      os << LogIO::SEVERE << "Can't merge scantables as header informations (any one of AntennaName, Equinox, and FluxUnit) differ." << LogIO::EXCEPTION ;
     }
     out->appendToHistoryTable((*it)->history());
     const Table& tab = (*it)->table();

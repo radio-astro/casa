@@ -44,8 +44,9 @@ namespace casa {
     public:
 
 	static const char **execArgs( );
+	static std::string dbusName( ) { return "view_server"; }
 
-	ViewerProxy( const std::string &name="view_server" );
+	ViewerProxy( const std::string &name=dbusName( ) );
 
 	dbus::variant start_interact( const dbus::variant &input, int panel )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::start_interact(dbus::fromVariant(input), panel) ); }
@@ -70,13 +71,13 @@ namespace casa {
 	dbus::variant popup( const std::string &what, int panel=0 )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::popup(what, panel) ); }
 
-	dbus::variant frame( int num=-1, int panel=0 )
-			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::frame(num, panel) ); }
+	dbus::variant channel( int num=-1, int panel=0 )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::channel(num, panel) ); }
 	dbus::variant zoom( int level, int panel=0 )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::zoom(level, panel) ); }
 
-	std::string cwd( const std::string &new_path = "" )
-			{ return edu::nrao::casa::viewer_proxy::cwd( new_path ); }
+	dbus::variant cwd( const std::string &new_path = "" )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::cwd( new_path ) ); }
 	dbus::variant panel( const std::string &type="viewer" )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::panel(type) ); }
 

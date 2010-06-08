@@ -121,12 +121,12 @@ public:
   static Int numStatPlots (const RFChunkStats &chunk);
 
   // resets at start of pass
-  FlagMatrix * reset ();
+  void reset ();
 
   // advances global flag iterator to time slot it (if required), sets
   // the flag cursor from the iterator (see below). If getflags is true,
   // also calls getDataFlags().
-  FlagMatrix * advance   ( uInt it,Bool getFlags=False );
+  void advance   ( uInt it,Bool getFlags=False );
 
   // fills global flag lattice with apriori flags from a VisBuffer (if required)
   void getMSFlags  ();
@@ -314,7 +314,7 @@ inline RFlagWord RFFlagCube::corrFlagMask ( RFlagWord cmask )
    { return corr_flagmask((uInt)cmask); }
 
 inline RFlagWord RFFlagCube::getFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
-   { return (*iter.cursor())(ich,ifr); }
+   { return (iter)(ich,ifr); }
 
 inline Bool RFFlagCube::setFlag ( uInt ich,uInt ifr ) 
    { return setFlag(ich,ifr,flag.iterator()); } 

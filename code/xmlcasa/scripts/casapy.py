@@ -4,18 +4,58 @@ import time
 import signal
 
 ##
+## tweak path... where necessary...
+##
+path_addition = [ ]
+for p in sys.path :
+    if p.startswith(sys.prefix):
+        # According to
+        # http://www.debian.org/doc/packaging-manuals/python-policy/ch-python.html
+        # "Python modules not handled by python-central or python-support must
+        # be installed in the system Python modules directory,
+        # /usr/lib/pythonX.Y/dist-packages for python2.6 and later, and
+        # /usr/lib/pythonX.Y/site-packages for python2.5 and earlier."
+        #
+        # I am not sure if this is general Python policy, or just Debian policy.
+        # In any case, dist-packages is a more honestly named site-packages, since
+        # nominally site stuff goes in /usr/local or /opt.
+        #
+        for wanted in ['lib-tk', 'dist-packages']:
+            newpath = p + os.sep + wanted
+            if os.path.isdir(newpath):
+                path_addition.append(newpath)
+
+sys.path = sys.path + path_addition
+
+# i.e. /usr/lib/pymodules/python2.6, needed for matplotlib in Debian and its derivatives.
+pymodules_dir = sys.prefix + '/lib/pymodules/python' + '.'.join(map(str, sys.version_info[:2]))
+
+if os.path.isdir(pymodules_dir) and pymodules_dir not in sys.path:
+    sys.path.append(pymodules_dir)
+
+##
 ## watchdog... which is *not* in the casapy process group
 ##
 if os.fork( ) == 0 :
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    ## close standard input to avoid terminal interrupts
+    sys.stdin.close( )
+    sys.stdout.close( )
+    sys.stderr.close( )
+    os.close(0)
+    os.close(1)
+    os.close(2)
     ppid = os.getppid( )
     while True :
         try:
             os.kill(ppid,0)
         except:
             break
-        time.sleep(15)
+        time.sleep(3)
     os.killpg(ppid, signal.SIGTERM)
-    os.sleep(15)
+    time.sleep(6)
     os.killpg(ppid, signal.SIGKILL)
     exit(0)
 
@@ -36,56 +76,13 @@ except ImportError, e:
     print "failed to load casa:\n", e
     exit(1)
 
-import matplotlib
+try:
+    import matplotlib
+except ImportError, e:
+    print "failed to load matplotlib:\n", e
+    print "sys.path =", "\n\t".join(sys.path)
+    
 from asap_init import *
-
-
-def termination_handler(signum, frame):
-
-    # Switch off this handler in order to avoid
-    # infinite looping
-    signal.signal(signum, signal.SIG_DFL)
-
-    # SIGTERM everything in this process' process group,
-    # and ignore SIGTERM
-    print "Clean up subprocesses..."
-
-    signal.signal(signal.SIGTERM, signal.SIG_IGN)
-    os.killpg(os.getpgid(0), signal.SIGTERM)
-    signal.signal(signal.SIGTERM, signal.SIG_DFL)
-
-    # Reraise the incoming signal, this time it
-    # will be handled by the default signal handler
-    os.kill(os.getpid(), signum)
-
-# Clean up child processes and terminate if any
-# of the following POSIX signals happen
-signal.signal(signal.SIGQUIT, termination_handler)
-signal.signal(signal.SIGABRT, termination_handler)
-signal.signal(signal.SIGTERM, termination_handler)
-signal.signal(signal.SIGHUP, termination_handler)
-
-# Unfortunately, trying to catch SIGSEGV/SIGBUS (with even
-# the most trivial signal handler) might trigger a mode of
-# infinite looping where another SIGSEGV/-BUS happens already
-# before the user signal handler is invoked (in the python
-# interpreter?). The effect is infinite looping, which is
-# even worse than segfaulting. Therefore do not catch SIGSEGV
-# or SIGBUS. Also SIGILL + SIGFPE may be unsafe to catch.
-# The remaining signals should be safe to handle because
-# they do not cause the process to go into an undefined state.
-
-# Do not handle the following POSIX signals
-#signal.signal(signal.SIGALRM, termination_handler)
-#signal.signal(signal.SIGPIPE, termination_handler)
-#signal.signal(signal.SIGUSR1, termination_handler)
-#signal.signal(signal.SIGUSR2, termination_handler)
-#signal.signal(signal.SIGKILL, termination_handler)
-#signal.signal(signal.SIGSTOP, termination_handler)
-#signal.signal(signal.SIGCONT, termination_handler)
-#signal.signal(signal.SIGTSTP, termination_handler)
-#signal.signal(signal.SIGTTIN, termination_handler)
-#signal.signal(signal.SIGTTOU, termination_handler)
 
 
 homedir = os.getenv('HOME')
@@ -166,6 +163,10 @@ while len(a) > 0:
             casa['flags'][c] = a.pop( )
             if c == '--rcdir':
                 casa['dirs']['rc'] = casa['flags'][c]
+
+    elif c.find('=') > 0 :
+        casa['flags'][c[0:c.find('=')]] = c[c.find('=')+1:]
+
     else :
         casa['flags'][c] = ''
 
@@ -222,6 +223,11 @@ if os.uname()[0] == 'Linux' :
 
         if os.fork( ) == 0 :
             os.close(r)
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
+            ## close standard input to avoid terminal interrupts
+            sys.stdin.close( )
+            os.close(0)
             args = [ 'casa-dbus-daemon' ]
             args = args + ['--print-address', str(w)]
             if dbus_conf is not None and os.path.exists(dbus_conf) :
@@ -982,7 +988,7 @@ class casaDocHelper(pydoc.Helper):
 pydoc.help = casaDocHelper(sys.stdin, sys.stdout)
 
 ##
-## /CASASUBST/python_library_directory/  is substitued at build time
+## /CASASUBST/python_library_directory/  is substituted at build time
 ##
 fullpath='/CASASUBST/python_library_directory/' + '/assignmentFilter.py'
 
@@ -1053,7 +1059,6 @@ if ipython:
              os.system("rm -rf %s" % x)
              #print "Removed: ", x, "\n"
 
-    if vwrpid!=9999: os.kill(vwrpid,9)
+    ## leave killing off children to the watchdog...
+    ## so everyone has a chance to die naturally...
     print "leaving casapy..."
-    signal.signal(signal.SIGTERM, signal.SIG_IGN)
-    os.killpg(os.getpgid(0), signal.SIGTERM)

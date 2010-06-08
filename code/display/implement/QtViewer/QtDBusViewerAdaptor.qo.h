@@ -32,10 +32,10 @@
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <casa/namespace.h>
 #include <QVariantMap>
+#include <display/QtViewer/QtViewer.qo.h>
 
 namespace casa {
 
-    class QtViewer;
     class QtDisplayData;
     class QtDisplayPanel;
     class QtDisplayPanelGui;
@@ -45,13 +45,10 @@ namespace casa {
 	Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.viewer")
 
     public:    
-	// Connects to the DBus server using the name provided (if non-null). Otherwise, the
-	// dbusName() method with the current process ID is used.  Returns a boolean which
-	// indicates whether the connection succeeded or not.
-	bool connectToDBus( const QString &dbus_name="" );
 
-	static const QString &name( );
-	const QString &getName( ) const { return name( ); }
+	QString dbusName( ) const { return QString(QtViewer::name( )); }
+	bool connectToDBus( const QString &dbus_name="" )
+			{ return QtDBusApp::connectToDBus( parent(), dbus_name ); }
 
 	// Constructor which takes the application.
 	QtDBusViewerAdaptor( QtViewer * );
@@ -66,14 +63,14 @@ namespace casa {
 	QDBusVariant reload( int panel_or_data );
 	QDBusVariant unload( int data );
 	QDBusVariant restore( const QString &path, int panel=0 );
-	QString cwd( const QString &new_path = "" );
+	QDBusVariant cwd( const QString &new_path = "" );
 	QDBusVariant panel( const QString &type="viewer", bool hidden=false  );
 	QDBusVariant hide( int panel=0 );
 	QDBusVariant show( int panel=0 );
 	QDBusVariant close( int panel=0 );
 	QDBusVariant popup( const QString &what, int panel=0 );
 
-	QDBusVariant frame( int num=-1, int panel=0 );
+	QDBusVariant channel( int num=-1, int panel=0 );
 	QDBusVariant zoom( int level, int panel=0 );
 
 	// like "close()", but leaves the closing up to the user if the window is not hidden
@@ -106,6 +103,12 @@ namespace casa {
 	void handle_destroyed_panel(QObject*);
 
     private:
+
+	inline QDBusVariant error( const QString &message ) {
+	    QMap<QString,QVariant> err;
+	    err["*error*"] = message;
+	    return QDBusVariant(QVariant(err));
+	}
 
 	class data_desc {
 	public:

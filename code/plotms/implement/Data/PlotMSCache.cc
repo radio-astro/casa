@@ -32,6 +32,8 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h> 	 
+#include <ms/MeasurementSets/MSFieldColumns.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferUtil.h>
@@ -78,19 +80,6 @@ PlotMSCache::PlotMSCache(PlotMS* parent):
   dataLoaded_(false),
   axesSet_(false)
 {
-
-  if (False) {
-
-    Vector<Complex> x(16,Complex(1.0));
-    cout << "x = " << x << endl;
-    ArrayLattice<Complex> xal(x);
-    LatticeFFT::cfft(xal);
-    cout << "x = " << x << endl;
-
-  }
-      
-
-
 
     // Set up loaded axes to be initially empty, and set up data columns for
     // data-based axes.
@@ -151,6 +140,9 @@ void PlotMSCache::increaseChunks(Int nc) {
   flag_.resize(nChunk_,False,True);
   flagrow_.resize(nChunk_,False,True);
 
+  wt_.resize(nChunk_,False,True);
+  imwt_.resize(nChunk_,False,True);
+
   az0_.resize(nChunk_,True);
   el0_.resize(nChunk_,True);
   ha0_.resize(nChunk_,True);
@@ -185,6 +177,8 @@ void PlotMSCache::increaseChunks(Int nc) {
     imag_[ic] = new Array<Float>();
     flag_[ic] = new Array<Bool>();
     flagrow_[ic] = new Vector<Bool>();
+    wt_[ic] = new Matrix<Float>();
+    imwt_[ic] = new Matrix<Float>();
     antenna_[ic] = new Vector<Int>();
     az_[ic] = new Vector<Double>();
     el_[ic] = new Vector<Double>();
@@ -245,6 +239,25 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
 
   }
 
+  // Get various names 	 
+  { 	 
+    MSAntenna msant(msname+"/ANTENNA"); 	 
+    MSField msfld(msname+"/FIELD"); 	 
+    antnames_.resize();
+    fldnames_.resize();
+    antnames_=ROMSAntennaColumns(msant).name().getColumn(); 	 
+    fldnames_=ROMSFieldColumns(msfld).name().getColumn(); 	 
+  } 	 
+  
+  if (averaging_.anyAveraging()) {
+    if (axes[0] == (PMS::WT) |
+	axes[1] == (PMS::WT) |
+	axes[0] == (PMS::IMWT) |
+	axes[1] == (PMS::IMWT)) {
+      throw(AipsError("Sorry, the Wt and ImWt axes options do not yet support averaging."));
+    }
+  }
+
   stringstream ss;
   ss << "Caching for the new plot: " 
        << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " 
@@ -289,8 +302,9 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
 
     // 1)
     for(unsigned int j = 0; !found && j < loadAxes.size(); j++)
-      if(loadAxes[i] == axis) found = true;
+      if(loadAxes[j] == axis) found = true;
     if(found) continue;
+
     
     // 2)
     if(!loadedAxes_[axis]) {
@@ -886,6 +900,9 @@ void PlotMSCache::release(const vector<PMS::Axis>& axes) {
         case PMS::FLAG: PMSC_DELETE(flag_) break;
         case PMS::FLAG_ROW: PMSC_DELETE(flagrow_) break;
 
+        case PMS::WT: PMSC_DELETE(wt_) break;
+        case PMS::IMWT: PMSC_DELETE(imwt_) break;
+
 	case PMS::AZ0: az0_.resize(0); break;
 	case PMS::EL0: el0_.resize(0); break;
 	case PMS::HA0: ha0_.resize(0); break;
@@ -1043,8 +1060,13 @@ void PlotMSCache::getAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
   case PMS::FLAG_ROW:
     axismask(2)=True;
     break;
+  case PMS::IMWT:
   case PMS::UVDIST_L:
     axismask(1)=True;
+    axismask(2)=True;
+    break;
+  case PMS::WT:
+    axismask(0)=True;
     axismask(2)=True;
     break;
   case PMS::ANTENNA:
@@ -1184,9 +1206,15 @@ Double PlotMSCache::get(PMS::Axis axis) {
   case PMS::FLAG:
     return getFlag();
     break;
-
   case PMS::FLAG_ROW:
     return getFlagRow();
+    break;
+
+  case PMS::WT:
+    return getWt();
+    break;
+  case PMS::IMWT:
+    return getImWt();
     break;
 
   case PMS::AZ0:
@@ -1375,7 +1403,7 @@ PlotLogMessage* PlotMSCache::flagRange(const PlotMSFlagging& flagging,
       }
       
       // Set the flags in the MS
-      flagInMS(flagging, flagchunk, flagindex, flag);
+      flagToDisk(flagging, flagchunk, flagindex, flag);
 
 
       // Re-compute the axes ranges
@@ -1474,9 +1502,9 @@ void PlotMSCache::setPlotMask(Int chunk) {
   
 }
 
-void PlotMSCache::flagInMS(const PlotMSFlagging& flagging,
-			   Vector<Int>& flchunks, Vector<Int>& flrelids, 
-			   Bool flag) {
+void PlotMSCache::flagToDisk(const PlotMSFlagging& flagging,
+			     Vector<Int>& flchunks, Vector<Int>& flrelids, 
+			     Bool flag) {
 
   // Sort the flags by chunk:
   Sort sorter;
@@ -1672,21 +1700,40 @@ vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {
 void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
   ss << "Scan=" << getScan() << " ";
-  ss << "Field=" << getField() << " ";
+
+  Int fld=Int(getField()); 	 
+  if (fld<0) 	 
+    ss << "Field=" << "*" << " "; 	 
+  else 	 
+    ss << "Field=" << fldnames_(fld) << "(" << fld << ")" << " "; 	 
+  
   ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD,7) << " ";
   ss << "BL=";
 
+  // Antenna names
   Int ant1=Int(getAnt1());
   if (!netAxesMask_(2) || ant1<0)
     ss << "*-";
   else
-    ss << ant1 << "-";
+    ss << antnames_(ant1) << "-";
 
   Int ant2=Int(getAnt2());
   if (!netAxesMask_(2) || ant2<0)
-    ss << "* ";
+    ss << "*";
   else
-    ss << ant2 << " ";
+    ss << antnames_(ant2);
+
+  // (now the indices)
+  ss << "(";
+  if (!netAxesMask_(2) || ant1<0)
+    ss << "*-";
+  else
+    ss << ant1 << "-";
+  if (!netAxesMask_(2) || ant2<0)
+    ss << "*";
+  else
+    ss << ant2;
+  ss << ") ";
 
   Int spw=Int(getSpw());
   ss << "Spw=";
@@ -1718,9 +1765,10 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
   ss << "Corr=";
   if (netAxesMask_(0))
-    ss << getCorr() << " ";
+    ss << Stokes::name(Stokes::type(uInt(getCorr()))) << " ";
   else
     ss << "* ";
+
   ss << "X=" << x << " ";
   ss << "Y="  << y << " ";
   ss << "(" << (currChunk_ > 0 ? (nPoints_(currChunk_-1)+irel_) : irel_) << "/";
@@ -1744,6 +1792,12 @@ void PlotMSCache::setChunk(Int i) {
 void PlotMSCache::deleteCache() {
     // Release all axes.
     release(PMS::axes());
+
+    // zero the meta-name containers
+    antnames_.resize();
+    fldnames_.resize();
+
+
 }
 
 void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
@@ -1986,6 +2040,14 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       *flagrow_[vbnum] = vb.flagRow();
       break;
 
+    case PMS::WT: {
+      *wt_[vbnum] = vb.weightMat();
+      break;
+    }
+    case PMS::IMWT: {
+      *imwt_[vbnum] = vb.imagingWeight();
+      break;
+    }
     case PMS::AZ0:
     case PMS::EL0: {
       Vector<Double> azel;
@@ -1997,10 +2059,10 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
     case PMS::HA0: 
       ha0_(vbnum) = vb.hourang(vb.time()(0))*12/C::pi;  // in hours
       break;
-    case PMS::PA0:
+    case PMS::PA0: {
       pa0_(vbnum) = vb.parang0(vb.time()(0))*180.0/C::pi; // in degrees
       break;
-
+    }
     case PMS::ANTENNA: {
       antenna_[vbnum]->resize(nAnt_);
       indgen(*antenna_[vbnum]);
@@ -2049,6 +2111,8 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
     case PMS::V:
     case PMS::W:
     case PMS::FLAG:
+    case PMS::WT:
+    case PMS::IMWT:
     case PMS::ANTENNA: 
     case PMS::AZIMUTH: 
     case PMS::ELEVATION: 
@@ -2075,6 +2139,8 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
             else if(axis == PMS::V)        n += v_[i]->size();
             else if(axis == PMS::W)        n += w_[i]->size();
             else if(axis == PMS::FLAG)     n += flag_[i]->size();
+            else if(axis == PMS::WT)       n += wt_[i]->size();
+            else if(axis == PMS::IMWT)     n += imwt_[i]->size();
             else if(axis == PMS::ANTENNA)  n += antenna_[i]->size();
             else if(axis == PMS::AZIMUTH)  n += az_[i]->size();
             else if(axis == PMS::ELEVATION)n += el_[i]->size();
@@ -2155,9 +2221,15 @@ void PlotMSCache::computeRanges() {
 	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,1)),uInt(0));
 	  break;
 	}
+	case PMS::IMWT:
 	case PMS::UVDIST_L: {
 	  // collapse on corr
 	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(1,0)),uInt(0));
+	  break;
+	}
+	case PMS::WT: {
+	  // collapse on chan
+	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(1,1)),uInt(0));
 	  break;
 	}
 	case PMS::AMP: 
@@ -2313,6 +2385,19 @@ void PlotMSCache::computeRanges() {
 	    if (flag_[ic]->nelements()>0) {
 	      limits(2*ix)=0.0;
 	      limits(2*ix+1)=1.0;
+	    }
+	    break;
+
+	  case PMS::WT:
+	    if (wt_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*wt_[ic])(collmask)));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*wt_[ic])(collmask)));
+	    }
+	    break;
+	  case PMS::IMWT:
+	    if (imwt_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*imwt_[ic])(collmask)));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*imwt_[ic])(collmask)));
 	    }
 	    break;
 

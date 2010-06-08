@@ -1,6 +1,7 @@
 using namespace std;
 #include <string>
 #include <iostream>
+#include <cstdio>
 
 #include "Error.h"
 

@@ -65,9 +65,13 @@ namespace asdm {
 	StateTable &StateRow::getTable() const {
 		return table;
 	}
-	
-	void StateRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool StateRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void StateRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

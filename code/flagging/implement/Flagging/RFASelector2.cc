@@ -622,7 +622,11 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
         }
         else
         {
-          sel_ifr(chunk.antToIfr(ant(0,i),ant(1,i))) = True;
+          unsigned indx = chunk.antToIfr(ant(0,i),ant(1,i));
+
+          assert( indx < sel_ifr.nelements() );
+
+          sel_ifr(indx) = True;
           addString(ifrdesc,names(ant(0,i))+"-"+names(ant(1,i)),",");
         }
       }
@@ -816,26 +820,28 @@ RFASelector::~RFASelector ()
       delete sel_clip[i].mapper;
 }
 
-void RFASelector::startData()
+void RFASelector::startData(bool verbose)
 {
-    RFAFlagCubeBase::startData();
+    RFAFlagCubeBase::startData(verbose);
   
-    String flagstring = unflag?String("unflag"):String("flag");
-    os << "Data flagged/unflagged : " << desc_str << " " << flagstring;
-
-    if (flag_everything) os << " all" ;
-
-    os << LogIO::POST;
+    if (verbose) {
+        String flagstring = unflag?String("unflag"):String("flag");
+        os << "Data flagged/unflagged : " << desc_str << " " << flagstring;
+        
+        if (flag_everything) os << " all" ;
+        
+        os << LogIO::POST;
+    }
     
     Bool have_subset = ( desc_str.length() );
     
     if( flag_everything && !shadow)
         {
-          /* jmlarsen: Why is this useful/necessary?? */
+          /* jmlarsen: This does not seem useful nor necessary */
           
-          if( !have_subset && !unflag)
-            os<<"FLAG ALL requested, but no MS subset specified.\n"
-              "Refusing to flag the whole measurement set!\n"<<LogIO::EXCEPTION;
+            if (false) if( !have_subset && !unflag)
+                os<<"FLAG ALL requested, but no MS subset specified.\n"
+                    "Refusing to flag the whole measurement set!\n"<<LogIO::EXCEPTION;
         }
     
     return;

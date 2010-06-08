@@ -19,6 +19,10 @@ def importuvfits(fitsfile,vis,antnamescheme=None):
 		casalog.post("")
 		ms.fromfits(vis,fitsfile,antnamescheme=antnamescheme)
 		ms.close()
+		# save original flagversion
+		ok=fg.open(vis)
+		ok=fg.saveflagversion('Original',comment='Original flags at import into CASA', merge='replace')
+		ok=fg.done()
 	        # write history
                 if ((type(vis)==str) & (os.path.exists(vis))):
                         ms.open(vis,nomodify=False)

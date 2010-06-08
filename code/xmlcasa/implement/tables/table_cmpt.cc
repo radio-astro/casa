@@ -527,51 +527,44 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 ::casac::table*
 table::queryC(const std::string& query, const std::string& resultTable, const std::string& sortlist, const std::string& columns)
 {
- ::casac::table *rstat(0);
- try {
-	 if(itsTable){
-		 std::ostringstream taqlString;
-                 taqlString <<  "select ";
-	         if(!columns.empty())
-	            taqlString << columns;
-	         taqlString << "from " << this->name() << " where ";
-	         taqlString <<   query;
-	         if(!sortlist.empty())
-	            taqlString << " orderby " << sortlist;
-	         if(!resultTable.empty())
-	            taqlString << " giving " << resultTable;
-                 casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
-                 rstat = new ::casac::table(theQTab);
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
- } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
- }
- return rstat;
+  *itsLog << LogIO::WARN
+          << "tb.queryC has been merged with tb.query, and will disappear\n"
+          << "in the next release.  Update your scripts now!"
+          << LogIO::POST;
+  return table::query(query, resultTable, sortlist, columns);
 }
+
 ::casac::table*
-table::query(const std::string& query, const std::string& name, const std::string& sortlist, const std::string& columns)
+table::query(const std::string& query, const std::string& name,
+             const std::string& sortlist, const std::string& columns)
 {
  ::casac::table *rstat(0);
  try {
-	 if(itsTable){
-		 std::ostringstream taqlString;
-		 taqlString <<  "select from " << this->name() << " where ";
-		 taqlString <<   query;
-		 casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
-                 rstat = new ::casac::table(theQTab);
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
+   if(itsTable){
+     std::ostringstream taqlString;
+     taqlString << "select";
+     if(!columns.empty())
+       taqlString << " " << columns;
+     taqlString << " from " << this->name();
+     if(!query.empty())
+       taqlString << " where " << query;
+     if(!sortlist.empty())
+       taqlString << " orderby " << sortlist;
+     if(!name.empty())
+       taqlString << " giving " << name;
+     casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
+     rstat = new ::casac::table(theQTab);
+   } else {
+     *itsLog << LogIO::WARN
+             << "No table specified, please open first" << LogIO::POST;
+   }
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+            << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
 }
-
 ::casac::variant*
 table::calc(const std::string& expr)
 {

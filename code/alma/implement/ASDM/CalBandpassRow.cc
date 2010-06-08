@@ -77,9 +77,13 @@ namespace asdm {
 	CalBandpassTable &CalBandpassRow::getTable() const {
 		return table;
 	}
-	
-	void CalBandpassRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalBandpassRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalBandpassRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

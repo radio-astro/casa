@@ -308,6 +308,9 @@ public:
    		const Array<Float>& pixels, LogIO& log
    );
 
+   static Vector<Quantity> makeFakeBeam(LogIO& logIO, const CoordinateSystem& csys, Bool suppressWarnings = False);
+
+
 private:
 
 // Convert 2d sky shape (parameters=major axis, minor axis, position angle) 

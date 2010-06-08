@@ -389,12 +389,12 @@ void ASDM_ANNOTATION::fill(const ASDM& asdm) {
 
 	
 	if (rows.at(i)->isVllValueExists())
-		vllValue.put(rowIndex, basic2CASA1D<long long,int>(rows.at(i)->getVllValue()));
+		vllValue.put(rowIndex, basic2CASA1D<int64_t,int>(rows.at(i)->getVllValue()));
 	
 
 	
 	if (rows.at(i)->isVvllValueExists())
-		vvllValue.put(rowIndex, basic2CASA2D<long long,int>(rows.at(i)->getVvllValue()));
+		vvllValue.put(rowIndex, basic2CASA2D<int64_t,int>(rows.at(i)->getVvllValue()));
 	
 
 	

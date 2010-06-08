@@ -1,14 +1,11 @@
 <ui version="4.0" >
- <author></author>
- <comment></comment>
- <exportmacro></exportmacro>
  <class>MinMaxEditorItem</class>
  <widget class="QWidget" name="MinMaxEditorItem" >
   <property name="geometry" >
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>555</width>
+    <width>560</width>
     <height>29</height>
    </rect>
   </property>
@@ -22,11 +19,11 @@
    <string>lineEditorItem</string>
   </property>
   <layout class="QHBoxLayout" >
-   <property name="margin" >
-    <number>1</number>
-   </property>
    <property name="spacing" >
     <number>3</number>
+   </property>
+   <property name="margin" >
+    <number>1</number>
    </property>
    <item>
     <widget class="QLabel" name="nameLabel" >
@@ -55,7 +52,7 @@
      <property name="sizeType" >
       <enum>QSizePolicy::MinimumExpanding</enum>
      </property>
-     <property name="sizeHint" >
+     <property name="sizeHint" stdset="0" >
       <size>
        <width>0</width>
        <height>0</height>
@@ -69,16 +66,17 @@
       <string/>
      </property>
      <property name="icon" >
-      <iconset resource="QtAutoGui.qrc" >:/icons/hist.png</iconset>
+      <iconset resource="QtAutoGui.qrc" >
+       <normaloff>:/icons/hist.png</normaloff>:/icons/hist.png</iconset>
      </property>
     </widget>
    </item>
    <item>
     <layout class="QVBoxLayout" >
-     <property name="margin" >
+     <property name="spacing" >
       <number>0</number>
      </property>
-     <property name="spacing" >
+     <property name="margin" >
       <number>0</number>
      </property>
      <item>
@@ -100,26 +98,6 @@
     </layout>
    </item>
    <item>
-    <widget class="QToolButton" name="tool" >
-     <property name="text" >
-      <string/>
-     </property>
-     <property name="icon" >
-      <iconset resource="QtAutoGui.qrc" >:/icons/spanner.png</iconset>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="labelOk" >
-     <property name="text" >
-      <string/>
-     </property>
-     <property name="pixmap" >
-      <pixmap resource="QtAutoGui.qrc" >:/icons/tick.png</pixmap>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QRadioButton" name="radioButton" >
      <property name="text" >
       <string>auto apply</string>
@@ -131,7 +109,6 @@
    </item>
   </layout>
  </widget>
- <pixmapfunction></pixmapfunction>
  <resources>
   <include location="QtAutoGui.qrc" />
  </resources>

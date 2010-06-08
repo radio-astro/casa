@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string CalFocusModelTable::tableName = "CalFocusModel";
-	
+	const vector<string> CalFocusModelTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -114,7 +115,6 @@ namespace asdm {
 /**
  * A destructor for CalFocusModelTable.
  */
- 
 	CalFocusModelTable::~CalFocusModelTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -134,13 +134,64 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string CalFocusModelTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> CalFocusModelTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaName");
+
+		attributesNames.push_back("receiverBand");
+
+		attributesNames.push_back("polarizationType");
+
+		attributesNames.push_back("calDataId");
+
+		attributesNames.push_back("calReductionId");
+
+
+		attributesNames.push_back("startValidTime");
+
+		attributesNames.push_back("endValidTime");
+
+		attributesNames.push_back("antennaMake");
+
+		attributesNames.push_back("numCoeff");
+
+		attributesNames.push_back("numSourceObs");
+
+		attributesNames.push_back("coeffName");
+
+		attributesNames.push_back("coeffFormula");
+
+		attributesNames.push_back("coeffValue");
+
+		attributesNames.push_back("coeffError");
+
+		attributesNames.push_back("coeffFixed");
+
+		attributesNames.push_back("focusModel");
+
+		attributesNames.push_back("focusRMS");
+
+		attributesNames.push_back("reducedChiSquared");
+
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& CalFocusModelTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -287,7 +338,7 @@ CalFocusModelRow* CalFocusModelTable::newRow(CalFocusModelRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;
 	}
 
@@ -331,7 +382,7 @@ CalFocusModelRow* CalFocusModelTable::newRow(CalFocusModelRow* row) {
 		
 		row.push_back(x);
 		privateRows.push_back(x);
-		x->isAdded();
+		x->isAdded(true);
 		return x;	
 	}	
 
@@ -485,7 +536,7 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/2/CalFocusModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/2/CalFocusModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -563,7 +614,7 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/2/CalFocusModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/2/CalFocusModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFocusModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -838,10 +889,10 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
 	}
 
 	
-	void CalFocusModelTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalFocusModel.xml")))
+	void CalFocusModelTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalFocusModel.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalFocusModel.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/CalFocusModel.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the CalFocusModel table", "CalFocusModel");

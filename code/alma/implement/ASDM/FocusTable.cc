@@ -65,7 +65,8 @@ using namespace asdm;
 namespace asdm {
 
 	string FocusTable::tableName = "Focus";
-	
+	const vector<string> FocusTable::attributesNames = initAttributesNames();
+		
 
 	/**
 	 * The list of field names that make up key key.
@@ -108,7 +109,6 @@ namespace asdm {
 /**
  * A destructor for FocusTable.
  */
- 
 	FocusTable::~FocusTable() {
 		for (unsigned int i = 0; i < privateRows.size(); i++) 
 			delete(privateRows.at(i));
@@ -128,13 +128,40 @@ namespace asdm {
 		return privateRows.size();
 	}
 	
-
 	/**
 	 * Return the name of this table.
 	 */
 	string FocusTable::getName() const {
 		return tableName;
 	}
+	
+	/**
+	 * Build the vector of attributes names.
+	 */
+	vector<string> FocusTable::initAttributesNames() {
+		vector<string> attributesNames;
+
+		attributesNames.push_back("antennaId");
+
+		attributesNames.push_back("timeInterval");
+
+
+		attributesNames.push_back("focusTracking");
+
+		attributesNames.push_back("focusOffset");
+
+		attributesNames.push_back("focusModelId");
+
+
+		attributesNames.push_back("measuredFocusPosition");
+
+		return attributesNames;
+	}
+	
+	/**
+	 * Return the names of the attributes.
+	 */
+	const vector<string>& FocusTable::getAttributesNames() { return attributesNames; }
 
 	/**
 	 * Return this table's Entity.
@@ -433,7 +460,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -511,7 +538,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss << "<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FocusTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -750,10 +777,10 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 	}
 
 	
-	void FocusTable::setFromFile(const string& directory) {
-    if (boost::filesystem::exists(boost::filesystem::path(directory + "/Focus.xml")))
+	void FocusTable::setFromFile(const string& directory) {		
+    if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Focus.xml"))))
       setFromXMLFile(directory);
-    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/Focus.bin")))
+    else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(directory + "/Focus.bin"))))
       setFromMIMEFile(directory);
     else
       throw ConversionException("No file found for the Focus table", "Focus");
@@ -842,7 +869,7 @@ void FocusTable::setFromXMLFile(const string& directory) {
     	if (row.size() == 0) {
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -858,7 +885,7 @@ void FocusTable::setFromXMLFile(const string& directory) {
     			last->timeInterval.setDuration(start - last->timeInterval.getStart());
     		row.push_back(x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -874,7 +901,7 @@ void FocusTable::setFromXMLFile(const string& directory) {
     			x->timeInterval.setDuration(first->timeInterval.getStart() - start);
     		row.insert(row.begin(), x);
     		privateRows.push_back(x);
-    		x->isAdded();
+    		x->isAdded(true);
     		return x;
     	}
     	
@@ -903,12 +930,25 @@ void FocusTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
-	
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "FocusTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "FocusTable");	
+		}	
+
 		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
 		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
-   		x->isAdded();
+   		x->isAdded(true);
 		return x;   
     } 
     	

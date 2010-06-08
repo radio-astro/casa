@@ -144,7 +144,7 @@ class CalDelayRow;
  * Result of delay offset calibration performed on-line by  TelCal. This calibration determines the delay offsets to be added in the  correlator to compensate for residual cable delays.   Delays are entered in seconds but represented as double precision floating point numbers.
  * <BR>
  
- * Generated from model's revision "1.53", branch "HEAD"
+ * Generated from model's revision "1.54", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDelay </CAPTION>
@@ -351,6 +351,13 @@ public:
 	 * @return the name of this table in a string.
 	 */
 	string getName() const;
+	
+	/**
+	 * Return the names of the attributes of this table.
+	 *
+	 * @return a vector of string
+	 */
+	 static const vector<string>& getAttributesNames();
 
 	/**
 	 * Return this table's Entity.
@@ -580,6 +587,16 @@ private:
 	 * The name of this table.
 	 */
 	static string tableName;
+	
+	/**
+	 * The attributes names.
+	 */
+	static const vector<string> attributesNames;
+	
+	/**
+	 * A method to fill attributesNames;
+	 */
+	static vector<string> initAttributesNames();
 
 
 	/**

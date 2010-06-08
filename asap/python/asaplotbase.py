@@ -569,7 +569,8 @@ class asaplotbase:
         if redraw: self.show(hardrefresh=False)
 
 
-    def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, ganged=True):
+    #def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, ganged=True):
+    def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, layout=None,ganged=True):
         """
         Set the panel layout.
 
@@ -592,6 +593,12 @@ class asaplotbase:
             self.figure.clear()
             self.set_title()
 
+        if layout:
+            lef, bot, rig, top, wsp, hsp = layout
+            self.figure.subplots_adjust(
+                left=lef,bottom=bot,right=rig,top=top,wspace=wsp,hspace=hsp)
+            del lef,bot,rig,top,wsp,hsp
+
         if rows < 1: rows = 1
 
         if cols <= 0:
@@ -604,6 +611,7 @@ class asaplotbase:
 
         if 0 <= n < rows*cols:
             i = len(self.subplots)
+
             self.subplots.append({})
 
             self.subplots[i]['axes']  = self.figure.add_subplot(rows,
@@ -665,6 +673,7 @@ class asaplotbase:
                 self.rows = rows
                 self.cols = cols
             self.subplot(0)
+        del rows,cols,n,nplots,layout,ganged,i
 
     def tidy(self):
         # this needs to be exceuted after the first "refresh"
@@ -726,8 +735,10 @@ class asaplotbase:
             yts = fp.get_size_in_points() - (self.rows)/2
             for sp in self.subplots:
                 ax = sp['axes']
-                s = ax.title.get_size()
-                tsize = s-(self.cols+self.rows)
+                #s = ax.title.get_size()
+                #tsize = s-(self.cols+self.rows)
+                s=FP(size=rcParams['axes.titlesize'])
+                tsize = s.get_size_in_points()-(self.cols)/2
                 ax.title.set_size(tsize)
                 fp = FP(size=rcParams['axes.labelsize'])
                 setp(ax.get_xticklabels(), fontsize=xts)

@@ -65,9 +65,13 @@ namespace asdm {
 	SBSummaryTable &SBSummaryRow::getTable() const {
 		return table;
 	}
-	
-	void SBSummaryRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SBSummaryRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SBSummaryRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

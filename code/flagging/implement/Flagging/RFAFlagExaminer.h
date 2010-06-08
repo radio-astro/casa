@@ -77,8 +77,8 @@ public:
   virtual void endChunk();
 
 
-  virtual void startData(){RFAFlagCubeBase::startData();return;};
-  virtual void startFlag();
+  virtual void startData(bool verbose){RFAFlagCubeBase::startData(verbose);return;};
+  virtual void startFlag(bool verbose);
   virtual void endFlag();
   virtual void finalize();
   virtual void initialize();

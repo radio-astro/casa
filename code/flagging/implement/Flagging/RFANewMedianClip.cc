@@ -134,12 +134,12 @@ void RFANewMedianClip::endChunk ()
 
 // startData
 // create new median sliders at start of data pass
-void RFANewMedianClip::startData ()
+void RFANewMedianClip::startData (bool verbose)
 {
   //new added
   evalue.reset(False,True);
 
-  RFAFlagCubeBase::startData();
+  RFAFlagCubeBase::startData(verbose);
   flag_iter.reset();
 
   pflagiter = &flag.iterator();
@@ -214,10 +214,10 @@ RFA::IterMode RFANewMedianClip::endData ()
 }
 
 
-void RFANewMedianClip::startDry ()
+void RFANewMedianClip::startDry (bool verbose)
 {
   if(!stdeved) 
-    RFAFlagCubeBase::startDry();
+    RFAFlagCubeBase::startDry(verbose);
   // reset lattices to read-only
   evalue.reset(True,False);
   pflagiter = &flag.iterator();

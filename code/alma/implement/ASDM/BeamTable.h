@@ -86,7 +86,7 @@ class BeamRow;
  * At the present time, this table is not defined.  This table would  be needed for the observing system to write suitable primary beam maps in  all data sets. It is not clear that this table is really needed.  Data  reduction software may well access available archived beam measurements  (e.g. CalBeam tables) for accurate deconvolution.
  * <BR>
  
- * Generated from model's revision "1.53", branch "HEAD"
+ * Generated from model's revision "1.54", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Beam </CAPTION>
@@ -144,6 +144,13 @@ public:
 	 * @return the name of this table in a string.
 	 */
 	string getName() const;
+	
+	/**
+	 * Return the names of the attributes of this table.
+	 *
+	 * @return a vector of string
+	 */
+	 static const vector<string>& getAttributesNames();
 
 	/**
 	 * Return this table's Entity.
@@ -291,6 +298,16 @@ private:
 	 * The name of this table.
 	 */
 	static string tableName;
+	
+	/**
+	 * The attributes names.
+	 */
+	static const vector<string> attributesNames;
+	
+	/**
+	 * A method to fill attributesNames;
+	 */
+	static vector<string> initAttributesNames();
 
 
 	/**

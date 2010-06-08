@@ -65,9 +65,13 @@ namespace asdm {
 	CalDataTable &CalDataRow::getTable() const {
 		return table;
 	}
-	
-	void CalDataRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalDataRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalDataRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

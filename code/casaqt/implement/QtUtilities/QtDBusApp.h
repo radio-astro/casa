@@ -45,11 +45,23 @@ namespace casa {
 	    const QString &dbusObjectName( const QString &name="" );
 	    static bool serviceIsAvailable(const QString &service);
 	    static bool serviceIsAvailable(const std::string &service);
-	    virtual const QString &getName( ) const = 0;
+
+	    virtual QString dbusName( ) const = 0;
+	    static QString generateServiceName( const QString &name, const pid_t pid );
+
+
 	    QtDBusApp( );
 	    virtual ~QtDBusApp( );
 
+	    // Connects to the DBus server using the name provided (if non-null). Otherwise, the
+	    // dbusName() method with the current process ID is used.  Returns a boolean which
+	    // indicates whether the connection succeeded or not.
+	    virtual bool connectToDBus( const QString &dbus_name="" ) = 0;
+
 	protected:
+
+	    bool connectToDBus( QObject *object,  const QString &dbus_name="" );
+
 	    // returns a new "id" to be used for things such as data, widget,
 	    // or object handles on both ends of the dbus connection...
 	    virtual int get_id( );

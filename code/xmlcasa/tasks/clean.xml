@@ -229,13 +229,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="any" name="start" subparam="true">
-	    <description>First channel to use</description>
+	    <description>start of output spectral dimension</description>
 	    <any type="variant"/>
 	    <value type="int">0</value>
     </param>
 <!--========================================================= -->
     <param type="any" name="width" subparam="true">
-	    <description>Number of input channels to average</description>
+	    <description>width of output spectral channels</description>
 	    <any type="variant"/>
 	    <value type="int">1</value>
     </param>
@@ -472,7 +472,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="width"><value>1</value>
                   <description>Width of output channel relative to MS channel (# to average)</description>
 		</default>
-		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="interpolation"><value type="string">linear</value></default>
+		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>
 	      </equals>
@@ -484,7 +485,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="width"><value type="string"></value>
 		  <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
 		</default>
-		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="interpolation"><value type="string">linear</value></default>
+		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value>
 		  <description>Velocity reference frame of output image; \'\' =input</description>
                 </default>
@@ -500,7 +502,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="width"><value type="string"></value>
 		  <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
 		</default>
-		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="interpolation"><value type="string">linear</value></default>
+		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>
 	      </equals>
@@ -539,7 +542,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 		      <default param="npercycle"><value>100</value></default>
-                      <default param="chaniter"><value type='bool'>False</value></default>
+			  <!--                      <default param="chaniter"><value type='bool'>False</value></default>
+			  -->
 	        </equals>
             </when>
 	    <when param="imagermode">
@@ -662,13 +666,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                  spw='0:5~61'; spw 0, channels 5 to 61
                  spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
+                 spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
+				    channels 3 to 45.
+                 spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
                  <!-- COMMENTED OUT UNTIL PROPER PARSING OF CHANNEL SELECTION
                  IS IMPLEMENTED -->
-				 <!--need to  check if these work--> 
-                 <!--spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
-				   channels 3 to 45.
-                 spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-				 -->
 			     <!-- multiple ranges do not work for 3.0.1
                  spw='0:0~10;15~60'; spectral window 0 with channels 
 				    0-10,15-60
@@ -743,14 +745,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
                nchan -- Total number of channels in the output image.
-                 default: -1; all channels, all spws. Example: nchan=100. It 
-                 is often easiest to leave nchan at the default value. 
-                 Note, with the default if there is overlap in the spws, you 
-                 may get some extra channels filled with zeros at the end.  
-                 Channels de-selected with spw parameter will be filled with 
-                 zeros if selected here.
+                 Example: nchan=100. 
+                 Default: -1; Automatically selects enough channels to cover 
+                 data selected by 'spw' and consistent with 'start' and 'width'. 
+	         It is often easiest to leave nchan at the default value. 
                start -- First channel, velocity, or frequency. 
-                 For mode='channel'; default=0; e.g. the first input channel; 
+                 For mode='channel'; This selects the channel index number 
+                 from the MS (0 based) that you want to correspond to the first 
+                 channel of the output cube. The output cube will be in frequency 
+                 space with the first channel having the frequency of the
+                 MS channel selected by start.  start=0 refers to the first 
+                 channel in the first selected spw, even if that channel 
+                 is de-selected in the spw parameter. Channels de-selected by 
+                 the spw parameter will be filled with zeros if included by
+                 the start parameter. For example, spw=3~8:3~100 and start=2
+                 will produce a cube that starts on the third channel (recall 0
+                 based) of spw index 3, and the first channel will be blank.
                  example:start=5
                  For mode='velocity' or 'frequency': default=''; 
                  starts at first input channel of first input spw
@@ -770,7 +780,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  mode='frequency', and increasing velocity for mode='velocity'. 
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
-                 default = 'nearest'  HOWEVER, 'linear' is generally recommended
+                 default = 'linear'
+               chaniter -- specify how spectral CLEAN is performed, 
+                 default: chaniter=False;
+                 example: chaniter=True; step through channels 
+                  WARNING: The interactive clean with chaniter=True for
+                    optical velocity mode
+                    (mode='velocity' and veltype='optical') is
+                    NOT YET IMPLEMENTED.
                outframe -- For mode='velocity', 'frequency', or 'channel':  velocity
                  reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
@@ -969,13 +986,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  this number interactively during the cleaning, starting with
                  a low number like 20, but then increasing as more extended
                  emission is encountered.
-               chaniter -- specify how interactive CLEAN is performed, 
-                 default: chaniter=False;
-                 example: chaniter=True; step through channels 
-                  WARNING: The interactive clean with chaniter=True for
-                    optical velocity mode
-                    (mode='velocity' and veltype='optical') is
-                    NOT YET IMPLEMENTED.
 
        mask -- Specification of cleanbox(es), mask image(s), and/or
                region(s) to be used for CLEANing. As long as the image has

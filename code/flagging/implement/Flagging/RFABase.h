@@ -101,13 +101,13 @@ public:
   virtual void endChunk () {}
   
 // Called before starting a data pass on a chunk. 
-  virtual void startData () {};
+  virtual void startData (bool verbose) {};
 
 // Called before starting a dry pass on a chunk. 
-  virtual void startDry  () {};
+  virtual void startDry  (bool verbose) {};
 
 // Called before starting the fetch-flags pass.
-  virtual void startFlag () {};
+  virtual void startFlag (bool verbose) {};
 
 // Called after a pass is completed successfully (i.e., not stopped
 // by start or iter methods). Return value: STOP to stop, DATA for 

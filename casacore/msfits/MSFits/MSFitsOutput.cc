@@ -34,6 +34,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Containers/RecordDesc.h>
 #include <casa/Containers/RecordField.h>
+#include <casa/OS/Time.h>
 #include <fits/FITS/hdu.h>
 #include <fits/FITS/fitsio.h>
 #include <fits/FITS/FITSTable.h>
@@ -94,7 +95,8 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
 				 Bool asMultiSource,
 				 Bool combineSpw,			       
 				 Bool writeStation,
-                                 Double sensitivity)
+                                 Double sensitivity,
+                                 const Bool padWithFlags)
 {
   LogIO os(LogOrigin("MSFitsOutput", "writeFitsFile"));
   const uInt nrow = ms.nrow();
@@ -150,7 +152,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     std::set<Int> allIDs;
     for (uInt i = 0; i < ddidcol.nelements(); i++) {
       Int ddid = ddidcol(i);
-      if (ddid < spwidcol.nelements()) {
+      if (static_cast<uInt>(ddid) < spwidcol.nelements()) {
         Int spwid = spwidcol(ddid);
         
         allIDs.insert(spwid);
@@ -198,7 +200,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
 				     outfile, ms, column,
 				     spwidMap, nrspw, startchan, nchan, 
 				     stepchan, fieldidMap,
-				     asMultiSource, combineSpw);
+				     asMultiSource, combineSpw, padWithFlags);
 
   Bool ok = (fitsOutput != 0);
   if (!ok) {
@@ -275,6 +277,33 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
   return ok;
 }
 
+uInt MSFitsOutput::get_tbf_end(const uInt rownr, const uInt nrow, const uInt nif, 
+                               const ROScalarColumn<Double>& intimec,
+                               const ROScalarColumn<Double>& timewidthcol,
+                               const ROScalarColumn<Int>& inant1,
+                               const ROScalarColumn<Int>& inant2,
+                               const Bool asMultiSource,
+                               const ROScalarColumn<Int>& infieldid)
+{
+  const Double maxTime = intimec(rownr) + 0.2 * timewidthcol(rownr);
+  const Int startant1 = inant1(rownr);
+  const Int startant2 = inant2(rownr);
+
+  Int startfld = 0;  
+  if(asMultiSource)
+    startfld = infieldid(rownr);
+  
+  uInt tbfend = rownr;
+  for(uInt currrow = rownr + 1; currrow - rownr < nif && currrow < nrow; ++currrow){
+    if(intimec(currrow) <= maxTime &&
+       inant1(currrow) == startant1 && inant2(currrow) == startant2 &&
+       (!asMultiSource || infieldid(currrow) == startfld))
+      tbfend = currrow;
+    else
+      break;
+  }
+  return tbfend;
+}
 
 FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 				    Double& chanbw,
@@ -286,7 +315,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 				    Int chanstep,
 				    const Block<Int>& fieldidMap,
 				    Bool asMultiSource,
-				    Bool combineSpw)
+				    const Bool combineSpw,
+                                    Bool padWithFlags)
 {
   FitsOutput *outfile = 0;
   LogIO os(LogOrigin("MSFitsOutput", "writeMain"));
@@ -757,25 +787,202 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
   // Similarly, record the sort order (the following didn't work....)
   //  ek.define("history aips sort order", "TB");
 
+  Bool deleteIptr;
+  Matrix<Complex> indatatmp(IPosition(2, numcorr0, numchan0));
+  const Complex *iptr = indatatmp.getStorage(deleteIptr);
 
-  // Check that an integral number of SPWs fit in the MS.
+  Bool deleteWtPtr;
+  Matrix<Float> inwttmp(numcorr0, numchan0);
+  const Float *wptr = inwttmp.getStorage(deleteWtPtr);
+
+  Bool deleteFlagPtr;
+  Matrix<Bool> inflagtmp(IPosition(2, numcorr0, numchan0));
+  const Bool *fptr = inflagtmp.getStorage(deleteFlagPtr);
+
+  Bool deleteIndPtr;
+  const uInt *indptr = stokesIndex.getStorage(deleteIndPtr);
+
+  // Do we need to check units? I think the MS rules are that units cannot
+  // be changed.
+
+  Vector<Double> uvw(3);
+  Int day;
+  Double dayFraction;
+
+  const Double oneOverC = 1.0 / C::c;
+
+  // Sort the table in order of TIME, ANTENNA1, ANTENNA2, FIELDID, SPWID.
+  // Iterate through the table on the first 4 fields.
+  Block<String> sortNames(combineSpw ? 4 : 5);
+  sortNames[0] = MS::columnName(MS::TIME_CENTROID);
+  sortNames[1] = MS::columnName(MS::ANTENNA1);
+  sortNames[2] = MS::columnName(MS::ANTENNA2);
+  sortNames[3] = MS::columnName(MS::FIELD_ID);
+  Vector<uInt> sortIndex;
+  if(combineSpw)                   // combineSpw will do its own
+    sortIndex.resize(nrow);        // DATA_DESC_ID sorting.
+  else
+    sortNames[4] = MS::columnName(MS::DATA_DESC_ID);
+  Table sortTable = rawms.sort (sortNames);
+
+  // Make objects for the various columns.
+  ROArrayColumn<Complex> indata(sortTable, columnName);
+  ROArrayColumn<Float> inweightscalar(sortTable, 
+				      MS::columnName(MS::WEIGHT));
+  ROArrayColumn<Float> inweightarray;
+  if (hasWeightArray) {
+    inweightarray.attach(sortTable, MS::columnName(MS::WEIGHT_SPECTRUM));
+  }
+  ROScalarColumn<Bool> inrowflag(sortTable, MS::columnName(MS::FLAG_ROW));
+  ROArrayColumn<Bool> indataflag(sortTable, MS::columnName(MS::FLAG));
+  ROArrayColumn<Double> inuvw(sortTable, MS::columnName(MS::UVW));
+  ROScalarColumn<Double> intimec(sortTable, MS::columnName(MS::TIME_CENTROID));
+  ROScalarColumn<Int> inant1(sortTable, MS::columnName(MS::ANTENNA1));
+  ROScalarColumn<Int> inant2(sortTable, MS::columnName(MS::ANTENNA2));
+  ROScalarColumn<Int> inarray(sortTable, MS::columnName(MS::ARRAY_ID));
+  ROScalarColumn<Int> inspwinid(sortTable,
+				MS::columnName(MS::DATA_DESC_ID));
+
+  ROScalarColumn<Double> inexposure;
+  ROScalarColumn<Int> infieldid;
+  if (asMultiSource) {
+    infieldid.attach (sortTable, MS::columnName(MS::FIELD_ID));
+    // Why is exposure only done for multisource files?
+    inexposure.attach (sortTable, MS::columnName(MS::EXPOSURE));
+  }
+
   uInt nif = 1;
-  if (combineSpw) {
+  if(combineSpw)
     nif = nrspw;
-    if (nrow%nif != 0) {
-      os << LogIO::SEVERE << "The number of rows per spectral-window varies;"
-	" cannot combine spectral windows"
-	 << LogIO::POST;
-      return 0;
+  if(nif < 2)
+    padWithFlags = false;
+
+  ROScalarColumn<Double> ininterval;
+  if(padWithFlags)
+    ininterval.attach(sortTable, MS::columnName(MS::INTERVAL));
+
+  // (another) check whether the SPWs naturally fit the IF paradigm.  Do this
+  // before creating the writer so that a partial UVFITS file isn't left on
+  // disk if this exits.
+  Vector<Int> expectedDDIDs;
+
+  uInt nOutRow = nrow;
+  Vector<uInt> tbfends;
+    
+  if (combineSpw){
+    // Prepare a list of the expected DDIDs as a function of rownr % nif.
+    // If inspwinid(rownr) != expectedDDIDs[rownr % nif], something has gone
+    // wrong (probably combinespw && multiple tunings, CAS-2048).
+    expectedDDIDs.resize(nif);
+    expectedDDIDs.set(0);      // Default, but would catching errors with -1 be better?
+
+    uInt ifnum = 0;
+    for(uInt i = 0; i < ndds; ++i){
+      if(i < spwidMap.nelements() && spwidMap[i] >= 0){
+        if(ifnum < nif){
+          expectedDDIDs[ifnum] = i;
+          ++ifnum;
+        }
+        else{
+          os << LogIO::WARN
+             << "spwidMap selects more spws than there are IFs.  Expect problems."
+             << LogIO::POST;
+        }
+      }
+    }
+
+    if (nif > 1) {             // Don't bother counting all the inspwinids
+      Vector<uInt> nperIF;     // unless there is > 1 kind.      
+      nperIF.resize(nif);
+      nperIF.set(0);
+
+      tbfends.resize(nrow);
+
+      uInt rownr = 0;
+      while(rownr < nrow){
+        uInt tbfend = rownr + nif - 1;
+        
+        if(padWithFlags){          
+          tbfend = get_tbf_end(rownr, nrow, nif, intimec,
+                               asMultiSource ? inexposure : ininterval,
+                               inant1, inant2,
+                               asMultiSource, infieldid);
+          nOutRow += nif - (tbfend + 1 - rownr); // Increment by # of padded rows.
+        }
+        else if(tbfend >= nrow)
+          tbfend = nrow - 1;
+        
+        Vector<Int>  miniDDIDs;
+        Vector<uInt> miniSort;
+        uInt nrowsThisTBF = tbfend + 1 - rownr;
+        
+        miniDDIDs.resize(nrowsThisTBF);
+        miniSort.resize(nrowsThisTBF);
+        for(uInt rowInTBF = 0; rowInTBF < nrowsThisTBF; ++rowInTBF){
+          miniDDIDs[rowInTBF] = spwidMap[inspwinid(rownr + rowInTBF)];
+          ++nperIF[miniDDIDs[rowInTBF]];
+        }
+        GenSortIndirect<Int>::sort(miniSort, miniDDIDs);
+        for(uInt rowInTBF = 0; rowInTBF < nrowsThisTBF; ++rowInTBF){
+          sortIndex[rownr] = rownr + miniSort[rowInTBF] - rowInTBF;
+          tbfends[rownr] = tbfend;
+          ++rownr;
+        }
+      }
+      os << LogIO::DEBUG1 << "rownr         = " << rownr << LogIO::POST;
+      os << LogIO::DEBUG1 << "nrow          = " << nrow << LogIO::POST;
+      os << LogIO::DEBUG1 << "nOutRow * nif = " << nOutRow << LogIO::POST;
+      
+      if(nOutRow % nif){
+        os << LogIO::SEVERE
+           << "The expected # of output rows, " << nOutRow
+           << " is not a multiple of the number of IFs, " << nif << ".\n"
+           << "Expect problems."
+           << LogIO::POST;
+        // Commented out for now.
+        // return 0;
+      }
+      nOutRow /= nif;
+      
+      if(!padWithFlags){
+        Bool haveProblem = false;
+        for(uInt m = 1; m < nif; ++m){
+          if(nperIF[m] != nperIF[0]){
+            haveProblem = true;
+            break;
+          }
+        }
+      
+        if(haveProblem){
+          os << LogIO::SEVERE
+             << "The number of rows per spectral window varies:\n"
+             << " Output SpW   # of rows\n";
+          for(uInt m = 0; m < nif; ++m)
+            os << "    " << m << "       " << nperIF[m] << "\n";
+          os << " the spectral windows cannot be combined without padwithflags."
+             << LogIO::POST;
+          return 0;
+        }
+      }
+      else{
+        os << LogIO::NORMAL
+           << outFITSFile << " will be "
+           << 100.0 * (1.0 - nrow / static_cast<Float>(nOutRow * nif))
+           << "% padded by flags to fit into IFs."
+           << LogIO::POST;
+      }
     }
   }
 
-  // Finally, make the writer
-  FITSGroupWriter writer(outFITSFile, desc, nrow/nif, ek, False);
+  // Finally, make the writer.  If it breaks past this point, the user gets to
+  // look at the pieces.
+  FITSGroupWriter writer(outFITSFile, desc, nOutRow, ek, False);
   outfile = writer.writer();
 
   // DATA - out
   RecordFieldPtr< Array<Float> > odata(writer.row(), "data");
+  Bool deleteOptr;
+  Float *optr = (*odata).getStorage(deleteOptr);
 
   os << LogIO::DEBUG1 << "output data shape = " 
      << writer.row().asArrayFloat(writer.row().fieldNumber("data")).shape() << " "
@@ -797,68 +1004,6 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     ointtim = RecordFieldPtr<Float> (writer.row(), "inttim");
   }
 
-  Bool deleteIptr;
-  Matrix<Complex> indatatmp(IPosition(2, numcorr0, numchan0));
-  const Complex *iptr = indatatmp.getStorage(deleteIptr);
-
-  Bool deleteWtPtr;
-  Matrix<Float> inwttmp(numcorr0, numchan0);
-  const Float *wptr = inwttmp.getStorage(deleteWtPtr);
-
-  Bool deleteFlagPtr;
-  Matrix<Bool> inflagtmp(IPosition(2, numcorr0, numchan0));
-  const Bool *fptr = inflagtmp.getStorage(deleteFlagPtr);
-
-  Bool deleteOptr;
-  Float *optr = (*odata).getStorage(deleteOptr);
-
-  Bool deleteIndPtr;
-  const uInt *indptr = stokesIndex.getStorage(deleteIndPtr);
-
-  // Do we need to check units? I think the MS rules are that units cannot
-  // be changed.
-
-  Vector<Double> uvw(3);
-  Int day;
-  Double dayFraction;
-
-  const Double oneOverC = 1.0 / C::c;
-
-  // Sort the table in order of TIME, ANTENNA1, ANTENNA2, FIELDID, SPWID.
-  // Iterate through the table on the first 4 fields.
-  Block<String> sortNames(5);
-  sortNames[0] = MS::columnName(MS::TIME);
-  sortNames[1] = MS::columnName(MS::ANTENNA1);
-  sortNames[2] = MS::columnName(MS::ANTENNA2);
-  sortNames[3] = MS::columnName(MS::FIELD_ID);
-  sortNames[4] = MS::columnName(MS::DATA_DESC_ID);
-  Table sortTable = rawms.sort (sortNames);
-
-  // Make objects for the various columns.
-  ROArrayColumn<Complex> indata(sortTable, columnName);
-  ROArrayColumn<Float> inweightscalar(sortTable, 
-				      MS::columnName(MS::WEIGHT));
-  ROArrayColumn<Float> inweightarray;
-  if (hasWeightArray) {
-    inweightarray.attach(sortTable, MS::columnName(MS::WEIGHT_SPECTRUM));
-  }
-  ROScalarColumn<Bool> inrowflag(sortTable, MS::columnName(MS::FLAG_ROW));
-  ROArrayColumn<Bool> indataflag(sortTable, MS::columnName(MS::FLAG));
-  ROArrayColumn<Double> inuvw(sortTable, MS::columnName(MS::UVW));
-  ROScalarColumn<Double> intime(sortTable, MS::columnName(MS::TIME));
-  ROScalarColumn<Int> inant1(sortTable, MS::columnName(MS::ANTENNA1));
-  ROScalarColumn<Int> inant2(sortTable, MS::columnName(MS::ANTENNA2));
-  ROScalarColumn<Int> inarray(sortTable, MS::columnName(MS::ARRAY_ID));
-  ROScalarColumn<Int> inspwinid(sortTable,
-				MS::columnName(MS::DATA_DESC_ID));
-  ROScalarColumn<Int> infieldid;
-  ROScalarColumn<Double> inexposure;
-  if (asMultiSource) {
-    infieldid.attach (sortTable, MS::columnName(MS::FIELD_ID));
-    // Why is exposure only done for multisource files?
-    inexposure.attach (sortTable, MS::columnName(MS::EXPOSURE));
-  }
-
   // Check if first cell has a WEIGHT of correct shape.
   if (hasWeightArray) {
     IPosition shp = inweightarray.shape(0);
@@ -869,90 +1014,127 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     }
   }
 
-  Vector<Int> expectedDDIDs;
-  if(combineSpw){
-    // Prepare a list of the expected DDIDs as a function of rownr % nif.
-    // If inspwinid(rownr) != expectedDDIDs[rownr % nif], something has gone
-    // wrong (probably combinespw && multiple tunings, CAS-2048).
-    expectedDDIDs.resize(nif);
-    for(uInt i = 0; i < nif; ++i)
-      expectedDDIDs[i] = inspwinid(i);
-  }
-
   Vector<Int> antnumbers;
   handleAntNumbers(rawms,antnumbers);
 
   // Loop through all rows.
-  ProgressMeter meter(0.0, nrow*1.0, "UVFITS Writer", "Rows copied", "", "",
-		      True, nrow/100);
+  ProgressMeter meter(0.0, nOutRow*1.0, "UVFITS Writer", "Rows copied", "", "",
+		      True, nOutRow/100);
 
-  Int rownr = -1;
-  Double lasttime(0.0);
-  for (i=0; i<nrow; i+=nif) {
+  uInt tbfrownr = 0;  // Input row # of (time, baseline, field).
+  uInt outrownr = 0;  // Output row #.
+  
+  //Double lasttime(0.0);
+  Vector<Float> realcorr(numcorr0);
+  Vector<Float> imagcorr(numcorr0);
+  Vector<Float> wgtaver(numcorr0);
+  Int old_nspws_found = -1;             // Just for debugging curiosity.
+  while(tbfrownr < nrow){
+    if(outrownr >= nOutRow){      // Shouldn't happen, but just in case...
+      os << LogIO::WARN
+         << "The loop over output rows failed to stop when expected...stopping it now."
+         << LogIO::POST;
+      break;
+    }
 
     // Will only write a record if some non-flagged data found
     //    Bool dowrite(True);   // temporarily disable, because FITSGroupWriter chokes
 
-    meter.update((rownr+1)*1.0);
     Float* outptr = optr;           // reset for each spectral-window
-    for (uInt m=0; m<nif; m++) {
-      rownr++;
 
-      if(combineSpw && inspwinid(rownr) != expectedDDIDs[rownr % nif]){
-        os << LogIO::SEVERE
-           << "A DATA_DESC_ID appeared out of the expected order."
-           << LogIO::POST;
-        os << LogIO::SEVERE
-           << "MSes with multiple tunings (i.e. spw varies with time) cannot be"
-           << LogIO::POST;
-        os << LogIO::SEVERE
-           << "exported with combinespw.  Export each tuning separately."
-           << LogIO::POST;
-        return 0;
-      }
-      
-      // DATA matrix
-      indata.get(rownr, indatatmp);
-      // FLAG_ROW
-      Bool rowFlag = inrowflag(rownr);
-      // FLAG
-      indataflag.get(rownr, inflagtmp);
-      // WEIGHT_SPECTRUM (defaults to WEIGHT)
-      Bool getwt = True;
-      if (hasWeightArray) {
-	IPosition shp = inweightarray.shape(rownr);
-	if (shp.isEqual(inwttmp.shape())) {
-	  inweightarray.get(rownr, inwttmp);
-	  getwt = False;
-	}
-      }
-      if (getwt) {
-	const Vector<Float> wght = inweightscalar(rownr);
-	for (Int p = 0; p < numcorr0; p++) {
-	  inwttmp.row(p) = wght(p);
-	}
-      }
+    // Loop over the IFs, whether or not the corresponding spws are present for
+    // this (time, baseline, field).
+    // rownr should only be used inside this loop; use tbfrownr outside.
+    uInt rawrownr = tbfrownr;     // Essentially tbfrownr + m - # of missing spws
+                                  // so far.
+    uInt rownr = rawrownr;
+    uInt tbfend = tbfrownr + nif - 1;
+    if(combineSpw && nif > 1){
+      tbfend = tbfends[rownr];
+      rownr = sortIndex[rawrownr];
+    }
 
-      /*
-      Double rtime(86400.0*floor(intime(0)/86400.0));
-      cout << "rtime = " << rtime << " " << "nrows = " << intime.nrow() << endl;
-      cout << "time = " << intime(rownr)-rtime;
-      if (intime(rownr)!=lasttime)
-	cout << " ***NEW*** ";
-      cout << endl;
-      */
-      lasttime=intime(rownr);
+    for(uInt m = 0; m < nif; ++m){
+      Bool rowFlag;           // FLAG_ROW
+
+      if(combineSpw && (rownr >= nrow // flag remaining IFs in tbfrownr
+                        || inspwinid(rownr) != expectedDDIDs[m])){
+        if(padWithFlags){
+          // Save this row for the next one, and fill in with flagged junk.
+          
+          indatatmp.set(0.0);   // DATA matrix
+          //indata.get(rownr, indatatmp);   // DATA matrix
+          rowFlag = true;
+          inflagtmp.set(true);
+          inwttmp.set(0.0);
+          // Don't update lasttime.
+        }
+        else{
+          os << LogIO::SEVERE
+             << "A DATA_DESC_ID appeared out of the expected order.\n"
+             << "MSes with multiple tunings (i.e. spw varies with time) cannot"
+             << "\nbe exported with combinespw.  Export each tuning separately."
+             << LogIO::POST;
+          return 0;
+        }        
+      }
+      else{  // The spw is present, use it.
+        if(rownr >= nrow){      // Shouldn't happen, but just in case...
+          os << LogIO::WARN
+             << "The loop over input rows failed to stop when expected...stopping it now."
+             << LogIO::POST;
+          break;
+        }
+
+        indata.get(rownr, indatatmp);   // DATA matrix
+        rowFlag = inrowflag(rownr);
+        indataflag.get(rownr, inflagtmp);      // FLAG
+
+        // WEIGHT_SPECTRUM (defaults to WEIGHT)
+        Bool getwt = True;
+        if (hasWeightArray) {
+          IPosition shp = inweightarray.shape(rownr);
+          if (shp.isEqual(inwttmp.shape())) {
+            inweightarray.get(rownr, inwttmp);
+            getwt = False;
+          }
+        }
+        if (getwt) {
+          const Vector<Float> wght = inweightscalar(rownr);
+          for (Int p = 0; p < numcorr0; p++) {
+            inwttmp.row(p) = wght(p);
+          }
+        }
+        /*
+          Double rtime(86400.0*floor(intimec(0)/86400.0));
+          cout << "rtime = " << rtime << " " << "nrows = " << intimec.nrow()
+               << endl;
+          cout << "time = " << intimec(rownr)-rtime;
+          if (intimec(rownr)!=lasttime)
+            cout << " ***NEW*** ";
+          cout << endl;
+        */
+        // lasttime = intimec(rownr);
+
+        if(!padWithFlags || rawrownr <= tbfend){
+          ++rawrownr;  // register that the spw was present.
+          if(combineSpw && nif > 1)
+            rownr = sortIndex[rawrownr];
+          else
+            rownr = rawrownr;
+        }
+      }
 
       // We should optimize this loop more, probably do frequency as
       // the inner loop?
-      Vector<Float> realcorr(numcorr0); realcorr.set(0);
-      Vector<Float> imagcorr(numcorr0); imagcorr.set(0);
-      Vector<Float> wgtaver(numcorr0);  wgtaver.set(0);
+      realcorr.set(0);
+      imagcorr.set(0);
+      wgtaver.set(0);
       Int chancounter=0;
       for (Int k=chanstart; k< (nchan*chanstep+chanstart); k++) {
 
   /*
-	cout << "row = " << rownr << " "
+	cout << "row = " << tbfrownr << " "
 	  //	<< outptr << " " << optr << " " << outptr-optr << " ";
 	     << "ddi = " << m << " (" << inspwinid(i) << ") "
 	     << "chan = " << k << " / "
@@ -972,9 +1154,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 	}
 	++chancounter;
 	for (Int j=0; j<numcorr0; j++) {
-	  
-	  
 	  Int offset = indptr[j] + k*numcorr0;
+
 	  if(!fptr[offset]){
 	    //	    dowrite=True;
 	    realcorr[j] += iptr[offset].real()*wptr[offset];
@@ -1000,49 +1181,110 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 	    }
 	    outptr += 3;
 	  }
-
 	}
-
       }
-    }
+
+      // if(nOutRow - outtbfrownr < 5)
+      //   os << LogIO::DEBUG1 << "(outtbfrownr, m) = (" << outtbfrownr
+      //      << ", " << m << ")" << LogIO::POST;
+
+    }   // Ends loop over IFs.
 
     // If found data at this timestamp, write it out
     //    if (dowrite) {
-      // Random parameters
-      // UU VV WW
-      inuvw.get(i, uvw);
-      *ouu = uvw(0) * oneOverC;
-      *ovv = uvw(1) * oneOverC;
-      *oww = uvw(2) * oneOverC;
+    // Random parameters
+    // UU VV WW
+    inuvw.get(tbfrownr, uvw);
+    *ouu = uvw(0) * oneOverC;
+    *ovv = uvw(1) * oneOverC;
+    *oww = uvw(2) * oneOverC;
       
-      // TIME
-      timeToDay(day, dayFraction, intime(i));
-      *odate1 = day;
-      *odate2 = dayFraction;
+    // TIME
+    timeToDay(day, dayFraction, intimec(tbfrownr));
+    *odate1 = day;
+    *odate2 = dayFraction;
       
-      // BASELINE
-      *obaseline = antnumbers(inant1(i))*256 + antnumbers(inant2(i)) + inarray(i)*0.01;
+    // BASELINE
+    *obaseline = antnumbers(inant1(tbfrownr))*256 + antnumbers(inant2(tbfrownr)) + inarray(tbfrownr)*0.01;
       
-      // FREQSEL (in the future it might be FREQ_GRP+1)
-      //    *ofreqsel = inddid(i) + 1;
-      if (combineSpw) {
-	*ofreqsel = 1;
-      } else {
-	*ofreqsel = 1 + spwidMap[inspwinid(i)];
-      }
+    // FREQSEL (in the future it might be FREQ_GRP+1)
+    //    *ofreqsel = inddid(i) + 1;
+    if (combineSpw) {
+      *ofreqsel = 1;
+    } else {
+      *ofreqsel = 1 + spwidMap[inspwinid(tbfrownr)];
+    }
       
-      // SOURCE
-      // INTTIM
-      if (asMultiSource) {
-	*osource = 1 + fieldidMap[infieldid(i)];
-	*ointtim = inexposure(i);
-      }
+    // SOURCE
+    // INTTIM
+    if (asMultiSource) {
+      *osource = 1 + fieldidMap[infieldid(tbfrownr)];
+      *ointtim = inexposure(tbfrownr);
+    }
       
-      writer.write();
+    writer.write();
+    ++outrownr;
+    meter.update(outrownr);
 
-      //    } // dowrite
+    // How many spws showed up for this (time_centroid, ant1, ant2, field)?
+    if(rawrownr == tbfrownr){
+      os << LogIO::WARN
+         << "No spectral windows were present for row # " << tbfrownr << "\n"
+         << " input (time_centroid, ant1, ant2, field) =\n"
+         << "  (" << intimec(tbfrownr) << ", " << inant1(tbfrownr) << ", "
+         << inant2(tbfrownr) << ", " << infieldid(tbfrownr) << ")"
+         << LogIO::POST;
+    }
+    else{
+      Int nspws_found = rawrownr - tbfrownr;  // Just for debugging curiosity.
+      
+      if(nspws_found != old_nspws_found){
+        old_nspws_found = nspws_found;
+        os << LogIO::DEBUG1 << "Beginning with row # " << tbfrownr << LogIO::POST;
+        os << LogIO::DEBUG1
+           << " input (time_centroid, ant1, ant2, field) =" << LogIO::POST;
 
+        // intimec is in modified julian day seconds, but Time::Time() takes
+        // julian days.
+        Double mjd_in_s = intimec(tbfrownr);
+        Time juldate(2400000.5 + mjd_in_s / 86400.0);
+        os << LogIO::DEBUG1
+           << "  (" << juldate.year() << "-";
+        if(juldate.month() < 10)
+          os << "0";
+        os << juldate.month() << "-";
+        if(juldate.dayOfMonth() < 10)
+          os << "0";
+        os << juldate.dayOfMonth() << "-";
+    
+        if(juldate.hours() < 10)               // Time stores things internally as days.
+          os << "0";                           // Do we really want to use it for sub-day units
+        os << juldate.hours() << ":";          // when we start with intimec in s?
+        if(juldate.minutes() < 10)
+          os << "0";
+        os << juldate.minutes() << ":";
+        mjd_in_s -= 60.0 * static_cast<Int>(mjd_in_s / 60.0);
+        os << mjd_in_s;
+        
+        os << ", " << inant1(tbfrownr) << ", "
+           << inant2(tbfrownr) << ", "
+          // infieldid is unattached and segfaultable if !asMultiSource.
+           << (asMultiSource ? infieldid(tbfrownr) : 0) << "):" << LogIO::POST;
+        os << LogIO::DEBUG1
+           << nspws_found << " spws present out of " << nif << " IFs."
+           << LogIO::POST;
+      }
+        
+      tbfrownr = rawrownr;  // Increment it by the # of spws found.
+    }
+    
+    //    } // dowrite
   }
+  os << LogIO::DEBUG1 << "tbfrownr = " << tbfrownr << LogIO::POST;
+  os << LogIO::DEBUG1 << "outrownr = " << outrownr << LogIO::POST;
+  os << LogIO::DEBUG1 << "nrow     = " << nrow << LogIO::POST;
+  os << LogIO::DEBUG1 << "nOutRow  = " << nOutRow << LogIO::POST;
+
   // changing chanbw to output one
   chanbw=bw0;
 
@@ -1284,6 +1526,9 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
 
     // Added Nov 2009, following AIPS addition
     header.define("FRAME",posref);                   // FRAME
+    os << LogIO::NORMAL                              // Requested by CAS-437.
+       << "Using " << posref << " frame for antenna positions."
+       << LogIO::POST;
 
 
     // NOT in going aips
@@ -2074,11 +2319,12 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
   RecordDesc desc;
   Record stringLengths; // no strings
   Record units;
-  desc.addField("TIME", TpFloat);
+  
+  desc.addField("TIME", TpDouble);
   units.define ("TIME", "DAYS");
-  desc.addField("TIME INTERVAL", TpFloat);
-  units.define ("TIME INTERVAL", "DAYS");
-  desc.addField("ANTENNA NO.", TpInt);
+  desc.addField("TIME_INTERVAL", TpFloat);
+  units.define ("TIME_INTERVAL", "DAYS");
+  desc.addField("ANTENNA_NO", TpInt);
   desc.addField("SUBARRAY", TpInt);
   desc.addField("TEMPERATURE", TpFloat);
   units.define ("TEMPERATURE", "CENTIGRADE");
@@ -2097,9 +2343,9 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
 
   FITSTableWriter writer(output, desc, stringLengths,
 			 nrow, header, units, False);
-  RecordFieldPtr<Float> time(writer.row(), "TIME");
-  RecordFieldPtr<Float> interval(writer.row(), "TIME INTERVAL");
-  RecordFieldPtr<Int> antenna(writer.row(), "ANTENNA NO.");
+  RecordFieldPtr<Double> time(writer.row(), "TIME");
+  RecordFieldPtr<Float> interval(writer.row(), "TIME_INTERVAL");
+  RecordFieldPtr<Int> antenna(writer.row(), "ANTENNA_NO");
   RecordFieldPtr<Int> arrayId(writer.row(), "SUBARRAY");
   RecordFieldPtr<Float> temperature(writer.row(), "TEMPERATURE");
   RecordFieldPtr<Float> pressure(writer.row(), "PRESSURE");
@@ -2311,7 +2557,7 @@ Table MSFitsOutput::handleSysCal (const MeasurementSet& ms,
   map:    (output) map from allids to 0,1,...,nr
   selids: (output) inverse of map
 
-  returns: nr, number of different IDs in allids
+  returns: nr, number of selected IDs in allids
  */
 Int MSFitsOutput::makeIdMap (Block<Int>& map, Vector<Int>& selids,
 			     const Vector<Int>& allids)

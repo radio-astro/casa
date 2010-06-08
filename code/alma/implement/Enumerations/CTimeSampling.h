@@ -55,7 +55,7 @@ namespace TimeSamplingMod
   //! TimeSampling.
   //! Time granularity for data
   
-  const char *const revision = "1.6";
+  const char *const revision = "1.7";
   const int version = 1;
   
   enum TimeSampling

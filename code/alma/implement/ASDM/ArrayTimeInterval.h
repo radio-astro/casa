@@ -69,12 +69,12 @@ public:
 	ArrayTimeInterval(double startInMJD,
 			  double durationInDays);
 			  
-	ArrayTimeInterval(long long startInNanoSeconds,
-			  long long durationInNanoSeconds);		  				  
+	ArrayTimeInterval(int64_t startInNanoSeconds,
+			  int64_t durationInNanoSeconds);		  				  
 					  
 	ArrayTimeInterval(ArrayTime start);
 	ArrayTimeInterval(double startInMJD);
-	ArrayTimeInterval(long long startInNanoSeconds);
+	ArrayTimeInterval(int64_t startInNanoSeconds);
 	
 #ifndef WITHOUT_ACS
 	ArrayTimeInterval (IDLArrayTimeInterval t); 
@@ -82,19 +82,19 @@ public:
 	// Setters
 	void setStart(ArrayTime start);
 	void setStart(double start);
-	void setStart(long long start);
+	void setStart(int64_t start);
 	
 	void setDuration(Interval duration);
-	void setDuration(long long nanoSeconds);
+	void setDuration(int64_t nanoSeconds);
 	void setDuration(double days);
 		
 	// Getters	
 	ArrayTime getStart() const ;
 	double getStartInMJD() const ;
-	long long getStartInNanoSeconds() const ;
+	int64_t getStartInNanoSeconds() const ;
 	
 	Interval getDuration() const ;
-	long long getDurationInNanoSeconds() const ;
+	int64_t getDurationInNanoSeconds() const ;
 	double getDurationInDays() const ;
 	
 	// Checkers
@@ -179,7 +179,7 @@ public:
 
 // inline constructors
 
- inline ArrayTimeInterval::ArrayTimeInterval(): start((long long)0), duration(0) {}
+ inline ArrayTimeInterval::ArrayTimeInterval(): start((int64_t)0), duration(0) {}
  inline ArrayTimeInterval::ArrayTimeInterval(ArrayTime start_, Interval duration_) {
    start = start_;
    duration = Interval(min(duration_.get(), Long::MAX_VALUE - start.get()));
@@ -187,12 +187,12 @@ public:
  
  inline ArrayTimeInterval::ArrayTimeInterval(double startInMJD, double durationInDays) :
    start(startInMJD), 
-   duration((long long) (ArrayTime::unitsInADay * durationInDays)){}
+   duration((int64_t) (ArrayTime::unitsInADay * durationInDays)){}
  
- inline ArrayTimeInterval::ArrayTimeInterval(long long startInNanoSeconds,
-					     long long durationInNanoSeconds){
+ inline ArrayTimeInterval::ArrayTimeInterval(int64_t startInNanoSeconds,
+					     int64_t durationInNanoSeconds){
    start = startInNanoSeconds;
-   duration = min(durationInNanoSeconds, Long::MAX_VALUE - startInNanoSeconds);
+   duration = min(durationInNanoSeconds, int64_t(Long::MAX_VALUE - startInNanoSeconds));
  }				
  
  inline ArrayTimeInterval::ArrayTimeInterval(ArrayTime  start_):
@@ -205,7 +205,7 @@ public:
    this->duration = Interval(Long::MAX_VALUE - start.get());
  }
  
- inline	ArrayTimeInterval::ArrayTimeInterval(long long startInNanoSeconds):
+ inline	ArrayTimeInterval::ArrayTimeInterval(int64_t startInNanoSeconds):
    start(startInNanoSeconds) {
    this->duration = Interval(Long::MAX_VALUE - start.get());
  }
@@ -219,7 +219,7 @@ public:
    this->start = ArrayTime(start);
  }
  
- inline void ArrayTimeInterval::setStart(long long start) {
+ inline void ArrayTimeInterval::setStart(int64_t start) {
    this->start = ArrayTime(start);
  }
  
@@ -229,10 +229,10 @@ public:
  
  
  inline void ArrayTimeInterval::setDuration(double duration) {
-   this->duration = Interval((long long) (ArrayTime::unitsInADay * duration));	
+   this->duration = Interval((int64_t) (ArrayTime::unitsInADay * duration));	
  }
  
- inline void ArrayTimeInterval::setDuration(long long duration) {
+ inline void ArrayTimeInterval::setDuration(int64_t duration) {
    this->duration = Interval(duration);	
  }
  
@@ -245,7 +245,7 @@ public:
    return start.getMJD();	
  }
  
- inline long long ArrayTimeInterval::getStartInNanoSeconds() const  {
+ inline int64_t ArrayTimeInterval::getStartInNanoSeconds() const  {
    return start.get();	
  }
  
@@ -257,7 +257,7 @@ public:
    return (((double) duration.get()) / ArrayTime::unitsInADay);	
  }
  
- inline long long ArrayTimeInterval::getDurationInNanoSeconds() const {
+ inline int64_t ArrayTimeInterval::getDurationInNanoSeconds() const {
    return duration.get();	
  }
  
@@ -268,32 +268,32 @@ public:
  }
  
  inline bool ArrayTimeInterval::overlaps(ArrayTimeInterval ati) {
-   long long start1 = start.get();
-   long long end1 = start1 + duration.get();
+   int64_t start1 = start.get();
+   int64_t end1 = start1 + duration.get();
    
    
-   long long start2 = ati.getStart().get();
-   long long end2   = start2 + ati.getDuration().get();
+   int64_t start2 = ati.getStart().get();
+   int64_t end2   = start2 + ati.getDuration().get();
    
    return (start2 <= start1 && end2 >= start1) ||
      (start2 >= start1 && start2 <= end1);
  }
  
  inline bool ArrayTimeInterval::contains(ArrayTimeInterval ati) {
-   long long start1 = start.get();;
-   long long end1 = start1 + duration.get();
+   int64_t start1 = start.get();;
+   int64_t end1 = start1 + duration.get();
    
-   long long start2 = ati.getStart().get();
-   long long end2   = start2 + ati.getDuration().get();
+   int64_t start2 = ati.getStart().get();
+   int64_t end2   = start2 + ati.getDuration().get();
    
    return (start2>=start1 && end2<=end1);
  }
  
  inline bool ArrayTimeInterval::contains(ArrayTime ati) {
-   long long start1 = start.get();
-   long long end1 = start1 + duration.get();
+   int64_t start1 = start.get();
+   int64_t end1 = start1 + duration.get();
    
-   long long time = ati.get();
+   int64_t time = ati.get();
    return (time >= start1 && time < end1);
  }
  

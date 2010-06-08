@@ -219,7 +219,7 @@ def simdata(
             pl.ion()
             pl.clf()
             pl.subplot(121)
-            model_min,model_max, model_rms = util.statim(modelflat,plot=True,incell=model_cell)
+            model_min,model_max, model_rms = util.statim(modelflat,plot=True,incell=model_cell,bar=False)
             lims=pl.xlim(),pl.ylim()
             tt=pl.array(range(25))*pl.pi/12            
             pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
@@ -259,7 +259,7 @@ def simdata(
                     pl.clf()
         else:
 #            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=model_cell)
-            model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=in_cell)
+            model_min,model_max, model_rms = util.statim(modelflat,plot=False,incell=in_cell,bar=False)
 
         casalog.origin('simdata')
 
@@ -437,7 +437,7 @@ def simdata(
                         ",trx="+str(t_rx)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
                         ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
-                    msg("** this may take a few minutes, but will be faster in the next CASA release",priority="warn")
+                    msg("** this may take a few minutes, but will be faster in the future",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
                             tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
@@ -751,17 +751,23 @@ def simdata(
             # Convolve model with beam.
             convolved = project + '.convolved.im'
             ia.open(modelregrid)
+            ia.setbrightnessunit("Jy/pixel") # regridded model is jy/pix
             ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                           pa=beam['positionangle'],overwrite=True)
+            # setting these things correctly should remove the need to manually scale outflat in the 
+            # difference calculation
+            ia.done()
+            ia.open(convolved)
+            ia.setbrightnessunit("Jy/beam")
+            ia.setrestoringbeam(beam=beam)
+            ia.done()
 
-            # imagecalc is interpreting outflat in Jy/pix - 
-            # the diff is v. negative.
             bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
             bmarea=bmarea/(out_cell[0]['value']*out_cell[1]['value']) # bm area in pix
             msg("synthesized beam area in output pixels = %f" % bmarea)
             # Make difference image.
             difference = project + '.diff.im'
-            ia.imagecalc(difference, "'%s' - ('%s'/%g)" % (convolved, outflat,bmarea), overwrite = True)
+            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
             # Get rms of difference image.
             ia.open(difference)
             diffstats = ia.statistics(robust = True)
@@ -806,7 +812,10 @@ def simdata(
                 pl.subplot(222)
         if doclean:
             max_cleanim=[] # mutable so can be returned
-            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim)
+            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display,disprange=max_cleanim,bar=False)
+            # 20100422 statim returns [min,max] now, so this is for 
+            # backward compatibility in simdata1
+            max_cleanim=[max_cleanim[1]]
             # max_cleanim returned in outflat units i.e. Jy/bm > jy/pix
             max_cleanim[0]/=bmarea
         # plot model image if exists
@@ -817,7 +826,7 @@ def simdata(
                 pl.subplot(221)
             # modelregrid might not exist if there's no display or fidelity
             if os.path.exists(modelregrid):
-                model_min,model_max, model_rms = util.statim(modelregrid,plot=display)
+                model_min,model_max, model_rms = util.statim(modelregrid,plot=display,bar=False)
                 xlim=max(pl.xlim())
                 ylim=max(pl.ylim())
             if display==True:
@@ -834,9 +843,9 @@ def simdata(
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
                 if display: pl.subplot(233)                
-                util.statim(project+".diff.im",plot=display,disprange=max_cleanim)
+                util.statim(project+".diff.im",plot=display,bar=False)
                 if display: pl.subplot(234)                
-                fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display)
+                fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display,bar=False)
 
         if display:
             tb.open(mstoimage)

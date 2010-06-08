@@ -77,9 +77,13 @@ namespace asdm {
 	CalSeeingTable &CalSeeingRow::getTable() const {
 		return table;
 	}
-	
-	void CalSeeingRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalSeeingRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalSeeingRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

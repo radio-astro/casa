@@ -25,7 +25,7 @@
 using namespace CalibrationSetMod;
 
 template<>
- struct enum_set_traits<CalibrationSet> : public enum_set_traiter<CalibrationSet,7,CalibrationSetMod::UNSPECIFIED> {};
+ struct enum_set_traits<CalibrationSet> : public enum_set_traiter<CalibrationSet,8,CalibrationSetMod::UNSPECIFIED> {};
 
 template<>
 class enum_map_traits<CalibrationSet,void> : public enum_map_traiter<CalibrationSet,void> {
@@ -47,6 +47,8 @@ public:
      (CalibrationSetMod::PHASE_CURVE,ep((int)CalibrationSetMod::PHASE_CURVE,"PHASE_CURVE","un-documented")));
     m_.insert(pair<CalibrationSet,EnumPar<void> >
      (CalibrationSetMod::POINTING_MODEL,ep((int)CalibrationSetMod::POINTING_MODEL,"POINTING_MODEL","un-documented")));
+    m_.insert(pair<CalibrationSet,EnumPar<void> >
+     (CalibrationSetMod::ACCUMULATE,ep((int)CalibrationSetMod::ACCUMULATE,"ACCUMULATE","un-documented")));
     m_.insert(pair<CalibrationSet,EnumPar<void> >
      (CalibrationSetMod::TEST,ep((int)CalibrationSetMod::TEST,"TEST","un-documented")));
     m_.insert(pair<CalibrationSet,EnumPar<void> >

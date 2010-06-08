@@ -89,9 +89,13 @@ namespace asdm {
 	MainTable &MainRow::getTable() const {
 		return table;
 	}
-	
-	void MainRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool MainRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void MainRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

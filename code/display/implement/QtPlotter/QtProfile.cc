@@ -167,10 +167,15 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     connect(relative, SIGNAL(stateChanged(int)), 
             this, SLOT(setRelativeProfile(int)));
 
-    autoScale = new QCheckBox("auto scale", this);
-    autoScale->setCheckState(Qt::Checked);
-    connect(autoScale, SIGNAL(stateChanged(int)), 
-            this, SLOT(setAutoScale(int)));
+    autoScaleX = new QCheckBox("X auto scale", this);
+    autoScaleX->setCheckState(Qt::Checked);
+    connect(autoScaleX, SIGNAL(stateChanged(int)), 
+            this, SLOT(setAutoScaleX(int)));
+
+    autoScaleY = new QCheckBox("Y auto scale", this);
+    autoScaleY->setCheckState(Qt::Checked);
+    connect(autoScaleY, SIGNAL(stateChanged(int)), 
+            this, SLOT(setAutoScaleY(int)));
 
     buttonLayout->addWidget(zoomInButton);
     buttonLayout->addWidget(zoomOutButton);    
@@ -182,7 +187,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
          QSizePolicy::MinimumExpanding, QSizePolicy::Minimum));
     buttonLayout->addWidget(multiProf);
     buttonLayout->addWidget(relative);
-    buttonLayout->addWidget(autoScale);
+    buttonLayout->addWidget(autoScaleX);
+    buttonLayout->addWidget(autoScaleY);
     buttonLayout->addWidget(writeButton);
     //buttonLayout->addWidget(printExpButton);
     //buttonLayout->addWidget(saveExpButton);
@@ -276,7 +282,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     yUnit = QString(img->units().getName().chars());
     pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
 
-    pc->setAutoScale(autoScale->checkState());
+    pc->setAutoScaleX(autoScaleX->checkState());
+    pc->setAutoScaleY(autoScaleY->checkState());
        
     setMultiProfile(true);
 }
@@ -378,10 +385,16 @@ void QtProfile::setRelativeProfile(int st)
    }
 }
 
-void QtProfile::setAutoScale(int st)
+void QtProfile::setAutoScaleX(int st)
 {
    //qDebug() << "auto scale state change=" << st;  
-   pc->setAutoScale(st);
+   pc->setAutoScaleX(st);
+}
+
+void QtProfile::setAutoScaleY(int st)
+{
+   //qDebug() << "auto scale state change=" << st;  
+   pc->setAutoScaleY(st);
 }
 
 void QtProfile::left()
@@ -765,8 +778,8 @@ void QtProfile::wcChanged(const String c,
     //Get Profile Flux density v/s velocity
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
-				coordinate, coordinateType, 
-                                0, 0, 0, "", frameType_p);
+                                coordinate, coordinateType, 
+                                0, 0, 0, String(""), frameType_p);
 
     // scale for better display
     // max absolute display numbers should be between 0.1 and 100.0

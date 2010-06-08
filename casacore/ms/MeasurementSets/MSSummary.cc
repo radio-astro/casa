@@ -122,12 +122,18 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 //
 void MSSummary::list (LogIO& os, Bool verbose) const
 {
+  Record dummy;
+  list(os, dummy, verbose, False);
+}
+
+  void MSSummary::list (LogIO& os, Record& outRec, Bool verbose, Bool fillRecord) const
+{
   // List a title for the Summary
   listTitle (os);
 
   // List the main table as well as the subtables in a useful order and format
   listWhere (os,verbose);
-  listWhat (os,verbose);
+  listWhat (os,outRec, verbose, fillRecord);
   listHow (os,verbose);
 
   // These aren't really useful (yet?)
@@ -171,12 +177,16 @@ void MSSummary::listWhere (LogIO& os, Bool verbose) const
 {
   listObservation (os,verbose);
 }
-
-
 void MSSummary::listWhat (LogIO& os, Bool verbose) const
 {
-  listMain (os,verbose);
-  listField (os,verbose);
+  Record dummy;
+  listWhat(os, dummy, verbose, False);
+
+}
+  void MSSummary::listWhat (LogIO& os, Record& outRec, Bool verbose, Bool fillRecord) const
+{
+  listMain (os,outRec, verbose, fillRecord);
+  listField (os,outRec, verbose, fillRecord);
 }
 
 
@@ -194,7 +204,13 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 //
 // SUBTABLES
 //
-void MSSummary::listMain (LogIO& os, Bool verbose) const
+  void MSSummary::listMain (LogIO& os, Bool verbose) const
+  {
+    Record dummy;
+    listMain(os, dummy, verbose, False);
+    
+  }
+  void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose, Bool fillRecord) const
 {
   if (nrow()<=0) {
     os << "The MAIN table is empty: there are no data!!!" << endl;
@@ -219,6 +235,14 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
        << " (" << timeref << ")" 
        << endl << endl;
     os << LogIO::POST;
+
+    if(fillRecord){
+      outRec.define("numrecords", nrow());
+      outRec.define("IntegrationTime", exposTime);
+      outRec.define("BeginTime", startTime/C::day);
+      outRec.define("EndTime", stopTime/C::day);
+      outRec.define("timeref", timeref);
+    }
 
     if (verbose) {   // do "scan" listing
 
@@ -270,7 +294,9 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
       icols[0] = "OBSERVATION_ID";
       icols[1] = "ARRAY_ID";
       TableIterator obsarriter(mstab,icols);
-
+      //Limiting record length
+      Int recLength=0;
+      const Int maxRecLength=10000; //limiting for speed and size sake
       // Iterate:
       while (!obsarriter.pastEnd()) {
 
@@ -313,9 +339,10 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	Bool firsttime(True);
 	Int thisnrow(0);
 	Double meanIntTim(0.0);
+	
 
 	os.output().precision(3);
-
+	Int subsetscan=0;
 	// Iterate over timestamps:
 	while (!stiter.pastEnd()) {
 
@@ -345,7 +372,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	  nddi=1;
 
 	  nVisPerField_(fldids(0))+=nrow;
-
+	  
 	  // fill field and ddi lists for this timestamp
 	  for (Int i=1; i < nrow; i++) {
 	    if ( !anyEQ(fldids,fldcol(i)) ) {
@@ -373,12 +400,13 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	    
 	    Bool samescan;
 	    samescan=(thisscan==lastscan);
+	    
 
 	    samescan = samescan && samefld && sameddi;
 
 	    // If state changed, then print out last scan's info
 	    if (!samescan) {
-// 	      cout << "thisscan " << thisscan << "lastscan " << lastscan
+//	      cout << "thisscan " << thisscan << "lastscan " << lastscan
 // 		   << " fldids " << fldids << " lastfldids " << lastfldids
 // 		   << " ddids " << ddids << " lastddids " << lastddids
 // 		   << " samescan " << (thisscan==lastscan) <<  " samefld " << samefld << " sameddi " << sameddi
@@ -426,6 +454,34 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	      os.output().width(widthLead); os << " ";
 	      os << spwids;
 	      os << endl;
+	      if(fillRecord && (recLength < maxRecLength)){
+		Record scanRecord;
+		Record subScanRecord;
+		String scanrecid=String("scan_")+String::toString(lastscan);
+		if(outRec.isDefined(scanrecid)){  
+		  scanRecord=outRec.asrwRecord(scanrecid);
+		  outRec.removeField(scanrecid);
+		}
+		
+		subScanRecord.define("BeginTime", btime/C::day);
+		subScanRecord.define("EndTime", etime/C::day);
+		subScanRecord.define("scanId", lastscan);
+		subScanRecord.define("FieldId", lastfldids(0));
+		subScanRecord.define("FieldName", name);
+		subScanRecord.define("nRow", thisnrow);
+		subScanRecord.define("IntegrationTime", meanIntTim);
+		subScanRecord.define("SpwIds", spwids);
+		scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
+		if(!outRec.isDefined(scanrecid)){  
+		  outRec.defineRecord(scanrecid, scanRecord);
+		}
+		if(lastscan == thisscan){
+		    ++subsetscan;
+		}
+		else{
+		  subsetscan=0;
+		}
+	      }
 
 	      // new btime:
 	      btime=thistime;
@@ -434,6 +490,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 
 	      thisnrow=0;
 	      meanIntTim=0.;
+	      ++recLength;
 	    }
 
 	    // etime keeps pace with thistime
@@ -500,7 +557,30 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	os.output().width(widthLead);  os << "  ";
 	os << spwids;
 	os << endl;
-	
+	if(fillRecord  && (recLength < maxRecLength)){
+	  Record scanRecord;
+	  Record subScanRecord;
+	  String scanrecid=String("scan_")+String::toString(lastscan);
+	  if(outRec.isDefined(scanrecid)){
+	    scanRecord=outRec.asrwRecord(scanrecid);
+	    outRec.removeField(scanrecid);
+	  }
+	  
+	  subScanRecord.define("BeginTime", btime/C::day);
+	  subScanRecord.define("EndTime", etime/C::day);
+	  subScanRecord.define("scanId", lastscan);
+	  subScanRecord.define("FieldId", lastfldids(0));
+	  subScanRecord.define("FieldName", name);
+	  subScanRecord.define("nRow", thisnrow);
+	  subScanRecord.define("IntegrationTime", meanIntTim);
+	  subScanRecord.define("SpwIds", spwids);
+	  scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
+	  if(!outRec.isDefined(scanrecid)){
+	    outRec.defineRecord(scanrecid, scanRecord);
+	  }
+	  subsetscan=0;
+	  ++recLength;
+	}
 	// post to logger
 	os << LogIO::POST;
 	
@@ -679,8 +759,13 @@ void MSSummary::listFeed (LogIO& os, Bool verbose) const
   os << LogIO::POST;
 }
 
-
-void MSSummary::listField (LogIO& os, Bool verbose) const 
+void MSSummary::listField (LogIO& os, Bool verbose) const
+{
+    Record dummy;
+    listField(os, dummy, verbose, False);
+    
+}
+void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRecord) const 
 {
   
   // Make a MS-field-columns object
@@ -711,6 +796,7 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
     Int widthSrc   =  6;
     Int widthnVis  =  7;
 
+    outrec.define("nfields", Int(fieldId.nelements())); 
     if (verbose) {}  // null, always same output
 
     // Line is	ID Date Time Name RA Dec Type
@@ -736,7 +822,6 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
 	MVAngle mvDec= mRaDec.getAngle().getValue()(1);
 	String name=msFC.name()(fld);
 	if (name.length()>12) name.replace(11,1,"*");
-
 	os.output().setf(ios::left, ios::adjustfield);
 	os.output().width(widthLead);	os << "  ";
         os.output().width(widthField);	os << (fld);
@@ -750,9 +835,24 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
         if (nVisPerField_.nelements()>fld) 
 	  {os.output().width(widthnVis);	os << nVisPerField_(fld);}
 	os << endl;
+	if(fillRecord){
+	  Record fieldrec;
+	  fieldrec.define("name", name);
+	  fieldrec.define("code",msFC.code()(fld));
+	  MeasureHolder mh(mRaDec);
+	  Record dirrec;
+	  String err;
+	  mh.toRecord(err, dirrec);
+	  fieldrec.defineRecord("direction", dirrec);
+	  String fieldrecid=String("field_")+String::toString(fld);
+	  if(!outrec.isDefined(fieldrecid)){
+	    outrec.defineRecord(fieldrecid, fieldrec);
+	  }
+	}	  
       } else {
 	os << "Field "<<fld<<" not found in FIELD table"<<endl;
       }
+      
     } 
 
     os << "   (nVis = Total number of time/baseline visibilities per field) " << endl;

@@ -51,6 +51,7 @@ class PlotMSCacheThread : public PlotMSThread {
     
     //# Friend class declarations.
     friend class PlotMSCache;
+    friend class PlotCalCache;
     friend class PlotMSCacheThreadHelper;
     
 public:

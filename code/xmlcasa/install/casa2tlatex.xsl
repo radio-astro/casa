@@ -80,6 +80,7 @@ Methods
 
 <xsl:template match="aps:task">
 \newpage
+\NextFile{<xsl:value-of select="@name"/>-task.html}
 \subsection{<xsl:value-of select="@name"/>}
 Requires:
 <xsl:for-each select="aps:needs">

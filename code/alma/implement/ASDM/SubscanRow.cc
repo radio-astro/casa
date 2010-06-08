@@ -71,9 +71,13 @@ namespace asdm {
 	SubscanTable &SubscanRow::getTable() const {
 		return table;
 	}
-	
-	void SubscanRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool SubscanRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void SubscanRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

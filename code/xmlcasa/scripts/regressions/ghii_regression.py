@@ -51,7 +51,7 @@ verbose=True
 niter=5000
 threshold="0.1mJy"
 weighting="briggs"
-robust=0.0
+robust=0.5
 
 fidelity=True  # need this or won't create diff image
 
@@ -91,6 +91,20 @@ refstats = { 'sum': 520.5,
              'rms': 0.0349,
              'sigma': 0.0344 }
 
+# 20100428
+refstats = { 'sum': 520.5, 
+             'max': 0.4292,
+             'min': -0.04473,
+             'rms': 0.0349,
+             'sigma': 0.0344 }
+
+# 20100505 robust=0.5
+refstats = { 'sum': 673.4, 
+             'max': 0.5978,
+             'min': -0.06423,
+             'rms': 0.0504,
+             'sigma': 0.0498 }
+
 ia.open(project + '.diff.im')
 hiidiff_stats=ia.statistics()
 ia.close()
@@ -105,14 +119,28 @@ diffstats = {'sum': 66.7,
 #padding change, 20100325
 diffstats = {'sum': 67.1,
              'max': 0.005628,
-             'min': -0.00105,
+             'min': -0.00103,
              'rms': 0.000940,
              'sigma': 0.000573 }
+
+# 20100505 robust=0.5
+diffstats = {'sum': 68.9,
+             'max': 0.004645,
+             'min': -0.00117,
+             'rms': 0.000946,
+             'sigma': 0.000556 }
+
+# 20100518 jy/bm
+diffstats = {'sum': 3268,
+             'max': 0.1856,
+             'min': -0.0792,
+             'rms': 0.0449,
+             'sigma': 0.0264 }
 
 ### tight 
 reftol   = {'sum':  1e-2,
             'max':  1e-2,
-            'min':  1e-2,
+            'min':  5e-2,
             'rms':  1e-2,
             'sigma': 1e-2}
 
@@ -128,6 +156,21 @@ loghdr = """
 """
 
 print >> logfile, loghdr
+
+# more info
+ms.open(project+".ms")
+print >> logfile, "Noiseless MS, amp stats:"
+print >> logfile, ms.statistics('DATA','amp')
+print >> logfile, "Noiseless MS, phase stats:"
+print >> logfile, ms.statistics('DATA','phase')
+ms.close()
+#ms.open(project+".noisy.ms")
+#print >> logfile, "Noisy MS, amp stats:"
+#print >> logfile, ms.statistics('DATA','amp')
+#print >> logfile, "Noisy MS, phase stats:"
+#print >> logfile, ms.statistics('DATA','phase')
+#ms.close()
+
 
 regstate = True
 rskes = refstats.keys()

@@ -65,9 +65,13 @@ namespace asdm {
 	EphemerisTable &EphemerisRow::getTable() const {
 		return table;
 	}
-	
-	void EphemerisRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool EphemerisRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void EphemerisRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

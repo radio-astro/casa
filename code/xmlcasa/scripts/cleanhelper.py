@@ -4,6 +4,7 @@ import commands
 import math
 import pdb
 import numpy
+import shutil
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -65,7 +66,7 @@ class cleanhelper:
         elif ((type(cell)==str) or (type(cell)==int) or (type(cell)==float)):
             cell=[cell, cell]
         elif (type(cell) != list):
-            raise TypeError, "parameter cell is not understood"
+            raise TypeError, "parameter cell %s is not understood" % str(cell)
         cellx=qa.quantity(cell[0], 'arcsec')
         celly=qa.quantity(cell[1], 'arcsec')
         if(cellx['unit']==''):
@@ -79,31 +80,31 @@ class cleanhelper:
         elif(type(imsize)==int):
             imsize=[imsize, imsize]
         elif(type(imsize) != list):
-            raise TypeError, "parameter imsize is not understood"
+            raise TypeError, "parameter imsize %s is not understood" % str(imsize)
             
 	elstart=start
         if(mode=='frequency'):
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('Hz') < 0):
-                raise TypeError, "start parameter is not a valid frequency quantity "
+                raise TypeError, "start parameter %s is not a valid frequency quantity " % str(start)
             ###make sure we respect outframe
             if(self.usespecframe != ''):
                 elstart=me.frequency(self.usespecframe, start)
             if(qa.quantity(width)['unit'].find('Hz') < 0):
-                raise TypeError, "width parameter is not a valid frequency quantity "	
+                raise TypeError, "width parameter %s is not a valid frequency quantity " % str(width)	
         elif(mode=='velocity'): 
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('m/s') < 0):
-                raise TypeError, "start parameter is not a valid velocity quantity "
+                raise TypeError, "start parameter %s is not a valid velocity quantity " % str(start)
             ###make sure we respect outframe
             if(self.usespecframe != ''):
                 elstart=me.radialvelocity(self.usespecframe, start)
             if(qa.quantity(width)['unit'].find('m/s') < 0):
-                raise TypeError, "width parameter is not a valid velocity quantity "	
+                raise TypeError, "width parameter %s is not a valid velocity quantity " % str(width)	
         else:
             if((type(width) != int) or 
                (type(start) != int)):
-                raise TypeError, "start, width have to be integers with mode %s" %mode
+                raise TypeError, "start (%s), width (%s) have to be integers with mode %s" % (str(start),str(width),mode)
 
         #####understand phasecenter
         if(type(phasecenter)==str):
@@ -204,7 +205,9 @@ class cleanhelper:
                 # for now just make for a main field 
                 ###need to get the pointing so select the fields
                 self.im.selectvis(field=field)
-		self.im.setvp(dovp=True)
+                # set to default minpb(=0.1), should use input minpb?
+                self.im.setmfcontrol()
+                self.im.setvp(dovp=True)
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
@@ -349,12 +352,20 @@ class cleanhelper:
                 if(not self.maskimages.has_key(self.imagelist[k])):
                     self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
         # initialize maskimages
+        # --- use outframe or dataframe for mask creation
+        if self.usespecframe=='': 
+            maskframe=self.dataspecframe
+        else:
+            maskframe=self.usespecframe
         for k in range(len(self.imagelist)):
             if(not (os.path.exists(self.maskimages[self.imagelist[k]]))):
                 ia.fromimage(outfile=self.maskimages[self.imagelist[k]],
                         infile=self.imagelist[k])
                 ia.open(self.maskimages[self.imagelist[k]])
                 ia.set(pixels=0.0)
+                mcsys=ia.coordsys().torecord()
+                mcsys['spectral2']['conversion']['system']=maskframe
+                ia.setcoordsys(mcsys)
                 ia.done(verbose=False)
 
         # assume a file name list for each field
@@ -525,6 +536,13 @@ class cleanhelper:
         ia.open(outputmask)
         shp=ia.shape()
         self.csys=ia.coordsys().torecord()
+        # respect dataframe or outframe
+        if self.usespecframe=='': 
+            maskframe=self.dataspecframe
+        else:
+            maskframe=self.usespecframe
+        self.csys['spectral2']['conversion']['system']=maskframe
+        ia.setcoordsys(self.csys)
         ia.close()
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -973,6 +991,8 @@ class cleanhelper:
         modshape=ia.shape()
         if modshape[3]==1:
           return False
+        if modshape[3]-1 < chan:
+          return False
         blc=[0,0,modshape[2]-1,chan]
         trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,chan]
         sbim=ia.subimage(outfile=outim, region=rg.box(blc,trc), overwrite=True)
@@ -993,6 +1013,8 @@ class cleanhelper:
         trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan]
         ia.open(cubimage)
         cubeshape=ia.shape()
+        if not (cubeshape[3] > (chan+inimshape[3]-1)):
+            return False
         rg0=ia.setboxregion(blc=blc,trc=trc)
         if inimshape[0:3]!=cubeshape[0:3]: 
             return False
@@ -1366,35 +1388,36 @@ class cleanhelper:
         for mode='velocity' or 'frequency' or 'channel'
         """
 
-        # first parse spw parameter:
-
-        # use MSSelect if possible:
-        if spw in (-1, '-1', '*', '', ' '):
-            spwinds = -1
-            chaninds = -1
-        else:
-            sel=ms.msseltoindex(self.vis, spw=spw)
-            spwinds=sel['spw'].tolist()
-            chaninds=sel['channel'].tolist()
-            if(len(spwinds) == 0):
-                spwinds = -1      
-                # I don't believe it is possible to select spw=-1 (all) and select other 
-                # than all chans, but in case it is here is a check:
-                if(len(chaninds) > 0):
-                    raise Exception, 'spw parameter '+spw+' resulted in chan select without spw select';
-                chaninds = -1
-
-        # the first selected spw 
-        if(spwinds==-1): 
-            spw0=0
-        else:
-            spw0=spwinds[0]
-
         tb.open(self.vis+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
+
+        # first parse spw parameter:
+
+        # use MSSelect if possible
+        if spw in (-1, '-1', '*', '', ' '):
+            # spwinds = -1
+            # chaninds = -1
+            # get nchan of all spw from mssel- after this spwinds and chaninds should always 
+            # be defined
+            # spw = range(len(chanfreqscol))
+            spw="*"
+
+        sel=ms.msseltoindex(self.vis, spw=spw)
+        # spw returned by msseletoindex, spw='0:5~10;10~20' 
+        # will give spw=[0] and len(spw) not equal to len(chanids)
+        # so get spwids from chaninds instead.
+        chaninds=sel['channel'].tolist()
+        spwinds=[]
+        for k in range(len(chaninds)):
+            spwinds.append(chaninds[k][0])
+        if(len(spwinds) == 0):
+            raise Exception, 'unable to parse spw parameter '+spw;
+            
+        # the first selected spw 
+        spw0=spwinds[0]
 
         # set dataspecframe:
         elspecframe=["REST",
@@ -1427,11 +1450,8 @@ class cleanhelper:
 
         
         # start accumulating channels:
-        if chaninds!=-1:
-            chanind0=chaninds[0]
-        else:
-            chanind0=[0,0,len(chanfreqs0)-1,1]
-        
+        chanind0=chaninds[0]
+                
         chanfreqs1dx = numpy.array(chanfreqs0[chanind0[1]])
         for ci in range(chanind0[1],chanind0[2]+1,chanind0[3])[1:]:
             chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqs0[ci])
@@ -1441,27 +1461,22 @@ class cleanhelper:
         chan0freqwidth=chanwids0[0][chanind0[1]]
 
         # more spw?:
-        if(spwinds!=-1):
-            for ispw in range(1,len(spwinds)):
-                spwi=spwinds[ispw]
-                chanfreqs=chanfreqscol['r'+str(spwi+1)].transpose()
-                chanfreqsi = chanfreqs[0]  
-                if len(chanfreqsi)<1:
-                    raise Exception, 'spw parameter '+spw+' selected spw '+str(spwinds[ispw]+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
-                # accumulate channels:
-                if chaninds!=-1:
-                    chanindi=chaninds[ispw]
-                else:
-                    chanindi=[1,0,len(chanfreqsi)-1,1]
-        
-                for ci in range(chanindi[1],chanindi[2]+1,chanindi[3]):
-                    chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqsi[ci])
-            if len(spwinds)<=1:
-                chanindi=chanind0
-                spwi=spw0
-        else:
-            chanindi=chanind0
-            spwi=spw0
+        # spw returned by msseletoindex, spw='0:5~10;10~20' 
+        # will give spw=[0] and len(spw) not equal to len(chanids)
+        chanindi=chanind0
+        spwi=spw0
+        unsorted=False
+        for isel in range(1,len(chaninds)):
+            chanindi=chaninds[isel]
+            spwi=chanindi[0]
+            chanfreqs=chanfreqscol['r'+str(spwi+1)].transpose()
+            chanfreqsi = chanfreqs[0]  
+            if len(chanfreqsi)<1:
+                raise Exception, 'spw parameter '+spw+' selected spw '+str(spwinds[isel]+1)+' that has no frequencies - SPECTRAL_WINDOW table may be corrupted'
+            if chanfreqsi[0] < chanfreqs0[0]: 
+                unsorted = True 
+            for ci in range(chanindi[1],chanindi[2]+1,chanindi[3]):
+                chanfreqs1dx = numpy.append(chanfreqs1dx,chanfreqsi[ci])
          
         # get width of last selected channel of last spw (that could be used for width in vel mode)
         chanwidsN=chanwidcol['r'+str(spwi+1)].transpose()
@@ -1470,7 +1485,7 @@ class cleanhelper:
 
         # flatten:
         chanfreqs1d = chanfreqs1dx.flatten()        
-        # despite what I was told, flatten() does not sort.
+        # flatten() does not sort.
         chanfreqs1d.sort()
         chanfreqs0.sort()
                 
@@ -1491,7 +1506,7 @@ class cleanhelper:
         # otherwise convert start/width from vel to freq, save original units.
         # do the conversion in the USER-SPECIFIED outframe 
         # if frame='', convertvf will use dataspecframe
- 
+
         if type(start)==str:  
             instartunit=qa.quantity(start)['unit']            
             if(qa.quantity(start)['unit'].find('m/s') > -1):                
@@ -1521,7 +1536,7 @@ class cleanhelper:
             if locstart>=len(chanfreqs0) or locstart<0:
                 raise TypeError, "Start channel is outside the first spw"
             if type(locstart)==int:
-                # GAAAH - in noninteractive mode, default start=0 instead of "" that it should be!!!
+                # in noninteractive mode, default start=0 instead of ""
                 if mode=="velocity" and locstart==0:
                     fstart = chanfreqs1d[-1]
                 else:
@@ -1604,9 +1619,13 @@ class cleanhelper:
             # width was being used to calculate the output chan width, then part of the 
             # last chan may be cut off.
             nchan = int(round(bw/abs(finc)))+1   # XXX could argue for ceil here
-        
+
         # sanity checks:
-        fend = fstart + finc*(nchan-1) 
+        # unsorted case
+        if mode=="channel" and unsorted and start!='':
+            fend = fstart - finc*(nchan-1)
+        else:
+           fend = fstart + finc*(nchan-1) 
         if fend >= (chanfreqs1d[-1]+abs(finc)):
             self._casalog.post("your values of spw, start, and width appear to exceed the spectral range available.  Blank channels may result","WARN")
         if fend <= 0:
@@ -1623,7 +1642,6 @@ class cleanhelper:
 
         # here are the output channels in Hz
         freqlist = numpy.array(range(nchan)) * finc + fstart
-
         retnchan=len(freqlist)
     
         #print bw,freqlist[0],freqlist[-1]
@@ -1632,7 +1650,10 @@ class cleanhelper:
             # XXX depending on how this gets used, we probably needs checks here to convert
             # from quantity strings to channel indices.  Check for strange behaviour.
             if start=="":
-                retstart=0
+                # here, we can make the default start be the first *selected* channel
+                retstart = chanind0[1]
+                # or we can make it be zero:
+                # retstart=0
             else:
                 retstart=start
             if width=="":
@@ -1768,6 +1789,49 @@ class cleanhelper:
         fout = me.measure(f0,frame)['m0']['value']
         return fout
 
+    def setspecframe(self,spw):
+        """
+        set spectral frame for mfs to data frame based
+        on spw selection 
+        (part copied from setChannelization)
+        """
+        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        spwframe=tb.getcol('MEAS_FREQ_REF');
+        tb.close()
+
+        # first parse spw parameter:
+
+        # use MSSelect if possible
+        if spw in (-1, '-1', '*', '', ' '):
+            spw="*"
+
+        sel=ms.msseltoindex(self.vis, spw=spw)
+        # spw returned by msseletoindex, spw='0:5~10;10~20' 
+        # will give spw=[0] and len(spw) not equal to len(chanids)
+        # so get spwids from chaninds instead.
+        chaninds=sel['channel'].tolist()
+        spwinds=[]
+        for k in range(len(chaninds)):
+            spwinds.append(chaninds[k][0])
+        if(len(spwinds) == 0):
+            raise Exception, 'unable to parse spw parameter '+spw;
+            
+        # the first selected spw 
+        spw0=spwinds[0]
+
+        # set dataspecframe:
+        elspecframe=["REST",
+                     "LSRK",
+                     "LSRD",
+                     "BARY",
+                     "GEO",	    
+                     "TOPO",
+                     "GALACTO",
+                     "LGROUP",
+                     "CMB"]
+        self.dataspecframe=elspecframe[spwframe[spw0]];
+        return 
+
     def initChaniter(self,nchan,spw,start,width,imagename,mode,tmpdir='_tmpimdir/'):
         """
         initialize for channel iteration in interactive clean
@@ -1786,7 +1850,7 @@ class cleanhelper:
                 tmppath.append(os.path.dirname(imname)+'/'+tmpdir)
             # clean up old directory
             if os.path.isdir(tmppath[-1]):
-                os.system('rm -rf '+tmppath[-1])
+                shutil.rmtree(tmppath[-1])
             os.mkdir(tmppath[-1])
         #internally converted to frequency mode for mode='channel'
         #to ensure correct frequency axis for output image
@@ -1911,8 +1975,8 @@ class cleanhelper:
         retparms['imagename']=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(chan)
                    for indx, imn in enumerate(finalimagename)]
 
-        print "Processing for channel %s starts..." % chan
-        self._casalog.post("Processing channel %s "% chan)
+        #print "Processing channel %s " % chan
+        #self._casalog.post("Processing channel %s "% chan)
 
         # Select only subset of vis data if possible.
         # It does not work well for multi-spw so need
@@ -1976,10 +2040,8 @@ class cleanhelper:
 
                 self.convertmodelimage(modelimages=chanmodimg,
                                         outputmodel=self.imagelist.values()[0]+'.model')
-            # clean up tempoarary channel model image
-            for img in chanmodimg:
-                if os.path.exists(img):
-                    os.system('rm -rf ' + img)
+            # clean up temporary channel model image
+            self.cleanupTempFiles(chanmodimg)
 
     def storeCubeImages(self,cubeimageroot,chanimageroot,chan,imagermode):
         """
@@ -1993,20 +2055,28 @@ class cleanhelper:
             cubeimagerootname=cubeimageroot[n]
             chanimagerootname=chanimageroot[n]
         for ext in imagext:
+            nomaskim=False
             cubeimage=cubeimagerootname+ext
             chanimage=chanimagerootname+ext
             if not os.path.exists(cubeimage):
                 if os.path.exists(chanimage):
                     outim=ia.newimagefromimage(cubeimagerootname+'.model',cubeimage)
-            self.putchanimage(cubeimage, chanimage,chan)
+                elif ext=='.mask':
+                    # unless mask image is given or in interactive mode
+                    # there is no mask image
+                    nomaskim=True
+            if not nomaskim: 
+                self.putchanimage(cubeimage, chanimage,chan)
 
-    def cleanupTempFiles(self,tmppath):
+    def cleanupTempFiles(self, tmppath):
         """
-        clean up temporary files created for chaniter=T clean
+        Remove the directories listed by tmppath.
         """
+        # Created to deal with temporary dirs created by chaniter=T clean,
+        # now used elsewhere too.
         for dir in tmppath:
             if os.path.exists(dir):
-               os.system('rm -rf '+dir)
+               shutil.rmtree(dir)
 
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):

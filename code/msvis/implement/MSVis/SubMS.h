@@ -100,7 +100,7 @@ class SubMS
 
   
 
-  ~SubMS();
+  virtual ~SubMS();
   
   // Change or Set the MS this MSSelector refers to.
   void setMS(MeasurementSet& ms);
@@ -117,6 +117,10 @@ class SubMS
   void selectSpw(Vector<Int> spw, Vector<Int> nchan, Vector<Int> start, 
                  Vector<Int> step, const Bool averchan);
   
+  // Setup polarization selection (for now, only from available correlations -
+  // no Stokes transformations.)
+  Bool selectCorrelations(const String& corrstr);
+
   //select Time and time averaging or regridding
   //void selectTime();
 
@@ -128,7 +132,8 @@ class SubMS
 		   const String& baseline="", const String& scan="",
                    const String& uvrange="", const String& taql="", 
 		   const Vector<Int>& step=Vector<Int> (1,1),
-		   const Bool averchan=True, const String& subarray="");
+		   const Bool averchan=True, const String& subarray="",
+                   const String& correlation="");
 
   // This older version does not return a success value, and does need nchan,
   // start, and step.  It is used elsewhere.
@@ -174,10 +179,10 @@ class SubMS
   //Useful if temporary subselection/averaging is necessary
   // It'll be in memory if the basic output ms is less than half of 
   // memory reported by HostInfo unless forced to by user...
-  MeasurementSet* makeScratchSubMS(const Vector<MS::PredefinedColumns>& whichDataCols, 
+  virtual MeasurementSet* makeScratchSubMS(const Vector<MS::PredefinedColumns>& whichDataCols, 
 				   const Bool forceInMemory=False);
   // In this form whichDataCol gets passed to parseColumnNames().
-  MeasurementSet* makeScratchSubMS(const String& whichDataCol, 
+  virtual MeasurementSet* makeScratchSubMS(const String& whichDataCol, 
 				   const Bool forceInMemory=False);
 
   // This sets up a default new ms
@@ -333,7 +338,24 @@ class SubMS
   // Vector<Int>(1,-1) means: use all SPWs
   Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1));
 
- private:
+ protected:
+
+  //method that returns the selected ms (?! - but it's Boolean - RR)
+  Bool makeSelection();
+  Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillDDTables();
+  Bool fillFieldTable();
+  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
+  Bool copyAntenna();
+  Bool copyFeed();
+  Bool copySource();
+  Bool copyObservation();
+  Bool copyPointing();
+  Bool copyWeather();
+  //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillAccessoryMainCols();
+
   // *** Private member functions ***
   Bool getDataColumn(ROArrayColumn<Complex>& data,
                      const MS::PredefinedColumns colName);
@@ -358,34 +380,15 @@ class SubMS
   static uInt dataColStrToEnums(const String& col,
                                 Vector<MS::PredefinedColumns>& colvec);
     
-  //method that returns the selected ms (?! - but it's Boolean - RR)
-  Bool makeSelection();
-  Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillDDTables();
-  Bool fillFieldTable();
-  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
-  Bool copyAntenna();
-  Bool copyFeed();
-  Bool copySource();
-  Bool copyObservation();
-  Bool copyPointing();
-  Bool copyWeather();
-  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
-  Bool writeSimilarSpwShape(const Vector<MS::PredefinedColumns>& colNames);
+  
+  Bool doChannelMods(const Vector<MS::PredefinedColumns>& colNames);
 
-  // The guts of writeSimilarSpwShape(), ripped out so they can handle either
+  // The guts of doChannelMods(), ripped out so they can handle either
   // Float or Complex data.
   template<class M>
-  void chanAvgSameShapes(const ROArrayColumn<M>& data,
-                         const MS::PredefinedColumns columnName,
-                         const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-                         Cube<Float>& outspweight,
-                         Vector<Float>& outwgtspectmp,
-                         Matrix<Float>& inwgtspectmp, const Float *inwptr,
-                         ROArrayColumn<Bool>& flag, Matrix<Bool>& inflagtmp,
-                         const Bool *iflg, const Int nrow,
-                         Cube<Bool>& outflag, const Bool writeToDataCol);
+  void filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
+		   const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
+		   const Int nrow);
 
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
@@ -411,6 +414,11 @@ class SubMS
   // of ms_p.  FLOAT_DATA is not included because it is not natively complex. 
   const ROArrayColumn<Complex>& right_column(const ROMSColumns *ms_p,
                                              const MS::PredefinedColumns datacol);
+
+  // The writable version of the above.
+  ArrayColumn<Complex>& right_column(MSColumns *msclala,
+				     const MS::PredefinedColumns col,
+				     const Bool writeToDataCol);
 
   // Figures out the number, maximum, and index of the selected antennas.
   uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
@@ -471,7 +479,7 @@ class SubMS
   Double timeBin_p;
   uInt numOutRows_p;
   String scanString_p, uvrangeString_p, taqlString_p;
-  String timeRange_p, arrayExpr_p;
+  String timeRange_p, arrayExpr_p, corrString_p;
   uInt nant_p;
   String ignorables_p;          // Should time averaging not split bins by
                                 // (sub)array(_ID), scan #, and/or state ID?

@@ -2,6 +2,8 @@
 #define QTRASTERDATA_H_
  
 #include <qwt_raster_data.h>
+#include <cstdio>
+
 class QwtPlotSpectrogram;
 
 namespace casa { 

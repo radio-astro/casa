@@ -77,9 +77,13 @@ namespace asdm {
 	CalPointingTable &CalPointingRow::getTable() const {
 		return table;
 	}
-	
-	void CalPointingRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool CalPointingRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void CalPointingRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

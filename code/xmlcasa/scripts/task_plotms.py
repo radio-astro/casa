@@ -13,7 +13,10 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
            transform=None,
            freqframe=None,restfreq=None,veldef=None,shift=None,
            extendflag=None,
-           extcorr=None, extchannel=None):
+           extcorr=None, extchannel=None,
+           plotfile=None, format=None,
+           highres=None, interactive=None, overwrite=None
+):
 
 # we'll add these later
 #           extspw=None, extantenna=None,
@@ -110,14 +113,18 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
                     is turned on.
                     default: False.
     """
+    # Check if DISPLAY environment variable is set.
+    if os.getenv('DISPLAY') == None:
+        casalog.post('ERROR: DISPLAY environment variable is not set!  Cannot open plotms.', 'SEVERE')
+        return False
+    
+    if (plotfile and os.path.exists(plotfile) and not overwrite):
+        casalog.post("Plot file " + plotfile + " exists and overwrite is false, cannot write the file", "SEVERE")
+        return False
 
-    try:
-        # Check if DISPLAY environment variable is set.
-        if os.getenv('DISPLAY') == None:
-            print 'ERROR: DISPLAY environment variable is not set!  Cannot open plotms.'
-            return
-        
+    try:            
         # Check synonyms
+
         synonyms = {}
         synonyms['timeinterval'] = synonyms['timeint'] = 'time_interval'
         synonyms['chan'] = 'channel'
@@ -139,9 +146,9 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
         
         # Set filename and axes
+
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
-        
 
         # Set selection
         if (selectdata):
@@ -149,11 +156,11 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         else:
             pm.setPlotMSSelection('','','','','','','','','',False)
             
-            
         # Set averaging
         if not averagedata:
             avgchannel = avgtime = ''
             avgscan = avgfield = avgbaseline = avgantenna = avgspw = False
+           
             scalar = False
             
         pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, avgantenna, avgspw, scalar, False)
@@ -174,10 +181,18 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         if extcorr:
             extcorrstr='all'
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
-        
         # Update and show
         pm.update()
         pm.show()
+        
+        # write file if requested
+        if(plotfile != ""):
+            while (pm.isDrawing()):
+                casalog.post("Waiting until drawing of the plot has completed before saving it",'NORMAL')
+                time.sleep(0.5)
+            pm.save(plotfile, format, highres, interactive)
     
     except Exception, instance:
         print "Exception during plotms task: ", instance
+        
+    return True

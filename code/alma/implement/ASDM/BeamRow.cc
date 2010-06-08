@@ -65,9 +65,13 @@ namespace asdm {
 	BeamTable &BeamRow::getTable() const {
 		return table;
 	}
-	
-	void BeamRow::isAdded() {
-		hasBeenAdded = true;
+
+	bool BeamRow::isAdded() const {
+		return hasBeenAdded;
+	}	
+
+	void BeamRow::isAdded(bool added) {
+		hasBeenAdded = added;
 	}
 	
 	

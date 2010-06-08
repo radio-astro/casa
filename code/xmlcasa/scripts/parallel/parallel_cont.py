@@ -76,7 +76,7 @@ class imagecont():
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
-        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol)
+        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True)
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):

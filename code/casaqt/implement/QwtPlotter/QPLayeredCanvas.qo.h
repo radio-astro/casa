@@ -85,7 +85,7 @@ public:
             unsigned int totalSegments = 0,
             unsigned int segmentThreshold =
                 QPDrawThread::DEFAULT_SEGMENT_THRESHOLD) const;
-    
+
     // Draws the attached layer items into the image cache, using the given
     // canvas rect and scale maps.  If PlotOperation parametesr are given, they
     // are updated as needed.
@@ -266,7 +266,11 @@ protected:
     
     // Detaches the given item.
     void detachLayeredItem(QPPlotItem* item);
-    
+   
+    // Is drawing in progress?
+    virtual Bool isDrawing() const;
+
+ 
     
     // Draw Methods //
     

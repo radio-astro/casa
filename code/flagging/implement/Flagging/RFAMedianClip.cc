@@ -105,7 +105,6 @@ void RFATimeMedian::endChunk ()
 {
   RFADiffMapBase::endChunk();
 // create local flag iterator
-  flag_iter.cursor()->resize(IPosition(2, 0, 0));
   flag_iter = FlagCubeIterator();
   if( msl ) delete [] msl;
   msl = NULL;
@@ -113,9 +112,9 @@ void RFATimeMedian::endChunk ()
 
 // startData
 // create new median sliders at start of data pass
-void RFATimeMedian::startData ()
+void RFATimeMedian::startData (bool verbose)
 {
-  RFADiffMapBase::startData();
+  RFADiffMapBase::startData(verbose);
   flag_iter.reset();
   if( msl ) delete [] msl;
 // this is a workaround for a compiler bug that we occasionally see
