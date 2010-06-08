@@ -9,9 +9,8 @@
 \chapter[Appendix: Simulation]{Simulation}
 \label{chapter:sim}
 
-{\bfseries New in 3.0.1:} The angular size of the simulated map must
-be defined by the parameter {\em mosaicsize}.  See
-\S\ref{section:sim.almasimmos}.
+{\bfseries New in 3.0.2:} {\tt simdata2} is the new, and preferred,
+task to use.  It will replace {\tt simdata} in a future version.
 
 The capability for simulating observations and datasets from the EVLA
 and ALMA are an important use-case for CASA.  This not only allows one
@@ -43,10 +42,13 @@ Observations in CASA''.
 Following general CASA practice, the greatest flexibility and richest
 functionality is at the Toolkit level.  The most commonly used
 procedures for interferometric simulation are encapsulated in the {\tt
- simdata} task.  Total power simulation is possible at the task level
-using the {\tt sdsim} task, which follows somewhat parallel inputs
-and whose capabilities will being developed more fully in the next
-release.
+simdata} task.  Total power simulation is possible at the task level
+using the {\tt sdsim} task, and now incorporated directly into {\tt
+simdata2} (one can create and jointly deconvolve synthetic single dish
+and interferometric datasets).
+%which follows somewhat parallel inputs
+%and whose capabilities will being developed more fully in the next
+%release.
 
 %{\bf BETA ALERT:} The simulation capabilities are currently under
 %development.  What we do have is mostly at the Toolkit level.
@@ -58,7 +60,10 @@ release.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Simulating ALMA with {\tt simdata}}
-\label{section:sim.almasimmos}
+\label{section:sim.almasimmos_old}
+
+{\bfseries Warning:} {\tt simdata} is being replaced with {\tt simdata2}.  Please switch to the 
+latter, described below.
 
 The inputs are:
 \small
@@ -120,6 +125,80 @@ the task to determine a realistic system temperature.  Other
 corrupting effects, such as phase noise, gain drift, and
 cross-polarization, can be added the the MS with the toolkit - see the
 web documentation for more information.
+
+Much more detailed information, and use-case examples, can be found at 
+
+\url{http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Simulating ALMA with {\tt simdata2}}
+\label{section:sim.almasimmos}
+
+The inputs are:
+\small
+\begin{verbatim}
+#  simdata2 :: mosaic simulation task:
+project             =      'sim'        #  root for output file names
+modifymodel         =      False        #  modify model image
+     skymodel       = '$project.skymodel' #  model image to observe or modify
+
+setpointings        =       True        
+     integration    =      '10s'        #  integration (sampling) time
+     direction      = ['J2000 19h00m00 -40d00m00'] #  "J2000 19h00m00 -40d00m00" or "" to center on model
+     mapsize        = ['1arcmin', '1arcmin'] #  angular size of map or "" to cover model
+     maptype        = 'hexagonal'       #  hexagonal, square, etc
+     pointingspacing =  '1arcmin'       #  spacing in between pointings or "" for 0.5 PB
+
+predict             =       True        #  calculate visibilites using ptgfile
+     complist       =         ''        #  optional componentlist to observe with skymodel
+     antennalist    = 'alma.out10.cfg'  #  antenna position file or "" for no interferometric MS
+     refdate        = '2012/05/21/22:05:00' #  time/date of observation *see help
+     totaltime      =    '7200s'        #  total time of observation
+     caldirection   =         ''        #  pt source calibrator [experimental]
+     calflux        =      '1Jy'        
+     sdantlist      =         ''        #  single dish antenna position file or "" for no total power MS
+     sdant          =          0        #  single dish antenna index in file
+
+thermalnoise        = 'tsys-atm'        #  add thermal noise: [tsys-atm|tsys-manual|""]
+     user_pwv       =        1.0        #  Precipitable Water Vapor in mm
+     t_ground       =      269.0        #  ambient temperature
+
+leakage             =        0.0        #  cross polarization
+image               =       True        #  (re)image $project.ms to $project.image
+     vis            = '$project.ms'     #  Measurement Set(s) to image
+     modelimage     =         ''        #  prior image to use in clean e.g. existing single dish image
+     imsize         = [128, 128]        #  output image size in pixels (x,y) or 0 to match model
+     cell           = '0.1arcsec'       #  cell size with units or "" to equal model
+     niter          =        500        #  maximum number of iterations (0 for dirty image)
+     threshold      =  '0.01mJy'        #  flux level (+units) to stop cleaning
+     weighting      =  'natural'        #  weighting to apply to visibilities
+     outertaper     =         []        #  uv-taper on outer baselines in uv-plane
+     stokes         =        'I'        #  Stokes params to image
+
+analyze             =       True        #  (only first 6 selected outputs will be displayed)
+     showarray      =      False        #  like plotants
+     showuv         =       True        #  display uv coverage
+     showpsf        =       True        #  display synthesized (dirty) beam
+     showmodel      =       True        #  display sky model at original resolution
+     showconvolved  =      False        #  display sky model convolved with output beam
+     showclean      =       True        #  display the synthesized image
+     showresidual   =      False        #  display the clean residual image
+     showdifference =       True        #  display difference image
+     showfidelity   =       True        #  display fidelity
+
+graphics            =   'screen'        #  display graphics at each stage to [screen|file|both|none]
+verbose             =      False        
+overwrite           =      False        #  overwrite files starting with $project
+async               =      False        #  If true the taskname must be started using simdata2(...)
+\end{verbatim}
+\normalsize
+
+One major advantage of {\tt simdata2} is the modularity: one can
+modify one's sky model, predict visibilities, corrupt the Measurement
+Set, re-image, and analyze the result all separately, provided in a
+few cases the filenames are set correctly.  The description of the sky
+model is no longer coupled directly to the size and cell size of the
+output image, allowing greater flexibility and a more straightforward setup.
 
 Much more detailed information, and use-case examples, can be found at 
 
