@@ -28,6 +28,7 @@
 #include <tables/Tables/TableDesc.h>
 #include <casa/BasicSL/String.h>
 #include <casa/System/ProgressMeter.h>
+#include <cmath>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -74,7 +75,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template<class M>
 void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 			const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-			const Int nrow, const Bool calcImgWts)
+			const Int nrow, const Bool calcImgWts, 
+			const Bool calcWtSig, ROArrayColumn<Float>& rowWt,
+			ROArrayColumn<Float>& sigma)
 {
   Bool deleteIptr;
   Matrix<M> indatatmp;
@@ -87,6 +90,14 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
   Matrix<Bool> inflagtmp;
   Bool deleteIFptr;
   Matrix<Bool> outflag;
+  
+  ROArrayColumn<Float> inrowwt(mscIn_p->weight());
+  Vector<Float> inrowwttmp;
+  Vector<Float> outrowwt;
+  
+  ROArrayColumn<Float> inrowsig(mscIn_p->sigma());
+  Vector<Float> inrowsigtmp;
+  Vector<Float> outrowsig;
   
   Matrix<Float> inwgtspectmp;
   Bool deleteIWptr;
@@ -106,6 +117,8 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
   Vector<Float> outwgtspectmp;
   //   const Float *owptr = outwgtspectmp.getStorage(deleteOWptr);
 
+  Vector<Int> avcounter;
+
   const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
 
   // Guarantee oldDDID != ddID on 1st iteration.
@@ -115,6 +128,8 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
   Int inChanInc;
   Int nperbin;
 
+  Double rowwtfac, sigfac;
+  
   ProgressMeter meter(0.0, nrow * 1.0, "split", "rows filtered", "", "",
 		      True, nrow / 100);
 
@@ -161,7 +176,26 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
         inImgWtsSpectrum.resize(inNumChan_p[ddID]);
         outImgWts.resize(nchan_p[ddID]);
       }
-        
+
+      if(calcWtSig){
+	rowwtfac = static_cast<Float>(nchan_p[ddID]) / inNumChan_p[ddID];
+	if(averageChannel_p)
+	  rowwtfac *= chanStep_p[ddID];
+	sigfac = 1.0 / sqrt(rowwtfac);
+	os << LogIO::DEBUG1
+	   << ddID << ": inNumChan_p[ddID] = " << inNumChan_p[ddID]
+	   << ", nchan_p[ddID] = " << nchan_p[ddID]
+	   << "\nrowwtfac = " << rowwtfac
+	   << ", sigfac = " << sigfac
+	   << LogIO::POST;
+	inrowwttmp.resize(inNumCorr_p[ddID]);
+	outrowwt.resize(ncorr_p[ddID]);
+	inrowsigtmp.resize(inNumCorr_p[ddID]);
+	outrowsig.resize(ncorr_p[ddID]);
+      }
+
+      avcounter.resize(ncorr_p[ddID]);
+
       oldDDID = ddID;
     }
 
@@ -173,12 +207,18 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     if(calcImgWts)
       inImgWts.get(row, inImgWtsSpectrum);
     //os << LogIO::DEBUG1 << "doSpWeight: " << doSpWeight << LogIO::POST;
-    if(doSpWeight)
-      wgtSpec.get(row, inwgtspectmp);
+    if(doSpWeight){
+      outrowwt.set(0.0);
+      if(calcWtSig)
+	wgtSpec.get(row, inwgtspectmp);
+    }
+    else if(calcWtSig)
+      rowWt.get(row, inrowwttmp);
+    if(calcWtSig)
+      sigma.get(row, inrowsigtmp);
 
     uInt outChanInd = 0;
     Int chancounter = 0;
-    Vector<Int> avcounter(ncorr_p[ddID]);
     outdatatmp.set(0); outwgtspectmp.set(0);
     avcounter.set(0);
     
@@ -238,6 +278,7 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
                 outdata(outCorrInd,
 			outChanInd) = outdatatmp[outCorrInd] / 
 		                      outwgtspectmp[outCorrInd];
+		outrowwt[outCorrInd] += outwgtspectmp[outCorrInd];
 	      }
               else{
                 outdata(outCorrInd, outChanInd) = 0.0;
@@ -263,6 +304,16 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     }
     outDataCol.put(row, outdata);
     msc_p->flag().put(row, outflag);
+    if(calcWtSig){
+      for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
+        Int inCorr = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd];
+	if(!doSpWeight)
+	  outrowwt[outCorrInd] = rowwtfac * inrowwttmp[inCorr];
+	outrowsig[outCorrInd] = sigfac * inrowsigtmp[inCorr];
+      }
+      msc_p->weight().put(row, outrowwt);
+      msc_p->sigma().put(row, outrowsig);
+    }
     if(doSpWeight)
       msc_p->weightSpectrum().put(row, outspweight);
     if(calcImgWts)

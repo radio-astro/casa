@@ -5250,9 +5250,6 @@ Bool SubMS::fillAccessoryMainCols(){
   //msc_p->uvwMeas().putColumn(mscIn_p->uvwMeas());
   msc_p->uvw().putColumn(mscIn_p->uvw());
   
-  msc_p->weight().putColumn(mscIn_p->weight());
-  msc_p->sigma().putColumn(mscIn_p->sigma());
-  
   relabelIDs();
   return True;
 }
@@ -5287,6 +5284,9 @@ Bool SubMS::fillAccessoryMainCols(){
       if(!(mscIn_p->weightSpectrum().isNull()) &&
          mscIn_p->weightSpectrum().isDefined(0))
         msc_p->weightSpectrum().putColumn(mscIn_p->weightSpectrum());
+
+      msc_p->weight().putColumn(mscIn_p->weight());
+      msc_p->sigma().putColumn(mscIn_p->sigma());
     }
     else{
       // if(sameShape_p){
@@ -6065,6 +6065,11 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   LogIO os(LogOrigin("SubMS", "doChannelMods()"));
   Int nrow = mssel_p.nrow();
 
+  ROArrayColumn<Float> rowWt;
+  rowWt.reference(mscIn_p->weight());
+  ROArrayColumn<Float> sigma;
+  sigma.reference(mscIn_p->sigma());
+  
   const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
                           mscIn_p->weightSpectrum().isDefined(0);
   ROArrayColumn<Float> wgtSpec;
@@ -6083,11 +6088,13 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
     
     if(datacols[colind] == MS::FLOAT_DATA)
       filterChans<Float>(mscIn_p->floatData(), msc_p->floatData(),
-			 doSpWeight, wgtSpec, nrow, doImgWts_p);
+			 doSpWeight, wgtSpec, nrow, doImgWts_p && !colind,
+			 !colind, rowWt, sigma);
     else
       filterChans<Complex>(right_column(mscIn_p, datacols[colind]),
 			   right_column(msc_p, datacols[colind], writeToDataCol),
-			   doSpWeight, wgtSpec, nrow, doImgWts_p && !colind);
+			   doSpWeight, wgtSpec, nrow, doImgWts_p && !colind,
+			   !colind, rowWt, sigma);
   }
   return True;
 }
@@ -6615,6 +6622,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
   //Float oldMemUse = -1.0;
 
+  Double rowwtfac; // Adjusts row weight for channel selection.
+
   uInt n_tbns = bin_slots_p.nelements();
   ProgressMeter meter(0.0, n_tbns * 1.0, "split", "bins averaged", "", "",
 		      True, n_tbns / 100);
@@ -6683,6 +6692,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           }
           if(doImgWts_p)
             outImagingWeight.resize(nchan_p[ddID]);
+
+	  rowwtfac = static_cast<Double>(nchan_p[ddID]) / inNumChan_p[ddID];
         }
       }
 
@@ -6707,19 +6718,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         // be copied through to the output channels.
         // It's a bit faster if no slicing is done...so avoid it if possible.
 
-	// 5/23/2010: Should change this to make unflaggedwt a sum of
-	// unflgWtSpec if doSpWeight.  (CAS-2199?)
-        // Set flagged weights to 0 in the unflagged weights...
-        for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
-	  Int inCorrInd = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd];
-	  
-          if(allTrue(flag(*toikit)(IPosition(2, inCorrInd, chanStart_p[ddID]),
-                                   IPosition(2, inCorrInd,
-                                             nchan_p[ddID] + chanStart_p[ddID] - 1))))
-            unflaggedwt[outCorrInd] = 0.0;
-	  else
-	    unflaggedwt[outCorrInd] = inRowWeight(*toikit)(IPosition(1, inCorrInd));
-        }
         if(doSpWeight){
           if(!keepShape_p){
             unflgWtSpec = wgtSpec(*toikit)(corrChanSlicer);
@@ -6728,7 +6726,29 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           else{
             unflgWtSpec = wgtSpec(*toikit);
             unflgWtSpec(flag(*toikit)) = 0.0;
-          }            
+          }
+        }
+        // Set flagged weights to 0 in the unflagged weights...
+        for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
+	  Int inCorrInd = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd];
+	  IPosition startpos(2, inCorrInd, chanStart_p[ddID]);
+	  IPosition endpos(2, inCorrInd,
+			   nchan_p[ddID] + chanStart_p[ddID] - 1);
+	  
+	  if(doSpWeight){
+	    unflaggedwt[outCorrInd] = sum(unflgWtSpec(startpos, endpos));
+	  }
+	  else{
+	    if(allTrue(flag(*toikit)(startpos, endpos))){
+	      unflaggedwt[outCorrInd] = 0.0;
+	    }
+	    else{
+	      unflaggedwt[outCorrInd] = inRowWeight(*toikit)(IPosition(1,
+								   inCorrInd));
+	      if(!keepShape_p)
+		unflaggedwt[outCorrInd] *= rowwtfac;
+	    }
+	  }
         }
         
         // The input row may be completely flagged even if the row flag is
