@@ -18,6 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# set SVNREVISION and BUILDTIME
+set( casadef_quiet TRUE )
+set( casadef_perl ${PERL_EXECUTABLE} )
+set( casadef_source_dir ${CMAKE_SOURCE_DIR} )
+include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
+
 add_custom_command( OUTPUT version.cc
   COMMAND 
   sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'
@@ -25,21 +31,30 @@ add_custom_command( OUTPUT version.cc
       -e 's|PATCH|${CASA_PATCH_VERSION}|'
       -e 's|REVISION|${SVNREVISION}|'
       -e 's|DATE|${BUILDTIME}|'
-      -e 's|INFO||'
       ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > version.cc
       || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template
 )
 
-# Compile time definitions
-#add_custom_command( OUTPUT casadef.py
-#  COMMAND echo task_directory           = ${PYTHON_TASKD} > casadef.py 
-#  COMMAND echo python_library_directory = ${PYTHON_LIBD}  >> casadef.py
-#  COMMAND echo build_time               = ${BUILDTIME}    >> casadef.py
-#  COMMAND echo subversion_revision      = ${SVNREVISION}  >> casadef.py
-#  COMMAND echo subversion_url           = ${SVNURL}       >> casadef.py
-#  COMMAND echo casa_version             = ${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION} >> casadef.py
-#  COMMAND echo casa_build               = ${CASABUILD}    >> casadef.py
-#)
+# (Re)create casadef.py in every build, including those that do
+# not trigger a new cmake run.
+# Parts of casadef.py is generated from the output of svn. This
+# is delegated to the cmake script code/install/casadef.cmake in
+# order to allow setting environment variables portably.
+
+add_custom_target( 
+  xmlcasa_python_casadef
+  COMMAND echo "task_directory = \\\"${PYTHON_TASKD}\\\"" > casadef.py
+  COMMAND echo "python_library_directory = \\\"${PYTHON_LIBD}\\\"" >> casadef.py
+  COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
+  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake >> casadef.py
+  )
+
+add_dependencies( inst xmlcasa_python_casadef )
+add_custom_target( xmlcasa_python_casadef_fast ${CMAKE_BUILD_TOOL} xmlcasa_python_casadef/fast )
+add_dependencies( xmlcasa_fast xmlcasa_python_casadef_fast )
+
+install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
 
 casa_add_library( xmlcasa
   implement/alma/asdm2msfillertask_cmpt.cc
@@ -101,9 +116,6 @@ casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
 
-
-
-#install( PROGRAMS casadef.py  DESTINATION python/${PYTHONV} )
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py

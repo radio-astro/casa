@@ -3,7 +3,7 @@ extern const int   aips_major_version = MAJORMINOR;
 extern const int   aips_minor_version = PATCH;
 extern const int   aips_patch_version = REVISION;
 extern const char* aips_version_date  = "DATE";
-extern const char* aips_version_info  = "INFO";
+extern const char* aips_version_info  = "";
 } //# NAMESPACE CASA - END
 
 

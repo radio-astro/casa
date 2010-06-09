@@ -11,6 +11,7 @@ import sets
 import sys
 import os
 import re
+import casadef
 
 import casac
 casalog = casac.homefinder.find_home_by_name('logsinkHome').create()
@@ -360,4 +361,4 @@ class taskmanager(object):
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     tm = taskmanager( task_path=[ '', os.environ['__CASAPY_PYTHONDIR'] ] )
 else:
-    tm = taskmanager( task_path=[ '', '/CASASUBST/task_directory/' ] )
+    tm = taskmanager( task_path=[ '', casadef.task_directory ] )

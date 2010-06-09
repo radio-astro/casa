@@ -8,6 +8,7 @@ import atexit
 import time
 import types
 import inspect
+import casadef
 from math import *
 
 a=inspect.stack()
@@ -527,7 +528,7 @@ class cluster(object):
      if (dhome!=phome):
         phome=dhome
 
-     sdir='/CASASUBST/python_library_directory/'+'/'
+     sdir = casadef.python_library_directory + '/'
      ##sdir='/home/casa-dev-08/dschieb/casapy-test-30.1.10182-001-64b/lib64/python2.5/'
      self.__client.push(dict(phome=phome), i)
      self.__client.execute('import sys', i)
