@@ -77,7 +77,7 @@ dump( CMAKE_HOST_SYSTEM_NAME
 set( BUILD_SHARED_LIBS ON )
 
 set( DEFAULT_CXX_FLAGS 
-     "-pipe -Wall -Wno-non-template-friend -Wcast-align -Wno-comment"
+     "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
      )
 
 

@@ -2287,17 +2287,17 @@ void VisibilityIterator::putCol(ArrayColumn<Complex> &column, const Array<Comple
 
 void VisibilityIterator::putCol(ArrayColumn<Bool> &column, const Slicer &slicer, const Array<Bool> &array)
 {
-    column.putColumnCells(selRows_p, array);
+    column.putColumnCells(selRows_p, slicer, array);
 }
 
 void VisibilityIterator::putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array)
 {
-    column.putColumnCells(selRows_p, array);
+    column.putColumnCells(selRows_p, slicer, array);
 }
 
 void VisibilityIterator::putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array)
 {
-    column.putColumnCells(selRows_p, array);
+    column.putColumnCells(selRows_p, slicer, array);
 }
 
 } //# NAMESPACE CASA - END
