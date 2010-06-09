@@ -1,32 +1,34 @@
 //#---------------------------------------------------------------------------
 //# MBFITSreader.cc: ATNF single-dish RPFITS reader.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2008
-//# Mark Calabretta, ATNF
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning this software should be addressed as follows:
-//#        Internet email: mcalabre@atnf.csiro.au.
-//#        Postal address: Dr. Mark Calabretta,
-//#                        Australia Telescope National Facility,
-//#                        P.O. Box 76,
-//#                        Epping, NSW, 2121,
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
 //#                        AUSTRALIA
 //#
-//# $Id: MBFITSreader.cc,v 19.54 2008-11-17 06:51:55 cal103 Exp $
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: MBFITSreader.cc,v 19.57 2009-10-30 06:34:36 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# The MBFITSreader class reads single dish RPFITS files (such as Parkes
 //# Multibeam MBFITS files).
@@ -142,7 +144,7 @@ int MBFITSreader::open(
   // Open the RPFITS file.
   int jstat = -3;
   if (rpfitsin(jstat)) {
-    sprintf(cMsg, "failed to open MBFITS file\n       %s", rpname);
+    sprintf(cMsg, "Failed to open MBFITS file\n%s", rpname);
     os << LogIO::SEVERE << cMsg << LogIO::POST ;
     return 1;
   }
@@ -160,7 +162,7 @@ int MBFITSreader::open(
   // Read the first header.
   jstat = -1;
   if (rpfitsin(jstat)) {
-    sprintf(cMsg, "failed to read MBFITS header in file\n"
+    sprintf(cMsg, "Failed to read MBFITS header in file\n"
                   "%s", rpname);
     os << LogIO::SEVERE << cMsg << LogIO::POST ;
     close();
@@ -206,7 +208,7 @@ int MBFITSreader::open(
   }
 
   if (cNBeam <= 0) {
-    os << LogIO::SEVERE << "couldn't determine number of beams." << LogIO::POST ;
+    os << LogIO::SEVERE << "Couldn't determine number of beams." << LogIO::POST ;
     close();
     return 1;
   }
@@ -338,7 +340,7 @@ int MBFITSreader::open(
 
   // Read the first syscal record.
   if (rpget(1, cEOS)) {
-    os << LogIO::SEVERE << "failed to read first syscal record." << LogIO::POST ;
+    os << LogIO::SEVERE << "Failed to read first syscal record." << LogIO::POST ;
     close();
     return 1;
   }
@@ -377,7 +379,7 @@ int MBFITSreader::getHeader(
   LogIO os( LogOrigin( className, methodName, WHERE ) ) ;
 
   if (!cMBopen) {
-    os << LogIO::SEVERE << "an MBFITS file has not been opened." << LogIO::POST ;
+    os << LogIO::SEVERE << "An MBFITS file has not been opened." << LogIO::POST ;
     return 1;
   }
 
@@ -522,7 +524,7 @@ int MBFITSreader::read(
   MBrecord *iMBuff = 0x0;
 
   if (!cMBopen) {
-    os << LogIO::SEVERE << "an MBFITS file has not been opened." << LogIO::POST ;
+    os << LogIO::SEVERE << "An MBFITS file has not been opened." << LogIO::POST ;
     return 1;
   }
 
@@ -595,10 +597,10 @@ int MBFITSreader::read(
           cChanOff = new int[cNIF];
           cXpolOff = new int[cNIF];
 
-          int simulIF = 0;
           int maxChan = 0;
           int maxXpol = 0;
 
+          cSimulIF = 0;
           for (int iIF = 0; iIF < cNIF; iIF++) {
             if (cIFs[iIF]) {
               // Buffer index for each IF within each simultaneous set.
@@ -624,7 +626,7 @@ int MBFITSreader::read(
               }
 
               // Maximum number of selected IFs in any simultaneous set.
-              simulIF = max(simulIF, cIFSel[iIF]+1);
+              cSimulIF = max(cSimulIF, cIFSel[iIF]+1);
 
               // Maximum memory required for any simultaneous set.
               maxChan = max(maxChan, cChanOff[iIF] + cNChan[iIF]*cNPol[iIF]);
@@ -651,7 +653,7 @@ int MBFITSreader::read(
           }
 
           if (cNBin > 1 && cNBeamSel > 1) {
-            os << LogIO::SEVERE << "ERROR, cannot handle binning mode for multiple beams." << LogIO::POST ;
+            os << LogIO::SEVERE << "Cannot handle binning mode for multiple beams.\nSelect a single beam for input." << LogIO::POST ;
             close();
             return 1;
           }
@@ -664,11 +666,11 @@ int MBFITSreader::read(
 
           // Allocate memory for spectral arrays.
           for (int ibuff = 0; ibuff < nBuff; ibuff++) {
-            cBuffer[ibuff].setNIFs(simulIF);
+            cBuffer[ibuff].setNIFs(cSimulIF);
             cBuffer[ibuff].allocate(0, maxChan, maxXpol);
 
             // Signal that this IF in this buffer has been flushed.
-            for (int iIF = 0; iIF < simulIF; iIF++) {
+            for (int iIF = 0; iIF < cSimulIF; iIF++) {
               cBuffer[ibuff].IFno[iIF] = 0;
             }
           }
@@ -688,45 +690,8 @@ int MBFITSreader::read(
           cPrevUTC = -1.0;
         }
 
-        // Check for change-of-day.
-        double cod = 0.0;
-        if ((cUTC + 86400.0) < (cPrevUTC + 600.0)) {
-          // cUTC should continue to increase past 86400 during a single scan.
-          // However, if the RPFITS file contains multiple scans that straddle
-          // midnight then cUTC can jump backwards from the end of one scan to
-          // the start of the next.
-#ifdef PKSIO_DEBUG
-          char buf[256] ;
-          sprintf(buf, "Change-of-day on cUTC: %.1f -> %.1f", cPrevUTC, cUTC);
-          os << LogIO::DEBUGGING << buf << LogIO::POST ;
-#endif
-          // Can't change the recorded value of cUTC directly (without also
-          // changing dateobs) so change-of-day must be recorded separately as
-          // an offset to be applied when comparing integration timestamps.
-          cod = 86400.0;
-
-        } else if (cUTC < cPrevUTC - 1.0) {
-          sprintf(cMsg,
-            "Cycle %d:%03d-%03d, UTC went backwards from\n"
-            "%.1f to %.1f!  Incrementing day number,\n"
-            "positions may be unreliable.", cScanNo, cCycleNo,
-            cCycleNo+1, cPrevUTC, cUTC);
-          os << LogIO::WARN << cMsg << LogIO::POST ;
-          cUTC += 86400.0;
-        }
-
-        if (cNBin > 1) {
-          // Binning mode: correct the time.
-          cUTC += param_.intbase * (cBin - (cNBin + 1)/2.0);
-        }
-
-        // New integration cycle?
-        if ((cUTC+cod) > cPrevUTC) {
-          cCycleNo++;
-          cPrevUTC = cUTC + 0.0001;
-        }
-
-        // Apply beam selection.
+        // Apply beam and IF selection before the change-of-day test to allow
+        // a single selected beam and IF to be handled in binning-mode.
         beamNo = int(cBaseline / 256.0);
         if (beamNo == 1) {
           // Store the position of beam 1 for grid convergence corrections.
@@ -739,9 +704,63 @@ int MBFITSreader::read(
         // Sanity check (mainly for MOPS).
         if (cIFno > cNIF) continue;
 
-        // Apply IF selection.
+        // Apply IF selection; iIFSel == 0 for the first selected IF, == 1
+        // for the second, etc.
         iIFSel = cIFSel[cIFno - 1];
         if (iIFSel < 0) continue;
+
+
+        if (cNBin > 1) {
+          // Binning mode: correct the time.
+          cUTC += param_.intbase * (cBin - (cNBin + 1)/2.0);
+        }
+
+        // Check for change-of-day.
+        double cod = 0.0;
+        if ((cUTC + 86400.0) < (cPrevUTC + 600.0)) {
+          // cUTC should continue to increase past 86400 during a single scan.
+          // However, if the RPFITS file contains multiple scans that straddle
+          // midnight then cUTC can jump backwards from the end of one scan to
+          // the start of the next.
+#ifdef PKSIO_DEBUG
+          char buf[256] ;
+          sprintf(buf, "Change-of-day on cUTC: %.1f -> %.1f\n", cPrevUTC, cUTC);
+          os << LogIO::DEBUGGING << buf << LogIO::POST ;
+#endif
+          // Can't change the recorded value of cUTC directly (without also
+          // changing dateobs) so change-of-day must be recorded separately as
+          // an offset to be applied when comparing integration timestamps.
+          cod = 86400.0;
+
+        } 
+
+        if ((cUTC+cod) < cPrevUTC - 1.0) {
+          if (cBin == 1 && iIFSel) {
+            // Multiple-IF, binning-mode data is only partially time ordered.
+#ifdef PKSIO_DEBUG
+            fprintf(stderr, "New IF in multiple-IF, binning-mode data.\n");
+#endif
+            cCycleNo -= cNBin;
+            cPrevUTC = -1.0;
+
+          } else {
+            // All other data should be fully time ordered.
+            sprintf(cMsg,
+              "Cycle %d:%03d-%03d, UTC went backwards from\n"
+              "%.1f to %.1f!  Incrementing day number,\n"
+              "positions may be unreliable.", cScanNo, cCycleNo,
+              cCycleNo+1, cPrevUTC, cUTC);
+            //logMsg(cMsg);
+            os << LogIO::WARN << cMsg << LogIO::POST ;
+            cUTC += 86400.0;
+          }
+        }
+
+        // New integration cycle?
+        if ((cUTC+cod) > cPrevUTC) {
+          cCycleNo++;
+          cPrevUTC = cUTC + 0.0001;
+        }
 
         sprintf(cDateObs, "%-10.10s", names_.datobs);
         cDateObs[10] = '\0';
@@ -794,8 +813,8 @@ int MBFITSreader::read(
         for (iBeamSel = 0; iBeamSel < cNBeamSel; iBeamSel++) {
           iMBuff = cBuffer + iBeamSel + cNBeamSel*cFlushBin;
 
-          // iMBuff->nIF is set to zero (below) to signal that all IFs in
-          // an integration have been flushed.
+          // iMBuff->nIF is decremented (below) and if zero signals that all
+          // IFs in an integration have been flushed.
           if (iMBuff->nIF) {
             if (cycleNo == 0 || iMBuff->cycleNo < cycleNo) {
               beamNo  = iMBuff->beamNo;
@@ -808,6 +827,9 @@ int MBFITSreader::read(
           // Found an integration to flush.
           break;
         }
+
+        // Start with the first IF in the next bin.
+        cFlushIF = 0;
       }
 
       if (beamNo) {
@@ -815,7 +837,7 @@ int MBFITSreader::read(
         iMBuff = cBuffer + iBeamSel + cNBeamSel*cFlushBin;
 
         // Find the IF to flush.
-        for (; cFlushIF < iMBuff->nIF; cFlushIF++) {
+        for (; cFlushIF < cSimulIF; cFlushIF++) {
           if (iMBuff->IFno[cFlushIF]) break;
         }
 
@@ -837,7 +859,7 @@ int MBFITSreader::read(
     }
 
 
-    if (cFlushing && cFlushBin == 0 && cFlushIF == 0 && cInterp) {
+    if (cInterp && cFlushing == 1) {
       // Start of flush cycle, interpolate the beam position.
       //
       // The position is measured by the control system at a time returned by
@@ -1113,6 +1135,8 @@ int MBFITSreader::read(
         os << LogIO::DEBUGGING << buf << LogIO::POST ;
 #endif
       }
+
+      cFlushing = 2;
     }
 
 
@@ -1130,11 +1154,10 @@ int MBFITSreader::read(
       // Signal that this IF in this buffer location has been flushed.
       iMBuff->IFno[cFlushIF] = 0;
 
-      if (cFlushIF == iMBuff->nIF - 1) {
-        // Signal that all IFs in this buffer location have been flushed.
-        iMBuff->nIF = 0;
-
-        // Stop cEOS being set when the next integration is read.
+      iMBuff->nIF--;
+      if (iMBuff->nIF == 0) {
+        // All IFs in this buffer location have been flushed.  Stop cEOS
+        // being set when the next integration is read.
         iMBuff->cycleNo = 0;
 
       } else {
