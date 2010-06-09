@@ -1691,18 +1691,17 @@ bool componentlist::replace(const int which, const ::casac::record& list,
   return rstat;
 }
 
-bool componentlist::print(const int which)
-{
-  itsLog->origin(LogOrigin("componentlist", "print"));
-
-  // TODO : IMPLEMENT ME HERE !
-  bool rstat(false);
+bool componentlist::summarize(const int which) {
+  itsLog->origin(LogOrigin("componentlist", __FUNCTION__));
+  Bool rstat = False;
   try{
-    if(itsList && itsBin){
-      *itsLog << LogIO::WARN << "print not implemented yet" << LogIO::POST;
+    if(itsList && itsBin) {
+      *itsLog << LogIO::NORMAL << itsList->summarize(which) << LogIO::POST;
+      rstat = True;
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
+      rstat = False;
     }
   }
   catch (AipsError x){

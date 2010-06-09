@@ -153,7 +153,7 @@ class componentlist
 
     bool replace(const int which, const ::casac::record& list, const std::vector<int>& whichones = std::vector<int> (1, -1));
 
-    bool print(const int which = -1);
+    bool summarize(const int which = -1);
 
     bool iscomponentlist(const ::casac::variant& tool);
 
