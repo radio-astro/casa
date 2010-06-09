@@ -1119,6 +1119,14 @@ Bool ComponentList::fromRecord(String& error, const RecordInterface& inRec){
 	}
 	return retval;
 }
+
+String ComponentList::summarize(uInt index) const {
+	  AlwaysAssert(index < nelements(), AipsError);
+	  DebugAssert(ok(), AipsError);
+	  return component(index).summarize();
+}
+
+
 // Local Variables: 
 // compile-command: "gmake ComponentList"
 // End: 
