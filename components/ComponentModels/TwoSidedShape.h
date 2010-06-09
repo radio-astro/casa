@@ -310,6 +310,12 @@ public:
   virtual Bool fromPixel (const Vector<Double>& parameters,
                           const DirectionCoordinate& dirCoord);
 
+  static String sizeToString(
+    	Quantity major, Quantity minor, Quantity posangle,
+    	Bool includeUncertainties = True, Quantity majorErr = 0,
+    	Quantity minorErr = 0, Quantity posanErr = 0
+  );
+
 protected:
   // The constructors and assignment operator are protected as only derived
   // classes should use them.
