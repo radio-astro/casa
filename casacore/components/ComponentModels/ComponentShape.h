@@ -285,6 +285,10 @@ public:
   // Return a pointer to the object. All subclasses must implement. 
   virtual const ComponentShape* getPtr() const = 0;
 
+  // Return a nicely formatted string describing the component's size.
+  // All subclasses must implement.
+  virtual String sizeToString() const = 0;
+
 protected:
   // The constructors and assignment operator are protected as only derived
   // classes should use them.

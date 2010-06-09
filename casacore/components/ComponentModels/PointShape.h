@@ -257,6 +257,8 @@ public:
   // return a pointer to this object.
   virtual const ComponentShape* getPtr() const; 
 
+  virtual String sizeToString() const;
+
 private:
 
 // FInd out if a direction is located within a pixel 
