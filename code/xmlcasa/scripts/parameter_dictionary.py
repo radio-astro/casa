@@ -2251,6 +2251,17 @@ class par(str):
 		"""		
 
 	@staticmethod
+	def smallscalebias():
+		"""
+		smallscalebias -- A bias toward smaller scales in multiscale
+		clean.  The peak flux found at each scale is weighted by
+		a factor = 1 - smallscalebias*scale/max_scale, so that weighted
+		peak flux = peak flux*factor.
+		Typically the values range from 0.2 to 1.0.
+		default: 0.6
+		"""
+ 
+	@staticmethod
 	def smoothsize():
 		"""
 		smoothsize -- smoothing beam in Pressed-out
