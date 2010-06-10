@@ -1,6 +1,8 @@
 import shutil
 import unittest
 import os
+from tasks import *
+#from taskinit import *
 
 #
 # Test of flagdata modes
@@ -28,9 +30,10 @@ class test_base(unittest.TestCase):
             print "Moving data..."
             os.system('cp -r ' + \
                       os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + vis + ' ' + vis)
-            
-        flagdata(vis=self.vis, unflag=true)
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata(vis=self.vis, unflag=True)
 
     def setUp_ngc5921(self):
         self.vis = "ngc5921.ms"
@@ -43,7 +46,8 @@ class test_base(unittest.TestCase):
                          '/data/regression/ngc5921/ngc5921.fits', \
                          self.vis)
             
-        flagdata(vis=self.vis, unflag=true)
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata(vis=self.vis, unflag=True)
 
 
 class test_rfi(test_base):
@@ -53,11 +57,11 @@ class test_rfi(test_base):
         self.setUp_flagdatatest()
         
     def test1(self):
-        flagdata(vis=self.vis, unflag=true)
+        flagdata(vis=self.vis, unflag=True)
         flagdata(vis=self.vis, mode='rfi')
         test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 1326)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 5252, 51)
-        flagdata(vis=self.vis, unflag=true)
+        flagdata(vis=self.vis, unflag=True)
 
 
 class test_shadow(test_base):
@@ -93,7 +97,7 @@ class test_vector_flagmanager(test_base):
         default(flagdata)
         vis = 'flagdatatest.ms'
 
-        flagdata(vis=vis, unflag=true)
+        flagdata(vis=vis, unflag=True)
 
         clipminmax=[0.0, 0.2]
         antenna = ['1', '2']
@@ -102,7 +106,7 @@ class test_vector_flagmanager(test_base):
         inp(flagdata) # broken, looks only at global parameters
         flagdata(vis=vis, clipminmax=clipminmax, antenna=antenna, clipcolumn=clipcolumn)
         test_eq(flagdata(vis=vis, mode='summary'), 70902, 17897)
-        flagdata(vis=vis, unflag=true)
+        flagdata(vis=vis, unflag=True)
 
         print "Test of flagmanager mode=list, flagbackup=True/False"
         flagmanager(vis=vis, mode='list')
@@ -110,13 +114,13 @@ class test_vector_flagmanager(test_base):
         assert len(fg.getflagversionlist()) == 5
         fg.done()
 
-        flagdata(vis=vis, unflag=true, flagbackup=false)
+        flagdata(vis=vis, unflag=True, flagbackup=False)
         flagmanager(vis=vis, mode='list')
         fg.open(vis)
         assert len(fg.getflagversionlist()) == 5
         fg.done()
 
-        flagdata(vis=vis, unflag=true, flagbackup=true)
+        flagdata(vis=vis, unflag=True, flagbackup=True)
         flagmanager(vis=vis, mode='list')
         fg.open(vis)
         len(fg.getflagversionlist()) == 6
@@ -157,7 +161,7 @@ class test_flagmanager(test_base):
         flagmanager(vis = self.vis, mode='restore', versionname='manualflag_3')
         restore2 = flagdata(vis = self.vis, mode='summary')['flagged']
 
-        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags"
+        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags, should be", ant2
 
         assert restore2 == ant2
 
@@ -249,18 +253,18 @@ class test_statistics_queries(test_base):
 
     def test13(self):
         print "quack mode quackincrement"
-        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 571536)
 
-        flagdata(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 857304)
         
-        flagdata(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1571724)
         
-        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1762236)
-        flagdata(vis=self.vis, unflag=true)
+        flagdata(vis=self.vis, unflag=True)
 
 
 
@@ -276,7 +280,7 @@ class test_selections(test_base):
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 52416)
         
         # feed not implemented flagdata(vis=vis, feed='27')
-        # flagdata(vis=vis, unflag=true)
+        # flagdata(vis=vis, unflag=True)
 
     def test_antenna(self):
 
@@ -322,11 +326,3 @@ def suite():
             test_flagmanager,
             test_rfi,
             test_shadow]
-
-def main():
-
-    for t in suite():
-        assert unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(t)).wasSuccessful()
-
-if __name__ == "__main__":
-    main()
