@@ -260,7 +260,6 @@ void Scantable::setupMainTable()
   mdirCol.write(td);
   td.addColumn(ScalarColumnDesc<Float>("AZIMUTH"));
   td.addColumn(ScalarColumnDesc<Float>("ELEVATION"));
-  td.addColumn(ScalarColumnDesc<Float>("PARANGLE"));
   td.addColumn(ScalarColumnDesc<Float>("OPACITY"));
 
   td.addColumn(ScalarColumnDesc<uInt>("TCAL_ID"));
@@ -302,10 +301,10 @@ void Scantable::attach()
   azCol_.attach(table_, "AZIMUTH");
   elCol_.attach(table_, "ELEVATION");
   dirCol_.attach(table_, "DIRECTION");
-  paraCol_.attach(table_, "PARANGLE");
   fldnCol_.attach(table_, "FIELDNAME");
   rbeamCol_.attach(table_, "REFBEAMNO");
 
+  mweatheridCol_.attach(table_,"WEATHER_ID");
   mfitidCol_.attach(table_,"FIT_ID");
   mfreqidCol_.attach(table_, "FREQ_ID");
   mtcalidCol_.attach(table_, "TCAL_ID");
@@ -500,7 +499,7 @@ void Scantable::setFeedType(const std::string& feedtype)
   table_.rwKeywordSet().define(String("POLTYPE"), feedtype);
 }
 
-MPosition Scantable::getAntennaPosition () const
+MPosition Scantable::getAntennaPosition() const
 {
   Vector<Double> antpos;
   table_.keywordSet().get("AntennaPosition", antpos);
@@ -514,7 +513,16 @@ void Scantable::makePersistent(const std::string& filename)
   Path path(inname);
   /// @todo reindex SCANNO, recompute nbeam, nif, npol
   inname = path.expandedName();
-  table_.deepCopy(inname, Table::New);
+  // WORKAROUND !!! for Table bug
+  // Remove when fixed in casacore
+  if ( table_.tableType() == Table::Memory  && !selector_.empty() ) {
+    Table tab = table_.copyToMemoryTable(generateName());
+    tab.deepCopy(inname, Table::New);
+    tab.markForDelete();
+
+  } else {
+    table_.deepCopy(inname, Table::New);
+  }
 }
 
 int Scantable::nbeam( int scanno ) const
@@ -645,7 +653,7 @@ int Scantable::getBeam(int whichrow) const
   return beamCol_(whichrow);
 }
 
-std::vector<uint> Scantable::getNumbers(ScalarColumn<uInt>& col)
+std::vector<uint> Scantable::getNumbers(const ScalarColumn<uInt>& col) const
 {
   Vector<uInt> nos(col.getColumn());
   uInt n = genSort( nos, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates );
@@ -839,16 +847,14 @@ std::vector<float> Scantable::getSpectrum( int whichrow,
   if ( ptype == basetype ) {
     specCol_.get(whichrow, arr);
   } else {
-    CountedPtr<STPol> stpol(STPol::getPolClass(Scantable::factories_, basetype));
+    CountedPtr<STPol> stpol(STPol::getPolClass(Scantable::factories_,
+                                               basetype));
     uInt row = uInt(whichrow);
     stpol->setSpectra(getPolMatrix(row));
     Float fang,fhand,parang;
-    fang = focusTable_.getTotalFeedAngle(mfocusidCol_(row));
+    fang = focusTable_.getTotalAngle(mfocusidCol_(row));
     fhand = focusTable_.getFeedHand(mfocusidCol_(row));
-    parang = paraCol_(row);
-    /// @todo re-enable this
-    // disable total feed angle to support paralactifying Caswell style
-    stpol->setPhaseCorrections(parang, -parang, fhand);
+    stpol->setPhaseCorrections(fang, fhand);
     arr = stpol->getSpectrum(requestedpol, ptype);
   }
   if ( arr.nelements() == 0 )
@@ -920,8 +926,7 @@ std::string Scantable::summary( bool verbose )
       << setw(15) << "IFs:" << setw(4) << nif() << endl
       << setw(15) << "Polarisations:" << setw(4) << npol()
       << "(" << getPolType() << ")" << endl
-      << setw(15) << "Channels:"  << setw(4) << nchan() << endl;
-  oss << endl;
+      << setw(15) << "Channels:" << nchan() << endl;
   String tmp;
   oss << setw(15) << "Observer:"
       << table_.keywordSet().asString("Observer") << endl;
@@ -966,9 +971,11 @@ std::string Scantable::summary( bool verbose )
   oss << setw(5) << "Scan" << setw(15) << "Source"
       << setw(10) << "Time" << setw(18) << "Integration" << endl;
   oss << setw(5) << "" << setw(5) << "Beam" << setw(3) << "" << dirtype << endl;
-  oss << setw(10) << "" << setw(3) << "IF" << setw(6) << ""
+  oss << setw(10) << "" << setw(3) << "IF" << setw(3) << ""
       << setw(8) << "Frame" << setw(16)
-      << "RefVal" << setw(10) << "RefPix" << setw(12) << "Increment" <<endl;
+      << "RefVal" << setw(10) << "RefPix" << setw(12) << "Increment"
+      << setw(7) << "Channels"
+      << endl;
   oss << asap::SEPERATOR << endl;
   TableIterator iter(table_, "SCANNO");
   while (!iter.pastEnd()) {
@@ -1003,9 +1010,10 @@ std::string Scantable::summary( bool verbose )
         Table isubt = iiter.table();
         ROTableRow irow(isubt);
         const TableRecord& irec = irow.get(0);
-        oss << setw(10) << "";
+        oss << setw(9) << "";
         oss << setw(3) << std::right << irec.asuInt("IFNO") << std::left
-            << setw(2) << "" << frequencies().print(irec.asuInt("FREQ_ID"))
+            << setw(1) << "" << frequencies().print(irec.asuInt("FREQ_ID"))
+            << setw(3) << "" << nchan(irec.asuInt("IFNO"))
             << endl;
 
         ++iiter;
@@ -1039,13 +1047,24 @@ MEpoch Scantable::getEpoch(int whichrow) const
   } else {
     Double tm;
     table_.keywordSet().get("UTC",tm);
-    return MEpoch(MVEpoch(tm));  
+    return MEpoch(MVEpoch(tm));
   }
 }
 
 std::string Scantable::getDirectionString(int whichrow) const
 {
   return formatDirection(getDirection(uInt(whichrow)));
+}
+
+
+SpectralCoordinate Scantable::getSpectralCoordinate(int whichrow) const {
+  const MPosition& mp = getAntennaPosition();
+  const MDirection& md = getDirection(whichrow);
+  const MEpoch& me = timeCol_(whichrow);
+  //Double rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
+  Vector<Double> rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
+  return freqTable_.getSpectralCoordinate(md, mp, me, rf,
+                                          mfreqidCol_(whichrow));
 }
 
 std::vector< double > Scantable::getAbcissa( int whichrow ) const
@@ -1060,14 +1079,7 @@ std::vector< double > Scantable::getAbcissa( int whichrow ) const
     }
     return stlout;
   }
-
-  const MPosition& mp = getAntennaPosition();
-  const MDirection& md = getDirection(whichrow);
-  const MEpoch& me = timeCol_(whichrow);
-  //Double rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
-  Vector<Double> rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
-  SpectralCoordinate spc =
-    freqTable_.getSpectralCoordinate(md, mp, me, rf, mfreqidCol_(whichrow));
+  SpectralCoordinate spc = getSpectralCoordinate(whichrow);
   Vector<Double> pixel(nchan);
   Vector<Double> world;
   indgen(pixel);
@@ -1224,18 +1236,18 @@ void Scantable::shift(int npix)
   genSort( fids, Sort::Ascending,
 	   Sort::QuickSort|Sort::NoDuplicates );
   for (uInt i=0; i<fids.nelements(); ++i) {
-    frequencies().shiftRefPix(npix, i);
+    frequencies().shiftRefPix(npix, fids[i]);
   }
 }
 
-std::string asap::Scantable::getAntennaName() const
+std::string Scantable::getAntennaName() const
 {
   String out;
   table_.keywordSet().get("AntennaName", out);
   return out;
 }
 
-int asap::Scantable::checkScanInfo(const std::vector<int>& scanlist) const
+int Scantable::checkScanInfo(const std::vector<int>& scanlist) const
 {
   String tbpath;
   int ret = 0;
@@ -1320,7 +1332,7 @@ int asap::Scantable::checkScanInfo(const std::vector<int>& scanlist) const
   return ret;
 }
 
-std::vector<double>  asap::Scantable::getDirectionVector(int whichrow) const
+std::vector<double> Scantable::getDirectionVector(int whichrow) const
 {
   Vector<Double> Dir = dirCol_(whichrow).getAngle("rad").getValue();
   std::vector<double> dir;
@@ -1678,6 +1690,17 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 
 
   return ;
+}
+
+std::vector<float> Scantable::getWeather(int whichrow) const
+{
+  std::vector<float> out(5);
+  //Float temperature, pressure, humidity, windspeed, windaz;
+  weatherTable_.getEntry(out[0], out[1], out[2], out[3], out[4],
+                         mweatheridCol_(uInt(whichrow)));
+
+
+  return out;
 }
 
 }

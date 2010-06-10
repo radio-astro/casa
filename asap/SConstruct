@@ -5,23 +5,26 @@ import platform
 import SCons
 
 moduledir = distutils.sysconfig.get_python_lib()
-if  platform.architecture()[0] == '64bit':
+
+if sys.platform.startswith('linux') and platform.architecture()[0] == '64bit':
     # hack to install into /usr/lib64 if scons is in the 32bit /usr/lib/
     if moduledir.startswith("/usr/lib/"):
         moduledir = moduledir.replace("lib", "lib64")
 
-opts = Options("options.cfg")
-opts.AddOptions(
+EnsureSConsVersion(1,1,0)
+
+opts = Variables("options.cfg")
+opts.AddVariables(
                 ("FORTRAN", "The fortran compiler", None),
                 ("f2clib", "The fortran to c library", None),
-                PathOption("prefix",
+                PathVariable("prefix",
 	        "The root installation path",
                            distutils.sysconfig.PREFIX),
-                PathOption("moduledir",
+                PathVariable("moduledir",
                             "The python module path (site-packages))",
                             moduledir),
-		PathOption("casacoreroot", "The location of casacore",
-				    "/usr/local"),
+		PathVariable("casacoreroot", "The location of casacore",
+                             "/usr/local"),
 		("boostroot", "The root dir where boost is installed", None),
 		("boostlib", "The name of the boost python library", 
 		 "boost_python"),
@@ -44,6 +47,7 @@ opts.AddOptions(
 		("cfitsiolibdir", "The cfitsio library location", None),
 		("cfitsiolib", "The cfitsio library name", "cfitsio"),
 		("cfitsioincdir", "The cfitsio include location", None),
+		("wcslib", "The wcs library name", "wcs"),
 		("wcsroot", 
 		 "The root directory where wcs is installed", None),
 		("wcslibdir", "The wcs library location", None),
@@ -51,15 +55,27 @@ opts.AddOptions(
 		("rpfitsroot", 
 		 "The root directory where rpfits is installed", None),
 		("rpfitslibdir", "The rpfits library location", None),
-#		("rpfitsincdir", "The rpfits include location", None),
-                EnumOption("mode", "The type of build.", "debug",
+                ("pyraproot", "The root directory where libpyrap is installed",
+                 None),
+                ("pyraplib", "The name of the pyrap library", "pyrap"),
+                ("pyraplibdir", "The directory where libpyrap is installed",
+                 None),
+                ("pyrapincdir", "The pyrap include location",
+                 None),
+                BoolVariable("enable_pyrap", "Use pyrap conversion library", 
+                             False),
+
+                EnumVariable("mode", "The type of build.", "release",
                            ["release","debug"], ignorecase=1),
                 ("makedist",
                  "Make a binary archive giving a suffix, e.g. sarge or fc5",
                  ""),
-                EnumOption("makedoc", "Build the userguide in specified format",
+                EnumVariable("makedoc", "Build the userguide in specified format",
                            "none",
-                           ["none", "pdf", "html"], ignorecase=1)
+                           ["none", "pdf", "html"], ignorecase=1),
+                BoolVariable("apps", "Build cpp apps", True),
+                BoolVariable("alma", "Enable alma specific functionality", 
+                             False),
                 )
 
 env = Environment( toolpath = ['./scons'],
@@ -72,9 +88,6 @@ env = Environment( toolpath = ['./scons'],
 Help(opts.GenerateHelpText(env))
 env.SConsignFile()
 
-if env["PLATFORM"] == "darwin":
-    env.EnsureSConsVersion(0,96,95)
-
 casacoretooldir = os.path.join(env["casacoreroot"],"share",
 				   "casacore")
 if not os.path.exists(casacoretooldir):
@@ -82,6 +95,8 @@ if not os.path.exists(casacoretooldir):
     Exit(1)
 
 # load casacore specific build flags
+env.Tool('casaoptions', [casacoretooldir])
+opts.Update(env)
 env.Tool('casa', [casacoretooldir])
 
 if not env.GetOption('clean'):
@@ -92,7 +107,7 @@ if not env.GetOption('clean'):
     conf.env.AppendUnique(CPPPATH=os.path.join(conf.env["casacoreroot"], 
 					       "include", "casacore"))
     if not conf.CheckLib("casa_casa", language='c++'): Exit(1)
-    conf.env.PrependUnique(LIBS=["casa_ms", "casa_components", 
+    conf.env.PrependUnique(LIBS=["casa_images", "casa_ms", "casa_components", 
                                  "casa_coordinates", "casa_lattices", 
                                  "casa_fits", "casa_measures", "casa_scimath",
                                  "casa_scimath_f", "casa_tables", 
@@ -107,9 +122,17 @@ if not env.GetOption('clean'):
         if not conf.CheckLib(library=pylib, language='c'): Exit(1)
 
     conf.env.AddCustomPackage('boost')
-    if not conf.CheckLibWithHeader(env["boostlib"], 
+    if not conf.CheckLibWithHeader(conf.env["boostlib"], 
                                    'boost/python.hpp', language='c++'): 
         Exit(1)
+
+    conf.env.AddCustomPackage('pyrap')
+    if  conf.env.get("enable_pyrap") and conf.CheckLib(conf.env["pyraplib"], 
+                                                       language='c++', 
+                                                       autoadd=0): 
+        conf.env.Append(CPPFLAGS=['-DHAVE_PYRAP'])
+        conf.env.PrependUnique(LIBS=env['pyraplib'])
+    
     # test for cfitsio
     if not conf.CheckLib("m"): Exit(1)
     conf.env.AddCustomPackage('cfitsio')
@@ -117,30 +140,34 @@ if not env.GetOption('clean'):
 				   'fitsio.h', language='c'):
         Exit(1)
     conf.env.AddCustomPackage('wcs')
-    if not conf.CheckLibWithHeader('wcs', 'wcslib/wcs.h', language='c'):
+    if not conf.CheckLibWithHeader(conf.env["wcslib"], 
+                                   'wcslib/wcs.h', language='c'):
         Exit(1)
     conf.env.AddCustomPackage('rpfits')
     if not conf.CheckLib(conf.env["rpfitslib"], language="c"):
 	Exit(1)
 
     # test for blas/lapack
+    lapackname = conf.env.get("lapacklib", "lapack")
     conf.env.AddCustomPackage("lapack")
-    if not conf.CheckLib(conf.env["lapacklib"]): Exit(1)
+    if not conf.CheckLib(lapackname): Exit(1)
     blasname = conf.env.get("blaslib", "blas")
     conf.env.AddCustomPackage("blas")
-    if not conf.CheckLib(conf.env["blaslib"]): Exit(1)
+    if not conf.CheckLib(blasname): Exit(1)
     conf.env.CheckFortran(conf)
     if not conf.CheckLib('stdc++', language='c++'): Exit(1)
+    if conf.env["alma"]:
+        conf.env.Append(CPPFLAGS=['-DUSE_ALMA'])
     env = conf.Finish()
 
-env["version"] = "2.2.x"
+env["version"] = "3.0.0"
 
 if env['mode'] == 'release':
     if env["PLATFORM"] != "darwin":
 	env.Append(LINKFLAGS=['-Wl,-O1', '-s'])
     env.Append(CCFLAGS=["-O2"])
 else:
-    env.Append(CCFLAGS=["-g"])
+    env.Append(CCFLAGS=["-g", "-Wall"])
 
 # Export for SConscript files
 Export("env")
@@ -164,14 +191,17 @@ taction = Action(test_module, test_str)
 env.AddPostAction(so, taction)
 
 # install targets
-somod = env.Install("$moduledir/asap", so )
-pymods = env.Install("$moduledir/asap", env.SGlob("python/*.py"))
-bins = env.Install("$prefix/bin", ["bin/asap", "bin/asap_update_data"])
-shares = env.Install("$moduledir/asap/data", "share/ipythonrc-asap")
-env.Alias('install', [somod, pymods, bins, shares])
+installs = []
+installs.append(env.Install("$moduledir/asap", so))
+installs.append(env.Install("$moduledir/asap", env.SGlob("python/*.py")))
+installs.append(env.Install("$prefix/bin", 
+                            ["bin/asap", "bin/asap_update_data"]))
+installs.append(env.Install("$moduledir/asap/data", "share/ipythonrc-asap"))
+installs.append(env.Install("$moduledir/asap/data", "share/ipy_user_conf.py"))
+env.Alias('install', installs)
 
 # install aips++ data repos
-rootdir=None
+rootdir = None
 outdir =  os.path.join(env["moduledir"],'asap','data')
 sources = ['ephemerides','geodetic']
 if os.path.exists("/nfs/aips++/data"):
@@ -192,6 +222,7 @@ if len(env["makedist"]):
     env.QInstall("$stagedir/bin", ["bin/asap", "bin/asap_update_data"])
     env.QInstall("$stagedir", ["bin/install"])
     env.QInstall("$stagedir/asap/data", "share/ipythonrc-asap")
+    env.QInstall("$stagedir/asap/data", "share/ipy_user_conf.py")
     if rootdir is not None:
         # This creates a directory Using data table... - disabled
         #env.Command("Using data tables in %s" % rootdir,
@@ -207,6 +238,9 @@ if len(env["makedist"]):
     env.AddPostAction(arch, Delete("$stagedir"))
 if env["makedoc"].lower() != "none":
     env.SConscript("doc/SConscript")
+
+if env["apps"]:
+    env.SConscript("apps/SConscript")
 
 if env.GetOption("clean"):
     Execute(Delete(".sconf_temp"))

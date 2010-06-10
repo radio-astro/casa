@@ -6,8 +6,21 @@ class selector(_selector):
     A selection object to be applied to scantables to restrict the
     scantables to specific rows.
     """
-    def __init(self):
-        _selector.__init__(self)
+    fields = ["pols", "ifs", "beams", "scans", "cycles", "name", "query"]
+
+    def __init__(self, *args, **kw):
+        if len(args) == 1:
+            if isinstance(args[0], self.__class__) \
+               or isinstance(args[0], _selector):
+                _selector.__init__(self, args[0])
+            else:
+                raise TypeError("Argument can only be a selector object")
+        else:
+            _selector.__init__(self)
+            for k,v  in kw.items():
+                if k in self.fields:
+                    func = getattr(self, "set_%s" % k)
+                    func(v)
 
     def reset(self):
         """
@@ -44,7 +57,7 @@ class selector(_selector):
             self._setpols(vec)
         else:
             raise TypeError('Unknown pol type. Please use [0,1...] or ["XX","YY"...]')
-    
+
     # for the americans
     set_polarizations = set_polarisations
     # for the lazy
@@ -219,6 +232,10 @@ class selector(_selector):
         """
         Merge two selections.
         """
+        if self.is_empty():
+            return other
+        elif other.is_empty():
+            return self
         union = selector()
         gets = [[self._getscans(), other._getscans(), union._setscans],
                 [self._getcycles(), other._getcycles(),union._setcycles],

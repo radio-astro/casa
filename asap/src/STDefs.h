@@ -26,18 +26,13 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STDefs.h 1388 2007-07-26 16:02:13Z TakTsutsumi $
+//# $Id: STDefs.h 1757 2010-06-09 09:03:06Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 
 #ifndef ASAPDEFS_H
 #define ASAPDEFS_H
 
 namespace asap {
-  enum AxisNo { BeamAxis=0,
-                IFAxis,
-                PolAxis,
-                ChanAxis,
-                nAxes};
 
   enum Instrument {UNKNOWNINST=0,
                    ALMA,
@@ -52,10 +47,7 @@ namespace asap {
 
   enum FeedPolType {UNKNOWNFEED, LINEAR, CIRCULAR, N_POL};
 
-  enum WeightType {NONE=0, VAR, TSYS, TINT, TINTSYS, N_WEIGHTTYPES};
-
-  enum TableType {MEMORY=0, PERSISTENT};
-
+  enum WeightType {W_NONE=0, W_VAR, W_TSYS, W_TINT, W_TINTSYS, W_N_WEIGHTTYPES};
 
 
   const std::string SEPERATOR =

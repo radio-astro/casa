@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.h 1388 2007-07-26 16:02:13Z TakTsutsumi $
+//# $Id: STWriter.h 1757 2010-06-09 09:03:06Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #ifndef STWRITER_H
 #define STWRITER_H
@@ -35,6 +35,7 @@
 
 #include <casa/aips.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <casa/BasicSL/String.h>
 
 #include "Logger.h"
 #include "Scantable.h"
@@ -82,6 +83,8 @@ private:
                       const casa::Table& tab);
 
   void replacePtTab(const casa::Table& tab, const std::string& fname);
+
+  casa::String getObsTypes( casa::Int srctype ) ;
 
   std::string     format_;
   PKSwriter* writer_;

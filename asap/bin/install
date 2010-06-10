@@ -17,7 +17,7 @@ def get_libs(lib='_asap.so'):
     lddcommand = "/usr/bin/ldd"
     lddopts = ""
     if (sys.platform == "darwin"):
-        lddcommand = "otool"
+        lddcommand = "/usr/bin/otool"
         lddopts = "-L"
     if not os.path.isfile(lddcommand):
         raise IOError("ldd/otool is not available")
@@ -26,15 +26,27 @@ def get_libs(lib='_asap.so'):
     p = os.popen(lddcommand+" "+lddopts+" "+lib)
     resolved = []
     unresolved = []
-    for l in p.readlines():
-        lsp = l.split()
-        # test this to avoid fails on linux_gate, which has no library
-        if len(lsp) >= 3:
-            if lsp[2] == "not":
-                unresolved.append(lsp[0])
+    if sys.platform == "linux2":
+        for l in p.readlines():
+            lsp = l.split()
+            # test this to avoid fails on linux_gate, which has no library
+            if len(lsp) >= 3:
+                if lsp[2] == "not":
+                    unresolved.append(lsp[0])
+                else:
+                    resolved.append(lsp[2])
+    elif sys.platform == "darwin":
+        for l in p.readlines():
+            l = l.strip()
+            if l.endswith(":"):
+                continue
+            l = l.split()[0]
+            if not os.path.exists(l):
+                unresolved.append(l)
             else:
-                resolved.append(lsp[2])
+                resolved.append(l)
     return resolved, unresolved
+
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "p:m:h",
@@ -121,7 +133,7 @@ try:
     shutil.copytree("asap", moddir)
     print "Installing asap  scripts in %s" % bindir
     if moduledir != sysmoduledir:
-        import sre
+        import re
         print "Changing asap startup script to use custom PYTHONPATH"
         inf = file("bin/asap")
         outf = file(os.path.join(bindir,"asap"), "w")
@@ -136,6 +148,7 @@ try:
     else:
         shutil.copy2("bin/asap", bindir)
     shutil.copy2("bin/asap_update_data", bindir)
+    shutil.copy2("bin/asap2to3", bindir)
     if not os.path.exists("asap/data/ephemerides"):
         print "Warning - no data directory present"
         print "Please run asap_update_data after the installation is completed."

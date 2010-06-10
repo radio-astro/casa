@@ -1,31 +1,34 @@
 //#---------------------------------------------------------------------------
 //# PKSMS2reader.h: Class to read Parkes Multibeam data from a v2 MS.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
-//# Associated Universities, Inc. Washington DC, USA.
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
+//#                        AUSTRALIA
 //#
-//# $Id$
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: PKSMS2reader.h,v 19.18 2009-09-29 07:33:38 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# Original: 2000/08/03, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
@@ -34,6 +37,7 @@
 #define ATNF_PKSMS2READER_H
 
 #include <atnf/PKSIO/PKSreader.h>
+#include <atnf/PKSIO/PKSrecord.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
@@ -45,11 +49,11 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
+#include <casa/namespace.h>
+
 // <summary>
 // Class to read Parkes Multibeam data from a v2 MS.
 // </summary>
-
-#include <casa/namespace.h>
 
 class PKSMS2reader : public PKSreader
 {
@@ -63,6 +67,7 @@ class PKSMS2reader : public PKSreader
     //  Open the MS for reading.
     virtual Int open(
         const String msName,
+        const String antenna,
         Vector<Bool> &beams,
         Vector<Bool> &IFs,
         Vector<uInt> &nChan,
@@ -78,12 +83,13 @@ class PKSMS2reader : public PKSreader
         String &antName,
         Vector<Double> &antPosition,
         String &obsMode,
+        String &bunit,
         Float  &equinox,
-        String &freqRef,
+        //String &freqRef,
+        String &dopplerFrame,
         Double &mjd,
         Double &refFreq,
-        Double &bandwidth,
-        String &fluxunit);
+        Double &bandwidth);
 
     // Get frequency parameters for each IF.
     virtual Int getFreqInfo(
@@ -100,7 +106,10 @@ class PKSMS2reader : public PKSreader
         const Vector<Int>  refChan,
         const Bool getSpectra = True,
         const Bool getXPol    = False,
-        const Bool getFeedPos = False);
+        const Bool getFeedPos = False,
+        const Bool getPointing = False,
+        const Int  coordSys   = 0);
+
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(
@@ -110,6 +119,7 @@ class PKSMS2reader : public PKSreader
         Matrix<Double> &positions);
 
     // Read the next data record.
+/**
     virtual Int read(
         Int             &scanNo,
         Int             &cycleNo,
@@ -152,6 +162,9 @@ class PKSMS2reader : public PKSreader
         Matrix<uChar>   &flagged,
         Complex         &xCalFctr,
         Vector<Complex> &xPol);
+**/
+    virtual Int read(PKSrecord &pksrec);
+
 
     // Read the next data record, just the basics.
     virtual Int read(
@@ -167,15 +180,22 @@ class PKSMS2reader : public PKSreader
     virtual void close(void);
 
   private:
+    Vector<String> splitAntennaSelectionString( const String s );
+    void setupAntennaList( const String s ) ;
+
     Bool   cHaveBaseLin, cHaveCalFctr, cHaveSrcVel, cHaveTsys, cHaveXCalFctr,
-           cMSopen, cHaveTcal, cHaveDataCol, cATF, cHaveSysCal, cHaveCorrectedDataCol;
+           cMSopen, cHaveTcal, cHaveDataCol, cALMA, cHaveSysCal, cHaveCorrectedDataCol;
     Int    cCycleNo, cIdx, cNRow, cScanNo;
     Double cTime, lastmjd;
     Vector<Int>    cEndChan, cRefChan, cStartChan;
     Vector<Bool>   cBeams, cIFs;
     Vector<Slicer> cDataSel;
+    String         cDirRef, cTelName;
     MeasurementSet cPKSMS;
     Table          cSysCalTab, tmptab, tmptab2;
+
+    //Vector<String> cAntenna;
+    Vector<Int> cAntId;
 
     ROScalarColumn<Int>     cScanNoCol;
     ROScalarColumn<Double>  cTimeCol;
@@ -196,6 +216,7 @@ class PKSMS2reader : public PKSreader
     ROScalarColumn<Int>     cDataDescIdCol;
     ROScalarColumn<Int>     cSpWinIdCol;
     ROArrayColumn<Double>   cChanFreqCol;
+    ROScalarColumn<Double>   cTotBWCol;
     ROScalarColumn<Double>  cWeatherTimeCol;
     ROScalarColumn<Float>   cTemperatureCol;
     ROScalarColumn<Float>   cPressureCol;
@@ -203,6 +224,7 @@ class PKSMS2reader : public PKSreader
     ROArrayColumn<Float>    cTcalCol;
     ROScalarColumn<Int>     cBeamNoCol;
     ROArrayColumn<Double>   cPointingCol;
+    ROScalarColumn<Double>  cPointingTimeCol;
     ROArrayColumn<Float>    cTsysCol;
     ROArrayColumn<Float>    cSigmaCol;
     ROArrayColumn<Float>    cCalFctrCol;
@@ -210,6 +232,7 @@ class PKSMS2reader : public PKSreader
     ROArrayColumn<Float>    cBaseSubCol;
     ROArrayColumn<Float>    cFloatDataCol;
     ROArrayColumn<Bool>     cFlagCol;
+    ROScalarColumn<Bool>    cFlagRowCol;
     ROScalarColumn<Complex> cXCalFctrCol;
     ROArrayColumn<Complex>  cDataCol;
     ROArrayColumn<Complex>  cCorrectedDataCol;

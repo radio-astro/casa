@@ -26,6 +26,7 @@ RPFITSLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=R
 
 CASAINC   := -I$(CASAROOT)/code/include -I$(COREINCD) -I$(CASAROOT)/$(CASAARCH)/include
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
+#USELIB := lib64
 USELIB := lib
 
 # the compiler
@@ -36,11 +37,13 @@ endif
 # compiler flags
 CXXFLAGS := -fPIC -O3 -g
 CXXFLAGS += -ansi -Wno-long-long -Wall
+#CXXOPTS := -DAIPS_64B
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
    #CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
    CXXFLAGS +=-DAIPS_DARWIN
+   #CXXFLAGS += -Wno-long-double
 endif
 
 # cfitsio
@@ -49,6 +52,7 @@ CFITSIOINC := -I$(CFITSIOROOT)/include/cfitsio
 CFITSIOLIB := -lcfitsio
 
 #rpfits
+#RPFITSROOT := /usr
 RPFITSLIB := -lrpfits
 
 G2CROOT := /usr
@@ -68,15 +72,13 @@ else
 endif
 
 # python
-PYTHONINC := $(addprefix -I,$(PYTHONINCD))
+YTHONINC := $(addprefix -I,$(PYTHONINCD))
 PYTHONLIB := -L$(PYTHONLIBD) $(PYTHONLIB)
+PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
 
 # use python universal build
 ifeq "$(CASAARCH)" "darwin"
-   #PYVERSION := 2.5
-   #PYTHONROOT := /Library/Frameworks/Python.framework/Versions/$(PYVERSION)
    PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
-   #PYTHONLIB := -F$(PYTHONROOT)/lib -framework Python
 endif
 
 # the linker
@@ -124,6 +126,7 @@ CCOBJECTS := MathUtils.o \
              STWriter.o \
              STAsciiWriter.o \
              STFITSImageWriter.o \
+             STAtmosphere.o \
              Scantable.o \
              Templates.o 
 PYOBJECTS := python_Scantable.o \
@@ -135,16 +138,18 @@ PYOBJECTS := python_Scantable.o \
              python_STLineFinder.o \
              python_STFitEntry.o \
              python_STWriter.o \
-             python_SrcType.o \
              python_LineCatalog.o \
+	     python_SrcType.o \
+             python_STAtmosphere.o \
+             python_STCoordinate.o \
 	     python_asap.o
 
 OBJECTS := $(CCOBJECTS) $(PYOBJECTS)
 
 HEADERS   := MathUtils.h \
-             Logger.h \
 	     Lorentzian1D.h \
 	     Lorentzian1DParam.h \
+             Logger.h \
              STAttr.h \
              STHeader.h \
              Scantable.h \
@@ -173,7 +178,10 @@ HEADERS   := MathUtils.h \
 	     STPolLinear.h \
 	     STWriter.h \
 	     STAsciiWriter.h \
-             STFITSImageWriter.h
+             STFITSImageWriter.h \
+             IndexedCompare.h \
+             STAtmosphere.h \
+             STCoordinate.h
 
 STATICCCLIB := libasap.a
 MEMBERS := $(patsubst %,$(STATICCCLIB)(%),$(CCOBJECTS))

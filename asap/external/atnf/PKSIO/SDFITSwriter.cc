@@ -1,45 +1,48 @@
 //#---------------------------------------------------------------------------
 //# SDFITSwriter.cc: ATNF CFITSIO interface class for SDFITS output.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
-//# Mark Calabretta, ATNF
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning this software should be addressed as follows:
-//#        Internet email: mcalabre@atnf.csiro.au.
-//#        Postal address: Dr. Mark Calabretta,
-//#                        Australia Telescope National Facility,
-//#                        P.O. Box 76,
-//#                        Epping, NSW, 2121,
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
 //#                        AUSTRALIA
 //#
-//# $Id$
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: SDFITSwriter.cc,v 19.18 2009-09-29 07:33:39 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# Original: 2000/07/24, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
 
-#include <algorithm>
-#include <math.h>
+#include <atnf/PKSIO/MBrecord.h>
+#include <atnf/PKSIO/SDFITSwriter.h>
 
-// AIPS++ includes.
+#include <casa/Logging/LogIO.h>
+
 #include <casa/iostream.h>
 
-// ATNF includes.
-#include <atnf/PKSIO/PKSMBrecord.h>
-#include <atnf/PKSIO/SDFITSwriter.h>
+#include <algorithm>
+#include <math.h>
+#include <cstring>
 
 using namespace std;
 
@@ -49,12 +52,15 @@ const double PI  = 3.141592653589793238462643;
 // Factor to convert radians to degrees.
 const double R2D = 180.0 / PI;
 
+// Class name
+const string className = "SDFITSwriter" ;
+
 //------------------------------------------------- SDFITSwriter::SDFITSwriter
 
 SDFITSwriter::SDFITSwriter()
 {
   // Default constructor.
-  cSDptr = 0;
+  cSDptr = 0x0;
 }
 
 //------------------------------------------------ SDFITSwriter::~SDFITSwriter
@@ -75,6 +81,7 @@ int SDFITSwriter::create(
         char*  telescope,
         double antPos[3],
         char*  obsMode,
+        char*  bunit,
         float  equinox,
         char*  dopplerFrame,
         int    nIF,
@@ -84,6 +91,13 @@ int SDFITSwriter::create(
         int    haveBase,
         int    extraSysCal)
 {
+  const string methodName = "create()" ;
+
+  if (cSDptr) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Output file already open, close it first.");
+    return 1;
+  }
+
   // Prepend an '!' to the output name to force it to be overwritten.
   char sdname[80];
   sdname[0] = '!';
@@ -92,6 +106,8 @@ int SDFITSwriter::create(
   // Create a new SDFITS file.
   cStatus = 0;
   if (fits_create_file(&cSDptr, sdname, &cStatus)) {
+    sprintf(cMsg, "Failed to create SDFITS file\n       %s", sdName);
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, cMsg);
     return cStatus;
   }
 
@@ -112,7 +128,7 @@ int SDFITSwriter::create(
       cDoTDIM = 2;
       break;
     }
-    
+
     if (cNChan[iIF] != cNChan[0] || cNPol[iIF] != cNPol[0]) {
       // Varying channels and/or polarizations, need a TDIM column at least.
       cDoTDIM = 1;
@@ -139,6 +155,7 @@ int SDFITSwriter::create(
 
   // Write required primary header keywords.
   if (fits_write_imghdr(cSDptr, 8, 0, 0, &cStatus)) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed to write required primary header keywords.");
     return cStatus;
   }
 
@@ -158,8 +175,8 @@ int SDFITSwriter::create(
   char text[72];
   char version[7];
   char date[11];
-  sscanf("$Revision: 19.10 $", "%*s%s", version);
-  sscanf("$Date: 2006/07/05 05:44:52 $", "%*s%s", date);
+  sscanf("$Revision: 19.18 $", "%*s%s", version);
+  sscanf("$Date: 2009-09-29 07:33:39 $", "%*s%s", date);
   sprintf(text, "SDFITSwriter (v%s, %s)", version, date);
   fits_write_key_str(cSDptr, "ORIGIN", text, "output class", &cStatus);
 
@@ -169,11 +186,18 @@ int SDFITSwriter::create(
   sprintf(text, "using cfitsio v%.3f.", fits_get_version(&cfvers));
   fits_write_comment(cSDptr, text, &cStatus);
 
+  if (cStatus) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed in writing primary header.");
+    return cStatus;
+  }
+
+
   // Create an SDFITS extension.
   long nrow = 0;
   int  ncol = 0;
   if (fits_create_tbl(cSDptr, BINARY_TBL, nrow, ncol, NULL, NULL, NULL,
       "SINGLE DISH", &cStatus)) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed to create a binary table extension.");
     return 1;
   }
 
@@ -208,7 +232,7 @@ int SDFITSwriter::create(
   fits_insert_col(cSDptr, ++ncol, "SCAN", "1I", &cStatus);
 
   // CYCLE (additional, real).
-  fits_insert_col(cSDptr, ++ncol, "CYCLE", "1I", &cStatus);
+  fits_insert_col(cSDptr, ++ncol, "CYCLE", "1J", &cStatus);
 
   // DATE-OBS (core, real).
   fits_insert_col(cSDptr, ++ncol, "DATE-OBS", "10A", &cStatus);
@@ -354,7 +378,7 @@ int SDFITSwriter::create(
   sprintf(tform, "%dE", maxNPol);
   fits_insert_col(cSDptr, ++ncol, "TSYS", tform, &cStatus);
   sprintf(tunit, "TUNIT%d", ncol);
-  fits_write_key_str(cSDptr, tunit, "Jy", "units of field", &cStatus);
+  fits_write_key_str(cSDptr, tunit, bunit, "units of field", &cStatus);
 
   // CALFCTR (additional, real).
   sprintf(tform, "%dE", maxNPol);
@@ -368,9 +392,9 @@ int SDFITSwriter::create(
     fits_write_tdim(cSDptr, ncol, 2, tdim, &cStatus);
 
     // BASESUB (additional, real).
-    sprintf(tform, "%dE", 9*maxNPol);
+    sprintf(tform, "%dE", 24*maxNPol);
     fits_insert_col(cSDptr, ++ncol, "BASESUB", tform, &cStatus);
-    tdim[0] = 9;
+    tdim[0] = 24;
     fits_write_tdim(cSDptr, ncol, 2, tdim, &cStatus);
   }
 
@@ -395,7 +419,7 @@ int SDFITSwriter::create(
   }
 
   sprintf(tunit, "TUNIT%d", ncol);
-  fits_write_key_str(cSDptr, tunit, "Jy", "units of field", &cStatus);
+  fits_write_key_str(cSDptr, tunit, bunit, "units of field", &cStatus);
 
   // FLAGGED (additional, logical).
   if (cDoTDIM < 2) {
@@ -443,7 +467,7 @@ int SDFITSwriter::create(
     }
 
     sprintf(tunit, "TUNIT%d", ncol);
-    fits_write_key_str(cSDptr, tunit, "Jy", "units of field", &cStatus);
+    fits_write_key_str(cSDptr, tunit, bunit, "units of field", &cStatus);
   }
 
   if (cExtraSysCal) {
@@ -522,6 +546,10 @@ int SDFITSwriter::create(
     fits_set_tscale(cSDptr, j, 1.0, 0.0, &cStatus);
   }
 
+  if (cStatus) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed in writing binary table header.");
+  }
+
   return cStatus;
 }
 
@@ -529,35 +557,43 @@ int SDFITSwriter::create(
 
 // Write a record to the SDFITS file.
 
-int SDFITSwriter::write(PKSMBrecord &mbrec)
+int SDFITSwriter::write(MBrecord &mbrec)
 {
+  const string methodName = "write()" ;
+  LogIO os( LogOrigin( className, methodName, WHERE ) ) ;
+
   char *cptr;
 
   // Check parameters.
   int IFno = mbrec.IFno[0];
   if (IFno < 1 || cNIF < IFno) {
-    cerr << "SDFITSwriter::write: "
-         << "Invalid IF number " << IFno
-         << " (maximum " << cNIF << ")." << endl;
+    os << LogIO::WARN
+       << "SDFITSwriter::write: "
+       << "Invalid IF number " << IFno
+       << " (maximum " << cNIF << ")." << LogIO::POST ;
     return 1;
   }
 
   int iIF = IFno - 1;
   int nChan = cNChan[iIF];
   if (mbrec.nChan[0] != nChan) {
-    cerr << "SDFITSriter::write: "
-         << "Wrong number of channels for IF " << IFno << "," << endl
-         << "                    "
-         << "got " << nChan << " should be " << mbrec.nChan[0] << "." << endl;
+    os << LogIO::WARN
+       << "SDFITSriter::write: "
+       << "Wrong number of channels for IF " << IFno << "," << endl
+       << "                    "
+       << "got " << nChan << " should be " << mbrec.nChan[0] << "." << endl;
+    os << LogIO::POST ;
     return 1;
   }
 
   int nPol = cNPol[iIF];
   if (mbrec.nPol[0] != nPol) {
-    cerr << "SDFITSriter::write: "
-         << "Wrong number of polarizations for IF " << IFno << "," << endl
-         << "                    "
-         << "got " << nPol << " should be " << mbrec.nPol[0] << "." << endl;
+    os << LogIO::WARN
+       << "SDFITSriter::write: "
+       << "Wrong number of polarizations for IF " << IFno << "," << endl
+       << "                    "
+       << "got " << nPol << " should be " << mbrec.nPol[0] << "." << endl;
+    os << LogIO::POST ;
     return 1;
   }
 
@@ -654,7 +690,7 @@ int SDFITSwriter::write(PKSMBrecord &mbrec)
                        &cStatus);
 
     // BASESUB.
-    fits_write_col_flt(cSDptr, ++icol, cRow, 1, 9*nPol, mbrec.baseSub[0][0],
+    fits_write_col_flt(cSDptr, ++icol, cRow, 1, 24*nPol, mbrec.baseSub[0][0],
                        &cStatus);
   }
 
@@ -738,18 +774,32 @@ int SDFITSwriter::write(PKSMBrecord &mbrec)
     fits_write_col_flt(cSDptr, ++icol, cRow, 1, 1, &windAz, &cStatus);
   }
 
+  if (cStatus) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed in writing binary table entry.");
+  }
+
   return cStatus;
 }
 
 
-//-------------------------------------------------- SDFITSwriter::reportError
+//------------------------------------------------------ SDFITSwriter::history
 
-// Print the error message corresponding to the input status value and all the
-// messages on the CFITSIO error stack to stderr.
+// Write a history record.
 
-void SDFITSwriter::reportError()
+int SDFITSwriter::history(char *text)
+
 {
-  fits_report_error(stderr, cStatus);
+  const string methodName = "history()" ;
+
+  if (!cSDptr) {
+    return 1;
+  }
+
+  if (fits_write_history(cSDptr, text, &cStatus)) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed in writing HISTORY records.");
+  }
+
+  return cStatus;
 }
 
 //-------------------------------------------------------- SDFITSwriter::close
@@ -758,9 +808,14 @@ void SDFITSwriter::reportError()
 
 void SDFITSwriter::close()
 {
+  const string methodName = "close()" ;
+
   if (cSDptr) {
     cStatus = 0;
-    fits_close_file(cSDptr, &cStatus);
+    if (fits_close_file(cSDptr, &cStatus)) {
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed to close file.");
+    }
+
     cSDptr = 0;
   }
 }
@@ -771,9 +826,37 @@ void SDFITSwriter::close()
 
 void SDFITSwriter::deleteFile()
 {
+  const string methodName = "deleteFile()" ;
+
   if (cSDptr) {
     cStatus = 0;
-    fits_delete_file(cSDptr, &cStatus);
+    if (fits_delete_file(cSDptr, &cStatus)) {
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed to close and delete file.");
+    }
+
     cSDptr = 0;
   }
+}
+
+//------------------------------------------------------- SDFITSwriter::log
+
+// Log a message.  If the current CFITSIO status value is non-zero, also log
+// the corresponding error message and dump the CFITSIO message stack.
+
+void SDFITSwriter::log(LogOrigin origin, LogIO::Command cmd, const char *msg)
+{
+  LogIO os( origin ) ;
+
+  os << cmd << msg << endl ;
+
+  if (cStatus) {
+    fits_get_errstatus(cStatus, cMsg);
+    os << cMsg << endl ; 
+
+    while (fits_read_errmsg(cMsg)) {
+      os << cMsg << endl ;
+    }
+  }
+
+  os << LogIO::POST ;
 }

@@ -1,33 +1,37 @@
 //#---------------------------------------------------------------------------
 //# pks_maths.cc: Mathematical functions for Parkes single-dish data reduction
 //#---------------------------------------------------------------------------
-//# Copyright (C) 1994-2006
-//# Associated Universities, Inc. Washington DC, USA.
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2004-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
+//#                        AUSTRALIA
 //#
-//# Original: Mark Calabretta
-//# $Id: pks_maths.cc,v 1.5 2006/05/19 00:12:35 mcalabre Exp $
-//----------------------------------------------------------------------------
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: pks_maths.cc,v 1.7 2009-09-29 07:45:02 cal103 Exp $
+//#---------------------------------------------------------------------------
+//# Original: 2004/07/16 Mark Calabretta
+//#---------------------------------------------------------------------------
 
 // AIPS++ includes.
 #include <casa/aips.h>
@@ -294,14 +298,13 @@ void gst(Double ut1, Double &gmst, Double &gast)
 
 //----------------------------------------------------------------------- azel
 
-// Convert (ra,dec) to (az,el), from
-// http://aa.usno.navy.mil/faq/docs/Alt_Az.html.  Position as a Cartesian
-// triplet in m, UT1 in MJD form, and all angles in radian.
+// Convert (ra,dec) to (az,el).  Position as a Cartesian triplet in m, UT1 in
+// MJD form, and all angles in radian.
 
 void azel(const Vector<Double> position, Double ut1, Double ra, Double dec,
           Double &az, Double &el)
 {
-  // Get gocentric longitude and latitude (rad).
+  // Get geocentric longitude and latitude (rad).
   Double x = position(0);
   Double y = position(1);
   Double z = position(2);
@@ -317,9 +320,11 @@ void azel(const Vector<Double> position, Double ut1, Double ra, Double dec,
   Double ha = (gast + lng) - ra;
 
   // Azimuth and elevation (rad).
-  az = atan2(cos(dec)*sin(ha), cos(dec)*sin(lat)*cos(ha) - sin(dec)*cos(lat));
+  az = atan2(cos(dec)*sin(ha), 
+             cos(dec)*sin(lat)*cos(ha) - sin(dec)*cos(lat));
   if (az < 0.0) az += C::_2pi;
-  el = asin(cos(dec)*cos(lat)*cos(ha) + sin(dec)*sin(lat));
+  el = asin(sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(ha));
+
 }
 
 //---------------------------------------------------------------------- solel

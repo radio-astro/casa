@@ -1,5 +1,10 @@
 import SCons
 
+try:
+    from SCons.Environment import installFunc
+except ImportError:
+    from SCons.Tool.install import installFunc
+
 def no_output(target, source, env):
     return ""
 
@@ -26,7 +31,7 @@ def generate(env):
     env.QInstallAs = QInstallAs
     
     quietinstaller_builder = env.Builder(
-        action = env.Action(SCons.Environment.installFunc, no_output),
+        action = env.Action(installFunc, no_output),
         multi=1
     )
 

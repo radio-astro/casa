@@ -1,31 +1,34 @@
 //#---------------------------------------------------------------------------
-//# SDFITSreader.cc: ATNF CFITSIO interface class for SDFITS input.
+//# SDFITSreader.cc: ATNF interface class for SDFITS input using CFITSIO.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
-//# Associated Universities, Inc. Washington DC, USA.
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning this software should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
+//#                        AUSTRALIA
 //#
-//# $Id$
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: SDFITSreader.cc,v 19.45 2009-09-30 07:23:48 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# The SDFITSreader class reads single dish FITS files such as those written
 //# by SDFITSwriter containing Parkes Multibeam data.
@@ -33,19 +36,18 @@
 //# Original: 2000/08/09, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
 
-#include <algorithm>
-#include <strings.h>
+#include <atnf/pks/pks_maths.h>
+#include <atnf/PKSIO/MBrecord.h>
+#include <atnf/PKSIO/SDFITSreader.h>
 
-// AIPS++ includes.
-#include <casa/iostream.h>
+#include <casa/Logging/LogIO.h>
+#include <casa/Quanta/MVTime.h>
 #include <casa/math.h>
 #include <casa/stdio.h>
 
-// ATNF includes.
-#include <atnf/pks/pks_maths.h>
-#include <atnf/PKSIO/PKSMBrecord.h>
-#include <atnf/PKSIO/SDFITSreader.h>
-
+#include <algorithm>
+#include <strings.h>
+#include <cstring>
 
 class FITSparm
 {
@@ -56,6 +58,7 @@ class FITSparm
     int  coltype;	// Column data type, as found.
     long nelem;		// Column data repeat count; < 0 for vardim.
     int  tdimcol;	// TDIM column number; 0 for keyword; -1 absent.
+    char units[32];	// Units from TUNITn keyword.
 };
 
 // Numerical constants.
@@ -64,12 +67,25 @@ const double PI  = 3.141592653589793238462643;
 // Factor to convert radians to degrees.
 const double D2R = PI / 180.0;
 
+// Class name
+const string className = "SDFITSreader" ;
+
+//---------------------------------------------------- SDFITSreader::(statics)
+
+int SDFITSreader::sInit  = 1;
+int SDFITSreader::sReset = 0;
+int (*SDFITSreader::sALFAcalNon)[2]   = (int (*)[2])(new float[16]);
+int (*SDFITSreader::sALFAcalNoff)[2]  = (int (*)[2])(new float[16]);
+float (*SDFITSreader::sALFAcalOn)[2]  = (float (*)[2])(new float[16]);
+float (*SDFITSreader::sALFAcalOff)[2] = (float (*)[2])(new float[16]);
+float (*SDFITSreader::sALFAcal)[2]    = (float (*)[2])(new float[16]);
+
 //------------------------------------------------- SDFITSreader::SDFITSreader
 
 SDFITSreader::SDFITSreader()
 {
   // Default constructor.
-  cSDptr = 0;
+  cSDptr = 0x0;
 
   // Allocate space for data descriptors.
   cData = new FITSparm[NDATA];
@@ -84,6 +100,7 @@ SDFITSreader::SDFITSreader()
   cStartChan = 0x0;
   cEndChan   = 0x0;
   cRefChan   = 0x0;
+  cPols      = 0x0;
 }
 
 //------------------------------------------------ SDFITSreader::~SDFITSreader
@@ -112,6 +129,8 @@ int SDFITSreader::open(
         int    &haveSpectra,
         int    &extraSysCal)
 {
+  const string methodName = "open()" ;
+
   if (cSDptr) {
     close();
   }
@@ -119,8 +138,8 @@ int SDFITSreader::open(
   // Open the SDFITS file.
   cStatus = 0;
   if (fits_open_file(&cSDptr, sdName, READONLY, &cStatus)) {
-    cerr << "Failed to open SDFITS file: " << sdName << endl;
-    reportError();
+    sprintf(cMsg, "ERROR: Failed to open SDFITS file\n       %s", sdName);
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, cMsg);
     return 1;
   }
 
@@ -137,9 +156,13 @@ int SDFITSreader::open(
       if (fits_movnam_hdu(cSDptr, BINARY_TBL, "CIMAFITS", 0, &cStatus) == 0) {
         cALFA_CIMA = 1;
 
+        // Check for later versions of CIMAFITS.
+        float version;
+        readParm("VERSION", TFLOAT, &version);
+        if (version >= 2.0f) cALFA_CIMA = int(version);
+
       } else {
-        cerr << "Failed to locate SDFITS binary table." << endl;
-        reportError();
+        log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Failed to locate SDFITS binary table.");
         close();
         return 1;
       }
@@ -147,14 +170,18 @@ int SDFITSreader::open(
 
     // Arecibo ALFA data of some kind.
     cALFA = 1;
-    for (int iBeam = 0; iBeam < 8; iBeam++) {
-      for (int iPol = 0; iPol < 2; iPol++) {
-        cALFAcalOn[iBeam][iPol]  = 0.0f;
-        cALFAcalOff[iBeam][iPol] = 0.0f;
+    if (sInit) {
+      for (int iBeam = 0; iBeam < 8; iBeam++) {
+        for (int iPol = 0; iPol < 2; iPol++) {
+          sALFAcalOn[iBeam][iPol]  = 0.0f;
+          sALFAcalOff[iBeam][iPol] = 0.0f;
 
-        // Nominal factor to calibrate spectra in Jy.
-        cALFAcal[iBeam][iPol] = 3.0f;
+          // Nominal factor to calibrate spectra in Jy.
+          sALFAcal[iBeam][iPol] = 3.0f;
+        }
       }
+
+      sInit = 0;
     }
   }
 
@@ -164,42 +191,41 @@ int SDFITSreader::open(
   cGBT = strncmp(telescope, "GBT", 3) == 0 ||
          strncmp(telescope, "NRAO_GBT", 8) == 0;
 
-  cRow = 0;
-
 
   // Check that the DATA array column is present.
   findData(DATA, "DATA", TFLOAT);
   haveSpectra = cHaveSpectra = cData[DATA].colnum > 0;
 
+  cNAxisTime = 0;
   if (cHaveSpectra) {
     // Find the number of data axes (must be the same for each IF).
-    cNAxis = 5;
-    if (readDim(DATA, 1, &cNAxis, cNAxes)) {
-      reportError();
+    cNAxes = 5;
+    if (readDim(DATA, 1, &cNAxes, cNAxis)) {
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
       close();
       return 1;
     }
 
     if (cALFA_BD) {
-      // ALFA BDFITS: variable length arrays don't actually vary and there is 
+      // ALFA BDFITS: variable length arrays don't actually vary and there is
       // no TDIM (or MAXISn) card; use the LAGS_IN value.
-      cNAxis = 5;
-      readParm("LAGS_IN", TLONG, cNAxes);
-      cNAxes[1] = 1;
-      cNAxes[2] = 1;
-      cNAxes[3] = 1;
-      cNAxes[4] = 1;
-      cData[DATA].nelem = cNAxes[0];
+      cNAxes = 5;
+      readParm("LAGS_IN", TLONG, cNAxis);
+      cNAxis[1] = 1;
+      cNAxis[2] = 1;
+      cNAxis[3] = 1;
+      cNAxis[4] = 1;
+      cData[DATA].nelem = cNAxis[0];
     }
 
-    if (cNAxis < 4) {
+    if (cNAxes < 4) {
       // Need at least four axes (for now).
-      cerr << "DATA array contains fewer than four axes." << endl;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "DATA array contains fewer than four axes.");
       close();
       return 1;
-    } else if (cNAxis > 5) {
+    } else if (cNAxes > 5) {
       // We support up to five axes.
-      cerr << "DATA array contains more than five axes." << endl;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "DATA array contains more than five axes.");
       close();
       return 1;
     }
@@ -210,7 +236,7 @@ int SDFITSreader::open(
     // DATA column not present, check for a DATAXED keyword.
     findData(DATAXED, "DATAXED", TSTRING);
     if (cData[DATAXED].colnum < 0) {
-      cerr << "DATA array column absent from binary table." << endl;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "DATA array column absent from binary table.");
       close();
       return 1;
     }
@@ -219,11 +245,11 @@ int SDFITSreader::open(
     char dataxed[32];
     readParm("DATAXED", TSTRING, dataxed);
 
-    for (int iaxis = 0; iaxis < 5; iaxis++) cNAxes[iaxis] = 0;
-    sscanf(dataxed, "(%ld,%ld,%ld,%ld,%ld)", cNAxes, cNAxes+1, cNAxes+2,
-      cNAxes+3, cNAxes+4);
+    for (int iaxis = 0; iaxis < 5; iaxis++) cNAxis[iaxis] = 0;
+    sscanf(dataxed, "(%ld,%ld,%ld,%ld,%ld)", cNAxis, cNAxis+1, cNAxis+2,
+      cNAxis+3, cNAxis+4);
     for (int iaxis = 4; iaxis > -1; iaxis--) {
-      if (cNAxes[iaxis] == 0) cNAxis = iaxis;
+      if (cNAxis[iaxis] == 0) cNAxes = iaxis;
     }
   }
 
@@ -234,76 +260,115 @@ int SDFITSreader::open(
 
   // Find required DATA array axes.
   char ctype[5][72];
-  for (int iaxis = 0; iaxis < cNAxis; iaxis++) {
+  for (int iaxis = 0; iaxis < cNAxes; iaxis++) {
     strcpy(ctype[iaxis], "");
     readParm(CTYPE[iaxis], TSTRING, ctype[iaxis]);      // Core.
   }
 
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     close();
     return 1;
   }
 
-  char *fqCRPIX  = 0;
   char *fqCRVAL  = 0;
   char *fqCDELT  = 0;
+  char *fqCRPIX  = 0;
   char *raCRVAL  = 0;
   char *decCRVAL = 0;
   char *timeCRVAL = 0;
+  char *timeCDELT = 0;
+  char *timeCRPIX = 0;
   char *beamCRVAL = 0;
+  char *polCRVAL = 0;
 
-  for (int iaxis = 0; iaxis < cNAxis; iaxis++) {
+  cFreqAxis   = -1;
+  cStokesAxis = -1;
+  cRaAxis     = -1;
+  cDecAxis    = -1;
+  cTimeAxis   = -1;
+  cBeamAxis   = -1;
+
+  for (int iaxis = 0; iaxis < cNAxes; iaxis++) {
     if (strncmp(ctype[iaxis], "FREQ", 4) == 0) {
-      cReqax[0] = iaxis;
-      fqCRPIX  = CRPIX[iaxis];
-      fqCRVAL  = CRVAL[iaxis];
-      fqCDELT  = CDELT[iaxis];
+      cFreqAxis = iaxis;
+      fqCRVAL   = CRVAL[iaxis];
+      fqCDELT   = CDELT[iaxis];
+      fqCRPIX   = CRPIX[iaxis];
 
     } else if (strncmp(ctype[iaxis], "STOKES", 6) == 0) {
-      cReqax[1] = iaxis;
+      cStokesAxis = iaxis;
+      polCRVAL = CRVAL[iaxis];
 
     } else if (strncmp(ctype[iaxis], "RA", 2) == 0) {
-      cReqax[2] = iaxis;
-      raCRVAL  = CRVAL[iaxis];
+      cRaAxis   = iaxis;
+      raCRVAL   = CRVAL[iaxis];
 
     } else if (strncmp(ctype[iaxis], "DEC", 3) == 0) {
-      cReqax[3] = iaxis;
-      decCRVAL = CRVAL[iaxis];
+      cDecAxis  = iaxis;
+      decCRVAL  = CRVAL[iaxis];
 
     } else if (strcmp(ctype[iaxis], "TIME") == 0) {
-      // TIME (UTC seconds since midnight) can be a keyword or axis type.
+      // TIME (UTC seconds since midnight); axis type, if present, takes
+      // precedence over keyword.
+      cTimeAxis = iaxis;
       timeCRVAL = CRVAL[iaxis];
+
+      // Check for non-degeneracy.
+      if ((cNAxisTime = cNAxis[iaxis]) > 1) {
+        timeCDELT = CDELT[iaxis];
+        timeCRPIX = CRPIX[iaxis];
+        sprintf(cMsg, "DATA array contains a TIME axis of length %ld.",
+          cNAxisTime);
+        //logMsg(cMsg);
+        log(LogOrigin( className, methodName, WHERE ), LogIO::NORMAL, cMsg);
+      }
 
     } else if (strcmp(ctype[iaxis], "BEAM") == 0) {
       // BEAM can be a keyword or axis type.
+      cBeamAxis = iaxis;
       beamCRVAL = CRVAL[iaxis];
     }
   }
 
   if (cALFA_BD) {
     // Fixed in ALFA CIMAFITS.
-    cReqax[2] = 2;
+    cRaAxis = 2;
     raCRVAL = "CRVAL2A";
 
-    cReqax[3] = 3;
+    cDecAxis = 3;
     decCRVAL = "CRVAL3A";
   }
 
-  // Check that all are present.
-  for (int iaxis = 0; iaxis < 4; iaxis++) {
-    if (cReqax[iaxis] < 0) {
-      cerr << "Could not find required DATA array axes." << endl;
-      close();
-      return 1;
-    }
+
+  // Check that required axes are present.
+  if (cFreqAxis < 0 || cStokesAxis < 0 || cRaAxis < 0 || cDecAxis < 0) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Could not find required DATA array axes.");
+    close();
+    return 1;
   }
 
   // Set up machinery for data retrieval.
   findData(SCAN,     "SCAN",     TINT);         // Shared.
   findData(CYCLE,    "CYCLE",    TINT);         // Additional.
   findData(DATE_OBS, "DATE-OBS", TSTRING);      // Core.
-  findData(TIME,     "TIME",     TDOUBLE);      // Core.
+
+  if (cTimeAxis >= 0) {
+    // The DATA array has a TIME axis.
+    if (cNAxisTime > 1) {
+      // Non-degenerate.
+      findData(TimeRefVal, timeCRVAL, TDOUBLE); // Time reference value.
+      findData(TimeDelt,   timeCDELT, TDOUBLE); // Time increment.
+      findData(TimeRefPix, timeCRPIX, TFLOAT);  // Time reference pixel.
+    } else {
+      // Degenerate, treat its like a simple TIME keyword.
+      findData(TIME, timeCRVAL,  TDOUBLE);
+    }
+
+  } else {
+    findData(TIME,   "TIME",     TDOUBLE);      // Core.
+  }
+
   findData(EXPOSURE, "EXPOSURE", TFLOAT);       // Core.
   findData(OBJECT,   "OBJECT",   TSTRING);      // Core.
   findData(OBJ_RA,   "OBJ-RA",   TDOUBLE);      // Additional.
@@ -313,9 +378,9 @@ int SDFITSreader::open(
 
   findData(BEAM,     "BEAM",     TSHORT);       // Additional.
   findData(IF,       "IF",       TSHORT);       // Additional.
-  findData(FqRefPix,  fqCRPIX,   TFLOAT);       // Frequency reference pixel.
   findData(FqRefVal,  fqCRVAL,   TDOUBLE);      // Frequency reference value.
   findData(FqDelt,    fqCDELT,   TDOUBLE);      // Frequency increment.
+  findData(FqRefPix,  fqCRPIX,   TFLOAT);       // Frequency reference pixel.
   findData(RA,        raCRVAL,   TDOUBLE);      // Right ascension.
   findData(DEC,      decCRVAL,   TDOUBLE);      // Declination.
   findData(SCANRATE, "SCANRATE", TFLOAT);       // Additional.
@@ -342,8 +407,16 @@ int SDFITSreader::open(
   findData(WINDSPEE, "WINDSPEE", TFLOAT);       // Shared.
   findData(WINDDIRE, "WINDDIRE", TFLOAT);       // Shared.
 
+  findData(STOKES,    polCRVAL,  TINT);
+  findData(SIG,       "SIG",     TSTRING);
+  findData(CAL,       "CAL",     TSTRING);
+
+  findData(RVSYS,     "RVSYS",   TDOUBLE);
+  findData(VFRAME,    "VFRAME",  TDOUBLE);
+  findData(VELDEF,    "VELDEF",  TSTRING);
+
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     close();
     return 1;
   }
@@ -354,12 +427,17 @@ int SDFITSreader::open(
     // ALFA data.
     cALFAscan = 0;
     cScanNo = 0;
-    if (cALFA_BD) {
+    if (cALFA_CIMA) {
+      findData(SCAN,  "SCAN_ID", TINT);
+      if (cALFA_CIMA > 1) {
+        // Note that RECNUM increases by cNAxisTime per row.
+        findData(CYCLE, "RECNUM", TINT);
+      } else {
+        findData(CYCLE, "SUBSCAN", TINT);
+      }
+    } else if (cALFA_BD) {
       findData(SCAN,  "SCAN_NUMBER", TINT);
       findData(CYCLE, "PATTERN_NUMBER", TINT);
-    } else if (cALFA_CIMA) {
-      findData(SCAN,  "SCAN_ID", TINT);
-      findData(CYCLE, "SUBSCAN", TINT);
     }
   } else {
     readData(SCAN, 1, &cFirstScanNo);
@@ -367,23 +445,26 @@ int SDFITSreader::open(
 
   cCycleNo = 0;
   cLastUTC = 0.0;
+  for ( int i = 0 ; i < 4 ; i++ ) {
+    cGLastUTC[i] = 0.0 ;
+    cGLastScan[i] = -1 ;
+    cGCycleNo[i] = 0 ;
+  }
 
   // Beam number, 1-relative by default.
   cBeam_1rel = 1;
-  if (cData[BEAM].colnum < 0) {
+  if (cALFA) {
+    // ALFA INPUT_ID, 0-relative (overrides BEAM column if present).
+    findData(BEAM, "INPUT_ID", TSHORT);
+    cBeam_1rel = 0;
+
+  } else if (cData[BEAM].colnum < 0) {
     if (beamCRVAL) {
       // There is a BEAM axis.
       findData(BEAM, beamCRVAL, TDOUBLE);
-
     } else {
-      if (cALFA) {
-        // ALFA data, 0-relative.
-        findData(BEAM, "INPUT_ID", TSHORT);
-      } else {
-        // ms2sdfits output, 0-relative "feed" number.
-        findData(BEAM, "MAIN_FEED1", TSHORT);
-      }
-
+      // ms2sdfits output, 0-relative "feed" number.
+      findData(BEAM, "MAIN_FEED1", TSHORT);
       cBeam_1rel = 0;
     }
   }
@@ -392,15 +473,12 @@ int SDFITSreader::open(
   cIF_1rel = 1;
   if (cALFA && cData[IF].colnum < 0) {
     // ALFA data, 0-relative.
-    findData(IF, "IFVAL", TSHORT);
-    cIF_1rel = 0;
-  }
-
-  if (cData[TIME].colnum < 0) {
-    if (timeCRVAL) {
-      // There is a TIME axis.
-      findData(TIME, timeCRVAL, TDOUBLE);
+    if (cALFA_CIMA > 1) {
+      findData(IF, "IFN", TSHORT);
+    } else {
+      findData(IF, "IFVAL", TSHORT);
     }
+    cIF_1rel = 0;
   }
 
   // ms2sdfits writes a scalar "TSYS" column that averages the polarizations.
@@ -475,7 +553,7 @@ int SDFITSreader::open(
   // Find the number of rows.
   fits_get_num_rows(cSDptr, &cNRow, &cStatus);
   if (!cNRow) {
-    cerr << "Table contains no entries." << endl;
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "Table contains no entries.");
     close();
     return 1;
   }
@@ -488,8 +566,8 @@ int SDFITSreader::open(
     int   anynul;
     if (fits_read_col(cSDptr, TSHORT, cData[BEAM].colnum, 1, 1, cNRow,
                       &beamNul, beamCol, &anynul, &cStatus)) {
-      reportError();
       delete [] beamCol;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
       close();
       return 1;
     }
@@ -503,8 +581,8 @@ int SDFITSreader::open(
 
       // Check validity.
       if (beamCol[irow] < cBeam_1rel) {
-        cerr << "SDFITS file contains invalid beam number." << endl;
         delete [] beamCol;
+        log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "SDFITS file contains invalid beam number.");
         close();
         return 1;
       }
@@ -544,8 +622,8 @@ int SDFITSreader::open(
     int   anynul;
     if (fits_read_col(cSDptr, TSHORT, cData[IF].colnum, 1, 1, cNRow,
                       &IFNul, IFCol, &anynul, &cStatus)) {
-      reportError();
       delete [] IFCol;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
       close();
       return 1;
     }
@@ -559,8 +637,8 @@ int SDFITSreader::open(
 
       // Check validity.
       if (IFCol[irow] < cIF_1rel) {
-        cerr << "SDFITS file contains invalid IF number." << endl;
         delete [] IFCol;
+        log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "SDFITS file contains invalid IF number.");
         close();
         return 1;
       }
@@ -591,8 +669,8 @@ int SDFITSreader::open(
         if (cHaveSpectra) {
           if (cData[DATA].nelem < 0) {
             // Variable dimension array.
-            if (readDim(DATA, irow+1, &cNAxis, cNAxes)) {
-              reportError();
+            if (readDim(DATA, irow+1, &cNAxes, cNAxis)) {
+              log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
               close();
               return 1;
             }
@@ -603,14 +681,14 @@ int SDFITSreader::open(
             char dataxed[32];
             readParm("DATAXED", TSTRING, dataxed);
 
-            sscanf(dataxed, "(%ld,%ld,%ld,%ld,%ld)", cNAxes, cNAxes+1,
-              cNAxes+2, cNAxes+3, cNAxes+4);
+            sscanf(dataxed, "(%ld,%ld,%ld,%ld,%ld)", cNAxis, cNAxis+1,
+              cNAxis+2, cNAxis+3, cNAxis+4);
           }
         }
 
         // Number of channels and polarizations.
-        cNChan[iIF]    = cNAxes[cReqax[0]];
-        cNPol[iIF]     = cNAxes[cReqax[1]];
+        cNChan[iIF]    = cNAxis[cFreqAxis];
+        cNPol[iIF]     = cNAxis[cStokesAxis];
         cHaveXPol[iIF] = 0;
 
         // Is cross-polarization data present?
@@ -620,7 +698,7 @@ int SDFITSreader::open(
           long nAxes[2];
 
           if (readDim(XPOLDATA, irow+1, &nAxis, nAxes)) {
-            reportError();
+            log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE );
             close();
             return 1;
           }
@@ -649,15 +727,55 @@ int SDFITSreader::open(
     cGetXPol  = 0;
 
     // Number of channels and polarizations.
-    cNChan[0] = cNAxes[cReqax[0]];
-    cNPol[0]  = cNAxes[cReqax[1]];
+    cNChan[0] = cNAxis[cFreqAxis];
+    cNPol[0]  = cNAxis[cStokesAxis];
     cHaveXPol[0] = 0;
   }
 
-  if (cALFA) {
-    // ALFA labels each polarization as a separate IF.
+  if (cALFA && cALFA_CIMA < 2) {
+    // Older ALFA data labels each polarization as a separate IF.
     cNPol[0] = cNIF;
     cNIF = 1;
+  }
+
+  // For GBT data that stores spectra for each polarization in separate rows
+  if ( cData[STOKES].colnum > 0 ) {
+    int *stokesCol = new int[cNRow];
+    int stokesNul = 1;
+    int   anynul;
+    if (fits_read_col(cSDptr, TINT, cData[STOKES].colnum, 1, 1, cNRow,
+                      &stokesNul, stokesCol, &anynul, &cStatus)) {
+      delete [] stokesCol;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
+      close();
+      return 1;
+    }
+
+    vector<int> pols ;
+    pols.push_back( stokesCol[0] ) ;
+    for ( int i = 0 ; i < cNRow ; i++ ) {
+      bool pmatch = false ;
+      for ( uint j = 0 ; j < pols.size() ; j++ ) {
+        if ( stokesCol[i] == pols[j] ) {
+          pmatch = true ;
+          break ;
+        }
+      }
+      if ( !pmatch ) {
+        pols.push_back( stokesCol[i] ) ;
+      }
+    }
+
+    cPols = new int[pols.size()] ;
+    for ( uint i = 0 ; i < pols.size() ; i++ ) {
+      cPols[i] = pols[i] ;
+    }
+
+    for ( int i = 0 ; i < cNIF ; i++ ) {
+      cNPol[i] = pols.size() ;
+    }
+
+    delete [] stokesCol ;
   }
 
   // Passing back the address of the array allows PKSFITSreader::select() to
@@ -711,6 +829,18 @@ int SDFITSreader::open(
 
   extraSysCal = cExtraSysCal;
 
+
+  // Extras for ALFA data.
+  cALFAacc = 0.0f;
+  if (cALFA_CIMA > 1) {
+    // FFTs per second when the Mock correlator operates in RFI blanking mode.
+    readData("PHFFTACC", TFLOAT, 0, &cALFAacc);
+  }
+
+
+  cRow = 0;
+  cTimeIdx = cNAxisTime;
+
   return 0;
 }
 
@@ -724,6 +854,7 @@ int SDFITSreader::getHeader(
         char   telescope[32],
         double antPos[3],
         char   obsMode[32],
+        char   bunit[32],
         float  &equinox,
         char   radecsys[32],
         char   dopplerFrame[32],
@@ -732,6 +863,8 @@ int SDFITSreader::getHeader(
         double &refFreq,
         double &bandwidth)
 {
+  const string methodName = "getHeader()" ;
+  
   // Has the file been opened?
   if (!cSDptr) {
     return 1;
@@ -772,6 +905,19 @@ int SDFITSreader::getHeader(
 
   readData(OBSMODE, 1, obsMode);			// Shared.
 
+  // Brightness unit.
+  if (cData[DATAXED].colnum >= 0) {
+    strcpy(bunit, "Jy");
+  } else {
+    strcpy(bunit, cData[DATA].units);
+  }
+
+  if (strcmp(bunit, "JY") == 0) {
+    bunit[1] = 'y';
+  } else if (strcmp(bunit, "JY/BEAM") == 0) {
+    strcpy(bunit, "Jy/beam");
+  }
+
   readParm("EQUINOX",  TFLOAT,  &equinox);		// Shared.
   if (cStatus == 405) {
     // EQUINOX was written as string value in early versions.
@@ -792,10 +938,13 @@ int SDFITSreader::getHeader(
     strcpy(dopplerFrame, "TOPOCENT");
 
     // Look for VELFRAME, written by earlier versions of Livedata.
+    //
+    // Added few more codes currently (as of 2009 Oct) used in the GBT
+    // SDFITS (based io_sdfits_define.pro of GBTIDL). - TT
     if (readParm("VELFRAME", TSTRING, dopplerFrame)) {	// Additional.
       // No, try digging it out of the CTYPE card (AIPS convention).
       char keyw[9], ctype[9];
-      sprintf(keyw, "CTYPE%ld", cReqax[0]+1);
+      sprintf(keyw, "CTYPE%ld", cFreqAxis+1);
       readParm(keyw, TSTRING, ctype);
 
       if (strncmp(ctype, "FREQ-", 5) == 0) {
@@ -803,15 +952,35 @@ int SDFITSreader::getHeader(
         if (strcmp(dopplerFrame, "LSR") == 0) {
           // LSR unqualified usually means LSR (kinematic).
           strcpy(dopplerFrame, "LSRK");
+        } else if (strcmp(dopplerFrame, "LSD") == 0) {
+          // LSR as a dynamical defintion 
+          strcpy(dopplerFrame, "LSRD");
         } else if (strcmp(dopplerFrame, "HEL") == 0) {
           // Almost certainly barycentric.
           strcpy(dopplerFrame, "BARYCENT");
+        } else if (strcmp(dopplerFrame, "BAR") == 0) {
+          // barycentric.
+          strcpy(dopplerFrame, "BARYCENT");
+        } else if (strcmp(dopplerFrame, "OBS") == 0) {
+          // observed or topocentric.
+          strcpy(dopplerFrame, "TOPO");
+        } else if (strcmp(dopplerFrame, "GEO") == 0) {
+          // geocentric 
+          strcpy(dopplerFrame, "GEO");
+        } else if (strcmp(dopplerFrame, "GAL") == 0) {
+          // galactic 
+          strcpy(dopplerFrame, "GAL");
+        } else if (strcmp(dopplerFrame, "LGR") == 0) {
+          // Local group 
+          strcpy(dopplerFrame, "LGROUP");
+        } else if (strcmp(dopplerFrame, "CMB") == 0) {
+          // Cosimic Microwave Backgroup
+          strcpy(dopplerFrame, "CMB");
         }
       } else {
         strcpy(dopplerFrame, "");
       }
     }
-
     // Translate to FITS standard names.
     if (strncmp(dopplerFrame, "TOP", 3) == 0) {
       strcpy(dopplerFrame, "TOPOCENT");
@@ -821,49 +990,28 @@ int SDFITSreader::getHeader(
       strcpy(dopplerFrame, "HELIOCEN");
     } else if (strncmp(dopplerFrame, "BARY", 4) == 0) {
       strcpy(dopplerFrame, "BARYCENT");
+    } else if (strncmp(dopplerFrame, "GAL", 3) == 0) {
+      strcpy(dopplerFrame, "GALACTOC");
+    } else if (strncmp(dopplerFrame, "LGROUP", 6) == 0) {
+      strcpy(dopplerFrame, "LOCALGRP");
+    } else if (strncmp(dopplerFrame, "CMB", 3) == 0) {
+      strcpy(dopplerFrame, "CMBDIPOL");
     }
   }
-
+  
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     return 1;
   }
 
   // Get parameters from first row of table.
-  readData(DATE_OBS, 1, datobs);
-  readData(TIME,     1, &utc);
+  readTime(1, 1, datobs, utc);
   readData(FqRefVal, 1, &refFreq);
   readParm("BANDWID", TDOUBLE, &bandwidth);		// Core.
 
-  if (cALFA_BD) utc *= 3600.0;
-
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     return 1;
-  }
-
-  // Check DATE-OBS format.
-  if (datobs[2] == '/') {
-    // Translate an old-format DATE-OBS.
-    datobs[9] = datobs[1];
-    datobs[8] = datobs[0];
-    datobs[2] = datobs[6];
-    datobs[5] = datobs[3];
-    datobs[3] = datobs[7];
-    datobs[6] = datobs[4];
-    datobs[7] = '-';
-    datobs[4] = '-';
-    datobs[1] = '9';
-    datobs[0] = '1';
-    datobs[10] = '\0';
-
-  } else if (datobs[10] == 'T' && cData[TIME].colnum < 0) {
-    // Dig UTC out of a new-format DATE-OBS.
-    int   hh, mm;
-    float ss;
-    sscanf(datobs+11, "%d:%d:%f", &hh, &mm, &ss);
-    utc = (hh*60 + mm)*60 + ss;
-    datobs[10] = '\0';
   }
 
   return 0;
@@ -878,6 +1026,8 @@ int SDFITSreader::getFreqInfo(
         double* &startFreq,
         double* &endFreq)
 {
+  const string methodName = "getFreqInfo()" ;
+
   float  fqRefPix;
   double fqDelt, fqRefVal;
 
@@ -891,8 +1041,8 @@ int SDFITSreader::getFreqInfo(
     int   anynul;
     if (fits_read_col(cSDptr, TSHORT, cData[IF].colnum, 1, 1, cNRow,
                       &IFNul, IFCol, &anynul, &cStatus)) {
-      reportError();
       delete [] IFCol;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
       close();
       return 1;
     }
@@ -955,7 +1105,7 @@ int SDFITSreader::findRange(
         double utcSpan[2],
         double* &positions)
 {
-  int anynul;
+  const string methodName = "findRange()" ;
 
   // Has the file been opened?
   if (!cSDptr) {
@@ -965,23 +1115,24 @@ int SDFITSreader::findRange(
   nRow = cNRow;
 
   // Find the number of rows selected.
-  short *sel = new short[nRow];
-  for (int irow = 0; irow < nRow; irow++) {
+  short *sel = new short[cNRow];
+  for (int irow = 0; irow < cNRow; irow++) {
     sel[irow] = 1;
   }
 
+  int anynul;
   if (cData[BEAM].colnum > 0) {
     short *beamCol = new short[cNRow];
     short beamNul = 1;
     if (fits_read_col(cSDptr, TSHORT, cData[BEAM].colnum, 1, 1, cNRow,
                       &beamNul, beamCol, &anynul, &cStatus)) {
-      reportError();
       delete [] beamCol;
       delete [] sel;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
       return 1;
     }
 
-    for (int irow = 0; irow < nRow; irow++) {
+    for (int irow = 0; irow < cNRow; irow++) {
       if (!cBeams[beamCol[irow]-cBeam_1rel]) {
         sel[irow] = 0;
       }
@@ -995,13 +1146,13 @@ int SDFITSreader::findRange(
     short IFNul = 1;
     if (fits_read_col(cSDptr, TSHORT, cData[IF].colnum, 1, 1, cNRow,
                       &IFNul, IFCol, &anynul, &cStatus)) {
-      reportError();
       delete [] IFCol;
       delete [] sel;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
       return 1;
     }
 
-    for (int irow = 0; irow < nRow; irow++) {
+    for (int irow = 0; irow < cNRow; irow++) {
       if (!cIFs[IFCol[irow]-cIF_1rel]) {
         sel[irow] = 0;
       }
@@ -1011,119 +1162,184 @@ int SDFITSreader::findRange(
   }
 
   nSel = 0;
-  for (int irow = 0; irow < nRow; irow++) {
+  for (int irow = 0; irow < cNRow; irow++) {
     nSel += sel[irow];
   }
 
 
   // Find the time range assuming the data is in chronological order.
-  readData(DATE_OBS, 1,    dateSpan[0]);
-  readData(DATE_OBS, nRow, dateSpan[1]);
-  readData(TIME, 1,    utcSpan);
-  readData(TIME, nRow, utcSpan+1);
-
-  if (cALFA_BD) {
-    utcSpan[0] *= 3600.0;
-    utcSpan[1] *= 3600.0;
-  }
-
-  // Check DATE-OBS format.
-  for (int i = 0; i < 2; i++) {
-    if (dateSpan[0][2] == '/') {
-      // Translate an old-format DATE-OBS.
-      dateSpan[i][9] = dateSpan[i][1];
-      dateSpan[i][8] = dateSpan[i][0];
-      dateSpan[i][2] = dateSpan[i][6];
-      dateSpan[i][5] = dateSpan[i][3];
-      dateSpan[i][3] = dateSpan[i][7];
-      dateSpan[i][6] = dateSpan[i][4];
-      dateSpan[i][7] = '-';
-      dateSpan[i][4] = '-';
-      dateSpan[i][1] = '9';
-      dateSpan[i][0] = '1';
-      dateSpan[i][10] = '\0';
-    }
-
-    if (dateSpan[i][10] == 'T' && cData[TIME].colnum < 0) {
-      // Dig UTC out of a new-format DATE-OBS.
-      int   hh, mm;
-      float ss;
-      sscanf(dateSpan[i]+11, "%d:%d:%f", &hh, &mm, &ss);
-      utcSpan[i] = (hh*60 + mm)*60 + ss;
-    }
-  }
+  readTime(1, 1, dateSpan[0], utcSpan[0]);
+  readTime(cNRow, cNAxisTime, dateSpan[1], utcSpan[1]);
 
 
   // Retrieve positions for selected data.
-  double *ra  = new double[cNRow];
-  double *dec = new double[cNRow];
-  fits_read_col(cSDptr, TDOUBLE, cData[RA].colnum,  1, 1, nRow, 0, ra,
-                &anynul, &cStatus);
-  fits_read_col(cSDptr, TDOUBLE, cData[DEC].colnum, 1, 1, nRow, 0, dec,
-                &anynul, &cStatus);
-
-  if (cALFA_BD) {
-    for (int irow = 0; irow < nRow; irow++) {
-      // Convert hours to degrees.
-      ra[irow] *= 15.0;
-    }
-  }
-
   int isel = 0;
   positions = new double[2*nSel];
 
-  // Parameters needed to compute feed-plane coordinates.
-  double *srcRA, *srcDec;
-  float  *par, *rot;
-  if (cGetFeedPos) {
-    srcRA  = new double[cNRow];
-    srcDec = new double[cNRow];
-    par    = new float[cNRow];
-    rot    = new float[cNRow];
-    fits_read_col(cSDptr, TDOUBLE, cData[OBJ_RA].colnum,   1, 1, nRow, 0,
-                  srcRA,  &anynul, &cStatus);
-    fits_read_col(cSDptr, TDOUBLE, cData[OBJ_DEC].colnum,  1, 1, nRow, 0,
-                  srcDec, &anynul, &cStatus);
-    fits_read_col(cSDptr, TFLOAT,  cData[PARANGLE].colnum, 1, 1, nRow, 0,
-                  par,    &anynul, &cStatus);
-    fits_read_col(cSDptr, TFLOAT,  cData[FOCUSROT].colnum, 1, 1, nRow, 0,
-                  rot,    &anynul, &cStatus);
+  if (cCoordSys == 1) {
+    // Horizontal (Az,El).
+    if (cData[AZIMUTH].colnum  < 0 ||
+        cData[ELEVATIO].colnum < 0) {
+      log(LogOrigin( className, methodName, WHERE ), LogIO::WARN, "Azimuth/elevation information absent.");
+      cStatus = -1;
 
-    for (int irow = 0; irow < nRow; irow++) {
-      if (sel[irow]) {
-        // Convert to feed-plane coordinates.
-        Double dist, pa;
-        distPA(ra[irow]*D2R, dec[irow]*D2R, srcRA[irow]*D2R, srcDec[irow]*D2R,
-               dist, pa);
+    } else {
+      float *az = new float[cNRow];
+      float *el = new float[cNRow];
+      readCol(AZIMUTH,  az);
+      readCol(ELEVATIO, el);
 
-        Double spin = (par[irow] + rot[irow])*D2R - pa + PI;
-        if (spin > 2.0*PI) spin -= 2.0*PI;
-        Double squint = PI/2.0 - dist;
-
-        positions[isel++] = spin;
-        positions[isel++] = squint;
+      if (!cStatus) {
+        for (int irow = 0; irow < cNRow; irow++) {
+          if (sel[irow]) {
+            positions[isel++] = az[irow] * D2R;
+            positions[isel++] = el[irow] * D2R;
+          }
+        }
       }
+
+      delete [] az;
+      delete [] el;
     }
 
-    delete [] srcRA;
-    delete [] srcDec;
-    delete [] par;
-    delete [] rot;
+  } else if (cCoordSys == 3) {
+    // ZPA-EL.
+    if (cData[BEAM].colnum < 0 ||
+        cData[FOCUSROT].colnum < 0 ||
+        cData[ELEVATIO].colnum < 0) {
+      log(LogOrigin( className, methodName, WHERE ), LogIO::WARN, "ZPA/elevation information absent.");
+      cStatus = -1;
+
+    } else {
+      short *beam = new short[cNRow];
+      float *rot  = new float[cNRow];
+      float *el   = new float[cNRow];
+      readCol(BEAM,     beam);
+      readCol(FOCUSROT, rot);
+      readCol(ELEVATIO, el);
+
+      if (!cStatus) {
+        for (int irow = 0; irow < cNRow; irow++) {
+          if (sel[irow]) {
+            Int beamNo = beam[irow];
+            Double zpa = rot[irow];
+            if (beamNo > 1) {
+              // Beam geometry for the Parkes multibeam.
+              if (beamNo < 8) {
+                zpa += -60.0 + 60.0*(beamNo-2);
+              } else {
+                zpa += -90.0 + 60.0*(beamNo-8);
+              }
+
+              if (zpa < -180.0) {
+                zpa += 360.0;
+              } else if (zpa > 180.0) {
+                zpa -= 360.0;
+              }
+            }
+
+            positions[isel++] = zpa * D2R;
+            positions[isel++] = el[irow] * D2R;
+          }
+        }
+      }
+
+      delete [] beam;
+      delete [] rot;
+      delete [] el;
+    }
 
   } else {
-    for (int irow = 0; irow < nRow; irow++) {
-      if (sel[irow]) {
-        positions[isel++] =  ra[irow] * D2R;
-        positions[isel++] = dec[irow] * D2R;
+    double *ra  = new double[cNRow];
+    double *dec = new double[cNRow];
+    readCol(RA,  ra);
+    readCol(DEC, dec);
+
+    if (cStatus) {
+      delete [] ra;
+      delete [] dec;
+      goto cleanup;
+    }
+
+    if (cALFA_BD) {
+      for (int irow = 0; irow < cNRow; irow++) {
+        // Convert hours to degrees.
+        ra[irow] *= 15.0;
       }
     }
+
+    if (cCoordSys == 0) {
+      // Equatorial (RA,Dec).
+      for (int irow = 0; irow < cNRow; irow++) {
+        if (sel[irow]) {
+          positions[isel++] =  ra[irow] * D2R;
+          positions[isel++] = dec[irow] * D2R;
+        }
+      }
+
+    } else if (cCoordSys == 2) {
+      // Feed-plane.
+      if (cData[OBJ_RA].colnum   < 0 ||
+          cData[OBJ_DEC].colnum  < 0 ||
+          cData[PARANGLE].colnum < 0 ||
+          cData[FOCUSROT].colnum < 0) {
+        log( LogOrigin( className, methodName, WHERE ), LogIO::WARN, 
+             "Insufficient information to compute feed-plane\n"
+             "         coordinates.");
+        cStatus = -1;
+
+      } else {
+        double *srcRA  = new double[cNRow];
+        double *srcDec = new double[cNRow];
+        float  *par = new float[cNRow];
+        float  *rot = new float[cNRow];
+
+        readCol(OBJ_RA,   srcRA);
+        readCol(OBJ_DEC,  srcDec);
+        readCol(PARANGLE, par);
+        readCol(FOCUSROT, rot);
+
+        if (!cStatus) {
+          for (int irow = 0; irow < cNRow; irow++) {
+            if (sel[irow]) {
+              // Convert to feed-plane coordinates.
+              Double dist, pa;
+              distPA(ra[irow]*D2R, dec[irow]*D2R, srcRA[irow]*D2R,
+                     srcDec[irow]*D2R, dist, pa);
+
+              Double spin = (par[irow] + rot[irow])*D2R - pa;
+              if (spin > 2.0*PI) spin -= 2.0*PI;
+              Double squint = PI/2.0 - dist;
+
+              positions[isel++] = spin;
+              positions[isel++] = squint;
+            }
+          }
+        }
+
+        delete [] srcRA;
+        delete [] srcDec;
+        delete [] par;
+        delete [] rot;
+      }
+    }
+
+    delete [] ra;
+    delete [] dec;
   }
 
+cleanup:
   delete [] sel;
-  delete [] ra;
-  delete [] dec;
 
-  return cStatus;
+  if (cStatus) {
+    nSel = 0;
+    delete [] positions;
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
+    cStatus = 0;
+    return 1;
+  }
+
+  return 0;
 }
 
 
@@ -1132,16 +1348,23 @@ int SDFITSreader::findRange(
 // Read the next data record.
 
 int SDFITSreader::read(
-        PKSMBrecord &mbrec)
+        MBrecord &mbrec)
 {
+  const string methodName = "read()" ;
+
   // Has the file been opened?
   if (!cSDptr) {
     return 1;
   }
-
   // Find the next selected beam and IF.
   short iBeam = 0, iIF = 0;
-  while (++cRow <= cNRow) {
+  int iPol = -1 ;
+  while (1) {
+    if (++cTimeIdx > cNAxisTime) {
+      if (++cRow > cNRow) break;
+      cTimeIdx = 1;
+    }
+
     if (cData[BEAM].colnum > 0) {
       readData(BEAM, cRow, &iBeam);
 
@@ -1163,13 +1386,52 @@ int SDFITSreader::read(
           // ALFA data, check for calibration data.
           char chars[32];
           readData(OBSMODE, cRow, chars);
-          if (strcmp(chars, "CAL") == 0) {
-            // iIF is really the polarization in ALFA data.
-            alfaCal(iBeam, iIF);
+          if (strcmp(chars, "DROP") == 0) {
+            // Completely flagged integration.
             continue;
+
+          } else if (strcmp(chars, "CAL") == 0) {
+            sReset = 1;
+            if (cALFA_CIMA > 1) {
+              for (short iPol = 0; iPol < cNPol[iIF]; iPol++) {
+                alfaCal(iBeam, iIF, iPol);
+              }
+              continue;
+            } else {
+              // iIF is really the polarization in older ALFA data.
+              alfaCal(iBeam, 0, iIF);
+              continue;
+            }
+
+          } else {
+            // Reset for the next CAL record.
+            if (sReset) {
+              for (short iPol = 0; iPol < cNPol[iIF]; iPol++) {
+                sALFAcalNon[iBeam][iPol]  = 0;
+                sALFAcalNoff[iBeam][iPol] = 0;
+                sALFAcalOn[iBeam][iPol]   = 0.0f;
+                sALFAcalOff[iBeam][iPol]  = 0.0f;
+              }
+              sReset = 0;
+
+              sprintf(cMsg, "ALFA cal factors for beam %d: %.3e, %.3e",
+                iBeam+1, sALFAcal[iBeam][0], sALFAcal[iBeam][1]);
+              log(LogOrigin( className, methodName, WHERE ), LogIO::NORMAL, cMsg);
+              //logMsg(cMsg);
+            }
           }
         }
 
+        // for GBT SDFITS
+        if (cData[STOKES].colnum > 0 ) {
+          readData(STOKES, cRow, &iPol ) ;
+          for ( int i = 0 ; i < cNPol[iIF] ; i++ ) {
+            if ( cPols[i] == iPol ) {
+              iPol = i ;
+              break ;
+            }
+          }
+        }
         break;
       }
     }
@@ -1199,36 +1461,12 @@ int SDFITSreader::read(
 
   // Times.
   char datobs[32];
-  readData(DATE_OBS, cRow,  datobs);
-  readData(TIME,     cRow, &mbrec.utc);
-  if (cALFA_BD) mbrec.utc *= 3600.0;
-
-  if (datobs[2] == '/') {
-    // Translate an old-format DATE-OBS.
-    datobs[9] = datobs[1];
-    datobs[8] = datobs[0];
-    datobs[2] = datobs[6];
-    datobs[5] = datobs[3];
-    datobs[3] = datobs[7];
-    datobs[6] = datobs[4];
-    datobs[7] = '-';
-    datobs[4] = '-';
-    datobs[1] = '9';
-    datobs[0] = '1';
-
-  } else if (datobs[10] == 'T' && cData[TIME].colnum < 0) {
-    // Dig UTC out of a new-format DATE-OBS.
-    int   hh, mm;
-    float ss;
-    sscanf(datobs+11, "%d:%d:%f", &hh, &mm, &ss);
-    mbrec.utc = (hh*60 + mm)*60 + ss;
-  }
-
-  datobs[10] = '\0';
+  readTime(cRow, cTimeIdx, datobs, mbrec.utc);
   strcpy(mbrec.datobs, datobs);
 
   if (cData[CYCLE].colnum > 0) {
     readData(CYCLE, cRow, &mbrec.cycleNo);
+    mbrec.cycleNo += cTimeIdx - 1;
     if (cALFA_BD) mbrec.cycleNo++;
   } else {
     // Cycle number not recorded, must do our own bookkeeping.
@@ -1238,10 +1476,66 @@ int SDFITSreader::read(
     }
   }
 
+  if ( iPol != -1 ) {
+    if ( mbrec.scanNo != cGLastScan[iPol] ) {
+      cGLastScan[iPol] = mbrec.scanNo ;
+      cGCycleNo[iPol] = 0 ;
+      mbrec.cycleNo = ++cGCycleNo[iPol] ;
+    }
+    else {
+      mbrec.cycleNo = ++cGCycleNo[iPol] ;
+    }
+  }
+
   readData(EXPOSURE, cRow, &mbrec.exposure);
 
   // Source identification.
-  readData(OBJECT,  cRow,  mbrec.srcName);
+  readData(OBJECT, cRow, mbrec.srcName);
+
+  if ( iPol != -1 ) {
+    char obsmode[32] ;
+    readData( OBSMODE, cRow, obsmode ) ;
+    char sig[1] ;
+    char cal[1] ;
+    readData( SIG, cRow, sig ) ;
+    readData( CAL, cRow, cal ) ;
+    if ( strstr( obsmode, "PSWITCH" ) != NULL ) {
+      // position switch
+      strcat( mbrec.srcName, "_p" ) ;
+      if ( strstr( obsmode, "PSWITCHON" ) != NULL ) {
+        strcat( mbrec.srcName, "s" ) ;
+      }
+      else if ( strstr( obsmode, "PSWITCHOFF" ) != NULL ) {
+        strcat( mbrec.srcName, "r" ) ;
+      }
+    }
+    else if ( strstr( obsmode, "Nod" ) != NULL ) {
+      // nod
+      strcat( mbrec.srcName, "_n" ) ;
+      if ( sig[0] == 'T' ) {
+        strcat( mbrec.srcName, "s" ) ;
+      }
+      else {
+        strcat( mbrec.srcName, "r" ) ;
+      }
+    }
+    else if ( strstr( obsmode, "FSWITCH" ) != NULL ) {
+      // frequency switch
+      strcat( mbrec.srcName, "_f" ) ;
+      if ( sig[0] == 'T' ) {
+        strcat( mbrec.srcName, "s" ) ;
+      }
+      else {
+        strcat( mbrec.srcName, "r" ) ;
+      }
+    }
+    if ( cal[0] == 'T' ) {
+      strcat( mbrec.srcName, "c" ) ;
+    }
+    else {
+      strcat( mbrec.srcName, "o" ) ;
+    }
+  }
 
   readData(OBJ_RA,  cRow, &mbrec.srcRA);
   if (strcmp(cData[OBJ_RA].name, "OBJ-RA") == 0) {
@@ -1278,6 +1572,7 @@ int SDFITSreader::read(
     mbrec.raRate  = scanrate[0] * D2R;
     mbrec.decRate = scanrate[1] * D2R;
   }
+  mbrec.paRate = 0.0f;
 
   // IF-dependent parameters.
   int startChan = cStartChan[iIF];
@@ -1288,6 +1583,9 @@ int SDFITSreader::read(
   int nChan = abs(endChan - startChan) + 1;
   int nPol = cNPol[iIF];
 
+  if ( cData[STOKES].colnum > 0 )
+    nPol = 1 ;
+
   if (cGetSpectra || cGetXPol) {
     int nxpol = cGetXPol ? 2*nChan : 0;
     mbrec.allocate(0, nChan*nPol, nxpol);
@@ -1297,6 +1595,7 @@ int SDFITSreader::read(
   mbrec.IFno[0]  = iIF + 1;
   mbrec.nChan[0] = nChan;
   mbrec.nPol[0]  = nPol;
+  mbrec.polNo = iPol ;
 
   readData(FqRefPix, cRow, mbrec.fqRefPix);
   readData(FqRefVal, cRow, mbrec.fqRefVal);
@@ -1315,7 +1614,7 @@ int SDFITSreader::read(
   }
 
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     return 1;
   }
 
@@ -1352,56 +1651,60 @@ int SDFITSreader::read(
   }
 
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     return 1;
   }
 
   // Read data, sectioning and transposing it in the process.
-  long *blc = new long[cNAxis+1];
-  long *trc = new long[cNAxis+1];
-  long *inc = new long[cNAxis+1];
-  for (int iaxis = 0; iaxis <= cNAxis; iaxis++) {
+  long *blc = new long[cNAxes+1];
+  long *trc = new long[cNAxes+1];
+  long *inc = new long[cNAxes+1];
+  for (int iaxis = 0; iaxis <= cNAxes; iaxis++) {
     blc[iaxis] = 1;
     trc[iaxis] = 1;
     inc[iaxis] = 1;
   }
 
-  blc[cReqax[0]] = std::min(startChan, endChan);
-  trc[cReqax[0]] = std::max(startChan, endChan);
-  blc[cNAxis] = cRow;
-  trc[cNAxis] = cRow;
+  blc[cFreqAxis] = std::min(startChan, endChan);
+  trc[cFreqAxis] = std::max(startChan, endChan);
+  if (cTimeAxis >= 0) {
+    blc[cTimeAxis] = cTimeIdx;
+    trc[cTimeAxis] = cTimeIdx;
+  }
+  blc[cNAxes] = cRow;
+  trc[cNAxes] = cRow;
 
   mbrec.haveSpectra = cGetSpectra;
   if (cGetSpectra) {
     int  anynul;
 
-    for (int ipol = 0; ipol < nPol; ipol++) {
-      blc[cReqax[1]] = ipol+1;
-      trc[cReqax[1]] = ipol+1;
+    for (int iPol = 0; iPol < nPol; iPol++) {
+      blc[cStokesAxis] = iPol+1;
+      trc[cStokesAxis] = iPol+1;
 
-      if (cALFA) {
+      if (cALFA && cALFA_CIMA < 2) {
         // ALFA data: polarizations are stored in successive rows.
-        blc[cReqax[1]] = 1;
-        trc[cReqax[1]] = 1;
+        blc[cStokesAxis] = 1;
+        trc[cStokesAxis] = 1;
 
-        if (ipol) {
+        if (iPol) {
           if (++cRow > cNRow) {
             return -1;
           }
 
-          blc[cNAxis] = cRow;
-          trc[cNAxis] = cRow;
+          blc[cNAxes] = cRow;
+          trc[cNAxes] = cRow;
         }
 
       } else if (cData[DATA].nelem < 0) {
         // Variable dimension array; get axis lengths.
-        int  naxis = 5, status;
+        int naxes = 5, status;
 
-        if ((status = readDim(DATA, cRow, &naxis, cNAxes))) {
-          reportError();
+        if ((status = readDim(DATA, cRow, &naxes, cNAxis))) {
+          log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
 
-        } else if ((status = (naxis != cNAxis))) {
-          cerr << "DATA array dimensions changed." << endl;
+        } else if ((status = (naxes != cNAxes))) {
+          log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE, "DATA array dimensions changed.");
         }
 
         if (status) {
@@ -1412,10 +1715,10 @@ int SDFITSreader::read(
         }
       }
 
-      if (fits_read_subset_flt(cSDptr, cData[DATA].colnum, cNAxis, cNAxes,
-          blc, trc, inc, 0, mbrec.spectra[0] + ipol*nChan, &anynul,
+      if (fits_read_subset_flt(cSDptr, cData[DATA].colnum, cNAxes, cNAxis,
+          blc, trc, inc, 0, mbrec.spectra[0] + iPol*nChan, &anynul,
           &cStatus)) {
-        reportError();
+        log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
         delete [] blc;
         delete [] trc;
         delete [] inc;
@@ -1424,7 +1727,7 @@ int SDFITSreader::read(
 
       if (endChan < startChan) {
         // Reverse the spectrum.
-        float *iptr = mbrec.spectra[0] + ipol*nChan;
+        float *iptr = mbrec.spectra[0] + iPol*nChan;
         float *jptr = iptr + nChan - 1;
         float *mid  = iptr + nChan/2;
         while (iptr < mid) {
@@ -1436,19 +1739,34 @@ int SDFITSreader::read(
 
       if (cALFA) {
         // ALFA data, rescale the spectrum.
-        float *chan  = mbrec.spectra[0] + ipol*nChan;
+        float el, zd;
+        readData(ELEVATIO, cRow, &el);
+        zd = 90.0f - el;
+
+        float factor = sALFAcal[iBeam][iPol] / alfaGain(zd);
+
+        if (cALFA_CIMA > 1) {
+          // Rescale according to the number of unblanked accumulations.
+          int colnum, naccum;
+          findCol("STAT", &colnum);
+          fits_read_col(cSDptr, TINT, colnum, cRow, 10*(cTimeIdx-1)+2, 1, 0,
+                        &naccum, &anynul, &cStatus);
+          factor *= cALFAacc / naccum;
+        }
+
+        float *chan  = mbrec.spectra[0] + iPol*nChan;
         float *chanN = chan + nChan;
         while (chan < chanN) {
           // Approximate conversion to Jy.
-          *(chan++) *= cALFAcal[iBeam][iIF];
+          *(chan++) *= factor;
         }
       }
 
-      if (mbrec.tsys[0][ipol] == 0.0) {
+      if (mbrec.tsys[0][iPol] == 0.0) {
         // Compute Tsys as the average across the spectrum.
-        float *chan  = mbrec.spectra[0] + ipol*nChan;
+        float *chan  = mbrec.spectra[0] + iPol*nChan;
         float *chanN = chan + nChan;
-        float *tsys = mbrec.tsys[0] + ipol;
+        float *tsys = mbrec.tsys[0] + iPol;
         while (chan < chanN) {
           *tsys += *(chan++);
         }
@@ -1458,10 +1776,10 @@ int SDFITSreader::read(
 
       // Read data flags.
       if (cData[FLAGGED].colnum > 0) {
-        if (fits_read_subset_byt(cSDptr, cData[FLAGGED].colnum, cNAxis,
-            cNAxes, blc, trc, inc, 0, mbrec.flagged[0] + ipol*nChan, &anynul,
+        if (fits_read_subset_byt(cSDptr, cData[FLAGGED].colnum, cNAxes,
+            cNAxis, blc, trc, inc, 0, mbrec.flagged[0] + iPol*nChan, &anynul,
             &cStatus)) {
-          reportError();
+          log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
           delete [] blc;
           delete [] trc;
           delete [] inc;
@@ -1470,7 +1788,7 @@ int SDFITSreader::read(
 
         if (endChan < startChan) {
           // Reverse the flag vector.
-          unsigned char *iptr = mbrec.flagged[0] + ipol*nChan;
+          unsigned char *iptr = mbrec.flagged[0] + iPol*nChan;
           unsigned char *jptr = iptr + nChan - 1;
           for (int ichan = 0; ichan < nChan/2; ichan++) {
             unsigned char tmp = *iptr;
@@ -1481,7 +1799,7 @@ int SDFITSreader::read(
 
       } else {
         // All channels are unflagged by default.
-        unsigned char *iptr = mbrec.flagged[0] + ipol*nChan;
+        unsigned char *iptr = mbrec.flagged[0] + iPol*nChan;
         for (int ichan = 0; ichan < nChan; ichan++) {
           *(iptr++) = 0;
         }
@@ -1512,7 +1830,7 @@ int SDFITSreader::read(
 
     if (fits_read_subset_flt(cSDptr, cData[XPOLDATA].colnum, nAxis, nAxes,
         blc, trc, inc, 0, mbrec.xpol[0], &anynul, &cStatus)) {
-      reportError();
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
       delete [] blc;
       delete [] trc;
       delete [] inc;
@@ -1543,7 +1861,7 @@ int SDFITSreader::read(
   delete [] inc;
 
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     return 1;
   }
 
@@ -1551,12 +1869,15 @@ int SDFITSreader::read(
   readData(REFBEAM,  cRow, &mbrec.refBeam);
   readData(TCAL,     cRow, &mbrec.tcal[0]);
   readData(TCALTIME, cRow,  mbrec.tcalTime);
+
   readData(AZIMUTH,  cRow, &mbrec.azimuth);
   readData(ELEVATIO, cRow, &mbrec.elevation);
   readData(PARANGLE, cRow, &mbrec.parAngle);
+
   readData(FOCUSAXI, cRow, &mbrec.focusAxi);
   readData(FOCUSTAN, cRow, &mbrec.focusTan);
   readData(FOCUSROT, cRow, &mbrec.focusRot);
+
   readData(TAMBIENT, cRow, &mbrec.temp);
   readData(PRESSURE, cRow, &mbrec.pressure);
   readData(HUMIDITY, cRow, &mbrec.humidity);
@@ -1574,126 +1895,22 @@ int SDFITSreader::read(
   mbrec.focusRot  *= D2R;
   mbrec.windAz    *= D2R;
 
+  // For GBT data, source velocity can be evaluated
+  if ( cData[RVSYS].colnum > 0 && cData[VFRAME].colnum > 0 ) {
+    float vframe;
+    readData(VFRAME, cRow, &vframe);
+    float rvsys;
+    readData(RVSYS,  cRow, &rvsys);
+    //mbrec.srcVelocity = rvsys - vframe ;
+    mbrec.srcVelocity = rvsys ;
+  }
+
   if (cStatus) {
-    reportError();
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     return 1;
   }
 
   return 0;
-}
-
-
-//------------------------------------------------------ SDFITSreader::alfaCal
-
-// Process ALFA calibration data.
-
-int SDFITSreader::alfaCal(
-        short iBeam,
-        short iPol)
-{
-  int  calOn;
-  char chars[32];
-  if (cALFA_BD) {
-    readData("OBS_NAME", TSTRING, cRow, chars);
-  } else {
-    readData("SCANTYPE", TSTRING, cRow, chars);
-  }
-
-  if (strcmp(chars, "ON") == 0) {
-    calOn = 1;
-  } else if (strcmp(chars, "OFF") == 0) {
-    calOn = 0;
-  } else {
-    return 1;
-  }
-
-  // Read cal data.
-  long *blc = new long[cNAxis+1];
-  long *trc = new long[cNAxis+1];
-  long *inc = new long[cNAxis+1];
-  for (int iaxis = 0; iaxis <= cNAxis; iaxis++) {
-    blc[iaxis] = 1;
-    trc[iaxis] = 1;
-    inc[iaxis] = 1;
-  }
-
-  // User channel selection.
-  int startChan = cStartChan[0];
-  int endChan   = cEndChan[0];
-
-  blc[cNAxis] = cRow;
-  trc[cNAxis] = cRow;
-  blc[cReqax[0]] = std::min(startChan, endChan);
-  trc[cReqax[0]] = std::max(startChan, endChan);
-  blc[cReqax[1]] = 1;
-  trc[cReqax[1]] = 1;
-
-  float spectrum[endChan];
-  int anynul;
-  if (fits_read_subset_flt(cSDptr, cData[DATA].colnum, cNAxis, cNAxes,
-      blc, trc, inc, 0, spectrum, &anynul, &cStatus)) {
-    reportError();
-    delete [] blc;
-    delete [] trc;
-    delete [] inc;
-    return 1;
-  }
-
-  // Average the spectrum.
-  float mean = 1e9f;
-  for (int k = 0; k < 2; k++) {
-    float discrim = 2.0f * mean;
-
-    int nChan = 0;
-    float sum = 0.0f;
-
-    float *chanN = spectrum + abs(endChan - startChan) + 1;
-    for (float *chan = spectrum; chan < chanN; chan++) {
-      // Simple discriminant that eliminates strong radar interference.
-      if (*chan < discrim) {
-        nChan++;
-        sum += *chan;
-      }
-    }
-
-    mean = sum / nChan;
-  }
-
-  if (calOn) {
-    cALFAcalOn[iBeam][iPol]  += mean;
-  } else {
-    cALFAcalOff[iBeam][iPol] += mean;
-  }
-
-  if (cALFAcalOn[iBeam][iPol] != 0.0f &&
-      cALFAcalOff[iBeam][iPol] != 0.0f) {
-    // Tcal should come from the TCAL table, it varies weakly with beam,
-    // polarization, and frequency.  However, TCAL is not written properly.
-    float Tcal = 12.0f;
-    cALFAcal[iBeam][iPol] = Tcal / (cALFAcalOn[iBeam][iPol] -
-                                    cALFAcalOff[iBeam][iPol]);
-
-    // Scale from K to Jy; the gain also varies weakly with beam,
-    // polarization, frequency, and zenith angle.
-    float fluxCal = 10.0f;
-    cALFAcal[iBeam][iPol] /= fluxCal;
-
-    cALFAcalOn[iBeam][iPol]  = 0.0f;
-    cALFAcalOff[iBeam][iPol] = 0.0f;
-  }
-
-  return 0;
-}
-
-
-//-------------------------------------------------- SDFITSreader::reportError
-
-// Print the error message corresponding to the input status value and all the
-// messages on the CFITSIO error stack to stderr.
-
-void SDFITSreader::reportError()
-{
-  fits_report_error(stderr, cStatus);
 }
 
 //-------------------------------------------------------- SDFITSreader::close
@@ -1705,7 +1922,7 @@ void SDFITSreader::close()
   if (cSDptr) {
     int status = 0;
     fits_close_file(cSDptr, &status);
-    cSDptr = 0;
+    cSDptr = 0x0;
 
     if (cBeams)     delete [] cBeams;
     if (cIFs)       delete [] cIFs;
@@ -1713,6 +1930,28 @@ void SDFITSreader::close()
     if (cEndChan)   delete [] cEndChan;
     if (cRefChan)   delete [] cRefChan;
   }
+}
+
+//------------------------------------------------------- SDFITSreader::log
+
+// Log a message.  If the current CFITSIO status value is non-zero, also log
+// the corresponding error message and the CFITSIO message stack.
+
+void SDFITSreader::log(LogOrigin origin, LogIO::Command cmd, const char *msg)
+{
+  LogIO os( origin ) ;
+
+  os << msg << endl ;
+
+  if (cStatus > 0) {
+    fits_get_errstatus(cStatus, cMsg);
+    os << cMsg << endl ;
+
+    while (fits_read_errmsg(cMsg)) {
+      os << cMsg << endl ;
+    }
+  }
+  os << LogIO::POST ;
 }
 
 //----------------------------------------------------- SDFITSreader::findData
@@ -1736,6 +1975,8 @@ void SDFITSreader::findData(
     int  coltype;
     long nelem, width;
     fits_get_coltype(cSDptr, colnum, &coltype, &nelem, &width, &cStatus);
+    fits_get_bcolparms(cSDptr, colnum, 0x0, cData[iData].units, 0x0, 0x0, 0x0,
+      0x0, 0x0, 0x0, &cStatus);
 
     // Look for a TDIMnnn keyword or column.
     char tdim[8];
@@ -1767,6 +2008,34 @@ void SDFITSreader::findData(
   }
 }
 
+//------------------------------------------------------ SDFITSreader::findCol
+
+// Locate a parameter in the SDFITS file.
+
+void SDFITSreader::findCol(
+        char *name,
+        int *colnum)
+{
+  *colnum = 0;
+  int status = 0;
+  fits_get_colnum(cSDptr, CASESEN, name, colnum, &status);
+
+  if (status) {
+    // Not a real column - maybe it's virtual.
+    char card[81];
+
+    status = 0;
+    fits_read_card(cSDptr, name, card, &status);
+    if (status) {
+      // Not virtual either.
+      *colnum = -1;
+    }
+
+    // Clear error messages.
+    fits_clear_errmsg();
+  }
+}
+
 //------------------------------------------------------ SDFITSreader::readDim
 
 // Determine the dimensions of an array in the SDFITS file.
@@ -1774,28 +2043,28 @@ void SDFITSreader::findData(
 int SDFITSreader::readDim(
         int  iData,
         long iRow,
-        int *naxis,
-        long naxes[])
+        int *naxes,
+        long naxis[])
 {
   int colnum = cData[iData].colnum;
   if (colnum <= 0) {
     return 1;
   }
 
-  int maxdim = *naxis;
+  int maxdim = *naxes;
   if (cData[iData].tdimcol < 0) {
     // No TDIMnnn column for this array.
     if (cData[iData].nelem < 0) {
       // Variable length array; read the array descriptor.
-      *naxis = 1;
+      *naxes = 1;
       long dummy;
-      if (fits_read_descript(cSDptr, colnum, iRow, naxes, &dummy, &cStatus)) {
+      if (fits_read_descript(cSDptr, colnum, iRow, naxis, &dummy, &cStatus)) {
         return 1;
       }
 
     } else {
       // Read the repeat count from TFORMnnn.
-      if (fits_read_tdim(cSDptr, colnum, maxdim, naxis, naxes, &cStatus)) {
+      if (fits_read_tdim(cSDptr, colnum, maxdim, naxes, naxis, &cStatus)) {
         return 1;
       }
     }
@@ -1813,10 +2082,10 @@ int SDFITSreader::readDim(
     if (*tp != '(') return 1;
 
     tp++;
-    *naxis = 0;
+    *naxes = 0;
     for (size_t j = 1; j < strlen(tdimval); j++) {
       if (tdimval[j] == ',' || tdimval[j] == ')') {
-        sscanf(tp, "%ld", naxes + (*naxis)++);
+        sscanf(tp, "%ld", naxis + (*naxes)++);
         if (tdimval[j] == ')') break;
         tp = tdimval + j + 1;
       }
@@ -1851,7 +2120,7 @@ int SDFITSreader::readData(
   int colnum;
   findCol(name, &colnum);
 
-  if (colnum > 0) {
+  if (colnum > 0 && iRow > 0) {
     // Read the first value from the specified row of the table.
     int  coltype;
     long nelem, width;
@@ -1914,13 +2183,12 @@ int SDFITSreader::readData(
         long iRow,
         void *value)
 {
-  char *name  = cData[iData].name;
   int  type   = cData[iData].type;
   int  colnum = cData[iData].colnum;
-  long nelem  = cData[iData].nelem;
 
-  if (colnum > 0) {
+  if (colnum > 0 && iRow > 0) {
     // Read the required number of values from the specified row of the table.
+    long nelem = cData[iData].nelem;
     int anynul;
     if (type == TSTRING) {
       if (nelem) {
@@ -1949,6 +2217,7 @@ int SDFITSreader::readData(
 
   } else if (colnum == 0) {
     // Read keyword value.
+    char *name  = cData[iData].name;
     fits_read_key(cSDptr, type, name, value, 0, &cStatus);
 
   } else {
@@ -1969,30 +2238,259 @@ int SDFITSreader::readData(
   return colnum < 0;
 }
 
-//------------------------------------------------------ SDFITSreader::findCol
+//------------------------------------------------------ SDFITSreader::readCol
 
-// Locate a parameter in the SDFITS file.
+// Read a scalar column from the SDFITS file.
 
-void SDFITSreader::findCol(
-        char *name,
-        int *colnum)
+int SDFITSreader::readCol(
+        int  iData,
+        void *value)
 {
-  *colnum = 0;
-  int status = 0;
-  fits_get_colnum(cSDptr, CASESEN, name, colnum, &status);
+  int type = cData[iData].type;
 
-  if (status) {
-    // Not a real column - maybe it's virtual.
-    char card[81];
+  if (cData[iData].colnum > 0) {
+    // Table column.
+    int anynul;
+    fits_read_col(cSDptr, type, cData[iData].colnum, 1, 1, cNRow, 0,
+                  value, &anynul, &cStatus);
 
-    status = 0;
-    fits_read_card(cSDptr, name, card, &status);
-    if (status) {
-      // Not virtual either.
-      *colnum = -1;
+  } else {
+    // Header keyword.
+    readData(iData, 0, value);
+    for (int irow = 1; irow < cNRow; irow++) {
+      if (type == TSHORT) {
+        ((short *)value)[irow] = *((short *)value);
+      } else if (type == TINT) {
+        ((int *)value)[irow] = *((int *)value);
+      } else if (type == TFLOAT) {
+        ((float *)value)[irow] = *((float *)value);
+      } else if (type == TDOUBLE) {
+        ((double *)value)[irow] = *((double *)value);
+      }
+    }
+  }
+
+  return cData[iData].colnum < 0;
+}
+
+//----------------------------------------------------- SDFITSreader::readTime
+
+// Read the time from the SDFITS file.
+
+int SDFITSreader::readTime(
+        long iRow,
+        int  iPix,
+        char   *datobs,
+        double &utc)
+{
+  readData(DATE_OBS, iRow, datobs);
+  if (cData[TIME].colnum >= 0) {
+    readData(TIME, iRow, &utc);
+  } else if (cGBT) {
+    Int yy, mm ;
+    Double dd, hour, min, sec ;
+    sscanf( datobs, "%d-%d-%lfT%lf:%lf:%lf", &yy, &mm, &dd, &hour, &min, &sec ) ;
+    dd = dd + ( hour * 3600.0 + min * 60.0 + sec ) / 86400.0 ;
+    MVTime mvt( yy, mm, dd ) ;
+    dd = mvt.day() ;
+    utc = fmod( dd, 1.0 ) * 86400.0 ;
+  } else if (cNAxisTime > 1) {
+    double timeDelt, timeRefPix, timeRefVal;
+    readData(TimeRefVal, iRow, &timeRefVal);
+    readData(TimeDelt,   iRow, &timeDelt);
+    readData(TimeRefPix, iRow, &timeRefPix);
+    utc = timeRefVal + (iPix - timeRefPix) * timeDelt;
+  }
+
+  if (cALFA_BD) utc *= 3600.0;
+
+  // Check DATE-OBS format.
+  if (datobs[2] == '/') {
+    // Translate an old-format DATE-OBS.
+    datobs[9] = datobs[1];
+    datobs[8] = datobs[0];
+    datobs[2] = datobs[6];
+    datobs[5] = datobs[3];
+    datobs[3] = datobs[7];
+    datobs[6] = datobs[4];
+    datobs[7] = '-';
+    datobs[4] = '-';
+    datobs[1] = '9';
+    datobs[0] = '1';
+
+  } else if (datobs[10] == 'T' && cData[TIME].colnum < 0) {
+    // Dig UTC out of a new-format DATE-OBS.
+    int   hh, mm;
+    float ss;
+    sscanf(datobs+11, "%d:%d:%f", &hh, &mm, &ss);
+    utc = (hh*60 + mm)*60 + ss;
+  }
+
+  datobs[10] = '\0';
+
+  return 0;
+}
+
+//------------------------------------------------------ SDFITSreader::alfaCal
+
+// Process ALFA calibration data.
+
+int SDFITSreader::alfaCal(
+        short iBeam,
+        short iIF,
+        short iPol)
+{
+  const string methodName = "alfaCal()" ;
+
+  int  calOn;
+  char chars[32];
+  if (cALFA_BD) {
+    readData("OBS_NAME", TSTRING, cRow, chars);
+  } else {
+    readData("SCANTYPE", TSTRING, cRow, chars);
+  }
+
+  if (strcmp(chars, "ON") == 0) {
+    calOn = 1;
+  } else if (strcmp(chars, "OFF") == 0) {
+    calOn = 0;
+  } else {
+    return 1;
+  }
+
+  // Read cal data.
+  long *blc = new long[cNAxes+1];
+  long *trc = new long[cNAxes+1];
+  long *inc = new long[cNAxes+1];
+  for (int iaxis = 0; iaxis <= cNAxes; iaxis++) {
+    blc[iaxis] = 1;
+    trc[iaxis] = 1;
+    inc[iaxis] = 1;
+  }
+
+  // User channel selection.
+  int startChan = cStartChan[iIF];
+  int endChan   = cEndChan[iIF];
+
+  blc[cFreqAxis] = std::min(startChan, endChan);
+  trc[cFreqAxis] = std::max(startChan, endChan);
+  if (cALFA_CIMA > 1) {
+    // CIMAFITS 2.x has a legitimate STOKES axis...
+    blc[cStokesAxis] = iPol+1;
+    trc[cStokesAxis] = iPol+1;
+  } else {
+    // ...older ALFA data does not.
+    blc[cStokesAxis] = 1;
+    trc[cStokesAxis] = 1;
+  }
+  if (cTimeAxis >= 0) {
+    blc[cTimeAxis] = cTimeIdx;
+    trc[cTimeAxis] = cTimeIdx;
+  }
+  blc[cNAxes] = cRow;
+  trc[cNAxes] = cRow;
+
+  float spectrum[endChan];
+  int anynul;
+  if (fits_read_subset_flt(cSDptr, cData[DATA].colnum, cNAxes, cNAxis,
+      blc, trc, inc, 0, spectrum, &anynul, &cStatus)) {
+    log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
+    delete [] blc;
+    delete [] trc;
+    delete [] inc;
+    return 1;
+  }
+
+  // Factor to rescale according to the number of unblanked accumulations.
+  float factor = 1.0f;
+  if (cALFA_CIMA > 1) {
+    int   colnum, naccum;
+    findCol("STAT", &colnum);
+    fits_read_col(cSDptr, TINT, colnum, cRow, 2, 1, 0, &naccum, &anynul,
+                  &cStatus);
+    factor = cALFAacc / naccum;
+  }
+
+  // Average the spectrum.
+  float mean = 1e9f;
+  for (int k = 0; k < 2; k++) {
+    float discrim = 2.0f * mean;
+
+    int nChan = 0;
+    float sum = 0.0f;
+
+    float *chanN = spectrum + abs(endChan - startChan) + 1;
+    for (float *chan = spectrum; chan < chanN; chan++) {
+      // Simple discriminant that eliminates strong radar interference.
+      if (*chan < discrim) {
+        nChan++;
+        sum += *chan * factor;
+      }
     }
 
-    // Clear error messages.
-    fits_clear_errmsg();
+    mean = sum / nChan;
   }
+
+  if (calOn) {
+    sALFAcalOn[iBeam][iPol]  *= sALFAcalNon[iBeam][iPol];
+    sALFAcalOn[iBeam][iPol]  += mean;
+    sALFAcalOn[iBeam][iPol]  /= ++sALFAcalNon[iBeam][iPol];
+  } else {
+    sALFAcalOff[iBeam][iPol] *= sALFAcalNoff[iBeam][iPol];
+    sALFAcalOff[iBeam][iPol] += mean;
+    sALFAcalOff[iBeam][iPol] /= ++sALFAcalNoff[iBeam][iPol];
+  }
+
+  if (sALFAcalNon[iBeam][iPol] && sALFAcalNoff[iBeam][iPol]) {
+    // Tcal should come from the TCAL table, it varies weakly with beam,
+    // polarization, and frequency.  However, TCAL is not written properly.
+    float Tcal = 12.0f;
+    sALFAcal[iBeam][iPol] = Tcal / (sALFAcalOn[iBeam][iPol] -
+                                    sALFAcalOff[iBeam][iPol]);
+
+    // Scale from K to Jy; the gain also varies weakly with beam,
+    // polarization, frequency, and zenith angle.
+    float fluxCal = 10.0f;
+    sALFAcal[iBeam][iPol] /= fluxCal;
+  }
+
+  return 0;
 }
+
+//----------------------------------------------------- SDFITSreader::alfaGain
+
+// ALFA gain factor.
+
+float SDFITSreader::alfaGain(
+        float zd)
+{
+  // Gain vs zenith distance table from Robert Minchin, 2008/12/08.
+  const int nZD = 37;
+  const float zdLim[] = {1.5f, 19.5f};
+  const float zdInc = (nZD - 1) / (zdLim[1] - zdLim[0]);
+  float zdGain[] = {                                       1.00723708,
+                    1.16644573,  1.15003645,  1.07117307,  1.02532673,
+                    1.01788402,  1.01369524,  1.00000000,  0.989855111,
+                    0.990888834, 0.993996620, 0.989964068, 0.982213855,
+                    0.978662670, 0.979349494, 0.978478372, 0.974631131,
+                    0.972126007, 0.972835243, 0.972742677, 0.968671739,
+                    0.963891327, 0.963452935, 0.966831207, 0.969585896,
+                    0.970700860, 0.972644389, 0.973754644, 0.967344403,
+                    0.952168941, 0.937160134, 0.927843094, 0.914048433,
+                    0.886700928, 0.864701211, 0.869126320, 0.854309499};
+
+  float gain;
+  // Do table lookup by linear interpolation.
+  float lambda = zdInc * (zd - zdLim[0]);
+  int j = int(lambda);
+  if (j < 0) {
+    gain = zdGain[0];
+  } else if (j >= nZD-1) {
+    gain = zdGain[nZD-1];
+  } else {
+    gain = zdGain[j] + (lambda - j) * (zdGain[j+1] - zdGain[j]);
+  }
+
+  return gain;
+}
+

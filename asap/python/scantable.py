@@ -1,17 +1,42 @@
+import os
+try:
+    from functools import wraps as wraps_dec
+except ImportError:
+    from asap.compatibility import wraps as wraps_dec
+
 from asap._asap import Scantable
 from asap import rcParams
-from asap import print_log
+from asap import print_log, print_log_dec
 from asap import asaplog
 from asap import selector
 from asap import linecatalog
+from asap.coordinate import coordinate
 from asap import _n_bools, mask_not, mask_and, mask_or
+
+
+def preserve_selection(func):
+    @wraps_dec(func)
+    def wrap(obj, *args, **kw):
+        basesel = obj.get_selection()
+        val = func(obj, *args, **kw)
+        obj.set_selection(basesel)
+        return val
+    return wrap
+
+
+def is_scantable(filename):
+    return (os.path.isdir(filename)
+            and not os.path.exists(filename+'/table.f1')
+            and os.path.exists(filename+'/table.info'))
+
 
 class scantable(Scantable):
     """
         The ASAP container for scans
     """
 
-    def __init__(self, filename, average=None, unit=None, getpt=None, antenna=None):
+    #@print_log_dec
+    def __init__(self, filename, average=None, unit=None, getpt=None, antenna=None, parallactify=None):
         """
         Create a scantable from a saved one or make a reference
         Parameters:
@@ -35,6 +60,8 @@ class scantable(Scantable):
                          the MS data faster in some cases.
             antenna:     Antenna selection. integer (id) or string (name
                          or id).
+            parallactify: Indcicate that the data had been parallatified.
+                          Default is taken form rc file.
         """
         if average is None:
             average = rcParams['scantable.autoaverage']
@@ -56,54 +83,51 @@ class scantable(Scantable):
                     print_log('ERROR')
                     return 
             antenna = tmpstr.rstrip(',')
+        parallactify = parallactify or rcParams['scantable.parallactify']
         varlist = vars()
         from asap._asap import stmath
         self._math = stmath( rcParams['insitu'] )
         if isinstance(filename, Scantable):
             Scantable.__init__(self, filename)
         else:
-            if isinstance(filename, str):# or \
-#                (isinstance(filename, list) or isinstance(filename, tuple)) \
-#                  and isinstance(filename[-1], str):
-                import os.path
+            if isinstance(filename, str):
                 filename = os.path.expandvars(filename)
                 filename = os.path.expanduser(filename)
                 if not os.path.exists(filename):
                     s = "File '%s' not found." % (filename)
                     if rcParams['verbose']:
                         asaplog.push(s)
-                        #print asaplog.pop().strip()
                         print_log('ERROR')
                         return
                     raise IOError(s)
-                if os.path.isdir(filename) \
-                    and not os.path.exists(filename+'/table.f1'):
-                    # crude check if asap table
-                    if os.path.exists(filename+'/table.info'):
-                        ondisk = rcParams['scantable.storage'] == 'disk'
-                        Scantable.__init__(self, filename, ondisk)
-                        if unit is not None:
-                            self.set_fluxunit(unit)
-                        # do not reset to the default freqframe
-                        #self.set_freqframe(rcParams['scantable.freqframe'])
+                if is_scantable(filename):
+                    ondisk = rcParams['scantable.storage'] == 'disk'
+                    Scantable.__init__(self, filename, ondisk)
+                    if unit is not None:
+                        self.set_fluxunit(unit)
+                    # do not reset to the default freqframe
+                    #self.set_freqframe(rcParams['scantable.freqframe'])
+                elif os.path.isdir(filename) \
+                         and not os.path.exists(filename+'/table.f1'):
+                    msg = "The given file '%s'is not a valid " \
+                          "asap table." % (filename)
+                    if rcParams['verbose']:
+                        #print msg
+                        asaplog.push( msg )
+                        print_log( 'ERROR' )
+                        return
                     else:
-                        msg = "The given file '%s'is not a valid " \
-                              "asap table." % (filename)
-                        if rcParams['verbose']:
-                            #print msg
-                            asaplog.push( msg )
-                            print_log( 'ERROR' )
-                            return
-                        else:
-                            raise IOError(msg)
+                        raise IOError(msg)
                 else:
                     self._fill([filename], unit, average, getpt, antenna)
             elif (isinstance(filename, list) or isinstance(filename, tuple)) \
                   and isinstance(filename[-1], str):
                 self._fill(filename, unit, average, getpt, antenna)
+        self.parallactify(parallactify)
         self._add_history("scantable", varlist)
         print_log()
 
+    #@print_log_dec
     def save(self, name=None, format=None, overwrite=False):
         """
         Store the scantable on disk. This can be an asap (aips++) Table,
@@ -118,7 +142,7 @@ class scantable(Scantable):
                                        'ASCII' (saves as ascii text file)
                                        'MS2' (saves as an aips++
                                               MeasurementSet V2)
-                                       'FITS' (save as image FITS - not 
+                                       'FITS' (save as image FITS - not
                                                readable by class)
                                        'CLASS' (save as FITS readable by CLASS)
             overwrite:   If the file should be overwritten if it exists.
@@ -129,7 +153,7 @@ class scantable(Scantable):
             scan.save('myscan.sdfits', 'SDFITS')
         """
         from os import path
-        if format is None: format = rcParams['scantable.save']
+        format = format or rcParams['scantable.save']
         suffix = '.'+format.lower()
         if name is None or name == "":
             name = 'scantable'+suffix
@@ -202,13 +226,8 @@ class scantable(Scantable):
                 return
             else: raise
         try:
-            bsel = self.get_selection()
-            sel = selector()
-            sel.set_scans(allscans)
-            self.set_selection(bsel+sel)
-            scopy = self._copy()
-            self.set_selection(bsel)
-            return scantable(scopy)
+            sel = selector(scans=allscans)
+            return self._select_copy(sel)
         except RuntimeError:
             if rcParams['verbose']:
                 #print "Couldn't find any match."
@@ -218,6 +237,12 @@ class scantable(Scantable):
             else:
                 raise
 
+    def _select_copy(self, selection):
+        orig = self.get_selection()
+        self.set_selection(orig+selection)
+        cp = self.copy()
+        self.set_selection(orig)
+        return cp
 
     def get_scan(self, scanid=None):
         """
@@ -252,22 +277,13 @@ class scantable(Scantable):
             sel = selector()
             if type(scanid) is str:
                 sel.set_name(scanid)
-                self.set_selection(bsel+sel)
-                scopy = self._copy()
-                self.set_selection(bsel)
-                return scantable(scopy)
+                return self._select_copy(sel)
             elif type(scanid) is int:
                 sel.set_scans([scanid])
-                self.set_selection(bsel+sel)
-                scopy = self._copy()
-                self.set_selection(bsel)
-                return scantable(scopy)
+                return self._select_copy(sel)
             elif type(scanid) is list:
                 sel.set_scans(scanid)
-                self.set_selection(sel)
-                scopy = self._copy()
-                self.set_selection(bsel)
-                return scantable(scopy)
+                return self._select_copy(sel)
             else:
                 msg = "Illegal scanid type, use 'int' or 'list' if ints."
                 if rcParams['verbose']:
@@ -293,11 +309,8 @@ class scantable(Scantable):
         Parameters:
             filename:    the name of a file to write the putput to
                          Default - no file output
-            verbose:     print extra info such as the frequency table
-                         The default (False) is taken from .asaprc
         """
         info = Scantable._summary(self, True)
-        #if verbose is None: verbose = rcParams['scantable.verbosesummary']
         if filename is not None:
             if filename is "":
                 filename = 'scantable_summary.txt'
@@ -327,14 +340,14 @@ class scantable(Scantable):
     def get_spectrum(self, rowno):
         """Return the spectrum for the current row in the scantable as a list.
         Parameters:
-             rowno:   the row number to retrieve the spectrum from        
+             rowno:   the row number to retrieve the spectrum from
         """
         return self._getspectrum(rowno)
 
     def get_mask(self, rowno):
         """Return the mask for the current row in the scantable as a list.
         Parameters:
-             rowno:   the row number to retrieve the mask from        
+             rowno:   the row number to retrieve the mask from
         """
         return self._getmask(rowno)
 
@@ -342,10 +355,29 @@ class scantable(Scantable):
         """Return the spectrum for the current row in the scantable as a list.
         Parameters:
              spec:   the spectrum
-             rowno:    the row number to set the spectrum for        
+             rowno:    the row number to set the spectrum for
         """
         assert(len(spec) == self.nchan())
         return self._setspectrum(spec, rowno)
+
+    def get_coordinate(self, rowno):
+        """Return the (spectral) coordinate for a a given 'rowno'.
+        NOTE:
+            * This coordinate is only valid until a scantable method modifies
+              the frequency axis.
+            * This coordinate does contain the original frequency set-up
+              NOT the new frame. The conversions however are done using the user
+              specified frame (e.g. LSRK/TOPO). To get the 'real' coordinate,
+              use scantable.freq_align first. Without it there is no closure,
+              i.e.
+              c = myscan.get_coordinate(0)
+              c.to_frequency(c.get_reference_pixel()) != c.get_reference_value()
+
+        Parameters:
+             rowno:    the row number for the spectral coordinate
+
+        """
+        return coordinate(Scantable.get_coordinate(self, rowno))
 
     def get_selection(self):
         """
@@ -359,19 +391,39 @@ class scantable(Scantable):
         """
         return selector(self._getselection())
 
-    def set_selection(self, selection=selector()):
+    def set_selection(self, selection=None, **kw):
         """
         Select a subset of the data. All following operations on this scantable
         are only applied to thi selection.
         Parameters:
-            selection:    a selector object (default unset the selection)
+            selection:    a selector object (default unset the selection),
+
+            or
+
+            any combination of
+            "pols", "ifs", "beams", "scans", "cycles", "name", "query"
+
         Examples:
             sel = selector()         # create a selection object
             self.set_scans([0, 3])    # select SCANNO 0 and 3
             scan.set_selection(sel)  # set the selection
             scan.summary()           # will only print summary of scanno 0 an 3
             scan.set_selection()     # unset the selection
+            # or the equivalent
+            scan.set_selection(scans=[0,3])
+            scan.summary()           # will only print summary of scanno 0 an 3
+            scan.set_selection()     # unset the selection
         """
+        if selection is None:
+            # reset
+            if len(kw) == 0:
+                selection = selector()
+            else:
+                # try keywords
+                for k in kw:
+                    if k not in selector.fields:
+                        raise KeyError("Invalid selection key '%s', valid keys are %s" % (k, selector.fields))
+                selection = selector(**kw)
         self._setselection(selection)
 
     def get_row(self, row=0, insitu=None):
@@ -424,9 +476,7 @@ class scantable(Scantable):
             msk = scan.create_mask([100, 200], [500, 600])
             scan.stats(stat='mean', mask=m)
         """
-        if mask == None:
-            mask = []
-        axes = ['Beam', 'IF', 'Pol', 'Time']
+        mask = mask or []
         if not self._check_ifs():
             raise ValueError("Cannot apply mask as the IFs have different "
                              "number of channels. Please use setselection() "
@@ -440,39 +490,40 @@ class scantable(Scantable):
             statvals = []
         if not rtnabc: statvals = self._math._stats(self, mask, stat)
 
-        out = ''
-        axes = []
+        #def cb(i):
+        #    return statvals[i]
+
+        #return self._row_callback(cb, stat)
+
+        label=stat
+        #callback=cb
+        out = ""
+        #outvec = []
+        sep = '-'*50
         for i in range(self.nrow()):
-            axis = []
-            axis.append(self.getscan(i))
-            axis.append(self.getbeam(i))
-            axis.append(self.getif(i))
-            axis.append(self.getpol(i))
-            axis.append(self.getcycle(i))
-            axes.append(axis)
-            tm = self._gettime(i)
-            src = self._getsourcename(i)
             refstr = ''
             statunit= ''
             if getchan:
                 qx, qy = self.chan2data(rowno=i, chan=chan[i])
                 if rtnabc:
                     statvals.append(qx['value'])
-                    #refstr = '(value: %3.3f' % (qy['value'])+' ['+qy['unit']+'])'
                     refstr = ('(value: %'+form) % (qy['value'])+' ['+qy['unit']+'])'
                     statunit= '['+qx['unit']+']'
                 else:
-                    #refstr = '(@ %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
                     refstr = ('(@ %'+form) % (qx['value'])+' ['+qx['unit']+'])'
-                    #statunit= ' ['+qy['unit']+']'
-            out += 'Scan[%d] (%s) ' % (axis[0], src)
+
+            tm = self._gettime(i)
+            src = self._getsourcename(i)
+            out += 'Scan[%d] (%s) ' % (self.getscan(i), src)
             out += 'Time[%s]:\n' % (tm)
-            if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
-            if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
-            if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
-            #out += '= %3.3f   ' % (statvals[i]) +refstr+'\n' 
+            if self.nbeam(-1) > 1:
+                out +=  ' Beam[%d] ' % (self.getbeam(i))
+            if self.nif(-1) > 1: out +=  ' IF[%d] ' % (self.getif(i))
+            if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (self.getpol(i))
+            #outvec.append(callback(i))
+            #out += ('= %'+form) % (outvec[i]) +'   '+refstr+'\n' 
             out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n' 
-            out +=  "--------------------------------------------------\n"
+            out +=  sep+"\n"
 
         if rcParams['verbose']:
             import os
@@ -483,21 +534,19 @@ class scantable(Scantable):
                 usr=commands.getoutput( 'whoami' )
             tmpfile='/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
             f=open(tmpfile,'w')
-            print >> f, "--------------------------------------------------"
-            print >> f, " ", stat, statunit
-            print >> f, "--------------------------------------------------"
+            print >> f, sep
+            print >> f, ' %s %s' % (label, statunit)
+            print >> f, sep
             print >> f, out
             f.close()
             f=open(tmpfile,'r')
             x=f.readlines()
             f.close()
-            for xx in x:
-                asaplog.push( xx, False )
+            blanc=''
+            asaplog.push(blanc.join(x), False)
+            #for xx in x:
+            #    asaplog.push( xx, False )
             print_log()
-        #else:
-            #retval = { 'axesnames': ['scanno', 'beamno', 'ifno', 'polno', 'cycleno'],
-            #           'axes' : axes,
-            #           'data': statvals}
         return statvals
 
     def chan2data(self, rowno=0, chan=0):
@@ -540,46 +589,56 @@ class scantable(Scantable):
         """
         return list(Scantable.get_column_names(self))
 
-    def get_tsys(self):
+    def get_tsys(self, row=-1):
         """
         Return the System temperatures.
         Returns:
             a list of Tsys values for the current selection
         """
-
+        if row > -1:
+            return self._get_column(self._gettsys, row)
         return self._row_callback(self._gettsys, "Tsys")
 
+
+    def get_weather(self, row=-1):
+        values = self._get_column(self._get_weather, row)
+        if row > -1:
+            return {'temperature': values[0],
+                    'pressure': values[1], 'humidity' : values[2],
+                    'windspeed' : values[3], 'windaz' : values[4]
+                    }
+        else:
+            out = []
+            for r in values:
+
+                out.append({'temperature': r[0],
+                            'pressure': r[1], 'humidity' : r[2],
+                            'windspeed' : r[3], 'windaz' : r[4]
+                    })
+            return out
+
     def _row_callback(self, callback, label):
-        axes = []
-        axesnames = ['scanno', 'beamno', 'ifno', 'polno', 'cycleno']
         out = ""
         outvec = []
+        sep = '-'*50
         for i in range(self.nrow()):
-            axis = []
-            axis.append(self.getscan(i))
-            axis.append(self.getbeam(i))
-            axis.append(self.getif(i))
-            axis.append(self.getpol(i))
-            axis.append(self.getcycle(i))
-            axes.append(axis)
             tm = self._gettime(i)
             src = self._getsourcename(i)
-            out += 'Scan[%d] (%s) ' % (axis[0], src)
+            out += 'Scan[%d] (%s) ' % (self.getscan(i), src)
             out += 'Time[%s]:\n' % (tm)
-            if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
-            if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
-            if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
+            if self.nbeam(-1) > 1:
+                out +=  ' Beam[%d] ' % (self.getbeam(i))
+            if self.nif(-1) > 1: out +=  ' IF[%d] ' % (self.getif(i))
+            if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (self.getpol(i))
             outvec.append(callback(i))
             out += '= %3.3f\n' % (outvec[i])
-            out +=  "--------------------------------------------------\n"
+            out +=  sep+'\n'
         if rcParams['verbose']:
-            asaplog.push("--------------------------------------------------")
+            asaplog.push(sep)
             asaplog.push(" %s" % (label))
-            asaplog.push("--------------------------------------------------")
+            asaplog.push(sep)
             asaplog.push(out)
             print_log()
-        # disabled because the vector seems more useful
-        #retval = {'axesnames': axesnames, 'axes': axes, 'data': outvec}
         return outvec
 
     def _get_column(self, callback, row=-1):
@@ -623,8 +682,8 @@ class scantable(Scantable):
         Example:
             none
         """
-        return self._get_column(self._getinttime, row)        
-        
+        return self._get_column(self._getinttime, row)
+
 
     def get_sourcename(self, row=-1):
         """
@@ -673,7 +732,7 @@ class scantable(Scantable):
     def get_direction(self, row=-1):
         """
         Get a list of Positions on the sky (direction) for the observations.
-        Return a float for each integration in the scantable.
+        Return a string for each integration in the scantable.
         Parameters:
             row:    row no of integration. Default -1 return all rows
         Example:
@@ -692,6 +751,7 @@ class scantable(Scantable):
         """
         return self._get_column(self._getdirectionvec, row)
 
+    #@print_log_dec
     def set_unit(self, unit='channel'):
         """
         Set the unit for all following operations on this scantable
@@ -707,6 +767,7 @@ class scantable(Scantable):
         self._setcoordinfo(inf)
         self._add_history("set_unit", varlist)
 
+    #@print_log_dec
     def set_instrument(self, instr):
         """
         Set the instrument for subsequent processing.
@@ -718,6 +779,7 @@ class scantable(Scantable):
         self._add_history("set_instument", vars())
         print_log()
 
+    #@print_log_dec
     def set_feedtype(self, feedtype):
         """
         Overwrite the feed type, which might not be set correctly.
@@ -728,6 +790,7 @@ class scantable(Scantable):
         self._add_history("set_feedtype", vars())
         print_log()
 
+    #@print_log_dec
     def set_doppler(self, doppler='RADIO'):
         """
         Set the doppler for all following operations on this scantable.
@@ -741,19 +804,23 @@ class scantable(Scantable):
         self._add_history("set_doppler", vars())
         print_log()
 
+    #@print_log_dec
     def set_freqframe(self, frame=None):
         """
         Set the frame type of the Spectral Axis.
         Parameters:
             frame:   an optional frame type, default 'LSRK'. Valid frames are:
-                     'REST', 'TOPO', 'LSRD', 'LSRK', 'BARY',
+                     'TOPO', 'LSRD', 'LSRK', 'BARY',
                      'GEO', 'GALACTO', 'LGROUP', 'CMB'
         Examples:
             scan.set_freqframe('BARY')
         """
-        if frame is None: frame = rcParams['scantable.freqframe']
+        frame = frame or rcParams['scantable.freqframe']
         varlist = vars()
-        valid = ['REST', 'TOPO', 'LSRD', 'LSRK', 'BARY', \
+        # "REST" is not implemented in casacore
+        #valid = ['REST', 'TOPO', 'LSRD', 'LSRK', 'BARY', \
+        #           'GEO', 'GALACTO', 'LGROUP', 'CMB']
+        valid = ['TOPO', 'LSRD', 'LSRK', 'BARY', \
                    'GEO', 'GALACTO', 'LGROUP', 'CMB']
 
         if frame in valid:
@@ -828,8 +895,7 @@ class scantable(Scantable):
             unflag:    if True, unflag the data
         """
         varlist = vars()
-        if mask is None:
-            mask = []
+        mask = mask or []
         try:
             self._flag(mask, unflag)
         except RuntimeError, msg:
@@ -882,31 +948,36 @@ class scantable(Scantable):
                 return
             else: raise
         self._add_history("clip", varlist)
-        
-    def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
+
+    #@print_log_dec
+    def lag_flag(self, start, end, unit="MHz", insitu=None):
+    #def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
         """
         Flag the data in 'lag' space by providing a frequency to remove.
-        Flagged data in the scantable gets set to 0.0 before the fft.
+        Flagged data in the scantable gets interpolated over the region.
         No taper is applied.
         Parameters:
-            frequency:    the frequency (really a period within the bandwidth) 
-                          to remove
-            width:        the width of the frequency to remove, to remove a 
-                          range of frequencies around the centre.
-            unit:         the frequency unit (default "GHz")
+            start:    the start frequency (really a period within the
+                      bandwidth)  or period to remove
+            end:      the end frequency or period to remove
+            unit:     the frequency unit (default "MHz") or "" for
+                      explicit lag channels
         Notes:
-            It is recommended to flag edges of the band or strong 
+            It is recommended to flag edges of the band or strong
             signals beforehand.
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
-        base = { "GHz": 1000000000., "MHz": 1000000., "kHz": 1000., "Hz": 1. }
-        if not base.has_key(unit):
+        base = { "GHz": 1000000000., "MHz": 1000000., "kHz": 1000., "Hz": 1.}
+        if not (unit == "" or base.has_key(unit)):
             raise ValueError("%s is not a valid unit." % unit)
         try:
-            s = scantable(self._math._lag_flag(self, frequency*base[unit],
-                                               width*base[unit]))
+            if unit == "":
+                s = scantable(self._math._lag_flag(self, start, end, "lags"))
+            else:
+                s = scantable(self._math._lag_flag(self, start*base[unit],
+                                                   end*base[unit], "frequency"))
         except RuntimeError, msg:
             if rcParams['verbose']:
                 #print msg
@@ -922,7 +993,7 @@ class scantable(Scantable):
         else:
             return s
 
-
+    #@print_log_dec
     def create_mask(self, *args, **kwargs):
         """
         Compute and return a mask based on [min, max] windows.
@@ -951,11 +1022,9 @@ class scantable(Scantable):
             # and 800 and 900 in the unit 'channel'
             c)
             mask only channel 400
-            msk =  scan.create_mask([400, 400])
+            msk =  scan.create_mask([400])
         """
-        row = 0
-        if kwargs.has_key("row"):
-            row = kwargs.get("row")
+        row = kwargs.get("row", 0)
         data = self._getabcissa(row)
         u = self._getcoordinfo()[0]
         if rcParams['verbose']:
@@ -972,8 +1041,14 @@ class scantable(Scantable):
         ws = (isinstance(args[-1][-1], int) or isinstance(args[-1][-1], float)) \
              and args or args[0]
         for window in ws:
-            if (len(window) != 2 or window[0] > window[1] ):
-                raise TypeError("A window needs to be defined as [min, max]")
+            if len(window) == 1:
+                window = [window[0], window[0]]
+            if len(window) == 0 or  len(window) > 2:
+                raise ValueError("A window needs to be defined as [start(, end)]")
+            if window[0] > window[1]:
+                tmp = window[0]
+                window[0] = window[1]
+                window[1] = tmp
             for i in range(n):
                 if data[i] >= window[0] and data[i] <= window[1]:
                     msk[i] = True
@@ -1126,7 +1201,7 @@ class scantable(Scantable):
             To do more sophisticate Restfrequency setting, e.g. on a
             source and IF basis, use scantable.set_selection() before using
             this function.
-            # provide your scantable is call scan
+            # provide your scantable is called scan
             selection = selector()
             selection.set_name("ORION*")
             selection.set_ifs([1])
@@ -1187,15 +1262,15 @@ class scantable(Scantable):
         self._add_history("set_restfreqs", varlist)
 
     def shift_refpix(self, delta):
-	"""
-	Shift the reference pixel of the Spectra Coordinate by an 
-	integer amount.
-	Parameters:
-	    delta:   the amount to shift by
-        Note:
-	    Be careful using this with broadband data.
         """
-	Scantable.shift(self, delta)
+        Shift the reference pixel of the Spectra Coordinate by an
+        integer amount.
+        Parameters:
+            delta:   the amount to shift by
+        Note:
+            Be careful using this with broadband data.
+        """
+        Scantable.shift_refpix(self, delta)
 
     def history(self, filename=None):
         """
@@ -1248,7 +1323,7 @@ class scantable(Scantable):
     #
     # Maths business
     #
-
+    #@print_log_dec
     def average_time(self, mask=None, scanav=False, weight='tint', align=False):
         """
         Return the (time) weighted average of a scan.
@@ -1274,10 +1349,9 @@ class scantable(Scantable):
             newscan = scan.average_time()
         """
         varlist = vars()
-        if weight is None: weight = 'TINT'
-        if mask is None: mask = ()
-        if scanav: scanav = "SCAN"
-        else: scanav = "NONE"
+        weight = weight or 'TINT'
+        mask = mask or ()
+        scanav = (scanav and 'SCAN') or 'NONE'
         scan = (self, )
         try:
             if align:
@@ -1301,6 +1375,7 @@ class scantable(Scantable):
         print_log()
         return s
 
+    #@print_log_dec
     def convert_flux(self, jyperk=None, eta=None, d=None, insitu=None):
         """
         Return a scan where all spectra are converted to either
@@ -1320,15 +1395,16 @@ class scantable(Scantable):
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
-        if jyperk is None: jyperk = -1.0
-        if d is None: d = -1.0
-        if eta is None: eta = -1.0
+        jyperk = jyperk or -1.0
+        d = d or -1.0
+        eta = eta or -1.0
         s = scantable(self._math._convertflux(self, d, eta, jyperk))
         s._add_history("convert_flux", varlist)
         print_log()
         if insitu: self._assign(s)
         else: return s
 
+    #@print_log_dec
     def gain_el(self, poly=None, filename="", method="linear", insitu=None):
         """
         Return a scan after applying a gain-elevation correction.
@@ -1372,16 +1448,18 @@ class scantable(Scantable):
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
-        if poly is None:
-            poly = ()
+        poly = poly or ()
         from os.path import expandvars
         filename = expandvars(filename)
         s = scantable(self._math._gainel(self, poly, filename, method))
         s._add_history("gain_el", varlist)
         print_log()
-        if insitu: self._assign(s)
-        else: return s
+        if insitu:
+            self._assign(s)
+        else:
+            return s
 
+    #@print_log_dec
     def freq_align(self, reftime=None, method='cubic', insitu=None):
         """
         Return a scan where all rows have been aligned in frequency/velocity.
@@ -1400,21 +1478,27 @@ class scantable(Scantable):
         if insitu is None: insitu = rcParams["insitu"]
         self._math._setinsitu(insitu)
         varlist = vars()
-        if reftime is None: reftime = ""
+        reftime = reftime or ""
         s = scantable(self._math._freq_align(self, reftime, method))
         s._add_history("freq_align", varlist)
         print_log()
         if insitu: self._assign(s)
         else: return s
 
-    def opacity(self, tau, insitu=None):
+    #@print_log_dec
+    def opacity(self, tau=None, insitu=None):
         """
         Apply an opacity correction. The data
         and Tsys are multiplied by the correction factor.
         Parameters:
-            tau:         Opacity from which the correction factor is
+            tau:         (list of) opacity from which the correction factor is
                          exp(tau*ZD)
-                         where ZD is the zenith-distance
+                         where ZD is the zenith-distance.
+                         If a list is provided, it has to be of length nIF,
+                         nIF*nPol or 1 and in order of IF/POL, e.g.
+                         [opif0pol0, opif0pol1, opif1pol0 ...]
+                         if tau is `None` the opacities are determined from a
+                         model.
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
@@ -1422,12 +1506,15 @@ class scantable(Scantable):
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
+        if not hasattr(tau, "__len__"):
+            tau = [tau]
         s = scantable(self._math._opacity(self, tau))
         s._add_history("opacity", varlist)
         print_log()
         if insitu: self._assign(s)
         else: return s
 
+    #@print_log_dec
     def bin(self, width=5, insitu=None):
         """
         Return a scan where all spectra have been binned up.
@@ -1443,10 +1530,12 @@ class scantable(Scantable):
         s = scantable(self._math._bin(self, width))
         s._add_history("bin", varlist)
         print_log()
-        if insitu: self._assign(s)
-        else: return s
+        if insitu:
+            self._assign(s)
+        else:
+            return s
 
-
+    #@print_log_dec
     def resample(self, width=5, method='cubic', insitu=None):
         """
         Return a scan where all spectra have been binned up.
@@ -1469,7 +1558,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-
+    #@print_log_dec
     def average_pol(self, mask=None, weight='none'):
         """
         Average the Polarisations together.
@@ -1481,13 +1570,13 @@ class scantable(Scantable):
                          weighted), or 'tsys' (1/Tsys**2 weighted)
         """
         varlist = vars()
-        if mask is None:
-            mask = ()
+        mask = mask or ()
         s = scantable(self._math._averagepol(self, mask, weight.upper()))
         s._add_history("average_pol", varlist)
         print_log()
         return s
 
+    #@print_log_dec
     def average_beam(self, mask=None, weight='none'):
         """
         Average the Beams together.
@@ -1499,19 +1588,32 @@ class scantable(Scantable):
                          weighted), or 'tsys' (1/Tsys**2 weighted)
         """
         varlist = vars()
-        if mask is None:
-            mask = ()
+        mask = mask or ()
         s = scantable(self._math._averagebeams(self, mask, weight.upper()))
         s._add_history("average_beam", varlist)
         print_log()
         return s
 
+    def parallactify(self, pflag):
+        """
+        Set a flag to inidcate whether this data should be treated as having
+        been 'parallactified' (total phase == 0.0)
+        Parameters:
+            pflag:  Bool inidcating whether to turn this on (True) or
+                    off (False)
+        """
+        varlist = vars()
+        self._parallactify(pflag)
+        self._add_history("parallactify", varlist)
+
+    #@print_log_dec
     def convert_pol(self, poltype=None):
         """
         Convert the data to a different polarisation type.
+        Note that you will need cross-polarisation terms for most conversions.
         Parameters:
             poltype:    The new polarisation type. Valid types are:
-                        "linear", "stokes" and "circular"
+                        "linear", "circular", "stokes" and "linpol"
         """
         varlist = vars()
         try:
@@ -1529,19 +1631,22 @@ class scantable(Scantable):
         print_log()
         return s
 
-    #def smooth(self, kernel="hanning", width=5.0, insitu=None):
-    def smooth(self, kernel="hanning", width=5.0, plot=False, insitu=None):
+    #@print_log_dec
+    def smooth(self, kernel="hanning", width=5.0, order=2, plot=False, insitu=None):
         """
         Smooth the spectrum by the specified kernel (conserving flux).
         Parameters:
             kernel:     The type of smoothing kernel. Select from
-                        'hanning' (default), 'gaussian', 'boxcar' and
-                        'rmedian'
+                        'hanning' (default), 'gaussian', 'boxcar', 'rmedian'
+                        or 'poly'
             width:      The width of the kernel in pixels. For hanning this is
                         ignored otherwise it defauls to 5 pixels.
                         For 'gaussian' it is the Full Width Half
                         Maximum. For 'boxcar' it is the full width.
-                        For 'rmedian' it is the half width.
+                        For 'rmedian' and 'poly' it is the half width.
+            order:      Optional parameter for 'poly' kernel (default is 2), to
+                        specify the order of the polnomial. Ignored by all other
+                        kernels.
             plot:       plot the original and the smoothed spectra.
                         In this each indivual fit has to be approved, by
                         typing 'y' or 'n'
@@ -1557,7 +1662,7 @@ class scantable(Scantable):
 
         if plot: orgscan = self.copy()
 
-        s = scantable(self._math._smooth(self, kernel.lower(), width))
+        s = scantable(self._math._smooth(self, kernel.lower(), width, order))
         s._add_history("smooth", varlist)
 
         if plot:
@@ -1600,8 +1705,9 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-
-    def poly_baseline(self, mask=None, order=0, plot=False, uselin=False, insitu=None):
+    #@print_log_dec
+    def poly_baseline(self, mask=None, order=0, plot=False, uselin=False,
+                      insitu=None):
         """
         Return a scan which has been baselined (all rows) by a polynomial.
         Parameters:
@@ -1832,6 +1938,7 @@ class scantable(Scantable):
         else:
             return workscan
 
+    #@print_log_dec
     def rotate_linpolphase(self, angle):
         """
         Rotate the phase of the complex polarization O=Q+iU correlation.
@@ -1848,7 +1955,7 @@ class scantable(Scantable):
         print_log()
         return
 
-
+    #@print_log_dec
     def rotate_xyphase(self, angle):
         """
         Rotate the phase of the XY correlation.  This is always done in situ
@@ -1865,9 +1972,10 @@ class scantable(Scantable):
         print_log()
         return
 
+    #@print_log_dec
     def swap_linears(self):
         """
-        Swap the linear polarisations XX and YY, or better the first two 
+        Swap the linear polarisations XX and YY, or better the first two
         polarisations as this also works for ciculars.
         """
         varlist = vars()
@@ -1876,6 +1984,7 @@ class scantable(Scantable):
         print_log()
         return
 
+    #@print_log_dec
     def invert_phase(self):
         """
         Invert the phase of the complex polarisation
@@ -1886,6 +1995,7 @@ class scantable(Scantable):
         print_log()
         return
 
+    #@print_log_dec
     def add(self, offset, insitu=None):
         """
         Return a scan where all spectra have the offset added
@@ -1906,6 +2016,7 @@ class scantable(Scantable):
         else:
             return s
 
+    #@print_log_dec
     def scale(self, factor, tsys=True, insitu=None):
         """
         Return a scan where all spectra are scaled by the give 'factor'
@@ -1971,8 +2082,9 @@ class scantable(Scantable):
         self.set_selection(basesel+sel)
         self._setsourcetype(stype)
         self.set_selection(basesel)
-        s._add_history("set_sourcetype", varlist)
+        self._add_history("set_sourcetype", varlist)
 
+    #@print_log_dec
     def auto_quotient(self, preserve=True, mode='paired', verify=False):
         """
         This function allows to build quotients automatically.
@@ -1983,7 +2095,7 @@ class scantable(Scantable):
                             remove it.  The equations used are
                             preserve: Output = Toff * (on/off) - Toff
                             remove:   Output = Toff * (on/off) - Ton
-            mode:           the on/off detection mode 
+            mode:           the on/off detection mode
                             'paired' (default)
                             identifies 'off' scans by the
                             trailing '_R' (Mopra/Parkes) or
@@ -2016,6 +2128,7 @@ class scantable(Scantable):
         print_log()
         return s
 
+    #@print_log_dec
     def mx_quotient(self, mask = None, weight='median', preserve=True):
         """
         Form a quotient using "off" beams when observing in "MX" mode.
@@ -2027,7 +2140,7 @@ class scantable(Scantable):
                             preserve: Output = Toff * (on/off) - Toff
                             remove:   Output = Toff * (on/off) - Ton
         """
-        if mask is None: mask = ()
+        mask = mask or ()
         varlist = vars()
         on = scantable(self._math._mx_extract(self, 'on'))
         preoff = scantable(self._math._mx_extract(self, 'off'))
@@ -2038,6 +2151,7 @@ class scantable(Scantable):
         print_log()
         return q
 
+    #@print_log_dec
     def freq_switch(self, insitu=None):
         """
         Apply frequency switching to the data.
@@ -2057,6 +2171,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
+    #@print_log_dec
     def recalc_azel(self):
         """
         Recalculate the azimuth and elevation for each position.
@@ -2070,24 +2185,28 @@ class scantable(Scantable):
         print_log()
         return
 
+    #@print_log_dec
     def __add__(self, other):
         """
         implicit on all axes and on Tsys
         """
         return self._operation( other, "ADD" )
 
+    #@print_log_dec
     def __sub__(self, other):
         """
         implicit on all axes and on Tsys
         """
         return self._operation( other, 'SUB' )
 
+    #@print_log_dec
     def __mul__(self, other):
         """
         implicit on all axes and on Tsys
         """
         return self._operation( other, 'MUL' )
 
+    #@print_log_dec
     def __div__(self, other):
         """
         implicit on all axes and on Tsys
@@ -2119,18 +2238,20 @@ class scantable(Scantable):
         import numpy
         basesel = self.get_selection()
         for i in range(self.nrow()):
-            sel = selector()+basesel
-            sel.set_scans(self.getscan(i))
-            sel.set_beams(self.getbeam(i))
-            sel.set_ifs(self.getif(i))
-            sel.set_polarisations(self.getpol(i))
-            self.set_selection(sel)
+            sel = self.get_row_selector(i)
+            self.set_selection(basesel+sel)
             nans = numpy.isnan(self._getspectrum(0))
         if numpy.any(nans):
             bnans = [ bool(v) for v in nans]
             self.flag(bnans)
         self.set_selection(basesel)
-        
+
+    def get_row_selector(self, rowno):
+        return selector(beams=self.getbeam(rowno),
+                        ifs=self.getif(rowno),
+                        pols=self.getpol(rowno),
+                        scans=self.getscan(rowno),
+                        cycles=self.getcycle(rowno))
 
     def _add_history(self, funcname, parameters):
         if not rcParams['scantable.history']:

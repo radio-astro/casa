@@ -1,31 +1,34 @@
 //#---------------------------------------------------------------------------
 //# PKSFITSreader.h: Class to read Parkes Multibeam data from a FITS file.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
-//# Associated Universities, Inc. Washington DC, USA.
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
+//#                        AUSTRALIA
 //#
-//# $Id$
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: PKSFITSreader.h,v 19.18 2009-09-29 07:33:38 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# This class is basically a wrapper class for reading data from either an
 //# MBFITS (single dish variant of RPFITS) or SDFITS file using the relevant
@@ -38,19 +41,22 @@
 #define ATNF_PKSFITSREADER_H
 
 #include <atnf/PKSIO/FITSreader.h>
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSreader.h>
 
 #include <casa/aips.h>
+#include <casa/stdio.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/String.h>
 
+#include <casa/namespace.h>
+
 // <summary>
 // Class to read Parkes Multibeam data from a FITS file.
 // </summary>
 
-#include <casa/namespace.h>
 class PKSFITSreader : public PKSreader
 {
   public:
@@ -66,6 +72,7 @@ class PKSFITSreader : public PKSreader
     // Open the FITS file for reading.
     virtual Int open(
         const String fitsName,
+        const String antenna,
         Vector<Bool> &beams,
         Vector<Bool> &IFs,
         Vector<uInt> &nChan,
@@ -81,12 +88,12 @@ class PKSFITSreader : public PKSreader
         String &antName,
         Vector<Double> &antPosition,
         String &obsType,
+        String &bunit,
         Float  &equinox,
         String &dopplerFrame,
         Double &mjd,
         Double &refFreq,
-        Double &bandwidth,
-        String &fluxunit);
+        Double &bandwidth);
 
     // Get frequency parameters for each IF.
     virtual Int getFreqInfo(
@@ -103,7 +110,9 @@ class PKSFITSreader : public PKSreader
         const Vector<Int>  refChan,
         const Bool getSpectra = True,
         const Bool getXPol    = False,
-        const Bool getFeedPos = False);
+        const Bool getFeedPos = False,
+        const Bool getPointing = False,
+        const Int  coordSys   = 0);
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(
@@ -113,58 +122,7 @@ class PKSFITSreader : public PKSreader
         Matrix<Double> &positions);
 
     // Read the next data record.
-    virtual Int read(
-        Int             &scanNo,
-        Int             &cycleNo,
-        Double          &mjd,
-        Double          &interval,
-        String          &fieldName,
-        String          &srcName,
-        Vector<Double>  &srcDir,
-        Vector<Double>  &srcPM,
-        Double          &srcVel,
-        String          &obsType,
-        Int             &IFno,
-        Double          &refFreq,
-        Double          &bandwidth,
-        Double          &freqInc,
-        Vector<Double>  &restFreq,
-        Vector<Float>   &tcal,
-        String          &tcalTime,
-        Float           &azimuth,
-        Float           &elevation,
-        Float           &parAngle,
-        Float           &focusAxi,
-        Float           &focusTan,
-        Float           &focusRot,
-        Float           &temperature,
-        Float           &pressure,
-        Float           &humidity,
-        Float           &windSpeed,
-        Float           &windAz,
-        Int             &refBeam,
-        Int             &beamNo,
-        Vector<Double>  &direction,
-        Vector<Double>  &scanRate,
-        Vector<Float>   &tsys,
-        Vector<Float>   &sigma,
-        Vector<Float>   &calFctr,
-        Matrix<Float>   &baseLin,
-        Matrix<Float>   &baseSub,
-        Matrix<Float>   &spectra,
-        Matrix<uChar>   &flagged,
-        Complex         &xCalFctr,
-        Vector<Complex> &xPol);
-
-    // Read the next data record, just the basics.
-    virtual Int read(
-        Int           &IFno,
-        Vector<Float> &tsys,
-        Vector<Float> &calFctr,
-        Matrix<Float> &baseLin,
-        Matrix<Float> &baseSub,
-        Matrix<Float> &spectra,
-        Matrix<uChar> &flagged);
+    virtual Int read(PKSrecord &pksrec);
 
     // Close the FITS file.
     virtual void close();
@@ -172,7 +130,7 @@ class PKSFITSreader : public PKSreader
   private:
     Int    *cBeams, *cIFs;
     uInt   cNBeam, cNIF;
-    PKSMBrecord cMBrec;
+    MBrecord cMBrec;
     FITSreader  *cReader;
 
     Char* trim(char *string);

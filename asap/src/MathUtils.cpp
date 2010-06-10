@@ -39,6 +39,11 @@
 #include <scimath/Mathematics/MedianSlider.h>
 #include <casa/Exceptions/Error.h>
 
+#include <scimath/Fitting/LinearFit.h>
+#include <scimath/Functionals/Polynomial.h>
+#include <scimath/Mathematics/AutoDiff.h>
+
+
 #include "MathUtils.h"
 
 using namespace casa;
@@ -182,19 +187,62 @@ void mathutil::runningMedian(Vector<Float>& out, Vector<Bool>& outflag,
   outflag.resize(flag.nelements());
   MedianSlider ms(hwidth);
   Slice sl(0, fwidth-1);
-  Float medval = ms.add(const_cast<Vector<Float>& >(in)(sl), 
+  Float medval = ms.add(const_cast<Vector<Float>& >(in)(sl),
                   const_cast<Vector<Bool>& >(flag)(sl));
   uInt n = in.nelements();
   for (uInt i=hwidth; i<(n-hwidth); ++i) {
     // add data value
-    out[i] = ms.add(in[i+hwidth], flag[i+hwidth]); 
-    outflag[i] = (ms.nval() == 0);    
+    out[i] = ms.add(in[i+hwidth], flag[i+hwidth]);
+    outflag[i] = (ms.nval() == 0);
   }
-  // replicate edge values from fisrt value with full width of values
+  // replicate edge values from first value with full width of values
   for (uInt i=0;i<hwidth;++i) {
     out[i] = out[hwidth];
-    outflag[i] = outflag[hwidth];    
+    outflag[i] = outflag[hwidth];
     out[n-1-i] = out[n-1-hwidth];
-    outflag[n-1-i] = outflag[n-1-hwidth];    
+    outflag[n-1-i] = outflag[n-1-hwidth];
+  }
+}
+
+void mathutil::polyfit(Vector<Float>& out, Vector<Bool>& outmask,
+                       const Vector<Float>& in, const Vector<Bool>& mask,
+                       float width, int order)
+{
+  Int hwidth = Int(width+0.5);
+  Int fwidth = hwidth*2+1;
+  out.resize(in.nelements());
+  outmask.resize(mask.nelements());
+  LinearFit<Float> fitter;
+  Polynomial<Float> poly(order);
+  fitter.setFunction(poly);
+  Vector<Float> sigma(fwidth);
+  sigma = 1.0;
+  Vector<Float> parms;
+  Vector<Float> x(fwidth);
+  indgen(x);
+
+  uInt n = in.nelements();
+
+  for (uInt i=hwidth; i<(n-hwidth); ++i) {
+    // add data value
+    if (mask[i]) {
+      Slice sl(i-hwidth, fwidth);
+      const Vector<Float> &y = const_cast<Vector<Float>& >(in)(sl);
+      const Vector<Bool> &m = const_cast<Vector<Bool>& >(mask)(sl);
+      parms = fitter.fit(x, y, sigma, &m);
+
+      poly.setCoefficients(parms);
+      out[i] = poly(x[hwidth]);//cout << in[i] <<"->"<<out[i]<<endl;
+    } else {
+      out[i] = in[i];
+    }
+    outmask[i] = mask[i];
+  }
+  // replicate edge values from first value with full width of values
+  for (uInt i=0;i<hwidth;++i) {
+    out[i] = out[hwidth];
+    outmask[i] = outmask[hwidth];
+    out[n-1-i] = out[n-1-hwidth];
+    outmask[n-1-i] = outmask[n-1-hwidth];
   }
 }
