@@ -55,7 +55,7 @@ ALLEXES  := $(sort $(AIPSEXES) $(PGMREXES))
 
 # Pattern rules.
 #---------------
-ifeq "$(shell uname -p)" "x86_64"
+ifeq "$(shell uname -m)" "x86_64"
 
 $(AIPSROOT)/.% : $(CODEDIR)/%
 	  sed -e 's#__AIPSROOT#$(AIPSROOT)#g' $< > $@

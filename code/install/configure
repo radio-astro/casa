@@ -727,7 +727,7 @@ EOT
            SITES=""
            if [ "$ARCH" = "darwin" ]; then
 			echo -n "searching for pre-defined sites..."
-           	cpuarch=$(uname -p)
+           	cpuarch=$(uname -m)
 			sites=($(ls ${AIPSROOT}/${ARCH}/*/makedefs | sed -e 's,.*/\(.*\)/makedefs,\1,'))
 			for i in ${sites[@]}
 			  do
