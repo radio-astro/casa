@@ -32,6 +32,7 @@
 #include <casa/aips.h>
 #include <casa/iosfwd.h>
 #include <unistd.h>
+#include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -161,6 +162,13 @@ public:
     // <group>
     IPosition(const Array<Int>& other);
     Vector<Int> asVector() const;
+    // </group>
+
+    // Convert an IPosition to and from an Array<Int>. In either case, the
+    // array must be one dimensional.
+    // <group>
+    IPosition(const std::vector<Int>& other);
+    std::vector<Int> asStdVector() const;
     // </group>
 
     // This member functions return an IPosition which has
