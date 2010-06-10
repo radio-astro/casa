@@ -73,6 +73,33 @@ Vector<Int> IPosition::asVector() const
     return retval;
 }
 
+IPosition::IPosition (const std::vector<Int> &other)
+: size_p (other.size()),
+  data_p (0)
+{
+    if (size_p == 0) {
+	return;        // Be slightly loose about conformance checking
+    }
+    allocateBuffer();
+    Bool del;
+    for (uInt i=0; i<size_p; ++i) {
+      data_p[i] = other[i];
+    }
+    DebugAssert(ok(), AipsError);
+}
+
+std::vector<Int> IPosition::asStdVector() const
+{
+    DebugAssert(ok(), AipsError);
+    // Make an array which is the correct size.
+    std::vector<Int> retval(nelements());
+    for (uInt i=0; i<nelements(); i++) {
+        AlwaysAssert (data_p[i] <= 2147483647, AipsError);
+	retval[i] = data_p[i];
+    }
+    return retval;
+}
+
 LogIO& operator<< (LogIO& os, const IPosition& ip)
 {
     os.output() << ip;
