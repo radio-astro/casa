@@ -784,10 +784,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                chaniter -- specify how spectral CLEAN is performed, 
                  default: chaniter=False;
                  example: chaniter=True; step through channels 
-                  WARNING: The interactive clean with chaniter=True for
-                    optical velocity mode
-                    (mode='velocity' and veltype='optical') is
-                    NOT YET IMPLEMENTED.
                outframe -- For mode='velocity', 'frequency', or 'channel':  velocity
                  reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
