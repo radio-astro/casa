@@ -31,7 +31,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   coordsystest_regression.py
   cvel_regression.py
   fits-import-export_regression.py
-  flagdata_test.py
   fls3a_hi_regression.py
   g192_regression.py
   ggtau_regression.py
@@ -74,6 +73,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   run_orionmos4sim.py
   sdtpimaging_regression.py
   testcube_regression.py
+  unit_tests.py
   wf_regression.py
   wproj3ddat_regression.py
 )
