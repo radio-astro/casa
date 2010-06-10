@@ -319,10 +319,25 @@ class test_selections(test_base):
         flagdata(vis=self.vis, array='0')
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 
+# Dummy class which cleans up created files
+class cleanup(test_base):
+    
+    def tearDown(self):
+        os.system('rm -rf ngc5921.ms')
+        os.system('rm -rf ngc5921.ms.flagversions')
+        os.system('rm -rf flagdatatest.ms')
+        os.system('rm -rf flagdatatest.ms.flagversions')
+        
+    def test1(self):
+        '''flagdata: Cleanup'''
+        pass
+
+
 def suite():
     return [test_selections,
             test_statistics_queries,
             test_vector_flagmanager,
             test_flagmanager,
             test_rfi,
-            test_shadow]
+            test_shadow,
+            cleanup]
