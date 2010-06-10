@@ -1,5 +1,6 @@
 import os
 import numpy
+import re
 import sys
 import shutil
 from __main__ import default
@@ -39,7 +40,10 @@ def check_eq(val, expval, tol=None):
 
 class split_test1(unittest.TestCase):
     need_to_initialize = True
-    doTearDown        = False
+    records           = {}
+    doTearDown        = {}
+    corrsels = ['', 'rr, ll', 'rl, lr', 'rr', 'll']
+    corrsel  = ''            # This initialization shouldn't matter.
     
     def setUp(self):
         if self.need_to_initialize:
@@ -52,69 +56,218 @@ class split_test1(unittest.TestCase):
         self.__class__.need_to_initialize = False
                 
         inpms = '0420+417/0420+417.ms'
-        outms1 = 'output1.ms'
         self.__class__.inpms = inpms
-        self.__class__.outms1 = outms1
     
         if not os.path.exists(inpms):
             # Copying is technically unnecessary for split,
             # but self.inpms is shared by other tests, so making
             # it readonly might break them.
             shutil.copytree(datapath + inpms, inpms)
-        for doomedms in (outms1, ):
-            shutil.rmtree(doomedms, ignore_errors=True)
-        self.res = split(inpms, outms1, datacolumn='data',
-                         field='', spw='', width=1, antenna='',
-                         timebin='20s', timerange='',
-                         scan='', array='', uvrange='',
-                         correlation='', async=False)
-        tb.open(outms1)
-        self.__class__.data   = tb.getcell('DATA', 2)
-        self.__class__.weight = tb.getcell('WEIGHT', 5)
-        self.__class__.sigma  = tb.getcell('SIGMA', 7)
-        tb.close()
+
+        for corrsel in self.corrsels:
+            self.res = self.do_split(corrsel)
+
+    def do_split(self, corrsel):
+        outms = 'output' + re.sub(',\s*', '', corrsel) + '.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "Time averaging", corrsel
+            splitran = split(self.inpms, outms, datacolumn='data',
+                             field='', spw='', width=1, antenna='',
+                             timebin='20s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation=corrsel, async=False)
+            tb.open(outms)
+            record['data']   = tb.getcell('DATA', 2)
+            record['weight'] = tb.getcell('WEIGHT', 5)
+            record['sigma']  = tb.getcell('SIGMA', 7)
+            tb.close()
+        except Exception, e:
+            print "Error time averaging and reading", outms
+            raise e
+        self.__class__.records[corrsel] = record
+        return splitran
+
     
     def tearDown(self):
-        if self.doTearDown:
-            #for doomedms in (inpms1, inpms2, self.outms1, self.outms2):
-            for doomedms in (self.inpms, self.outms1):
-                shutil.rmtree(doomedms, ignore_errors=True)
-            self.__class__.doTearDown = False
+        if self.doTearDown.has_key(self.corrsel):
+            shutil.rmtree(self.doTearDown[self.corrsel],
+                          ignore_errors=True)
 
-    def test1(self):
+    def check_subtables(self, corrsel, expected):
+        oms = self.records[corrsel]['ms']
+        assert listshapes(mspat=oms)[oms] == set(expected)
+        self.__class__.corrsel = corrsel
+        self.__class__.doTearDown[corrsel] = oms
+        
+
+    def test_sts(self):
         """
         Subtables, time avg. without correlation selection
         """
-        assert listshapes(mspat=self.outms1)[self.outms1] == set([(4, 1)])
-        self.__class__.doTearDown = True
+        self.check_subtables('', [(4, 1)])
 
-    def test2(self):
+    def test_sts_rrll(self):
+        """
+        Subtables, time avg. RR, LL
+        """
+        self.check_subtables('rr, ll', [(2, 1)])
+        
+    def test_sts_rllr(self):
+        """
+        Subtables, time avg. RL, LR
+        """
+        self.check_subtables('rl, lr', [(2, 1)])
+        
+    def test_sts_rr(self):
+        """
+        Subtables, time avg. RR
+        """
+        self.check_subtables('rr', [(1, 1)])
+        
+    def test_sts_ll(self):
+        """
+        Subtables, time avg. LL
+        """
+        self.check_subtables('ll', [(1, 1)])
+
+    ## # split does not yet return a success value, and exceptions
+    ## # are captured.
+    ## # But at least on June 10 it correctly exited with an error
+    ## # msg for correlation = 'rr, rl, ll'.
+    ## def test_abort_on_rrrlll(self):
+    ##     """
+    ##     Cannot slice out RR, RL, LL
+    ##     """
+    ##     self.assertFalse(self.doSplit('rr, rl, ll'))
+        
+    def test_data(self):
         """
         DATA[2],   time avg. without correlation selection
         """
-        check_eq(self.data,
+        check_eq(self.records['']['data'],
                  numpy.array([[ 0.14428490-0.03145669j],
                               [-0.00379944+0.00710297j],
                               [-0.00381106-0.00066403j],
                               [ 0.14404297-0.04763794j]]),
                  0.0001)
+        
+    def test_data_rrll(self):
+        """
+        DATA[2],   time avg. RR, LL
+        """
+        check_eq(self.records['rr, ll']['data'],
+                 numpy.array([[ 0.14428490-0.03145669j],
+                              [ 0.14404297-0.04763794j]]),
+                 0.0001)
 
-    def test3(self):
+    def test_data_rllr(self):
+        """
+        DATA[2],   time avg. RL, LR
+        """
+        check_eq(self.records['rl, lr']['data'],
+                 numpy.array([[-0.00379944+0.00710297j],
+                              [-0.00381106-0.00066403j]]),
+                 0.0001)
+        
+    def test_data_rr(self):
+        """
+        DATA[2],   time avg. RR
+        """
+        check_eq(self.records['rr']['data'],
+                 numpy.array([[ 0.14428490-0.03145669j]]),
+                 0.0001)
+
+    def test_data_ll(self):
+        """
+        DATA[2],   time avg. LL
+        """
+        check_eq(self.records['ll']['data'],
+                 numpy.array([[ 0.14404297-0.04763794j]]),
+                 0.0001)
+
+    def test_wt(self):
         """
         WEIGHT[5], time avg. without correlation selection
         """
-        check_eq(self.weight,
+        check_eq(self.records['']['weight'],
                  numpy.array([143596.34375, 410221.34375,
                               122627.1640625, 349320.625]),
                  1.0)
 
-    def test4(self):
+    def test_wt_rrll(self):
+        """
+        WEIGHT[5], time avg. RR, LL
+        """
+        check_eq(self.records['rr, ll']['weight'],
+                 numpy.array([143596.34375, 349320.625]),
+                 1.0)
+
+    def test_wt_rllr(self):
+        """
+        WEIGHT[5], time avg. RL, LR
+        """
+        check_eq(self.records['rl, lr']['weight'],
+                 numpy.array([410221.34375, 122627.1640625]),
+                 1.0)
+
+    def test_wt_rr(self):
+        """
+        WEIGHT[5], time avg. RR
+        """
+        check_eq(self.records['rr']['weight'],
+                 numpy.array([143596.34375]),
+                 1.0)
+
+    def test_wt_ll(self):
+        """
+        WEIGHT[5], time avg. LL
+        """
+        check_eq(self.records['ll']['weight'],
+                 numpy.array([349320.625]),
+                 1.0)
+
+    def test_sigma(self):
         """
         SIGMA[7],  time avg. without correlation selection
         """
-        check_eq(self.sigma,
+        check_eq(self.records['']['sigma'],
                  numpy.array([0.00168478, 0.00179394,
                               0.00182574, 0.00194404]),
+                 0.0001)
+        
+    def test_sigma_rrll(self):
+        """
+        SIGMA[7],  time avg. RR, LL
+        """
+        check_eq(self.records['rr, ll']['sigma'],
+                 numpy.array([0.00168478, 0.00194404]),
+                 0.0001)
+        
+    def test_sigma_rllr(self):
+        """
+        SIGMA[7],  time avg. RL, LR
+        """
+        check_eq(self.records['rl, lr']['sigma'],
+                 numpy.array([0.00179394, 0.00182574]),
+                 0.0001)
+        
+    def test_sigma_rr(self):
+        """
+        SIGMA[7],  time avg. RR
+        """
+        check_eq(self.records['rr']['sigma'],
+                 numpy.array([0.00168478]),
+                 0.0001)
+        
+    def test_sigma_ll(self):
+        """
+        SIGMA[7],  time avg. LL
+        """
+        check_eq(self.records['ll']['sigma'],
+                 numpy.array([0.00194404]),
                  0.0001)
         
 
