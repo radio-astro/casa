@@ -30,7 +30,7 @@ add_custom_command( OUTPUT version.cc
       -e 's|MINOR|${CASA_MINOR_VERSION}|'
       -e 's|PATCH|${CASA_PATCH_VERSION}|'
       -e 's|REVISION|${SVNREVISION}|'
-      -e 's|DATE|${BUILDTIME}|'
+      -e 's|DATE|${TAGGEDTIME}|'
       ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > version.cc
       || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template
