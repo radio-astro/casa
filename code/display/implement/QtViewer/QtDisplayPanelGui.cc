@@ -830,6 +830,7 @@ void QtDisplayPanelGui::hideImageMenus() {
                annotAct_->setEnabled(True);
                profileAct_->setEnabled(True);
                shpMgrAct_->setEnabled(True);
+               setUseRegion(False);
                break;
             }
             if (pdd->dataType() == "ms" || img ==0) {
@@ -847,6 +848,7 @@ void QtDisplayPanelGui::hideImageMenus() {
                annotAct_->setEnabled(False);
                profileAct_->setEnabled(False);
                shpMgrAct_->setEnabled(False);
+               setUseRegion(False);
                //cout << "hide image menus" << endl;
                break;
             }
@@ -1035,6 +1037,7 @@ void QtDisplayPanelGui::showFileBoxPanel() {
   qfb_->raise();  
   annotAct_->setEnabled(False);
   mkRgnAct_->setEnabled(False);
+  setUseRegion(True);
 
 }
 
@@ -1044,6 +1047,7 @@ void QtDisplayPanelGui::hideFileBoxPanel() {
   qfb_->hide();  
   annotAct_->setEnabled(True);
   mkRgnAct_->setEnabled(True);
+  setUseRegion(False);
 }
     
 void QtDisplayPanelGui::showAnnotatorPanel() {
@@ -1072,6 +1076,7 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
   qap_->raise();  
   fboxAct_->setEnabled(False);
   mkRgnAct_->setEnabled(False);
+  setUseRegion(True);
 
 }
 
@@ -1082,6 +1087,7 @@ void QtDisplayPanelGui::hideAnnotatorPanel() {
   qap_->hide();  
   fboxAct_->setEnabled(True);
   mkRgnAct_->setEnabled(True);
+  setUseRegion(False);
 }
 
 void QtDisplayPanelGui::showMakeRegionPanel() {
@@ -1103,6 +1109,9 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
         }
       }
   }
+  fboxAct_->setEnabled(False);
+  annotAct_->setEnabled(False);
+  setUseRegion(True);
 
 }
 
@@ -1113,6 +1122,7 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
   qmr_->hide();  
   fboxAct_->setEnabled(True);
   annotAct_->setEnabled(True);
+  setUseRegion(False);
 }
 
 void QtDisplayPanelGui::showImageProfile() {
