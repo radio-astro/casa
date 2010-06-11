@@ -219,7 +219,7 @@ file( WRITE ${casaroot}/casainit.sh
       "    a_temp=`egrep \"^[  ]*$a_host[ ]\" \"$a_root/aipshosts\"`\n"
       "    a_arch=`/bin/echo $a_temp | awk '{ print $2 }'`\n"
       "fi\n"
-      "if [ \"$a_arch\" == \"\" ]\n"
+      "if [ \"$a_arch\" = \"\" ]\n"
       "then\n"
       "    case `uname -s` in\n"
       "    Linux)\n"
