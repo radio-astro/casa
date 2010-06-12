@@ -18,18 +18,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# This CMake script sets the variables SVNREVISION, BUILDTIME and SVNURL.
+# This CMake script sets the variables SVNREVISION, BUILDTIME, TAGGEDTIME and 
+# SVNURL.
 #
 # The script may be invoked from include(...) or using cmake -P
 # In practice this dual interface is used to ensure that the values
-# of SVNREVISION, BUILDTIME and SVNURL are consistent in the two contexts: 
-# generating c++ code, and for generating python code.
+# of SVNREVISION, BUILDTIME, TAGGEDTIME and SVNURL are consistent in the
+# two contexts: generating c++ code, and for generating python code.
 #
 # On input, the variables casadef_perl and casadef_source_dir must be set to
 # the perl executable, and to ${CMAKE_SOURCE_DIR} respectively.
 # If and only if the variable casadef_quiet is not set, the values
-# of SVNREVISION, BUILDTIME and SVNURL are written to standard output
-# as valid python code.
+# of SVNREVISION, BUILDTIME and SVNURL are written to standard
+# output as valid python code.
 
 if( NOT casadef_perl )
   message( FATAL_ERROR "casadef_perl is undefined" )
@@ -56,6 +57,13 @@ execute_process( COMMAND
   )
 
 execute_process( COMMAND
+  ${casadef_perl} -e "open(INFO, 'svn info ${casadef_source_dir}/VERSION |') ; while (<INFO>){ if ( s/^Last Changed Date:[^(]+\\s+//) { print; } }"
+  COMMAND  sed "s/[()]//g"
+  OUTPUT_VARIABLE TAGGEDTIME 
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+execute_process( COMMAND
   ${casadef_perl} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Revision:\\s+//) { print; } }"
   WORKING_DIRECTORY ${casadef_source_dir}
   OUTPUT_VARIABLE SVNREVISION
@@ -69,9 +77,14 @@ execute_process( COMMAND
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
+
+
 set( ENV{LC_TIME} ${_lc_time_old} )
 set( ENV{LC_MESSAGES} ${_lc_messages_old} )
 
+if( NOT TAGGEDTIME )
+  message( FATAL_ERROR "Could not read \"Last Changed Date\" from the output of \"svn info ${casadef_source_dir}/VERSION\"" )
+endif()
 if( NOT SVNREVISION )
   message( FATAL_ERROR "Could not read \"Revision\" from the output of \"svn info\"" )
 endif()

@@ -30,7 +30,7 @@ add_custom_command( OUTPUT version.cc
       -e 's|MINOR|${CASA_MINOR_VERSION}|'
       -e 's|PATCH|${CASA_PATCH_VERSION}|'
       -e 's|REVISION|${SVNREVISION}|'
-      -e 's|DATE|${BUILDTIME}|'
+      -e 's|DATE|${TAGGEDTIME}|'
       ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > version.cc
       || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template
@@ -111,8 +111,6 @@ casa_add_library( xmlcasa
 
 casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
 casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
-casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
-casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
 

@@ -96,6 +96,9 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void setStatsPrint(Bool printStats=True) {
     qdp_->printStats = printStats;  }
 
+  virtual void setUseRegion(Bool useRegion=True) {
+    qdp_->useRegion = useRegion;  }
+
   virtual bool supports( SCRIPTING_OPTION option ) const;
   virtual QVariant start_interact( const QVariant &input, int id );
   virtual QVariant setoptions( const QMap<QString,QVariant> &input, int id);

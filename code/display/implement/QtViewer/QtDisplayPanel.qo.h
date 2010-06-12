@@ -903,8 +903,8 @@ public:
   //# This (public) bool is probably temporary.  True by default.
   //# Set it False to disable stats printing.
   Bool printStats;
-  
-  
+
+  Bool useRegion;
   
   //# Printing utilities
   

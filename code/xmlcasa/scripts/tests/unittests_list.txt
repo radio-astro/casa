@@ -12,6 +12,7 @@ test_clean                      scastro@eso.org
 test_csvclean                   scastro@eso.org
 test_exportasdm                 dpetry@eso.org
 test_fixvis                     rreid@nrao.edu
+test_flagdata                   jmlarsen@eso.org
 test_hanningsmooth              scastro@eso.org
 test_imcontsub                  dmehring@nrao.edu
 test_imfit                      dmehring@nrao.edu

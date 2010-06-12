@@ -76,7 +76,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent) :
 		hasRgn_(False), rgnExtent_(0), qsm_(0),
 		lastMotionEvent_(0), bkgdClrOpt_(0), 
                 extChan_(""), extPol_("")  ,
-                printStats(True){
+                printStats(True), useRegion(False){
     
   setWindowTitle("Viewer Display Panel");
   
@@ -352,14 +352,16 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 	// rgnImgPath_: pathname of the active image used to make the region.
 	// Will be transformed into regionPathname() if saved to disk.
       //   rgnSaved = True;  }
-//    resetRTRegion();
+     if (useRegion)
+         resetRTRegion();
 
 
      //this reset is necessary but cannot do
      //because the bug that polygon tool prematurely
      //emit 'reagion ready'.
      //enable this after that bug cas-1393 fix
-//   resetPTRegion();
+     if (useRegion)
+        resetPTRegion();
     
     
     delete imReg;  }  }  

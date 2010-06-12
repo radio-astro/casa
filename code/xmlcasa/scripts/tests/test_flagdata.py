@@ -1,6 +1,8 @@
 import shutil
 import unittest
 import os
+from tasks import *
+#from taskinit import *
 
 #
 # Test of flagdata modes
@@ -15,7 +17,72 @@ def test_eq(result, total, flagged):
     assert result['flagged'] == flagged, \
            "%s flags set; %s expected" % (result['flagged'], flagged)
 
-class test_vector_flagmanager(unittest.TestCase):
+
+# Base class which defines setUp functions
+# for importing different data sets
+class test_base(unittest.TestCase):
+    def setUp_flagdatatest(self):
+        self.vis = "flagdatatest.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata(vis=self.vis, unflag=True)
+
+    def setUp_ngc5921(self):
+        self.vis = "ngc5921.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Importing data..."
+            importuvfits(os.environ.get('CASAPATH').split()[0] + \
+                         '/data/regression/ngc5921/ngc5921.fits', \
+                         self.vis)
+            
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata(vis=self.vis, unflag=True)
+
+
+class test_rfi(test_base):
+    """Test of mode = 'rfi'"""
+    
+    def setUp(self):
+        self.setUp_flagdatatest()
+        
+    def test1(self):
+        flagdata(vis=self.vis, unflag=True)
+        flagdata(vis=self.vis, mode='rfi')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 1326)
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 5252, 51)
+        flagdata(vis=self.vis, unflag=True)
+
+
+class test_shadow(test_base):
+    """Test of mode = 'shadow'"""
+    def setUp(self):
+        self.setUp_flagdatatest()
+
+    def test1(self):
+        flagdata(vis=self.vis, mode='shadow', diameter=40)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 5252)
+
+    def test2(self):
+        flagdata(vis=self.vis, mode='shadow')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 2912)
+
+    def test3(self):
+        flagdata(vis=self.vis, mode='shadow', correlation='LL')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 1456)
+
+
+class test_vector_flagmanager(test_base):
     def runTest(self):
 
         # Import data
@@ -23,14 +90,14 @@ class test_vector_flagmanager(unittest.TestCase):
         
         os.system('cp -r ' + \
                   os.environ.get('CASAPATH').split()[0] +
-                  "/data/regression/flagdata/" + vis + ' ' + vis)
+                  "/data/regression/unittest/flagdata/" + vis + ' ' + vis)
 
         print "Test of vector mode"
         
         default(flagdata)
         vis = 'flagdatatest.ms'
 
-        flagdata(vis=vis, unflag=true)
+        flagdata(vis=vis, unflag=True)
 
         clipminmax=[0.0, 0.2]
         antenna = ['1', '2']
@@ -38,8 +105,8 @@ class test_vector_flagmanager(unittest.TestCase):
 
         inp(flagdata) # broken, looks only at global parameters
         flagdata(vis=vis, clipminmax=clipminmax, antenna=antenna, clipcolumn=clipcolumn)
-        test_eq(flagdata(vis=vis, mode='summary'), 2000700, 465398)
-        flagdata(vis=vis, unflag=true)
+        test_eq(flagdata(vis=vis, mode='summary'), 70902, 17897)
+        flagdata(vis=vis, unflag=True)
 
         print "Test of flagmanager mode=list, flagbackup=True/False"
         flagmanager(vis=vis, mode='list')
@@ -47,14 +114,13 @@ class test_vector_flagmanager(unittest.TestCase):
         assert len(fg.getflagversionlist()) == 5
         fg.done()
 
-
-        flagdata(vis=vis, unflag=true, flagbackup=false)
+        flagdata(vis=vis, unflag=True, flagbackup=False)
         flagmanager(vis=vis, mode='list')
         fg.open(vis)
         assert len(fg.getflagversionlist()) == 5
         fg.done()
 
-        flagdata(vis=vis, unflag=true, flagbackup=true)
+        flagdata(vis=vis, unflag=True, flagbackup=True)
         flagmanager(vis=vis, mode='list')
         fg.open(vis)
         len(fg.getflagversionlist()) == 6
@@ -67,18 +133,10 @@ class test_vector_flagmanager(unittest.TestCase):
         len(fg.getflagversionlist()) == 6
         fg.done()
 
-class test_flagmanager(unittest.TestCase):
+class test_flagmanager(test_base):
 
     def setUp(self):
-        self.vis = "ngc5921.ms"
-        os.system("rm -rf " + self.vis + "*")
-
-        print "Importing %s..." % (self.vis)
-        importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                     '/data/regression/ngc5921/ngc5921.fits', \
-                     self.vis)
-        
-        flagdata(vis=self.vis, unflag=True)
+        self.setUp_ngc5921()
 
     def test1(self):
         """Create, then restore autoflag"""
@@ -103,25 +161,15 @@ class test_flagmanager(unittest.TestCase):
         flagmanager(vis = self.vis, mode='restore', versionname='manualflag_3')
         restore2 = flagdata(vis = self.vis, mode='summary')['flagged']
 
-        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags"
+        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags, should be", ant2
 
         assert restore2 == ant2
 
 
-class test_statistics_queries(unittest.TestCase):
+class test_statistics_queries(test_base):
 
     def setUp(self):
-        self.vis = "ngc5921.ms"
-
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-        else:
-            print "Importing data..."
-            importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                         '/data/regression/ngc5921/ngc5921.fits', \
-                         self.vis)
-            
-        flagdata(vis=self.vis, unflag=true)
+        self.setUp_ngc5921()
 
     def test_CAS2021(self):
         print "Test antenna selection"
@@ -205,36 +253,26 @@ class test_statistics_queries(unittest.TestCase):
 
     def test13(self):
         print "quack mode quackincrement"
-        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 571536)
 
-        flagdata(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 857304)
         
-        flagdata(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1571724)
         
-        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
+        flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1762236)
-        flagdata(vis=self.vis, unflag=true)
+        flagdata(vis=self.vis, unflag=True)
 
 
 
-class test_selections(unittest.TestCase):
+class test_selections(test_base):
     """Test various selections"""
 
     def setUp(self):
-        self.vis = "ngc5921.ms"
-        
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-        else:
-            print "Importing data..."
-            importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                         '/data/regression/ngc5921/ngc5921.fits', \
-                         self.vis)
-            
-        flagdata(vis=self.vis, unflag=true)
+        self.setUp_ngc5921()
 
     def test_scan(self):
         
@@ -242,7 +280,7 @@ class test_selections(unittest.TestCase):
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 52416)
         
         # feed not implemented flagdata(vis=vis, feed='27')
-        # flagdata(vis=vis, unflag=true)
+        # flagdata(vis=vis, unflag=True)
 
     def test_antenna(self):
 
@@ -281,41 +319,25 @@ class test_selections(unittest.TestCase):
         flagdata(vis=self.vis, array='0')
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 
+# Dummy class which cleans up created files
+class cleanup(test_base):
+    
+    def tearDown(self):
+        os.system('rm -rf ngc5921.ms')
+        os.system('rm -rf ngc5921.ms.flagversions')
+        os.system('rm -rf flagdatatest.ms')
+        os.system('rm -rf flagdatatest.ms.flagversions')
+        
+    def test1(self):
+        '''flagdata: Cleanup'''
+        pass
+
+
 def suite():
     return [test_selections,
             test_statistics_queries,
             test_vector_flagmanager,
-            test_flagmanager]
-
-def main():
-
-    for t in suite():
-        assert unittest.TextTestRunner(verbosity=2).run(unittest.makeSuite(t)).wasSuccessful()
-
-    print "Test of mode='rfi'"
-    vis='flagdatatest.ms'
-    flagdata(vis=vis, unflag=true)
-    flagdata(vis=vis, mode='rfi')
-    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 9142)
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 148200, 354)
-    flagdata(vis=vis, unflag=true)
-
-
-    print "Test of mode = 'shadow'"
-    flagdata(vis=vis, mode='shadow', diameter=40)
-    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 38610)
-    flagdata(vis=vis, unflag=true)
-
-    flagdata(vis=vis, mode='shadow')
-    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 15860)
-    flagdata(vis=vis, unflag=true)
-
-    flagdata(vis=vis, mode='shadow', correlation='LL')
-    test_eq(flagdata(vis=vis, mode='summary'), 2000700, 7930)
-    flagdata(vis=vis, unflag=true)
-
-    flagmanager(vis=vis, mode='list')
-
-
-if __name__ == "__main__":
-    main()
+            test_flagmanager,
+            test_rfi,
+            test_shadow,
+            cleanup]

@@ -8,6 +8,7 @@ import atexit
 import time
 import types
 import inspect
+import casadef
 from math import *
 
 a=inspect.stack()
@@ -27,6 +28,9 @@ else:
 class cluster(object):
 
    "control cluster engines for parallel tasks"
+
+   print 'start cluster---------'
+   _instance = None
    
    __client=None
    __controller=None
@@ -44,13 +48,25 @@ class cluster(object):
    __new_engs=[]
    #__result={}
 
+   def __new__(cls, *args, **kwargs):
+       if not cls._instance:
+           cls._instance = super(cluster, cls).__new__(
+                                cls, *args, **kwargs)
+       return cls._instance
+
+   def __call__(self):
+       # if there is already a controller, use it
+       if (self.__controller!=None):
+           print ("the controller %s is already running" % 
+                  self.__controller)
+       return self
+
    def __init__(self):
       '''Initialize a Cluster.
 
       A Cluster enables parallel and distributed execution of CASA tasks and tools on a set of networked computers. A culster consists of one controller and one or more engines. Each engine is an independent Python instance that takes Python commands over a network connection. The controller provides an interface for working with a set of engines. A user uses casapy console to command the controller. A password-less ssh access to the computers that hosts engines is required for the communication between controller and engines.
       
       '''
-
       self.__client=None
       self.__controller=None
       self.__timestamp=None
@@ -512,7 +528,7 @@ class cluster(object):
      if (dhome!=phome):
         phome=dhome
 
-     sdir='/CASASUBST/python_library_directory/'+'/'
+     sdir = casadef.python_library_directory + '/'
      ##sdir='/home/casa-dev-08/dschieb/casapy-test-30.1.10182-001-64b/lib64/python2.5/'
      self.__client.push(dict(phome=phome), i)
      self.__client.execute('import sys', i)
@@ -668,6 +684,12 @@ class cluster(object):
       x=c.pad_task_id('basename', [3, 5, 8])
       x
       {3: 'basename-3', 5: 'basename-5', 8: 'basename-8'}
+      x=c.pad_task_id([1,3],[0,1,2,3])
+      x
+      {0: '1-0', 1: '3-1', 2: '3-2', 3: '3-3'}
+      x=c.pad_task_id(['a', 'b','c','d','e'],[0,1,2,3])
+      x
+      {0: 'a-0', 1: 'b-1', 2: 'c-2', 3: 'd-3'}
       y=c.pad_task_id(x)
       y
       {0: 'a-0-0', 1: 'b-1-1', 2: 'c-2-2', 3: 'd-3-3'}
@@ -685,10 +707,28 @@ class cluster(object):
       if not int_id:
          return base
 
+      if type(b)==list:
+         for j in range(len(b)):
+            if type(b[j])!=str:
+               b[j]=str(b[j])
+
       if len(task_id)==0:
          task_id=list(xrange(0, len(self.__engines))) 
-      for j in task_id:
-         base[j]=b+'-'+str(j)
+      if type(b)==str:
+         for j in task_id:
+            base[j]=b+'-'+str(j)
+      if type(b)==list:
+         k=len(b)
+         m=len(task_id)
+         if m<=k:
+            for j in range(m):
+               base[task_id[j]]=b[j]+'-'+str(task_id[j])
+         else:
+            for j in range(k):
+               base[task_id[j]]=b[j]+'-'+str(task_id[j])
+            for j in range(k,m):
+               base[task_id[j]]=b[k-1]+'-'+str(task_id[j])
+
       if type(b)==dict:
           for i in b.keys():
              base[i]=b[i]+'-'+str(i)
@@ -760,6 +800,54 @@ class cluster(object):
          base[j]=args[i]
       return base
 
+   def split_int(self, start, end, task_id=[]):
+      '''Generate a dictionary to distribute the spectral windows
+
+      @param start The start integer value
+      @param end The end integer value
+      @param task_id The list of integer ids
+      This is a convenience function for quick generating a dictionary of integer start points. Example:
+      x=c.split_int(9, 127, [2,3,4])
+      x
+      {2: 9, 3: 49, 4: 89 }
+
+      '''
+      base={}
+      if len(task_id)==0:
+         task_id=list(xrange(0, len(self.__engines))) 
+
+      if len(task_id)==0:
+         print "no engines available, no split done"
+         return base
+
+      if type(start)!=int or type(end)!=int:
+         print "start and end point must be integer"
+         return base
+
+      if start<0:
+         print "the start must be greate than 0"
+         return base
+
+      if start>=end:
+         print "the end must be greate than start"
+         return base
+
+      nx=1
+      try:
+         nx=int(ceil(abs(float(end - start))/len(task_id)))
+      except:
+         pass
+
+      #print nx, nchan, len(task_id)
+      i=-1
+      for j in task_id:
+         i=i+1
+         if i>=len(task_id):
+            break
+         st=i*nx
+         base[j]=st+start
+      return base
+       
    def split_channel(self, spw, nchan, task_id=[]):
       '''Generate a dictionary to distribute the spectral windows
 
@@ -798,7 +886,7 @@ class cluster(object):
             break
          st=i*nx
          se=st+nx-1
-         base[i]=str(spw)+":"+str(st)+"~"+str(se)
+         base[j]=str(spw)+":"+str(st)+"~"+str(se)
       return base
        
    def pgc(self,*args,**kwargs):
