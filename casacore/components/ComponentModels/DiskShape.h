@@ -235,6 +235,7 @@ public:
   // return a pointer to this object.
   virtual const ComponentShape* getPtr() const; 
 
+  virtual String sizeToString() const;
 
 private:
   Double calcSample(const MDirection::MVType& compDirValue, 

@@ -34,6 +34,7 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
+#include <casa/Utilities/Precision.h>
 
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/SpectralModel.h>
@@ -71,7 +72,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
+		fitDone(False), _noBeam(False), peakIntensities() {
         _construct(imagename, box, region, 0, estimatesFilename);
     }
 
@@ -88,7 +89,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
+		fitDone(False), _noBeam(False), peakIntensities() {
         _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
@@ -136,11 +137,6 @@ namespace casa {
         if(converged) {
         	_setSizes();
         	_setFluxes();
-        	pixelPositions.resize(results.nelements());
-        	for(uInt i=0; i<results.nelements(); i++) {
-        		Vector<Double> x(2);
-        		pixelPositions[i] = x;
-        	}
         }
         String resultsString = _resultsToString();
         if (converged && ! newEstimatesFileName.empty()) {
@@ -380,7 +376,7 @@ namespace casa {
     		summary << _statisticsToString() << endl;
     		for (uInt i = 0; i < results.nelements(); i++) {
     			summary << "Fit on " << image->name(True) << " component " << i << endl;
-    			summary << _positionToString(i) << endl;
+    			summary << results.component(i).positionToString(&(image->coordinates())) << endl;
     			summary << _sizeToString(i) << endl;
     			summary << _fluxToString(i) << endl;
     			summary << _spectrumToString(i) << endl;
@@ -409,91 +405,6 @@ namespace casa {
     	stats << "       --- RMS of input image " << inputRMS << " " << unit << endl;
     	stats << "       --- RMS of residual image " << residRMS << " " << unit << endl;
     	return stats.str();
-    }
-
-    String ImageFitter::_positionToString(const uInt compNumber)  {
-    	ostringstream position;
-    	MDirection mdir = results.getRefDirection(compNumber);
-
-    	Quantity lat = mdir.getValue().getLat("rad");
-    	String dec = MVAngle(lat).string(MVAngle::ANGLE_CLEAN, 8);
-
-    	Quantity longitude = mdir.getValue().getLong("rad");
-    	String ra = MVTime(longitude).string(MVTime::TIME, 9);
-    	const ComponentShape* compShape = results.getShape(compNumber);
-
-    	Quantity ddec = compShape->refDirectionErrorLat();
-    	ddec.convert("rad");
-
-    	Quantity dra = compShape->refDirectionErrorLong();
-
-    	dra.convert("rad");
-
-    	// choose a unified error for both axes
-    	Double delta = 0;
-    	if ( dra.getValue() == 0 && ddec.getValue() == 0 ) {
-    		delta = 0;
-    	}
-    	else if ( dra.getValue() == 0 ) {
-    		delta = fabs(ddec.getValue());
-    	}
-    	else if ( ddec.getValue() == 0 ) {
-    		delta = fabs(dra.getValue());
-    	}
-    	else {
-    		delta = sqrt( dra.getValue()*dra.getValue() + ddec.getValue()*ddec.getValue() );
-    	}
-
-		// Add error estimates to ra/dec strings if an error is given (either >0)
-
-    	uInt precision = 1;
-    	if ( delta != 0 ) {
-    		dra.convert("s");
-
-    		ddec.convert("arcsec");
-    		Double drasec  = _round(dra.getValue());
-    		Double ddecarcsec = _round(ddec.getValue());
-    		Vector<Double> dravec(2), ddecvec(2);
-    		dravec.set(drasec);
-    		ddecvec.set(ddecarcsec);
-    		precision = _precision(dravec,ddecvec);
-    		ra = MVTime(longitude).string(MVTime::TIME, 6+precision);
-    		dec =  MVAngle(lat).string(MVAngle::ANGLE, 6+precision);
-    	}
-    	position << "Position ---" << endl;
-    	position << "       --- ra:    " << ra << " +/- " << std::fixed
-    		<< setprecision(precision) << dra << " (" << dra.getValue("arcsec")
-    		<< " arcsec)" << endl;
-    	position << "       --- dec: " << dec << " +/- " << ddec << endl;
-       	Vector<Double> world(4,0), pixel(4,0);
-    	image->coordinates().toWorld(world, pixel);
-
-        world[0] = longitude.getValue();
-        world[1] = lat.getValue();
-        // TODO do the pixel computations in another method
-        if (image->coordinates().toPixel(pixel, world)) {
-        	pixelPositions[compNumber][0] = pixel[0];
-        	pixelPositions[compNumber][1] = pixel[1];
-
-        	DirectionCoordinate dCoord = image->coordinates().directionCoordinate(
-        		ImageMetaData(*image).directionCoordinateNumber()
-        	);
-        	Vector<Double> increment = dCoord.increment();
-        	Double raPixErr = dra.getValue("rad")/increment[0];
-        	Double decPixErr = ddec.getValue("rad")/increment[1];
-        	Vector<Double> raPix(2), decPix(2);
-         	raPix.set(_round(raPixErr));
-        	decPix.set(_round(decPixErr));
-        	precision = _precision(raPix, decPix);
-
-        	position << setprecision(precision);
-        	position << "       --- ra:   " << pixel[0] << " +/- " << raPixErr << " pixels" << endl;
-        	position << "       --- dec:  " << pixel[1] << " +/- " << decPixErr << " pixels" << endl;
-        }
-        else {
-        	position << "unable to determine max in pixels" << endl;
-        }
-    	return position.str();
     }
 
     void ImageFitter::_setFluxes() {
@@ -538,14 +449,8 @@ namespace casa {
     String ImageFitter::_sizeToString(const uInt compNumber) const  {
     	ostringstream size;
     	const ComponentShape* compShape = results.getShape(compNumber);
-
     	AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
-    	Quantity maj = majorAxes[compNumber];
-    	Quantity min = minorAxes[compNumber];
-    	Quantity pa = positionAngles[compNumber];
-    	Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
-    	Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
-    	Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
+
     	Vector<Quantum<Double> > beam = image->imageInfo().restoringBeam();
     	Bool hasBeam = beam.nelements() == 3;
     	size << "Image component size";
@@ -553,10 +458,18 @@ namespace casa {
     		size << " (convolved with beam)";
     	}
     	size << " ---" << endl;
-    	size << _gaussianToString(maj, min, pa, emaj, emin, epa) << endl;
+    	size << compShape->sizeToString() << endl;
     	if (hasBeam) {
+    		Quantity maj = majorAxes[compNumber];
+    		Quantity min = minorAxes[compNumber];
+    		Quantity pa = positionAngles[compNumber];
+    		const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
+    		Quantity emaj = gaussShape->majorAxisError();
+    		Quantity emin = gaussShape->minorAxisError();
+    		Quantity epa  = gaussShape->positionAngleError();
+
     		size << "Clean beam size ---" << endl;
-    		size << _gaussianToString(beam[0], beam[1], beam[2], 0, 0, 0, False) << endl;
+    		size << TwoSidedShape::sizeToString(beam[0], beam[1], beam[2], False) << endl;
     		size << "Image component size (deconvolved from beam) ---" << endl;
     		// NOTE fit components change here to their deconvolved counterparts
     		Quantity femaj = emaj/maj;
@@ -571,9 +484,9 @@ namespace casa {
     				if (pa.getValue("deg") < 0) {
     					pa += Quantity(180, "deg");
     				}
-    				emaj *= femaj;
-    				emin *= femin;
-    				size << _gaussianToString(maj, min, pa, emaj, emin, epa);
+    				emaj = femaj * maj;
+    				emin = femin * min;
+    				size << TwoSidedShape::sizeToString(maj, min, pa, True, emaj, emin, epa);
     			}
     		}
     		else {
@@ -582,165 +495,6 @@ namespace casa {
     		}
     	}
     	return size.str();
-    }
-
-    Double ImageFitter::_round(Double number) const {
-    	Double sign = 1;
-        if (number < 0) {
-            sign = -1;
-            number = -number;
-        }
-        Double lgr = log10(number);
-        // shift number into range 32-320
-        Int i = (lgr >= 0) ? int(lgr + 0.5) : int(lgr - 0.5);
-        Double temp = number * pow(10.0, (2-i));
-        return sign*(temp + 0.5)*pow(10.0, (i-2));
-    }
-
-    uInt ImageFitter::_precision(
-    	const Vector<Double>& pair1, const Vector<Double>& pair2
-    ) const {
-    	Double val1 = pair1[0];
-    	Double err1 = pair1[1];
-    	Double value = val1;
-    	Double error = fabs(err1);
-    	uInt sign = 0;
-    	if (pair2.size() == 0) {
-				if (val1 < 0) {
-                sign = 1;
-                val1 = fabs(val1);
-            }
-    	}
-    	else {
-    		Double val2 = pair2[0];
-    		Double err2 = pair2[1];
-            if (val1 < 0 or val2 < 0) {
-                sign = 1;
-                val1 = fabs(val1);
-                val2 = fabs(val2);
-            }
-            value = max(val1, val2);
-            error = (err1 == 0 || err2 == 0)
-            	? max(fabs(err1), fabs(err1))
-            	: min(fabs(err1), fabs(err2));
-    	}
-
-    	// Here are a few general safeguards
-    	// If we are dealing with a value smaller than the estimated error
-    	// (e.g., 0.6 +/- 12) , the roles in formatting need to be
-    	// reversed.
-    	if ( value < error ) {
-    		value = max(value,0.1*error);
-    		// TODO be cool and figure out a way to swap without using a temporary variable
-    		Double tmp = value;
-    		value = error;
-    		error = tmp;
-    	}
-
-		// A value of precisely 0 formats as if it were 1.  If the error is
-    	// precisely 0, we print to 3 significant digits
-
-    	if ( value == 0 ) {
-    		value = 1;
-    	}
-    	if ( error == 0 ) {
-    		error = 0.1*value;
-    	}
-
-		// Arithmetically we have to draw the limit somewhere.  It is
-		// unlikely that numbers (and errors) < 1e-10 are reasonably
-		// printed using this limited technique.
-    	value = max(value,1e-10);
-    	error = max(error,1e-8);
-
-    	// Print only to two significant digits in the error
-    	error = 0.1*error;
-
-    	// Generate format
-
-    	uInt before = max(int(log10(value))+1,1);     // In case value << 1 ==> log10 < 0
-    	uInt after = 0;
-    	//String format="%"+str(sign+before)+".0f"
-    	uInt width = sign + before;
-    	if ( log10(error) < 0 ) {
-    		after = int(fabs(log10(error)))+1;
-    		//format="%"+str(sign+before+1+after)+"."+str(after)+"f"
-    		width = sign + before + after + 1;
-    	}
-    	return after;
-    }
-
-    String ImageFitter::_gaussianToString(
-    	Quantity major, Quantity minor, Quantity posangle,
-    	Quantity majorErr, Quantity minorErr, Quantity posanErr,
-    	Bool includeUncertainties
-    ) const {
-    	// Inputs all as angle quanta
-    	Vector<String> angUnits(5);
-    	angUnits[0] = "deg";
-    	angUnits[1] = "arcmin";
-    	angUnits[2] = "arcsec";
-    	angUnits[3] = "marcsec";
-    	angUnits[4] = "uarcsec";
-    	// First force position angle to be between 0 and 180 deg
-    	if(posangle.getValue() < 0) {
-    		posangle + Quantity(180, "deg");
-    	}
-
-    	String prefUnits;
-    	Quantity vmax(max(fabs(major.getValue("arcsec")), fabs(minor.getValue("arcsec"))), "arcsec");
-
-       	for (uInt i=0; i<angUnits.size(); i++) {
-        	prefUnits = angUnits[i];
-        	if(vmax.getValue(prefUnits) > 1) {
-        		break;
-        	}
-        }
-       	major.convert(prefUnits);
-       	minor.convert(prefUnits);
-       	majorErr.convert(prefUnits);
-       	minorErr.convert(prefUnits);
-
-    	Double vmaj = major.getValue();
-    	Double vmin = minor.getValue();
-
-    	// Formatting as "value +/- err" for symmetric errors
-
-    	Double dmaj = majorErr.getValue();
-    	Double dmin = minorErr.getValue();
-    	// position angle is always in degrees cuz users like that
-    	Double pa  = posangle.getValue("deg");
-    	Double dpa = posanErr.getValue("deg");
-
-    	Vector<Double> majVec(2), minVec(2), paVec(2);
-    	majVec[0] = vmaj;
-    	majVec[1] = dmaj;
-    	minVec[0] = vmin;
-    	minVec[1] = dmin;
-    	paVec[0] = pa;
-    	paVec[1] = dpa;
-    	uInt precision1 = _precision(majVec, minVec);
-    	uInt precision2 = _precision(paVec, Vector<Double>(0));
-
-    	ostringstream summary;
-    	summary << std::fixed << setprecision(precision1);
-    	summary << "       --- major axis:     " << major.getValue();
-    	if (includeUncertainties) {
-    		summary << " +/- " << majorErr.getValue();
-    	}
-    	summary << " " << prefUnits << endl;
-    	summary << "       --- minor axis:     " << minor.getValue();
-    	if (includeUncertainties) {
-    	    summary << " +/- " << minorErr.getValue();
-    	}
-    	summary << " "<< prefUnits << endl;
-    	summary << setprecision(precision2);
-    	summary << "       --- position angle: " << pa;
-    	if (includeUncertainties) {
-    		summary << " +/- " << dpa;
-    	}
-    	summary << " deg" << endl;
-    	return summary.str();
     }
 
     String ImageFitter::_fluxToString(uInt compNumber) const {
@@ -793,7 +547,7 @@ namespace casa {
         fluxes << "Flux ---" << endl;
 
         if (! _noBeam) {
-        	precision = _precision(fd, Vector<Double>());
+        	precision = precisionForValueErrorPairs(fd, Vector<Double>());
         	fluxes << std::fixed << setprecision(precision);
         	fluxes << "       --- Integrated:   " << fluxDensity.getValue()
 					<< " +/- " << fluxDensityError.getValue() << " "
@@ -816,7 +570,7 @@ namespace casa {
         Vector<Double> pi(2);
         pi[0] = peakIntensity.getValue();
         pi[1] = peakIntensityError.getValue();
-        precision = _precision(pi, Vector<Double>());
+        precision = precisionForValueErrorPairs(pi, Vector<Double>());
         fluxes << std::fixed << setprecision(precision);
         fluxes << "       --- Peak:         " << peakIntensity.getValue()
  			<< " +/- " << peakIntensityError.getValue() << " "
@@ -909,12 +663,31 @@ namespace casa {
     }
 
     void ImageFitter::_writeNewEstimatesFile() const {
+
+
+
     	ostringstream out;
     	for (uInt i=0; i<results.nelements(); i++) {
-    		out << peakIntensities[i].getValue() << ", "
-    				<< pixelPositions[i][0] << ", " << pixelPositions[i][1] << ", "
+
+        	MDirection mdir = results.getRefDirection(i);
+           	Quantity lat = mdir.getValue().getLat("rad");
+            Quantity longitude = mdir.getValue().getLong("rad");
+    		Vector<Double> world(4,0), pixel(4,0);
+    		image->coordinates().toWorld(world, pixel);
+    		world[0] = longitude.getValue();
+    		world[1] = lat.getValue();
+    		if (image->coordinates().toPixel(pixel, world)) {
+    			out << peakIntensities[i].getValue() << ", "
+    				<< pixel[0] << ", " << pixel[1] << ", "
     				<< majorAxes[i] << ", " << minorAxes[i] << ", "
     				<< positionAngles[i] << endl;
+    		}
+    		else {
+    			*itsLog << LogIO::WARN << "Unable to calculate pixel location of "
+    				<< "component number " << i << " so cannot write new estimates"
+    				<< "file" << LogIO::POST;
+    			return;
+    		}
     	}
     	String output = out.str();
     	File estimates(newEstimatesFileName);

@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Precision.h: Determine appropriate precision for printing
+//# Copyright (C) 1994,1995,1999
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,26 +23,28 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id:  $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#ifndef CASA_PRECISION_H
+#define CASA_PRECISION_H
 
-#include <string>
+//# Includes
+#include <casa/aips.h>
+#include <casa/Arrays/Vector.h>
 
-#define CASACORE_VERSION "1.0.12"
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+// <summary> Various precision-related functions </summary>
+// <use visibility=export>
+// <reviewed reviewer="" date="" tests="" demos="">
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+// <synopsis>
+// Various functions for determining precision for printing.
+// </synopsis>
+
+// Determine precision for two related value, error pairs (such as RA-Dec)
+	uInt precisionForValueErrorPairs(const Vector<Double>& pair1, const Vector<Double>& pair2);
 
 } //# NAMESPACE CASA - END
 

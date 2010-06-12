@@ -277,6 +277,20 @@ void GaussianShape::updateFT() {
   itsFT.setPA(itsShape.PA() + C::pi_2);
 }
 
+String GaussianShape::sizeToString() const {
+	return TwoSidedShape::sizeToString(
+		Quantity(itsShape.majorAxis(), "rad"),
+		Quantity(itsShape.minorAxis(), "rad"),
+		Quantity(itsShape.PA(), "rad"), True,
+		majorAxisError(), minorAxisError(),
+		positionAngleError()
+	);
+}
+
+
+
+
+
 // Local Variables: 
 // compile-command: "gmake GaussianShape"
 // End: 
