@@ -19,6 +19,7 @@
 #include "MathUtils.h"
 #include "STFit.h"
 #include "Scantable.h"
+#include "STCoordinate.h"
 
 namespace asap {
 /**
@@ -232,8 +233,18 @@ public:
   int checkScanInfo(const vector<int>& scanlist) const
     { return table_->checkScanInfo(scanlist); }
  
-  std::vector<double>  getDirectionVector(int whichrow) const
+  std::vector<double> getDirectionVector(int whichrow) const
     { return table_->getDirectionVector(whichrow); }
+
+  void parallactify(bool flag)
+    { table_->parallactify(flag); }
+
+  STCoordinate getCoordinate(int row) {
+    return STCoordinate(table_->getSpectralCoordinate(row));
+  }
+
+  std::vector<float> getWeather(int whichrow) const
+    { return table_->getWeather(whichrow); }
 
   void reshapeSpectrum( int nmin, int nmax )
   { table_->reshapeSpectrum( nmin, nmax ); }

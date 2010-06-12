@@ -9,17 +9,16 @@ import matplotlib
 
 from matplotlib.figure import Figure, Text
 from matplotlib.font_manager import FontProperties as FP
-from matplotlib.numerix import sqrt
+from numpy import sqrt
 from matplotlib import rc, rcParams
 from asap import rcParams as asaprcParams
 from matplotlib.ticker import OldScalarFormatter
-from matplotlib.ticker import NullLocator
 
 # API change in mpl >= 0.98
 try:
     from matplotlib.transforms import blended_transform_factory
 except ImportError:
-    from matplotlib.transforms import blend_xy_sep_transform  as blended_transform_factory
+    from matplotlib.transforms import blend_xy_sep_transform as blended_transform_factory
 
 from asap import asaplog
 
@@ -28,19 +27,12 @@ if int(matplotlib.__version__.split(".")[1]) < 87:
     asaplog.push( "matplotlib version < 0.87. This might cause errors. Please upgrade." )
     print_log( 'WARN' )
 
-#class MyFormatter(OldScalarFormatter):
-#    def __call__(self, x, pos=None):
-#        last = len(self.locs)-2
-#        if pos==0:
-#            return ''
-#        else: return OldScalarFormatter.__call__(self, x, pos)
-
 class asaplotbase:
     """
     ASAP plotting base class based on matplotlib.
     """
 
-    def __init__(self, rows=1, cols=0, title='', size=(8,6), buffering=False):
+    def __init__(self, rows=1, cols=0, title='', size=None, buffering=False):
         """
         Create a new instance of the ASAPlot plotting class.
 
@@ -156,8 +148,8 @@ class asaplotbase:
 
         fmt is the line style as in plot().
         """
-        from matplotlib.numerix import array
-        from matplotlib.numerix.ma import MaskedArray
+        from numpy import array
+        from numpy.ma import MaskedArray
         if x is None:
             if y is None: return
             x = range(len(y))
@@ -288,6 +280,22 @@ class asaplotbase:
         print 'Press any mouse button...'
         self.register('button_press', position_disable)
 
+
+#     def get_region(self):
+#         pos = []
+#         print "Please select the bottom/left point"
+#         pos.append(self.figure.ginput(n=1, show_clicks=False)[0])
+#         print "Please select the top/right point"
+#         pos.append(self.figure.ginput(n=1, show_clicks=False)[0])
+#         return pos
+
+#     def get_point(self):
+#         print "Please select the point"
+#         pt = self.figure.ginput(n=1, show_clicks=False)
+#         if pt:
+#             return pt[0]
+#         else:
+#             return None
 
     def region(self):
         """
@@ -639,13 +647,13 @@ class asaplotbase:
                 if not ganged:
                     self.subplots[i]['axes'] = self.figure.add_subplot(rows,
                                                 cols, i+1)
-                    if asaprcParams['plotter.xaxisformatting'] == 'mpl':
+                    if asaprcParams['plotter.axesformatting'] != 'mpl':
                         self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
                 else:
                     if i == 0:
                         self.subplots[i]['axes'] = self.figure.add_subplot(rows,
                                                 cols, i+1)
-                        if asaprcParams['plotter.xaxisformatting'] != 'mpl':
+                        if asaprcParams['plotter.axesformatting'] != 'mpl':
                             
                             self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
                     else:
@@ -729,30 +737,25 @@ class asaplotbase:
                         sp['axes'].legend((' '))
 
             from matplotlib.artist import setp
-            fp = FP(size=rcParams['xtick.labelsize'])
-            xts = fp.get_size_in_points()- (self.cols)/2
-            fp = FP(size=rcParams['ytick.labelsize'])
-            yts = fp.get_size_in_points() - (self.rows)/2
+            fpx = FP(size=rcParams['xtick.labelsize'])
+            xts = fpx.get_size_in_points()- (self.cols)/2
+            fpy = FP(size=rcParams['ytick.labelsize'])
+            yts = fpy.get_size_in_points() - (self.rows)/2
+            fpa = FP(size=rcParams['axes.labelsize'])
+            fpat = FP(size=rcParams['axes.titlesize'])
+            axsize =  fpa.get_size_in_points()
+            tsize =  fpat.get_size_in_points()-(self.cols)/2
             for sp in self.subplots:
                 ax = sp['axes']
-                #s = ax.title.get_size()
-                #tsize = s-(self.cols+self.rows)
-                s=FP(size=rcParams['axes.titlesize'])
-                tsize = s.get_size_in_points()-(self.cols)/2
                 ax.title.set_size(tsize)
-                fp = FP(size=rcParams['axes.labelsize'])
                 setp(ax.get_xticklabels(), fontsize=xts)
                 setp(ax.get_yticklabels(), fontsize=yts)
-                origx =  fp.get_size_in_points()
-                origy = origx
                 off = 0
                 if self.cols > 1: off = self.cols
-                xfsize = origx-off
-                ax.xaxis.label.set_size(xfsize)
+                ax.xaxis.label.set_size(axsize-off)
                 off = 0
                 if self.rows > 1: off = self.rows
-                yfsize = origy-off
-                ax.yaxis.label.set_size(yfsize)
+                ax.yaxis.label.set_size(axsize-off)
 
     def subplot(self, i=None, inc=None):
         """

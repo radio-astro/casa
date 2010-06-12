@@ -1,6 +1,10 @@
-from asap import rcParams, print_log, selector
+from asap import rcParams, print_log, print_log_dec
+from asap import selector, scantable
 from asap import asaplog
 import matplotlib.axes
+from matplotlib.font_manager import FontProperties
+from matplotlib.text import Text
+
 import re
 
 class asapplotter:
@@ -12,11 +16,11 @@ class asapplotter:
         Currenly it only plots 'spectra' not Tsys or
         other variables.
     """
-    def __init__(self, visible=None):
+    def __init__(self, visible=None , **kwargs):
         self._visible = rcParams['plotter.gui']
         if visible is not None:
             self._visible = visible
-        self._plotter = self._newplotter()
+        self._plotter = self._newplotter(**kwargs)
         if self._visible and matplotlib.get_backend() == "TkAgg":
             from asap.casatoolbar import CustomToolbarTkAgg
             self._plotter.figmgr.casabar = CustomToolbarTkAgg(self)
@@ -41,6 +45,7 @@ class asapplotter:
         self._maskselection = None
         self._selection = selector()
         self._hist = rcParams['plotter.histogram']
+        self._fp = FontProperties()
         self._panellayout = self.set_panellayout(refresh=False)
 
     def _translate(self, instr):
@@ -51,7 +56,7 @@ class asapplotter:
                     return key
         return None
 
-    def _newplotter(self):
+    def _newplotter(self, **kwargs):
         backend=matplotlib.get_backend()
         if not self._visible:
             from asap.asaplot import asaplot
@@ -63,9 +68,9 @@ class asapplotter:
             from asap.asaplotgui_gtk import asaplotgui as asaplot
         else:
             from asap.asaplot import asaplot
-        return asaplot()
+        return asaplot(**kwargs)
 
-
+    #@print_log_dec
     def plot(self, scan=None):
         """
         Plot a scantable.
@@ -100,34 +105,152 @@ class asapplotter:
         print_log()
         return
 
+    def gca(self):
+        return self._plotter.figure.gca()
+
+    def refresh(self):
+        """Do a soft refresh"""
+        self._plotter.figure.show()
+
+    def create_mask(self, nwin=1, panel=0, color=None):
+        """
+        Interactively define a mask.It retruns a mask that is equivalent to
+        the one created manually with scantable.create_mask.
+        Parameters:
+            nwin:       The number of mask windows to create interactively
+                        default is 1.
+            panel:      Which panel to use for mask selection. This is useful
+                        if different IFs are spread over panels (default 0)
+        """
+        if self._data is None:
+            return []
+        outmask = []
+        self._plotter.subplot(panel)
+        xmin, xmax = self._plotter.axes.get_xlim()
+        marg = 0.05*(xmax-xmin)
+        self._plotter.axes.set_xlim(xmin-marg, xmax+marg)
+        self.refresh()
+
+        def cleanup(lines=False, texts=False, refresh=False):
+            if lines:
+                del self._plotter.axes.lines[-1]
+            if texts:
+                del self._plotter.axes.texts[-1]
+            if refresh:
+                self.refresh()
+
+        for w in xrange(nwin):
+            wpos = []
+            self.text(0.05,1.0, "Add start boundary",
+                      coords="relative", fontsize=10)
+            point = self._plotter.get_point()
+            cleanup(texts=True)
+            if point is None:
+                continue
+            wpos.append(point[0])
+            self.axvline(wpos[0], color=color)
+            self.text(0.05,1.0, "Add end boundary", coords="relative", fontsize=10)
+            point = self._plotter.get_point()
+            cleanup(texts=True, lines=True)
+            if point is None:
+                self.refresh()
+                continue
+            wpos.append(point[0])
+            self.axvspan(wpos[0], wpos[1], alpha=0.1,
+                         edgecolor=color, facecolor=color)
+            ymin, ymax = self._plotter.axes.get_ylim()
+            outmask.append(wpos)
+
+        self._plotter.axes.set_xlim(xmin, xmax)
+        self.refresh()
+        if len(outmask) > 0:
+            return self._data.create_mask(*outmask)
+        return []
 
     # forwards to matplotlib axes
     def text(self, *args, **kwargs):
+        if kwargs.has_key("interactive"):
+            #if kwargs.pop("interactive"):
+            #    pos = self._plotter.get_point()
+            #    args = tuple(pos)+args
+            kwargs.pop("interactive")
         self._axes_callback("text", *args, **kwargs)
+
     text.__doc__ = matplotlib.axes.Axes.text.__doc__
+
     def arrow(self, *args, **kwargs):
+        if kwargs.has_key("interactive"):
+            #if kwargs.pop("interactive"):
+            #    pos = self._plotter.get_region()
+            #    dpos = (pos[0][0], pos[0][1],
+            #            pos[1][0]-pos[0][0],
+            #            pos[1][1] - pos[0][1])
+            #    args = dpos + args
+            kwargs.pop("interactive")
         self._axes_callback("arrow", *args, **kwargs)
+
     arrow.__doc__ = matplotlib.axes.Axes.arrow.__doc__
+
+    def annotate(self, text, xy=None, xytext=None, **kwargs):
+        if kwargs.has_key("interactive"):
+            #if kwargs.pop("interactive"):
+            #    xy = self._plotter.get_point()
+            #    xytext = self._plotter.get_point()
+            kwargs.pop("interactive")
+        if not kwargs.has_key("arrowprops"):
+            kwargs["arrowprops"] = dict(arrowstyle="->")
+        self._axes_callback("annotate", text, xy, xytext, **kwargs)
+
+    annotate.__doc__ = matplotlib.axes.Axes.annotate.__doc__
+
     def axvline(self, *args, **kwargs):
+        if kwargs.has_key("interactive"):
+            #if kwargs.pop("interactive"):
+            #    pos = self._plotter.get_point()
+            #    args = (pos[0],)+args
+            kwargs.pop("interactive")
         self._axes_callback("axvline", *args, **kwargs)
+
     axvline.__doc__ = matplotlib.axes.Axes.axvline.__doc__
+
     def axhline(self, *args, **kwargs):
+        if kwargs.has_key("interactive"):
+            #if kwargs.pop("interactive"):
+            #    pos = self._plotter.get_point()
+            #    args = (pos[1],)+args
+            kwargs.pop("interactive")
         self._axes_callback("axhline", *args, **kwargs)
+
     axhline.__doc__ = matplotlib.axes.Axes.axhline.__doc__
+
     def axvspan(self, *args, **kwargs):
+        if kwargs.has_key("interactive"):
+            #if kwargs.pop("interactive"):
+            #    pos = self._plotter.get_region()
+            #    dpos = (pos[0][0], pos[1][0])
+            #    args = dpos + args
+            kwargs.pop("interactive")
         self._axes_callback("axvspan", *args, **kwargs)
         # hack to preventy mpl from redrawing the patch
         # it seem to convert the patch into lines on every draw.
         # This doesn't happen in a test script???
-        del self._plotter.axes.patches[-1]
+        #del self._plotter.axes.patches[-1]
+
     axvspan.__doc__ = matplotlib.axes.Axes.axvspan.__doc__
 
     def axhspan(self, *args, **kwargs):
+        if kwargs.has_key("interactive"):
+            #if kwargs.pop("interactive"):
+            #    pos = self._plotter.get_region()
+            #    dpos = (pos[0][1], pos[1][1])
+            #    args = dpos + args
+            kwargs.pop("interactive")
         self._axes_callback("axhspan", *args, **kwargs)
         # hack to preventy mpl from redrawing the patch
         # it seem to convert the patch into lines on every draw.
         # This doesn't happen in a test script???
-        del self._plotter.axes.patches[-1]
+        #del self._plotter.axes.patches[-1]
+
     axhspan.__doc__ = matplotlib.axes.Axes.axhspan.__doc__
 
     def _axes_callback(self, axesfunc, *args, **kwargs):
@@ -464,7 +587,7 @@ class asapplotter:
             rcp('lines', linewidth=linewidth)
         if refresh and self._data: self.plot(self._data)
 
-    def set_font(self, family=None, style=None, weight=None, size=None, refresh=True):
+    def set_font(self, refresh=True,**kwargs):
         """
         Set font properties.
         Parameters:
@@ -478,14 +601,11 @@ class asapplotter:
                        Otherwise,the parameter(s) are set without replotting.
         """
         from matplotlib import rc as rcp
-        if isinstance(family, str):
-            rcp('font', family=family)
-        if isinstance(style, str):
-            rcp('font', style=style)
-        if isinstance(weight, str):
-            rcp('font', weight=weight)
-        if isinstance(size, float) or isinstance(size, int):
-            rcp('font', size=size)
+        fdict = {}
+        for k,v in kwargs.iteritems():
+            if v:
+                fdict[k] = v
+        self._fp = FontProperties(**fdict)
         if refresh and self._data: self.plot(self._data)
 
     def set_panellayout(self,layout=[],refresh=True):
@@ -539,7 +659,7 @@ class asapplotter:
             raise ValueError("'linecat' isn't of type linecatalog.")
         if not self._data.get_unit().endswith("Hz"):
             raise RuntimeError("Can only overlay linecatalogs when data is in frequency.")
-        from matplotlib.numerix import ma
+        from numpy import ma
         for j in range(len(self._plotter.subplots)):
             self._plotter.subplot(j)
             lims = self._plotter.axes.get_xlim()
@@ -715,7 +835,7 @@ class asapplotter:
         else: n = len(n0)
         if isinstance(nstack0, int): nstack = nstack0
         else: nstack = len(nstack0)
-        maxpanel, maxstack = 16,8
+        maxpanel, maxstack = 16,16
         if n > maxpanel or nstack > maxstack:
             maxn = 0
             if nstack > maxstack: maxn = maxstack
@@ -760,8 +880,8 @@ class asapplotter:
                        or scan._getabcissalabel()
                 ylab = self._ordinate and self._ordinate[panelcount] \
                        or scan._get_ordinate_label()
-                self._plotter.set_axes('xlabel',xlab)
-                self._plotter.set_axes('ylabel',ylab)
+                self._plotter.set_axes('xlabel', xlab)
+                self._plotter.set_axes('ylabel', ylab)
                 lbl = self._get_label(scan, r, self._panelling, self._title)
                 if isinstance(lbl, list) or isinstance(lbl, tuple):
                     if 0 <= panelcount < len(lbl):
@@ -780,12 +900,12 @@ class asapplotter:
                 else:
                     y = scan._getspectrum(r)
                 m = scan._getmask(r)
-                from matplotlib.numerix import logical_not, logical_and
+                from numpy import logical_not, logical_and
                 if self._maskselection and len(self._usermask) == len(m):
                     if d[self._stacking](r) in self._maskselection[self._stacking]:
                         m = logical_and(m, self._usermask)
                 x = scan._getabcissa(r)
-                from matplotlib.numerix import ma, array
+                from numpy import ma, array
                 y = ma.masked_array(y,mask=logical_not(array(m,copy=False)))
                 if self._minmaxx is not None:
                     s,e = self._slice_indeces(x)
@@ -838,8 +958,14 @@ class asapplotter:
             r+=1 # next row
         #reset the selector to the scantable's original
         scan.set_selection(savesel)
+        
+        #temporary switch-off for older matplotlib
+        #if self._fp is not None:
+        if self._fp is not None and getattr(self._plotter.figure,'findobj',False):
+            for o in self._plotter.figure.findobj(Text):
+                o.set_fontproperties(self._fp)
 
-    def set_selection(self, selection=None, refresh=True):
+    def set_selection(self, selection=None, refresh=True, **kw):
         """
         Parameters:
             selection:  a selector object (default unset the selection)
@@ -847,7 +973,21 @@ class asapplotter:
                         replotted based on the new parameter setting(s). 
                         Otherwise,the parameter(s) are set without replotting.
         """
-        self._selection = isinstance(selection,selector) and selection or selector()
+        if selection is None:
+            # reset
+            if len(kw) == 0:
+                self._selection = selector()
+            else:
+                # try keywords
+                for k in kw:
+                    if k not in selector.fields:
+                        raise KeyError("Invalid selection key '%s', valid keys are %s" % (k, selector.fields))
+                self._selection = selector(**kw)
+        elif isinstance(selection, selector):
+            self._selection = selection
+        else:
+            raise TypeError("'selection' is not of type selector")
+
         d0 = {'s': 'SCANNO', 'b': 'BEAMNO', 'i':'IFNO',
               'p': 'POLNO', 'c': 'CYCLENO', 't' : 'TIME' }
         order = [d0[self._panelling],d0[self._stacking]]
@@ -884,20 +1024,22 @@ class asapplotter:
         return userlabel or d[mode]
 
     def plotazel(self, scan=None, outfile=None):
+    #def plotazel(self):
         """
-        plot azimuth and elevation  versus time of a scantable
+        plot azimuth and elevation versus time of a scantable
         """
-        import pylab as PL
-        from matplotlib.dates import DateFormatter, timezone, HourLocator, MinuteLocator, DayLocator
+        from matplotlib import pylab as PL
+        from matplotlib.dates import DateFormatter, timezone
+        from matplotlib.dates import HourLocator, MinuteLocator,SecondLocator, DayLocator
         from matplotlib.ticker import MultipleLocator
-        from matplotlib.numerix import array, pi
+        from numpy import array, pi
         self._data = scan
         self._outfile = outfile
         dates = self._data.get_time(asdatetime=True)
         t = PL.date2num(dates)
         tz = timezone('UTC')
         PL.cla()
-        #PL.ioff()
+        PL.ioff()
         PL.clf()
         # Adjust subplot layouts
         if len(self._panellayout) !=6: self.set_panellayout(refresh=False)
@@ -916,12 +1058,16 @@ class asapplotter:
             majloc = DayLocator()
             minloc = HourLocator(range(0,23,12))
             timefmt = DateFormatter("%b%d")
-        else:
-            timefmt = DateFormatter('%H')
+        elif tdel > 24./60.:
+            timefmt = DateFormatter('%H:%M')
             majloc = HourLocator()
-            minloc = MinuteLocator(20)
-        PL.title(dstr)
+            minloc = MinuteLocator(30)
+        else:
+            timefmt = DateFormatter('%H:%M')
+            majloc = MinuteLocator(interval=5)
+            minloc = SecondLocator(30)
 
+        PL.title(dstr)
         if tdel == 0.0:
             th = (t - PL.floor(t))*24.0
             PL.plot(th,el,'o',markersize=2, markerfacecolor='b', markeredgecolor='b')
@@ -946,43 +1092,42 @@ class asapplotter:
             for irow in range(len(az)):
                 if az[irow] < 0: az[irow] += 360.0
 
-        ax = PL.subplot(2,1,2)
+        ax2 = PL.subplot(2,1,2)
         #PL.xlabel('Time (UT [hour])')
         PL.ylabel('Az [deg.]')
         if tdel == 0.0:
             PL.plot(th,az,'o',markersize=2, markeredgecolor='b',markerfacecolor='b')
         else:
             PL.plot_date(t,az,'o', markersize=2,markeredgecolor='b',markerfacecolor='b',tz=tz)
-            ax.xaxis.set_major_formatter(timefmt)
-            ax.xaxis.set_major_locator(majloc)
-            ax.xaxis.set_minor_locator(minloc)
-        #ax.grid(True)
-        ax.set_ylim(0,360)
-        ax.yaxis.grid(True)
+            ax2.xaxis.set_major_formatter(timefmt)
+            ax2.xaxis.set_major_locator(majloc)
+            ax2.xaxis.set_minor_locator(minloc)
+        #ax2.grid(True)
+        ax2.set_ylim(0,360)
+        ax2.yaxis.grid(True)
         #hfmt = DateFormatter('%H')
         #hloc = HourLocator()
         yloc = MultipleLocator(60)
-        ax.yaxis.set_major_locator(yloc)
+        ax2.yaxis.set_major_locator(yloc)
         if tdel > 1.0:
-            labels = ax.get_xticklabels()
+            labels = ax2.get_xticklabels()
             PL.setp(labels, fontsize=10)
             PL.xlabel('Time (UT [day])')
         else:
             PL.xlabel('Time (UT [hour])')
 
-        #PL.ion()
+        PL.ion()
         PL.draw()
         if (self._outfile is not None):
            PL.savefig(self._outfile)
 
     def plotpointing(self, scan=None, outfile=None):
+    #def plotpointing(self):
         """
         plot telescope pointings
         """
-        import pylab as PL
-        from matplotlib.dates import DateFormatter, timezone
-        from matplotlib.ticker import MultipleLocator
-        from matplotlib.numerix import array, pi, zeros
+        from matplotlib import pylab as PL
+        from numpy import array, pi
         self._data = scan
         self._outfile = outfile
         dir = array(self._data.get_directionval()).transpose()
@@ -1000,7 +1145,7 @@ class asapplotter:
         #ax = PL.axes([0.1,0.1,0.8,0.8])
         #ax = PL.axes([0.1,0.1,0.8,0.8])
         ax.set_aspect('equal')
-        PL.plot(ra,dec, 'b,')
+        PL.plot(ra, dec, 'b,')
         PL.xlabel('RA [deg.]')
         PL.ylabel('Declination [deg.]')
         PL.title('Telescope pointings')
@@ -1134,13 +1279,11 @@ class asapplotter:
         ssum=self._data.__str__()
         # Print Observation header to the upper-left corner of plot
         if plot:
-            srest=ssum[ssum.find('Rest Freqs:'):ssum.find('Abcissa:')]
-            shead=ssum[ssum.find('Beams:'):ssum.find('Flux Unit:')]
-            headstr=shead.split('\n\n')
-            if extrastr != '': headstr[1]=extrastr+'\n'+headstr[1]
+            headstr=[ssum[ssum.find('Observer:'):ssum.find('Flux Unit:')]]
+            headstr.append(ssum[ssum.find('Beams:'):ssum.find('Observer:')]
+                         +ssum[ssum.find('Rest Freqs:'):ssum.find('Abcissa:')])
+            if extrastr != '': headstr[0]=extrastr+'\n'+headstr[0]
             #headstr[1]='Data File:     '+(filestr or 'unknown')+'\n'+headstr[1]
-            headstr[0]=headstr[0]+'\n'+srest
-            headstr.reverse()
             ssel='***Selections***\n'+(selstr+self._data.get_selection().__str__() or 'none')
             headstr.append(ssel)
             nstcol=len(headstr)
@@ -1158,7 +1301,7 @@ class asapplotter:
                             horizontalalignment='right',
                             verticalalignment='bottom',fontsize=8)
             self._plotter.release()
-            del srest, shead, headstr, ssel
+            del headstr, ssel
         if logger:
             asaplog.push("----------------\n  Plot Summary\n----------------")
             asaplog.push(extrastr)

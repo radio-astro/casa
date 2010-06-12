@@ -120,17 +120,28 @@ Bool STFITSImageWriter::write(const Scantable& stable,
   cols[4] = String("POLNO");
   TableIterator iter(tab, cols);
   // Open data file
+
   while ( !iter.pastEnd() ) {
     Table t = iter.table();
     ROTableRow row(t);
     const TableRecord& rec = row.get(0);
     String dirtype = stable.getDirectionRefString();
     ostringstream onstr;
-    onstr << "SCAN" << rec.asuInt("SCANNO")
-    << "_CYCLE" << rec.asuInt("CYCLENO")
-    << "_BEAM" << rec.asuInt("BEAMNO")
-    << "_IF" << rec.asuInt("IFNO")
-    << "_POL" << rec.asuInt("POLNO");
+    if (rootName.length()==0) {
+      rootName = "fits";
+    }
+    if (tab.nrow() > 1) {
+      if (stable.nscan() > 1) 
+        onstr << "_SCAN" << rec.asuInt("SCANNO");
+      if (stable.ncycle(rec.asuInt("SCANNO")) > 1) 
+        onstr << "_CYCLE" << rec.asuInt("CYCLENO");
+      if (stable.nbeam(rec.asuInt("SCANNO")) > 1) 
+        onstr << "_BEAM" << rec.asuInt("BEAMNO");
+      if (stable.nif(rec.asuInt("SCANNO")) > 1) 
+        onstr << "_IF" << rec.asuInt("IFNO");
+      if (stable.npol(rec.asuInt("SCANNO")) > 1) 
+        onstr << "_POL" << rec.asuInt("POLNO");
+    }
     String fileName = rootName + String(onstr) + String(".fits");
     int row0 = t.rowNumbers(tab)[0];
 
@@ -259,7 +270,9 @@ Bool STFITSImageWriter::write(const Scantable& stable,
       throw AipsError("Couldn't modify AZIMUTH");        
     }
     fits_close_file(fptr, &status);
-  
+    ostringstream oss;
+    oss << "Wrote " << fileName;
+    pushLog(String(oss));  
     //pushLog(String(oss));
     ++iter;
   }

@@ -34,7 +34,7 @@ class STPol {
 public:
 
   typedef  void (STPol::*polOperation)( casa::Float phase );
-  STPol(): totalfeed_(0.0),parangle_(0.0),feedhand_(1.0) {}
+  STPol(): totalangle_(0.0),feedhand_(1.0) {}
   virtual ~STPol() {}
 
   typedef FactoryBase<STPol> STPolFactory;
@@ -82,11 +82,10 @@ public:
     { basespectra_.resize(); basespectra_ = spec; }
 
 
-  void setPhaseCorrections(casa::Float parangle=0.0, casa::Float totalfeed=0.0,
-                           casa::Float feedhand=1.0)
-    { totalfeed_=totalfeed;parangle_=parangle;feedhand_=feedhand;}
+  void setPhaseCorrections(casa::Float totalang=0.0, casa::Float feedhand=1.0)
+    { totalangle_=totalang;feedhand_=feedhand;}
 
-  casa::Float getTotalPhase() const { return totalfeed_+parangle_; }
+  casa::Float getTotalPhase() const { return totalangle_; }
   casa::Float getFeedHand() const { return feedhand_; }
 
   static std::pair<int, std::string> polFromString(const std::string& key);
@@ -98,7 +97,7 @@ private:
   static std::map<std::string, std::pair<int, std::string> > polmap_;
   static std::map<std::string, std::map<int, std::string> > labelmap_;
 
-  casa::Float totalfeed_,parangle_,feedhand_;
+  casa::Float totalangle_,feedhand_;
   std::string mode_;
   casa::Matrix<casa::Float> basespectra_;
 

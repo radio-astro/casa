@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_Scantable.cpp 1707 2010-02-19 09:30:37Z WataruKawasaki $
+//# $Id: python_Scantable.cpp 1757 2010-06-09 09:03:06Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #include <vector>
 
@@ -132,6 +132,9 @@ void python_Scantable() {
     .def("_recalcazel", &ScantableWrapper::calculateAZEL)
     .def("_setsourcetype", &ScantableWrapper::setSourceType)
     .def("_getdirectionvec", &ScantableWrapper::getDirectionVector)
+    .def("_parallactify", &ScantableWrapper::parallactify)
+    .def("get_coordinate", &ScantableWrapper::getCoordinate)
+    .def("_get_weather", &ScantableWrapper::getWeather)
     .def("_reshape", &ScantableWrapper::reshapeSpectrum, 
 	 (boost::python::arg("nmin")=-1, 
 	  boost::python::arg("nmax")=-1) )

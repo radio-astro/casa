@@ -36,19 +36,26 @@ public:
 
   STFocus& operator=(const STFocus& other);
 
-  casa::uInt addEntry( casa::Float faxis, casa::Float ftan,
+  casa::uInt addEntry( casa::Float pa, casa::Float faxis, casa::Float ftan,
                        casa::Float frot, casa::Float hand=1.0f,
                        casa::Float mount=0.0f, casa::Float user=0.0f,
-                       casa::Float xyphase=0.0f, casa::Float xyphaseoffset=0.0f);
+                       casa::Float xyphase=0.0f, 
+                       casa::Float xyphaseoffset=0.0f);
 
-  void getEntry( casa::Float& fax, casa::Float& ftan,
+  void getEntry( casa::Float& pa, casa::Float& fax, casa::Float& ftan,
                  casa::Float& frot, casa::Float& hand,
                  casa::Float& mount, casa::Float& user,
                  casa::Float& xyphase, casa::Float& xyphaseoffset,
                  casa::uInt id) const;
 
-  casa::Float getTotalFeedAngle(casa::uInt id) const;
+  casa::Float getTotalAngle(casa::uInt id) const;
+
+  casa::Float getParAngle(casa::uInt id) const {
+    return parangleCol_(id);
+  }
   casa::Float getFeedHand(casa::uInt id) const;
+
+  void setParallactify(bool istrue=false);
 
   const casa::String& name() const { return name_; }
 
@@ -56,9 +63,8 @@ private:
   void setup();
   static const casa::String name_;
   casa::ScalarColumn<casa::Float> rotationCol_, axisCol_,
-                                  tanCol_,handCol_,
-                                  mountCol_,userCol_,
-                                  xyphCol_,xyphoffCol_;
+    tanCol_,handCol_, parangleCol_,
+    mountCol_,userCol_, xyphCol_,xyphoffCol_,;
 };
 
 }

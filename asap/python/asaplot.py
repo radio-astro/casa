@@ -10,7 +10,7 @@ class asaplot(asaplotbase):
     """
     ASAP plotting class based on matplotlib.
     """
-    def __init__(self, rows=1, cols=0, title='', size=(8,4), buffering=False):
+    def __init__(self, rows=1, cols=0, title='', size=None, buffering=False):
 	"""
 	Create a new instance of the ASAPlot plotting class.
 

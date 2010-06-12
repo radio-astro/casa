@@ -26,13 +26,14 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STLineFinder.cpp 1603 2009-07-17 20:35:47Z TakTsutsumi $
+//# $Id: STLineFinder.cpp 1757 2010-06-09 09:03:06Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 
 
 // ASAP
 #include "STLineFinder.h"
 #include "STFitter.h"
+#include "IndexedCompare.h"
 
 // STL
 #include <functional>
@@ -109,8 +110,8 @@ public:
    void rewind() throw(AipsError);
 
 protected:
-   // supplementary function to control running mean calculations.
-   // It adds a specified channel to the running mean box and
+   // supplementary function to control running mean/median calculations.
+   // It adds a specified channel to the running box and
    // removes (ch-maxboxnchan+1)'th channel from there
    // Channels, for which the mask is false or index is beyond the
    // allowed range, are ignored
@@ -151,12 +152,20 @@ class LFAboveThreshold : protected LFLineListOperations {
    casa::Int last_sign;                    // a sign (+1, -1 or 0) of the
                                            // last point of the detected line
                                            //
+   bool itsUseMedian;                      // true if median statistics is used
+                                           // to determine the noise level, otherwise
+                                           // it is the mean of the lowest 80% of deviations
+                                           // (default)
+   int itsNoiseSampleSize;                 // sample size used to estimate the noise statistics
+                                           // Negative value means the whole spectrum is used (default)
 public:
 
    // set up the detection criterion
    LFAboveThreshold(std::list<pair<int,int> > &in_lines,
                     int in_min_nchan = 3,
-                    casa::Float in_threshold = 5) throw();
+                    casa::Float in_threshold = 5,
+                    bool use_median = false,
+                    int noise_sample_size = -1) throw();
    virtual ~LFAboveThreshold() throw();
 
    // replace the detection criterion
@@ -199,7 +208,247 @@ protected:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// LFNoiseEstimator  a helper class designed to estimate off-line variance
+//                   using statistics depending on the distribution of 
+//                   values (e.g. like a median)
+//
+//                   Two statistics are supported: median and an average of
+//                   80% of smallest values. 
+//
+
+struct LFNoiseEstimator {
+   // construct an object
+   // size - maximum sample size. After a size number of elements is processed
+   // any new samples would cause the algorithm to drop the oldest samples in the
+   // buffer.
+   explicit LFNoiseEstimator(size_t size);
+
+   // add a new sample 
+   // in - the new value
+   void add(float in);
+
+   // median of the distribution
+   float median() const;
+
+   // mean of lowest 80% of the samples
+   float meanLowest80Percent() const;
+
+   // return true if the buffer is full (i.e. statistics are representative)
+   inline bool filledToCapacity() const { return itsBufferFull;}
+
+protected:
+   // update cache of sorted indices
+   // (it is assumed that itsSampleNumber points to the newly
+   // replaced element)
+   void updateSortedCache() const;
+
+   // build sorted cache from the scratch
+   void buildSortedCache() const;
+
+   // number of samples accumulated so far
+   // (can be less than the buffer size)
+   size_t numberOfSamples() const;
+
+   // this helper method builds the cache if
+   // necessary using one of the methods
+   void fillCacheIfNecessary() const;
+
+private:
+   // buffer with samples (unsorted)
+   std::vector<float> itsVariances;
+   // current sample number (<=itsVariances.size())
+   size_t itsSampleNumber;
+   // true, if the buffer all values in the sample buffer are used
+   bool itsBufferFull;
+   // cached indices into vector of samples
+   mutable std::vector<size_t> itsSortedIndices;
+   // true if any of the statistics have been obtained at least
+   // once. This flag allows to implement a more efficient way of
+   // calculating statistics, if they are needed at once and not 
+   // after each addition of a new element
+   mutable bool itsStatisticsAccessed;
+};
+
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
 } // namespace asap
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// LFNoiseEstimator  a helper class designed to estimate off-line variance
+//                   using statistics depending on the distribution of 
+//                   values (e.g. like a median)
+//
+//                   Two statistics are supported: median and an average of
+//                   80% of smallest values. 
+//
+
+// construct an object
+// size - maximum sample size. After a size number of elements is processed
+// any new samples would cause the algorithm to drop the oldest samples in the
+// buffer.
+LFNoiseEstimator::LFNoiseEstimator(size_t size) : itsVariances(size),
+     itsSampleNumber(0), itsBufferFull(false), itsSortedIndices(size),
+     itsStatisticsAccessed(false)
+{
+   AlwaysAssert(size>0,AipsError);
+} 
+
+
+// add a new sample 
+// in - the new value
+void LFNoiseEstimator::add(float in)
+{
+   if (isnan(in)) {
+       // normally it shouldn't happen
+       return;
+   }
+   itsVariances[itsSampleNumber] = in;
+
+   if (itsStatisticsAccessed) {
+       // only do element by element addition if on-the-fly 
+       // statistics are needed
+       updateSortedCache();
+   }
+
+   // advance itsSampleNumber now
+   ++itsSampleNumber;
+   if (itsSampleNumber == itsVariances.size()) {
+       itsSampleNumber = 0;
+       itsBufferFull = true;
+   } 
+   AlwaysAssert(itsSampleNumber<itsVariances.size(),AipsError);
+}
+
+// number of samples accumulated so far
+// (can be less than the buffer size)
+size_t LFNoiseEstimator::numberOfSamples() const
+{
+  // the number of samples accumulated so far may be less than the
+  // buffer size
+  const size_t nSamples = itsBufferFull ? itsVariances.size(): itsSampleNumber;
+  AlwaysAssert( (nSamples > 0) && (nSamples <= itsVariances.size()), AipsError);
+  return nSamples;
+}
+
+// this helper method builds the cache if
+// necessary using one of the methods
+void LFNoiseEstimator::fillCacheIfNecessary() const
+{
+  if (!itsStatisticsAccessed) {
+      if ((itsSampleNumber!=0) || itsBufferFull) {
+          // build the whole cache efficiently 
+          buildSortedCache();
+      } else {
+          updateSortedCache();
+      }
+      itsStatisticsAccessed = true;
+  } // otherwise, it is updated in 'add' using on-the-fly method
+}
+
+// median of the distribution
+float LFNoiseEstimator::median() const
+{
+  fillCacheIfNecessary();
+  // the number of samples accumulated so far may be less than the
+  // buffer size
+  const size_t nSamples = numberOfSamples();
+  const size_t medSample = nSamples / 2;
+  AlwaysAssert(medSample < itsSortedIndices.size(), AipsError);
+  return itsVariances[itsSortedIndices[medSample]];
+}
+
+// mean of lowest 80% of the samples
+float LFNoiseEstimator::meanLowest80Percent() const
+{
+  fillCacheIfNecessary();
+  // the number of samples accumulated so far may be less than the
+  // buffer size
+  const size_t nSamples = numberOfSamples();
+  float result = 0;
+  size_t numpt=size_t(0.8*nSamples);
+  if (!numpt) {
+      numpt=nSamples; // no much else left,
+                     // although it is very inaccurate
+  }
+  AlwaysAssert( (numpt > 0) && (numpt<itsSortedIndices.size()), AipsError);
+  for (size_t ch=0; ch<numpt; ++ch) {
+       result += itsVariances[itsSortedIndices[ch]];
+  }
+  result /= float(numpt);
+  return result;
+}
+
+// update cache of sorted indices
+// (it is assumed that itsSampleNumber points to the newly
+// replaced element)
+void LFNoiseEstimator::updateSortedCache() const
+{
+  // the number of samples accumulated so far may be less than the
+  // buffer size
+  const size_t nSamples = numberOfSamples();
+
+  if (itsBufferFull) {
+      // first find the index of the element which is being replaced
+      size_t index = nSamples;
+      for (size_t i=0; i<nSamples; ++i) {
+           AlwaysAssert(i < itsSortedIndices.size(), AipsError);
+           if (itsSortedIndices[i] == itsSampleNumber) {
+               index = i;
+               break;
+           }
+      }
+      AlwaysAssert( index < nSamples, AipsError);
+
+      const vector<size_t>::iterator indStart = itsSortedIndices.begin();
+      // merge this element with preceeding block first
+      if (index != 0) {
+          // merge indices on the basis of variances
+          inplace_merge(indStart,indStart+index,indStart+index+1, 
+                        indexedCompare<size_t>(itsVariances.begin()));
+      }
+      // merge with the following block
+      if (index + 1 != nSamples) {
+          // merge indices on the basis of variances
+          inplace_merge(indStart,indStart+index+1,indStart+nSamples, 
+                        indexedCompare<size_t>(itsVariances.begin()));
+      }
+  } else {
+      // itsSampleNumber is the index of the new element
+      AlwaysAssert(itsSampleNumber < itsSortedIndices.size(), AipsError);
+      itsSortedIndices[itsSampleNumber] = itsSampleNumber;
+      if (itsSampleNumber >= 1) {
+          // we have to place this new sample in
+          const vector<size_t>::iterator indStart = itsSortedIndices.begin();
+          // merge indices on the basis of variances
+          inplace_merge(indStart,indStart+itsSampleNumber,indStart+itsSampleNumber+1, 
+                        indexedCompare<size_t>(itsVariances.begin()));
+      }
+  }
+}
+
+// build sorted cache from the scratch
+void LFNoiseEstimator::buildSortedCache() const
+{
+  // the number of samples accumulated so far may be less than the
+  // buffer size
+  const size_t nSamples = numberOfSamples();
+  AlwaysAssert(nSamples <= itsSortedIndices.size(), AipsError);
+  for (size_t i=0; i<nSamples; ++i) {
+       itsSortedIndices[i]=i;
+  }
+
+  // sort indices, but check the array of variances
+  const vector<size_t>::iterator indStart = itsSortedIndices.begin();
+  stable_sort(indStart,indStart+nSamples, indexedCompare<size_t>(itsVariances.begin()));
+}
+
+//
+///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -274,8 +523,8 @@ int RunningBox::getNumberOfBoxPoints() const throw()
   return box_chan_cntr;
 }
 
-// supplementary function to control running mean calculations.
-// It adds a specified channel to the running mean box and
+// supplementary function to control running mean/median calculations.
+// It adds a specified channel to the running box and
 // removes (ch-max_box_nchan+1)'th channel from there
 // Channels, for which the mask is false or index is beyond the
 // allowed range, are ignored
@@ -338,8 +587,14 @@ void RunningBox::updateDerivativeStatistics() const throw(AipsError)
       Float coeff=(sumfch/Float(box_chan_cntr)-meanch*mean)/
                 (meanch2-square(meanch));
       linmean=coeff*(Float(cur_channel)-meanch)+mean;
-      linvariance=sqrt(sumf2/Float(box_chan_cntr)-square(mean)-
-                    square(coeff)*(meanch2-square(meanch)));
+      linvariance=sumf2/Float(box_chan_cntr)-square(mean)-
+                    square(coeff)*(meanch2-square(meanch));
+      if (linvariance<0.) {
+          // this shouldn't happen normally, but could be due to round-off error
+          linvariance = 0; 
+      } else {
+          linvariance = sqrt(linvariance);
+      }
   }
   need2recalculate=False;
 }
@@ -350,7 +605,7 @@ void RunningBox::updateDerivativeStatistics() const throw(AipsError)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// LFAboveThreshold - a running mean algorithm for line detection
+// LFAboveThreshold - a running mean/median algorithm for line detection
 //
 //
 
@@ -358,9 +613,12 @@ void RunningBox::updateDerivativeStatistics() const throw(AipsError)
 // set up the detection criterion
 LFAboveThreshold::LFAboveThreshold(std::list<pair<int,int> > &in_lines,
                                    int in_min_nchan,
-                                   casa::Float in_threshold) throw() :
+                                   casa::Float in_threshold,
+                                   bool use_median,
+                                   int noise_sample_size) throw() :
              min_nchan(in_min_nchan), threshold(in_threshold),
-             lines(in_lines), running_box(NULL) {}
+             lines(in_lines), running_box(NULL), itsUseMedian(use_median),
+             itsNoiseSampleSize(noise_sample_size) {}
 
 LFAboveThreshold::~LFAboveThreshold() throw()
 {
@@ -473,30 +731,27 @@ void LFAboveThreshold::findLines(const casa::Vector<casa::Float> &spectrum,
       if (running_box!=NULL) delete running_box;
       running_box=new RunningBox(spectrum,mask,edge,max_box_nchan);
 
-
       // determine the off-line variance first
       // an assumption made: lines occupy a small part of the spectrum
 
-      std::vector<float> variances(edge.second-edge.first);
-      DebugAssert(variances.size(),AipsError);
+      const size_t noiseSampleSize = itsNoiseSampleSize<0 ? size_t(edge.second-edge.first) : 
+                      std::min(size_t(itsNoiseSampleSize), size_t(edge.second-edge.first));
+      DebugAssert(noiseSampleSize,AipsError);
+      const bool globalNoise = (size_t(edge.second - edge.first) == noiseSampleSize);
+      LFNoiseEstimator ne(noiseSampleSize);
 
-      for (;running_box->haveMore();running_box->next())
-           variances[running_box->getChannel()-edge.first]=
-                                running_box->getLinVariance();
+      for (;running_box->haveMore();running_box->next()) {
+	   ne.add(running_box->getLinVariance());
+           if (ne.filledToCapacity()) {
+               break;
+           }
+      }
 
-      // in the future we probably should do a proper Chi^2 estimation
-      // now a simple 80% of smaller values will be used.
-      // it may degrade the performance of the algorithm for weak lines
-      // due to a bias of the Chi^2 distribution.
-      stable_sort(variances.begin(),variances.end());
-
-      Float offline_variance=0;
-      uInt offline_cnt=uInt(0.8*variances.size());
-      if (!offline_cnt) offline_cnt=variances.size(); // no much else left,
-                                    // although it is very inaccurate
-      for (uInt n=0;n<offline_cnt;++n)
-           offline_variance+=variances[n];
-      offline_variance/=Float(offline_cnt);
+      Float offline_variance = -1; // just a flag that it is unset
+            
+      if (globalNoise) {
+	  offline_variance = itsUseMedian ? ne.median() : ne.meanLowest80Percent();
+      }
 
       // actual search algorithm
       is_detected_before=False;
@@ -509,21 +764,22 @@ void LFAboveThreshold::findLines(const casa::Vector<casa::Float> &spectrum,
       for (running_box->rewind();running_box->haveMore();
                                  running_box->next()) {
            const int ch=running_box->getChannel();
-           if (running_box->getNumberOfBoxPoints()>=minboxnchan)
+           if (!globalNoise) {
+               // add a next point for a local noise estimate
+	       ne.add(running_box->getLinVariance());
+           }    
+           if (running_box->getNumberOfBoxPoints()>=minboxnchan) {
+               if (!globalNoise) {
+	           offline_variance = itsUseMedian ? ne.median() : ne.meanLowest80Percent();
+               }
+               AlwaysAssert(offline_variance>0.,AipsError);
                processChannel(mask[ch] && (fabs(running_box->aboveMean()) >=
                   threshold*offline_variance), mask);
-           else processCurLine(mask); // just finish what was accumulated before
+           } else processCurLine(mask); // just finish what was accumulated before
 
            signs[ch]=getAboveMeanSign();
-           // os<<ch<<" "<<spectrum[ch]<<" "<<fabs(running_box->aboveMean())<<" "<<
-           // threshold*offline_variance<<endl;
-
-           const Float buf=running_box->aboveMean();
-           if (buf>0) signs[ch]=1;
-           else if (buf<0) signs[ch]=-1;
-           else if (buf==0) signs[ch]=0;
-           //os<<ch<<" "<<spectrum[ch]<<" "<<running_box->getLinMean()<<" "<<
-           //             threshold*offline_variance<<endl;
+            //os<<ch<<" "<<spectrum[ch]<<" "<<fabs(running_box->aboveMean())<<" "<<
+            //threshold*offline_variance<<endl;
       }
       if (lines.size())
           searchForWings(lines,signs,mask,edge);
@@ -648,17 +904,26 @@ STLineFinder::STLineFinder() throw() : edge(0,0)
 //              confusing of baseline undulations with a real line.
 //              Setting a very large value doesn't usually provide
 //              valid detections.
-// in_box_size  the box size for running mean calculation. Default is
+// in_box_size  the box size for running mean/median calculation. Default is
 //              1./5. of the whole spectrum size
+// in_noise_box the box size for off-line noise estimation (if working with
+//              local noise. Negative value means use global noise estimate
+//              Default is -1 (i.e. estimate using the whole spectrum)
+// in_median    true if median statistics is used as opposed to average of
+//              the lowest 80% of deviations (default)
 void STLineFinder::setOptions(const casa::Float &in_threshold,
                               const casa::Int &in_min_nchan,
                               const casa::Int &in_avg_limit,
-                              const casa::Float &in_box_size) throw()
+                              const casa::Float &in_box_size,
+                              const casa::Float &in_noise_box,
+                              const casa::Bool &in_median) throw()
 {
   threshold=in_threshold;
   min_nchan=in_min_nchan;
   avg_limit=in_avg_limit;
   box_size=in_box_size;
+  itsNoiseBox = in_noise_box;
+  itsUseMedian = in_median;
 }
 
 STLineFinder::~STLineFinder() throw(AipsError) {}
@@ -682,7 +947,6 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
                 const std::vector<int> &in_edge,
                 const casa::uInt &whichRow) throw(casa::AipsError)
 {
-  //const int minboxnchan=4;
   if (scan.null())
       throw AipsError("STLineFinder::findLines - a scan should be set first,"
                       " use set_scan");
@@ -699,6 +963,19 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
   if (mask.nelements()!=nchan)
       throw AipsError("STLineFinder::findLines - in_scan and in_mask have different"
             "number of spectral channels.");
+
+  // taking flagged channels into account
+  vector<bool> flaggedChannels = scan->getMask(whichRow);
+  if (flaggedChannels.size()) {
+      // there is a mask set for this row
+      if (flaggedChannels.size() != mask.nelements()) {
+          throw AipsError("STLineFinder::findLines - internal inconsistency: number of mask elements do not match the number of channels");
+      }
+      for (size_t ch = 0; ch<mask.nelements(); ++ch) {
+           mask[ch] &= flaggedChannels[ch];
+      }
+  }
+
   // number of elements in in_edge
   if (in_edge.size()>2)
       throw AipsError("STLineFinder::findLines - the length of the in_edge parameter"
@@ -731,6 +1008,12 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
   if (max_box_nchan<2)
       throw AipsError("STLineFinder::findLines - box_size is too small");
 
+  // number of elements in the sample for noise estimate
+  const int noise_box = itsNoiseBox<0 ? -1 : int(nchan * itsNoiseBox); 
+
+  if ((noise_box!= -1) and (noise_box<2))
+      throw AipsError("STLineFinder::findLines - noise_box is supposed to be at least 2 elements");
+
   spectrum.resize();
   spectrum = Vector<Float>(scan->getSpectrum(whichRow));
 
@@ -754,7 +1037,7 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
 
      try {
          // line find algorithm
-         LFAboveThreshold lfalg(new_lines,avg_factor*min_nchan, threshold);
+         LFAboveThreshold lfalg(new_lines,avg_factor*min_nchan, threshold, itsUseMedian,noise_box);
          lfalg.findLines(spectrum,temp_mask,edge,max_box_nchan);
          signs.resize(lfalg.getSigns().nelements());
          signs=lfalg.getSigns();

@@ -3,6 +3,10 @@ This is the ATNF Single Dish Analysis package.
 
 """
 import os,sys,shutil, platform
+try:
+    from functools import wraps as wraps_dec
+except ImportError:
+    from asap.compatibility import wraps as wraps_dec
 
 # Set up CASAPATH and first time use of asap i.e. ~/.asap/*
 plf = None
@@ -32,7 +36,7 @@ if not os.path.exists(userdir):
     os.mkdir(userdir)
     #shutil.copyfile(asapdata+"/data/ipythonrc-asap", userdir+"/ipythonrc-asap")
     # commented out by TT on 2009.06.23 for casapy use
-    ##shutil.copyfile(asapdata+"/data/ipy_user_conf.py", 
+    ##shutil.copyfile(asapdata+"/data/ipy_user_conf.py",
     ##                userdir+"/ipy_user_conf.py")
     f = file(userdir+"/asapuserfuncs.py", "w")
     f.close()
@@ -42,7 +46,7 @@ if not os.path.exists(userdir):
 ##else:
     # upgrade to support later ipython versions
     ##if not os.path.exists(userdir+"/ipy_user_conf.py"):
-    ##    shutil.copyfile(asapdata+"/data/ipy_user_conf.py", 
+    ##    shutil.copyfile(asapdata+"/data/ipy_user_conf.py",
     ##                    userdir+"/ipy_user_conf.py")
 
 # remove from namespace
@@ -73,7 +77,6 @@ def _asap_fname():
      * HOME/.asaprc
 
     """
-
     fname = os.path.join( os.getcwd(), '.asaprc')
     if os.path.exists(fname): return fname
 
@@ -108,7 +111,9 @@ defaultParams = {
     'plotter.ganged'      : [True, _validate_bool],
     'plotter.histogram'  : [False, _validate_bool],
     'plotter.papertype'  : ['A4', str],
-    'plotter.xaxisformatting' : ['asap', str],
+    ## for older Matplotlib version
+    #'plotter.axesformatting' : ['mpl', str],
+    'plotter.axesformatting' : ['asap', str],
 
     # scantable
     'scantable.save'      : ['ASAP', str],
@@ -117,7 +122,8 @@ defaultParams = {
     'scantable.verbosesummary'   : [False, _validate_bool],
     'scantable.storage'   : ['memory', str],
     'scantable.history'   : [True, _validate_bool],
-    'scantable.reference'      : ['.*(e|w|_R)$', str]
+    'scantable.reference'      : ['.*(e|w|_R)$', str],
+    'scantable.parallactify'   : [False, _validate_bool]
     # fitter
     }
 
@@ -145,7 +151,7 @@ plotter.stacking           : Pol
 # default mode for panelling
 plotter.panelling          : scan
 
-# push panels together, to share axislabels
+# push panels together, to share axis labels
 plotter.ganged             : True
 
 # decimate the number of points plotted by a factor of
@@ -163,7 +169,7 @@ plotter.histogram          : False
 plotter.papertype          : A4
 
 # The formatting style of the xaxis
-plotter.xaxisformatting    : 'asap' or 'mpl'
+plotter.axesformatting    : 'mpl' (default) or 'asap' (for old versions of matplotlib)
 
 # scantable
 
@@ -188,7 +194,11 @@ scantable.verbosesummary   : False
 
 # Control the identification of reference (off) scans
 # This is has to be a regular expression
-scantable.reference         : .*(e|w|_R)$
+scantable.reference        : .*(e|w|_R)$
+
+# Indicate whether the data was parallactified (total phase offest == 0.0)
+scantable.parallactify     : False
+
 # Fitter
 """
 
@@ -289,7 +299,7 @@ def rcdefaults():
     rcParams.update(rcParamsDefault)
 
 def _n_bools(n, val):
-    return [ val for i in xrange(n) ] 
+    return [ val for i in xrange(n) ]
 
 def _is_sequence_or_number(param, ptype=int):
     if isinstance(param,tuple) or isinstance(param,list):
@@ -356,6 +366,15 @@ if rcParams['verbose']:
 else:
     asaplog.disable()
 
+
+def print_log_dec(f):
+    @wraps_dec(f)
+    def wrap_it(*args, **kw):
+        val = f(*args, **kw)
+        print_log()
+        return val
+    return wrap_it
+
 def print_log(level='INFO'):
     from taskinit import casalog
     log = asaplog.pop()
@@ -381,8 +400,11 @@ from selector import selector
 from asapmath import *
 from scantable import scantable
 from asaplinefind import linefinder
+from simplelinefinder import simplelinefinder
 from linecatalog import linecatalog
 from interactivemask import interactivemask
+from opacity import skydip
+from opacity import model as opacity_model
 
 if rcParams['useplotter']:
     try:
@@ -391,17 +413,17 @@ if rcParams['useplotter']:
         if gui:
             import matplotlib
             if not matplotlib.sys.modules['matplotlib.backends']: matplotlib.use("TkAgg")
-        import pylab
+        from matplotlib import pylab
         xyplotter = pylab
         plotter = asapplotter(gui)
         del gui
     except ImportError:
         #print "Matplotlib not installed. No plotting available"
-        asaplog.push( "Matplotlib not installed. No plotting available")
+        asaplog.post( "Matplotlib not installed. No plotting available")
         print_log('WARN')
 
-__date__ = '$Date: 2010-04-27 22:33:35 -0600 (Tue, 27 Apr 2010) $'.split()[1]
-__version__  = '2.3.1 alma'
+__date__ = '$Date: 2010-06-09 03:03:06 -0600 (Wed, 09 Jun 2010) $'.split()[1]
+__version__  = '3.0.0 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '
 casapath=os.environ["CASAPATH"].split()
@@ -426,16 +448,18 @@ else:
     __revision__ = ' unknown '
 
 def is_ipython():
-    return '__IP' in dir(sys.modules["__main__"])
+    return 'IPython' in sys.modules.keys()
 if is_ipython():
     def version(): print  "ASAP %s(%s)"% (__version__, __date__)
+
     def list_scans(t = scantable):
-        import types
-        globs = sys.modules['__main__'].__dict__.iteritems()
-        print "The user created scantables are:"
-        sts = map(lambda x: x[0], filter(lambda x: isinstance(x[1], t), globs))
-        print filter(lambda x: not x.startswith('_'), sts)
-        return
+        import inspect
+        print "The user created scantables are: ",
+        globs=inspect.currentframe().f_back.f_locals.copy()
+        out = [ k for k,v in globs.iteritems() \
+                     if isinstance(v, scantable) and not k.startswith("_") ]
+        print out
+        return out
 
     def commands():
         x = """
@@ -461,6 +485,9 @@ if is_ipython():
             get_azimuth     - get the azimuth of the scans
             get_elevation   - get the elevation of the scans
             get_parangle    - get the parallactic angle of the scans
+            get_coordinate  - get the spectral coordinate for the given row,
+                              which can be used for coordinate conversions
+            get_weather     - get the weather condition parameters
             get_unit        - get the current unit
             set_unit        - set the abcissa unit to be used from this
                               point on
@@ -505,7 +532,8 @@ if is_ipython():
                               in time off is selected)
             mx_quotient     - Form a quotient using MX data (off beams)
             scale, *, /     - return a scan scaled by a given factor
-            add, +, -       - return a scan with given value added
+            add, +          - return a scan with given value added
+            sub, -          - return a scan with given value subtracted
             bin             - return a scan with binned channels
             resample        - return a scan with resampled channels
             smooth          - return the spectrally smoothed scan
@@ -528,6 +556,8 @@ if is_ipython():
                               'max', 'rms' etc.
             stddev          - Determine the standard deviation of the current
                               beam/if/pol
+            get_row_selector - get the selection object for a specified row
+                               number
      [Selection]
          selector              - a selection object to set a subset of a scantable
             set_scans          - set (a list of) scans by index
@@ -589,6 +619,8 @@ if is_ipython():
                               called 'plotter'
             plot            - plot a scantable
             plot_lines      - plot a linecatalog overlay
+            plotazel        - plot azimuth and elevation versus time
+            plotpointing    - plot telescope pointings
             save            - save the plot to a file ('png' ,'ps' or 'eps')
             set_mode        - set the state of the plotter, i.e.
                               what is to be plotted 'colour stacked'
@@ -612,20 +644,15 @@ if is_ipython():
                               coordinates
             axhline,axvline - draw horizontal/vertical lines
             axhspan,axvspan - draw horizontal/vertical regions
+            annotate        - draw an arrow with label
+            create_mask     - create a scnatble mask interactively
 
         xyplotter           - matplotlib/pylab plotting functions
-
-    [Reading files]
-        reader              - access rpfits/sdfits files
-            open            - attach reader to a file
-            close           - detach reader from file
-            read            - read in integrations
-            summary         - list info about all integrations
 
     [General]
         commands            - this command
         print               - print details about a variable
-        list_scans          - list all scantables created bt the user
+        list_scans          - list all scantables created by the user
         list_files          - list all files readable by asap (default rpf)
         del                 - delete the given variable from memory
         range               - create a list of values, e.g.
@@ -638,6 +665,9 @@ if is_ipython():
         mask_and,mask_or,
         mask_not            - boolean operations on masks created with
                               scantable.create_mask
+        skydip              - gain opacity values from a sky dip observation
+        opacity_model       - compute opacities fro given frequencies based on
+                              atmospheric model
 
     Note:
         How to use this with help:

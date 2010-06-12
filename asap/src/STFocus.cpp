@@ -33,8 +33,10 @@ STFocus::STFocus(const Scantable& parent ) :
   setup();
 }
 
-asap::STFocus::STFocus( casa::Table tab ) : STSubTable(tab, name_)
+STFocus::STFocus( casa::Table tab ) : 
+  STSubTable(tab, name_)
 {
+  parangleCol_.attach(table_,"PARANGLE");
   rotationCol_.attach(table_,"ROTATION");
   axisCol_.attach(table_,"AXIS");
   tanCol_.attach(table_,"TAN");
@@ -49,10 +51,11 @@ STFocus::~STFocus()
 {
 }
 
-STFocus& asap::STFocus::operator =( const STFocus & other )
+STFocus& STFocus::operator =( const STFocus & other )
 {
   if (this != &other) {
     static_cast<STSubTable&>(*this) = other;
+    parangleCol_.attach(table_,"PARANGLE");
     rotationCol_.attach(table_,"ROTATION");
     axisCol_.attach(table_,"AXIS");
     tanCol_.attach(table_,"TAN");
@@ -64,9 +67,10 @@ STFocus& asap::STFocus::operator =( const STFocus & other )
   }
   return *this;
 }
-void asap::STFocus::setup( )
+void STFocus::setup( )
 {
   // add to base class table
+  table_.addColumn(ScalarColumnDesc<Float>("PARANGLE"));
   table_.addColumn(ScalarColumnDesc<Float>("ROTATION"));
   table_.addColumn(ScalarColumnDesc<Float>("AXIS"));
   table_.addColumn(ScalarColumnDesc<Float>("TAN"));
@@ -75,8 +79,10 @@ void asap::STFocus::setup( )
   table_.addColumn(ScalarColumnDesc<Float>("MOUNT"));
   table_.addColumn(ScalarColumnDesc<Float>("XYPHASE"));
   table_.addColumn(ScalarColumnDesc<Float>("XYPHASEOFFSET"));
+  table_.rwKeywordSet().define("PARALLACTIFY", False);
 
   // new cached columns
+  parangleCol_.attach(table_,"PARANGLE");
   rotationCol_.attach(table_,"ROTATION");
   axisCol_.attach(table_,"AXIS");
   tanCol_.attach(table_,"TAN");
@@ -87,19 +93,20 @@ void asap::STFocus::setup( )
   xyphoffCol_.attach(table_,"XYPHASEOFFSET");
 }
 
-uInt STFocus::addEntry( Float fax, Float ftan, Float frot, Float hand,
-                        Float user, Float mount,
-                        Float xyphase, Float xyphaseoffset)
+  uInt STFocus::addEntry( Float pa, Float fax, Float ftan, Float frot, Float hand,
+                          Float user, Float mount,
+                          Float xyphase, Float xyphaseoffset)
 {
-  Table result = table_( near(table_.col("ROTATION"), frot)
-                    && near(table_.col("AXIS"), fax)
-                    && near(table_.col("TAN"), ftan)
-                    && near(table_.col("HAND"), hand)
-                    && near(table_.col("USERPHASE"), user)
-                    && near(table_.col("MOUNT"), mount)
-                    && near(table_.col("XYPHASE"), xyphase)
-                    && near(table_.col("XYPHASEOFFSET"), xyphaseoffset)
-                    );
+  Table result = table_(  near(table_.col("PARANGLE"), pa)
+                          && near(table_.col("ROTATION"), frot)
+                          && near(table_.col("AXIS"), fax)
+                          && near(table_.col("TAN"), ftan)
+                          && near(table_.col("HAND"), hand)
+                          && near(table_.col("USERPHASE"), user)
+                          && near(table_.col("MOUNT"), mount)
+                          && near(table_.col("XYPHASE"), xyphase)
+                          && near(table_.col("XYPHASEOFFSET"), xyphaseoffset)
+                          );
   uInt resultid = 0;
   if ( result.nrow() > 0) {
     ROScalarColumn<uInt> c(result, "ID");
@@ -112,6 +119,7 @@ uInt STFocus::addEntry( Float fax, Float ftan, Float frot, Float hand,
       idCol_.get(rno-1, resultid);
       resultid++;
     }
+    parangleCol_.put(rno, pa);
     rotationCol_.put(rno, frot);
     axisCol_.put(rno, fax);
     tanCol_.put(rno, ftan);
@@ -125,10 +133,10 @@ uInt STFocus::addEntry( Float fax, Float ftan, Float frot, Float hand,
   return resultid;
 }
 
-void asap::STFocus::getEntry( Float& rotation, Float& angle, Float& ftan,
-                              Float& hand, Float& user, Float& mount,
-                              Float& xyphase, Float& xyphaseoffset,
-                              uInt id) const
+  void STFocus::getEntry( Float& pa, Float& rotation, Float& angle, Float& ftan,
+                                Float& hand, Float& user, Float& mount,
+                                Float& xyphase, Float& xyphaseoffset,
+                                uInt id) const
 {
   Table t = table_(table_.col("ID") == Int(id) );
   if (t.nrow() == 0 ) {
@@ -137,6 +145,7 @@ void asap::STFocus::getEntry( Float& rotation, Float& angle, Float& ftan,
   ROTableRow row(t);
   // get first row - there should only be one matching id
   const TableRecord& rec = row.get(0);
+  pa = rec.asFloat("PARANGLE");
   rotation = rec.asFloat("ROTATION");
   angle = rec.asFloat("AXIS");
   ftan = rec.asFloat("TAN");
@@ -148,24 +157,28 @@ void asap::STFocus::getEntry( Float& rotation, Float& angle, Float& ftan,
 }
 
 
-casa::Float asap::STFocus::getTotalFeedAngle( casa::uInt id ) const
+casa::Float STFocus::getTotalAngle( casa::uInt id ) const
 {
   Float total = 0.0f;
   Table t = table_(table_.col("ID") == Int(id) );
   if (t.nrow() == 0 ) {
-    throw(AipsError("STFocus::getEntry - id out of range"));
+    throw(AipsError("STFocus::getTotalAngle - id out of range"));
+  }
+  if (table_.keywordSet().asBool("PARALLACTIFY")) {
+    return 0.0f;
   }
   ROTableRow row(t);
   // get first row - there should only be one matching id
   const TableRecord& rec = row.get(0);
+  total += rec.asFloat("PARANGLE");  
   total += rec.asFloat("ROTATION");
   total += rec.asFloat("USERPHASE");
   total += rec.asFloat("MOUNT");
   return total;
 }
-}
 
-casa::Float asap::STFocus::getFeedHand( casa::uInt id ) const
+
+casa::Float STFocus::getFeedHand( casa::uInt id ) const
 {
   Table t = table_(table_.col("ID") == Int(id) );
   if (t.nrow() == 0 ) {
@@ -176,3 +189,8 @@ casa::Float asap::STFocus::getFeedHand( casa::uInt id ) const
   return rec.asFloat("HAND");
 }
 
+void STFocus::setParallactify(bool istrue) {
+  table_.rwKeywordSet().define("PARALLACTIFY", Bool(istrue));
+}
+
+}

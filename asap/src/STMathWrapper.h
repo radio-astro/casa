@@ -145,8 +145,9 @@ public:
   { return ScantableWrapper(STMath::resample(in.getCP(), method, width)); }
 
   ScantableWrapper
-    smooth(const ScantableWrapper& in, const std::string& kernel, float width)
-  { return ScantableWrapper(STMath::smooth(in.getCP(), kernel, width)); }
+    smooth(const ScantableWrapper& in, const std::string& kernel, float width,
+           int order=2)
+  { return ScantableWrapper(STMath::smooth(in.getCP(), kernel, width, order)); }
 
   ScantableWrapper
     gainElevation(const ScantableWrapper& in,
@@ -163,7 +164,7 @@ public:
   { return ScantableWrapper(STMath::convertFlux(in.getCP(), d, etaap, jyperk)); }
 
   ScantableWrapper opacity(const ScantableWrapper& in,
-                                      float tau)
+                          const std::vector<float>& tau)
   { return ScantableWrapper(STMath::opacity(in.getCP(), tau)); }
 
   ScantableWrapper
@@ -200,8 +201,10 @@ public:
   { return ScantableWrapper(STMath::mxExtract(in.getCP(),scantype)); }
 
   ScantableWrapper lagFlag( const ScantableWrapper& in,
-                            double frequency, double width )
-  { return ScantableWrapper(STMath::lagFlag(in.getCP(), frequency, width)); }
+                            double start, double end,
+                            const std::string& mode="frequency" )
+  { return ScantableWrapper(STMath::lagFlag(in.getCP(), start, end,
+                                            mode)); }
 
   // test for average spectra with different channel/resolution
   ScantableWrapper

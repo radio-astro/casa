@@ -12,7 +12,7 @@
 \setlength{\parindent}{0mm}
 \setlength{\parskip}{1ex}
 
-\title{ATNF Spectral Analysis Package\\User Guide v2.1\\DRAFT }
+\title{ATNF Spectral Analysis Package\\User Guide v2.3 }
 \author{Chris Phillips}
 
 \newcommand{\cmd}[1]{{\tt #1}}
@@ -47,7 +47,7 @@ antennas, and can probably be used for other antennas if they can
 produce ``Single Dish FITS'' format. It is based on the AIPS++
 package.
 
-This userguide has been updated for the ASAP 2.1. Please report any
+This userguide has been updated for the ASAP 2.3. Please report any
 mistakes you find.
 
 \section{Installation and Running}
@@ -57,17 +57,16 @@ Currently there are installations running on Linux machines at
 \begin{itemize}
 \item Epping - use hosts {\tt draco} or {\tt hydra}
 \item Narrabri - use host {\tt kaputar}
-\item Parkes - use host {\tt bourbon}
-\item Mopra - use host {\tt minos}
+\item Parkes - use host {\tt ?}
+\item Mopra - use host {\tt minos} or {\tt kaputar} if at Narrabri
 \end{itemize}
 
 Or use your own Linux desktop.
 
-{\em Note. ASAP2.1 only runs on ATNF Linux machines which have been
+{\em Note. ASAP2.2 only runs on ATNF Linux machines which have been
 updated to Debian Sarge and are using the ``DEBIANSarge''
 /usr/local. If your favourite machine has not been upgraded, send a
-request to your friendly IT support. At the time of writing asap 2.1
-does not run on hydra, bourbon or kaputar.}
+request to your friendly IT support.}
 
 \index{Running}To start asap log onto one of these Linux hosts and enter
 
@@ -165,7 +164,7 @@ function names. If you type the first few letters of a function name,
 then type {\tt <TAB>} the function name will be auto completed if it
 is un-ambiguous, or a list of possibilities will be
 given. Auto-completion works for the user object names as well as
-function names. It does not work for filenames, nor for function
+function names and even file names It does not work for for function
 arguments.
 
 Example
@@ -209,7 +208,7 @@ programs. E.g.
   ASAP>pwd
   ASAP>ls
   ASAP>cd /my/data/directory
-  ASAP>! mozilla&
+  ASAP>! firefox&
 \end{verbatim}
 
 \subsection{Help}
@@ -351,7 +350,7 @@ Example:
   ASAP>scans.summary()                # Brief listing
 
   # Equivalent to brief summary function call
-  ASAP>print scan
+  ASAP>print scans
 \end{verbatim}
 
 The summary function gives you a scan-based summary, presenting the
@@ -421,6 +420,7 @@ Examples:
 
   ASAP>selection.reset()              # Turn off selection
   ASAP>scans.set_selection(selection) # Apply the reset selection
+  ASAP>scans.set_selection() # alternative to reset selection
 
 \end{verbatim}
 
@@ -459,7 +459,7 @@ Example usage:
 
 \begin{verbatim}
   ASAP>scans = scantable('2004-11-23_1841-P484.rpf') # Read in the data
-  ASAP>scans.set_freqframe('LSRK')  # Use the LSR velocity frame
+  ASAP>scans.set_freqframe('LSRK')   # Use the LSR velocity frame
   ASAP>scans.set_unit('km/s')        # Use velocity for plots etc from now on
   ASAP>scans.set_doppler('OPTICAL')  # Use the optical velocity convention
   ASAP>scans.set_unit('MHz')         # Use frequency in MHz from now on
@@ -527,7 +527,7 @@ Example :
 \begin{verbatim}
 
   # Select channel range for baselining
-  ASAP>scans.set_unit('channels')
+  ASAP>scans.set_unit('channel')
   ASAP>msk = scans.create_mask([100,400],[600,800])
 
   # Select velocity range for fitting
@@ -541,7 +541,7 @@ argument.
 
 Example :
 \begin{verbatim}
-  ASAP>scans.set_unit('channels')
+  ASAP>scans.set_unit('channel')
   ASAP>msk = scans.create_mask([0,100],[900-1023], invert=True)
 \end{verbatim}
 
@@ -561,7 +561,7 @@ excluding the edge channels, a strong maser feature and a birdie in
 the middle of the band:
 
 \begin{verbatim}
-  ASAP>scans.set_unit('channels')
+  ASAP>scans.set_unit('channel')
   ASAP>msk1 = q.create_mask([0,100],[511,511],[900,1023],invert=True)
   ASAP>scans.set_unit('km/s')
   ASAP>msk2 = q.create_mask([-20,-10],invert=True)
@@ -613,27 +613,27 @@ Example usage:
 \end{verbatim}
 
 
-\subsection{Reader object}
+%\subsection{Reader object}
 
-\index{Reader object}\index{Scantable!reader object}For more control
-when reading data into ASAP, the reader object should be used.  This
-has the option of only reading in a range of integrations, only a
-specified beam or IF and does not perform any scan averaging of the
-data, allowing analysis of the individual integrations.  Note that due
-to limitation of the RPFITS library, only one reader object can be
-open at one time reading RPFITS files.  To read multiple RPFITS files,
-the old reader must be destroyed before the new file is opened.
-However, multiple readers can be created and attached to SDFITS files.
-
-
-Example usage:
-
-\begin{verbatim}
-  ASAP>r = reader('2003-03-16_082048_t0002.rpf')
-  ASAP>r.summary()
-  ASAP>scan = r.read()
-  ASAP>del r
-\end{verbatim}
+%\index{Reader object}\index{Scantable!reader object}For more control
+%when reading data into ASAP, the reader object should be used.  This
+%has the option of only reading in a range of integrations, only a
+%specified beam or IF and does not perform any scan averaging of the
+%data, allowing analysis of the individual integrations.  Note that due
+%to limitation of the RPFITS library, only one reader object can be
+%open at one time reading RPFITS files.  To read multiple RPFITS files,
+%the old reader must be destroyed before the new file is opened.
+%However, multiple readers can be created and attached to SDFITS files.
+%
+%
+%Example usage:
+%
+%\begin{verbatim}
+%  ASAP>r = reader('2003-03-16_082048_t0002.rpf')
+%  ASAP>r.summary()
+%  ASAP>scan = r.read()
+%  ASAP>del r
+%\end{verbatim}
 
 \section{Basic Processing}
 
@@ -648,7 +648,7 @@ requires the data to have matching source/reference pairs or one
 reference for multiple sources. Auto quotient assumes reference scans
 have a trailing ``\_R'' in the source name for data from Parkes and
 Mopra, and a trailing ``e'' or ``w'' for data from Tidbinbilla.
-This functions has two \cmd{mode}s. \cmd{paired} (the deafault), which assumes
+This functions has two \cmd{mode}s. \cmd{paired} (the default), which assumes
 matching adjacent pairs of source/reference scans and \cmd{time}, which finds
 the closest reference scan in time.
 
@@ -834,7 +834,7 @@ E.g:
 \index{Tsys scaling}Sometime the nominal Tsys measurement at the
 telescope is wrong due to an incorrect noise diode calibration. This
 can easily be corrected for with the scale function. By default,
-\cmd{scale} only scans the spectra and not the corresponding Tsys.
+\cmd{scale} only scaless the spectra and not the corresponding Tsys.
 
 \begin{verbatim}
   ASAP>scans.scale(1.05, tsys=True)
@@ -870,7 +870,7 @@ corrections will not work unless these get recalculated.
 
 \begin{verbatim}
   ASAP>scans.recalc_azel()                # recalculate az/el 
-              							  # based on pointing
+              				  # based on pointing
 \end{verbatim}
 
 Gain-elevation curves for some telescopes and frequencies are known to
@@ -961,6 +961,8 @@ For example:
 
 \end{verbatim}
 
+One can also apply the inverse of \cmd{get\_scan} \cmd{drop\_scan}
+
 To copy a scantable the following does not work:
 
 \begin{verbatim}
@@ -993,9 +995,12 @@ formats are:
   for interchange between packages, but few packages actually can read
   it.
 
-%\item[FITS] This uses simple ``image'' fits to save the data, each row
-%  being written to a separate fits file. This format is suitable for
-%  importing the data into CLASS.
+\item[FITS] This uses simple ``image'' fits to save the data, each row
+  being written to a separate fits file.
+
+\item[CLASS] This uses simple ``image'' fits to save the data, each row
+  being written to a separate fits file. This format has modification so it 
+  is suitable for importing the data into CLASS.
 
 \item[ASCII] A simple text based format suitable for the user to
 processing using Perl or, Python, gnuplot etc.
@@ -1401,8 +1406,8 @@ wish to use. E.g.:
   ASAP>data.set_restfreqs([jpl[11],[jpl[21]])
 \end{verbatim}
 
-For data with many IFs, such as from MOPS, the user it is recommended
-that the user creates their own line cstalog for the data and use this
+For data with many IFs, such as from MOPS, it is recommended
+that users creates their own line catalog table for the data and use this
 to set the rest frequency for each IF.
 
 \section{Fitting}
@@ -1657,7 +1662,7 @@ Normally scantables exist entirely in memory during an ASAP
 session. This has the advantage of speed, but causes limits on the
 size of the dataset which can be loaded. ASAP can use ``disk based''
 scan tables which cache the bulk of the scantable on disk and require
-significantly less memory usage.
+significantly less memory usage. This should be used for all MOPS data!
 
 To use disk based tables you either need to change the default in your
 \cmd{.asaprc} file, e.g.
@@ -1678,7 +1683,7 @@ Changing the ``\cmd{rc}'' value affects the next time the
 
 {\bf NOTE: } Currently a bug in ipython means temporary files are not
 cleaned up properly when you exit ASAP. If you use disk based scan
-tables your directory will be left with 'tabXXXXX\_X' directories. These can
+tables your directory will be left with 'tmpXXXXX\_X' directories. These can
 be safely removed if ASAP is not running.
 
 \section{Scantable Mathematics}
@@ -1691,10 +1696,10 @@ not work for integers).
 
 {\em Currently mathematics between two scantables is not available }
 
-%  ASAP>sum = scan1+scan2
 \begin{verbatim}
   ASAP>scan2 = scan1+2.0
   ASAP>scan *= 1.05
+  ASAP>sum = scan1+scan2
 \end{verbatim}
 
 \section{Scripting}
@@ -1712,6 +1717,8 @@ documentation.
 \hspace{1cm} http://svn.atnf.csiro.au/trac/asap/wiki
 
 \hspace{1cm} http://www.python.org/doc/Introduction.html
+
+\hspace{1cm} http:/ipython.scipy.org
 
 \subsection{Running scripts}
 

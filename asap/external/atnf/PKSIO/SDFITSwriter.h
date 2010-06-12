@@ -1,32 +1,34 @@
 //#---------------------------------------------------------------------------
 //# SDFITSwriter.h: ATNF CFITSIO interface class for SDFITS output.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
-//# Mark Calabretta, ATNF
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning this software should be addressed as follows:
-//#        Internet email: mcalabre@atnf.csiro.au.
-//#        Postal address: Dr. Mark Calabretta,
-//#                        Australia Telescope National Facility,
-//#                        P.O. Box 76,
-//#                        Epping, NSW, 2121,
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
 //#                        AUSTRALIA
 //#
-//# $Id$
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: SDFITSwriter.h,v 19.10 2009-09-29 07:33:39 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# Original: 2000/07/24, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
@@ -34,9 +36,13 @@
 #ifndef ATNF_SDFITSWRITER_H
 #define ATNF_SDFITSWRITER_H
 
-#include <atnf/PKSIO/PKSMBrecord.h>
+#include <atnf/PKSIO/MBrecord.h>
+#include <casa/Logging/LogIO.h>
 
 #include <fitsio.h>
+
+using namespace std;
+using namespace casa;
 
 // <summary>
 // ATNF CFITSIO interface class for SDFITS output.
@@ -49,7 +55,7 @@ class SDFITSwriter
     SDFITSwriter();
 
     // Destructor.
-    ~SDFITSwriter();
+    virtual ~SDFITSwriter();
 
     // Create a new SDFITSwriter and store static data.
     int create(
@@ -59,6 +65,7 @@ class SDFITSwriter
         char*  telescope,
         double antPos[3],
         char*  obsMode,
+        char*  bunit,
         float  equinox,
         char*  dopplerFrame,
         int    nIF,
@@ -69,10 +76,10 @@ class SDFITSwriter
         int    extraSysCal);
 
     // Store time-variable data.
-    int write(PKSMBrecord &record);
+    int write(MBrecord &record);
 
-    // Print out CFITSIO error messages.
-    void reportError();
+    // Write a history record.
+    int history(char* text);
 
     // Close the SDFITS file.
     void close();
@@ -85,6 +92,10 @@ class SDFITSwriter
     int  cDoTDIM, cDoXPol, cExtraSysCal, cHaveBase, *cHaveXPol, cIsMX,
          *cNChan, cNIF, *cNPol, cStatus;
     long cRow;
+
+    // Message handling.
+    char cMsg[256];
+    void log(LogOrigin origin, LogIO::Command cmd, const char *msg = 0x0);
 };
 
 #endif

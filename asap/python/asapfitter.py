@@ -1,6 +1,6 @@
 import _asap
 from asap import rcParams
-from asap import print_log
+from asap import print_log, print_log_dec
 from asap import _n_bools
 from asap import mask_and
 from asap import asaplog
@@ -78,7 +78,7 @@ class fitter:
         """
         Set the function to be fit.
         Parameters:
-            poly:    use a polynomial of the order given with nonlinear least squares fit 
+            poly:    use a polynomial of the order given with nonlinear least squares fit
             lpoly:   use polynomial of the order given with linear least squares fit
             gauss:   fit the number of gaussian specified
             lorentz: fit the number of lorentzian specified
@@ -94,7 +94,7 @@ class fitter:
             self.fitfunc = 'poly'
             n = kwargs.get('poly')
             self.components = [n]
-            self.uselinear = False 
+            self.uselinear = False
         elif kwargs.has_key('lpoly'):
             self.fitfunc = 'poly'
             n = kwargs.get('lpoly')
@@ -105,13 +105,13 @@ class fitter:
             self.fitfunc = 'gauss'
             self.fitfuncs = [ 'gauss' for i in range(n) ]
             self.components = [ 3 for i in range(n) ]
-            self.uselinear = False 
+            self.uselinear = False
         elif kwargs.has_key('lorentz'):
             n = kwargs.get('lorentz')
             self.fitfunc = 'lorentz'
             self.fitfuncs = [ 'lorentz' for i in range(n) ]
             self.components = [ 3 for i in range(n) ]
-            self.uselinear = False 
+            self.uselinear = False
         else:
             msg = "Invalid function type."
             if rcParams['verbose']:
@@ -126,6 +126,7 @@ class fitter:
         self.fitted = False
         return
 
+    #@print_log_dec
     def fit(self, row=0, estimate=False):
         """
         Execute the actual fitting process. All the state has to be set.
@@ -163,7 +164,7 @@ class fitter:
                 out = "Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (self.data.getscan(i),
                                                                       self.data.getbeam(i),
                                                                       self.data.getif(i),
-                                                                      self.data.getpol(i), 
+                                                                      self.data.getpol(i),
                                                                       self.data.getcycle(i))
                 asaplog.push(out,False)
         self.fitter.setdata(self.x, self.y, self.mask)
@@ -220,7 +221,7 @@ class fitter:
             else:
                 self.data._addfit(fit,self._fittedrow)
 
-    #def set_parameters(self, params, fixed=None, component=None):
+    #@print_log_dec
     def set_parameters(self,*args,**kwargs):
         """
         Set the parameters to be fitted.
@@ -542,6 +543,7 @@ class fitter:
                 raise RuntimeError(msg)
         return self.fitter.getfit()
 
+    #@print_log_dec
     def commit(self):
         """
         Return a new scan where the fits have been commited (subtracted)
@@ -570,7 +572,9 @@ class fitter:
         print_log()
         return scan
 
-    def plot(self, residual=False, components=None, plotparms=False, filename=None):
+    #@print_log_dec
+    def plot(self, residual=False, components=None, plotparms=False,
+             filename=None):
         """
         Plot the last fit.
         Parameters:
@@ -597,7 +601,7 @@ class fitter:
         tlab = 'Spectrum'
         xlab = 'Abcissa'
         ylab = 'Ordinate'
-        from matplotlib.numerix import ma,logical_not,logical_and,array
+        from numpy import ma,logical_not,logical_and,array
         m = self.mask
         if self.data:
             tlab = self.data._getsourcename(self._fittedrow)
@@ -605,7 +609,7 @@ class fitter:
             m =  logical_and(self.mask,
                              array(self.data._getmask(self._fittedrow),
                                    copy=False))
-                             
+
             ylab = self.data._get_ordinate_label()
 
         colours = ["#777777","#dddddd","red","orange","purple","green","magenta", "cyan"]
@@ -669,6 +673,7 @@ class fitter:
             self._p.save(filename)
         print_log()
 
+    #@print_log_dec
     def auto_fit(self, insitu=None, plot=False):
         """
         Return a scan where the function is applied to all rows for
@@ -699,7 +704,7 @@ class fitter:
             out = " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (scan.getscan(r),
                                                                    scan.getbeam(r),
                                                                    scan.getif(r),
-                                                                   scan.getpol(r), 
+                                                                   scan.getpol(r),
                                                                    scan.getcycle(r))
             asaplog.push(out, False)
             self.x = scan._getabcissa(r)
@@ -722,4 +727,3 @@ class fitter:
             self._p = None
         print_log()
         return scan
-

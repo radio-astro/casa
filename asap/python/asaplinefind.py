@@ -40,7 +40,7 @@ class linefinder:
         return
 
     def set_options(self,threshold=1.7320508075688772,min_nchan=3,
-        avg_limit=8,box_size=0.2):
+        avg_limit=8,box_size=0.2,noise_box='all',noise_stat='mean80'):
         """
         Set the parameters of the algorithm
         Parameters:
@@ -54,14 +54,40 @@ class linefinder:
              avg_limit    A number of consequtive channels not greater than
                           this parameter can be averaged to search for
                           broad lines. Default is 8.
-             box_size     A running mean box size specified as a fraction
+             box_size     A running mean/median box size specified as a fraction
                           of the total spectrum length. Default is 1/5
+             noise_box    Area of the spectrum used to estimate noise stats
+                          Both string values and numbers are allowed
+                          Allowed string values:
+                             'all' use all the spectrum (default)
+                             'box' noise box is the same as running mean/median
+                                   box
+                          Numeric values are defined as a fraction from the
+                          spectrum size. Values should be positive.
+                          (noise_box == box_size has the same effect as
+                           noise_box = 'box')
+             noise_stat   Statistics used to estimate noise, allowed values:
+                              'mean80' use the 80% of the lowest deviations
+                                       in the noise box (default)
+                              'median' median of deviations in the noise box
+                             
         Note:  For bad baselines threshold should be increased,
                and avg_limit decreased (or even switched off completely by
                setting this parameter to 1) to avoid detecting baseline
                undulations instead of real lines.
         """
-        self.finder.setoptions(threshold,min_nchan,avg_limit,box_size)
+        if noise_stat.lower() not in ["mean80",'median']:
+           raise RuntimeError, "noise_stat argument in linefinder.set_options can only be mean80 or median"
+        nStat = (noise_stat.lower() == "median")
+        nBox = -1.
+        if isinstance(noise_box,str):
+           if noise_box.lower() not in ['all','box']:
+              raise RuntimeError, "string-valued noise_box in linefinder.set_options can only be all or box"
+           if noise_box.lower() == 'box':
+              nBox = box_size
+        else:
+           nBox = float(noise_box)
+        self.finder.setoptions(threshold,min_nchan,avg_limit,box_size,nBox,nStat)
         return
 
     def set_scan(self, scan):
