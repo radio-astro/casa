@@ -3,7 +3,8 @@ import string
 from taskinit import *
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
-          timebin, timerange, scan, array, uvrange, ignorables):
+          timebin, timerange, scan, array, uvrange, correlation,
+          ignorables):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -45,6 +46,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              default '' (all).
     uvrange -- uv distance range to select.
                default '' (all).
+    correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
+                   default '' (all).
     ignorables -- Data descriptors that time averaging can ignore:
                   array, scan, and/or state
                   Default '' (none)
@@ -97,6 +100,10 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             except:
                 raise TypeError, 'parameter width is invalid..using 1'
 
+        if type(correlation) == list:
+            correlation = ', '.join(correlation)
+        correlation = correlation.upper()
+
         if hasattr(ignorables, '__iter__'):
             ignorables = ', '.join(ignorables)
 
@@ -124,7 +131,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                      baseline=antenna,   subarray=array,
                      timebin='',         time=timerange,
                      whichcol=datacolumn,
-                     scan=scan,          uvrange=uvrange)
+                     scan=scan,          uvrange=uvrange,
+                     ignorables=ignorables,
+                     correlation=correlation)
             
             # The selection was already made, so blank them before time averaging.
             field = ''
@@ -147,7 +156,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                  timebin=timebin,     time=timerange,
                  whichcol=datacolumn,
                  scan=scan,           uvrange=uvrange,
-                 ignorables=ignorables)
+                 ignorables=ignorables,
+                 correlation=correlation)
         ms.close()
 
         if do_both_chan_and_time_avg:

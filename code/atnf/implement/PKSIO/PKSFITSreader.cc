@@ -1,30 +1,34 @@
+//#---------------------------------------------------------------------------
 //# PKSFITSreader.cc: Class to read Parkes multibeam data from a FITS file.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2008
-//# Associated Universities, Inc. Washington DC, USA.
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but
-//# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-//# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: PKSFITSreader.cc,v 19.21 2008-11-17 06:54:25 cal103 Exp $
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
+//#                        AUSTRALIA
+//#
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: PKSFITSreader.cc,v 19.23 2009-09-29 07:33:38 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# Original: 2000/08/02, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
@@ -487,13 +491,13 @@ Int PKSFITSreader::read(PKSrecord &pksrec)
 
   if (cMBrec.haveBase) {
     pksrec.baseLin.resize(2,nPol);
-    pksrec.baseSub.resize(9,nPol);
+    pksrec.baseSub.resize(24,nPol);
 
     for (uInt ipol = 0; ipol < nPol; ipol++) {
       pksrec.baseLin(0,ipol) = cMBrec.baseLin[0][ipol][0];
       pksrec.baseLin(1,ipol) = cMBrec.baseLin[0][ipol][1];
 
-      for (uInt j = 0; j < 9; j++) {
+      for (uInt j = 0; j < 24; j++) {
         pksrec.baseSub(j,ipol) = cMBrec.baseSub[0][ipol][j];
       }
     }

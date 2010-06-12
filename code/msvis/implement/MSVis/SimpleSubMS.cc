@@ -70,7 +70,7 @@ namespace casa {
     }
     mscIn_p=new ROMSColumns(mssel_p);
     String msname=AppInfo::workFileName(100, "TempSubMS");
-    MeasurementSet* ah=setupMS(msname, nchan_p[0], npol_p[0],  
+    MeasurementSet* ah=setupMS(msname, nchan_p[0], ncorr_p[0],  
 			       mscIn_p->observation().telescopeName()(0),
 			       Vector<MS::PredefinedColumns>(1,whichcol));
     if(!ah)

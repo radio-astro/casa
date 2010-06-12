@@ -9393,6 +9393,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
       //viewer_p->unload(mask_id_p);
       //Setting clean_panel_p to 0 seems to do the trick...the above stuff 
       // like done causes a crash after a call again...have to understand that
+      viewer_p->close(clean_panel_p);
       clean_panel_p=0;
       image_id_p=0;
       mask_id_p=0;

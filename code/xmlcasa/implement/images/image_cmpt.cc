@@ -2621,9 +2621,6 @@ image::statistics(const std::vector<int>& axes,
 	    return rstat;
     }
 
-// Convert region from Glish record to ImageRegion. Convert mask to ImageRegion
-// and make SubImage.
-
     Record *regionRec = toRecord(region);
     String mtmp = mask.toString();
     if(mtmp == "false" || mtmp == "[]")

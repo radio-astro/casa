@@ -1,6 +1,5 @@
-
 ##########################################################################
-# task_imtrans.py
+# imfit_test.py
 #
 # Copyright (C) 2008, 2009
 # Associated Universities, Inc. Washington DC, USA.
@@ -31,50 +30,74 @@
 # </author>
 #
 # <summary>
-# Task to transpose an image
+# Test suite for the CASA imfit Task
 # </summary>
 #
 # <reviewed reviwer="" date="" tests="" demos="">
-# </reviewed>
+# </reviewed
 #
 # <prerequisite>
 # <ul>
-#
+#   <li> <linkto class="imfit.py:description">imfit</linkto> 
 # </ul>
 # </prerequisite>
 #
 # <etymology>
-# imtrans => im(age) trans(pose)
+# imfit_test stands for imfit test
 # </etymology>
 #
 # <synopsis>
-# imtrans transposes an image. It is built on top of ia.reorder()
+# imfit_test.py is a Python script that tests the correctness
+# of the ia.fitcomponents tool method and the imfit task in CASA.
 # </synopsis> 
 #
 # <example>
-# imtrans(imagename="myim.im", outfile="transposed.im", order="102")
+# # This test was designed to run in the automated CASA test system.
+# # This example shows who to run it manually from within casapy.
+# casapy -c runUnitTest test_imcontsub
+#
+# or
+#
+# # This example shows who to run it manually from with casapy.
+# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
+# import runUnitTest
+# runUnitTest.main(['imcontsub_test'])
 #
 # </example>
 #
 # <motivation>
-# To make users happy, cf https://bugs.aoc.nrao.edu/browse/CAS-607
+# To provide a test standard to the imfit task to ensure
+# coding changes do not break the associated bits 
 # </motivation>
 #
 
 ###########################################################################
+import casac
+from tasks import *
 from taskinit import *
+from __main__ import *
+import unittest
 
-def imtrans(imagename=None, outfile=None, order=None):
-    casalog.origin('imtrans')
-    retval = None
-    myia = iatool.create()
-    try:
-        if (not myia.open(imagename)):
-            raise Exception, "Cannot create image analysis tool using " + imagename
-        retval = myia.reorder(outfile=outfile, order=order)
-    except Exception, instance:
-        casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-        retval = None
-    if (myia):
-        myia.done()
-    return retval
+class componentlist_test(unittest.TestCase):
+    
+    def setUp(self):
+        return
+
+    def tearDown(self):
+        return
+ 
+    def test_summarize(self):
+        """Test the cl.summarize() method"""
+        # make me a list
+        cl.addcomponent(
+            [1,0,0,0],'Jy','Stokes',['J2000', '10:30:00.00', '-20.00.00.0'],
+            'gaussian','4arcsec','2arcsec','30deg'
+        )
+        self.assertTrue(cl.summarize(0))
+        self.assertRaises(Exception, cl.summarize, 1)
+
+
+ 
+
+def suite():
+    return [componentlist_test]

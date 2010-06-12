@@ -29,6 +29,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -234,6 +235,16 @@ class SubMS
   static Bool sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
                        Vector<MS::PredefinedColumns>& complexDataCols);
 
+  // Fills outToIn[pol] with a map from output correlation index to input
+  // correlation index, for each input polID pol.
+  // It does not yet check the appropriateness of the correlation selection
+  // string, so ignore the return value for now.  outToIn[pol] defaults to
+  // an empty Vector if no correlations are selected for pol.
+  // That is not the same as the default "select everything in ms".
+  static Bool getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
+			  Vector<Vector<Int> >& outToIn,
+			  const Bool areSelecting=false);
+  
   Bool doWriteImagingWeight(const ROMSColumns& msc,
                             const Vector<MS::PredefinedColumns>& colNames);
 
@@ -388,7 +399,9 @@ class SubMS
   template<class M>
   void filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 		   const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-		   const Int nrow);
+		   const Int nrow, const Bool calcImgWts, 
+		   const Bool calcWtSig, ROArrayColumn<Float>& rowWt,
+		   ROArrayColumn<Float>& sigma);
 
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
@@ -407,7 +420,7 @@ class SubMS
   Int numOfTimeBins(const Double timeBin);
 
   // Used in a couple of places to estimate how much memory to grab.
-  Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * npol_p[0] *
+  Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * ncorr_p[0] *
                            sizeof(Complex);}
 
   // Picks a reference to DATA, MODEL_DATA, CORRECTED_DATA, or LAG_DATA out
@@ -443,9 +456,10 @@ class SubMS
   void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
                      const Vector<MS::PredefinedColumns> colEnums); 
 
-  // Returns whether or not all the elements of inNumChan_p are the
-  // same, AND whether all the elements of nchan_p are the same.
-  Bool checkSpwShape();
+  // Returns whether or not the numbers of correlations and channels
+  // are independent of DATA_DESCRIPTION_ID, for both the input and output
+  // MSes.
+  Bool areDataShapesConstant();
 
   // Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
   // ones.  Must be called after fieldid_p is set and before calling
@@ -472,10 +486,11 @@ class SubMS
   MeasurementSet ms_p, mssel_p;
   MSColumns * msc_p;		// columns of msOut_p
   ROMSColumns * mscIn_p;
-  Bool chanModification_p,      // Iff true, the input channels cannot simply
-                                // be copied through to the output channels.
-       antennaSel_p,
-       sameShape_p;
+  Bool keepShape_p,      	// Iff true, each output array has the
+				// same shape as the corresponding input one.
+       sameShape_p,             // Iff true, the shapes of the arrays do not
+				// vary with row number.
+       antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
   uInt numOutRows_p;
   String scanString_p, uvrangeString_p, taqlString_p;
@@ -494,8 +509,9 @@ class SubMS
               totnchan_p, // The # of output channels for each output spw.
               chanStart_p,
               chanStep_p,
-              npol_p,
-              inNumChan_p;
+              ncorr_p,    // The # of output correlations for each DDID.
+              inNumChan_p,    // The # of input channels for each spw.
+              inNumCorr_p;    // The # of input correlations for each DDID.
   Vector<Int> fieldid_p;
   Bool averageChannel_p;
   Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
@@ -506,9 +522,13 @@ class SubMS
   Vector<Int> antNewIndex_p;
 
   Vector<Int> arrayId_p;
+  Vector<Int> polID_p;	       // Map from input DDID to input polID, filled in fillDDTables(). 
   Vector<Double> newTimeVal_p;
   Vector<uInt> tOI_p; //timeOrderIndex
   Vector<uInt> spw2ddid_p;
+
+  // inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
+  Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
 
   Vector<Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
 
@@ -519,6 +539,8 @@ class SubMS
 
   Bool doImgWts_p; // Use doWriteImagingWeight() to get this!  Cutting corners
                    // just leads to trouble...
+
+  Vector<Slice> corrSlice_p;
 };
 
 

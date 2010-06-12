@@ -84,9 +84,9 @@ namespace casa {
     mssel_p(ms_p),
     msc_p(NULL),
     mscIn_p(NULL),
-    chanModification_p(False),
-    antennaSel_p(False),
+    keepShape_p(true),
     sameShape_p(True),
+    antennaSel_p(False),
     timeBin_p(-1.0),
     numOutRows_p(0),
     scanString_p(""),
@@ -104,9 +104,9 @@ namespace casa {
     mssel_p(ms_p),
     msc_p(NULL),
     mscIn_p(NULL),
-    chanModification_p(False),
-    antennaSel_p(False),
+    keepShape_p(true),
     sameShape_p(True),
+    antennaSel_p(False),
     timeBin_p(-1.0),
     numOutRows_p(0),
     scanString_p(""),
@@ -350,18 +350,56 @@ namespace casa {
     }    
   }
 
+  // selectSpw must be called first because this uses spwRelabel_p!
   Bool SubMS::selectCorrelations(const String& corrstr)
   {
     LogIO os(LogOrigin("SubMS", "selectCorrelations()"));
-    Bool cando = true;
-
     MSSelection mssel;
-    mssel.setPolnExpr(corrstr);
+    const Bool areSelecting = corrstr != "" && corrstr != "*";
 
+    if(areSelecting)
+      mssel.setPolnExpr(corrstr);
     corrString_p = corrstr;
-
-    return cando;
+    return getCorrMaps(mssel, ms_p, inPolOutCorrToInCorrMap_p, areSelecting);
   }
+
+Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
+			Vector<Vector<Int> >& outToIn, const Bool areSelecting)
+{
+  Bool cando = true;
+
+  uInt npol = ms.polarization().nrow();  // The total number of polids
+    
+  // Nominally empty selection for all polids
+  outToIn.resize(npol);
+  outToIn.set(Vector<Int>());
+    
+  if(areSelecting){
+    // Get the corr indices as an ordered map
+    OrderedMap<Int, Vector<Vector<Int> > > corrmap(mssel.getCorrMap(&ms));
+
+    // Iterate over the ordered map to fill the vector maps
+    ConstMapIter<Int, Vector<Vector<Int> > > mi(corrmap);
+    for(mi.toStart(); !mi.atEnd(); ++mi){
+      Int pol = mi.getKey();
+
+      outToIn[pol] = mi.getVal()[0];
+    }
+  }
+  else{	// Make outToIn an identity map.
+    ROScalarColumn<Int> numCorr(ms.polarization(), 
+				MSPolarization::columnName(MSPolarization::NUM_CORR));
+    
+    for(uInt polid = 0; polid < npol; ++polid){
+      uInt ncorr = numCorr(polid);
+      
+      outToIn[polid].resize(ncorr);
+      for(uInt cid = 0; cid < ncorr; ++cid)
+	outToIn[polid][cid] = cid;
+    }
+  }
+  return cando;
+}
 
   // This is the one used by split.
   Bool SubMS::setmsselect(const String& spw, const String& field,
@@ -577,17 +615,17 @@ namespace casa {
       MeasurementSet* outpointer=0;
 
       if(tileShape.nelements() == 3){
-        outpointer = setupMS(msname, nchan_p[0], npol_p[0],  
+        outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
                              colNamesTok, tileShape);
       }
       else if((tileShape.nelements()==1) && (tileShape[0]==0 || tileShape[0]==1)){
-        outpointer = setupMS(msname, nchan_p[0], npol_p[0],
+        outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
                              mscIn_p->observation().telescopeName()(0),
                              colNamesTok, tileShape[0]);
       }
       else{
         //Sweep all other cases of bad tileshape to a default one.
-        outpointer = setupMS(msname, nchan_p[0], npol_p[0],
+        outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
                              mscIn_p->observation().telescopeName()(0),  
                              colNamesTok, 0);
       }
@@ -680,7 +718,7 @@ namespace casa {
     Double sizeInMB= 1.5 * n_bytes() / (1024.0 * 1024.0);
     String msname=AppInfo::workFileName(uInt(sizeInMB), "TempSubMS");
     
-    MeasurementSet* outpointer=setupMS(msname, nchan_p[0], npol_p[0],  
+    MeasurementSet* outpointer=setupMS(msname, nchan_p[0], ncorr_p[0],  
                                        mscIn_p->observation().telescopeName()(0),
                                        whichDataCols);
     
@@ -746,7 +784,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   copyPointing();
   copyWeather();
     
-  sameShape_p = checkSpwShape();
+  sameShape_p = areDataShapesConstant();
   doImgWts_p = doWriteImagingWeight(*mscIn_p, datacols);
     
   if(timeBin_p <= 0.0){
@@ -831,7 +869,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt nddids = polId.nrow();
       uInt nSpws = spw_p.nelements();
 
-      Vector<uInt> npols_per_spw;
+      Vector<uInt> npols_per_spw;  // # of pol setups per spw, !#pols.
       Int highestSpw = max(spw_p);
       if(highestSpw < 0)
         highestSpw = 0;
@@ -869,9 +907,21 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Vector<Int> ddids;
       ddids.resize(nSpws);
 
-      npol_p.resize(nSpws); 
-      for(uInt k = 0; k < nSpws; ++k)
-        npol_p[k] = pols(polId(spw2ddid_p[spw_p[k]])).nelements();
+      inNumCorr_p.resize(nSpws);
+      ncorr_p.resize(nSpws);
+      for(uInt k = 0; k < nSpws; ++k){
+	Int ddid = spw2ddid_p[spw_p[k]];
+	
+        inNumCorr_p[k] = pols(polId(ddid)).nelements();
+	ncorr_p[k] = inPolOutCorrToInCorrMap_p[polId(ddid)].nelements();
+	if(ncorr_p[k] == 0){
+          os << LogIO::SEVERE
+             << "None of the selected correlations are in spectral window "
+	     << spw_p[k]
+             << LogIO::POST;
+          return false;
+	}
+      }
     }
     
     // Now remake the selected ms
@@ -1164,16 +1214,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ROScalarColumn<Double> totBW(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::TOTAL_BANDWIDTH));
     inNumChan_p.resize(spw_p.nelements()); 
     
-    Vector<Int> ddPolId=polId.getColumn();
+    polID_p = polId.getColumn();
     Bool dum;
-    Sort sort( ddPolId.getStorage(dum),sizeof(Int) );
+    Sort sort( polID_p.getStorage(dum),sizeof(Int) );
     sort.sortKey((uInt)0,TpInt);
     Vector<uInt> index,uniq;
-    sort.sort(index,ddPolId.nelements());
+    sort.sort(index,polID_p.nelements());
     uInt nPol = sort.unique(uniq,index);
-    Vector<Int> selectedPolId(nPol);
+    Vector<Int> selectedPolId(nPol); 	// Map from output polID to input polID.
     for(uInt k = 0; k < nPol; ++k)
-      selectedPolId[k]=ddPolId[index[uniq[k]]];
+      selectedPolId[k] = polID_p[index[uniq[k]]];
     
     // Make map from input to output spws.
     Sort sortSpws(spw_p.getStorage(dum), sizeof(Int));
@@ -1196,19 +1246,73 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     Vector<Int> newPolId(spw_uniq_p.nelements());
     for(uInt k = 0; k < nuniqSpws; ++k){
-      for (uInt j=0; j < nPol; ++j){ 
-	if(selectedPolId[j]==ddPolId[k])
-	  newPolId[k]=j;
+      Bool found = false;
+      
+      for(uInt j = 0; j < nPol; ++j){ 
+	if(selectedPolId[j] == polID_p[k]){
+	  newPolId[k] = j;
+	  found = true;
+	  break;
+	}
       }
+      if(!found){
+	os << LogIO::SEVERE
+	   << "No polarization ID found for output polarization setup " << k
+	   << LogIO::POST;
+	return false;
+      }
+    }
+    corrSlice_p.resize(nPol);
+    for(uInt outpid = 0; outpid < nPol; ++outpid){
+      uInt inpid = selectedPolId[outpid];
+      uInt ncorr = inPolOutCorrToInCorrMap_p[inpid].nelements();
+      const Vector<Int> inCT(corrType(inpid));
+      
+      if(ncorr < inCT.nelements()){
+	keepShape_p = false;
+
+	// Check whether the requested correlations can be accessed by slicing.
+	// That means there must be a constant stride.  The most likely (only?)
+	// way to violate that is to ask for 3 out of 4 correlations.
+	if(ncorr > 2){
+	  os << LogIO::SEVERE
+	     << "Sorry, the requested correlation selection is not unsupported.\n"
+	     << "Try selecting fewer or all of the correlations."
+	     << LogIO::POST;
+	  return false;
+	}
+
+	corrSlice_p[outpid] = Slice(inPolOutCorrToInCorrMap_p[inpid][0],
+			       ncorr,
+			       ncorr > 1 ? inPolOutCorrToInCorrMap_p[inpid][1] -
+			                   inPolOutCorrToInCorrMap_p[inpid][0] :
+			       1);
+      }
+      else
+	corrSlice_p[outpid] = Slice(0, ncorr);
+      
       msOut_p.polarization().addRow();
-      msPol.numCorr().put(k, numCorr(polId(spw2ddid_p[spw_uniq_p[k]])));
-      msPol.corrType().put(k, corrType(polId(spw2ddid_p[spw_uniq_p[k]])));
-      msPol.corrProduct().put(k, corrProd(polId(spw2ddid_p[spw_uniq_p[k]])));
-      msPol.flagRow().put(k, polFlagRow(polId(spw2ddid_p[spw_uniq_p[k]])));
+      msPol.numCorr().put(outpid, ncorr);
+      msPol.flagRow().put(outpid, polFlagRow(inpid));
+
+      Vector<Int> outCT;
+      const Matrix<Int> inCP(corrProd(inpid));
+      Matrix<Int> outCP;
+      outCT.resize(ncorr);
+      outCP.resize(2, ncorr);
+      for(uInt k = 0; k < ncorr; ++k){
+	Int inCorrInd = inPolOutCorrToInCorrMap_p[inpid][k];
+	
+	outCT[k] = inCT[inCorrInd];
+	for(uInt feedind = 0; feedind < 2; ++feedind)
+	  outCP(feedind, k) = inCP(feedind, inCorrInd);
+      }
+      msPol.corrType().put(outpid, outCT);
+      msPol.corrProduct().put(outpid, outCP);
     }
 
     for(uInt k = 0; k < spw_p.nelements(); ++k)
-      inNumChan_p[k]=numChan(spw_p[k]);
+      inNumChan_p[k] = numChan(spw_p[k]);
     
     Vector<Vector<Int> > spwinds_of_uniq_spws(nuniqSpws);
 
@@ -1265,7 +1369,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         Vector<Double> effBWIn = effBW(spw_uniq_p[min_k]);
         Int outChan = 0;
 
-        chanModification_p = true;
+        keepShape_p = false;
 
         effBWOut.set(0.0);
         for(uInt rangeNum = 0;
@@ -5146,9 +5250,6 @@ Bool SubMS::fillAccessoryMainCols(){
   //msc_p->uvwMeas().putColumn(mscIn_p->uvwMeas());
   msc_p->uvw().putColumn(mscIn_p->uvw());
   
-  msc_p->weight().putColumn(mscIn_p->weight());
-  msc_p->sigma().putColumn(mscIn_p->sigma());
-  
   relabelIDs();
   return True;
 }
@@ -5161,7 +5262,7 @@ Bool SubMS::fillAccessoryMainCols(){
     fillAccessoryMainCols();
 
     //Deal with data
-    if(!chanModification_p){
+    if(keepShape_p){
       ROArrayColumn<Complex> data;
       Vector<MS::PredefinedColumns> complexCols;
       const Bool doFloat = sepFloat(colNames, complexCols);
@@ -5183,6 +5284,9 @@ Bool SubMS::fillAccessoryMainCols(){
       if(!(mscIn_p->weightSpectrum().isNull()) &&
          mscIn_p->weightSpectrum().isDefined(0))
         msc_p->weightSpectrum().putColumn(mscIn_p->weightSpectrum());
+
+      msc_p->weight().putColumn(mscIn_p->weight());
+      msc_p->sigma().putColumn(mscIn_p->sigma());
     }
     else{
       // if(sameShape_p){
@@ -5748,16 +5852,16 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
   // 	    Int spw=spwindex[vb.spectralWindow()];
   // 	    rowsnow=vb.nRow();
   // 	    RefRows rowstoadd(rowsdone, rowsdone+rowsnow-1);
-  // 	    //	    Cube<Bool> locflag(npol_p[spw], nchan_p[spw], rowsnow);
+  // 	    //	    Cube<Bool> locflag(ncorr_p[spw], nchan_p[spw], rowsnow);
 
-  //           Cube<Complex> averdata(npol_p[spw], nchan_p[spw], rowsnow);
+  //           Cube<Complex> averdata(ncorr_p[spw], nchan_p[spw], rowsnow);
 		
-  //           locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
+  //           locflag.resize(ncorr_p[spw], nchan_p[spw], rowsnow);
   //           //ddIds.resize(rowsnow);
   //           //ddIds.fill(spw);
 
   //           if(doSpWeight)
-  //             spWeight.resize(npol_p[spw], nchan_p[spw], rowsnow);              
+  //             spWeight.resize(ncorr_p[spw], nchan_p[spw], rowsnow);              
   // 	    for(uInt ni=0;ni<ntok;ni++)
   // 	      {
   // 		if(complexDataCols[ni]== MS::DATA)
@@ -5771,7 +5875,7 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
   //                 os << LogIO::DEBUG1
   //                    << "spw: " << spw << "\n"
   //                    << "vis.shape(): " << vis.shape() << "\n"
-  //                    << "npol_p[spw]: " << npol_p[spw] << "\n"
+  //                    << "ncorr_p[spw]: " << ncorr_p[spw] << "\n"
   //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
   //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
   //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
@@ -5782,14 +5886,14 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
   //               Int npol_cube  = vis.shape()[0];
   //               Int nchan_cube = vis.shape()[1];
                 
-  //               if(npol_cube != npol_p[spw] ||
+  //               if(npol_cube != ncorr_p[spw] ||
   //                  nchan_cube != inNumChan_p[spw]){
   //                 // Should not happen, but can.
   //                 os << LogIO::SEVERE
   //                    << "The data in the current chunk does not have the expected shape!\n"
   //                    << "spw: " << spw << "\n"
   //                    << "vis.shape(): " << vis.shape() << "\n"
-  //                    << "npol_p[spw]: " << npol_p[spw] << "\n"
+  //                    << "ncorr_p[spw]: " << ncorr_p[spw] << "\n"
   //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
   //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
   //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
@@ -5801,7 +5905,7 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
   //                    << "chanStep is too wide for the current chunk!\n"
   //                    << "spw: " << spw << "\n"
   //                    << "vis.shape(): " << vis.shape() << "\n"
-  //                    << "npol_p[spw]: " << npol_p[spw] << "\n"
+  //                    << "ncorr_p[spw]: " << ncorr_p[spw] << "\n"
   //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
   //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
   //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
@@ -5958,8 +6062,14 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 
 Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
 {
+  LogIO os(LogOrigin("SubMS", "doChannelMods()"));
   Int nrow = mssel_p.nrow();
 
+  ROArrayColumn<Float> rowWt;
+  rowWt.reference(mscIn_p->weight());
+  ROArrayColumn<Float> sigma;
+  sigma.reference(mscIn_p->sigma());
+  
   const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
                           mscIn_p->weightSpectrum().isDefined(0);
   ROArrayColumn<Float> wgtSpec;
@@ -5970,57 +6080,22 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   const Bool writeToDataCol = mustConvertToData(ntok, datacols);
   
   for(uInt colind = 0; colind < ntok; colind++){
-    if(datacols[colind] == MS::FLOAT_DATA){
+    if(ntok > 1)
+      os << LogIO::NORMAL // PROGRESS
+	 << "Writing filtered " << MS::columnName(datacols[colind])
+	 << " channels."
+	 << LogIO::POST;
+    
+    if(datacols[colind] == MS::FLOAT_DATA)
       filterChans<Float>(mscIn_p->floatData(), msc_p->floatData(),
-			 doSpWeight, wgtSpec, nrow);
-    }
+			 doSpWeight, wgtSpec, nrow, doImgWts_p && !colind,
+			 !colind, rowWt, sigma);
     else
       filterChans<Complex>(right_column(mscIn_p, datacols[colind]),
 			   right_column(msc_p, datacols[colind], writeToDataCol),
-			   doSpWeight, wgtSpec, nrow);
+			   doSpWeight, wgtSpec, nrow, doImgWts_p && !colind,
+			   !colind, rowWt, sigma);
   }
-  
-  //-----------------------------------------------------------------------------
-  // Write the IMAGING_WEIGHTs column as well if required.
-  if(doImgWts_p){
-    //      ROArrayColumn<Bool> rowFlag(mscIn_p->rowFlags());
-    ROArrayColumn<Float> inImgWts(mscIn_p->imagingWeight());
-
-    Float outImgWtsAccum = 0;
-    Vector<Float> inImgWtsSpectrum;
-    Matrix<Float> outImgWts(nchan_p[0], nrow);
-    Vector<Bool> rowFlag(mscIn_p->flagRow().getColumn());
-
-    for(Int row = 0; row < nrow; ++row){
-      inImgWts.get(row, inImgWtsSpectrum);
-
-      Int ck = 0;
-      Int chancounter = 0;
-      Int counter = 0;
-
-      Int chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
-      for (Int c = chanStart_p[0]; c < chanStop; c++){
-        if(chancounter == chanStep_p[0]){
-          chancounter = 0;
-          counter = 0;
-        }
-        chancounter++;
-        //	      Int offset= p + c*npol_p[0];
-        if(!rowFlag(row)){
-          outImgWtsAccum += inImgWtsSpectrum(c);
-          counter++;
-
-          if(chancounter == chanStep_p[0])
-            if(counter != 0)
-              outImgWts(ck, row) = outImgWtsAccum/counter;
-        }
-        if(chancounter == chanStep_p[0])
-          ck++;
-      }
-    }
-    msc_p->imagingWeight().putColumn(outImgWts);
-  }
-  //-----------------------------------------------------------------------------
   return True;
 }
 
@@ -6523,18 +6598,20 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
   //os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
   os << LogIO::DEBUG1 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
-  //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
+  //os << LogIO::NORMAL << "ncorr_p = " << ncorr_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
-  IPosition blc(2, 0, chanStart_p[0]);
-  IPosition trc(2, npol_p[0] - 1, nchan_p[0] + chanStart_p[0] - 1);
-  IPosition sliceShape(trc - blc + 1);
-  IPosition oldsliceShape = sliceShape + 1; // Ensure mismatch on 1st iteration.
+  //IPosition blc(2, 0, chanStart_p[0]);
+  //IPosition trc(2, ncorr_p[0] - 1, nchan_p[0] + chanStart_p[0] - 1);
+  //IPosition sliceShape(trc - blc + 1);
+  IPosition sliceShape;
+  IPosition oldsliceShape = IPosition(2, 0, 0); // Ensure mismatch on 1st iteration.
+  Slice chanSlice;
+  Slicer corrChanSlicer;
 
   // The real initialization is inside the loop - this just prevents a compiler warning.
   uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
   Array<Float> unflgWtSpec;
-  Vector<Float> unflgImgWts;
   Array<Complex> data_toikit;
   Array<Float> floatData_toikit;
   Vector<Float> unflaggedwt;
@@ -6544,6 +6621,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   // Guarantee oldDDID != ddID on 1st iteration.
   Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
   //Float oldMemUse = -1.0;
+
+  Double rowwtfac; // Adjusts row weight for channel selection.
 
   uInt n_tbns = bin_slots_p.nelements();
   ProgressMeter meter(0.0, n_tbns * 1.0, "split", "bins averaged", "", "",
@@ -6578,13 +6657,17 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           ddID = 0;
         }
       
-        // Note the lack of polStart_p[ddID] - this is not set up to select by
-        // polarization, or even correlation.
-        blc = IPosition(2, 0, chanStart_p[ddID]);
-        trc = IPosition(2, npol_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
+        //// Note the lack of polStart_p[ddID] - this is not set up to select by
+        //// polarization, or even correlation.
+        //blc = IPosition(2, 0, chanStart_p[ddID]);
+        //trc = IPosition(2, ncorr_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
+	chanSlice = Slice(chanStart_p[ddID], nchan_p[ddID],
+			  averageChannel_p ? 1 : chanStep_p[ddID]);
+	corrChanSlicer = Slicer(corrSlice_p[polID_p[ddID]], chanSlice);
         chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
 
-        sliceShape = trc - blc + 1;
+        //sliceShape = trc - blc + 1;
+	sliceShape = IPosition(2, ncorr_p[ddID], nchan_p[ddID]);
         if(sliceShape != oldsliceShape){
           os << LogIO::DEBUG1
              << "sliceShape = " << sliceShape << " (was: " << oldsliceShape << ")"
@@ -6592,9 +6675,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           oldsliceShape = sliceShape;
 
           // Refit the temp & output holders for this shape.
-          unflaggedwt.resize(npol_p[ddID]);
-	  outRowWeight.resize(npol_p[ddID]);
-	  outSigma.resize(npol_p[ddID]);
+          unflaggedwt.resize(ncorr_p[ddID]);
+	  outRowWeight.resize(ncorr_p[ddID]);
+	  outSigma.resize(ncorr_p[ddID]);
           outFlag.resize(sliceShape);
           data_toikit.resize(sliceShape);
           for(uInt datacol = 0; datacol < ntok; ++datacol)
@@ -6607,10 +6690,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             unflgWtSpec.resize(sliceShape);
             outSpWeight.resize(sliceShape);
           }
-          if(doImgWts_p){
-            unflgImgWts.resize(nchan_p[ddID]);
+          if(doImgWts_p)
             outImagingWeight.resize(nchan_p[ddID]);
-          }
+
+	  rowwtfac = static_cast<Double>(nchan_p[ddID]) / inNumChan_p[ddID];
         }
       }
 
@@ -6631,27 +6714,41 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       outUVW.column(orn).set(0.0);
       for(uivector::iterator toikit = slotv.begin();
           toikit != slotv.end(); ++toikit){
-        // chanModification_p==true means the input channels cannot simply
+        // keepShape_p == false means the input channels cannot simply
         // be copied through to the output channels.
         // It's a bit faster if no slicing is done...so avoid it if possible.
 
-        // Set flagged weights to 0 in the unflagged weights...
-        unflaggedwt = inRowWeight(*toikit);
-        for(Int polind = 0; polind < npol_p[ddID]; ++polind){
-          if(allTrue(flag(*toikit)(IPosition(2, polind, chanStart_p[ddID]),
-                                   IPosition(2, polind,
-                                             nchan_p[ddID] + chanStart_p[ddID] - 1))))
-            unflaggedwt[polind] = 0.0;
-        }
         if(doSpWeight){
-          if(chanModification_p){
-            unflgWtSpec = wgtSpec(*toikit)(blc, trc);
-            unflgWtSpec(flag(*toikit)(blc, trc)) = 0.0;
+          if(!keepShape_p){
+            unflgWtSpec = wgtSpec(*toikit)(corrChanSlicer);
+            unflgWtSpec(flag(*toikit)(corrChanSlicer)) = 0.0;
           }
           else{
             unflgWtSpec = wgtSpec(*toikit);
             unflgWtSpec(flag(*toikit)) = 0.0;
-          }            
+          }
+        }
+        // Set flagged weights to 0 in the unflagged weights...
+        for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
+	  Int inCorrInd = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd];
+	  IPosition startpos(2, inCorrInd, chanStart_p[ddID]);
+	  IPosition endpos(2, inCorrInd,
+			   nchan_p[ddID] + chanStart_p[ddID] - 1);
+	  
+	  if(doSpWeight){
+	    unflaggedwt[outCorrInd] = sum(unflgWtSpec(startpos, endpos));
+	  }
+	  else{
+	    if(allTrue(flag(*toikit)(startpos, endpos))){
+	      unflaggedwt[outCorrInd] = 0.0;
+	    }
+	    else{
+	      unflaggedwt[outCorrInd] = inRowWeight(*toikit)(IPosition(1,
+								   inCorrInd));
+	      if(!keepShape_p)
+		unflaggedwt[outCorrInd] *= rowwtfac;
+	    }
+	  }
         }
         
         // The input row may be completely flagged even if the row flag is
@@ -6672,10 +6769,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           
           totslotwt += totrowwt;
         
-          if(chanModification_p)
-            outFlag *= flag(*toikit)(blc, trc);
-          else
-            outFlag *= flag(*toikit);
+	  outFlag *= keepShape_p ? flag(*toikit) : flag(*toikit)(corrChanSlicer);
 
           if(doSpWeight){
             //    os << LogIO::DEBUG1
@@ -6696,15 +6790,15 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             //    << "\nwgtSpec(*toikit)(blc) = " << wgtSpec(*toikit)(blc)
             //    << "\nflag(*toikit)(blc) = " << flag(*toikit)(blc)
             //    << LogIO::POST;
-            if(chanModification_p){
+            if(!keepShape_p){
               for(uInt datacol = 0; datacol < ntok; ++datacol)
                 accumUnflgDataWS(data_toikit, unflgWtSpec,
-                                 data[datacol](*toikit)(blc, trc),
-                                 flag(*toikit)(blc, trc), outData[datacol]);
+                                 data[datacol](*toikit)(corrChanSlicer),
+                                 flag(*toikit)(corrChanSlicer), outData[datacol]);
               if(doFloat)
                 accumUnflgDataWS(floatData_toikit, unflgWtSpec,
-                                 floatData(*toikit)(blc, trc),
-                                 flag(*toikit)(blc, trc), outFloatData);
+                                 floatData(*toikit)(corrChanSlicer),
+                                 flag(*toikit)(corrChanSlicer), outFloatData);
             }
             else{
               for(uInt datacol = 0; datacol < ntok; ++datacol)
@@ -6718,15 +6812,15 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             }
           }
           else{
-            if(chanModification_p){
+            if(!keepShape_p){
               for(uInt datacol = 0; datacol < ntok; ++datacol)
                 accumUnflgData(data_toikit, unflaggedwt,
-                               data[datacol](*toikit)(blc, trc),
-                               flag(*toikit)(blc, trc), outData[datacol]);
+                               data[datacol](*toikit)(corrChanSlicer),
+                               flag(*toikit)(corrChanSlicer), outData[datacol]);
               if(doFloat)
                 accumUnflgData(floatData_toikit, unflaggedwt,
-                               floatData(*toikit)(blc, trc),
-                               flag(*toikit)(blc, trc), outFloatData);
+                               floatData(*toikit)(corrChanSlicer),
+                               flag(*toikit)(corrChanSlicer), outFloatData);
             }
             else{
               for(uInt datacol = 0; datacol < ntok; ++datacol)
@@ -6743,16 +6837,19 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             for(Int c = 0; c < nchan_p[ddID]; ++c){
               Bool unflagged = false;
                   
-              for(Int polind = 0; polind < npol_p[ddID]; ++polind){
+	      // Here we are looking at flag again.  Can't unflagged be set
+	      // earlier?
+              for(Int polind = 0; polind < ncorr_p[ddID]; ++polind){
                 if(!flag(*toikit)(IPosition(2, polind, chanStart_p[ddID] + c))){
                   unflagged = true;
                   break;
                 }
               }
-              unflgImgWts[c] = unflagged ? inImagingWeight(*toikit)(IPosition(1, chanStart_p[ddID] + c)) : 0.0;
+	      if(unflagged)
+		outImagingWeight[c] += totrowwt *
+		  inImagingWeight(*toikit)(IPosition(1, chanStart_p[ddID] + c));
             }
           }
-
 
           Double wv = 0.0;
           Array<Complex>::const_iterator dataEnd = data_toikit.end();
@@ -6768,12 +6865,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           // totrowwt > 0.0 implies totslotwt > 0.0
           outTC[orn] += totrowwt * (inTC(*toikit) - outTC[orn]) / totslotwt;
           outExposure[orn] += totrowwt * inExposure(*toikit);
-        
-          if(doImgWts_p){
-            for(Int c = 0; c < nchan_p[ddID]; ++c)
-              outImagingWeight[c] += totrowwt * unflgImgWts[c];
-          }
-        }
+	}
       } // End of loop through the slot's rows.
 
       // If there were no weights > 0, plop in reasonable values just for
@@ -6792,7 +6884,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         outRowFlag[orn] = true;
       }
 
-      slotv.clear();  // Free some memory.
+      slotv.clear();  // Free some memory.  Does it save time?  Test!
       if(doSpWeight){
         Matrix<Float>::const_iterator oSpWtIter;
         const Matrix<Float>::const_iterator oSpWtEnd(outSpWeight.end());
@@ -6807,7 +6899,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           }
         }
         if(doImgWts_p){
-          uInt npol = npol_p[ddID];          
+          uInt npol = ncorr_p[ddID];          
           uInt nchan = chanStop - chanStart_p[ddID];
 
           for(uInt c = 0; c < nchan; ++c){
@@ -6820,20 +6912,20 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         }        
       }
       else{
-        uInt npol  = npol_p[ddID];
+        uInt ncorr  = ncorr_p[ddID];
         uInt nchan = chanStop - chanStart_p[ddID];
         
-        for(uInt polind = 0; polind < npol; ++polind){
-          Float rowwtpol = outRowWeight[polind];
+        for(uInt corrind = 0; corrind < ncorr; ++corrind){
+          Float rowwtcorr = outRowWeight[corrind];
           for(uInt datacol = 0; datacol < ntok; ++datacol){
 
-            if(rowwtpol != 0.0){
+            if(rowwtcorr != 0.0){
               for(uInt c = 0; c < nchan; ++c)
-                outData[datacol](polind, c) /= rowwtpol;
+                outData[datacol](corrind, c) /= rowwtcorr;
             }
             else{
               for(uInt c = 0; c < nchan; ++c)
-                outData[datacol](polind, c) = 0.0;
+                outData[datacol](corrind, c) = 0.0;
             }
           }
         }
@@ -6844,14 +6936,14 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         }
       }
 
-      // npol_p is Int, therefore polind is too.
-      for(Int polind = 0; polind < npol_p[ddID]; ++polind){
-        Float orw = outRowWeight[polind];
+      // ncorr_p is Int, therefore corrInd is too.
+      for(Int corrInd = 0; corrInd < ncorr_p[ddID]; ++corrInd){
+        Float orw = outRowWeight[corrInd];
         
         if(orw > 0.0)
-          outSigma[polind] = sqrt(1.0 / orw);
+          outSigma[corrInd] = sqrt(1.0 / orw);
         else
-          outSigma[polind] = -1.0; // Seems safer than 0.0.
+          outSigma[corrInd] = -1.0; // Seems safer than 0.0.
       }
 
       // Fill in the nonaveraging values from slotv0.
@@ -6967,9 +7059,9 @@ void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
 }
 
 
-inline Bool SubMS::checkSpwShape()
+inline Bool SubMS::areDataShapesConstant()
 {
-  return allSame(inNumChan_p) && allSame(nchan_p);
+  return allSame(inNumChan_p) && allSame(nchan_p) && allSame(inNumCorr_p) && allSame(ncorr_p);
 }
 
   Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames)

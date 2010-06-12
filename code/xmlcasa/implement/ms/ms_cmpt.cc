@@ -1646,14 +1646,14 @@ ms::timesort(const std::string& msname)
 }
 
 bool
-ms::split(const std::string&      outputms,  const ::casac::variant& field, 
-	  const ::casac::variant& spw,       const std::vector<int>& step,
-          const ::casac::variant& antenna,   const ::casac::variant& timebin,
-          const std::string&      timerange, const ::casac::variant& scan,
-          const ::casac::variant& uvrange,   const std::string&      taql,
-          const std::string&      whichcol,  const ::casac::variant& tileShape,
-          const ::casac::variant& subarray,  const bool averchan,
-          const std::string&      ignorables)
+ms::split(const std::string&      outputms,   const ::casac::variant& field, 
+	  const ::casac::variant& spw,        const std::vector<int>& step,
+          const ::casac::variant& antenna,    const ::casac::variant& timebin,
+          const std::string&      timerange,  const ::casac::variant& scan,
+          const ::casac::variant& uvrange,    const std::string&      taql,
+          const std::string&      whichcol,   const ::casac::variant& tileShape,
+          const ::casac::variant& subarray,   const bool averchan,
+          const std::string&      ignorables, const std::string& correlation)
 {
   Bool rstat(False);
   try {
@@ -1678,10 +1678,13 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
      String t_uvrange = toCasaString(uvrange);
      String t_taql(taql);
      const String t_subarray = toCasaString(subarray);
+     String t_correlation = upcase(correlation);
+     //if(t_correlation == "")
+     //  t_correlation = "*";   // * doesn't work.
      
      if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
                                t_taql, Vector<Int>(step), averchan,
-                               t_subarray)){
+                               t_subarray, t_correlation)){
        *itsLog << LogIO::SEVERE
                << "Error selecting data."
                << LogIO::POST;

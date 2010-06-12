@@ -35,7 +35,6 @@ casa_add_library( atnf
   implement/PKSIO/NROOTFDataset.cc
   implement/PKSIO/NROReader.cc
   implement/PKSIO/PKSFITSreader.cc
-  implement/PKSIO/PKSMBrecord.cc
   implement/PKSIO/PKSMS2reader.cc
   implement/PKSIO/PKSMS2writer.cc
   implement/PKSIO/PKSreader.cc

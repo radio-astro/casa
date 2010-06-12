@@ -246,7 +246,7 @@
            a_temp=$a_root/$a_arch\_*/bin
            a_temp=`{echo $a_temp(1) | awk -F/ '{ print $(NF-1) }'}
            a_ext=`{echo $a_temp | sed -e 's/.*_//'}
-           if (test $aips_ext '=' '64b' -a `{uname -p} '!=' 'x86_64') { a_arch='*' }
+           if (test $aips_ext '=' '64b' -a `{uname -m} '!=' 'x86_64') { a_arch='*' }
            if (!~ $a_ext '*') { a_arch=$a_arch\_$a_ext }
         }
      }

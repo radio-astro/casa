@@ -2856,20 +2856,19 @@ list in the second argument</description>
     components 10 \&amp; 13 from the othercl list.
   </comments>
 
- 
-   <method type="function" name="print">
+   <method type="function" name="summarize">
    <shortdescription>Summarize the specified component to the logger</shortdescription>
    
-  <keyword>print</keyword>
+  <keyword>summarize</keyword>
 
   <description>
-     The print function summarizes the contents of the specified components to the logger.
+     The summarize function summarizes the contents of the specified components to the logger.
   </description>
   <input>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     Unset or an integer between 0 and one less than the list length, inclusively</description>
+     Unset or an integer between 0 and one less than the list length, inclusive</description>
      <value>-1</value>
      </param>
   </input>
@@ -2877,9 +2876,6 @@ list in the second argument</description>
 </method>
 
 
-
-
- 
    <method name="iscomponentlist" type="function">
    <shortdescription>Is the argument a componentlist tool?</shortdescription>
    
