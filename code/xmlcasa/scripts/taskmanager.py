@@ -38,30 +38,30 @@ class taskmanager(object):
               'mec': None, 'tasks initialized': [], 'task path': [], 'initialized': False,
               'log root': None, 'execute count': 0, 'result map': { }, 'pipe minder': None }
 
-    def retrieve(self, reciept):
+    def retrieve(self, receipt):
         try:
-            if isinstance( self.__hub['result map'][reciept]['result'], PendingResult ):
-                result = self.__hub['result map'][reciept]['result'].get_result(block=False)
+            if isinstance( self.__hub['result map'][receipt]['result'], PendingResult ):
+                result = self.__hub['result map'][receipt]['result'].get_result(block=False)
                 if result is not None:
-                    target = self.__hub['result map'][reciept]['engine']['index']
-                    result_name = "result_%04d" % reciept
-                    self.__hub['result map'][reciept]['result'] = { 'result': self.__hub['mec'].pull( result_name, targets=[target] )[0] }
-                    self.__hub['result map'][reciept]['result output'] = result[0]
-                    if self.__hub['result map'][reciept]['result output'].has_key('stdout') :
-                        engine = self.__hub['result map'][reciept]['engine']
-                        log_message({'out': 'stdout', 'engine': engine}, 1, self.__hub['result map'][reciept]['result output']['stdout'].splitlines() )
-                    if self.__hub['result map'][reciept]['result output'].has_key('stderr') :
-                        log_message({'out': 'stderr', 'engine': engine}, 2, self.__hub['result map'][reciept]['result output']['stderr'].splitlines() )
-                    return self.__hub['result map'][reciept]['result']
+                    target = self.__hub['result map'][receipt]['engine']['index']
+                    result_name = "result_%04d" % receipt
+                    self.__hub['result map'][receipt]['result'] = { 'result': self.__hub['mec'].pull( result_name, targets=[target] )[0] }
+                    self.__hub['result map'][receipt]['result output'] = result[0]
+                    if self.__hub['result map'][receipt]['result output'].has_key('stdout') :
+                        engine = self.__hub['result map'][receipt]['engine']
+                        log_message({'out': 'stdout', 'engine': engine}, 1, self.__hub['result map'][receipt]['result output']['stdout'].splitlines() )
+                    if self.__hub['result map'][receipt]['result output'].has_key('stderr') :
+                        log_message({'out': 'stderr', 'engine': engine}, 2, self.__hub['result map'][receipt]['result output']['stderr'].splitlines() )
+                    return self.__hub['result map'][receipt]['result']
                 else:
                     return { 'result': 'pending' }
         except:
             pass
 
-        if self.__hub['result map'].has_key(reciept):
-            return self.__hub['result map'][reciept]['result']
+        if self.__hub['result map'].has_key(receipt):
+            return self.__hub['result map'][receipt]['result']
         else:
-            raise Exception, "invalid reciept: " + str(reciept)
+            raise Exception, "invalid receipt: " + str(receipt)
 
     def execute(self, taskname, *args, **kwargs):
 
