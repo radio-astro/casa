@@ -105,7 +105,7 @@ macro( casa_add_tasks module _target )
 
   install( 
     FILES ${_xmls}
-    DESTINATION ../share/xml
+    DESTINATION ${casaroot}/share/xml
     )
 
   install( 
