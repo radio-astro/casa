@@ -39,6 +39,7 @@ add_custom_target(
   COMMAND echo "python_library_directory = \\\"${PYTHON_LIBD}\\\"" >> casadef.py
   COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
   COMMAND cat definitions >> casadef.py
+  DEPENDS definitions
   )
 
 add_dependencies( xmlcasa_python_casadef xmlcasa_update_definitions )
