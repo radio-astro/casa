@@ -28,10 +28,12 @@ def browsetable(tablename=None, mightedit=None,
     #Python script
     try:
         casalog.origin('browsetable')
-        if type(tablename) == str and os.path.exists(tablename):
+        if type(tablename) == str:
             t = tbtool.create()
-            t.open(tablename, nomodify=not mightedit)
-            if mightedit or not (sortlist or taql or skipcols):
+            mightfilter = sortlist or taql or skipcols
+            if os.path.exists(tablename):
+                t.open(tablename, nomodify=not mightedit)
+            if not tablename or mightedit or not mightfilter:
                 t.browse()
             else:
                 colnames = t.colnames()
@@ -59,7 +61,7 @@ def browsetable(tablename=None, mightedit=None,
                 ft.browse()
                 ft.close()
                 #shutil.rmtree(ftname)  # Can't do until browser exits.
-            t.close()
+            t.close()  # Can be closed even if not open.
         else:
             raise Exception, 'Table ' + str(tablename) + ' not found - please check the name'
     except Exception, instance:

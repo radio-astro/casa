@@ -10,11 +10,11 @@
   <description>
   </description>
   <input>
-    <param type="string" name="tablename" kind="table" mustexist="true">
+    <param type="string" name="tablename" kind="table">
       <description>Name of input table</description>
       <value></value>
     </param>
-    <param type="bool" name="mightedit">
+    <param type="bool" name="mightedit" subparam="true">
       <description>Warning: the GUI seems to ignore whether the table tool is opened read-only - just be careful, esp. if filtering.</description>
       <value>False</value>
     </param>
@@ -33,12 +33,13 @@
       <value type="string"></value>
     </param>
     <constraints>
-      <when param="mightedit">
-	<equals type="bool" value="False">
+      <when param="tablename">
+	<notequals type="string" value="">
+          <default param="mightedit"><value type="bool">False</value></default>
 	  <default param="sortlist"><value type="string"></value></default>
 	  <default param="taql"><value type="string"></value></default>
 	  <default param="skipcols"><value type="string"></value></default>
-	</equals>
+	</notequals>
       </when>
     </constraints>
   </input>
