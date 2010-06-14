@@ -90,16 +90,14 @@ if homedir == None :
    print "Environment variable HOME is not set, please set it"
    exit(1)
 
-import casadef
-
 casa = { 'build': {
-             'time': casadef.build_time,
-             'version': casadef.casa_version,
-             'number': casadef.subversion_revision
+             'time': '/CASASUBST/build_time',
+             'version': '/CASASUBST/casa_version',
+             'number': '/CASASUBST/casa_build'
          },
          'source': {
-             'url': casadef.subversion_url,
-             'revision': casadef.subversion_revision
+             'url': '/CASASUBST/subversion_url',
+             'revision': '/CASASUBST/subversion_revision'
          },
          'helpers': {
              'logger': 'casalogger',
@@ -971,7 +969,7 @@ if ipython:
 #pathname=os.environ.get('CASAPATH').split()[0]
 #uname=os.uname()
 #unameminusa=str.lower(uname[0])
-fullpath = casadef.python_library_directory + 'assignmentFilter.py'
+fullpath='/CASASUBST/python_library_directory//assignmentFilter.py'
 casalog.origin('casa')
 
 #
@@ -989,7 +987,10 @@ class casaDocHelper(pydoc.Helper):
 
 pydoc.help = casaDocHelper(sys.stdin, sys.stdout)
 
-fullpath=casadef.python_library_directory + '/assignmentFilter.py'
+##
+## /CASASUBST/python_library_directory/  is substituted at build time
+##
+fullpath='/CASASUBST/python_library_directory/' + '/assignmentFilter.py'
 
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
