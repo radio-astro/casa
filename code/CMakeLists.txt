@@ -51,6 +51,10 @@ casa_always_install()
 # Build options
 #
 
+if( NOT USE_LIBCASACORE )
+  set( USE_LIBCASACORE False )
+endif()
+
 # Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE RelWithDebInfo )
@@ -400,7 +404,7 @@ endif()
 
 if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
     EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so OR
-    EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so )
+    EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so OR USE_LIBCASACORE )
   set( casacore_libs casacore )
   ##
   ## by default the GNUmakefile for casacore installs include
@@ -430,7 +434,7 @@ casa_find( CASACORE
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
            INCLUDES_SUFFIXES casacore
            LIBS ${casacore_libs}
-           PREFIX_HINTS ${casacore_prefix}
+           PREFIX_HINTS ${casacore_prefix} /usr
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB DL )
