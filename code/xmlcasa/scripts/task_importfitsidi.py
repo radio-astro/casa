@@ -19,14 +19,13 @@ def importfitsidi(fitsidifile,vis):
 		ms.fromfitsidi(vis,fitsidifile)
 		ms.close()
 	        # write history
-                if ((type(vis)==str) & (os.path.exists(vis))):
-                        ms.open(vis,nomodify=False)
+		if ((type(vis)==str) & (os.path.exists(vis)) & ms.open(vis,nomodify=False)):
+			ms.writehistory(message='taskname     = importfitsidi',origin='importfitsidi')
+			ms.writehistory(message='fitsidifile  = "'+str(fitsidifile)+'"',origin='importfitsidi')
+			ms.writehistory(message='vis          = "'+str(vis)+'"',origin='importfitsidi')
+			ms.close()
                 else:
-                        raise Exception, 'Output visibility file not created; cannot write to its history table.'
-        	ms.writehistory(message='taskname     = importfitsidi',origin='importfitsidi')
-        	ms.writehistory(message='fitsidifile  = "'+str(fitsidifile)+'"',origin='importfitsidi')
-        	ms.writehistory(message='vis          = "'+str(vis)+'"',origin='importfitsidi')
-        	ms.close()
+                        raise Exception, 'Cannot write to history table of output MS.'
 
 	except Exception, instance: 
 		print '*** Error ***',instance
