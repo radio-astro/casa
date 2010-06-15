@@ -121,7 +121,7 @@ public:
   // The only constructor is from a FitsInput.
   //
 
-  FITSIDItoMS1(FitsInput& in, const Int& obsType=0);
+  FITSIDItoMS1(FitsInput& in, const Int& obsType=0, const Bool& initFirstMain=True);
 
   ~FITSIDItoMS1();
   
@@ -133,12 +133,6 @@ public:
   
   Table oldfullTable(const String& tabName);
   
-  //
-  // Get the full table, using the supplied arguments to construct
-  // the table.  The table will contain all data from the current
-  // row to the end of the BinarTableExtension.
-  //
-  Table fillMainTable(const String& tabName);
   
   // Fill the Observation and ObsLog tables
   void fillObsTables();
@@ -274,7 +268,6 @@ protected:
   MeasurementSet ms_p;
   MSColumns* msc_p;
   static Bool firstMain;
-  
 
   //
   //# Member Functions
