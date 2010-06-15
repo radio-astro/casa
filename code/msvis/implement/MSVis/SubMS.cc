@@ -5628,11 +5628,13 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 
       uInt outrn = 0; 		   	   		// row number in output.
       uInt nInputRows = inSId.nrow();
+      Int maxSId = sourceRelabel_p.nelements();  // inSidVal is Int.
       for(uInt inrn = 0; inrn < nInputRows; ++inrn){
 	Int inSidVal = inSId(inrn);
 	Int inSPWVal = inSPW(inrn);  // -1 means the source is valid for any SPW.
 	
-	if(inSidVal > -1 && sourceRelabel_p[inSidVal] > -1
+	if(inSidVal > -1 && inSidVal < maxSId &&
+           sourceRelabel_p[inSidVal] > -1
            && (inSPWVal == -1 || spwRelabel_p[inSPWVal] > -1)){
 	  // Copy inrn to outrn.
 	  TableCopy::copyRows(newSource, oldSource, outrn, inrn, 1);
