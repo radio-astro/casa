@@ -289,10 +289,11 @@ void TSMCubeMMap::accessSection (const IPosition& start, const IPosition& end,
       expandedSectionShape.offsetIncrement (dataLength);
 
     // Calculate the largest number of pixels, nSec
-    // that are consequtive in section
+    // that are consequtive in data and in section
     uInt nSec = dataLength(0);
     uInt secDim = 1;
     while (secDim < nrdim_p &&
+           dataLength(secDim-1) == tileShape_p(secDim-1) &&
            dataLength(secDim-1) == sectionShape(secDim-1)) {
 
         nSec *= dataLength(secDim);
