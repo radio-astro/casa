@@ -75,7 +75,9 @@ public:
   virtual uInt estimateMemoryUse () { return RFAFlagCubeBase::estimateMemoryUse()+2; }
   virtual Bool newChunk ( Int &maxmem );
   virtual IterMode iterTime ( uInt it );
+  virtual void endRows(uInt itime);
   virtual IterMode iterRow  ( uInt ir );
+  virtual void iterFlag(uInt itime);
   virtual void startData(bool verbose);
 
   virtual String getDesc ();

@@ -1549,7 +1549,6 @@ namespace casa {
 
     //printflagselections();
     
-#if 1  
     if ( !nant )
       os<<"No Measurement Set has been attached\n"<<LogIO::EXCEPTION;
     
@@ -1848,7 +1847,12 @@ namespace casa {
 			      }
 			  }
 		    }
-		  
+                    
+                    for( uInt ival = 0; ival<acc.nelements(); ival++ ) {
+                        if ( active(ival) ) {
+                            acc[ival]->endRows(itime);
+                        }
+                    }
 		  } /* for vi... */
 
 		  // end pass for all agents
@@ -2025,7 +2029,7 @@ namespace casa {
       }
 
     }
-    catch( AipsError x )
+    catch( int x ) //(AipsError x)
       {
 	// clean up agents
 	for( uInt i=0; i<acc.nelements(); i++ )
@@ -2040,25 +2044,23 @@ namespace casa {
 	// clean up PGPlotters
 	//cleanupPlotters();
 	// throw the exception on
-	throw x;
+	throw;
       }
-    catch(std::exception e) 
-      {
-	for( uInt i=0; i<acc.nelements(); i++ ) {
-          if ( acc[i] ) {
-            delete acc[i];
-            acc[i] = NULL;
-          }
-        }
-	acc.resize(0);
-
-        throw AipsError(e.what());
-      }
+    //    catch(int e) //(std::exception e) 
+    //      {
+    //	for( uInt i=0; i<acc.nelements(); i++ ) {
+    //          if ( acc[i] ) {
+    //            delete acc[i];
+    //            acc[i] = NULL;
+    //          }
+    //        }
+    //	acc.resize(0);
+    //
+    //        throw AipsError(e.what());
+    //      }
     //cleanupPlotters();
     ms.flush();
     //os<<"Flagging complete\n"<<LogIO::POST;
-    
-#endif
     
     /* Clear the current flag selections */
     clearflagselections(0);

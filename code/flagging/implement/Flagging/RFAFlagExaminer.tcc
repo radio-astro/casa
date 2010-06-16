@@ -226,6 +226,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+  //also need to call RFFlagCube::setMSFlags, which
+  // updates some statistics   void RFAFlagExaminer::endRows(uInt it)
+
   // it: time index
   void RFAFlagExaminer::iterFlag(uInt it)
   {

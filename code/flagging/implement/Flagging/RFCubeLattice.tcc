@@ -298,7 +298,7 @@ template<class T> void RFCubeLattice<T>::cleanup ()
   lat_shape.resize(0);
 }
 
-template<class T> void RFCubeLattice<T>::reset ( Bool r,Bool w )
+template<class T> void RFCubeLattice<T>::reset ()
 {
   iter.reset();
 }
