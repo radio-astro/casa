@@ -341,7 +341,6 @@ void ROVisibilityIterator::advance()
   }
   if (more_p) {
     setSelTable();
-    attachColumns(attachTable());
     getTopoFreqs();
     // invalidate any attached VisBuffer
     if (!vbStack_p.empty()) ((VisBuffer*)vbStack_p.top())->invalidate();
@@ -1980,7 +1979,7 @@ VisibilityIterator & VisibilityIterator::operator++()
 void VisibilityIterator::attachColumns(const Table &t)
 {
   ROVisibilityIterator::attachColumns(t);
-  //todo: should cache this (update once per ms)
+
   const ColumnDescSet& cds=t.tableDesc().columnDescSet();
   if (cds.isDefined(MS::columnName(MS::DATA))) {
     RWcolVis.attach(t, MS::columnName(MS::DATA));
