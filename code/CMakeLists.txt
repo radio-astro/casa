@@ -1,6 +1,7 @@
 #
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+# Copyright (C) 2010 Associated Universities, Inc. Washington DC, USA.
 #
 # This file is part of CASA.
 #
@@ -84,6 +85,10 @@ set( DEFAULT_CXX_FLAGS
      "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
      )
 
+set( DEFAULT_C_FLAGS 
+     "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
+     )
+
 
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
@@ -137,6 +142,10 @@ set( CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} )
 
 if( NOT CMAKE_CXX_FLAGS )
   set( CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${EXTRA_CXX_FLAGS}" )
+endif()
+
+if( NOT CMAKE_C_FLAGS )
+  set( CMAKE_C_FLAGS "${DEFAULT_C_FLAGS} ${EXTRA_C_FLAGS}" )
 endif()
 
 
@@ -837,7 +846,7 @@ set( PYTHON_TASKD ${PYTHON_LIBD} )
 
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
-casa_add_module( graphics CASACORE PGPLOT X11 )
+casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
 casa_add_module( casadbus CASACORE DBUS )
 casa_add_module( tableplot CASACORE PYTHON )
 casa_add_module( msvis CASACORE graphics )
