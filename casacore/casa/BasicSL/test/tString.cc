@@ -418,6 +418,13 @@ void trim() {
     assert(myString.empty());
 }
 
+void startsWith() {
+	String myString = "Gozer the Destroyer";
+	assert(myString.startsWith("G"));
+	assert(myString.startsWith("Gozer t"));
+	assert(! myString.startsWith("oz"));
+}
+
 /* void hashtest()
 {
   String *xp, a, x[] = {
@@ -461,6 +468,7 @@ int main() {
   toFloat();
   toInt();
   trim();
+  startsWith();
   cout << "\nEnd of test\n";
   return(0);
 }
