@@ -827,30 +827,62 @@ void FITSIDItoMS1::describeColumns()
 
     //
     // Get shape vector from MAXISn fields for UV_DATA extensions
+    // and determine if there are WEIGHTS in the UV data
     //
     String extname(FITSIDItoMS1::extname());
     extname = extname.before(trailing);
 
     Vector<Int> maxis(0);
-    if(extname=="UV_DATA") 
-      {
-        const FitsKeyword* kw;
+    if(extname=="UV_DATA"){
+	const FitsKeyword* kw;
         String kwname;
         kwl.first();
         uInt ctr=0;
 
-        while((kw = kwl.next())) 
-	  {
+	weightKwPresent_p = False;
+
+        while((kw = kwl.next())){
 	    kwname = kw->name();
-	    if(kwname.at(0,5)=="MAXIS")
-	      { 
+	    if(kwname.at(0,5)=="MAXIS"){ 
 		maxis.resize(++ctr,True);
 		maxis(ctr-1)=kw->asInt();
 //		cout << "**maxis=" << maxis << endl;
-	      }
-	  }
-      }
+	    }
+	    else if(kwname.at(0,6)=="WEIGHT"){
+	        weightKwPresent_p = True;
+		*itsLog << LogIO::WARN << "WEIGHT keyword in UV_DATA table presently not supported."
+			<< LogIO::POST;
+	    }
+	}
 
+	if(maxis.nelements()>1){
+	    if(maxis(1)==2){
+		uv_data_hasWeights_p = False;
+		if(!weightKwPresent_p){
+		    *itsLog << LogIO::WARN << "MAXIS1 keyword == 2 in UV_DATA table AND WEIGHT keyword not present."
+			    << endl << ". Will try to continue ..." << LogIO::POST;
+		}
+	    }
+	    else if(maxis(1)==3){
+		uv_data_hasWeights_p = True;
+		if(weightKwPresent_p){
+		    *itsLog << LogIO::WARN << "MAXIS1 keyword == 3 in UV_DATA table AND WEIGHT keyword present."
+			    << endl << ". Will try to continue by ignoring WEIGHT keyword ..." << LogIO::POST;
+		    weightKwPresent_p = False;
+		}
+	    }
+	    else{
+		uv_data_hasWeights_p = False;
+		*itsLog << LogIO::WARN << "Invalid value for MAXIS1 keyword in UV_DATA table "
+			<< maxis(1) << " should be 2 or 3. Will try to continue ..." << LogIO::POST;
+	    }
+	}
+	else{
+	    uv_data_hasWeights_p = False;
+	    *itsLog << LogIO::WARN << "Could not find MAXIS1 keyword in UV_DATA table. FITS IDI file probably invalid."
+		    << LogIO::POST;
+	}
+    }
 
     for (Int icol=0; icol<nfield; icol++) {
 	itsNelem(icol) = field(icol).nelements();
@@ -865,8 +897,9 @@ void FITSIDItoMS1::describeColumns()
 
 	//cout << "colname=" << colname << endl;
 
-	if(extname=="UV_DATA" && colname=="FLUX")
+	if(extname=="UV_DATA" && colname=="FLUX"){
 	  colname="DATA";
+	}
 
 	//
 	// Check if the name exists.
@@ -1881,8 +1914,9 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     //cout << "*****NEW_BASELINE ADDR=" << new_baseline << endl;
         
 
-    Float visReal;
-    Float visImag;
+    Float visReal = 0.;
+    Float visImag = 0.;
+    Float visWeight = 0.;
 
     //***temporal fix  
     Int nIF_p = 0;
@@ -1902,31 +1936,40 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       putrow++;
  
       for (Int chan=0; chan<nChan; chan++) {
- 	for (Int pol=0; pol<nCorr; pol++) {
+	for (Int pol=0; pol<nCorr; pol++) {
            
           memcpy(&visReal, (static_cast<Float *>(data_addr[iFlux])) + count++, sizeof(Float));
-          //cout << "COUNT=" << count <<"ifno="<< ifno <<"chan="<< chan<<"pol="<< pol  << endl;
+//          if(count<9){
+//	    cout << "COUNT=" << count <<"ifno="<< ifno <<"chan="<< chan<<"pol="<< pol  << " corrindex " << corrIndex_p[pol] << endl;
+//	  }
 	  //visReal *= tscal(iFlux);
 	  //visReal += tzero(iFlux); 
 
 	  memcpy(&visImag, (static_cast<Float *>(data_addr[iFlux])) + count++, sizeof(Float));     
 	  //visImag *= tscal(iFlux);
 	  //visImag += tzero(iFlux); 
-          //cout<<"visReal="<< visReal << "visImag="<< visImag<<endl;
+//	  if(count<10){
+//	    cout<<"    visReal="<< visReal << "visImag="<< visImag<<endl;
+//	  }
+
+	  if(uv_data_hasWeights_p){
+	      memcpy(&visWeight, (static_cast<Float *>(data_addr[iFlux])) + count++, sizeof(Float));     
+	  }
 
 	  //const Float wt = priGroup_p(count++); 
 
 	  const Int p = corrIndex_p[pol];
-/*
- 	  if (wt < 0.0) {
-	    weightSpec(p, chan) = -wt;
+
+ 	  if (visWeight < 0.0) {
+	    weightSpec(p, chan) = -visWeight;
 	    flag(p, chan) = True;
 	  } else {                            
-	    weightSpec(p, chan) = wt;
+	    weightSpec(p, chan) = visWeight;
 	    flag(p, chan) = False;
 	  }
-*/
+
 	  vis(p, chan) = Complex(visReal, visImag);
+
  	}
       }
 

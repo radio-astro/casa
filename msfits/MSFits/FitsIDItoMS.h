@@ -268,6 +268,9 @@ protected:
   MeasurementSet ms_p;
   MSColumns* msc_p;
   static Bool firstMain;
+  Bool uv_data_hasWeights_p;
+  Bool weightKwPresent_p;
+  Matrix<Float> weightsFromKW_p;
 
   //
   //# Member Functions
