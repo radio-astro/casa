@@ -1662,6 +1662,18 @@ bool table::clearlocks()
 	return rstat;
 }
 
+bool table::listlocks()
+{
+	Bool rstat(True);
+
+	Vector<String> lockedTables = Table::getLockedTables();
+	cout << "Locked tables: " << endl;
+	for (uInt i=0;i<lockedTables.nelements();++i)
+	  cout << "   " << lockedTables(i) << endl;
+	cout << "--" << endl;
+	return rstat;
+}
+
 bool
 table::ok()
 {

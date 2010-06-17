@@ -190,6 +190,8 @@ class table
 
     bool clearlocks();
 
+    bool listlocks();
+
     ::casac::record* statistics(const std::string& column, const std::string& complex_value, const bool useflags = true);
 
     private:
