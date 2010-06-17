@@ -187,9 +187,11 @@ namespace casa {
 
       // SubMS uses a different meaning for nchan_p from MSSelection.  For
       // SubMS it is the # of output channels for each output spw.  For
-      // MSSelection it is end input chan - start input chan + 1 for each
-      // output spw.
+      // MSSelection it is end input chan for each output spw.
       for(uInt k = 0; k < nchan_p.nelements(); ++k){
+	if(chanStep_p[k] == 0)	// CAS-2224, triggered by spw='0:2'
+	  chanStep_p[k] = 1;	// (as opposed to '0:2~2').
+	
         nchan_p[k] = (nchan_p[k] - chanStart_p[k] + 1) / chanStep_p[k];
         if(nchan_p[k] < 1)
           nchan_p[k] = 1;
