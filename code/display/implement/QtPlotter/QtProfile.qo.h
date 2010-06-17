@@ -102,8 +102,9 @@ public slots:
     //virtual void crosshairReady(const String& evtype);
     virtual void closeEvent ( QCloseEvent * event ); 
     void resetProfile(ImageInterface<Float>* img, const char *name = 0);
-    void wcChanged(const String,
-                     const Vector<Double>, const Vector<Double>);
+    void wcChanged( const String,
+		    const Vector<Double>, const Vector<Double>,
+		    const Vector<Double>, const Vector<Double> );
     void changeAxis(String, String, String);
 
     void overplot(QHash<QString, ImageInterface<float>*>);
@@ -138,6 +139,8 @@ private:
     QComboBox *frameButton_p;
     
     ImageAnalysis* analysis;
+    ImageInterface<Float>* image;
+
     QHash<QString, ImageAnalysis*> *over;
     String coordinate;
     String coordinateType;
@@ -151,7 +154,8 @@ private:
     QString ypos;
     int cube;
 
-    Vector<Double> lastX, lastY;
+    Vector<Double> lastPX, lastPY;
+    Vector<Double> lastWX, lastWY;
     Vector<Float> z_xval;
     Vector<Float> z_yval;
     QString region;
