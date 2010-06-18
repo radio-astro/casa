@@ -475,6 +475,9 @@ void ROVisibilityIterator::setState()
     curNumChanGroup_p=numChanGroup_p[spw];
     freqCacheOK_p=False;
   }
+
+  msIter_rowIds.resize(0);
+
   stateOk_p=True;
 }
 
@@ -719,6 +722,16 @@ Vector<uInt>& ROVisibilityIterator::rowIds(Vector<uInt>& rowids) const
 {
   rowids.resize(curNumRow_p);
   rowids = selRows_p.convert();
+
+  /* Get row numbers from msIter only when needed */
+  if (msIter_rowIds.nelements() == 0) {
+      msIter_rowIds.resize(curTableNumRow_p);
+      msIter_rowIds = msIter_p.table().rowNumbers();
+  }
+
+  for (uInt i = 0; i < rowids.nelements(); i++) {
+      rowids(i) = msIter_rowIds(rowids(i));
+  }
   return rowids;
 }
 
