@@ -1,6 +1,7 @@
 #
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+# Copyright (C) 2010 Associated Universities, Inc. Washington DC, USA.
 #
 # This file is part of CASA.
 #
@@ -51,6 +52,12 @@ casa_always_install()
 # Build options
 #
 
+# force searching for libcasacore instead of libcasa_*
+if( NOT USE_LIBCASACORE )
+  set( USE_LIBCASACORE False )
+endif()
+
+
 # Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE RelWithDebInfo )
@@ -80,6 +87,9 @@ set( DEFAULT_CXX_FLAGS
      "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
      )
 
+set( DEFAULT_C_FLAGS 
+     "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
+     )
 
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
@@ -107,7 +117,9 @@ if( APPLE )
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    set( arch darwin )
+    if( NOT arch )
+    	set( arch darwin )
+    endif()
     set( DEFAULT_CXX_FLAGS
       "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks"
       )
@@ -118,11 +130,15 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
   if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
     set( casa_packages /usr/lib64/casapy )
-    set( arch linux_64b )
+    if( NOT arch )
+    	set( arch linux_64b )
+    endif()
     set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
   else()
     set( casa_packages /usr/lib/casapy )
-    set( arch linux_gnu )
+    if( NOT arch )
+        set( arch linux_gnu )
+    endif()
     set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
   endif()
 else()
@@ -135,6 +151,9 @@ if( NOT CMAKE_CXX_FLAGS )
   set( CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${EXTRA_CXX_FLAGS}" )
 endif()
 
+if( NOT CMAKE_C_FLAGS )
+  set( CMAKE_C_FLAGS "${DEFAULT_C_FLAGS} ${EXTRA_C_FLAGS}" )
+endif()
 
 string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
 
@@ -152,7 +171,7 @@ if( EXISTS ${casaroot}/aipshosts )
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-  if( _a )
+  if( _a AND NOT arch )
     set( arch ${_a} )    
   endif()
 endif()
@@ -400,7 +419,7 @@ endif()
 
 if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
     EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so OR
-    EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so )
+    EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so OR USE_LIBCASACORE )
   set( casacore_libs casacore )
   ##
   ## by default the GNUmakefile for casacore installs include
@@ -833,7 +852,9 @@ set( PYTHON_TASKD ${PYTHON_LIBD} )
 
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
-casa_add_module( graphics CASACORE PGPLOT X11 )
+
+# for linux RPM & binary distros libgraphics contains pgplot (linked in)...
+casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
 casa_add_module( casadbus CASACORE DBUS )
 casa_add_module( tableplot CASACORE PYTHON )
 casa_add_module( msvis CASACORE graphics )
