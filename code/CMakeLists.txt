@@ -52,9 +52,11 @@ casa_always_install()
 # Build options
 #
 
+# force searching for libcasacore instead of libcasa_*
 if( NOT USE_LIBCASACORE )
   set( USE_LIBCASACORE False )
 endif()
+
 
 # Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
 if( NOT CMAKE_BUILD_TYPE )
@@ -89,7 +91,6 @@ set( DEFAULT_C_FLAGS
      "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
      )
 
-
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
 add_custom_target( check ${CMAKE_CTEST_COMMAND} )
@@ -116,7 +117,9 @@ if( APPLE )
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    set( arch darwin )
+    if( NOT arch )
+    	set( arch darwin )
+    endif()
     set( DEFAULT_CXX_FLAGS
       "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks"
       )
@@ -128,13 +131,13 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
   if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
     set( casa_packages /usr/lib64/casapy )
     if( NOT arch )
-      set( arch linux_64b )
+    	set( arch linux_64b )
     endif()
     set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
   else()
     set( casa_packages /usr/lib/casapy )
     if( NOT arch )
-      set( arch linux_gnu )
+        set( arch linux_gnu )
     endif()
     set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
   endif()
@@ -152,7 +155,6 @@ if( NOT CMAKE_C_FLAGS )
   set( CMAKE_C_FLAGS "${DEFAULT_C_FLAGS} ${EXTRA_C_FLAGS}" )
 endif()
 
-
 string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
 
 #
@@ -169,7 +171,7 @@ if( EXISTS ${casaroot}/aipshosts )
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-  if( _a )
+  if( _a AND NOT arch )
     set( arch ${_a} )    
   endif()
 endif()
@@ -447,7 +449,7 @@ casa_find( CASACORE
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
            INCLUDES_SUFFIXES casacore
            LIBS ${casacore_libs}
-           PREFIX_HINTS ${casacore_prefix} /usr
+           PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB DL )
@@ -548,13 +550,11 @@ set( PYTHON_LIBNAME ${PYTHON_LIBNAME} CACHE STRING "Python major and minor versi
 string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
 
 if( APPLE )
-    if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-        set( pyroot ${casa_packages}/lib/Python.framework/Versions/${PYTHONV} )
-    else()
-       set( pyroot ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
-    endif()
-else()
-    set( pyroot ${casa_packages} )
+  if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
+    set( pyroot ${pyroot}/lib/Python.framework/Versions/${PYTHONV} )
+  else()
+    set( pyroot ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
+  endif()
 endif()
 
 set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
@@ -648,7 +648,7 @@ file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
 # The names of CCMTools libraries have changed.
 # Need to support both naming conventions, until the new
 # version is universally available. (This implementation
-# would be cleaner if CCM exported a version number.)
+# would be cleaner if CCMTools exported a version number.)
 #
 if( EXISTS ${casa_packages}/lib/libccmtools_local.so OR
     EXISTS ${casa_packages}/lib64/libccmtools_local.so OR
@@ -810,6 +810,8 @@ casa_config_end()
 list( GET ${RPFITS_LIBRARIES} 0 rpfits_lib )
 get_filename_component(rpfitslibd ${rpfits_lib} PATH)
 
+string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
+
 # convert semicolons to spaces...
 set( _ii "" )
 foreach( _i ${PYTHON_INCLUDE_DIRS} )
@@ -833,7 +835,7 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   WCSLIBLIBD = .\n
   WCSLIBLIB = ${WCSLIB_wcs}\n
   PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${casa_packages}/lib\n
+  PYTHONLIBD = ${_pythonlibd}\n
   PYTHONINCD = ${_ii}\n
   PYTHONLIB = ${PYTHON_LIBRARIES}\n
   BOOSTROOT = ${BOOST_ROOT}\n
@@ -850,6 +852,8 @@ set( PYTHON_TASKD ${PYTHON_LIBD} )
 
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
+
+# for linux RPM & binary distros libgraphics contains pgplot (linked in)...
 casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
 casa_add_module( casadbus CASACORE DBUS )
 casa_add_module( tableplot CASACORE PYTHON )
