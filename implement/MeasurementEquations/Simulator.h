@@ -359,12 +359,6 @@ private:
 
   Int seed_p;
 
-  // VisEquation handles corruption by visibility calibration effects
-  VisEquation ve_p;
-
-  // Generic container for any number of calibration effects to corrupt with
-  PtrBlock<VisCal*> vc_p;
-
   ACoh     *ac_p;
 
   SkyEquation* se_p;
@@ -412,7 +406,10 @@ private:
   Vector<Quantity>      distance_p;
 
   // </group>
-
+  // VisEquation handles corruption by visibility calibration effects
+  VisEquation ve_p;
+  // Generic container for any number of calibration effects to corrupt with
+  PtrBlock<VisCal*> vc_p;
 
   // info for spectral window parameters
   // <group>
