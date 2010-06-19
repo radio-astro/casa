@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import commands
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -294,7 +295,21 @@ class clean_test1(unittest.TestCase):
         '''Clean 36: Non-default value of phasecenter'''
         self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=2)
         self.assertTrue(os.path.exists(self.img+'.image'))
-        
+
+    def test37(self):
+        '''Clean 37: Test box mask'''
+        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145])
+        self.assertTrue(os.path.exists(self.img+'.image') and
+			os.path.exists(self.img+'.mask'))
+
+    def test38(self):
+        '''Clean 38: Test freeing of resource for mask (checks CAS-954)'''
+        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145])
+        cmd='/usr/sbin/lsof|grep %s' % self.img+'.mask'
+        output=commands.getoutput(cmd)
+        ret=output.find(self.img+'.mask')
+        self.assertTrue(ret==-1)
+
 class clean_test2(unittest.TestCase):
     
     # Input and output names
