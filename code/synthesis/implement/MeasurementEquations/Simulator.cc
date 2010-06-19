@@ -101,22 +101,18 @@
 Simulator::Simulator(): 
   msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
   seed_p(11111),
-  ve_p(),
-  vc_p(),
-  ac_p(0), vp_p(0), gvp_p(0), 
+  ac_p(0), distance_p(0), ve_p(), vc_p(),vp_p(0), gvp_p(0), 
   sim_p(0),
   // epJ_p(0),
-  epJTableName_p(),
-  nSpw(0)
+  nSpw(0),
+  epJTableName_p()
 {
 }
 
 
 Simulator::Simulator(String& msname) 
-  : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    ve_p(),
-    vc_p(),
-    ac_p(0), vp_p(0), gvp_p(0), 
+  : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111), 
+    ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0), 
     sim_p(0),
     // epJ_p(0),
     epJTableName_p()
@@ -143,10 +139,8 @@ Simulator::Simulator(String& msname)
 
 
 Simulator::Simulator(MeasurementSet &theMs)
-  : msname_p(""), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    ve_p(),
-    vc_p(),
-    ac_p(0), vp_p(0), gvp_p(0), 
+  : msname_p(""), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111), 
+    ac_p(0), distance_p(0), ve_p(), vc_p(), vp_p(0), gvp_p(0), 
     sim_p(0),
     // epJ_p(0),
     epJTableName_p()
@@ -183,9 +177,7 @@ Simulator::Simulator(MeasurementSet &theMs)
 
 Simulator::Simulator(const Simulator &other)
   : msname_p(""), ms_p(0), vs_p(0), seed_p(11111),
-    ve_p(),
-    vc_p(),
-    ac_p(0), vp_p(0), gvp_p(0),
+    ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0),
     sim_p(0),
     // epJ_p(0),
     epJTableName_p()
@@ -2172,13 +2164,13 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    AlwaysAssert(images_p[model], AipsError);
 	    // RI TODO is this a logic problem with more than one source??
 	    // Add distance
-	    if(abs(distance_p[nField-1].get().getValue())>0.0) {
+	    if((distance_p.nelements() > 0 && distance_p.nelements() <= nField) && abs(distance_p[nField-1].get().getValue())>0.0) {
 	      os << "  Refocusing to distance " << distance_p[nField-1].get("km").getValue()
 		 << " km" << LogIO::POST;
+	      Record info(images_p[model]->miscInfo());
+	      info.define("distance", distance_p[nField-1].get("m").getValue());
+	      images_p[model]->setMiscInfo(info);
 	    }
-	    Record info(images_p[model]->miscInfo());
-	    info.define("distance", distance_p[nField-1].get("m").getValue());
-	    images_p[model]->setMiscInfo(info);
 	    if(sm_p->add(*images_p[model])!=model) {
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
 	      return False;
