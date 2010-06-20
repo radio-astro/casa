@@ -2224,7 +2224,7 @@ void FITSIDItoMS1::fillAntennaTable()
    ROScalarColumn<Int> stid(anTab,"NOSTA");
    ROScalarColumn<Int> mntid(anTab,"MNTSTA");
    ROArrayColumn<Float> offset(anTab,"STAXOF");
-   ROScalarColumn<Double> diam;
+   ROScalarColumn<Float> diam;
    if(anTab.tableDesc().isColumn("DIAMETER")){
      diam.attach(anTab,"DIAMETER"); // this column is optional
    }
@@ -2335,23 +2335,36 @@ void FITSIDItoMS1::fillFeedTable() {
   ROScalarColumn<Int> fqid(anTab, "FREQID");
   ROScalarColumn<Int> digLev(anTab, "NO_LEVELS");
   ROScalarColumn<String> poltya(anTab, "POLTYA");
-  ROArrayColumn<Float> polaa(anTab, "POLAA");
-  ROArrayColumn<Float> polcala;
-  if(anTab.tableDesc().isColumn("POLCALA")){
-    polcala.attach(anTab, "POLCALA");
-  }
-  else{
-    *itsLog << LogIO::WARN << "POLCALA column is missing in ANTENNA table." << LogIO::POST;
-  }
   ROScalarColumn<String> poltyb(anTab, "POLTYB");
-  ROArrayColumn<Float> polab(anTab, "POLAB");
+
+  // if the values for all bands are the same, POLAA, POLAB, POLCALA and POLCALB can be scalar
+  Bool POLAisScalar = False;
+  ROArrayColumn<Float> polaa;
+  ROArrayColumn<Float> polab;
+  ROScalarColumn<Float> polaaS;
+  ROScalarColumn<Float> polabS;
+  try{
+    polaa.attach(anTab, "POLAA");
+    polab.attach(anTab, "POLAB");
+  }
+  catch(AipsError x){
+    polaaS.attach(anTab, "POLAA");
+    polabS.attach(anTab, "POLAB");
+    POLAisScalar = True;
+    *itsLog << LogIO::WARN << "Treating POLAA and POLAB columns in input ANTENNA table as scalar," 
+	    << endl << " i.e. using same value for all bands." << LogIO::POST;
+  }
+
+  ROArrayColumn<Float> polcala;
   ROArrayColumn<Float> polcalb;
-  if(anTab.tableDesc().isColumn("POLCALB")){
+  if(anTab.tableDesc().isColumn("POLCALA") && anTab.tableDesc().isColumn("POLCALB")){
+    polcala.attach(anTab, "POLCALA");
     polcalb.attach(anTab, "POLCALB");
   }
   else{
-    *itsLog << LogIO::WARN << "POLCALB column is missing in ANTENNA table." << LogIO::POST;
+    *itsLog << LogIO::WARN << "POLCALA and/or POLCALB column is missing in ANTENNA table." << LogIO::POST;
   }
+
   //  ROArrayColumn<Float> beamfwhm(anTab, "BEAMFWHM"); // this column is optional and there is presently
                                                     // no place this information in the MS
   Matrix<Complex> polResponse(2,2); 
@@ -2359,27 +2372,37 @@ void FITSIDItoMS1::fillFeedTable() {
   Matrix<Double> offset(2,2); offset=0.;
   Int nAnt = anTab.nrow();
   //cout <<"nAnt="<<nAnt<<", nIF="<< nIF;
-  Matrix<Float> polanga(nIF,nAnt); 
-  Matrix<Float> polangb(nIF,nAnt); 
   Vector<Double> position(3); position=0.;
   Vector<String> polType(2);
-  polaa.getColumn(polanga); 
-  polab.getColumn(polangb); 
-  //Double testval=1.0;
   receptorAngle_p = 0;
   receptorAngle_p.resize(2*nAnt*nIF);
-  for (Int i=0; i<nAnt; i++) {
-    for (Int j=0; j<nIF; j++) {
-
-    //cout << "testval is used"<< endl;
-    //receptorAngle_p(2*i+0)=testval*C::degree;
-    //receptorAngle_p(2*i+1)=testval*C::degree;
-
-      Int k = (i*nIF + j);
-      receptorAngle_p(2*k+0)=static_cast<Double>(polanga(j,i))*C::degree;
-      receptorAngle_p(2*k+1)=static_cast<Double>(polangb(j,i))*C::degree;
+  if(POLAisScalar){
+    Vector<Float> polanga(nAnt); 
+    Vector<Float> polangb(nAnt); 
+    polaaS.getColumn(polanga); 
+    polabS.getColumn(polangb); 
+    for(Int i=0; i<nAnt; i++){
+      for(Int j=0; j<nIF; j++){
+	Int k = (i*nIF + j);
+	receptorAngle_p(2*k+0)=static_cast<Double>(polanga[i])*C::degree;
+	receptorAngle_p(2*k+1)=static_cast<Double>(polangb[i])*C::degree;
+      }
     }
   }
+  else{
+    Matrix<Float> polanga(nIF,nAnt); 
+    Matrix<Float> polangb(nIF,nAnt); 
+    polaa.getColumn(polanga); 
+    polab.getColumn(polangb); 
+    for(Int i=0; i<nAnt; i++){
+      for(Int j=0; j<nIF; j++){
+	Int k = (i*nIF + j);
+	receptorAngle_p(2*k+0)=static_cast<Double>(polanga(j,i))*C::degree;
+	receptorAngle_p(2*k+1)=static_cast<Double>(polangb(j,i))*C::degree;
+      }
+    }
+  }
+  //Double testval=1.0;
 
   // fill the feed table
   Int outRow=-1;
@@ -2583,12 +2606,51 @@ void FITSIDItoMS1::fillFieldTable()
   ROScalarColumn<Int> qual(suTab,"QUAL");
   ROScalarColumn<String> code(suTab,"CALCODE");
   ROScalarColumn<Int> fqid(suTab,"FREQID");
-  ROArrayColumn<Float> iflux(suTab,"IFLUX"); // I (Jy)
-  ROArrayColumn<Float> qflux(suTab,"QFLUX"); // Q 
-  ROArrayColumn<Float> uflux(suTab,"UFLUX"); // U 
-  ROArrayColumn<Float> vflux(suTab,"VFLUX"); // V 
-  ROArrayColumn<Float> alpha(suTab,"ALPHA"); // sp. index  
-  ROArrayColumn<Float> foffset(suTab,"FREQOFF"); // fq. offset  
+
+  // if the values are the same for all bands, the flux, alpha, freqoff, sysvel, and restfreq columns can be scalar
+  Bool IFLUXisScalar = False;
+  ROArrayColumn<Float> iflux;
+  ROArrayColumn<Float> qflux;
+  ROArrayColumn<Float> uflux;
+  ROArrayColumn<Float> vflux;
+  ROArrayColumn<Float> alpha;
+  ROArrayColumn<Float> foffset;  
+  ROArrayColumn<Double> sysvel;
+  ROArrayColumn<Double> restfreq;
+
+  ROScalarColumn<Float> ifluxS;
+  ROScalarColumn<Float> qfluxS;
+  ROScalarColumn<Float> ufluxS;
+  ROScalarColumn<Float> vfluxS;
+  ROScalarColumn<Float> alphaS;
+  ROScalarColumn<Float> foffsetS;
+  ROScalarColumn<Double> sysvelS;
+  ROScalarColumn<Double> restfreqS;
+
+  try{ // try array column first
+    iflux.attach(suTab,"IFLUX"); // I (Jy)
+    qflux.attach(suTab,"QFLUX"); // Q 
+    uflux.attach(suTab,"UFLUX"); // U 
+    vflux.attach(suTab,"VFLUX"); // V 
+    alpha.attach(suTab,"ALPHA"); // sp. index  
+    foffset.attach(suTab,"FREQOFF"); // fq. offset  
+    sysvel.attach(suTab,"SYSVEL"); // sys vel. (m/s)  
+    restfreq.attach(suTab,"RESTFREQ"); // rest freq. (hz)  
+  }
+  catch(AipsError x){
+    ifluxS.attach(suTab,"IFLUX"); // I (Jy)
+    qfluxS.attach(suTab,"QFLUX"); // Q 
+    ufluxS.attach(suTab,"UFLUX"); // U 
+    vfluxS.attach(suTab,"VFLUX"); // V 
+    alphaS.attach(suTab,"ALPHA"); // sp. index  
+    foffsetS.attach(suTab,"FREQOFF"); // fq. offset  
+    sysvelS.attach(suTab,"SYSVEL"); // sys vel. (m/s)  
+    restfreqS.attach(suTab,"RESTFREQ"); // rest freq. (hz)  
+    IFLUXisScalar = True;
+    *itsLog << LogIO::WARN << "Treating ?FLUX, ALPHA, FREQOFF, SYSVEL, and RESTFREQ columns in input SOURCE table as scalar,"
+	    << endl << " i.e. using same value for all bands." << LogIO::POST;
+  }      
+
   ROScalarColumn<Double> ra(suTab,"RAEPO");    //degrees
   ROScalarColumn<Double> dec(suTab,"DECEPO");  //degrees
   ROScalarColumn<String> equinox;
@@ -2601,7 +2663,6 @@ void FITSIDItoMS1::fillFieldTable()
   }
   ROScalarColumn<Double> raapp(suTab,"RAAPP");    //degrees
   ROScalarColumn<Double> decapp(suTab,"DECAPP");  //degrees
-  ROArrayColumn<Double> sysvel(suTab,"SYSVEL"); // sys vel. (m/s)  
   ROScalarColumn<String> veltype(suTab,"VELTYP"); //   
   ROScalarColumn<String> veldef(suTab,"VELDEF"); //   
   ROScalarColumn<Double> pmra(suTab,"PMRA");   //deg/day
