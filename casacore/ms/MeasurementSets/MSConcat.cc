@@ -1115,7 +1115,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 
 
 Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt& rowi, const uInt& rowj){
-  // check if the two SOURCE table rows are identical IGNORING SOURCE_ID and SPW_ID
+  // check if the two SOURCE table rows are identical IGNORING SOURCE_ID, SPW_ID, time, and interval
 
   Bool areEquivalent(False);
 
@@ -1126,10 +1126,10 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
      areEQ(sourceCol.numLines(), rowi, rowj) &&
      // do NOT test SPW ID!
      // areEQ(sourceCol.spectralWindowId(), rowi, rowj) &&
+     // areEQ(sourceCol.interval(), rowi, rowj) &&
+     // areEQ(sourceCol.time(), rowi, rowj) && 
      areEQ(sourceCol.direction(), rowi, rowj) &&
-     areEQ(sourceCol.interval(), rowi, rowj) &&
-     areEQ(sourceCol.properMotion(), rowi, rowj) &&
-     areEQ(sourceCol.time(), rowi, rowj) 
+     areEQ(sourceCol.properMotion(), rowi, rowj)
      ){
     
     //    cout << "All non-optionals equal" << endl;
