@@ -151,6 +151,7 @@ static Int getIndexContains(Vector<String>& map, const String& key,
 }
 
 Bool FITSIDItoMS1::firstMain = True; // initialize the class variable firstMain
+SimpleOrderedMap<Int,Int> FITSIDItoMS1::antIdFromNo(-1); // initialize the class variable antIdFromNo
 
 //	
 // Constructor
@@ -180,6 +181,7 @@ FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType, const Bool& in
   
   if(initFirstMain){
       firstMain = True;
+      antIdFromNo.clear();
   }
   
   //
@@ -1798,8 +1800,8 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
   Int lastAnt1, lastAnt2, lastArray, lastSpW, lastSourceId;
   lastAnt1=-1; lastAnt2=-1; lastArray=-1; lastSpW=-1; lastSourceId=-1;
   Int putrow = -1;
-  Double lastTime=0;
-  Bool lastRowFlag=False;
+  //  Double lastTime=0;
+  //  Bool lastRowFlag=False;
   Float lastWeight=0.0;
   Int nScan = 0;
 
@@ -1892,10 +1894,23 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 
     Int array = Int(100.0*(baseline - Int(baseline)+0.001));
     Int ant1 = Int(baseline)/256; 
-    nAnt_p = max(nAnt_p,ant1);
     Int ant2 = Int(baseline) - ant1*256; 
-    nAnt_p = max(nAnt_p,ant2);
-    ant1--; ant2--; // make 0-based
+    if(antIdFromNo.isDefined(ant1)){
+    	ant1 = antIdFromNo(ant1);
+    }
+    else{
+    	*itsLog << LogIO::SEVERE << "Inconsistent input dataset: unknown ANTENNA_NO "
+    			<< ant1 << " in baseline used in UV_DATA table." << LogIO::EXCEPTION;
+    }
+    if(antIdFromNo.isDefined(ant2)){
+    	ant2 = antIdFromNo(ant2);
+    }
+    else{
+    	*itsLog << LogIO::SEVERE << "Inconsistent input dataset: unknown ANTENNA_NO "
+    			<< ant2 << " in baseline used in UV_DATA table." << LogIO::EXCEPTION;
+    }
+    nAnt_p = max(nAnt_p,ant1+1);
+    nAnt_p = max(nAnt_p,ant2+1);
 
     // Convert U,V,W from units of seconds to meters
     uvw *= C::c;
@@ -2140,8 +2155,8 @@ void FITSIDItoMS1::fillAntennaTable()
    arrayXYZ(1)=getKeywords().asdouble("ARRAYY");
    arrayXYZ(2)=getKeywords().asdouble("ARRAYZ");
 
-   *itsLog << LogIO::NORMAL << "number of antennas ="<<nAnt<<LogIO::POST;
-   *itsLog << LogIO::NORMAL << "array ref pos:"<<arrayXYZ<<LogIO::POST;
+   *itsLog << LogIO::NORMAL << "number of antennas = "<<nAnt<<LogIO::POST;
+   *itsLog << LogIO::NORMAL << "array ref pos = "<<arrayXYZ<<LogIO::POST;
 
    Double rdate=0.0;
    String srdate;
@@ -2212,7 +2227,6 @@ void FITSIDItoMS1::fillAntennaTable()
 
    Float diameter=0.01; // default (meaning "not set")
 
-   //Table anTab=fullTable("",Table::Scratch);
    Table anTab=oldfullTable("");
 
    MSAntennaColumns& ant(msc_p->antenna());
@@ -2221,7 +2235,7 @@ void FITSIDItoMS1::fillAntennaTable()
    ROArrayColumn<Float> dantXYZ(anTab,"DERXYZ");
    // following is for space-born telescope
    //ROScalarColumn<Int> orbp(anTab,"ORBPARM");
-   ROScalarColumn<Int> stid(anTab,"NOSTA");
+   ROScalarColumn<Int> anNo(anTab,"NOSTA");
    ROScalarColumn<Int> mntid(anTab,"MNTSTA");
    ROArrayColumn<Float> offset(anTab,"STAXOF");
    ROScalarColumn<Float> diam;
@@ -2241,11 +2255,28 @@ void FITSIDItoMS1::fillAntennaTable()
    //  (ATCA looks like "VLBI" in UVFITS, but is already correct)
    //Bool doVLBIRefl= ((array_p!="ATCA") && allLE(abs(arrayXYZ),1000.0));     
 
+
+   // continue definition of antenna number to antenna id mapping 
+   for (Int inRow=0; inRow<nAnt; inRow++) {
+     Int ii = anNo(inRow);
+     if(!antIdFromNo.isDefined(ii)){
+       antIdFromNo.define(ii, antIdFromNo.ndefined()); // append assuming uniqueness
+       *itsLog << LogIO::NORMAL << "   antenna_no " << ii << " -> antenna ID " << antIdFromNo(ii) << endl;
+     }
+   }
+
    // add antenna info to table (TT)
    ant.setPositionRef(MPosition::ITRF);
-   Int row=ms_p.antenna().nrow()-1;
-   for (Int i=0; i<nAnt; i++) {
-     ms_p.antenna().addRow(); row++;
+
+   // take into account that the ANTENNA table may already contain rows 
+   Int newRows = antIdFromNo.ndefined() - ms_p.antenna().nrow();
+   ms_p.antenna().addRow(newRows);
+
+   Int row=0;
+   for (Int i=0; i<newRows; i++) {
+     
+     row = antIdFromNo(anNo(i));
+
      if(diam.isNull()){ // no DIAMETER column available
        ant.dishDiameter().put(row,diameter);
      }
@@ -2263,7 +2294,7 @@ void FITSIDItoMS1::fillAntennaTable()
      }
      ant.flagRow().put(row,False);
      ant.mount().put(row,mount);
-     ant.name().put(row,String::toString(stid(i)));
+     ant.name().put(row,String::toString(anNo(i)));
      //Vector<Double> offsets(3); offsets=0.; offsets(0)=offset(i);
      //ant.offset().put(row,offset);
      ant.station().put(row,name(i));
@@ -2404,20 +2435,35 @@ void FITSIDItoMS1::fillFeedTable() {
   }
   //Double testval=1.0;
 
+  // start/continue definition of antenna number to ID mapping in case this table is read before the MS Antenna table is filled
+  for (Int inRow=0; inRow<nAnt; inRow++) {
+    Int ii = anNo(inRow);
+    if(!antIdFromNo.isDefined(ii)){
+      antIdFromNo.define(ii, antIdFromNo.ndefined()); // append assuming uniqueness
+       *itsLog << LogIO::NORMAL << "   antenna_no " << ii << " -> antenna ID " << antIdFromNo(ii) << endl;
+    }
+  }
+
   // fill the feed table
   Int outRow=-1;
   for (Int inRow=0; inRow<nAnt; inRow++) {
     for (Int inIF=0; inIF<nIF; inIF++) { 
       Int k = inRow*nIF + inIF;
       ms_p.feed().addRow(); outRow++;
-      msfc.antennaId().put(outRow,anNo(inRow)-1);
+      if(antIdFromNo.isDefined(anNo(inRow))){
+    	msfc.antennaId().put(outRow,antIdFromNo(anNo(inRow)));
+      }
+      else{
+    	*itsLog << LogIO::SEVERE << "Internal error: no mapping for ANTENNA_NO "
+				<< anNo(inRow) << LogIO::EXCEPTION;
+      }
       msfc.beamId().put(outRow,-1);
       msfc.feedId().put(outRow,0); // only one feed ID == 0
       if(!timeint.isNull()){
-	msfc.interval().put(outRow,timeint(inRow)*C::day);
+    	 msfc.interval().put(outRow,timeint(inRow)*C::day);
       }
       else{ // use the double version instead
-	msfc.interval().put(outRow,timeintd(inRow)*C::day);
+    	 msfc.interval().put(outRow,timeintd(inRow)*C::day);
       }
      //    msfc.phasedFeedId().put(outRow,-1);
      //msfc.spectralWindowId().put(outRow,-1); // all

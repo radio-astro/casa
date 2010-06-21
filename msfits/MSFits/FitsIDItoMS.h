@@ -271,6 +271,7 @@ protected:
   Bool uv_data_hasWeights_p;
   Bool weightKwPresent_p;
   Matrix<Float> weightsFromKW_p;
+  static SimpleOrderedMap<Int,Int> antIdFromNo;
 
   //
   //# Member Functions
