@@ -330,11 +330,10 @@ void MSFitsIDI::readFITSFile(Bool& atEnd)
   // Move the subtables in the proper place and add the subtable
   // references to the main table description.
   //
-  cout << "Subtables found: " << subTableName << endl;
+  os << LogIO::NORMAL << "Subtables found: " << subTableName << LogIO::POST;
   // Open the main table to be updated.
   Table msmain (itsMSOut, Table::Update);
   // Loop over all subtables.
-  cout << "Nr of subtables = " << subTableNr+1 << endl;
   for (Int isub=0; isub<=subTableNr; isub++) {
     //cout << "renaming subtable " << subTableName(isub) << endl;
     // Open the subtable to be updated.
