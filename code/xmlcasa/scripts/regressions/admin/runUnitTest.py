@@ -127,7 +127,7 @@ def readfile(FILE):
     # It will skip lines that contain '#' and
     # it will only read words starting with test
     if(not os.path.exists(FILE)):
-        print 'List of tests does not exist'
+        print 'ERROR: List of tests does not exist'
         return []
     
     List = []
@@ -166,6 +166,8 @@ def main(testnames=[]):
         whichtests = 0
         # Get the full list of tests from file
         listtests = readfile(LISTofTESTS)
+        if listtests == []:
+            raise Exception, 'List of tests \"%s\" is empty or does not exist'%LISTofTESTS
     elif (listtests == SHORT_LIST or listtests == ['--short']
           or listtests == ['SHORT_LIST']):
         whichtests = 2
