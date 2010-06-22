@@ -357,6 +357,7 @@ void RFASelector::addClipInfoDesc ( const Block<ClipInfo> &clip)
 RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) : 
   RFAFlagCubeBase(ch,parm)
 {
+    is_selector = true;
   if ( chunk.measSet().isNull() ) {
     throw AipsError("Received chunk referring to NULL MS!");
   }
@@ -1354,8 +1355,10 @@ RFA::IterMode RFASelector::iterRow (uInt ir)
                       /* No channel selections, flag all channels.
                          
                       jmlarsen: Unfortunately, clearRowFlag and setRowFlag
-                      don't seem to work, therefore don't do like this
-
+                      don't seem to work, therefore don't do like this.
+                      (This could probably be brought to work by
+                      fixing RFFlagCube::setMSFlags() to use the flagrow.)
+                      
                       cout << " flag entire row " << endl;
                       unflag ? 
                       flag.clearRowFlag(ifr, it) :
@@ -1392,6 +1395,24 @@ RFA::IterMode RFASelector::iterRow (uInt ir)
   }
 
   return RFA::CONT;
+}
+
+/* Flush flags after each time stamp, but
+   only if this is the only agent 
+*/
+void RFASelector::endRows(uInt it)
+{
+    if (nAgent == 1) {
+        flag.advance(it);
+        flag.setMSFlags(it);
+    }
+}
+    
+void RFASelector::iterFlag(uInt it)
+{
+    if (nAgent != 1) {
+        RFAFlagCubeBase::iterFlag(it);
+    }
 }
 
 String RFASelector::getDesc ()

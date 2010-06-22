@@ -6,7 +6,7 @@ import os
 try:
     import casac  # No-op if already in casapy.
 except:
-    import glob, os, sys
+    import sys
     
     casacpath = glob(os.sep.join(os.environ["CASAPATH"].split() +
                                  ['python', '2.*']))  # devs
@@ -34,7 +34,7 @@ def get_tool(toolname):
 
 
 def listshapes(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or',
-               sortfirst=False):
+               sortfirst=False, incl_ddid=False):
     """
     Lists the data shapes of the MSes matched by mspat.
     """
@@ -43,6 +43,7 @@ def listshapes(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or',
 
     holderdict = {}
     holderdict['mytb'] = get_tool('tb')
+    holderdict['incl_ddid'] = incl_ddid
 
     splitatdoubleglob = mspat.split('**/')
     if len(splitatdoubleglob) > 1:
@@ -75,12 +76,16 @@ def checkMSes(holderdict, dir, files):
     #needed_items = holderdict.get('needed_items', {})
     
     mytb = holderdict['mytb']
+    incl_ddid = holderdict['incl_ddid']
     
     for currms in mses:
         if currms[:2] == './':  # strip off leading ./, if present.
             currms = currms[2:]    # cosmetic.
-        
-        retval[currms] = set([])
+
+        if incl_ddid:
+            retval[currms] = {}
+        else:
+            retval[currms] = set([])
 
         try:
             mytb.open(currms + '/POLARIZATION')
@@ -128,18 +133,28 @@ def checkMSes(holderdict, dir, files):
 
         for row in xrange(mytb.nrows()):
             if not mytb.getcell('FLAG_ROW', row):
-                retval[currms].add((num_corrs[mytb.getcell('POLARIZATION_ID',
-                                                           row)],
-                                    num_chans[mytb.getcell('SPECTRAL_WINDOW_ID',
-                                                           row)]))
+                key = (num_corrs[mytb.getcell('POLARIZATION_ID', row)],
+                       num_chans[mytb.getcell('SPECTRAL_WINDOW_ID', row)])
+                if incl_ddid:
+                    if retval[currms].has_key(key):
+                        retval[currms][key].append(row)
+                    else:
+                        retval[currms][key] = [row]
+                else:
+                    retval[currms].add(key)
         mytb.close()
 
 
 if __name__ == '__main__':
+    import pprint
     import sys
     mspat = '*.ms'
     musthave = []
+    incl_ddid = False
     if len(sys.argv) > 1:
-        mspat = sys.argv[1]
-        musthave = sys.argv[2:]
-    listshapes(musthave, mspat)
+        incl_ddid = sys.argv[1]
+        mspat = sys.argv[2]
+        musthave = sys.argv[3:]
+    msdict = listshapes(musthave, mspat, incl_ddid=incl_ddid)
+    pprint.pprint(msdict)
+    

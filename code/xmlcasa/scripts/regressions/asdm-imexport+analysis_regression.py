@@ -160,7 +160,7 @@ def analyseASDM(basename, caltablename0):
     # Calibration tables are applied with applycal and images of the calibrator and the
     # galaxy are made.
 
-    isOK = False
+    isOK = True
     
     msname=basename+'.ms'
     contimage=basename+'_cont'
@@ -399,21 +399,23 @@ def analyseASDM(basename, caltablename0):
         print ">> Peak in calibrator image: "+str(peak[i])
         print ">> Dynamic range in calibrator image: "+str(peak[i]/rms[i])
 
-    reference_rms = [0.00163516565226, 0.00328419636935]
-    reference_peak = [1.00014090538, 1.00039517879]
+    reference_rms = [0.00163517, 0.00328371]
+    reference_peak = [1.00014091, 1.00039518]
 
     for i in range(2):
-        if(
-            (abs(rms[i] - reference_rms[i])/reference_rms[i] > 0.001)
-            or (abs(peak[i] - reference_peak[i])/reference_peak[i] > 0.001)
-            ):
-            print ">> Test failed."
+        print ">> image rms ", i, " is ", rms[i], " expected value is ", reference_rms[i] 
+        if(abs(rms[i] - reference_rms[i])/reference_rms[i] > 0.0001):
+            print ">> ERROR." 
             isOK = False
-        else:
-            isOK = True
+        print ">> image peak ", i, " is ", peak[i], " expected value is ", reference_peak[i] 
+        if(abs(peak[i] - reference_peak[i])/reference_peak[i] > 0.0001):
+            print ">> ERROR." 
+            isOK = False
             
     if (isOK):
         print ">> Test passed."
+    else:
+        print ">> Test failed."
 
     return isOK
 
@@ -494,7 +496,7 @@ else:
         checktable(name, expected)
 
         expected = [
-                     ['UVW',       557, [-172.89959879, -80.72977186, 63.39285641], 1E-7],
+                     ['UVW',       557, [-172.89959178,  -80.72977289,   63.39287425], 1E-7], 
                      ['EXPOSURE',  557, 6.048, 0],
                      ['DATA',      557,
                       [[ -4.17647697e-03 +3.08606686e-05j,  -1.18642126e-03 +7.54371868e-05j,

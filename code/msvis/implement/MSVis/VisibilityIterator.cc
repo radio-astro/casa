@@ -341,7 +341,6 @@ void ROVisibilityIterator::advance()
   }
   if (more_p) {
     setSelTable();
-    attachColumns(attachTable());
     getTopoFreqs();
     // invalidate any attached VisBuffer
     if (!vbStack_p.empty()) ((VisBuffer*)vbStack_p.top())->invalidate();
@@ -476,6 +475,9 @@ void ROVisibilityIterator::setState()
     curNumChanGroup_p=numChanGroup_p[spw];
     freqCacheOK_p=False;
   }
+
+  msIter_rowIds.resize(0);
+
   stateOk_p=True;
 }
 
@@ -720,6 +722,16 @@ Vector<uInt>& ROVisibilityIterator::rowIds(Vector<uInt>& rowids) const
 {
   rowids.resize(curNumRow_p);
   rowids = selRows_p.convert();
+
+  /* Get row numbers from msIter only when needed */
+  if (msIter_rowIds.nelements() == 0) {
+      msIter_rowIds.resize(curTableNumRow_p);
+      msIter_rowIds = msIter_p.table().rowNumbers();
+  }
+
+  for (uInt i = 0; i < rowids.nelements(); i++) {
+      rowids(i) = msIter_rowIds(rowids(i));
+  }
   return rowids;
 }
 
@@ -1980,7 +1992,7 @@ VisibilityIterator & VisibilityIterator::operator++()
 void VisibilityIterator::attachColumns(const Table &t)
 {
   ROVisibilityIterator::attachColumns(t);
-  //todo: should cache this (update once per ms)
+
   const ColumnDescSet& cds=t.tableDesc().columnDescSet();
   if (cds.isDefined(MS::columnName(MS::DATA))) {
     RWcolVis.attach(t, MS::columnName(MS::DATA));

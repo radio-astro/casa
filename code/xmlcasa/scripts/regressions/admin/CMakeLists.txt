@@ -18,35 +18,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
-  test_boxit.py
-  test_clean.py
-  test_clearstat.py
-  test_csvclean.py
-  test_exportasdm.py
-  test_fixvis.py
-  test_flagdata.py
-  test_hanningsmooth.py
-  test_imcontsub.py
-  test_imfit.py
-  test_imhead.py
-  test_immath.py
-  test_immoments.py
-  test_importasdm.py
-  test_importevla.py
-  test_importfitsidi.py
-  test_importoldasdm.py
-  test_imregrid.py
-  test_imsmooth.py
-  test_imstat.py
-  test_imval.py
-  test_listhistory.py
-  test_listvis.py
-  test_plotants.py
-  test_plotms.py
-  test_report.py
-  test_smoothcal.py
-  test_vishead.py
-  test_visstat.py
-  unittests_list.txt
+casa_add_python( xmlcasa xmlcasa_regressions_admin_python python/${PYTHONV}/regressions/admin
+  publish_summary.py
+  runUnitTest.py
+  testbase.py
+  imageTest.py
+  locatescript.py
+  gprof2dot.py
+  profileplot.py
+  report.py
+  tableMaker.py
+  testwrapper.py
+  tw_func.py
+  tw_plotmem.py
+  tw_utils.py
 )
+
+install( PROGRAMS 
+         process_manager.pl
+         scheduler.pl
+         runcasa_from_shell.sh
+         tests_list.txt
+         DESTINATION python/${PYTHONV}/regressions/admin )

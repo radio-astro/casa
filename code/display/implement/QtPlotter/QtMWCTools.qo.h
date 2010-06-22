@@ -72,11 +72,12 @@ public:
   virtual ~QtPolyTool() {}
  
 public slots:
-  void setCoordType(const String& t) { QtMWCTool::setCoordType(t);  }
+  void setCoordType(const String& t);
 
 signals:
-  void wcNotify(const String c, 
-           const Vector<Double> x, const Vector<Double> y);
+  void wcNotify( const String c, 
+		 const Vector<Double> px, const Vector<Double> py,
+		 const Vector<Double> wx, const Vector<Double> wy );
 
 protected:
   virtual void updateRegion();
@@ -93,11 +94,12 @@ public:
   virtual ~QtRectTool() {}
 
 public slots:
-  void setCoordType(const String& t) { QtMWCTool::setCoordType(t);  }
+  void setCoordType(const String& t);
 
 signals:
-  void wcNotify(const String c, 
-           const Vector<Double> x, const Vector<Double> y);
+  void wcNotify( const String c, 
+		 const Vector<Double> px, const Vector<Double> py,
+		 const Vector<Double> wx, const Vector<Double> wy );
 
 protected:
   virtual void updateRegion();
@@ -116,8 +118,9 @@ public slots:
   void setCoordType(const String& t);
 
 signals:
-  void wcNotify(const String c, 
-           const Vector<Double> x, const Vector<Double> y);
+  void wcNotify( const String c, 
+		 const Vector<Double> px, const Vector<Double> py,
+		 const Vector<Double> wx, const Vector<Double> wy );
 
 
 };

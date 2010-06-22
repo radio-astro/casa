@@ -123,7 +123,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="interpolation" subparam="true">
       <description>Spectral interpolation (nearest, linear, cubic)</description>
-      <value>nearest</value>
+      <value>linear</value>
       <allowed kind="enum">
 	<value>nearest</value>
 	<value>linear</value>

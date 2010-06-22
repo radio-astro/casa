@@ -100,29 +100,33 @@ def diffMetadata(testOut, standardOut, prefix=""):
     testList = open(testOut,'r').readlines()
     stndList = open(standardOut,'r').readlines()
 
-    # Pattern to capture floats
-    floatPat = re.compile(r"[ |]([+-]?[0-9]*\.[0-9]+)")
-
-    # Filter all floats from a list of strings
-    def filterFloats(list):
+    #                     Pattern                         Substitution
+    unwanted = ((re.compile(r"[ |]([+-]?[0-9]*\.[0-9]+)"), 'x'), # floats
+                (re.compile(r' '),                          ''), # spaces
+                (re.compile(r'-+'),                       '-+')) # dashes
+    
+    def filter_out_unwanted(linelist, unwanted):
+        """
+        Given a list of strings and a tuple of (pattern, substitution)
+        pairs, returns a corresponding list of strings with the patterns
+        replaced by the substitutions.
+        """
         newList = []
-        for linenum in range(len(list)):
-            newList.append( floatPat.sub('x',list[linenum]) )
+        for line in linelist:
+            filtered = line
+            for pat, subst in unwanted:
+                filtered = pat.sub(subst, filtered)
+            newList.append(filtered)
         return newList
             
-    newTestList = filterFloats(testList)
-    newStndList = filterFloats(stndList)
+    newTestList = filter_out_unwanted(testList, unwanted)
+    newStndList = filter_out_unwanted(stndList, unwanted)
 
-    # Remove all spaces from list of strings
-    for linenum in range(len(newTestList)):
-        newTestList[linenum] = newTestList[linenum].replace(' ','')
-        newStndList[linenum] = newStndList[linenum].replace(' ','')
-
-    # If everything is equal, return True
-    if (newTestList == newStndList): return True
+    # If everything after filtering is equal, return True
+    if newTestList == newStndList:
+        return True
     
     # else... do the rest
-
     print "  - Writing differences to ", diffOut
     
     sys.stdout = open(diffOut,'w') # redirect stdout

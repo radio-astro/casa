@@ -79,6 +79,8 @@ class calibrater
 
     bool listcal(const std::string& caltable, const ::casac::variant& field, const ::casac::variant& antenna, const ::casac::variant& spw, const std::string& listfile, const int pagerows = 50);
 
+    bool fromaipscal(const std::string& caltable, const std::string& fitsfile, const std::string& extension = "CL", const std::string& whichhdu = "");
+
     bool posangcal(const std::vector<double>& posangcor, const std::string& tablein, const std::string& tableout = "");
 
     bool linpolcor(const std::string& tablein = "", const std::string& tableout = "", const std::vector<std::string>& fields = std::vector<std::string> (1, """"));

@@ -1106,7 +1106,9 @@ void TBArrayDataString::setDataAt(vector<int> d, TBData& val) {
         String type = val.getType();
         if(type == TBConstants::TYPE_STRING) {
             value(ip) = val.asString();
-        }
+        } else {
+            value(ip) = val.asString();
+	}
     }
 }
 

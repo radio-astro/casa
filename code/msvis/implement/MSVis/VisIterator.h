@@ -203,13 +203,6 @@ protected:
   virtual void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, 
 			     Cube<Complex>& data) const;
 
-  Table selTable_p;
-
-  // New slicer supports multiple Slices in channel and correlation
-  Vector<Vector<Slice> > chanSlices_p, corrSlices_p, newSlicer_p, newWtSlicer_p;
-  Bool useNewSlicer_p;
-  Vector<Matrix<Int> > chanAveBounds_p;
-
   // Column access functions
   virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
   virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
@@ -223,6 +216,14 @@ protected:
   virtual void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
+
+  Table selTable_p;
+
+  // New slicer supports multiple Slices in channel and correlation
+  Vector<Vector<Slice> > chanSlices_p, corrSlices_p, newSlicer_p, newWtSlicer_p;
+  Bool useNewSlicer_p;
+  Vector<Matrix<Int> > chanAveBounds_p;
+
 };
 
 // <summary>

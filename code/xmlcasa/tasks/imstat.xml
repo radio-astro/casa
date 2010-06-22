@@ -44,6 +44,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
 
+    <param type="bool" name="list">
+        <description>Print stats to logger?</description>
+        <value>True</value>
+    </param>
+
+    <param type="bool" name="verbose">
+        <description>Print additional messages to logger?</description>
+        <value>True</value>
+    </param>
+
     <constraints>
     </constraints>
 </input>

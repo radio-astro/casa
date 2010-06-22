@@ -1157,13 +1157,17 @@ void QtDisplayPanelGui::showImageProfile() {
                       (ppd->getTool(QtMouseToolNames::POSITION));
                 if (pos) {
                    connect(pos, 
-                    SIGNAL(wcNotify(const String,
-                                    const Vector<Double>, 
-                                    const Vector<Double>)),
+                    SIGNAL(wcNotify( const String,
+				     const Vector<Double>, 
+				     const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )),
                     profile_,
-                    SLOT(wcChanged(const String,
-                                      const Vector<Double>, 
-                                      const Vector<Double>)));
+                    SLOT(wcChanged( const String,
+				    const Vector<Double>, 
+				    const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      pos,
@@ -1173,13 +1177,17 @@ void QtDisplayPanelGui::showImageProfile() {
                       (ppd->getTool(QtMouseToolNames::RECTANGLE));
                 if (rect) {
                    connect(rect, 
-                   SIGNAL(wcNotify(const String,
-                                     const Vector<Double>, 
-                                     const Vector<Double>)),
+                   SIGNAL(wcNotify( const String,
+				    const Vector<Double>, 
+				    const Vector<Double>,
+				    const Vector<Double>, 
+				    const Vector<Double> )),
                    profile_,
-                   SLOT(wcChanged(const String,
-                                    const Vector<Double>, 
-                                    const Vector<Double>)));
+                   SLOT(wcChanged( const String,
+				   const Vector<Double>, 
+				   const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      rect,
@@ -1190,13 +1198,17 @@ void QtDisplayPanelGui::showImageProfile() {
                       (ppd->getTool(QtMouseToolNames::POLYGON));
                 if (poly) {
                    connect(poly, 
-                   SIGNAL(wcNotify(const String,
-                                     const Vector<Double>, 
-                                     const Vector<Double>)),
-                   profile_,
-                   SLOT(wcChanged(const String, 
+                   SIGNAL(wcNotify( const String,
+				    const Vector<Double>, 
+				    const Vector<Double>,
                                     const Vector<Double>, 
-                                    const Vector<Double>)));
+                                    const Vector<Double> )),
+                   profile_,
+                   SLOT(wcChanged( const String, 
+				   const Vector<Double>, 
+				   const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      poly,

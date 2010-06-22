@@ -97,7 +97,7 @@ void TBConstants::dprint(int level, String message, int indentLevel) {
 
 const unsigned int TBConstants::DEFAULT_SELECT_NUM = 1000;
 const unsigned int TBConstants::DEFAULT_EXPORT_NUM = 1000;
-const unsigned int TBConstants::MAX_SELECT_NUM = 10000;
+const unsigned int TBConstants::MAX_SELECT_NUM = 1000000;
 const unsigned int TBConstants::MAX_ACTION_BUFFER = 100;
 const unsigned int TBConstants::DEFAULT_ROW_INTERVAL = 5;
 
@@ -344,6 +344,8 @@ vector<String>* TBConstants::nonArrayTypes() {
 }
 
 const String TBConstants::COMMENT_DATE = "Modified Julian Day";
+const String TBConstants::COMMENT_TIMP = "Time interval midpoint";  // e.g. in POINTING
+const String TBConstants::COMMENT_TIMP2 = "Midpoint of time for which this set of parameters is accurate.";  // e.g. in SOURCE
 
 String TBConstants::typeName(DataType dt) {
     if(dt == TpBool) return TYPE_BOOL;

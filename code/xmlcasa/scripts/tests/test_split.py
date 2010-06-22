@@ -41,7 +41,9 @@ def check_eq(val, expval, tol=None):
 
 
 class SplitChecker(unittest.TestCase):
-    """Base class for split unit tests."""
+    """
+    Base class for unit test suites that do multiple tests per split run.
+    """
     # Don't setup class variables here - the children would squabble over them.
     
     def setUp(self):
@@ -334,9 +336,45 @@ class split_test_cav(SplitChecker):
         check_eq(self.records['ll']['sigma'],
                  numpy.array([1.60727513]),
                  0.0001)
+
+class split_test_cst(unittest.TestCase):
+    """
+    The main thing here is to not segfault even when the SOURCE table
+    contains nonsense.
+    """    
+    inpms = datapath + 'unittest/split/crazySourceTable.ms' # read-only
+    outms = 'filteredsrctab.ms'
+
+    def setUp(self):
+        shutil.rmtree(self.outms, ignore_errors=True)
+        try:
+            print "\nSplitting", self.inpms
+            splitran = split(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='', width=1,
+                             antenna='',
+                             timebin='', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+        except Exception, e:
+            print "Error splitting to", self.outms
+            raise e
+
+    def tearDown(self):
+        shutil.rmtree(self.outms, ignore_errors=True)
         
+    def test_cst(self):
+        """
+        Check that only the good part of a SOURCE subtable with some nonsense made it through
+        """
+        tb.open(self.outms + '/SOURCE')
+        srcids = tb.getcol('SOURCE_ID')
+        tb.close()
+        check_eq(srcids, numpy.array([0, 0, 0, 0, 1, 1, 1,
+                                      1, 0, 0, 0, 0, 0, 0,
+                                      0, 0, 0, 0, 0, 0, 0,
+                                      0, 0, 0, 0, 0, 0, 0]))
 
 def suite():
-    return [split_test_tav, split_test_cav]        
+    return [split_test_tav, split_test_cav, split_test_cst]        
         
     

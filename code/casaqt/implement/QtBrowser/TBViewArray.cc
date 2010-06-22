@@ -100,16 +100,21 @@ void TBViewArray::setDataAt(vector<int> d, TBData& newVal, bool f) {
             widgetUpdate = true;
         }
 
+	cerr << "Update stuff :" << widgetUpdate << " " << format << " " << f << endl;
         if(widgetUpdate) {
-            if(format == NULL || !f)
+            if(format == NULL || !f){
+		    cerr << newVal.asString() << endl;
+		    cerr << row << " " << col << endl;
+		    cerr << update << endl;
                 table->item(row, col)->setText(newVal.asString().c_str());
-            else {
+	    }else {
                 format->applyTo(table->item(row, col), &newVal);
             }
+	    update = true;
         }
         
         array->setDataAt(d, newVal);
-        update = oldUpdate;
+        //update = oldUpdate;
     }
 }
 

@@ -15,10 +15,10 @@ cursord = {
     }
 
 class PlotFlag:   
-    '''
+    """
     (1) Start the internal python interpreter... 
-    and make the "pylab" module from the main python/casapy namespace 
-    visible inside it. ( done inside TPPlotter )  Note that "pylab" is the 
+    and make the 'pylab' module from the main python/casapy namespace 
+    visible inside it. ( done inside TPPlotter )  Note that 'pylab' is the 
     only module of casapy that is visible from this internal interpreter.
     
     (2) figmanager = pl.get_current_fig_manager() 
@@ -27,14 +27,14 @@ class PlotFlag:
     (3) Create the python-C++ call-back module -> PyBind. 
         ( description in tables/implement/TablePlot/PlotterGlobals.cc )
 	
-    (3) TablePlotTkAgg.py  implements a python class called "PlotFlag"
-        which takes an instance of "PyBind" and "figmanager" and makes 
+    (3) TablePlotTkAgg.py  implements a python class called 'PlotFlag'
+        which takes an instance of 'PyBind' and 'figmanager' and makes 
 	the connection between the two.
 
 	- Additional buttons are placed in the toolbar, and their callbacks
 	  defined to call methods of PyBind.
 	- The toolbar event-loop is captured - by explicitly disconnecting
-	  previous bindings, and re-defining them for "pan","zoom","mark-region"
+	  previous bindings, and re-defining them for 'pan','zoom','mark-region'
 	  modes. (need to do all three, to get them to interact properly with each other)
 	- Some Canvas events are also redefined to allow mark-region boxes to
 	  automatically resize and move around, when the window is resized or
@@ -54,7 +54,7 @@ class PlotFlag:
 	      this has to keep up with the native TkAgg matplotlib backend's
 	      whimsical decisions of when to create a new figure and when not to.
 	
-    '''
+    """
     def __init__(self,PyBind):
         #print "Init PlotFlag"
 	self.PyBind = PyBind;
@@ -84,7 +84,7 @@ class PlotFlag:
 		self.configure_buttons();
 
 		self.newtoolbar = False;
-        
+
 	# Toolbar parameters
 	self.panel=0;
         self.rows=0;
@@ -330,7 +330,10 @@ class PlotFlag:
     def draw_rubberband(self, event, x0, y0, x1, y1):
         if (rcParams['backend'] == 'Agg'):
             return
-        height = self.canvas.figure.bbox.height()
+        ### workaround for matplotlib API changes
+        #height = self.canvas.figure.bbox.height()  #0.91.4
+        #height = self.canvas.figure.bbox.height    #>=0.98
+        height = self.get_bbox_size(self.canvas.figure.bbox,"height") #workaround
         y0 =  height-y0
         y1 =  height-y1
         try: self.toolbar.lastrect
@@ -342,7 +345,10 @@ class PlotFlag:
     def draw_rect(self, x0, y0, x1, y1, x0data, y0data, x1data, y1data,a,panel,rows,cols):
        	self.panelregionlist.append([x0data,y0data,x1data,y1data,panel+1,rows,cols]);
 	self.axeslist.append(a);
-        height = self.canvas.figure.bbox.height()
+        ### workaround for matplotlib API changes
+        #height = self.canvas.figure.bbox.height()  #0.91.4
+        #height = self.canvas.figure.bbox.height    #>=0.98
+        height = self.get_bbox_size(self.canvas.figure.bbox,"height") #workaround
         y0 =  height-y0
         y1 =  height-y1
         if(os.uname()[0] == 'Darwin'):
@@ -372,10 +378,19 @@ class PlotFlag:
 	  a = self.axeslist[z];
           x0=q[0]; y0=q[1]; x1=q[2]; y1=q[3];
           # map to new zoom limits (current fig co-ords)
-	  px0,py0 = a.transData.xy_tup( (x0, y0) )
-	  px1,py1 = a.transData.xy_tup( (x1, y1) )
+          ### workaround for matplotlib API changes
+          #px0,py0 = a.transData.xy_tup( (x0, y0) )     #0.91
+          #px0,py0 = a.transData.transform( (x0, y0) )  #>=0.98
+          px0,py0 = self.get_xy(a.transData, (x0, y0) ) #workaround
+          ### workaround for matplotlib API changes
+          #px1,py1 = a.transData.xy_tup( (x1, y1) )     #0.91
+          #px1,py1 = a.transData.transform( (x1, y1) )  #>=0.98
+          px1,py1 = self.get_xy(a.transData, (x1, y1) )
 
-	  height = self.canvas.figure.bbox.height()
+          ### workaround for matplotlib API changes
+          #height = self.canvas.figure.bbox.height()   #0.91
+          #height = self.canvas.figure.bbox.height     #>=0.98
+          height = self.get_bbox_size(self.canvas.figure.bbox,"height") #workaround
   	  py0 =  height-py0
   	  py1 =  height-py1
           if(os.uname()[0] == 'Darwin'):
@@ -502,11 +517,15 @@ class PlotFlag:
 
         self.toolbar._xypress=[]
         for i, a in enumerate(self.canvas.figure.get_axes()):
-            if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
+            #if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
+            if x is not None and y is not None and event.inaxes and a.get_navigate():
                 xmin, xmax = a.get_xlim()
                 ymin, ymax = a.get_ylim()
                 lim = xmin, xmax, ymin, ymax
-                self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.deepcopy() ))
+                ### workaround for matplotlib API changes
+                #self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.deepcopy() ))  #0.91.4
+                #self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.frozen() ))    #>=0.98
+                self.toolbar._xypress.append(( x, y, a, i, lim, self.copy_trans(a.transData)))  #workaround
 		self.panel = event.inaxes._num
 		self.rows = event.inaxes._rows
 		self.cols = event.inaxes._cols
@@ -526,8 +545,14 @@ class PlotFlag:
             xmin, ymin, xmax, ymax = lim
 
             # mark rect
-            lastx, lasty = a.transData.inverse_xy_tup( (lastx, lasty) )
-            x, y = a.transData.inverse_xy_tup( (x, y) )
+            ### workaround for matplotlib API changes
+            #lastx, lasty = a.transData.inverse_xy_tup( (lastx, lasty) )        #0.91.4
+            #lastx, lasty = a.transData.inverted().transform( (lastx, lasty) )  #>=0.98
+            lastx, lasty = self.get_inverse_xy(a.transData, (lastx, lasty) )    #workaround
+            ### workaround for matplotlib API changes
+            #x, y = a.transData.inverse_xy_tup( (x, y) )        #0.91.4
+            #x, y = a.transData.inverted().transform( (x, y) )  #>=0.98
+            x, y = self.get_inverse_xy(a.transData, (x, y) )    #workaround
             Xmin,Xmax=a.get_xlim()
             Ymin,Ymax=a.get_ylim()
 
@@ -553,8 +578,13 @@ class PlotFlag:
                 if ymin > Ymin: ymin=Ymin
                 if ymax < Ymax: ymax=Ymax
 
-        px1,py1 = a.transData.xy_tup( (xmin, ymin) )
-	px2,py2 = a.transData.xy_tup( (xmax, ymax) )
+        ### workaround for matplotlib API changes
+        #px1,py1 = a.transData.xy_tup( (xmin, ymin) )     #0.91.4
+        #px1,py1 = a.transData.transform( (xmin, ymin) )  #>=0.98
+        px1,py1 = self.get_xy(a.transData, (xmin, ymin) ) #workaround
+        #px2,py2 = a.transData.xy_tup( (xmax, ymax) )     #0.91.4
+        #px2,py2 = a.transData.transform( (xmax, ymax) )  #>=0.98
+        px2,py2 = self.get_xy(a.transData, (xmax, ymax) ) #workaround
 	    
 	self.draw_rect(px1, py1, px2, py2, xmin, ymin, xmax, ymax, a, self.panel, self.rows, self.cols)
         #print 'Region on panel [%(r)d,%(c)d,%(p)d] : [%(t1).3f, %(t2).3f, %(t3).3f, %(t4).3f] '%{'r':self.rows,'c':self.cols, 'p':self.panel+1,'t1':xmin,'t2':xmax, 't3':ymin, 't4':ymax};
@@ -620,11 +650,15 @@ class PlotFlag:
 
         self.toolbar._xypress=[]
         for i, a in enumerate(self.canvas.figure.get_axes()):
-            if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
+            #if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
+            if x is not None and y is not None and event.inaxes and a.get_navigate():
                 xmin, xmax = a.get_xlim()
                 ymin, ymax = a.get_ylim()
                 lim = xmin, xmax, ymin, ymax
-                self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.deepcopy() ))
+                ### workaround for matplotlib API changes
+                #self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.deepcopy() ))   #0.91.4
+                #self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.frozen() ))     #>=0.98
+                self.toolbar._xypress.append(( x, y, a, i, lim, self.copy_trans(a.transData)))  #workaround
 
         self.toolbar.press(event)
 
@@ -648,8 +682,14 @@ class PlotFlag:
             xmin, ymin, xmax, ymax = lim
 
             # zoom to rect
-            lastx, lasty = a.transData.inverse_xy_tup( (lastx, lasty) )
-            x, y = a.transData.inverse_xy_tup( (x, y) )
+            ### workaround for matplotlib API changes
+            #lastx, lasty = a.transData.inverse_xy_tup( (lastx, lasty) )        #0.91.4
+            #lastx, lasty = a.transData.inverted().transform( (lastx, lasty) )  #>=0.98
+            lastx, lasty = self.get_inverse_xy(a.transData, (lastx, lasty) )    #workaround
+            ### workaround for matplotlib API changes
+            #x, y = a.transData.inverse_xy_tup( (x, y) )        #0.91.4
+            #x, y = a.transData.inverted().transform( (x, y) )  #>=0.98
+            x, y = self.get_inverse_xy(a.transData, (x, y) )    #workaround
             Xmin,Xmax=a.get_xlim()
             Ymin,Ymax=a.get_ylim()
 
@@ -765,11 +805,15 @@ class PlotFlag:
 
         self.toolbar._xypress=[]
         for i, a in enumerate(self.canvas.figure.get_axes()):
-            if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
+            #if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
+            if x is not None and y is not None and event.inaxes and a.get_navigate():
                 xmin, xmax = a.get_xlim()
                 ymin, ymax = a.get_ylim()
                 lim = xmin, xmax, ymin, ymax
-                self.toolbar._xypress.append((x, y, a, i, lim,a.transData.deepcopy()))
+                ### workaround for matplotlib API changes
+                #self.toolbar._xypress.append((x, y, a, i, lim,a.transData.deepcopy()))  #0.91.4
+                #self.toolbar._xypress.append((x, y, a, i, lim,a.transData.frozen()))    #>=0.98
+                self.toolbar._xypress.append((x, y, a, i, lim,self.copy_trans(a.transData))) #workaround
                 self.canvas.mpl_disconnect(self.toolbar._idDrag)
                 self.toolbar._idDrag=self.canvas.mpl_connect('motion_notify_event', self.drag_pan)
 
@@ -823,8 +867,14 @@ class PlotFlag:
             #safer to use the recorded button at the press than current button:
             #multiple button can get pressed during motion...
             if self.toolbar._button_pressed==1:
-                lastx, lasty = trans.inverse_xy_tup( (lastx, lasty) )
-                x, y = trans.inverse_xy_tup( (event.x, event.y) )
+                ### workaround for matplotlib API changes
+                #lastx, lasty = trans.inverse_xy_tup( (lastx, lasty) )          #0.91.4
+                #lastx, lasty = trans.inverted().transform( (lastx, lasty) )    #>=0.98
+                lastx, lasty = self.get_inverse_xy(trans, (lastx, lasty) )      #workaround
+                ### workaround for matplotlib API changes
+                #x, y = trans.inverse_xy_tup( (event.x, event.y) )        #0.91.4
+                #x, y = trans.inverted().transform( (event.x, event.y) )  #>=0.98
+                x, y = self.get_inverse_xy(trans, (event.x, event.y) )    #workaround
                 if a.get_xscale()=='log':
                     dx=1-lastx/x
                 else:
@@ -850,15 +900,24 @@ class PlotFlag:
                     ymax -= dy
             elif self.toolbar._button_pressed==3:
                 try:
-                    dx=(lastx-event.x)/float(a.bbox.width())
-                    dy=(lasty-event.y)/float(a.bbox.height())
+                    ### workaround for matplotlib API changes
+                    #dx=(lastx-event.x)/float(a.bbox.width())  #0.91.4
+                    #dx=(lastx-event.x)/float(a.bbox.width)    #>=0.98
+                    dx=(lastx-event.x)/float(self.get_bbox_size(a.bbox,"width")) #workaround
+                    ### workaround for matplotlib API changes
+                    #dy=(lasty-event.y)/float(a.bbox.height()) #0.91.4
+                    #dy=(lasty-event.y)/float(a.bbox.height)   #>=0.98
+                    dy=(lasty-event.y)/float(self.get_bbox_size(a.bbox,"height"))  #workaround
                     dx,dy=format_deltas(event,dx,dy)
                     if a.get_aspect() != 'auto':
                         dx = 0.5*(dx + dy)
                         dy = dx
                     alphax = pow(10.0,dx)
                     alphay = pow(10.0,dy)#use logscaling, avoid singularities and smother scaling...
-                    lastx, lasty = trans.inverse_xy_tup( (lastx, lasty) )
+                    ### workaround for matplotlib API changes
+                    #lastx, lasty = trans.inverse_xy_tup( (lastx, lasty) )       #0.91.4
+                    #lastx, lasty = trans.inverted().transform( (lastx, lasty) ) #>=0.98
+                    lastx, lasty = self.get_inverse_xy(trans, (lastx, lasty) )   #workaround
                     if a.get_xscale()=='log':
                         xmin = lastx*(xmin/lastx)**alphax
                         xmax = lastx*(xmax/lastx)**alphax
@@ -948,4 +1007,48 @@ class PlotFlag:
 	    self.toolbar.bMarkRegion.config(relief='sunken');
 
 
+    #### Workarounds for Matplotlib version handling (ugly) ####
+    def ismatlab_new(self):
+        verstr=matplotlib.__version__.split(".")
+        maj=int(verstr[0])
+        sub=int(verstr[1])
+        return (maj>0 or sub>=98)
 
+    def get_inverse_xy(self,trans,(x,y)):
+        if hasattr(trans,"inverse_xy_tup"): return trans.inverse_xy_tup((x, y))
+        elif hasattr(trans,"inverted"): return trans.inverted().transform((x, y))
+        else: return None
+
+    def get_xy(self,trans,(x,y)):
+        return self.switch_func(trans,["xy_tup","transform"],(x,y))
+
+    def copy_trans(self,trans): 
+        return self.switch_func(trans,["deepcopy","frozen"])
+        
+    def get_bbox_size(self,obj,func=""):
+        return self.get_called_or_attr(obj,func)
+
+    def switch_func(self,obj,funcs=[],*args,**kwargs):
+        """
+        Tries a list of functions and return a result from callable one.
+        Deals with function name changes but parameters have to be unchanged.
+        """
+        for func in funcs:
+            called_func=self.get_called_or_attr(obj,func,*args,**kwargs)
+            if called_func != None: break
+        return called_func
+
+    def get_called_or_attr(self,obj,func="",*args,**kwargs):
+        """
+        Returns a result from function call if it's callable.
+        If not callable, returns the attribute or False (non-existent). 
+        """
+        #if not hasattr(obj,func): return False
+        #else: called=getattr(obj,func)
+        try: called=getattr(obj,func)
+        #except: return False
+        except: return None
+        if callable(called): return called(*args,**kwargs)
+        else: return called
+        
+        

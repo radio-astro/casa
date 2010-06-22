@@ -187,9 +187,11 @@ namespace casa {
 
       // SubMS uses a different meaning for nchan_p from MSSelection.  For
       // SubMS it is the # of output channels for each output spw.  For
-      // MSSelection it is end input chan - start input chan + 1 for each
-      // output spw.
+      // MSSelection it is end input chan for each output spw.
       for(uInt k = 0; k < nchan_p.nelements(); ++k){
+	if(chanStep_p[k] == 0)	// CAS-2224, triggered by spw='0:2'
+	  chanStep_p[k] = 1;	// (as opposed to '0:2~2').
+	
         nchan_p[k] = (nchan_p[k] - chanStart_p[k] + 1) / chanStep_p[k];
         if(nchan_p[k] < 1)
           nchan_p[k] = 1;
@@ -5628,11 +5630,13 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 
       uInt outrn = 0; 		   	   		// row number in output.
       uInt nInputRows = inSId.nrow();
+      Int maxSId = sourceRelabel_p.nelements();  // inSidVal is Int.
       for(uInt inrn = 0; inrn < nInputRows; ++inrn){
 	Int inSidVal = inSId(inrn);
 	Int inSPWVal = inSPW(inrn);  // -1 means the source is valid for any SPW.
 	
-	if(inSidVal > -1 && sourceRelabel_p[inSidVal] > -1
+	if(inSidVal > -1 && inSidVal < maxSId &&
+           sourceRelabel_p[inSidVal] > -1
            && (inSPWVal == -1 || spwRelabel_p[inSPWVal] > -1)){
 	  // Copy inrn to outrn.
 	  TableCopy::copyRows(newSource, oldSource, outrn, inrn, 1);

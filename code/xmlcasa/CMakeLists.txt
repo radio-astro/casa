@@ -18,6 +18,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+
+# Make sure that compile time definitions (build time, svn revision number)
+# are recomputed in every build.
+
+# This target is executed non-conditionally and before any other target that
+# depends on the definitions file
+add_custom_target( xmlcasa_update_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
+
+
+# This is delegated to the cmake script code/install/casadef.cmake in
+# order to allow setting environment variables portably.
+add_custom_command( OUTPUT definitions
+  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions
+)
+
+add_custom_target(
+  xmlcasa_python_casadef
+  COMMAND echo "task_directory = \\\"${PYTHON_TASKD}\\\"" > casadef.py
+  COMMAND echo "python_library_directory = \\\"${PYTHON_LIBD}\\\"" >> casadef.py
+  COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
+  COMMAND cat definitions >> casadef.py
+  DEPENDS definitions
+  )
+
+add_dependencies( xmlcasa_python_casadef xmlcasa_update_definitions )
+
+add_dependencies( inst xmlcasa_python_casadef )
+add_custom_target( xmlcasa_python_casadef_fast ${CMAKE_BUILD_TOOL} xmlcasa_python_casadef/fast )
+add_dependencies( xmlcasa_fast xmlcasa_python_casadef_fast )
+
+install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
+
 # set SVNREVISION and BUILDTIME
 set( casadef_quiet TRUE )
 set( casadef_perl ${PERL_EXECUTABLE} )
@@ -25,36 +57,22 @@ set( casadef_source_dir ${CMAKE_SOURCE_DIR} )
 include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
 
 add_custom_command( OUTPUT version.cc
-  COMMAND 
+  COMMAND egrep subversion_revision definitions > tmp1.txt
+  COMMAND sed -e 's|[^0-9]*\"||g' tmp1.txt > tmp2.txt
+  COMMAND echo "namespace casa { extern const int   aips_patch_version =" > tmp3.txt
+  COMMAND cat tmp2.txt >> tmp3.txt
+  COMMAND
   sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'
       -e 's|MINOR|${CASA_MINOR_VERSION}|'
       -e 's|PATCH|${CASA_PATCH_VERSION}|'
       -e 's|REVISION|${SVNREVISION}|'
       -e 's|DATE|${TAGGEDTIME}|'
-      ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > version.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > tmp4.txt
+  COMMAND cat tmp3.txt tmp4.txt > version.cc
       || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template
+  DEPENDS definitions
 )
-
-# (Re)create casadef.py in every build, including those that do
-# not trigger a new cmake run.
-# Parts of casadef.py is generated from the output of svn. This
-# is delegated to the cmake script code/install/casadef.cmake in
-# order to allow setting environment variables portably.
-
-add_custom_target( 
-  xmlcasa_python_casadef
-  COMMAND echo "task_directory = \\\"${PYTHON_TASKD}\\\"" > casadef.py
-  COMMAND echo "python_library_directory = \\\"${PYTHON_LIBD}\\\"" >> casadef.py
-  COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
-  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake >> casadef.py
-  )
-
-add_dependencies( inst xmlcasa_python_casadef )
-add_custom_target( xmlcasa_python_casadef_fast ${CMAKE_BUILD_TOOL} xmlcasa_python_casadef/fast )
-add_dependencies( xmlcasa_fast xmlcasa_python_casadef_fast )
-
-install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
 
 casa_add_library( xmlcasa
   implement/alma/asdm2msfillertask_cmpt.cc
@@ -108,6 +126,8 @@ casa_add_library( xmlcasa
   implement/xerces/stdcasaXMLUtil.cc
   version.cc
   )
+add_dependencies( libxmlcasa_fast xmlcasa_update_definitions )
+add_dependencies( libxmlcasa      xmlcasa_update_definitions )
 
 casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
 casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )

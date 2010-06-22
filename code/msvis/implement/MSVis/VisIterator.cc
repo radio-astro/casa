@@ -188,6 +188,7 @@ void ROVisIterator::setSelTable()
     Vector<uInt> rows(curNumRow_p);
     indgen(rows,uInt(curStartRow_p));
     selTable_p=msIter_p.table()(rows);
+    attachColumns(attachTable());
 }
 
 

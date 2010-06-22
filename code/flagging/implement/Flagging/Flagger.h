@@ -131,7 +131,7 @@ protected:
  
   MeasurementSet   ms;
   MeasurementSet   originalms;
-  Block<RFABase*> acc;
+  PtrBlock<RFABase*> acc;
 
   //new added
   MeasurementSet *mssel_p;

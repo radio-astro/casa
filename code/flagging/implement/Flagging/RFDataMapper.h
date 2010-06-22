@@ -147,7 +147,12 @@ inline RFDataMapper::MapperType RFDataMapper::type ()
 { return mytype; }
 
 inline Float RFDataMapper::mapValue ( uInt ich,uInt irow )
-{ return ddm->map(*pviscube,ich,irow); }
+{ 
+  if (pviscube == NULL) {
+    throw(AipsError("Visibility buffer is unset, cannot get value!"));
+  }
+  return ddm->map(*pviscube,ich,irow); 
+}
 
 inline Float RFDataMapper::mapValue ( uInt irow )
 { return (this->*rowmapper)(irow); }

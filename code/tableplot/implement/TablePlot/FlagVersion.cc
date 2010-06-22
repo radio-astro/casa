@@ -51,6 +51,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableRecord.h>
+#include <tables/Tables/TiledShapeStMan.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>
@@ -395,11 +396,26 @@ Bool FlagVersion::saveFlagVersion( String versionname ,
       TableDesc td("", versionname, TableDesc::Scratch);
       td.comment() = "TablePlot Flag Table : " + versionname;
       
-      if(fcol_p) td.addColumn (ArrayColumnDesc<Bool> (dataflagcolname_p));
+      if(fcol_p) {
+          td.addColumn (ArrayColumnDesc<Bool> (dataflagcolname_p, 2));
+          td.defineHypercolumn("TiledFlag", 3,
+                               stringToVector(dataflagcolname_p));
+      }
       if(frcol_p) td.addColumn (ScalarColumnDesc<Bool> (rowflagcolname_p));
 
       SetupNewTable aNewTab(tabvername, td, Table::New);
       
+      // FLAG hyperColumn
+      {
+          ArrayColumn<Bool> fromFlag(tab_p, dataflagcolname_p);
+          
+          uInt nrow = 600;  //arbitrary
+          IPosition tileShape(3, fromFlag.shape(0)(0), fromFlag.shape(0)(1), nrow);
+      
+          TiledShapeStMan flagStMan("TiledFlag", tileShape);
+          aNewTab.bindColumn(dataflagcolname_p, flagStMan);
+      }
+
       Table ftab(aNewTab, Table::Plain, nrows_p);
 
       saveFlagsInto( tab_p, ftab, String("replace") );

@@ -525,7 +525,8 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 }
 
 ::casac::table*
-table::queryC(const std::string& query, const std::string& resultTable, const std::string& sortlist, const std::string& columns)
+table::queryC(const std::string& query, const std::string& resultTable,
+              const std::string& sortlist, const std::string& columns)
 {
   *itsLog << LogIO::WARN
           << "tb.queryC has been merged with tb.query, and will disappear\n"
@@ -565,6 +566,7 @@ table::query(const std::string& query, const std::string& name,
  }
  return rstat;
 }
+
 ::casac::variant*
 table::calc(const std::string& expr)
 {
@@ -1657,6 +1659,18 @@ bool table::clearlocks()
 {
 	Bool rstat(True);
 	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
+bool table::listlocks()
+{
+	Bool rstat(True);
+
+	Vector<String> lockedTables = Table::getLockedTables();
+	cout << "Locked tables: " << endl;
+	for (uInt i=0;i<lockedTables.nelements();++i)
+	  cout << "   " << lockedTables(i) << endl;
+	cout << "--" << endl;
 	return rstat;
 }
 

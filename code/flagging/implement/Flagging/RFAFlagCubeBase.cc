@@ -53,7 +53,8 @@ void RFABase::init ()
 // -----------------------------------------------------------------------
 RFAFlagCubeBase::RFAFlagCubeBase (  RFChunkStats &ch,const RecordInterface &parm ) :
   RFABase(ch,parm),
-  flag(ch,isFieldSet(parm,RF_FIGNORE),isFieldSet(parm,RF_RESET),os)
+  flag(ch,isFieldSet(parm,RF_FIGNORE),isFieldSet(parm,RF_RESET),os),
+  is_selector(false)
 {
 }
 
@@ -122,7 +123,7 @@ uInt RFAFlagCubeBase::estimateMemoryUse ()
 // -----------------------------------------------------------------------
 Bool RFAFlagCubeBase::newChunk (Int &)
 {
-  flag.init(corrmask, nAgent, name());
+  flag.init(corrmask, nAgent, is_selector, name());
   return active=True;
 }
 

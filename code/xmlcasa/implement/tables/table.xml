@@ -2963,6 +2963,16 @@ Failure (returning F) is a sign of a bug.
 <returns type="bool"/>
 </method>
 
+   <method type="function" name="listlocks">
+	   <shortdescription>Lists any table lock associated with the current process</shortdescription>
+   
+<description>
+	Occasionally a table will be inretrievably locked to another process no matter how much closing is done.
+	So listLocks will list the offending tables (and unoffending ones, too), so we can figure out where the problem might be.
+</description>
+<returns type="bool"/>
+</method>
+
 
    <method type="function" name="statistics">
    <shortdescription>Get statistics on the selected table column</shortdescription>
