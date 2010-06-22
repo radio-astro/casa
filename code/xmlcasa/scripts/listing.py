@@ -119,8 +119,8 @@ def diffMetadata(testOut, standardOut, prefix=""):
             newList.append(filtered)
         return newList
             
-    newTestList = filter_out_unwanted(testList)
-    newStndList = filter_out_unwanted(stndList)
+    newTestList = filter_out_unwanted(testList, unwanted)
+    newStndList = filter_out_unwanted(stndList, unwanted)
 
     # If everything after filtering is equal, return True
     if newTestList == newStndList:
