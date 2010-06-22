@@ -43,6 +43,9 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/BasicMath/Math.h>
+
+#include <casa/OS/Directory.h>
+
 #include <ms/MeasurementSets/MeasurementSet.h> //
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -147,15 +150,13 @@ static Int getIndexContains(Vector<String>& map, const String& key,
   return -1;
 }
 
-//initialize UV_DATA flag
-Bool FITSIDItoMS1::firstMain = True;
+Bool FITSIDItoMS1::firstMain = True; // initialize the class variable firstMain
+SimpleOrderedMap<Int,Int> FITSIDItoMS1::antIdFromNo(-1); // initialize the class variable antIdFromNo
 
 //	
 // Constructor
 //	
-
-
-FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType)
+FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType, const Bool& initFirstMain)
   : BinaryTableExtension(fitsin),
     itsNrMSKs(10),
     itsMSKC(itsNrMSKs," "),
@@ -178,6 +179,10 @@ FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType)
   itsIsArray.resize(nfield);   // array flags per field
   itsIsArray = False;          // assume scalar-type
   
+  if(initFirstMain){
+      firstMain = True;
+      antIdFromNo.clear();
+  }
   
   //
   // Step 0: The mandatory and reserved FITS keywords have been read
@@ -204,13 +209,10 @@ FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType)
       //
       if (itsMSKN(ikey) == "TYPE") {
 	itsTableInfo.setType(itsMSKV(ikey));
-	///		cout << "found MSK TYPE    = " << itsMSKV(ikey) << endl;
       } else if (itsMSKN(ikey) == "SUBTYPE") {
 	itsTableInfo.setSubType(itsMSKV(ikey));
-	///		cout << "found MSK SUBTYPE = " << itsMSKV(ikey) << endl;
       } else if (itsMSKN(ikey) == "README") {
 	itsTableInfo.readmeAddLine(itsMSKV(ikey));
-	///		cout << "found MSK README  = " << itsMSKV(ikey) << endl;
       }
       itsgotMSK(ikey) = False;
     }
@@ -243,16 +245,17 @@ FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType)
   itsKwSet.restructure(emptyDesc);
   
   //
-  // Step 4: Create a single-row scratch table, with the table
+  // Step 4: Create a single-row table, with the table
   // description just built. It will hold the "current" row and is
   // therefore called itsCurRowTab.
   //
   SetupNewTable newtab("", itsTableDesc, Table::Scratch);
   StManAipsIO stman;
   newtab.bindAll (stman);
-  
-  
+    
   itsCurRowTab = Table(newtab, 1);
+
+  //cout << "Created " << itsCurRowTab.tableName() << endl; 
   
   const Regex trailing(" *$"); // trailing blanks
   
@@ -561,11 +564,10 @@ void FITSIDItoMS1::fillRow()
 }
 
 
-//	The destructor
+// The destructor
 
 FITSIDItoMS1::~FITSIDItoMS1()
 {
-  //delete infile_p;
   delete msc_p;
   delete itsLog;
 }
@@ -577,16 +579,18 @@ Table FITSIDItoMS1::oldfullTable(const String& tabname)
     // Prepare for the creation of a new table with the name requested
     // and with the same table description as itsCurRowTab.  
     //
-    SetupNewTable newtab(tabname, getDescriptor(), Table::NewNoReplace); 
+    SetupNewTable newtab(tabname, getDescriptor(), Table::Scratch); 
 
     Int nRows = nrows();
     StandardStMan stanStMan (-nRows);
-    newtab.bindAll (stanStMan);      
+    newtab.bindAll(stanStMan);      
 
     //
     // Create an empty table with the proper number of rows.
     //
     Table full(newtab,nrows());
+
+    // cout << "OFT Creating " << full.tableName() << endl;
 
     //
     // Create a row copier that will repeatedly copy the current row
@@ -629,86 +633,6 @@ Table FITSIDItoMS1::oldfullTable(const String& tabname)
 
     return full;
 }
-
-
-//Table FITSIDItoMS1::fullTable(const String& tabname, 
-//			      const Table::TableOption taboptn,
-//			      Bool useIncrSM)
-//{
-//}
-
-//Table FITSIDItoMS1::createTable(const String& tabname)
-//{
-//}
-
-
-//Table FITSIDItoMS1::fillTable(const String& tabname)
-//{
-//}
-
-//Table FITSIDItoMS1::createMainTable(const String& tabname)
-//{
-//}
-
-
-Table FITSIDItoMS1::fillMainTable(const String& tabname)
-{
-    //
-    // Open the MAIN table in Update mode and add appropriate number of rows.
-    //
-    Table maintab(tabname,Table::Update);
-    maintab.addRow(nrows());
-
-    //cout << "nrows=" << maintab.nrow() << "\n";
-    //
-    // Create a row copier that will repeatedly copy the current row
-    // in the single-row table itsCurRowTab to the MAIN table.
-    //
-    RowCopier rowcop(maintab, itsCurRowTab);
-
-    //
-    // Loop over all rows remaining.
-    //
-    //for (Int outrow = 0, infitsrow = currrow();
-    //	 infitsrow < nrows(); 
-    //	 outrow++, infitsrow++) {
-
-    for (Int outrow = maintab.nrow()-nrows(), infitsrow = currrow();
-	 infitsrow < nrows(); 
-	 outrow++, infitsrow++) { 
-
-      //cout << "infitsrow=" << infitsrow << "\n";
-
-	//
-	// Copy the 0-th row from itsCurRowTab to the outrow-th row in
-	// the full-sized table.
-	//
-	rowcop.copy(outrow, 0);
-	//
-	// Read the next input row, but don't read past the end of the
-	// table.
-	//
-	if ((infitsrow+1) < nrows()) { 
-	    //
-	    // Read the next row.
-	    //
-	    read(1);
-	    //
-	    // Write it in itsCurRowTab.
-	    //
-	    fillRow();
-	}
-    }
-
-    //
-    // Construct the table.info.
-    //
-    TableInfo& info = maintab.tableInfo();
-    info = itsTableInfo;
-
-    return maintab;
-}
-
 
 
 const TableDesc& FITSIDItoMS1::getDescriptor()
@@ -769,8 +693,6 @@ void FITSIDItoMS1::convertKeywords()
     while ((kw = kwl.next())) {
 
 	kwname = kw->name();
-	//if(kw->isreserved()) cout << "reserved kwname=" << kwname << endl;
-	//else cout << "kwname=" << kwname << endl;
 	
 	if (!kw->isreserved()) {
 	    //
@@ -785,15 +707,14 @@ void FITSIDItoMS1::convertKeywords()
 	    //
 	    kwname = kw->name();
 
-///	    cout << "doing keyword " << kwname << endl;
 	    //
             // If the name already occurs in itsKwSet, issue a warning
             // and overwrite the old keyword.
 	    //
 	    if (itsKwSet.isDefined(kwname)) {
-		cout << "Duplicate keyword name : " << kwname
-		     << " most recent occurrance takes precedence" << endl;
-		itsKwSet.removeField(kwname);
+	      *itsLog << LogIO::WARN << "Duplicate keyword name : " << kwname
+		      << " most recent occurrance takes precedence" << LogIO::POST;
+	      itsKwSet.removeField(kwname);
 	    }
 	    
 	    //
@@ -827,22 +748,23 @@ void FITSIDItoMS1::convertKeywords()
 		    } else if (kwname(3,1)=="V") {
 			itsMSKV(iMSK-1) = val;
 		    } else {
-			cout << "MSBinaryTable found unknown MSK keyword: "
-			     << kwname << ". It will be ignored" << endl;
+			*itsLog << LogIO::WARN << "MSBinaryTable found unknown MSK keyword: "
+				<< kwname << ". It will be ignored" << LogIO::POST;
 		    }
 		} else {
-		    cout << "MSBinaryTable found unknown MSK keyword: "
-			 << kwname << ". It will be ignored" << endl;
+		    *itsLog << LogIO::WARN << "MSBinaryTable found unknown MSK keyword: "
+			    << kwname << ". It will be ignored" << LogIO::POST;
 		}
-	    } else {
-
+	    } 
+	    else {
+		
 		// Add a keyword of the proper type to the keyword
 		// list.
 		//
 		switch (kw->type()) {
 		case FITS::NOVALUE: itsKwSet.define(kwname,"");
 		    // NOVALUE fields become string keywords with an emtpy string.
-		    cout << "FITS::NOVALUE found" << endl;
+		    *itsLog << LogIO::NORMAL << "FITS::NOVALUE found" << LogIO::POST;
 		    break;
 		case FITS::LOGICAL: itsKwSet.define(kwname, kw->asBool()); 
 		    break;
@@ -859,9 +781,8 @@ void FITSIDItoMS1::convertKeywords()
 		case FITS::COMPLEX: itsKwSet.define(kwname, kw->asComplex());
 		    break;
 		default:
-		    cerr << "Error: unrecognized table data type for keyword "
-			 << kwname << " type = " << kw->type() << endl;
-		    cerr << "That should not have happened" << endl;
+		    *itsLog << LogIO::WARN << "Internal error: unrecognized table data type for keyword "
+			    << kwname << " type = " << kw->type() << LogIO::POST;
 		    continue;
 		}
 		
@@ -885,7 +806,7 @@ void FITSIDItoMS1::convertKeywords()
     // FITS::minInt.
     //
     itsKwSet.define("VERSION", extver());
-///   cout << "defined table keyword VERSION = " << extver() << endl;
+    
 }
 
 
@@ -908,30 +829,62 @@ void FITSIDItoMS1::describeColumns()
 
     //
     // Get shape vector from MAXISn fields for UV_DATA extensions
+    // and determine if there are WEIGHTS in the UV data
     //
     String extname(FITSIDItoMS1::extname());
     extname = extname.before(trailing);
 
     Vector<Int> maxis(0);
-    if(extname=="UV_DATA") 
-      {
-        const FitsKeyword* kw;
+    if(extname=="UV_DATA"){
+	const FitsKeyword* kw;
         String kwname;
         kwl.first();
         uInt ctr=0;
 
-        while((kw = kwl.next())) 
-	  {
+	weightKwPresent_p = False;
+
+        while((kw = kwl.next())){
 	    kwname = kw->name();
-	    if(kwname.at(0,5)=="MAXIS")
-	      { 
+	    if(kwname.at(0,5)=="MAXIS"){ 
 		maxis.resize(++ctr,True);
 		maxis(ctr-1)=kw->asInt();
-		cout << "**maxis=" << maxis << endl;
-	      }
-	  }
-      }
+//		cout << "**maxis=" << maxis << endl;
+	    }
+	    else if(kwname.at(0,6)=="WEIGHT"){
+	        weightKwPresent_p = True;
+		*itsLog << LogIO::WARN << "WEIGHT keyword in UV_DATA table presently not supported."
+			<< LogIO::POST;
+	    }
+	}
 
+	if(maxis.nelements()>1){
+	    if(maxis(1)==2){
+		uv_data_hasWeights_p = False;
+		if(!weightKwPresent_p){
+		    *itsLog << LogIO::WARN << "MAXIS1 keyword == 2 in UV_DATA table AND WEIGHT keyword not present."
+			    << endl << ". Will try to continue ..." << LogIO::POST;
+		}
+	    }
+	    else if(maxis(1)==3){
+		uv_data_hasWeights_p = True;
+		if(weightKwPresent_p){
+		    *itsLog << LogIO::WARN << "MAXIS1 keyword == 3 in UV_DATA table AND WEIGHT keyword present."
+			    << endl << ". Will try to continue by ignoring WEIGHT keyword ..." << LogIO::POST;
+		    weightKwPresent_p = False;
+		}
+	    }
+	    else{
+		uv_data_hasWeights_p = False;
+		*itsLog << LogIO::WARN << "Invalid value for MAXIS1 keyword in UV_DATA table "
+			<< maxis(1) << " should be 2 or 3. Will try to continue ..." << LogIO::POST;
+	    }
+	}
+	else{
+	    uv_data_hasWeights_p = False;
+	    *itsLog << LogIO::WARN << "Could not find MAXIS1 keyword in UV_DATA table. FITS IDI file probably invalid."
+		    << LogIO::POST;
+	}
+    }
 
     for (Int icol=0; icol<nfield; icol++) {
 	itsNelem(icol) = field(icol).nelements();
@@ -946,8 +899,9 @@ void FITSIDItoMS1::describeColumns()
 
 	//cout << "colname=" << colname << endl;
 
-	if(extname=="UV_DATA" && colname=="FLUX")
+	if(extname=="UV_DATA" && colname=="FLUX"){
 	  colname="DATA";
+	}
 
 	//
 	// Check if the name exists.
@@ -963,8 +917,8 @@ void FITSIDItoMS1::describeColumns()
 	    //
 	    // Issue a warning.
 	    //
-	    cout << "Duplicate column name : " << ttype(icol)
-		 << " this occurance will be named " << colname << endl;
+	    *itsLog << LogIO::WARN << "Duplicate column name : " << ttype(icol)
+		    << " this occurance will be named " << colname << LogIO::POST;
 
 	} else if (itsTableDesc.keywordSet().isDefined(colname)) {
 	    //
@@ -983,11 +937,11 @@ void FITSIDItoMS1::describeColumns()
 	Bool isString = False;
 	Bool isSHAPEd = False;
 	String SHAPEstr = "()";
-	cout << colname << " is";
+//	cout << colname << " is";
 	if (field(icol).fieldtype() == FITS::CHAR
 	    || field(icol).fieldtype() == FITS::STRING) {
 	    isString = True;
-	    cout << " a String-type column";
+//	    cout << " a String-type column";
 	    //
 	    // See whether MSK SHAPE is defined. If so: array.
 	    //
@@ -1006,10 +960,10 @@ void FITSIDItoMS1::describeColumns()
 	} else if (itsNelem(icol) > 1) {
 	    // multi-element vector or other array
 	    itsIsArray(icol) = True;
-	    cout << " a multi-element non-String-type Array column";
+//	    cout << " a multi-element non-String-type Array column";
 
 	} else {
-	    cout << " a non-String-type column";
+//	    cout << " a non-String-type column";
 	    //
 	    // See whether MSK SHAPE is defined. If so: array.
 	    //
@@ -1019,13 +973,13 @@ void FITSIDItoMS1::describeColumns()
 			SHAPEstr = itsMSKV(ikey);
 			itsIsArray(icol) = True;
 			isSHAPEd = True;
-			cout << " (0/1 element Vector)";
+//			cout << " (0/1 element Vector)";
 			itsgotMSK(ikey) = False;
 		    }
 		}
 	    }
 	}
-	cout << endl;
+//	cout << endl;
 
 	//
 	// Get the shape vector for arrays.
@@ -1047,7 +1001,7 @@ void FITSIDItoMS1::describeColumns()
 		for (Int id=0; id<maxis(0); id++) {
 		    shape(id) = maxis(id+1);
 		}
-		cout << "   shape = " << shape << endl;
+//		cout << "   shape = " << shape << endl;
 	      }
 
 	    else
@@ -1070,7 +1024,7 @@ void FITSIDItoMS1::describeColumns()
 		for (Int id=0; id<ndim; id++) {
 		    shape(id) = atoi(dimvec(id).chars());
 		}
-		cout << "   shape = " << shape << endl;
+//		cout << "   shape = " << shape << endl;
 
 	    } else if (isSHAPEd) {
 		//
@@ -1079,7 +1033,7 @@ void FITSIDItoMS1::describeColumns()
 		//
 		dimstr = SHAPEstr(1,SHAPEstr.length()-2);
 		shape(0) = atoi(dimstr.chars());
-		cout << "   shape = " << shape << endl;
+//		cout << "   shape = " << shape << endl;
 
 	    } else {
 		//
@@ -1091,7 +1045,7 @@ void FITSIDItoMS1::describeColumns()
 		formstr = formstr.before(trailing);
 		formstr = formstr(0,formstr.length()-1);
 		shape(0) = atoi(formstr.chars());
-		cout << "    shape = " << shape << endl;
+//		cout << "    shape = " << shape << endl;
 	    }
 
 	      }
@@ -1107,11 +1061,11 @@ void FITSIDItoMS1::describeColumns()
 		    if (itsMSKN(ikey) == "OPTIONS") {
 			if (itsMSKV(ikey) == "DIRECT") {
 			    option = ColumnDesc::Direct;
-///			    cout << "found MSK OPTIONS = DIRECT for "
-///				 << colname << endl;
+			    *itsLog << LogIO::DEBUG1 << "found MSK OPTIONS = DIRECT for "
+				    << colname << LogIO::POST;
 			} else {
-			    cout << "Invalid MSK OPTIONS = "
-				 << itsMSKV(ikey) << " is ignored." << endl;
+			    *itsLog << LogIO::WARN << "Invalid MSK OPTIONS = "
+				    << itsMSKV(ikey) << " is ignored." << LogIO::POST;
 			}
 			itsgotMSK(ikey) = False;
 		    }
@@ -1224,9 +1178,8 @@ void FITSIDItoMS1::describeColumns()
 	    
 	default:
 	    // VADESC or NOVALUE should not happen in a table.
-	    cerr << "Error: column " << icol
-		 << " has untranslatable type " << field(icol).fieldtype()
-		 << " This should NEVER happen " << endl;
+	    *itsLog << LogIO::WARN << "Internal error: column " << icol
+		    << " has untranslatable type " << field(icol).fieldtype() << LogIO::POST;
 	    continue;
 	}		// end of switch on FITS type
 	
@@ -1353,7 +1306,7 @@ void FITSIDItoMS1::getAxisInfo()
       //cout << "idx=" << idx <<endl;
       if(kwname == "MAXIS"){
 	nAxis = kw->asInt();
-	cout << "nAxis=" << nAxis << endl;;
+	//cout << "nAxis=" << nAxis << endl;;
 	setMAXIS = True;
       }
     }
@@ -1410,11 +1363,11 @@ void FITSIDItoMS1::getAxisInfo()
 	}
       **/
 
-    cout << "nPixel_p=" << nPixel_p << endl;
-    cout << "coordType_p=" << coordType_p << endl;
-    cout << "refVal_p=" << refVal_p << endl;
-    cout << "refPix_p=" << refPix_p << endl;
-    cout << "delta_p=" << delta_p << endl;
+//    cout << "nPixel_p=" << nPixel_p << endl;
+//    cout << "coordType_p=" << coordType_p << endl;
+//    cout << "refVal_p=" << refVal_p << endl;
+//    cout << "refPix_p=" << refPix_p << endl;
+//    cout << "delta_p=" << delta_p << endl;
   }
   
   // Check if required axes are there
@@ -1451,7 +1404,7 @@ void FITSIDItoMS1::getAxisInfo()
     corrType_p(i) = ifloor(refVal_p(iPol) +
 			   (i+1-refPix_p(iPol))*delta_p(iPol)+0.5);
     // convert AIPS-convention Stokes description to aips++ enum
-    cout << "corrType_p="<< corrType_p(i) <<endl;
+//    cout << "corrType_p="<< corrType_p(i) <<endl;
     switch (corrType_p(i)) {
     case -8:
       corrType_p(i) = Stokes::YX; break;
@@ -1481,8 +1434,8 @@ void FITSIDItoMS1::getAxisInfo()
      
     default: 
       if (corrType_p(i) < -8 || corrType_p(i) > 4) {
-	cout << "Unknown Correlation type: " << corrType_p(i) 
-	       << LogIO::EXCEPTION;
+	*itsLog << "Unknown Correlation type: " << corrType_p(i) 
+		<< LogIO::EXCEPTION;
       }
     }
   }
@@ -1506,7 +1459,7 @@ void FITSIDItoMS1::getAxisInfo()
     Fallible<Int> receptor = Stokes::receptor1(cType);
     if (receptor.isValid()) {
       corrProduct_p(0,i) = receptor;
-      cout << "corrProcut_p(0,"<< i <<")=" << corrProduct_p(0,i);
+//      cout << "corrProcut_p(0,"<< i <<")=" << corrProduct_p(0,i);
     } else {
       *itsLog << "Cannot deduce receptor 1 for correlations of type: " 
 	     << Stokes::name(cType) << LogIO::EXCEPTION;
@@ -1514,7 +1467,7 @@ void FITSIDItoMS1::getAxisInfo()
     receptor = Stokes::receptor2(cType);
     if (receptor.isValid()) {
       corrProduct_p(1,i) = receptor;
-      cout << "corrProcut_p(1,"<< i <<")=" << corrProduct_p(1,i);
+//      cout << "corrProcut_p(1,"<< i <<")=" << corrProduct_p(1,i);
     } else {
       *itsLog << "Cannot deduce receptor 2 for correlations of type: " 
 	     << Stokes::name(cType) << LogIO::EXCEPTION;
@@ -1528,6 +1481,7 @@ void FITSIDItoMS1::getAxisInfo()
   // Save the array name
   array_p = (kwp=kw(FITS::TELESCOP)) ? kwp->asString() : "unknown";
   array_p=array_p.before(trailing);
+
   // Save the RA/DEC epoch (for ss fits)
   epoch_p = (kwp=kw(FITS::EPOCH)) ? kwp->asFloat() : 2000.0;
 
@@ -1757,9 +1711,9 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 
   tFields = tfields();
   nRows = nrows();
-  cout << "tFields=" << tFields << endl;
-  cout << "nrows=" << nRows << endl;
-  cout << "msnrows=" << MSnRows << endl; 
+  //cout << "tFields=" << tFields << endl;
+  //cout << "nrows=" << nRows << endl;
+  //cout << "msnrows=" << MSnRows << endl; 
   //cout << "scanNumber=" << nScan<< endl;
 
   Vector<String> tType(tFields);
@@ -1769,15 +1723,15 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     tType(i) = tType(i).before(trailing);
   }
 
-  cout << "tType=" << tType(0) << endl;
+  //cout << "tType=" << tType(0) << endl;
 
-  cout << "STOKES POS=" << getIndex(coordType_p,"STOKES") << endl;
-  cout << "FREQ POS=" << getIndex(coordType_p,"FREQ") << endl;
+  //cout << "STOKES POS=" << getIndex(coordType_p,"STOKES") << endl;
+  //cout << "FREQ POS=" << getIndex(coordType_p,"FREQ") << endl;
 
   Int nCorr = nPixel_p(getIndex(coordType_p,"STOKES"));
   Int nChan = nPixel_p(getIndex(coordType_p,"FREQ"));
-  cout << "nCorr=" << nCorr << endl;
-  cout << "nChan=" << nChan << endl;
+  //cout << "nCorr=" << nCorr << endl;
+  //cout << "nChan=" << nChan << endl;
 
   Matrix<Complex> vis(nCorr,nChan);
   Vector<Float> sigma(nCorr);
@@ -1846,8 +1800,8 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
   Int lastAnt1, lastAnt2, lastArray, lastSpW, lastSourceId;
   lastAnt1=-1; lastAnt2=-1; lastArray=-1; lastSpW=-1; lastSourceId=-1;
   Int putrow = -1;
-  Double lastTime=0;
-  Bool lastRowFlag=False;
+  //  Double lastTime=0;
+  //  Bool lastRowFlag=False;
   Float lastWeight=0.0;
   Int nScan = 0;
 
@@ -1857,7 +1811,7 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     putrow = MSnRows - 1; 
     nScan = scans(putrow) + 1;      
   }
-  cout << "scanNumber=" << nScan<< endl;
+  //cout << "scanNumber=" << nScan<< endl;
 
   for (Int trow=0; trow<nRows; trow++) {
     // Read next row and
@@ -1876,14 +1830,13 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     time -= JDofMJD0;
     //cout << "TIME=" << time << endl; 
 
-    if (iTime1>=0)
-      {
-	Double time1;
-	memcpy(&time1, (static_cast<Double *>(data_addr[iTime1])), sizeof(Double));
-	time1 *= tscal(iTime1);
-	time1 += tzero(iTime1); 
-	time += time1;
-      }
+    if (iTime1>=0){
+      Double time1;
+      memcpy(&time1, (static_cast<Double *>(data_addr[iTime1])), sizeof(Double));
+      time1 *= tscal(iTime1);
+      time1 += tzero(iTime1); 
+      time += time1;
+    }
     //cout << "TIME=" << time << endl; 
 
     Long _baseline;
@@ -1922,13 +1875,14 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       interval *= tscal(iInttim);
       // cout << "INTTIM=" << setprecision(11) << interval << endl; 
     } else {
-      *itsLog << LogIO::WARN << "UV_DATA table contains no integration time information. Will try to derive it from TIME." 
-	      << LogIO::POST;
       // make a guess at the integration time
-      //if (row<0) startTime = time;
       if (row<0) {
+	*itsLog << LogIO::WARN << "UV_DATA table contains no integration time information. Will try to derive it from TIME." 
+		<< LogIO::POST;
 	startTime = time;
-	if (firstMain) startTime_p = startTime;
+	if (firstMain){
+	  startTime_p = startTime;
+	}
       }
       if (time > startTime) {
 	interval=time-startTime;
@@ -1940,13 +1894,24 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 
     Int array = Int(100.0*(baseline - Int(baseline)+0.001));
     Int ant1 = Int(baseline)/256; 
-    nAnt_p = max(nAnt_p,ant1);
     Int ant2 = Int(baseline) - ant1*256; 
-    nAnt_p = max(nAnt_p,ant2);
-    ant1--; ant2--; // make 0-based
+    if(antIdFromNo.isDefined(ant1)){
+    	ant1 = antIdFromNo(ant1);
+    }
+    else{
+    	*itsLog << LogIO::SEVERE << "Inconsistent input dataset: unknown ANTENNA_NO "
+    			<< ant1 << " in baseline used in UV_DATA table." << LogIO::EXCEPTION;
+    }
+    if(antIdFromNo.isDefined(ant2)){
+    	ant2 = antIdFromNo(ant2);
+    }
+    else{
+    	*itsLog << LogIO::SEVERE << "Inconsistent input dataset: unknown ANTENNA_NO "
+    			<< ant2 << " in baseline used in UV_DATA table." << LogIO::EXCEPTION;
+    }
+    nAnt_p = max(nAnt_p,ant1+1);
+    nAnt_p = max(nAnt_p,ant2+1);
 
-    if(mydebug) cout << "baseline=" << baseline << endl;
-    
     // Convert U,V,W from units of seconds to meters
     uvw *= C::c;
 
@@ -1964,84 +1929,77 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     //cout << "*****NEW_BASELINE ADDR=" << new_baseline << endl;
         
 
-    Float visReal;
-    Float visImag;
+    Float visReal = 0.;
+    Float visImag = 0.;
+    Float visWeight = 0.;
 
     //***temporal fix  
     Int nIF_p = 0;
     nIF_p = getIndex(coordType_p,"BAND");
-        if (nIF_p>=0) {
-          nIF_p=nPixel_p(nIF_p);
-        } else {
-          nIF_p=1;
-        }
+    if (nIF_p>=0) {
+      nIF_p=nPixel_p(nIF_p);
+    } else {
+      nIF_p=1;
+    }
     
     //cout <<"ifnomax ="<<max(1,nIF_p)<<endl;
- 
-
 
     for (Int ifno=0; ifno<max(1,nIF_p); ifno++) {
       // BANDs go to separate rows in the MS
-      //ms_p.addRow();
       ms.addRow();
       row++;
       putrow++;
  
       for (Int chan=0; chan<nChan; chan++) {
- 	for (Int pol=0; pol<nCorr; pol++) {
+	for (Int pol=0; pol<nCorr; pol++) {
            
-          //memcpy(&visReal, (static_cast<Float *>(data_addr[iFlux])) + (sizeof(Float)*count++), sizeof(Float));
           memcpy(&visReal, (static_cast<Float *>(data_addr[iFlux])) + count++, sizeof(Float));
-          if (mydebug) cout << "COUNT=" << count <<"ifno="<< ifno <<"chan="<< chan<<"pol="<< pol  << endl;
+//          if(count<9){
+//	    cout << "COUNT=" << count <<"ifno="<< ifno <<"chan="<< chan<<"pol="<< pol  << " corrindex " << corrIndex_p[pol] << endl;
+//	  }
 	  //visReal *= tscal(iFlux);
 	  //visReal += tzero(iFlux); 
 
-	  //memcpy(&visImag, (static_cast<Float *>(data_addr[iFlux])) + (sizeof(Float)*count++), sizeof(Float));     
 	  memcpy(&visImag, (static_cast<Float *>(data_addr[iFlux])) + count++, sizeof(Float));     
 	  //visImag *= tscal(iFlux);
 	  //visImag += tzero(iFlux); 
-          //cout<<"visReal="<< visReal << "visImag="<< visImag<<endl;
+//	  if(count<10){
+//	    cout<<"    visReal="<< visReal << "visImag="<< visImag<<endl;
+//	  }
+
+	  if(uv_data_hasWeights_p){
+	      memcpy(&visWeight, (static_cast<Float *>(data_addr[iFlux])) + count++, sizeof(Float));     
+	  }
 
 	  //const Float wt = priGroup_p(count++); 
 
 	  const Int p = corrIndex_p[pol];
-/*
- 	  if (wt < 0.0) {
-	    weightSpec(p, chan) = -wt;
+
+ 	  if (visWeight < 0.0) {
+	    weightSpec(p, chan) = -visWeight;
 	    flag(p, chan) = True;
 	  } else {                            
-	    weightSpec(p, chan) = wt;
+	    weightSpec(p, chan) = visWeight;
 	    flag(p, chan) = False;
 	  }
-*/
+
 	  vis(p, chan) = Complex(visReal, visImag);
+
  	}
       }
 
-
       // fill in values for all the unused columns
-      //if (row==0 && putrow==0) {
-      if (row==0) {
- 	msc.feed1().put(row,0);
- 	msc.feed2().put(row,0);
- 	msc.flagRow().put(row,False);
- 	lastRowFlag=False;
- 	//msc.scanNumber().put(row,0);
- 	//msc.scanNumber().put(row,nScan);
- 	msc.processorId().put(row,-1);
- 	msc.observationId().put(row,0);
- 	msc.stateId().put(row,-1);
- 	Vector<Float> tmp(nCorr); tmp=1.0;
- 	msc.sigma().put(row,tmp);
- 	msc.weight().put(row,tmp);
- 	lastWeight=1.0;
-      }
+      msc.feed1().put(row,0);
+      msc.feed2().put(row,0);
+      msc.flagRow().put(row,False);
+      msc.processorId().put(row,-1);
+      msc.observationId().put(row,0);
+      msc.stateId().put(row,-1);
 
-      //cout << "$$$$$$$$$$$$$$$$"<<endl;
-      //cout << "row, putrow at 2432="<< row <<","<< putrow << endl;
-      //cout << "nScan="<< nScan << endl;
-      //cout << "$$$$$$$$$$$$$$$$"<<endl;
-     
+      Vector<Float> tmp(nCorr); tmp=1.0;
+      msc.sigma().put(row,tmp);
+      msc.weight().put(row,tmp);
+      lastWeight=1.0;
 
       msc.interval().put(row,interval);
       msc.exposure().put(row,interval);
@@ -2053,57 +2011,28 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       // multichannel case: weight should not be used.
       if (nChan==1) { 
  	const Vector<Float> weight(weightSpec.column(0).copy()); 
- 	if (weight(0)!=lastWeight) {
- 	  //msc.weight().put(row,weight);
- 	  msc.weight().put(putrow,weight);
- 	  lastWeight=weight(0);
- 	}
+
+	msc.weight().put(putrow,weight);
+
       }
-      //msc.weightSpectrum().put(row,weightSpec); 
-      //msc.flag().put(row,flag);
-      //msc.flagCategory().put(row,flagCat);
+
       msc.weightSpectrum().put(putrow,weightSpec); 
       msc.flag().put(putrow,flag);
       msc.flagCategory().put(putrow,flagCat);
+
       Bool rowFlag=allEQ(flag,True);
-      if (rowFlag!=lastRowFlag) {
- 	//msc.flagRow().put(row,rowFlag);
- 	msc.flagRow().put(putrow,rowFlag);
- 	lastRowFlag=rowFlag;
-      }
+      msc.flagRow().put(putrow,rowFlag);
 
-      if (ant1!=lastAnt1) {
- 	//msc.antenna1().put(row,ant1);
- 	msc.antenna1().put(putrow,ant1);
- 	lastAnt1=ant1;
-      }
-      if (array!=lastArray) {
- 	//msc.arrayId().put(row,array);
- 	msc.arrayId().put(putrow,array);
- 	lastArray=array;
-      }
-      // Always put antenna2 since it is bound to the
-      // aipsStMan and is assumed to change every
-      // row
-      //msc.antenna2().put(row,ant2);
+      msc.antenna1().put(putrow,ant1);
       msc.antenna2().put(putrow,ant2);
-      if (time!=lastTime) {
- 	//msc.time().put(row,time);
- 	//msc.timeCentroid().put(row,time);
- 	msc.time().put(putrow,time);
- 	msc.timeCentroid().put(putrow,time+interval/2.);
- 	lastTime=time;
-        lastTime_p=lastTime;
-        //cout << "lastTime_p="<< lastTime <<endl;
-
-      }
-      //msc.uvw().put(row,uvw);
+      msc.arrayId().put(putrow,array);
+      msc.time().put(putrow,time);
+      msc.timeCentroid().put(putrow,time+interval/2.);
       msc.uvw().put(putrow,uvw);
       
       // determine the spectralWindowId
       Int spW = ifno;
       if (iFreq>=0) {
-
         memcpy(&spW, (static_cast<Int *>(data_addr[iFreq])), sizeof(Int));
         spW *= (Int)tscal(iFreq);
         spW += (Int)tzero(iFreq); 
@@ -2129,12 +2058,8 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
         sourceId += (Int)tzero(iSource); 
  	sourceId--; // make 0-based
       }
-      if (sourceId!=lastSourceId) {
- 	//msc.fieldId().put(row,sourceId);
- 	msc.fieldId().put(putrow,sourceId);
- 	nField = max(nField, sourceId+1);
- 	lastSourceId=sourceId;
-      }
+      msc.fieldId().put(putrow,sourceId);
+      nField = max(nField, sourceId+1);
     }
     meter.update((trow+1)*1.0);
   }
@@ -2212,7 +2137,6 @@ void FITSIDItoMS1::fillObsTables() {
   }
 }
 
-//void FITSIDItoMS1::fillAntennaTable(BinaryTable& bt)
 void FITSIDItoMS1::fillAntennaTable()
 {
   *itsLog << LogOrigin("FitsIDItoMS", "fillAntennaTable");
@@ -2231,8 +2155,8 @@ void FITSIDItoMS1::fillAntennaTable()
    arrayXYZ(1)=getKeywords().asdouble("ARRAYY");
    arrayXYZ(2)=getKeywords().asdouble("ARRAYZ");
 
-   *itsLog << LogIO::NORMAL << "number of antennas ="<<nAnt<<LogIO::POST;
-   *itsLog << LogIO::NORMAL << "array ref pos:"<<arrayXYZ<<LogIO::POST;
+   *itsLog << LogIO::NORMAL << "number of antennas = "<<nAnt<<LogIO::POST;
+   *itsLog << LogIO::NORMAL << "array ref pos = "<<arrayXYZ<<LogIO::POST;
 
    Double rdate=0.0;
    String srdate;
@@ -2278,7 +2202,17 @@ void FITSIDItoMS1::fillAntennaTable()
    rdate=timeVal.second(); // MJD seconds
    String arrnam="Unknown";
    if (btKeywords.isDefined("ARRNAM")) {
-     arrnam=btKeywords.asString("ARRNAM"); 
+     arrnam=btKeywords.asString("ARRNAM");
+     arrnam=arrnam.before(trailing);
+     if(array_p==""){
+       array_p = arrnam;
+     }
+     else{
+       if(array_p != arrnam){
+	 *itsLog << LogIO::WARN << "Conflicting observatory names: found "
+		 << arrnam << " and " << array_p << LogIO::POST;
+       }
+     }
    }
 
    // store the time and frame keywords 
@@ -2290,11 +2224,9 @@ void FITSIDItoMS1::fillAntennaTable()
 
    //save value to set time reference frame elsewhere
    timsys_p=timsys;
-   // Fill in some likely values
-   //Float diameter=25;
-   Float diameter=6; // default (For SMA)  
 
-   //Table anTab=fullTable("",Table::Scratch);
+   Float diameter=0.01; // default (meaning "not set")
+
    Table anTab=oldfullTable("");
 
    MSAntennaColumns& ant(msc_p->antenna());
@@ -2303,30 +2235,48 @@ void FITSIDItoMS1::fillAntennaTable()
    ROArrayColumn<Float> dantXYZ(anTab,"DERXYZ");
    // following is for space-born telescope
    //ROScalarColumn<Int> orbp(anTab,"ORBPARM");
-   ROScalarColumn<Int> stid(anTab,"NOSTA");
+   ROScalarColumn<Int> anNo(anTab,"NOSTA");
    ROScalarColumn<Int> mntid(anTab,"MNTSTA");
    ROArrayColumn<Float> offset(anTab,"STAXOF");
-   ROScalarColumn<Double> diam;
+   ROScalarColumn<Float> diam;
    if(anTab.tableDesc().isColumn("DIAMETER")){
      diam.attach(anTab,"DIAMETER"); // this column is optional
    }
    else{
+     if (arrnam=="ATCA") diameter=22;
+     if (arrnam=="VLBA") diameter=25;
+     if (arrnam=="SMA")  diameter=6.0;
      *itsLog << LogIO::WARN 
-	     << "ANTENNA input table does not contain dish DIAMETER column. Will assume default values." << LogIO::POST; 
-     if (array_p=="ATCA") diameter=22;
-     if (array_p=="VLBA") diameter=25;
-     if (array_p=="EVN")  diameter=25;
+	     << "ANTENNA input table does not contain dish DIAMETER column.\n Will assume default diameter for TELESCOPE " 
+	     << arrnam << " which is " << diameter <<" m." << LogIO::POST; 
    }
 
    // All "VLBI" (==arrayXYZ<1000) requires y-axis reflection:
    //  (ATCA looks like "VLBI" in UVFITS, but is already correct)
    //Bool doVLBIRefl= ((array_p!="ATCA") && allLE(abs(arrayXYZ),1000.0));     
 
+
+   // continue definition of antenna number to antenna id mapping 
+   for (Int inRow=0; inRow<nAnt; inRow++) {
+     Int ii = anNo(inRow);
+     if(!antIdFromNo.isDefined(ii)){
+       antIdFromNo.define(ii, antIdFromNo.ndefined()); // append assuming uniqueness
+       *itsLog << LogIO::NORMAL << "   antenna_no " << ii << " -> antenna ID " << antIdFromNo(ii) << endl;
+     }
+   }
+
    // add antenna info to table (TT)
    ant.setPositionRef(MPosition::ITRF);
-   Int row=ms_p.antenna().nrow()-1;
-   for (Int i=0; i<nAnt; i++) {
-     ms_p.antenna().addRow(); row++;
+
+   // take into account that the ANTENNA table may already contain rows 
+   Int newRows = antIdFromNo.ndefined() - ms_p.antenna().nrow();
+   ms_p.antenna().addRow(newRows);
+
+   Int row=0;
+   for (Int i=0; i<newRows; i++) {
+     
+     row = antIdFromNo(anNo(i));
+
      if(diam.isNull()){ // no DIAMETER column available
        ant.dishDiameter().put(row,diameter);
      }
@@ -2344,7 +2294,7 @@ void FITSIDItoMS1::fillAntennaTable()
      }
      ant.flagRow().put(row,False);
      ant.mount().put(row,mount);
-     ant.name().put(row,String::toString(stid(i)));
+     ant.name().put(row,String::toString(anNo(i)));
      //Vector<Double> offsets(3); offsets=0.; offsets(0)=offset(i);
      //ant.offset().put(row,offset);
      ant.station().put(row,name(i));
@@ -2370,32 +2320,32 @@ void FITSIDItoMS1::fillAntennaTable()
 }
 
 void FITSIDItoMS1::fillFeedTable() {
+  const Regex trailing(" *$"); // trailing blanks
   MSFeedColumns& msfc(msc_p->feed());
 
   ConstFitsKeywordList& kwl = kwlist();
-  const FitsKeyword* kw;
+  const FitsKeyword* fkw;
   String kwname;
   kwl.first();
   Int noSTKD = 1;
   Int firstSTK = 0;
   Int nIF = 1;
-  while ((kw = kwl.next()))
-    {
-      kwname = kw->name();
-      if (kwname == "NO_STKD") {
-        noSTKD = kw->asInt();
-        cout << kwname << "=" << noSTKD << endl;
-      }
-      if (kwname == "STK_1") {
-        firstSTK = kw->asInt();
-        cout << kwname << "=" << firstSTK << endl;
-      }
-      if (kwname == "NO_BAND") {
-        nIF = kw->asInt();
-        cout << kwname << "=" << nIF << endl;
-      }
-
+  while ((fkw = kwl.next())){
+    kwname = fkw->name();
+    if (kwname == "NO_STKD") {
+      noSTKD = fkw->asInt();
+      //cout << kwname << "=" << noSTKD << endl;
     }
+    if (kwname == "STK_1") {
+      firstSTK = fkw->asInt();
+      //cout << kwname << "=" << firstSTK << endl;
+    }
+    if (kwname == "NO_BAND") {
+      nIF = fkw->asInt();
+      //cout << kwname << "=" << nIF << endl;
+    }
+    
+  }
 
   //access fitsidi AN table
   Table anTab = oldfullTable("");
@@ -2416,23 +2366,36 @@ void FITSIDItoMS1::fillFeedTable() {
   ROScalarColumn<Int> fqid(anTab, "FREQID");
   ROScalarColumn<Int> digLev(anTab, "NO_LEVELS");
   ROScalarColumn<String> poltya(anTab, "POLTYA");
-  ROArrayColumn<Float> polaa(anTab, "POLAA");
-  ROArrayColumn<Float> polcala;
-  if(anTab.tableDesc().isColumn("POLCALA")){
-    polcala.attach(anTab, "POLCALA");
-  }
-  else{
-    *itsLog << LogIO::WARN << "POLCALA column is missing in ANTENNA table." << LogIO::POST;
-  }
   ROScalarColumn<String> poltyb(anTab, "POLTYB");
-  ROArrayColumn<Float> polab(anTab, "POLAB");
+
+  // if the values for all bands are the same, POLAA, POLAB, POLCALA and POLCALB can be scalar
+  Bool POLAisScalar = False;
+  ROArrayColumn<Float> polaa;
+  ROArrayColumn<Float> polab;
+  ROScalarColumn<Float> polaaS;
+  ROScalarColumn<Float> polabS;
+  try{
+    polaa.attach(anTab, "POLAA");
+    polab.attach(anTab, "POLAB");
+  }
+  catch(AipsError x){
+    polaaS.attach(anTab, "POLAA");
+    polabS.attach(anTab, "POLAB");
+    POLAisScalar = True;
+    *itsLog << LogIO::WARN << "Treating POLAA and POLAB columns in input ANTENNA table as scalar," 
+	    << endl << " i.e. using same value for all bands." << LogIO::POST;
+  }
+
+  ROArrayColumn<Float> polcala;
   ROArrayColumn<Float> polcalb;
-  if(anTab.tableDesc().isColumn("POLCALB")){
+  if(anTab.tableDesc().isColumn("POLCALA") && anTab.tableDesc().isColumn("POLCALB")){
+    polcala.attach(anTab, "POLCALA");
     polcalb.attach(anTab, "POLCALB");
   }
   else{
-    *itsLog << LogIO::WARN << "POLCALB column is missing in ANTENNA table." << LogIO::POST;
+    *itsLog << LogIO::WARN << "POLCALA and/or POLCALB column is missing in ANTENNA table." << LogIO::POST;
   }
+
   //  ROArrayColumn<Float> beamfwhm(anTab, "BEAMFWHM"); // this column is optional and there is presently
                                                     // no place this information in the MS
   Matrix<Complex> polResponse(2,2); 
@@ -2440,25 +2403,44 @@ void FITSIDItoMS1::fillFeedTable() {
   Matrix<Double> offset(2,2); offset=0.;
   Int nAnt = anTab.nrow();
   //cout <<"nAnt="<<nAnt<<", nIF="<< nIF;
-  Matrix<Float> polanga(nIF,nAnt); 
-  Matrix<Float> polangb(nIF,nAnt); 
   Vector<Double> position(3); position=0.;
   Vector<String> polType(2);
-  polaa.getColumn(polanga); 
-  polab.getColumn(polangb); 
-  //Double testval=1.0;
   receptorAngle_p = 0;
   receptorAngle_p.resize(2*nAnt*nIF);
-  for (Int i=0; i<nAnt; i++) {
-    for (Int j=0; j<nIF; j++) {
+  if(POLAisScalar){
+    Vector<Float> polanga(nAnt); 
+    Vector<Float> polangb(nAnt); 
+    polaaS.getColumn(polanga); 
+    polabS.getColumn(polangb); 
+    for(Int i=0; i<nAnt; i++){
+      for(Int j=0; j<nIF; j++){
+	Int k = (i*nIF + j);
+	receptorAngle_p(2*k+0)=static_cast<Double>(polanga[i])*C::degree;
+	receptorAngle_p(2*k+1)=static_cast<Double>(polangb[i])*C::degree;
+      }
+    }
+  }
+  else{
+    Matrix<Float> polanga(nIF,nAnt); 
+    Matrix<Float> polangb(nIF,nAnt); 
+    polaa.getColumn(polanga); 
+    polab.getColumn(polangb); 
+    for(Int i=0; i<nAnt; i++){
+      for(Int j=0; j<nIF; j++){
+	Int k = (i*nIF + j);
+	receptorAngle_p(2*k+0)=static_cast<Double>(polanga(j,i))*C::degree;
+	receptorAngle_p(2*k+1)=static_cast<Double>(polangb(j,i))*C::degree;
+      }
+    }
+  }
+  //Double testval=1.0;
 
-    //cout << "testval is used"<< endl;
-    //receptorAngle_p(2*i+0)=testval*C::degree;
-    //receptorAngle_p(2*i+1)=testval*C::degree;
-
-      Int k = (i*nIF + j);
-      receptorAngle_p(2*k+0)=static_cast<Double>(polanga(j,i))*C::degree;
-      receptorAngle_p(2*k+1)=static_cast<Double>(polangb(j,i))*C::degree;
+  // start/continue definition of antenna number to ID mapping in case this table is read before the MS Antenna table is filled
+  for (Int inRow=0; inRow<nAnt; inRow++) {
+    Int ii = anNo(inRow);
+    if(!antIdFromNo.isDefined(ii)){
+      antIdFromNo.define(ii, antIdFromNo.ndefined()); // append assuming uniqueness
+       *itsLog << LogIO::NORMAL << "   antenna_no " << ii << " -> antenna ID " << antIdFromNo(ii) << endl;
     }
   }
 
@@ -2468,14 +2450,20 @@ void FITSIDItoMS1::fillFeedTable() {
     for (Int inIF=0; inIF<nIF; inIF++) { 
       Int k = inRow*nIF + inIF;
       ms_p.feed().addRow(); outRow++;
-      msfc.antennaId().put(outRow,anNo(inRow)-1);
+      if(antIdFromNo.isDefined(anNo(inRow))){
+    	msfc.antennaId().put(outRow,antIdFromNo(anNo(inRow)));
+      }
+      else{
+    	*itsLog << LogIO::SEVERE << "Internal error: no mapping for ANTENNA_NO "
+				<< anNo(inRow) << LogIO::EXCEPTION;
+      }
       msfc.beamId().put(outRow,-1);
-      msfc.feedId().put(outRow,0);
+      msfc.feedId().put(outRow,0); // only one feed ID == 0
       if(!timeint.isNull()){
-	msfc.interval().put(outRow,timeint(inRow)*C::day);
+    	 msfc.interval().put(outRow,timeint(inRow)*C::day);
       }
       else{ // use the double version instead
-	msfc.interval().put(outRow,timeintd(inRow)*C::day);
+    	 msfc.interval().put(outRow,timeintd(inRow)*C::day);
       }
      //    msfc.phasedFeedId().put(outRow,-1);
      //msfc.spectralWindowId().put(outRow,-1); // all
@@ -2562,8 +2550,8 @@ void FITSIDItoMS1::fillSpectralWindowTable()
   Matrix<Float> chWidth(nIF_p,nRow);
   Matrix<Float> totalBandwidth(nIF_p,nRow);
   Matrix<Int> sideband(nIF_p,nRow);
-  cout << "nIF_p=" << nIF_p << endl;
-  cout << "nRow=" << nRow << endl;
+  //cout << "nIF_p=" << nIF_p << endl;
+  //cout << "nRow=" << nRow << endl;
 
 
   Int nSpW = nIF_p;
@@ -2639,8 +2627,6 @@ void FITSIDItoMS1::fillSpectralWindowTable()
 }                                            
 
 // method to fill Field Table
-//void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField)
-//void FITSIDItoMS1::fillFieldTable(Int nField)
 void FITSIDItoMS1::fillFieldTable()
 {
   *itsLog << LogOrigin("FitsIDItoMS()", "fillFieldTable");
@@ -2666,12 +2652,51 @@ void FITSIDItoMS1::fillFieldTable()
   ROScalarColumn<Int> qual(suTab,"QUAL");
   ROScalarColumn<String> code(suTab,"CALCODE");
   ROScalarColumn<Int> fqid(suTab,"FREQID");
-  ROArrayColumn<Float> iflux(suTab,"IFLUX"); // I (Jy)
-  ROArrayColumn<Float> qflux(suTab,"QFLUX"); // Q 
-  ROArrayColumn<Float> uflux(suTab,"UFLUX"); // U 
-  ROArrayColumn<Float> vflux(suTab,"VFLUX"); // V 
-  ROArrayColumn<Float> alpha(suTab,"ALPHA"); // sp. index  
-  ROArrayColumn<Float> foffset(suTab,"FREQOFF"); // fq. offset  
+
+  // if the values are the same for all bands, the flux, alpha, freqoff, sysvel, and restfreq columns can be scalar
+  Bool IFLUXisScalar = False;
+  ROArrayColumn<Float> iflux;
+  ROArrayColumn<Float> qflux;
+  ROArrayColumn<Float> uflux;
+  ROArrayColumn<Float> vflux;
+  ROArrayColumn<Float> alpha;
+  ROArrayColumn<Float> foffset;  
+  ROArrayColumn<Double> sysvel;
+  ROArrayColumn<Double> restfreq;
+
+  ROScalarColumn<Float> ifluxS;
+  ROScalarColumn<Float> qfluxS;
+  ROScalarColumn<Float> ufluxS;
+  ROScalarColumn<Float> vfluxS;
+  ROScalarColumn<Float> alphaS;
+  ROScalarColumn<Float> foffsetS;
+  ROScalarColumn<Double> sysvelS;
+  ROScalarColumn<Double> restfreqS;
+
+  try{ // try array column first
+    iflux.attach(suTab,"IFLUX"); // I (Jy)
+    qflux.attach(suTab,"QFLUX"); // Q 
+    uflux.attach(suTab,"UFLUX"); // U 
+    vflux.attach(suTab,"VFLUX"); // V 
+    alpha.attach(suTab,"ALPHA"); // sp. index  
+    foffset.attach(suTab,"FREQOFF"); // fq. offset  
+    sysvel.attach(suTab,"SYSVEL"); // sys vel. (m/s)  
+    restfreq.attach(suTab,"RESTFREQ"); // rest freq. (hz)  
+  }
+  catch(AipsError x){
+    ifluxS.attach(suTab,"IFLUX"); // I (Jy)
+    qfluxS.attach(suTab,"QFLUX"); // Q 
+    ufluxS.attach(suTab,"UFLUX"); // U 
+    vfluxS.attach(suTab,"VFLUX"); // V 
+    alphaS.attach(suTab,"ALPHA"); // sp. index  
+    foffsetS.attach(suTab,"FREQOFF"); // fq. offset  
+    sysvelS.attach(suTab,"SYSVEL"); // sys vel. (m/s)  
+    restfreqS.attach(suTab,"RESTFREQ"); // rest freq. (hz)  
+    IFLUXisScalar = True;
+    *itsLog << LogIO::WARN << "Treating ?FLUX, ALPHA, FREQOFF, SYSVEL, and RESTFREQ columns in input SOURCE table as scalar,"
+	    << endl << " i.e. using same value for all bands." << LogIO::POST;
+  }      
+
   ROScalarColumn<Double> ra(suTab,"RAEPO");    //degrees
   ROScalarColumn<Double> dec(suTab,"DECEPO");  //degrees
   ROScalarColumn<String> equinox;
@@ -2684,7 +2709,6 @@ void FITSIDItoMS1::fillFieldTable()
   }
   ROScalarColumn<Double> raapp(suTab,"RAAPP");    //degrees
   ROScalarColumn<Double> decapp(suTab,"DECAPP");  //degrees
-  ROArrayColumn<Double> sysvel(suTab,"SYSVEL"); // sys vel. (m/s)  
   ROScalarColumn<String> veltype(suTab,"VELTYP"); //   
   ROScalarColumn<String> veldef(suTab,"VELDEF"); //   
   ROScalarColumn<Double> pmra(suTab,"PMRA");   //deg/day
@@ -2827,12 +2851,9 @@ void FITSIDItoMS1::fixEpochReferences() {
   }
 }
 
-//void FITSIDItoMS1::updateTables(const String& MSFileName)
 void FITSIDItoMS1::updateTables(const String& MStmpDir)
-//void FITSIDItoMS1::updateTables(const String& MSMain, const String& MStmpDir)
 {
   const Vector<Double> obsTime = msc_p->observation().timeRange()(0);
-  cout << "check PT 1"<<endl; 
   //update polarization table
   //this should be a polarization table in _tmp directory  
   //This is expected to call after getAxisInfo.
@@ -2848,9 +2869,7 @@ void FITSIDItoMS1::updateTables(const String& MStmpDir)
 
   //update time in the field table
   MSFileName = MStmpDir + "/SOURCE";
-  //MSMainSubFileName = MSMain + "/OBSERVATION";
   MeasurementSet mssub2(MSFileName,Table::Update);
-  //MeasurementSet msobs(MSMainSubFileName,Table::Update);
   ms_p = mssub2;
   msc_p = new MSColumns(ms_p);
   Int nrow = ms_p.field().nrow();
@@ -2880,8 +2899,7 @@ void FITSIDItoMS1::readFitsFile(const String& msFile)
   String extname(FITSIDItoMS1::extname());
   extname=extname.before(trailing);
   
-  cout << "rectype=" << infile_p.rectype() << endl;
-  cout << "Found binary table of type " << extname << endl;
+  *itsLog << LogIO::NORMAL << "Found binary table " << extname << LogIO::POST;
   
   if(extname=="UV_DATA") 
     { 
@@ -2899,20 +2917,16 @@ void FITSIDItoMS1::readFitsFile(const String& msFile)
 	  fillMSMainTable(msFile, nField, nSpW);
 	  fillObsTables();
 	  
-	  
 	  fixEpochReferences();
 	  
-	  cout << "updating subtables ..."<< endl;
 	  updateTables(tmpdir); 
 	  
 	  firstMain=False;
 	}
       else
 	{
-	  
 	  fillMSMainTable(msFile, nField, nSpW);
 	  fillObsTables();
-	  //skip();
 	}
     }
   
@@ -2926,8 +2940,10 @@ void FITSIDItoMS1::readFitsFile(const String& msFile)
       else if (extname=="SOURCE") fillFieldTable();
       else if (extname=="FREQUENCY") fillSpectralWindowTable();
       else if (extname=="ANTENNA") fillFeedTable();
-      
-      oldfullTable("");
+      else{
+	*itsLog << LogIO::WARN 
+		<< "    Don\'t know how to handle this table type. Will ignore it." << LogIO::POST;
+      }
     }
 
 } 

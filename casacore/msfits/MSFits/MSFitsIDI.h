@@ -102,9 +102,6 @@ class MSFitsIDI
   // Read and process a FITS-IDI file
   void readFITSFile(Bool& atEnd);
 
-  //DP  // Create a new, empty output MS
-  //DP  void createOutputMS();
-
  private:
   // Data source and device type
   String itsDataSource;
@@ -112,7 +109,6 @@ class MSFitsIDI
 
   // MS, status and write options
   String itsMSOut;
-  //DP  MeasurementSet* itsMS;
   Bool itsMSExists;
   Int itsObsType;  // 0=standard, 1=fastmosaic, requiring small tiles in the measurement set
 
