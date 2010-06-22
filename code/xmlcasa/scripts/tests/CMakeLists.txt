@@ -48,4 +48,5 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_smoothcal.py
   test_vishead.py
   test_visstat.py
+  unittests_list.txt
 )
