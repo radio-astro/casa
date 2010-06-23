@@ -41,8 +41,8 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
-   #CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
-   CXXFLAGS +=-DAIPS_DARWIN
+   CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
+   #CXXFLAGS +=-DAIPS_DARWIN
    #CXXFLAGS += -Wno-long-double
 endif
 
@@ -72,14 +72,14 @@ else
 endif
 
 # python
-YTHONINC := $(addprefix -I,$(PYTHONINCD))
+PYTHONINC := $(addprefix -I,$(PYTHONINCD))
 PYTHONLIB := -L$(PYTHONLIBD) $(PYTHONLIB)
-PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
+#PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
 
 # use python universal build
-ifeq "$(CASAARCH)" "darwin"
-   PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
-endif
+#ifeq "$(CASAARCH)" "darwin"
+#   PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
+#endif
 
 # the linker
 LD        := $(CXX)
@@ -90,8 +90,8 @@ BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
-   #LDFLAGS   := -bundle -arch i386
-   LDFLAGS   := -bundle
+   LDFLAGS   := -bundle -arch i386
+   #LDFLAGS   := -bundle
 endif
 
 
