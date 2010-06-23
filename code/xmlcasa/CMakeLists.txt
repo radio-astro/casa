@@ -225,7 +225,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listhistory.py
   scripts/task_listobs.py
   scripts/task_listvis.py
-  scripts/task_makemask.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
   scripts/task_newflagdata.py
@@ -330,7 +329,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listhistory.xml
   tasks/listobs.xml
   tasks/listvis.xml
-  tasks/makemask.xml
   tasks/mosaic.xml
   tasks/newflagdata.xml
   tasks/peel.xml
