@@ -108,7 +108,6 @@ namespace casa {
                 const Bool& append=True, const String& newEstimatesInp=""
             );
 
-
             // destructor
             ~ImageFitter();
 
@@ -119,13 +118,12 @@ namespace casa {
             // Did the fit converge? Throw AipsError if the fit has not yet been done.
 			Bool converged() const;
 
-
         private:
-            LogIO *itsLog;
-            ImageInterface<Float> *image;
-            Record regionRecord;
-            uInt chan;
-            String stokesString, mask, residual, model, logfileName,
+            LogIO *_log;
+            ImageInterface<Float> *_image;
+            Record _regionRecord;
+            uInt _chan;
+            String _stokesString, mask, residual, model, logfileName,
 				regionString, estimatesString, newEstimatesFileName;
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, results;
@@ -142,20 +140,6 @@ namespace casa {
                 const String& imagename, const String& box, const String& regionName,
                 const Record* regionPtr, const String& estimatesFilename
             );
-
-            // determine the region based on the inputs
-            void _doRegion(const String& box, const String& region, const Record* regionPtr);
-
-            // process the 'box' command line argument and return the associated region as
-            // a record.
-            ImageRegion _processBox(const String& box);
-
-            ImageRegion _boxRegion(String blc1, String blc2, String trc1, String trc2);
-
-            // check the validity of the image-related parameters. If stokes not specified
-            // and image contains a single stokes plane, stokesString will be set to the
-            // stokes parameter of that plane.
-            void _checkImageParameterValidity();
 
             // summarize the results in a nicely formatted string
             String _resultsToString();
@@ -186,7 +170,6 @@ namespace casa {
 			Double _getStatistic(const String& type, const Record& stats) const;
 
 			String _statisticsToString() const;
-
     };
 }
 
