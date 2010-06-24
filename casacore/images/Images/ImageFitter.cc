@@ -194,11 +194,20 @@ namespace casa {
         inputProcessor.process(
         	_image, _regionRecord, diagnostics,
         	imagename, regionPtr, regionName, box,
-        	String::toString(_chan), _stokesString
+        	String::toString(_chan), _stokesString,
+        	ImageInputProcessor::USE_FIRST_STOKES
         );
         *_log << logOrigin;
 
+        if (_stokesString.empty()) {
+        	// use the first stokes plane
+        	ImageMetaData md(*_image);
+        	if (md.hasPolarizationAxis()) {
+        		_stokesString = md.stokesAtPixel(0);
+        	}
+        }
         // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
+
         String iquv = "IQUV";
         _kludgedStokes = (iquv.index(_stokesString) == String::npos) ? "I" : _stokesString;
         // </todo>
