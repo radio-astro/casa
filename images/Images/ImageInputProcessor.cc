@@ -66,18 +66,15 @@ void ImageInputProcessor::process(
     	}
     	ImageMetaData metaData(*image);
     	Vector<uInt> chanEndPts = _setSpectralRanges(chans, metaData);
-    	cout << "chans " << _pairsToString(chanEndPts) << endl;
     	Vector<uInt> polEndPts = _setPolarizationRanges(
     		stokes, metaData, image->name(), stokesControl
     	);
-    	cout << "pols " << _pairsToString(polEndPts) << endl;
 
     	Vector<Double> boxCorners = _setBoxCorners(box);
     	_setRegion(
     		regionRecord, diagnostics, boxCorners,
     		chanEndPts, polEndPts, metaData, image
     	);
-    	cout << "pols " << _cornersToString(boxCorners) << endl;
 
     	*_log << LogIO::NORMAL << "Using specified box(es) " << box << LogIO::POST;
     }
