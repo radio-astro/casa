@@ -332,10 +332,12 @@ casa_find( CFITSIO
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
 
+if( NOT APPLE )
 # X11.
 find_package( X11 REQUIRED )
 # Rename
 set( X11_INCLUDE_DIRS ${X11_INCLUDE_DIR} )
+endif()
 
 # Since we are using the C++ linker, the Fortran runtime libraries must be explicitly
 # linked in.
@@ -374,11 +376,19 @@ endif()
 
 # PGPLOT (FORTRAN plotting package).
 # depends on X11
+if( APPLE )
+casa_find( PGPLOT
+  VERSION 5.3.1
+  INCLUDES cpgplot.h
+  LIBS pgplot cpgplot
+  DEPENDS FORTRAN )
+else()
 casa_find( PGPLOT
   VERSION 5.3.1
   INCLUDES cpgplot.h
   LIBS pgplot cpgplot
   DEPENDS X11 FORTRAN )
+endif()
 
 # WCSLIB
 casa_find( WCSLIB
@@ -396,6 +406,10 @@ casa_find( WCSLIB
   DEFINITIONS -DSIGNBIT 
   DEPENDS PGPLOT )
 
+
+# BLAS
+casa_find( FFTW3
+           LIBS fftw3_threads fftw3f_threads fftw3f fftw3 )
 
 # BLAS
 casa_find( BLAS
@@ -435,6 +449,7 @@ else()
        casa_images
        casa_lattices
        casa_measures
+       casa_mirlib
        casa_ms
        casa_msfits
        casa_scimath
@@ -854,13 +869,14 @@ set( PYTHON_TASKD ${PYTHON_LIBD} )
 # This will set up include paths, and which libraries to link to
 
 # for linux RPM & binary distros libgraphics contains pgplot (linked in)...
+if( NOT APPLE )
 casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
 casa_add_module( casadbus CASACORE DBUS )
 casa_add_module( tableplot CASACORE PYTHON )
 casa_add_module( msvis CASACORE graphics )
 casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
 casa_add_module( plotms CASACORE QT4 casaqt msvis )
-casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis )
+casa_add_module( display CASACORE WCSLIB QT4 FFTW3 casaqt msvis )
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( flagging CASACORE Boost tableplot msvis )
 casa_add_module( calibration CASACORE tableplot msvis )
@@ -871,5 +887,24 @@ casa_add_module( atnf CASACORE RPFITS CFITSIO )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
+else()
+casa_add_module( graphics CASACORE PGPLOT WCSLIB )
+casa_add_module( casadbus CASACORE DBUS )
+casa_add_module( tableplot CASACORE PYTHON )
+casa_add_module( msvis CASACORE graphics )
+casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
+casa_add_module( plotms CASACORE QT4 casaqt msvis )
+casa_add_module( display CASACORE WCSLIB QT4 CFITSIO FFTW3 casaqt msvis )
+#casa_add_module( display3d CASACORE QT4 OPENGL display )
+casa_add_module( flagging CASACORE Boost tableplot msvis )
+casa_add_module( calibration CASACORE tableplot msvis )
+casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
+casa_add_module( alma CASACORE LIBXML2 Boost )
+casa_add_module( oldalma CASACORE LIBXML2 Boost )
+casa_add_module( atnf CASACORE RPFITS CFITSIO )
+casa_add_module( dish CASACORE )
+casa_add_module( nrao CASACORE )
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
+endif()
 
 # demo atmosphere ionosphere jive nfra simulators vlbi vo
