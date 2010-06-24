@@ -46,7 +46,7 @@ void ImageInputProcessor::process(
 	String& diagnostics, const String& imagename,
 	const Record* regionPtr, const String& regionName,
 	const String& box, const String& chans,
-	const String& stokes
+	const String& stokes, const StokesControl& stokesControl
 ) const {
     *_log << LogOrigin("ImageInputProcessor", __FUNCTION__);
     if (imagename.empty()) {
@@ -66,14 +66,19 @@ void ImageInputProcessor::process(
     	}
     	ImageMetaData metaData(*image);
     	Vector<uInt> chanEndPts = _setSpectralRanges(chans, metaData);
+    	cout << "chans " << _pairsToString(chanEndPts) << endl;
     	Vector<uInt> polEndPts = _setPolarizationRanges(
-    		stokes, metaData, image->name()
+    		stokes, metaData, image->name(), stokesControl
     	);
+    	cout << "pols " << _pairsToString(polEndPts) << endl;
+
     	Vector<Double> boxCorners = _setBoxCorners(box);
     	_setRegion(
     		regionRecord, diagnostics, boxCorners,
     		chanEndPts, polEndPts, metaData, image
     	);
+    	cout << "pols " << _cornersToString(boxCorners) << endl;
+
     	*_log << LogIO::NORMAL << "Using specified box(es) " << box << LogIO::POST;
     }
     else if (regionPtr != 0) {
@@ -87,7 +92,7 @@ void ImageInputProcessor::process(
         	<< regionName << LogIO::POST;
     }
     else {
-    	// nothing specified, use entire image
+    	// nothing specified, use entire positional plane with spectral and polarization specs
     	ImageMetaData md(*image);
     	Vector<Double> boxCorners(0);
     	if(md.hasDirectionCoordinate()) {
@@ -99,7 +104,7 @@ void ImageInputProcessor::process(
     		boxCorners[3] = dirShape[1] - 1;
     	}
     	Vector<uInt> chanEndPts = _setSpectralRanges(chans, md);
-    	Vector<uInt> polEndPts = _setPolarizationRanges(stokes, md, image->name());
+    	Vector<uInt> polEndPts = _setPolarizationRanges(stokes, md, image->name(), stokesControl);
 
     	_setRegion(
     		regionRecord, diagnostics, boxCorners,
@@ -288,7 +293,7 @@ Vector<uInt> ImageInputProcessor::_consolidateAndOrderRanges(
 
 Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
 	String specification, const ImageMetaData& metaData,
-	const String& imageName
+	const String& imageName, const StokesControl& stokesControl
 ) const {
     Vector<uInt> ranges(0);
     if (! metaData.hasPolarizationAxis()) {
@@ -298,7 +303,17 @@ Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
 	if (specification.empty()) {
 		ranges.resize(2);
 		ranges[0] = 0;
-		ranges[1] = metaData.nStokes() - 1;
+		switch (stokesControl) {
+			case USE_FIRST_STOKES:
+				ranges[1] = 0;
+				break;
+			case USE_ALL_STOKES:
+				ranges[1] = metaData.nStokes() - 1;
+				break;
+			default:
+				// bug if we get here
+				*_log << "Logic error, unhandled stokes control" << LogIO::EXCEPTION;
+		};
 		return ranges;
 	}
     // First split on commas. Commas seem to have been supported at some point
@@ -512,4 +527,15 @@ String ImageInputProcessor::_pairsToString(const Vector<uInt>& pairs) const {
 	return os.str();
 }
 
-
+String ImageInputProcessor::_cornersToString(const Vector<Double>& corners) const {
+	ostringstream os;
+	uInt nCorners = corners.size()/4;
+	for (uInt i=0; i<nCorners; i++) {
+		os << "blc: (" << corners[4*i] << ", " << corners[4*i + 1] << "), trc: "
+			<< corners[4*i + 2] << ", " << corners[4*i + 3] << ")";
+		if (i < nCorners - 1) {
+			os << endl;
+		}
+	}
+	return os.str();
+}

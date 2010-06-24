@@ -53,6 +53,11 @@ class ImageInputProcessor {
 	// </synopsis>
 
 public:
+	// instruction if input stokes is blank
+	enum StokesControl {
+		USE_FIRST_STOKES,
+		USE_ALL_STOKES
+	};
 
 	//constructor
 	ImageInputProcessor();
@@ -63,13 +68,14 @@ public:
 	// Process the inputs. Output parameters are the pointer to the
 	// opened <src>image</src>, the specified region as a record (<src>
 	// regionRecord</src>, and a <src>diagnostics</src> String describing
-	// how the region was chosen.
+	// how the region was chosen. <src>stokesControl</src> indicates default
+	// stokes range to use if <src>stokes</src> is blank.
     void process(
     	ImageInterface<Float>*& image, Record& regionRecord,
     	String& diagnostics, const String& imagename,
     	const Record* regionPtr, const String& regionName,
     	const String& box, const String& chans,
-    	const String& stokes
+    	const String& stokes, const StokesControl& stokesControl
     ) const;
 
 private:
@@ -101,10 +107,12 @@ private:
 
     Vector<uInt> _setPolarizationRanges(
     	String specification, const ImageMetaData& metaData,
-    	const String& imageName
+    	const String& imageName, const StokesControl& stokesControl
     ) const;
 
     String _pairsToString(const Vector<uInt>& pairs) const;
+
+    String _cornersToString(const Vector<Double>& corners) const;
 };
 }
 
