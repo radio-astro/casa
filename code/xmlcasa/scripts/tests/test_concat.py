@@ -75,6 +75,7 @@ class test_concat(unittest.TestCase):
                 print "Copying ", mymsname
                 shutil.copytree(mymsname, cpath+'/'+mymsname)
         os.chdir(cpath)
+
         default(concat)
         
     def tearDown(self):
@@ -141,8 +142,34 @@ class test_concat(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
         else:
             ms.close()
+            if 'test1.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test1.ms',ignore_errors=True)
+            shutil.copytree(msname,'test1.ms')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
+
+            # check source table
+            name = "SOURCE"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['SOURCE_ID',           55, 13, 0],
+                ['SPECTRAL_WINDOW_ID',  55, 3, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+            # check spw table
+            name = "SPECTRAL_WINDOW"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['NUM_CHAN',           3, 128, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+
 
     def test2(self):
         ''' case 2: 3 parts, different sources, different spws '''
@@ -204,8 +231,34 @@ class test_concat(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
         else:
             ms.close()
+            if 'test2.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test2.ms',ignore_errors=True)
+            shutil.copytree(msname,'test2.ms')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
+
+            # check source table
+            name = "SOURCE"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['SOURCE_ID',           41, 13, 0],
+                ['SPECTRAL_WINDOW_ID',  41, 2, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+            # check spw table
+            name = "SPECTRAL_WINDOW"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['NUM_CHAN',           2, 128, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+
 
     def test3(self):
         ''' case 3: 3 parts, different sources, same spws'''
@@ -267,8 +320,34 @@ class test_concat(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
         else:
             ms.close()
+            if 'test3.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test3.ms',ignore_errors=True)
+            shutil.copytree(msname,'test3.ms')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
+
+            # check source table
+            name = "SOURCE"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['SOURCE_ID',           28, 13, 0],
+                ['SPECTRAL_WINDOW_ID',  28, 1, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+            # check spw table
+            name = "SPECTRAL_WINDOW"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['NUM_CHAN',           1, 128, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+    
 
     def test4(self):
         '''concatenating five MSs with identical sources but different time/intervals on them (CSV-268)'''
@@ -332,6 +411,9 @@ class test_concat(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
         else:
             ms.close()
+            if 'test4.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test4.ms',ignore_errors=True)
+            shutil.copytree(msname,'test4.ms')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
         
@@ -379,10 +461,21 @@ class test_concat(unittest.TestCase):
             try:
                 results = checktable(name, expected)
             except:
+                print "Expected error."
                 results = False
             if results: 
                 retValue['success']=False
                 retValue['error_msgs']='SOURCE row 16 should not existCheck of table '+name+' failed'
+            # check spw table
+            name = "SPECTRAL_WINDOW"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['NUM_CHAN',           8, 4, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
     
                 
         self.assertTrue(retValue['success'])
@@ -391,4 +484,3 @@ class test_concat(unittest.TestCase):
 def suite():
     return [test_concat]        
         
-    
