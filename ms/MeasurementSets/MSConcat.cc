@@ -985,9 +985,25 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	// check if row j has an equivalent row somewhere else in the table
 	for (uint k=0 ; k < numrows_this ; ++k){
 	  if (k!=j && !rowToBeRemoved(j) && !rowToBeRemoved(k)){
-	    if( sourceRowsEquivalent(sourceCol, j, k) ){ // all columns are the same (not testing source and spw id)
+	    if( sourceRowsEquivalent(sourceCol, j, k) ){ // all columns are the same (not testing source, spw id, time, and interval)
 	      if(areEQ(sourceCol.spectralWindowId(),j, k)){ // also the SPW id is the same
-//		cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
+		//cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
+
+		// set the time and interval to a superset of the two
+		Double blowk = sourceCol.time()(k) - sourceCol.interval()(k)/2.;
+		Double bhighk = sourceCol.time()(k) + sourceCol.interval()(k)/2.;
+		Double blowj = sourceCol.time()(j) - sourceCol.interval()(j)/2.;
+		Double bhighj = sourceCol.time()(j) + sourceCol.interval()(j)/2.;
+		Double newInterval = max(bhighk,bhighj)-min(blowk,blowj);
+		Double newTime = (max(bhighk,bhighj)+min(blowk,blowj))/2.;
+
+		//cout << "new time = " << newTime << ", new interval = " << newInterval << endl;
+
+		sourceCol.interval().put(j, newTime);
+		sourceCol.interval().put(k, newTime);
+		sourceCol.interval().put(j, newInterval);
+		sourceCol.interval().put(k, newInterval);
+
 		// delete one of the rows
 		if(j<k){ // make entry in map for (k, j) and delete k
 		  tempSourceIndex.define(thisId(k), thisId(j));
@@ -1126,16 +1142,13 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
      areEQ(sourceCol.numLines(), rowi, rowj) &&
      // do NOT test SPW ID!
      // areEQ(sourceCol.spectralWindowId(), rowi, rowj) &&
-     // areEQ(sourceCol.interval(), rowi, rowj) &&
-     // areEQ(sourceCol.time(), rowi, rowj) && 
      areEQ(sourceCol.direction(), rowi, rowj) &&
      areEQ(sourceCol.properMotion(), rowi, rowj)
      ){
     
     //    cout << "All non-optionals equal" << endl;
-    
+
     // test the optional columns next
-    areEquivalent = True;
     if(!(sourceCol.position().isNull())){
       try {
 	areEquivalent = areEQ(sourceCol.position(), rowi, rowj);
