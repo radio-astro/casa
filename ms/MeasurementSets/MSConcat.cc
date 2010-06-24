@@ -1149,6 +1149,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
     //    cout << "All non-optionals equal" << endl;
 
     // test the optional columns next
+    areEquivalent = True;
     if(!(sourceCol.position().isNull())){
       try {
 	areEquivalent = areEQ(sourceCol.position(), rowi, rowj);
