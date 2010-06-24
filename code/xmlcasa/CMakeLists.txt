@@ -138,6 +138,7 @@ casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
 
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
+  scripts/JPLephem_reader.py
   scripts/asap_init.py
   scripts/assignmentFilter.py
   scripts/casa_in_py.py

@@ -77,5 +77,12 @@ def readJPLephem(fmfile):
                         retdict[hk] = matchobj.group(1) # 0 is the whole line
                         #print "found", retdict[hk]
                         break
+    retdict['earliest'] = datestr_to_s(retdict['data'][0]['date'])
+    retdict['latest'] = datestr_to_s(retdict['data'][-1]['date'])
     return retdict
 
+def datestr_to_s(datestr):
+    """
+    Given a UT date like "2010-May-01 00:00", returns en epoch measure.
+    """
+    return me.epoch(rf='UT', v0=qa.totime(datestr))
