@@ -31,8 +31,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     antenna -- antenna names
                default '' (all),
                antenna = '3 & 7' gives one baseline with antennaid = 3,7.
-    timebin -- Value for time averaging
-               default='-1s' (no averaging); example: timebin='30s'
+    timebin -- Interval width for time averaging.
+               default: '0s' or '-1s' (no averaging)
+               example: timebin='30s'
     timerange -- Time range
                  default='' means all times.  examples:
                  timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'

@@ -36,16 +36,23 @@ class par(str):
 	@staticmethod
 	def antenna():
 		""" 
-		      antenna -- Select data based on antenna/baseline
-       		       default: 0 for sdimaging, '' (means all) for the other tasks
-       		       If antenna string is a non-negative integer, it is assumed an antenna index
-       		         otherwise, it is assumed as an antenna name
-       		       antenna='5&6'; baseline between antenna index 5 and index 6.
-       		       antenna='VA05&VA06'; baseline between VLA antenna 5 and 6.
-       		       antenna='5&6;7&8'; baseline 5-6 and 7-8
-       		       antenna='5'; all baselines with antenna 5
-       		       antenna='5,6,10'; all baselines with antennas 5 and 6
+                antenna -- Select data by antenna/baseline
+                default: 0 for sdimaging, '' (means all) for the other tasks
+                Non-negative integers are assumed to be antenna indices, and
+                anything else is taken as an antenna name.
 
+                Examples:
+                antenna='5&6': baseline between antenna index 5 and index 6.
+                antenna='VA05&VA06': baseline between VLA antenna 5 and 6.
+                antenna='5&6:7&8': baselines 5-6 and 7-8
+                antenna='5': all baselines with antenna 5
+                antenna='5,6,10': all baselines including antennas 5, 6, or 10
+                antenna='5,6,10&': all baselines with *only* antennas 5, 6, or 10
+                                   (cross-correlations only.  Use && to include
+                                   autocorrelations, and &&& to get only
+                                   autocorrelations.)
+                antenna='!ea03,ea12,ea17': all baselines except those that include
+                                           EVLA antennas ea03, ea12, or ea17
 		"""
 
 	@staticmethod
@@ -537,13 +544,17 @@ class par(str):
 	@staticmethod	
 	def datacolumn():
 		""" Which data column to use (for plotting, splitting, etc):
-		Options: 'DATA' (raw), 'MODEL_DATA', 'CORRECTED_DATA'
 
-		plotxy:
-	        datacolumn -- Visibility file (MS) data column
+		plotxy: Visibility file (MS) data column
                 default: 'data'; example: datacolumn='model'
                 Options: 'data' (raw),'corrected','model','residual'(corrected-model),'weight'
 
+                split: Visibility file (MS) data column
+                default: 'corrected'; example: datacolumn='data'
+                Options: 'data' (raw), 'corrected', 'model', 'all',
+                         'float_data' (single dish), 'lag_data',
+                         'float_data,data', and 'lag_data,data'.
+                         note: 'all' = whichever of the above that are present.
 		"""
 
 	@staticmethod
@@ -993,6 +1004,22 @@ class par(str):
 		
 	        This selection is in addition to scanlist, field, and pollist
 		"""
+
+        @staticmethod
+        def ignoreables():
+                """
+                Let time bins ignore boundaries in array, scan, and/or state.
+                default = '' (separate time bins by all of the above)
+                examples:
+                ignorables = 'scan': Can be useful when the scan number
+                                     goes up with each integration,
+                                     as in many WSRT MSes.
+                ignorables = ['array', 'state']: disregard array and state
+                                                 IDs when time averaging.
+                ignorables = 'state,subarr': Same as above.  ignorables
+                                             matches on 'arr', 'scan', and
+                                             'state'.
+                """
 		
 	@staticmethod
 	def imagename():
@@ -2173,7 +2200,8 @@ class par(str):
 
 	@staticmethod
 	def scan():
-		""" Scan number range - underdevelopment. """
+		""" Scan number range
+                default: ''=all"""
 
 	@staticmethod
 	def scanaverage():
@@ -2555,7 +2583,12 @@ class par(str):
 	
 	@staticmethod
 	def timebin():
-		""" Value for time averaging; '-1s' indicates no averaging: """
+		"""
+                Interval width for time averaging.
+                default: '0s' or '-1s' (no averaging)
+                example: timebin='30s'
+                         '10' means '10s'
+                """
 
 	@staticmethod
 	def timerange():
