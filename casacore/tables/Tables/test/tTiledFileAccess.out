@@ -8,7 +8,7 @@ cacheSize: 1 (*64)
 #reads:    32
 #accesses: 32        hit-rate:  0%
 <<<
-1
+0
 0
 >>> TSMCube cache statistics:
 cubeShape: [32, 16]

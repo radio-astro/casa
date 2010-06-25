@@ -85,7 +85,7 @@ TiledFileHelper::TiledFileHelper (const String& fileName,
   }
   createDirArrColumn ("DATA", dtype, "");
   TiledStMan::setup(0);
-  fileSet_p[0] = new TSMFile (fileName, writable, tsmOpt);
+  fileSet_p[0] = new TSMFile (fileName, writable, tsmMode(shape.nelements()));
 }
 
 TiledFileHelper::~TiledFileHelper()

@@ -470,6 +470,8 @@ protected:
     // classes use type TpArray*.
     int arrayDataType (int dataType) const;
 
+    // The TSM option to use for the given tile dimensionality 
+    virtual TSMOption tsmMode(uInt nrDim) const;
 
     //# Declare all data members.
     // The name of the hypercolumn.
