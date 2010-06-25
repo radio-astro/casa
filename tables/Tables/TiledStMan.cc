@@ -49,7 +49,6 @@
 #include <tables/Tables/DataManError.h>
 
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 TiledStMan::TiledStMan ()
@@ -363,12 +362,12 @@ TSMCube* TiledStMan::makeTSMCube (TSMFile* file, const IPosition& cubeShape,
                                   Int64 fileOffset)
 {
     TSMCube* hypercube;
-    if (tsmOption().option() == TSMOption::MMap) {
+    if (tsmMode(tileShape.nelements()).option() == TSMOption::MMap) {
         //cout << "mmapping TSM1" << endl;
       AlwaysAssert (file->bucketFile()->isMapped(), AipsError);
         hypercube = new TSMCubeMMap (this, file, cubeShape, tileShape,
                                      values, fileOffset);
-    } else if (tsmOption().option() == TSMOption::Buffer) {
+    } else if (tsmMode(tileShape.nelements()).option() == TSMOption::Buffer) {
         //cout << "buffered TSM1" << endl;
         AlwaysAssert (file->bucketFile()->isBuffered(), AipsError);
         hypercube = new TSMCubeBuff (this, file, cubeShape, tileShape,
@@ -879,7 +878,7 @@ TSMCube* TiledStMan::makeHypercube (const IPosition& cubeShape,
 
 void TiledStMan::createFile (uInt index)
 {
-  TSMFile* file = new TSMFile (this, index, tsmOption());
+  TSMFile* file = new TSMFile (this, index, tsmMode(nrdim_p));
     fileSet_p[index] = file;
 }
 
@@ -1116,7 +1115,7 @@ void TiledStMan::headerFileGet (AipsIO& headerFile, uInt tabNrrow,
 	headerFile >> flag;
 	if (flag) {
 	    if (fileSet_p[i] == 0) {
-                fileSet_p[i] = new TSMFile (this, headerFile, i, tsmOption());
+	      fileSet_p[i] = new TSMFile (this, headerFile, i, tsmMode(nrdim_p));
 	    }else{
 		fileSet_p[i]->getObject (headerFile);
 	    }
@@ -1134,13 +1133,13 @@ void TiledStMan::headerFileGet (AipsIO& headerFile, uInt tabNrrow,
     }
     for (i=0; i<nrCube; i++) {
 	if (cubeSet_p[i] == 0) {
-            if (tsmOption().option() == TSMOption::MMap) {
+	  if (tsmMode(nrdim_p).option() == TSMOption::MMap) {
                 //cout << "mmapping TSM" << endl;
                 cubeSet_p[i] = new TSMCubeMMap (this, headerFile);
-            } else if (tsmOption().option() == TSMOption::Buffer) {
+	  } else if (tsmMode(nrdim_p).option() == TSMOption::Buffer) {
                 //cout << "buffered TSM" << endl;
                 cubeSet_p[i] = new TSMCubeBuff (this, headerFile,
-                                                tsmOption().bufferSize());
+                                                tsmMode(nrdim_p).bufferSize());
             }else{
                 //cout << "caching TSM" << endl;
 	        cubeSet_p[i] = new TSMCube (this, headerFile);
@@ -1171,6 +1170,16 @@ TSMFile* TiledStMan::getFile (uInt sequenceNumber)
 	throw (DataManInternalError ("TiledStMan::getFile"));
     }
     return fileSet_p[sequenceNumber];
+}
+
+TSMOption TiledStMan::tsmMode(uInt nrDim) const
+{
+  if (nrDim == 4) {
+    return TSMOption(TSMOption::Cache);
+  }
+  else {
+    return TSMOption(TSMOption::MMap);
+  }
 }
 
 } //# NAMESPACE CASA - END

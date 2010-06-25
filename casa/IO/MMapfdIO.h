@@ -46,9 +46,11 @@ namespace casa
 // cache of tiles. When using memory-mapped IO it does not need to do that
 // anymore.
 //
-// On 32-bit systems its use is limited because for large files the 4 GB
-// memory space is insufficient. However, for 64-bit systems the memory
-// space is large enough to make use of it.
+// On 32-bit non-Linux systems its use is limited because for large files
+// the 4 GB memory space is insufficient. On 32-bit systems, the mmap2 system 
+// call (Linux) or mmap (Mac) is used to map a < 4GB section of a large file
+// into memory. On 64-bit systems the memory space is large enough to make 
+// use of memory mapping for files up to 16K Petabytes.
 //
 // In the general case there is direct access to the mapped file space.
 // The read and write methods copies the data into/from a buffer.
@@ -58,6 +60,8 @@ namespace casa
 // writable, writing into the mapped data segment means changing the file
 // contents.
 // </synopsis>
+//
+
 
 class MMapfdIO: public LargeFiledesIO
 {
@@ -81,25 +85,33 @@ public:
   // The file name is only used in possible error messages.
   void map (int fd, const String& fileName);
 
-  // Map or remap the entire file.
-  // Remapping is needed if the file has grown elsewhere.
-  void mapFile();
+  // Map or remap the file. If the mapping of the entire file to memory
+  // succeeds, the offset and length parameters have no effect. If mapping
+  // the entire file fails (large files on 32 bit systems), attempts are
+  // made to map as large section as possible, which includes the section 
+  // specified by offset and length. Remapping is needed if the file has
+  // grown elsewhere.
+  void mapFile(Int64 offset, Int64 length);
 
   // Flush changed mapped data to the file.
   // Nothing is done if the file is readonly.
   void flush();
 
   // Write the number of bytes from the seek position on.
-  // The file will be extended and remapped if writing beyond end-of-file.
-  // In that case possible pointers obtained using <src>getXXPointer</src>
-  // are not valid anymore.
+  // The file will be extended and remapped if writing beyond end-of-file,
+  // or if the currently mapped section does not include the required
+  // section. In that case possible pointers obtained using
+  // <src>getXXPointer</src> are not valid anymore.
   virtual void write (uInt size, const void* buf);
 
   // Read <src>size</src> bytes from the File. Returns the number of bytes
   // actually read. Will throw an exception (AipsError) if the requested
   // number of bytes could not be read unless throwException is set to
   // False. Will always throw an exception if the file is not readable or
-  // the system call returns an undocumented value.
+  // the system call returns an undocumented value. The file will be
+  // remapped if the currently mapped section does not include the
+  // required section. In that case, possible pointers obtained using
+  // <src>getXXPointer</src> are not valid anymore.
   virtual Int read (uInt size, void* buf, Bool throwException=True);
 
   // Get a read or write pointer to the given position in the mapped file.
@@ -109,9 +121,14 @@ public:
   // So it means that the write pointer can only be used to update the file,
   // not to extend it. The <src>seek</src> and <src>write</src> functions
   // should be used to extend a file.
+  // The length parameter is the required length of validity of the returned
+  // buffer. The file will be remapped if the currently mapped section does
+  // not include the required section. In that case possible pointers
+  // obtained from previous calls to <src>getXXPointer</src> are not valid
+  // anymore.
   // <group>
-  const void* getReadPointer (Int64 offset) const;
-  void* getWritePointer (Int64 offset);
+  const void* getReadPointer (Int64 offset, Int64 length) const;
+  void* getWritePointer (Int64 offset, Int64 length);
   // </group>
 
   // Get the file size.
@@ -134,6 +151,8 @@ private:
   // </group>
 
   Int64  itsFileSize;       //# File size
+  Int64  itsMapOffset;      //# Start of memory map in file
+  Int64  itsMapSize;        //# Size of currently memory mapped region
   Int64  itsPosition;       //# Current seek position
   char*  itsPtr;            //# Pointer to memory map
   Bool   itsIsWritable;

@@ -72,7 +72,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       initializeBuckets (bucketNr);
     }
     return static_cast<const char*>(itsFile->mappedFile()->getReadPointer
-      (itsStartOffset + Int64(bucketNr)*itsBucketSize));
+                                    (itsStartOffset + Int64(bucketNr)*itsBucketSize,
+                                     itsBucketSize));
   }
 
   void BucketMapped::initializeBuckets (uInt bucketNr)
@@ -82,7 +83,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Initialize this bucket and all uninitialized ones before it.
       while (itsCurNrOfBuckets <= bucketNr) {
         char* data = static_cast<char*>(itsFile->mappedFile()->getWritePointer
-                   (itsStartOffset + Int64(itsCurNrOfBuckets)*itsBucketSize));
+                                        (itsStartOffset + Int64(itsCurNrOfBuckets)*itsBucketSize,
+                                         itsBucketSize));
         memset (data, 0, itsBucketSize);
         itsCurNrOfBuckets++;
         setWritten();
