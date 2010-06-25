@@ -826,6 +826,7 @@ list( GET ${RPFITS_LIBRARIES} 0 rpfits_lib )
 get_filename_component(rpfitslibd ${rpfits_lib} PATH)
 
 string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
+string( REGEX REPLACE "/[^/]+/?$" "" rpfitslibd ${RPFITS_LIBRARIES} )
 
 # convert semicolons to spaces...
 set( _ii "" )
