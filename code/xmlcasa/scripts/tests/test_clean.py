@@ -34,6 +34,8 @@ class clean_test1(unittest.TestCase):
     msfile = 'ngc7538_ut1.ms'
     res = None
     img = 'cleantest1'
+    img2 = '0-cleantest1'
+    msk = 'cleantest1.in.mask'
 
     def setUp(self):
         self.res = None
@@ -43,13 +45,17 @@ class clean_test1(unittest.TestCase):
             
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         shutil.copytree(datapath+self.msfile, self.msfile)
+        shutil.copytree(datapath+self.msk, self.msk)
     
     def tearDown(self):
         if (os.path.exists(self.msfile)):
             os.system('rm -rf ' + self.msfile)
 
         os.system('rm -rf ' + self.img+'*')
+        os.system('rm -rf ' + self.img2+'*')
      
+        if (os.path.exists(self.msk)):
+            os.system('rm -rf ' + self.msk)
 
     def getpixval(self,img,pixel):
         ia.open(img)
@@ -309,6 +315,13 @@ class clean_test1(unittest.TestCase):
         output=commands.getoutput(cmd)
         ret=output.find(self.img+'.mask')
         self.assertTrue(ret==-1)
+
+    def test39(self):
+        '''Clean 39: Input mask image specified'''
+        self.res=clean(vis=self.msfile,imagename=self.img2,mask=self.msk)
+        self.assertEqual(self.res, None)
+        self.assertTrue(os.path.exists(self.img2+'.image'))
+
 
 class clean_test2(unittest.TestCase):
     
