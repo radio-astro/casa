@@ -623,12 +623,12 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 
         if (!tiled || !simpleTiling) {
             // Untiled, or tiled at a higher than expected dimensionality
-            // Use a canonical tile shape of 32 kB size
+            // Use a canonical tile shape of 1 MB size
 
             Int maxNchan = max (numberChan());
             Int tileSize = maxNchan/10 + 1;
             Int nCorr = data->shape(0)(0);
-            dataTileShape = IPosition(3, nCorr, tileSize, 4096/nCorr/tileSize + 1);
+            dataTileShape = IPosition(3, nCorr, tileSize, 131072/nCorr/tileSize + 1);
         };
   
         // Add the MODEL_DATA column

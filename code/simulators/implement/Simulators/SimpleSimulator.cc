@@ -98,7 +98,7 @@ SimpleSimulator::SimpleSimulator(SimObservations *obs, const String& msname)
     newtab.bindColumn(MS::columnName(MS::ANTENNA1), aipsStMan);
     newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan);
 
-    Int tileSize = 32;
+    Int tileSize = 1024;   // in KB
     TiledShapeStMan tiledStMan1("TiledData",
 				IPosition(3,1,tileSize,max(1, 4096/tileSize)));
     TiledShapeStMan tiledStMan1f("TiledFlag",
