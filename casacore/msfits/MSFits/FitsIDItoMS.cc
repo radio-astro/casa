@@ -568,7 +568,9 @@ void FITSIDItoMS1::fillRow()
 
 FITSIDItoMS1::~FITSIDItoMS1()
 {
-  delete msc_p;
+  if(!msc_p){
+    delete msc_p;
+  }
   delete itsLog;
 }
 
@@ -1869,6 +1871,14 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     time  *= C::day; 
     //    cout << "TIME=" << setprecision(11) << time << endl; 
 
+    if (row<0) {
+      startTime = time;
+      if (firstMain){
+	startTime_p = startTime;
+	//	cout << "startTime is set to " << startTime << endl;
+      }
+    }
+
     // If integration time is available, use it:
     if (iInttim > -1) {
       memcpy(&interval, (static_cast<Float *>(data_addr[iInttim])), sizeof(Float));
@@ -1879,10 +1889,6 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       if (row<0) {
 	*itsLog << LogIO::WARN << "UV_DATA table contains no integration time information. Will try to derive it from TIME." 
 		<< LogIO::POST;
-	startTime = time;
-	if (firstMain){
-	  startTime_p = startTime;
-	}
       }
       if (time > startTime) {
 	interval=time-startTime;
@@ -1890,6 +1896,10 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 	msc.exposure().fillColumn(interval);
 	startTime = DBL_MAX; // do this only once
       }
+    }
+
+    if(trow==nRows-1){
+      lastTime_p = time+interval;
     }
 
     Int array = Int(100.0*(baseline - Int(baseline)+0.001));
@@ -2060,9 +2070,9 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       }
       msc.fieldId().put(putrow,sourceId);
       nField = max(nField, sourceId+1);
-    }
+    } // end for(ifno=0 ...
     meter.update((trow+1)*1.0);
-  }
+  } // end for(trow=0 ...
 
   // fill the receptorAngle with defaults, just in case there is no AN table
   receptorAngle_p=0;
@@ -2865,7 +2875,7 @@ void FITSIDItoMS1::updateTables(const String& MStmpDir)
   MSPolarizationColumns& msPol(msc_p->polarization());
   msPol.corrType().put(0,corrType_p);
   msPol.corrProduct().put(0,corrProduct_p);
-  //delete msc_p;
+  delete msc_p;
 
   //update time in the field table
   MSFileName = MStmpDir + "/SOURCE";
@@ -2873,16 +2883,15 @@ void FITSIDItoMS1::updateTables(const String& MStmpDir)
   ms_p = mssub2;
   msc_p = new MSColumns(ms_p);
   Int nrow = ms_p.field().nrow();
-  
-  
   MSFieldColumns& msFld(msc_p->field());
   
   for (Int row = 0; row < nrow; row++) { 
     msFld.time().put(row,obsTime(0)); 
-    //cout << "update:obsTime=" << obsTime(0);
+    //    cout << "update:obsTime=" << obsTime(0);
   }
     
-  //delete msc_p;
+  delete msc_p;
+  msc_p = 0;
 
 } 
 
