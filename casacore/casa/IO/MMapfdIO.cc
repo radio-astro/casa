@@ -65,7 +65,7 @@ namespace casa
     itsFileSize   = length();
     itsPosition   = 0;
     if (itsFileSize > 0) {
-        mapFile(0, itsFileSize);
+        mapFile(0, 1);
     }
   }
 
@@ -108,7 +108,8 @@ namespace casa
            length. */
         
         uInt pageSize = getpagesize();
-        
+	itsMapSize = itsFileSize;
+
         do {
             itsMapSize /= 2;
 
@@ -130,8 +131,8 @@ namespace casa
                 throw AipsError (s.str());
             }
 
-            // cout << "mapping " << itsMapSize << " from " << itsMapOffset << " to " << itsMapOffset + itsMapSize 
-            //      << " (requested " << offset << " to " << offset + length << ")" << endl;
+	    //	    cout << "mapping " << itsMapSize << " from " << itsMapOffset << " to " << itsMapOffset + itsMapSize 
+	    //		 << " (requested " << offset << " to " << offset + length << ")" << endl;
 
 	    errno = 0;
 
