@@ -14,7 +14,7 @@ from tasks import *
 from taskinit import *
 import unittest
 
-myname = 'concat-unit-test'
+myname = 'test_concat'
 
 # name of the resulting MS
 msname = 'concatenated.ms'
@@ -66,7 +66,7 @@ class test_concat(unittest.TestCase):
     def setUp(self):
         res = None
 
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/concat/input/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/concat/input/'
         cpath = os.path.abspath(os.curdir)
         filespresent = sorted(glob.glob("*.ms"))
         os.chdir(datapath)
@@ -350,7 +350,7 @@ class test_concat(unittest.TestCase):
     
 
     def test4(self):
-        '''concatenating five MSs with identical sources but different time/intervals on them (CSV-268)'''
+        '''case 4: five MSs with identical sources but different time/intervals on them (CSV-268)'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         
         shutil.rmtree(msname,ignore_errors=True)
