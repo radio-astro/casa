@@ -100,7 +100,7 @@ def diffMetadata(testOut, standardOut, prefix=""):
     testList = open(testOut,'r').readlines()
     stndList = open(standardOut,'r').readlines()
 
-    #                     Pattern                         Substitution
+    #                     Pattern                        Substitution
     unwanted = ((re.compile(r"[ |]([+-]?[0-9]*\.[0-9]+)"), 'x'), # floats
                 (re.compile(r' '),                          ''), # spaces
                 (re.compile(r'-+'),                       '-+')) # dashes

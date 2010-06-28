@@ -52,17 +52,7 @@
 # </synopsis> 
 #
 # <example>
-# # This test was designed to run in the automated CASA test system.
-# # This example shows who to run it manually from within casapy.
-# casapy -c runUnitTest test_imcontsub
-#
-# or
-#
-# # This example shows who to run it manually from with casapy.
-# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
-# import runUnitTest
-# runUnitTest.main(['imcontsub_test'])
-#
+# `echo $CASAPATH/bin/casapy | sed -e 's$ $/$'` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py test_imfit[test1,test2,...]
 # </example>
 #
 # <motivation>
@@ -252,14 +242,7 @@ class imfit_test(unittest.TestCase):
                 default('imfit')
                 return imfit(imagename=noisy_image, box=box, region=region)
     
-            for j in [0, 1]:
-                if (j == 0):
-                    code = run_fitcomponents
-                    method = test + "ia.fitcomponents: "
-                else:
-                    code = run_imfit
-                    method = test + "imfit: "
-    
+            for code in [run_fitcomponents, run_imfit]:
                 res = code()
                 clist = res['results']
                 if (not res['converged']):
@@ -330,13 +313,7 @@ class imfit_test(unittest.TestCase):
             default('imfit')
             return imfit(imagename=noisy_image, box=box)
     
-        for i in [0, 1]:
-            if (i == 0):
-                code = run_fitcomponents
-                method = test + "ia.fitcomponents: "
-            else:
-                code = run_imfit
-                method = test + "imfit: "
+        for code in [run_fitcomponents, run_imfit]:
             res = code()
             if (res['converged']):
                 success = False
@@ -376,13 +353,7 @@ class imfit_test(unittest.TestCase):
                 default('imfit')
                 return imfit(imagename=noisy_image, mask=mask, includepix=includepix, excludepix=excludepix)
     
-            for j in [0, 1]:
-                if (j == 0):
-                    code = run_fitcomponents
-                    method = test + "ia.fitcomponents: "
-                else:
-                    code = run_imfit
-                    method = test + "imfit: "
+            for code in [run_fitcomponents, run_imfit]:
                 res = code()
     
                 clist = res['results']
@@ -446,37 +417,35 @@ class imfit_test(unittest.TestCase):
         test = "residual_and_model_test: "
         success = True
         global msgs
-        residual = 'residual.im'
-        model = 'model.im'
         box="100,100,200,200"
-        for i in [0, 1]:
-            residual = "residual.im" + str(i)
-            model = "model.im" + str(i)
-            def run_fitcomponents():
-                ia.open(noisy_image)
-                return ia.fitcomponents(box=box, residual=residual, model=model)
-            def run_imfit():
-                default('imfit')
-                return imfit(imagename=noisy_image, box=box, residual=residual, model=model)
+        def run_fitcomponents(model, residual):
+            ia.open(noisy_image)
+            return ia.fitcomponents(
+                box=box, residual=residual, model=model
+            )
+        def run_imfit(model, residual):
+            default('imfit')
+            return imfit(
+                imagename=noisy_image, box=box, residual=residual,
+                model=model
+            )
     
-            if (i == 0):
-                code = run_fitcomponents
-                method = test + "ia.fitcomponents: "
-            else:
-                code = run_imfit
-                method = test + "imfit: "
-            res = code()
+        for code in [run_fitcomponents, run_imfit]:
+            model = 'model_' + str(code) + '.im'
+            residual = 'resid_' + str(code) + '.im'
+
+            res = code(model, residual)
             clist = res['results']
     
             if (not res['converged']):
                 success = False
-                msgs += method + "fit did not converge unexpectedly"
+                msgs + test + "fit did not converge unexpectedly"
             if (not check_image(residual, expected_residual, 'residualDifference.im')):
                 success = False
-                msgs += method + "Did not get expected residual image\n"
+                msgs += test + "Did not get expected residual image\n"
             if (not check_image(model, expected_model, 'modelDifference.im')):
                 success = False
-                msgs += method + "Did not get expected model image\n"
+                msgs += test + "Did not get expected model image\n"
     
         self.assertTrue(success,msgs)
     
@@ -494,63 +463,57 @@ class imfit_test(unittest.TestCase):
             default('imfit')
             return imfit(imagename=convolved_model, estimates=estimates_convolved)
     
-        for i in [0, 1]:
-            if (i == 0):
-                code = run_fitcomponents
-                method = test + "ia.fitcomponents: "
-            else:
-                code = run_imfit
-                method = test + "imfit: "
+        for code in [run_fitcomponents, run_imfit]:
             res = code()
     
             clist = res['results']
             if (not res['converged']):
                 success = False
-                msgs += method + "fit did not converge unexpectedly"
+                msgs += test + "fit did not converge unexpectedly"
             epsilon = 1e-5
             # I flux test
             got = clist['component0']['flux']['value'][0]
             expected = 60082.6
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Q flux test
             got = clist['component0']['flux']['value'][1]
             expected = 0
             if (got != expected):
                 success = False
-                msgs += method + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # RA test
             got = clist['component0']['shape']['direction']['m0']['value']
             expected = 0.000213318
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Dec test
             got = clist['component0']['shape']['direction']['m1']['value']
             expected = 1.939254e-5 
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Major axis test
             got = clist['component0']['shape']['majoraxis']['value']
             expected = 28.21859344 
             epsilon = 1e-7
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test+ "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Minor axis test
             got = clist['component0']['shape']['minoraxis']['value']
             expected = 25.55011520
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Position angle test
             got = clist['component0']['shape']['positionangle']['value']
             expected = 126.3211050
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
     
         self.assertTrue(success,msgs)
        

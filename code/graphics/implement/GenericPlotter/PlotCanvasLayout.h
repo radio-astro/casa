@@ -121,10 +121,10 @@ public:
     
     
     // Implements PlotCanvasLayout::coordIsValid().
-    bool coordIsValid(const PlotLayoutCoordinate& coord) const { return true; }
+    bool coordIsValid(const PlotLayoutCoordinate& ) const { return true; }
     
     // Implements PlotCanvasLayout::coordToIndex().
-    int coordToIndex(const PlotLayoutCoordinate& coord) const { return 0; }
+    int coordToIndex(const PlotLayoutCoordinate& ) const { return 0; }
     
     // Implements PlotCanvasLayout::setCanvasAt().
     void setCanvasAt(const PlotLayoutCoordinate& coord, PlotCanvasPtr c);
@@ -148,7 +148,7 @@ public:
     unsigned int spacing() const { return 0; }
     
     // Implements PlotCanvasLayout::setSpacing().
-    void setSpacing(unsigned int spacing) { }
+    void setSpacing(unsigned int ) { }
     
 protected:
     PlotCanvasPtr m_canvas; // Canvas.
