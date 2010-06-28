@@ -122,11 +122,13 @@ String Stokes::name(StokesTypes stokesType)
 }
 
 Vector<String> Stokes::allNames(Bool includeUndefined) {
-	uInt size = includeUndefined ? NumberOfTypes + 1 : NumberOfTypes;
+	uInt size = includeUndefined ? NumberOfTypes : NumberOfTypes - 1;
 	Vector<String> names(size);
-	for (uInt i=0; i<names.size(); i++) {
+	uInt idx = 0;
+	for (uInt i=0; i<NumberOfTypes; i++) {
 		if (includeUndefined || (StokesTypes)i != Undefined) {
-			names[i] = name((StokesTypes)i);
+			names[idx] = name((StokesTypes)i);
+			idx++;
 		}
 	}
 	return names;
