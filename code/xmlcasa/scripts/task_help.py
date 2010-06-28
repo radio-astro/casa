@@ -73,7 +73,7 @@ def tasklist():
     print 'cvel                applycal      deconvolve    uvcontsub   '
     print 'fixvis              bandpass      feather       uvmodelfit  '
     print 'hanningsmooth       blcal         ft            uvsub'
-    print 'split               calstat            csvclean    (uvcontsub2)'
+    print 'split               calstat       csvclean      (uvcontsub2)'
     print 'uvcontsub           clearcal      widefield                '
     print 'uvsub               cvel          (boxit )                 '
     print '(uvcontsub2)        fluxscale     (autoclean)              '
