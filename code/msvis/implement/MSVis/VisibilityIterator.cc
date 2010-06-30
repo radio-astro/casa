@@ -1943,6 +1943,7 @@ void ROVisibilityIterator::getColArray(const ROArrayColumn<T> &column, Array<T> 
 {
     if (!slurp_p) {
         column.getColumnCells(selRows_p, array, resize);
+        return;
     }
 
     if (all.nelements() == 0) {
