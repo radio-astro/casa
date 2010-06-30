@@ -190,6 +190,9 @@ public:
   // original ms row
   virtual Vector<uInt>& rowIds(Vector<uInt>& rowids) const; 
 
+  // Need to override this and not use getColArray
+  virtual Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
+
 protected:
   virtual void setSelTable();
 
@@ -204,9 +207,9 @@ protected:
 			     Cube<Complex>& data) const;
 
   // Column access functions
-  virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, const String &colName, Vector<Bool> &all, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, const String &colName, Vector<Int> &all, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, const String &colName, Vector<Double> &all, Bool resize = False) const;
 
   virtual void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;

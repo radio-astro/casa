@@ -53,7 +53,7 @@ ROVisibilityIterator::ROVisibilityIterator()
 ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
 					   const Block<Int>& sortColumns,
 					   Double timeInterval)
- : msIter_p(ms,sortColumns,timeInterval),selRows_p(0, 0),
+    : msIter_p(ms,sortColumns,timeInterval),selRows_p(0, 0),slurp_p(false),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
@@ -69,6 +69,7 @@ floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 
 
 void ROVisibilityIterator::initsinglems(){
+
   //  cout << "addDefaultSortColumns = False!" << endl;
   This = (ROVisibilityIterator*)this;
   isMultiMS_p=False;
@@ -97,7 +98,7 @@ void ROVisibilityIterator::initsinglems(){
 ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
 					   const Block<Int>& sortColumns, const Bool addDefaultSort,
 					   Double timeInterval)
- :msIter_p(ms,sortColumns,timeInterval, addDefaultSort),selRows_p(0, 0),
+ :msIter_p(ms,sortColumns,timeInterval, addDefaultSort),selRows_p(0, 0),slurp_p(false),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
   floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
@@ -111,7 +112,7 @@ msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
 					   const Block<Int>& sortColumns,
 					   Double timeInterval)
-: msIter_p(mss,sortColumns,timeInterval),selRows_p(0, 0),
+: msIter_p(mss,sortColumns,timeInterval),selRows_p(0, 0),slurp_p(false),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
@@ -124,7 +125,7 @@ floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
 					   const Block<Int>& sortColumns, const Bool addDefaultSort,
 					   Double timeInterval)
-  : msIter_p(mss,sortColumns,timeInterval,addDefaultSort),selRows_p(0, 0),
+  : msIter_p(mss,sortColumns,timeInterval,addDefaultSort),selRows_p(0, 0),slurp_p(false),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
     floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
@@ -133,7 +134,7 @@ msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 
 }
 void ROVisibilityIterator::initmultims(const Block<MeasurementSet> &mss){
- 
+
   This = (ROVisibilityIterator*)this; 
   msCounter_p=0;
   isMultiMS_p=True;
@@ -170,7 +171,9 @@ ROVisibilityIterator::ROVisibilityIterator(const ROVisibilityIterator& other)
     operator=(other);
 }
 
-ROVisibilityIterator::~ROVisibilityIterator() {}
+ROVisibilityIterator::~ROVisibilityIterator() 
+{
+}
 
 ROVisibilityIterator& 
 ROVisibilityIterator::operator=(const ROVisibilityIterator& other) 
@@ -179,6 +182,7 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   This=(ROVisibilityIterator*)this;
   msIter_p=other.msIter_p;
   selRows_p=other.selRows_p;
+  slurp_p = other.slurp_p;
   curChanGroup_p=other.curChanGroup_p;
   curNumChanGroup_p=other.curNumChanGroup_p;
   channelGroupSize_p=other.channelGroupSize_p;
@@ -392,6 +396,7 @@ void ROVisibilityIterator::setSelTable()
 
   curNumRow_p=curEndRow_p-curStartRow_p+1;
   selRows_p = RefRows(curStartRow_p, curEndRow_p);
+  rowIds_p.resize(0);
 }
 
 void ROVisibilityIterator::getTopoFreqs()
@@ -475,8 +480,6 @@ void ROVisibilityIterator::setState()
     curNumChanGroup_p=numChanGroup_p[spw];
     freqCacheOK_p=False;
   }
-
-  msIter_rowIds.resize(0);
 
   stateOk_p=True;
 }
@@ -718,20 +721,27 @@ ROVisibilityIterator & ROVisibilityIterator::operator++()
   return *this;
 }
 
+void ROVisibilityIterator::update_rowIds() const
+{
+  if (rowIds_p.nelements() == 0) {
+      rowIds_p = selRows_p.convert();
+      
+      Vector<uInt> msIter_rowIds(msIter_p.table().rowNumbers());
+
+      for (uInt i = 0; i < rowIds_p.nelements(); i++) {
+          rowIds_p(i) = msIter_rowIds(rowIds_p(i));
+      }
+  }
+  return;
+}
+
 Vector<uInt>& ROVisibilityIterator::rowIds(Vector<uInt>& rowids) const
 {
-  rowids.resize(curNumRow_p);
-  rowids = selRows_p.convert();
-
-  /* Get row numbers from msIter only when needed */
-  if (msIter_rowIds.nelements() == 0) {
-      msIter_rowIds.resize(curTableNumRow_p);
-      msIter_rowIds = msIter_p.table().rowNumbers();
-  }
-
-  for (uInt i = 0; i < rowids.nelements(); i++) {
-      rowids(i) = msIter_rowIds(rowids(i));
-  }
+  /* Calculate the row numbers in the original MS only when needed,
+     i.e. when this function is called */
+  update_rowIds();
+  rowids.resize(rowIds_p.nelements());
+  rowids = rowIds_p;
   return rowids;
 }
 
@@ -739,28 +749,28 @@ Vector<uInt>& ROVisibilityIterator::rowIds(Vector<uInt>& rowids) const
 Vector<Int>& ROVisibilityIterator::antenna1(Vector<Int>& ant1) const
 {
   ant1.resize(curNumRow_p);
-  getCol(colAntenna1, ant1);
+  getCol(colAntenna1, ant1, MS::columnName(MS::ANTENNA1), allAntenna1);
   return ant1;
 }
 
 Vector<Int>& ROVisibilityIterator::antenna2(Vector<Int>& ant2) const
 {
   ant2.resize(curNumRow_p);
-  getCol(colAntenna2, ant2);
+  getCol(colAntenna2, ant2, MS::columnName(MS::ANTENNA2), allAntenna2);
   return ant2;
 }
 
 Vector<Int>& ROVisibilityIterator::feed1(Vector<Int>& fd1) const
 {
   fd1.resize(curNumRow_p);
-  getCol(colFeed1, fd1);
+  getCol(colFeed1, fd1, MS::columnName(MS::FEED1), allFeed1);
   return fd1;
 }
 
 Vector<Int>& ROVisibilityIterator::feed2(Vector<Int>& fd2) const
 {
   fd2.resize(curNumRow_p);
-  getCol(colFeed2, fd2);
+  getCol(colFeed2, fd2, MS::columnName(MS::FEED2), allFeed2);
   return fd2;
 }
 
@@ -816,7 +826,7 @@ Matrix<Bool>& ROVisibilityIterator::flag(Matrix<Bool>& flags) const
   Bool deleteIt2;
   const Bool* pcube=This->flagCube_p.getStorage(deleteIt1);
   Bool* pflags=flags.getStorage(deleteIt2);
-  for (Int row=0; row<curNumRow_p; row++) {
+  for (uInt row=0; row<curNumRow_p; row++) {
     for (Int chn=0; chn<channelGroupSize_p; chn++) {
       *pflags=*pcube++;
       for (Int pol=1; pol<nPol_p; pol++, pcube++) {
@@ -833,15 +843,15 @@ Matrix<Bool>& ROVisibilityIterator::flag(Matrix<Bool>& flags) const
 Vector<Bool>& ROVisibilityIterator::flagRow(Vector<Bool>& rowflags) const
 {
   rowflags.resize(curNumRow_p);
-  getCol(colFlagRow, rowflags);
+  getCol(colFlagRow, rowflags, MS::columnName(MS::FLAG_ROW), allRowflags);
   return rowflags;
 }
 
 Vector<Int>& ROVisibilityIterator::scan(Vector<Int>& scans) const
 {
-  scans.resize(curNumRow_p);
-  getCol(colScan, scans);
-  return scans;
+    scans.resize(curNumRow_p);
+    getCol(colScan, scans, MS::columnName(MS::SCAN_NUMBER), allScans);
+    return scans;
 }
 
 Vector<Double>& ROVisibilityIterator::frequency(Vector<Double>& freq) const
@@ -882,14 +892,16 @@ Vector<Double>& ROVisibilityIterator::lsrFrequency(Vector<Double>& freq) const
 Vector<Double>& ROVisibilityIterator::time(Vector<Double>& t) const
 {
   t.resize(curNumRow_p);
-  getCol(colTime, t); 
+
+  getCol(colTime, t, MS::columnName(MS::TIME), allTimes);
+
   return t;
 }
 
 Vector<Double>& ROVisibilityIterator::timeInterval(Vector<Double>& t) const
 {
   t.resize(curNumRow_p);
-  getCol(colTimeInterval, t); 
+  getCol(colTimeInterval, t, MS::columnName(MS::INTERVAL), allTimeInterval);
   return t;
 }
 
@@ -1080,7 +1092,7 @@ ROVisibilityIterator::visibility(Matrix<CStokesVector>& vis,
   // The cross terms are zero filled in these cases.
   switch (nPol_p) {
   case 4: {
-    for (Int row=0; row<curNumRow_p; row++) {
+    for (uInt row=0; row<curNumRow_p; row++) {
       for (Int chn=0; chn<channelGroupSize_p; chn++,pcube+=4) {
 	vis(chn,row)=pcube;
       }
@@ -1089,7 +1101,7 @@ ROVisibilityIterator::visibility(Matrix<CStokesVector>& vis,
   }
   case 2: {
     vis.set(Complex(0.,0.));
-    for (Int row=0; row<curNumRow_p; row++) {
+    for (uInt row=0; row<curNumRow_p; row++) {
       for (Int chn=0; chn<channelGroupSize_p; chn++,pcube+=2) {
 	CStokesVector& v=vis(chn,row);
 	v(0)=*pcube; 
@@ -1100,7 +1112,7 @@ ROVisibilityIterator::visibility(Matrix<CStokesVector>& vis,
   }
   case 1: {
     vis.set(Complex(0.,0.));
-    for (Int row=0; row<curNumRow_p; row++) {
+    for (uInt row=0; row<curNumRow_p; row++) {
       for (Int chn=0; chn<channelGroupSize_p; chn++,pcube++) {
 	CStokesVector& v=vis(chn,row);
 	v(0)=v(3)=*pcube; 
@@ -1115,11 +1127,11 @@ Vector<RigidVector<Double,3> >&
 ROVisibilityIterator::uvw(Vector<RigidVector<Double,3> >& uvwvec) const
 {
     uvwvec.resize(curNumRow_p);
-    getCol(colUVW, This->uvwMat_p,True);
+    getColArray<Double>(colUVW, This->uvwMat_p, MS::columnName(MS::UVW), allUVW, True);
     // get a pointer to the raw storage for quick access
     Bool deleteIt;
     Double* pmat=This->uvwMat_p.getStorage(deleteIt);
-    for (Int row=0; row<curNumRow_p; row++, pmat+=3) uvwvec(row)=pmat;
+    for (uInt row=0; row<curNumRow_p; row++, pmat+=3) uvwvec(row)=pmat;
     return uvwvec;
 }
 
@@ -1465,7 +1477,7 @@ Int ROVisibilityIterator::nSubInterval() const
     
     /* Count unique times */
     retval = 1;
-    for (unsigned i = 0; i < nTimes; i++) {
+    for (unsigned i = 0; i < nTimes - 1; i++) {
       if (tp[i] < tp[i+1]) retval += 1;
     }
   }
@@ -1865,19 +1877,55 @@ Int ROVisibilityIterator::numberCoh(){
   
 }
 
-void ROVisibilityIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize) const
+template<class T>
+void ROVisibilityIterator::getColScalar(const ROScalarColumn<T> &column, Vector<T> &array, const String &colName, Vector<T> &all, Bool resize) const
 {
-    column.getColumnCells(selRows_p, array, resize);
+    if (!slurp_p) {
+        column.getColumnCells(selRows_p, array, resize);
+        return;
+    }
+
+    if (all.nelements() == 0) {
+        ScalarColumn<T> colAll(msIter_p.ms(), colName);
+        try {
+            all = colAll.getColumn();
+        }
+        catch (...) {
+            // If out of memory, do it the slow way.
+            // Sorry for the generic catch but it is undocumented, 
+            // what getColumn() throws in case of OOM,
+            // so this is probably the safest things to do.
+            // If there are other problems the following call
+            // is likely to throw too.
+            column.getColumnCells(selRows_p, array, resize);
+            return;
+        }
+    }
+
+    update_rowIds();
+
+    if (resize && array.shape().nelements() != curNumRow_p) {
+        array.resize(curNumRow_p);
+    }
+
+    for (unsigned i = 0; i < curNumRow_p; i++) {
+        array(i) = all(rowIds_p(i));
+    }
+    return;
+}
+void ROVisibilityIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, const String &colName, Vector<Bool> &all, Bool resize) const
+{
+    getColScalar<Bool>(column, array, colName, all, resize);
 }
 
-void ROVisibilityIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize) const
+void ROVisibilityIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, const String &colName, Vector<Int> &all, Bool resize) const
 {
-    column.getColumnCells(selRows_p, array, resize);
+    getColScalar<Int>(column, array, colName, all, resize);
 }
 
-void ROVisibilityIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize) const
+void ROVisibilityIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, const String &colName, Vector<Double> &all, Bool resize) const
 {
-    column.getColumnCells(selRows_p, array, resize);
+    getColScalar<Double>(column, array, colName, all, resize);
 }
 
 void ROVisibilityIterator::getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize) const
@@ -1888,6 +1936,56 @@ void ROVisibilityIterator::getCol(const ROArrayColumn<Bool> &column, Array<Bool>
 void ROVisibilityIterator::getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize) const
 {
     column.getColumnCells(selRows_p, array, resize);
+}
+
+template<class T>
+void ROVisibilityIterator::getColArray(const ROArrayColumn<T> &column, Array<T> &array, const String &colName, Array<T> &all, Bool resize) const
+{
+    if (!slurp_p) {
+        column.getColumnCells(selRows_p, array, resize);
+    }
+
+    if (all.nelements() == 0) {
+        ArrayColumn<T> colAll(msIter_p.ms(), colName);
+        try {
+            all = colAll.getColumn();
+        }
+        catch (...) {
+            column.getColumnCells(selRows_p, array, resize);
+            return;
+        }
+    }
+
+    update_rowIds();
+
+    // Support only uvw column for now
+    if (all.shape().nelements() != 2) {
+        stringstream ss;
+        ss << __func__ << ": Column " << colName << " is " << all.shape().nelements() 
+           << "-dimensional, expected 2-dimensional";
+        throw(AipsError(ss.str()));
+    }
+
+    if (all.shape()(0) != 3) {
+        stringstream ss;
+        ss << __func__ << ": Column " << colName << " has cell length " << all.shape()(0) 
+           << ", expected 3";
+        throw(AipsError(ss.str()));
+    }
+
+    IPosition shape(2, 3, curNumRow_p);
+    if (resize && array.shape() != shape) {
+        dynamic_cast<Matrix<T> &>(array).resize(3, curNumRow_p);
+    }
+
+    Matrix<T> &m1 = dynamic_cast<Matrix<T> &>(array);
+    Matrix<T> &m2 = dynamic_cast<Matrix<T> &>(all);
+    for (unsigned j = 0; j < curNumRow_p; j++) {
+        for (unsigned i = 0; i < 3; i++) {
+            m1(i, j) = m2(i, rowIds_p(j));
+        }
+    }
+    return;
 }
 
 void ROVisibilityIterator::getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize) const
@@ -1921,12 +2019,19 @@ ROVisibilityIterator::attachTable() const
     return msIter_p.table();
 }
 
+void ROVisibilityIterator::slurp() const
+{
+    slurp_p = true;
+
+    return;
+}
+
 VisibilityIterator::VisibilityIterator() {}
 
 VisibilityIterator::VisibilityIterator(MeasurementSet &MS, 
 				       const Block<Int>& sortColumns, 
 				       Double timeInterval)
-:ROVisibilityIterator(MS, sortColumns, timeInterval)
+ :ROVisibilityIterator(MS, sortColumns, timeInterval)
 {
 }
 
@@ -1950,17 +2055,25 @@ VisibilityIterator::VisibilityIterator(Block<MeasurementSet>& mss,
 }
 
 VisibilityIterator::VisibilityIterator(const VisibilityIterator & other)
+    : ROVisibilityIterator()
 {
     operator=(other);
 }
 
-VisibilityIterator::~VisibilityIterator() {}
+VisibilityIterator::~VisibilityIterator() 
+{
+    if (slurp_p && dirtyRowflags) {
+        ScalarColumn<Bool> colAll(msIter_p.ms(), MS::columnName(MS::FLAG_ROW));
+        colAll.putColumn(allRowflags);
+    }
+}
 
 VisibilityIterator& 
 VisibilityIterator::operator=(const VisibilityIterator& other)
 {
     if (this!=&other) {
 	ROVisibilityIterator::operator=(other);
+        dirtyRowflags = other.dirtyRowflags;
 	RWcolFlag.reference(other.RWcolFlag);
         RWcolFlagRow.reference(other.RWcolFlagRow);
 	RWcolVis.reference(other.RWcolVis);
@@ -2028,7 +2141,7 @@ void VisibilityIterator::setFlag(const Matrix<Bool>& flag)
     throw(AipsError("VisIter::setFlag(flag) - inconsistent number of channels"));
   }
   
-  for (Int row=0; row<curNumRow_p; row++) {
+  for (uInt row=0; row<curNumRow_p; row++) {
     for (Int chn=0; chn<channelGroupSize_p; chn++) {
       for (Int pol=0; pol<nPol_p; pol++) {
 	*p++=*pflag;
@@ -2048,7 +2161,8 @@ void VisibilityIterator::setFlag(const Cube<Bool>& flags)
 
 void VisibilityIterator::setFlagRow(const Vector<Bool>& rowflags)
 {
-  putCol(RWcolFlagRow, rowflags);
+    putCol(RWcolFlagRow, rowflags, MS::columnName(MS::FLAG_ROW), allRowflags);
+    dirtyRowflags = true;
 }
 
 void VisibilityIterator::setVis(const Matrix<CStokesVector> & vis,
@@ -2071,7 +2185,7 @@ void VisibilityIterator::setVis(const Matrix<CStokesVector> & vis,
   visCube_p.resize(nPol_p,channelGroupSize_p,curNumRow_p);
   Bool deleteIt;
   Complex* p=visCube_p.getStorage(deleteIt);
-  for (Int row=0; row<curNumRow_p; row++) {
+  for (uInt row=0; row<curNumRow_p; row++) {
     for (Int chn=0; chn<channelGroupSize_p; chn++) {
       const CStokesVector& v=vis(chn,row);
       switch (nPol_p) {
@@ -2277,9 +2391,36 @@ void VisibilityIterator::putDataColumn(DataColumn whichOne,
   }
 }  
 
-void VisibilityIterator::putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array)
+void VisibilityIterator::putColScalar(ScalarColumn<Bool> &column, const Vector<Bool> &array, const String &colName, Vector<Bool> &all)
 {
-    column.putColumnCells(selRows_p, array);
+    if (!slurp_p) {
+        column.putColumnCells(selRows_p, array);
+        return;
+    }
+
+    if (all.nelements() == 0) {
+        ScalarColumn<Bool> colAll(msIter_p.ms(), colName);
+        try {
+            all = colAll.getColumn();
+        }
+        catch (...) {
+            // If out of memory, do it the slow way
+            column.putColumnCells(selRows_p, array);
+            return;
+        }
+    }
+
+    update_rowIds();
+
+    for (unsigned i = 0; i < curNumRow_p; i++) {
+        all(rowIds_p(i)) = array(i);
+    }
+    return;
+}
+
+void VisibilityIterator::putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array, const String &colName, Vector<Bool> &all)
+{
+    putColScalar(column, array, colName, all);
 }
 
 void VisibilityIterator::putCol(ArrayColumn<Bool> &column, const Array<Bool> &array)
@@ -2310,6 +2451,14 @@ void VisibilityIterator::putCol(ArrayColumn<Float> &column, const Slicer &slicer
 void VisibilityIterator::putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array)
 {
     column.putColumnCells(selRows_p, slicer, array);
+}
+
+void VisibilityIterator::slurp() const
+{
+    ROVisibilityIterator::slurp();
+
+    dirtyRowflags = false;
+    return;
 }
 
 } //# NAMESPACE CASA - END

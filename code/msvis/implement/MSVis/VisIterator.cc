@@ -499,17 +499,17 @@ Int ROVisIterator::numberCorr(Int pol) const {
 
 }
 
-void ROVisIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize) const
+void ROVisIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, const String &, Vector<Bool> &, Bool resize) const
 {
     column.getColumn(array, resize);
 }
 
-void ROVisIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize) const
+void ROVisIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, const String &, Vector<Int> &, Bool resize) const
 {
     column.getColumn(array, resize);
 }
 
-void ROVisIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize) const
+void ROVisIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, const String &, Vector<Double> &, Bool resize) const
 {
     column.getColumn(array, resize);
 }
@@ -548,6 +548,20 @@ void ROVisIterator::getCol(const ROArrayColumn<Complex> &column, const Slicer &s
 {
     column.getColumn(slicer, array, resize);
 }
+
+
+Vector<RigidVector<Double,3> >& 
+ROVisIterator::uvw(Vector<RigidVector<Double,3> >& uvwvec) const
+{
+    uvwvec.resize(curNumRow_p);
+    getCol(colUVW, uvwMat_p,True);
+    // get a pointer to the raw storage for quick access
+    Bool deleteIt;
+    Double* pmat = uvwMat_p.getStorage(deleteIt);
+    for (uInt row=0; row<curNumRow_p; row++, pmat+=3) uvwvec(row)=pmat;
+    return uvwvec;
+}
+
 
 const Table
 ROVisIterator::attachTable() const
