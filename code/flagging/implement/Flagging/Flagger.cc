@@ -544,6 +544,9 @@ namespace casa {
 	//vs_p = new VisSet(*mssel_p,noselection,0.0);
       }
     vs_p->resetVisIter(sort2, timeInterval);
+
+    // Optimize for iterating randomly through one MS
+    vs_p->iter().slurp();
     
     selectDataChannel();
     ms = *mssel_p;
@@ -975,6 +978,7 @@ namespace casa {
             Double timeInterval = 7.0e9; //a few thousand years
             
             vs_p->resetVisIter(sort2, timeInterval);
+            vs_p->iter().slurp();
             //lets make sure the data channel selection is done
             selectDataChannel();
             
@@ -1561,6 +1565,11 @@ namespace casa {
     // reset existing flags?
     Bool reset_flags = isFieldSet(opt, RF_RESET);
 
+    /* Don't use the progmeter if less than this
+       number of timestamps (for performance reasons;
+       just creating a ProgressMeter is relatively
+       expensive). */
+    const unsigned progmeter_limit = 1000;
     
     try { // all exceptions to be caught below
       
@@ -1572,6 +1581,7 @@ namespace casa {
       // Setdata already made a data selection
       
       VisibilityIterator &vi(vs_p->iter()); 
+      vi.slurp();
       VisBuffer vb(vi);
       
       RFChunkStats chunk(vi, vb,
@@ -1775,7 +1785,12 @@ namespace casa {
 		{
             
 		  sprintf(subtitle,"pass %d (data)",npass+1);
-		  ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq);
+
+                  auto_ptr<ProgressMeter> progmeter(NULL);
+                  if (chunk.num(TIME) > progmeter_limit) {
+                      progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+                  }
+
 		  // start pass for all active agents
                   //cout << "-----------subtitle=" << subtitle << endl;
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1787,7 +1802,9 @@ namespace casa {
 		  // iterate over visbuffers
 		  for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
 
-		    progmeter.update(itime);
+                    if (progmeter.get() != NULL) {
+                        progmeter->update(itime);
+                    }
 		    chunk.newTime();
 		    Bool anyActive = False;
 		    anyActive=False;
@@ -1870,14 +1887,19 @@ namespace casa {
 		  sprintf(subtitle,"pass %d (dry)",npass+1);
                   //cout << "-----------subtitle=" << subtitle << endl;
 
-		  ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq);
+                  auto_ptr<ProgressMeter> progmeter(NULL);
+                  if (chunk.num(TIME) > progmeter_limit) {
+                      progmeter = auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+                  }
 		  // start pass for all active agents
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 		    if ( iter_mode(ival) == RFA::DRY )
 		      acc[ival]->startDry(new_field_spw);
 		  for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
 		    {
-		      progmeter.update(itime);
+                      if (progmeter.get() != NULL) {
+                          progmeter->update(itime);
+                      }
 		      // now, call individual VisBuffer iterators
 		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 			if ( iter_mode(ival) == RFA::DRY )
@@ -1906,18 +1928,23 @@ namespace casa {
 
 	  if ( !isFieldSet(opt, RF_TRIAL) && anyNE(active_init, False) )
 	    {
-		sprintf(subtitle,"pass (flag)");
-		//cout << "-----------subtitle=" << subtitle << endl;
-
-	      ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq);
+	      sprintf(subtitle,"pass (flag)");
+              //cout << "-----------subtitle=" << subtitle << endl;
+              
+              auto_ptr<ProgressMeter> progmeter(NULL);
+              if (chunk.num(TIME) > progmeter_limit) {
+                  progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
+              }
 	      for (uInt i = 0; i<acc.nelements(); i++)
 		if (active_init(i))
 		  acc[i]->startFlag(new_field_spw);
 	      uInt itime=0;
 	      for( vi.origin(); vi.more(); vi++,itime++ ) {
-		  progmeter.update(itime);
-		  
-		  chunk.newTime();
+                  if (progmeter.get() != NULL) {
+                      progmeter->update(itime);
+                  }
+                  
+                  chunk.newTime();
 		  //		  inRowFlags += sum(chunk.nrfIfr());
 
 		  Bool anyActive = False;

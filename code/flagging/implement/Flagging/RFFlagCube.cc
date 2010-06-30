@@ -353,7 +353,6 @@ void RFFlagCube::advance( uInt it,Bool getFlags )
   return;
 }
 
-
 // Fills lattice with apriori flags (from VisBuffer in ChunkStats)
 void RFFlagCube::getMSFlags(uInt it)
 {
@@ -408,22 +407,24 @@ void RFFlagCube::getMSFlags(uInt it)
 	throw AipsError(ss.str());
       }
 
+    Bool deleteIn, deleteFc;
+    Bool *inp = in_flags.getStorage(deleteIn);
+    const Bool *fcp = fc.getStorage(deleteFc);
+
     for( uInt i=0; i < fr.nelements(); i++ )
     {
       uInt ifr = chunk.ifrNum(i);
 
       if (fr(i)) {
-          for (uInt ichan = 0; ichan < num(CHAN); ichan++) {
-              for (uInt icorr = 0; icorr < num(CORR); icorr++) {
-                  in_flags(icorr, ichan, ifr) = 1;
-              }
+          unsigned n = num(CHAN)*num(CORR);
+          for (unsigned j = 0; j < n; j++) {
+              inp[j + ifr * n] = 1; 
           }
       }
       else {
-          for (uInt ichan = 0; ichan < num(CHAN); ichan++) {
-              for (uInt icorr = 0; icorr < num(CORR); icorr++) {
-                  in_flags(icorr, ichan, ifr) = fc(icorr, ichan, i);
-              }
+          unsigned n = num(CORR) * num(CHAN);
+          for (unsigned j = 0; j < n; j++) {
+              inp[j + n * ifr] = fcp[j + n * i];
           }
       }
 
@@ -466,6 +467,8 @@ void RFFlagCube::getMSFlags(uInt it)
           }
       }
     }
+    in_flags.putStorage(inp, deleteIn);
+    fc.freeStorage(fcp, deleteFc);
   }
 }
 
@@ -496,37 +499,53 @@ void RFFlagCube::setMSFlags(uInt itime)
   Cube<Bool>   out_flagcube( num(CORR),num(CHAN),nr,False );
 
   chunk.nrfTime(itime) = 0;
-  /* 
-  chunk.nfChanIfr.set(0);
-  chunk.nfCorrIfr.set(0);
-  chunk.nfChanTime.set(0);
-  chunk.nfCorrTime.set(0);
-  chunk.nfChanCorr.set(0);
-  */
+
+  Bool deleteOut, deleteIn;
+  Bool *outp = out_flagcube.getStorage(deleteOut);
+  const Bool *inp = in_flags.getStorage(deleteIn);
+
+  Bool deleteNfChanIfr;
+  uInt *nfChanIfrp = chunk.nfChanIfr().getStorage(deleteNfChanIfr);
+
+  unsigned ncorr = num(CORR);
+  unsigned nchan = num(CHAN);
 
   for( uInt ir=0; ir<nr; ir++ )
   {
       uInt ifr = chunk.ifrNum(ir);
-      //F flag counter reset
-      //chunk.nrfIfr(ifr)=0;
-      chunk.nfIfrTime(ifr,itime)=0;
-      // (ncorr,nchan) matrix of output flags
+
+      chunk.nrfIfr(ifr) = 0;
 
       if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
       
       // Set data flags
-      for( uInt ich=0; ich<num(CHAN); ich++ ) {
+      unsigned n = nchan * ncorr;
+      unsigned iout = n*ir;
+      unsigned iin = n*ifr;
+      unsigned iChanIfr = nchan * ifr;
+      uInt &iNfIfrTime = chunk.nfIfrTime(ifr, itime);
+      iNfIfrTime = 0;
+      for( uInt ich=0; ich < nchan; ich++, iChanIfr++) {
+          nfChanIfrp[iChanIfr] = 0;
+      }
 
-	  chunk.nfChanIfr(ich, ifr) = 0;
+      iChanIfr = nchan * ifr;
+      for( uInt ich=0; ich < nchan; ich++, iChanIfr++) {
 
           if (kiss) {
 
-              for( uInt icorr = 0; icorr < num(CORR); icorr++) {
-                  if (out_flagcube(icorr, ich, ir) = 
-                      in_flags(icorr, ich, ifr)) {
-                      
-                      chunk.nfChanIfr(ich,ifr)++;
-                      chunk.nfIfrTime(ifr,itime)++;
+              if (ncorr == 1) {
+                  if (outp[iout++] = inp[iin++]) {
+                      nfChanIfrp[iChanIfr]++;
+                      iNfIfrTime++;
+                  }
+              }
+              else {
+                  for( uInt icorr = 0; icorr < ncorr; icorr++, iout++, iin++) {
+                      if (outp[iout] = inp[iin]) {
+                          nfChanIfrp[iChanIfr]++;
+                          iNfIfrTime++;
+                      }
                   }
               }
           } else {
@@ -579,7 +598,7 @@ void RFFlagCube::setMSFlags(uInt itime)
       // chunk.nf*
       // nrfIfr(ifr), nrfTime(itime), nfIfrTime(ifr,itime), nfChanIfr(ich,ifr)
 
-      if (chunk.nfIfrTime(ifr, itime) == num(CHAN)*num(CORR)) {
+      if (chunk.nfIfrTime(ifr, itime) == nchan * ncorr) {
 
           out_flagrow(ir) = True;
 
@@ -587,6 +606,11 @@ void RFFlagCube::setMSFlags(uInt itime)
           chunk.nrfTime(itime)++;
       }
   }
+
+  out_flagcube.putStorage(outp, deleteOut);
+  in_flags.freeStorage(inp, deleteIn);
+  //  chunk.nfChanIfr().putStorage(nfChanIfrp, deleteNfChanIfr);
+
   if(mdbg)
       {
           Int cnt1=0,cnt2=0;

@@ -224,6 +224,8 @@ public:
                                           { return nf_chan_ifr(ich,ifr); }
   const Matrix<uInt> & nfChanIfr () const   
                                           { return nf_chan_ifr; }        
+  Matrix<uInt> & nfChanIfr ()
+                                          { return nf_chan_ifr; }        
   uInt & nrfIfr  (uInt i)                  
                                           { return nrf_ifr(i); }
   uInt & nrfTime (uInt i)                  
