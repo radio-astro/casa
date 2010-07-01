@@ -6218,6 +6218,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
   return True;
 }
 
+// This is the one used by im.setjy() (because it has a model arg).
 Bool Imager::setjy(const Vector<Int>& fieldid, 
 		      const Vector<Int>& spectralwindowid,
 		      const String& fieldnames, const String& spwstring,
@@ -6342,7 +6343,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
 	  if (fluxStd.compute(fieldName, mfreq, returnFlux, returnFluxErr)) {
 	    // Standard reference source identified
-	    returnFlux.value(fluxUsed);
+	    returnFlux.value(fluxUsed); // Read this as fluxUsed = returnFlux.value();
 	  } 
 
 	  // dgoscha, NCSA, 02 May, 2002
