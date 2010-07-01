@@ -127,6 +127,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>-1.</value>
     </param> 
 
+    <param type="bool" name="flagbackup">
+	    <description>Automatically back up the flags at each step?</description>
+	    <value>True</value>
+    </param>
+
     <constraints>
             <when param="singledish">
                 <equals type="bool" value="False"/>
@@ -248,6 +253,9 @@ shadow -- flag baselines that are shadowed
             &gt;&gt;&gt; shadow expandable parameter
                  diameter -- (float) effective diameter (m) to use (default=-1 use antenna diameter)
  
+flagbackup -- Backup flags before each flagging step
+              (default: True)
+
             Examples:
 
                  importevla(asdm='CLowTest_000',ocorr_mode='ca',applyflags=False)
