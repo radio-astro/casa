@@ -1174,6 +1174,10 @@ TSMFile* TiledStMan::getFile (uInt sequenceNumber)
 
 TSMOption TiledStMan::tsmMode(uInt nrDim) const
 {
+#if defined(AIPS_DARWIN)
+  return TSMOption(TSMOption::Cache);
+  // because mmap performs badly on Mac, not on Linux
+#endif
   if (nrDim == 4) {
     return TSMOption(TSMOption::Cache);
   }
