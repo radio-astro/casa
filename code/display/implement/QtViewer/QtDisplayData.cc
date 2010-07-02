@@ -1218,6 +1218,8 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
     const CoordinateSystem& cs = 
       (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+    String unit =  
+      (im_ != 0) ? im_->units().getName() : cim_->units().getName();
 					   
     Int zIndex = padd->activeZIndex();
     IPosition pos = padd->fixedPosition();
@@ -1281,8 +1283,10 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     //cout << "zLabel=" << zLabel << " hLabel=" << hLabel << endl;
     //cout << "tStr=" << tStr << endl;
 
-    String head = "Statistics at " + zaxis + "=" + zLabel + " " +
-            haxis + "=" + hLabel + "\n";
+    String head = description() + "\n" +  
+            zaxis + "=" + zLabel + " " +
+            haxis + "=" + hLabel + " " +
+            "FluxUnit=" + unit.before("/beam") + "\n";
     //stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
     stats.getLayerStats(layerStats, nm, zPos, zIndex, hPos, hIndex); 
     //cout << layerStats << endl;
