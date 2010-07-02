@@ -350,8 +350,8 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   //cout << "createMS SetupNewTable\n";
     
   // Choose the Tile size per column to be 1 MB
-  const Int nTileCorr = 1;
-  const Int nTileChan = 1024;
+  const Int nTileCorr = 4;
+  const Int nTileChan = 64;
   const Int tileSizeKBytes = 1024;
   Int nTileRow;
 
