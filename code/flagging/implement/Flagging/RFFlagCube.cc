@@ -45,6 +45,10 @@ const Bool mdbg=False;
 const Bool verbose=False;
         
 RFCubeLattice<RFlagWord> RFFlagCube::flag; // global flag lattice
+Cube<Bool> RFFlagCube::in_flags;  //global flag array (kiss mode)
+int RFFlagCube::in_flags_time;
+bool RFFlagCube::in_flags_flushed;
+
 FlagMatrix RFFlagCube::flagrow;   
 Int RFFlagCube::pos_get_flag=-1,RFFlagCube::pos_set_flag=-1;
 Int RFFlagCube::maxmemuse=0;
@@ -89,7 +93,10 @@ RFFlagCube::RFFlagCube ( RFChunkStats &ch,Bool ignore,Bool reset,LogIO &sink )
 
 RFFlagCube::~RFFlagCube ()
 {
-  num_inst--;
+    in_flags.resize(0, 0, 0);
+    in_flags_time = -1;
+    in_flags_flushed = false;
+    num_inst--;
 }
 
 uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
@@ -101,9 +108,10 @@ uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
 }
 
 // creates flag cube for a given visibility chunk
-void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool is_selector, const String &name) 
+void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const String &name) 
 {
-    kiss = (nAgent == 1 && is_selector); /* Use a Cube<Bool> instead of the flag lattice in this case */
+    kiss = only_selector; /* Use a Cube<Bool> instead of the
+                             expensive flag lattice in this case */
 
     if (dbg) cout << "name=" << name << endl;
  
@@ -140,6 +148,7 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool is_selector, const S
                in the if conditions.
             */
             flag.shape().resize(1);
+            in_flags_time = -1;
         }
 	pos_get_flag = pos_set_flag = -1;
 
@@ -358,13 +367,18 @@ void RFFlagCube::getMSFlags(uInt it)
 {
   // return if already filled at this iterator position
   if( !kiss ) {
-      if (flag.position() <= pos_get_flag )
+      if (pos_get_flag >= flag.position() )
           return;
       
       pos_get_flag = flag.position();
   }
   else {
       pos_get_flag = it;
+      if (in_flags_time == it) {
+          return;
+      }
+      in_flags_time = it;
+      in_flags_flushed = false;
   }
   
   FlagVector fl_row (flagrow.column(pos_get_flag));
@@ -493,6 +507,14 @@ void RFFlagCube::setMSFlags(uInt itime)
       
       pos_set_flag = flag.position();
   }
+  else {
+      if (in_flags_flushed) {
+          return;
+      }
+      else {
+          in_flags_flushed = true;
+      }
+  }
 
   uInt nr = chunk.visBuf().nRow();
   Vector<Bool> out_flagrow( nr,False );
@@ -609,7 +631,7 @@ void RFFlagCube::setMSFlags(uInt itime)
 
   out_flagcube.putStorage(outp, deleteOut);
   in_flags.freeStorage(inp, deleteIn);
-  //  chunk.nfChanIfr().putStorage(nfChanIfrp, deleteNfChanIfr);
+  chunk.nfChanIfr().putStorage(nfChanIfrp, deleteNfChanIfr);
 
   if(mdbg)
       {

@@ -109,7 +109,7 @@ class Flagger : public FlaggerEnums
 {
 protected:
 // creates an agent by name
-  RFABase * createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms );
+  RFABase * createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms, bool &only_selector );
 
 // sets up record of agents and default parameters
   const RecordInterface & setupAgentDefaults ();

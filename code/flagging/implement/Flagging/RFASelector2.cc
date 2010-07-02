@@ -357,7 +357,6 @@ void RFASelector::addClipInfoDesc ( const Block<ClipInfo> &clip)
 RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) : 
   RFAFlagCubeBase(ch,parm)
 {
-    is_selector = true;
   if ( chunk.measSet().isNull() ) {
     throw AipsError("Received chunk referring to NULL MS!");
   }
@@ -1397,12 +1396,10 @@ RFA::IterMode RFASelector::iterRow (uInt ir)
   return RFA::CONT;
 }
 
-/* Flush flags after each time stamp, but
-   only if this is the only agent 
-*/
+/* Flush flags after each time stamp, if in kiss mode */
 void RFASelector::endRows(uInt it)
 {
-    if (nAgent == 1) {
+    if (only_selector) {
         flag.advance(it);
         flag.setMSFlags(it);
     }
@@ -1410,7 +1407,7 @@ void RFASelector::endRows(uInt it)
     
 void RFASelector::iterFlag(uInt it)
 {
-    if (nAgent != 1) {
+    if (!only_selector) {
         RFAFlagCubeBase::iterFlag(it);
     }
 }

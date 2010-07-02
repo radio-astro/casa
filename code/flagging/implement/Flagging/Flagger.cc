@@ -1378,8 +1378,12 @@ namespace casa {
   // -----------------------------------------------------------------------
   RFABase * Flagger::createAgent (const String &id,
 				  RFChunkStats &chunk,
-				  const RecordInterface &parms )
+				  const RecordInterface &parms,
+                                  bool &only_selector)
   {
+      if (id != "select" && id != "flagexaminer") {
+          only_selector = false;
+      }
     // cerr << "Agent id: " << id << endl;
     if ( id == "timemed" )
       return new RFATimeMedian(chunk, parms);
@@ -1607,6 +1611,7 @@ namespace casa {
       
       acc.set(NULL);
       uInt nacc = 0;
+      bool only_selector = true;  // only RFASelector agents?
       for (uInt i=0; i<agents.nfields(); i++) {
           if (  agents.dataType(i) != TpRecord )
 	    os << "Unrecognized field '" << agents.name(i) << "' in agents\n" << LogIO::EXCEPTION;
@@ -1656,7 +1661,8 @@ namespace casa {
 	  // create agent based on name
 	  RFABase *agent = createAgent(agent_id,
 				       chunk,
-				       parms);
+				       parms,
+                                       only_selector);
 	  if ( !agent )
 	    os<<"Unrecognized method name '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	  agent->init();
@@ -1666,6 +1672,9 @@ namespace casa {
 	  acc[nacc++] = agent;
       }
       
+      for (unsigned i = 0; i < nacc; i++) {
+          acc[i]->setOnlySelector(only_selector);
+      }
       acc.resize(nacc, True);
 
       // begin iterating over chunks
@@ -2056,7 +2065,7 @@ namespace casa {
       }
 
     }
-    catch( int x ) //(AipsError x)
+    catch(AipsError x)
       {
 	// clean up agents
 	for( uInt i=0; i<acc.nelements(); i++ )
@@ -2073,18 +2082,18 @@ namespace casa {
 	// throw the exception on
 	throw;
       }
-    //    catch(int e) //(std::exception e) 
-    //      {
-    //	for( uInt i=0; i<acc.nelements(); i++ ) {
-    //          if ( acc[i] ) {
-    //            delete acc[i];
-    //            acc[i] = NULL;
-    //          }
-    //        }
-    //	acc.resize(0);
-    //
-    //        throw AipsError(e.what());
-    //      }
+    catch(std::exception e) 	 
+        { 	 
+            for( uInt i=0; i<acc.nelements(); i++ ) { 	 
+                if ( acc[i] ) { 	 
+                    delete acc[i]; 	 
+                    acc[i] = NULL; 	 
+                } 	 
+            } 	 
+            acc.resize(0); 	 
+            
+            throw AipsError(e.what()); 	 
+        }
     //cleanupPlotters();
     ms.flush();
     //os<<"Flagging complete\n"<<LogIO::POST;

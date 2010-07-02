@@ -237,7 +237,9 @@ public:
 
   bool kiss;  // do things simpler (faster) if there is exactly one selector agent
 
-  Cube<Bool> in_flags;
+  static Cube<Bool> in_flags;
+  static int in_flags_time;  //time stamp that in_flags has reached
+  static bool in_flags_flushed; // do we need to write the flags back for this time stamp?
 
   // shortcut to RFChunkStats::num
   uInt num ( StatEnums which ) { return chunk.num(which); }
