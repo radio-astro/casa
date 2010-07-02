@@ -1287,6 +1287,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
             zaxis + "=" + zLabel + " " +
             haxis + "=" + hLabel + " " +
             "FluxUnit=" + unit.before("/beam") + "\n";
+
     //stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
     stats.getLayerStats(layerStats, nm, zPos, zIndex, hPos, hIndex); 
     //cout << layerStats << endl;
