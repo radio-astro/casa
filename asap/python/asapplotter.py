@@ -21,9 +21,8 @@ class asapplotter:
         if visible is not None:
             self._visible = visible
         self._plotter = self._newplotter(**kwargs)
-        if self._visible and matplotlib.get_backend() == "TkAgg":
-            from asap.casatoolbar import CustomToolbarTkAgg
-            self._plotter.figmgr.casabar = CustomToolbarTkAgg(self)
+        # additional tool bar
+        self._plotter.figmgr.casabar=self._newcasabar()
 
         self._panelling = None
         self._stacking = None
@@ -69,6 +68,13 @@ class asapplotter:
         else:
             from asap.asaplot import asaplot
         return asaplot(**kwargs)
+
+    def _newcasabar(self):
+        backend=matplotlib.get_backend()
+        if self._visible and backend == "TkAgg":
+            from asap.casatoolbar import CustomToolbarTkAgg
+            return CustomToolbarTkAgg(self)
+        else: return None
 
     #@print_log_dec
     def plot(self, scan=None):

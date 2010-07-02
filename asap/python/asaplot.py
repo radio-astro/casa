@@ -5,6 +5,7 @@ ASAP plotting class based on matplotlib.
 from asap.asaplotbase import *
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.backend_bases import FigureManagerBase
 
 class asaplot(asaplotbase):
     """
@@ -21,3 +22,4 @@ class asaplot(asaplotbase):
         del v['self']
         asaplotbase.__init__(self,**v)
         self.canvas = FigureCanvasAgg(self.figure)
+        self.figmgr = FigureManagerBase(self.canvas,1)
