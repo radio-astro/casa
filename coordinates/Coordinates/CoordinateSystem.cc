@@ -2454,7 +2454,7 @@ String CoordinateSystem::format(String& units,
                                 uInt worldAxis,
                                 Bool isAbsolute,
                                 Bool showAsAbsolute,
-                                Int precision)
+                                Int precision) const
 {
     AlwaysAssert(worldAxis < nWorldAxes(), AipsError);
 // 
