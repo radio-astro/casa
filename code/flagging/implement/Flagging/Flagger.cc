@@ -74,6 +74,8 @@
 
 #include <algorithm>
 
+#include <sstream>
+
 namespace casa {
 
   const bool Flagger::dbg = false;
@@ -1438,6 +1440,19 @@ namespace casa {
       printAgentRecord(agent_id, i, agents.asRecord(i));
     }
   }
+
+    /*
+      Well, for boolean values this function gives you 1 + 1 = 2,
+      where the AIPS++ built-in, never-should-have-been-written, sum()
+      surprisingly gives you 1 + 1 = 1.
+     */
+    int Flagger::my_aipspp_sum(const Array<Bool> &a)
+    {
+        return a.contiguousStorage() ?
+            std::accumulate(a.cbegin(), a.cend(), 0) :
+            std::accumulate(a.begin(),  a.end(),  0);
+    }
+
   void Flagger::printAgentRecord(String &agent_id, uInt agentCount,
 				 const RecordInterface &agent_rec){
     // but if an id field is set in the sub-record, use that instead
@@ -1682,7 +1697,7 @@ namespace casa {
 
       bool new_field_spw = true;   /* Is the current chunk the first chunk for this (field,spw)? */
 
-      Int inRowFlags=0, outRowFlags=0, totalRows=0, inDataFlags=0, outDataFlags=0, totalData=0;
+      Int64 inRowFlags=0, outRowFlags=0, totalRows=0, inDataFlags=0, outDataFlags=0, totalData=0;
 
       for (vi.originChunks();
 	   vi.moreChunks(); 
@@ -1744,7 +1759,7 @@ namespace casa {
 		  availmem = maxmem>0 ? maxmem : 0;
 		}
 	    }
-          if (dbg) cout << "Active for this chunk: " << sum(active) << endl;
+          if (dbg) cout << "Active for this chunk: " << my_aipspp_sum(active) << endl;
 
 	  // initially active agents
 	  Vector<Bool> active_init = active;
@@ -1829,11 +1844,11 @@ namespace casa {
 			if (anyActive) acc[i]->initializeIter(itime);
 		    }
 
-                    inRowFlags += sum(vb.flagRow());
+                    inRowFlags += my_aipspp_sum(vb.flagRow());
 		    totalRows += vb.flagRow().nelements();
 		    totalData += vb.flagCube().shape().product();
 
-                    inDataFlags += sum(vb.flagCube());
+                    inDataFlags += my_aipspp_sum(vb.flagCube());
 		    
 		    // now, call individual VisBuffer iterators
 		    for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1978,8 +1993,8 @@ namespace casa {
 		  
 		  //		  outRowFlags += sum(chunk.nrfIfr());
 
-		  outRowFlags += sum(vb.flagRow());
-                  outDataFlags += sum(vb.flagCube());
+		  outRowFlags += my_aipspp_sum(vb.flagRow());
+                  outDataFlags += my_aipspp_sum(vb.flagCube());
 
 	      }  // for (vi ... ) loop over time
 	      if (didSomething) {
@@ -2028,24 +2043,26 @@ namespace casa {
           if (didSomething && new_field_spw) {
               
               LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
-              
-              osss << "Field = " << field_id << " , Spw Id : "
+
+              stringstream ss;
+              ss << "Field = " << field_id << ", Spw Id = "
                    << spw_id
-                   << "  Total rows = " << totalRows
-                   << endl;
-              osss << "Input:    "
+                   << ", Total rows = " << totalRows
+                 << ", Total data = " << totalData << endl;
+              ss << "Input:    "
                    << "  Rows flagged = " << inRowFlags << " "
                    << "(" << 100.0*inRowFlags/totalRows << " %)."
                    << "  Data flagged = " << inDataFlags << " "
                    << "(" << 100.0*inDataFlags/totalData << " %)."
                    << endl;
-              osss << "This run: "
+              ss << "This run: "
                    << "  Rows flagged = " << outRowFlags - inRowFlags << " "
                    << "(" << 100.0*(outRowFlags-inRowFlags)/totalRows << " %)."
                    << "  Data flagged = "  << outDataFlags - inDataFlags << " "
                    << "(" << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
                    << endl;
-              osss << LogIO::POST;
+              
+              osss << ss.str() << LogIO::POST;
 
               /* Reset counters */
               inRowFlags = outRowFlags = totalRows = inDataFlags = outDataFlags = totalData = 0;
