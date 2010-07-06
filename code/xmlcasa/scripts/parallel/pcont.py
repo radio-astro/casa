@@ -1,12 +1,32 @@
 from taskinit import *
 from parallel_go import *
 from cleanhelper import *
+from odict import *
 import numpy as np
+import random
+import string
 import time
 import os
 import shutil
 import pdb
 
+def averimages(outimage='outimage', inimages=[]):
+    if((type(inimages)==list) and (len (inimages)==0)):
+        return False
+    if(os.path.exists(outimage)):
+        shutil.rmtree(outimage)
+    if(type(inimages)==list):
+        shutil.copytree(inimages[0], outimage)
+        ia.open(outimage)        
+        for k in range(1, len(inimages)) :
+            ia.calc('"'+outimage+'" +  "'+inimages[k]+'"')
+        ia.calc('"'+outimage+'"'+'/'+str(len(inimages)))
+        ia.done()
+    elif(type(inimages)==str):
+        shutil.copytree(inimages, outimage)
+    else:
+        return False
+    return True
 
 def getchanimage(inimage, outimage, chan, nchan=1):
     """
@@ -39,7 +59,7 @@ def putchanimage(cubimage,inim,chan):
     ia.close()
     ia.open(cubimage)
     cubeshape=ia.shape()
-    blc=[0,0,inimshape[2]-1,chan]
+    blc=[0,0,0,chan]
     trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
     if( not (cubeshape[3] > (chan+inimshape[3]-1))):
         return False
@@ -175,7 +195,7 @@ def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e1
                     doneup=True
                     spwsel[k].append(j)    
                     matchup=0
-                    while(upfreq < freqs[j][ind[matchup]]):
+                    while(upfreq > freqs[j][ind[matchup]]):
                         matchup=matchup+1
                     matchup=matchup-1 if matchup > 0 else 0
                     if(freqs[j][channum[j]-1] > freqs[j][0]):
@@ -283,6 +303,8 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         print "Removing ", model, 'and', imagename+'.image'
         shutil.rmtree(model, True)
         shutil.rmtree(imagename+'.image', True)
+        shutil.rmtree(imagename+'.residual', True)
+
     ###num of cpu per node
     numcpu=numcpuperhost
     if((hostnames==[]) or (hostnames=='')): 
@@ -299,6 +321,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     print 'SPWSEL ', spwsel, startsel, nchansel 
 
     out=range(numcpu)  
+    c.pgc('casalog.filter()')
     c.pgc('from  parallel.parallel_cont import *')
     spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
     fieldlaunch='"'+field+'"' if (type(field) == str) else str(field)
@@ -306,13 +329,13 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'")'
     print 'launch command', launchcomm
     c.pgc(launchcomm);
-    c.pgc('a.visInMem='+str(visinmem));
-    c.pgc('a.painc='+str(painc));
-    c.pgc('a.cfcache='+'"'+str(cfcache)+'"');
-    c.pgc('a.pblimit='+str(pblimit));
-    c.pgc('a.dopbcorr='+str(dopbcorr));
-    c.pgc('a.applyoffsets='+str(applyoffsets));
-    c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
+    #c.pgc('a.visInMem='+str(visinmem));
+    #c.pgc('a.painc='+str(painc));
+    #c.pgc('a.cfcache='+'"'+str(cfcache)+'"');
+    #c.pgc('a.pblimit='+str(pblimit));
+    #c.pgc('a.dopbcorr='+str(dopbcorr));
+    #c.pgc('a.applyoffsets='+str(applyoffsets));
+    #c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
 
 
     tb.open(msname+"/SPECTRAL_WINDOW")
@@ -335,14 +358,20 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     tb.done()
     ###define image names
     imlist=[]
+    char_set = string.ascii_letters
     cfcachelist=[]
     for k in range(numcpu):
-        substr='spw'
-        for u in range(len(spwsel[k])):
-            if(u==0):
-                substr=substr+'_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
-            else:
-                substr=substr+'_spw_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
+        #substr='spw'
+        #for u in range(len(spwsel[k])):
+        #    if(u==0):
+        #       substr=substr+'_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
+        #   else:
+        #        substr=substr+'_spw_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
+        ####new version to keep filename small
+        substr='Temp_'+string.join(random.sample(char_set,8), sep='')
+        while (os.path.exists(substr+'.model')):
+            substr='Temp_'+string.join(random.sample(char_set,8), sep='')
+        ###############
         imlist.append(substr)
         cfcachelist.append(cfcache+'_'+str(k));
     #####
@@ -356,7 +385,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
-            c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
+            #c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
             runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel[k])+', numchan='+str(nchansel[k])+', field="'+str(field)+'", spw='+str(spwsel[k])+', freq='+freq+', band='+band+', imname='+imnam+')'
             print 'command is ', runcomm
             out[k]=c.odo(runcomm,k)
@@ -365,20 +394,42 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             time.sleep(5)
             overone=True
             for k in range(numcpu):
+                #print 'k', k, out[k]
                 overone=(overone and c.check_job(out[k],False)) 
+                #print 'overone', overone 
             over=overone
-        residual=imlist[0]+'.residual'
-        psf=imlist[0]+'.psf'
+        residual=imagename+'.residual'
+        psf=imagename+'.psf'
+        psfs=range(len(imlist))
+        residuals=range(len(imlist))
+        restoreds=range(len(imlist))
+        for k in range (len(imlist)):
+            psfs[k]=imlist[k]+'.psf'
+            residuals[k]=imlist[k]+'.residual'
+            restoreds[k]=imlist[k]+'.image'
+	averimages(residual, residuals)
         if(maj==0):
             copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
             if(not contclean or (not os.path.exists(model))):
                 copyimage(inimage=residual, outimage=model, 
                           init=True, initval=0.0)    
-        ia.open(residual)
-        for k in range(1, len(imlist)) :
-            ia.calc('"'+residual+'" +  "'+imlist[k]+'.residual"')
-        ia.calc('"'+residual+'"'+'/'+str(len(imlist)))
-        ia.done()
+        #ia.open(residual)
+        #for k in range(1, len(imlist)) :
+        #   ia.open(residual)
+        #    ia.calc('"'+residual+'" +  "'+imlist[k]+'.residual"')
+        #   ia.done()
+            ############
+        #    ia.open(imlist[k]+'.residual')
+        #    print 'residual of ', imlist[k], ia.statistics()['min'], ia.statistics()['max']
+        #    ia.done()
+            ##############
+        #ia.open(residual)
+        #print 'calc dvision', '"'+residual+'"'+'/'+str(len(imlist))
+        #ia.calc('"'+residual+'"'+'/'+str(len(imlist)))
+        #print 'Residual', ia.statistics() 
+        #ia.done()
+        if(maj==0):
+            averimages(psf, psfs)
         #incremental clean...get rid of tempmodel
         shutil.rmtree('tempmodel', True)
         rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
@@ -392,24 +443,35 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         ia.open(model)
         ia.calc('"'+model+'" +  "tempmodel"')
         ia.done()
+        ia.open('tempmodel')
+        #arr=ia.getchunk()
+        print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
+        ia.done()
         ia.open(model)
-        arr=ia.getchunk()
-        print 'min max of model', np.min(arr), np.max(arr)
+        #arr=ia.getchunk()
+        print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
         ia.done()
         for k in range(len(imlist)):
             ia.open(imlist[k]+'.model')
-            ia.putchunk(arr)
+            #ia.putchunk(arr)
+            ia.insert(infile=model, locate=[0,0,0,0])
             ia.done()
-    restored=imlist[0]+'.image'
-    ia.open(restored)
-    for k in range(1, len(imlist)) :
-        ia.calc('"'+restored+'" +  "'+imlist[k]+'.image"')
-    ia.calc('"'+restored+'"'+'/'+str(len(imlist)))
-    ia.done()
+    restored=imagename+'.image'
+    #ia.open(restored)
+    #for k in range(1, len(imlist)) :
+    #    ia.calc('"'+restored+'" +  "'+imlist[k]+'.image"')
+    #ia.calc('"'+restored+'"'+'/'+str(len(imlist)))
+    #ia.done()
     shutil.rmtree(imagename+'.image', True)
-    shutil.move(restored,  imagename+'.image')
+    averimages(restored, restoreds)
+    #shutil.move(restored,  imagename+'.image')
     time2=time.time()
-    
+    ###Clean up
+    for k in range(len(imlist)):
+        shutil.rmtree(imlist[k]+'.model', True)
+        shutil.rmtree(imlist[k]+'.psf', True)
+        shutil.rmtree(imlist[k]+'.residual', True)
+        shutil.rmtree(imlist[k]+'.image', True)
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
     c.stop_cluster()
 
@@ -589,3 +651,213 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
             raise 'Number of MSs and hosts has to match for now' 
             return
         
+def pcontmultims(msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000], 
+                 pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+                 field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
+                 hostnames='', 
+                 numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', weight='natural',
+                 contclean=False, visinmem=False,
+                 painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+                 epjtablename=''):
+    if len(msnames)==0:
+        return                    
+    niterpercycle=niter/majorcycles
+    if(niterpercycle == 0):
+        niterpercycle=niter
+        majorcycles=1
+    c=cluster()
+    hostname=os.getenv('HOSTNAME')
+    wd=os.getcwd()
+    owd=wd
+    timesplit=0
+    timeimage=0
+    model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
+    shutil.rmtree('tempmodel', True)
+    if(not contclean):
+        print "Removing ", model, 'and', imagename+'.image'
+        shutil.rmtree(model, True)
+        shutil.rmtree(imagename+'.image', True)
+    ###num of cpu per node
+    numcpu=numcpuperhost
+    if((hostnames==[]) or (hostnames=='')): 
+        hostnames=[hostname]
+    if (len(msnames) != len(hostnames)):
+        raise 'Number of MSs and hosts has to match for now' 
+        return
+    if (len(msnames) != len(workdirs)):
+        raise 'Number of Working Directiories and hosts has to match for now' 
+        return
+    print 'Hosts ', hostnames
+    time1=time.time()
+    print 'output will be in directory', owd
+    hostdata=odict()
+    for k in range(len(hostnames)):
+        hostname=hostnames[k]
+        myrec=odict()
+        myrec['msname']=workdirs[k]+'/'+msnames[k]
+        myrec['spwids']=ms.msseltoindex(vis=myrec['msname'], spw=spw)['spw']
+        myrec['spwsel'],myrec['startsel'],myrec['nchansel']=findchansel(msnames[k], myrec['spwids'], numcpuperhost)
+        c.start_engine(hostname,numcpuperhost,workdirs[k])
+        hostdata[hostname]=myrec
+    ##start an engine locally for deconvolution
+    c.start_engine(os.getenv('HOSTNAME'),1,owd)
+    numcpu=numcpu*len(hostnames)
+    
+    print 'SPWSEL ', hostdata 
+
+    out=range(numcpu)  
+    c.pgc('casalog.filter()')
+    c.pgc('from  parallel.parallel_cont import *')
+    spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
+    fieldlaunch='"'+field+'"' if (type(field) == str) else str(field)
+    pslaunch='"'+phasecenter+'"' if (type(phasecenter) == str) else str(phasecenter)
+    launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'")'
+    print 'launch command', launchcomm
+    c.pgc(launchcomm);
+    #c.pgc('a.visInMem='+str(visinmem));
+    #c.pgc('a.painc='+str(painc));
+    #c.pgc('a.cfcache='+'"'+str(cfcache)+'"');
+    #c.pgc('a.pblimit='+str(pblimit));
+    #c.pgc('a.dopbcorr='+str(dopbcorr));
+    #c.pgc('a.applyoffsets='+str(applyoffsets));
+    #c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
+
+    allfreq=np.array([])
+    for msid in range(len(hostnames)): 
+        msname=msnames[msid]
+        myrec=hostdata.values()[msid]
+        tb.open(msname+"/SPECTRAL_WINDOW")
+        freqs=tb.getcol('CHAN_FREQ')
+        for k in range(len(myrec['spwids'])) :
+            allfreq=np.append(allfreq, freqs[:,myrec['spwids'][k]])
+        tb.done()
+    ##number of channels in the ms
+    numchanperms=len(allfreq)
+    print 'number of channels', numchanperms
+    minfreq=np.min(allfreq)
+    band=np.max(allfreq)-minfreq
+    ##minfreq=minfreq-(band/2.0);
+    ###need to get the data selection for each process here
+    ## this algorithm is a poor first try
+    if(minfreq <0 ):
+        minfreq=0.0
+    freq='"%s"'%(str((minfreq+band/2.0))+'Hz')
+    band='"%s"'%(str((band*1.1))+'Hz')
+    ###define image names
+    imlist=[]
+    cfcachelist=[]
+    for kk in range(len(hostnames)):
+        myrec=hostdata.values()[kk]
+        for jj in range(numcpuperhost) :
+            k=kk*numcpuperhost+jj
+            substr=msnames[kk]+'_spw'
+            for u in range(len(myrec['spwsel'][jj])):
+                if(u==0):
+                    substr=substr+'_'+str(myrec['spwsel'][jj][u])+'_chan_'+str(myrec['startsel'][jj][u])
+                else:
+                    substr=substr+'_spw_'+str(myrec['spwsel'][jj][u])+'_chan_'+str(myrec['startsel'][jj][u])
+            imlist.append(workdirs[kk]+'/'+substr)
+            cfcachelist.append(cfcache+'_'+str(k));
+    #####
+    ##continue clean or not
+    if(contclean and os.path.exists(model)):
+        for k in range(numcpu):
+            copyimage(inimage=model, outimage=imlist[k]+'.model', init=False)
+    else:
+        for k in range(len(imlist)):
+            shutil.rmtree(imlist[k]+'.model', True)
+    for maj in range(majorcycles):
+        for jj in range(len(hostnames)):
+            msname=msnames[jj]
+            for kk in range(numcpuperhost):
+                spwsel=hostdata[hostnames[jj]]['spwsel'][kk]
+                startsel=hostdata[hostnames[jj]]['startsel'][kk]
+                nchansel=hostdata[hostnames[jj]]['nchansel'][kk]
+                k=jj*numcpuperhost+kk
+                imnam='"%s"'%(imlist[k])
+                #c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k)
+                runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spwsel)+', freq='+freq+', band='+band+', imname='+imnam+')'
+                print 'command is ', runcomm
+                out[k]=c.odo(runcomm,k)
+        over=False
+        while(not over):
+            time.sleep(5)
+            overone=True
+            for k in range(numcpu):
+                #print 'k', k, out[k]
+                overone=(overone and c.check_job(out[k],False)) 
+                #print 'overone', overone 
+            over=overone
+	residual=imagename+'.residual'
+        psf=imagename+'.psf'
+        psfs=range(len(imlist))
+        residuals=range(len(imlist))
+        restoreds=range(len(imlist))
+        for k in range (len(imlist)):
+            psfs[k]=imlist[k]+'.psf'
+            residuals[k]=imlist[k]+'.residual'
+            restoreds[k]=imlist[k]+'.image'
+	averimages(residual, residuals)
+        if(maj==0):
+		averimages(psf, psfs)
+		copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
+		if(not contclean or (not os.path.exists(model))):
+			copyimage(inimage=residual, outimage=model, 
+				init=True, initval=0.0)    
+        #ia.open(residual)
+        #for k in range(1, len(imlist)) :
+        #    ia.open(residual)
+        #    ia.calc('"'+residual+'" +  "'+imlist[k]+'.residual"')
+        #ia.done()
+        #############
+        #   ia.open(imlist[k]+'.residual')
+        #   print 'residual of ', imlist[k], ia.statistics()['min'], ia.statistics()['max']
+        #   ia.done()
+        ##############
+        ia.open(residual)
+        print 'Residual', ia.statistics() 
+	ia.done()
+	########
+        #incremental clean...get rid of tempmodel
+        shutil.rmtree('tempmodel', True)
+        rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
+        print 'Deconvolution command', rundecon
+        out[0]=c.odo(rundecon,numcpu)
+        over=False
+        while(not over):
+            time.sleep(5)
+            over=c.check_job(out[0],False)
+        ###incremental added to total 
+        ia.open(model)
+        ia.calc('"'+model+'" +  "tempmodel"')
+        ia.done()
+        ia.open('tempmodel')
+        #arr=ia.getchunk()
+        print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
+        ia.done()
+        ia.open(model)
+        #arr=ia.getchunk()
+        print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
+        ia.done()
+        for k in range(len(imlist)):
+            ia.open(imlist[k]+'.model')
+            #ia.putchunk(arr)
+            ia.insert(infile=model, locate=[0,0,0,0])
+            ia.done()
+    #######
+    restored=imagename+'.image'
+    averimages(restored, restoreds)
+    ###close major cycle loop
+    #shutil.rmtree(imagename+'.image', True)
+    #shutil.move(restored,  imagename+'.image')
+    time2=time.time()
+    ###Clean up
+    #for k in range(len(imlist)):
+    #   shutil.rmtree(imlist[k]+'.model', True)
+    #  shutil.rmtree(imlist[k]+'.residual', True)
+    # shutil.rmtree(imlist[k]+'.image', True)
+    print 'Time to image is ', (time2-time1)/60.0, 'mins'
+    c.stop_cluster()
+
+            
+    return
