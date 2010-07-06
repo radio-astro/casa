@@ -826,7 +826,7 @@ String DirectionCoordinate::format(String& units,
                                    uInt worldAxis,
                                    Bool isAbsolute,
                                    Bool showAsAbsolute,
-                                   Int precision)
+                                   Int precision) const
 {
    DebugAssert(worldAxis< nWorldAxes(), AipsError);
    DebugAssert(nWorldAxes()==2, AipsError);

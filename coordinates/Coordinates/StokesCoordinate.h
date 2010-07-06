@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: StokesCoordinate.h 19816 2006-12-22 05:00:30Z gvandiep $
+//# $Id: StokesCoordinate.h 20886 2010-04-29 14:06:56Z gervandiepen $
 
 
 #ifndef COORDINATES_STOKESCOORDINATE_H
@@ -146,6 +146,7 @@ public:
     // </group>
 
     // Interconvert between pixel and world as a Stokes type.
+    // It returns False if no conversion could be done.
     // <group>
     Bool toPixel(Int &pixel, Stokes::StokesTypes stokes) const;
     Bool toWorld(Stokes::StokesTypes &stokes, Int pixel) const;
@@ -235,7 +236,7 @@ public:
                           uInt worldAxis,
                           Bool isAbsolute=True,
                           Bool showAsAbsolute=True,
-                          Int precision = -1);
+                          Int precision = -1) const;
 
     // Comparison function. Any private Double data members are compared    
     // with the specified fractional tolerance.  Don't compare on the specified     

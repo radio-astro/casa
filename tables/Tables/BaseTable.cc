@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.cc 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: BaseTable.cc 20908 2010-06-16 06:17:33Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/BaseTable.h>
@@ -420,7 +420,7 @@ void BaseTable::trueDeepCopy (const String& newName,
         throw TableError
 	       ("Table::deepCopy: new name equal to old name " + name_p);
     }
-    //# Flush the data and sutables.
+    //# Flush the data and subtables.
     //# (cast is necessary to bypass non-constness).
     BaseTable* ncThis = const_cast<BaseTable*>(this);
     ncThis->flush (True, True);
@@ -648,6 +648,16 @@ RefTable* BaseTable::makeRefTable (Bool rowOrder, uInt initialNrrow)
 Bool BaseTable::adjustRownrs (uInt, Vector<uInt>&, Bool) const
     { return True; }
 
+BaseTable* BaseTable::select (uInt maxRow)
+{
+    if (maxRow == 0  ||  maxRow >= nrow()) {
+        return this;
+    }
+    Vector<uInt> rownrs(maxRow);
+    indgen(rownrs);
+    return select(rownrs);
+}
+
 // Do the row selection.
 BaseTable* BaseTable::select (const TableExprNode& node, uInt maxRow)
 {
@@ -655,16 +665,20 @@ BaseTable* BaseTable::select (const TableExprNode& node, uInt maxRow)
     AlwaysAssert (!isNull(), AipsError);
     // If it is a null expression, return maxrows.
     if (node.isNull()) {
-        if (maxRow <=0  ||  maxRow >= nrow()) {
-	    return this;
-	}
-	Vector<uInt> rownrs(maxRow);
-	indgen(rownrs);
-	return select(rownrs);
+        return select (maxRow);
     }
     //# First check if the node is a Bool.
     if (node.dataType() != TpBool  ||  !node.isScalar()) {
 	throw (TableInvExpr ("expression result is not Bool scalar"));
+    }
+    // Accept a const bool expression.
+    if (node.getNodeRep()->isConstant()) {
+        if (node.getBool(0)) {
+            // Select maxRow rows.
+            return select (maxRow);
+        }
+        // Select no rows.
+        return select(Vector<uInt>());
     }
     //# Now check if this table has been used for all columns.
     //# This also catches a case like:  tab(True);

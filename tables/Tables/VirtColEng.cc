@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VirtColEng.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: VirtColEng.cc 20926 2010-07-05 11:42:12Z gervandiepen $
 
 #include <tables/Tables/VirtColEng.h>
 #include <tables/Tables/DataManError.h>
@@ -38,6 +38,14 @@ VirtualColumnEngine::~VirtualColumnEngine()
 Bool VirtualColumnEngine::isStorageManager() const
     { return False; }
 
+Bool VirtualColumnEngine::canAddRow() const
+    { return True; }
+void VirtualColumnEngine::addRow (uInt)
+    {}
+Bool VirtualColumnEngine::canRemoveRow() const
+    { return True; }
+void VirtualColumnEngine::removeRow (uInt)
+    {}
 
 //# Create, open, prepare and close do nothing unless implemented in the
 // derived class.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataType.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: HDF5DataType.cc 20901 2010-06-09 07:23:37Z gervandiepen $
 
 #include <casa/HDF5/HDF5DataType.h>
 #include <casa/Utilities/Assert.h>
@@ -77,6 +77,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_UINT);
     H5Tset_size (itsHidFile, sizeof(uInt));
+    itsHidMem = H5Tcopy (itsHidFile);
+  }
+
+  HDF5DataType::HDF5DataType (const Int64*)
+    : itsSize (sizeof(Int64))
+  {
+    itsHidFile = H5Tcopy (H5T_NATIVE_INT);
+    H5Tset_size (itsHidFile, sizeof(Int64));
     itsHidMem = H5Tcopy (itsHidFile);
   }
 
@@ -161,9 +169,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    dtype = TpBool;
 	  } else if (sz == sizeof(Short)) {
 	    dtype = TpShort;
-	  } else {
-	    AlwaysAssert (sz==sizeof(Int), AipsError);
+	  } else if (sz == sizeof(Int)) {
 	    dtype = TpInt;
+	  } else {
+	    AlwaysAssert (sz==sizeof(Int64), AipsError);
+	    dtype = TpInt64;
 	  }
 	} else {
 	  if (sz == 1) {
@@ -238,6 +248,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const Float*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const Int64*)
   {
     HDF5Object::throwNoHDF5();
   }

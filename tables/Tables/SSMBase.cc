@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMBase.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: SSMBase.cc 20883 2010-04-27 06:02:21Z gervandiepen $
 
 #include <tables/Tables/SSMBase.h>
 #include <tables/Tables/SSMColumn.h>
@@ -322,9 +322,13 @@ DataManager* SSMBase::makeObject (const String& group, const Record& spec)
   return new SSMBase (group, spec);
 }
 
-void SSMBase::setCacheSize (uInt aCacheSize)
+void SSMBase::setCacheSize (uInt aCacheSize, Bool canExceedNrBuckets)
 {
   itsCacheSize = max(aCacheSize,2u);
+  // Limit the cache size if needed.
+  if (!canExceedNrBuckets  &&  itsCacheSize > getCache().nBucket()) {
+    itsCacheSize = itsCache->nBucket();
+  }
   if (itsCache != 0) {
     itsCache->resize (itsCacheSize);
   }

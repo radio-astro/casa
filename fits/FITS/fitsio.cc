@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fitsio.cc 20750 2009-10-01 06:32:18Z Malte.Marquarding $
+//# $Id: fitsio.cc 20886 2010-04-29 14:06:56Z gervandiepen $
 
 # include <fits/FITS/hdu.h>
 # include <fits/FITS/fitsio.h>
@@ -328,7 +328,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return cards;
 	    }
 	    // get every card image as a char* and store them into cards.
-	    char* cardImg = new char[81];
+	    char cardImg[81];;
 	    cards.resize( l_keysexist + 1 );
 	    for( int keynum = 1; keynum<l_keysexist+1;keynum++ ){
 		if(ffgrec( m_fptr, keynum, cardImg, &l_status )){ // error reading card

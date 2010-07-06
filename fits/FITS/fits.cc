@@ -1447,8 +1447,8 @@ int FITS::chk_comment(const char *s, int len) {
 int FITS::get_comment(const char *s, int len, int &begpos) {
 	// find the beginning of a comment and return the trimmed length
 	int i;
-	for (i = 0; s[i] == ' ' && i < len; ++i) ;
-	if (s[i] == '/') {
+	for (i = 0; i < len && s[i] == ' '; ++i) ;
+	if (i < len && s[i] == '/') {
 	    ++i;
 	    if (i < len) {
 		begpos = i;

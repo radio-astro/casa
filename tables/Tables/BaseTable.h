@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.h 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: BaseTable.h 20908 2010-06-16 06:17:33Z gervandiepen $
 
 #ifndef TABLES_BASETABLE_H
 #define TABLES_BASETABLE_H
@@ -322,6 +322,9 @@ public:
 
     // Select rows using the given expression.
     BaseTable* select (const TableExprNode&, uInt maxRow);
+
+    // Select maxRow rows. maxRow=0 means all.
+    BaseTable* select (uInt maxRow);
 
     // Select rows using a vector of row numbers.
     BaseTable* select (const Vector<uInt>& rownrs);

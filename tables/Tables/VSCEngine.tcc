@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VSCEngine.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: VSCEngine.tcc 20926 2010-07-05 11:42:12Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/VSCEngine.h>
@@ -56,19 +56,6 @@ VSCEngine<T>::~VSCEngine()
 template<class T>
 String VSCEngine<T>::dataManagerType() const
     { return dataTypeId() + "VSCEngine"; }
-
-template<class T>
-Bool VSCEngine<T>::canAddRow() const
-    { return True; }
-template<class T>
-void VSCEngine<T>::addRow (uInt)
-{}
-template<class T>
-Bool VSCEngine<T>::canRemoveRow() const
-    { return True; }
-template<class T>
-void VSCEngine<T>::removeRow (uInt)
-{}
 
 // The column is in principle writable.
 template<class T>

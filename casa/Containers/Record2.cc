@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Record2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Record2.cc 20906 2010-06-10 08:59:51Z gervandiepen $
 
 #include <casa/Containers/Record.h>
 #include <casa/Containers/ValueHolder.h>
@@ -44,6 +44,8 @@ ValueHolder Record::asValueHolder (const RecordFieldId& id) const
     return ValueHolder(asInt(id));
   case TpUInt:
     return ValueHolder(asuInt(id));
+  case TpInt64:
+    return ValueHolder(asInt64(id));
   case TpFloat:
     return ValueHolder(asFloat(id));
   case TpDouble:
@@ -64,6 +66,8 @@ ValueHolder Record::asValueHolder (const RecordFieldId& id) const
     return ValueHolder(asArrayInt(id));
   case TpArrayUInt:
     return ValueHolder(asArrayuInt(id));
+  case TpArrayInt64:
+    return ValueHolder(asArrayInt64(id));
   case TpArrayFloat:
     return ValueHolder(asArrayFloat(id));
   case TpArrayDouble:
@@ -101,6 +105,9 @@ void Record::defineFromValueHolder (const RecordFieldId& id,
   case TpUInt:
     define (id, value.asuInt());
     break;
+  case TpInt64:
+    define (id, value.asInt64());
+    break;
   case TpFloat:
     define (id, value.asFloat());
     break;
@@ -130,6 +137,9 @@ void Record::defineFromValueHolder (const RecordFieldId& id,
     break;
   case TpArrayUInt:
     define (id, value.asArrayuInt());
+    break;
+  case TpArrayInt64:
+    define (id, value.asArrayInt64());
     break;
   case TpArrayFloat:
     define (id, value.asArrayFloat());
