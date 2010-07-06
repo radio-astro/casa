@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VirtScaCol.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: VirtScaCol.tcc 20925 2010-07-05 11:41:34Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/VirtScaCol.h>
@@ -66,11 +66,11 @@ Bool VirtualScalarColumn<T>::canAccessScalarColumn (Bool& reask) const
 #define VIRTUALSCALARCOLUMN_GETPUT(TP,NM) \
 template<class T> \
 void VirtualScalarColumn<T>::aips_name2(get,NM) (uInt rownr, TP* dataPtr) \
-    { getVirtualScalarColumn (this, rownr, dataPtr, static_cast<T*>(0)); } \
+    { getVirtualScalarColumn (this, rownr, dataPtr); } \
 template<class T> \
 void VirtualScalarColumn<T>::aips_name2(put,NM) (uInt rownr, \
                                                  const TP* dataPtr) \
-    { putVirtualScalarColumn (this, rownr, dataPtr, static_cast<T*>(0)); }
+    { putVirtualScalarColumn (this, rownr, dataPtr); }
 
 VIRTUALSCALARCOLUMN_GETPUT(Bool,BoolV)
 VIRTUALSCALARCOLUMN_GETPUT(uChar,uCharV)

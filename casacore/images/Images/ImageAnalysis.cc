@@ -2306,7 +2306,9 @@ ComponentList ImageAnalysis::fitsky(
 	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
     }
 
+    //cerr << "uno" << endl;
     Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
+    //cerr << "dos" << endl;
 	SubImage<Float> subImageTmp(*pImage_p, slice, False);
 
 	// Convert region from Glish record to ImageRegion. Convert mask
@@ -2352,7 +2354,9 @@ ComponentList ImageAnalysis::fitsky(
 	Fit2D fitter(*itsLog);
 
     // Set pixel range depending on Stokes type and min/max
+    //cerr << "tres" << endl;
     _setFitSkyIncludeExclude(includepix, excludepix, stokes, minVal, maxVal, fitter);
+    //cerr << "quatro" << endl;
 
     // Recover just single component estimate if desired and bug out
 	// Must use subImage in calls as converting positions to absolute
@@ -2360,6 +2364,7 @@ ComponentList ImageAnalysis::fitsky(
     ComponentList cl;
 
     if (!fitIt) {
+                //cerr << "cinco" << endl;
 		Vector<Double> parameters;
 		parameters = singleParameterEstimate(fitter, Fit2D::GAUSSIAN,
 				maskedPixels, minVal, maxVal, minPos, maxPos, stokes, subImage,
@@ -2385,6 +2390,7 @@ ComponentList ImageAnalysis::fitsky(
 	}
 	// Add models
 
+        cerr << "sechs" << endl;
 	Vector<String> modelTypes(models.copy());
 	for (uInt i = 0; i < nModels; i++) {
 		// If we ask to fit a POINT component, that really means a
@@ -2479,6 +2485,7 @@ ComponentList ImageAnalysis::fitsky(
 
 		cl.add(result(i));
 	}
+        //cerr << "quatro" << endl;
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 
 	// CAS-1966 keep degenerate axes
@@ -2487,6 +2494,7 @@ ComponentList ImageAnalysis::fitsky(
 		*(ImageRegion::tweakedRegionRecord(&region)),
 		mask, list, *itsLog, False, AxesSpecifier(True)
 	);
+        //cerr << "tres" << endl;
 	residStats = _fitskyWriteResidualAndGetStats(subImage2, residPixels, residImageName);
 
 
@@ -2494,17 +2502,21 @@ ComponentList ImageAnalysis::fitsky(
 	ImageMetaData subImageMD(subImage2);
 	Vector<Int> inputDirectionAxes = subImageMD.directionAxesNumbers();
 	Record reg;
+        //cerr << "dos" << endl;
 	ImageAnalysis(&subImage2).statistics(
 		inputStats, inputDirectionAxes, reg, "", Vector<String>(0),
 		Vector<Float>(0), Vector<Float>(0)
 	);
 
+        //cerr << "uno" << endl;
     if (! modelImageName.empty()) {
         // construct the model image, copying pattern from ImageProxy
     	ImageUtilities::writeImage(
     		subImage2.shape(), subImage2.coordinates(),
     		modelImageName, modelPixels, *itsLog
     	);
+
+        //cerr << "zero" << endl;
     }
 	return cl;
 }
@@ -4796,6 +4808,10 @@ Bool ImageAnalysis::sethistory(const String& origin,
 	*itsLog << lor << LogIO::POST;
 
 	LoggerHolder& log = pImage_p->logger();
+	// 
+	// Make sure we can write into the history table if needed
+	//
+	log.reopenRW();
 	LogSink& sink = log.sink();
 	for (uInt i = 0; i < History.nelements(); i++) {
 		if (History(i).length() > 0) {

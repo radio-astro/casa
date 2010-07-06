@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VirtualTaQLColumn.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: VirtualTaQLColumn.cc 20926 2010-07-05 11:42:12Z gervandiepen $
 
 #include <tables/Tables/VirtualTaQLColumn.h>
 #include <tables/Tables/Table.h>

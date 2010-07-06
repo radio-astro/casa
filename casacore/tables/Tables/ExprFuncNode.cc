@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNode.cc 20839 2009-12-01 10:15:16Z gervandiepen $
+//# $Id: ExprFuncNode.cc 20885 2010-04-29 11:31:16Z gervandiepen $
 
 #include <tables/Tables/ExprFuncNode.h>
 #include <tables/Tables/TableError.h>
@@ -1273,9 +1273,11 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
 	}
     }
     switch (fType) {
-    case randFUNC:
     case rownrFUNC:
     case rowidFUNC:
+	checkNumOfArg (0, 0, nodes);
+	return NTInt;
+    case randFUNC:
     case piFUNC:
     case eFUNC:
 	checkNumOfArg (0, 0, nodes);

@@ -53,15 +53,15 @@ def generate(env):
             uniarch = env.get("universal", False)
             flags = []
             if uniarch:
-                for i in uniarch:
+                for i in uniarch.split(','):		
                     flags += ['-arch', i]
                 ppflags =  flags + ['-isysroot' , env.DarwinDevSdk() ]
                 linkflags = flags + ['-Wl,-syslibroot,%s' %  env.DarwinDevSdk()]
-                env.AppendUnique(CPPFLAGS=ppflags)
-                env.AppendUnique(FORTRANFLAGS=ppflags)
-                env.AppendUnique(SHFORTRANFLAGS=ppflags)
-                env.AppendUnique(SHLINKFLAGS=linkflags)
-                env.AppendUnique(LINKFLAGS=linkflags)
+                env.Append(CPPFLAGS=ppflags)
+                env.Append(FORTRANFLAGS=ppflags)
+                env.Append(SHFORTRANFLAGS=ppflags)
+                env.Append(SHLINKFLAGS=linkflags)
+                env.Append(LINKFLAGS=linkflags)
                 # otherwise darwin puts builddir into the name
             env.Append(SHLINKFLAGS=["-install_name", "${TARGET.file}"])
             env.Append(SHLINKFLAGS=["-single_module"])

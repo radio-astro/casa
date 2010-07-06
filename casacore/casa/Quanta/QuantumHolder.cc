@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QuantumHolder.cc 20705 2009-09-03 09:04:46Z gervandiepen $
+//# $Id: QuantumHolder.cc 20890 2010-05-17 07:08:54Z gervandiepen $
 
 //# Includes
 #include <casa/Quanta/QuantumHolder.h>

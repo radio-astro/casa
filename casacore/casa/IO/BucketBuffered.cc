@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketBuffered.cc 20869 2010-03-19 08:31:45Z gervandiepen $
+//# $Id: BucketBuffered.cc 20900 2010-06-04 08:49:48Z gervandiepen $
 
 //# Includes
 #include <casa/IO/BucketBuffered.h>
@@ -61,9 +61,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsFile->bufferedFile()->seek
       (itsStartOffset + Int64(bucketNr)*itsBucketSize + bucketOffset);
     // When doing read/write, it can happen that not all bytes are written yet.
-    // So accept it if not all bytes could be read
-    uInt nread = itsFile->bufferedFile()->read(nbytes, itsBuffer+bufferOffset,
-                                               False);
+    // So accept it if not all bytes could be read.
+    uInt nread = itsFile->bufferedFile()->read (nbytes, itsBuffer+bufferOffset,
+                                                False);
     if (nread < nbytes) {
       memset (itsBuffer+bufferOffset+nread, 0, nbytes-nread);
     }

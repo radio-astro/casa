@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VirtColEng.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: VirtColEng.h 20926 2010-07-05 11:42:12Z gervandiepen $
 
 #ifndef TABLES_VIRTCOLENG_H
 #define TABLES_VIRTCOLENG_H
@@ -129,7 +129,21 @@ private:
     VirtualColumnEngine& operator= (const VirtualColumnEngine&);
 
     // The data manager is not a storage manager?
-    Bool isStorageManager() const;
+    virtual Bool isStorageManager() const;
+
+    // Does the data manager allow to add rows? (default no)
+    virtual Bool canAddRow() const;
+
+    // Does the data manager allow to delete rows? (default no)
+    virtual Bool canRemoveRow() const;
+
+    // Add rows to all columns.
+    // The default implementation does nothing.
+    virtual void addRow (uInt nrrow);
+
+    // Delete a row from all columns.
+    // The default implementation does nothing.
+    virtual void removeRow (uInt rownr);
 
     // Flush the data in the engine object.
     // If the object contains persistent data, this is the place to write them.

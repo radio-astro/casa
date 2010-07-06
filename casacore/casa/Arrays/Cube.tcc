@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Cube.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Cube.tcc 20887 2010-05-07 11:50:41Z Malte.Marquarding $
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
@@ -123,8 +123,8 @@ template<class T> void Cube<T>::resize(uInt nx, uInt ny, uInt nz,
 template<class T> void Cube<T>::assign (const Array<T>& other)
 {
     DebugAssert(ok(), ArrayError);
-    if (other.ndim() != 2)
-	throw(ArrayNDimError(2, other.ndim(), "Cube<T>::assign()"
+    if (other.ndim() != 3)
+	throw(ArrayNDimError(3, other.ndim(), "Cube<T>::assign()"
 			     " - attempt to assign from non-cube"));
     Array<T>::assign (other);
 }

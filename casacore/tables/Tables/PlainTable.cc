@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: PlainTable.cc 20889 2010-05-17 06:53:39Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/PlainTable.h>
@@ -96,7 +96,7 @@ PlainTable::PlainTable (SetupNewTable& newtab, uInt nrrow, Bool initialize,
     //# Create the data managers for unbound columns.
     //# Check if there are no data managers with equal names.
     newtab.handleUnbound();
-    newtab.columnSetPtr()->checkDataManagerNames();
+    newtab.columnSetPtr()->checkDataManagerNames (name_p);
     //# Get the data from the SetupNewTable object.
     //# Set SetupNewTable object to in use.
     tdescPtr_p  = newtab.tableDescPtr();

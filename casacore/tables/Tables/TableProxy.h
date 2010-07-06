@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: TableProxy.h 20901 2010-06-09 07:23:37Z gervandiepen $
 
 #ifndef TABLES_TABLEPROXY_H
 #define TABLES_TABLEPROXY_H
@@ -298,7 +298,8 @@ public:
 
   // Add one or more columns to the table.
   void addColumns (const Record& tableDesc,
-		   const Record& dminfo);
+		   const Record& dminfo,
+                   Bool addToParent);
 
   // Rename a column in the table.
   void renameColumn (const String& nameOld,
@@ -586,6 +587,8 @@ private:
   void printArrayValue (ostream& os, Bool v, const String&) const
     {os << v;}
   void printArrayValue (ostream& os, Int v, const String&) const
+    {os << v;}
+  void printArrayValue (ostream& os, Int64 v, const String&) const
     {os << v;}
   void printArrayValue (ostream& os, Double v, const String&) const
     {os << v;}
