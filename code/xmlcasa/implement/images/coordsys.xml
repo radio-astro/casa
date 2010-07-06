@@ -2153,6 +2153,10 @@ the right in parentheses).
      <description>Conversion type</description>
      <value></value>
      </param>
+     <param type="bool" direction="in" name="showconversion">
+     <description>Show the conversion layer</description>
+     <value>true</value>
+     </param>
 </input>
 
 <returns type="string"/>

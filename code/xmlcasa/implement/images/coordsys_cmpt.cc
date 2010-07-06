@@ -1264,7 +1264,7 @@ coordsys::setconversiontype(const std::string& direction,
 }
 
 std::string
-coordsys::getconversiontype(const std::string& type)
+coordsys::getconversiontype(const std::string& type,const bool showconversion)
 {
   *itsLog << LogOrigin("coordsys", "getconversiontype");
 
@@ -1275,8 +1275,8 @@ coordsys::getconversiontype(const std::string& type)
     Int c = itsCoordSys->findCoordinate(Coordinate::DIRECTION, after);
     if (c >= 0) {
       const DirectionCoordinate& dCoord = itsCoordSys->directionCoordinate(c);
-      MDirection::Types type;
-      dCoord.getReferenceConversion(type);
+      MDirection::Types type=dCoord.directionType(showconversion);
+	//dCoord.getReferenceConversion(type);
       return MDirection::showType(type);
     }
   } else if (cType==Coordinate::SPECTRAL) {
@@ -1284,11 +1284,11 @@ coordsys::getconversiontype(const std::string& type)
     Int c = itsCoordSys->findCoordinate(Coordinate::SPECTRAL, after);
     if (c >= 0) {
       const SpectralCoordinate& sCoord = itsCoordSys->spectralCoordinate(c);
-      MFrequency::Types type;
-      MEpoch epoch;
-      MDirection direction;
-      MPosition position;
-      sCoord.getReferenceConversion(type, epoch, position, direction);
+      MFrequency::Types type=sCoord.frequencySystem(showconversion);
+      //MEpoch epoch;
+      //MDirection direction;
+      //MPosition position;
+      //sCoord.getReferenceConversion(type, epoch, position, direction);
       return MFrequency::showType(type);
     }
   }
