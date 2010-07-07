@@ -251,10 +251,6 @@ RFA::IterMode RFADiffBase::iterDry ( uInt it )
       else
       {
         diffrow(idiffrow++) = d;
-        Bool res = flag.clearFlag(ich,ifr);
-        updated |= res;
-        if( di>=0 )
-          dbg_sym(di)= res ? CIRCLE4 : DOT;
       }
     } // for(ich)
     // update the noise level, if any changes in flags
@@ -272,7 +268,7 @@ RFA::IterMode RFADiffBase::endData ()
 {
   RFAFlagCubeBase::endData();
   uInt dum;
-  rowclipper.updateSigma(dum,dum);
+  rowclipper.updateSigma(dum, dum, true, false);
   
   if( debug.enabled() )
     makePlot();
@@ -287,7 +283,7 @@ RFA::IterMode RFADiffBase::endDry ()
   RFAFlagCubeBase::endDry();
 // update the reference AAD
   uInt ifrmax,itmax;
-  Float dmax =   rowclipper.updateSigma(ifrmax,itmax);
+  Float dmax =   rowclipper.updateSigma(ifrmax,itmax, true, false);
   
   dprintf(os,"Max diff (%f) at ifr %d (%s), it %d: new sigma is %f\n",
       dmax,ifrmax,chunk.ifrString(ifrmax).chars(),itmax,rowclipper.sigma0(ifrmax,itmax));
@@ -303,7 +299,7 @@ RFA::IterMode RFADiffBase::endDry ()
   return RFA::DRY;
 }
 
-void RFADiffBase::startDataRow (uInt ifr)
+void RFADiffBase::startDataRow (uInt)
 {
   idiffrow=0;
 }
