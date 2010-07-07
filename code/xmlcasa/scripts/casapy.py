@@ -254,7 +254,7 @@ try :
    os.makedirs(ipythonpath, 0755)
 except :
    pass
-#os.environ['IPYTHONDIR']=ipythonpath
+os.environ['IPYTHONDIR']=ipythonpath
 os.environ['__CASARCDIR__']=casa['dirs']['rc']
 
 #import string
