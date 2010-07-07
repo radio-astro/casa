@@ -45,7 +45,6 @@ class test_base(unittest.TestCase):
             importuvfits(os.environ.get('CASAPATH').split()[0] + \
                          '/data/regression/ngc5921/ngc5921.fits', \
                          self.vis)
-            
         os.system('rm -rf ' + self.vis + '.flagversions')
         flagdata(vis=self.vis, unflag=True)
 
@@ -254,7 +253,44 @@ class test_msselection(test_base):
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
+class test_autoflag(test_base):
 
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_CAS1979(self):
+        """Test that autoflagging does not clear flags"""
+        s0 = flagdata(vis=self.vis, mode="summary")['flagged']
+        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
+        s1 = flagdata(vis=self.vis, mode="summary")['flagged']
+        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
+        s2 = flagdata(vis=self.vis, mode="summary")['flagged']
+        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
+        s3 = flagdata(vis=self.vis, mode="summary")['flagged']
+        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
+        s4 = flagdata(vis=self.vis, mode="summary")['flagged']
+        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
+        s5 = flagdata(vis=self.vis, mode="summary")['flagged']
+        flagdata(vis=self.vis, mode="autoflag", algorithm="freqmed", field="0", spw="0")
+        s6 = flagdata(vis=self.vis, mode="summary")['flagged']
+
+        assert s0 == 0
+        assert s0 <= s1
+        assert s1 <= s2
+        assert s2 <= s3
+        assert s3 <= s4
+        assert s4 <= s5
+        assert s5 <= s6
+
+    def test1(self):
+        print "Test of autoflag, algorithm=timemed"
+        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 4725)
+
+    def test2(self):
+        print "Test of autoflag, algorithm=freqmed"
+        flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 29101)
 
 class test_statistics_queries(test_base):
 
@@ -290,16 +326,6 @@ class test_statistics_queries(test_base):
         assert set(s['scan'].keys()) == set(['3', '6'])
         s = flagdata(vis=self.vis, mode='summary', minabs=400000, maxabs=450000)
         assert s['scan'].keys() == ['3']
-
-    def test2(self):
-        print "Test of autoflag, algorithm=timemed"
-        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
-        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 4725)
-
-    def test3(self):
-        print "Test of autoflag, algorithm=freqmed"
-        flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
-        test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 28916)
 
     def test4(self):
         print "Test of channel average"
@@ -432,4 +458,5 @@ def suite():
             test_rfi,
             test_shadow,
             test_msselection,
+            test_autoflag,
             cleanup]
