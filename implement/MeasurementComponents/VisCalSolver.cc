@@ -1378,8 +1378,9 @@ void VisCalSolver::optStepSize2() {
 void VisCalSolver::getErrors() {
 
   // Number of *REAL* dof
-  Int nDOF=2*(nWt()-ntrue(parOK()));
-  
+  //  Int nDOF=2*(nWt()-ntrue(parOK()));  // !!!! this is zero for 3 antennas!
+  Int nDOF=max(2*(nWt()-ntrue(parOK())),1);
+
   Double k2=chiSq()/Double(nDOF);
 
   parErr()=0.0;
