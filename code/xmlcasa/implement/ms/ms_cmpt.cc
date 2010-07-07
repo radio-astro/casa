@@ -2104,7 +2104,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 }
 
 bool
-ms::hanningsmooth()
+ms::hanningsmooth(const std::string& datacolumn)
 {
   Bool rstat(False);
   try {
@@ -2112,7 +2112,7 @@ ms::hanningsmooth()
      if(!ready2write_()){
        *itsLog << LogIO::SEVERE
 	       << "Please open ms with parameter nomodify=false so "
-	       << "smoothed channel data can be stored (in the CORRECTED_DATA column)."
+	       << "smoothed channel data can be stored."
 	       << LogIO::POST;
        return rstat;
      }
@@ -2120,9 +2120,14 @@ ms::hanningsmooth()
      Block<int> noSort;
      Matrix<Int> allChannels;
      Double intrvl = 0;
-
-     VisSet vs(*itsMS,noSort,allChannels,intrvl);
-     VisSetUtil::HanningSmooth(vs);
+     String dcol(datacolumn);
+     dcol.downcase();
+     Bool addScratch = !(dcol=="data"); // don't add scratch columns if the don't exist already
+                                        // and the requested output column is == "data"
+     VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
+     *itsLog << LogIO::NORMAL << "Smoothing ... (smoothed data will be written to MS column \'" 
+	     << datacolumn << "\')" << LogIO::POST;
+     VisSetUtil::HanningSmooth(vs, datacolumn);
 
      rstat = True;
   } catch (AipsError x) {

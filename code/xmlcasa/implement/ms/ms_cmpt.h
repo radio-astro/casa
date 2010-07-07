@@ -157,7 +157,7 @@ class ms
 
     ::casac::record* msseltoindex(const std::string& vis = "", const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "");
 
-    bool hanningsmooth();
+    bool hanningsmooth(const std::string& datacolumn = "corrected");
 
     bool uvsub(const bool reverse = false);
 

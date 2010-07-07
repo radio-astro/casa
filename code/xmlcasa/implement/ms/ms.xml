@@ -3467,6 +3467,12 @@ in spectral window 1.
    <shortdescription>Hanning smooth the frequency channels to remove Gibbs ringing.</shortdescription>
    
   <keyword>hanningsmooth</keyword>
+  <input> 
+     <param type="string" direction="in" name="datacolumn">
+     <description>the name of the MS column into which to write the smoothed data</description>
+     <value>corrected</value>
+     </param>
+  </input>
   <returns type="bool"/>
   <description>
     This function Hanning smooths the frequency channels with a
@@ -3479,7 +3485,7 @@ in spectral window 1.
   <example>
     \begin{verbatim}
     ms.open('ngc5921.ms',nomodify=False)
-    ms.hanningsmooth()
+    ms.hanningsmooth('data')
     ms.close()
     \end{verbatim}
   </example>

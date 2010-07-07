@@ -499,24 +499,24 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Quantity& pointsourcesens,
   pointsourcesens=Quantity(sqrt(sumwtsq)/sumwt, "Jy");
   relativesens=sqrt(sumwtsq)/sumwt/naturalsens;
 }
-void VisSetUtil::HanningSmooth(VisSet &vs)
+  void VisSetUtil::HanningSmooth(VisSet &vs, const String& dataCol)
 {
   VisIter& vi(vs.iter());
-  VisSetUtil::HanningSmooth(vi);
+  VisSetUtil::HanningSmooth(vi, dataCol);
 }
-void VisSetUtil::HanningSmooth(VisIter &vi)
+  void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol)
 {
   LogIO os(LogOrigin("VisSetUtil", "HanningSmooth()"));
 
-  
   VisBuffer vb(vi);
-
   Int row, chn, pol;
 
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
     if (vi.existsWeightSpectrum()) {
       for (vi.origin();vi.more();vi++) {
-	Cube<Complex>& vc= vb.correctedVisCube();
+
+	Cube<Complex>& vc = ( dataCol=="data" ? vb.visCube() : vb.correctedVisCube());
+
 	Cube<Bool>& fc= vb.flagCube();
 	Cube<Float>& wc= vb.weightSpectrum();
 
@@ -555,12 +555,21 @@ void VisSetUtil::HanningSmooth(VisIter &vi)
 	    newFlag(pol,nChan-1,row) = True;  // flag last channel
 	  }
 	}
-	vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+
+	if(dataCol=="data"){
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	}
+	else{
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	}
+
 	vi.setWeightSpectrum(newWeight);
       }
     } else {
       for (vi.origin();vi.more();vi++) {
-	Cube<Complex>& vc= vb.correctedVisCube();
+
+	Cube<Complex>& vc = (dataCol=="data" ? vb.visCube() : vb.correctedVisCube());
+
 	Cube<Bool>& fc= vb.flagCube();
 	Matrix<Float>& wm = vb.weightMat();
 
@@ -591,7 +600,14 @@ void VisSetUtil::HanningSmooth(VisIter &vi)
 	    newFlag(pol,nChan-1,row) = True;  // flag last channel
 	  }
 	}
-	vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+
+	if(dataCol=="data"){
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	}
+	else{
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	}
+
 	vi.setWeightMat(newWeight);
       }
     }
