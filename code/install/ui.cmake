@@ -286,7 +286,8 @@ macro( casa_add_tools out_idl out_sources )
     set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2toolxml.xsl )
     add_custom_command(
       OUTPUT ${_out_xml}
-      COMMAND ${SAXON} ${_xml} ${_xsl} | sed -e \"s/exmlns/xmlns/\" > ${_out_xml}
+      COMMAND ${SAXON} ${_xml} ${_xsl} > tmp.xml
+      COMMAND sed -e \"s/exmlns/xmlns/\" tmp.xml > ${_out_xml}
       DEPENDS ${_xml} ${_xsl} 
       )
 
@@ -295,7 +296,8 @@ macro( casa_add_tools out_idl out_sources )
     set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2idl3.xsl )
     add_custom_command(
       OUTPUT ${_idl}
-      COMMAND ${SAXON} ${_out_xml} ${_xsl} | sed -e \"s/<?xml version=.*//\" > ${_idl}
+      COMMAND ${SAXON} ${_out_xml} ${_xsl} > tmp.xml
+      COMMAND sed -e \"s/<?xml version=.*//\" tmp.xml > ${_idl}
       DEPENDS ${_out_xml} ${_xsl} 
       )
 
@@ -429,7 +431,9 @@ macro( casa_add_doc xml prefix )
     add_custom_command(
       OUTPUT ${_htex}
       COMMAND mkdir -p ${prefix}/helpfiles
-      COMMAND ${SAXON} ${xml} ${_xsl} | sed -e "s/<?xml version.*//" | awk -f ${CMAKE_SOURCE_DIR}/install/docutils/xml2latex.awk >  ${_htex}
+      COMMAND ${SAXON} ${xml} ${_xsl} > tmp.xml
+      COMMAND sed -e "s/<?xml version.*//" tmp.xml > tmp2.xml
+      COMMAND awk -f ${CMAKE_SOURCE_DIR}/install/docutils/xml2latex.awk tmp2.xml >  ${_htex}
       DEPENDS ${xml} ${_xsl}
       VERBATIM
       )
