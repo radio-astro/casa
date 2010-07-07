@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaGram.cc 20919 2010-06-29 12:06:30Z gervandiepen $
+//# $Id: MSAntennaGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 // MSAntennaGram; grammar for antenna command lines
 
@@ -100,6 +100,7 @@ const TableExprNode* msAntennaGramParseNode()
 }
 void msAntennaGramParseDeleteNode()
 {
+    return MSAntennaParse::cleanup();
 }
 
 //# Give the string position.
