@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSAntennaGram.ll 20919 2010-06-29 12:06:30Z gervandiepen $
+    $Id: MSAntennaGram.ll 20630 2009-06-12 04:14:37Z gervandiepen $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -37,113 +37,102 @@
 
 #undef YY_DECL
 #define YY_DECL int MSAntennaGramlex (YYSTYPE* lvalp)
+static string                qstr;
 %}
 
 WHITE     [ \t\n]*
 DIGIT     [0-9]
 INT       {DIGIT}+
-EXP       [DdEe][+-]?{INT}
-FLOAT     {INT}{EXP}|{INT}"."{DIGIT}*({EXP})?|{DIGIT}*"."{INT}({EXP})?
 
 QSTRING   \"[^\"\n]*\"
-ASTRING   \'[^\'\n]*\'
-STRING    ({QSTRING}|{ASTRING})+
-REGEX     "/"[^/\n]*"/"
+STRING    ({QSTRING})+
 
-ALPHA     [a-zA-Z]
-UNIT      {ALPHA}+
-NAMECHAR  [-+a-zA-Z0-9_:.]
-NAMENNUM  [a-zA-Z_:]
-NAME      {NAMENNUM}{NAMECHAR}*
-ESCNAME   \\.+
-PATTCHAR  [][*?^]
-PATTERN   ({NAMENNUM}|{PATTCHAR})({NAMECHAR}|{PATTCHAR})*
+QUOTE     (\")
+RQUOTE    (\/)
+NQ        [^\\\n\"]+
+NRQ       [^\\\n\/]+
 
+/* 
+NAMES       ([a-zA-Z_{}]+[a-zA-Z:0-9_{}]*) 
+IDENTIFIER  ({NAMES}+|STRING)
+SIDENTIFIER  ([A-Za-z_'{''}''*''-''+''*']+[A-Za-z:0-9_'{''}''*''+''-']+)
+*/
 
+NAME ([A-za-z0-9_'{''}''+''-':])
+		 /*IDENTIFIER  ([A-Za-z0-9_{}+-:]+|STRING)*/
+IDENTIFIER  ({NAME}+|STRING)
+SIDENTIFIER  ([A-Za-z0-9_'{''}''+''-''*''?':]+)
+		 /* SIDENTIFIER  ({NAMES}+"*") */
+		 /* IDENTIFIER  ([A-Za-z:0-9_{}]+|STRING)*/
+		 /* SIDENTIFIER  ([A-Za-z:0-9_{}]+"*")   */
+%x QS RS
 /* rules */
 %%
-
-{STRING}  {
-             int lenstr = strlen(MSAntennaGramtext) - 2;
-             lvalp->str = (char*)malloc(lenstr+1);
-             strncpy(lvalp->str, MSAntennaGramtext+1, lenstr);
-             lvalp->str[lenstr] = '\0';
-             return QSTRING;
+{QUOTE}   { // Start of a quoted string
+            qstr.resize(0);
+            BEGIN(QS);
           }
 
-{REGEX}   {
-             int lenstr = strlen(MSAntennaGramtext) - 2;
-             lvalp->str = (char*)malloc(lenstr+1);
-             strncpy(lvalp->str, MSAntennaGramtext+1, lenstr);
-             lvalp->str[lenstr] = '\0';
-             return REGEX;
+<QS>{NQ}  { 
+            (qstr)+= MSAntennaGramtext;
           }
 
+<QS>{QUOTE} { /* saw closing quote - all done */
+               BEGIN(INITIAL);
+               lvalp->str = (char *)malloc((qstr.length() + 1)*sizeof(char));
+               strcpy(lvalp->str,qstr.c_str());
+               qstr.resize(0);
 
-{INT}     {
-             msAntennaGramPosition() += yyleng;
-             lvalp->str = (char*)malloc(strlen(MSAntennaGramtext) + 1);
-             strcpy(lvalp->str, MSAntennaGramtext);
-             return INT;
+               return QSTRING;
+             }
+
+{RQUOTE}  { // Start of a regex string
+            qstr.resize(0);
+            BEGIN(RS);
           }
 
-{FLOAT}   {
-             msAntennaGramPosition() += yyleng;
-             lvalp->str = (char*)malloc(strlen(MSAntennaGramtext) + 1);
-             strcpy(lvalp->str, MSAntennaGramtext);
-             return FLOAT;
+<RS>{NRQ} {
+            (qstr)+= MSAntennaGramtext;
           }
 
-{UNIT}    {
-             msAntennaGramPosition() += yyleng;
-             lvalp->str = (char*)malloc(strlen(MSAntennaGramtext) + 1);
-             strcpy(lvalp->str, MSAntennaGramtext);
-             return UNIT;
+<RS>{RQUOTE} { /* saw closing quote - all done */
+               BEGIN(INITIAL);
+               lvalp->str = (char *)malloc((qstr.length() + 1)*sizeof(char));
+               strcpy(lvalp->str,qstr.c_str());
+               qstr.resize(0);
+
+               return REGEX;
+             }
+
+
+{INT}     { msAntennaGramPosition() += yyleng;
+            lvalp->str = (char *)malloc((strlen(MSAntennaGramtext) + 1) * sizeof(char));
+            strcpy(lvalp->str, MSAntennaGramtext);
+            
+            return INT;
           }
 
-{NAME}    {
-             msAntennaGramPosition() += yyleng;
-             lvalp->str = (char *)malloc((strlen(MSAntennaGramtext) + 1));
-             strcpy(lvalp->str, MSAntennaGramtext);
-             return IDENTIFIER;
-          }
+";"       { msAntennaGramPosition() += yyleng;  return SEMICOLON; }
+"&"       { msAntennaGramPosition() += yyleng;  return AMPERSAND; }
+"~"       { msAntennaGramPosition() += yyleng;  return DASH; }
+","       { msAntennaGramPosition() += yyleng;  return COMMA;}
+"!"       { msAntennaGramPosition() += yyleng;  return NOT;}
+  /* Literals */
 
-{ESCNAME} {
-             msAntennaGramPosition() += yyleng;
-             lvalp->str = (char *)malloc((strlen(MSAntennaGramtext)));
-             strcpy(lvalp->str, MSAntennaGramtext+1);
-             return IDENTIFIER;
-          }
+{IDENTIFIER} { msAntennaGramPosition() += yyleng;
+               lvalp->str = (char *)malloc((strlen(MSAntennaGramtext) + 1) * sizeof(char));
+               strcpy(lvalp->str, MSAntennaGramtext);
 
-{PATTERN} {
-             msAntennaGramPosition() += yyleng;
-             lvalp->str = (char *)malloc((strlen(MSAntennaGramtext) + 1));
-             strcpy(lvalp->str, MSAntennaGramtext);
-             return QSTRING;
-          }
+               return IDENTIFIER;
+             }
+{SIDENTIFIER} { msAntennaGramPosition() += yyleng;
+                lvalp->str = (char *)malloc((strlen(MSAntennaGramtext) + 1) * sizeof(char));
+                strcpy(lvalp->str, MSAntennaGramtext);
 
-";"       { msAntennaGramPosition() += yyleng; return SEMICOLON; }
-"&"       { msAntennaGramPosition() += yyleng; return AMPERSAND; }
-"~"       { msAntennaGramPosition() += yyleng; return DASH; }
-","       { msAntennaGramPosition() += yyleng; return COMMA;}
-"!"       { msAntennaGramPosition() += yyleng; return NOT;}
+                return QSTRING;
+              }
 "("       { msAntennaGramPosition() += yyleng; return LPAREN; }
 ")"       { msAntennaGramPosition() += yyleng; return RPAREN;}
-"<"       { msAntennaGramPosition() += yyleng; return LT;}
-">"       { msAntennaGramPosition() += yyleng; return GT;}
-
-{WHITE}   { msAntennaGramPosition() += yyleng;} /* Eat whitespace */
-
- /* An unterminated string is an error */
-\'|\"     { throw MSSelectionAntennaError ("Unterminated string"); }
-
- /* An unterminated regex is an error */
-"/"       { throw MSSelectionAntennaError ("Unterminated regex"); }
-
- /* terminate on EOF */
-<<EOF>>   { yyterminate(); }
-
- /* Any other character is invalid */
-.         { return YYERRCODE; }
-
+{WHITE}   { msAntennaGramPosition() += yyleng;} /* Eat white spaces */
+.         { msAntennaGramPosition() += yyleng;return MSAntennaGramtext[0];}
 %%
