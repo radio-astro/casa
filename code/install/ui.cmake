@@ -452,6 +452,12 @@ macro( casa_add_doc xml prefix )
       ${CMAKE_SOURCE_DIR}/install/docutils/tmptail4tex
       VERBATIM
       )
+
+    if (${prefix} MATCHES tool)
+      add_custom_target( ${_base}_tool_latex DEPENDS ${_latex} )
+    else()
+      add_custom_target( ${_base}_task_latex DEPENDS ${_latex} )
+    endif()
     
     set( casa_out_latex ${casa_out_latex} ${_latex} )
 
@@ -468,6 +474,12 @@ macro( casa_add_doc xml prefix )
         COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         DEPENDS ${_latex}
         VERBATIM )
+
+      if (${prefix} MATCHES tool)
+        add_custom_target( ${_base}_tool_html DEPENDS ${_html} )
+      else()
+        add_custom_target( ${_base}_task_html DEPENDS ${_html} )
+      endif()
       
       set( casa_out_html ${casa_out_html} ${_html} )
     endif()
@@ -483,7 +495,14 @@ macro( casa_add_doc xml prefix )
         COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
         DEPENDS ${_latex}
         VERBATIM )
-      
+
+      if (${prefix} MATCHES tool)
+	add_custom_target( ${_base}_tool_pdf DEPENDS ${_pdf} ) 
+      else()
+        add_custom_target( ${_base}_task_pdf DEPENDS ${_pdf} )
+      endif()
+
       set( casa_out_pdf ${casa_out_pdf} ${_pdf} )
+
     endif()
 endmacro()
