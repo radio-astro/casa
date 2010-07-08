@@ -884,6 +884,10 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   Vector<Int> antenna2list=thisSelection.getAntenna2List();
   Matrix<Int> chanlist=thisSelection.getChanList();
   Matrix<Int> baselinelist=thisSelection.getBaselineList();
+  Vector<Int> ddIDList=thisSelection.getDDIDList();
+  OrderedMap<Int, Vector<Int > > polMap=thisSelection.getPolMap();
+  OrderedMap<Int, Vector<Vector<Int> > > corrMap=thisSelection.getCorrMap();
+
   retval.define("spw", spwlist);
   retval.define("field", fieldlist);
   retval.define("scan",scanlist);
@@ -891,6 +895,10 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   retval.define("antenna2", antenna2list);
   retval.define("baselines",baselinelist);
   retval.define("channel", chanlist);
+  retval.define("dd",ddIDList);
+  //  retval.define("polmap",polMap);
+  // retrval.define("corrmap",corrMap);
+
   return retval;
 
 }

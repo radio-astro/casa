@@ -256,6 +256,7 @@ protected:
   Vector<Double> refVal_p, refPix_p, delta_p; 
   String array_p,object_p,timsys_p;
   Double epoch_p;
+  static Double rdate;
   Int nAnt_p;
   Vector<Double> receptorAngle_p;
   MFrequency::Types freqsys_p;

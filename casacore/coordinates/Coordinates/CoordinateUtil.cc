@@ -956,7 +956,7 @@ Stokes::StokesTypes CoordinateUtil::findSingleStokes (LogIO& os, const Coordinat
 }
 
 String CoordinateUtil::formatCoordinate(
-	const IPosition& pixel, CoordinateSystem& cSys, Int precision
+	const IPosition& pixel, const CoordinateSystem& cSys, Int precision
 ) {
 	Vector<Double> pixel2(cSys.nPixelAxes());
 	for (uInt i=0; i<pixel2.nelements(); i++) {
@@ -967,7 +967,7 @@ String CoordinateUtil::formatCoordinate(
    
 
 String CoordinateUtil::formatCoordinate (
-	const Vector<Double>& pixel, CoordinateSystem& cSys, Int precision
+	const Vector<Double>& pixel, const CoordinateSystem& cSys, Int precision
 ) {
 	Vector<Double> world;
 

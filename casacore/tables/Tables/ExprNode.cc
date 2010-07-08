@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ExprNode.cc 20909 2010-06-16 07:29:13Z gervandiepen $
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
@@ -239,6 +239,12 @@ TableExprNode operator|| (const TableExprNode& left,
 
 TableExprNode TableExprNode::in (const TableExprNodeSet& set) const
 {
+    // An empty set never matches.
+    // Note it makes it possible to use an empty set that has
+    // no data type yet.
+    if (set.nelements() == 0) {
+        return TableExprNode(False);
+    }
     set.checkEqualDataTypes();
     TableExprNodeSet setcp = set;
     return newIN (setcp.setOrArray());

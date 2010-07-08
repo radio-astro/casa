@@ -202,6 +202,8 @@ public:
     static DataManager* makeObject (const String& dataManagerType,
 				    const Record& spec);
 
+    virtual TSMOption tsmMode(uInt nrDim) const;
+
 private:
     // Create a TiledCellStMan.
     // This constructor is private, because it should only be used

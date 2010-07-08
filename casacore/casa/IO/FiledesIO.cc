@@ -58,7 +58,7 @@ FiledesIO::FiledesIO()
   itsFile     (-1)
 {}
 
-FiledesIO::FiledesIO (int fd, const String fileName)
+FiledesIO::FiledesIO (int fd, const String& fileName)
 : itsFile  (-1)
 {
   attach (fd, fileName);
@@ -70,7 +70,7 @@ FiledesIO::~FiledesIO()
 }
 
 
-void FiledesIO::attach (int fd, const String fileName)
+void FiledesIO::attach (int fd, const String& fileName)
 {
     AlwaysAssert (itsFile == -1, AipsError);
     itsFile     = fd;

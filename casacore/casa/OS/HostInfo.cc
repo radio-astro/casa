@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HostInfo.cc 20699 2009-09-02 12:21:07Z gervandiepen $
+//# $Id: HostInfo.cc 20891 2010-05-17 07:10:15Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 #include <casa/OS/HostInfo.h>
@@ -125,7 +125,6 @@ Int HostInfo::numCPUs(bool use_aipsrc)				\
     if ( use_aipsrc ) {						\
 	String value;						\
 	if ( Aipsrc::find(value, keyword) ) {			\
-	    char buf[256];					\
 	    int result;						\
 	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
 		return (Int) result;				\

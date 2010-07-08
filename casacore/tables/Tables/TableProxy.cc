@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: TableProxy.cc 20924 2010-07-05 11:38:03Z gervandiepen $
 
 
 #include <tables/Tables/TableProxy.h>
@@ -475,7 +475,8 @@ void TableProxy::printValueHolder (const ValueHolder& vh, ostream& os,
   case TpUChar:
   case TpShort:
   case TpInt:
-    os << vh.asInt();
+  case TpInt64:
+    os << vh.asInt64();
     break;
   case TpFloat:
     defPrec = 9;
@@ -522,13 +523,14 @@ void TableProxy::printValueHolder (const ValueHolder& vh, ostream& os,
   case TpArrayUChar:
   case TpArrayShort:
   case TpArrayInt:
+  case TpArrayInt64:
     {
-      Array<Int> arr = vh.asArrayInt();
+      Array<Int64> arr = vh.asArrayInt64();
       if (useBrackets) {
         printArray (arr, os, sep);
       } else {
-        Array<Int>::const_iterator iterend = arr.end();
-        for (Array<Int>::const_iterator iter=arr.begin();
+        Array<Int64>::const_iterator iterend = arr.end();
+        for (Array<Int64>::const_iterator iter=arr.begin();
              iter!=iterend; ++iter) {
           if (iter != arr.begin()) {
             os << sep;
@@ -1474,7 +1476,8 @@ Bool TableProxy::isWritable() const
 }
 
 void TableProxy::addColumns (const Record& tableDesc,
-			     const Record& dminfo)
+			     const Record& dminfo,
+                             Bool addToParent)
 {
   TableDesc tabdesc;
   String message;
@@ -1482,10 +1485,10 @@ void TableProxy::addColumns (const Record& tableDesc,
     throw TableError("addColumns failed: " + message);
   }
   if (dminfo.nfields() > 0) {
-    table_p.addColumn (tabdesc, dminfo);
+    table_p.addColumn (tabdesc, dminfo, addToParent);
   } else {
     for (uInt i=0; i<tabdesc.ncolumn(); i++) {
-      table_p.addColumn (tabdesc[i]);
+      table_p.addColumn (tabdesc[i], addToParent);
     }
   }
 }
@@ -1637,8 +1640,14 @@ Bool TableProxy::makeTableDesc (const Record& gdesc, TableDesc& tabdesc,
 	  return False;
 	}
       }
+      // Set maximum string length.
       if (maxlen > 0) {
 	tabdesc.rwColumnDesc(nrdone).setMaxLength (maxlen);
+      }
+      // Define the keywords if needed.
+      if (cold.isDefined ("keywords")) {
+        putKeyValues (tabdesc.rwColumnDesc(nrdone).rwKeywordSet(),
+                      cold.asRecord("keywords"));
       }
     }
     nrdone++;
@@ -2764,6 +2773,8 @@ ValueHolder TableProxy::getKeyValue (const TableRecord& keySet,
     return ValueHolder (keySet.asInt(fieldId));
   case TpUInt:
     return ValueHolder (keySet.asuInt(fieldId));
+  case TpInt64:
+    return ValueHolder (keySet.asInt64(fieldId));
   case TpFloat:
     return ValueHolder (keySet.asFloat(fieldId));
   case TpDouble:
@@ -2784,6 +2795,8 @@ ValueHolder TableProxy::getKeyValue (const TableRecord& keySet,
     return ValueHolder (keySet.asArrayInt(fieldId));
   case TpArrayUInt:
     return ValueHolder (keySet.asArrayuInt(fieldId));
+  case TpArrayInt64:
+    return ValueHolder (keySet.asArrayInt64(fieldId));
   case TpArrayFloat:
     return ValueHolder (keySet.asArrayFloat(fieldId));
   case TpArrayDouble:
@@ -2845,6 +2858,12 @@ void TableProxy::putKeyValue (TableRecord& keySet,
     break;
   case TpArrayUInt:
     keySet.define (fieldId, value.asArrayuInt());
+    break;
+  case TpInt64:
+    keySet.define (fieldId, value.asInt64());
+    break;
+  case TpArrayInt64:
+    keySet.define (fieldId, value.asArrayInt64());
     break;
   case TpFloat:
     keySet.define (fieldId, value.asFloat());

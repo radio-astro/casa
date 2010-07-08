@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: RecordGram.yy 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+    $Id: RecordGram.yy 20922 2010-07-05 11:36:04Z gervandiepen $
 */
 
 %{
@@ -46,6 +46,7 @@ TableExprNodeSet* settp;
 %token <val> LITERAL
 %token <val> STRINGLITERAL
 %token <val> REGEX
+%token STYLE
 %token IN
 %token INCONE
 %token BETWEEN
@@ -67,7 +68,6 @@ TableExprNodeSet* settp;
 %token CLOSEDEMPTY
 %token EMPTYCLOSED
 %type <val> unit
-%type <node> whexpr
 %type <node> orexpr
 %type <node> andexpr
 %type <node> relexpr
@@ -106,10 +106,29 @@ int RecordGramlex (YYSTYPE*);
 %}
 
 %%
-whexpr:    orexpr {
-               RecordGram::setNodePtr ($1);
-	       $$ = $1;
-	   }
+topcomm:   whexpr
+         | stylecoms whexpr
+         ;
+
+stylecoms: stylecoms stylecomm
+         | stylecomm
+         ;
+
+stylecomm: STYLE stylelist
+         ;
+
+stylelist: stylelist COMMA NAME {
+               RecordGram::theirTaQLStyle.set ($3->str);
+               delete $3;
+           }
+         | NAME {
+               RecordGram::theirTaQLStyle.set ($1->str);
+               delete $1;
+           }
+         ;
+
+whexpr:    orexpr
+             { RecordGram::setNodePtr ($1); }
          ;
 
 orexpr:    andexpr

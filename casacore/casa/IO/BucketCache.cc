@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketCache.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: BucketCache.cc 20870 2010-03-23 13:31:52Z gervandiepen $
 
 
 //# Includes
@@ -227,6 +227,11 @@ char* BucketCache::getBucket (uInt bucketNr)
 	getSlot (bucketNr);
 	readBucket (its_ActualSlot);
     }else{
+        if (! its_file->isWritable()) {
+            throw AipsError ("BucketCache::getBucket: bucket " +
+                             String::toString(bucketNr) +
+                             " exceeds nr of buckets");
+        }
 	initializeBuckets (bucketNr);
     }
     return its_Cache[its_ActualSlot];

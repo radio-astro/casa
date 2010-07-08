@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManInfo.cc 20861 2010-02-11 12:27:48Z gervandiepen $
+//# $Id: DataManInfo.cc 20889 2010-05-17 06:53:39Z gervandiepen $
 
 
 //# Includes
@@ -181,19 +181,21 @@ void DataManInfo::adjustTSM (TableDesc& tabDesc, Record& dminfo)
   }
 }
 
-Record DataManInfo::adjustStMan (const Record& dminfo, const String& dmType)
+Record DataManInfo::adjustStMan (const Record& dminfo, const String& dmType,
+                                 Bool replaceMSM)
 {
   Record newdm;
   for (uInt j=0; j<dminfo.nfields(); j++) {
     Record rec = dminfo.subRecord(j);
     // Get the data manager name and create an object for it.
-    String dmName = rec.asString("NAME");
-    DataManager* dmptr = DataManager::getCtor(rec.asString("TYPE"))
-                                                           (dmName, Record());
-    if (dmptr->isStorageManager()  &&  !dmptr->canAddRow()) {
+    String exName = rec.asString("NAME");
+    String exType = rec.asString("TYPE");
+    DataManager* dmptr = DataManager::getCtor(exType) (exName, Record());
+    if ((dmptr->isStorageManager()  &&  !dmptr->canAddRow())  ||
+        (replaceMSM  &&  exType == "MemoryStMan")) {
       // A non-writable storage manager; use given storage manager instead.
       rec.define ("TYPE", dmType);
-      rec.define ("NAME", dmName);
+      rec.define ("NAME", exName);
     }
     newdm.defineRecord (j, rec);
   }

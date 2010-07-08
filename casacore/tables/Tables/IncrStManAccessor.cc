@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IncrStManAccessor.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: IncrStManAccessor.cc 20883 2010-04-27 06:02:21Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/IncrStManAccessor.h>
@@ -67,9 +67,10 @@ ROIncrementalStManAccessor& ROIncrementalStManAccessor::operator=
 }
 
 
-void ROIncrementalStManAccessor::setCacheSize (uInt size)
+void ROIncrementalStManAccessor::setCacheSize (uInt size,
+                                               Bool canExceedNrBuckets)
 {
-    dataManPtr_p->setCacheSize (size);
+    dataManPtr_p->setCacheSize (size, canExceedNrBuckets);
 }
 uInt ROIncrementalStManAccessor::cacheSize() const
 {

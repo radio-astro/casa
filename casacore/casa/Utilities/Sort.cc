@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Sort.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Sort.cc 20901 2010-06-09 07:23:37Z gervandiepen $
 
 #include <casa/Utilities/Sort.h>
 #include <casa/Utilities/GenSort.h>
@@ -95,6 +95,11 @@ uInt SortKey::tryGenSort (Vector<uInt>& indexVector, uInt nrrec, int opt) const
 	if (incr_p == sizeof(Int)) {
 	    return GenSortIndirect<Int>::sort (indexVector, (Int*)data_p,
 					       nrrec, ord, opt);
+	}
+    } else if (cmpFunc_p == ObjCompare<Int64>::compare) {
+	if (incr_p == sizeof(Int64)) {
+	    return GenSortIndirect<Int64>::sort (indexVector, (Int64*)data_p,
+                                                 nrrec, ord, opt);
 	}
     } else if (cmpFunc_p == ObjCompare<String>::compare) {
 	if (incr_p == sizeof(String)) {

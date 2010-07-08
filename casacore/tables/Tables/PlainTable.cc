@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: PlainTable.cc 20889 2010-05-17 06:53:39Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/PlainTable.h>
@@ -50,16 +50,20 @@ TableCache PlainTable::tableCache = TableCache();
 
 
 PlainTable::PlainTable (SetupNewTable& newtab, uInt nrrow, Bool initialize,
-			const TableLock& lockOptions, int endianFormat)
+			const TableLock& lockOptions, int endianFormat,
+                        const TSMOption& tsmOption)
 : BaseTable      (newtab.name(), newtab.option(), 0),
   colSetPtr_p    (0),
   tableChanged_p (True),
   addToCache_p   (True),
-  lockPtr_p      (0)
+  lockPtr_p      (0),
+  tsmOption_p    (tsmOption)
 {
   try {
     // Determine and set the endian option.
     setEndian (endianFormat);
+    // Replace default TSM option for new table.
+    tsmOption_p.fillOption (True);
     // Set initially to no write in destructor.
     // At the end it is reset. In this way nothing is written if
     // an exception is thrown during initialization.
@@ -92,7 +96,7 @@ PlainTable::PlainTable (SetupNewTable& newtab, uInt nrrow, Bool initialize,
     //# Create the data managers for unbound columns.
     //# Check if there are no data managers with equal names.
     newtab.handleUnbound();
-    newtab.columnSetPtr()->checkDataManagerNames();
+    newtab.columnSetPtr()->checkDataManagerNames (name_p);
     //# Get the data from the SetupNewTable object.
     //# Set SetupNewTable object to in use.
     tdescPtr_p  = newtab.tableDescPtr();
@@ -112,7 +116,7 @@ PlainTable::PlainTable (SetupNewTable& newtab, uInt nrrow, Bool initialize,
     //# Initialize the data managers.
     Table tab(this, False);
     nrrowToAdd_p = nrrow;
-    colSetPtr_p->initDataManagers (nrrow, bigEndian_p, tab);
+    colSetPtr_p->initDataManagers (nrrow, bigEndian_p, tsmOption_p, tab);
     //# Initialize the columns if needed.
     if (initialize  &&  nrrow > 0) {
 	colSetPtr_p->initialize (0, nrrow-1);
@@ -146,13 +150,17 @@ PlainTable::PlainTable (SetupNewTable& newtab, uInt nrrow, Bool initialize,
 PlainTable::PlainTable (AipsIO&, uInt version, const String& tabname,
 			const String& type, uInt nrrow, int opt,
 			const TableLock& lockOptions,
+                        const TSMOption& tsmOption,
 			Bool addToCache, uInt locknr)
 : BaseTable      (tabname, opt, nrrow),
   colSetPtr_p    (0),
   tableChanged_p (False),
   addToCache_p   (addToCache),
-  lockPtr_p      (0)
+  lockPtr_p      (0),
+  tsmOption_p    (tsmOption)
 {
+    // Replace default TSM option for existing table.
+    tsmOption_p.fillOption (False);
     //# Set initially to no write in destructor.
     //# At the end it is reset. In this way nothing is written if
     //# an exception is thrown during initialization.
@@ -231,7 +239,8 @@ PlainTable::PlainTable (AipsIO&, uInt version, const String& tabname,
     //# Create a Table object to be used internally by the data managers.
     //# Do not count it, otherwise a mutual dependency exists.
     Table tab(this, False);
-    nrrow_p = colSetPtr_p->getFile (ios, tab, nrrow_p, bigEndian_p);
+    nrrow_p = colSetPtr_p->getFile (ios, tab, nrrow_p, bigEndian_p,
+                                    tsmOption_p);
     //# Read the TableInfo object.
     getTableInfo();
     //# Release the read lock if UserLocking is used.
@@ -414,7 +423,7 @@ void PlainTable::syncTable()
     BaseTable* btab = Table::makeBaseTable
                          (tableName(), "", Table::Old,
 			  TableLock(TableLock::PermanentLocking),
-			  False, 1);
+			  TSMOption(TSMOption::Buffer,0,0), False, 1);
     PlainTable* tab = (PlainTable*)btab;
     TableAttr defaultAttr (tableName(), isWritable(), lockOptions());
     // Now check if all columns are the same.
@@ -648,43 +657,46 @@ void PlainTable::removeRow (uInt rownr)
     colSetPtr_p->autoReleaseLock();
 }
 
-void PlainTable::addColumn (const ColumnDesc& columnDesc)
+void PlainTable::addColumn (const ColumnDesc& columnDesc, Bool)
 {
     if (! isWritable()) {
 	throw (TableInvOper ("Table::addColumn; table is not writable"));
     }
     Table tab(this, False);
-    colSetPtr_p->addColumn (columnDesc, bigEndian_p, tab);
+    colSetPtr_p->addColumn (columnDesc, bigEndian_p, tsmOption_p, tab);
     tableChanged_p = True;
 }
 void PlainTable::addColumn (const ColumnDesc& columnDesc,
-			    const String& dataManager, Bool byName)
+			    const String& dataManager, Bool byName, Bool)
 {
     if (! isWritable()) {
 	throw (TableInvOper ("Table::addColumn; table is not writable"));
     }
     Table tab(this, False);
-    colSetPtr_p->addColumn (columnDesc, dataManager, byName, bigEndian_p, tab);
+    colSetPtr_p->addColumn (columnDesc, dataManager, byName, bigEndian_p,
+                            tsmOption_p, tab);
     tableChanged_p = True;
 }
 void PlainTable::addColumn (const ColumnDesc& columnDesc,
-			    const DataManager& dataManager)
+			    const DataManager& dataManager, Bool)
 {
     if (! isWritable()) {
 	throw (TableInvOper ("Table::addColumn; table is not writable"));
     }
     Table tab(this, False);
-    colSetPtr_p->addColumn (columnDesc, dataManager, bigEndian_p, tab);
+    colSetPtr_p->addColumn (columnDesc, dataManager, bigEndian_p,
+                            tsmOption_p, tab);
     tableChanged_p = True;
 }
 void PlainTable::addColumn (const TableDesc& tableDesc,
-			    const DataManager& dataManager)
+			    const DataManager& dataManager, Bool)
 {
     if (! isWritable()) {
 	throw (TableInvOper ("Table::addColumn; table is not writable"));
     }
     Table tab(this, False);
-    colSetPtr_p->addColumn (tableDesc, dataManager, bigEndian_p, tab);
+    colSetPtr_p->addColumn (tableDesc, dataManager, bigEndian_p,
+                            tsmOption_p, tab);
     tableChanged_p = True;
 }
 

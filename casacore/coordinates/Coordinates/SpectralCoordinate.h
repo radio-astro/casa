@@ -476,7 +476,7 @@ public:
                           uInt worldAxis,
                           Bool isAbsolute=True,
                           Bool showAsAbsolute=True,
-                          Int precision=-1);
+                          Int precision=-1) const;
 
     // Set the default formatter unit (which is initialized to empty).  Must 
     // be consistent with Hz or km/s.  

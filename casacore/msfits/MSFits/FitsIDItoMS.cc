@@ -151,6 +151,7 @@ static Int getIndexContains(Vector<String>& map, const String& key,
 }
 
 Bool FITSIDItoMS1::firstMain = True; // initialize the class variable firstMain
+Double FITSIDItoMS1::rdate = 0.; // initialize the class variable rdate
 SimpleOrderedMap<Int,Int> FITSIDItoMS1::antIdFromNo(-1); // initialize the class variable antIdFromNo
 
 //	
@@ -163,7 +164,7 @@ FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType, const Bool& in
     itsMSKN(itsNrMSKs," "),
     itsMSKV(itsNrMSKs," "),
     itsgotMSK(itsNrMSKs,False),
-    infile_p(fitsin), 
+    infile_p(fitsin),
     itsObsType(obsType),
     msc_p(0)
 {
@@ -182,6 +183,7 @@ FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType, const Bool& in
   if(initFirstMain){
       firstMain = True;
       antIdFromNo.clear();
+      rdate = 0.;
   }
   
   //
@@ -568,7 +570,9 @@ void FITSIDItoMS1::fillRow()
 
 FITSIDItoMS1::~FITSIDItoMS1()
 {
-  delete msc_p;
+  if(!msc_p){
+    delete msc_p;
+  }
   delete itsLog;
 }
 
@@ -1869,6 +1873,14 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     time  *= C::day; 
     //    cout << "TIME=" << setprecision(11) << time << endl; 
 
+    if (row<0) {
+      startTime = time;
+      if (firstMain){
+	startTime_p = startTime;
+	//	cout << "startTime is set to " << startTime << endl;
+      }
+    }
+
     // If integration time is available, use it:
     if (iInttim > -1) {
       memcpy(&interval, (static_cast<Float *>(data_addr[iInttim])), sizeof(Float));
@@ -1879,10 +1891,6 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       if (row<0) {
 	*itsLog << LogIO::WARN << "UV_DATA table contains no integration time information. Will try to derive it from TIME." 
 		<< LogIO::POST;
-	startTime = time;
-	if (firstMain){
-	  startTime_p = startTime;
-	}
       }
       if (time > startTime) {
 	interval=time-startTime;
@@ -1890,6 +1898,10 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 	msc.exposure().fillColumn(interval);
 	startTime = DBL_MAX; // do this only once
       }
+    }
+
+    if(trow==nRows-1){
+      lastTime_p = time+interval;
     }
 
     Int array = Int(100.0*(baseline - Int(baseline)+0.001));
@@ -2060,9 +2072,9 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       }
       msc.fieldId().put(putrow,sourceId);
       nField = max(nField, sourceId+1);
-    }
+    } // end for(ifno=0 ...
     meter.update((trow+1)*1.0);
-  }
+  } // end for(trow=0 ...
 
   // fill the receptorAngle with defaults, just in case there is no AN table
   receptorAngle_p=0;
@@ -2078,15 +2090,18 @@ void FITSIDItoMS1::fillObsTables() {
   if(firstMain) {
     ms_p.observation().addRow();
     String observer;
-    observer = (kwp=kw(FITS::OBSERVER)) ? kwp->asString() : "";
+    observer = (kwp=kw(FITS::OBSERVER)) ? kwp->asString() : "unknown";
     observer=observer.before(trailing);
     MSObservationColumns msObsCol(ms_p.observation());
     msObsCol.observer().put(0,observer);
+    String obscode;
+    obscode = (kwp=kw("OBSCODE")) ? kwp->asString() : "";
+    obscode=obscode.before(trailing);
+    msObsCol.project().put(0,obscode);
     String telescope= (kwp=kw(FITS::TELESCOP)) ? kwp->asString() : "unknown";
     telescope=telescope.before(trailing);  
     msObsCol.telescopeName().put(0,telescope);
     msObsCol.scheduleType().put(0, "");
-    msObsCol.project().put(0, "");
    
   //String date;
   //date = (kwp=kw(FITS::DATE_OBS)) ? kwp->asString() : "";
@@ -2158,7 +2173,6 @@ void FITSIDItoMS1::fillAntennaTable()
    *itsLog << LogIO::NORMAL << "number of antennas = "<<nAnt<<LogIO::POST;
    *itsLog << LogIO::NORMAL << "array ref pos = "<<arrayXYZ<<LogIO::POST;
 
-   Double rdate=0.0;
    String srdate;
    if(btKeywords.isDefined("RDATE")) {
      srdate=btKeywords.asString("RDATE");
@@ -2191,7 +2205,7 @@ void FITSIDItoMS1::fillAntennaTable()
    }
 
 
-   //cout << "srdate=" << srdate <<endl;
+   cout << "srdate=" << srdate <<endl;
    //cout << "gst="<< gst << endl;
 
    MVTime timeVal;
@@ -2397,7 +2411,7 @@ void FITSIDItoMS1::fillFeedTable() {
   }
 
   //  ROArrayColumn<Float> beamfwhm(anTab, "BEAMFWHM"); // this column is optional and there is presently
-                                                    // no place this information in the MS
+                                                    // no place for this information in the MS
   Matrix<Complex> polResponse(2,2); 
   polResponse=0.; polResponse(0,0)=polResponse(1,1)=1.;
   Matrix<Double> offset(2,2); offset=0.;
@@ -2822,13 +2836,8 @@ void FITSIDItoMS1::fillFieldTable()
                        MDirection::Ref(epochRef));
     }
 
-    // ** following will be filled later (once Observation Table is filled) 
+    // time will be filled later (once Observation Table is filled) 
     // at this moment just put 0.0.
-    // For FITS-IDI, this ref time equals to RDATE in sec?
-    // 
-    // Get the time from the observation subtable. I have assumed that this bit
-    // of the observation table has been filled by now.
-    //const Vector<Double> obsTimes = msc_p->observation().timeRange()(0);
  
     msField.time().put(fld, 0.0);
     msField.numPoly().put(fld,numPoly);
@@ -2865,7 +2874,7 @@ void FITSIDItoMS1::updateTables(const String& MStmpDir)
   MSPolarizationColumns& msPol(msc_p->polarization());
   msPol.corrType().put(0,corrType_p);
   msPol.corrProduct().put(0,corrProduct_p);
-  //delete msc_p;
+  delete msc_p;
 
   //update time in the field table
   MSFileName = MStmpDir + "/SOURCE";
@@ -2873,16 +2882,32 @@ void FITSIDItoMS1::updateTables(const String& MStmpDir)
   ms_p = mssub2;
   msc_p = new MSColumns(ms_p);
   Int nrow = ms_p.field().nrow();
-  
-  
   MSFieldColumns& msFld(msc_p->field());
   
   for (Int row = 0; row < nrow; row++) { 
     msFld.time().put(row,obsTime(0)); 
-    //cout << "update:obsTime=" << obsTime(0);
+    //    cout << "update: obsTime=" << obsTime(0) << endl;
   }
     
-  //delete msc_p;
+  delete msc_p;
+
+  // update time in the feed table
+  MSFileName = MStmpDir + "/ANTENNA";
+  MeasurementSet mssub3(MSFileName,Table::Update);
+  ms_p = mssub3;
+  msc_p = new MSColumns(ms_p);
+  nrow = ms_p.feed().nrow();
+  MSFeedColumns& msFeed(msc_p->feed());
+  
+  for (Int row = 0; row < nrow; row++) { 
+    // cout << "update: feed time =" << msFeed.time()(row) << ", rdate " << rdate  << endl;
+    msFeed.time().put(row, msFeed.time()(row) + rdate); // add the reference date  
+    // cout << "update: feed time new =" << msFeed.time()(row)  << endl;
+  }
+    
+  delete msc_p;
+
+  msc_p = 0;
 
 } 
 

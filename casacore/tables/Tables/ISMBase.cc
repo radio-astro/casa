@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ISMBase.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ISMBase.cc 20883 2010-04-27 06:02:21Z gervandiepen $
 
 
 #include <tables/Tables/ISMBase.h>
@@ -231,11 +231,15 @@ DataManager* ISMBase::makeObject (const String& group, const Record& spec)
     return new ISMBase (group, spec);
 }
 
-void ISMBase::setCacheSize (uInt cacheSize)
+void ISMBase::setCacheSize (uInt cacheSize, Bool canExceedNrBuckets)
 {
     cacheSize_p = cacheSize;
+    // Limit the cache size if needed.
+    if (!canExceedNrBuckets  &&  cacheSize_p > getCache().nBucket()) {
+        cacheSize_p = cache_p->nBucket();
+    }
     if (cache_p != 0) {
-	cache_p->resize (cacheSize);
+	cache_p->resize (cacheSize_p);
     }
 }
 
@@ -279,7 +283,7 @@ void ISMBase::readIndex()
 {
     file_p->seek (0);
     // Use the file indicated by the fd from the BucketFile object.
-    FiledesIO fio (file_p->fd());
+    FiledesIO fio (file_p->fd(), file_p->name());
     TypeIO* tio;
     // It is stored in canonical or local format.
     if (asBigEndian()) {
@@ -335,7 +339,7 @@ void ISMBase::writeIndex()
     // Write a few items at the beginning of the file.
     file_p->seek (0);
     // Use the file indicated by the fd from the BucketFile object.
-    FiledesIO fio (file_p->fd());
+    FiledesIO fio (file_p->fd(), file_p->name());
     TypeIO* tio;
     // Store it in canonical or local format.
     if (asBigEndian()) {

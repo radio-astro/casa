@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: IPosition.h 20858 2010-02-03 13:08:35Z gervandiepen $
 
 #ifndef CASA_IPOSITION_H
 #define CASA_IPOSITION_H
@@ -258,6 +258,10 @@ public:
     // Returns 0 if nelements() == 0, otherwise it returns the product of
     // its elements.
     Int64 product() const;
+
+    // Are all elements equal to 1?
+    // Useful to check if a given stride is really a stride.
+    Bool allOne() const;
 
     // Element-by-element comparison for equality.
     // It returns True if the lengths and all elements are equal.

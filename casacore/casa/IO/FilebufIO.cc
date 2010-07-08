@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FilebufIO.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: FilebufIO.cc 20900 2010-06-04 08:49:48Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/IO/FilebufIO.h>
@@ -367,7 +367,11 @@ uInt FilebufIO::readBlock (uInt size, char* buf, Bool throwException)
       throw AipsError ("FilebufIO::readBlock - incorrect number of bytes"
 		       " read for file " + fileName());
     }
-    size = itsBufLen-st;
+    if (itsBufLen > st) {
+      size = itsBufLen-st;
+    } else {
+      size = 0;
+    }
   }
   memcpy (buf, itsBuffer+st, size);
   return size;
