@@ -247,7 +247,7 @@ macro( casa_ccmtools )
     COMMAND ${PERL_EXECUTABLE} -le 'for (@ARGV) { ( -e ) or die \"$$_ missing!\"\; }' --
     ARGS ${_output}
 
-    DEPENDS ${_conversions} ${_depends}
+    DEPENDS ${_conversions} ${_depends} ${CCMTOOLS_ccmtools_EXECUTABLE}
 
     # Indirect dependencies to included IDL files
     IMPLICIT_DEPENDS C ${_depends}  # Use the C preprocessor because
