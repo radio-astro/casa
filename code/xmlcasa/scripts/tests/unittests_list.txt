@@ -9,6 +9,7 @@
 test_boxit                      dmehring@nrao.edu
 test_clearstat                  scastro@eso.org
 test_clean                      scastro@eso.org
+test_concat                     dpetry@eso.org
 test_csvclean                   scastro@eso.org
 test_exportasdm                 dpetry@eso.org
 test_fixvis                     rreid@nrao.edu
@@ -32,5 +33,6 @@ test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
 test_report                     jmlarsen@eso.org
 test_smoothcal                  scastro@eso.org
+test_split                      rreid@nrao.edu
 test_vishead                    jmlarsen@eso.org
 test_visstat                    jmlarsen@eso.org
