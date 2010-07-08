@@ -39,7 +39,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicSL/String.h>
   
-#define LOG0 1
+#define LOG0 0
 // <summary>
 // A wrapper around the CASA logging facilities for the MS Plotter
 // </summary>

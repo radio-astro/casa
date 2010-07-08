@@ -57,9 +57,6 @@ TBMain::TBMain() : QMainWindow(), browser(), waiting(false),
     setupKeyboardShortcuts();
     show();    
     QCoreApplication::processEvents();
-    QString myapp("Table Browser");
-    QCoreApplication::setApplicationName(myapp);
-
     
     // Try loading the last saved view
     TBView* view = TBView::loadFromDefaultFile();

@@ -360,7 +360,7 @@ public:
   IPosition visibilityShape() const;
 
   // Return u,v and w (in meters)
-  Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
+  virtual Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
   Matrix<Double>& uvwMat(Matrix<Double>& uvwmat) const;
 
   // Return weight
@@ -414,6 +414,17 @@ public:
 
   // Return the number of sub-intervals in the current chunk
   Int nSubInterval() const;
+
+  // Call to use the slurp i/o method for all scalar columns. This
+  // will cause the full column to be cached in memory, if
+  // any value of the column is used. In case of out-of-memory,
+  // it will automatically fall-back on not caching the column
+  // in memory. Slurping the column is to be considered as a
+  // work-around for the Table i/o code, which uses BucketCache 
+  // and performs extremely bad for random access. 
+  // Slurping is useful when iterating non-sequentially through 
+  // one full MS, it is not tested with multiple MSs.
+  virtual void slurp() const;
 
   // Velocity selection - specify the output channels in velocity:
   // nChan - number of output channels, vStart - start velocity,
@@ -550,10 +561,19 @@ protected:
   //Check if spw is in selected SPW for actual ms
   Bool isInSelectedSPW(const Int& spw);
 
+  // Updates, if necessary, rowIds_p member for the current chunk
+  virtual void update_rowIds() const;
+
+  template<class T>
+    void getColScalar(const ROScalarColumn<T> &column, Vector<T> &array, const String &colName, Vector<T> &all, Bool resize) const;
+
+  template<class T>
+    void getColArray(const ROArrayColumn<T> &column, Array<T> &array, const String &colName, Array<T> &all, Bool resize) const;
+
   // column access functions, can be overridden in derived classes
-  virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, const String &colName, Vector<Bool> &all, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, const String &colName, Vector<Int> &all, Bool resize = False) const;
+  virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, const String &colName, Vector<Double> &all, Bool resize = False) const;
 
   virtual void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;
@@ -564,13 +584,19 @@ protected:
   virtual void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
 
+  //  virtual void getCol(const String &colName, Array<Double> &array, Array<Double> &all, Bool resize = False) const;
+  //  virtual void getCol(const String &colName, Vector<Bool> &array, Vector<Bool> &all, Bool resize = False) const;
+  //  virtual void getCol(const String &colName, Vector<Int> &array, Vector<Int> &all, Bool resize = False) const;
+  //  virtual void getCol(const String &colName, Vector<Double> &array, Vector<Double> &all, Bool resize = False) const;
 
   ROVisibilityIterator* This;
   MSIter msIter_p;
   RefRows selRows_p; // currently selected rows from msIter_p.table()
+  mutable bool slurp_p;
   Int curChanGroup_p, curNumChanGroup_p, channelGroupSize_p, 
-      curNumRow_p, curTableNumRow_p, curStartRow_p, curEndRow_p,
+      curTableNumRow_p, curStartRow_p, curEndRow_p,
       nChan_p, nPol_p, nRowBlocking_p;
+  uInt curNumRow_p;
   Bool more_p, newChanGroup_p, initialized_p, msIterAtOrigin_p, stateOk_p;
 
   // channel selection
@@ -596,7 +622,7 @@ protected:
   Block<Bool> visOK_p;
   Cube<Bool> flagCube_p;
   Cube<Complex> visCube_p;
-  Matrix<Double> uvwMat_p;
+  mutable Matrix<Double> uvwMat_p;
   Matrix<Float> imagingWeight_p;
   Vector<Float> feedpa_p;
 
@@ -624,12 +650,16 @@ protected:
   Vector<Double> lsrFreq_p;
   String vInterpolation_p;
 
-  mutable Vector<uInt> msIter_rowIds;
+  mutable Vector<uInt> rowIds_p;
 
   ROScalarColumn<Int> colAntenna1, colAntenna2;
+  mutable Vector<Int> allAntenna1, allAntenna2;
   ROScalarColumn<Int> colFeed1, colFeed2;
+  mutable Vector<Int> allFeed1, allFeed2;
   ROScalarColumn<Double> colTime;
+  mutable Vector<Double> allTimes;
   ROScalarColumn<Double> colTimeInterval;
+  mutable Vector<Double> allTimeInterval;
   ROArrayColumn<Float> colWeight;
   ROArrayColumn<Float> colWeightSpectrum;
   ROArrayColumn<Float> colImagingWeight;
@@ -640,8 +670,11 @@ protected:
   ROArrayColumn<Float> colSigma;
   ROArrayColumn<Bool> colFlag;
   ROScalarColumn<Bool> colFlagRow;
+  mutable   Vector<Bool> allRowflags;
   ROScalarColumn<Int> colScan;
+  mutable   Vector<Int> allScans;
   ROArrayColumn<Double> colUVW;
+  mutable Matrix<Double> allUVW;
   //object to calculate imaging weight in case of no imaging_weight column
   VisImagingWeight imwgt_p;
 
@@ -810,6 +843,8 @@ public:
   // Set/modify the imaging weights
   void setImagingWeight(const Matrix<Float>& wt);
 
+  virtual void slurp() const;
+
 protected:
   virtual void attachColumns(const Table &t);
   void setInterpolatedVisFlag(const Cube<Complex>& vis, 
@@ -822,8 +857,7 @@ protected:
   void putDataColumn(DataColumn whichOne, const Cube<Complex>& data);
 
   // column access functions, can be overridden in derived classes
-  virtual void putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array);
-
+  virtual void putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array, const String &colName, Vector<Bool> &all);
   virtual void putCol(ArrayColumn<Bool> &column, const Array<Bool> &array);
   virtual void putCol(ArrayColumn<Float> &column, const Array<Float> &array);
   virtual void putCol(ArrayColumn<Complex> &column, const Array<Complex> &array);
@@ -831,6 +865,11 @@ protected:
   virtual void putCol(ArrayColumn<Bool> &column, const Slicer &slicer, const Array<Bool> &array);
   virtual void putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array);
   virtual void putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array);
+
+  // non-virtual, no reason to template this function because Bool is the only type needed
+  void putColScalar(ScalarColumn<Bool> &column, const Vector<Bool> &array, const String &colName, Vector<Bool> &all);
+
+  mutable bool dirtyRowflags; // was allRowflags modified and needs to be written back?
 
   ArrayColumn<Complex> RWcolVis;
   ArrayColumn<Float> RWcolFloatVis;

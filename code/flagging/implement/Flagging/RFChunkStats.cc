@@ -62,7 +62,7 @@ const MeasurementSet & RFChunkStats::measSet () const
 
 const String RFChunkStats::msName () const 
 { 
-  return String(flagger.measSet().tableName()); 
+  return flagger.measSet().tableName(); 
 } 
 
 const Vector<String> & RFChunkStats::antNames () const 
@@ -168,7 +168,7 @@ void RFChunkStats::newChunk(bool init_quack)
               break;
             }
           }
-          //visbuf.flagCube().putStorage(flags, dataIsAcopy);
+          visbuf.flagCube().putStorage(flags, dataIsAcopy);
 
           //cout << "flagCube() = " << visbuf.flagCube() << endl;
           //cout << "flag() = " << visbuf.flag() << endl;

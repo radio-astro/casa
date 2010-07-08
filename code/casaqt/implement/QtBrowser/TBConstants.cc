@@ -97,7 +97,7 @@ void TBConstants::dprint(int level, String message, int indentLevel) {
 
 const unsigned int TBConstants::DEFAULT_SELECT_NUM = 1000;
 const unsigned int TBConstants::DEFAULT_EXPORT_NUM = 1000;
-const unsigned int TBConstants::MAX_SELECT_NUM = 1000000;
+const unsigned int TBConstants::MAX_SELECT_NUM = 10000;
 const unsigned int TBConstants::MAX_ACTION_BUFFER = 100;
 const unsigned int TBConstants::DEFAULT_ROW_INTERVAL = 5;
 

@@ -33,7 +33,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-void VersionInfo::report(ostream &os)
+void VersionInfo::report(ostream &os, bool nobuild)
 {
     int major1 = majorVersion()/10;
     int major2 = majorVersion() - major1*10;

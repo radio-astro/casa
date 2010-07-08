@@ -109,7 +109,7 @@ class Flagger : public FlaggerEnums
 {
 protected:
 // creates an agent by name
-  RFABase * createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms );
+  RFABase * createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms, bool &only_selector );
 
 // sets up record of agents and default parameters
   const RecordInterface & setupAgentDefaults ();
@@ -131,7 +131,7 @@ protected:
  
   MeasurementSet   ms;
   MeasurementSet   originalms;
-  PtrBlock<RFABase*> acc;
+  Block<RFABase*> acc;
 
   //new added
   MeasurementSet *mssel_p;
@@ -297,6 +297,8 @@ public:
   /* Get rid of negative indices (meaning negation of antenna) in baselinelist */
   static void reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant);
   
+  static int my_aipspp_sum(const Array<Bool> &a);
+
 private:
     
   Flagger( const Flagger & )          {};

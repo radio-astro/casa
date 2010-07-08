@@ -89,8 +89,6 @@ protected:
   RFlagWord   corrmask; 
 // flag cube lattice
   RFFlagCube  flag;   // flag cube lattice  
-
-  bool is_selector;  // is RFASelector ?
 };
 
 

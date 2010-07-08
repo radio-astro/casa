@@ -263,7 +263,6 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	      ///flagc(pl,ch-StartChan,(timecnt*NumB)+baselinecnt) = flag.getFlag(ch,ifrs(bs));//flag.anyFlagged(ch,ifrs(bs));
 	      ///chunkflags(pl,ch-StartChan,(itime*NumB)+baselinecnt) = flag.getFlag(ch,ifrs(bs));//flag.anyFlagged(ch,ifrs(bs));
 	      
-	
 	      visc(pl,ch-StartChan,(timecnt*NumB)+baselinecnt) = mapValue(ch,bs);
 	      flagc(pl,ch-StartChan,(timecnt*NumB)+baselinecnt) = flag.anyFlagged(ch,ifrs(bs));
 	      chunkflags(pl,ch-StartChan,(itime*NumB)+baselinecnt) = flag.anyFlagged(ch,ifrs(bs));

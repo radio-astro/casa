@@ -36,7 +36,9 @@ class cluster(object):
    __controller=None
    __timestamp=None
    __engines=[]
-   __ipythondir=os.environ['IPYTHONDIR']
+   __ipythondir=os.environ['PWD']+'/ipython'
+   if(os.environ.has_key('IPYTHONDIR')):
+      __ipythondir=os.environ['IPYTHONDIR']
    __homepath=os.environ['HOME'] 
    __start_engine_file='start_engine.sh'
    __stop_node_file='stop_node.sh'
@@ -71,7 +73,11 @@ class cluster(object):
       self.__controller=None
       self.__timestamp=None
       self.__engines=[]
-      self.__ipythondir=os.environ['IPYTHONDIR']
+      self.__ipythondir=os.environ['PWD']+'/ipython'
+      if(os.environ.has_key('IPYTHONDIR')):
+         self.__ipythondir=os.environ['IPYTHONDIR']
+      else:
+         os.environ['IPYTHONDIR']=self.__ipythondir
       self.__homepath=os.environ['HOME'] 
       if (self.__ipythondir==None or self.__ipythondir==''):
          os.environ["IPYTHONDIR"]=os.environ['HOME']+'.casa/ipython'

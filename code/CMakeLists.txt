@@ -332,11 +332,11 @@ casa_find( CFITSIO
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
 
-if( NOT APPLE )
 # X11.
-find_package( X11 REQUIRED )
-# Rename
-set( X11_INCLUDE_DIRS ${X11_INCLUDE_DIR} )
+if( NOT APPLE )
+  find_package( X11 REQUIRED )
+  # Rename
+  set( X11_INCLUDE_DIRS ${X11_INCLUDE_DIR} )
 endif()
 
 # Since we are using the C++ linker, the Fortran runtime libraries must be explicitly
@@ -377,18 +377,15 @@ endif()
 # PGPLOT (FORTRAN plotting package).
 # depends on X11
 if( APPLE )
-casa_find( PGPLOT
-  VERSION 5.3.1
-  INCLUDES cpgplot.h
-  LIBS pgplot cpgplot
-  DEPENDS FORTRAN )
+  set( _deps FORTRAN )
 else()
+  set( _deps X11 FORTRAN )
+endif()
 casa_find( PGPLOT
   VERSION 5.3.1
   INCLUDES cpgplot.h
   LIBS pgplot cpgplot
-  DEPENDS X11 FORTRAN )
-endif()
+  DEPENDS ${_deps} )
 
 # WCSLIB
 casa_find( WCSLIB
@@ -407,8 +404,12 @@ casa_find( WCSLIB
   DEPENDS PGPLOT )
 
 
-# BLAS
+# FFTW
+# Does not provide its version number in a header nor
+# in the library, which is a pity because CASACore needs
+# version >= 3.2.2 and is subject to a bug in fftw 3.2.1
 casa_find( FFTW3
+           INCLUDES fftw3.h
            LIBS fftw3_threads fftw3f_threads fftw3f fftw3 )
 
 # BLAS
@@ -458,7 +459,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.12
+           VERSION 1.0.13
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -467,7 +468,9 @@ casa_find( CASACORE
            PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
-           DEPENDS LAPACK CFITSIO WCSLIB DL )
+           DEPENDS LAPACK CFITSIO WCSLIB FFTW3 DL )
+# Listing explicitly CASACore's dependency libraries is not necessary if the CASACore libraries 
+# were built with correct linking information, which they are not.
 
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
   -DCASA_USECASAPATH
@@ -825,6 +828,8 @@ casa_config_end()
 list( GET ${RPFITS_LIBRARIES} 0 rpfits_lib )
 get_filename_component(rpfitslibd ${rpfits_lib} PATH)
 
+string( REGEX REPLACE "/[^/]+/?$" "" rpfitslibd ${RPFITS_LIBRARIES} ) # What is the effect of this? Do the two lines above not set rpfitslibd to the path of the first library in RPFITS_LIBRARIES?
+
 string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
 
 # convert semicolons to spaces...
@@ -869,32 +874,17 @@ set( PYTHON_TASKD ${PYTHON_LIBD} )
 # This will set up include paths, and which libraries to link to
 
 # for linux RPM & binary distros libgraphics contains pgplot (linked in)...
-if( NOT APPLE )
-casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
-casa_add_module( casadbus CASACORE DBUS )
-casa_add_module( tableplot CASACORE PYTHON )
-casa_add_module( msvis CASACORE graphics )
-casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
-casa_add_module( plotms CASACORE QT4 casaqt msvis )
-casa_add_module( display CASACORE WCSLIB QT4 FFTW3 casaqt msvis )
-#casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( flagging CASACORE Boost tableplot msvis )
-casa_add_module( calibration CASACORE tableplot msvis )
-casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
-casa_add_module( alma CASACORE LIBXML2 Boost )
-casa_add_module( oldalma CASACORE LIBXML2 Boost )
-casa_add_module( atnf CASACORE RPFITS CFITSIO )
-casa_add_module( dish CASACORE )
-casa_add_module( nrao CASACORE )
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
+if( APPLE )
+  casa_add_module( graphics CASACORE PGPLOT WCSLIB )
 else()
-casa_add_module( graphics CASACORE PGPLOT WCSLIB )
+  casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
+endif()
 casa_add_module( casadbus CASACORE DBUS )
 casa_add_module( tableplot CASACORE PYTHON )
 casa_add_module( msvis CASACORE graphics )
 casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
 casa_add_module( plotms CASACORE QT4 casaqt msvis )
-casa_add_module( display CASACORE WCSLIB QT4 CFITSIO FFTW3 casaqt msvis )
+casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis )
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( flagging CASACORE Boost tableplot msvis )
 casa_add_module( calibration CASACORE tableplot msvis )
@@ -905,6 +895,5 @@ casa_add_module( atnf CASACORE RPFITS CFITSIO )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
-endif()
 
 # demo atmosphere ionosphere jive nfra simulators vlbi vo

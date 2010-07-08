@@ -148,7 +148,6 @@ from listcal import  listcal
 from listhistory import  listhistory
 from listobs import  listobs
 from listvis import  listvis
-from makemask import  makemask
 from mosaic import  mosaic
 from newflagdata import  newflagdata
 from peel import  peel

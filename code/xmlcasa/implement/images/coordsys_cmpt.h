@@ -15,7 +15,6 @@
 
 #include <vector>
 #include <xmlcasa/casac.h>
-#include <xmlcasa/Quantity.h>
 #include <xmlcasa/conversions.h>
 #include <xmlcasa/record.h>
 #include <xmlcasa/variant.h>
@@ -105,7 +104,7 @@ class coordsys
 
     bool setconversiontype(const std::string& direction = "", const std::string& spectral = "");
 
-    std::string getconversiontype(const std::string& type = "");
+    std::string getconversiontype(const std::string& type = "", const bool showconversion = true);
 
     bool setdirection(const std::string& refcode = "", const std::string& proj = "", const std::vector<double>& projpar = std::vector<double> (1, -1), const std::vector<double>& refpix = std::vector<double> (1, -1), const ::casac::variant& refval = ::casac::initialize_variant(""), const ::casac::variant& incr = ::casac::initialize_variant(""), const ::casac::variant& xform = ::casac::initialize_variant(""), const ::casac::variant& poles = ::casac::initialize_variant(""));
 

@@ -411,9 +411,9 @@ class PlotFlag:
         if self.quitted is False:
                 self.quit(closewin=True);
                 print " ";
-                print "................................................................";
-                print "............. Please IGNORE Tkinter error message. .............";
-                print "................................................................";
+                #print "................................................................";
+                #print "............. Please IGNORE Tkinter error message. .............";
+                #print "................................................................";
 
     def quit(self, closewin=True):
         #print 'quit with close-window : ', closewin;

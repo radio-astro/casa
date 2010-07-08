@@ -74,6 +74,8 @@
 
 #include <algorithm>
 
+#include <sstream>
+
 namespace casa {
 
   const bool Flagger::dbg = false;
@@ -544,6 +546,9 @@ namespace casa {
 	//vs_p = new VisSet(*mssel_p,noselection,0.0);
       }
     vs_p->resetVisIter(sort2, timeInterval);
+
+    // Optimize for iterating randomly through one MS
+    vs_p->iter().slurp();
     
     selectDataChannel();
     ms = *mssel_p;
@@ -975,6 +980,7 @@ namespace casa {
             Double timeInterval = 7.0e9; //a few thousand years
             
             vs_p->resetVisIter(sort2, timeInterval);
+            vs_p->iter().slurp();
             //lets make sure the data channel selection is done
             selectDataChannel();
             
@@ -1374,8 +1380,12 @@ namespace casa {
   // -----------------------------------------------------------------------
   RFABase * Flagger::createAgent (const String &id,
 				  RFChunkStats &chunk,
-				  const RecordInterface &parms )
+				  const RecordInterface &parms,
+                                  bool &only_selector)
   {
+      if (id != "select" && id != "flagexaminer") {
+          only_selector = false;
+      }
     // cerr << "Agent id: " << id << endl;
     if ( id == "timemed" )
       return new RFATimeMedian(chunk, parms);
@@ -1430,6 +1440,19 @@ namespace casa {
       printAgentRecord(agent_id, i, agents.asRecord(i));
     }
   }
+
+    /*
+      Well, for boolean values this function gives you 1 + 1 = 2,
+      where the AIPS++ built-in, never-should-have-been-written, sum()
+      surprisingly gives you 1 + 1 = 1.
+     */
+    int Flagger::my_aipspp_sum(const Array<Bool> &a)
+    {
+        return a.contiguousStorage() ?
+            std::accumulate(a.cbegin(), a.cend(), 0) :
+            std::accumulate(a.begin(),  a.end(),  0);
+    }
+
   void Flagger::printAgentRecord(String &agent_id, uInt agentCount,
 				 const RecordInterface &agent_rec){
     // but if an id field is set in the sub-record, use that instead
@@ -1561,6 +1584,11 @@ namespace casa {
     // reset existing flags?
     Bool reset_flags = isFieldSet(opt, RF_RESET);
 
+    /* Don't use the progmeter if less than this
+       number of timestamps (for performance reasons;
+       just creating a ProgressMeter is relatively
+       expensive). */
+    const unsigned progmeter_limit = 1000;
     
     try { // all exceptions to be caught below
       
@@ -1572,6 +1600,7 @@ namespace casa {
       // Setdata already made a data selection
       
       VisibilityIterator &vi(vs_p->iter()); 
+      vi.slurp();
       VisBuffer vb(vi);
       
       RFChunkStats chunk(vi, vb,
@@ -1597,6 +1626,7 @@ namespace casa {
       
       acc.set(NULL);
       uInt nacc = 0;
+      bool only_selector = true;  // only RFASelector agents?
       for (uInt i=0; i<agents.nfields(); i++) {
           if (  agents.dataType(i) != TpRecord )
 	    os << "Unrecognized field '" << agents.name(i) << "' in agents\n" << LogIO::EXCEPTION;
@@ -1646,7 +1676,8 @@ namespace casa {
 	  // create agent based on name
 	  RFABase *agent = createAgent(agent_id,
 				       chunk,
-				       parms);
+				       parms,
+                                       only_selector);
 	  if ( !agent )
 	    os<<"Unrecognized method name '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	  agent->init();
@@ -1656,6 +1687,9 @@ namespace casa {
 	  acc[nacc++] = agent;
       }
       
+      for (unsigned i = 0; i < nacc; i++) {
+          acc[i]->setOnlySelector(only_selector);
+      }
       acc.resize(nacc, True);
 
       // begin iterating over chunks
@@ -1663,7 +1697,7 @@ namespace casa {
 
       bool new_field_spw = true;   /* Is the current chunk the first chunk for this (field,spw)? */
 
-      Int inRowFlags=0, outRowFlags=0, totalRows=0, inDataFlags=0, outDataFlags=0, totalData=0;
+      Int64 inRowFlags=0, outRowFlags=0, totalRows=0, inDataFlags=0, outDataFlags=0, totalData=0;
 
       for (vi.originChunks();
 	   vi.moreChunks(); 
@@ -1725,7 +1759,7 @@ namespace casa {
 		  availmem = maxmem>0 ? maxmem : 0;
 		}
 	    }
-          if (dbg) cout << "Active for this chunk: " << sum(active) << endl;
+          if (dbg) cout << "Active for this chunk: " << my_aipspp_sum(active) << endl;
 
 	  // initially active agents
 	  Vector<Bool> active_init = active;
@@ -1775,7 +1809,12 @@ namespace casa {
 		{
             
 		  sprintf(subtitle,"pass %d (data)",npass+1);
-		  ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq);
+
+                  auto_ptr<ProgressMeter> progmeter(NULL);
+                  if (chunk.num(TIME) > progmeter_limit) {
+                      progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+                  }
+
 		  // start pass for all active agents
                   //cout << "-----------subtitle=" << subtitle << endl;
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1787,7 +1826,9 @@ namespace casa {
 		  // iterate over visbuffers
 		  for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
 
-		    progmeter.update(itime);
+                    if (progmeter.get() != NULL) {
+                        progmeter->update(itime);
+                    }
 		    chunk.newTime();
 		    Bool anyActive = False;
 		    anyActive=False;
@@ -1803,11 +1844,11 @@ namespace casa {
 			if (anyActive) acc[i]->initializeIter(itime);
 		    }
 
-                    inRowFlags += sum(vb.flagRow());
+                    inRowFlags += my_aipspp_sum(vb.flagRow());
 		    totalRows += vb.flagRow().nelements();
 		    totalData += vb.flagCube().shape().product();
 
-                    inDataFlags += sum(vb.flagCube());
+                    inDataFlags += my_aipspp_sum(vb.flagCube());
 		    
 		    // now, call individual VisBuffer iterators
 		    for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1870,14 +1911,19 @@ namespace casa {
 		  sprintf(subtitle,"pass %d (dry)",npass+1);
                   //cout << "-----------subtitle=" << subtitle << endl;
 
-		  ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq);
+                  auto_ptr<ProgressMeter> progmeter(NULL);
+                  if (chunk.num(TIME) > progmeter_limit) {
+                      progmeter = auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+                  }
 		  // start pass for all active agents
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 		    if ( iter_mode(ival) == RFA::DRY )
 		      acc[ival]->startDry(new_field_spw);
 		  for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
 		    {
-		      progmeter.update(itime);
+                      if (progmeter.get() != NULL) {
+                          progmeter->update(itime);
+                      }
 		      // now, call individual VisBuffer iterators
 		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 			if ( iter_mode(ival) == RFA::DRY )
@@ -1906,18 +1952,23 @@ namespace casa {
 
 	  if ( !isFieldSet(opt, RF_TRIAL) && anyNE(active_init, False) )
 	    {
-		sprintf(subtitle,"pass (flag)");
-		//cout << "-----------subtitle=" << subtitle << endl;
-
-	      ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq);
+	      sprintf(subtitle,"pass (flag)");
+              //cout << "-----------subtitle=" << subtitle << endl;
+              
+              auto_ptr<ProgressMeter> progmeter(NULL);
+              if (chunk.num(TIME) > progmeter_limit) {
+                  progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
+              }
 	      for (uInt i = 0; i<acc.nelements(); i++)
 		if (active_init(i))
 		  acc[i]->startFlag(new_field_spw);
 	      uInt itime=0;
 	      for( vi.origin(); vi.more(); vi++,itime++ ) {
-		  progmeter.update(itime);
-		  
-		  chunk.newTime();
+                  if (progmeter.get() != NULL) {
+                      progmeter->update(itime);
+                  }
+                  
+                  chunk.newTime();
 		  //		  inRowFlags += sum(chunk.nrfIfr());
 
 		  Bool anyActive = False;
@@ -1942,8 +1993,8 @@ namespace casa {
 		  
 		  //		  outRowFlags += sum(chunk.nrfIfr());
 
-		  outRowFlags += sum(vb.flagRow());
-                  outDataFlags += sum(vb.flagCube());
+		  outRowFlags += my_aipspp_sum(vb.flagRow());
+                  outDataFlags += my_aipspp_sum(vb.flagCube());
 
 	      }  // for (vi ... ) loop over time
 	      if (didSomething) {
@@ -1992,24 +2043,26 @@ namespace casa {
           if (didSomething && new_field_spw) {
               
               LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
-              
-              osss << "Field = " << field_id << " , Spw Id : "
+
+              stringstream ss;
+              ss << "Field = " << field_id << ", Spw Id = "
                    << spw_id
-                   << "  Total rows = " << totalRows
-                   << endl;
-              osss << "Input:    "
+                   << ", Total rows = " << totalRows
+                 << ", Total data = " << totalData << endl;
+              ss << "Input:    "
                    << "  Rows flagged = " << inRowFlags << " "
                    << "(" << 100.0*inRowFlags/totalRows << " %)."
                    << "  Data flagged = " << inDataFlags << " "
                    << "(" << 100.0*inDataFlags/totalData << " %)."
                    << endl;
-              osss << "This run: "
+              ss << "This run: "
                    << "  Rows flagged = " << outRowFlags - inRowFlags << " "
                    << "(" << 100.0*(outRowFlags-inRowFlags)/totalRows << " %)."
                    << "  Data flagged = "  << outDataFlags - inDataFlags << " "
                    << "(" << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
                    << endl;
-              osss << LogIO::POST;
+              
+              osss << ss.str() << LogIO::POST;
 
               /* Reset counters */
               inRowFlags = outRowFlags = totalRows = inDataFlags = outDataFlags = totalData = 0;
@@ -2029,7 +2082,7 @@ namespace casa {
       }
 
     }
-    catch( int x ) //(AipsError x)
+    catch(AipsError x)
       {
 	// clean up agents
 	for( uInt i=0; i<acc.nelements(); i++ )
@@ -2046,18 +2099,18 @@ namespace casa {
 	// throw the exception on
 	throw;
       }
-    //    catch(int e) //(std::exception e) 
-    //      {
-    //	for( uInt i=0; i<acc.nelements(); i++ ) {
-    //          if ( acc[i] ) {
-    //            delete acc[i];
-    //            acc[i] = NULL;
-    //          }
-    //        }
-    //	acc.resize(0);
-    //
-    //        throw AipsError(e.what());
-    //      }
+    catch(std::exception e) 	 
+        { 	 
+            for( uInt i=0; i<acc.nelements(); i++ ) { 	 
+                if ( acc[i] ) { 	 
+                    delete acc[i]; 	 
+                    acc[i] = NULL; 	 
+                } 	 
+            } 	 
+            acc.resize(0); 	 
+            
+            throw AipsError(e.what()); 	 
+        }
     //cleanupPlotters();
     ms.flush();
     //os<<"Flagging complete\n"<<LogIO::POST;

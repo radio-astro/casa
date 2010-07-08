@@ -169,7 +169,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 datacolumn='model'
 
         useflags -- Take MS flags into account?
-                default: False
+                default: True
                 useflag=False
                 useflag=True
         If useflags=False, flagged values are included in the statistics.

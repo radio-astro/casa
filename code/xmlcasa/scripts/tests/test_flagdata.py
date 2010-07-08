@@ -2,7 +2,7 @@ import shutil
 import unittest
 import os
 from tasks import *
-#from taskinit import *
+from taskinit import *
 
 #
 # Test of flagdata modes
@@ -57,11 +57,9 @@ class test_rfi(test_base):
         self.setUp_flagdatatest()
         
     def test1(self):
-        flagdata(vis=self.vis, unflag=True)
         flagdata(vis=self.vis, mode='rfi')
         test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 1326)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 5252, 51)
-        flagdata(vis=self.vis, unflag=True)
 
 
 class test_shadow(test_base):
@@ -82,63 +80,112 @@ class test_shadow(test_base):
         test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 1456)
 
 
-class test_vector_flagmanager(test_base):
-    def runTest(self):
+class test_vector(test_base):
+    def setUp(self):
+        self.setUp_flagdatatest()
 
-        # Import data
-        vis = 'flagdatatest.ms'
-        
-        os.system('cp -r ' + \
-                  os.environ.get('CASAPATH').split()[0] +
-                  "/data/regression/unittest/flagdata/" + vis + ' ' + vis)
+    def test1(self):
 
         print "Test of vector mode"
         
-        default(flagdata)
-        vis = 'flagdatatest.ms'
-
-        flagdata(vis=vis, unflag=True)
-
         clipminmax=[0.0, 0.2]
         antenna = ['1', '2']
         clipcolumn = ['DATA', 'datA']
 
-        inp(flagdata) # broken, looks only at global parameters
-        flagdata(vis=vis, clipminmax=clipminmax, antenna=antenna, clipcolumn=clipcolumn)
-        test_eq(flagdata(vis=vis, mode='summary'), 70902, 17897)
-        flagdata(vis=vis, unflag=True)
+        flagdata(vis=self.vis, clipminmax=clipminmax, antenna=antenna, clipcolumn=clipcolumn)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 17897)
 
-        print "Test of flagmanager mode=list, flagbackup=True/False"
-        flagmanager(vis=vis, mode='list')
-        fg.open(vis)
-        assert len(fg.getflagversionlist()) == 5
-        fg.done()
+    def test2(self):
+        flagdata(vis=self.vis, antenna=["2", "3", "5", "6"])
+        s = flagdata(vis=self.vis, mode="summary")
+        for a in ["VLA3", "VLA4", "VLA6", "VLA7"]:
+            self.assertEqual(s['antenna'][a]['flagged'], 5252)
+        for a in ["VLA1", "VLA2", "VLA5", "VLA8", "VLA9", "VLA10", "VLA11", "VLA24"]:
+            self.assertEqual(s['antenna'][a]['flagged'], 808)
 
-        flagdata(vis=vis, unflag=True, flagbackup=False)
-        flagmanager(vis=vis, mode='list')
-        fg.open(vis)
-        assert len(fg.getflagversionlist()) == 5
-        fg.done()
-
-        flagdata(vis=vis, unflag=True, flagbackup=True)
-        flagmanager(vis=vis, mode='list')
-        fg.open(vis)
-        len(fg.getflagversionlist()) == 6
-        fg.done()
-
-        print "Test of flagmanager mode=rename"
-        flagmanager(vis=vis, mode='rename', oldname='manualflag_3', versionname='Ha! The best version ever!', comment='This is a *much* better name')
-        flagmanager(vis=vis, mode='list')
-        fg.open(vis)
-        len(fg.getflagversionlist()) == 6
-        fg.done()
-
-class test_flagmanager(test_base):
-
+class test_vector_ngc5921(test_base):
     def setUp(self):
         self.setUp_ngc5921()
 
+    def test3(self):
+        flagdata(vis=self.vis, antenna=["2", "3", "5", "6"], scan="4")
+        s = flagdata(vis=self.vis, mode="summary")
+        for a in ["2", "3", "5", "6"]:
+            self.assertEqual(s['antenna'][a]['flagged'], 6552)
+        for a in ["1", "4", "7", "8", "9", "10", "24"]:
+            self.assertEqual(s['antenna'][a]['flagged'], 1008)
+
+    def test4(self):
+        a = ["2", "13", "5", "9"]
+        t = ["09:30:00~09:40:00",
+             "10:20:00~10:25:00",
+             "09:50:00~13:30:00",
+             "09:30:00~09:40:00"]
+
+        # Flag one after another
+        for i in range(len(a)):
+            flagdata(vis=self.vis, antenna=a[i], timerange=t[i])
+
+        stats_serial = flagdata(vis=self.vis, mode="summary")
+
+        # Flag in parallel
+        flagdata(vis=self.vis, unflag=True)
+        flagdata(vis=self.vis, antenna=a, timerange=t)
+        
+        stats_parallel = flagdata(vis=self.vis, mode="summary")
+
+        # Did we get the same net results? (full recursive comparison of statistics dictionaries)
+        self.assertEqual(stats_serial, stats_parallel)
+
+        # If any corner of the dictionaries had differed, the test above would have failed
+        # (just double checking)
+        stats_serial["channel"]["23"]["total"] = 25703
+        self.assertNotEqual(stats_serial, stats_parallel)
+
+        stats_serial["channel"]["23"]["total"] = 25704
+        self.assertEqual(stats_serial, stats_parallel)
+        
+        # And was most data flagged for the specified antennas?
+        for ant in range(28):
+            name = str(ant+1) # From "1" to "28"
+            if name not in ["23"]:
+                if name in a:
+                    assert stats_serial["antenna"][name]['flagged'] > 5544, stats_serial["antenna"]
+                else:
+                    self.assertEqual(stats_serial["antenna"][name]['flagged'], 5544, "antenna=" + name + str(stats_serial["antenna"]))
+
+class test_flagmanager(test_base):
+    def setUp(self):
+        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
+        self.setUp_flagdatatest()
+        
     def test1(self):
+        print "Test of flagmanager mode=list, flagbackup=True/False"
+        flagmanager(vis=self.vis, mode='list')
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), 3)
+        fg.done()
+
+        flagdata(vis=self.vis, unflag=True, flagbackup=False)
+        flagmanager(vis=self.vis, mode='list')
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), 3)
+        fg.done()
+
+        flagdata(vis=self.vis, unflag=True, flagbackup=True)
+        flagmanager(vis=self.vis, mode='list')
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), 4)
+        fg.done()
+
+        print "Test of flagmanager mode=rename"
+        flagmanager(vis=self.vis, mode='rename', oldname='manualflag_2', versionname='Ha! The best version ever!', comment='This is a *much* better name')
+        flagmanager(vis=self.vis, mode='list')
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), 4)
+        fg.done()
+
+    def test2(self):
         """Create, then restore autoflag"""
 
         flagdata(vis = self.vis, mode='summary')
@@ -164,6 +211,49 @@ class test_flagmanager(test_base):
         print "After restoring pre-antenna 3 flagging, there are", restore2, "flags, should be", ant2
 
         assert restore2 == ant2
+
+class test_msselection(test_base):
+
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_simple(self):
+        baselines = flagdata(vis = self.vis, mode="summary", antenna="9")['baseline'].keys()
+        assert "9&&9" not in baselines
+        assert "9&&10" in baselines
+        assert "9&&11" in baselines
+        assert "10&&10" not in baselines
+        assert "10&&11" not in baselines
+
+        baselines = flagdata(vis = self.vis, mode="summary", antenna="9,10")['baseline'].keys()
+        assert "9&&9" not in baselines
+        assert "9&&10" in baselines
+        assert "9&&11" in baselines
+        assert "10&&10" not in baselines
+        assert "10&&11" in baselines
+
+    def test_amp(self):
+        baselines = flagdata(vis = self.vis, mode="summary", antenna="9&")['baseline'].keys()
+        #??? assert "9&&9" not in baselines
+        #assert "9&&10" not in baselines
+        #assert "9&&11" not in baselines
+        #assert "10&&10" not in baselines
+        #assert "10&&11" not in baselines
+
+        baselines = flagdata(vis = self.vis, mode="summary", antenna="9,10&")['baseline'].keys()
+        assert "9&&9" not in baselines
+        assert "9&&10" in baselines
+        assert "9&&11" not in baselines
+        assert "10&&10" not in baselines
+        assert "10&&11" not in baselines
+
+        baselines = flagdata(vis = self.vis, mode="summary", antenna="9&10")['baseline'].keys()
+        assert "9&&9" not in baselines
+        assert "9&&10" in baselines
+        assert "9&&11" not in baselines
+        assert "10&&10" not in baselines
+        assert "10&&11" not in baselines
+
 
 
 class test_statistics_queries(test_base):
@@ -336,8 +426,10 @@ class cleanup(test_base):
 def suite():
     return [test_selections,
             test_statistics_queries,
-            test_vector_flagmanager,
+            test_vector,
+            test_vector_ngc5921,
             test_flagmanager,
             test_rfi,
             test_shadow,
+            test_msselection,
             cleanup]

@@ -879,7 +879,8 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 {
   ::casac::Quantity wetOpacity;
   try {
-    if (pRefractiveIndexProfile) {
+    //if (pRefractiveIndexProfile) {
+    if (pSkyStatus) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -887,7 +888,8 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 	chan = nc;
       wetOpacity.value.resize(1);
       wetOpacity.units = "neper";
-      wetOpacity.value[0] = pRefractiveIndexProfile->getWetOpacity(spwId,chan).get(wetOpacity.units);
+      //wetOpacity.value[0] = pRefractiveIndexProfile->getWetOpacity(spwId,chan).get(wetOpacity.units);
+      wetOpacity.value[0] = pSkyStatus->getWetOpacity(spwId,chan).get(wetOpacity.units);
       cout << "rip: " << wetOpacity.value[0] << " " << wetOpacity.units << " " << chan << endl;
     } else {
       *itsLog << LogIO::WARN
@@ -985,13 +987,15 @@ atmosphere::getWetOpacitySpec(Quantity& wetOpacity, const int spwId)
 {
   int nchan(-1);
   try {
-    if (pRefractiveIndexProfile) {
+    //if (pRefractiveIndexProfile) {
+    if (pSkyStatus) {
       nchan = pSpectralGrid->getNumChan(spwId);
       (wetOpacity.value).resize(nchan);
       wetOpacity.units="mm-1";
       for (int i = 0; i < nchan; i++) {
 	(wetOpacity.value)[i] =
-	  pRefractiveIndexProfile->getWetOpacity(spwId,i).get(wetOpacity.units);
+	  //pRefractiveIndexProfile->getWetOpacity(spwId,i).get(wetOpacity.units);
+          pSkyStatus->getWetOpacity(spwId,i).get(wetOpacity.units);
       }
     } else {
       *itsLog << LogIO::WARN

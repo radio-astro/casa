@@ -1558,8 +1558,8 @@ emptyMS(const Path& tableName, const Bool overwrite) {
     newMS.bindColumn(MeasurementSet::
 		     columnName(MeasurementSet::TIME_CENTROID), incrMan);
   }
-  //Experimental tiledShapeStMan
-  IPosition tileShape(3, 4, 128, 16);
+  // 1 MB tile size
+  IPosition tileShape(3, 4, 128, 256);
   // These columns contain the bulk of the data so save them in a tiled way
   {
     //TiledDataStMan dataMan(dataCol);
@@ -2334,11 +2334,10 @@ void  VLAFiller::addHypercubes(uInt nPol, uInt nChan) {
   if (addDataCube) {
     if (addSigmaCube) {
       itsTileId.define(sigmaTileId, static_cast<Int>(nPol));
-      //      uInt rowTiles = 378*128/nPol;
-      //Now using a row tile length of 378...need to make this
-      // dynamic if there is no autocorr...
-      uInt rowTiles=378;
-      if (rowTiles < 378) rowTiles = 378;
+      
+      // 1 MB tile size
+      uInt rowTiles = 131072 / nPol;
+      if (rowTiles < 1) rowTiles = 1;
       itsSigmaAcc.addHypercube(IPosition(2, nPol, 0), 
 			       IPosition(2, nPol, rowTiles),
 			       itsTileId);
@@ -2347,47 +2346,47 @@ void  VLAFiller::addHypercubes(uInt nPol, uInt nChan) {
     //  if (addImagingWeightCube)
     {
       itsTileId.define(imagingWeightTileId, static_cast<Int>(10*nChan));
-      const uInt chanTiles = (nChan+7)/8;
-      //      uInt rowTiles = 378*128/chanTiles;
-      uInt rowTiles=378;
-      if (rowTiles < 378) rowTiles = 378;
+      // 1 MB tile size
+      uInt rowTiles = 131072 / nChan;
+      if (rowTiles < 1) rowTiles = 1;
       itsImagingWeightAcc.addHypercube(IPosition(2, nChan, 0), 
-			       IPosition(2, chanTiles, rowTiles),
+			       IPosition(2, nChan, rowTiles),
 			       itsTileId);
       itsTileId.removeField(imagingWeightTileId);
     }
     
     itsTileId.define(dataTileId, static_cast<Int>(10*nChan + nPol));
-    const uInt chanTiles = (nChan+7)/8;
-    //    uInt rowTiles = 378*128/nPol/chanTiles;
-    uInt rowTiles=378;
-    if (rowTiles < 378) rowTiles = 378;
+    // 1 MB tile size
+    uInt rowTiles = 131072 / nChan / nPol;
+    if (rowTiles < 1) rowTiles = 1;
     itsDataAcc.addHypercube(IPosition(3, nPol, nChan, 0), 
-			    IPosition(3, nPol, chanTiles, rowTiles),
+			    IPosition(3, nPol, nChan, rowTiles),
 			    itsTileId);
 
     itsTileId.removeField(dataTileId);
  
     itsTileId.define(modDataTileId, static_cast<Int>(10*nChan + nPol));
     itsModDataAcc.addHypercube(IPosition(3, nPol, nChan, 0), 
-			       IPosition(3, nPol, chanTiles, rowTiles),
+			       IPosition(3, nPol, nChan, rowTiles),
 			       itsTileId);
     itsTileId.removeField(modDataTileId);
 
     itsTileId.define(corrDataTileId, static_cast<Int>(10*nChan + nPol));
     itsCorrDataAcc.addHypercube(IPosition(3, nPol, nChan, 0), 
-			       IPosition(3, nPol, chanTiles, rowTiles),
+			       IPosition(3, nPol, nChan, rowTiles),
 			       itsTileId);
     itsTileId.removeField(corrDataTileId);
     itsTileId.define(chanFlagTileId, static_cast<Int>(10*nChan + nPol));
     itsChanFlagAcc.addHypercube(IPosition(3, nPol, nChan, 0), 
-			       IPosition(3, nPol, chanTiles, rowTiles),
+			       IPosition(3, nPol, nChan, rowTiles),
 			       itsTileId);
     itsTileId.removeField(chanFlagTileId);
 
     itsTileId.define(flagTileId, static_cast<Int>(10*nChan + nPol));
+    rowTiles = 131072 / (nPol * nChan * nCat);
+    if (rowTiles < 1) rowTiles = 1;
     itsFlagAcc.addHypercube(IPosition(4, nPol, nChan, nCat, 0), 
-  			    IPosition(4, nPol, chanTiles, nCat, rowTiles),
+  			    IPosition(4, nPol, nChan, nCat, rowTiles),
   			    itsTileId);
     itsTileId.removeField(flagTileId);
     const uInt nCubes = itsDataShapes.nelements();

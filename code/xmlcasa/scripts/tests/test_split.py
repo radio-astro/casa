@@ -39,6 +39,60 @@ def check_eq(val, expval, tol=None):
     except ValueError:
         raise ValueError, "%r != %r" % (val, expval)
 
+def slurp_table(tabname):
+    """
+    Returns a dictionary containing the CASA table tabname.  The dictionary
+    is arranged like:
+
+    {'keywords': tb.getkeywords(),
+     'cols': {colname0, {'desc': tb.getcoldesc(colname0),
+                         'keywords': tb.getcolkeywords(colname0),
+                         'data': tb.getcol(colname0)},
+              colname1, {'desc': tb.getcoldesc(colname1),
+                             'keywords': tb.getcolkeywords(colname1),
+                         'data': tb.getcol(colname1)},
+              ...}}
+    """
+    tb.open(tabname)
+    retval = {'keywords': tb.getkeywords(),
+              'cols': {}}
+    cols = tb.colnames()
+    for col in cols:
+        entry = {'desc': tb.getcoldesc(col),
+                 'keywords': tb.getcolkeywords(col)}
+        if tb.isvarcol(col):
+            entry['data'] = tb.getvarcol(col)
+        else:
+            entry['data'] = tb.getcol(col)
+        retval['cols'][col] = entry
+    tb.close()
+    return retval
+    
+def compare_tables(tabname, exptabname, tol=None):
+    """
+    Raises a ValueError if the contents of tabname are not the same as those
+    of exptabname to within tol.
+    """
+    exptabdict = slurp_table(exptabname)
+    tabdict = slurp_table(tabname)
+
+    if set(tabdict['keywords']) != set(exptabdict['keywords']):
+        raise ValueError, tabname + ' and ' + exptabname + ' have different keywords'
+    if set(tabdict['cols'].keys()) != set(exptabdict['cols'].keys()):
+        raise ValueError, tabname + ' and ' + exptabname + ' have different columns'
+    for col, tabentry in tabdict['cols'].iteritems():
+        if set(tabentry['keywords']) != set(exptabdict['cols'][col]['keywords']):
+            raise ValueError, tabname + ' and ' + exptabname + ' have different keywords for column ' + col
+
+        # Check everything in the description except the data manager.
+        for thingy in tabentry['desc']:
+            if thingy not in ('dataManagerGroup', 'dataManagerType'):
+                if tabentry['desc'][thingy] != exptabdict['cols'][col]['desc'][thingy]:
+                    raise ValueError, thingy + ' differs in the descriptions of ' + col + ' in ' + tabname + ' and ' + exptabname
+                
+        check_eq(tabentry['data'], exptabdict['cols'][col]['data'])
+
+
 
 class SplitChecker(unittest.TestCase):
     """
@@ -373,8 +427,51 @@ class split_test_cst(unittest.TestCase):
                                       1, 0, 0, 0, 0, 0, 0,
                                       0, 0, 0, 0, 0, 0, 0,
                                       0, 0, 0, 0, 0, 0, 0]))
+        
+
+class split_test_state(unittest.TestCase):
+    """
+    Checks a simple copy of the STATE subtable.
+    """
+    # rename and make readonly when plotxy goes away.
+    inpms = 'plotxy/uid___X1eb_Xa30_X1.ms'
+    
+    outms = 'musthavestate.ms'
+
+    def setUp(self):
+        try:
+            shutil.rmtree(self.outms, ignore_errors=True)
+        
+            if not os.path.exists(self.inpms):
+                # Copying is technically unnecessary for split,
+                # but self.inpms is shared by other tests, so making
+                # it readonly might break them.
+                shutil.copytree(datapath + self.inpms, self.inpms)
+                
+                print "\n\tSplitting", self.inpms
+                print "\t  ...ignore any warnings about time-varying feeds..."
+            splitran = split(self.inpms, self.outms, datacolumn='corrected',
+                             field='', spw='', width=1,
+                             antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+        except Exception, e:
+            print "Error splitting", self.inpms, "to", self.outms
+            raise e
+
+    def tearDown(self):
+        shutil.rmtree(self.inpms, ignore_errors=True)
+        shutil.rmtree(self.outms, ignore_errors=True)
+
+    def test_state(self):
+        """
+        Was the STATE subtable copied?
+        """
+        compare_tables(self.outms + '/STATE', self.inpms + '/STATE')
+        
 
 def suite():
-    return [split_test_tav, split_test_cav, split_test_cst]        
+    return [split_test_tav, split_test_cav, split_test_cst, split_test_state]        
         
     

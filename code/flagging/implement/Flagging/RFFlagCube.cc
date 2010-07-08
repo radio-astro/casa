@@ -45,6 +45,10 @@ const Bool mdbg=False;
 const Bool verbose=False;
         
 RFCubeLattice<RFlagWord> RFFlagCube::flag; // global flag lattice
+Cube<Bool> RFFlagCube::in_flags;  //global flag array (kiss mode)
+int RFFlagCube::in_flags_time;
+bool RFFlagCube::in_flags_flushed;
+
 FlagMatrix RFFlagCube::flagrow;   
 Int RFFlagCube::pos_get_flag=-1,RFFlagCube::pos_set_flag=-1;
 Int RFFlagCube::maxmemuse=0;
@@ -89,7 +93,10 @@ RFFlagCube::RFFlagCube ( RFChunkStats &ch,Bool ignore,Bool reset,LogIO &sink )
 
 RFFlagCube::~RFFlagCube ()
 {
-  num_inst--;
+    in_flags.resize(0, 0, 0);
+    in_flags_time = -1;
+    in_flags_flushed = false;
+    num_inst--;
 }
 
 uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
@@ -101,9 +108,10 @@ uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
 }
 
 // creates flag cube for a given visibility chunk
-void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool is_selector, const String &name) 
+void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const String &name) 
 {
-    kiss = (nAgent == 1 && is_selector); /* Use a Cube<Bool> instead of the flag lattice in this case */
+    kiss = only_selector; /* Use a Cube<Bool> instead of the
+                             expensive flag lattice in this case */
 
     if (dbg) cout << "name=" << name << endl;
  
@@ -140,6 +148,7 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool is_selector, const S
                in the if conditions.
             */
             flag.shape().resize(1);
+            in_flags_time = -1;
         }
 	pos_get_flag = pos_set_flag = -1;
 
@@ -353,19 +362,23 @@ void RFFlagCube::advance( uInt it,Bool getFlags )
   return;
 }
 
-
 // Fills lattice with apriori flags (from VisBuffer in ChunkStats)
 void RFFlagCube::getMSFlags(uInt it)
 {
   // return if already filled at this iterator position
   if( !kiss ) {
-      if (flag.position() <= pos_get_flag )
+      if (pos_get_flag >= flag.position() )
           return;
       
       pos_get_flag = flag.position();
   }
   else {
       pos_get_flag = it;
+      if (in_flags_time == it) {
+          return;
+      }
+      in_flags_time = it;
+      in_flags_flushed = false;
   }
   
   FlagVector fl_row (flagrow.column(pos_get_flag));
@@ -408,22 +421,24 @@ void RFFlagCube::getMSFlags(uInt it)
 	throw AipsError(ss.str());
       }
 
+    Bool deleteIn, deleteFc;
+    Bool *inp = in_flags.getStorage(deleteIn);
+    const Bool *fcp = fc.getStorage(deleteFc);
+
     for( uInt i=0; i < fr.nelements(); i++ )
     {
       uInt ifr = chunk.ifrNum(i);
 
       if (fr(i)) {
-          for (uInt ichan = 0; ichan < num(CHAN); ichan++) {
-              for (uInt icorr = 0; icorr < num(CORR); icorr++) {
-                  in_flags(icorr, ichan, ifr) = 1;
-              }
+          unsigned n = num(CHAN)*num(CORR);
+          for (unsigned j = 0; j < n; j++) {
+              inp[j + ifr * n] = 1; 
           }
       }
       else {
-          for (uInt ichan = 0; ichan < num(CHAN); ichan++) {
-              for (uInt icorr = 0; icorr < num(CORR); icorr++) {
-                  in_flags(icorr, ichan, ifr) = fc(icorr, ichan, i);
-              }
+          unsigned n = num(CORR) * num(CHAN);
+          for (unsigned j = 0; j < n; j++) {
+              inp[j + n * ifr] = fcp[j + n * i];
           }
       }
 
@@ -466,6 +481,8 @@ void RFFlagCube::getMSFlags(uInt it)
           }
       }
     }
+    in_flags.putStorage(inp, deleteIn);
+    fc.freeStorage(fcp, deleteFc);
   }
 }
 
@@ -490,43 +507,67 @@ void RFFlagCube::setMSFlags(uInt itime)
       
       pos_set_flag = flag.position();
   }
+  else {
+      if (in_flags_flushed) {
+          return;
+      }
+      else {
+          in_flags_flushed = true;
+      }
+  }
 
   uInt nr = chunk.visBuf().nRow();
   Vector<Bool> out_flagrow( nr,False );
   Cube<Bool>   out_flagcube( num(CORR),num(CHAN),nr,False );
 
   chunk.nrfTime(itime) = 0;
-  /* 
-  chunk.nfChanIfr.set(0);
-  chunk.nfCorrIfr.set(0);
-  chunk.nfChanTime.set(0);
-  chunk.nfCorrTime.set(0);
-  chunk.nfChanCorr.set(0);
-  */
+
+  Bool deleteOut, deleteIn;
+  Bool *outp = out_flagcube.getStorage(deleteOut);
+  const Bool *inp = in_flags.getStorage(deleteIn);
+
+  Bool deleteNfChanIfr;
+  uInt *nfChanIfrp = chunk.nfChanIfr().getStorage(deleteNfChanIfr);
+
+  unsigned ncorr = num(CORR);
+  unsigned nchan = num(CHAN);
 
   for( uInt ir=0; ir<nr; ir++ )
   {
       uInt ifr = chunk.ifrNum(ir);
-      //F flag counter reset
-      //chunk.nrfIfr(ifr)=0;
-      chunk.nfIfrTime(ifr,itime)=0;
-      // (ncorr,nchan) matrix of output flags
+
+      chunk.nrfIfr(ifr) = 0;
 
       if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
       
       // Set data flags
-      for( uInt ich=0; ich<num(CHAN); ich++ ) {
+      unsigned n = nchan * ncorr;
+      unsigned iout = n*ir;
+      unsigned iin = n*ifr;
+      unsigned iChanIfr = nchan * ifr;
+      uInt &iNfIfrTime = chunk.nfIfrTime(ifr, itime);
+      iNfIfrTime = 0;
+      for( uInt ich=0; ich < nchan; ich++, iChanIfr++) {
+          nfChanIfrp[iChanIfr] = 0;
+      }
 
-	  chunk.nfChanIfr(ich, ifr) = 0;
+      iChanIfr = nchan * ifr;
+      for( uInt ich=0; ich < nchan; ich++, iChanIfr++) {
 
           if (kiss) {
 
-              for( uInt icorr = 0; icorr < num(CORR); icorr++) {
-                  if (out_flagcube(icorr, ich, ir) = 
-                      in_flags(icorr, ich, ifr)) {
-                      
-                      chunk.nfChanIfr(ich,ifr)++;
-                      chunk.nfIfrTime(ifr,itime)++;
+              if (ncorr == 1) {
+                  if (outp[iout++] = inp[iin++]) {
+                      nfChanIfrp[iChanIfr]++;
+                      iNfIfrTime++;
+                  }
+              }
+              else {
+                  for( uInt icorr = 0; icorr < ncorr; icorr++, iout++, iin++) {
+                      if (outp[iout] = inp[iin]) {
+                          nfChanIfrp[iChanIfr]++;
+                          iNfIfrTime++;
+                      }
                   }
               }
           } else {
@@ -579,7 +620,7 @@ void RFFlagCube::setMSFlags(uInt itime)
       // chunk.nf*
       // nrfIfr(ifr), nrfTime(itime), nfIfrTime(ifr,itime), nfChanIfr(ich,ifr)
 
-      if (chunk.nfIfrTime(ifr, itime) == num(CHAN)*num(CORR)) {
+      if (chunk.nfIfrTime(ifr, itime) == nchan * ncorr) {
 
           out_flagrow(ir) = True;
 
@@ -587,6 +628,11 @@ void RFFlagCube::setMSFlags(uInt itime)
           chunk.nrfTime(itime)++;
       }
   }
+
+  out_flagcube.putStorage(outp, deleteOut);
+  in_flags.freeStorage(inp, deleteIn);
+  chunk.nfChanIfr().putStorage(nfChanIfrp, deleteNfChanIfr);
+
   if(mdbg)
       {
           Int cnt1=0,cnt2=0;

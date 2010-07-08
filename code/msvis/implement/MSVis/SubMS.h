@@ -353,17 +353,21 @@ class SubMS
 
   //method that returns the selected ms (?! - but it's Boolean - RR)
   Bool makeSelection();
+
+  // (Sub)table fillers.
   Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillDDTables();
+  Bool fillDDTables();		// Includes spw and pol.
   Bool fillFieldTable();
   Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
   Bool copyAntenna();
   Bool copyFeed();
-  Bool copySource();
-  Bool copyObservation();
   Bool copyPointing();
+  Bool copyObservation();
+  Bool copySource();
+  Bool copyState();
   Bool copyWeather();
+
   //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillAccessoryMainCols();
 

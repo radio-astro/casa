@@ -591,12 +591,11 @@ void GBTBackendFiller::addCalSet(const IPosition &defaultTileShape,
 	    // Use a canonical tile shape of 128 kB size
 
 	    Int maxNchan = 1024;
-	    Int tileSize = maxNchan/10 + 1;
 	    Int nCorr = 2;
 	    // try to infer nCorr from table, if there is something there
 	    if (data->nrow() > 0 && data->isDefined(0)) {
 		nCorr = data->shape(0)(0);
-		dataTileShape = IPosition(3, nCorr, tileSize, max(1, 4096/nCorr/tileSize));
+		dataTileShape = IPosition(3, nCorr, maxNchan, max(1, 131072/nCorr/maxNchan));
 	    }
 	}
     };

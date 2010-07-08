@@ -564,13 +564,20 @@ class cleanhelper:
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
             #make image a mask image i.e 1 and 0 only
+            #   make a copy of mask image again since 
+            #   the image name may contain / , +, - which may causes
+            #   problem in evaluating iif.
+            self.copymaskimage(outputmask, shp, '__temp_mask')
             ia.open(outputmask)
             ###getchunk is a mem hog
             #arr=ia.getchunk()
             #arr[arr>0.01]=1
             #ia.putchunk(arr)
-            ia.calc(pixels='iif('+outputmask.replace('/','\/')+'>0.01, 1, 0)')
+            #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
+            #ia.calc(pixels=inpix)
+            ia.calc(pixels="iif(__temp_mask>0.01, 1, 0)")
             ia.close()
+            ia.removefile('__temp_mask')
         #pdb.set_trace()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):

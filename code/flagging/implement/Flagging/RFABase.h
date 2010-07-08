@@ -171,12 +171,14 @@ virtual void endRows(uInt /* itime */) {};
   virtual void finalizeIter(uInt /* iter */) {};
 
   virtual void setNAgent(uInt n) { nAgent = n; };
+  virtual void setOnlySelector(bool only_sel) { only_selector = only_sel; };
 
 protected:
   uInt nAgent;
   RFChunkStats &chunk;
   Record params;
   String myname;
+  bool only_selector;  //Do only RFASelector agents exist?
 
   uInt num (StatEnums which) { return chunk.num(which); };
 

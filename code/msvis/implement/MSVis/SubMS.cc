@@ -612,7 +612,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
         return False;
       }
       mscIn_p=new ROMSColumns(mssel_p);
-      // Note again the verifyColumns() a few lines back that stops setupMS()
+      // Note again the parseColumnNames() a few lines back that stops setupMS()
       // from being called if the MS doesn't have the requested columns.
       MeasurementSet* outpointer=0;
 
@@ -751,7 +751,6 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
   
 Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 {
-  //LogIO os(LogOrigin("SubMS", "makeSubMS()"));
   LogIO os(LogOrigin("SubMS", "fillAllTables()"));
   Bool success = true;
     
@@ -784,6 +783,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     
   copyObservation();
   copyPointing();
+  copyState();
   copyWeather();
     
   sameShape_p = areDataShapesConstant();
@@ -965,7 +965,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                  const Vector<Int>& tshape)
   {
     if(tshape.nelements() != 3)
-      throw(AipsError("TileShape has to have 3 elememts ") );
+      throw(AipsError("TileShape has to have 3 elements ") );
+
+    // This is more to shush a compiler warning than to warn users.
+    LogIO os(LogOrigin("SubMS", "setupMS()"));
+    if(tshape[0] != nCorr)
+      os << LogIO::DEBUG1
+	 << "Warning: using " << tshape[0] << " from the tileshape instead of "
+	 << nCorr << " for the number of correlations."
+	 << LogIO::POST;
+    if(tshape[1] != nchan)
+      os << LogIO::DEBUG1
+	 << "Warning: using " << tshape[1] << " from the tileshape instead of "
+	 << nchan << " for the number of channels."
+	 << LogIO::POST;
 
     // Choose an appropriate tileshape
     //IPosition dataShape(2,nCorr,nchan);
@@ -1566,10 +1579,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     }
   }
 
-  //
-  // This method is called only in makeSubMS().  It should really be called in
-  // setupMS.  But that has been made into a static method and verifyColumns()
-  // cannot be called there.
+  // This method is currently not called in SubMS.  It should really be called
+  // in setupMS, but that has been made into a static method and it cannot be
+  // called there.  The ms argument is unused, but it is there to preserve the
+  // signature, even though it causes a compiler warning.
   //
   void SubMS::verifyColumns(const MeasurementSet& ms,
                             const Vector<MS::PredefinedColumns>& colNames)
@@ -5328,6 +5341,14 @@ Bool SubMS::fillAccessoryMainCols(){
   Bool SubMS::getDataColumn(ROArrayColumn<Float>& data,
                             const MS::PredefinedColumns colName)
   {
+    LogIO os(LogOrigin("SubMS", "getDataColumn()"));
+
+    if(colName != MS::FLOAT_DATA)
+      os << LogIO::WARN
+	 << "Using FLOAT_DATA (because it has type Float) instead of the requested "
+	 << colName
+	 << LogIO::POST;
+    
     data.reference(mscIn_p->floatData());
     return True;
   }
@@ -5355,10 +5376,23 @@ Bool SubMS::fillAccessoryMainCols(){
                             const MS::PredefinedColumns colName,
                             const Bool writeToDataCol)
   {
-    if(colName == MS::FLOAT_DATA)
+    LogIO os(LogOrigin("SubMS", "putDataColumn()"));
+
+    if(writeToDataCol)
+      os << LogIO::NORMAL
+	 << "Writing to FLOAT_DATA instead of DATA."
+	 << LogIO::POST;
+
+    if(colName == MS::FLOAT_DATA){
       msc.floatData().putColumn(data);
-    else
+    }
+    else{
+      os << LogIO::SEVERE
+	 << "Float data cannot be written to "
+	 << MS::columnName(colName)
+	 << LogIO::POST;
       return false;
+    }
     return true;
   }
 
@@ -5385,10 +5419,23 @@ Bool SubMS::fillAccessoryMainCols(){
                             const MS::PredefinedColumns colName,
                             const Bool writeToDataCol)
   {
-    if(colName == MS::FLOAT_DATA)
+    LogIO os(LogOrigin("SubMS", "putDataColumn()"));
+
+    if(writeToDataCol)
+      os << LogIO::NORMAL
+	 << "Writing to FLOAT_DATA instead of DATA."
+	 << LogIO::POST;
+
+    if(colName == MS::FLOAT_DATA){
       msc.floatData().putColumn(data);
-    else
+    }
+    else{
+      os << LogIO::SEVERE
+	 << "Float data cannot be written to "
+	 << MS::columnName(colName)
+	 << LogIO::POST;
       return false;
+    }
     return true;
   }
 
@@ -5667,10 +5714,32 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     return True;
   }
   
+Bool SubMS::copyState()
+{  
+  // STATE is allowed to not exist, even though it is not optional in the MS
+  // def'n.  For one thing, split dropped it for quite a while.
+  if(Table::isReadable(mssel_p.stateTableName())){
+    LogIO os(LogOrigin("SubMS", "copyState()"));
+    const MSState& oldState = mssel_p.state();
+
+    if(oldState.nrow() > 0){
+      MSState& newState = msOut_p.state();
+      const ROMSStateColumns oldStateCols(oldState);
+      MSStateColumns newStateCols(newState);
+
+      if(stateRemapper_p.nelements() < 1)
+	make_map(mscIn_p->stateId().getColumn(), stateRemapper_p);
+
+      for(uInt outrn = 0; outrn < stateRemapper_p.nelements(); ++outrn)
+	TableCopy::copyRows(newState, oldState, outrn, stateRemapper_p[outrn], 1);
+    }
+  }
+  return True;
+}
+  
   Bool SubMS::copyPointing(){
     //Pointing is allowed to not exist
-    Bool pointExists=Table::isReadable(mssel_p.pointingTableName());
-    if(pointExists){
+    if(Table::isReadable(mssel_p.pointingTableName())){
       //Wconst Table oldPoint(mssel_p.pointingTableName(), Table::Old);
       const MSPointing& oldPoint = mssel_p.pointing();
 
@@ -6290,10 +6359,10 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       const Vector<Int>& arrayIDs = ignore_array ? 
                                     zeroes : mscIn_p->arrayId().getColumn();
 
-      const Vector<Int>& scan = ignore_array ? zeroes :
+      const Vector<Int>& scan = ignore_scan ? zeroes :
                                 mscIn_p->scanNumber().getColumn();
 
-      const Vector<Int>& state = ignore_array ? zeroes :
+      const Vector<Int>& state = ignore_state ? zeroes :
                                  mscIn_p->stateId().getColumn();
 
       const Vector<Bool>& rowFlag = mscIn_p->flagRow().getColumn();
@@ -6316,8 +6385,8 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
                                              // used.
       if(ignore_state)
         stateRemapper_p.resize(1);         // 0 -> 0
-      else
-        make_map(state,    stateRemapper_p);
+      else if(stateRemapper_p.nelements() < 1)
+	make_map(state,    stateRemapper_p);
 
       Int numBin = 0;
 
