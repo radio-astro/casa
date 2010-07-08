@@ -1379,7 +1379,7 @@ void VisCalSolver::getErrors() {
 
   // Number of *REAL* dof
   //  Int nDOF=2*(nWt()-ntrue(parOK()));  // !!!! this is zero for 3 antennas!
-  Int nDOF=max(2*(nWt()-ntrue(parOK())),1);
+  Int nDOF=max(2*(nWt()-ntrue(parOK())), 1u);
 
   Double k2=chiSq()/Double(nDOF);
 
