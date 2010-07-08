@@ -608,6 +608,135 @@ that very often can be quite expensive.
 
 </method>
 
+   <method type="function" name="create">
+   <shortdescription>create a new table</shortdescription>
+   
+<description>
+	Create a new \casa\ Table.
+
+Most of the time you just need to specify the table's name and a description of
+its format.
+
+A table can be shared by multiple processes by using the appropriate
+locking options. The possible options are:
+\\- auto: let the system take care of locking. At regular time
+intervals these autolocks are released to give other processes the
+opportunity to access the table. <!-- The aipsrc variable
+\\\texttt{table.relinquish.reqautolocks.interval} defines the number
+of seconds between releasing autolocks on tables needed in another process.
+\\\texttt{table.relinquish.allautolocks.interval} defines the number
+of seconds between releasing all autolocks.-->
+\\- autonoread: as auto, but no read locking is needed. This must be
+used with care, because it means that reading can be done while
+the table tool is not synchronized with the table file (as is
+normally done when a lock is acquired). The function \texttt{resync}
+can be used to explicitly synchronize the table tool
+\\- user: the user takes care by explicit calls to lock and unlock
+\\- usernoread: as user and the no readlocking behaviour of autonoread.
+\\- permanent: use a permanent lock; the constructor fails when the table is
+already in use in another process
+\\- permanentwait: as above, but wait until the other process
+releases its lock
+\\- default: this is the default option.
+If the given table is already open, the locking option in use is not
+changed. Otherwise it reverts to auto.
+\\When auto locking is used, it is possible to give a record containing
+the fields option, interval, and/or maxwait. In this way advanced
+users have full control over the locking options. In practice this is
+hardly ever needed.
+
+
+</description>
+<input>
+  <param type="string" name="tablename">
+    <value></value>
+  </param>
+  <param type="any" name="tabledesc">
+    <description>description of the table's format</description>
+    <any type="record"/>
+    <value></value>
+  </param>
+  <param type="any" name="lockoptions">
+    <description>locking to be used</description>
+    <any type="record"/>
+    <value>default</value>
+  </param>
+  <param type="string" name="endianformat">
+    <value></value>
+  </param>
+  <param type="string" name="memtype">
+    <value></value>
+  </param>
+  <param type="int" name="nrow">
+    <value>0</value>
+  </param>
+  <param type="any" name="dminfo">
+    <description>Data Manager information</description>
+    <any type="record"/>
+    <value></value>
+  </param>
+</input>
+<returns type="bool"/>
+
+<example>
+\begin{verbatim}
+
+  # First let's get sample descriptions of a table and its data managers.
+  import os, shutil
+
+  def get_tabledesc_and_dminfo(tabname="3C273XC1.MS"):
+      made_copy = False
+
+      # Fetch new table if tabname not present
+      if not os.path.isdir(tabname):
+          # Get path to CASA root directory by stripping name from '$CASAPATH'
+          pathname = os.environ.get("CASAPATH").split()[0]
+
+          # There should be some data here
+          fitsdata = pathname + "/data/demo/3C273XC1.fits"
+          tabname = "3C273XC1.MS"
+
+          ms.fromfits(tabname, fitsdata)
+          ms.close()
+          made_copy = True
+
+      tb.open(tabname)
+      tabdesc = tb.getdesc()
+      dminfo  = tb.getdminfo()
+      print tabname, "has", tb.nrows(), "rows."
+      tb.close()
+
+      # Clean up
+      if made_copy:
+          shutil.rmtree(tabname)
+
+      return tabdesc, dminfo
+
+  tabdesc, dmi = get_tabledesc_and_dminfo()
+  tabdesc  # prints tabdesc
+  dmi      # prints dmi
+
+  # You could alter tabdesc and/or dmi at this point.
+
+  # Unnecessary, but just to show there is nothing up my sleeve...
+  tb.close()
+
+  tb.create("myempty.ms", tabdesc, dminfo=dmi)
+  tb.nrows()     # 0L
+  tb.addrows(5)  # Add the rows _before_ filling the columns.
+  tb.putcol('ARRAY_ID', numpy.array([0 for i in range(5)]))
+  tb.putcol('ANTENNA1', numpy.array(range(5)))
+  tb.putcol('ANTENNA2', numpy.array(range(1,6)))
+  tb.browse()    # Still mostly, but not completely, empty.
+  tb.close()
+\end{verbatim}
+
+This creates a CASA table using a description of a table and its data managers from an existing MS.
+
+</example>
+
+</method>
+
  
    <method type="function" name="flush">
    <shortdescription>flush the current contents to disk</shortdescription>

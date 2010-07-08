@@ -48,6 +48,14 @@ class table
 
     bool fromASDM(const std::string& tablename, const std::string& xmlfile);
 
+    bool create(const std::string& tablename,
+                const ::casac::record& tabledesc,
+                const ::casac::record& lockoptions = ::casac::initialize_record("default"),
+                const std::string& endianformat = "", // "" == "aipsrc"
+                const std::string& memtype = "",      // "" -> Table::Plain
+                int nrow = 0,
+                const ::casac::record& dminfo = ::casac::initialize_record(""));
+
     bool open(const std::string& tablename = "", const ::casac::record& lockoptions = ::casac::initialize_record("default"), const bool nomodify = true);
 
     bool flush();

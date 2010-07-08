@@ -100,6 +100,42 @@ table::open(const std::string& tablename, const ::casac::record& lockoptions, co
 }
 
 bool
+table::create(const std::string& tablename, const ::casac::record& tabledesc,
+              const ::casac::record& lockoptions,
+              const std::string& endianformat, // "" == "aipsrc", "local",
+                                               // "little", or "big".
+	      const std::string& memtype,      // "memory" -> Table::Memory,
+                                               // anything else -> Table::Plain.
+	      int nrow,                        // 0 seems like a good default.
+  	      const ::casac::record& dminfo)
+{
+ Bool rstat(False);
+ try{
+   Record *tlock = toRecord(lockoptions);
+   Record *tdesc = toRecord(tabledesc);
+   Record *dmI   = toRecord(dminfo);
+
+   if(itsTable)
+     close();
+   itsTable = new casa::TableProxy(String(tablename), *tlock,
+                                   String(endianformat), String(memtype),
+                                   nrow, *tdesc, *dmI);
+   delete tlock;
+   delete tdesc;
+   delete dmI;
+   
+   rstat = True;
+ }
+ catch (AipsError x) {
+   *itsLog << LogOrigin("create", name())
+           << LogIO::SEVERE
+           << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;  
+}
+
+bool
 table::flush()
 {
  Bool rstat(False);
@@ -925,16 +961,18 @@ bool
 table::addcols(const ::casac::record& desc, const ::casac::record& dminfo)
 {
  Bool rstat(False);
+ *itsLog << LogOrigin("addcols", name());
+ 
  try {
 	 if(itsTable){
 		 Record *tdesc = toRecord(desc);
 		 Record *tdminfo = toRecord(dminfo);
-		 itsTable->addColumns(*tdesc, *tdminfo, False);
+		 itsTable->addColumns(*tdesc, *tdminfo);
 		 delete tdesc;
 		 delete tdminfo;
 		 rstat = True;
 	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+           *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
