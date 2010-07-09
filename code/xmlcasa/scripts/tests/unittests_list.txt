@@ -9,6 +9,7 @@
 test_boxit                      dmehring@nrao.edu
 test_clearstat                  scastro@eso.org
 test_clean                      scastro@eso.org
+test_componentlist              dmehring@nrao.edu
 test_concat                     dpetry@eso.org
 test_csvclean                   scastro@eso.org
 test_exportasdm                 dpetry@eso.org
@@ -26,6 +27,7 @@ test_importoldasdm              dpetry@eso.org
 test_imregrid                   jmlarsen@eso.org
 test_imsmooth                   dmehring@nrao.edu
 test_imstat                     dmehring@nrao.edu
+test_imtrans                    dmehring@nrao.edu
 test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
 test_listvis                    scastro@eso.org
