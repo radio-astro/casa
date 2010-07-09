@@ -929,9 +929,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       Vector<Double> freqs;
       if(imageStep_p==0)
 	imageStep_p=1;
-      Int nsubchans=
-	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p)+1;
-      if((nsubchans >0) && (imageNchan_p>nsubchans)) imageNchan_p=nsubchans;
+//	TT: commented these out otherwise the case for multiple MSes would not work
+//	Int nsubchans=
+//	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p)+1;
+//      if((nsubchans >0) && (imageNchan_p>nsubchans)) imageNchan_p=nsubchans;
 
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Image spectral coordinate: "<< imageNchan_p
