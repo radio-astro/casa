@@ -31,7 +31,7 @@
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
-#include <xmlcasa/ms/ms_cmpt.h>
+#include <ms_cmpt.h>
 #include <xmlcasa/ms/Statistics.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>

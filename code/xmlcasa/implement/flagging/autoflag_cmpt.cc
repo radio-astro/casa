@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/flagging/autoflag_cmpt.h>
+#include <autoflag_cmpt.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
 #include <ms/MeasurementSets/MeasurementSet.h>

@@ -10,7 +10,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/synthesis/calibrater_cmpt.h>
+#include <calibrater_cmpt.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
 #include <ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>

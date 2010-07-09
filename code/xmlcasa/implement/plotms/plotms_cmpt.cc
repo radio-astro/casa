@@ -24,10 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <xmlcasa/plotms/plotms_cmpt.h>
+#include <plotms_cmpt.h>
 
 #include <xmlcasa/StdCasa/CasacSupport.h>
-#include <xmlcasa/utils/dbus_cmpt.h>
+#include <dbus_cmpt.h>
 
 #include <unistd.h>
 

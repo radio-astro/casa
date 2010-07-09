@@ -37,7 +37,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/components/componentlist_cmpt.h>
+#include <componentlist_cmpt.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/SpectralModel.h>

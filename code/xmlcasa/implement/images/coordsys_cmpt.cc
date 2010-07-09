@@ -29,7 +29,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
-#include <xmlcasa/images/coordsys_cmpt.h>
+#include <coordsys_cmpt.h>
 #include <measures/Measures/MCFrequency.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MeasTable.h>

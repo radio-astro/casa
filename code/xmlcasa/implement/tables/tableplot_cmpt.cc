@@ -14,7 +14,7 @@
 #include <string.h>
 #include <cmath>
 #include <CCM_Python/PySub.h>
-#include <xmlcasa/tables/tableplot_cmpt.h>
+#include <tableplot_cmpt.h>
 #include <casa/aips.h>
 #include <tableplot/TablePlot/TablePlot.h>
 

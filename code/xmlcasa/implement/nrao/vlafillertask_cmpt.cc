@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/nrao/vlafillertask_cmpt.h>
+#include <vlafillertask_cmpt.h>
 
 #include <nrao/VLA/VLAFiller.h>
 #include <nrao/VLA/VLAFilterSet.h>

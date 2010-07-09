@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/images/imagepol_cmpt.h>
+#include <imagepol_cmpt.h>
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>

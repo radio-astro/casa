@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/tables/tableiterator_cmpt.h>
+#include <tableiterator_cmpt.h>
 #include <casa/aips.h>
 
 using namespace std;

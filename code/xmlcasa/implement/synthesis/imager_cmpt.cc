@@ -26,8 +26,8 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>
-#include <xmlcasa/synthesis/imager_cmpt.h>
-#include <xmlcasa/images/image_cmpt.h>
+#include <imager_cmpt.h>
+#include <image_cmpt.h>
 #include <casa/System/PGPlotterNull.h>
 #include <graphics/Graphics/PGPlotterLocal.h>
 

@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <xmlcasa/casa/logsink_cmpt.h>
+#include <logsink_cmpt.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogFilter.h>
 #include <xmlcasa/casa/TSLogSink.h>

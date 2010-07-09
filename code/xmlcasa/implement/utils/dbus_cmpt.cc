@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <xmlcasa/utils/dbus_cmpt.h>
+#include <dbus_cmpt.h>
 
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>

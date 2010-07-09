@@ -31,7 +31,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/Logging/LogIO.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
-#include <xmlcasa/synthesis/calibrater_cmpt.h>
+#include <calibrater_cmpt.h>
 
 // This test program uses a MeasurementSet which can be created from
 // the fits dataset in '/aips++/data/nrao/VLA/ngc5921.fits'.  For

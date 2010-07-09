@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <sys/wait.h>
-#include <xmlcasa/images/image_cmpt.h>
+#include <image_cmpt.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayUtil.h>

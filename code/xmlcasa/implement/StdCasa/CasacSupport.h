@@ -8,7 +8,7 @@
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <measures/Measures/MEpoch.h>
-#include <xmlcasa/Quantity.h>
+#include <casac/Quantity.h>
 #include <xmlcasa/record.h>
 
 // Conversions utilities

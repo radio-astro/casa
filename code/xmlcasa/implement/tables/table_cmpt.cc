@@ -12,7 +12,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/tables/table_cmpt.h>
+#include <table_cmpt.h>
 #include <casa/aips.h>
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/MemoryStMan.h>
