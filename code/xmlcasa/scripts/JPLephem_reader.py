@@ -9,16 +9,19 @@ def readJPLephem(fmfile):
     """
     retdict = {}
     casalog.origin('readJPLephem')
+
+    # Try opening fmfile now, because otherwise there's no point continuing.
     try:
         ephem = open(fmfile)
     except IOError:
         casalog.post("Could not open ephemeris file " + fmfile,
                      priority="SEVERE")
         return {}
-    else:
-        fmlines = ephem.readlines()
-        ephem.close()
 
+    # Setup the regexps.
+
+    # Headers (one time only things)
+    
     # Dictionary of quantity label: regexp pattern pairs that will be searched
     # for once.  The matching quantity will go in retdict[label].  Only a
     # single quantity (group) will be retrieved per line.
@@ -34,36 +37,43 @@ def readJPLephem(fmfile):
     for hk in headers:
         headers[hk] = re.compile(headers[hk])
 
-    # need date, r (heliocentric distance), and delta (geocentric distance).
+    # Data ("the rows of the table")
+    
+    # need date, r (heliocentric distance), delta (geocentric distance), and phang (phase angle).
     # (Could use the "dot" time derivatives for Doppler shifting, but it's
     # likely unnecessary.)
     # Use named groups!
     #  Date__(UT)__HR:MN     R.A.___(ICRF/J2000.0)___DEC Ob-lon Ob-lat Sl-lon Sl-lat   NP.ang   NP.dist               r        rdot            delta      deldot    S-T-O   L_s
     #  2010-May-01 00:00     09 01 43.1966 +19 04 28.673 286.52  18.22 246.99  25.34 358.6230      3.44  1.661167637023  -0.5303431 1.28664311447968  15.7195833  37.3033   84.50
-    datepat   = r'^\s*(?P<date>\d+-\w+-\d+ \d+:\d+)'
-    radecpat  = r'\s+\d+ \d+ [0-9.]+ [-+ ]?\d+ \d+ [0-9.]+'
-    lonlatpat = r'\s+[0-9.]+\s+[-+]?[0-9.]+'
-    rpat      = r'\s+(?P<r>[0-9.]+)'
-    rdotpat   = r'\s+[-0-9.]+'
-    deltapat  = r'\s+(?P<delta>[0-9.]+)'
+    colpats = {}              # Patterns for things that will be stored.
+    colpats['date'] = r'^\s*(?P<date>\d+-\w+-\d+ \d+:\d+)'
+    radecpat        = r'\s+\d+ \d+ [0-9.]+ [-+ ]?\d+ \d+ [0-9.]+'
+    lonlatpat       = r'\s+[0-9.]+\s+[-+]?[0-9.]+'
+    colpats['r']    = r'\s+(?P<r>[0-9.]+)'
+    rdotpat          = r'\s+[-0-9.]+'
+    colpats['delta'] = r'\s+(?P<delta>[0-9.]+)'
     deltadotpat = rdotpat
-    phangpat  = r'\s+(?P<phang>[0-9.]+)'
-    datapat = re.compile(datepat + radecpat
+    colpats['phang'] = r'\s+(?P<phang>[0-9.]+)'
+    datapat = re.compile(colpats['date'] + radecpat
                          + lonlatpat             # Ob
                          + lonlatpat             # Sl
                          + lonlatpat             # NP
-                         + rpat + rdotpat
-                         + deltapat + deltadotpat
-                         + phangpat)
-    
-    stoppat = r'^Column meaning:\s*$'
+                         + colpats['r'] + rdotpat
+                         + colpats['delta'] + deltadotpat
+                         + colpats['phang'])
 
-    retdict['data'] = []
-    for line in fmlines:
+    stoppat = r'^Column meaning:\s*$'  # Signifies the end of data.
+
+    # Read fmfile into retdict.
+    retdict['data'] = {}
+    for col in colpats:
+        retdict['data'][col] = []
+    for line in ephem:
         if retdict.has_key('isOK'):
             matchobj = re.search(datapat, line)
             if matchobj:
-                retdict['data'].append(matchobj.groupdict())
+                for col in matchobj.groupdict():
+                    retdict['data'][col].append(matchobj.groupdict()[col])
             elif re.match(stoppat, line):
                 break
         else:
@@ -77,12 +87,46 @@ def readJPLephem(fmfile):
                         retdict[hk] = matchobj.group(1) # 0 is the whole line
                         #print "found", retdict[hk]
                         break
-    retdict['earliest'] = datestr_to_s(retdict['data'][0]['date'])
-    retdict['latest'] = datestr_to_s(retdict['data'][-1]['date'])
+    ephem.close()
+
+    # Convert numerical strings into actual numbers.
+    retdict['earliest'] = datestr_to_epoch(retdict['data']['date'][0])
+    retdict['latest'] = datestr_to_epoch(retdict['data']['date'][-1])
+
+    for hk in ['meanrad', 'T_mean']:
+        retdict[hk] = float(retdict[hk])
+    retdict['data']['date'] = datestrs_to_epochs(retdict['data']['date'])
+    for dk in ['r', 'delta', 'phang']:
+        retdict['data'][dk] = [float(s) for s in retdict['data'][dk]]
+    
     return retdict
 
-def datestr_to_s(datestr):
+def datestr_to_epoch(datestr):
     """
-    Given a UT date like "2010-May-01 00:00", returns en epoch measure.
+    Given a UT date like "2010-May-01 00:00", returns an epoch measure.
     """
     return me.epoch(rf='UT', v0=qa.totime(datestr))
+
+def datestrs_to_epochs(datestrlist):
+    """
+    Like datestr_to_epoch, but more so.  All of the date strings must have the
+    same reference frame (i.e. UT).
+    """
+    timeq = {}
+    # Do first conversion to get unit.
+    firsttime = qa.totime(datestrlist[0])
+    timeq['unit'] = firsttime['unit']
+    timeq['value'] = [firsttime['value']]
+    for i in xrange(1, len(datestrlist)):
+        timeq['value'].append(qa.totime(datestrlist[i])['value'])
+
+    # me.epoch doesn't take array values, so make a vector epoch measure manually.
+    #return me.epoch(rf='UT', v0=timeq)
+    return {'m0': timeq, 'refer': 'UT1', 'type': 'epoch'}
+
+def ephem_dict_to_table(fmdict, tablepath):
+    """
+    Converts a dictionary from readJPLephem() to a CASA table, and attempts to
+    save it to tablepath.  Returns whether or not it was successful.
+    """
+    
