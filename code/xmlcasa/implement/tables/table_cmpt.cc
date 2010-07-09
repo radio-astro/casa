@@ -967,7 +967,7 @@ table::addcols(const ::casac::record& desc, const ::casac::record& dminfo)
 	 if(itsTable){
 		 Record *tdesc = toRecord(desc);
 		 Record *tdminfo = toRecord(dminfo);
-		 itsTable->addColumns(*tdesc, *tdminfo);
+		 itsTable->addColumns(*tdesc, *tdminfo, False);
 		 delete tdesc;
 		 delete tdminfo;
 		 rstat = True;
