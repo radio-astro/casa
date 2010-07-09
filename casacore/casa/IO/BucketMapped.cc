@@ -30,6 +30,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <cstring>   //# for memset
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -56,11 +57,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void BucketMapped::doExtend (uInt)
   {
-    // Extend the file by writing the last byte.
-    char ch=0;
-    itsFile->mappedFile()->seek (itsStartOffset + 
-                                 Int64(itsNewNrOfBuckets)*itsBucketSize - 1);
-    itsFile->mappedFile()->write (1, &ch);
+    // Extend the file.
+    // Earlier versions of this function used to write only the
+    // very last byte of the extended file. But that method was
+    // found to severely degrade the performance of the following 
+    // memory mapping on OS X 10.5 and OS X 10.6 (not on Linux).
+    itsFile->mappedFile()->seek(itsStartOffset + 
+				Int64(itsNewNrOfBuckets - 1)*itsBucketSize);
+    
+    uInt n = itsNewNrOfBuckets - itsCurNrOfBuckets;
+    std::auto_ptr<char> ch(new char[itsBucketSize * n]());
+    itsFile->mappedFile()->write(itsBucketSize, ch.get());
   }
 
   const char* BucketMapped::getBucket (uInt bucketNr)
