@@ -640,7 +640,7 @@ namespace casa {
       vector<AxisName> bpLagsAxes;
       bpLagsAxes.push_back(AxisNameMod::SPP); // ******
       SDMDataObject::ZeroLagsBinaryPart bpZeroLags(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FXF); // ALMA default
-      if(telName_p != "ALMA"){
+      if(telName_p != "ALMA" && telName_p != "OSF"){
 	if(telName_p == "ACA" || telName_p == "VLBA" || telName_p == "EVLA"){
 	  bpZeroLags = SDMDataObject::ZeroLagsBinaryPart(bpLagsSize, bpLagsAxes, CorrelatorTypeMod::FX);	  
 	}
@@ -1366,6 +1366,11 @@ namespace casa {
 	  w.push_back(PolarizationTypeMod::Y);
 	  w.push_back(PolarizationTypeMod::L);
 	  break;
+	case StokesParameterMod::I:
+	  os << LogIO::NORMAL << "Note: Stokes I (probably WVR data) stored with corr. types XX." << LogIO::POST;
+	  w.push_back(PolarizationTypeMod::X);
+	  w.push_back(PolarizationTypeMod::X);
+	  break;
 	default:
 	  os << LogIO::SEVERE << "Cannot store correlation product for stokes parameter " << CStokesParameter::name(corrTypeV[i]) << LogIO::POST;
 	  rstat = False;
@@ -1433,7 +1438,7 @@ namespace casa {
     filterMode.push_back(FilterModeMod::UNDEFINED);
 
     CorrelatorNameMod::CorrelatorName correlatorName = CorrelatorNameMod::ALMA_BASELINE; // the default
-    if(telName_p == "ALMA"){
+    if(telName_p == "ALMA" || telName_p == "OSF"){
       correlatorName = CorrelatorNameMod::ALMA_BASELINE; //???
     }
     else if(telName_p == "ACA"){
@@ -1476,7 +1481,7 @@ namespace casa {
 
     asdm::AlmaRadiometerRow* tR = 0;
 
-    //    tR = tT.newRow();
+    tR = tT.newRow();
 
     tT.add(tR);
 
@@ -1800,7 +1805,8 @@ namespace casa {
       string name = "unspec. frontend";
       ReceiverBandMod::ReceiverBand frequencyBand;
       ReceiverSidebandMod::ReceiverSideband receiverSideband;
-      setRecBands(SPWRows[irow]->getRefFreq(), frequencyBand, receiverSideband); 
+      double dummyF;
+      setRecBands(SPWRows[irow]->getRefFreq(), dummyF, frequencyBand, receiverSideband); 
       int numLO = 0; // no information in the MS ???
       vector<Frequency > freqLO;
       //freqLO.push_back(Frequency(1.)); // ???
@@ -1907,7 +1913,7 @@ namespace casa {
 
 	receptorAngleV.push_back( Angle( receptA[rnum].getValue( unitASDMAngle() ) ) );
 
-	if(telName_p=="ALMA" || telName_p=="ACA"){
+	if(telName_p=="ALMA" || telName_p=="ACA" || telName_p == "OSF"){
 	  receiverIdV.push_back(0); // always zero for ALMA
 	}
 	else{
@@ -1945,7 +1951,7 @@ namespace casa {
       tR = tT.newRow(antennaId, spwIdV[0], timeInterval, numReceptor, beamOffsetV, focusReferenceV, 
 		     polarizationTypesV, polResponseV, receptorAngleV, receiverIdV);
 
-      if(telName_p=="ALMA" || telName_p=="ACA"){
+      if(telName_p=="ALMA" || telName_p=="ACA" || telName_p == "OSF"){
 	tR->setFeedNum(1); // always 1 for ALMA
       }
       else{
@@ -2643,6 +2649,7 @@ namespace casa {
     vector< asdm::SwitchCycleRow * > swcRV = swcT.get();
     Tag swcTag = swcRV[0]->getSwitchCycleId(); // preliminary implementation: get tag from first (and only) row
     
+    uInt nMainTabRows = ms_p.nrow();	
     uInt nProcTabRows =  processor().nrow();
     Int dummyProcId = -1;
     if(nProcTabRows<1){ // processor table not filled, all data should have proc id == -1
@@ -2694,15 +2701,14 @@ namespace casa {
 	SpectralResolutionTypeMod::SpectralResolutionType spectralType = SpectralResolutionTypeMod::FULL_RESOLUTION;
 	
 	uInt jrow=0;
-	uInt nMainTabRows = ms_p.nrow();	
 	while(jrow<nMainTabRows){
 	  if(processorId()(jrow)==procId && dataDescId()(jrow)==iDDId){
 	    break;
 	  }
 	  jrow++;
 	}
-	if(jrow>=nMainTabRows){ // DDId or processor not found
-	  break;
+	if(jrow>=nMainTabRows){ // DDId-processor pair not found
+	  continue;
 	}
 	
 	if(!asdmDataDescriptionId_p.isDefined(iDDId)){
@@ -2934,7 +2940,7 @@ namespace casa {
 	  if(verbosity_p>1){
 	    cout << "Defined conf desc id for main table row " << mainTabRow << endl;
 	  }
-	  
+
 	  mainTabRow = irow-1;
 	  
 	} // end loop over remainder of timestamp in MS main table 
@@ -2970,7 +2976,7 @@ namespace casa {
     asdm::ExecBlockRow* tER = 0;
 
     SimpleOrderedMap <asdm::Tag, Double> execBlockStartTime(-1.); // map from SBSummaryID to current execblock start time
-    SimpleOrderedMap <asdm::Tag, Double> execBlockEndTime(-1.); // map from SBSummaryID to current execblock start time
+    SimpleOrderedMap <asdm::Tag, Double> execBlockEndTime(-1.); // map from SBSummaryID to current execblock end time
     SimpleOrderedMap <asdm::Tag, asdm::ConfigDescriptionRow*> correspConfigDescRow(0); // map from SBSummaryID to the 
                                                                              // ConfigDescription row of current exec block
     SimpleOrderedMap <asdm::Tag, Int> execBlockNumber(0); // map from SBSummaryID to current execblock number
@@ -2993,7 +2999,7 @@ namespace casa {
       }
       if (Xobservatory.length() == 0 || 
 	  !MeasTable::Observatory(Xpos,Xobservatory)) {
-	// unknown observatory, use the above calculated centroid position
+	// unknown observatory
 	os << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
 	   << "\". Determining observatory position from antenna 0." << LogIO::POST;
 	Xpos=MPosition::Convert(antenna().positionMeas()(0), MPosition::WGS84)();
@@ -3019,6 +3025,12 @@ namespace casa {
     Bool warned = False; // aux. var. to avoid warning repetition  
     uInt nMainTabRows = ms_p.nrow();
 
+    Int prevSBKey = -1;
+    double prevReprFreq = (163.+211.)/2.*1E9;
+    ReceiverBandMod::ReceiverBand prevFrequencyBand = ReceiverBandMod::ALMA_RB_05; 
+    ReceiverSidebandMod::ReceiverSideband prevRSB = ReceiverSidebandMod::TSB;
+    Int nProcTabRows =  processor().nrow();
+
     for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
 
       // Step 1: determine SBSummary ID and fill SBSummary table row
@@ -3029,19 +3041,91 @@ namespace casa {
       // parameters of the new SBSummary row
       Int ddId = dataDescId()(mainTabRow);
       Int spwId = dataDescription().spectralWindowId()(ddId);
-      Int sbKey = obsId+10000*spwId;
+      Int procId = processorId()(mainTabRow);
+
+      Bool isWVR = False;
+      if(procId>=0 && nProcTabRows>0 && procId < nProcTabRows){
+	if(processor().type()(procId) == "RADIOMETER"){
+	  //cout << "Found WVR data" << endl;
+	  isWVR = True;
+	}
+      }
+
+      double frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq()); 
+      //cout << "Freq " << frequency << endl;
+
+      ReceiverBandMod::ReceiverBand frequencyBand; // get from frequency
+      ReceiverSidebandMod::ReceiverSideband rSB;
+      double reprFreq = 0.;
+      Int bandNum = setRecBands(Frequency(frequency), reprFreq, frequencyBand, rSB); 
+      //cout << "Band " << bandNum << endl;
+
+      Int sbKey = obsId;
+      
+      if(bandNum >= 0){
+	if(isWVR){// special case: WVR data is observed in a (potentially) different band but no separate SB is created for it
+	  if(prevSBKey>=0){ // other data was encountered beforehand, there is already a proper SBKey from it
+	    sbKey = prevSBKey;
+	    reprFreq = prevReprFreq;
+	    frequencyBand = prevFrequencyBand;
+	    rSB = prevRSB;
+	  }
+	  else{ // we need to peek forward until non-WVR data is found
+	    Bool foundNonWVR = False;
+	    uInt mainTabRowB = 0;
+	    for(mainTabRowB=mainTabRow+1; mainTabRowB<nMainTabRows; mainTabRowB++){
+	      Int procIdB = processorId()(mainTabRowB);
+	      if(procIdB>=0 && nProcTabRows>0 && procIdB < nProcTabRows){
+		if(processor().type()(procIdB) == "RADIOMETER"){
+		  //cout << "Found WVR data again" << endl;
+		  continue;
+		}
+		foundNonWVR=True;
+		break;
+		
+	      }
+	      foundNonWVR=True;
+	      break;
+	    }// end for
+	    if(foundNonWVR){
+	      obsId = observationId()(mainTabRowB);
+	      ddId = dataDescId()(mainTabRowB);
+	      spwId = dataDescription().spectralWindowId()(ddId);
+	      frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq());
+	      bandNum = setRecBands(Frequency(frequency), reprFreq, frequencyBand, rSB);
+	      sbKey = obsId+10000*bandNum;
+	    }
+	    else{ // there is only WVR data
+	      sbKey = obsId+10000*bandNum;
+	    }
+	  }
+	}
+	else{ // this is normal non-WVR data
+	  sbKey = obsId+10000*bandNum; // an SB can only observe one band
+	}
+      }
+      else{
+	os << LogIO::WARN << "Could not determine ALMA frequency band for frequency " 
+	   << frequency << " Hz in MS Spectral Window " << spwId << ". Will try to continue." << LogIO::POST;
+	  sbKey = obsId+10000*bandNum; // an SB can only observe one band
+      }
+      // memorize freq band info
+      prevSBKey = sbKey;
+      prevReprFreq = reprFreq;
+      prevFrequencyBand = frequencyBand;
+      prevRSB = rSB;
+
+      //cout << "   SBKey " << sbKey << endl;
+      //cout << "   reprFreq " << reprFreq << endl;
+
       String sbsUid("uid://SAFFEC0C0/X1/X1");
       ostringstream oss;
       oss << sbKey;
       sbsUid = sbsUid + String(oss);
       EntityRef sbSummaryUID(sbsUid.c_str(), "", "ASDM", asdmVersion_p); // will be reset later when linking the ASDM to an APDM 
       EntityRef projectUID("uid://SAFFEC0C0/X1/X2", "", "ASDM", asdmVersion_p); // dto.
-      EntityRef obsUnitSetId("uid://SAFFEC0C0/X1/X3", "", "ASDM", asdmVersion_p); // dto. ???
-      double frequency = (spectralWindow().refFrequencyQuant()(spwId)).getValue(unitASDMFreq()); 
-      ReceiverBandMod::ReceiverBand frequencyBand; // get from frequency
-      ReceiverSidebandMod::ReceiverSideband rSB;
-      setRecBands(Frequency(frequency), frequencyBand, rSB); 
-      
+      EntityRef obsUnitSetId("uid://SAFFEC0C0/X1/X3", "", "ASDM", asdmVersion_p); // dto. 
+
       SBTypeMod::SBType sbType = SBTypeMod::OBSERVATORY; //???
       Vector< Quantum< Double > > tRange;
       tRange.reference(observation().timeRangeQuant()(obsId)); 
@@ -3053,14 +3137,7 @@ namespace casa {
 	     <<LogIO::POST;
 	  warned = True;
 	}
-	if((Int)observation().nrow()-1 == obsId){ // there is no next observation
-	  durationSecs = timestampEndSecs(nMainTabRows-1) - tRange[0].getValue("s");
-	}
-	else{
-	  Vector< Quantum< Double > > tRange2;
-	  tRange2.reference(observation().timeRangeQuant()(obsId+1)); 
-	  durationSecs = tRange2[0].getValue("s") - tRange[0].getValue("s");
-	}
+	durationSecs = timestampEndSecs(nMainTabRows-1) - timestampStartSecs(0);
       } 
       Interval sbDuration = ASDMInterval(durationSecs);
       int numberRepeats = 1;
@@ -3093,7 +3170,7 @@ namespace casa {
       vector< string > weatherConstraint;
       weatherConstraint.push_back("weather constraint t.b.d.");
       
-      tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, 
+      tR = tT.newRow(sbSummaryUID, projectUID, obsUnitSetId, reprFreq, frequencyBand, sbType, sbDuration, 
 		     centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, 
 		     scienceGoal, numWeatherConstraint, weatherConstraint);
       
@@ -3105,8 +3182,8 @@ namespace casa {
 	  cout << "New SBSummary tag created: " << tR2 << endl;
 	}
 	if(asdmSBSummaryId_p.isDefined(sbKey)){
-	  os << LogIO::WARN << "There is more than one scheduling block necessary for the obsid - spwid pair (" 
-	     << obsId << ", " << spwId << ").\n This can presently not yet be handled properly.\n" 
+	  os << LogIO::WARN << "There is more than one scheduling block necessary for the obsid - freqBand pair (" 
+	     << obsId << ", " << bandNum << ").\n This can presently not yet be handled properly.\n" 
 	     << "(MS Main table row " << mainTabRow << ")" << LogIO::POST;
 	}
 	else{
@@ -3136,13 +3213,15 @@ namespace casa {
 
 	// is the exec block complete?
 	Double endT = timestampEndSecs(mainTabRow);
+	//	if(endT > execBlockEndTime(sBSummaryTag)){ // integration intervals may be different for different DD Ids, take max endT
 	execBlockEndTime.remove(sBSummaryTag);
 	execBlockEndTime.define(sBSummaryTag, endT);
+	  //	}
 	if(verbosity_p>2){
 	  cout << "interval = " << endT - execBlockStartTime(sBSummaryTag) << ", duration == " <<  durationSecs << endl;
 	}
+
 	if(endT - execBlockStartTime(sBSummaryTag) >= durationSecs){ // yes, it is complete
-	  
 	  // parameters for a new row
   
 	  ArrayTime startTime = ASDMArrayTime(execBlockStartTime(sBSummaryTag));
@@ -3204,8 +3283,10 @@ namespace casa {
 	    return False;
 	  }
 	  asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
+
 	  if(verbosity_p>2){
-	    cout << "eblock id defined in loop 1 for time " << setprecision(9) << execBlockStartTime(sBSummaryTag) << endl;
+	    cout << "eblock id defined in loop 1 for start time " << setprecision(13) << execBlockStartTime(sBSummaryTag) << endl;
+	    cout << "                                  end time " << setprecision(13) << execBlockEndTime(sBSummaryTag) << endl;
 	  }
 
 	  // undefine the mapping for this Tag since the ExecBlock was completed
@@ -3217,16 +3298,16 @@ namespace casa {
 	  maxBaseline.remove(sBSummaryTag);
 	  
 	}
-	//	else{ // no, it is not complete	 
-	//	}
+// 	else{ // no, it is not complete	 
+// 	}
       } 
       else{// no, it has not been started, yet
 
 	// check if there is another exec block which started at the same time
 	for(uInt i=0; i<execBlockStartTime.ndefined(); i++){
 	  if(execBlockStartTime.getVal(i) == timestampStartSecs(mainTabRow)){
-	    os << LogIO::SEVERE << "Observation of different spectral windows at the same time and under the same observation ID is not supported."
-	     << "\n  Please split out the different spectral windows into individual MSs and process separately." << LogIO::POST;
+	    os << LogIO::SEVERE << "Observation of different frequency bands at the same time and under the same observation ID is not supported by the ASDM."
+	     << "\n  Please split out the different spectral bands into individual MSs and process separately." << LogIO::POST;
 	    return False;
 	  }
 	}
@@ -3241,6 +3322,7 @@ namespace casa {
 	  execBlockNumber.remove(sBSummaryTag);
 	}
 	execBlockNumber.define(sBSummaryTag, oldNum + 1); // sequential numbering starting at 1
+
 	if(verbosity_p>2){
 	  cout << "eblock number " << oldNum + 1 << " defined for start time " << setprecision (9) << timestampStartSecs(mainTabRow) << endl;
 	}
@@ -3267,7 +3349,6 @@ namespace casa {
 	minBaseline.define(sBSummaryTag, bLine);
 	maxBaseline.define(sBSummaryTag, bLine);
       }
-
       // skip rest of this timestamp
       Double tStamp = time()(mainTabRow);
       while(mainTabRow<nMainTabRows 
@@ -3343,12 +3424,15 @@ namespace casa {
 	return False;
       }
       asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
+
       if(verbosity_p>2){
-	cout << "eblock id defined in loop 2 for time " << setprecision(9) << execBlockStartTime(sBSummaryTag) << endl;
+	cout << "eblock id defined in loop 2 for start time " << setprecision(13) << execBlockStartTime(sBSummaryTag) << endl;
+	cout << "                                  end time " << setprecision(13) << execBlockEndTime(sBSummaryTag) << endl;
       }
 
       // undefine the mapping for this Tag since the ExecBlock was completed
-      execBlockStartTime.remove(sBSummaryTag); // need only remove from the map which is tested
+      execBlockStartTime.remove(sBSummaryTag); // need only remove from the map what is tested
+      execBlockEndTime.remove(sBSummaryTag); 
 
     }
 
@@ -3461,14 +3545,14 @@ namespace casa {
       Double rowTime = timestampStartSecs(mainTabRow);
       
       //   asdmExecBlockId_p defined for this timestamp?
-      if(asdmExecBlockId_p.isDefined(timestampStartSecs(mainTabRow))){ // a new exec block has started
+      if(asdmExecBlockId_p.isDefined(rowTime)){ // a new exec block has started
 	// is there a previous exec block?
 	if(execBlockId != Tag()){
 	  //  finish the old exec block
 	}
 	// set up new exec block
 	// parameters for the first scan
-	execBlockId = asdmExecBlockId_p(timestampStartSecs(mainTabRow));
+	execBlockId = asdmExecBlockId_p(rowTime);
 	asdm::ExecBlockRow* EBR = (ASDM_p->getExecBlock()).getRowByKey(execBlockId);
 	scanNumber = 1; // ASDM scan numbering starts at 1
         subscanNumber = 1; // dito for subscans
@@ -3486,11 +3570,15 @@ namespace casa {
 	cout << "Encoutered main tab row " << mainTabRow << " which is not part of an execblock." << endl;
 	continue;
       }
+      else if(MSTimeSecs(scanEndTime) - timestampEndSecs(mainTabRow) <= 0.9){
+	cout << "Internal error at main tab row " << mainTabRow << ": misaligned scan and execblock end." << endl;
+	continue;
+      }
       
       // while(scan not finished)
       while( mainTabRow<nMainTabRows && 
 	     MSTimeSecs(scanEndTime) - (rowTime = timestampStartSecs(mainTabRow)) > 1E-3 ){ // presently one scan per exec block ???
-	
+
 	// parameters for the new SubScan table row
 	Double subScanEnd = rowTime + subscanDuration_p; 
 	if(subScanEnd > MSTimeSecs(scanEndTime)){
@@ -3518,7 +3606,7 @@ namespace casa {
 	  SimpleOrderedMap< Int, uInt > subScanStartRows(0);
 	  SimpleOrderedMap< Int, uInt > subScanEndRows(0);
 	  while(irow2<nMainTabRows &&
-		timestampStartSecs(irow2)< subScanEnd){
+		timestampStartSecs(irow2) < subScanEnd){
 	    Int ddId = dataDescId()(irow2);
 	    Int fId = fieldId()(irow2);
 	    if(ddId == theDDId){
@@ -3610,11 +3698,10 @@ namespace casa {
 	} // end loop over DD indices
 	// update mainTabRow
 	mainTabRow = irow;
-	//cout << "mainTabRow " << mainTabRow << endl;
       } // end while scan continues
       // scan finished
       // complete and write scan table row
-      mainTabRow--; // return to last row of the scan
+      mainTabRow--; // return to the last row of the scan
       scanEndTime = ArrayTime( timestampEndSecs(mainTabRow) );	  
       scanNumIntent = 1; // hardwired (???)
       for(uInt i=0; i<(uInt)scanNumIntent; i++){
@@ -4159,61 +4246,93 @@ namespace casa {
     return rval;
   }
 
-  Bool MS2ASDM::setRecBands( const asdm::Frequency refFreq, 
-			     ReceiverBandMod::ReceiverBand& frequencyBand,
-			     ReceiverSidebandMod::ReceiverSideband& receiverSideband){
+  Int MS2ASDM::setRecBands( const asdm::Frequency refFreq, 
+			    double& repFreq,
+			    ReceiverBandMod::ReceiverBand& frequencyBand,
+			    ReceiverSidebandMod::ReceiverSideband& receiverSideband){
 
-    Quantity repFreq( refFreq.get(), String(Frequency::unit()) );
-    Double repFreqGHz = repFreq.getValue("GHz");
+    // return the band number as an Int, -1 means failure, 0 means unknown observatory
+    Int rval = -1;
+
+    Quantity theFreq( refFreq.get(), String(Frequency::unit()) );
+    Double theFreqGHz = theFreq.getValue("GHz");
     
+    //cout << "tel " << telName_p << endl;
+    //cout << "Freq (GHz) " << theFreqGHz << endl; 
+
+    // default values
+    Quantity tempQ( ((Int)theFreqGHz)*1E9, "Hz");
+    repFreq =  tempQ.getValue(unitASDMFreq());
     frequencyBand = ReceiverBandMod::UNSPECIFIED;
     receiverSideband = ReceiverSidebandMod::NOSB;
 
     // implementation of the ALMA freq bands !!!
-    if(telName_p == "ALMA"){
-      if(31.<=repFreqGHz &&  repFreqGHz<45.){
+    if(telName_p == "ALMA" || telName_p == "OSF" || telName_p == "ACA"){
+      if(31.<=theFreqGHz &&  theFreqGHz<45.){
+	repFreq = (31.+45.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_01;
 	receiverSideband = ReceiverSidebandMod::SSB; 
+	rval = 1;
       }
-      if(67.<=repFreqGHz &&  repFreqGHz<90.){
+      if(67.<=theFreqGHz &&  theFreqGHz<90.){
+	repFreq = (67.+90.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_02;
 	receiverSideband = ReceiverSidebandMod::SSB; 
+	rval = 2;
       }
-      if(84.<=repFreqGHz &&  repFreqGHz<116.){
+      if(84.<=theFreqGHz &&  theFreqGHz<116.){
+	repFreq = (84.+116.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_03;
 	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 3;
       }
-      else if(125.<=repFreqGHz &&  repFreqGHz<163.){
+      else if(125.<=theFreqGHz &&  theFreqGHz<163.){
+	repFreq = (125.+163.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_04;
 	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 4;
       }	  
-      else if(163.<=repFreqGHz &&  repFreqGHz<211.){
+      else if(163.<=theFreqGHz &&  theFreqGHz<211.){
+	repFreq = (163.+211.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_05;
 	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 5;
       }	  
-      else if(211.<=repFreqGHz &&  repFreqGHz<275.){
+      else if(211.<=theFreqGHz &&  theFreqGHz<275.){
+	repFreq = (211.+275.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_06;
 	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 6;
       }	  
-      else if(275.<=repFreqGHz &&  repFreqGHz<373.){
+      else if(275.<=theFreqGHz &&  theFreqGHz<373.){
+	repFreq = (275.+373.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_07;
 	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 7;
       }	  
-      else if(385.<=repFreqGHz &&  repFreqGHz<500.){
+      else if(385.<=theFreqGHz &&  theFreqGHz<500.){
+	repFreq = (385.+500.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_08;
 	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 8;
       }	  
-      else if(602.<=repFreqGHz &&  repFreqGHz<720.){
+      else if(602.<=theFreqGHz &&  theFreqGHz<720.){
+	repFreq = (602.+720.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_09;
 	receiverSideband = ReceiverSidebandMod::DSB; 
+	rval = 9;
       }	  
-      else if(787.<=repFreqGHz &&  repFreqGHz<950.){
+      else if(787.<=theFreqGHz &&  theFreqGHz<950.){
+	repFreq = (787.+950.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_10;
 	receiverSideband = ReceiverSidebandMod::DSB; 
+	rval = 10;
       }
-      return True;
+      Quantity tempQ2(repFreq, "Hz");
+      repFreq =  tempQ2.getValue(unitASDMFreq());
+      return rval;
     }
-    return False;
+    return 0; // unknown observatory
   }  
 
 

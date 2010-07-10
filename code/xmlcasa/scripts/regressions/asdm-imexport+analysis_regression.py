@@ -399,16 +399,16 @@ def analyseASDM(basename, caltablename0):
         print ">> Peak in calibrator image: "+str(peak[i])
         print ">> Dynamic range in calibrator image: "+str(peak[i]/rms[i])
 
-    reference_rms = [0.00163517, 0.00328371]
-    reference_peak = [1.00014091, 1.00039518]
+    reference_rms = [ 0.00163517, 0.00328390]
+    reference_peak = [1.00014102, 1.00039506]
 
     for i in range(2):
         print ">> image rms ", i, " is ", rms[i], " expected value is ", reference_rms[i] 
-        if(abs(rms[i] - reference_rms[i])/reference_rms[i] > 0.0001):
+        if(abs(rms[i] - reference_rms[i])/reference_rms[i] > 0.01):
             print ">> ERROR." 
             isOK = False
         print ">> image peak ", i, " is ", peak[i], " expected value is ", reference_peak[i] 
-        if(abs(peak[i] - reference_peak[i])/reference_peak[i] > 0.0001):
+        if(abs(peak[i] - reference_peak[i])/reference_peak[i] > 0.01):
             print ">> ERROR." 
             isOK = False
             
