@@ -103,6 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SimpleSubMS splitter(thisms);
     splitter.setmsselect(spwstring, fieldnames, antnames, scan, uvdist, 
 			 msSelect, nchan, start, step, True, "");
+    splitter.selectCorrelations("");
     splitter.selectTime(-1.0, timerng);
     MS::PredefinedColumns whichCol=MS::DATA;
     if(thisms.tableDesc().isColumn("CORRECTED_DATA"))
@@ -141,7 +142,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Update);
       else
-	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
+	//thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
+	//		      Table::Old);
+	thisms=MeasurementSet(msname, TableLock(), 
 			      Table::Old);
       
       return setDataOnThisMS(thisms, mode, nchan, start, step, spectralwindowids, fieldids, msSelect, timerng, 
@@ -581,34 +584,34 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
     //If its a memory table who cares 
     if((ms_p->tableType()) != Table::Memory){
       antab_p=Table(ms_p->antennaTableName(),
-		    TableLock(TableLock::AutoNoReadLocking));
+		    TableLock());
       datadesctab_p=Table(ms_p->dataDescriptionTableName(),
-			  TableLock(TableLock::AutoNoReadLocking));
+			  TableLock());
       feedtab_p=Table(ms_p->feedTableName(),
-		      TableLock(TableLock::AutoNoReadLocking));
+		      TableLock());
       fieldtab_p=Table(ms_p->fieldTableName(),
-		       TableLock(TableLock::AutoNoReadLocking));
+		       TableLock());
       obstab_p=Table(ms_p->observationTableName(),
-		     TableLock(TableLock::AutoNoReadLocking));
+		     TableLock());
       poltab_p=Table(ms_p->polarizationTableName(),
-		     TableLock(TableLock::AutoNoReadLocking));
+		     TableLock());
       proctab_p=Table(ms_p->processorTableName(),
-		      TableLock(TableLock::AutoNoReadLocking));
+		      TableLock());
       spwtab_p=Table(ms_p->spectralWindowTableName(),
-		     TableLock(TableLock::AutoNoReadLocking));
+		     TableLock());
       statetab_p=Table(ms_p->stateTableName(),
-		       TableLock(TableLock::AutoNoReadLocking));
+		       TableLock());
       
       if(Table::isReadable(ms_p->dopplerTableName()))
 	dopplertab_p=Table(ms_p->dopplerTableName(),
-			   TableLock(TableLock::AutoNoReadLocking));
+			   TableLock());
       
       if(Table::isReadable(ms_p->flagCmdTableName()))
 	flagcmdtab_p=Table(ms_p->flagCmdTableName(),
-			   TableLock(TableLock::AutoNoReadLocking));
+			   TableLock());
       if(Table::isReadable(ms_p->freqOffsetTableName()))
 	freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
-			      TableLock(TableLock::AutoNoReadLocking));
+			      TableLock());
       
       if(ms_p->isWritable()){
 	if(!(Table::isReadable(ms_p->historyTableName()))){
@@ -620,22 +623,22 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	  
 	}
 	historytab_p=Table(ms_p->historyTableName(),
-			   TableLock(TableLock::AutoNoReadLocking), Table::Update);
+			   TableLock(), Table::Update);
       }
       if(Table::isReadable(ms_p->pointingTableName()))
 	pointingtab_p=Table(ms_p->pointingTableName(), 
-			    TableLock(TableLock::AutoNoReadLocking));
+			    TableLock());
       
       if(Table::isReadable(ms_p->sourceTableName()))
 	sourcetab_p=Table(ms_p->sourceTableName(),
-			  TableLock(TableLock::AutoNoReadLocking));
+			  TableLock());
       
       if(Table::isReadable(ms_p->sysCalTableName()))
 	syscaltab_p=Table(ms_p->sysCalTableName(),
-			  TableLock(TableLock::AutoNoReadLocking));
+			  TableLock());
       if(Table::isReadable(ms_p->weatherTableName()))
 	weathertab_p=Table(ms_p->weatherTableName(),
-			 TableLock(TableLock::AutoNoReadLocking));
+			 TableLock());
     
       if(ms_p->isWritable()){
 	hist_p= new MSHistoryHandler(*ms_p, "imager");
