@@ -3213,10 +3213,10 @@ namespace casa {
 
 	// is the exec block complete?
 	Double endT = timestampEndSecs(mainTabRow);
-	//	if(endT > execBlockEndTime(sBSummaryTag)){ // integration intervals may be different for different DD Ids, take max endT
-	execBlockEndTime.remove(sBSummaryTag);
-	execBlockEndTime.define(sBSummaryTag, endT);
-	  //	}
+	if(endT > execBlockEndTime(sBSummaryTag)){ // integration intervals may be different for different DD Ids, take max endT
+	  execBlockEndTime.remove(sBSummaryTag);
+	  execBlockEndTime.define(sBSummaryTag, endT);
+	}
 	if(verbosity_p>2){
 	  cout << "interval = " << endT - execBlockStartTime(sBSummaryTag) << ", duration == " <<  durationSecs << endl;
 	}
@@ -3567,12 +3567,47 @@ namespace casa {
 	scanFlagRow = False;
       } // end if a new exec block has started
       else if(execBlockId == Tag()){
-	cout << "Encoutered main tab row " << mainTabRow << " which is not part of an execblock." << endl;
+	os << LogIO::WARN << "Encountered main tab row " << mainTabRow << " which is not part of an execblock." << LogIO::POST;
 	continue;
       }
       else if(MSTimeSecs(scanEndTime) - timestampEndSecs(mainTabRow) <= 0.9){
-	cout << "Internal error at main tab row " << mainTabRow << ": misaligned scan and execblock end." << endl;
-	continue;
+	os << LogIO::NORMAL << "Potential problem at main tab row " << mainTabRow << ": misaligned scan and execblock end." 
+	   << endl << "Will try to continue ..." << LogIO::POST;
+	// search back to see if the execblock start can be found
+
+	Double searchIntervalSecs = 60.;
+
+	uInt mainTabRowB = mainTabRow;
+	Bool foundEBStart = False;
+	Double rowTimeB = rowTime;
+	while(rowTime - rowTimeB < searchIntervalSecs && mainTabRowB>0){
+	  rowTimeB = timestampStartSecs(--mainTabRowB);
+	  if(asdmExecBlockId_p.isDefined(rowTimeB)){
+	    foundEBStart = True;
+	    execBlockId = asdmExecBlockId_p(rowTimeB);
+	    asdm::ExecBlockRow* EBR = (ASDM_p->getExecBlock()).getRowByKey(execBlockId);
+	    scanNumber = 1; // ASDM scan numbering starts at 1
+	    subscanNumber = 1; // dito for subscans
+	    scanStart = rowTimeB;
+	    scanStartTime = ASDMArrayTime( scanStart );
+	    scanEndTime = EBR->getEndTime(); // preset to the end of the execblock
+	    scanNumIntent = 0;
+	    numSubScan = 0;
+	    scanIntent.resize(0);
+	    scanCalDataType.resize(0);
+	    scanCalibrationOnLine.resize(0);
+	    scanFlagRow = False;
+	    break;
+	  }
+	}
+	if(foundEBStart){
+	  os << LogIO::NORMAL << "Problem resolved. Found execblock start " << rowTime - rowTimeB << " s earlier." << LogIO::POST;
+	}
+	else{
+	  os << LogIO::SEVERE << "Searched back for " << searchIntervalSecs 
+	     << " s. Could not resolve misalignment." << LogIO::POST;
+	  return False;
+	}
       }
       
       // while(scan not finished)
@@ -4077,7 +4112,13 @@ namespace casa {
 
 	asdm::PointingRow* tR2;
 	
-	tR2 = tT.add(tR);
+	try{
+	  tR2 = tT.add(tR);
+	}
+	catch(asdm::DuplicateKey){
+	  os << LogIO::WARN << "Caught asdm::DuplicateKey error for antenna id " 
+	     << aId << LogIO::POST;	
+	}	  
 	if(tR2 != tR){// no new row was inserted
 	  os << LogIO::WARN << "Internal error: duplicate row in Pointing table for antenna id " 
 	     << aId << LogIO::POST;	
