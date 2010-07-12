@@ -8,14 +8,37 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
 
     kwkeys is a list of keys in dict that should be treated as table keywords,
     and colkeys is a list of keys to be treated as table columns.  If a key is
-    not in either of them, it will be appended to colkeys if it is an array or
-    list with the right number of rows, or kwkeys otherwise.
+    not in either of them, it will be appended to colkeys if it refers to a
+    list, array, or specially formed dict with the right number of rows, or
+    kwkeys otherwise.
+
+    "Specially formed dict" means a python dictionary with the right keys to
+    provide a comment and/or keywords to specify a (measure) frame or
+    (quantity) unit for the column.
 
     The number of rows is set by the first column.  The order of the columns is
     the order of colkeys, followed by the remaining columns in alphabetical
     order.
 
-    TODO: detect non-float data types.
+    Example:
+    mydict = {'delta': [1.2866, 1.2957, 1.3047],
+              'date': {'m0': {'unit': 'd',
+                              'value': [55317.0, 55318.0, 55319.0]},
+                       'refer': 'UT1',
+                       'type': 'epoch'},
+              'phang': {'comment': 'phase angle',
+                        'data': {'unit': 'deg',
+                                 'value': array([37.30, 37.33, 37.36])}}}
+                                 
+    # Produces a table with, in order, a measure column (date),
+    # a bare column (delta), and a commented quantity column (phang).
+    # The comment goes in the 'comment' field of the column description.
+    # Measure and straight array columns can also be described by using
+    # a {'comment': (description),
+    #    'data':    (measure, quantity, numpy.array or list)} dict.
+    dict_to_table(mydict, 'd_vs_phang.tab')
+
+    TODO: detect non-float data types, including array cells.
     """
     nrows = 0
     dkeys = indict.keys()
