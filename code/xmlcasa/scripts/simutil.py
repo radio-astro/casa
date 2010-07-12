@@ -704,6 +704,7 @@ class simutil:
         if absent, or '%s ' % epoch if present.  x and y will be angle qa's in
         degrees.
         """
+        import re
         if direction == None:
             direction=self.direction
         if type(direction) == type([]):
@@ -713,7 +714,21 @@ class simutil:
             epoch = dirl[0] + ' '
         else:
             epoch = ''
-        x, y = map(qa.toangle, dirl[-2:])
+        # x, y = map(qa.toangle, dirl[-2:])
+        x=qa.toangle(dirl[1])
+        # qa is stupid when it comes to dms vs hms, and assumes hms with colons and dms for periods.  
+        decstr=dirl[2]
+        # parse with regex to get three numbers and reinstall them as dms
+        q=re.compile('([+-]\d+).(\d+).(\d+\.?\d*)')
+        qq=q.match(decstr)
+        z=qq.groups()
+        decstr=z[0]+'d'
+        if len(z)>1:
+            decstr=decstr+z[1]+'m'
+        if len(z)>2:
+            decstr=decstr+z[2]+'s'
+        y=qa.toangle(decstr)
+
         return epoch, qa.convert(x, 'deg'), qa.convert(y, 'deg')
 
 
