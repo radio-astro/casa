@@ -1565,10 +1565,10 @@ the <link anchor="measures:measures.doframe.function">doframe</link> function. T
 {\bf IMPORTANT NOTE:}\\
 To get an accurate conversion of solar system objects direction to a celestial frame, one should convert to AZEL or HADEC before to get parallax accounted for. Thus if you want to get the moon's position in J2000..one would do it in 2 stages\\
 i.e (after setting the appropriate frames) \\
-{\tt
+\begin{verbatim}
 moonazel=me.measure(me.direction('moon'), 'AZELGEO')
 moonJ2000=me.measure(moonazel, 'J2000')
-}
+\end{verbatim}
 <!-- An optional argument {em qv} can contain a quantity with a vector of values
 and a unit. When present, the vector will be converted (and returned) in the
 same way as the main reference. Not all Measures accept this argument yet. If
