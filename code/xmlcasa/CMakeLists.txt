@@ -466,6 +466,3 @@ if( casa_out_pdf )
 else()
   add_custom_target( doc_pdf COMMAND echo "PDF to HTML converter was not found." )
 endif()
-
-# All documentation
-add_custom_target( doc DEPENDS doc_doxy doc_latex doc_html doc_pdf )

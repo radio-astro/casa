@@ -897,3 +897,9 @@ casa_add_module( nrao CASACORE )
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
 
 # demo atmosphere ionosphere jive nfra simulators vlbi vo
+
+add_subdirectory( doc/taskref )
+add_subdirectory( doc/casaref )
+
+# All documentation
+add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf )

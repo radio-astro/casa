@@ -43,11 +43,14 @@ macro( casa_add_tasks module _target )
   set( _out_latex "" )
   set( _out_html "" )
   set( _out_pdf "" )
+  set( _all_tasks "" )
 
   foreach( _x ${_xmls} )
     
     get_filename_component( _base ${_x} NAME_WE )
     get_filename_component( _xml ${_x} ABSOLUTE )
+
+    list( APPEND _all_tasks ${_base} )
 
     set( _cli ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cli.py )
     set( _pg  ${CMAKE_CURRENT_BINARY_DIR}/${_base}_pg.py )
@@ -90,9 +93,18 @@ macro( casa_add_tasks module _target )
     set( _out_py ${_out_py} ${_py} ${_cli} ${_pg} )
 
     # Create task documentation
-    casa_add_doc( ${_xml} ${CASA_DOC_DIR}/tasks )
-  
+    casa_add_doc( ${_xml} ${CASA_DOC_DIR} task )
+
   endforeach()
+
+  set( _tasksref ${CASA_DOC_DIR}/helpfiles/tasksref.htex )
+  add_custom_target(    
+   xmlcasa_tasksref
+   COMMAND mkdir -p ${CASA_DOC_DIR}/helpfiles
+   COMMAND echo > ${_tasksref}
+   COMMAND for x in ${_all_tasks} \; do echo "\\\\input{$$x.htex}" >> ${_tasksref} \; done
+   DEPENDS ${_xml}
+  )
 
   add_custom_target( 
     ${_target}
@@ -334,7 +346,9 @@ macro( casa_add_tools out_idl out_sources )
     set( ${out_sources} ${${out_sources}} ${_outputs} )
 
     # Create tool documentation
-    casa_add_doc( ${_xml} ${CASA_DOC_DIR}/tools )
+    if ( NOT ${_base} STREQUAL plotms )    # because there is already a plotms task, and there would be a name conflict!
+	casa_add_doc( ${_xml} ${CASA_DOC_DIR} tool )
+    endif() 
 
   endforeach()
   
@@ -416,13 +430,14 @@ endmacro()
 
 
 
-# casa_add_doc( XML prefix )
+# casa_add_doc( XML prefix type )
 #
 # - extracts PDF + HTML + LATEX documentation from the given XML
 #   and adds the names of generated pdf/html/latex output to the cmake variables
 #   casa_out_pdf, casa_out_html and casa_out_latex.
+# type: "task" or "tool"
 #
-macro( casa_add_doc xml prefix )
+macro( casa_add_doc xml prefix type )
 
     # Create htex
     set( _htex  ${prefix}/helpfiles/${_base}.htex )
@@ -453,7 +468,7 @@ macro( casa_add_doc xml prefix )
       VERBATIM
       )
 
-    if (${prefix} MATCHES tool)
+    if (${type} STREQUAL tool)
       add_custom_target( ${_base}_tool_latex DEPENDS ${_latex} )
     else()
       add_custom_target( ${_base}_task_latex DEPENDS ${_latex} )
@@ -475,7 +490,7 @@ macro( casa_add_doc xml prefix )
         DEPENDS ${_latex}
         VERBATIM )
 
-      if (${prefix} MATCHES tool)
+      if (${type} STREQUAL tool)
         add_custom_target( ${_base}_tool_html DEPENDS ${_html} )
       else()
         add_custom_target( ${_base}_task_html DEPENDS ${_html} )
@@ -496,7 +511,7 @@ macro( casa_add_doc xml prefix )
         DEPENDS ${_latex}
         VERBATIM )
 
-      if (${prefix} MATCHES tool)
+      if (${type} STREQUAL tool)
 	add_custom_target( ${_base}_tool_pdf DEPENDS ${_pdf} ) 
       else()
         add_custom_target( ${_base}_task_pdf DEPENDS ${_pdf} )
