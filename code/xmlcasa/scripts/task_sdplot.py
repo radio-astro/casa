@@ -256,7 +256,11 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 
 	    # Reload plotter if necessary
 	    if not sd.plotter._plotter or sd.plotter._plotter.is_dead:
+		    if hasattr(sd.plotter,'_plotter') and \
+			   hasattr(sd.plotter._plotter.figmgr,'casabar'):
+			    del sd.plotter._plotter.figmgr.casabar
 		    sd.plotter._plotter = sd.plotter._newplotter()
+		    sd.plotter._plotter.figmgr.casabar=sd.plotter._newcasabar()
 
 	    # The new toolbar
 	    #if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
