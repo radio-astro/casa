@@ -40,7 +40,6 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TiledDataStMan.h>
 #include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/TiledDataStManAccessor.h>
 #include <tables/Tables/TableIter.h>

@@ -1622,7 +1622,7 @@ emptyMS(const Path& tableName, const Bool overwrite) {
   }
 
   {
-    TiledColumnStMan tiledStUVW("TiledUVW",IPosition(2,3,378));
+      TiledColumnStMan tiledStUVW("TiledUVW",IPosition(2, 3, (1024*1024)/ (3*sizeof(double))));
     newMS.bindColumn(MS::columnName(MS::UVW),tiledStUVW);
   }
   // The standard storage manager is the default manager but by default it only

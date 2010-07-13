@@ -1115,11 +1115,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                   IPosition(4,tileShape(0),tileShape(1),1,
                                             tileShape(2)));
     TiledShapeStMan tiledStMan2("TiledWgtSpectrum",tileShape);
-    TiledColumnStMan tiledStMan3("TiledUVW",IPosition(2,3,1024));
+    TiledColumnStMan tiledStMan3("TiledUVW",IPosition(2, 3, (tileShape(0) * tileShape(1) * tileShape(2)) / 3));
     TiledShapeStMan tiledStMan4("TiledWgt", 
-                                IPosition(2,tileShape(0),tileShape(2)));
+                                IPosition(2,tileShape(0), tileShape(1) * tileShape(2)));
     TiledShapeStMan tiledStMan5("TiledSigma", 
-                                IPosition(2,tileShape(0),tileShape(2)));
+                                IPosition(2,tileShape(0), tileShape(1) * tileShape(2)));
     
     // Bind the DATA, FLAG & WEIGHT_SPECTRUM columns to the tiled stman
     
@@ -1146,7 +1146,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     if (isAllColumns(colNamesTok))
       {
         TiledShapeStMan tiledStManImgWts("TiledImagingWeight",
-                                         IPosition(1,tileShape(1)));
+                                         IPosition(1, tileShape(0) * tileShape(1) * tileShape(2)));
         newtab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT),tiledStManImgWts);
       }
     
