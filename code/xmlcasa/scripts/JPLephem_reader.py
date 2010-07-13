@@ -1,6 +1,7 @@
 import numpy
 import re
 from taskinit import me, qa
+from dict_to_table import dict_to_table
 
 def readJPLephem(fmfile):
     """
@@ -27,16 +28,18 @@ def readJPLephem(fmfile):
     # for once.  The matching quantity will go in retdict[label].  Only a
     # single quantity (group) will be retrieved per line.
     headers = {
-        'body': r'^Target body name:\s+(\w+)',          # object name
-        'ephtype': r'\?s_type=1#top>\]\s*:\s+\*(\w+)', # e.g. OBSERVER
-        'obsloc': r'^Center-site name:\s+(\w+)',        # e.g. GEOCENTRIC
-        'meanrad': r'Mean radius \(km\)\s*=\s*([0-9.]+)',
-        'T_mean': r'Mean Temperature \(K\)\s*=\s*([0-9.]+)',
+        'body': {'pat': r'^Target body name:\s+(\w+)'},          # object name
+        'ephtype': {'pat': r'\?s_type=1#top>\]\s*:\s+\*(\w+)'}, # e.g. OBSERVER
+        'obsloc': {'pat': r'^Center-site name:\s+(\w+)'},        # e.g. GEOCENTRIC
+        'meanrad': {'pat': r'Mean radius \(km\)\s*=\s*([0-9.]+)',
+                    'unit': 'km'},
+        'T_mean': {'pat': r'Mean Temperature \(K\)\s*=\s*([0-9.]+)',
+                   'unit': 'K'},
         # Check data format
-        'isOK': r'^\s*(Date__\(UT\)__HR:MN\s+R.A._+\([^_]+\)_+DEC\s+Ob-lon\s+Ob-lat\s+Sl-lon\s+Sl-lat\s+NP.ang\s+NP.dist\s+r\s+rdot\s+delta\s+deldot\s+S-T-O)',      
+        'isOK': {'pat': r'^\s*(Date__\(UT\)__HR:MN\s+R.A._+\([^_]+\)_+DEC\s+Ob-lon\s+Ob-lat\s+Sl-lon\s+Sl-lat\s+NP.ang\s+NP.dist\s+r\s+rdot\s+delta\s+deldot\s+S-T-O)'}
         }
     for hk in headers:
-        headers[hk] = re.compile(headers[hk])
+        headers[hk]['pat'] = re.compile(headers[hk]['pat'])
 
     # Data ("the rows of the table")
     
@@ -91,7 +94,7 @@ def readJPLephem(fmfile):
             for hk in headers:
                 if not retdict.has_key(hk):
                     #print hk,
-                    matchobj = re.search(headers[hk], line)
+                    matchobj = re.search(headers[hk]['pat'], line)
                     if matchobj:
                         retdict[hk] = matchobj.group(1) # 0 is the whole line
                         #print "found", retdict[hk]
@@ -102,8 +105,10 @@ def readJPLephem(fmfile):
     retdict['earliest'] = datestr_to_epoch(retdict['data']['date']['data'][0])
     retdict['latest'] = datestr_to_epoch(retdict['data']['date']['data'][-1])
 
-    for hk in ['meanrad', 'T_mean']:
-        retdict[hk] = float(retdict[hk])
+    for hk in headers:
+        if headers[hk].has_key('unit'):
+            retdict[hk] = {'unit': headers[hk]['unit'],
+                           'value': float(retdict[hk])}
     retdict['data']['date'] = datestrs_to_epochs(retdict['data']['date']['data'])
     for dk in ['r', 'delta', 'phang']:
         retdict['data'][dk]['data'] = {'unit': cols[dk]['unit'],
@@ -138,9 +143,39 @@ def datestrs_to_epochs(datestrlist):
             'type': 'epoch'}
 
 
-def ephem_dict_to_table(fmdict, tablepath):
+def ephem_dict_to_table(fmdict, tablepath=''):
     """
     Converts a dictionary from readJPLephem() to a CASA table, and attempts to
     save it to tablepath.  Returns whether or not it was successful.
     """
-    pass
+    if not tablepath:
+        tablepath = "ephem_JPL-Horizons_%s%.0f-%.0f%s%s.tab" % (fmdict['body'],
+                                                              fmdict['earliest']['m0']['value'],
+                                                              fmdict['latest']['m0']['value'],
+                                                              fmdict['latest']['m0']['unit'],
+                                                              fmdict['latest']['refer'])
+        print "Writing to", tablepath
+        
+    retval = True
+    try:
+        outdict = fmdict.copy() # Yes, I want a shallow copy.
+        kws = fmdict.keys()
+        kws.remove('data')
+        cols = outdict['data'].keys()
+        clashing_cols = []
+        for c in cols:
+            if c in kws:
+                clashing_cols.append(c)
+        if clashing_cols:
+            raise ValueError, 'The input dictionary lists' + ', '.join(clashing_cols) + 'as both keyword(s) and column(s)'
+
+        # This promotes the keys in outdict['data'] up one level, and removes
+        # 'data' as a key of outdict.
+        outdict.update(outdict.pop('data'))
+
+        retval = dict_to_table(outdict, tablepath, kws, cols)
+    except Exception, e:
+        print 'Error', e, 'trying to export an ephemeris dict to', tablepath
+        retval = False
+
+    return retval

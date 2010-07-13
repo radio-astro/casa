@@ -45,6 +45,22 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
     keywords = []
     cols = []
 
+    def get_bare_col(col):
+        """
+        Given a col that could be a bare column (list or array), or measure or
+        quantity containing a bare column, return the bare column.
+        """
+        barecol = col
+        if hasattr(barecol, 'has_key'):
+            if barecol.has_key('comment'):
+                barecol = barecol.get('data')
+            if me.ismeasure(barecol):
+                barecol = barecol['m0']
+            # if qa.isquantity(data) can't be trusted.
+            if hasattr(barecol, 'has_key') and barecol.has_key('unit') and barecol.has_key('value'):
+                barecol = barecol['value']
+        return barecol
+        
     # Divvy up the known keywords and columns, if present, preserving the
     # requested order.
     for kw in kwkeys:
@@ -55,24 +71,16 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
         if c in dkeys:
             cols.append(dkeys.pop(dkeys.index(c)))
             if nrows == 0:
-                nrows = len(indict[c])
+                nrows = len(get_bare_col(indict[c]))
+                print "Got nrows =", nrows, "from", c
 
     # Go through what's left of dkeys and assign them to either keywords or
     # cols.
     dkeys.sort()
     for d in dkeys:
         used_as_col = False
-        colcand = indict[d]
+        colcand = get_bare_col(indict[d])
         
-        if hasattr(colcand, 'has_key'):
-            if colcand.has_key('comment'):
-                colcand = colcand.get('data')
-            if me.ismeasure(colcand):
-                colcand = colcand['m0']
-            # if qa.isquantity(data) can't be trusted.
-            if hasattr(colcand, 'has_key') and colcand.has_key('unit') and colcand.has_key('value'):
-                colcand = colcand['value']
-            
         # Treat it as a column if it has the right number of rows.
         if type(colcand) in (list, numpy.ndarray):
             if nrows == 0:
