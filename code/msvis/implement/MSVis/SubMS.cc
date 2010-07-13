@@ -6663,7 +6663,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
   Double totrowwt;
 
-  Matrix<Double> outUVW(3, outNrow);
+  Vector<Double> outUVW(3);
   outUVW.set(0.0);
 
   Vector<Float> outSigma;
@@ -6784,7 +6784,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
       // Iterate through mscIn_p's rows that belong to the slot.
       Double swv = 0.0; // Sum of the weighted visibilities.
-      outUVW.column(orn).set(0.0);
+      outUVW.set(0.0);
       for(uivector::iterator toikit = slotv.begin();
           toikit != slotv.end(); ++toikit){
         // keepShape_p == false means the input channels cannot simply
@@ -6931,12 +6931,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             wv += fabs(*dit);
           if(wv > 0.0){
             swv += wv;
-            outUVW.column(orn) = outUVW.column(orn)
-              + (wv / swv) * (inUVW(*toikit) - outUVW.column(orn));
+            outUVW += (wv / swv) * (inUVW(*toikit) - outUVW);
           }
 
           // totrowwt > 0.0 implies totslotwt > 0.0
-          outTC[orn] += totrowwt * (inTC(*toikit) - outTC[orn]) / totslotwt;
+          outTC[orn] += (totrowwt / totslotwt) * (inTC(*toikit) - outTC[orn]);
           outExposure[orn] += totrowwt * inExposure(*toikit);
 	}
       } // End of loop through the slot's rows.
@@ -6944,7 +6943,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       // If there were no weights > 0, plop in reasonable values just for
       // appearance's sake.
       if(swv <= 0.0)
-        outUVW.column(orn) = inUVW(slotv0);
+        outUVW = inUVW(slotv0);
 
       // Average the accumulated values.
       //totslotwt = sum(outRowWeight);  // Uncomment for debugging
@@ -7058,6 +7057,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       if(doImgWts_p)
         msc_p->imagingWeight().put(orn, outImagingWeight);
       
+      // And it's a good idea in general (always?), since it avoids arrays that
+      // hold all of the output rows.
+      msc_p->uvw().put(orn, outUVW);
+
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.
 
@@ -7070,9 +7073,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   //    << LogIO::POST;
 
   bin_slots_p.resize(0);           // Free some memory
-
-  msc_p->uvw().putColumn(outUVW);
-  outUVW.resize();			// Free some memory
 
   // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
   //    << "memory after putting ImagingWt: "
