@@ -428,12 +428,13 @@ casa_add_pymodule( interrupt modules/interrupt/interrupt_python.cc )
 # Make sure that all IDLs are up to date before considering casac
 # This has the desired effects that
 # - Dependencies of the C++ sources are calculated after the IDLs are created
+#   (IDLs might #include each other)
 # - When ccmtools is invoked, all the required IDL (which may not be explicit
 #   cmake dependencies for the ccmtools command) exist.
-add_custom_target( idl SOURCES ${tools_idl} ${outputs_idl} )
-add_custom_target( generated_sources SOURCES ${tools_sources} )
-add_dependencies( casac idl )
-add_dependencies( libxmlcasa generated_sources idl )
+add_custom_target( idl SOURCES ${tools_idl} )
+add_custom_target( generated_sources SOURCES ${tools_sources} ${outputs_idl} )
+add_dependencies( generated_sources idl )
+add_dependencies( libxmlcasa generated_sources )
 
 add_subdirectory( scripts/tests )
 add_subdirectory( scripts/regressions )
