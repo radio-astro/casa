@@ -187,15 +187,11 @@ dump( CMAKE_INSTALL_PREFIX )
 #
 # Targets for creating doxygen documentation
 #
-find_package( LATEX )
 
-# Use htlatex, if it exists
-unset( LATEX2HTML_CONVERTER CACHE )
-find_program( LATEX2HTML_CONVERTER NAMES htlatex latex2html )
-
-if( LATEX2HTML_CONVERTER MATCHES htlatex )
-  set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,3" )
-endif()
+# Use htlatex, do not support latex2html
+find_program( LATEX2HTML_CONVERTER NAMES htlatex )
+set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,3" 
+      CACHE STRING "LATEX2HTML_CONVERTER options" )
 
 set( CASA_DOC_DIR ${casaroot}/docs ) # Where to put documentation
 
