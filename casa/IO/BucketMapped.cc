@@ -37,7 +37,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   BucketMapped::BucketMapped (BucketFile* file, Int64 startOffset,
                               uInt bucketSize, uInt nrOfBuckets)
-    : BucketBase (file, startOffset, bucketSize, nrOfBuckets)
+    : BucketBase (file, startOffset, bucketSize, nrOfBuckets),
+      zeros(new char[itsBucketSize]())
   {
     AlwaysAssert (itsFile->mappedFile() != 0, AipsError);
   }
@@ -66,8 +67,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Int64(itsNewNrOfBuckets - 1)*itsBucketSize);
     
     uInt n = itsNewNrOfBuckets - itsCurNrOfBuckets;
-    std::auto_ptr<char> ch(new char[itsBucketSize * n]());
-    itsFile->mappedFile()->write(itsBucketSize, ch.get());
+    for (uInt i = 0; i < n; i++) {
+        itsFile->mappedFile()->write(itsBucketSize, zeros.get());
+    }
   }
 
   const char* BucketMapped::getBucket (uInt bucketNr)
