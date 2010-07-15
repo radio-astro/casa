@@ -764,7 +764,7 @@ macro( casa_find package )
   endif()
 
   else()
-    #message( STATUS "${package} already found or not required" )
+    message( STATUS "Looking for ${package} -- (cached) ok " )
   endif()
 
   #
