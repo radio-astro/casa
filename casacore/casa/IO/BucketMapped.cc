@@ -63,12 +63,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // very last byte of the extended file. But that method was
     // found to severely degrade the performance of the following 
     // memory mapping on OS X 10.5 and OS X 10.6 (not on Linux).
+ 
     itsFile->mappedFile()->seek(itsStartOffset + 
-				Int64(itsNewNrOfBuckets - 1)*itsBucketSize);
+                                Int64(itsCurNrOfBuckets)*itsBucketSize);
     
-    uInt n = itsNewNrOfBuckets - itsCurNrOfBuckets;
-    for (uInt i = 0; i < n; i++) {
-        itsFile->mappedFile()->write(itsBucketSize, zeros.get());
+    while (itsCurNrOfBuckets < itsNewNrOfBuckets) {
+      itsFile->mappedFile()->write(itsBucketSize, zeros.get());
+      itsCurNrOfBuckets++;
     }
   }
 
@@ -100,6 +101,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
   }
-
-
 } //# NAMESPACE CASA - END
