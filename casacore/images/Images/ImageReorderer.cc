@@ -92,8 +92,12 @@ void ImageReorderer::_construct(const String& imagename, const String& outfile) 
 	}
 	File outputImageFile(_outputImage);
 	switch(outputImageFile.getWriteStatus()) {
+	case File::CREATABLE:
+		// handle just to avoid compiler warning
+		break;
 	case File::OVERWRITABLE:
-		// fall through
+		// fall through to NOT_OVERWRITABLE
+		// FIXME add caller specified Bool overwrite flag
 	case File::NOT_OVERWRITABLE:
 		*_log << "Requested output image " << _outputImage
 			<< " already exists and will not be overwritten" << LogIO::EXCEPTION;
