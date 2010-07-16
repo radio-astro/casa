@@ -203,6 +203,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_gencal.py
   scripts/task_hanningsmooth.py
   scripts/task_help.py
+  scripts/task_imcollapse.py
   scripts/task_imcontsub.py
   scripts/task_imfit.py
   scripts/task_imhead.py
@@ -309,6 +310,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/gaincal.xml
   tasks/gencal.xml
   tasks/hanningsmooth.xml
+  tasks/imcollapse.xml
   tasks/imcontsub.xml
   tasks/imfit.xml
   tasks/imhead.xml
