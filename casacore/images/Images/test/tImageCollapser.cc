@@ -163,17 +163,19 @@ int main() {
     	}
     	{
     		writeTestString("sum subimage collapse along axis 1");
-    		ImageCollapser collapser(
+    		ImageCollapser *collapser = new ImageCollapser(
     			"sum", goodImage, "", "1,1,2,2", "1-2",
     			"qu", "", 2, outname(), False
     		);
-    		collapser.collapse(False);
+    		collapser->collapse(False);
+    		delete collapser;
     		// and check that we can overwrite the previous output
-    		ImageCollapser collapser2(
+    		collapser = new ImageCollapser(
         		"sum", goodImage, "", "1,1,2,2", "1-2",
         		"qu", "", 1, outname(), True
         	);
-    		collapser2.collapse(False);
+    		collapser->collapse(False);
+    		delete collapser;
     		checkImage(outname(), "collapse_sum_1.fits");
     	}
     	{
