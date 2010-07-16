@@ -26,16 +26,23 @@
 
 #include <images/Images/ImageInputProcessor.h>
 
+#include <casa/Containers/HashMap.h>
 #include <casa/Utilities/Sort.h>
+#include <casa/iostream.h>
+
 #include <images/Images/FITSImage.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
-
 #include <images/Regions/WCBox.h>
 #include <images/Regions/RegionManager.h>
 
-ImageInputProcessor::ImageInputProcessor() : _log(new LogIO()) {}
+const String ImageInputProcessor::ALL = "ALL";
+
+ImageInputProcessor::ImageInputProcessor()
+: _log(new LogIO()), _processHasRun(False),
+  _nSelectedChannels(0)
+{}
 
 ImageInputProcessor::~ImageInputProcessor() {
 	delete _log;
@@ -43,12 +50,14 @@ ImageInputProcessor::~ImageInputProcessor() {
 
 void ImageInputProcessor::process(
 	ImageInterface<Float>*& image, Record& regionRecord,
-	String& diagnostics, const String& imagename,
-	const Record* regionPtr, const String& regionName,
-	const String& box, const String& chans,
-	const String& stokes, const StokesControl& stokesControl
-) const {
-    *_log << LogOrigin("ImageInputProcessor", __FUNCTION__);
+	String& diagnostics, Vector<OutputStruct> *outputStruct,
+	const String& imagename, const Record* regionPtr,
+	const String& regionName, const String& box,
+	const String& chans, const String& stokes,
+	const StokesControl& stokesControl, const Bool allowMultipleBoxes
+) {
+	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+    *_log << origin;
     if (imagename.empty()) {
         *_log << "imagename cannot be blank" << LogIO::EXCEPTION;
     }
@@ -58,84 +67,116 @@ void ImageInputProcessor::process(
     image = 0;
     ImageUtilities::openImage(image, imagename, *_log);
     if (image == 0) {
+    	*_log << origin;
     	*_log << "Unable to open image " << imagename << LogIO::EXCEPTION;
     }
+    if (outputStruct != 0) {
+    	_checkOutputs(outputStruct);
+    }
+	ImageMetaData metaData(*image);
+	_nSelectedChannels = metaData.nChannels();
+	// region specification order:
+	// 1: process box if given explicitly
+	// 2. else process region if pointer to region record specified
+	// 3. else process region if region name specified
+	// 4. else no box or region specified, process region as entire
+	//    positional plane anding with chans and stokes specs
+
     if (! box.empty()) {
     	if (box.freq(",") % 4 != 3) {
     		*_log << "box not specified correctly" << LogIO::EXCEPTION;
     	}
-    	ImageMetaData metaData(*image);
     	Vector<uInt> chanEndPts = _setSpectralRanges(chans, metaData);
     	Vector<uInt> polEndPts = _setPolarizationRanges(
     		stokes, metaData, image->name(), stokesControl
     	);
-
     	Vector<Double> boxCorners = _setBoxCorners(box);
     	_setRegion(
     		regionRecord, diagnostics, boxCorners,
     		chanEndPts, polEndPts, metaData, image
     	);
-
+    	*_log << origin;
     	*_log << LogIO::NORMAL << "Using specified box(es) " << box << LogIO::POST;
     }
     else if (regionPtr != 0) {
     	_setRegion(regionRecord, diagnostics, regionPtr);
+    	*_log << origin;
     	*_log << LogIO::NORMAL << "Set region from supplied region record"
     		<< LogIO::POST;
     }
     else if (! regionName.empty()) {
     	_setRegion(regionRecord, diagnostics, image, regionName);
+    	*_log << origin;
        	*_log << LogIO::NORMAL << "Set region from supplied region file "
         	<< regionName << LogIO::POST;
     }
     else {
     	// nothing specified, use entire positional plane with spectral and polarization specs
-    	ImageMetaData md(*image);
     	Vector<Double> boxCorners(0);
-    	if(md.hasDirectionCoordinate()) {
-    		Vector<Int> dirShape = md.directionShape();
+    	if(metaData.hasDirectionCoordinate()) {
+    		Vector<Int> dirShape = metaData.directionShape();
     		boxCorners.resize(4);
     		boxCorners[0] = 0;
     		boxCorners[1] = 0;
     		boxCorners[2] = dirShape[0] - 1;
     		boxCorners[3] = dirShape[1] - 1;
     	}
-    	Vector<uInt> chanEndPts = _setSpectralRanges(chans, md);
-    	Vector<uInt> polEndPts = _setPolarizationRanges(stokes, md, image->name(), stokesControl);
+    	Vector<uInt> chanEndPts = _setSpectralRanges(chans, metaData);
+    	Vector<uInt> polEndPts = _setPolarizationRanges(
+    		stokes, metaData, image->name(), stokesControl
+    	);
 
     	_setRegion(
     		regionRecord, diagnostics, boxCorners,
-    		chanEndPts, polEndPts, md, image
+    		chanEndPts, polEndPts, metaData, image
     	);
-    	*_log << LogIO::NORMAL << "No region specified. Using full positional plane." << LogIO::POST;
+        *_log << origin;
+    	*_log << LogIO::NORMAL << "No region specified. Using full positional plane."
+    		<< LogIO::POST;
     	if (chans.empty()) {
-    		*_log << LogIO::NORMAL << "Using all spectral channels." << LogIO::POST;
+    		*_log << LogIO::NORMAL << "Using all spectral channels."
+    			<< LogIO::POST;
     	}
     	else {
-    		*_log << LogIO::NORMAL << "Using channel range(s) " << _pairsToString(chanEndPts) << LogIO::POST;
+    		*_log << LogIO::NORMAL << "Using channel range(s) "
+    			<< _pairsToString(chanEndPts) << LogIO::POST;
     	}
-
     	if (!stokes.empty()) {
     		*_log << LogIO::NORMAL << "Using all polarizations" << LogIO::POST;
     	}
     	else {
-    		*_log << LogIO::NORMAL << "Using polarization range(s) " << _pairsToString(polEndPts) << LogIO::POST;
+    		*_log << LogIO::NORMAL << "Using polarization range(s) "
+    			<< _pairsToString(polEndPts) << LogIO::POST;
     	}
     }
+    if (!allowMultipleBoxes && regionRecord.fieldNumber("regions") >= 0) {
+    	*_log << "Only a single n-dimensional rectangular region is supported."
+    		<< LogIO::EXCEPTION;
+    }
+    _processHasRun = True;
+}
+
+uInt ImageInputProcessor::nSelectedChannels() const {
+	if (! _processHasRun) {
+	    *_log << LogOrigin("ImageInputProcessor", __FUNCTION__);
+		*_log << "Programming logic error, ImageInputProcessor::process() must be called "
+			<< "before ImageInputProcessor::" << __FUNCTION__ << "()" << LogIO::EXCEPTION;
+	}
+	return _nSelectedChannels;
 }
 
 Vector<uInt> ImageInputProcessor::_setSpectralRanges(
 	String specification, const ImageMetaData& metaData
-) const {
+) {
 	Vector<uInt> ranges(0);
     if (! metaData.hasSpectralAxis()) {
     	return ranges;
     }
 
 	specification.trim();
-
+	specification.upcase();
 	uInt nchan = metaData.nChannels();
-	if (specification.empty()) {
+	if (specification.empty() || specification == ALL) {
 		ranges.resize(2);
 		ranges[0] = 0;
 		ranges[1] = nchan - 1;
@@ -237,7 +278,12 @@ Vector<uInt> ImageInputProcessor::_setSpectralRanges(
     	ranges[2*i + 1] = max;
 
     }
-    return _consolidateAndOrderRanges(ranges);
+    Vector<uInt> consolidatedRanges = _consolidateAndOrderRanges(ranges);
+    _nSelectedChannels = 0;
+    for (uInt i=0; i<consolidatedRanges.size()/2; i++) {
+    	_nSelectedChannels += consolidatedRanges[2*i + 1] - consolidatedRanges[2*i] + 1;
+    }
+    return consolidatedRanges;
 }
 
 Vector<uInt> ImageInputProcessor::_consolidateAndOrderRanges(
@@ -297,6 +343,13 @@ Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
     	return ranges;
     }
 	specification.trim();
+	specification.upcase();
+	if (specification == ALL) {
+		ranges.resize(2);
+		ranges[0] = 0;
+		ranges[1] = metaData.nStokes() - 1;
+		return ranges;
+	}
 	if (specification.empty()) {
 		ranges.resize(2);
 		ranges[0] = 0;
@@ -337,7 +390,6 @@ Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
 
     for (uInt i=0; i<parts.size(); i++) {
     	String part = parts[i];
-    	part.upcase();
     	Vector<String>::iterator iter = sortedNames.begin();
     	while (iter != sortedNames.end() && ! part.empty()) {
     		if (part.startsWith(*iter)) {
@@ -430,60 +482,99 @@ void ImageInputProcessor::_setRegion(
 	const Vector<uInt>& polEndPts, const ImageMetaData& md,
 	const ImageInterface<Float> *image
 ) const {
+
+	String method(__FUNCTION__);
+	method += "_1";
+	LogOrigin origin("ImageInputProcessor", method);
+	*_log << origin;
     IPosition imShape = image->shape();
     Vector<Double> blc(imShape.nelements());
     Vector<Double> trc(imShape.nelements());
-
-    for (uInt i=0; i<imShape.nelements(); i++) {
-        blc[i] = 0;
-        trc[i] = imShape[i] - 1;
-    }
     CoordinateSystem csys = image->coordinates();
-
     Vector<Int> directionAxisNumbers = md.directionAxesNumbers();
     Int spectralAxisNumber = md.spectralAxisNumber();
     Int polarizationAxisNumber = md.polarizationAxisNumber();
+
+    Vector<Double> xCorners(boxCorners.size()/2);
+    Vector<Double> yCorners(xCorners.size());
+    for (uInt i=0; i<xCorners.size(); i++) {
+    	Double x = boxCorners[2*i];
+    	Double y = boxCorners[2*i + 1];
+
+    	if (x < 0 || y < 0 ) {
+    		*_log << "blc in box spec is less than 0" << LogIO::EXCEPTION;
+    	}
+    	if (
+    		x >= imShape[directionAxisNumbers[0]]
+    	    || y >= imShape[directionAxisNumbers[1]]
+    	) {
+    		*_log << "trc in box spec is greater than or equal to number "
+    			<< "of direction pixels in the image" << LogIO::EXCEPTION;
+    	}
+    	xCorners[i] = x;
+    	yCorners[i] = y;
+    }
+
     RegionManager rm;
     uInt regionCount = 0;
     ImageRegion imRegion;
-    for (uInt iStokes=0; iStokes < polEndPts.size()/2; iStokes++) {
-    	if (md.hasPolarizationAxis()) {
-    		blc[polarizationAxisNumber] = polEndPts[2*iStokes];
-    		trc[polarizationAxisNumber] = polEndPts[2*iStokes + 1];
+    Vector<Double> polEndPtsDouble(polEndPts.size());
+    for (uInt i=0; i<polEndPts.size(); i++) {
+    	polEndPtsDouble[i] = (Double)polEndPts[i];
+    }
+
+    Vector<Double> chanEndPtsDouble(chanEndPts.size());
+    for (uInt i=0; i<chanEndPts.size(); i++) {
+    	chanEndPtsDouble[i] = (Double)chanEndPts[i];
+    }
+
+    HashMap<uInt, Vector<Double> > axisCornerMap;
+
+    for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
+    	if (axisNumber == directionAxisNumbers[0]) {
+			axisCornerMap(axisNumber) = xCorners;
     	}
-    	for (uInt iSpec=0; iSpec < chanEndPts.size()/2; iSpec++) {
-    		if (md.hasSpectralAxis()) {
-        		blc[spectralAxisNumber] = chanEndPts[2*iSpec];
-        		trc[spectralAxisNumber] = chanEndPts[2*iSpec + 1];
-    		}
-    		for (uInt iPos=0; iPos<boxCorners.size()/4; iPos++) {
-    			if (md.hasDirectionCoordinate()) {
-    				if (boxCorners[4*iPos] < 0 || boxCorners[4*iPos + 1] < 0 ) {
-    					*_log << "blc in box spec is less than 0" << LogIO::EXCEPTION;
-    				}
-    				if (
-    					boxCorners[4*iPos +  2] >= imShape[directionAxisNumbers[0]]
-    					|| boxCorners[4*iPos +  3] >= imShape[directionAxisNumbers[1]]
-    				) {
-    					*_log << "trc in box spec is greater than or equal to number "
-    					"of direction pixels in the image" << LogIO::EXCEPTION;
-    				}
-    				blc[directionAxisNumbers[0]] = boxCorners[4*iPos];
-    				blc[directionAxisNumbers[1]] = boxCorners[4*iPos + 1];
-    				trc[directionAxisNumbers[0]] = boxCorners[4*iPos + 2];
-    				trc[directionAxisNumbers[1]] = boxCorners[4*iPos + 3];
-    			}
-    			LCBox lcBox(blc, trc, imShape);
-    			WCBox wcBox(lcBox, csys);
-    			ImageRegion thisRegion(wcBox);
-    			imRegion = (regionCount == 0)
-    				? thisRegion
-    				: imRegion = *rm.doUnion(imRegion, thisRegion);
-    			regionCount++;
-    		}
+    	else if (axisNumber == directionAxisNumbers[1]) {
+    		axisCornerMap(axisNumber) = yCorners;
+    	}
+    	else if (axisNumber == spectralAxisNumber) {
+    		axisCornerMap(axisNumber) = chanEndPtsDouble;
+    	}
+    	else if (axisNumber == polarizationAxisNumber) {
+    		axisCornerMap(axisNumber) = polEndPtsDouble;
+    	}
+    	else {
+    		*_log << "Unhandled image axis number " << axisNumber
+    			<< LogIO::EXCEPTION;
     	}
     }
+
+    uInt nRegions = 1;
+    if (md.hasDirectionCoordinate()) {
+    	nRegions *= boxCorners.size()/4;
+    }
+    if (md.hasPolarizationAxis()) {
+    	nRegions *= polEndPts.size()/2;
+    }
+    if (md.hasSpectralAxis()) {
+    	nRegions *= chanEndPts.size()/2;
+    }
+
+    for (uInt i=0; i<nRegions; i++) {
+    	for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
+    		blc(axisNumber) = axisCornerMap(axisNumber)[2*i];
+    		trc(axisNumber) = axisCornerMap(axisNumber)[2*i + 1];
+    	}
+		LCBox lcBox(blc, trc, imShape);
+		WCBox wcBox(lcBox, csys);
+		ImageRegion thisRegion(wcBox);
+		imRegion = (i == 0)
+			? thisRegion
+			: imRegion = *rm.doUnion(imRegion, thisRegion);
+    }
+
     ostringstream os;
+
     os << "Used image region from " << endl;
     if (md.hasDirectionCoordinate()) {
     	os << "    position box corners: ";
@@ -503,7 +594,9 @@ void ImageInputProcessor::_setRegion(
     	os << "    polarization pixel ranges: " << _pairsToString(polEndPts);
     }
     regionRecord = Record(imRegion.toRecord(""));
+
     //_printRecordFields(regionRecord);
+
     Int fieldNumber = regionRecord.fieldNumber("nr");
     if (fieldNumber >= 0) {
     	Int nr;
@@ -536,3 +629,55 @@ String ImageInputProcessor::_cornersToString(const Vector<Double>& corners) cons
 	}
 	return os.str();
 }
+
+void ImageInputProcessor::_checkOutputs(
+	Vector<OutputStruct> *output
+) const {
+	for (
+		Vector<OutputStruct>::iterator iter = output->begin();
+		iter != output->end();
+		iter++
+	) {
+		String label = iter->label;
+		String name = *(iter->outputFile);
+		Bool required = iter->required;
+		Bool replaceable = iter->replaceable;
+		if (name.empty()) {
+			if (required) {
+				*_log << label << " cannot be blank" << LogIO::EXCEPTION;
+			}
+			else {
+				continue;
+			}
+		}
+		LogIO::Command logLevel = required ? LogIO::SEVERE : LogIO::WARN;
+		LogIO::Command logAction = required ? LogIO::EXCEPTION : LogIO::POST;
+		File f(name);
+		switch (f.getWriteStatus()) {
+		case File::NOT_CREATABLE:
+			*_log << logLevel << "Requested " << label << " " << name
+				<< " cannot be created so will not be written" << logAction;
+			*(iter->outputFile) = "";
+			break;
+		case File::NOT_OVERWRITABLE:
+			*_log << logLevel << "There is already a file or directory named "
+				<< name << " which cannot be overwritten so the " << label
+				<< " will not be written" << logAction;
+			*(iter->outputFile) = "";
+			break;
+		case File::OVERWRITABLE:
+			if (! replaceable) {
+				*_log << logLevel << "Replaceable flag is false and there is "
+					<< "already a file or directory named " << name
+					<< " so the " << label << " will not be written"
+					<< logAction;
+				*(iter->outputFile) = "";
+			}
+			break;
+		default:
+			continue;
+		}
+	}
+}
+
+
