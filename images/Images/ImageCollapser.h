@@ -84,7 +84,7 @@ namespace casa {
         LogIO *_log;
         ImageInterface<Float> *_image;
         Record _regionRecord;
-        String _regionString, _stokesString, _chan, _mask, _outname;
+        String _regionString, _chan, _stokesString, _mask, _outname;
         uInt _compressionAxis;
         Bool _overwrite;
         //AggregateType _aggType;

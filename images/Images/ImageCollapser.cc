@@ -44,10 +44,10 @@ namespace casa {
     	const String& chanInp, const String& stokes,
     	const String& maskInp, const uInt compressionAxis,
         const String& outname, const Bool overwrite
-    ) : _chan(chanInp), _stokesString(stokes), _mask(maskInp),
-		_regionString(""), _outname(outname),
-		_compressionAxis(compressionAxis), _log(new LogIO()),
-		_overwrite(overwrite), _image(0), _aggregateFunction(0) {
+    ) : _log(new LogIO()), _image(0), _regionString(""),
+		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
+		_outname(outname), _compressionAxis(compressionAxis),
+		_overwrite(overwrite), _aggregateFunction(0) {
         _construct(aggString, imagename, box, region);
     }
 
@@ -63,7 +63,8 @@ namespace casa {
     		imageRegion, maskRegion, *_image,
     		_regionRecord, _mask, _log, False
     	);
-    	delete imageRegion, maskRegion;
+    	delete imageRegion;
+    	delete maskRegion;
     	IPosition inShape = subImage.shape();
     	IPosition outShape = inShape;
     	outShape[_compressionAxis] = 1;
