@@ -516,7 +516,6 @@ void ImageInputProcessor::_setRegion(
     }
 
     RegionManager rm;
-    uInt regionCount = 0;
     ImageRegion imRegion;
     Vector<Double> polEndPtsDouble(polEndPts.size());
     for (uInt i=0; i<polEndPts.size(); i++) {
@@ -530,7 +529,7 @@ void ImageInputProcessor::_setRegion(
 
     HashMap<uInt, Vector<Double> > axisCornerMap;
 
-    for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
+    for (Int axisNumber=0; axisNumber<(Int)image->ndim(); axisNumber++) {
     	if (axisNumber == directionAxisNumbers[0]) {
 			axisCornerMap(axisNumber) = xCorners;
     	}
