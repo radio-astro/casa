@@ -77,6 +77,9 @@ a \fits\ file:
 
 \begin{itemize}
 
+\item <link anchor="images:image.collapse.function">subimage</link> (function) - collapse image along specified axis,
+computing aggregate function of pixels along that axis
+
 \item <link anchor="images:image.decompose.function">decompose</link> - separate a complex image into individual components
 
 \item <link anchor="images:image.deconvolvecomponentlist.function">deconvolvecomponentlist</link> - deconvolve a Componentlist from the restoring beam
@@ -1249,6 +1252,87 @@ This shows a mixed type expression.  The real part of the Complex image
 type.  The result of the expression is not written out to disk
 in this case.  It is evaluated each time it is needed.
 </example>
+</method>
+
+<method type="function" name="collapse">
+    <shortdescription>Collapse image along specified axis, computing aggregate function of pixels along that axis.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="function">
+            <description>Aggregate function to apply: avdev, max, mean, median, min, rms, stdev, sum, variance.</description>
+            <value></value>
+        </param>
+        <param type="int" direction="in" name="axis">
+            <description>Zero-based axis number along which to collapse image.</description>
+            <value>0</value>
+        </param>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image file name. If blank, no image is written but a new image tool referencing the collapsed image is returned.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="region">
+            <description>Region name, default is to not use a region.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="box">
+            <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy"</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="chans">
+            <description>Channels to use. Channels must be contigous. Default is to use all channels.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="mask">
+            <description>Mask to use. Default is none.</description>
+            <value></value>
+        </param>
+        <param type="bool" direction="in" name="overwrite">
+            <description>Overwrite (unprompted) pre-existing output file? Ignored if outfile is blank.</description>
+            <value>false</value>
+        </param>
+    </input>
+    <returns type="casaimage"/>
+    <description>
+        This method collapses an image along a specified axis of N pixels to 1 pixel. It computes
+        the specified aggregate function of pixels along that axis and places those values in the
+        single remaining plane of this axis in the output image. The method returns an image analysis
+        tool containing the newly created collapsed image. Choices of aggregate functions are:
+        avdev, max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
+        the function parameter (eg, function="r" will compute the rms of the pixel values).
+        
+        If outfile is not specified (or contains only white spaces), no image is written but the
+        collapsed image is still able to be accessed via the image analysis tool this method always
+        returns which references the collpased image. If the returned object is not wanted it should
+        still be caught and deleted via its done() method. If this is not done, there is no gaurantee
+        for when the python garbage collector will delete it. If the returned object is wanted, it
+        should be deleted as soon as possible for the same reasons, eg
+        \begin{verbatim}
+        collapsed_image = ia.collapse(...)
+        # do things (or not) with collapsed_image and when done with object, do
+        collapsed_image.done()
+        \end{verbatim}
+
+        The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
+        of axis values of the pixels along that axis that were used in computing the aggregate value.
+        <example>
+\begin{verbatim}
+"""
+# myimage.im is a 512x512x128x4 (ra,dec,freq,stokes) image
+ia.open("myimage.im")
+# collapse a subimage of it along its spectral axis avoiding the 8 edge
+# channels at each end of the band, computing the mean value of the pixels
+# resulting image is 256x256x1x4 in size.
+collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2, box="127,127,383,383", chans="8-119")
+# manipulate collapsed
+collapsed.done()
+
+"""
+\end{verbatim}
+        </example>
+    </description>
 </method>
 
    <method type="function" name="imageconcat">
