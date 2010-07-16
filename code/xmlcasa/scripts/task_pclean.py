@@ -114,6 +114,12 @@ def pclean(vis, imagename, field, spw, imsize, cell,
     if cleanmode!='':
        cleanmode='channel'
 
+    if spw=='':
+       spw='*'
+
+    if imagename=='':
+       imagename=vis
+
     if cleanmode=='':
        pcont(msname=vis, 
           imagename=imagename, imsize=imsize, 
@@ -137,8 +143,8 @@ def pclean(vis, imagename, field, spw, imsize, cell,
           weight=weighting, mode='channel', 
           start=start, nchan=nchan, step=step, 
           chanchunk=chanchunk, scales=scales,
-          contclean=conclean, visinmem=visinmem)
+          contclean=contclean, visinmem=visinmem)
 
-
+parallel_clean=pclean
     
 

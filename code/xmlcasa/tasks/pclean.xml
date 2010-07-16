@@ -174,7 +174,7 @@
 			<value>[]</value>
 		</param>
 
-		<param type="string" name="hostnames">
+		<param type="stringArray" name="hostnames">
 			<description>The names of the cluster engine hosts</description>
 			<value></value>
 		</param>

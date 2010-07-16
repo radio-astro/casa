@@ -543,12 +543,14 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
         im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
                        phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start)
         im.setoptions(imagetilevol=imagetilevol) 
+        print 'making model image (', model, ') ...'
         im.make(model)
+        print 'model image (', model, ') made'
         im.done()
     ia.open(model)
     csys=ia.coordsys()
     ###as image will have conversion to LSRK...need to get original stuff
-    originsptype=csys.getconversiontype('spectral', False)
+    originsptype=csys.getconversiontype('spectral')
     csys.setconversiontype(spectral=originsptype)
     fstart=csys.toworld([0,0,0,0],'n')['numeric'][3]
     fstep=csys.toworld([0,0,0,1],'n')['numeric'][3]-fstart
