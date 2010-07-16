@@ -123,8 +123,8 @@ namespace casa {
             ImageInterface<Float> *_image;
             Record _regionRecord;
             uInt _chan;
-            String _stokesString, mask, residual, model, logfileName,
-				regionString, estimatesString, newEstimatesFileName;
+            String _stokesString, _mask, _residual, _model, _logfileName,
+				regionString, estimatesString, _newEstimatesFileName;
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, results;
             Vector<String> fixed;
