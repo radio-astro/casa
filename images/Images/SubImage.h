@@ -235,6 +235,27 @@ public:
   virtual void reopen();
   // </group>
 
+  // Factory method to create a SubImage from a region and a WCLELMask string.
+  // Moved from ImageAnalysis
+  // <src>outRegion</src> Pointer to the corresponding region. Pointer is
+  // created internally by new(); it is the caller's responsibility to delete it.
+  // <src>outMask</src> Pointer to corresponding mask. Pointer is created
+  // internally via new(); it is the caller's responsibility to delete it.
+  // <src>inImage</src> input image for which a subimage is desired.
+  // <src>region</src> Input region record from which to make the subimage.
+  // <src>mask</src> LEL mask description.
+  // <src>os</src> Pointer to logger to which to log messages. If 0, no logging (except exceptions).
+  // <src>writableIfPossible</src> make the subimage writable. If input image is not writable, this
+  // will always be False.
+  // <src>axesSpecifier</src> Specifier for output axes (duh).
+
+  static SubImage<T> createSubImage(
+	  ImageRegion*& outRegion, ImageRegion*& outMask,
+      ImageInterface<T>& inImage, const Record& region,
+      const String& mask, LogIO *os, Bool writableIfPossible,
+      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
+  );
+
 private:
   // Set the coordinates.
   // It removes world axes if the subimage has axes removed.
