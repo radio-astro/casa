@@ -632,26 +632,15 @@ class ImageAnalysis
                         casa::String& maskName,
                         casa::Bool init, casa::Bool makeDefault,
                         casa::LogIO& os, casa::Bool list) const;
-
-// Convert region Record to an ImageRegion pointer
-    casa::ImageRegion* makeRegionRegion(casa::ImageInterface<casa::Float>& inImage,
-                                        const casa::Record& theRegion, 
-                                        const casa::Bool listBoundingBox,
-                                        casa::LogIO& logger);
-
-// Make ImageRegion from 'mask' string
-    casa::ImageRegion* makeMaskRegion (const casa::String& mask) const;
-    
+    /*
     // Make a SubImage from a region and a WCLELMask string
-    casa::SubImage<casa::Float> 
-      makeSubImage(casa::ImageRegion*& pRegionRegion,
-                   casa::ImageRegion*& pMaskRegion,
-                   casa::ImageInterface<casa::Float>& inImage,
-                   const casa::Record& theRegion, const casa::String& mask,
-                   casa::Bool listBoundingBox, casa::LogIO& os,
-                   casa::Bool writableIfPossible,
-                   const casa::AxesSpecifier& axesSpecifier=casa::AxesSpecifier());
-
+    SubImage<Float> makeSubImage(
+    	ImageRegion*& pRegionRegion, ImageRegion*& pMaskRegion,
+        ImageInterface<Float>& inImage, const Record& theRegion,
+        const String& mask, LogIO *os, Bool writableIfPossible,
+        const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
+    );
+*/
 // See if the combination of the 'region' and 'mask' ImageRegions have changed
     casa::Bool haveRegionsChanged (casa::ImageRegion* pNewRegionRegion,
                                    casa::ImageRegion* pNewMaskRegion,
@@ -663,7 +652,7 @@ class ImageAnalysis
       makeCoordinateSystem(const casa::Record& cSys,
                            const casa::IPosition& shape) const;
     
-    // Make a block of regions from a GlishRecord (filled in by substitute.g).
+    // Make a block of regions from a Record
     void makeRegionBlock(casa::PtrBlock<const casa::ImageRegion*>& regions,
                          const casa::Record& Regions,
                          casa::LogIO& logger);
