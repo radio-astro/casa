@@ -58,7 +58,8 @@ namespace casa {
 
     ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
         *_log << LogOrigin("ImageCollapser", __FUNCTION__);
-    	ImageRegion *imageRegion, *maskRegion;
+    	ImageRegion *imageRegion = 0;
+    	ImageRegion *maskRegion = 0;
     	SubImage<Float> subImage = SubImage<Float>::createSubImage(
     		imageRegion, maskRegion, *_image,
     		_regionRecord, _mask, _log, False
@@ -137,8 +138,6 @@ namespace casa {
     		delete outImage;
     		outImage = 0;
     	}
-		cout << "outimage " << outImage << endl;
-
     	return outImage;
     }
 
