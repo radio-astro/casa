@@ -42,119 +42,189 @@ void _checkCorner(const Record& gotRecord, const Vector<Double>& expected) {
 	}
 }
 
+void testException(
+	const String& test,
+	Vector<ImageInputProcessor::OutputStruct> *outputStruct,
+	const String& imagename, const Record *regionPtr,
+	const String& regionName, const String& box,
+	const String& chans, const String& stokes,
+	const ImageInputProcessor::StokesControl& stokesControl,
+	const Bool allowMultipleBoxes
+) {
+	ImageInputProcessor processor;
+	ImageInterface<Float> *image = 0;
+	Record region;
+	String diagnostics;
+	Bool fail = True;
+	try {
+		writeTestString(test);
+		processor.process(
+			image, region, diagnostics, outputStruct, imagename,
+			regionPtr, regionName,
+			box, chans, stokes, stokesControl, allowMultipleBoxes
+		);
+		// should not get here
+		fail = False;
+		delete image;
+		AlwaysAssert(false, AipsError);
+	}
+	catch (AipsError) {
+		// should get here with fail = true
+		AlwaysAssert(fail, AipsError);
+	}
+}
+
+void testSuccess(
+	const String& test,
+	Vector<ImageInputProcessor::OutputStruct> *outputStruct,
+	const String& imagename, const Record *regionPtr,
+	const String& regionName, const String& box,
+	const String& chans, const String& stokes,
+	const ImageInputProcessor::StokesControl& stokesControl,
+	const Bool allowMultipleBoxes,
+	const Vector<Double>& expectedBlc,
+	const Vector<Double>& expectedTrc
+) {
+	ImageInputProcessor processor;
+	ImageInterface<Float> *image = 0;
+	Record region;
+	String diagnostics;
+	writeTestString("Valid box specification succeeds");
+	processor.process(
+		image, region, diagnostics, outputStruct, imagename,
+		regionPtr, regionName,
+		box, chans, stokes, stokesControl, allowMultipleBoxes
+	);
+	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
+	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
+	AlwaysAssert(processor.nSelectedChannels() == 1, AipsError);
+}
+
+void runProcess(
+	const String& test,
+	Vector<ImageInputProcessor::OutputStruct> *outputStruct,
+	const String& imagename, const Record *regionPtr,
+	const String& regionName, const String& box,
+	const String& chans, const String& stokes,
+	const ImageInputProcessor::StokesControl& stokesControl,
+	const Bool allowMultipleBoxes
+) {
+	ImageInputProcessor processor;
+	ImageInterface<Float> *image = 0;
+	Record region;
+	String diagnostics;
+	writeTestString("Valid box specification succeeds");
+	processor.process(
+		image, region, diagnostics, outputStruct, imagename,
+		regionPtr, regionName,
+		box, chans, stokes, stokesControl, allowMultipleBoxes
+	);
+}
+
+
 int main() {
     try {
+    	String goodImage = "image_input_processor.im";
+
+
     	ImageInputProcessor processor;
-    	ImageInterface<Float> *image;
+    	ImageInterface<Float> *image = 0;
     	Record region;
     	String diagnostics;
-    	String goodImage = "image_input_processor.im";
-		Bool fail = True;
+    	Bool fail = True;
+    	testException("Bad image name throws exception",
+    		0, "bogus_image", 0, "", "", "", "",
+    		ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException("Bad region name throws exception", 0, goodImage, 0, "bogus.rgn",
+    		"", "", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException("Bad region name in another image throws exception",
+    		0, goodImage, 0, "bogus.im:bogus.rgn",
+    		"", "", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException(
+    		"Bad box spec #1 throws exception",
+    		0, goodImage, 0, "", "-1,0,10,10",
+    		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException(
+    		"Bad box spec #2 throws exception",
+    		0, goodImage, 0, "", "0,-1,10,10",
+    		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException("Bad box spec #3 throws exception",
+    		0, goodImage, 0, "", "0,0,100 ,10",
+    		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException(
+    		"Bad box spec #4 throws exception",
+    		0, goodImage, 0, "", "0, 0,10 ,100",
+    		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException(
+    		"Bad box spec #5 throws exception",
+    		0, goodImage, 0, "", "5, 0, 0,10 ,10",
+    		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException(
+    		"Bad box spec #6 throws exception",
+    		0, goodImage, 0, "", "a, 0,10 ,10",
+    		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+    	);
+    	testException("Bad box spec #7 throws exception",
+    		0, goodImage, 0, "", "1a, 0,10 ,10",
+        	"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid channel spec #1 throws exception",
+			0, goodImage, 0, "", "0, 0,10 ,10",
+        	"1", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid channel spec #2 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"a", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid channel spec #3 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"a-b", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid channel spec #4 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"0-b", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid channel spec #5 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	">0", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid channel spec #6 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"-1", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid channel spec #7 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"<5", "", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid stokes spec #1 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"", "b", ImageInputProcessor::USE_ALL_STOKES, True
+        );
+    	testException(
+    		"Valid box spec with invalid stokes spec #2 throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"", "yy", ImageInputProcessor::USE_ALL_STOKES, True
+        );
     	try {
-    		writeTestString("Bad image name throws exception");
-    		processor.process(
-    			image, region, diagnostics, "bogus_image", 0, "", "", "", "",
-    			ImageInputProcessor::USE_ALL_STOKES
-    		);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(false, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad region name throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "bogus.rgn", "", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(false, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad region name in another image throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "bogus.im:bogus.rgn", "", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(False, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad box spec #1 throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "", "-1,0,10,10", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(False, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad box spec #2 throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "", "0,-1,10,10", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = false;
-    		AlwaysAssert(False, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad box spec #3 throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "", "0,0,100 ,10", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(False, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad box spec #4 throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,100", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(False, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad box spec #5 throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "", "5, 0, 0,10 ,10", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(False, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-    	try {
-    		writeTestString("Bad box spec #6 throws exception");
-    		processor.process(image, region, diagnostics, goodImage, 0, "", "a, 0,10 ,10", "", "", ImageInputProcessor::USE_ALL_STOKES);
-    		// should not get here
-    		fail = False;
-    		AlwaysAssert(False, AipsError);
-    	}
-    	catch (AipsError) {
-    		// should get here with fail = true
-    		AlwaysAssert(fail, AipsError);
-    	}
-       	try {
-        	writeTestString("Bad box spec #7 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "1a, 0,10 ,10", "", "", ImageInputProcessor::USE_ALL_STOKES);
+    		writeTestString("Calling nSelectedChannels() before process() throws an exception");
+    		ImageInputProcessor processor;
+		    processor.nSelectedChannels();
         	// should not get here
         	fail = False;
         	AlwaysAssert(False, AipsError);
@@ -163,104 +233,73 @@ int main() {
         	// should get here with fail = true
         	AlwaysAssert(fail, AipsError);
         }
-       	try {
-        	writeTestString("Valid box spec with invalid channel spec #1 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "1", "", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
+       	{
+        	ImageInputProcessor::OutputStruct output;
+        	String out = "/cannot_create";
+        	output.label = "file";
+        	output.outputFile = &out;
+        	output.required = True;
+        	output.replaceable = True;
+        	Vector<ImageInputProcessor::OutputStruct> outs(1);
+        	outs[0] = output;
+        	testException(
+        		"Non-createable output file throws exception",
+        		&outs, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
+       	}
+       	{
+        	writeTestString("Non-overwriteable output file throws exception");
+        	ImageInputProcessor::OutputStruct output;
+        	String out = "/usr";
+        	output.label = "file";
+        	output.outputFile = &out;
+        	output.required = True;
+        	output.replaceable = True;
+        	Vector<ImageInputProcessor::OutputStruct> outs(1);
+        	outs[0] = output;
+        	testException(
+        		"Non-overwriteable output file throws exception",
+        		&outs, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
         }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
+
+       	{
+        	writeTestString("Non-replaceable output file throws exception");
+        	ImageInputProcessor::OutputStruct output;
+        	String out = "input_image_processor_dont_replace_me";
+        	output.label = "file";
+        	output.outputFile = &out;
+        	output.required = True;
+        	output.replaceable = False;
+        	Vector<ImageInputProcessor::OutputStruct> outs(1);
+        	outs[0] = output;
+        	testException(
+        		"Non-replaceable output file throws exception",
+        		&outs, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
         }
-       	try {
-        	writeTestString("Valid box spec with invalid channel spec #2 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "a", "", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
-        }
-       	try {
-        	writeTestString("Valid box spec with invalid channel spec #3 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "a-b", "", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
-        }
-       	try {
-        	writeTestString("Valid box spec with invalid channel spec #4 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "0-b", "", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
-        }
-       	try {
-        	writeTestString("Valid box spec with invalid channel spec #5 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", ">0", "", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
-        }
-       	try {
-        	writeTestString("Valid box spec with invalid channel spec #6 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "-1", "", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
-        }
-       	try {
-        	writeTestString("Valid box spec with invalid channel spec #7 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "<5", "", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
-        }
-       	try {
-        	writeTestString("Valid box spec with invalid stokes spec #1 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "", "b", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
-        }
-       	try {
-        	writeTestString("Valid box spec with invalid stokes spec #2 throws exception");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,10 ,10", "", "yy", ImageInputProcessor::USE_ALL_STOKES);
-        	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
-        }
-        catch (AipsError) {
-        	// should get here with fail = true
-        	AlwaysAssert(fail, AipsError);
+       	testException(
+       		"Multiple boxes with allowMultipleRegions = False throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10, 20,20,30,30",
+        	"", "", ImageInputProcessor::USE_ALL_STOKES, False
+        );
+       	testException(
+       		"Multiple stokes ranges with allowMultipleRegions = False throws exception",
+        	0, goodImage, 0, "", "0, 0,10 ,10",
+        	"", "iu", ImageInputProcessor::USE_ALL_STOKES, False
+        );
+        {
+        	writeTestString("Multiple stokes ranges with allowMultipleRegions = True succeeds");
+        	processor.process(
+        		image, region, diagnostics, 0, goodImage, 0, "", "0, 0,10 ,10",
+        		"", "iu", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
+        	delete image;
+        	// FIXME just checks that no excpetion is thrown at this point, need to
+        	// do region checking.
         }
     	Vector<Double> expectedBlc(4);
     	expectedBlc[0] = 1.24795230e+00;
@@ -272,78 +311,135 @@ int main() {
     	expectedTrc[1] = 7.82564556e-01;
     	expectedTrc[2] = 4.73510000e+09;
     	expectedTrc[3] = 4;
+    	testSuccess(
+    		"Valid box specification succeeds",
+        	0, goodImage, 0, "", "0, 0,  10,10",
+        	"", "", ImageInputProcessor::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+        );
+    	testSuccess(
+    		"Valid box specification with valid channel specification #1 succeeds",
+        	0, goodImage, 0, "", "0, 0,  10,10",
+        	"0-0", "", ImageInputProcessor::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+        );
+    	testSuccess(
+    		"Valid box specification with valid channel specification #2 succeeds",
+        	0, goodImage, 0, "", "0, 0,  10,10",
+        	"0", "", ImageInputProcessor::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+        );
+        testSuccess(
+        	"Valid box specification with valid stokes specification #1 succeeds",
+        	 0, goodImage, 0, "", "0, 0,  10,10",
+        	"", "QVIU", ImageInputProcessor::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+        );
         {
-        	writeTestString("Valid box specification succeeds");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10", "", "", ImageInputProcessor::USE_ALL_STOKES);
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
-        }
-        {
-        	writeTestString("Valid box specification with valid channel specification #1 succeeds");
-        	processor.process(image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10", "0-0", "", ImageInputProcessor::USE_ALL_STOKES);
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
-        }
-        {
-        	writeTestString("Valid box specification with valid channel specification #2 succeeds");
-        	processor.process(
-        		image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10",
-        		"0", "", ImageInputProcessor::USE_ALL_STOKES
-        	);
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
-        }
-        {
-        	writeTestString("Valid box specification with valid stokes specification #1 succeeds");
-        	processor.process(
-        		image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10",
-        		"", "QVIU", ImageInputProcessor::USE_ALL_STOKES
-        	);
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
-        }
-        {
-        	writeTestString("Valid box specification with valid stokes specification #2 succeeds");
         	expectedTrc[3] = 3;
-        	processor.process(
-        		image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10", "",
-        		"QIU", ImageInputProcessor::USE_ALL_STOKES
+        	testSuccess(
+        		"Valid box specification with valid stokes specification #2 succeeds",
+        		0, goodImage, 0, "", "0, 0,  10,10", "",
+        		"QIU", ImageInputProcessor::USE_ALL_STOKES, True,
+            	expectedBlc, expectedTrc
         	);
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
         }
         {
-        	writeTestString("Valid box specification with valid stokes specification #3 succeeds");
         	expectedBlc[3] = expectedTrc[3] = 2;
-        	processor.process(
-        		image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10",
-        		"", "Q", ImageInputProcessor::USE_ALL_STOKES
+        	testSuccess(
+        		"Valid box specification with valid stokes specification #3 succeeds",
+        		0, goodImage, 0, "", "0, 0,  10,10",
+        		"", "Q", ImageInputProcessor::USE_ALL_STOKES, True,
+            	expectedBlc, expectedTrc
         	);
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
         }
         {
-        	writeTestString("Valid box specification using all polarizations for blank stokes");
-        	processor.process(
-        		image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10",
-        		"", "", ImageInputProcessor::USE_ALL_STOKES
-        	);
         	expectedBlc[3] = 1;
         	expectedTrc[3] = 4;
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
+        	testSuccess(
+        		"Valid box specification using all polarizations for blank stokes",
+        		0, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True,
+            	expectedBlc, expectedTrc
+            );
         }
         {
-        	writeTestString("Valid box specification using first polarizations for blank stokes");
         	expectedTrc[3] = 1;
         	expectedBlc[3] = 1;
-        	processor.process(
-        		image, region, diagnostics, goodImage, 0, "", "0, 0,  10,10",
-        		"", "  ", ImageInputProcessor::USE_FIRST_STOKES
+        	testSuccess(
+        		"Valid box specification using first polarizations for blank stokes",
+        		0, goodImage, 0, "", "0, 0,  10,10",
+        		"", "  ", ImageInputProcessor::USE_FIRST_STOKES, True,
+            	expectedBlc, expectedTrc
         	);
-        	_checkCorner(region.asRecord(RecordFieldId("blc")), expectedBlc);
-        	_checkCorner(region.asRecord(RecordFieldId("trc")), expectedTrc);
         }
+       	{
+        	writeTestString("Non-required, non-overwriteable output file is set to blank");
+        	ImageInputProcessor::OutputStruct output;
+        	String out = "/usr";
+        	output.label = "file";
+        	output.outputFile = &out;
+        	output.required = False;
+        	output.replaceable = True;
+        	Vector<ImageInputProcessor::OutputStruct> outs(1);
+        	outs[0] = output;
+        	runProcess(
+        		"Non-required, non-overwriteable output file is set to blank",
+        		&outs, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
+        	AlwaysAssert(out.empty(), AipsError);
+       	}
+       	{
+        	ImageInputProcessor::OutputStruct output;
+        	String out = "/cannot_write_me";
+        	output.label = "file";
+        	output.outputFile = &out;
+        	output.required = False;
+        	output.replaceable = True;
+        	Vector<ImageInputProcessor::OutputStruct> outs(1);
+        	outs[0] = output;
+        	runProcess(
+        		"Non-required, non-createable output file is set to blank",
+        		&outs, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
+        	AlwaysAssert(out.empty(), AipsError);
+       	}
+       	{
+        	ImageInputProcessor::OutputStruct output;
+        	String out = "input_image_processor_dont_replace_me";
+        	output.required = False;
+        	output.label = "file";
+        	output.outputFile = &out;
+        	output.required = False;
+        	output.replaceable = False;
+        	Vector<ImageInputProcessor::OutputStruct> outs(1);
+        	outs[0] = output;
+        	runProcess(
+        		"Non-required, non-replaceable output file is set to blank",
+        		&outs, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
+        	AlwaysAssert(out.empty(), AipsError);
+       	}
+       	{
+        	ImageInputProcessor::OutputStruct output;
+        	output.label = "file";
+        	String name = "youcanwritemedddslsl";
+        	String save = name;
+        	output.outputFile = &name;
+        	output.required = True;
+        	output.replaceable = False;
+        	Vector<ImageInputProcessor::OutputStruct> outs(1);
+        	outs[0] = output;
+        	runProcess(
+        		"Writeable file is not reset",
+        		&outs, goodImage, 0, "", "0, 0,  10,10",
+        		"", "", ImageInputProcessor::USE_ALL_STOKES, True
+        	);
+        	AlwaysAssert(name == save, AipsError);
+       	}
     }
     catch (AipsError x) {
         cerr << "Exception caught: " << x.getMesg() << endl;

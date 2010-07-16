@@ -59,6 +59,20 @@ public:
 		USE_ALL_STOKES
 	};
 
+	const static String ALL;
+
+	// struct for checking output file writability
+	struct OutputStruct {
+		// label used for messages, eg "residual image", "estmates file"
+		String label;
+		// pointer to the output name
+		String *outputFile;
+		// is this file required to be written, or can the task continue if it cannot be?
+		Bool required;
+		// If a file by the same name already exists, will the task allow it to be overwritten?
+		Bool replaceable;
+	};
+
 	//constructor
 	ImageInputProcessor();
 
@@ -69,17 +83,28 @@ public:
 	// opened <src>image</src>, the specified region as a record (<src>
 	// regionRecord</src>, and a <src>diagnostics</src> String describing
 	// how the region was chosen. <src>stokesControl</src> indicates default
-	// stokes range to use if <src>stokes</src> is blank.
+	// stokes range to use if <src>stokes</src> is blank. If
+	// <src>allowMultipleBoxes</src> is False, an exception will be thrown if
+	// the inputs specify multiple n-dimensional rectangles. This should usually
+	// be set to false if the caller can only deal with a single n-dimensional
+	// rectangular region.
     void process(
     	ImageInterface<Float>*& image, Record& regionRecord,
-    	String& diagnostics, const String& imagename,
-    	const Record* regionPtr, const String& regionName,
-    	const String& box, const String& chans,
-    	const String& stokes, const StokesControl& stokesControl
-    ) const;
+    	String& diagnostics, Vector<OutputStruct> *outputStruct,
+    	const String& imagename, const Record* regionPtr,
+    	const String& regionName, const String& box,
+    	const String& chans, const String& stokes,
+    	const StokesControl& stokesControl, Bool allowMultipleBoxes
+    );
+
+    // Get the number of channels that have been selected. The process() method must
+    // be called prior to calling this method or an exception is thrown.
+    uInt nSelectedChannels() const;
 
 private:
     LogIO *_log;
+    Bool _processHasRun;
+    uInt _nSelectedChannels;
 
     void _setRegion(
     	Record& regionRecord, String& diagnostics,
@@ -99,7 +124,7 @@ private:
 
     Vector<uInt> _setSpectralRanges(
     	String specification, const ImageMetaData& metaData
-    ) const;
+    );
 
     Vector<Double> _setBoxCorners(const String& box) const;
 
@@ -113,7 +138,10 @@ private:
     String _pairsToString(const Vector<uInt>& pairs) const;
 
     String _cornersToString(const Vector<Double>& corners) const;
+
+    void _checkOutputs(Vector<OutputStruct> *output) const;
 };
+
 }
 
 #endif /* IMAGES_IMAGEINPUTPROCESSOR_H */
