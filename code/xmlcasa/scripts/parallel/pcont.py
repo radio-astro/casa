@@ -73,7 +73,100 @@ def putchanimage(cubimage,inim,chan):
     ia.removefile(inim)
     return True
 
+def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12):
+    numproc=numpartition
+    spwsel=[]
+    startsel=[]
+    nchansel=[]
+    for k in range(numproc):
+        spwsel.append([])
+        startsel.append([])
+        nchansel.append({})
+    
+    tb.open(msname+"/SPECTRAL_WINDOW")
+    channum=tb.getcol('NUM_CHAN')
+    nspw=tb.nrows()
+    if(len(spwids)==0):
+        spwids=range(nspw)
+    freqs=[]
+    for k in range(nspw):
+        freqs.append(tb.getcol('CHAN_FREQ', k, 1).flatten())
+        
+    allfreq=freqs[spwids[0]]
+    flatspw=np.ndarray((channum[spwids[0]]), int)
+    flatspw[:]=spwids[0]
+    flatchan=np.array(range(channum[spwids[0]]))
+    for k in range(1, len(spwids)) :
+        allfreq=np.append(allfreq, freqs[spwids[k]])
+        tpflatspw=np.ndarray((channum[spwids[k]]), int)
+        tpflatspw[:]=spwids[k]
+        flatspw=np.append(flatspw, tpflatspw)
+        flatchan=np.append(flatchan, np.array(range(channum[spwids[k]])))
+     ##number of channels in the ms
+    #pdb.set_trace()
+    sortind=np.argsort(allfreq)
+    allfreq=np.sort(allfreq)
+    numchanperms=len(allfreq)
+    print 'number of channels', numchanperms
+    minfreq=np.min(allfreq)
+    if(minfreq > endfreq):
+        return -1, -1, -1
+    minfreq=minfreq if minfreq > beginfreq else beginfreq
+    maxfreq=np.max(allfreq)
+    if(maxfreq < beginfreq):
+        return -1, -1, -1
+    maxfreq=maxfreq if maxfreq < endfreq else endfreq
+    startallchan=0
+    while (minfreq > allfreq[startallchan]):
+        startallchan=startallchan+1
+    if(startallchan > (allfreq.size -1) ):
+        #return -1
+        return -1, -1, -1
+    endallchan=allfreq.size -1
+    while((maxfreq < allfreq[endallchan]) and (endallchan > 0)):
+        endallchan=endallchan-1
+    if(endallchan < (startallchan+1)):
+        ##fail
+        return -1, -1, -1
+    totchan=endallchan-startallchan+1
+    bandperproc=(allfreq[endallchan]-allfreq[startallchan])/numproc
+    chanperproc=totchan/numproc
+    extrachan=0
+    if((totchan%numproc) > 0):
+        chanperproc=chanperproc+1
+        extrachan=1
+    actualchan=0
+    
+    spwcounter=0
+    for k in range(numproc):
+        spwsel[k].append(flatspw[sortind[actualchan]])
+        startsel[k].append(flatchan[sortind[actualchan]])
+        for j in range(chanperproc):
+            if(((actualchan%chanperproc) > 0) and (flatspw[sortind[actualchan]] !=flatspw[sortind[actualchan-1]])):
+                nchansel[k].update({flatspw[sortind[actualchan-1]]:(flatchan[sortind[actualchan-1]]-startsel[k][spwcounter]+1)})
+                if(not np.any(np.array(spwsel[k])==flatspw[sortind[actualchan]])):
+                    spwcounter=spwcounter+1
+                    spwsel[k].append(flatspw[sortind[actualchan]])
+                    startsel[k].append(flatchan[sortind[actualchan]])
+                else:
+                    ###we are back on a spw that is already selected
+                    nchansel[k].pop(flatspw[sortind[actualchan]])
+                    spwcounter=0
+                    while (spwsel[k][spwcounter] != flatspw[sortind[actualchan]]):
+                        spwcounter+=1
+            actualchan=actualchan+1
+        #pdb.set_trace()
+        if(len(nchansel[k]) != len(spwsel[k])):
+            nchansel[k].update({spwsel[k][spwcounter]:(flatchan[sortind[actualchan-1]]-startsel[k][spwcounter]+1)})
+        spwcounter=0
+    
+    retchan=[]
+    for k in range(numproc):
+        retchan.append([])
+        for j in range(len(nchansel[k])):
+            retchan[k].append(nchansel[k][spwsel[k][j]])
 
+    return spwsel, startsel, retchan
 
 def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, continuum=True):
     numproc=numpartition
@@ -316,7 +409,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         c.start_engine(hostname,numcpu,owd)
     numcpu=numcpu*len(hostnames)
     ###spw and channel selection
-    spwsel,startsel,nchansel=findchansel(msname, spwids, numcpu)
+    spwsel,startsel,nchansel=findchanselcont(msname, spwids, numcpu)
     
     print 'SPWSEL ', spwsel, startsel, nchansel 
 
@@ -550,7 +643,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     ia.open(model)
     csys=ia.coordsys()
     ###as image will have conversion to LSRK...need to get original stuff
-    originsptype=csys.getconversiontype('spectral')
+    originsptype=csys.getconversiontype('spectral', showconversion=False)
     csys.setconversiontype(spectral=originsptype)
     fstart=csys.toworld([0,0,0,0],'n')['numeric'][3]
     fstep=csys.toworld([0,0,0,1],'n')['numeric'][3]-fstart
