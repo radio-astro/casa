@@ -53,9 +53,11 @@ Int main(Int argc, char *argv[]) {
 	uInt axis = input.getInt("axis");
 	String function = input.getString("function");
 	String outname = input.getString("outname");
-	ImageCollapser imCollapser(
+    // FIXME create user input for overwrite parameter
+    ImageCollapser imCollapser(
 		function,imagename, region, box,
-		chans, stokes, mask, axis, outname
+		chans, stokes, mask, axis, outname,
+        False
     );
 
 	imCollapser.collapse(False);
