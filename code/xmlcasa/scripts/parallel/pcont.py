@@ -422,7 +422,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'")'
     print 'launch command', launchcomm
     c.pgc(launchcomm);
-    #c.pgc('a.visInMem='+str(visinmem));
+    c.pgc('a.visInMem='+str(visinmem));
     #c.pgc('a.painc='+str(painc));
     #c.pgc('a.cfcache='+'"'+str(cfcache)+'"');
     #c.pgc('a.pblimit='+str(pblimit));
