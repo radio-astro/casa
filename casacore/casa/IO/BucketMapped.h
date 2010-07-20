@@ -31,7 +31,7 @@
 //# Includes
 #include <casa/IO/BucketBase.h>
 #include <casa/IO/MMapfdIO.h>
-
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
