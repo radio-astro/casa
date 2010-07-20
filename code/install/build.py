@@ -456,7 +456,7 @@ def build_casa(b, url, revision, type, ops, architecture):
                 # Brute force
                 b.do("", "sudo yum -y install casapy-test-devel")
             else:
-                b.do("", "sudo yum -y install antlr-c++-devel antlr-c++-shared casapy-boost casapy-boost-devel casapy-ccmtools casapy-ccmtools-python casapy-ccmtools-shared casapy-python casapy-python-devel cfitsio-devel dbus-c++ fftw3 fftw3-devel qt434-devel qt434-qwt-devel rpfits tix tix-devel wcslib xerces-c xerces-c-devel aatm aatm-devel dbus-c++-devel blas-devel cmake")
+                b.do("", "sudo yum -y install antlr-c++-devel antlr-c++-shared casapy-boost casapy-boost-devel casapy-ccmtools casapy-ccmtools-python casapy-ccmtools-shared casapy-python casapy-python-devel cfitsio-devel dbus-c++ fftw3 fftw3-devel qt434-devel qt434-qwt-devel rpfits tix tix-devel wcslib xerces-c xerces-c-devel aatm aatm-devel dbus-c++-devel blas-devel lapack-devel pgplot-devel cmake")
 
             # It should cause packages to be installed only from the casa RPM
             # repository. If there were conflicts with other repositories, you 
