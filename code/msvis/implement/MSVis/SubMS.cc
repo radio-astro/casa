@@ -73,6 +73,7 @@
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 #include <functional>
+#include <map>
 #include <set>
 #include <measures/Measures/MeasTable.h>
 
@@ -572,7 +573,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     arrayExpr_p = subarray;
     if(arrayExpr_p == ""){      // Zap any old ones.
       arrayId_p.resize();
-      arrayRemapper_p.resize();
+      arrayRemapper_p.clear();
     }
     // else arrayId_p will get set in makeSelection().
 
@@ -5396,48 +5397,48 @@ Bool SubMS::fillAccessoryMainCols(){
     return true;
   }
 
-  Bool SubMS::putDataColumn(MSColumns& msc, Cube<Complex>& data, 
-                            const MS::PredefinedColumns colName,
-                            const Bool writeToDataCol)
-  {
-    if(writeToDataCol || colName == MS::DATA)
-      msc.data().putColumn(data);
-    else if (colName ==  MS::MODEL_DATA)
-      msc.modelData().putColumn(data);
-    else if (colName == MS::CORRECTED_DATA)
-      msc.correctedData().putColumn(data);
-    //else if(colName == MS::FLOAT_DATA)              // promotion from Float
-    //  msc.floatData().putColumn(data);              // to Complex is pvt?
-    else if(colName == MS::LAG_DATA)
-      msc.lagData().putColumn(data);
-    else
-      return false;
-    return true;
-  }
+  // Bool SubMS::putDataColumn(MSColumns& msc, Cube<Complex>& data, 
+  //                           const MS::PredefinedColumns colName,
+  //                           const Bool writeToDataCol)
+  // {
+  //   if(writeToDataCol || colName == MS::DATA)
+  //     msc.data().putColumn(data);
+  //   else if (colName ==  MS::MODEL_DATA)
+  //     msc.modelData().putColumn(data);
+  //   else if (colName == MS::CORRECTED_DATA)
+  //     msc.correctedData().putColumn(data);
+  //   //else if(colName == MS::FLOAT_DATA)              // promotion from Float
+  //   //  msc.floatData().putColumn(data);              // to Complex is pvt?
+  //   else if(colName == MS::LAG_DATA)
+  //     msc.lagData().putColumn(data);
+  //   else
+  //     return false;
+  //   return true;
+  // }
 
-  Bool SubMS::putDataColumn(MSColumns& msc, Cube<Float>& data, 
-                            const MS::PredefinedColumns colName,
-                            const Bool writeToDataCol)
-  {
-    LogIO os(LogOrigin("SubMS", "putDataColumn()"));
+  // Bool SubMS::putDataColumn(MSColumns& msc, Cube<Float>& data, 
+  //                           const MS::PredefinedColumns colName,
+  //                           const Bool writeToDataCol)
+  // {
+  //   LogIO os(LogOrigin("SubMS", "putDataColumn()"));
 
-    if(writeToDataCol)
-      os << LogIO::NORMAL
-	 << "Writing to FLOAT_DATA instead of DATA."
-	 << LogIO::POST;
+  //   if(writeToDataCol)
+  //     os << LogIO::NORMAL
+  // 	 << "Writing to FLOAT_DATA instead of DATA."
+  // 	 << LogIO::POST;
 
-    if(colName == MS::FLOAT_DATA){
-      msc.floatData().putColumn(data);
-    }
-    else{
-      os << LogIO::SEVERE
-	 << "Float data cannot be written to "
-	 << MS::columnName(colName)
-	 << LogIO::POST;
-      return false;
-    }
-    return true;
-  }
+  //   if(colName == MS::FLOAT_DATA){
+  //     msc.floatData().putColumn(data);
+  //   }
+  //   else{
+  //     os << LogIO::SEVERE
+  // 	 << "Float data cannot be written to "
+  // 	 << MS::columnName(colName)
+  // 	 << LogIO::POST;
+  //     return false;
+  //   }
+  //   return true;
+  // }
 
   // Sets outcol to row numbers in the corresponding subtable of its ms that
   // correspond to the values of incol.
@@ -5447,18 +5448,25 @@ Bool SubMS::fillAccessoryMainCols(){
   void SubMS::remapColumn(const ROScalarColumn<Int>& incol,
                           ScalarColumn<Int>& outcol)
   {
-    Vector<Int> colvec = incol.getColumn();
-    Vector<Int> mapper;
+    uInt nrows = incol.nrow();
     
-    make_map(colvec, mapper);
-    if(mapper.nelements() == 1){
+    if(nrows != outcol.nrow()){
+      ostringstream ostr;
+
+      ostr << "SubMS::remapColumn(): the # of input rows, " << nrows
+	   << ", != the # of output rows, " << outcol.nrow();
+      throw(AipsError(ostr.str()));
+    }
+    
+    std::map<Int, Int> mapper;
+    
+    make_map(incol, mapper);
+    if(mapper.size() == 1){
       outcol.fillColumn(0);        // Just a little optimization.
     }
     else{
-      for(uInt k = 0; k < colvec.nelements(); ++k)
-	colvec[k] = static_cast<Int>(remapped(colvec[k], mapper,
-					      k > 0 ? colvec[k - 1] + 1 : 0));
-      outcol.putColumn(colvec);
+      for(uInt k = 0; k < nrows; ++k)
+	outcol.put(k, mapper[incol(k)]);
     }
   }
   
@@ -5727,11 +5735,23 @@ Bool SubMS::copyState()
       const ROMSStateColumns oldStateCols(oldState);
       MSStateColumns newStateCols(newState);
 
-      if(stateRemapper_p.nelements() < 1)
-	make_map(mscIn_p->stateId().getColumn(), stateRemapper_p);
+      // Initialize stateRemapper_p if necessary.
+      if(stateRemapper_p.size() < 1)
+	make_map(mscIn_p->stateId(), stateRemapper_p);
 
-      for(uInt outrn = 0; outrn < stateRemapper_p.nelements(); ++outrn)
-	TableCopy::copyRows(newState, oldState, outrn, stateRemapper_p[outrn], 1);
+      uInt nStates = stateRemapper_p.size();
+      
+      // stateRemapper_p goes from input to output, as is wanted in most
+      // places.  Here we need a map going the other way, so make one.
+      Vector<Int> outStateToInState(nStates);
+      std::map<Int, Int>::iterator mit;
+      
+      for(mit = stateRemapper_p.begin(); mit != stateRemapper_p.end(); ++mit)
+	outStateToInState[(*mit).second] = (*mit).first;
+      
+      for(uInt outrn = 0; outrn < nStates; ++outrn)
+	TableCopy::copyRows(newState, oldState, outrn,
+			    outStateToInState[outrn], 1);
     }
   }
   return True;
@@ -6201,15 +6221,33 @@ void SubMS::make_map(const Vector<Int>& mscol, Vector<Int>& mapper)
   std::set<Int> valSet;
   
   for(uInt i = mscol.nelements() - 1; i--;)  // Strange, but slightly more
-                                        // efficient than going forward.
-    valSet.insert(mscol[i]);
-
+    valSet.insert(mscol[i]);                 // efficient than going forward.
   mapper.resize(valSet.size());
 
   uInt remaval = 0;
   for(std::set<Int>::const_iterator vs_iter = valSet.begin();
       vs_iter != valSet.end(); ++vs_iter){
     mapper[remaval] = *vs_iter;
+    ++remaval;
+  }
+}
+
+// Sets mapper to to a map from the distinct values of mscol, in increasing
+// order, to 0, 1, 2, ..., mapper.size() - 1.
+// A static method that is used by SubMS, but doesn't necessarily have to go
+// with it.  It may belong in something more MSColumnsish.
+void SubMS::make_map(const ROScalarColumn<Int>& mscol,
+		     std::map<Int, Int>& mapper)
+{
+  std::set<Int> valSet;
+  
+  for(uInt i = mscol.nrow() - 1; i--;)  // Strange, but slightly more
+    valSet.insert(mscol(i));    	// efficient than going forward.
+
+  uInt remaval = 0;
+  for(std::set<Int>::const_iterator vs_iter = valSet.begin();
+      vs_iter != valSet.end(); ++vs_iter){
+    mapper[*vs_iter] = remaval;
     ++remaval;
   }
 }
@@ -6299,13 +6337,13 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
                              const uInt array)
 {
   // Fastest slotnum (farthest apart), but slowest index.
-  uInt slotKey = remapped(array, arrayRemapper_p, array);
+  uInt slotKey = arrayRemapper_p[array];
   
-  slotKey *= stateRemapper_p.nelements();
-  slotKey += remapped(state, stateRemapper_p, state);
+  slotKey *= stateRemapper_p.size();
+  slotKey += stateRemapper_p[state];
 
-  slotKey *= scanRemapper_p.nelements();                // Must be set before calling
-  slotKey += remapped(scan, scanRemapper_p, abs(scan)); // rowProps2slotKey().
+  slotKey *= scanRemapper_p.size();        // Must be set before calling
+  slotKey += scanRemapper_p[scan]; 	   // rowProps2slotKey().
 
   slotKey *= fieldid_p.nelements();
   slotKey += fieldRelabel_p[field];
@@ -6356,15 +6394,6 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
         ignore_state = ignorables_p.contains("state");
       }
 
-      const Vector<Int>& arrayIDs = ignore_array ? 
-                                    zeroes : mscIn_p->arrayId().getColumn();
-
-      const Vector<Int>& scan = ignore_scan ? zeroes :
-                                mscIn_p->scanNumber().getColumn();
-
-      const Vector<Int>& state = ignore_state ? zeroes :
-                                 mscIn_p->stateId().getColumn();
-
       const Vector<Bool>& rowFlag = mscIn_p->flagRow().getColumn();
 
       //std::set<Int> slotSet;
@@ -6374,19 +6403,23 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       newTimeVal_p.resize(numrows);
       bin_slots_p.resize(numrows);
 
-      if(ignore_array)
-        arrayRemapper_p.resize(1);         // 0 -> 0
-      else
-        make_map(arrayIDs, arrayRemapper_p);
-      if(ignore_scan)
-        scanRemapper_p.resize(1);         // 0 -> 0
-      else
-        make_map(scan,     scanRemapper_p);  // This map is only implicitly
-                                             // used.
-      if(ignore_state)
-        stateRemapper_p.resize(1);         // 0 -> 0
-      else if(stateRemapper_p.nelements() < 1)
-	make_map(state,    stateRemapper_p);
+      if(ignore_array){
+	arrayRemapper_p.clear();
+	arrayRemapper_p[0] = 0;		// This will do.
+      }
+      else if(arrayRemapper_p.size() < 1)
+	make_map(mscIn_p->arrayId(), arrayRemapper_p);
+
+      if(ignore_scan){
+	scanRemapper_p.clear();
+	scanRemapper_p[0] = 0;
+      }
+      else if(scanRemapper_p.size() < 1)
+        make_map(mscIn_p->scanNumber(), 
+		 scanRemapper_p);        // This map is only implicitly used.
+
+      if(stateRemapper_p.size() < 1)
+	make_map(mscIn_p->stateId(), stateRemapper_p);
 
       Int numBin = 0;
 
@@ -6423,9 +6456,12 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
 	  }
 	  bin_slots_p[numBin][rowProps2slotKey(ant1[toik], ant2[toik],
 					       datDesc[toik], fieldId[toik],
-					       scan[toik],	// Don't remap!
-					       state[toik],
-                                               arrayIDs[toik])].push_back(toik);
+					       ignore_scan ? 0 : // Don't remap!
+					       mscIn_p->scanNumber()(toik),	
+					       ignore_state ? 0 : 
+					       mscIn_p->stateId()(toik),
+                                               ignore_array ? 0:
+					       mscIn_p->arrayId()(toik))].push_back(toik);
 	  oldtoik = toik;
 	}
       }
@@ -6577,12 +6613,12 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   const ROScalarColumn<Int> state(mscIn_p->stateId());
 
   const ROScalarColumn<Int> inProc(mscIn_p->processorId());
-  Vector<Int> procMapper;
-  make_map(inProc.getColumn(), procMapper);
+  std::map<Int, Int> procMapper;
+  make_map(inProc, procMapper);
 
   const ROScalarColumn<Int> inObs(mscIn_p->observationId());
-  Vector<Int> obsMapper;
-  make_map(inObs.getColumn(), obsMapper);
+  std::map<Int, Int> obsMapper;
+  make_map(inObs, obsMapper);
 
   const ROScalarColumn<Int> inArr(mscIn_p->arrayId());
 
@@ -7034,12 +7070,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       outFeed1[orn] = inFeed1(slotv0);
       outFeed2[orn] = inFeed2(slotv0);
       outField[orn]   = fieldRelabel_p[fieldID(slotv0)];
-      outState[orn]   = remapped(state(slotv0), stateRemapper_p,
-                                 abs(state(slotv0)));
-      outProc[orn]    = remapped(inProc(slotv0), procMapper,
-                                 abs(inProc(slotv0)));
-      outObs[orn]     = remapped(inObs(slotv0), obsMapper,
-                                 abs(inObs(slotv0)));
+      outState[orn]   = stateRemapper_p[state(slotv0)];
+      outProc[orn]    = procMapper[inProc(slotv0)];
+      outObs[orn]     = obsMapper[inObs(slotv0)];
       outArr[orn]     = inArr(slotv0);	        // Don't remap!
       dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
 
