@@ -1226,7 +1226,6 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
 {
 
    const uInt nDisplayAxes = displayAxes_p.nelements();
-   const uInt nStatsAxes = cursorAxes_p.nelements();
    const uInt n1 = stats.shape()(0);
 
    //cout << "displayAxes_p=" << displayAxes_p << endl;
@@ -1336,7 +1335,7 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
    //Write statistics to logger.  We write the pixel location
    //relative to the parent lattice
    for (uInt j=0; j<n1; j++) {
-      if (/*zAx != 0 && */layer == j)  {
+      if (/*zAx != 0 && */layer == (Int)j)  {
 
       //os << setw(len0)     
       //   << j+blcParent_p(displayAxes_p(0));
