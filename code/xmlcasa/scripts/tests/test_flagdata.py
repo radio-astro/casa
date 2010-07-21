@@ -449,6 +449,9 @@ class cleanup(test_base):
 
     def test1(self):
         '''flagdata: Cleanup'''
+        print "<measurement><name>My Measurement</name><value>43.0</value></measurement>"
+        print "<measurement><name>Length (m)</name><value>4.0</value></measurement>"
+        print "<measurement><name>Length (m)</name><value>5.7</value></measurement>"
         pass
 
 
