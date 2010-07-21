@@ -74,6 +74,25 @@ SHORT_LIST = ['test_boxit',
              'test_smoothcal',
              'test_vishead']
 
+# memory mode variable
+MEM = 0
+
+class MemTest(nose.plugins.Plugin):
+
+    name = "memtest"
+
+    def beforeTest(self, test):
+        msg = '***** List of open files after running %s\n'%test
+        infile = open('ListOpenFiles','a')
+        infile.write(msg)
+        infile.close()
+        
+    def afterTest(self, test):
+        pid = os.getpid()
+        os.system('/usr/sbin/lsof |grep %s'%pid +' |grep -i nosedir >> ListOpenFiles')
+
+        
+
 def usage():
     print '*************************************************************************'
     print '\nRunUnitTest will execute unit test(s) of CASA tasks.'
@@ -85,6 +104,7 @@ def usage():
     print '--short:          runs only a short list of tests defined in SHORT_LIST'
     print '--file <list>:    runs the tests defined in <list>; one test per line'
     print '--list:           prints the full list of available tests from unittests_list.txt'
+    print '--mem:            runs the tests in debugging mode'
     print '--help:           prints this message\n'
     print 'NOTE: tests must be located in ....scripts/tests\n'
     print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
@@ -228,7 +248,6 @@ def main(testnames=[]):
     elif (whichtests == 1):
         '''Run specific tests'''
         list = []
-        
         for f in listtests:
             if not haslist(f):
                 testcases = UnitTest(f).getUnitTest()
@@ -259,8 +278,13 @@ def main(testnames=[]):
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
     try:
-        regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2","--xunit-file="+xmlfile],
-                              suite=list)
+        if (MEM):
+            regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--with-memtest","--verbosity=2",
+                            "--xunit-file="+xmlfile], suite=list, addplugins=[MemTest()])
+        else:
+            regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2",
+                            "--xunit-file="+xmlfile], suite=list)
+            
     
         os.chdir(PWD)
     except:
@@ -277,6 +301,11 @@ if __name__ == "__main__":
         # If called with ... -c runUnitTest.py from the command line,
         # then parse the command line parameters
         i = sys.argv.index("-c")
+        if "--mem" in sys.argv:
+            # run tests in mem mode            
+            MEM = 1
+            sys.argv.pop(sys.argv.index("--mem"))
+            
         if len(sys.argv) >= i + 2 and \
                re.compile("runUnitTest\.py$").search(sys.argv[i + 1]):
 
@@ -317,12 +346,14 @@ if __name__ == "__main__":
                         break
                 
                     testnames.append(elem)
+                    print testnames
         else:
             testnames = []
     else:
         # Not called with -c (but possibly execfile() from iPython)
         testnames = []
 
+#    os._exit(0)
     try:
         main(testnames)
     except:
