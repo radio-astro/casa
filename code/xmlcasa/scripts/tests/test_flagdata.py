@@ -443,7 +443,10 @@ class cleanup(test_base):
         os.system('rm -rf ngc5921.ms.flagversions')
         os.system('rm -rf flagdatatest.ms')
         os.system('rm -rf flagdatatest.ms.flagversions')
-        
+        print "<measurement><name>My Measurement</name><value>42.0</value></measurement>"
+        print "<measurement><name>Length (m)</name><value>3.0</value></measurement>"
+        print "<measurement><name>Length (m)</name><value>4.7</value></measurement>"
+
     def test1(self):
         '''flagdata: Cleanup'''
         pass
