@@ -13,6 +13,9 @@ import pdb
 import traceback
 import re
 import cProfile
+
+PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
+
 imager = casac.homefinder.find_home_by_name('imagerHome')
 image = casac.homefinder.find_home_by_name('imageHome')
 quantity=casac.Quantity
@@ -35,10 +38,10 @@ SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/regressions/'
 UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
 if not os.access(SCRIPT_REPOS, os.F_OK):
     if os.access(AIPS_DIR+'/lib64', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/regressions/'
+        SCRIPT_REPOS = AIPS_DIR+'/lib64/python'+PYVER+'/regressions/'
         UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
     elif os.access(AIPS_DIR+'/lib', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/regressions/'
+        SCRIPT_REPOS = AIPS_DIR+'/lib/python'+PYVER+'/regressions/'
         UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
     else:            #Mac release
         SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'

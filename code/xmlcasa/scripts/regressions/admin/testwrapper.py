@@ -11,6 +11,8 @@ import traceback
 import casac
 import unittest
 
+PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
+
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 DATA_DIR = AIPS_DIR+'/data'
 
@@ -18,10 +20,10 @@ SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/tests/'
 UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
 if not os.access(SCRIPT_REPOS, os.F_OK):
     if os.access(AIPS_DIR+'/lib64', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/tests/'
+        SCRIPT_REPOS = AIPS_DIR+'/lib64/python' + PYVER + '/tests/'
         UTILS_DIR = SCRIPT_REPOS+'admin'
     elif os.access(AIPS_DIR+'/lib', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/tests/'
+        SCRIPT_REPOS = AIPS_DIR+'/lib/python' + PYVER + '/tests/'
         UTILS_DIR = SCRIPT_REPOS+'admin'
     else:            #Mac release
         SCRIPT_REPOS = AIPS_DIR+'/Resources/python/tests/'
@@ -300,9 +302,3 @@ class ExecTest(unittest.TestCase,UnitTest):
         execfile(self.testscript, gl)   
         
 
-
-
-
-
-
-        

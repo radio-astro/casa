@@ -32,13 +32,15 @@ import re
 import shutil
 import nose
 
+PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
+
 CASA_DIR = os.environ["CASAPATH"].split()[0]
 TESTS_DIR = CASA_DIR+'/code/xmlcasa/scripts/tests/'
 UTILS_DIR = CASA_DIR+'/code/xmlcasa/scripts/regressions/admin/'
 if not os.access(UTILS_DIR, os.F_OK):
     if os.access(CASA_DIR+'/lib64', os.F_OK):
-        TESTS_DIR = CASA_DIR+'/lib64/python2.5/tests/'
-        UTILS_DIR = CASA_DIR+'/lib64/python2.5/regressions/admin/'
+        TESTS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/tests/'
+        UTILS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/regressions/admin/'
     elif os.access(CASA_DIR+'/lib', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib/python/tests/'
         UTILS_DIR = CASA_DIR+'/lib/python/regressions/admin/'
