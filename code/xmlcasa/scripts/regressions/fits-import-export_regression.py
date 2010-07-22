@@ -14,6 +14,7 @@
 #       (i.e. is the RA and DEC of the max. flux properly determined?)      #
 #    3) Is the export performed without raising exceptions?                 #
 #    4) Is the exported file compatible with the original?                  #
+#    5) Does the bitpix=16 feature work                                     #
 #                                                                           #
 # Input data:                                                               #
 #    28 sample fits files constructed by Mark Calabretta                    #
@@ -142,6 +143,63 @@ def checkimage(myfitsimage_name, maxpos_expect, maxposf_expect):
     return subtest_passed
 # end def checkimage()
 
+def checkimageb(myfitsimage_name):
+    global myname
+    subtest_passed = True
+
+    # import the image
+    default('importfits')
+    try:
+        print myname, ' Importing ', myfitsimage_name+'.fits', ' ...'
+        importfits(fitsimage = myfitsimage_name+'.fits',
+                   imagename = myfitsimage_name,
+                   overwrite = True)
+    except:
+        print myname, ' Error ', sys.exc_info()[0]
+        raise    
+    else:
+        print myname, ' No exceptions raised!'
+        mystat = imstat(imagename = myfitsimage_name)
+        # export the image
+        default('exportfits')
+        try:
+            print 'Exporting ', myfitsimage_name, ' with bitpix=16 ...'
+            exportfits(fitsimage = myfitsimage_name + 'exp.fits',
+                       imagename = myfitsimage_name,
+                       overwrite = True, bitpix=16) # with BITPIX=16 !
+        except:
+            print myname, ' Error ', sys.exc_info()[0]
+            raise    
+        else:
+            print myname, ' No exceptions raised! Now testing minimum and maximum values ...'
+            # re-import the image    
+            default('importfits')
+            try:
+                print myname, ' Re-importing ', myfitsimage_name+'exp.fits', ' ...'
+                importfits(fitsimage = myfitsimage_name+'exp.fits',
+                           imagename = myfitsimage_name+'exp',
+                           overwrite = True)
+            except:
+                print myname, ' Error ', sys.exc_info()[0]
+                raise    
+            else:
+                print myname, ' No exceptions raised! Now checking image ...'
+                myotherstat = imstat(imagename = myfitsimage_name+'exp')
+                if not (mystat['min'] == myotherstat['min']):
+                    print myname, ' Error in re-imported image ', myfitsimage_name+'exp', ':'
+                    print myname, '   expected  minimum is ', mystat['min']
+                    print myname, '                               but found ', myotherstat['min'] 
+                    subtest_passed = False    
+                if not (mystat['max'] == myotherstat['max']):
+                    print myname, ' Error in re-imported image ', myfitsimage_name+'exp', ':'
+                    print myname, '   expected  maximum is ', mystat['max']
+                    print myname, '                               but found ', myotherstat['max'] 
+                    subtest_passed = False    
+                if subtest_passed:
+                    print myname, ' re-imported image ', myfitsimage_name+'exp', ' as expected.'
+    return subtest_passed
+# end def checkimage()
+
 failed_tests = []
 passed_tests = []
 
@@ -160,6 +218,21 @@ for i in mydict.keys():
         print myname, ' Subtest ', i, ' failed.'
         failed_tests.append(mydict[i][3])
     print myname, ' ***********************************************************'
+
+
+thefitsimage_name = mydict[1][0]
+print myname, ' ***********************************************************'
+print myname, ' Test of the BITPIX parameter:'
+passed = checkimageb(thefitsimage_name)
+if passed:
+    print myname, ' bitpix test passed.'
+    passed_tests.append('bitpix')
+else:
+    print myname, ' bitpix test failed.'
+    failed_tests.append('bitpix')
+print myname, ' ***********************************************************'
+
+
 
 if len(failed_tests)>0:
     if len(passed_tests)>0:
