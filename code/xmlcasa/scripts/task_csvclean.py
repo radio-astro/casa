@@ -108,13 +108,19 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
         parsummary += 'interactive='+str(interactive)+''
         casalog.post(parsummary,'INFO')    
         
-        if (not (type(vis)==str) & (os.path.exists(vis))):
+#        if (not (type(vis)==str) & (os.path.exists(vis))):
+#            raise Exception, 'Visibility data set not found - please verify the name'
+        if ((type(vis)==str) & (os.path.exists(vis))):
+            ms.open(vis)
+        else:
             raise Exception, 'Visibility data set not found - please verify the name'
     
         if (imagename == ""):
+            ms.close()
             raise Exception, "Must provide output image name in parameter imagename."            
         
         if os.path.exists(imagename):
+            ms.close()
             raise Exception, "Output image %s already exists - will not overwrite." % imagename
            
         if (field == ''):
@@ -197,10 +203,7 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
         imname = imagename+'.image'
 
         # Make sure all tables and images are closed
-        tb.close()
-        im.close()
-        ia.close()
-        dc.close()
+        ms.close()
         
         # Add scratch columns if they don't exist
         tb.open(vis)
@@ -267,6 +270,9 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
         return True
 
     except Exception, instance:
+        im.close()
+        ia.close()
+        dc.close()
         print '*** Error *** ',instance
         casalog.post("Error ...", 'SEVERE')
         traceback.print_exc()
