@@ -368,32 +368,49 @@ endif()
 
 # PGPLOT (FORTRAN plotting package).
 # depends on X11
-if( APPLE )
-  set( _deps FORTRAN )
-else()
-  set( _deps X11 FORTRAN )
+if( NOT SKIP_PGPLOT )
+  if( APPLE )
+    set( _deps FORTRAN )
+  else()
+    set( _deps X11 FORTRAN )
+  endif()
+  casa_find( PGPLOT
+    VERSION 5.3.1
+    INCLUDES cpgplot.h
+    LIBS pgplot cpgplot
+    DEPENDS ${_deps} )
 endif()
-casa_find( PGPLOT
-  VERSION 5.3.1
-  INCLUDES cpgplot.h
-  LIBS pgplot cpgplot
-  DEPENDS ${_deps} )
 
 # WCSLIB
-casa_find( WCSLIB
-  VERSION 4.3
-  INCLUDES wcslib/wcsconfig.h
-  LIBS wcs
-       pgsbox
-  # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
-  # hence "cout << WCSLIB_VERSION" would not work. The following
-  # code makes a string out of WCSLIB_VERSION.
-  CPP_VERSION "\"\";
+if( NOT SKIP_PGPLOT )
+  casa_find( WCSLIB
+    VERSION 4.3
+    INCLUDES wcslib/wcsconfig.h
+    LIBS wcs
+         pgsbox
+    # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
+    # hence "cout << WCSLIB_VERSION" would not work. The following
+    # code makes a string out of WCSLIB_VERSION.
+    CPP_VERSION "\"\";
 #define CASA_STRINGIFY(x) #x
 #define CASA_TOSTRING(x) CASA_STRINGIFY(x)
-  std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
-  DEFINITIONS -DSIGNBIT 
-  DEPENDS PGPLOT )
+    std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
+    DEFINITIONS -DSIGNBIT 
+    DEPENDS PGPLOT )
+else()
+  casa_find( WCSLIB
+    VERSION 4.3
+    INCLUDES wcslib/wcsconfig.h
+    LIBS wcs
+    # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
+    # hence "cout << WCSLIB_VERSION" would not work. The following
+    # code makes a string out of WCSLIB_VERSION.
+    CPP_VERSION "\"\";
+#define CASA_STRINGIFY(x) #x
+#define CASA_TOSTRING(x) CASA_STRINGIFY(x)
+    std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
+    DEFINITIONS -DSIGNBIT )
+endif()
 
 
 # FFTW
@@ -869,7 +886,11 @@ set( PYTHON_TASKD ${PYTHON_LIBD} )
 if( APPLE )
   casa_add_module( graphics CASACORE PGPLOT WCSLIB )
 else()
-  casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
+  if( NOT SKIP_PGPLOT )
+    casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
+  else()
+    casa_add_module( graphics CASACORE X11 WCSLIB )
+  endif()
 endif()
 casa_add_module( casadbus CASACORE DBUS )
 casa_add_module( tableplot CASACORE PYTHON )
