@@ -31,7 +31,6 @@ import string
 import re
 import shutil
 import nose
-import nose.plugins.xunit
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
 TESTS_DIR = CASA_DIR+'/code/xmlcasa/scripts/tests/'
@@ -49,6 +48,7 @@ if not os.access(UTILS_DIR, os.F_OK):
 
 sys.path.append(UTILS_DIR)
 
+import memTest
 import testwrapper
 from testwrapper import *
 
@@ -78,41 +78,6 @@ SHORT_LIST = ['test_boxit',
 
 # memory mode variable
 MEM = 0
-
-class MemTest(nose.plugins.xunit.Xunit):
-
-    name = "memtest"
-
-    def options(self, parser, env):
-        # Identical to the base class method, except that the command line
-        # option needs to be called something different
-        """Sets additional command line options."""
-        nose.plugins.base.Plugin.options(self, parser, env)
-        parser.add_option(
-            '--memtest-file', action='store',
-            dest='xunit_file', metavar="FILE",
-            default=env.get('NOSE_XUNIT_FILE', 'nosetests.xml'),
-            help=("Path to xml file to store the xunit report in. "
-                  "Default is nosetests.xml in the working directory "
-                  "[NOSE_XUNIT_FILE]"))
-
-    def beforeTest(self, test):
-        msg = '***** List of open files after running %s\n'%test
-        infile = open('ListOpenFiles','a')
-        infile.write(msg)
-        infile.close()
-        
-    def afterTest(self, test):
-        pid = os.getpid()
-        os.system('/usr/sbin/lsof -p ' + str(pid) + ' | grep -i nosedir >> ListOpenFiles')
-
-        # And write to output XML in a format which is understandable by Hudson
-        (errorcode, n) = commands.getstatusoutput('/usr/sbin/lsof -p ' + str(pid) + ' | wc -l')
-
-        if errorcode == 0:
-            v = "<system-out><measurement><name>Open files</name><value>" + n + "</value></measurement></system-out>"
-            self.errorlist.append(v)
-
 
 def usage():
     print '*************************************************************************'
@@ -301,7 +266,7 @@ def main(testnames=[]):
     try:
         if (MEM):
             regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-memtest","--verbosity=2",
-                            "--memtest-file="+xmlfile], suite=list, addplugins=[MemTest()])
+                            "--memtest-file="+xmlfile], suite=list, addplugins=[memTest.MemTest()])
         else:
             regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-xunit","--verbosity=2",
                             "--xunit-file="+xmlfile], suite=list)
