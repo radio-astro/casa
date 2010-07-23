@@ -265,8 +265,9 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_uvcontsub.py
   scripts/task_uvmodelfit.py
   scripts/task_uvsub.py
-  scripts/task_viewerconnection.py
   scripts/task_viewer.py
+  scripts/task_msview.py
+  scripts/task_imview.py
   scripts/task_vishead.py
   scripts/task_visstat.py
   scripts/task_widefield.py
@@ -370,8 +371,9 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/uvcontsub.xml
   tasks/uvmodelfit.xml
   tasks/uvsub.xml
-  tasks/viewerconnection.xml
   tasks/viewer.xml
+  tasks/imview.xml
+  tasks/msview.xml
   tasks/vishead.xml
   tasks/visstat.xml
   tasks/widefield.xml
