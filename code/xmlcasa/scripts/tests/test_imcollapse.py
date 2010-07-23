@@ -81,12 +81,15 @@ def run_collapse(
     imagename, function, axis, outfile, region, box, chans,
     stokes, mask, overwrite
 ):
-    ia.open(imagename)
-    res = ia.collapse(
+    myia = iatool.create()
+    myia.open(imagename)
+    res = myia.collapse(
         function=function, axis=axis, outfile=outfile,
         region=region, box=box, chans=chans, stokes=stokes,
         mask=mask, overwrite=overwrite
     )
+    myia.close()
+    myia.done()
     return res
 
 def run_imcollapse(
@@ -127,7 +130,9 @@ class imcollapse_test(unittest.TestCase):
             gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
         )/expectedCsys.referencevalue()['numeric'];
         self.assertTrue(abs(fracDiffRef).max() <= 1e-13)
+        got.close()
         got.done()
+        expected.close()
         expected.done()
 
     def test_exceptions(self):
