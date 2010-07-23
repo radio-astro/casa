@@ -671,7 +671,13 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
       // Solution channel registration
       Int solCh0(0);
       dataChan=&vb.channel()(0);
-      if (freqDepMat()) {
+
+      // If cal _parameters_ are not freqDep (e.g., a delay)
+      //  the startChan() should be the same as the first data channel
+      if (freqDepMat() && !freqDepPar())
+	startChan()=(*dataChan);
+
+      if (freqDepMat() && freqDepPar()) {
 	solCh0=(*dataChan)-startChan();
 	if (solCh0 < 0) solCh0=0;
       }
@@ -1052,7 +1058,13 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	// Solution channel registration
 	Int solCh0(0);
 	dataChan=&vb.channel()(0);
-	if (freqDepMat()) {
+
+	// If cal _parameters_ are not freqDep (e.g., a delay)
+	//  the startChan() should be the same as the first data channel
+	if (freqDepMat() && !freqDepPar())
+	  startChan()=(*dataChan);
+
+	if (freqDepMat() && freqDepPar()) {
 	  solCh0=(*dataChan)-startChan();
 	  if (solCh0 < 0) solCh0=0;
 	}
