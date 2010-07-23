@@ -36,7 +36,11 @@ def nice_classname(obj):
         return cls_name
 
 def write_message(fileleak, memoryleak):
-    
+
+    if fileleak != 0:
+        print "Net file descriptors opened:", fileleak
+    if memoryleak != 0:
+        print "Net memory allocated:", memoryleak, "kB"
     return "<system-out>\
 &lt;measurement&gt;&lt;name&gt;Files leaked&lt;/name&gt;&lt;value&gt;" + str(fileleak) + "&lt;/value&gt;&lt;/measurement&gt;\
 &lt;measurement&gt;&lt;name&gt;Memory leaked (kB)&lt;/name&gt;&lt;value&gt;" + str(memoryleak) + "&lt;/value&gt;&lt;/measurement&gt;\
