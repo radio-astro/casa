@@ -64,6 +64,13 @@ class MemTest(nose.plugins.xunit.Xunit):
                   "Default is nosetests.xml in the working directory "
                   "[NOSE_XUNIT_FILE]"))
 
+        # Find the lsof executable
+        self.lsof = "/usr/sbin/lsof"
+        if not os.path.exists(self.lsof):
+            self.lsof = "/usr/bin/lsof"
+        if not os.path.exists(self.lsof):
+            print "Warning: Could not find lsof at /usr/sbin/lsof or /usr/bin/lsof"
+
     def report(self, stream):
         """Writes an Xunit-formatted XML file
 
@@ -93,7 +100,7 @@ class MemTest(nose.plugins.xunit.Xunit):
         infile.write(msg)
         infile.close()
 
-        (errorcode, n) = commands.getstatusoutput('/usr/sbin/lsof -p ' + str(self._pid) + ' | wc -l')
+        (errorcode, n) = commands.getstatusoutput(self.lsof + ' -p ' + str(self._pid) + ' | wc -l')
         if errorcode == 0:
             self._openfiles = n
         else:
@@ -108,12 +115,9 @@ class MemTest(nose.plugins.xunit.Xunit):
     def _update_after_test(self):
         # The predefined hooks stopTest() and afterTest() cannot be used
         # because they get called after addError/addFailure/addSuccess
-        if os.path.exists('/usr/sbin/lsof'):
-            os.system('/usr/sbin/lsof -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles')
-        elif os.path.exists('/usr/bin/lsof'):
-            os.system('/usr/bin/lsof -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles')
+        os.system(self.lsof + ' -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles')
 
-        (errorcode, n) = commands.getstatusoutput('/usr/sbin/lsof -p ' + str(self._pid) + ' | wc -l')
+        (errorcode, n) = commands.getstatusoutput(self.lsof + ' -p ' + str(self._pid) + ' | wc -l')
 
         if errorcode == 0:
             self._fileleak = int(n) - int(self._openfiles)
