@@ -204,9 +204,9 @@ if (`uname` eq "Linux\n") {
 	die "could not update regression scripts";
     }
     sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.py \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.sh \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.txt \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.pl \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.sh \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.txt \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl \$HOME/admin/");
 }
 else {
     sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.py \$HOME/admin/");
