@@ -108,7 +108,10 @@ class MemTest(nose.plugins.xunit.Xunit):
     def _update_after_test(self):
         # The predefined hooks stopTest() and afterTest() cannot be used
         # because they get called after addError/addFailure/addSuccess
-        os.system('/usr/sbin/lsof -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles')
+        if os.path.exists('/usr/sbin/lsof'):
+            os.system('/usr/sbin/lsof -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles')
+        elif os.path.exists('/usr/bin/lsof'):
+            os.system('/usr/bin/lsof -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles')
 
         (errorcode, n) = commands.getstatusoutput('/usr/sbin/lsof -p ' + str(self._pid) + ' | wc -l')
 
