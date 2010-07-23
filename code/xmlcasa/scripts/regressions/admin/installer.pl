@@ -196,10 +196,17 @@ if (`uname` eq "Linux\n") {
     else {
 	die "Unknown architechture '$arch'\n";
     }
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python2.5/regressions/admin/*.py \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.sh \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.txt \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.pl \$HOME/admin/");
+    if ( -d "$install_dir/$unpacked_dir/$lib/python2.5" ) {
+	$pyver = "2.5";
+    } elsif ( -d "$install_dir/$unpacked_dir/$lib/python2.6" ) {
+	$pyver = "2.6";
+    } else {
+	die "could not update regression scripts";
+    }
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.py \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.sh \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.txt \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl \$HOME/admin/");
 }
 else {
     sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.py \$HOME/admin/");

@@ -35,6 +35,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_admin_python python/${PYTHONV}/regr
 )
 
 install( PROGRAMS 
+         installer.pl
          process_manager.pl
          scheduler.pl
          runcasa_from_shell.sh
