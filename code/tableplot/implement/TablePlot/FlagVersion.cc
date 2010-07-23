@@ -263,8 +263,9 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
          rfc += toRowFlag.getColumn();
          toRowFlag.putColumn(rfc);
       }
-      if( merge.matches("replace") )
+      if( merge.matches("replace") ) {
          toRowFlag.putColumn(fromRowFlag.getColumn());
+      }
    }
    
    if(fcol_p)
@@ -273,96 +274,96 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
       ArrayColumn<Bool> toFlag(toFTab, dataflagcolname_p);
 
       Bool fixedshape=False;
-           
+
       /* Check if the FLAG column has the same shape for all rows */
-      /* If so - then read/write all at once. 
+      /* If so - then loop through in large chunks.
          If not - read/write row by row. 
          TODO : This is slow, and TableIterator is perhaps a faster way
                  to do this.
+
+         getColumn/putColumn would work for small MSs but runs out of
+         memory for large MSs.
       */
            
-      // Check if fixed shape. probably the better way...
-      /*
-         TableDesc td = fromFTab.actualTableDesc();
-         fixedshape = (td.columnDesc( dataflagcolname_p )).isFixedShape();
-      */
-                
-      // Check if fixed shape - ad-hoc way !
-      try 
-      {
-          Array<Bool> rfs = fromFlag.getColumn();
-          fixedshape = True;
+      // Check if fixed shape. probably the better way... but it sometimes
+      // tells us that fixed shaped columns are not!
+      TableDesc td = fromFTab.actualTableDesc();
+      fixedshape = (td.columnDesc( dataflagcolname_p )).isFixedShape();
+
+      if (! fixedshape) {
+	/* If we can read the column with getColumn, it is fixed shape.
+	   If we couldn't, it may not be fixed shape or we ran out of memory.
+	*/
+	try  {
+	  Array<Bool> rfs = fromFlag.getColumn();
+	  fixedshape = True;
+	}
+	catch(...) {
+	}
       }
-      catch( AipsError x ) // need to specialize to Table Conformance Error
-      {
-          fixedshape = False;
-      }
-                                
+      
       //cout << " is Fixed Shape : " << fixedshape << endl;
       
-      if( merge.matches("and") )
-      {
-         if( fixedshape )
-         {
-             Array<Bool> rfc = fromFlag.getColumn();
-             rfc *= toFlag.getColumn();
-             toFlag.putColumn(rfc);
-         }
-         else
-         {
-              // Check if DATA_DESC_ID is a column
-              //    if so, use the TableIterator on this.
-              // For now, go row by row....
-              Array<Bool> arr1(fromFlag.shape(0));
-              Array<Bool> arr2(toFlag.shape(0));
-              for(Int i=0;i<nrows_p;i++)
-              {
-                  fromFlag.get(i,arr1,True);
-                  toFlag.get(i,arr2,True);
-                  arr2 *= arr1;
-                  toFlag.put(i,arr2);
-              }
-          }
+      if( fixedshape ) { 
+	
+	IPosition shape(fromFlag.shape(0));
+	/* Process large chunks at a time in order to avoid overhead, e.g. 100 MB.
+	   Empirically, processing row by row has just a small overhead (3 times)
+	   so we just need to process many rows at a time.
+	*/		
+	uInt chunk_rows = 100*1024*1024 / (shape(0) * shape(1)) + 1;
+	Array<Bool> arr1;
+	Array<Bool> arr2;
+	for(unsigned i=0;i<nrows_p;i += chunk_rows)
+	  {
+	    unsigned j = i + chunk_rows - 1;
+	    if (!(j < nrows_p)) j = nrows_p - 1;
+	    RefRows arraySection(i, j);
 
+	    fromFlag.getColumnCells(arraySection,arr1,True);
+
+	    if( merge.matches("and") ) {
+	      toFlag.getColumnCells(arraySection,arr2,True);
+	      arr2 *= arr1;
+	    }
+	    else if (merge.matches("or")) {
+	      toFlag.getColumnCells(arraySection,arr2,True);
+	      arr2 += arr1;
+	    }
+	    else if (merge.matches("replace")) {
+	      arr2.assign(arr1);
+	    } 
+	    toFlag.putColumnCells(arraySection,arr2);
+	  }
       }
-      if( merge.matches("or") )
-      {
-          if( fixedshape )
-          {
-              Array<Bool> rfc = fromFlag.getColumn();
-              rfc += toFlag.getColumn();
-              toFlag.putColumn(rfc);
-          }
-          else
-          {
-              Array<Bool> arr1(fromFlag.shape(0));
-              Array<Bool> arr2(toFlag.shape(0));
-              for(Int i=0;i<nrows_p;i++)
-              {
-                 fromFlag.get(i,arr1,True);
-                 toFlag.get(i,arr2,True);
-                 arr2 += arr1;
-                 toFlag.put(i,arr2);
-              }
-          }
+      else {
+	// Check if DATA_DESC_ID is a column
+	//    if so, use the TableIterator on this.
+	// For now, go row by row....
+	Array<Bool> arr1;
+	Array<Bool> arr2;
+	ProgressMeter pm(0, nrows_p, "Saving flags");
+	for(unsigned i=0;i<nrows_p;i++)
+	  {
+	    if (i % 16384 == 0) {
+	      pm.update(i);
+	    }
+	    fromFlag.get(i,arr1,True);
+	    if( merge.matches("and") ) {
+	      toFlag.get(i,arr2,True);
+	      arr2 *= arr1;
+	    }
+	    else if (merge.matches("or")) {
+	      toFlag.get(i,arr2,True);
+	      arr2 += arr1;
+	    }
+	    else if (merge.matches("replace")) {
+	      arr2 = arr1;
+	    }
+	    toFlag.put(i,arr2);
+	  }
       }
-      if( merge.matches("replace") )
-      {
-          if( fixedshape )
-          {
-              toFlag.putColumn(fromFlag.getColumn());
-          }
-          else
-          {
-              Array<Bool> arr(fromFlag.shape(0));
-              for(Int i=0;i<nrows_p;i++)
-              {
-                  fromFlag.get(i,arr,True);
-                  toFlag.put(i,arr);
-              }
-          }
-      }
-   }
+   } // end if fcol_p
    
    toFTab.flush();
 
@@ -377,7 +378,6 @@ Bool FlagVersion::saveFlagVersion( String versionname ,
 {
    String fnname= "saveFlagVersion";
    Bool exists = doesVersionExist(versionname);
-   
    String tabvername = flagtablename_p + versionname;
 
    /* If doesn't exist, say so and make a new version. */
@@ -404,13 +404,14 @@ Bool FlagVersion::saveFlagVersion( String versionname ,
       if(frcol_p) td.addColumn (ScalarColumnDesc<Bool> (rowflagcolname_p));
 
       SetupNewTable aNewTab(tabvername, td, Table::New);
-      
+
       // FLAG hyperColumn
       {
           ArrayColumn<Bool> fromFlag(tab_p, dataflagcolname_p);
           
-          uInt nrow = 600;  //arbitrary
-          IPosition tileShape(3, fromFlag.shape(0)(0), fromFlag.shape(0)(1), nrow);
+          uInt tile_size = 1024*1024; // bytes
+          IPosition tileShape(3, fromFlag.shape(0)(0), fromFlag.shape(0)(1), 
+			      tile_size*8 / (fromFlag.shape(0)(0) * fromFlag.shape(0)(1)));
       
           TiledShapeStMan flagStMan("TiledFlag", tileShape);
           aNewTab.bindColumn(dataflagcolname_p, flagStMan);
@@ -419,7 +420,7 @@ Bool FlagVersion::saveFlagVersion( String versionname ,
       Table ftab(aNewTab, Table::Plain, nrows_p);
 
       saveFlagsInto( tab_p, ftab, String("replace") );
-      
+
       readVersionList();
    }
    
@@ -527,7 +528,11 @@ Bool FlagVersion::deleteFlagVersion( String versionname )
 
    return True;
 }
-/*********************************************************************************/
+/*********************************************************************************
+This function should be changed to not use get(i,...) and put(i, ...) instead
+ of getColumn(...) and putColumn(...). Otherwise out of memory errors happen
+ for large MSs.
+*/
 Bool FlagVersion::clearAllFlags()
 {
    String fnname= "clearAllFlags";
@@ -544,6 +549,7 @@ Bool FlagVersion::clearAllFlags()
    {
       ScalarColumn<Bool> rfscol;
       rfscol.attach(tab_p,rowflagcolname_p);
+ 
       Vector<Bool> frc = rfscol.getColumn();
       frc = False;
       rfscol.putColumn(frc);
@@ -552,6 +558,7 @@ Bool FlagVersion::clearAllFlags()
    {
       ArrayColumn<Bool> facol;
       facol.attach(tab_p,dataflagcolname_p);
+ 
       Array<Bool> fc = facol.getColumn();
       fc = False;
       facol.putColumn(fc);

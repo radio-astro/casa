@@ -170,7 +170,7 @@ class FlagVersion
       Vector<String> versionlist_p;
       Vector<String> commentlist_p;
       Bool fcol_p, frcol_p;
-      Int nrows_p;
+      unsigned nrows_p;
 
       Table subflagtable_p;
 
