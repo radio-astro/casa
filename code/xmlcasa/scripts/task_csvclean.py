@@ -97,6 +97,7 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
     
     try:
         casalog.origin('csvclean')
+        ms = casac.homefinder.find_home_by_name('msHome').create()
     
         parsummary = 'vis="'+str(vis)+'", imagename="'+str(imagename)+'", '
         parsummary += 'field="'+str(field)+'", spw="'+str(spw)+'", '
@@ -116,11 +117,11 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
             raise Exception, 'Visibility data set not found - please verify the name'
     
         if (imagename == ""):
-            ms.close()
+#            ms.close()
             raise Exception, "Must provide output image name in parameter imagename."            
         
         if os.path.exists(imagename):
-            ms.close()
+#            ms.close()
             raise Exception, "Output image %s already exists - will not overwrite." % imagename
            
         if (field == ''):
@@ -203,7 +204,7 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
         imname = imagename+'.image'
 
         # Make sure all tables and images are closed
-        ms.close()
+#        ms.close()
         
         # Add scratch columns if they don't exist
         tb.open(vis)
