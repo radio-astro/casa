@@ -120,6 +120,12 @@ public:
   // Is this type capable of smoothing?  (nominally no)
   virtual Bool smoothable() { return False; };
 
+  // Should only parallel-hands be used in solving?
+  //  (generally no (default=False), but GJones and related
+  //   will override, and eventually this will be a user-set-able
+  //   parameter)
+  virtual Bool phandonly() { return False; }
+
   // Access to focus channel
   inline Int&         focusChan()      { return focusChan_; };
 
