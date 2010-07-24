@@ -1048,9 +1048,9 @@ public:
     pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
     pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
-    void setValue(TBData& value) { }
+    void setValue(TBData& value) { (void)value; }
     
-    bool equals(TBData* data) { return false; }
+    bool equals(TBData* data) { return false; (void)data; }
     // </group>
     
     
@@ -1144,11 +1144,11 @@ public:
     
     // See TBArrayData::containsBetween().  Returns false because Strings
     // are not numberable.
-    bool containsBetween(TBData* data, TBData* data2) { return false; }
+    bool containsBetween(TBData* data, TBData* data2) { return false; (void)data,(void)data2; }
     
     // See TBArrayData::containsLessThan().  Returns false because Strings
     // are not numberable.
-    bool containsLessThan(TBData* data) { return false; }
+    bool containsLessThan(TBData* data) { return false; (void)data; }
     
     // See TBArrayData::containsGreaterThan().  Returns false because Strings
     // are not numberable.

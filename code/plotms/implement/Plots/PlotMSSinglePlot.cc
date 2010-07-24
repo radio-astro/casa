@@ -98,9 +98,10 @@ void PlotMSSinglePlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
     tab.insertTransformationsSubtab(2);
     tab.insertCacheSubtab(3);
     tab.insertDisplaySubtab(4);
-    tab.insertCanvasSubtab(5);
-    tab.insertExportSubtab(6);
-    tab.clearSubtabsAfter(7);
+    tab.insertIterateSubtab(5);//////????
+    tab.insertCanvasSubtab(6);
+    tab.insertExportSubtab(7);
+    tab.clearSubtabsAfter(8);
 }
 
 void PlotMSSinglePlot::attachToCanvases() {

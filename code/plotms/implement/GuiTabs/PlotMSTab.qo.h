@@ -82,7 +82,7 @@ public:
         return QList<QToolButton*>(); }
     
     // Sets up the tab for the given maximum width.
-    virtual void setupForMaxWidth(int maxWidth) { }
+    virtual void setupForMaxWidth(int maxWidth) { (void)maxWidth; }
     
 protected:
     // Parent.

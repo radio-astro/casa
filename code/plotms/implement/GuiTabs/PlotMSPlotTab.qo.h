@@ -43,6 +43,7 @@ class PlotMSCacheTab;
 class PlotMSCanvasTab;
 class PlotMSDataTab;
 class PlotMSDisplayTab;
+class PlotMSIterateTab;
 class PlotMSExportTab;
 class PlotMSMultiAxesTab;
 class PlotMSTransformationsTab;
@@ -77,7 +78,7 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged() to do
     // nothing unless overridden in the child class.
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag) { }
+            int updateFlag)   {  (void)params,(void)updateFlag; }
     
 signals:
     // This signal should be emitted whenever the value of the widget changes
@@ -187,6 +188,8 @@ protected:
     PlotMSDataTab* insertDataSubtab(int index);
     PlotMSDisplayTab* addDisplaySubtab();
     PlotMSDisplayTab* insertDisplaySubtab(int index);
+    PlotMSIterateTab* addIterateSubtab();
+    PlotMSIterateTab* insertIterateSubtab(int index);
     PlotMSExportTab* addExportSubtab();
     PlotMSExportTab* insertExportSubtab(int index);
     PlotMSMultiAxesTab* addMultiAxesSubtab();

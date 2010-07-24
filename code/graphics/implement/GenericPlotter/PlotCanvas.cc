@@ -289,7 +289,7 @@ void PlotCanvas::setAxesStackLengthLimit(int lengthLimit) {
 
 pair<int, int> PlotCanvas::cachedAxesStackImageSize() const {
     return pair<int, int>(-1, -1); }
-void PlotCanvas::setCachedAxesStackImageSize(int width, int height) { }
+void PlotCanvas::setCachedAxesStackImageSize(int width, int height) { (void)width, (void)height; }
 
 
 bool PlotCanvas::plot(PlotPtr plot, bool overplot) {
