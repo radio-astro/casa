@@ -187,6 +187,23 @@ calibrater::setmodel(const std::string& modelImage)
 }
 
 bool 
+calibrater::setptmodel(const std::vector<double>& stokes) {
+  try
+    {
+      itsCalibrater->setModel(stokes);
+    }
+  catch (AipsError x)
+    {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
+  return true;
+}
+
+
+
+
+bool 
 calibrater::setapply(const std::string& type,
 		     const double t,
 		     const std::string& table,
