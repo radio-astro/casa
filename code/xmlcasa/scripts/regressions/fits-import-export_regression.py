@@ -185,12 +185,12 @@ def checkimageb(myfitsimage_name):
             else:
                 print myname, ' No exceptions raised! Now checking image ...'
                 myotherstat = imstat(imagename = myfitsimage_name+'exp')
-                if not (mystat['min'] == myotherstat['min']):
+                if not (abs((mystat['min'] - myotherstat['min'])/mystat['min']) < 1E-6):
                     print myname, ' Error in re-imported image ', myfitsimage_name+'exp', ':'
                     print myname, '   expected  minimum is ', mystat['min']
                     print myname, '                               but found ', myotherstat['min'] 
                     subtest_passed = False    
-                if not (mystat['max'] == myotherstat['max']):
+                if not (abs((mystat['max'] - myotherstat['max'])/mystat['max']) < 1E-6):
                     print myname, ' Error in re-imported image ', myfitsimage_name+'exp', ':'
                     print myname, '   expected  maximum is ', mystat['max']
                     print myname, '                               but found ', myotherstat['max'] 
