@@ -140,8 +140,15 @@
 		</param>
 
 		<param type="string" name="mode">
-			<description>clean mode</description>
-			<value>channel</value>
+			<description>clean mode (continuum, channel, frequency, velocity, mfs)</description>
+			<value>continuum</value>
+	              <allowed kind="enum">
+		      <value>continuum</value>
+		      <value>channel</value>
+		      <value>frequency</value>
+		      <value>velocity</value>
+		      <value>mfs</value>
+		    </allowed>
 		</param>
 
 		<param type="int" name="start" subparam="true">
@@ -186,7 +193,7 @@
 
         <constraints>
                  <when param="mode">
-                     <equals type="string" value=""/>
+                     <equals type="string" value="continuum"/>
                      <equals type="string" value="channel">
                          <default param="start"><value>0</value></default>
                          <default param="nchan"><value>1</value></default>

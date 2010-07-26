@@ -110,9 +110,6 @@ def pclean(vis, imagename, field, spw, imsize, cell,
     numcores=numcpuperhost
     #pdb.set_trace()
 
-    cleanmode=mode
-    if cleanmode!='':
-       cleanmode='channel'
 
     if spw=='':
        spw='*'
@@ -120,7 +117,7 @@ def pclean(vis, imagename, field, spw, imsize, cell,
     if imagename=='':
        imagename=vis
 
-    if cleanmode=='':
+    if mode=='continum':
        pcont(msname=vis, 
           imagename=imagename, imsize=imsize, 
           pixsize=cell, phasecenter=phasecenter, 
@@ -140,7 +137,7 @@ def pclean(vis, imagename, field, spw, imsize, cell,
           hostnames=hostnames, 
           numcpuperhost=numcores, 
           majorcycles=majorcycles, niter=niter, alg=alg,
-          weight=weighting, mode='channel', 
+          weight=weighting, mode=mode, 
           start=start, nchan=nchan, step=step, 
           chanchunk=chanchunk, scales=scales,
           contclean=contclean, visinmem=visinmem)
