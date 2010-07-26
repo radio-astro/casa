@@ -112,8 +112,18 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 			<value>G</value>
 			<value>T</value>
 			<value>GSPLINE</value>
+			<value>K</value>
+			<value>KCROSS</value>
+			<value>XY+QU</value>
 		</allowed>
 	</param>
+
+
+        <param type="doubleArray" name="smodel">
+               <description>Point source Stokes parameters for source model.</description>
+               <value></value>
+        </param>
+
 
 	<param type="string" name="calmode">
 		<description>Type of solution" (\'ap\', \'p\', \'a\')</description>
@@ -198,6 +208,9 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	<when param="gaintype">
 		<equals value="G"/>
 		<equals value="T"/>
+		<equals value="K"/>
+		<equals value="KCROSS"/>
+		<equals value="XY+QU"/>
 		<equals value="GSPLINE">
 			<default param="splinetime"><value>3600.0</value></default>
 			<default param="npointaver"><value>3</value></default>

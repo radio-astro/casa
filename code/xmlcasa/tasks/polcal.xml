@@ -112,6 +112,11 @@ calibrations can be applied on the fly.
 		</allowed>
 	</param>
 
+        <param type="doubleArray" name="smodel">
+               <description>Point source Stokes parameters for source model.</description>
+               <value></value>
+        </param>
+
 	<param type="bool" name="append">
 		<description>Append solutions to the (existing) table</description>
 		<value>False</value>

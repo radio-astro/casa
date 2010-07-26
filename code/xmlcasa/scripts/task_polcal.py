@@ -5,7 +5,7 @@ def polcal(vis=None,caltable=None,
 	   field=None,spw=None,
 	   selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
 	   solint=None,combine=None,preavg=None,refant=None,minblperant=None,minsnr=None,
-	   poltype=None,append=None,
+	   poltype=None,smodel=None,append=None,
 	   gaintable=None,gainfield=None,interp=None,spwmap=None,
 	   gaincurve=None,opacity=None):
 
@@ -30,6 +30,10 @@ def polcal(vis=None,caltable=None,
 			cb.selectvis(time='',spw=spw,scan='',field=field,
 				     baseline='',uvrange='',chanmode='none',
 				     msselect='');
+
+                # set the model, if specified
+                if (len(smodel)>0):
+                        cb.setptmodel(smodel);
 
 		# Arrange apply of existing other calibrations 
 		# First do the existing cal tables...
