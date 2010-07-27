@@ -382,13 +382,6 @@ class SubMS
   Bool putDataColumn(MSColumns& msc, ROArrayColumn<Float>& data,
                      const MS::PredefinedColumns datacol,
                      const Bool writeToDataCol=False);
-  // Commented out because they use large Cubes.
-  // Bool putDataColumn(MSColumns& msc, Cube<Complex>& data,
-  //                    const MS::PredefinedColumns datacol,
-  //                    const Bool writeToDataCol=False);
-  // Bool putDataColumn(MSColumns& msc, Cube<Float>& data,
-  //                    const MS::PredefinedColumns datacol,
-  //                    const Bool writeToDataCol=False);
 
   // Helper function for parseColumnNames().  Converts col to a list of
   // MS::PredefinedColumnss, and returns the # of recognized data columns.

@@ -5397,49 +5397,6 @@ Bool SubMS::fillAccessoryMainCols(){
     return true;
   }
 
-  // Bool SubMS::putDataColumn(MSColumns& msc, Cube<Complex>& data, 
-  //                           const MS::PredefinedColumns colName,
-  //                           const Bool writeToDataCol)
-  // {
-  //   if(writeToDataCol || colName == MS::DATA)
-  //     msc.data().putColumn(data);
-  //   else if (colName ==  MS::MODEL_DATA)
-  //     msc.modelData().putColumn(data);
-  //   else if (colName == MS::CORRECTED_DATA)
-  //     msc.correctedData().putColumn(data);
-  //   //else if(colName == MS::FLOAT_DATA)              // promotion from Float
-  //   //  msc.floatData().putColumn(data);              // to Complex is pvt?
-  //   else if(colName == MS::LAG_DATA)
-  //     msc.lagData().putColumn(data);
-  //   else
-  //     return false;
-  //   return true;
-  // }
-
-  // Bool SubMS::putDataColumn(MSColumns& msc, Cube<Float>& data, 
-  //                           const MS::PredefinedColumns colName,
-  //                           const Bool writeToDataCol)
-  // {
-  //   LogIO os(LogOrigin("SubMS", "putDataColumn()"));
-
-  //   if(writeToDataCol)
-  //     os << LogIO::NORMAL
-  // 	 << "Writing to FLOAT_DATA instead of DATA."
-  // 	 << LogIO::POST;
-
-  //   if(colName == MS::FLOAT_DATA){
-  //     msc.floatData().putColumn(data);
-  //   }
-  //   else{
-  //     os << LogIO::SEVERE
-  // 	 << "Float data cannot be written to "
-  // 	 << MS::columnName(colName)
-  // 	 << LogIO::POST;
-  //     return false;
-  //   }
-  //   return true;
-  // }
-
   // Sets outcol to row numbers in the corresponding subtable of its ms that
   // correspond to the values of incol.
   //
@@ -5628,16 +5585,12 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
       // Remap antenna and spw #s.
       ScalarColumn<Int>& antCol = outcols.antennaId();
       ScalarColumn<Int>& spwCol = outcols.spectralWindowId();
-      Vector<Int> newAntIds = antCol.getColumn();
-      Vector<Int> newSpwIds = spwCol.getColumn();
 
       for(uInt k = 0; k < totalSelFeeds; ++k){
-	newAntIds[k] = antNewIndex_p[newAntIds[k]];
-        if(newSpwIds[k] > -1)
-          newSpwIds[k] = spwRelabel_p[newSpwIds[k]];
+	antCol.put(k, antNewIndex_p[antCol(k)]);
+        if(spwCol(k) > -1)
+          spwCol.put(k, spwRelabel_p[spwCol(k)]);
       }
-      antCol.putColumn(newAntIds);
-      spwCol.putColumn(newSpwIds);
     }
 
     if(newFeed.nrow() < 1){
@@ -6573,8 +6526,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
     return False;
   }
 
-  Int outNrow = msOut_p.nrow();
-
   Vector<MS::PredefinedColumns> columnNames;
   const Bool doFloat = sepFloat(dataColNames, columnNames);
   uInt ntok = columnNames.nelements();
@@ -6629,8 +6580,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   //const ROScalarColumn<Bool> rowFlag(mscIn_p->flagRow());
 
   // ...but new row flags can be made for completely flagged or unweighted rows.
-  Vector<Bool> outRowFlag(outNrow);
-  outRowFlag.set(false);
+  Bool outRowFlag;
 
   const ROScalarColumn<Int> scanNum(mscIn_p->scanNumber());
   const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
@@ -6639,73 +6589,27 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   os << LogIO::NORMAL << "Writing time averaged data of "
      << newTimeVal_p.nelements()<< " time slots" << LogIO::POST;
 
-  Vector<Double> outTime;
-  outTime.resize(outNrow);
-
-  Vector<Double> outTC;
-  outTC.resize(outNrow);
-  outTC.set(0.0);
-
-  Vector<Double> outExposure;
-  outExposure.resize(outNrow);
-  outExposure.set(0.0);
-
   //Vector<Cube<Complex> > outData(ntok);
   Matrix<Complex> outData[ntok];
   ArrayColumn<Complex> outDataCols[ntok];
   getDataColMap(outDataCols, ntok, columnNames);
-  Matrix<Float>   outFloatData;
+  Matrix<Float> outFloatData;
   
   Vector<Float> outRowWeight;
 
-  // Get resized + initialized later.
+  // These get resized + initialized later.
   Vector<Float> outImagingWeight;
   Matrix<Bool> outFlag;
-
-  Vector<Int> outAnt1(outNrow);
-  outAnt1.set(-1);
-
-  Vector<Int> outAnt2(outNrow);
-  outAnt2.set(-1);
-
-  Vector<Int> outFeed1(outNrow);
-  outFeed1.set(-1);
-
-  Vector<Int> outFeed2(outNrow);
-  outFeed2.set(-1);
-
-  Vector<Int> outScanNum(outNrow);
-  outScanNum.set(0);
-
-  Vector<Int> outProc(outNrow);
-  outProc.set(0);
-
-  Vector<Int> outObs(outNrow);
-  outObs.set(0);
-
-  Vector<Int> outArr(outNrow);
-  outArr.set(0);
-
-  Vector<Int> outField(outNrow);
-  outField.set(0);
-
-  Vector<Int> outState(outNrow);
-  outState.set(0);
-
-  Vector<Int> dataDesc(outNrow);
-  dataDesc.set(-1);
 
   Matrix<Float> outSpWeight;
 
   Double totrowwt;
 
   Vector<Double> outUVW(3);
-  outUVW.set(0.0);
-
   Vector<Float> outSigma;
 
   const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
-  //os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
+  //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
   os << LogIO::DEBUG1 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
   //os << LogIO::NORMAL << "ncorr_p = " << ncorr_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
@@ -6752,6 +6656,11 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       uivector& slotv = slotit->second;
       uInt slotv0 = slotv[0];
       Double totslotwt = 0.0;
+      Double outTC = 0.0;
+      Double outExposure = 0.0;
+
+      outRowFlag = false;
+      outUVW.set(0.0);
 
       Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
       Bool newDDID = (ddID != oldDDID);
@@ -6971,8 +6880,8 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
           }
 
           // totrowwt > 0.0 implies totslotwt > 0.0
-          outTC[orn] += (totrowwt / totslotwt) * (inTC(*toikit) - outTC[orn]);
-          outExposure[orn] += totrowwt * inExposure(*toikit);
+          outTC += (totrowwt / totslotwt) * (inTC(*toikit) - outTC);
+          outExposure += totrowwt * inExposure(*toikit);
 	}
       } // End of loop through the slot's rows.
 
@@ -6984,12 +6893,12 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       // Average the accumulated values.
       //totslotwt = sum(outRowWeight);  // Uncomment for debugging
       if(totslotwt > 0.0){
-        outExposure[orn] *= slotv.size() / totslotwt;
+        outExposure *= slotv.size() / totslotwt;
       }
       else{
-        // outExposure[orn] = 0.0;      // Already is.
-        outTC[orn] = inTC(slotv0);      // Looks better than 1858.
-        outRowFlag[orn] = true;
+        // outExposure = 0.0;      // Already is.
+        outTC = inTC(slotv0);      // Looks better than 1858.
+        outRowFlag = true;
       }
 
       slotv.clear();  // Free some memory.  Does it save time?  Test!
@@ -7057,24 +6966,29 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       // Fill in the nonaveraging values from slotv0.
       // In general, _IDs which are row numbers in a subtable must be
       // remapped, and those which are not probably shouldn't be.
-      outTime[orn]    = newTimeVal_p[tbn];
-      outScanNum[orn] = scanNum(slotv0);	// Don't remap!
+      msc_p->time().put(orn, newTimeVal_p[tbn]);
+      msc_p->scanNumber().put(orn, scanNum(slotv0));	// Don't remap!
       if(antennaSel_p){
-        outAnt1[orn]  = antIndexer_p[ant1(slotv0)];
-        outAnt2[orn]  = antIndexer_p[ant2(slotv0)];
+	msc_p->antenna1().put(orn, antIndexer_p[ant1(slotv0)]);
+	msc_p->antenna2().put(orn, antIndexer_p[ant2(slotv0)]);
       }
       else{
-        outAnt1[orn]  = ant1(slotv0);
-        outAnt2[orn]  = ant2(slotv0);
-      }		
-      outFeed1[orn] = inFeed1(slotv0);
-      outFeed2[orn] = inFeed2(slotv0);
-      outField[orn]   = fieldRelabel_p[fieldID(slotv0)];
-      outState[orn]   = stateRemapper_p[state(slotv0)];
-      outProc[orn]    = procMapper[inProc(slotv0)];
-      outObs[orn]     = obsMapper[inObs(slotv0)];
-      outArr[orn]     = inArr(slotv0);	        // Don't remap!
-      dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
+	msc_p->antenna1().put(orn, ant1(slotv0));
+	msc_p->antenna2().put(orn, ant2(slotv0));
+      }	
+      msc_p->feed1().put(orn, inFeed1(slotv0));
+      msc_p->feed2().put(orn, inFeed2(slotv0));
+      msc_p->fieldId().put(orn, fieldRelabel_p[fieldID(slotv0)]);
+      msc_p->stateId().put(orn, stateRemapper_p[state(slotv0)]);
+      msc_p->processorId().put(orn, procMapper[inProc(slotv0)]);
+      // interval is done in fillAverMainTable().
+      msc_p->observationId().put(orn, obsMapper[inObs(slotv0)]);
+      msc_p->arrayId().put(orn, inArr(slotv0));	        // Don't remap!
+      msc_p->dataDescId().put(orn,
+			      spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]]);
+      msc_p->flagRow().put(orn, outRowFlag);
+      msc_p->exposure().put(orn, outExposure);
+      msc_p->timeCentroid().put(orn, outTC);
 
       // Columns whose shape might vary with ddID must be filled on a
       // row-by-row basis.
@@ -7106,36 +7020,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   //    << LogIO::POST;
 
   bin_slots_p.resize(0);           // Free some memory
-
-  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "memory after putting ImagingWt: "
-  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-  //    << LogIO::POST;
-
-  msc_p->antenna1().putColumn(outAnt1);
-  msc_p->antenna2().putColumn(outAnt2);
-  msc_p->arrayId().putColumn(outArr);
-  msc_p->dataDescId().putColumn(dataDesc);
-  msc_p->exposure().putColumn(outExposure);
-  msc_p->feed1().putColumn(outFeed1);
-  msc_p->feed2().putColumn(outFeed2);
-  msc_p->fieldId().putColumn(outField);
-
-  msc_p->flagRow().putColumn(outRowFlag);
-
-  // interval is done in fillAverMainTable().
-  msc_p->observationId().putColumn(outObs);
-  msc_p->processorId().putColumn(outProc);
-  msc_p->scanNumber().putColumn(outScanNum);
-  msc_p->stateId().putColumn(outState);
-  msc_p->time().putColumn(outTime);
-  msc_p->timeCentroid().putColumn(outTC);
-
-  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "memory after putting TC: "
-  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-  //    << LogIO::POST;
-
   return True;
 }
 
