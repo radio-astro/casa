@@ -1348,13 +1348,11 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
       os << setw(10)
          << stats.column(NPTS)(j);
 
-      uInt npts = stats.column(NPTS)(j);
-
       if(LattStatsSpecialize::hasSomePoints(stats.column(NPTS)(j))){
 
          setStream(os, oPrec);
          os << setw(oDWidth)
-            << stats.column(SUM)(j) * npts;
+            << stats.column(SUM)(j);
          if (hasBeam) { 
             setStream(os, oPrec);
             os << setw(oDWidth)
@@ -1362,7 +1360,7 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
          }
          setStream(os, oPrec);
          os << setw(oDWidth)
-            << stats.column(MEAN)(j) * npts;
+            << stats.column(MEAN)(j);
          if (doRobust_p){ 
             setStream(os, oPrec);
             os << setw(oDWidth)
@@ -1370,16 +1368,16 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
          }
          setStream(os, oPrec);
          os << setw(oDWidth)
-            << stats.column(RMS)(j) * sqrt(Double(npts));
+            << stats.column(RMS)(j);
          setStream(os, oPrec);
          os << setw(oDWidth)
-            << stats.column(SIGMA)(j) * sqrt(Double(npts));
+            << stats.column(SIGMA)(j);
          setStream(os, oPrec);
          os << setw(oDWidth)
-            << stats.column(MIN)(j) * npts;
+            << stats.column(MIN)(j);
          setStream(os, oPrec);
          os << setw(oDWidth)
-            << stats.column(MAX)(j) * npts;
+            << stats.column(MAX)(j);
       }
       os << endl;
       }
