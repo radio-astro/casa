@@ -1156,7 +1156,7 @@ void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
   Float I(1.0),Q(0.0),U(0.0),V(0.0);
 
   // Only fill as many as are specified, up to 4 (unspecified will be assumed zero)
-  for (Int i=0;i<min(stokes.nelements(),4);++i)
+  for (uInt i=0;i<stokes.nelements();++i)
     switch (i) {
     case 0: { I=stokes(i); break; }
     case 1: { Q=stokes(i); break; }
