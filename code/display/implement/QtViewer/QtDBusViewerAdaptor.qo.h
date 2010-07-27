@@ -90,6 +90,7 @@ namespace casa {
 		     const QString &orientation = "portrait", const QString &media = "letter" );
 
 
+	QDBusVariant fileinfo( const QString &path );
 	QStringList keyinfo( int );
 
 	bool done( );
