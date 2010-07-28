@@ -17,6 +17,7 @@ endif
 PY := $(wildcard python/*.py python/svninfo.txt)
 LIBS := /tmp/_asap.so
 BINS := bin/asap
+APPS := apps/asap2to3
 
 CASAROOT  := $(word 1, $(CASAPATH))
 PLATFORM  := $(word 2, $(CASAPATH))
@@ -27,6 +28,7 @@ all: module #doc
 module:
 	@if ( test -f getsvnrev.sh ) ; then /bin/bash getsvnrev.sh ; fi
 	@cd $(ASAPROOT)/src; make
+	@cd $(ASAPROOT)/apps; make
 
 doc:
 	@cd $(ASAPROOT)/doc; make
