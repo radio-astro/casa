@@ -349,8 +349,8 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
           pixsize=['1arcsec', '1arcsec'], phasecenter='', 
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
-          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', weight='natural',
-          contclean=False, visinmem=False,
+          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', scales=[0], weight='natural',
+          contclean=False, visinmem=False, 
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''):
 
@@ -370,6 +370,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     majorcycles= integer number of CS major cycles to do, 
     niter= integer ...total number of clean iteration 
     alg= string  possibilities are 'clark', 'hogbom', 'msclean'
+    scales = scales to use when using alg='msclean'
     contclean = boolean ...if False the imagename.model is deleted if its on 
     disk otherwise clean will continue from previous run
     visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
@@ -528,7 +529,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             averimages(psf, psfs)
         #incremental clean...get rid of tempmodel
         shutil.rmtree('tempmodel', True)
-        rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
+        rundecon='a.cleancont(alg="'+str(alg)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
         print 'Deconvolution command', rundecon
         out[0]=c.odo(rundecon,0)
         over=False
