@@ -482,9 +482,14 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
-            #c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
+            c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
+            c.odo('a.painc='+str(painc),k);
+            c.odo('a.pblimit='+str(pblimit),k);
+            c.odo('a.dopbcorr='+str(dopbcorr),k);
+            c.odo('a.applyoffsets='+str(applyoffsets),k);
+            c.odo('a.epjtablename='+'"'+str(epjtablename)+'"',k);
             runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel[k])+', numchan='+str(nchansel[k])+', field="'+str(field)+'", spw='+str(spwsel[k])+', freq='+freq+', band='+band+', imname='+imnam+')'
-            print 'command is ', runcomm
+            print 'command is ', runcomm,cfcachelist[k];
             out[k]=c.odo(runcomm,k)
         over=False
         while(not over):
