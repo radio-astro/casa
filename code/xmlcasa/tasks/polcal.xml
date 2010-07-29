@@ -106,6 +106,12 @@ calibrations can be applied on the fly.
 			<value>Df+X</value>
 			<value>D+QU</value>
 			<value>Df+QU</value>
+                        <value>Dgen</value>
+                        <value>Dfgen</value>
+                        <value>Dgen+X</value>
+                        <value>Dfgen+X</value>
+                        <value>Dgen+QU</value>
+                        <value>Dfgen+QU</value>
 			<value>X</value>
 			<value>Xf</value>
 			<value>Xj</value>
