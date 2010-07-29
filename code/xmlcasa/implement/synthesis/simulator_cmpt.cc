@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/synthesis/simulator_cmpt.h>
+#include <simulator_cmpt.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/Record.h>
 #include <synthesis/MeasurementEquations/Simulator.h>

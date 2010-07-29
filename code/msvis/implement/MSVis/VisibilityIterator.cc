@@ -39,7 +39,6 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledColumnStMan.h>
 #include <tables/Tables/TiledStManAccessor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

@@ -144,11 +144,13 @@ from imregrid import  imregrid
 from imsmooth import  imsmooth
 from imstat import  imstat
 from imval import  imval
+from imview import imview
 from listcal import  listcal
 from listhistory import  listhistory
 from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
+from msview import msview
 from newflagdata import  newflagdata
 from peel import  peel
 from plotants import  plotants
@@ -167,7 +169,6 @@ from uvcontsub import  uvcontsub
 from uvcontsub2 import  uvcontsub2
 from uvmodelfit import  uvmodelfit
 from uvsub import  uvsub
-from viewerconnection import  viewerconnection
 from viewer import  viewer
 from vishead import  vishead
 from visstat import  visstat

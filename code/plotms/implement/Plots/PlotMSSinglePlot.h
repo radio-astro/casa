@@ -100,7 +100,7 @@ public:
     void detachFromCanvases();
     
     // Implements PlotMSPlot::plotTabHasChanged().
-    void plotTabHasChanged(PlotMSPlotTab& tab) { }
+    void plotTabHasChanged(PlotMSPlotTab& tab) { (void)tab; }
     
 protected:
     // Implements PlotMSPlot::assignCanvases().

@@ -295,6 +295,15 @@ class viewertool(object):
 
         return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].show, panel )
 
+    def fileinfo( self, path ):
+        if type(path) != str:
+            raise Exception, "fileinfo() takes a single path..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Dictionary, dict, self.__state['proxy'].fileinfo, path )
+
     def keyinfo( self, key ):
         if type(key) != int:
             raise Exception, "keyinfo() takes a single int..."

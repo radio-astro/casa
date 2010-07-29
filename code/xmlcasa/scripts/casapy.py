@@ -254,7 +254,12 @@ try :
    os.makedirs(ipythonpath, 0755)
 except :
    pass
-os.environ['IPYTHONDIR']=ipythonpath
+###check IPYTHONDIR is defined by user and make it if not there
+if(not os.environ.has_key('IPYTHONDIR')):
+    os.environ['IPYTHONDIR']=ipythonpath
+if(not os.path.exists(os.environ['IPYTHONDIR'])):
+    os.makedirs(os.environ['IPYTHONDIR'], 0755)
+
 os.environ['__CASARCDIR__']=casa['dirs']['rc']
 
 #import string

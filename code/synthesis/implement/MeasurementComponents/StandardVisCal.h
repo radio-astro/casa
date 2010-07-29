@@ -235,6 +235,9 @@ public:
   // This type is smoothable
   virtual Bool smoothable() { return True; };
 
+  // Nominally, we will only use parallel hands for now
+  virtual Bool phandonly() { return True; };
+
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
@@ -338,14 +341,12 @@ public:
   virtual Type type() { return VisCal::D; };
 
   // Return type name as string
-  virtual String typeName()     { return "D Jones"; };
-  virtual String longTypeName() { return "D Jones (instrumental polarization"; };
+  virtual String typeName()     { return "Dgen Jones"; };
+  virtual String longTypeName() { return "Dgen Jones (instrumental polarization"; };
 
   // Type of Jones matrix according to nPar()
-  //  Work in linear approx for now
-  //  TBD: provide toggle to support choice of General (non-linear) option
-  virtual Jones::JonesType jonesType() { return Jones::GenLinear; };
-  //virtual Jones::JonesType jonesType() { return Jones::General; };
+  //   Do GENERAL matrix algebra
+  virtual Jones::JonesType jonesType() { return Jones::General; };
 
   // We can solve for polarization with D
   virtual Int solvePol() { return solvePol_; };
@@ -373,7 +374,9 @@ public:
   // Method to list the D results
   virtual void logResults();
 
-  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
+  virtual void createCorruptor(const VisIter& vi, 
+			       const Record& simpar, 
+			       const Int nSim);
 protected:
 
   // D has two Complex parameters
@@ -402,7 +405,7 @@ private:
 };
 
 // **********************************************************
-//  DfJones (freq-dep D)
+//  DfJones (freq-dep D)  (general)
 //
 
 class DfJones : public DJones {
@@ -414,8 +417,53 @@ public:
 
   virtual ~DfJones();
 
-  // Return the type enum
-  virtual Type type() { return VisCal::D; };
+  // Return type name as string
+  virtual String typeName()     { return "Dfgen Jones"; };
+  virtual String longTypeName() { return "Dfgen Jones (frequency-dependent instrumental polarization"; };
+
+  // This is the freq-dep version of D 
+  //   (this is the ONLY fundamental difference from D)
+  virtual Bool freqDepPar() { return True; };
+  
+};
+
+
+
+// **********************************************************
+//  DlinJones   (linearized DJones)
+//
+
+class DlinJones : public DJones {
+public:
+
+  // Constructor
+  DlinJones(VisSet& vs);
+  DlinJones(const Int& nAnt);
+
+  virtual ~DlinJones();
+
+  // Return type name as string
+  virtual String typeName()     { return "D Jones"; };
+  virtual String longTypeName() { return "D Jones (instrumental polarization"; };
+
+  // Type of Jones matrix according to nPar()
+  //  Do linearized matrix algebra
+  virtual Jones::JonesType jonesType() { return Jones::GenLinear; };
+
+};
+
+// **********************************************************
+//  DflinJones (freq-dep, linearized DJones)
+//
+
+class DflinJones : public DlinJones {
+public:
+
+  // Constructor
+  DflinJones(VisSet& vs);
+  DflinJones(const Int& nAnt);
+
+  virtual ~DflinJones();
 
   // Return type name as string
   virtual String typeName()     { return "Df Jones"; };
@@ -425,15 +473,8 @@ public:
   //   (this is the ONLY fundamental difference from D)
   virtual Bool freqDepPar() { return True; };
 
-protected:
-
-  // <nothing>
-
-private:
-
-  // <nothing>
-  
 };
+
 
 // **********************************************************
 //  JJones
@@ -743,7 +784,7 @@ protected:
   virtual void calcAllMueller();
 
   // Solve in one VB for the position angle
-  void solveOneVB(const VisBuffer& vb);
+  virtual void solveOneVB(const VisBuffer& vb);
 
 private:
 
@@ -807,7 +848,7 @@ protected:
   virtual void calcAllJones();
 
   // Solve in one VB for the position angle
-  void solveOneVB(const VisBuffer& vb);
+  virtual void solveOneVB(const VisBuffer& vb);
 
 private:
 
@@ -900,6 +941,10 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb) {};
 
+  // K solves for itself
+  virtual Bool standardSolve() { return False; };
+  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+
 protected:
 
   // K has two "real" parameters
@@ -914,6 +959,9 @@ protected:
   // Initialize trivial dJs
   virtual void initTrivDJ() {};
 
+  // FFT solver for on VB
+  virtual void solveOneVB(const VisBuffer& vb);
+
   // Reference frequencies
   Vector<Double> KrefFreqs_;
 
@@ -921,6 +969,58 @@ private:
 
   
 };
+
+// (sbd) K for cross-hand solve
+class KcrossJones : public KJones {
+public:
+
+  // Constructor
+  KcrossJones(VisSet& vs);
+  KcrossJones(const Int& nAnt);
+
+  virtual ~KcrossJones();
+
+  // Return type name as string
+  virtual String typeName()     { return "Kcross Jones"; };
+  virtual String longTypeName() { return "Kcross Jones (single-band cross delay)"; };
+
+
+
+protected:
+
+  // FFT solver for on VB, that collapses baselines and cross-hands first
+  virtual void solveOneVB(const VisBuffer& vb);
+
+};
+
+// X-Y phase 
+class GlinXphJones : public GJones {
+public:
+
+  // Constructor
+  GlinXphJones(VisSet& vs);
+  GlinXphJones(const Int& nAnt);
+
+  virtual ~GlinXphJones();
+
+  // Return type name as string
+  virtual String typeName()     { return "GlinXph Jones"; };
+  virtual String longTypeName() { return "GlinXph Jones (X-Y phase)"; };
+
+  // Though derived from GJones, this type actually uses the cross-hands
+  virtual Bool phandonly() { return False; };
+
+  // Solves for itself
+  virtual Bool standardSolve() { return False; };
+  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+
+protected:
+
+  // FFT solver for on VB, that collapses baselines and cross-hands first
+  virtual void solveOneVB(const VisBuffer& vb);
+
+};
+
 
 
 // KMBD Jones provides support for multi-band delays

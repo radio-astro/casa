@@ -713,6 +713,7 @@ macro( casa_find package )
       endforeach()
       list( APPEND _paths ${CMAKE_INSTALL_PREFIX}/bin )
       list( APPEND _paths ${casa_packages}/bin )
+      list( APPEND _paths /opt/casa/core2-apple-darwin10/bin )
       list( APPEND _paths /opt/local/bin )
       list( APPEND _paths /sw/bin )
       list( APPEND _paths /opt/bin )
@@ -764,7 +765,7 @@ macro( casa_find package )
   endif()
 
   else()
-    #message( STATUS "${package} already found or not required" )
+    message( STATUS "Looking for ${package} -- (cached) ok " )
   endif()
 
   #

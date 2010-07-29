@@ -6,7 +6,7 @@ def gaincal(vis=None,caltable=None,
 	    selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
 	    solint=None,combine=None,preavg=None,refant=None,minblperant=None,
 	    minsnr=None,solnorm=None,
-	    gaintype=None,calmode=None,append=None,
+	    gaintype=None,smodel=None,calmode=None,append=None,
 	    splinetime=None,npointaver=None,phasewrap=None,
 	    gaintable=None,gainfield=None,interp=None,spwmap=None,
 	    gaincurve=None,opacity=None,parang=None):
@@ -33,6 +33,12 @@ def gaincal(vis=None,caltable=None,
 			cb.selectvis(time='',spw=spw,scan='',field=field,
 				     baseline='',uvrange='',chanmode='none',
 				     msselect='');
+
+		# set the model, if specified
+		if (len(smodel)>0):
+			cb.setptmodel(smodel);
+
+
 
 		# Arrange apply of existing other calibrations 
 		# First do the existing cal tables...
@@ -91,6 +97,11 @@ def gaincal(vis=None,caltable=None,
 				    apmode=calmode,phaseonly=phaseonly,append=append)
 		elif (gaintype=='T'):
 			cb.setsolve(type='T',t=solint,combine=combine,preavg=preavg,refant=refant,
+				    minblperant=minblperant,
+				    solnorm=solnorm,minsnr=minsnr,table=caltable,
+				    apmode=calmode,phaseonly=phaseonly,append=append)
+		elif (gaintype=='K' or gaintype=='KCROSS' or gaintype=='XY+QU'):
+			cb.setsolve(type=gaintype,t=solint,combine=combine,preavg=preavg,refant=refant,
 				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
 				    apmode=calmode,phaseonly=phaseonly,append=append)

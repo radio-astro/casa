@@ -1,16 +1,16 @@
 #ifndef _casac_conversions_h__
 #define _casac_conversions_h__
-#include <xmlcasa/complex.h>
+#include <casac/complex.h>
 #include <complex>
 #include <WX/Utils/smartptr.h>
 #include <WX/Utils/value.h>
 #include <xmlcasa/record.h>
 #include <xmlcasa/array.h>
-#include <xmlcasa/BoolAry.h>
-#include <xmlcasa/IntAry.h>
-#include <xmlcasa/DoubleAry.h>
-#include <xmlcasa/ComplexAry.h>
-#include <xmlcasa/StringAry.h>
+#include <casac/BoolAry.h>
+#include <casac/IntAry.h>
+#include <casac/DoubleAry.h>
+#include <casac/ComplexAry.h>
+#include <casac/StringAry.h>
 #include <string>
 
 namespace casac {

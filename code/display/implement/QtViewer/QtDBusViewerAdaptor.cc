@@ -655,6 +655,20 @@ namespace casa {
 	return QDBusVariant(QVariant(QString((const char*)buf)));
     }
 
+    QDBusVariant QtDBusViewerAdaptor::fileinfo( const QString &path ) {
+	QMap<QString,QVariant> map;
+	map.insert("path",QVariant(path));
+	struct stat buf;
+	if ( stat(path.toAscii().constData(),&buf) < 0 ) {
+	    // file (or dir) does not exist
+	    map.insert("type",QVariant("nonexistent"));
+	} else {
+	    String datatype = viewer_->filetype(path.toStdString()).chars();
+	    map.insert("type",QVariant((const char*) datatype.c_str( )));
+	}
+	return QDBusVariant(QVariant(map));
+    }
+
     QStringList QtDBusViewerAdaptor::keyinfo( int key ) {
 	QStringList result;
 

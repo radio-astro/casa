@@ -3,7 +3,7 @@
 //#include <casac/StdCasa/CasacSupport.h>
 #include <singledish/SDReaderWrapper.h>
 #include <singledish/SDMemTableWrapper.h>
-#include <xmlcasa/singledish/sdtable_cmpt.h>
+#include <sdtable_cmpt.h>
 
 namespace casa
 {

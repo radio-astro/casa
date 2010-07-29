@@ -388,6 +388,10 @@ public:
   void setModelVisCube(const Cube<Complex>& vis);
   void setCorrectedVisCube(const Cube<Complex>& vis);
 
+  // Set model according to a Stokes vector
+  void setModelVisCube(const Vector<Float>& stokes);
+
+
   // Reference external model visibilities
   void refModelVis(const Matrix<CStokesVector>& mvis);
 

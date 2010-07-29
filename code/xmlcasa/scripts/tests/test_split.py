@@ -124,6 +124,9 @@ class SplitChecker(unittest.TestCase):
             # it readonly might break them.
             shutil.copytree(datapath + inpms, inpms)
 
+        if not os.path.exists(inpms):
+            raise EnvironmentError, "Missing input MS: " + datapath + inpms
+
         for corrsel in self.corrsels:
             self.res = self.do_split(corrsel)
 

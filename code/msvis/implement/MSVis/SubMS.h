@@ -382,12 +382,6 @@ class SubMS
   Bool putDataColumn(MSColumns& msc, ROArrayColumn<Float>& data,
                      const MS::PredefinedColumns datacol,
                      const Bool writeToDataCol=False);
-  Bool putDataColumn(MSColumns& msc, Cube<Complex>& data,
-                     const MS::PredefinedColumns datacol,
-                     const Bool writeToDataCol=False);
-  Bool putDataColumn(MSColumns& msc, Cube<Float>& data,
-                     const MS::PredefinedColumns datacol,
-                     const Bool writeToDataCol=False);
 
   // Helper function for parseColumnNames().  Converts col to a list of
   // MS::PredefinedColumnss, and returns the # of recognized data columns.
@@ -472,7 +466,9 @@ class SubMS
 
   void relabelIDs();
   void remapColumn(const ROScalarColumn<Int>& incol, ScalarColumn<Int>& outcol);
-  void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
+  static void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
+  static void make_map(const ROScalarColumn<Int>& mscol,
+		       std::map<Int, Int>& mapper);
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 
   // A "Slot" is a subBin, i.e. rows within the same time bin that have
@@ -534,7 +530,7 @@ class SubMS
   // inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
   Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
 
-  Vector<Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
+  std::map<Int, Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
 
   // Each bin gets a map which maps its set of slot keys from
   // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to

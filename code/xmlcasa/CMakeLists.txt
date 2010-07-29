@@ -200,6 +200,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_gencal.py
   scripts/task_hanningsmooth.py
   scripts/task_help.py
+  scripts/task_imcollapse.py
   scripts/task_imcontsub.py
   scripts/task_imfit.py
   scripts/task_imhead.py
@@ -261,8 +262,9 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_uvcontsub.py
   scripts/task_uvmodelfit.py
   scripts/task_uvsub.py
-  scripts/task_viewerconnection.py
   scripts/task_viewer.py
+  scripts/task_msview.py
+  scripts/task_imview.py
   scripts/task_vishead.py
   scripts/task_visstat.py
   scripts/task_widefield.py
@@ -305,6 +307,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/gaincal.xml
   tasks/gencal.xml
   tasks/hanningsmooth.xml
+  tasks/imcollapse.xml
   tasks/imcontsub.xml
   tasks/imfit.xml
   tasks/imhead.xml
@@ -364,8 +367,9 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/uvcontsub.xml
   tasks/uvmodelfit.xml
   tasks/uvsub.xml
-  tasks/viewerconnection.xml
   tasks/viewer.xml
+  tasks/imview.xml
+  tasks/msview.xml
   tasks/vishead.xml
   tasks/visstat.xml
   tasks/widefield.xml
@@ -424,10 +428,13 @@ casa_add_pymodule( interrupt modules/interrupt/interrupt_python.cc )
 # Make sure that all IDLs are up to date before considering casac
 # This has the desired effects that
 # - Dependencies of the C++ sources are calculated after the IDLs are created
+#   (IDLs might #include each other)
 # - When ccmtools is invoked, all the required IDL (which may not be explicit
 #   cmake dependencies for the ccmtools command) exist.
 add_custom_target( idl SOURCES ${tools_idl} )
-add_dependencies( casac idl )
+add_custom_target( generated_sources SOURCES ${tools_sources} ${outputs_idl} )
+add_dependencies( generated_sources idl )
+add_dependencies( libxmlcasa generated_sources )
 
 add_subdirectory( scripts/tests )
 add_subdirectory( scripts/regressions )
@@ -459,6 +466,3 @@ if( casa_out_pdf )
 else()
   add_custom_target( doc_pdf COMMAND echo "PDF to HTML converter was not found." )
 endif()
-
-# All documentation
-add_custom_target( doc DEPENDS doc_doxy doc_latex doc_html doc_pdf )

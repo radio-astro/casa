@@ -56,6 +56,7 @@ VisEquation::VisEquation() :
   svc_(NULL),
   pivot_(VisCal::ALL),  // at the sky
   spwOK_(),
+  useInternalModel_(False),
   prtlev_(VISEQPRTLEV)
 {
   if (prtlev()>0) cout << "VE::VE()" << endl;
@@ -171,6 +172,18 @@ void VisEquation::setPivot(VisCal::Type pivot) {
 }
   
 
+//----------------------------------------------------------------------
+void VisEquation::setModel(const Vector<Float>& stokes) {
+
+  if (prtlev()>0) cout << "VE::setModel()" << endl;
+
+  // Set the internal point source model
+  useInternalModel_=True;
+  stokesModel_.resize(4);
+  stokesModel_.set(0.0);
+  stokesModel_(Slice(0,stokes.nelements(),1))=stokes;
+
+}
 
 
 //----------------------------------------------------------------------
@@ -227,19 +240,12 @@ void VisEquation::collapse(VisBuffer& vb) {
   if (prtlev()>0) cout << "VE::collapse()" << endl;
 
   // Handle origin of model data here:
-
-  /*
-  if (doaltmodel)
-    if (!skytype)
-      vb.setModel(model);;
-    // else skytype will originate model when encountered
+  if (useInternalModel_)
+    vb.setModelVisCube(stokesModel_);
   else
-    // force I/O from MS
-    vb.modelVisCube()
-  */
+    vb.modelVisCube();
 
   // Ensure required columns are present!
-  vb.modelVisCube();
   vb.visCube();
   vb.weightMat();
   
@@ -358,8 +364,7 @@ void VisEquation::state() {
 
   if (prtlev()>0) cout << "VE::state()" << endl;
 
-  cout << "freqAveOK_ = " << freqAveOK_ << endl;
-
+  cout << boolalpha;
 
   // Order in which DATA is corrected
   cout << "Correct order:" << endl;
@@ -385,13 +390,23 @@ void VisEquation::state() {
     cout << " <none>" << endl;
   
   cout << endl;
+
+  cout << "Source model:" << endl;
+  cout << "  useInternalModel_ = " << useInternalModel_ << endl;
+  if (useInternalModel_)
+    cout << "  Stokes = " << stokesModel_ << endl;
+  else
+    cout << "  <using MODEL_DATA column>" << endl;
+  cout << endl;
+
   cout << "Collapse order:" << endl;
+  cout << "  freqAveOK_ = " << freqAveOK_ << endl;
   
   if (svc_) {
     Int lidx=0;
     Int ridx=napp_-1;
 
-    if ( !svc().freqDepMat() ) {
+    if ( freqAveOK_ && !svc().freqDepMat() ) {
       // Correct DATA up to last freqDep term on LHS
       cout << " LHS (pre-freqAve):" << endl;
       if (lidx <= lfd_) 

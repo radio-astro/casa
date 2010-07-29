@@ -16,7 +16,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
 #include<casa/Utilities/Assert.h>
-#include <xmlcasa/synthesis/deconvolver_cmpt.h>
+#include <deconvolver_cmpt.h>
 #include <synthesis/MeasurementEquations/Deconvolver.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/System/PGPlotterNull.h>

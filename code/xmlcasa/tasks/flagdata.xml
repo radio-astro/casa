@@ -376,8 +376,8 @@
 
               clipexpr -- Clip using the following:
                 default: 'ABS RR'; example: clipexpr='RE XX'
-                options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-                          'I','XX','YY','RR','LL'
+                options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
+                         any of 'I', 'XX', 'YY', 'RR', 'LL'
               channelavg -- Average data over (selected) channels? Channel
                             selections are taken into account. Flagged channels
                             are excluded from the average.

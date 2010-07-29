@@ -8,15 +8,17 @@
 #    The conversion of ASDM to MS and back needs to be verified.            #
 #                                                                           # 
 # Features tested:                                                          #
-#    1) Is the import performed without raising exceptions                  #
-#    2) Do all expected tables exist                                        #
-#    3) Can the MS be opened                                                #
-#    4) Do the tables contain expected values                               #
-#    5) Is exportasdm performed without raising exceptions                  #
-#    6) Is the created ASDM well-formed (XML) and complete                  #
-#    7) Can the resulting ASDM be reimported without raising exceptions     #
-#    8) Does it have the same number of integrations as the original        #
-#    9) Does an imported ASDM pass a serious analysis                       #
+#    1) Is the import performed without raising exceptions?                 #
+#    2) Do all expected tables exist?                                       #
+#    3) Can the MS be opened?                                               #
+#    4) Do the tables contain expected values?                              #
+#    5) Is exportasdm performed without raising exceptions?                 #
+#    6) Is the created ASDM well-formed (XML) and complete?                 #
+#    7) Can the resulting ASDM be reimported without raising exceptions?    #
+#    8) Does it have the same number of integrations as the original?       #
+#    9) Does an imported ASDM pass a serious analysis?                      #
+#   10) After exporting the MS generated in (9) to an ASDM, does the        #
+#       re-imported MS pass the same analysis with the same results?        #
 #                                                                           #
 # Input data:                                                               #
 #     two datasets for the filler of ASDM 1.0                               #
@@ -165,7 +167,7 @@ def analyseASDM(basename, caltablename0):
     msname=basename+'.ms'
     contimage=basename+'_cont'
     lineimage=basename+'_line'
-    bname="N3256_B6_Mar19"
+    bname=basename+'_B'
     caltablename=bname+'_cal'
     msn=bname+'.ms'
 
@@ -178,6 +180,7 @@ def analyseASDM(basename, caltablename0):
         
     # Find the asdm
     asdm=basename
+    os.system('rm -rf '+bname+'_* '+msn)
     print ">> Importing the asdm: ", asdm, " as measurement set: ",msn 
     importasdm(
         asdm=asdm,
@@ -404,11 +407,11 @@ def analyseASDM(basename, caltablename0):
 
     for i in range(2):
         print ">> image rms ", i, " is ", rms[i], " expected value is ", reference_rms[i] 
-        if(abs(rms[i] - reference_rms[i])/reference_rms[i] > 0.0001):
+        if(abs(rms[i] - reference_rms[i])/reference_rms[i] > 0.01):
             print ">> ERROR." 
             isOK = False
         print ">> image peak ", i, " is ", peak[i], " expected value is ", reference_peak[i] 
-        if(abs(peak[i] - reference_peak[i])/reference_peak[i] > 0.0001):
+        if(abs(peak[i] - reference_peak[i])/reference_peak[i] > 0.01):
             print ">> ERROR." 
             isOK = False
             
@@ -423,11 +426,14 @@ def analyseASDM(basename, caltablename0):
 ###########################
 # beginning of actual test 
 
+part1 = True
+
+# part 1
 try:
     importasdm(myasdm_dataset_name)
 except:
     print myname, ": Error ", sys.exc_info()[0]
-    raise
+    part1 = False
 else:
     print myname, ": Success! Now checking output ..."
     mscomponents = set(["table.dat",
@@ -472,7 +478,7 @@ else:
     for name in mscomponents:
         if not os.access(msname+"/"+name, os.F_OK):
             print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
-            raise
+            part1 = False
         else:
             print myname, ": ", name, "present."
     print myname, ": MS exists. All tables present. Try opening as MS ..."
@@ -480,7 +486,7 @@ else:
         ms.open(msname)
     except:
         print myname, ": Error  Cannot open MS table", tablename
-        raise
+        part1 = False
     else:
         ms.close()
         print myname, ": OK. Checking tables in detail ..."
@@ -652,6 +658,11 @@ else:
                      ['ENCODER',         10, [-0.96686338, 0.88392100], 1E-7 ]
                      ]
         checktable(name, expected)
+
+if (not part1):
+    print "Part 1 failed."
+
+part2 = True
         
 myvis = myms_dataset_name
 os.system('rm -rf exportasdm-output.asdm myinput.ms')
@@ -692,18 +703,117 @@ try:
     print "Reimported MS contains ", nrowsreimp, "integrations."
     if(not nrowsreimp==nrowsorig):
         print "Numbers of integrations disagree."
-        raise Exception
+        part2 = False
 except:
     print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
-    raise
+    part2 = False
     
 #############
 # Now import an ASDM and do a serious analysis
 
 print
+print '==================================================================='
 print "Serious analysis of an ASDM ..."
 
-if(not analyseASDM(myasdm_dataset2_name, mywvr_correction_file)):
-    print myname, ': *** Unexpected error analysing ASDM, regression failed ***'   
-    raise
+rval = True
+part3 = True
 
+try:
+    rval = analyseASDM(myasdm_dataset2_name, mywvr_correction_file)
+except:
+    print myname, ': *** Unexpected error analysing ASDM, regression failed ***'   
+    part3 = False
+
+if(not rval):
+    print myname, ': *** Unexpected error analysing ASDM, regression failed ***'   
+    part3 = False
+
+#############
+#
+
+dopart4 = False
+
+part4 = True
+
+if dopart4:
+
+    print
+    print '==================================================================='
+    print "Export the previously imported ASDM ..."
+    default('exportasdm')
+    try:
+        os.system('rm -rf '+myasdm_dataset2_name+'-re-exported*')
+        #    os.system('rm -rf '+myasdm_dataset2_name+'-re-exported* '+myasdm_dataset2_name+'-split*')
+        
+        #    # use only the actual visibility data, not the WVR data
+        #    split(vis=myasdm_dataset2_name+'.ms',
+        #          outputvis=myasdm_dataset2_name+'-split.ms',
+        #          datacolumn='data',
+        #          spw='0~3'
+        #          )
+        
+        rval = exportasdm(
+            vis = myasdm_dataset2_name+'.ms',
+            #        vis = myasdm_dataset2_name+'-split.ms',
+            asdm = myasdm_dataset2_name+'-re-exported',
+            archiveid="X001",
+            apcorrected=False,
+            datacolumn='DATA' # the default
+            )
+        print "rval is ", rval
+        if not rval:
+            raise Exception
+        verify_asdm(myasdm_dataset2_name+'-re-exported', True)
+    except:
+        print myname, ': *** Unexpected error re-exporting MS to ASDM, regression failed ***'   
+        raise
+
+#############
+    # repeat analysis on re-exported ASDM
+
+    print
+    print '==================================================================='
+    print "Serious analysis of an exported and re-imported ASDM ..."
+    
+    rval = True
+    try:
+        rval = analyseASDM(myasdm_dataset2_name+'-re-exported', mywvr_correction_file)
+    except:
+        print myname, ': *** Unexpected error analysing re-exported ASDM, regression failed ***'   
+        part4 = False
+        
+    if(not rval):
+        print myname, ': *** Unexpected error analysing re-exported ASDM, regression failed ***'   
+        part4 = False
+
+# end if dopart4
+
+print
+print '==================================================================='
+print "Summary"
+
+if(not part1):
+    print "Part 1: ASDM import failed."
+else:
+    print "Part 1: ASDM import passed."
+if(not part2):
+    print "Part 2: ASDM export failed."
+else:
+    print "Part 2: ASDM export passed."
+if(not part3):
+    print "Part 3: serious analysis of an ASDM failed."
+else:
+    print "Part 3: serious analysis of an ASDM passed."
+if dopart4:
+    if not part4:
+        print "Part 4: serious analysis of an exported and re-imported ASDM failed."
+    else:
+        print "Part 4: serious analysis of an exported and re-imported ASDM passed."
+else:
+        print "Part 4: serious analysis of an exported and re-imported ASDM not executed."    
+
+if(not (part1 and part2 and part3 and part4)):
+    print "Regression failed."
+    raise
+else:
+    print "Regression passed."

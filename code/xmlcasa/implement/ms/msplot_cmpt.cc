@@ -43,7 +43,7 @@
 
 // msplot include files
 //#include <xmlcasa/ms/msplot_private.h>
-#include <xmlcasa/ms/msplot_cmpt.h>
+#include <msplot_cmpt.h>
 
 using namespace std;
 

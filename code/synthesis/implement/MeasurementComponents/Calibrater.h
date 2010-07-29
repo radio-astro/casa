@@ -101,6 +101,7 @@ class Calibrater
 		 const Record& applypar);
 
   Bool setmodel(const String& modelImage);
+  Bool setModel(const Vector<Double>& stokes);
 
   //  Arrange to solve
   Bool setsolve (const String& type, 

@@ -1139,6 +1139,79 @@ void VisBuffer::setModelVisCube(const Cube<Complex>& vis)
   modelVisCube_p=vis;
   modelVisCubeOK_p=True;
 }
+
+void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
+{
+
+  /*
+  cout << "Specified Stokes Parameters: " << stokes << endl;
+
+  cout << "polFrame() = " << polFrame() 
+       << " " << MSIter::Circular
+       << " " << MSIter::Linear
+       << endl;
+  */
+
+  // Stokes parameters, nominally unpolarized, unit I
+  Float I(1.0),Q(0.0),U(0.0),V(0.0);
+
+  // Only fill as many as are specified, up to 4 (unspecified will be assumed zero)
+  for (uInt i=0;i<stokes.nelements();++i)
+    switch (i) {
+    case 0: { I=stokes(i); break; }
+    case 1: { Q=stokes(i); break; }
+    case 2: { U=stokes(i); break; }
+    case 3: { V=stokes(i); break; }
+    default: { break; }
+    }
+
+  // Convert to correlations, according to basis
+  Vector<Complex> stkvis(4,Complex(0.0));  // initially all zero
+  switch (polFrame()) {
+  case MSIter::Circular: {
+    stkvis(0)=Complex(I+V);
+    stkvis(1)=Complex(Q,U);
+    stkvis(2)=Complex(Q,-U);
+    stkvis(3)=Complex(I-V);
+    break;
+  }
+  case MSIter::Linear: {
+    stkvis(0)=Complex(I+Q);
+    stkvis(1)=Complex(U,V);
+    stkvis(2)=Complex(U,-V);
+    stkvis(3)=Complex(I-Q);
+    break;
+  }
+  default:
+    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
+    break;
+  }
+    
+  // A map onto the actual correlations in the VisBuffer
+  Vector<Int> corrmap;
+  corrmap=corrType();
+  corrmap-=corrmap(0);
+  // This MUST yield indices < 4
+  if (max(corrmap)>3)
+    throw(AipsError("HELP! The correlations in the data are not normal!"));
+  
+
+  // Set the modelVisCube accordingly
+  modelVisCube_p.resize(visIter_p->visibilityShape());
+  modelVisCube_p.set(0.0);
+  for (Int icorr=0;icorr<nCorr();++icorr) 
+    if (abs(stkvis(icorr))>0.0)
+      modelVisCube_p(Slice(icorr,1,1),Slice(),Slice()).set(stkvis(corrmap(icorr)));
+  modelVisCubeOK_p=True;
+
+  // Lookup flux density calibrator scaling, and apply it per channel...
+  //  TBD
+
+
+
+}
+
+
 void VisBuffer::setCorrectedVisCube(const Cube<Complex>& vis)
 {
   correctedVisCube_p.resize(vis.shape());

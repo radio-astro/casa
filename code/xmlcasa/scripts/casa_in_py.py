@@ -185,7 +185,6 @@ from newflagdata_pg import newflagdata_pg as newflagdata
 from clearstat_pg import clearstat_pg as clearstat
 from flagautocorr_pg import flagautocorr_pg as flagautocorr
 from browsetable_pg import browsetable_pg as browsetable
-from makemask_pg import makemask_pg as makemask
 from smoothcal_pg import smoothcal_pg as smoothcal
 from imval_pg import imval_pg as imval
 from vishead_pg import vishead_pg as vishead

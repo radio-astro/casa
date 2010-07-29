@@ -309,7 +309,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 
   emit mouseRegionReady(mouseRegion, wch);  // echo mouseTool signal.
   
-  //Bool rgnSaved = False;
+  Bool rgnSaved = False;
     
   for(ListIter<QtDisplayData*> qdds(qdds_); 
         !qdds.atEnd(); qdds++) {
@@ -341,7 +341,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
     }
     
     
-    //if(!rgnSaved) {
+    if(!rgnSaved) {
     
       // First DD to respond with a region -- save it.
       
@@ -351,7 +351,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
       emit newRegion(rgnImgPath_);
 	// rgnImgPath_: pathname of the active image used to make the region.
 	// Will be transformed into regionPathname() if saved to disk.
-      //   rgnSaved = True;  }
+         rgnSaved = True;  }
      if (useRegion)
          resetRTRegion();
 

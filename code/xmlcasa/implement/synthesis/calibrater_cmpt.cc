@@ -10,7 +10,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/synthesis/calibrater_cmpt.h>
+#include <calibrater_cmpt.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
 #include <ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>
@@ -185,6 +185,23 @@ calibrater::setmodel(const std::string& modelImage)
     }
   return true;
 }
+
+bool 
+calibrater::setptmodel(const std::vector<double>& stokes) {
+  try
+    {
+      itsCalibrater->setModel(stokes);
+    }
+  catch (AipsError x)
+    {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
+  return true;
+}
+
+
+
 
 bool 
 calibrater::setapply(const std::string& type,

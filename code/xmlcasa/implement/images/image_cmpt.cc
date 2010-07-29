@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <sys/wait.h>
-#include <xmlcasa/images/image_cmpt.h>
+#include <image_cmpt.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayUtil.h>
@@ -47,6 +47,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
+#include <images/Images/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -148,41 +149,6 @@ image::~image()
   }
 }
 
-/*
-Bool unset(const ::std::vector<bool> &par) {
-  if (par.size() == 1 && par[0] == false) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-Bool unset(const ::std::vector<int> &par) {
-  if (par.size() == 1 && par[0]==-1) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-Bool unset(const ::casac::record &theRec) {
-  Bool rstat(True);
-  for(::casac::rec_map::const_iterator rec_it = theRec.begin();
-      rec_it != theRec.end(); rec_it++){
-    rstat = False;
-    break;
-  }
-  return rstat;
-}
-
-Bool unset(const ::casac::variant &theVar) {
-  Bool rstat(False);
-  if ( (theVar.type() == ::casac::variant::BOOLVEC)
-       && (theVar.size() == 0) ) rstat = True;
-  return rstat;
-}
-*/
-
 Bool isunset(const ::casac::variant &theVar) {
   Bool rstat(False);
   if ( (theVar.type() == ::casac::variant::BOOLVEC)
@@ -255,6 +221,34 @@ image::addnoise(const std::string& type, const std::vector<double>& pars,
     RETHROW(x);
   }
   return rstat;
+}
+
+casac::image * image::collapse(
+	const string& function, const int axis, const string& outfile,
+	const string& region, const string& box, const string& chans,
+	const string& stokes, const string& mask,
+	const bool overwrite
+) {
+	casac::image *newImageTool = 0;
+    *itsLog << LogOrigin("image", __FUNCTION__);
+    if (detached()) {
+    	return NULL;
+    }
+
+	try {
+		String aggString = function;
+		ImageCollapser collapser(
+			aggString, itsImage->name(), region,
+		    box, chans, stokes, mask, axis,
+		    outfile, overwrite
+		);
+		newImageTool = new ::casac::image(collapser.collapse(True));
+	}
+	catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+	return newImageTool;
 }
 
 ::casac::image *

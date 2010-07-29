@@ -465,7 +465,8 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
 
   else if(calType_p=="K")
     //    return timePlotK();
-    throw(AipsError("K plots are disabled for now."));
+    //    throw(AipsError("K plots are disabled for now."));
+    return doPlot();
 
   else if(calType_p=="Xold")
     throw(AipsError("X (old-style) plots are disabled for now."));

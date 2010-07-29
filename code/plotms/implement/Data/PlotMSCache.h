@@ -153,11 +153,11 @@ public:
 
 
   // Axis-specific generic gets
-  inline Double getScan(Int chnk,Int irel)     { return scan_(chnk); };
-  inline Double getField(Int chnk,Int irel)    { return field_(chnk); };
-  inline Double getTime(Int chnk,Int irel)     { return time_(chnk); };
-  inline Double getTimeIntr(Int chnk,Int irel) { return timeIntr_(chnk); };
-  inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk); };
+  inline Double getScan(Int chnk,Int irel)     { return scan_(chnk);   (void)irel; };
+  inline Double getField(Int chnk,Int irel)    { return field_(chnk);  (void)irel; };
+  inline Double getTime(Int chnk,Int irel)     { return time_(chnk);  (void)irel; };
+  inline Double getTimeIntr(Int chnk,Int irel) { return timeIntr_(chnk);  (void)irel; };
+  inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk);  (void)irel; };
 
   inline Double getFreq(Int chnk,Int irel) { return *(freq_[chnk]->data()+irel); };
   inline Double getVel(Int chnk,Int irel)  { return *(vel_[chnk]->data()+irel); };
@@ -184,10 +184,10 @@ public:
   inline Double getImWt(Int chnk,Int irel) { return *(imwt_[chnk]->data()+irel); };
 
   // These are array-global (one value per chunk)
-  inline Double getAz0(Int chnk,Int irel) { return az0_(chnk); };
-  inline Double getEl0(Int chnk,Int irel) { return el0_(chnk); };
-  inline Double getHA0(Int chnk,Int irel) { return ha0_(chnk); };
-  inline Double getPA0(Int chnk,Int irel) { return pa0_(chnk); };
+  inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
+  inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
+  inline Double getHA0(Int chnk,Int irel) { return ha0_(chnk);  (void)irel; };
+  inline Double getPA0(Int chnk,Int irel) { return pa0_(chnk);  (void)irel; };
 
   // These are antenna-based
   inline Double getAntenna(Int chnk,Int irel) { return *(antenna_[chnk]->data()+irel); };

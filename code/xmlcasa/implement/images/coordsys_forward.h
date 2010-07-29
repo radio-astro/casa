@@ -1,4 +1,4 @@
-#include <xmlcasa/measures/measures_cmpt.h>
+#include <measures_cmpt.h>
 #include <coordinates/Coordinates/Coordinate.h>
 
 namespace casa 

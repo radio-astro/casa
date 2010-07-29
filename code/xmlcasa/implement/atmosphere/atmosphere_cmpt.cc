@@ -21,7 +21,7 @@ using namespace std;
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
-#include <xmlcasa/atmosphere/atmosphere_cmpt.h>
+#include <atmosphere_cmpt.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
 
 using namespace atm;

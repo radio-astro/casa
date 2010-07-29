@@ -272,6 +272,32 @@ cb.setmodel("mymodel");
 
 </method>
 
+<method type="function" name="setptmodel">
+   <shortdescription>Set the point source model Stokes parameters to be used to compute the model visibilities</shortdescription>
+
+<input>
+   <param type="doubleArray" direction="in" name="stokes">
+   <description>Vector of Stokes parameters.</description>
+   <value type="vector">
+     <value>0.0</value>
+     <value>0.0</value>
+     <value>0.0</value>
+     <value>0.0</value>
+   </value>
+   </param>
+</input>
+<returns type="bool"/>
+
+<description>
+Set a global point source model Stokes parameters to use in solving operations.
+</description>
+
+<example>
+cb.setmodel([1,1,0,0]);
+</example>
+
+</method>
+
 
 <method type="function" name="setapply">
    <shortdescription>Arrange to apply calibration</shortdescription>

@@ -31,7 +31,7 @@
 #include <measures/Measures/MeasComet.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasureHolder.h>
-#include <xmlcasa/measures/measures_cmpt.h>
+#include <measures_cmpt.h>
 
 using namespace std;
 using namespace casa;

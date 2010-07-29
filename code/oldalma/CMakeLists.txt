@@ -20,10 +20,10 @@
 
 add_definitions( -DWITHOUT_ACS )
 
-if( APPLE )
-  set( CMAKE_CXX_FLAGS
-     "${CMAKE_CXX_FLAGS} -march=i586" )
-endif()
+#if( APPLE )
+#  set( CMAKE_CXX_FLAGS
+#     "${CMAKE_CXX_FLAGS} -march=i586" )
+#endif()
 
 casa_add_library( oldalma
   implement/ASDM/AlmaRadiometerRow.cc

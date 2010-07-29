@@ -32,6 +32,7 @@
 #include <plotms/GuiTabs/PlotMSCanvasTab.qo.h>
 #include <plotms/GuiTabs/PlotMSDataTab.qo.h>
 #include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
+#include <plotms/GuiTabs/PlotMSIterateTab.qo.h>
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
 #include <plotms/GuiTabs/PlotMSMultiAxesTab.qo.h>
 #include <plotms/GuiTabs/PlotMSTransformationsTab.qo.h>
@@ -271,6 +272,7 @@ PT_ST(Cache)
 PT_ST(Canvas)
 PT_ST(Data)
 PT_ST(Display)
+PT_ST(Iterate)
 PT_ST(Export)
 PT_ST(MultiAxes)
 PT_ST(Transformations)

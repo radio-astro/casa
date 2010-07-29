@@ -3,7 +3,7 @@
 #include <xmlcasa/type_record.h>
 #include <xmlcasa/type_variant.h>
 #include <xmlcasa/value_variant.h>
-#include <xmlcasa/casac.h>
+#include <casac/casac.h>
 #include <string.h>
 #include <CCM_Python/BasicTypes.h>
 #if USING_NUMPY_ARRAYS

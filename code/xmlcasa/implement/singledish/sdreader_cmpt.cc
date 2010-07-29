@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/singledish/sdreader_cmpt.h>
+#include <sdreader_cmpt.h>
 #include <casa/aips.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>

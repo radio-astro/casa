@@ -40,6 +40,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/GuiTabs/PlotMSCanvasTab.qo.h
   implement/GuiTabs/PlotMSDataTab.qo.h
   implement/GuiTabs/PlotMSDisplayTab.qo.h
+  implement/GuiTabs/PlotMSIterateTab.qo.h
   implement/GuiTabs/PlotMSExportTab.qo.h
   implement/GuiTabs/PlotMSFlaggingTab.qo.h
   implement/GuiTabs/PlotMSMultiAxesTab.qo.h
@@ -63,6 +64,7 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/GuiTabs/PlotMSCanvasTab.ui
   implement/GuiTabs/PlotMSDataTab.ui
   implement/GuiTabs/PlotMSDisplayTab.ui
+  implement/GuiTabs/PlotMSIterateTab.ui
   implement/GuiTabs/PlotMSExportTab.ui
   implement/GuiTabs/PlotMSFlaggingTab.ui
   implement/GuiTabs/PlotMSMultiAxesTab.ui
@@ -104,6 +106,7 @@ casa_add_library( plotms
   implement/GuiTabs/PlotMSCanvasTab.cc
   implement/GuiTabs/PlotMSDataTab.cc
   implement/GuiTabs/PlotMSDisplayTab.cc
+  implement/GuiTabs/PlotMSIterateTab.cc
   implement/GuiTabs/PlotMSExportTab.cc
   implement/GuiTabs/PlotMSFlaggingTab.cc
   implement/GuiTabs/PlotMSMultiAxesTab.cc

@@ -21,6 +21,7 @@
 casa_add_python( xmlcasa xmlcasa_regressions_admin_python python/${PYTHONV}/regressions/admin
   publish_summary.py
   runUnitTest.py
+  memTest.py
   testbase.py
   imageTest.py
   locatescript.py

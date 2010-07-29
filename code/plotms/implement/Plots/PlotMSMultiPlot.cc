@@ -100,7 +100,7 @@ vector<PlotCanvasPtr> PlotMSMultiPlot::canvases() const {
 
 void PlotMSMultiPlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
     tab.insertDataSubtab(0);
-    tab.insertMultiAxesSubtab(1);
+    tab.insertAxesSubtab(1);
     tab.insertCacheSubtab(2);
     tab.insertDisplaySubtab(3);
     tab.insertCanvasSubtab(4);
@@ -404,6 +404,7 @@ bool PlotMSMultiPlot::updateCache() {
 
 bool PlotMSMultiPlot::updateCanvas() {
     try {
+
         bool set = PMS_PP_RETCALL(itsParams_, PMS_PP_MSData, isSet, false);
         
         PMS_PP_Axes* a = itsParams_.typedGroup<PMS_PP_Axes>();
@@ -553,12 +554,19 @@ bool PlotMSMultiPlot::updateDisplay() {
 }
 
 void PlotMSMultiPlot::cacheLoaded_(bool wasCanceled) {
+
     // TODO
     // Let the plot know that the data has been changed as needed.
     if(wasCanceled)
         for(unsigned int i = 0; i < itsPlots_.size(); i++)
             for(unsigned int j = 0; j < itsPlots_[i].size(); j++)
                 itsPlots_[i][j]->dataChanged();
+
+    /*
+
+    // commented out because it causes a crash on startup
+    //  (but now multiplot cannot make useful plots; need to
+    //   rearrange the setupCache call or equivalent...  gmoellen 10Jul28)
     
     // Call setupCache on each of the indexers.
     PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
@@ -570,6 +578,8 @@ void PlotMSMultiPlot::cacheLoaded_(bool wasCanceled) {
         }
     }
     
+    */
+
     // End cache log as needed.
     if(itsTCLParams_.endCacheLog)
         itsParent_->getLogger()->releaseMeasurement();

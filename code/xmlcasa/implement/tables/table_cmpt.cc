@@ -12,7 +12,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/tables/table_cmpt.h>
+#include <table_cmpt.h>
 #include <casa/aips.h>
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/MemoryStMan.h>
@@ -97,6 +97,42 @@ table::open(const std::string& tablename, const ::casac::record& lockoptions, co
     RETHROW(x);
  }
  return rstat;
+}
+
+bool
+table::create(const std::string& tablename, const ::casac::record& tabledesc,
+              const ::casac::record& lockoptions,
+              const std::string& endianformat, // "" == "aipsrc", "local",
+                                               // "little", or "big".
+	      const std::string& memtype,      // "memory" -> Table::Memory,
+                                               // anything else -> Table::Plain.
+	      int nrow,                        // 0 seems like a good default.
+  	      const ::casac::record& dminfo)
+{
+ Bool rstat(False);
+ try{
+   Record *tlock = toRecord(lockoptions);
+   Record *tdesc = toRecord(tabledesc);
+   Record *dmI   = toRecord(dminfo);
+
+   if(itsTable)
+     close();
+   itsTable = new casa::TableProxy(String(tablename), *tlock,
+                                   String(endianformat), String(memtype),
+                                   nrow, *tdesc, *dmI);
+   delete tlock;
+   delete tdesc;
+   delete dmI;
+   
+   rstat = True;
+ }
+ catch (AipsError x) {
+   *itsLog << LogOrigin("create", name())
+           << LogIO::SEVERE
+           << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;  
 }
 
 bool
@@ -925,6 +961,8 @@ bool
 table::addcols(const ::casac::record& desc, const ::casac::record& dminfo)
 {
  Bool rstat(False);
+ *itsLog << LogOrigin("addcols", name());
+ 
  try {
 	 if(itsTable){
 		 Record *tdesc = toRecord(desc);
@@ -934,7 +972,7 @@ table::addcols(const ::casac::record& desc, const ::casac::record& dminfo)
 		 delete tdminfo;
 		 rstat = True;
 	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+           *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

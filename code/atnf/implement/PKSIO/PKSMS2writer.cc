@@ -175,8 +175,8 @@ Int PKSMS2writer::create(
   IncrementalStMan incrStMan("ISMData");
   newtab.bindAll(incrStMan, True);
 
-  // Use TiledShapeStMan for the FLOAT_DATA hypercube with tile size 16 kiB.
-  TiledShapeStMan tiledStMan("TiledData", IPosition(3,1,128,32));
+  // Use TiledShapeStMan for the FLOAT_DATA hypercube with tile size 1 MB.
+  TiledShapeStMan tiledStMan("TiledData", IPosition(3,1,128,2048));
   newtab.bindColumn(MS::columnName(MS::FLOAT_DATA), tiledStMan);
 
   // Use Standard Storage Manager to handle columns that change for each row.

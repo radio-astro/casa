@@ -134,7 +134,7 @@ public:
   // order of MSIter, which is not necessarily the raw order of ms!
   // The default ordering is ARRAY_ID, FIELD_ID, DATA_DESC_ID,
   // and TIME, but check MSIter.h to be sure.
-  // These columns will be added first if they are not specified.\
+  // These columns will be added first if they are not specified.
   //
   // An optional timeInterval can be given to iterate through chunks of time.
   // The default interval of 0 groups all times together.
