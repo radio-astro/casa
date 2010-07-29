@@ -369,16 +369,16 @@ class asaplotbase:
                 self.canvas.mpl_disconnect(self.events[type])
                 self.events[type] = None
 
-                # It seems to be necessary to return events to the toolbar.
-                if type == 'motion_notify':
-                    self.canvas.mpl_connect(type + '_event',
-                        self.figmgr.toolbar.mouse_move)
-                elif type == 'button_press':
-                    self.canvas.mpl_connect(type + '_event',
-                        self.figmgr.toolbar.press)
-                elif type == 'button_release':
-                    self.canvas.mpl_connect(type + '_event',
-                        self.figmgr.toolbar.release)
+                # It seems to be necessary to return events to the toolbar. <-- Not ture. 2010.Jul.14.kana.
+                #if type == 'motion_notify':
+                #    self.canvas.mpl_connect(type + '_event',
+                #        self.figmgr.toolbar.mouse_move)
+                #elif type == 'button_press':
+                #    self.canvas.mpl_connect(type + '_event',
+                #        self.figmgr.toolbar.press)
+                #elif type == 'button_release':
+                #    self.canvas.mpl_connect(type + '_event',
+                #        self.figmgr.toolbar.release)
 
         else:
             self.events[type] = self.canvas.mpl_connect(type + '_event', func)

@@ -78,7 +78,10 @@ class asapplotter:
             are consistent e.g. all 'channel' or all 'velocity' etc.
         """
         if self._plotter.is_dead:
+            if hasattr(self._plotter.figmgr,'casabar'):
+                del self._plotter.figmgr.casabar
             self._plotter = self._newplotter()
+            self._plotter.figmgr.casabar=self._newcasabar()
         self._plotter.hold()
         self._plotter.clear()
         if not self._data and not scan:
@@ -1015,7 +1018,10 @@ class asapplotter:
     # plotting in time is not yet implemented..
     def plottp(self, scan=None, outfile=None):
         if self._plotter.is_dead:
+            if hasattr(self._plotter.figmgr,'casabar'):
+                del self._plotter.figmgr.casabar
             self._plotter = self._newplotter()
+            self._plotter.figmgr.casabar=self._newcasabar()
         self._plotter.hold()
         self._plotter.clear()
         from asap import scantable

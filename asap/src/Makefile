@@ -20,7 +20,7 @@ PYTHONROOT := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=P
 PYTHONLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIBD eval_vars) && echo $$PYTHONLIBD)
 PYTHONINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONINCD eval_vars) && echo $$PYTHONINCD)
 PYTHONLIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIB eval_vars) && echo $$PYTHONLIB)
-PYTHONVER := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONVER eval_vars) && echo $$PYTHONVER)
+#PYTHONVER := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONVER eval_vars) && echo $$PYTHONVER)
 BOOSTROOT := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=BOOSTROOT eval_vars) && echo $$BOOSTROOT)
 RPFITSLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=RPFITSLIBD eval_vars) && echo $$RPFITSLIBD)
 
@@ -38,9 +38,10 @@ CXXFLAGS := -fPIC -O3 -g
 CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
-ifeq "$(CASAARCH)" "darwin"
-   CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
-   #CXXFLAGS +=-DAIPS_DARWIN
+ifneq (,$(findstring "$(CASAARCH)", "darwin"))
+   #CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
+else
+   CXXFLAGS +=-DAIPS_DARWIN
 endif
 
 # cfitsio
@@ -61,10 +62,10 @@ CASAPPLIB := -L$(CASALIB) -latnf $(CORELIB) \
              -L$(RPFITSLIBD) $(RPFITSLIB) $(CFITSIOLIB) $(G2CLIB) -lstdc++
 
 # darwin specific CASA flags
-ifeq "$(CASAARCH)" "darwin"
-   CASAPPLIB += -framework vecLib
-else
+ifneq (,$(findstring $(CASAARCH)", "darwin"))
    CASAPPLIB += -llapack -lblas
+else
+   CASAPPLIB += -framework vecLib
 endif
 
 # python
@@ -72,12 +73,12 @@ PYTHONINC := $(addprefix -I,$(PYTHONINCD))
 PYTHONLIB := -L$(PYTHONLIBD) $(PYTHONLIB)
 
 # use python universal build
-ifeq "$(CASAARCH)" "darwin"
-   #PYVERSION := 2.5
-   #PYTHONROOT := /Library/Frameworks/Python.framework/Versions/$(PYVERSION)
-   PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
-   #PYTHONLIB := -F$(PYTHONROOT)/lib -framework Python
-endif
+#ifeq "$(CASAARCH)" "darwin"
+#   PYVERSION := 2.5
+#   PYTHONROOT := /Library/Frameworks/Python.framework/Versions/$(PYVERSION)
+#   PYTHONINC := -I$(PYTHONROOT)/include/python$(PYVERSION)
+#   PYTHONLIB := -L$(PYTHONROOT)/lib -framework Python
+#endif
 
 # the linker
 LD        := $(CXX)
@@ -88,8 +89,7 @@ BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
-   LDFLAGS   := -bundle -arch i386
-   #LDFLAGS   := -bundle
+   LDFLAGS   := -bundle
 endif
 
 
