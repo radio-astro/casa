@@ -31,7 +31,7 @@
 //# Includes
 #include <casa/IO/BucketBase.h>
 #include <casa/IO/MMapfdIO.h>
-
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -112,6 +112,9 @@ private:
 
     // Extend the file with the given number of buckets.
     virtual void doExtend (uInt nrBucket);
+
+    // A bucket full of zeros
+    std::auto_ptr<char> zeros;
 
     // Initialize the bucket buffer.
     // The uninitialized buckets before this bucket are also initialized.

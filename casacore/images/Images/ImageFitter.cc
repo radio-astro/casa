@@ -72,8 +72,8 @@ namespace casa {
         const String& logfile, const Bool& append,
         const String& newEstimatesInp
     ) : _log(new LogIO()), _image(0), _chan(chanInp), _stokesString(stokes),
-		mask(maskInp), residual(residualInp),model(modelInp), logfileName(logfile),
-		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
+		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
 		fitDone(False), _noBeam(False), peakIntensities() {
@@ -89,8 +89,8 @@ namespace casa {
         const String& logfile, const Bool& append,
         const String& newEstimatesInp
     ) : _log(new LogIO()), _image(0), _chan(chanInp), _stokesString(stokes),
-		mask(maskInp), residual(residualInp),model(modelInp), logfileName(logfile),
-		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
+		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
 		fitDone(False), _noBeam(False), peakIntensities() {
@@ -122,10 +122,10 @@ namespace casa {
         	results = myImage.fitsky(
             	residPixels, residMask, converged,
             	inputStats, residStats, chiSquared,
-            	_regionRecord, _chan, _stokesString, mask,
-            	models, estimatesRecord, fixed,
+            	_regionRecord, _chan, _stokesString,
+            	_mask, models, estimatesRecord, fixed,
             	includePixelRange, excludePixelRange,
-            	fit, deconvolve, list, residual, model
+            	fit, deconvolve, list, _residual, _model
         	);
 		}
 		catch (AipsError err) {
@@ -140,11 +140,11 @@ namespace casa {
         	_setFluxes();
         }
         String resultsString = _resultsToString();
-        if (converged && ! newEstimatesFileName.empty()) {
+        if (converged && ! _newEstimatesFileName.empty()) {
         	_writeNewEstimatesFile();
         }
         *_log << LogIO::NORMAL << resultsString << LogIO::POST;
-        if (! logfileName.empty()) {
+        if (! _logfileName.empty()) {
         	_writeLogfile(resultsString);
         }
         return results;
@@ -191,14 +191,40 @@ namespace casa {
 
 		ImageInputProcessor inputProcessor;
         String diagnostics;
+        ImageInputProcessor::OutputStruct residualIm;
+        residualIm.label = "residual image";
+        residualIm.outputFile = &_residual;
+        residualIm.required = False;
+        residualIm.replaceable = True;
+        ImageInputProcessor::OutputStruct modelIm;
+        modelIm.label = "model image";
+        modelIm.outputFile = &_model;
+        modelIm.required = False;
+        modelIm.replaceable = True;
+        ImageInputProcessor::OutputStruct newEstFile;
+        newEstFile.label = "new estiamtes file";
+        newEstFile.outputFile = &_newEstimatesFileName;
+        newEstFile.required = False;
+        newEstFile.replaceable = True;
+        ImageInputProcessor::OutputStruct logFile;
+        logFile.label = "log file";
+        logFile.outputFile = &_logfileName;
+        logFile.required = False;
+        logFile.replaceable = True;
+
+        Vector<ImageInputProcessor::OutputStruct> outputs(4);
+        outputs[0] = residualIm;
+        outputs[1] = modelIm;
+        outputs[2] = newEstFile;
+        outputs[3] = logFile;
+
         inputProcessor.process(
-        	_image, _regionRecord, diagnostics,
+        	_image, _regionRecord, diagnostics, &outputs,
         	imagename, regionPtr, regionName, box,
         	String::toString(_chan), _stokesString,
-        	ImageInputProcessor::USE_FIRST_STOKES
+        	ImageInputProcessor::USE_FIRST_STOKES, False
         );
         *_log << logOrigin;
-
         if (_stokesString.empty()) {
         	// use the first stokes plane
         	ImageMetaData md(*_image);
@@ -227,38 +253,6 @@ namespace casa {
         	*_log << LogIO::NORMAL << "File " << estimatesFilename << " has " << estimates.nelements()
         		<< " specified, so will attempt to fit that many gaussians " << LogIO::POST;
         }
-        if (! residual.empty() || ! model.empty()) {
-        	HashMap<String, String> map, map2;
-        	map("residual") = residual;
-        	map("model") = model;
-        	map2 = map;
-        	ConstHashMapIter<String, String> iter(map);
-        	for (iter.toStart(); ! iter.atEnd(); iter++) {
-        		String key = iter.getKey();
-        		String name = iter.getVal();
-        		if (! name.empty()) {
-        			File f(name);
-        			switch (f.getWriteStatus()) {
-        			case File::NOT_CREATABLE:
-        				*_log << LogIO::WARN << "Requested " << key << " image "
-							<< name << " cannot be created so will not be written" << LogIO::POST;
-        				map2(key) = "";
-        				break;
-        			case File::NOT_OVERWRITABLE:
-        				*_log << LogIO::WARN << "Requested " << key
-							<< " image: There is already a file or directory named "
-							<< name << " which cannot be overwritten so the " << iter.getKey()
-							<< " image will not be written" << LogIO::POST;
-        				map2(key) = "";
-        				break;
-        			default:
-        				continue;
-        			}
-            	}
-            }
-        	residual = map2("residual");
-        	model = map2("model");
-        }
     }
 
     String ImageFitter::_resultsToString() {
@@ -269,7 +263,7 @@ namespace casa {
     	summary << "       --- region:              " << regionString << endl;
     	summary << "       --- channel:             " << _chan << endl;
     	summary << "       --- stokes:              " << _stokesString << endl;
-    	summary << "       --- mask:                " << mask << endl;
+    	summary << "       --- mask:                " << _mask << endl;
     	summary << "       --- include pixel ragne: " << includePixelRange << endl;
     	summary << "       --- exclude pixel ragne: " << excludePixelRange << endl;
     	summary << "       --- initial estimates:   " << estimatesString << endl;
@@ -524,37 +518,36 @@ namespace casa {
     }
 
     void ImageFitter::_writeLogfile(const String& output) const {
-    	File log(logfileName);
+    	File log(_logfileName);
     	switch (File::FileWriteStatus status = log.getWriteStatus()) {
     	case File::OVERWRITABLE:
     		if (logfileAppend) {
-    			Int fd = open(logfileName.c_str(), O_RDWR | O_APPEND);
-    			FiledesIO fio(fd, logfileName.c_str());
+    			Int fd = open(_logfileName.c_str(), O_RDWR | O_APPEND);
+    			FiledesIO fio(fd, _logfileName.c_str());
     			fio.write(output.length(), output.c_str());
     			FiledesIO::close(fd);
     			*_log << LogIO::NORMAL << "Appended results to file "
-    					<< logfileName << LogIO::POST;
+    					<< _logfileName << LogIO::POST;
     		}
+    		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
     	case File::CREATABLE:
     		if (status == File::CREATABLE || ! logfileAppend) {
+    			// can fall throw from previous case block so status can be File::OVERWRITABLE
     			String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
-    			Int fd = FiledesIO::create(logfileName.c_str());
-    			FiledesIO fio (fd, logfileName.c_str());
+    			Int fd = FiledesIO::create(_logfileName.c_str());
+    			FiledesIO fio (fd, _logfileName.c_str());
     			fio.write(output.length(), output.c_str());
     			FiledesIO::close(fd);
     			*_log << LogIO::NORMAL << action << " file "
-    					<< logfileName << " with new log file"
+    					<< _logfileName << " with new log file"
     					<< LogIO::POST;
     		}
     		break;
-    	case File::NOT_OVERWRITABLE:
-    		*_log << LogIO::WARN << "Unable to write to file "
-    		<< logfileName << LogIO::POST;
-    		break;
-    	case File::NOT_CREATABLE:
-    		*_log << LogIO::WARN << "Cannot create log file "
-    		<< logfileName << LogIO::POST;
-    		break;
+    	default:
+    		// checks to see if the log file is not creatable or not writeable should have already been
+    		// done and if so _logFileName set to the empty string so this method wouldn't be called in
+    		// those cases.
+    		*_log << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
     	}
     }
 
@@ -583,26 +576,15 @@ namespace casa {
     		}
     	}
     	String output = out.str();
-    	File estimates(newEstimatesFileName);
-    	switch (File::FileWriteStatus status = estimates.getWriteStatus()) {
-    	case File::NOT_OVERWRITABLE:
-    		*_log << LogIO::WARN << "Unable to write to file "
-				<< newEstimatesFileName << LogIO::POST;
-    		break;
-    	case File::NOT_CREATABLE:
-    		*_log << LogIO::WARN << "Cannot create estimates file "
-				<< newEstimatesFileName << LogIO::POST;
-    		break;
-    	default:
-    		String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
-    		Int fd = FiledesIO::create(newEstimatesFileName.c_str());
-    		FiledesIO fio(fd, logfileName.c_str());
-    		fio.write(output.length(), output.c_str());
-    		FiledesIO::close(fd);
-    		*_log << LogIO::NORMAL << action << " file "
-    				<< newEstimatesFileName << " with new estimates file"
-    				<< LogIO::POST;
-    	}
+    	File estimates(_newEstimatesFileName);
+    	String action = (estimates.getWriteStatus() == File::OVERWRITABLE) ? "Overwrote" : "Created";
+    	Int fd = FiledesIO::create(_newEstimatesFileName.c_str());
+    	FiledesIO fio(fd, _logfileName.c_str());
+    	fio.write(output.length(), output.c_str());
+    	FiledesIO::close(fd);
+    	*_log << LogIO::NORMAL << action << " file "
+    		<< _newEstimatesFileName << " with new estimates file"
+    		<< LogIO::POST;
     }
 }
 

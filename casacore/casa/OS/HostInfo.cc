@@ -239,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 HOSTINFO_IMPLEMENT_MEMBERS
 } //# NAMESPACE CASA - END
 
-#elif defined(__APPLE__)
+#elif defined(AIPS_DARWIN)
 #include <casa/OS/HostInfoDarwin.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
