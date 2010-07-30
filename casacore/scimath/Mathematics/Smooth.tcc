@@ -77,7 +77,6 @@ void Smooth<T>::hanning(Vector<T>& out, Vector<Bool>& outmask,
 
   if(nelm1>0){
     m = 2*(mask[0]==TrueIsGood) + 4*(mask[1]==TrueIsGood);
-    cout << "hanning  " << -1 << " m = " << m << endl;
     w = &(weights[m]);
     if (weighted[m]) {
       out[0] = (*w)[1]*in[0] + (*w)[2]*in[1];
@@ -88,7 +87,6 @@ void Smooth<T>::hanning(Vector<T>& out, Vector<Bool>& outmask,
       outmask[0] = False==TrueIsGood;
     }
     m = (mask[nelm1]==TrueIsGood) + 2*(mask[nelm1-1]==TrueIsGood);
-    cout << "hanning  " << nelm1 << " m = " << m << endl;
     w = &(weights[m]);
     if (weighted[m]) {
       out[nelm1] = (*w)[1]*in[nelm1] + (*w)[0]*in[nelm1-1];
@@ -105,9 +103,6 @@ void Smooth<T>::hanning(Vector<T>& out, Vector<Bool>& outmask,
 
   for(uInt i=1; i < nelm1; i++){
     m = (mask[i-1]==TrueIsGood) + 2*(mask[i]==TrueIsGood) + 4*(mask[i+1]==TrueIsGood);
-    if(i<30){
-      cout << "hanning loop " << i << " m = " << m << endl;
-    }
     w = &(weights[m]);
     if (weighted[m]) {
       out[i] = (*w)[0]*in[i-1] + (*w)[1]*in[i] + (*w)[2]*in[i+1];
