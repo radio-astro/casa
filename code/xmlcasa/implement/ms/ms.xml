@@ -1971,6 +1971,12 @@ Date/Time:                         RR:                      RL:                 
      </description>
      <value>-1.</value>     
      </param>
+
+     <param type="bool" direction="in" name="hanning">
+     <description>If true, perform hanning smoothing before regridding.
+     </description>
+     <value>true</value>     
+     </param>
     
   </input>
   <returns type="bool"/>
@@ -2099,6 +2105,13 @@ Date/Time:                         RR:                      RL:                 
      <description>radio or optical, default = radio</description>
      <value>radio</value>
      </param>
+
+     <param type="bool" direction="in" name="hanning">
+     <description>If true, perform hanning smoothing before regridding.
+     </description>
+     <value>true</value>     
+     </param>
+
     
   </input>
   <returns type="bool"/>

@@ -260,6 +260,7 @@ class SubMS
 		const Double regridCenter=-3E30, // default = "not set" 
 		const Double regridBandwidth=-1., // default = "not set" 
 		const Double regridChanWidth=-1., // default = "not set" 
+		const Bool doHanningSmooth=False,
 		const Int phaseCenterFieldId=-2, // -2 = use pahse center from field table
 		MDirection phaseCenter=MDirection(), // this direction is used if phaseCenterFieldId==-1
 		const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
