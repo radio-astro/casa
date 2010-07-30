@@ -81,7 +81,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="flagmode">
-            <description>flag mode (flag,unflag,restore)</description>
+            <description>flag mode (flag,unflag)</description>
             <value>flag</value>
     </param>
 
@@ -110,7 +110,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="overwrite">
             <description>overwrite the output file if already exists</description>
-            <value>False</value>
+            <value>True</value>
     </param>
 
     <param type="int" name="plotlevel">
@@ -180,11 +180,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         example: clipoutside=False means flag data WITHIN the range.
         flagmode -- flag mode
                 default: 'flag'
-                options: 'flag','unflag','restore'
-                         in 'restore' mode, a history of flagging is 
-                         displayed and current flag state is returned
+                options: 'flag','unflag'
+                WARNING: an option 'restore' has been abolished since CASA 3.2. 
+                         To get flag info, use a new SD task 'sdflagmanager'. 
         outfile -- Name of output file
-                default: '' (&lt;sdfile&gt;_f)
+                default: ''
+                WARNING: by default (outfile=''), actual output file name is 
+                         set as follows: 
+                           (1) if overwrite=True, sdfile (input) will be overwritten. 
+                           (2) if overwrite=False, outfile will be &lt;sdfile&gt;_f. 
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'
@@ -192,8 +196,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          processing; use MS for CASA imaging.
         overwrite -- overwrite the output file if already exists
                 options: (bool) True,False
-                default: False
-                WARNING: if outform='ASCII', this parameter is ignored 
+                default: True
+                WARNING: default value has been changed to True since CASA 3.2. 
+                         if outform='ASCII', this parameter is ignored 
         plotlevel -- control for plotting of results
                 options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
                 default: 0 (no plotting)
@@ -203,9 +208,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 WARNING: be careful plotting in fsotf mode!
 
         -------------------------------------------------------------------
-        Returns: Current values of maskflag for each spectrum as a list, 
-                 only if flagmode is set to 'restore'. Note that the 
-                 'restore' mode refers scanlist, iflist, and pollist.
 
         DESCRIPTION:
 
@@ -226,9 +228,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         If plotlevel&gt;=1, the task asks you if you really apply the 
         flags before it is actually written to the data with a plot 
         indicating flagged regions.
-        The flags are not written to the current (input) datasets unless 
-        outfile='none'.
         Please note that this task is still experimental.
+
+        WARNING for overwrite option:
+        Since CASA 3.2, the default value of the option 'overwrite' has 
+        been changed to True, thereby the current dataset (sdfile) is 
+        overwritten unless a different file name is set to outfile. 
 
         WARNING for the GBT raw SDFITS format data as input:
         Currently, all SDtasks cannot handle GBT raw SDFITS format data

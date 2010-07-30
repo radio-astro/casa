@@ -19,17 +19,17 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                 s = "File '%s' not found." % (filename)
                 raise Exception, s
 
-            # Default file name
-            if ( outfile == '' ):
-                    project = sdfile.rstrip('/') + '_f'
-            else:
-                    project = outfile
+	    if (outfile != ''):
+	        project = outfile
+	    else:
+	        project = sdfile.rstrip('/')
+	        if not overwrite:
+		    project = project + '_f'
 
             outfilename = os.path.expandvars(project)
             outfilename = os.path.expanduser(outfilename)
-            if not overwrite and flagmode!='restore':
-                if os.path.exists(outfilename):
-                    s = "Output file '%s' exist." % (outfilename)
+            if not overwrite and os.path.exists(outfilename):
+		    s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
             s = sd.scantable(sdfile,average=False,antenna=antenna)
@@ -120,21 +120,14 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                 return
 
             # flag mode
-            if ( flagmode.lower() == 'restore' ):
-                    show_flag_history(s)
-                    maskflag=restore_flag(s)
-                    return maskflag
-            elif (flagmode.lower() == 'flag'):
-                    flgmode=flagmode
-                    unflag=False
-            elif (flagmode.lower() == 'unflag'):
-                    flgmode=flagmode
-                    unflag=True
+	    flgmode = flagmode.lower()
+            if (flgmode == 'flag'):
+                    unflag = False
+            elif (flgmode == 'unflag'):
+                    unflag = True
             else:
                     raise Exception, 'unexpected flagmode'
 
-            scanns = s.getscannos()
-            sn=list(scanns)
             nr=s.nrow()
 
 	    if clip:
@@ -142,8 +135,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 		    casalog.post("Applying clipping...")
 	    else:
 		    if (len(flagrow) == 0):
-                            #print "Number of scans to be flagged:", len(sn)
-                            #print "Number of spectra to be flagged:", nr
                             casalog.post( "Number of spectra to be flagged: %d" % (nr) )
                             casalog.post( "Applying channel flagging..." )
 	            else:
@@ -350,8 +341,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     else:
                             return
 
-            sel.reset()
-            s.set_selection(sel)
            # Now save the spectrum and write out final ms
             if ( (outform == 'ASCII') or (outform == 'ascii') ):
                     outform = 'ASCII'
@@ -374,90 +363,16 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             
             #put back original spectral unit
             s.set_unit(unit_in) 
+            sel.reset()
+            s.set_selection(sel)
             s.save(spefile,outform,overwrite)
+	    
             if outform!='ASCII':
                     casalog.post( "Wrote output "+outform+" file "+spefile )
-            #if outfile!= 'none' or ( outfile=='none' and outform!='ASAP') :
-            #        print "Wrote output "+outform+" file "+spefile
-            #else:
-            #        print "Updated current flag information to "+spefile
-            # Clean up scantable
-            del s
+
+            del s, sel
 
         except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
         finally:
                 casalog.post('')
-
-
-
-def show_flag_history( scan ):
-        hist=scan._gethistory()
-        casalog.post( '' )
-        casalog.post( '--------------------------------------------------' )
-        casalog.post( 'History of channel flagging:' )
-        casalog.post( '--------------------------------------------------' )
-        for i in xrange(len(hist)):
-                hists=hist[i].split('##')
-                if ( len(hists) <= 1 ):
-                        continue
-                elif ( hists[1]=='sdflag' ):
-                        when=hists[0]
-                        scans=hists[2].lstrip('scans=')
-                        if (scans=='[]'):
-                                scans='ALL'
-                        pols=hists[3].lstrip('pols=')
-                        if (pols=='[]'):
-                                pols='ALL'
-                        mode=hists[4].lstrip('mode=')
-                        maskflag=hists[5].lstrip('maskflag=')
-                        ifs=hists[6].lstrip('ifs=')
-                        if (ifs=='[]'):
-                                ifs='ALL'
-                        
-                        out ='%16s' %('DATE: ')
-                        out+=when
-                        out+='\n'
-                        out+='%16s' %('APPLIED TO: ')
-                        out+='SCANS='+scans+' '
-                        out+='IFS='+ifs+' '
-                        out+='POLS='+pols+' '
-                        out+='\n'
-                        out+='%16s' %('FLAGGED: ')
-                        out+='MODE=\''+mode+'\' '
-                        out+='MASK='+maskflag
-                        out+='\n'
-
-                        casalog.post( out )
-        casalog.post( '--------------------------------------------------' )
-
-
-def restore_flag( scan ):
-        masks=[]
-        for irow in xrange(scan.nrow()):
-                flags=scan._getmask(irow)
-                torf=True
-                nl=-1
-                nu=-1
-                mask=[]
-                for i in xrange(len(flags)):
-                        if ( flags[i]!=torf ):
-                                nl=nu
-                                nu=i
-                                torf = not torf
-                        if ( nu!=-1 and nl!=-1 ):
-                                mask.append([nl,nu-1])
-                                nl=-1
-                                nu=-1
-                if not torf:
-                        mask.append([nu,i])
-                out='SCAN[%d] IF[%d] POL[%d]: ' %(scan.getscan(irow), scan.getif(irow), scan.getpol(irow))
-                out+='Current mask is '
-
-                casalog.post( out+str(mask) )
-
-                masks.append(mask)
-                
-        return masks
-
-
