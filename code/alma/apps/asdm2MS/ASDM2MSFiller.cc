@@ -1935,6 +1935,7 @@ void ASDM2MSFiller::addWeather(int    antenna_id_,
 }
 
 void ASDM2MSFiller::end(double time_) {
-  itsMS->flush();
+  itsMS->flush(True);
+  itsMS->closeSubTables();
 }
 
