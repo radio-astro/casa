@@ -125,7 +125,6 @@ void Smooth<T>::hanning(Array<T>& out, Array<Bool>& outmask,
   Matrix<T>(in).shape(nCorr,nChan);
 
   for(uInt i=0; i<(uInt)nCorr; i++){
-    cout << "hanning A loop " << i << endl;
     Vector<T> vout(Matrix<T>(out).row(i));
     Vector<Bool> voutMask(Matrix<Bool>(outmask).row(i));
     Vector<T> vin(Matrix<T>(in).row(i));
