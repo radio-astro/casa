@@ -140,7 +140,7 @@ class CustomToolbarCommon:
 #####################################
 ### TkAgg
 if matplotlib.get_backend() == 'TkAgg': import Tkinter as Tk
-class CustomToolbarTkAgg(CustomToolbarCommon):
+class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
     def __init__(self,parent):
         from asap.asapplotter import asapplotter
         if not isinstance(parent,asapplotter): return False
@@ -148,35 +148,27 @@ class CustomToolbarTkAgg(CustomToolbarCommon):
         self._p=parent._plotter
         self.figmgr=self._p.figmgr
         self.canvas=self.figmgr.canvas
-        self.custombar=None
         self.mode=''
         self.button=True
         self._add_custom_toolbar()
         CustomToolbarCommon.__init__(self,parent)
 
     def _add_custom_toolbar(self):
-        self.custombar=Tk.Frame(master=self.figmgr.window)
-        self.bSpec=self._NewButton(master=self.custombar,
+        Tk.Frame.__init__(self,master=self.figmgr.window)
+        self.bSpec=self._NewButton(master=self,
                                    text='spec value',
                                    command=self.spec_show)
-        self.bStat=self._NewButton(master=self.custombar,
+        self.bStat=self._NewButton(master=self,
                                    text='statistics',
                                    command=self.stat_cal)
-        self.bQuit=self._NewButton(master=self.custombar,
+        self.bQuit=self._NewButton(master=self,
                                    text='Quit',
                                    command=self.quit,
                                    side=Tk.RIGHT)
-        self.custombar.pack(side=Tk.BOTTOM,fill=Tk.BOTH)
-        
-	### temporary added
-        #self.bStat.config(state=Tk.DISABLED)
-        ###
-        #self.bSpec.config(relief='sunken')
-        #self.bStat.config(relief='raised')
-        #self.button=True
-        #self.spec_show()
+        self.pack(side=Tk.BOTTOM,fill=Tk.BOTH)
+
         self.disable_button()
-        return self
+        return #self
 
     def _NewButton(self, master, text, command, side=Tk.LEFT):
         if(os.uname()[0] == 'Darwin'):
@@ -209,7 +201,8 @@ class CustomToolbarTkAgg(CustomToolbarCommon):
 
     def quit(self):
         self.__disconnect_event()
-        self.delete_bar()
+        #self.delete_bar()
+        self.disable_button()
         self.figmgr.window.wm_withdraw()
 
     def enable_button(self):
@@ -229,8 +222,7 @@ class CustomToolbarTkAgg(CustomToolbarCommon):
 
     def delete_bar(self):
         self.__disconnect_event()
-        self.custombar.destroy()
-        self.custombar=None		
+        self.destroy()
 
     def __disconnect_event(self):
         #idP=self.figmgr.toolbar._idPress

@@ -199,9 +199,6 @@ class interactivemask:
 				       event.xdata, event.ydata],
 			     'pixel': [event.x, event.y,
 				       event.x, event.y]}
-		### Start mod: 2009/08/17 kana ###
-		#self._default_motion('stop')
-		### End mod ######################
 		self.p._plotter.register('motion_notify', self._region_draw)
 		self.p._plotter.register('button_release', self._region_end)
 
@@ -219,17 +216,12 @@ class interactivemask:
 			ynow=self.yold
 
 		self.p._plotter.figmgr.toolbar.draw_rubberband(event, xnow, ynow, self.rect['x'], self.rect['y'])
-		### Start mod: 2009/08/17 kana ###
-		#self.p._plotter.figmgr.toolbar.mouse_move(event)
-		### End mod ######################
 
 	def _region_end(self,event):
 		self.p._plotter.register('motion_notify', None)
-		### Start mod: 2009/08/17 kana ###
-		#self._default_motion('start')
-		### End mod ######################
 		self.p._plotter.register('button_release', None)
 
+		# Delete the rubber band
 		self.p._plotter.figmgr.toolbar.release(event)
                 
 		if event.inaxes == self.rect['axes']: 
@@ -311,31 +303,6 @@ class interactivemask:
 				self._polygons.append(self.p._plotter.subplots[j]['axes'].axvspan(msks[i][0],msks[i][1],facecolor='yellow'))
 		self.p._plotter.canvas.draw()
 
-	### Start mod: 2009/08/17 kana ###
-	def _default_motion(self,action):
-		if not isinstance(action,str):
-			print "WARN: Either 'stop' or 'start' is valid."
-			return
-		
-		canvas=self.p._plotter.canvas
-		toolbar=self.p._plotter.figmgr.toolbar
-		if action == 'stop':
-			if toolbar._idDrag:
-				print "WARN: No default event. Nothing to be done."
-				return
-			canvas.mpl_disconnect(toolbar._idDrag)
-			print "Disconnecting default motion event ", toolbar._idDrag
-		elif action == 'start':
-			if toolbar._idDrag:
-				print "WARN: Default event already exists. Disconnecting the event."
-				canvas.mpl_disconnect(toolbar._idDrag)
-			toolbar._idDrag=canvas.mpl_connect('motion_notify_event',toolbar.mouse_move)
-			print "Connecting default motion event ", toolbar._idDrag			
-		else:
-			print "WARN: Either 'stop' or 'start' is valid."
-
-	### End mod ######################
-		
 	def finish_selection(self, callback=None):
 		"""
 		Execute callback function, reset or close plotter window as
