@@ -5295,15 +5295,13 @@ Bool SubMS::fillAccessoryMainCols(){
     msc_p->antenna2().putColumn(mscIn_p->antenna2());
   }
   else{
-    Vector<Int> ant1 = mscIn_p->antenna1().getColumn();
-    Vector<Int> ant2 = mscIn_p->antenna2().getColumn();
+    const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
+    const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
     
-    for(uInt k = 0; k < ant1.nelements(); ++k){
-      ant1[k] = antNewIndex_p[ant1[k]];
-      ant2[k] = antNewIndex_p[ant2[k]];
+    for(uInt k = ant1.nrow() - 1; k--;){
+      msc_p->antenna1().put(k, antNewIndex_p[ant1(k)]);
+      msc_p->antenna2().put(k, antNewIndex_p[ant2(k)]);
     }
-    msc_p->antenna1().putColumn(ant1);
-    msc_p->antenna2().putColumn(ant2);
   }
   msc_p->feed1().putColumn(mscIn_p->feed1());
   msc_p->feed2().putColumn(mscIn_p->feed2());
@@ -5489,18 +5487,14 @@ Bool SubMS::fillAccessoryMainCols(){
 // etc.)
 void SubMS::relabelIDs()
 {
-  const Vector<Int>& inDDID = mscIn_p->dataDescId().getColumn();
-  Vector<Int> outDDID;
+  const ROScalarColumn<Int> inDDID(mscIn_p->dataDescId());
+  const ROScalarColumn<Int> fieldId(mscIn_p->fieldId());
+  Int nrows = inDDID.nrow();
   
-  outDDID.resize(inDDID.nelements());
-  for(uInt k = 0; k < inDDID.nelements(); ++k)
-    outDDID[k] = spwRelabel_p[oldDDSpwMatch_p[inDDID[k]]];
-  msc_p->dataDescId().putColumn(outDDID);
-
-  Vector<Int> fieldId = mscIn_p->fieldId().getColumn();
-  for(uInt k = 0; k < fieldId.nelements(); ++k)
-    fieldId[k] = fieldRelabel_p[fieldId[k]];
-  msc_p->fieldId().putColumn(fieldId);
+  for(Int k = nrows - 1; k--;){
+    msc_p->dataDescId().put(k, spwRelabel_p[oldDDSpwMatch_p[inDDID(k)]]);
+    msc_p->fieldId().put(k, fieldRelabel_p[fieldId(k)]);
+  }
 
   remapColumn(mscIn_p->arrayId(), msc_p->arrayId());
   remapColumn(mscIn_p->stateId(), msc_p->stateId());

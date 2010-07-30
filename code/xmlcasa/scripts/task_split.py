@@ -108,6 +108,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         if hasattr(ignorables, '__iter__'):
             ignorables = ', '.join(ignorables)
 
+        print "type(spw) =", type(spw)
+        if type(spw) == list:
+            spw = ','.join([str(s) for s in spw])
         do_chan_avg = spw.find('^') > -1     # '0:2~11^1' would be pointless.
         if not do_chan_avg:                  # ...look in width.
             if type(width) == int and width > 1:
