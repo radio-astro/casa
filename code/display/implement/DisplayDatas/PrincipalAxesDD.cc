@@ -362,7 +362,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
 	MDoppler::Types velocity_type = spec_coord.velocityDoppler( );
 	String velocity = MDoppler::showType(velocity_type);
 	std::transform(velocity.begin(), velocity.end(), velocity.begin(), tolower);
-	retval += " (" + frequency + "/" + velocity + ")";
+	retval += " (" + frequency + "/" + velocity + ") ";
      }
 
   }

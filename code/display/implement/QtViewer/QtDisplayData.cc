@@ -1275,17 +1275,44 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     } else {
        zLabel = ((CoordinateSystem)cs).format(tStr, 
                  Coordinate::DEFAULT, tWrld(zPos), zPos);
-       zLabel += tStr;
+       zLabel += tStr + " ";
        hLabel = ((CoordinateSystem)cs).format(tStr, 
                  Coordinate::DEFAULT, tWrld(hPos), hPos);
-       hLabel += tStr;
+       hLabel += tStr + " ";
     }
     //cout << "zLabel=" << zLabel << " hLabel=" << hLabel << endl;
     //cout << "tStr=" << tStr << endl;
 
+    Int spInd = cs.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate spCoord;
+    Int wSp=-1;
+    if (spInd>=0){
+       wSp= (cs.worldAxes(spInd))[0];
+       spCoord=cs.spectralCoordinate(spInd);
+       spCoord.setVelocity();
+       Double vel;
+       if (downcase(zaxis).contains("freq")) {
+            spCoord.pixelToVelocity(vel, zIndex); 
+            zLabel += "Velocity=" + String::toString(vel) + "km/s (radio) ";
+       }
+       if (downcase(haxis).contains("freq")) {
+            spCoord.pixelToVelocity(vel, hIndex); 
+            hLabel += "Velocity=" + String::toString(vel) + "km/s (radio) ";
+       }
+    }
+
+    //the position will have the frequency coord in it
+    //Vector<Double> lin(2);
+    //lin(0) = 1; lin(1) = 1;
+    //Vector<Double> wld(2);
+    //dd_->linToWorld(wld, lin);
+    //cout << "world=" << wld << endl;
+    //cout << "Tracking=" << dd_->showPosition(wld) << endl;
+
+
     String head = description() + "\n" +  
-            zaxis + "=" + zLabel + " " +
-            haxis + "=" + hLabel + " " +
+            zaxis + "=" + zLabel + 
+            haxis + "=" + hLabel + 
             "FluxUnit=" + unit + "\n";
 
     //stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
