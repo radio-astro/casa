@@ -112,10 +112,18 @@ class __msview_class(object):
 			except:
 				raise Exception, "msview() failed to change to the new working directory"
 				
-
-			panel = vwr.panel("viewer")
 			data = None
 			if type(infile) == str and len(infile) > 0 :
+				info = vwr.fileinfo(infile);
+				if info['type'] != 'ms' :
+					if info['type'] == 'image' :
+						raise Exception, "msview() only displays images, try 'imview()'..."
+					elif info['type'] == 'nonexistent' :
+						raise Exception, "ms (" + infile + ") could not be found..."
+					else :
+						raise Exception, "unknow error..."
+
+				panel = vwr.panel("viewer")
 				if type(displaytype) == str:
 					data = vwr.load( infile, displaytype, panel=panel )
 				else:
@@ -140,6 +148,7 @@ class __msview_class(object):
 						orientation="landscape"
 					vwr.output(outfile,scale=scale,dpi=dpi,format=format,orientation=orientation,panel=panel)
 			else:
+				panel = vwr.panel("viewer")
 				vwr.popup( 'open', panel=panel )
 
 

@@ -1731,16 +1731,92 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
   // Deal with changes to display/animator axes or to slice positions
   // on 'hidden axis' sliders.
   
-  Bool axischange = False,   sliderchange = False;
-  
-  axischange = readOptionRecord(itsOptionsXAxis, error, rec,
-                                     "xaxis") || axischange;
-  axischange = readOptionRecord(itsOptionsYAxis, error, rec,
-                                     "yaxis") || axischange;
-  Bool zaxischange = readOptionRecord(itsOptionsZAxis, error, rec,
-                                     "zaxis");
-  axischange = zaxischange || axischange;
+  Bool axischange = False;
+  Bool x_axischange = False;
+  Bool y_axischange = False;
+  Bool z_axischange = False;
+  Bool sliderchange = False;
 
+  String oldXAxis = itsOptionsXAxis;
+  String oldYAxis = itsOptionsYAxis;
+  String oldZAxis = itsOptionsZAxis;
+
+  x_axischange = readOptionRecord(itsOptionsXAxis, error, rec, "xaxis");
+  y_axischange = readOptionRecord(itsOptionsYAxis, error, rec, "yaxis");
+  z_axischange = readOptionRecord(itsOptionsZAxis, error, rec, "zaxis");
+
+  // coordinate system does not permit multiple axes of the same type
+  while ( itsOptionsXAxis == itsOptionsYAxis ||
+	  itsOptionsXAxis == itsOptionsZAxis ||
+	  itsOptionsYAxis == itsOptionsZAxis ) {
+      if ( x_axischange && y_axischange && z_axischange )
+	  throw(AipsError("Couldn't find unique set of axes"));
+      if ( x_axischange && ! y_axischange &&
+	   itsOptionsXAxis == itsOptionsYAxis ) {
+	  itsOptionsYAxis = oldXAxis;
+	  y_axischange = True;
+	  Record yaxis;
+	  yaxis.define("dlformat", "yaxis");
+	  yaxis.define("listname", "Y-axis");
+	  yaxis.define("ptype", "choice");
+	  yaxis.define("value",itsOptionsYAxis);
+	  recOut.defineRecord("yaxis", yaxis);
+      } else if ( x_axischange && ! z_axischange &&
+		  itsOptionsXAxis == itsOptionsZAxis ) {
+	  itsOptionsZAxis = oldXAxis;
+	  z_axischange = True;
+	  Record zaxis;
+	  zaxis.define("dlformat", "zaxis");
+	  zaxis.define("listname", "Z-axis");
+	  zaxis.define("ptype", "choice");
+	  zaxis.define("value",itsOptionsZAxis);
+	  recOut.defineRecord("zaxis", zaxis);
+      } else if ( y_axischange && ! x_axischange &&
+		  itsOptionsYAxis == itsOptionsXAxis ) {
+	  itsOptionsXAxis = oldYAxis;
+	  x_axischange = True;
+	  Record xaxis;
+	  xaxis.define("dlformat", "xaxis");
+	  xaxis.define("listname", "X-axis");
+	  xaxis.define("ptype", "choice");
+	  xaxis.define("value",itsOptionsXAxis);
+	  recOut.defineRecord("xaxis", xaxis);
+      } else if ( y_axischange && ! z_axischange &&
+		  itsOptionsYAxis == itsOptionsZAxis ) {
+	  itsOptionsZAxis = oldYAxis;
+	  z_axischange = True;
+	  Record zaxis;
+	  zaxis.define("dlformat", "zaxis");
+	  zaxis.define("listname", "Z-axis");
+	  zaxis.define("ptype", "choice");
+	  zaxis.define("value",itsOptionsZAxis);
+	  recOut.defineRecord("zaxis", zaxis);
+      } else if ( z_axischange && ! x_axischange &&
+		  itsOptionsZAxis == itsOptionsXAxis ) {
+	  itsOptionsXAxis = oldZAxis;
+	  x_axischange = True;
+	  Record xaxis;
+	  xaxis.define("dlformat", "xaxis");
+	  xaxis.define("listname", "X-axis");
+	  xaxis.define("ptype", "choice");
+	  xaxis.define("value",itsOptionsXAxis);
+	  recOut.defineRecord("xaxis", xaxis);
+      } else if ( z_axischange && ! y_axischange &&
+		  itsOptionsZAxis == itsOptionsYAxis ) {
+	  itsOptionsYAxis = oldZAxis;
+	  y_axischange = True;
+	  Record yaxis;
+	  yaxis.define("dlformat", "yaxis");
+	  yaxis.define("listname", "Y-axis");
+	  yaxis.define("ptype", "choice");
+	  yaxis.define("value",itsOptionsYAxis);
+	  recOut.defineRecord("yaxis", yaxis);
+      } else {
+	  throw(AipsError("Couldn't find unique set of axes"));
+      }
+  }
+	   
+  axischange = x_axischange || y_axischange || z_axischange;
   
   if (axischange) itsFixedPosition = 0;
     // Axes have changed: instead of retrieving axis position values
@@ -1811,7 +1887,7 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
     
     Record setanimrec;
     
-    if(isCSmaster() && zaxischange)  setanimrec.define("zindex",0);
+    if(isCSmaster() && z_axischange)  setanimrec.define("zindex",0);
 	// Only CS master is allowed to reset the current frame number.
 	// (As with position sliders, above, this code could be improved
 	// to better remember what frame we really want to be on....)
