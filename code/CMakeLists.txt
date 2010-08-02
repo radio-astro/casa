@@ -65,6 +65,7 @@ endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
+  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0" )
 endif()
 
 set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
@@ -470,7 +471,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.14
+           VERSION 1.0.16
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
