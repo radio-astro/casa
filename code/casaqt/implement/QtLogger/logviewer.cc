@@ -835,7 +835,23 @@ void LogViewer::copy()
    //erase from memory the selected
    //board->clear(QClipboard::Selection);
 
+   //qDebug() << "selection=" << board->supportsSelection();
+   //qDebug() << "FindBuffer=" << board->supportsFindBuffer();
    QModelIndexList lst = logView->selectionModel()->selectedIndexes();
+
+   //4.2>>>>>>>>>>
+   //QModelIndexList lst = logView->selectionModel()->selectedIndexes();
+   //QString clip = "";
+   //for (int i = 0; i < lst.count(); i += 4) {
+   // QModelIndex s = proxyModel->mapToSource(lst.at(i));
+   //  qDebug() << "selected/mapped row" << s.row();
+   // QString str = logModel->stringData(s.row()); 
+   // clip = clip + str;
+   //}
+   //board->setText(clip);
+   // qDebug() << "====cliplboard: " 
+   //            << board->text(QClipboard::Selection);
+   //4.2<<<<<<<<<<
    
    QSet<int> idSet;
    for (int i = 0; i < lst.count(); i++) {
@@ -884,23 +900,11 @@ void LogViewer::copy()
      //logModel->removeRow(sortedId[i], QModelIndex()); 
      clip = clip + str;
    }
-   board->setText(clip, QClipboard::Selection);
+   //board->setText(clip, QClipboard::Selection);
+   board->setText(clip);
 
-   /*
-   //4.2>>>>>>>>>>
-   QModelIndexList lst = logView->selectionModel()->selectedIndexes();
-   QString clip = "";
-   for (int i = 0; i < lst.count(); i += 4) {
-    QModelIndex s = proxyModel->mapToSource(lst.at(i));
-     qDebug() << "selected/mapped row" << s.row();
-    QString str = logModel->stringData(s.row()); 
-    clip = clip + str;
-   }
-   board->setText(clip, QClipboard::Selection);
-   // qDebug() << "====cliplboard: " 
-   //            << board->text(QClipboard::Selection);
-   //4.2<<<<<<<<<<
-   */
+   
+   
 
    /* single selection mode
    QString str = logModel->stringData(currentLogRow.row()); 
