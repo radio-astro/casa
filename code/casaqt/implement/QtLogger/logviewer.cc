@@ -134,6 +134,7 @@ LogViewer::LogViewer(QString logFile, QWidget *parent)
           proxyModel->rowCount() - 1, 0, QModelIndex());
     logView->setCurrentIndex(idx);
     logView->scrollTo(idx);
+    clicked(idx);
     //qDebug() << "========";
     logView->scrollToBottom();
     logView->setSelectionMode(QAbstractItemView::ExtendedSelection);
