@@ -761,7 +761,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	  n=chanIDList.shape()(0);
 	  for(Int i=0;i<n;i++) 
-	    if (chanIDList(i,3) < 0) 
+	    if (chanIDList(i,3) < 1) 
 	      chanIDList(i,3)=defaultStep;
 	}
       return chanIDList.copy();
