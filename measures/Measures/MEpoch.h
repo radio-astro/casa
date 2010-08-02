@@ -74,6 +74,7 @@ template <class M> class ROScalarMeasColumn;
 // <srcblock>
 //	#include <measures/Measures.h>
 //	#include <measures/Measures/MEpoch.h>
+//	#include <measures/Measures/MCEpoch.h>
 //	cout << "TAI for UTC = MJD(50237.29): " <<
 //		MEpoch::Convert(MEpoch(MVEpoch(Quantity(50237.29, "d")),
 //			               MEpoch::Ref(MEpoch::UTC)),
