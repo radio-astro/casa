@@ -142,7 +142,7 @@ Regrid an MS to a new spectral window / channel structure or frame
 
 
 	<param type="bool" name="hanning">
-	    <description>Turn on Hanning smoothing of spectral channels</description>
+	    <description> If true, Hanning smooth data before regridding to remove Gibbs ringing.</description>
 	    <value>False</value>
         </param>
 

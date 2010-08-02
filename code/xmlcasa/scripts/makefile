@@ -1,7 +1,5 @@
 # $Id$
-SCRIPTS := casapy.py
-EXCLUDE := oldscripts
-PACKS := regressions usecases demos parallel tests
+PYPACK := tests
 
 # Use the generic AIPS++ script installation makefile.
 #-----------------------------------------------------

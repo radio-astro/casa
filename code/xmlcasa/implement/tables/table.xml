@@ -1502,6 +1502,26 @@ able to substitute it in the query command.
 </method>
 
  
+   <method type="function" name="info">
+   <shortdescription>get the info record</shortdescription>
+   
+<description>
+The info record contains information on the table. 
+
+</description>
+<returns type="any">
+<any type="record"/>
+</returns>
+
+<!--
+<example>
+\begin{verbatim}
+\end{verbatim}
+</example>
+-->
+</method>
+
+
    <method type="function" name="putinfo">
    <shortdescription>set the info record</shortdescription>
    
@@ -1509,9 +1529,6 @@ able to substitute it in the query command.
 The info record contains information on the table. It is
 written by applications, and used <!-- by, for example, the <link anchor="catalog">catalog</link> directory browser --> to determine what type of
 information is stored in a table.
-
-!!!NOTE THAT tb.info() IS NOT IMPLEMENTED!!! The (missing) accessor
-function tb.info() gets the info record.
 
 </description>
 <input>

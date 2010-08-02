@@ -229,12 +229,29 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
         }
         
         // Set output quality.
-        int f = (format.resolution == PlotExportFormat::HIGH) ? 100 : -1;
+		bool hires = (format.resolution == PlotExportFormat::HIGH);
+		int quality;    // see QImage.save official documentation for its meaning
+		switch (format.type)
+		{
+			case PlotExportFormat::JPG:
+					// JPEG quality ranges from 0 (crude 8x8 blocks) to 100 (best)
+					quality= (hires)? 100: 95;   // experimental; need user feedback 
+					break; 
+			case PlotExportFormat::PNG:
+					// compression is lossless.  "quality" is number of deflations.
+					// first one does great compression.  more will buy only a small %. 	 
+					// Set to -1 for no compression 
+					quality=1; 
+					break;   // how many deflates
+			default: 
+					quality=-1;  // no compression of undefined/unknown formats
+		}
         
         // Save to file.
-        ret = !wasCanceled && !image.isNull() &&
+		ret = !wasCanceled && !image.isNull() &&
               image.save(format.location.c_str(),
-              PlotExportFormat::exportFormat(format.type).c_str(), f);
+              PlotExportFormat::exportFormat(format.type).c_str(), 
+			  quality);
         
     // PS/PDF
     } else if(format.type == PlotExportFormat::PS ||

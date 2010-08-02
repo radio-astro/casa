@@ -1095,7 +1095,8 @@ ms::regridspw(const std::string& outframe,
 	      const double regrid_start, 
 	      const double regrid_center, 
 	      const double regrid_bandwidth, 
-	      const double regrid_chan_width 
+	      const double regrid_chan_width,
+	      const bool hanning
 	      )
 {
   Bool rstat(False);
@@ -1150,7 +1151,8 @@ ms::regridspw(const std::string& outframe,
 				 t_regridInterpMeth,
 				 Double(center), 
 				 Double(regrid_bandwidth),
-				 Double(regrid_chan_width)
+				 Double(regrid_chan_width),
+				 hanning
 				 )
 	 )==1){ // successful modification of the MS took place
        *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
@@ -1197,9 +1199,14 @@ ms::cvel(const std::string& mode,
 	 const ::casac::variant& phasec, 
 	 const ::casac::variant& restfreq, 
 	 const std::string& outframe,
-	 const std::string& veltype)
+	 const std::string& veltype,
+	 const bool hanning)
 {
   Bool rstat(False);
+
+  Bool hanningDone(False);
+  SubMS *sms = 0;
+
   try {
 
     *itsLog << LogOrigin("ms", "cvel");
@@ -1211,6 +1218,8 @@ ms::cvel(const std::string& mode,
     if(!restfreq.toString().empty()){
       t_restfreq = casaQuantity(restfreq).getValue("Hz");
     }
+
+    Bool t_doHanning = hanning;
 
     // Determine grid
     Double t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
@@ -1342,7 +1351,7 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogOrigin("ms", "cvel");
 
-    SubMS *sms = new SubMS(originalName, Table::Update);
+    sms = new SubMS(originalName, Table::Update);
 
     *itsLog << LogIO::NORMAL << "Starting combination of spectral windows ..." << LogIO::POST;
 
@@ -1374,6 +1383,7 @@ ms::cvel(const std::string& mode,
 			      t_cstart, 
 			      t_bandwidth,
 			      t_cwidth,
+			      t_doHanning,
 			      t_phasec_fieldid, // == -1 if t_phaseCenter is valid
 			      t_phaseCenter,
 			      True, // use "center is start" mode
@@ -1382,7 +1392,12 @@ ms::cvel(const std::string& mode,
 			      t_start
 			      )
 	)==1){ // successful modification of the MS took place
+      hanningDone = t_doHanning;
+
       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
+      if(hanningDone){
+	*itsLog << LogIO::NORMAL << "Hanning smoothing was applied." << LogIO::POST;
+      }
       
       // Update HISTORY table of modfied MS
       String message = "Transformed/regridded with cvel";
@@ -1406,6 +1421,9 @@ ms::cvel(const std::string& mode,
       *itsLog << LogIO::NORMAL << "SubMS not modified by regridding." << LogIO::POST;
       rstat = True;
     }       
+
+    delete sms;
+    sms = 0;
 
     if(rstat){
       // print parameters of final SPW
@@ -1449,19 +1467,38 @@ ms::cvel(const std::string& mode,
 
       for(Int i=0; i<totNumChan-1; i++){
 	if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>0.1 ){
-	  *itsLog << LogIO::WARN << "Internal error: Center of channel i " << i <<  " is off nominal center by " 
+	  *itsLog << LogIO::WARN << "Internal error: Center of channel " << i <<  " is off nominal center by " 
 		  << ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz" << LogIO::POST;
 	}
       }
     } 
     
-    delete sms;
-    open(originalName,  Table::Update, False);
+    if(rstat){ // re-open MS for writing, unlocked
+      open(originalName,  False, False); 
+      *itsLog << LogOrigin("ms", "cvel");
+      if(!hanningDone && t_doHanning){ // still need to Hanning Smooth
+	Block<int> noSort;
+	Matrix<Int> allChannels;
+	Double intrvl = 0;
+	Bool addScratch = False; 
+	String dcol("corrected");
+	if(!itsMS->isColumnWritable("CORRECTED_DATA")){ // there are no scratch columns
+	  dcol = "data";
+	}
+	VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
+	*itsLog << LogIO::NORMAL << "Hanning smoothing ... (smoothed data will be written to MS column \'" 
+		<< dcol << "\')" << LogIO::POST;
+	VisSetUtil::HanningSmooth(vs, dcol);
+      }
+    }
 
   } catch (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-      Table::relinquishAutoLocks(True);
-      RETHROW(x);
+    if(sms){
+      delete sms;
+    }
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
   }
   Table::relinquishAutoLocks(True);
   return rstat;
@@ -2104,7 +2141,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 }
 
 bool
-ms::hanningsmooth()
+ms::hanningsmooth(const std::string& datacolumn)
 {
   Bool rstat(False);
   try {
@@ -2112,7 +2149,7 @@ ms::hanningsmooth()
      if(!ready2write_()){
        *itsLog << LogIO::SEVERE
 	       << "Please open ms with parameter nomodify=false so "
-	       << "smoothed channel data can be stored (in the CORRECTED_DATA column)."
+	       << "smoothed channel data can be stored."
 	       << LogIO::POST;
        return rstat;
      }
@@ -2120,9 +2157,14 @@ ms::hanningsmooth()
      Block<int> noSort;
      Matrix<Int> allChannels;
      Double intrvl = 0;
-
-     VisSet vs(*itsMS,noSort,allChannels,intrvl);
-     VisSetUtil::HanningSmooth(vs);
+     String dcol(datacolumn);
+     dcol.downcase();
+     Bool addScratch = !(dcol=="data"); // don't add scratch columns if the don't exist already
+                                        // and the requested output column is == "data"
+     VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
+     *itsLog << LogIO::NORMAL << "Smoothing ... (smoothed data will be written to MS column \'" 
+	     << datacolumn << "\')" << LogIO::POST;
+     VisSetUtil::HanningSmooth(vs, datacolumn);
 
      rstat = True;
   } catch (AipsError x) {

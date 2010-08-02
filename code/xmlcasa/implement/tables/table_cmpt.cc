@@ -642,6 +642,26 @@ table::selectrows(const std::vector<int>& rownrs, const std::string& name)
  return rstat;
 }
 
+
+::casac::record*
+table::info()
+{
+ ::casac::record *rstat(0);
+ try {
+	 if(itsTable){
+		 rstat = fromRecord(itsTable->tableInfo());
+	 } else {
+		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+	 }
+ } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;
+}
+
+
+
 bool
 table::putinfo(const ::casac::record& value)
 {

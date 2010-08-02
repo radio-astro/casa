@@ -454,7 +454,7 @@ class split_test_state(unittest.TestCase):
                 print "\n\tSplitting", self.inpms
                 print "\t  ...ignore any warnings about time-varying feeds..."
             splitran = split(self.inpms, self.outms, datacolumn='corrected',
-                             field='', spw='', width=1,
+                             field='', spw=[0, 1], width=1,
                              antenna='',
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',

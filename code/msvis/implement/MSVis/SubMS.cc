@@ -76,7 +76,7 @@
 #include <map>
 #include <set>
 #include <measures/Measures/MeasTable.h>
-
+#include <scimath/Mathematics/Smooth.h>
 
 namespace casa {
   
@@ -1623,6 +1623,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		       const Double regridCenter, 
 		       const Double regridBandwidth, 
 		       const Double regridChanWidth,
+		       const Bool doHanningSmooth,
 		       const Int phaseCenterFieldId,
 		       MDirection phaseCenter,
 		       const Bool centerIsStart,
@@ -1744,7 +1745,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
     }
     
-    if(!msModified){ // nothing to be done
+    if(!msModified){ // nothing to be done in terms of regridding
+      if(doHanningSmooth){ // but we still need to Hanning smooth
+	os << LogIO::NORMAL << "Hanning smoothing not applied in regridding step since no regridding was necessary." <<  LogIO::POST;
+      }
       return -1;
     }
     
@@ -1949,6 +1953,23 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	
 	if(!CORRECTED_DATACol.isNull()){
 	  yin.assign((*oldCORRECTED_DATAColP)(mainTabRow));
+
+	  // hanning smooth if requested
+	  if(doHanningSmooth){
+
+	    // copy yin to yinUnsmoothed 
+	    Array<Complex> yinUnsmoothed;
+	    yinUnsmoothed.assign(yin);
+	    Array<Bool> yinFlagsUnsmoothed;
+	    yinFlagsUnsmoothed.assign(yinFlags);
+
+	    Smooth<Complex>::hanning(yin, // the output
+				     yinFlags, // the output flags
+				     yinUnsmoothed, // the input
+				     yinFlagsUnsmoothed, // the input flags
+				     False);  // for flagging: good is not true
+	  }
+
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, // the new visibilities
 							  youtFlags, // the new flags
 							  xoutff, // the new channel centers
@@ -1967,6 +1988,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!DATACol.isNull()){
 	  yin.assign((*oldDATAColP)(mainTabRow));
+	  if(doHanningSmooth){
+	    Array<Complex> yinUnsmoothed;
+	    yinUnsmoothed.assign(yin);
+	    Array<Bool> yinFlagsUnsmoothed;
+	    yinFlagsUnsmoothed.assign(yinFlags);
+	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
+	  }
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  DATACol.put(mainTabRow, yout);
@@ -1977,12 +2005,26 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!LAG_DATACol.isNull()){
 	  yin.assign((*oldLAG_DATAColP)(mainTabRow));
+	  if(doHanningSmooth){
+	    Array<Complex> yinUnsmoothed;
+	    yinUnsmoothed.assign(yin);
+	    Array<Bool> yinFlagsUnsmoothed;
+	    yinFlagsUnsmoothed.assign(yinFlags);
+	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
+	  }
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  LAG_DATACol.put(mainTabRow, yout);
 	}
 	if(!MODEL_DATACol.isNull()){
 	  yin.assign((*oldMODEL_DATAColP)(mainTabRow));
+	  if(doHanningSmooth){
+	    Array<Complex> yinUnsmoothed;
+	    yinUnsmoothed.assign(yin);
+	    Array<Bool> yinFlagsUnsmoothed;
+	    yinFlagsUnsmoothed.assign(yinFlags);
+	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
+	  }
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  MODEL_DATACol.put(mainTabRow, yout);
@@ -1997,6 +2039,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Array<Float> youtf;
 	if(!FLOAT_DATACol.isNull()){
 	  yinf.assign((*oldFLOAT_DATAColP)(mainTabRow));
+	  if(doHanningSmooth){
+	    Array<Float> yinfUnsmoothed;
+	    yinfUnsmoothed.assign(yinf);
+	    Array<Bool> yinFlagsUnsmoothed;
+	    yinFlagsUnsmoothed.assign(yinFlags);
+	    Smooth<Float>::hanning(yinf, yinFlags, yinfUnsmoothed, yinFlagsUnsmoothed, False);  
+	  }
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
 							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
 	  FLOAT_DATACol.put(mainTabRow, youtf);
@@ -2007,10 +2056,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!IMAGING_WEIGHTCol.isNull()){
 	  yinf.assign((*oldIMAGING_WEIGHTColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
-							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
+
+	  if(yinFlags.shape().isEqual(yinf.shape())){ // shape must be the same 
+	    InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
+							   yinf, yinFlags, methodF[iDone], False, doExtrapolate);
+	  }
+	  else{ // don't use the flags 
+	    InterpolateArray1D<Double, Float>::interpolate(youtf, xout[iDone], xindd, 
+							   yinf, methodF[iDone]);
+	  }
 	  IMAGING_WEIGHTCol.put(mainTabRow, youtf);
 	}
+
 	if(!SIGMA_SPECTRUMCol.isNull()){
 	  yinf.assign((*oldSIGMA_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
@@ -2031,7 +2088,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(FLAG_CATEGORYCol.isDefined(mainTabRow)){
 	  Array<Bool> flagCat((*oldFLAG_CATEGORYColP)(mainTabRow));  
 	  IPosition flagCatShape = (*oldFLAG_CATEGORYColP).shape(mainTabRow);
-	  Int nCorrelators = flagCatShape(0); // get the dimension of the first axis
+	  Int nCorrelations = flagCatShape(0); // get the dimension of the first axis
 	  Int nChannels = flagCatShape(1); // get the dimension of the second axis
 	  Int nCat = flagCatShape(2); // the dimension of the third axis ==
                                       // number of categories
@@ -2039,10 +2096,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  
 	  Vector<Float> dummyYin(nChannels);
 	  Vector<Float> dummyYout(nOutChannels);
-	  Array<Bool> flagCatOut(IPosition(3, nCorrelators, nOutChannels, nCat)); 
+	  Array<Bool> flagCatOut(IPosition(3, nCorrelations, nOutChannels, nCat)); 
 	  
 	  for(Int i=0; i<nCat; i++){
-	    IPosition start(0,0,i), length (nCorrelators,nChannels,i), stride (1,1,0);
+	    IPosition start(0,0,i), length (nCorrelations,nChannels,i), stride (1,1,0);
 	    Slicer slicer (start, length, stride, Slicer::endIsLast);
 	    yinFlags.assign(flagCat(slicer));
 	    InterpolateArray1D<Double, Float>::interpolate(dummyYout, youtFlags,
@@ -2050,7 +2107,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 							   dummyYin, yinFlags,
                                                            methodF[iDone], False, False);
 	    // write the slice to the array flagCatOut
-	    for(Int j=0; j<nCorrelators; j++){
+	    for(Int j=0; j<nCorrelations; j++){
 	      for(Int k=0; k<nOutChannels; k++){
 		flagCatOut(IPosition(3, j, k, i)) = youtFlags(IPosition(2,j,k));
 	      }
@@ -4506,11 +4563,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
       }
       
-      // get the number of correlators from the
+      // get the number of correlations from the
       // dimension of the first axis of the sigma column
-      uInt nCorrelators = SIGMACol(firstAffRow).shape()(0); 
+      uInt nCorrelations = SIGMACol(firstAffRow).shape()(0); 
       
-      IPosition newShape = IPosition(2, nCorrelators, newNUM_CHAN);
+      IPosition newShape = IPosition(2, nCorrelations, newNUM_CHAN);
       
       Bool CORRECTED_DATAColIsOK = !CORRECTED_DATACol.isNull();
       Bool DATAColIsOK = !DATACol.isNull();
@@ -4573,7 +4630,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  flagCatShape = oldFLAG_CATEGORYCol.shape(firstAffRow);
 	  nCat = flagCatShape(2); // the dimension of the third axis ==
 	  // number of categories
-	  newFlagCategory.resize(IPosition(3, nCorrelators, newNUM_CHAN, nCat));
+	  newFlagCategory.resize(IPosition(3, nCorrelations, newNUM_CHAN, nCat));
 	} 
       }
       
@@ -4789,12 +4846,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  for(Int i=0; i<newNUM_CHAN; i++){
 	    // initialise special treatment for Bool columns
 	    if(FLAGColIsOK){
-	      for(uInt k=0; k<nCorrelators; k++){ 
+	      for(uInt k=0; k<nCorrelations; k++){ 
 		newFlag(k,i) =  True; // overwritten with False below if there is a SPW where this channel is not flagged for this correlator
 	      }
 	    }
 	    if(FLAG_CATEGORYColIsOK){
-	      for(uInt k=0; k<nCorrelators; k++){ 
+	      for(uInt k=0; k<nCorrelations; k++){ 
 		for(uInt m=0; m<nCat; m++){ 
 		  newFlagCategory(IPosition(3,k,i,m)) = False;
 		}
@@ -4802,11 +4859,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 
 	    Bool haveCoverage = False;
-	    Vector<Double> numNominal(nCorrelators, 0.);
-	    Vector<Double> modNorm(nCorrelators, 0.); // normalization for the averaging of the contributions from the SPWs
+	    Vector<Double> numNominal(nCorrelations, 0.);
+	    Vector<Double> modNorm(nCorrelations, 0.); // normalization for the averaging of the contributions from the SPWs
 	    for(Int j=0; j<averageN[i]; j++){
 	      if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
-		for(uInt k=0; k<nCorrelators; k++){
+		for(uInt k=0; k<nCorrelations; k++){
 		  if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){
 		    haveCoverage = True;
 		    if(averageChanFrac[i][j]==1.){ // count number of channels right on this frequency
@@ -4818,7 +4875,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    }
 		  }
 		}
-		for(uInt k=0; k<nCorrelators; k++){
+		for(uInt k=0; k<nCorrelations; k++){
 		  if(numNominal(k)>0. && numNominal(k)<averageN[i]-1){ // there are channels right on this frequency
 		    // and there are at least two more not on this frequency.
 		    // In order to make cvel's output agree with the interpolation done in clean,
@@ -4841,8 +4898,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 		  Double weight = 0.;
 
-		  // loop over first dimension (number of correlators)
-		  for(uInt k=0; k<nCorrelators; k++){
+		  // loop over first dimension (number of correlations)
+		  for(uInt k=0; k<nCorrelations; k++){
 		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
 
                       // renormalize for the case of missing SPW coverage
@@ -4887,7 +4944,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		  
 		  // special treatment for flag cat
 		  if(FLAG_CATEGORYColIsOK){
-		    for(uInt k=0; k<nCorrelators; k++){ // logical OR of all input spws
+		    for(uInt k=0; k<nCorrelations; k++){ // logical OR of all input spws
 		      for(uInt m=0; m<nCat; m++){ 
 			newFlagCategory(IPosition(3,k,i,m)) = 
 			  newFlagCategory(IPosition(3,k,i,m)) || newFlagCategoryI[ averageWhichSPW[i][j] ](IPosition(3,k,averageWhichChan[i][j],m));
@@ -5238,15 +5295,13 @@ Bool SubMS::fillAccessoryMainCols(){
     msc_p->antenna2().putColumn(mscIn_p->antenna2());
   }
   else{
-    Vector<Int> ant1 = mscIn_p->antenna1().getColumn();
-    Vector<Int> ant2 = mscIn_p->antenna2().getColumn();
+    const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
+    const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
     
-    for(uInt k = 0; k < ant1.nelements(); ++k){
-      ant1[k] = antNewIndex_p[ant1[k]];
-      ant2[k] = antNewIndex_p[ant2[k]];
+    for(uInt k = ant1.nrow() - 1; k--;){
+      msc_p->antenna1().put(k, antNewIndex_p[ant1(k)]);
+      msc_p->antenna2().put(k, antNewIndex_p[ant2(k)]);
     }
-    msc_p->antenna1().putColumn(ant1);
-    msc_p->antenna2().putColumn(ant2);
   }
   msc_p->feed1().putColumn(mscIn_p->feed1());
   msc_p->feed2().putColumn(mscIn_p->feed2());
@@ -5432,18 +5487,14 @@ Bool SubMS::fillAccessoryMainCols(){
 // etc.)
 void SubMS::relabelIDs()
 {
-  const Vector<Int>& inDDID = mscIn_p->dataDescId().getColumn();
-  Vector<Int> outDDID;
+  const ROScalarColumn<Int> inDDID(mscIn_p->dataDescId());
+  const ROScalarColumn<Int> fieldId(mscIn_p->fieldId());
+  Int nrows = inDDID.nrow();
   
-  outDDID.resize(inDDID.nelements());
-  for(uInt k = 0; k < inDDID.nelements(); ++k)
-    outDDID[k] = spwRelabel_p[oldDDSpwMatch_p[inDDID[k]]];
-  msc_p->dataDescId().putColumn(outDDID);
-
-  Vector<Int> fieldId = mscIn_p->fieldId().getColumn();
-  for(uInt k = 0; k < fieldId.nelements(); ++k)
-    fieldId[k] = fieldRelabel_p[fieldId[k]];
-  msc_p->fieldId().putColumn(fieldId);
+  for(Int k = nrows - 1; k--;){
+    msc_p->dataDescId().put(k, spwRelabel_p[oldDDSpwMatch_p[inDDID(k)]]);
+    msc_p->fieldId().put(k, fieldRelabel_p[fieldId(k)]);
+  }
 
   remapColumn(mscIn_p->arrayId(), msc_p->arrayId());
   remapColumn(mscIn_p->stateId(), msc_p->stateId());

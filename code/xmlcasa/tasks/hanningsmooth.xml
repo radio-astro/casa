@@ -20,29 +20,42 @@
 			<value></value>
                         <example>vis='ngc5921.ms'</example>
 		</param>
-
-                <constraints>
-                </constraints>
+                <param type="string" name="datacolumn" ignorecase="True">
+		  <description>the name of the MS column into which to write the smoothed data</description>
+		  <value>corrected</value>
+		  <allowed kind="enum">
+		    <value>corrected</value>
+		    <value>data</value>
+		  </allowed>
+		</param>
+		<param type="string" name="outputvis">
+			<description>name of the output visibility file (MS)</description>
+			<value></value>
+                        <example>outputvis='ngc5921-hs.ms'</example>
+		</param>
 	</input>
 <returns type="void"/>
 
 <example>
 
-        The hanningsmooth task smooths the frequency channels with
-        a weighted running average of 
+    This function Hanning smooths the frequency channels with
+    a weighted running average of smoothedData[i] =
+    0.25*correctedData[i-1] + 0.50*correctedData[i] +
+    0.25*correctedData[i+1].  The first and last channels are flagged.
+    Inclusion of a flagged value in an average causes that data value
+    to be flagged.
 
-            SData[i] = 0.25 * OData[i-1] + 0.50 * OData[i] + 0.25 * OData[i+1]
+    Keyword arguments:
+    vis -- Name of input visibility file (MS)
+           default: none; example: vis='ngc5921.ms'
+    datacolumn -- the name of the MS column into which to write the smoothed data
+                  default='corrected'; example: datacolumn='data'
+                  options: 'corrected' or 'data'
+    outputvis -- name of the output visibility file (MS)
+                 default=none (write to the input MS); example: outputvis='ngc5921_src.ms'
 
-        where SData is the smoothed data and OData is the original data.
+    hanningsmooth(vis='ngc4852.ms', datacolumn='data', outputvis='ngc4852-hs.ms')		 
 
-        The first and last channels are flagged. Inclusion of a flagged value in
-        an average causes that data value to be flagged.
-
-        Keyword arguments:
-        vis -- Name of input visibility file (MS)
-                default: none; example: vis='ngc5921.ms'
-
-        hanningsmooth(vis='ngc5921.ms')
 
  </example>
  </task>

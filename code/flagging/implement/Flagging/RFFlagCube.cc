@@ -374,7 +374,7 @@ void RFFlagCube::getMSFlags(uInt it)
   }
   else {
       pos_get_flag = it;
-      if (in_flags_time == it) {
+      if (in_flags_time == (int)it) {
           return;
       }
       in_flags_time = it;

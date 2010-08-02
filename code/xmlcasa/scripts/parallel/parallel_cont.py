@@ -40,11 +40,13 @@ class imagecont():
         if(not self.imageparamset):
             im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
             #im.selectvis(vis=msname, field=field, spw=spwstring, datainmemory=True)
-            im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
-                  robust=self.robust)
 ####
         #imname=imname+'_%02d'%(j)
             im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
+
+            im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
+                  robust=self.robust)
+
             im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, pastep=self.painc, pblimit=self.pblimit, cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol)
         #im.regionmask(mask='lala.mask', boxes=[[0, 0, 3599, 3599]])
         #im.setmfcontrol(cyclefactor=0.0)

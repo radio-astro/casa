@@ -115,16 +115,12 @@ Bool VLASourceFilter::ok() const {
            << LogIO::POST;
     return False;
   }
-  if (abs(itsQual) > SHRT_MAX && itsQual != INT_MIN) {
+  if (abs(itsQual) > SHRT_MAX && itsQual != -65536) {
     LogIO logErr(LogOrigin("VLASourceFilter", "ok()"));
     logErr << LogIO::SEVERE 
-	   << "The source qualifier has a bad value"
+	   << "The source qualifier has a bad value: " << itsQual
            << LogIO::POST;
     return False;
   }
   return True;
 }
-
-// Local Variables: 
-// compile-command: "gmake VLASourceFilter"
-// End: 
