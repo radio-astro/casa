@@ -139,14 +139,18 @@ ImageAnalysis::ImageAnalysis() :
 
 }
 
-// private ImageInterface constructor for on the fly components
-ImageAnalysis::ImageAnalysis(const ImageInterface<casa::Float>* inImage) :
-	pImage_p(0), pStatistics_p(0), pHistograms_p(0),
-			pOldStatsRegionRegion_p(0), pOldStatsMaskRegion_p(0),
-			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0) {
+ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
+    pImage_p(inImage->cloneII()), itsLog(new LogIO()), pStatistics_p(0),
+    pHistograms_p(0), pOldStatsRegionRegion_p(0),
+    pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+	pOldHistMaskRegion_p(0) {}
 
-	itsLog = new LogIO();
-	pImage_p = inImage->cloneII();
+ImageAnalysis::ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer) :
+itsLog(new LogIO()), pStatistics_p(0), pHistograms_p(0),
+    pOldStatsRegionRegion_p(0),
+    pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+    pOldHistMaskRegion_p(0) {
+    pImage_p = cloneInputPointer ? inImage->cloneII() : inImage;
 }
 
 ImageAnalysis::~ImageAnalysis() {
