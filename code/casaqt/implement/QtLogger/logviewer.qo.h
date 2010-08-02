@@ -92,6 +92,7 @@ private slots:
     void logOpen();
     
     void search();
+    void findNext();
     void remove();
     void purge();
     void copy();
@@ -114,6 +115,7 @@ private:
         *actionSave,
         *actionSaveAs,
         *actionSearch,
+        *actionNext,
         *actionFilter,
         *actionInsert,
         *actionCopy,
@@ -145,6 +147,7 @@ private:
     QModelIndex currentLogRow;
     QString currentFilter;
     QString currentSearch;
+    int nextRow;
 
     QString fileName;
 

@@ -80,7 +80,7 @@ namespace casa {
 LogViewer::LogViewer(QString logFile, QWidget *parent)
     : QMainWindow(parent), currentColumn(0),
       currentLogRow(),
-      currentFilter(""), currentSearch(""),
+      currentFilter(""), currentSearch(""),nextRow(0),
       fileName(logFile),
       logView(0), logModel(0), logPos(0)
 { 
@@ -285,6 +285,12 @@ void LogViewer::setupEditActions()
        QIcon(rsrcPath + "/find.png"), tr("Sear&ch"), this);
     connect(a, SIGNAL(triggered()), this, SLOT(search()));
     a->setShortcut(QKeySequence(QKeySequence::Find));
+    tb->addAction(a);
+    menu->addAction(a);
+    a = actionNext = new QAction(
+       QIcon(rsrcPath + "/downarrowstop.png"), tr("Find &Next"), this);
+    connect(a, SIGNAL(triggered()), this, SLOT(findNext()));
+    a->setShortcut(QKeySequence(QKeySequence::FindNext));
     tb->addAction(a);
     menu->addAction(a);
 
@@ -735,6 +741,55 @@ void LogViewer::search()
       return;
    currentSearch = newSearch;
    logModel->searchKeyChanged(currentSearch);
+   //qDebug() << "new search=" << currentSearch;
+}
+
+void LogViewer::findNext()
+{
+   QString newSearch = searchText->text().trimmed();
+   //if (newSearch == currentSearch)
+   //   return;
+   //currentSearch = newSearch;
+   //logModel->searchKeyChanged(currentSearch);
+   
+   if (newSearch == "")
+      return;
+
+   if (nextRow >= logModel->rowCount() - 1)
+      nextRow = -1;
+
+   QModelIndex idx = QModelIndex();
+   int k = nextRow;
+   int i = nextRow;
+   for (i = nextRow + 1; i < logModel->rowCount(); i++) {
+     QString str = proxyModel->data(
+         proxyModel->index(i, 3, idx), Qt::DisplayRole).toString();
+     //qDebug() << str << i;
+     if (str != "" && str.contains(newSearch)) {
+        QModelIndex idx = proxyModel->index(i, 0, QModelIndex());
+        logView->setCurrentIndex(idx);
+        logView->scrollTo(idx);
+        nextRow = i;
+        break;
+     }
+   }
+   //qDebug() << "i=" << i;
+   if (i == logModel->rowCount())
+      nextRow = -1;
+
+   for (int i = 0; i < k; i++) {
+     QString str = proxyModel->data(
+         proxyModel->index(i, 3, idx), Qt::DisplayRole).toString();
+     //qDebug() << str << i;
+     if (str != "" && str.contains(newSearch)) {
+        QModelIndex idx = proxyModel->index(i, 0, QModelIndex());
+        logView->setCurrentIndex(idx);
+        logView->scrollTo(idx);
+        nextRow = i;
+        break;
+     }
+   }
+
    //qDebug() << "new search=" << currentSearch;
 }
 
