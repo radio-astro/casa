@@ -454,6 +454,9 @@ if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
   ##
   set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
 else()
+  if( EXISTS ${CMAKE_INSTALL_PREFIX}/../include/casacore/casa/BasicMath.h )
+      set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
+  endif()
   set( casacore_libs
        casa_casa 
        casa_components
