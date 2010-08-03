@@ -1307,10 +1307,12 @@ class immath_test2(unittest.TestCase):
                     else:
                         res = immath(expr=expr, chans='22', outfile=outfile)
                     if(res):
-                        ia.open(outfile)
-                        if (ia.shape() != expected):
+                        myia = iatool.create()
+                        myia.open(outfile)
+                        if (myia.shape() != expected):
                             retValue['success'] = False
                             retValue['error_msgs'] += "\n" + test + ": immath produced image of wrong shape for image " + imagename + " expr " + expr
+                        myia.close()
                     else:
                         retValue['success'] = False
                         retValue['error_msgs'] += "\n" + test + ": immath returned false for image " + imagename + " expr " + expr
@@ -1362,9 +1364,10 @@ class immath_test3(unittest.TestCase):
             epsilon = 3e-7
         # POLA
         mode = 'pola'
-        ia.open(POLA_im)
-        expected = ia.getchunk()
-        ia.done()
+        myia = iatool.create()
+        myia.open(POLA_im)
+        expected = myia.getchunk()
+        myia.done()
 
         # pola the old way
         self._comp([Q_im, U_im], mode, 'pola_1.im', expected, epsilon)  
@@ -1415,24 +1418,26 @@ class immath_test3(unittest.TestCase):
         mask_tbl = outfile + os.sep + 'mask0'
         self.assertTrue(os.path.exists(mask_tbl))
         
-        tb.open(thresh_mask)
+        mytb = tbtool.create()
+        mytb.open(thresh_mask)
         col = 'PagedArray'
-        maskexp = tb.getcell(col, 0)
-        tb.done()
-        tb.open(mask_tbl)
-        maskgot = tb.getcell(col, 0)
+        maskexp = mytb.getcell(col, 0)
+        mytb.done()
+        mytb.open(mask_tbl)
+        maskgot = mytb.getcell(col, 0)
+        mytb.close()
 
         self.assertTrue((maskgot == maskexp).all())
 
         # POLI
         mode = 'poli'
-        ia.open(POLL_im)
-        poll = ia.getchunk()
-        ia.done()
+        myia.open(POLL_im)
+        poll = myia.getchunk()
+        myia.done()
 
-        ia.open(POLT_im)
-        polt = ia.getchunk()
-        ia.done()
+        myia.open(POLT_im)
+        polt = myia.getchunk()
+        myia.done()
 
         # linear polarization the old way
         self._comp([Q_im, U_im], mode, 'poli_1.im', poll, epsilon)  
