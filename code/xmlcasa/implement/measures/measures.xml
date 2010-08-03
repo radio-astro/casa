@@ -1437,6 +1437,39 @@ print me.asbaseline(b)
 # 'm2': {'value': 37.416573867739416, 'unit': 'm'},
 # 'refer': 'J2000',
 # 'type': 'baseline'}
+
+####now to give a series of positions in one go ...here 3
+####
+me.doframe(me.observatory('VLA'))
+me.doframe(me.direction('J2000', '19h20m00', '20d10m00'))
+me.doframe(me.epoch('utc', '2007/07/08/20:30:00'))
+ants=me.position('itrf',qa.quantity([3828763.11,3828746.55, 3828727.43],'m'), qa.quantity([442449.106,442592.14, 442580.12],'m'), qa.quantity([5064923.01, 5064923.01, 5064923.51],'m')) 
+print ants
+#{'type': 'position', 'refer': 'ITRF', 'm1': {'value': array([ 0.92031276,  0.92031276,  0.92031535]), 'unit': 'rad'}, 
+#'m0': {'value': array([ 0.11504897,  0.11508633,  0.1150838 ]), 'unit': 'rad'}, 
+#'m2': {'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587]), 'unit': 'm'}}
+
+bl=me.asbaseline(ants)
+print bl
+#{'type': 'baseline', 'refer': 'J2000', 'm1': {'value': array([ 0.92068328,  0.92068326,  0.92068585]), 'unit': 'rad'}, 
+#'m0': {'value': array([-2.08658811, -2.08655073, -2.08655326]), 'unit': 'rad'}, 
+#'m2': {'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587]), 'unit': 'm'}}
+
+me.expand(bl)
+
+#{'return': {'m0': {'unit': 'rad',
+#                  'value': array([-0.51637894, -0.36575235,  1.50036599])},
+#            'm1': {'unit': 'rad',
+#                   'value': array([-0.00060966,  0.00302388,  0.02206414])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 143.98943974,  135.78652583,   22.58992696])},
+#            'refer': 'J2000',
+#            'type': 'uvw'},
+# 'xyz': {'unit': 'm',
+#         'value': array([  1.25215025e+02,  -7.10925354e+01,  -8.77850493e-02,
+#         1.26804339e+02,  -4.85640980e+01,   4.10601842e-01,
+#         1.58931410e+00,   2.25284374e+01,   4.98386892e-01])}}
+
 \end{verbatim}
 <!--
 sb = me.position('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
