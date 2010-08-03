@@ -981,8 +981,10 @@ class immoment_test2(unittest.TestCase):
                           +"\nError: Moment file, " + got + ", was not created."
         
         immath( outfile=difference, expr='"' + got + '"-"' + expected + '"' )
-        ia.open(difference)
-        stats = ia.statistics()
+        myia = iatool.create()
+        myia.open(difference)
+        stats = myia.statistics()
+        myia.close()
         casalog.post("moment 1 difference image stats " + str(stats))
         if (stats['sumsq'][0] != 0):
             retValue['error_msgs'] += "\nError: first moment test did not produce expected image"
