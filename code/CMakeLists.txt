@@ -728,6 +728,10 @@ find_package(
   Qt4 4.3.4
   COMPONENTS QtCore QtGui QtDBus QtXml ) #QtOpenGL )
 
+if( NOT QT4_FOUND )
+  message( FATAL_ERROR "Qt4 could not be found. Please check!" )
+endif()
+
 set( QT4_INCLUDE_DIRS ${QT_INCLUDES} CACHE PATH "QT4 include directories" FORCE )
 set( QT4_DEFINITIONS ${QT_DEFINITIONS} -DQT_NO_DEBUG CACHE STRING "QT4 preprocessor flags" FORCE )
 set( QT4_LIBRARIES 
