@@ -125,9 +125,7 @@ Quantum<Vector<Double> > casaQuantumVector(const casac::variant& thevar){
   Quantum<Vector<Double> > retval(Vector<Double> (), Unit(""));
   //For now we know (at least till we have more time) how to deal with records only
   if(thevar.type() != ::casac::variant::RECORD){
-    cout << "NOT record " << endl;
     return retval;
-
   }
   ::casac::variant localvar(thevar); //cause its const
   Record * ptrRec = toRecord(localvar.asRecord());
