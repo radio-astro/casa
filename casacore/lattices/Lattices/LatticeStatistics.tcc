@@ -1121,7 +1121,8 @@ Bool LatticeStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 
 template <class T>
 Bool LatticeStatistics<T>::getLayerStats(
-        String& stats, Vector<String>& zName, Int zAxis, Int layer,
+        String& stats, Double area, 
+        Vector<String>& zName, Int zAxis, Int layer,
         Int hAxis, Int hLayer) { 
 
    if (!goodParameterStatus_p) {
@@ -1208,7 +1209,7 @@ Bool LatticeStatistics<T>::getLayerStats(
          for (uInt j=0; j<n1; j++) ord(j,i) = matrix(j,i);
       }
 
-      listLayerStats(hasBeam, pixelIterator.position(), ord,
+      listLayerStats(area, pixelIterator.position(), ord,
                      os, zName, zAxis, layer, hAxis, hLayer);
    }
    stats += os.str();
@@ -1218,7 +1219,7 @@ Bool LatticeStatistics<T>::getLayerStats(
 }
 
 template <class T>
-Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam, 
+Bool LatticeStatistics<T>::listLayerStats (Double beamArea, 
     const IPosition& dPos, const Matrix<AccumType>& stats,
     ostringstream& os, Vector<String>& zName,
     Int zAxis, Int layer, 
@@ -1322,8 +1323,8 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
 
    os << setw(10) << "Npts";
    os << setw(oDWidth) << "Sum";
-   if (hasBeam) 
-      os << setw(oDWidth) << "FluxDensity";
+   if (beamArea > 0) 
+      os << setw(oDWidth) << "Flux (Jy)";
    os << setw(oDWidth) << "Mean";  
    if (doRobust_p) 
       os << setw(oDWidth) << "Median"; 
@@ -1353,7 +1354,7 @@ Bool LatticeStatistics<T>::listLayerStats (Bool hasBeam,
          setStream(os, oPrec);
          os << setw(oDWidth)
             << stats.column(SUM)(j);
-         if (hasBeam) { 
+         if (beamArea > 0) { 
             setStream(os, oPrec);
             os << setw(oDWidth)
                << stats.column(FLUX)(j);
