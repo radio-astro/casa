@@ -1213,14 +1213,23 @@ variable {\em xyz} will be set to an array of values.
 <example>
 \begin{verbatim}
 print "\t----\t expand Ex 1 \t----"
-b=me.baseline('itrf','10m','20m','30m')
+b=me.baseline('itrf', qa.quantity([10, 20, 30], 'm'), qa.quantity([10, 20, 30], 'm'), qa.quantity([0, 0, 0], 'm'))
 print me.expand(b)
-#{'return': {'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-#            'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-#            'm2': {'value': 37.416573867739416, 'unit': 'm'},
-#            'refer': 'J2000',
-#            'type': 'uvw'},
-# 'xyz': {'value': [10.000000000000004, 20.000000000000004, 30.0], 'unit': 'm'}}
+me.expand(b)
+ 
+#{'return': {'m0': {'unit': 'rad',
+#                   'value': array([ 0.78539816,  0.78539816,  0.78539816])},
+#            'm1': {'unit': 'rad', 'value': array([ 0.,  0.,  0.])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 14.14213562,  28.28427125,  14.14213562])},
+#            'refer': 'ITRF',
+#            'type': 'baseline'},
+# 'xyz': {'unit': 'm',
+#         'value': array([ 10.,  10.,   0.,  20.,  20.,   0.,  10.,  10.,   0.])}}
+
+print me.expand(b)['xyz']['value']
+
+#[ 10.  10.   0.  20.  20.   0.  10.  10.   0.]
 \end{verbatim}
 <!--
 sb = me.baseline('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
@@ -1426,17 +1435,6 @@ positions, with subtractions to obtain baselines at a later stage.
 print "\t----\t asbaseline Ex 1 \t----"
 b = me.position('itrf', '10m', '20m', '30m');
 print b
-#{'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-# 'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-# 'm2': {'value': 37.416573867739416, 'unit': 'm'},
-# 'refer': 'ITRF',
-# 'type': 'position'}
-print me.asbaseline(b)
-#{'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-# 'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-# 'm2': {'value': 37.416573867739416, 'unit': 'm'},
-# 'refer': 'J2000',
-# 'type': 'baseline'}
 
 ####now to give a series of positions in one go ...here 3
 ####
