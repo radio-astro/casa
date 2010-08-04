@@ -976,7 +976,16 @@ Int QtDisplayData::spectralAxis() {
     Int coordno, axisincoord;
     cs->findWorldAxis(coordno, axisincoord, ax);
     
-    if(cs->showType(coordno)=="Spectral") return ax;  }
+    //cout << "coordno=" << coordno << endl;
+    if(cs->showType(coordno)=="Spectral") {
+        //if (im_ != 0) 
+        //   cout << "shape=" << im_->shape() << endl; 
+        //if (cim_ != 0)
+        //   cout << "cshape=" << cim_->shape() << endl; 
+        return ax;  
+    }
+
+  }
 
   return -1;  }
 

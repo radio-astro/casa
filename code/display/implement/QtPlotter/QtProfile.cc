@@ -718,11 +718,27 @@ void QtProfile::wcChanged( const String c,
 {
     if (!isVisible()) return;
     if (!analysis) return;
-    if (cube == 0) return;
+    //cout << "profile wcChanged     cube=" << cube << endl;
 
-//     cout << "wcChanged: coordType=" << c 
-//          << " coordinate=" << coordinate
-// 	 << " coordinateType=" << coordinateType << endl;
+    //qDebug() << "top=" << fileName;
+    //QHashIterator<QString, ImageAnalysis*> j(*over);
+    //while (j.hasNext()) {
+    //  j.next();
+    //  qDebug() << j.key() << ": " << j.value();
+    //}
+
+    if (cube == 0) {
+       pc->setWelcome("No profile available "
+                   "for the given data \nor\n"
+                   "No profile available for the "
+                   "display axes orientation");
+       pc->clearCurve();
+      return;
+    }
+
+    // cout << "wcChanged: coordType=" << c 
+    //      << " coordinate=" << coordinate
+    //	 << " coordinateType=" << coordinateType << endl;
 
     if (c != coordinate) {
        coordinate = c.chars();
@@ -810,7 +826,6 @@ void QtProfile::wcChanged( const String c,
 				 "world", coordinateType, 
 				 0, 0, 0, String(""), frameType_p);
 #endif
-
     if ( ! ok ) {
 	// change to notify user of error... 
 	return;
@@ -891,6 +906,7 @@ void QtProfile::wcChanged( const String c,
     
     pc->clearData();
     pc->plotPolyLine(z_xval, z_yval, fileName);
+
 
     QHashIterator<QString, ImageAnalysis*> i(*over);
     while (i.hasNext() && multiProf->isChecked()) {
@@ -1000,7 +1016,7 @@ void QtProfile::wcChanged( const String c,
 
 void QtProfile::changeAxis(String xa, String ya, String za) {
    //cout << "change axis=" << xa << " " << ya 
-   //     << " " << za << endl;
+   //     << " " << za << " cube=" << cube << endl;
    int cb = 0;
    if (xa.contains("Decl") && ya.contains("Right"))
        cb = -1;
@@ -1012,15 +1028,18 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
        cb = 1;
    if (!za.contains("Freq"))
        cb = 0;
-   if (cb != cube) {
+   //if (cb != cube) {
        cube = cb;
        xpos = "";
        ypos = "";
        position = QString("");
        te->setText(position);
        if (cube == 0)
-            pc->setWelcome("No profile available\n"
-                   "for the given data cube");
+            pc->setWelcome("No profile available "
+                   "for the given data \nor\n"
+                   "No profile available for the "
+                   "display axes orientation"
+                   );
        else 
             pc->setWelcome("assign a mouse button to\n"
                    "'crosshair' or 'rectangle' or 'polygon'\n"
@@ -1028,7 +1047,7 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
                    "the image to get a image profile");
 
        pc->clearCurve();
-   }
+   //}
      
    //cout << "cube=" << cube << endl;
 
