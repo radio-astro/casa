@@ -350,7 +350,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', scales=[0], weight='natural',
-          contclean=False, visinmem=False, 
+          contclean=False, visinmem=False, interactive=False,
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''):
 
@@ -510,8 +510,13 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             residuals[k]=imlist[k]+'.residual'
             restoreds[k]=imlist[k]+'.image'
 	averimages(residual, residuals)
+        if (interactive):
+            im.drawmask(residual,'lala.mask');
+        else:
+            if (maj==0):
+                copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0);
         if(maj==0):
-            copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
+#            copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
             if(not contclean or (not os.path.exists(model))):
                 copyimage(inimage=residual, outimage=model, 
                           init=True, initval=0.0)    
