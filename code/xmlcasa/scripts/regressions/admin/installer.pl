@@ -212,10 +212,7 @@ if (`uname` eq "Linux\n") {
     sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl \$HOME/admin/");
 }
 else {
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.py \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.sh \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.txt \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.pl \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/* \$HOME/admin/");
 }
 
 exit 0;
