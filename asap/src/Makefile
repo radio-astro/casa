@@ -67,9 +67,9 @@ CASAPPLIB := -L$(CASALIB) -latnf $(CORELIB) \
 
 # darwin specific CASA flags
 ifneq (,$(findstring $(CASAARCH)", "darwin"))
-   CASAPPLIB += -framework vecLib
-else
    CASAPPLIB += -llapack -lblas
+else
+   CASAPPLIB += -framework vecLib
 endif
 
 # python
@@ -130,13 +130,19 @@ CCOBJECTS := MathUtils.o \
              STFITSImageWriter.o \
              STAtmosphere.o \
              Scantable.o \
+             FillerBase.o \
+             NROFiller.o \
+             PKSFiller.o \
+             AsapLogSink.o \
              Templates.o 
 PYOBJECTS := python_Scantable.o \
              python_STFiller.o \
              python_STSelector.o \
              python_STMath.o \
              python_Fitter.o \
+             python_Filler.o \
              python_Logger.o \
+             python_LogSink.o \
              python_STLineFinder.o \
              python_STFitEntry.o \
              python_STWriter.o \
@@ -183,7 +189,11 @@ HEADERS   := MathUtils.h \
              STFITSImageWriter.h \
              IndexedCompare.h \
              STAtmosphere.h \
-             STCoordinate.h
+             STCoordinate.h \
+             FillerBase.h \
+             NROFiller.h \
+             PKSFiller.h \
+             AsapLogSink.h
 
 STATICCCLIB := libasap.a
 MEMBERS := $(patsubst %,$(STATICCCLIB)(%),$(CCOBJECTS))

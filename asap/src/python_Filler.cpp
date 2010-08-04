@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
-//# python_asap.h: python module for single dish package asap
+//# python_Filler.cc: python exposure of c++ Filler class
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2004
+//# Copyright (C) 2010
 //# ATNF
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -26,33 +26,28 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.h 1818 2010-08-02 06:10:43Z KanaSugimoto $
+//# $Id: python_STFiller.cpp 1774 2010-07-29 08:03:10Z MalteMarquarding $
 //#---------------------------------------------------------------------------
-#ifndef PYTHON_ASAP_H
-#define PYTHON_ASAP_H
+#include <boost/python.hpp>
+#include <boost/noncopyable.hpp>
 
-class casa::AipsError;
+#include "ScantableWrapper.h"
+#include "FillerWrapper.h"
+
+using namespace boost::python;
 
 namespace asap {
   namespace python {
-    void translate_ex(const casa::AipsError& e);
-    void python_Scantable();
-    void python_STFiller();
-    void python_Filler();
-    void python_STSelector();
-    void python_STMath();
-    void python_Fitter();
-    void python_STLineFinder();
-    void python_STFitEntry();
-    void python_STWriter();
-    void python_LineCatalog();
-    void python_Logger();
-    void python_LogSink();
-    void python_STCoordinate();
-    void python_STAtmosphere();
-    void python_SrcType();
 
-  } // python
-} //asap
+    void python_Filler() {
+      class_<FillerWrapper, boost::noncopyable>("filler",
+                                                init < ScantableWrapper >() )
+        .def("open", &FillerWrapper::open)
+        .def("fill", &FillerWrapper::fill)
+        .def("close", &FillerWrapper::close)
+        .def("setreferenceexpr", &FillerWrapper::setReferenceRegex)
+      ;
+    };
 
-#endif
+  } //namespace python
+} // namespace asap

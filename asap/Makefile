@@ -41,6 +41,7 @@ install:
 	@for file in $(LIBS) ; do cp -f $$file $(PYDIR)/asap ; done
 	@for file in $(BINS) ; do cp -f $$file $(PREFIX)/bin ; done
 	@for file in $(PY) ; do cp -f $$file $(PYDIR)/asap ; done
+	@for file in $(APPS) ; do cp -f $$file $(PREFIX)/asap ; done
 	@if ( test ! -d $(PREFIX)/share/asap ) ; then mkdir -p $(PREFIX)/share/asap ; fi
 	@cp -f share/ipythonrc-asap $(PREFIX)/share/asap/
 	@echo "Successfully installed asap module to" $(PYDIR)

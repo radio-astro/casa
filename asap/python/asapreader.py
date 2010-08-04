@@ -24,7 +24,7 @@ class reader(stfiller):
                is NOT possible. This is a limitation affecting
                rpfits ONLY.
     """
-    #@print_log_dec
+    @print_log_dec
     def __init__(self, filename, unit=None, theif=None, thebeam=None):
         self.unit = unit
         """
@@ -47,7 +47,7 @@ class reader(stfiller):
         stfiller.__init__(self, filename, theif, thebeam)
         print_log()
 
-    #@print_log_dec
+    @print_log_dec
     def read(self):
         """
         Reads in all integrations in the data file.

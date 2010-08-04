@@ -22,7 +22,6 @@ The normal install procedure is as follows
    #
    scons install
 
-
 Obtaining the data directory
 ============================
 

@@ -2,7 +2,7 @@ import os,glob,shutil
 
 # import root environment
 Import( "env")
-myenv = env.Copy()
+myenv = env.Clone()
 
 # gather cpp files
 cpps = env.SGlob("*.cpp")

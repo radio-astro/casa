@@ -76,7 +76,7 @@ class asapplotter:
             return CustomToolbarTkAgg(self)
         else: return None
 
-    #@print_log_dec
+    @print_log_dec
     def plot(self, scan=None):
         """
         Plot a scantable.
@@ -179,33 +179,30 @@ class asapplotter:
     # forwards to matplotlib axes
     def text(self, *args, **kwargs):
         if kwargs.has_key("interactive"):
-            #if kwargs.pop("interactive"):
-            #    pos = self._plotter.get_point()
-            #    args = tuple(pos)+args
-            kwargs.pop("interactive")
+            if kwargs.pop("interactive"):
+                pos = self._plotter.get_point()
+                args = tuple(pos)+args
         self._axes_callback("text", *args, **kwargs)
 
     text.__doc__ = matplotlib.axes.Axes.text.__doc__
 
     def arrow(self, *args, **kwargs):
         if kwargs.has_key("interactive"):
-            #if kwargs.pop("interactive"):
-            #    pos = self._plotter.get_region()
-            #    dpos = (pos[0][0], pos[0][1],
-            #            pos[1][0]-pos[0][0],
-            #            pos[1][1] - pos[0][1])
-            #    args = dpos + args
-            kwargs.pop("interactive")
+            if kwargs.pop("interactive"):
+                pos = self._plotter.get_region()
+                dpos = (pos[0][0], pos[0][1],
+                        pos[1][0]-pos[0][0],
+                        pos[1][1] - pos[0][1])
+                args = dpos + args
         self._axes_callback("arrow", *args, **kwargs)
 
     arrow.__doc__ = matplotlib.axes.Axes.arrow.__doc__
 
     def annotate(self, text, xy=None, xytext=None, **kwargs):
         if kwargs.has_key("interactive"):
-            #if kwargs.pop("interactive"):
-            #    xy = self._plotter.get_point()
-            #    xytext = self._plotter.get_point()
-            kwargs.pop("interactive")
+            if kwargs.pop("interactive"):
+                xy = self._plotter.get_point()
+                xytext = self._plotter.get_point()
         if not kwargs.has_key("arrowprops"):
             kwargs["arrowprops"] = dict(arrowstyle="->")
         self._axes_callback("annotate", text, xy, xytext, **kwargs)
@@ -214,31 +211,28 @@ class asapplotter:
 
     def axvline(self, *args, **kwargs):
         if kwargs.has_key("interactive"):
-            #if kwargs.pop("interactive"):
-            #    pos = self._plotter.get_point()
-            #    args = (pos[0],)+args
-            kwargs.pop("interactive")
+            if kwargs.pop("interactive"):
+                pos = self._plotter.get_point()
+                args = (pos[0],)+args
         self._axes_callback("axvline", *args, **kwargs)
 
     axvline.__doc__ = matplotlib.axes.Axes.axvline.__doc__
 
     def axhline(self, *args, **kwargs):
         if kwargs.has_key("interactive"):
-            #if kwargs.pop("interactive"):
-            #    pos = self._plotter.get_point()
-            #    args = (pos[1],)+args
-            kwargs.pop("interactive")
+            if kwargs.pop("interactive"):
+                pos = self._plotter.get_point()
+                args = (pos[1],)+args
         self._axes_callback("axhline", *args, **kwargs)
 
     axhline.__doc__ = matplotlib.axes.Axes.axhline.__doc__
 
     def axvspan(self, *args, **kwargs):
         if kwargs.has_key("interactive"):
-            #if kwargs.pop("interactive"):
-            #    pos = self._plotter.get_region()
-            #    dpos = (pos[0][0], pos[1][0])
-            #    args = dpos + args
-            kwargs.pop("interactive")
+            if kwargs.pop("interactive"):
+                pos = self._plotter.get_region()
+                dpos = (pos[0][0], pos[1][0])
+                args = dpos + args
         self._axes_callback("axvspan", *args, **kwargs)
         # hack to preventy mpl from redrawing the patch
         # it seem to convert the patch into lines on every draw.
@@ -249,11 +243,10 @@ class asapplotter:
 
     def axhspan(self, *args, **kwargs):
         if kwargs.has_key("interactive"):
-            #if kwargs.pop("interactive"):
-            #    pos = self._plotter.get_region()
-            #    dpos = (pos[0][1], pos[1][1])
-            #    args = dpos + args
-            kwargs.pop("interactive")
+            if kwargs.pop("interactive"):
+                pos = self._plotter.get_region()
+                dpos = (pos[0][1], pos[1][1])
+                args = dpos + args
         self._axes_callback("axhspan", *args, **kwargs)
         # hack to preventy mpl from redrawing the patch
         # it seem to convert the patch into lines on every draw.
@@ -1219,7 +1212,7 @@ class asapplotter:
         """
         private method for plotting total power data
         """
-        from matplotlib.numerix import ma, array, arange, logical_not
+        from numpy import ma, array, arange, logical_not
         r=0
         nr = scan.nrow()
         a0,b0 = -1,-1
