@@ -5157,7 +5157,8 @@ Bool Imager::clean(const String& algorithm,
 	}
       }
       
-    }catch(exception& x){
+    }
+    catch(exception& x){
       
       os << LogIO::WARN << "Caught exception: " << x.what()
 	 << LogIO::POST;
@@ -5181,7 +5182,12 @@ Bool Imager::clean(const String& algorithm,
 
     return converged;
   } 
-  
+  catch (PSFZero&  x)
+    {
+      os << LogIO::WARN << x.what() << LogIO::POST;
+      savePSF(psfnames);
+      return True;
+    }  
   catch (exception &x) { 
     for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
       if ((images_p.nelements() > uInt(thismodel)) && (!images_p[thismodel].null())) {
@@ -5202,6 +5208,7 @@ Bool Imager::clean(const String& algorithm,
 
     return False;
   } 
+
   catch(...){
     //Unknown exception...
     throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
@@ -7844,6 +7851,7 @@ Bool Imager::createFTMachine()
     // pick up the setPAIncrement() method of PBWProjectFT without
     // this
     //
+    os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
     ((nPBWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
 
     if (doPointing) 
@@ -9514,7 +9522,7 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
     String qhError;
       
     logSink_p.clearLocally();
-    LogIO os(LogOrigin("imager", "setimage()"), logSink_p);
+    LogIO os(LogOrigin("imager", "iClean()"), logSink_p);
 
     if(!ms_p.null()) {
       //    if(hasValidMS_p){
