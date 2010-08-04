@@ -205,6 +205,7 @@ class immath_test1(unittest.TestCase):
     def tearDown(self):
         for img in imageList:
             os.system('rm -rf ' +img)
+            os.system('rm -rf input_test*')
                        
     
     def test_input1(self):
@@ -877,6 +878,7 @@ class immath_test2(unittest.TestCase):
     def tearDown(self):
         for img in imageList2:
             os.system('rm -rf ' +img)
+            os.system('rm -rf pol_test*')
                        
     def copy_img(self):
         '''Copy images to local disk'''
@@ -1206,6 +1208,8 @@ class immath_test2(unittest.TestCase):
             retValue['success'] = False
             retValue['error_msgs'] += "\nFull image calculation threw an exception: " + str(sys.exc_info()[0])
     
+        os.system('rm -rf '+outfile)
+        
         try:
             # subimage image test
             outfile = 'subimage_sum.im'
@@ -1226,6 +1230,7 @@ class immath_test2(unittest.TestCase):
             retValue['error_msgs'] += "\nSub image calculation threw an exception"
 
         self.rm_img()
+        os.system('rm -rf '+outfile)
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
@@ -1332,7 +1337,10 @@ class immath_test3(unittest.TestCase):
     
     def tearDown(self):
         for img in imageList4:
-            shutil.rmtree(img)        
+            shutil.rmtree(img)     
+        
+        os.system('rm -rf pola*')
+        os.system('rm -rf poli*')   
 
     def _comp(self, imagename, mode, outfile, expected, epsilon, polithresh=''):
         immath(imagename=imagename, outfile=outfile, mode=mode, polithresh=polithresh)
