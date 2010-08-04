@@ -1303,13 +1303,13 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 				<< "unambiguously match the image axis names"
 				<< LogIO::EXCEPTION;
 		}
-		outImage = new ::casac::image(reorderer->reorder());
-		delete reorderer;
+		outImage = new ::casac::image(reorderer->reorder(), False);
 	} catch (AipsError x) {
 		delete reorderer;
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
+	delete reorderer;
 	return outImage;
 }
 
