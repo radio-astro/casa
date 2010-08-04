@@ -1564,9 +1564,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // remap them using j.
       uInt j = 0;
       for(uInt k = 0; k < fieldid_p.nelements(); ++k){
-        if(inSrcIDs[fieldid_p[k]] > -1){
-          sourceRelabel_p[inSrcIDs[fieldid_p[k]]] = j;
-          ++j;
+        Int fldInSrcID = inSrcIDs[fieldid_p[k]];
+        
+        if(fldInSrcID > -1){
+          if(sourceRelabel_p[fldInSrcID] == -1){ // Multiple fields can use the same
+            sourceRelabel_p[fldInSrcID] = j;     // source in a mosaic.
+            ++j;
+          }
         }
       }
     }
@@ -5298,7 +5302,7 @@ Bool SubMS::fillAccessoryMainCols(){
     const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
     const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
     
-    for(uInt k = ant1.nrow() - 1; k--;){
+    for(Int k = ant1.nrow(); k--;){
       msc_p->antenna1().put(k, antNewIndex_p[ant1(k)]);
       msc_p->antenna2().put(k, antNewIndex_p[ant2(k)]);
     }
@@ -5489,9 +5493,8 @@ void SubMS::relabelIDs()
 {
   const ROScalarColumn<Int> inDDID(mscIn_p->dataDescId());
   const ROScalarColumn<Int> fieldId(mscIn_p->fieldId());
-  Int nrows = inDDID.nrow();
   
-  for(Int k = nrows - 1; k--;){
+  for(Int k = inDDID.nrow(); k--;){
     msc_p->dataDescId().put(k, spwRelabel_p[oldDDSpwMatch_p[inDDID(k)]]);
     msc_p->fieldId().put(k, fieldRelabel_p[fieldId(k)]);
   }
@@ -6224,8 +6227,8 @@ void SubMS::make_map(const Vector<Int>& mscol, Vector<Int>& mapper)
 {
   std::set<Int> valSet;
   
-  for(uInt i = mscol.nelements() - 1; i--;)  // Strange, but slightly more
-    valSet.insert(mscol[i]);                 // efficient than going forward.
+  for(Int i = mscol.nelements(); i--;)  // Strange, but slightly more
+    valSet.insert(mscol[i]);            // efficient than going forward.
   mapper.resize(valSet.size());
 
   uInt remaval = 0;
@@ -6245,8 +6248,8 @@ void SubMS::make_map(const ROScalarColumn<Int>& mscol,
 {
   std::set<Int> valSet;
   
-  for(uInt i = mscol.nrow() - 1; i--;)  // Strange, but slightly more
-    valSet.insert(mscol(i));    	// efficient than going forward.
+  for(Int i = mscol.nrow(); i--;)  // Strange, but slightly more
+    valSet.insert(mscol(i));       // efficient than going forward.
 
   uInt remaval = 0;
   for(std::set<Int>::const_iterator vs_iter = valSet.begin();
@@ -6491,9 +6494,8 @@ uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
   const Vector<Int>& ant2 = msc->antenna2().getColumn();
 
   std::set<Int> ants;
-  uInt endrow = ant1.nelements() - 1;
-  for(uInt i = endrow; i--;){   // Strange, but slightly more
-    ants.insert(ant1[i]);	// efficient than going forward.
+  for(Int i = ant1.nelements(); i--;){   // Strange, but slightly more
+    ants.insert(ant1[i]);	         // efficient than going forward.
     ants.insert(ant2[i]);
   }
   uInt nant = ants.size();
