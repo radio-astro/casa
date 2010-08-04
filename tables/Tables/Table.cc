@@ -440,10 +440,19 @@ void Table::open (const String& name, const String& type, int tableOption,
     if (btp != 0) {
 	baseTabPtr_p = btp;
     }else{
-	//# Check if the table exists.
-	if (! Table::isReadable (absName)) {
-	    throw (TableNoFile (absName));
-	}
+        //# Check if the table exists.
+        String desc = Table::fileName(absName);
+        File file (desc);
+        if (!file.exists()) {
+            throw TableNoDescFile(desc);
+        }
+        //# Read the file type and verify that it is a table
+        AipsIO ios (desc);
+        String t = ios.getNextType();
+        if (t != "Table") {
+            throw TableInvType(absName, "Table", t);
+        }
+
 	// Create the BaseTable object and add a PlainTable to the cache.
 	baseTabPtr_p = makeBaseTable (absName, type, tableOption,
 				      lockOptions, tsmOpt, True, 0);
