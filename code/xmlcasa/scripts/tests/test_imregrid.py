@@ -49,8 +49,9 @@ class imregrid_test(unittest.TestCase):
         os.system('rm -rf ' +out5)
 
         
-    def test1(self):      
-        ia.maketestimage(outfile = IMAGE)
+    def test1(self):    
+        myia = iatool.create()  
+        myia.maketestimage(outfile = IMAGE)
         default('imregrid')
         
         # identity regrid
@@ -58,8 +59,8 @@ class imregrid_test(unittest.TestCase):
                  template = IMAGE,
                  output = out1)
         
-        im1 = ia.newimage(IMAGE)
-        im2 = ia.newimage(out1)
+        im1 = myia.newimage(IMAGE)
+        im2 = myia.newimage(out1)
         
         im1.statistics()
         im2.statistics()
@@ -98,7 +99,7 @@ class imregrid_test(unittest.TestCase):
             rec1['coordsys']['coordsys']['direction0']['crpix'][1]*2.0]
         print rec1
         
-        ia.fromrecord(rec1, out2)
+        myia.fromrecord(rec1, out2)
         
         # First we need to remove the output file.
         if (  os.path.exists(out1) ):
@@ -123,20 +124,20 @@ class imregrid_test(unittest.TestCase):
         
         
         # shift by -13, 1 pixels
-        
+
         rec1 = im1.torecord()
         rec1['coordsys']['coordsys']['direction0']['crpix'] = [
             rec1['coordsys']['coordsys']['direction0']['crpix'][0]-13,
             rec1['coordsys']['coordsys']['direction0']['crpix'][1]+1]
         
-        ia.fromrecord(rec1, out3)
+        myia.fromrecord(rec1, out3)
+        myia.close()
         # First we need to remove the output file.
         if (  os.path.exists(out1 ) ):
               shutil.rmtree( out1)
         imregrid(imagename = IMAGE,
                  template = out3,
                  output = out1)
-        
         
         s1 = imstat(IMAGE)
         s2 = imstat(out1)
@@ -150,8 +151,10 @@ class imregrid_test(unittest.TestCase):
         rec1['coordsys']['coordsys']['direction0']['crpix'] = [
             rec1['coordsys']['coordsys']['direction0']['crpix'][0]+13,
             rec1['coordsys']['coordsys']['direction0']['crpix'][1]-1]
-        
-        ia.fromrecord(rec1, out3)
+        if (  os.path.exists(out3 ) ):
+            shutil.rmtree( out3)
+        myia.fromrecord(rec1, out3)
+        myia.close()
         imregrid(imagename = IMAGE,
                  template = out3,
                  output = out4)
@@ -181,6 +184,7 @@ class imregrid_test(unittest.TestCase):
         # Exercise various reference codes (no check on output)
         codes = cs.newcoordsys(direction=True).referencecode('dir', True)
         rec1 = im1.torecord()
+        im1.done()
         for ref in codes:
             print "Regrid to", ref
             if ref not in ['JMEAN', 'JTRUE', 'APP',
@@ -193,16 +197,14 @@ class imregrid_test(unittest.TestCase):
                            'ITRF', 'TOPO']:
                 rec1['coordsys']['coordsys']['direction0']['conversionSystem'] = ref
                 
-                ia.fromrecord(rec1, out5)
-        
+                myia.fromrecord(rec1, out5)
+                myia.close()
                 if (  os.path.exists(out1 ) ):
                     shutil.rmtree( out1 )
                 imregrid(imagename = IMAGE,
                          template = out5,
                          output = out1)
             
-        im1.done()
-
 def suite():
     return [imregrid_test]
     
