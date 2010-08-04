@@ -76,9 +76,10 @@ import unittest
 good_image = "reorder_in.fits"
 
 def run_reorder(imagename, outfile, order):
-    ia.open(imagename)
-    res = ia.reorder(outfile=outfile, order=order)
-    ia.done()
+    myia = iatool.create()
+    myia.open(imagename)
+    res = myia.reorder(outfile=outfile, order=order)
+    myia.close()
     return res
 
 def run_imtrans(imagename, outfile, order):
@@ -126,16 +127,18 @@ class imtrans_test(unittest.TestCase):
     def test_straight_copy(self):
         """No actual transposing"""
         imagename = good_image
-        ia.open(imagename)
-        expecteddata = ia.getchunk()
-        expectednames = ia.coordsys().names()
-        ia.done()
+        myia = iatool.create()
+        myia.open(imagename)
+        expecteddata = myia.getchunk()
+        expectednames = myia.coordsys().names()
+        myia.close()
         count = 0
         for order in ["012", 12, ['r', 'd', 'f'], ["righ", "declin", "freq"]]:
             for code in [run_reorder, run_imtrans]:
                 newim = code(imagename, "straight_copy_" + str(count), order)
                 gotdata = newim.getchunk()
                 gotnames = newim.coordsys().names()
+                newim.close()
                 self.assertTrue((expecteddata == gotdata).all())
                 self.assertTrue(expectednames == gotnames)
                 count += 1
@@ -143,10 +146,11 @@ class imtrans_test(unittest.TestCase):
     def test_transpose(self):
         """Test transposing"""
         imagename = good_image
-        ia.open(imagename)
-        expecteddata = ia.getchunk()
-        expectednames = ia.coordsys().names()
-        ia.done()
+        myia = iatool.create()
+        myia.open(imagename)
+        expecteddata = myia.getchunk()
+        expectednames = myia.coordsys().names()
+        myia.done()
         count = 0
         for order in ["120", 120, ['d', 'f', 'r'], ["declin", "freq", "righ"]]:
             for code in [run_reorder, run_imtrans]:
@@ -158,6 +162,7 @@ class imtrans_test(unittest.TestCase):
                         for k in range(inshape[2]):
                             self.assertTrue(expecteddata[i][j][k] == gotdata[j][k][i])
                 gotnames = newim.coordsys().names()
+                newim.close()
                 self.assertTrue(expectednames[0] == gotnames[2])
                 self.assertTrue(expectednames[1] == gotnames[0])
                 self.assertTrue(expectednames[2] == gotnames[1])
