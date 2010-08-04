@@ -1767,7 +1767,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     if(needRegridding){
 
-      os << LogIO::NORMAL << "Main table data array columns will be rewritten ..." <<  LogIO::POST;
+      os << LogIO::NORMAL << "Main table data array columns will be rewritten." <<  LogIO::POST;	    
 
       // create the "partner" columns, i.e. rename the old array columns to old...
       // and create new empty columns with the original names to hold the regridded values
@@ -1815,6 +1815,26 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ArrayColumn<Bool>* oldFLAG_CATEGORYColP = 0;
 
     if(needRegridding){
+
+      if(doHanningSmooth){
+	os << LogIO::NORMAL << "The following columns will be Hanning-smoothed: " <<  LogIO::POST;
+	if(!CORRECTED_DATACol.isNull()){
+	  os << LogIO::NORMAL << " CORRECTED_DATA " <<  LogIO::POST;
+	}
+	else{
+	  if(!DATACol.isNull()){
+	    os << LogIO::NORMAL << " DATA ";
+	  }
+	  if(!LAG_DATACol.isNull()){
+	    os << LogIO::NORMAL << " LAG_DATA ";
+	  }
+	  if(!FLOAT_DATACol.isNull()){
+	    os << LogIO::NORMAL << " FLOAT_DATA ";
+	  }
+	  os << LogIO::POST;
+	}
+      }
+
       // (create column objects for all "partners" of the array columns to be modified)
       if(!CORRECTED_DATACol.isNull()){
 	oldCORRECTED_DATAColP = new ArrayColumn<Complex>(ms_p, "oldCORRECTED_DATA");
@@ -1909,7 +1929,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // channel-number-dependent arrays need to be regridded.
       if(regrid[iDone]){
 
-	Bool doExtrapolate = False;
+	Bool doExtrapolate = True;
 
 	// regrid the complex columns
 	Array<Complex> yout;
@@ -1928,7 +1948,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 
 	if(transform[iDone]){
-	  doExtrapolate = True;
+
 	  // create frequency machine for this time stamp
 	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(theFieldDirV[iDone], mObsPosV[iDone], theObsTime));
 	  Unit unit(String("Hz"));
@@ -1955,6 +1975,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}
 	
+	Bool hanningDone = False;
 	if(!CORRECTED_DATACol.isNull()){
 	  yin.assign((*oldCORRECTED_DATAColP)(mainTabRow));
 
@@ -1972,6 +1993,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				     yinUnsmoothed, // the input
 				     yinFlagsUnsmoothed, // the input flags
 				     False);  // for flagging: good is not true
+	    hanningDone = True;
 	  }
 
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, // the new visibilities
@@ -1992,7 +2014,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!DATACol.isNull()){
 	  yin.assign((*oldDATAColP)(mainTabRow));
-	  if(doHanningSmooth){
+	  if(doHanningSmooth && !hanningDone){ // only smooth DATA if CORRECTED_DATA doesn't exist
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
 	    Array<Bool> yinFlagsUnsmoothed;
@@ -2009,7 +2031,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!LAG_DATACol.isNull()){
 	  yin.assign((*oldLAG_DATAColP)(mainTabRow));
-	  if(doHanningSmooth){
+	  if(doHanningSmooth && !hanningDone){ // only smooth LAG_DATA if CORRECTED_DATA doesn't exist
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
 	    Array<Bool> yinFlagsUnsmoothed;
@@ -2022,13 +2044,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!MODEL_DATACol.isNull()){
 	  yin.assign((*oldMODEL_DATAColP)(mainTabRow));
-	  if(doHanningSmooth){
-	    Array<Complex> yinUnsmoothed;
-	    yinUnsmoothed.assign(yin);
-	    Array<Bool> yinFlagsUnsmoothed;
-	    yinFlagsUnsmoothed.assign(yinFlags);
-	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
-	  }
+
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  MODEL_DATACol.put(mainTabRow, yout);
@@ -2043,7 +2059,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Array<Float> youtf;
 	if(!FLOAT_DATACol.isNull()){
 	  yinf.assign((*oldFLOAT_DATAColP)(mainTabRow));
-	  if(doHanningSmooth){
+	  if(doHanningSmooth && !hanningDone){ // only smooth FLOAT_DATA if CORRECTED_DATA doesn't exist
 	    Array<Float> yinfUnsmoothed;
 	    yinfUnsmoothed.assign(yinf);
 	    Array<Bool> yinFlagsUnsmoothed;
