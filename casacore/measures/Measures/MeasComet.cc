@@ -116,39 +116,57 @@ Int MeasComet::nelements() const {
 };
 
 Bool MeasComet::get(MVPosition &returnValue, Double date) const {
-  returnValue = MVPosition();
-  if (!fillMeas(date)) return False;
+  if(!fillMeas(date)){
+    returnValue = MVPosition();
+    return False;
+  }
+  
   Double f = (date - ldat_p[0][0])/dmjd_p;
-  returnValue =
-    MVPosition(Quantity(ldat_p[1][MeasComet::RHO], "AU"),
-	       Quantity(ldat_p[1][MeasComet::RA], "deg"),
-	       Quantity(ldat_p[1][MeasComet::DEC], "deg"))*f -
-    MVPosition(Quantity(ldat_p[0][MeasComet::RHO], "AU"),
-	       Quantity(ldat_p[0][MeasComet::RA], "deg"),
-	       Quantity(ldat_p[0][MeasComet::DEC], "deg"))*(f-1);
+
+  returnValue = getRelPosition(0);
+  const MVPosition deltaX(getRelPosition(1) - returnValue);
+  returnValue += f * deltaX;
   return True;
 }
 
+MVPosition MeasComet::getRelPosition(const uInt index) const
+{
+  return MVPosition(Quantity(ldat_p[index][MeasComet::RHO], "AU"),
+                    Quantity(ldat_p[index][MeasComet::RA], "deg"),
+                    Quantity(ldat_p[index][MeasComet::DEC], "deg"));
+}
+
 Bool MeasComet::getDisk(MVDirection &returnValue, Double date) const {
-  returnValue = MVDirection();
-  if (!fillMeas(date)) return False;
+  if(!fillMeas(date)){
+    returnValue = MVDirection();
+    return False;
+  }
+  
   Double f = (date - ldat_p[0][0])/dmjd_p;
-  returnValue =
-    MVDirection(Quantity(ldat_p[1][MeasComet::DISKLONG], "deg"),
-	       Quantity(ldat_p[1][MeasComet::DISKLAT], "deg"))*f -
-    MVDirection(Quantity(ldat_p[0][MeasComet::DISKLONG], "deg"),
-	       Quantity(ldat_p[0][MeasComet::DISKLAT], "deg"))*(f-1);
+  returnValue = getDiskLongLat(0);
+  const MVDirection ll_on_second_date(getDiskLongLat(1));
+  Double sep = returnValue.separation(ll_on_second_date);
+  Double pa = returnValue.positionAngle(ll_on_second_date);
+  
+  returnValue.shiftAngle(f * sep, pa);
   return True;
+}
+
+MVDirection MeasComet::getDiskLongLat(const uInt index) const
+{
+  return MVDirection(Quantity(ldat_p[index][MeasComet::DISKLONG], "deg"),
+                     Quantity(ldat_p[index][MeasComet::DISKLAT], "deg"));
 }
 
 Bool MeasComet::getRadVel(MVRadialVelocity &returnValue, Double date) const {
   returnValue = 0.0;
   if (!fillMeas(date)) return False;
   Double f = (date - ldat_p[0][0])/dmjd_p;
-  returnValue =
-    MVRadialVelocity(Quantity(ldat_p[1][MeasComet::RADVEL]*f -
-			      ldat_p[0][MeasComet::RADVEL]*(f-1.0),
-			      "AU/d"));
+  Double radvel = ldat_p[0][MeasComet::RADVEL];
+  Double deltarv = ldat_p[1][MeasComet::RADVEL] - radvel;
+  
+  radvel += f * deltarv;
+  returnValue = MVRadialVelocity(Quantity(radvel, "AU/d"));
   return True;
 }
 
