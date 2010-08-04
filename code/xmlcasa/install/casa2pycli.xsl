@@ -578,14 +578,14 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:choose><xsl:text>]</xsl:text>
 </xsl:when>
 <xsl:when test="@type='record'">
-<xsl:text>[</xsl:text><xsl:choose>
+<xsl:text>{</xsl:text><xsl:choose>
 <xsl:when test="count(aps:value)">
 <xsl:call-template name="handlevalue"/>
 </xsl:when>
 <xsl:otherwise>
 <xsl:value-of select="."/>
 </xsl:otherwise>
-</xsl:choose><xsl:text>]</xsl:text>
+</xsl:choose><xsl:text>}</xsl:text>
 </xsl:when>
 <xsl:otherwise>
 <xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of>
