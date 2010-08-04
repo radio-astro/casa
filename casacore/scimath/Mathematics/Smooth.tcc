@@ -83,7 +83,12 @@ void Smooth<T>::hanning(Vector<T>& out, Vector<Bool>& outmask,
       outmask[0] = True==TrueIsGood;
     }
     else{
-      out[0] = in[0];
+      if(mask[0]==TrueIsGood){
+	out[0] = (*w)[1]*in[0] + (*w)[2]*in[1];
+      }
+      else{
+	out[0] = in[0];
+      }
       outmask[0] = False==TrueIsGood;
     }
     m = (mask[nelm1]==TrueIsGood) + 2*(mask[nelm1-1]==TrueIsGood);
@@ -93,7 +98,12 @@ void Smooth<T>::hanning(Vector<T>& out, Vector<Bool>& outmask,
       outmask[nelm1] = True==TrueIsGood;
     }
     else{
-      out[nelm1] = in[nelm1];
+      if(mask[nelm1]==TrueIsGood){
+	out[nelm1] = (*w)[1]*in[nelm1] + (*w)[0]*in[nelm1-1];
+      }
+      else{
+	out[nelm1] = in[nelm1];
+      }
       outmask[nelm1] = False==TrueIsGood;
     }
 
@@ -109,7 +119,12 @@ void Smooth<T>::hanning(Vector<T>& out, Vector<Bool>& outmask,
       outmask[i] = True==TrueIsGood;
     }
     else{
-      out[i] = in[i];
+      if(mask[i]==TrueIsGood){
+	out[i] = (*w)[0]*in[i-1] + (*w)[1]*in[i] + (*w)[2]*in[i+1];
+      }
+      else{
+	out[i] = in[i];
+      }
       outmask[i] = False==TrueIsGood;
     }
   }
