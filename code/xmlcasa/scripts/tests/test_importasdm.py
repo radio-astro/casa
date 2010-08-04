@@ -323,6 +323,7 @@ class asdmv1_import(unittest.TestCase):
             tb.close()
             tb.open(reimp_msname)
             nrowsreimp = tb.nrows()
+            tb.close()
             print "Reimported MS contains ", nrowsreimp, "integrations."
             if(not nrowsreimp==nrowsorig):
                 print "Numbers of integrations disagree."
