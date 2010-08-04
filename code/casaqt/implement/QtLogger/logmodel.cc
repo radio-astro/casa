@@ -292,7 +292,7 @@ bool LogModel::insert(int row, const QString &msg)
    if (msg.isEmpty())
       return false;
    QList<QVariant> columnData;
-   QDateTime dt = QDateTime::currentDateTime();
+   QDateTime dt = QDateTime::currentDateTime().toUTC();
    columnData << dt.toString(Qt::ISODate).replace("T", " ");
    columnData << "NOTE";
    columnData << QString(getenv("USER"));
