@@ -93,13 +93,28 @@ Bool MeasIERS::get(Double &returnValue,
     if (!initMeas(which)) return False;
     if (!fillMeas(which, date)) {
       if (!msgDone) {
-	msgDone = True;
 	LogIO os(LogOrigin("MeasIERS",
 			   String("fillMeas(MeasIERS::Files, Double)"),
 			   WHERE));
-	os << LogIO::NORMAL3 << 
-	  String("High precision reference frame information not available for requested JD ") << date <<
-	  LogIO::POST;
+        Time now;       // current time
+        
+        if(date > now.modifiedJulianDay()){
+          // People using times from the future are almost certainly simulating
+          // data, and, even if they would be upset by the IERS table not being
+          // available, there is not much they can do about it.
+          os << LogIO::NORMAL3
+             << "High precision Earth axis data is not yet available for requested JD "
+             << date
+             << LogIO::POST;
+        }
+        else{
+          os << LogIO::NORMAL
+             << "Requested JD " << date
+             << " is outside the range of the IERS (Earth axis data) table." 	 
+             << "\nCalculations will proceed with less precision"
+             << LogIO::POST;
+        }
+	msgDone = True;
       };
       return False;
     };
@@ -142,9 +157,10 @@ Bool MeasIERS::initMeas(MeasIERS::Files which) {
       LogIO os(LogOrigin("MeasIERS",
 			 String("initMeas(MeasIERS::Files)"),
 			 WHERE));
-      os << LogIO::NORMAL3 << 
-	String("High precision reference frame table ") + tp[which] + " not available" << 
-      LogIO::POST;
+      os << LogIO::NORMAL1
+         << "Cannot read IERS (Earth axis data) table " << tp[which]
+         << "\nCalculations will proceed with lower precision"
+         << LogIO::POST;
       return False;
     };
     MeasIERS::openNote(&MeasIERS::closeMeas);
