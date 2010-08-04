@@ -77,6 +77,7 @@
 #include <set>
 #include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/Smooth.h>
+#include <casa/Quanta/MVTime.h>
 
 namespace casa {
   
@@ -4727,7 +4728,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    // check that the intervals are the same
 	    if(intervalCol(nextRow) != theInterval){
-	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ", "
+	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
 		 << " but the two rows have different intervals: " << theInterval
@@ -4737,7 +4738,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    // check that the exposures are the same
 	    if(exposureCol(nextRow) != theExposure){
-	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ", "
+	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
 		 << " but the two rows have different exposures: " << theExposure
@@ -4748,7 +4749,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // found a matching row
 	    Int theSPWId = DDtoSPWIndex(DDIdCol(nextRow));
 	    if(SPWtoRowIndex.isDefined(theSPWId)){ // there should be a one-to-one relation: SPW <-> matching row
-	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ","
+	      os << LogIO::SEVERE << "Error: for time " << MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ","
 		 << theAntenna2 << "), field "<< theField << " found more than one row for SPW "
 		 << theSPWId << LogIO::POST;
 	      return False;
@@ -4767,9 +4768,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  
 	  if(nMatchingRows < nSpwsToCombine){
 	    if(nIncompleteCoverage==0){
-	      ostringstream oss;
-	      oss << mainTimeMeasCol(mainTabRow);
-	      os << LogIO::WARN << "Incomplete coverage of combined SPW starting at timestamp " << oss.str()
+	      os << LogIO::WARN << "Incomplete coverage of combined SPW starting at timestamp " 
+		 <<  MVTime(timeCol(mainTabRow)/C::day).string(MVTime::DMY,7)
 		 << ", baseline ( " << theAntenna1 << ", " << theAntenna2 << " )" << endl
 		 << "In this and further affected rows, the data arrays will be padded with zeros and corresponding channels flagged." <<  LogIO::POST;
 	    }
