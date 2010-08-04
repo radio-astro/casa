@@ -125,6 +125,23 @@ public:
     ~TableNoFile () throw();
 };
 
+// <summary>
+// Table error; table description not found
+// </summary>
+// <use visibility=export>
+
+// <synopsis> 
+// Table description file with this filename could not be found.
+// </synopsis> 
+
+class TableNoDescFile : public TableError {
+public:
+    // This constructor generates a message telling that the a table
+    // or description file does not exist.
+    TableNoDescFile (const String& filename,Category c=INVALID_ARGUMENT);
+    ~TableNoDescFile () throw();
+};
+
 
 // <summary>
 // Table error; no name given to table description
@@ -183,7 +200,8 @@ class TableInvType : public TableError {
 public:
     // This constructor generates a message that the in table type
     // mismatches the table type in the file.
-    TableInvType (const String& typeIn, const String& typeFile, Category c=CONFORMANCE);
+    TableInvType (const String& tableName, const String& typeIn,
+                  const String& typeFile, Category c=CONFORMANCE);
     ~TableInvType () throw();
 };
 
