@@ -1373,8 +1373,16 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
 
 	// Make the convolver
 	Image2DConvolver<Float> ic;
-	ic.convolve(*itsLog, *pImOut, subImage, kernelType, axes3, parameters,
-			autoScale, scale, True);
+    try {
+        ic.convolve(
+            *itsLog, *pImOut, subImage, kernelType, axes3,
+            parameters, autoScale, scale, True
+        );
+    }
+    catch (AipsError x) {
+        delete pImOut;
+        RETHROW(x);
+    }
 
 	// Return image
 	return pImOut;
