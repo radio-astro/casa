@@ -15,7 +15,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	#Python script
 
 	# make fg tool local 
-	fg = casac.homefinder.find_home_by_name('fgHome').create()	
+	fg = casac.homefinder.find_home_by_name('flaggerHome').create()	
 
 	try:
                 casalog.origin('importasdm')
