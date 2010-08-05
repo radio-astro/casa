@@ -36,6 +36,24 @@
 
 namespace casa {
 
+
+class PlotMSToolsTab;  /* fwd */
+
+// Registered with all Canvases so Tracker can act upon key presses
+class TrackerKeyHandler : public PlotKeyEventHandler  {
+	
+	public:
+		TrackerKeyHandler(PlotMSToolsTab *);
+				
+		virtual void handleKey(const PlotKeyEvent& event);
+	
+	private: 
+		PlotMSToolsTab *tools_tab;
+};
+
+
+
+
 // Subclass of PlotMSTab that handles the tools for the current plot.  Watches
 // no parameters.
 class PlotMSToolsTab : public PlotMSTab, Ui::ToolsTab,
@@ -60,21 +78,37 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged.  Currently
     // does nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag) { }
+            int updateFlag) { (void)params,(void)updateFlag; }
     
     
     // Show/hide the iteration buttons on this tab.
     void showIterationButtons(bool show);
     
+    
+
+    
 public slots:
     // Slot for when all tools are turned off, and the "None" radio button
     // should be checked.
     void toolsUnchecked();
+
+    // Tracker "snapshot" feature. Copies value in live display
+    // into multi-line text box for user to copy/paste.
+    // Made a slot in case it's useful to connect to a signal, but
+    // for the initial version, this is not done.
+    void takeSnapshotOfTrackerValue();
+    
+    // Erase contents of the text box holding recorded tracker values
+    void clearRecordedValues();
     
 protected:
     // Implements PlotTrackerToolNotifier::notifyTrackerChanged().  Updates the
     // tracker information in the line edit, if the proper checkbox is toggled.
     void notifyTrackerChanged(PlotTrackerTool& tool);
+
+public:
+    TrackerKeyHandler *tracker_key_handler;
+    
 };
 
 }

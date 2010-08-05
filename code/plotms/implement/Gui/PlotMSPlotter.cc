@@ -123,6 +123,7 @@ bool PlotMSPlotter::canvasDrawBeginning(
 	PlotOperationPtr drawOperation,
     bool drawingIsThreaded, int drawnLayersFlag
 ) {
+	(void)drawOperation,(void)drawnLayersFlag;
     if(!drawingIsThreaded) {
         cout << "PlotMSPlotter does not currently support threading for "
              << "plotter implementations that do not do threaded drawing "
@@ -369,8 +370,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::TOOL_ANNOTATE_RECTANGLE,
                          actionAnnotateRectangle);
     
-    itsActionMap_.insert(PlotMSAction::TRACKER_HOVER, actionTrackerHover);
-    itsActionMap_.insert(PlotMSAction::TRACKER_DISPLAY, actionTrackerDisplay);
+    itsActionMap_.insert(PlotMSAction::TRACKER_ENABLE_HOVER, actionTrackerHover);
+    itsActionMap_.insert(PlotMSAction::TRACKER_ENABLE_DISPLAY, actionTrackerDisplay);
     
     itsActionMap_.insert(PlotMSAction::STACK_BACK, actionStackBack);
     itsActionMap_.insert(PlotMSAction::STACK_BASE, actionStackBase);
@@ -562,6 +563,7 @@ bool PlotMSPlotter::_triggerAction(PlotMSAction& action) {
 bool PlotMSPlotter::exportPlot(
 		const PlotExportFormat& format, const bool interactive, const bool async
 ) {
+	(void)async;
 	PlotMSAction action(PlotMSAction::PLOT_EXPORT);
 	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
 	action.setParameter(PlotMSAction::P_FILE, format.location);
@@ -577,6 +579,7 @@ bool PlotMSPlotter::exportPlot(
 	action.setParameter(PlotMSAction::P_INTERACTIVE, interactive);
 
 	_triggerAction(action);
+	return true;
 }
 
 void PlotMSPlotter::currentThreadFinished() {
