@@ -5184,21 +5184,13 @@ Bool Imager::clean(const String& algorithm,
   } 
   catch (PSFZero&  x)
     {
-      os << LogIO::WARN << x.what() << LogIO::POST;
+      //os << LogIO::WARN << x.what() << LogIO::POST;
       savePSF(psfnames);
+      this->unlock();
+      throw(AipsError(String("PSFZero  ")+ x.getMesg()));
       return True;
     }  
   catch (exception &x) { 
-    for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
-      if ((images_p.nelements() > uInt(thismodel)) && (!images_p[thismodel].null())) {
-             images_p[thismodel]->table().relinquishAutoLocks(True);
-             images_p[thismodel]->table().unlock();
-	 }
-      if ((residuals_p.nelements()> uInt(thismodel)) && (!residuals_p[thismodel].null())) {
-             residuals_p[thismodel]->table().relinquishAutoLocks(True);
-             residuals_p[thismodel]->table().unlock();
-	 }
-    }
     this->unlock();
     throw(AipsError(x.what()));
 
@@ -8685,7 +8677,16 @@ Bool Imager::unlock(){
     if(!weathertab_p.isNull())
       weathertab_p.unlock();
   }
-
+  for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
+    if ((images_p.nelements() > uInt(thismodel)) && (!images_p[thismodel].null())) {
+      images_p[thismodel]->table().relinquishAutoLocks(True);
+      images_p[thismodel]->table().unlock();
+    }
+    if ((residuals_p.nelements()> uInt(thismodel)) && (!residuals_p[thismodel].null())) {
+      residuals_p[thismodel]->table().relinquishAutoLocks(True);
+      residuals_p[thismodel]->table().unlock();
+    }
+  }
   if(lockCounter_p > 0 )
     --lockCounter_p;
   return True ; 
@@ -9504,8 +9505,7 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
   
 }
 
-  Bool Imager::iClean(const String& algorithm, const Int niter, const Double gain,
-		      //		      const String& threshold, 
+  Bool Imager::iClean(const String& algorithm, const Int niter, const Double gain, 
 		      const Quantity& threshold,
 		      const Bool displayprogress,
 		      const Vector<String>& model,
@@ -9515,46 +9515,33 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 		      const Vector<String>& residual,
 		      const Vector<String>& psfnames,
 		      const Bool interactive, const Int npercycle,
-		      const String& masktemplate, const Bool async)
+		      const String& masktemplate)
   {
     Bool rstat(False);
-    QuantumHolder qhThreshold;
-    String qhError;
       
     logSink_p.clearLocally();
     LogIO os(LogOrigin("imager", "iClean()"), logSink_p);
 
     if(!ms_p.null()) {
-      //    if(hasValidMS_p){
-      try {
-	// if (!qhThreshold.fromString(qhError,threshold))
-	//   os << qhError << LogIO::EXCEPTION;
-
-	//	Vector<String> amodel(toVectorString(model));
+      //try
+       {
+       
 	Vector<String> amodel(model);
 	Vector<Bool>   fixed(keepfixed);
-	//	Vector<String> amask(toVectorString(mask));
 	Vector<String> amask(mask);
-	//	Vector<String> aimage(toVectorString(image));
 	Vector<String> aimage(image);
-	//	Vector<String> aresidual(toVectorString(residual));
 	Vector<String> aresidual(residual);
-	//	Vector<String> apsf(toVectorString(psfnames));
 	Vector<String> apsf(psfnames);
 	if( (apsf.nelements()==1) && apsf[0]==String(""))
 	  apsf.resize();
+	cerr << "threshold " << threshold << " amode " << amodel << " fixed " << fixed  << " clist " << complist << " amask " << amask << " ima " << aimage << " res " << aresidual << " psf " << apsf << endl;
 	if(!interactive){
-	  rstat = clean(String(algorithm), niter, gain, 
-			//			qhThreshold.asQuantity(), displayprogress, 
+	  rstat = clean(String(algorithm), niter, gain,  
 			threshold, displayprogress, 
 			amodel, fixed, String(complist), amask,  
 			aimage, aresidual, apsf);
 	}
 	else{
-	  /*if(amodel.nelements() > 1){
-	    throw(AipsError("Interactive clean in multifield mode is not supported yet"));
-	    }
-	  */
 	  if((amask.nelements()==0) || (amask[0]==String(""))){
 	    amask.resize(amodel.nelements());
 	    for (uInt k=0; k < amask.nelements(); ++k){
@@ -9574,7 +9561,6 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 	  Int continter=0;
 	  Int elniter=npercycle;
 	  ostringstream oos;
-	  //	  qhThreshold.asQuantity().print(oos);
 	  threshold.print(oos);
 	  String thresh=String(oos);
 	  if(String(masktemplate) != String("")){
@@ -9584,7 +9570,6 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 	  else {
 	    // do a zero component clean to get started
 	    clean(String(algorithm), 0, gain, 
-		  //			     qhThreshold.asQuantity(), displayprogress,
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
@@ -9670,10 +9655,10 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 	    }
 	  }
 	}
-      } catch  (AipsError x) {
-	os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	RETHROW(x);
-      }
+       } //catch  (AipsError x) {
+       //os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //	RETHROW(x);
+       //  }
     } else {
       os << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
     }

@@ -465,9 +465,9 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         #   else:
         #        substr=substr+'_spw_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
         ####new version to keep filename small
-        substr='Temp_'+string.join(random.sample(char_set,8), sep='')
+        substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
         while (os.path.exists(substr+'.model')):
-            substr='Temp_'+string.join(random.sample(char_set,8), sep='')
+            substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
         ###############
         imlist.append(substr)
         cfcachelist.append(cfcache+'_'+str(k));
@@ -492,13 +492,17 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             print 'command is ', runcomm,cfcachelist[k];
             out[k]=c.odo(runcomm,k)
         over=False
+        printkounter=0
         while(not over):
             time.sleep(5)
+            #printkounter +=1
             overone=True
             for k in range(numcpu):
                 #print 'k', k, out[k]
-                overone=(overone and c.check_job(out[k],False)) 
-                #print 'overone', overone 
+                overone=(overone and c.check_job(out[k],False))
+                #if((printkounter==10) and not(c.check_job(out[k],False))):
+                #    print 'job ', k, 'is waiting'
+                #    printkounter=0
             over=overone
         residual=imagename+'.residual'
         psf=imagename+'.psf'

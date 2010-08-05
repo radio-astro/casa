@@ -1,6 +1,7 @@
 import os
 from taskinit import *
 import time
+import numpy as np
 from cleanhelper import *
 class imagecont():
     def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural'):
@@ -26,6 +27,7 @@ class imagecont():
         self.painc=360.0
         self.pblimit=0.1
         self.dopbcorr=True
+        self.novaliddata=False
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
         self.epjtablename=''
@@ -43,17 +45,30 @@ class imagecont():
 ####
         #imname=imname+'_%02d'%(j)
             im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
-
+            if(np.sum(numchan)==0):
+                self.novaliddata=True
+                ###make blanks
+                im.make(imname+'.image')
+                im.make(imname+'.residual')
+                im.make(imname+'.model')
+                im.make(imname+'.psf')
+                return
             im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
-
             im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, pastep=self.painc, pblimit=self.pblimit, cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol)
         #im.regionmask(mask='lala.mask', boxes=[[0, 0, 3599, 3599]])
         #im.setmfcontrol(cyclefactor=0.0)
         if(not self.imageparamset):
-            im.clean(algorithm='mfclark', niter=0, threshold='0.05mJy', model=imname+'.model', image=imname+'.image', residual=imname+'.residual', psfimage=imname+'.psf')
+            try:
+                im.clean(algorithm='mfclark', niter=0, threshold='0.05mJy', model=imname+'.model', image=imname+'.image', residual=imname+'.residual', psfimage=imname+'.psf')
+            except Exception, instance:
+                if(string.count(instance.message, 'PSFZero') >0):
+                    self.novaliddata=True
+                else:
+                    raise instance
         else:
-            im.restore(model=imname+'.model',  image=imname+'.image', residual=imname+'.residual')
+            if(self.novaliddata):
+                im.restore(model=imname+'.model',  image=imname+'.image', residual=imname+'.residual')
             
         #im.done()
         self.imageparamset=True
