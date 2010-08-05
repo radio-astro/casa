@@ -440,7 +440,15 @@ void Table::open (const String& name, const String& type, int tableOption,
     if (btp != 0) {
 	baseTabPtr_p = btp;
     }else{
-        //# Check if the table exists.
+        //# Check if the table directory exists.
+        File dir(absName);
+        if (!dir.exists()) {
+            throw TableNoFile(absName);
+        }
+        if (!dir.isDirectory()) {
+            throw TableNoDir(absName);
+        }
+        //# Check if the table description exists.
         String desc = Table::fileName(absName);
         File file (desc);
         if (!file.exists()) {

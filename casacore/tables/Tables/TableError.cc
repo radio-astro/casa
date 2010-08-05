@@ -63,6 +63,12 @@ TableNoFile::TableNoFile (const String& name,Category c)
 TableNoFile::~TableNoFile () throw()
 {}
 
+TableNoDir::TableNoDir (const String& name,Category c)
+: TableError(name + " is not a directory",c)
+{}
+TableNoDir::~TableNoDir () throw()
+{}
+
 TableNoDescFile::TableNoDescFile (const String& filename,Category c)
 : TableError(filename.empty() ? String("No table name given at open") :
 	                      "File " + filename + " does not exist",c)

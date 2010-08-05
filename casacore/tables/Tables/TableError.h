@@ -125,6 +125,24 @@ public:
     ~TableNoFile () throw();
 };
 
+
+// <summary>
+// Table error; path is not a directory
+// </summary>
+// <use visibility=export>
+
+// <synopsis> 
+// Table directory with this name could not be found.
+// </synopsis> 
+
+class TableNoDir : public TableError {
+public:
+    // This constructor generates a message telling that the 
+    // table directory with the given name does not exist.
+    TableNoDir (const String& name,Category c=INVALID_ARGUMENT);
+    ~TableNoDir () throw();
+};
+
 // <summary>
 // Table error; table description not found
 // </summary>
