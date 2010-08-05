@@ -72,7 +72,7 @@ class imagecont():
                 else:
                     raise instance
         else:
-            if(self.novaliddata):
+            if(not self.novaliddata):
                 im.restore(model=imname+'.model',  image=imname+'.image', residual=imname+'.residual')
             
         #im.done()
