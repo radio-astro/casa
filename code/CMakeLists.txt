@@ -57,7 +57,6 @@ if( NOT USE_LIBCASACORE )
   set( USE_LIBCASACORE False )
 endif()
 
-
 # Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE RelWithDebInfo )
@@ -89,6 +88,16 @@ if( NOT arch AND EXISTS ${casaroot}/aipshosts )
 endif()
 
 set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
+
+# On Linux x86_64 add the (gcc specific) -fno-omit-frame-pointer
+# flag to debug builds
+if( CMAKE_SYSTEM_NAME STREQUAL Linux AND
+    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
+  foreach( _c CXX C FORTRAN )
+    set( CMAKE_${_c}_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
+    set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
+  endforeach()
+endif()
 
 if (CMAKE_CROSSCOMPILING)
   dump( CMAKE_HOST_SYSTEM )
