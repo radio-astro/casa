@@ -34,6 +34,9 @@ class imagecont():
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
         origname=msname
+        ###either psf 0 or no channel selected
+        if(self.novaliddata):
+            return
         #j=start
         #end=start+numchan-1
         #spwstring=str(spw)+':'+str(start)+'~'+str(end)
@@ -64,6 +67,8 @@ class imagecont():
             except Exception, instance:
                 if(string.count(instance.message, 'PSFZero') >0):
                     self.novaliddata=True
+                    ###make a blank image
+                    im.make(imname+'.image')
                 else:
                     raise instance
         else:
