@@ -67,9 +67,9 @@ CASAPPLIB := -L$(CASALIB) -latnf $(CORELIB) \
 
 # darwin specific CASA flags
 ifneq (,$(findstring $(CASAARCH)", "darwin"))
-   CASAPPLIB += -llapack -lblas
-else
    CASAPPLIB += -framework vecLib
+else
+   CASAPPLIB += -llapack -lblas
 endif
 
 # python
