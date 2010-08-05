@@ -21,8 +21,12 @@ def compare(test, standard):
     standardFile = open(standard,'r')
     standardList = standardFile.readlines()
     if (testList == standardList):
+        testList.close()
+        standardFile.close()
         return True
     else:
+        testList.close()
+        standardFile.close()
         return False
 #=============================================================================
 
@@ -97,8 +101,8 @@ def diffMetadata(testOut, standardOut, prefix=""):
 
     print "  - Comparing all non-floats in listing (ignore spaces)"
 
-    testList = open(testOut,'r').readlines()
-    stndList = open(standardOut,'r').readlines()
+    testList = open(testOut,'r')    
+    stndList = open(standardOut,'r')
 
     #                     Pattern                        Substitution
     unwanted = ((re.compile(r"[ |]([+-]?[0-9]*\.[0-9]+)"), 'x'), # floats
@@ -112,7 +116,7 @@ def diffMetadata(testOut, standardOut, prefix=""):
         replaced by the substitutions.
         """
         newList = []
-        for line in linelist:
+        for line in linelist.readlines():
             filtered = line
             for pat, subst in unwanted:
                 filtered = pat.sub(subst, filtered)
@@ -124,6 +128,8 @@ def diffMetadata(testOut, standardOut, prefix=""):
 
     # If everything after filtering is equal, return True
     if newTestList == newStndList:
+        testList.close()
+        stndList.close()
         return True
     
     # else... do the rest
@@ -146,6 +152,10 @@ def diffMetadata(testOut, standardOut, prefix=""):
     # Restore stdout
     sys.stdout = sys.__stdout__
 
+    # close files
+    testList.close()
+    stndList.close()
+    
     return False
 #=============================================================================
 
@@ -177,6 +187,8 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
     # Verify same number of lines
     if ( len(standardList) != len(testList) ):
         print "- Standard and test files do not have the same number of lines."
+        testFile.close()
+        standardFile.close()
         return False
 
     # Initialize some variables
@@ -298,6 +310,10 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
     # Restore stdout
     sys.stdout = sys.__stdout__
     
+    # cleanup
+    testFile.close()
+    standardFile.close()
+    
     return equal
 
 #=============================================================================
@@ -411,6 +427,7 @@ def reduce(filename, N):
 
     #for i in range(20): print reducedListing[i]
 
+    infile.close()
     return reducedListing
 #=============================================================================
 
