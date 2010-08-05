@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import commands
+import numpy
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -365,6 +366,52 @@ class clean_test2(unittest.TestCase):
                     
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+class clean_test3(unittest.TestCase):
+
+    # Input and output names#    msfile = 'ngc7538_ut.ms'
+    #msfile = '0556kf.ms'
+    msfile = 'outlier_ut.ms'
+    res = None
+    img = ['cleantest3a','cleantest3b']
+
+    def setUp(self):
+        self.res = None
+        default(clean)
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        shutil.copytree(datapath+self.msfile, self.msfile)
+
+    def tearDown(self):
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+
+        #os.system('rm -rf ' + self.img[0]+'* ')
+        #os.system('rm -rf ' + self.img[1]+'* ')
+	for imext in ['.image','.model','.residual','.psf']:
+	    shutil.rmtree(self.img[0]+imext)
+	    shutil.rmtree(self.img[1]+imext)
+
+    def testCAS1972(self):
+        """Clean test3:test bug fixes: CAS-1972"""
+        self.res= clean(vis=self.msfile,imagename=self.img,mode="mfs",interpolation="linear",
+                        niter=100, psfmode="clark", 
+                        imsize=[[512, 512], [512, 512]],
+                        cell="0.0001arcsec", phasecenter=['J2000 05h59m32.03313 23d53m53.9267', 
+                                                          'J2000 05h59m32.03313 23d53m53.9263'],
+                        weighting="natural",pbcor=False,minpb=0.1)
+
+        self.assertEqual(self.res,None)
+        for im in self.img:
+            self.assertTrue(os.path.exists(im+'.image'))
+        stat0 = imstat(self.img[0]+'.model')
+        stat1 = imstat(self.img[1]+'.model')
+        self.assertEqual(stat0['max'],stat1['max'])
+        self.assertTrue(all(stat0['maxpos']==numpy.array([256,256,0,0])) and
+               all(stat1['maxpos']==numpy.array([256,260,0,0])))
+
 
 def suite():
     return [clean_test1]
