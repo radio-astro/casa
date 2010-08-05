@@ -33,6 +33,9 @@ class hanningsmooth_test(unittest.TestCase):
         if (os.path.exists(self.out)):
             os.system('rm -rf ' + self.out)
         
+        shutil.rmtree('mynewms.ms',ignore_errors=True)
+
+        
     def checkcol(self,table,colname):
         '''Check if requested column exists'''
         tb.open(table)
@@ -135,8 +138,6 @@ class hanningsmooth_test(unittest.TestCase):
         self.res = hanningsmooth(vis=self.msfile, outputvis='mynewms.ms')
         self.assertTrue(self.checkcol('mynewms.ms', 'DATA'))
         
-
-
 
 def suite():
     return [hanningsmooth_test]
