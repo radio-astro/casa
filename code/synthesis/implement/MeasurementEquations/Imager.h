@@ -377,7 +377,7 @@ class Imager
 	      const Vector<String>& residual,
 	      const Vector<String>& psfnames,
 	      const Bool interactive, const Int npercycle,
-	      const String& masktemplate, const Bool async);
+	      const String& masktemplate);
   
   // MEM algorithm
   Bool mem(const String& algorithm,
