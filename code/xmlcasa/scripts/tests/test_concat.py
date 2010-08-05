@@ -82,11 +82,11 @@ class test_concat(unittest.TestCase):
         shutil.rmtree(msname,ignore_errors=True)
 
     def test1(self):
-        '''case 1: 4 parts, same sources but different spws'''
+        '''Concat 1: 4 parts, same sources but different spws'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
         
-        shutil.rmtree(msname,ignore_errors=True)
         self.res = concat(vis=['part1.ms','part2.ms','part3.ms','part4.ms'],concatvis=msname)
+        self.assertEqual(self.res,None)
 
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
@@ -172,10 +172,10 @@ class test_concat(unittest.TestCase):
 
 
     def test2(self):
-        ''' case 2: 3 parts, different sources, different spws '''
+        '''Concat 2: 3 parts, different sources, different spws '''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
-        shutil.rmtree(msname,ignore_errors=True)
         self.res = concat(vis=['part1.ms','part2-mod.ms','part3.ms'],concatvis=msname)
+        self.assertEqual(self.res,None)
         
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
@@ -261,10 +261,10 @@ class test_concat(unittest.TestCase):
 
 
     def test3(self):
-        ''' case 3: 3 parts, different sources, same spws'''
+        '''Concat 3: 3 parts, different sources, same spws'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
-        shutil.rmtree(msname,ignore_errors=True)
         self.res = concat(vis=['part1.ms','part2-mod2.ms','part3.ms'],concatvis=msname)
+        self.assertEqual(self.res,None)
 
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
@@ -350,12 +350,12 @@ class test_concat(unittest.TestCase):
     
 
     def test4(self):
-        '''case 4: five MSs with identical sources but different time/intervals on them (CSV-268)'''
+        '''Concat 4: five MSs with identical sources but different time/intervals on them (CSV-268)'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         
-        shutil.rmtree(msname,ignore_errors=True)
         self.res = concat(vis = ['shortpart1.ms', 'shortpart2.ms', 'shortpart3.ms', 'shortpart4.ms', 'shortpart5.ms'],
                           concatvis = msname)
+        self.assertEqual(self.res,None)
 
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
@@ -479,8 +479,19 @@ class test_concat(unittest.TestCase):
     
                 
         self.assertTrue(retValue['success'])
-                
+
+class concat_cleanup(unittest.TestCase):           
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        os.system('rm -rf *part*.ms')   
+        os.system('rm -rf test*.ms')
+
+    def testrun(self):
+        '''Concat: Cleanup'''
+        pass
     
 def suite():
-    return [test_concat]        
+    return [test_concat,concat_cleanup]        
         
