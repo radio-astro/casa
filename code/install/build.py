@@ -502,7 +502,6 @@ def build_casa(b, url, revision, type, ops, architecture):
     if ops == "Darwin":
         b.comment("It is essential that 3rd-party/bin comes before other stuff in your $PATH.")
         b.set_env('PATH', prefix, "/../", third, "/bin:$PATH")
-        b.set_env('PATH', "$PATH:/Applications/CMake\\ 2.8-0.app/Contents/bin")
         b.comment("This is a workaround for QWT and CASACore libraries not containing the proper rpaths (Note: Do not define the environment variable named DYLD_LIBRARY_PATH or something else might break.)")
         if architecture == "10.5":
             qwtdir = "qwt-5.2.0"
@@ -555,13 +554,14 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.comment("We need parts of CASA's data repository, ", prefix, "/data/geodetic and ", prefix, "/data/ephemerides, in order to build CASACore.")
         if ops == "Darwin":
             b.comment("The location of the data repository at /opt/casa/data is fixed on Mac.")
-        b.do("", "rm -rf ", prefix, "/data")
+        b.chdir("..")
+        b.do("", "rm -rf ./data")
         b.do("", "mkdir -p ./data")
         b.chdir("./data")
         b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/ephemerides ephemerides")
         b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/geodetic geodetic")
-        b.chdir("..")
-
+        b.chdir(prefix)
+        b.do("", "ln -s /opt/casa/data .")
 
     b.comment("Compile CASACore.")
 
@@ -583,7 +583,7 @@ def build_casa(b, url, revision, type, ops, architecture):
             b.comment("Also, you should use -fno-omit-frame-pointer for better debugging support on 64-bit Linux.")
             b.do("", "scons -j ", threads, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -fno-omit-frame-pointer -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW", extra_cpp_flags, "\" --libdir=", prefix, "/", builddir, "/lib --data-dir=", prefix, "/data --cfitsio-libdir=/usr/lib --cfitsio-incdir=/usr/include/cfitsio --extra-cflags=\"-g -fno-omit-frame-pointer\" --extra-fflags=\"-g  -fno-omit-frame-pointer\" --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static")
         elif ops == "Darwin":
-            b.do("", "scons -j ", threads, " --extra-root=", prefix, "/../", third, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW -DCASACORE_NOEXIT -fopenmp\" --data-dir=", prefix, "/../data --wcs-root=", prefix, "/", builddir, " --cfitsio-libdir=", prefix, "/../", third, "/lib --cfitsio-incdir=", prefix, "/../", third, "/include --fftw3-root=", prefix, "/../", third, " --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static")
+            b.do("", "scons -j ", threads, " --extra-root=", prefix, "/../", third, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-arch i386 -g -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW -DCASACORE_NOEXIT -DCASA_NOTAPE -fopenmp\" --data-dir=", prefix, "/../data --wcs-root=", prefix, "/", builddir, " --cfitsio-libdir=", prefix, "/../", third, "/lib --cfitsio-incdir=", prefix, "/../", third, "/include --fftw3-root=", prefix, "/../", third, " --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --extra-linkflags=\"-arch i386\" --extra-fflags=\"-arch i386\" --enable-shared --disable-static")
         else:
             assert False
         b.do("If scons did not end with an error message, the build was successful and you can install the libraries and headers", "scons install")
@@ -612,7 +612,14 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.do("", "make -j ", threads, " VERBOSE=on")
         b.do("You should now have the casapy executable (and other executables) at this location:",
              "ls -l ", prefix, "/", builddir, "/bin")
-        
+
+    b.comment("Then setup your CASAPATH and PATH environment variable in order to be able to run casapy (and compile ASAP). Just source the script that was created during the build:")
+    b.do("", "source ", prefix, "/casainit.sh")
+    b.comment("or you can set the variables manually (note: it is a space, not a '/', in CASAPATH)")
+    b.set_env('CASAPATH', "", prefix, " ", builddir)
+    b.set_env('PATH', "$PATH:", prefix, "/", builddir, "/bin")
+
+    if type != "test":
         b.comment("Build ASAP (optionally, if you want to reduce single dish data). This must be done after building the rest of CASA.")
         b.chdir(prefix)
         b.svn_exe(url + "/asap", revision, "asap")
@@ -627,12 +634,6 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.comment("The data repository is big. You can save 50% of disk space if you retrieve the repository with 'svn export' instead of 'svn checkout'.")
         b.do("Remove the link first (in case it already exists)", "rm -f ", prefix, "/data")
         b.do("", "ln -s ", datadir, " ", prefix, "/data")
-
-        b.comment("Then setup your CASAPATH and PATH environment variable in order to be able to run casapy. Just source the script that was created during the build:")
-        b.do("", "source ", prefix, "/casainit.sh")
-        b.comment("or you can set the variables manually (note: it is a space, not a '/', in CASAPATH)")
-        b.set_env('CASAPATH', "", prefix, " ", builddir)
-        b.set_env('PATH', "$PATH:", prefix, "/", builddir, "/bin")
 
         b.do("Then launch the python unit test suite,", "casapy --nogui --log2term -c ", prefix, "/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --mem")
         b.comment("which will summarize near the end if your build is okay or if there were problems.")
