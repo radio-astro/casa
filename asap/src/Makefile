@@ -41,9 +41,11 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
 ifneq (,$(findstring "$(CASAARCH)", "darwin"))
-   #CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
-else
    CXXFLAGS +=-DAIPS_DARWIN
+   ifneq (,$(shell sw_vers | grep 10.6))
+      CXXFLAGS += -arch i386
+   endif
+else
    #CXXFLAGS += -Wno-long-double
 endif
 
@@ -92,8 +94,11 @@ BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python
 BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
-ifeq "$(CASAARCH)" "darwin"
+ifneq (,$(findstring $(CASAARCH)", "darwin"))
    LDFLAGS   := -bundle
+   ifneq (,$(shell sw_vers | grep 10.6))
+      LDFLAGS += -arch i386
+   endif
 endif
 
 

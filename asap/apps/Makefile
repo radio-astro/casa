@@ -19,8 +19,13 @@ endif
 # compiler flags
 CXXFLAGS := -fPIC -O3 -g
 CXXFLAGS += -ansi -Wno-long-long -Wall
-CXXFLAGS := -Xlinker -rpath -Xlinker $(CASALIB)
-
+CXXFLAGS += -Xlinker -rpath -Xlinker $(CASALIB)
+ifneq (,$(findstring "$(CASAARCH)", "darwin"))
+   CXXFLAGS +=-DAIPS_DARWIN
+   ifneq (,$(shell sw_vers | grep 10.6))
+      CXXFLAGS += -arch i386
+   endif
+endif
 
 INCDIRS   := -I$(COREINCD)
 LIBS      := -L$(CASALIB) $(CORELIB)
