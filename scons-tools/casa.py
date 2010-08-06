@@ -62,10 +62,14 @@ def generate(env):
                 env.Append(SHFORTRANFLAGS=ppflags)
                 env.Append(SHLINKFLAGS=linkflags)
                 env.Append(LINKFLAGS=linkflags)
-                # otherwise darwin puts builddir into the name
-            env.Append(SHLINKFLAGS=["-install_name", "${TARGET.file}"])
+            # Put the installation path into the library,
+            # otherwise darwin puts builddir into the name
+            env.Append(SHLINKFLAGS=["-install_name", os.path.join( env.get("prefix"), "lib", "${TARGET.file}")])
             env.Append(SHLINKFLAGS=["-single_module"])
-            
+        else:
+            # On non-Darwin use RPATH (which scons ignores on on Darwin)
+            env.Append( RPATH = env.Literal( os.path.join( env.get("prefix"), 'lib')))
+
     AddCasaPlatform()
 
     def CheckCasaLib(context, lib):
