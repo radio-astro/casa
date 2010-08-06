@@ -947,12 +947,13 @@ uInt CoordinateSystem::nPixelAxes() const
 Bool CoordinateSystem::toWorld(Vector<Double> &world, 
 			       const Vector<Double> &pixel) const
 {
-	/*
-    cerr << "To world" << endl;
-    cerr << pixel.nelements() << endl;
-    cerr << nPixelAxes() << endl;
-    */
-    AlwaysAssert(pixel.nelements() == nPixelAxes(), AipsError);
+    if(pixel.nelements() != nPixelAxes()){
+	ostringstream oss;
+	oss << "pixel.nelements() != nPixelAxes(): "
+	    << pixel.nelements() << ", " << nPixelAxes();
+	throw (AipsError(String(oss)));
+    }
+
     if (world.nelements()!=nWorldAxes()) world.resize(nWorldAxes());
 
     const uInt nc = coordinates_p.nelements();
