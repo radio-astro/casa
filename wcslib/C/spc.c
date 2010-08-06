@@ -637,7 +637,7 @@ int spctyp(
    int  restreq_t = 0;
 
    /* Copy with blank padding. */
-   sprintf(ctype, "%-8s", ctypei);
+   sprintf(ctype, "%-8.8s", ctypei);
    ctype[8] = '\0';
 
    /* Do alias translation for AIPS spectral types. */
