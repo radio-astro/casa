@@ -30,7 +30,6 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
                 stacklevel=k
         myf=sys._getframe(stacklevel).f_globals
         ####local params
-        ia=myf['ia']
         cs=myf['cs']
         rg=myf['rg']
         casalog=myf['casalog']
@@ -55,6 +54,7 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
 
         # Now we get to the heart of the script!!!
         retValue={}
+        myia = iatool.create()
         try:
             # Find where the directional, stokes, and spectral
             # axies are.
@@ -63,8 +63,8 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
             # Initialize the coordinate system for the region
             # we are about to create
             csys = None
-            ia.open( imagename )
-            csys=ia.coordsys()
+            myia.open( imagename )
+            csys=myia.coordsys()
 
             # Find where the directional and channel axies are
             # Save the internal placement of the axies in a list
@@ -97,7 +97,7 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
             # TODO use world coordiates values, when wbox and wpolygon
             # work.  The min/max values will be in blcf, and trcf
             
-            fullSize=ia.boundingbox(ia.setboxregion())
+            fullSize=myia.boundingbox(myia.setboxregion())
             mins=fullSize['blc']
             maxs=fullSize['trc']
 
@@ -308,6 +308,8 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
                 # this is all we allow.
                 blcStr=''
                 for i in range( len(blc) ):
+                    if (blc[i] > trc[i]):
+                        raise Exception, "All elements of blc " + str(blc) + " must be less than or equal to corresponding elements of trc " + str(trc) + ". Element number " + str(i) + " is not."
                     if ( i > 0 ):
                         blcStr+=','
                     if ( isinstance( blc[i], str ) ):
@@ -375,8 +377,8 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
             # Cleanup time
             if ( csys != None ):
                 del csys
-            if ( ia.isopen() ):
-                    ia.close()
+            if ( myia.isopen() ):
+                myia.close()
                 
             if ( len(regions) >  1 ):
                 retValue = rg.makeunion( regions )
@@ -386,6 +388,7 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
 
         except Exception, instance:
             print '*** Error ***',instance
+            myia.done()
             return         
 
 #
