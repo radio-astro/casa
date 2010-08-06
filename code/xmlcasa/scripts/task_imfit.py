@@ -1,7 +1,4 @@
 from taskinit import *
-#from imregion import *
-#from odict import odict
-#from math import *
 
 def imfit(
     imagename=None, box=None, region=None, chan=None, stokes=None,
