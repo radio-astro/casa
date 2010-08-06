@@ -628,9 +628,7 @@ class imval_test(unittest.TestCase):
                  or not results.has_key('data') or \
                  ( results['data']+4.2731923e-09>error_margin or not results['mask'])):
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                       +'\nError: Expected value of -4.273192e-09, and mask=True',\
-                       +'\n\t'+msg
+                retValue['error_msgs'] = retValue['error_msgs'] + "\nError: Expected value of -4.273192e-09, and mask=True"  + "\n\t" + msg
                 
         #############################################################
         # Top-right
