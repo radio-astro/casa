@@ -104,9 +104,6 @@ def request_from_JPL(objnam, enddate,
     an hour.  (The return value from this function is whether or not it sent
     the request.)
 
-    Note that it must usually be run from outside casapy, and on a computer
-    that does not even have casapy, since it sends email, and 
-
     objnam:
         The name of the object (case-insensitive).  It will be used to refer to
         specifically its center, as opposed to other possible locations in the
@@ -141,6 +138,9 @@ def request_from_JPL(objnam, enddate,
     return_address:
         The email address that the ephemeris will be sent to.
         Default: <username>@<domainname>.
+    mailserver:
+        The computer at _your_ end to send the mail from.
+        Default: a semi-intelligent guess.
     """
     lobjnam = objnam.lower()
 
