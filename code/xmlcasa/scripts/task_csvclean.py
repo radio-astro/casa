@@ -1,11 +1,14 @@
 import os
 import shutil
 import traceback
+import pdb
+import numpy as np
+import sys
 from cleanhelper import *
 from taskinit import *
+im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
 
-
-def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weighting, restoringbeam, interactive):
+def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell, phasecenter, niter, weighting, restoringbeam, interactive):
 
     """ This task does an invert of the visibilities and deconvolve in the
 	    image plane. It does not do a uvdata subtraction (aka Cotton-Schwab
@@ -96,9 +99,11 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
     #Python script    
     
     try:
+
         casalog.origin('csvclean')
         ms = casac.homefinder.find_home_by_name('msHome').create()
-    
+        
+
         parsummary = 'vis="'+str(vis)+'", imagename="'+str(imagename)+'", '
         parsummary += 'field="'+str(field)+'", spw="'+str(spw)+'", '
         parsummary = 'cell="'+str(cell)+'",'
@@ -115,14 +120,14 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
             ms.open(vis)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
-    
-        if (imagename == ""):
-#            ms.close()
-            raise Exception, "Must provide output image name in parameter imagename."            
+        if(not advise):
+            if (imagename == ""):
+                #            ms.close()
+                raise Exception, "Must provide output image name in parameter imagename."            
         
-        if os.path.exists(imagename):
-#            ms.close()
-            raise Exception, "Output image %s already exists - will not overwrite." % imagename
+            if os.path.exists(imagename):
+                #            ms.close()
+                raise Exception, "Output image %s already exists - will not overwrite." % imagename
            
         if (field == ''):
         	field = '*'
@@ -207,51 +212,139 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
 #        ms.close()
         
         # Add scratch columns if they don't exist
-        tb.open(vis)
-        hasit = tb.colnames().count('CORRECTED_DATA')>0
-        tb.close()
-        if not hasit:
-        	cb.open(vis)
-        	cb.close()
+        #tb.open(vis)
+        #hasit = tb.colnames().count('CORRECTED_DATA')>0
+        #tb.close()
+        #if not hasit:
+        #	cb.open(vis)
+        #	cb.close()
         		
         # make the dirty image and psf
 
-        im.open(vis)
-        im.selectvis(spw=spw, field=field, usescratch=True)
-        im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter)
-        im.weight(weighting)
-        
-        im.makeimage(type='corrected', image=dirtyim)
-        im.makeimage(type='psf', image=psfim)
-        im.done()
+        im.open(vis, usescratch=True)
+        im.selectvis(spw=spw, field=field)
+        spwsel=ms.msseltoindex(vis=vis, spw=spw)['spw']
+        ch=ms.msseltoindex(vis=vis, spw=spw)['channel']
+        if(nchan < 1):
+            nchan=0
+            for k in range(len(spwsel)):
+                nchan += ch[k,2]-ch[k,1]+1
+            nchan=nchan/width
+            if(nchan < 1):
+                nchan=1
+        if(advise):
+            tb.open(vis+'/SPECTRAL_WINDOW')
+            allreffreq=tb.getcol('REF_FREQUENCY')
+            reffreq=0.0
+            if(len(allreffreq) > 1):
+                reffreq=0.0;
+                for f in  allreffreq:
+                    reffreq+=f
+                reffreq=reffreq/float(len(allreffreq))
+            else:
+                reffreq=allreffreq[0]
+            tb.done()
+            tb.open(vis+'/ANTENNA')
+            diams=tb.getcol('DISH_DIAMETER')
+            diam=np.min(diams)
+            tb.done()
+            fov=qa.quantity(3.0e8/reffreq/diam, 'rad')
+            adv=im.advise(fieldofview=fov)
+            cellx=qa.tos(adv['cell'], prec=4)
+            celly=cellx
+            myf = sys._getframe(len(inspect.stack())-1).f_globals
+            myf['cell']=[cellx,cellx]
+            myf['imsize']=[adv['pixels'], adv['pixels']]
+            nx=ny=adv['pixels']
+            myf['advise']=False
+            return
+        redopsf=True
+        redokounter=0
+        immode='mfs'
+        if(mode=='cube'):
+            immode='channel'
+        while(redopsf):
+            im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter, spw=spwsel.tolist(), mode=immode, start=ch[0,1], step=width, nchan=nchan)
+            im.weight(weighting)
+            try:
+                im.makeimage(type='corrected', image=dirtyim)
+                im.makeimage(type='psf', image=psfim)
+                ###make an empty model
+                im.make(modelname)
+                if((redokounter==2) and (np.min(nx,ny) > 25)):
+                    #pdb.set_trace()
+                    ia.open(psfim)
+                    csys=ia.coordsys()
+                    rg.setcoordinates(csys=csys.torecord())
+                    shp=ia.shape()
+                    blc=['10pix', '10pix', '0pix', '0pix']
+                    trc=[str(shp[0]-10)+'pix',str(shp[1]-10)+'pix',
+                         str(shp[2]-1)+'pix', str(shp[3]-1)+'pix']
+                    reg=rg.wbox(blc=blc, trc=trc)
+                    ia.set(pixels=0, region=rg.complement(reg))
+                    ia.done()
+                #im.done()
 
-        # Calculate bpa, bmin, bmaj if not given
-        if restoringbeam == [''] or len(restoringbeam) == 0:
-        	cx = nx/2
-        	cy = ny/2
-        	box = ''
+                # Calculate bpa, bmin, bmaj if not given
+                if restoringbeam == [''] or len(restoringbeam) == 0:
+                    cx = nx/2
+                    cy = ny/2
+                    box = ''
 
-        	if (nx > 100 and ny > 100):
-        		rg = [cx-10, cy-10, cx+10, cy+10]
-        		box = '%s,%s,%s,%s'%(rg[0],rg[1],rg[2],rg[3])
-            	ia.open(psfim)            	
-            	coords = ia.fitcomponents(box=box)
-            	ia.close()
-            	if(coords['converged'] == True):
-	            	bmaj = coords['results']['component0']['shape']['majoraxis']['value']
-	            	bmin = coords['results']['component0']['shape']['minoraxis']['value']
-	            	bpa = coords['results']['component0']['shape']['positionangle']['value']
-	            	bmaj = str(bmaj)+'arcsec'
-	            	bmin = str(bmin)+'arcsec'
-	            	bpa = str(bpa)+'deg'
-            	
-        parsummary = 'restoringbeam values = [\'%s\',\'%s\',\'%s\']'%(bmaj,bmin,bpa)
+                    #if (nx > 100 and ny > 100):
+                    #    rrg = [cx-10, cy-10, cx+10, cy+10]
+                    #    box = '%s,%s,%s,%s'%(rrg[0],rrg[1],rrg[2],rrg[3])
+                    #ia.open(psfim)
+                    #shp=ia.shape()
+                    #coords = ia.fitcomponents(box=box)
+                    #ia.close()
+                    #if(coords['converged'] == True):
+                coords=im.fitpsf(psfim)
+                if(coords['return']):
+                    bmaj=coords['bmaj']
+                    bmin=coords['bmin']
+                    bpa=coords['bpa']
+                    redopsf=False
+                else:
+                    redopsf=True
+                    nx=nx+1
+                    ny=ny+1
+                    redokounter += 1 
+                    if(redokounter==3):
+                        casalog.post('Failed to find a decent psf','SEVERE')
+                        return False
+                    else:
+                        casalog.post('Trying new image with 1 extra pixel','WARN')
+                        
+            except :
+            	redopsf=True
+                nx=nx+1
+                ny=ny+1
+                redokounter += 1
+                if(redokounter==3):
+                    casalog.post('Failed to find a decent psf','SEVERE')
+                    im.done()
+                    return False
+                else:
+                    casalog.post('Trying new image with 1 extra pixel','WARN')
+        im.done()            
+        parsummary = 'restoringbeam values = [\'%s\',\'%s\',\'%s\']'%(qa.tos(bmaj),qa.tos(bmin),qa.tos(bpa))
         casalog.post(parsummary,'INFO')
         
         # Make a mask
         maskname=''
         if(interactive):
             maskname=imagename+'.mask'
+            if(os.path.exists(maskname)):
+                ia.open(dirtyim)
+                csys=ia.coordsys()
+                shp=ia.shape()
+                ia.done()
+                ia.open(maskname)
+                ia.regrid(outfile='__tmpmask__', shape=shp, csys=csys.torecord(), axes=[0,1])
+                ia.remove(True)
+                ia.done()
+                shutil.move('__tmpmask__', maskname)
             im.drawmask(dirtyim, maskname)
 
         # use deconvolver to do image plane deconvolution
@@ -263,9 +356,9 @@ def csvclean(vis, imagename,field, spw, imsize, cell, phasecenter, niter, weight
         
         # create the restored image
         if restoringbeam == [''] or len(restoringbeam) == 0:
-        	dc.restore(model=modelname, image=imname)
+            dc.restore(model=modelname, image=imname, bmaj=bmaj, bmin=bmin, bpa=bpa)
         else:
-			dc.restore(model=modelname, image=imname, bmaj=bmaj, bmin=bmin, bpa=bpa)  
+            dc.restore(model=modelname, image=imname, bmaj=restoringbeam[0], bmin=restoringbeam[1], bpa=restoringbeam[2])  
 			
         dc.done()  
         return True
