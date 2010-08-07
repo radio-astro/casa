@@ -29,11 +29,13 @@ Quantity          casaQuantity(const casac::Quantity &);
 // generate a default Quantity (0.0) for unhandled variants.
 Quantity          casaQuantity(const casac::variant &);
 
+ Quantum<Vector<Double> > casaQuantumVector(const casac::variant &);
+
 ::casac::Quantity casacQuantity(const Quantity &);
 
 // See note in implementation about possible memory leak.
 ::casac::record  *fromRecord(const Record &);
-// makes a Vector of Quntity out of strings or vector of such or later records
+// makes a Vector of Quantity out of strings or vector of such or later records
  Bool toCasaVectorQuantity(const ::casac::variant& theval, 
 			   casa::Vector<casa::Quantity>& theQuants);
 

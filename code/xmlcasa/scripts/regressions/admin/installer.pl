@@ -134,7 +134,10 @@ chdir($install_dir) or die;
 if (`uname` eq "Darwin\n") {
     # Attach disk image, copy contents, unattach
     sys_exe("mkdir $install_dir/tmp");
-    sys_exe("hdiutil attach $prefix/$latest_release -mountroot $install_dir/tmp");
+    # Answer N(o) if hdiutil asks
+    # "The disk image you are opening may be damaged and could damage your
+    # system. Are you sure you want to open this disk image? (Y/N)"
+    sys_exe("echo N | hdiutil attach $prefix/$latest_release -mountroot $install_dir/tmp");
     system("cp -R $install_dir/tmp/* $install_dir/");  # might partially fail
     sys_exe("ls -1 $install_dir/tmp | grep CASA | sed 's/ /\\\\ /g' | xargs -Ixxx -n 1 hdiutil eject -force $install_dir/tmp/xxx");
 }
@@ -209,10 +212,7 @@ if (`uname` eq "Linux\n") {
     sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl \$HOME/admin/");
 }
 else {
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.py \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.sh \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.txt \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.pl \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/* \$HOME/admin/");
 }
 
 exit 0;

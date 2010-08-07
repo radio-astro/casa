@@ -333,7 +333,6 @@ if __name__ == "__main__":
                         break
                 
                     testnames.append(elem)
-                    print testnames
         else:
             testnames = []
     else:

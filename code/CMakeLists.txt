@@ -57,7 +57,6 @@ if( NOT USE_LIBCASACORE )
   set( USE_LIBCASACORE False )
 endif()
 
-
 # Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE RelWithDebInfo )
@@ -65,9 +64,40 @@ endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
+  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0" )
+endif()
+
+string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
+#
+# aipshosts is supported for backwards compatibility
+#
+if( NOT arch AND EXISTS ${casaroot}/aipshosts )
+  message( WARNING "Found ${casaroot}/aipshosts. You probably don't need  this file unless you need to build multiple architectures. If you remove aipshosts the name of the installation directory will be automatically set  based on this machine's architecture, or defined by the cmake command line option -Darch=<arch name>. Specifying on the command line will override the aipshosts entry." )
+  execute_process( COMMAND uname -n
+                   COMMAND awk -F. "{print $1}"
+                   OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process( COMMAND egrep "^[\ ]*${_host}[\ \t]*" ${casaroot}/aipshosts 
+                   COMMAND awk "{print $2}"
+    OUTPUT_VARIABLE _a
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+  if( _a )
+    set( arch ${_a} )    
+  endif()
 endif()
 
 set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
+
+# On Linux x86_64 add the (gcc specific) -fno-omit-frame-pointer
+# flag to debug builds
+if( CMAKE_SYSTEM_NAME STREQUAL Linux AND
+    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
+  foreach( _c CXX C FORTRAN )
+    set( CMAKE_${_c}_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
+    set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
+  endforeach()
+endif()
 
 if (CMAKE_CROSSCOMPILING)
   dump( CMAKE_HOST_SYSTEM )
@@ -100,22 +130,29 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 # 
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
+    set (archflag "" )
+    if( NOT arch )
+    	set( arch darwin )
+    endif()
 
     if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
         set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
       elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )        
+	set (archflag "-arch i386" )
         set( casa_packages /opt/casa/core2-apple-darwin10 )
-        set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch i386" )
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch i386" )
-        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch i386" )
+	if( ${arch} MATCHES 64 )
+		set (archflag "-arch x86_64" )
+		set (casa_packages /opt/casa/darwin10-64b )
+		add_definitions( -DAIPS_64B )
+	endif()
+        set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${archflag}" )
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error ${archflag} -framework AppKit" )
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${archflag}" )
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    if( NOT arch )
-    	set( arch darwin )
-    endif()
     set( DEFAULT_CXX_FLAGS
       "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks"
       )
@@ -151,26 +188,6 @@ if( NOT CMAKE_C_FLAGS )
   set( CMAKE_C_FLAGS "${DEFAULT_C_FLAGS} ${EXTRA_C_FLAGS}" )
 endif()
 
-string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
-
-#
-# aipshosts is supported for backwards compatibility
-#
-if( EXISTS ${casaroot}/aipshosts )
-  message( WARNING "Found ${casaroot}/aipshosts. You should probably delete this file, and the name of the installation directory will be automatically set (to \"${arch}\") based on this machine's architecture." )
-  execute_process( COMMAND uname -n
-                   COMMAND awk -F. "{print $1}"
-                   OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
-  execute_process( COMMAND egrep "^[\ ]*${_host}[\ ]" ${casaroot}/aipshosts 
-                   COMMAND awk "{print $2}"
-    OUTPUT_VARIABLE _a
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-  if( _a AND NOT arch )
-    set( arch ${_a} )    
-  endif()
-endif()
 
 #
 # The layout of the source+install directory trees
@@ -205,10 +222,9 @@ else()
 endif()
 
 #
-# Create casainit.sh
+# Create casainit.(c)sh
 # The environment defined here is not needed at build time, but at runtime.
-# The definitions are architecture dependent, hence put them in
-# the install directory
+# The definitions are architecture dependent, hence put them in the install directory
 #
 file( WRITE ${CMAKE_INSTALL_PREFIX}/casainit.sh
       "#!/bin/sh\n"
@@ -216,15 +232,22 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/casainit.sh
       "  export CASAPATH=\"${casaroot} ${arch}\"\n"
       "  export PATH=${CMAKE_INSTALL_PREFIX}/bin:${casa_packages}/bin:$PATH\n"
 )
+file( WRITE ${CMAKE_INSTALL_PREFIX}/casainit.csh
+      "# Usage: source casainit.csh\n"
+      "# Generated by CMake, do not edit\n"
+      "  setenv CASAPATH \"${casaroot} ${arch}\"\n"
+      "  setenv PATH ${CMAKE_INSTALL_PREFIX}/bin:${casa_packages}/bin:$PATH\n"
+)
 
-# Create a top-level casainit.sh which detects the architecture
-# and sources the right <arch>/casainit.sh
+# Create a top-level casainit.sh which sources the <arch>/casainit.sh
+# that belongs to this build.
 file( WRITE ${casaroot}/casainit.sh 
       "#!/bin/sh\n"
       "# Generated by CMake, do not edit\n"
       "a_root=${casaroot}\n"
       "a_host=`uname -n | awk -F. '{ print $1 }'`\n"
       "a_temp=\"\"\n"
+      "a_arch=\"\"\n"
       "if [ -f \"$a_root/aipshosts\" ]\n"
       "then\n"
       "    a_temp=`egrep \"^[  ]*$a_host[ ]\" \"$a_root/aipshosts\"`\n"
@@ -232,37 +255,27 @@ file( WRITE ${casaroot}/casainit.sh
       "fi\n"
       "if [ \"$a_arch\" = \"\" ]\n"
       "then\n"
-      "    case `uname -s` in\n"
-      "    Linux)\n"
-      "        case `uname -m` in\n"
-      "        x86_64)\n"
-      "            if [ -d \"$a_root/linux_64b\" ]; then\n"
-      "                a_arch=linux_64b\n"
-      "            else\n"
-      "                a_arch=\"${arch}\"\n"
-      "            fi\n"
-      "            ;;\n"
-      "        *)\n"
-      "            if [ -d \"$a_root/linux_gnu\" ]; then\n"
-      "                a_arch=linux_gnu\n"
-      "            else\n"
-      "                a_arch=\"${arch}\"\n"
-      "            fi\n"
-      "            ;;\n"
-      "        esac\n"
-      "        ;;\n"
-      "    Darwin)\n"
-      "        a_arch=darwin\n"
-      "        ;;\n"
-      "    *)\n"
-      "        echo \"Unknown uname -s: `uname -s`\"\n"
-      "        ;;\n"
-      "    esac\n"
+      "    source ${CMAKE_INSTALL_PREFIX}/casainit.sh\n"
+      "else\n"
+      "    source $a_root/$a_arch/casainit.sh\n"
       "fi\n"
-      "if [ \"$a_arch\" != \"\" ]\n"
-      "then\n"
-      "    . $a_root/$a_arch/casainit.sh\n"
-      "fi\n"
+)
+file( WRITE ${casaroot}/casainit.csh 
+      "#!/bin/sh\n"
+      "# Generated by CMake, do not edit\n"
+      "set a_root=\"${casaroot}\"\n"
+      "set a_host=`uname -n | awk -F. '{ print $1 }'`\n"
+      "set a_temp=\"\"\n"
+      "set a_arch=\"\"\n"
+      "if ( -f \"$a_root/aipshosts\" ) then\n"
+      "    set a_temp = `egrep \"^[  ]*\${a_host}[ ]\" \"$a_root/aipshosts\"`\n"
+      "    set a_arch = `/bin/echo $a_temp | awk '{ print $2 }'`\n"
+      "endif\n"
+      "if ( \"$a_arch\" == \"\" ) then\n"
+      "    source ${CMAKE_INSTALL_PREFIX}/casainit.csh\n"
+      "else\n"
+      "    source $a_root/$a_arch/casainit.csh\n"
+      "endif\n"
 )
 
 
@@ -459,6 +472,9 @@ if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
   ##
   set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
 else()
+  if( EXISTS ${CMAKE_INSTALL_PREFIX}/../include/casacore/casa/BasicMath.h )
+      set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
+  endif()
   set( casacore_libs
        casa_casa 
        casa_components
@@ -476,7 +492,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.14
+           VERSION 1.0.18
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -729,6 +745,10 @@ set( CCMTOOLS_ccmtools_FLAGS -Xms1024M -Xmx1024M )
 find_package(
   Qt4 4.3.4
   COMPONENTS QtCore QtGui QtDBus QtXml ) #QtOpenGL )
+
+if( NOT QT4_FOUND )
+  message( FATAL_ERROR "Qt4 could not be found. Please check!" )
+endif()
 
 set( QT4_INCLUDE_DIRS ${QT_INCLUDES} CACHE PATH "QT4 include directories" FORCE )
 set( QT4_DEFINITIONS ${QT_DEFINITIONS} -DQT_NO_DEBUG CACHE STRING "QT4 preprocessor flags" FORCE )

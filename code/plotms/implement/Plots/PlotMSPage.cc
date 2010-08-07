@@ -99,6 +99,7 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
             if(r >= oldrows || c >= oldcols) {
                 canvas = factory->canvas();
                 itsCanvases_[r][c] = canvas;
+							/* !!!!!! */  printf("DSW DEBUG: just made new canvas[r=%d][c=%d]    \n", r,c); /*DSW:TEST*/
                 
                 // connect new canvases' tracker to tool tab
                 tools = canvas->standardMouseTools();
@@ -112,6 +113,10 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
                 
                 // add plotmsplotter as draw watcher
                 canvas->registerDrawWatcher(PlotDrawWatcherPtr(plotter,false));
+                
+                // watch for keystrokes related to using tracker feature
+                canvas->registerKeyHandler( 
+                   PlotKeyEventHandlerPtr( plotter->getToolsTab()->tracker_key_handler, false) );
                 
                 // set cached image size
                 canvas->setCachedAxesStackImageSize(cimg.first, cimg.second);

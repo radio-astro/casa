@@ -1130,12 +1130,16 @@ void QtDisplayPanelGui::showImageProfile() {
     List<QtDisplayData*> rdds = qdp_->registeredDDs();
     QHash<QString, ImageInterface<float>*> overlap;
     for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+
          QtDisplayData* pdd = qdds.getRight();
          if(pdd != 0 && pdd->dataType() == "image") {
+
             
             ImageInterface<float>* img = pdd->imageInterface();
             PanelDisplay* ppd = qdp_->panelDisplay();
             if (ppd != 0 && img != 0) {
+
+ 
               if (ppd->isCSmaster(pdd->dd())) { 
 	      
 	      // pdd is a suitable QDD for profiling.
@@ -1216,11 +1220,16 @@ void QtDisplayPanelGui::showImageProfile() {
                 }
               }
               
-	      else if (profileDD_ != pdd) {
+	      else {
+                if (profileDD_ != pdd) {
 
 	        // [Re-]orient pre-existing profiler to pdd
-
                 profile_->resetProfile(img, pdd->name().chars());
+                profileDD_ = pdd;
+                }
+                else {
+                  pdd->checkAxis();
+                }
               }
 
               if (pdd->spectralAxis() == -1) {
@@ -1236,7 +1245,8 @@ void QtDisplayPanelGui::showImageProfile() {
 	      //break;
             }
             else {
-               overlap[pdd->name().chars()] = img;
+              if (pdd->spectralAxis() != -1) 
+                 overlap[pdd->name().chars()] = img;
             }
             }
          }
@@ -1253,6 +1263,8 @@ void QtDisplayPanelGui::hideImageProfile() {
     
     if(profile_) {    
       profile_->hide();
+      delete profile_;
+      profile_ = 0;
     }
     profileDD_ = 0;
     

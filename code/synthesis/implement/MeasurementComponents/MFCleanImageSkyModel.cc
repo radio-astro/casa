@@ -799,7 +799,6 @@ void MFCleanImageSkyModel::restoreOverlappingModels(){
   if(numberOfModels() == 1)
     return;
   for (Int model=0;model<(numberOfModels()-1); ++model) {
-  //for (Int model=numberOfModels()-1;model>-1; model--) {
     CoordinateSystem cs0=image(model).coordinates();
     IPosition iblc0(image(model).shape().nelements(),0);
 

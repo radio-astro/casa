@@ -3,6 +3,7 @@ from taskinit import *
 
 import asap as sd
 import pylab as pl
+from numpy import ma, array, logical_not, logical_and
 
 def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, overwrite, plotlevel):
 
@@ -694,7 +695,6 @@ def init_plot( fitter, n ):
 ### plot
 def plot( fitter, irow, fitted, residual ):
         colors=["#777777", "#dddddd", "red", "orange", "purple", "green", "magenta", "cyan"]
-        from matplotlib.numerix import ma, array, logical_not, logical_and
         myp=fitter._p
 
         myp.subplot(irow)

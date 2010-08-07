@@ -80,7 +80,7 @@ namespace casa {
 LogViewer::LogViewer(QString logFile, QWidget *parent)
     : QMainWindow(parent), currentColumn(0),
       currentLogRow(),
-      currentFilter(""), currentSearch(""),
+      currentFilter(""), currentSearch(""),nextRow(0),
       fileName(logFile),
       logView(0), logModel(0), logPos(0)
 { 
@@ -134,6 +134,7 @@ LogViewer::LogViewer(QString logFile, QWidget *parent)
           proxyModel->rowCount() - 1, 0, QModelIndex());
     logView->setCurrentIndex(idx);
     logView->scrollTo(idx);
+    clicked(idx);
     //qDebug() << "========";
     logView->scrollToBottom();
     logView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -285,6 +286,12 @@ void LogViewer::setupEditActions()
        QIcon(rsrcPath + "/find.png"), tr("Sear&ch"), this);
     connect(a, SIGNAL(triggered()), this, SLOT(search()));
     a->setShortcut(QKeySequence(QKeySequence::Find));
+    tb->addAction(a);
+    menu->addAction(a);
+    a = actionNext = new QAction(
+       QIcon(rsrcPath + "/downarrowstop.png"), tr("Find &Next"), this);
+    connect(a, SIGNAL(triggered()), this, SLOT(findNext()));
+    a->setShortcut(QKeySequence(QKeySequence::FindNext));
     tb->addAction(a);
     menu->addAction(a);
 
@@ -738,6 +745,55 @@ void LogViewer::search()
    //qDebug() << "new search=" << currentSearch;
 }
 
+void LogViewer::findNext()
+{
+   QString newSearch = searchText->text().trimmed();
+   //if (newSearch == currentSearch)
+   //   return;
+   //currentSearch = newSearch;
+   //logModel->searchKeyChanged(currentSearch);
+   
+   if (newSearch == "")
+      return;
+
+   if (nextRow >= logModel->rowCount() - 1)
+      nextRow = -1;
+
+   QModelIndex idx = QModelIndex();
+   int k = nextRow;
+   int i = nextRow;
+   for (i = nextRow + 1; i < logModel->rowCount(); i++) {
+     QString str = proxyModel->data(
+         proxyModel->index(i, 3, idx), Qt::DisplayRole).toString();
+     //qDebug() << str << i;
+     if (str != "" && str.contains(newSearch)) {
+        QModelIndex idx = proxyModel->index(i, 0, QModelIndex());
+        logView->setCurrentIndex(idx);
+        logView->scrollTo(idx);
+        nextRow = i;
+        break;
+     }
+   }
+   //qDebug() << "i=" << i;
+   if (i == logModel->rowCount())
+      nextRow = -1;
+
+   for (int i = 0; i < k; i++) {
+     QString str = proxyModel->data(
+         proxyModel->index(i, 3, idx), Qt::DisplayRole).toString();
+     //qDebug() << str << i;
+     if (str != "" && str.contains(newSearch)) {
+        QModelIndex idx = proxyModel->index(i, 0, QModelIndex());
+        logView->setCurrentIndex(idx);
+        logView->scrollTo(idx);
+        nextRow = i;
+        break;
+     }
+   }
+
+   //qDebug() << "new search=" << currentSearch;
+}
+
 void LogViewer::reload()
 {
    if (searchText->text() != "") {
@@ -835,7 +891,23 @@ void LogViewer::copy()
    //erase from memory the selected
    //board->clear(QClipboard::Selection);
 
+   //qDebug() << "selection=" << board->supportsSelection();
+   //qDebug() << "FindBuffer=" << board->supportsFindBuffer();
    QModelIndexList lst = logView->selectionModel()->selectedIndexes();
+
+   //4.2>>>>>>>>>>
+   //QModelIndexList lst = logView->selectionModel()->selectedIndexes();
+   //QString clip = "";
+   //for (int i = 0; i < lst.count(); i += 4) {
+   // QModelIndex s = proxyModel->mapToSource(lst.at(i));
+   //  qDebug() << "selected/mapped row" << s.row();
+   // QString str = logModel->stringData(s.row()); 
+   // clip = clip + str;
+   //}
+   //board->setText(clip);
+   // qDebug() << "====cliplboard: " 
+   //            << board->text(QClipboard::Selection);
+   //4.2<<<<<<<<<<
    
    QSet<int> idSet;
    for (int i = 0; i < lst.count(); i++) {
@@ -884,23 +956,11 @@ void LogViewer::copy()
      //logModel->removeRow(sortedId[i], QModelIndex()); 
      clip = clip + str;
    }
-   board->setText(clip, QClipboard::Selection);
+   //board->setText(clip, QClipboard::Selection);
+   board->setText(clip);
 
-   /*
-   //4.2>>>>>>>>>>
-   QModelIndexList lst = logView->selectionModel()->selectedIndexes();
-   QString clip = "";
-   for (int i = 0; i < lst.count(); i += 4) {
-    QModelIndex s = proxyModel->mapToSource(lst.at(i));
-     qDebug() << "selected/mapped row" << s.row();
-    QString str = logModel->stringData(s.row()); 
-    clip = clip + str;
-   }
-   board->setText(clip, QClipboard::Selection);
-   // qDebug() << "====cliplboard: " 
-   //            << board->text(QClipboard::Selection);
-   //4.2<<<<<<<<<<
-   */
+   
+   
 
    /* single selection mode
    QString str = logModel->stringData(currentLogRow.row()); 

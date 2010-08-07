@@ -75,6 +75,5 @@ def imtrans(imagename=None, outfile=None, order=None):
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
         retval = None
-    if (myia):
-        myia.done()
+    myia.done()
     return retval

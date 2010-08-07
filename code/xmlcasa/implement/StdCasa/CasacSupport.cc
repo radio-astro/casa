@@ -121,6 +121,34 @@ Quantity casaQuantity(const casac::variant &theVar){
    }
 }
 
+Quantum<Vector<Double> > casaQuantumVector(const casac::variant& thevar){ 
+  Quantum<Vector<Double> > retval(Vector<Double> (), Unit(""));
+  //For now we know (at least till we have more time) how to deal with records only
+  if(thevar.type() != ::casac::variant::RECORD){
+    return retval;
+  }
+  ::casac::variant localvar(thevar); //cause its const
+  Record * ptrRec = toRecord(localvar.asRecord());
+  QuantumHolder qh;
+  String error;
+  if(qh.fromRecord(error, *ptrRec)){
+    try {
+      if(qh.isQuantumVectorDouble()){
+	Quantum<Vector<Double> >retval1=qh.asQuantumVectorDouble();
+	delete ptrRec;
+	ptrRec=0;
+	return retval1;
+      }
+    }
+    catch(...){
+      return retval;
+    }
+  }
+  if(ptrRec)
+    delete ptrRec;
+  return retval;
+}
+
 Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Quantity>& theQuants){
 
   casa::Vector<casa::String> lesStrings;

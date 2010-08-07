@@ -115,19 +115,28 @@ image::image()
 }
 
 // private ImageInterface constructor for on the fly components
-image::image(const casa::ImageInterface<casa::Float>* inImage)
-{
-  try {
-    itsLog = new LogIO();
-    *itsLog << LogOrigin("image", "image");
-    itsImage= new ImageAnalysis(inImage);
-
+image::image(const casa::ImageInterface<casa::Float>* inImage) :
+       itsLog(new LogIO()), itsImage(new ImageAnalysis(inImage))
+ {
+   try {
+     *itsLog << LogOrigin("image", "image");
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 }
 
+// private ImageInterface constructor for on the fly components
+image::image(casa::ImageInterface<casa::Float>* inImage, const bool cloneInputPointer) :
+       itsLog(new LogIO()), itsImage(new ImageAnalysis(inImage, cloneInputPointer))
+{
+  try {
+    *itsLog << LogOrigin("image", "image");
+   } catch (AipsError x) {
+     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+     RETHROW(x);
+   }
+}
 
 image::~image()
 {
@@ -242,7 +251,7 @@ casac::image * image::collapse(
 		    box, chans, stokes, mask, axis,
 		    outfile, overwrite
 		);
-		newImageTool = new ::casac::image(collapser.collapse(True));
+		newImageTool = new ::casac::image(collapser.collapse(True), False);
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1294,13 +1303,13 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 				<< "unambiguously match the image axis names"
 				<< LogIO::EXCEPTION;
 		}
-		outImage = new ::casac::image(reorderer->reorder());
-		delete reorderer;
+		outImage = new ::casac::image(reorderer->reorder(), False);
 	} catch (AipsError x) {
 		delete reorderer;
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
+	delete reorderer;
 	return outImage;
 }
 

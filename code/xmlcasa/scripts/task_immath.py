@@ -658,16 +658,19 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
     isLPol = False
     isTPol = False
     stkslist=__check_stokes(filenames)
+
     if len(filenames) == 1:
         # do multistokes image
         if (type(stkslist[0]) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
-        ia.open(filenames[0])
-        stokesPixel = ia.coordsys().findcoordinate('stokes')['pixel']
+        myia = iatool.create()
+        myia.open(filenames[0])
+        stokesPixel = myia.coordsys().findcoordinate('stokes')['pixel']
         if (type(stokesPixel) != int):
+            myia.close()
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
 
-        trc = ia.shape()
+        trc = myia.shape()
         blc = []
 
         for i in range(len(trc)):
@@ -679,6 +682,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
         Qimage = Uimage = Vimage = ''
         for stokes in (neededStokes):
             if ((stokes == 'Q' or stokes == 'U') and stkslist[0].count(stokes) == 0):
+                myia.close()
                 raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
                 + " so poli calculation cannot be done"
             myfile = tmpFilePrefix + '_' + stokes
@@ -692,8 +696,8 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
                 pixNum = stkslist[0].index(stokes)
                 blc[stokesPixel] = pixNum
                 trc[stokesPixel] = pixNum
-                ia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
-        ia.done()
+                myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+        myia.done()
         isTPol = bool(Vimage)
         isLPol = not isTPol
         filenames = [Qimage, Uimage]

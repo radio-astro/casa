@@ -3,6 +3,7 @@ from taskinit import *
 
 import asap as sd
 import pylab as pl
+from numpy import ma, array, logical_not, logical_and
 
 def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, outfile, outform, overwrite, plotlevel):
 
@@ -190,7 +191,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     myp.clear()
                     myp.set_panels(nrow,ncol)
                     colours = ["green","red","#dddddd","#777777"]
-                    from matplotlib.numerix import ma, array, logical_not, logical_and
                     if nr <17:
                         rowlist=range(nr)
                     else:

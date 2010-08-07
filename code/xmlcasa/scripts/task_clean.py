@@ -2,6 +2,7 @@ import os
 import shutil
 from taskinit import *
 from cleanhelper import *
+im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
 #import pdb
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,

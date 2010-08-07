@@ -473,8 +473,56 @@ class split_test_state(unittest.TestCase):
         """
         compare_tables(self.outms + '/STATE', self.inpms + '/STATE')
         
+class split_test_singchan(unittest.TestCase):
+    """
+    Check selecting a single channel with the spw:chan syntax
+    """
+    # rename and make readonly when plotxy goes away.
+    inpms = 'viewertest/ctb80-vsm.ms'
+
+    outms = 'musthavesingchan.ms'
+
+    def setUp(self):
+        try:
+            shutil.rmtree(self.outms, ignore_errors=True)
+
+            if not os.path.exists(self.inpms):
+                # Copying is technically unnecessary for split,
+                # but self.inpms is shared by other tests, so making
+                # it readonly might break them.
+                shutil.copytree(datapath + self.inpms, self.inpms)
+
+            print "\n\tSplitting", self.inpms
+            splitran = split(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='0:25', width=1,
+                             antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+        except Exception, e:
+            print "Error splitting", self.inpms, "to", self.outms
+            raise e
+
+    def tearDown(self):
+        shutil.rmtree(self.inpms, ignore_errors=True)
+        shutil.rmtree(self.outms, ignore_errors=True)
+
+    def test_singchan(self):
+        """
+        Did we get the right channel?
+        """
+        tb.open(self.inpms)
+        data_orig = tb.getcell('DATA', 3)
+        tb.close()
+        tb.open(self.outms)
+        data_sp = tb.getcell('DATA', 3)
+        tb.close()
+        
+        # For all correlations, compare output channel 0 to input channel 25.
+        check_eq(data_sp[:,0], data_orig[:,25], 0.0001)
+        
 
 def suite():
-    return [split_test_tav, split_test_cav, split_test_cst, split_test_state]        
-        
+    return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
+            split_test_singchan]
     

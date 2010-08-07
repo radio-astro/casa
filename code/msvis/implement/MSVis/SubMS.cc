@@ -77,6 +77,7 @@
 #include <set>
 #include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/Smooth.h>
+#include <casa/Quanta/MVTime.h>
 
 namespace casa {
   
@@ -1564,9 +1565,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // remap them using j.
       uInt j = 0;
       for(uInt k = 0; k < fieldid_p.nelements(); ++k){
-        if(inSrcIDs[fieldid_p[k]] > -1){
-          sourceRelabel_p[inSrcIDs[fieldid_p[k]]] = j;
-          ++j;
+        Int fldInSrcID = inSrcIDs[fieldid_p[k]];
+        
+        if(fldInSrcID > -1){
+          if(sourceRelabel_p[fldInSrcID] == -1){ // Multiple fields can use the same
+            sourceRelabel_p[fldInSrcID] = j;     // source in a mosaic.
+            ++j;
+          }
         }
       }
     }
@@ -1763,7 +1768,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     if(needRegridding){
 
-      os << LogIO::NORMAL << "Main table data array columns will be rewritten ..." <<  LogIO::POST;
+      os << LogIO::NORMAL << "Main table data array columns will be rewritten." <<  LogIO::POST;	    
 
       // create the "partner" columns, i.e. rename the old array columns to old...
       // and create new empty columns with the original names to hold the regridded values
@@ -1811,6 +1816,26 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ArrayColumn<Bool>* oldFLAG_CATEGORYColP = 0;
 
     if(needRegridding){
+
+      if(doHanningSmooth){
+	os << LogIO::NORMAL << "The following columns will be Hanning-smoothed: " <<  LogIO::POST;
+	if(!CORRECTED_DATACol.isNull()){
+	  os << LogIO::NORMAL << " CORRECTED_DATA " <<  LogIO::POST;
+	}
+	else{
+	  if(!DATACol.isNull()){
+	    os << LogIO::NORMAL << " DATA ";
+	  }
+	  if(!LAG_DATACol.isNull()){
+	    os << LogIO::NORMAL << " LAG_DATA ";
+	  }
+	  if(!FLOAT_DATACol.isNull()){
+	    os << LogIO::NORMAL << " FLOAT_DATA ";
+	  }
+	  os << LogIO::POST;
+	}
+      }
+
       // (create column objects for all "partners" of the array columns to be modified)
       if(!CORRECTED_DATACol.isNull()){
 	oldCORRECTED_DATAColP = new ArrayColumn<Complex>(ms_p, "oldCORRECTED_DATA");
@@ -1905,7 +1930,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // channel-number-dependent arrays need to be regridded.
       if(regrid[iDone]){
 
-	Bool doExtrapolate = False;
+	Bool doExtrapolate = True;
 
 	// regrid the complex columns
 	Array<Complex> yout;
@@ -1924,7 +1949,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 
 	if(transform[iDone]){
-	  doExtrapolate = True;
+
 	  // create frequency machine for this time stamp
 	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(theFieldDirV[iDone], mObsPosV[iDone], theObsTime));
 	  Unit unit(String("Hz"));
@@ -1951,6 +1976,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}
 	
+	Bool hanningDone = False;
 	if(!CORRECTED_DATACol.isNull()){
 	  yin.assign((*oldCORRECTED_DATAColP)(mainTabRow));
 
@@ -1968,6 +1994,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				     yinUnsmoothed, // the input
 				     yinFlagsUnsmoothed, // the input flags
 				     False);  // for flagging: good is not true
+	    hanningDone = True;
 	  }
 
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, // the new visibilities
@@ -1988,7 +2015,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!DATACol.isNull()){
 	  yin.assign((*oldDATAColP)(mainTabRow));
-	  if(doHanningSmooth){
+	  if(doHanningSmooth && !hanningDone){ // only smooth DATA if CORRECTED_DATA doesn't exist
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
 	    Array<Bool> yinFlagsUnsmoothed;
@@ -2005,7 +2032,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!LAG_DATACol.isNull()){
 	  yin.assign((*oldLAG_DATAColP)(mainTabRow));
-	  if(doHanningSmooth){
+	  if(doHanningSmooth && !hanningDone){ // only smooth LAG_DATA if CORRECTED_DATA doesn't exist
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
 	    Array<Bool> yinFlagsUnsmoothed;
@@ -2018,13 +2045,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(!MODEL_DATACol.isNull()){
 	  yin.assign((*oldMODEL_DATAColP)(mainTabRow));
-	  if(doHanningSmooth){
-	    Array<Complex> yinUnsmoothed;
-	    yinUnsmoothed.assign(yin);
-	    Array<Bool> yinFlagsUnsmoothed;
-	    yinFlagsUnsmoothed.assign(yinFlags);
-	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
-	  }
+
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  MODEL_DATACol.put(mainTabRow, yout);
@@ -2039,7 +2060,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Array<Float> youtf;
 	if(!FLOAT_DATACol.isNull()){
 	  yinf.assign((*oldFLOAT_DATAColP)(mainTabRow));
-	  if(doHanningSmooth){
+	  if(doHanningSmooth && !hanningDone){ // only smooth FLOAT_DATA if CORRECTED_DATA doesn't exist
 	    Array<Float> yinfUnsmoothed;
 	    yinfUnsmoothed.assign(yinf);
 	    Array<Bool> yinFlagsUnsmoothed;
@@ -4707,7 +4728,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    // check that the intervals are the same
 	    if(intervalCol(nextRow) != theInterval){
-	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ", "
+	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
 		 << " but the two rows have different intervals: " << theInterval
@@ -4717,7 +4738,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    // check that the exposures are the same
 	    if(exposureCol(nextRow) != theExposure){
-	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ", "
+	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
 		 << " but the two rows have different exposures: " << theExposure
@@ -4728,7 +4749,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // found a matching row
 	    Int theSPWId = DDtoSPWIndex(DDIdCol(nextRow));
 	    if(SPWtoRowIndex.isDefined(theSPWId)){ // there should be a one-to-one relation: SPW <-> matching row
-	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ","
+	      os << LogIO::SEVERE << "Error: for time " << MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ","
 		 << theAntenna2 << "), field "<< theField << " found more than one row for SPW "
 		 << theSPWId << LogIO::POST;
 	      return False;
@@ -4747,9 +4768,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  
 	  if(nMatchingRows < nSpwsToCombine){
 	    if(nIncompleteCoverage==0){
-	      ostringstream oss;
-	      oss << mainTimeMeasCol(mainTabRow);
-	      os << LogIO::WARN << "Incomplete coverage of combined SPW starting at timestamp " << oss.str()
+	      os << LogIO::WARN << "Incomplete coverage of combined SPW starting at timestamp " 
+		 <<  MVTime(timeCol(mainTabRow)/C::day).string(MVTime::DMY,7)
 		 << ", baseline ( " << theAntenna1 << ", " << theAntenna2 << " )" << endl
 		 << "In this and further affected rows, the data arrays will be padded with zeros and corresponding channels flagged." <<  LogIO::POST;
 	    }
@@ -5298,7 +5318,7 @@ Bool SubMS::fillAccessoryMainCols(){
     const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
     const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
     
-    for(uInt k = ant1.nrow() - 1; k--;){
+    for(Int k = ant1.nrow(); k--;){
       msc_p->antenna1().put(k, antNewIndex_p[ant1(k)]);
       msc_p->antenna2().put(k, antNewIndex_p[ant2(k)]);
     }
@@ -5489,9 +5509,8 @@ void SubMS::relabelIDs()
 {
   const ROScalarColumn<Int> inDDID(mscIn_p->dataDescId());
   const ROScalarColumn<Int> fieldId(mscIn_p->fieldId());
-  Int nrows = inDDID.nrow();
   
-  for(Int k = nrows - 1; k--;){
+  for(Int k = inDDID.nrow(); k--;){
     msc_p->dataDescId().put(k, spwRelabel_p[oldDDSpwMatch_p[inDDID(k)]]);
     msc_p->fieldId().put(k, fieldRelabel_p[fieldId(k)]);
   }
@@ -6224,8 +6243,8 @@ void SubMS::make_map(const Vector<Int>& mscol, Vector<Int>& mapper)
 {
   std::set<Int> valSet;
   
-  for(uInt i = mscol.nelements() - 1; i--;)  // Strange, but slightly more
-    valSet.insert(mscol[i]);                 // efficient than going forward.
+  for(Int i = mscol.nelements(); i--;)  // Strange, but slightly more
+    valSet.insert(mscol[i]);            // efficient than going forward.
   mapper.resize(valSet.size());
 
   uInt remaval = 0;
@@ -6245,8 +6264,8 @@ void SubMS::make_map(const ROScalarColumn<Int>& mscol,
 {
   std::set<Int> valSet;
   
-  for(uInt i = mscol.nrow() - 1; i--;)  // Strange, but slightly more
-    valSet.insert(mscol(i));    	// efficient than going forward.
+  for(Int i = mscol.nrow(); i--;)  // Strange, but slightly more
+    valSet.insert(mscol(i));       // efficient than going forward.
 
   uInt remaval = 0;
   for(std::set<Int>::const_iterator vs_iter = valSet.begin();
@@ -6491,9 +6510,8 @@ uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
   const Vector<Int>& ant2 = msc->antenna2().getColumn();
 
   std::set<Int> ants;
-  uInt endrow = ant1.nelements() - 1;
-  for(uInt i = endrow; i--;){   // Strange, but slightly more
-    ants.insert(ant1[i]);	// efficient than going forward.
+  for(Int i = ant1.nelements(); i--;){   // Strange, but slightly more
+    ants.insert(ant1[i]);	         // efficient than going forward.
     ants.insert(ant2[i]);
   }
   uInt nant = ants.size();

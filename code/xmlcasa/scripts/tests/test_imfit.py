@@ -94,11 +94,14 @@ def near_abs(first, second, epsilon):
 # @param expected The name of the expected image
 # @param difference The name of the difference image to write
 def check_image(got, expected, difference):
-    ia.open(got);
+    myia = iatool.create()
+    myia.open(got);
     expr = "\"" + got + "\" - \"" + expected + "\"";
-    ia.imagecalc(difference, expr, True);
-    ia.open(difference);
-    stats = ia.statistics()
+    myia.imagecalc(difference, expr, True);
+    myia.done()
+    myia.open(difference);
+    stats = myia.statistics()
+    myia.done()
     return stats['sumsq'] == 0
 
 # count the number of lines in the specified file in which the spcified string occurs
@@ -142,8 +145,11 @@ class imfit_test(unittest.TestCase):
         test = "fit_using_full_image: "
         global msgs
         def run_fitcomponents():
-            ia.open(noisy_image)
-            return ia.fitcomponents()
+            myia = iatool.create()
+            myia.open(noisy_image)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
         def run_imfit():
             default('imfit')
             return imfit(imagename=noisy_image)
@@ -236,8 +242,11 @@ class imfit_test(unittest.TestCase):
                 region = 'mybox'
     
             def run_fitcomponents():
-                ia.open(noisy_image)
-                return ia.fitcomponents(box=box, region=region)
+                myia = iatool.create()
+                myia.open(noisy_image)
+                res = myia.fitcomponents(box=box, region=region)
+                myia.close()
+                return res
             def run_imfit():
                 default('imfit')
                 return imfit(imagename=noisy_image, box=box, region=region)
@@ -307,8 +316,11 @@ class imfit_test(unittest.TestCase):
     
         box = '0,0,20,20'
         def run_fitcomponents():
-            ia.open(noisy_image)
-            return ia.fitcomponents(box=box)
+            myia = iatool.create()
+            myia.open(noisy_image)
+            res = myia.fitcomponents(box=box)
+            myia.done()
+            return res
         def run_imfit():
             default('imfit')
             return imfit(imagename=noisy_image, box=box)
@@ -347,15 +359,17 @@ class imfit_test(unittest.TestCase):
                 excludepix = [-10,40]
     
             def run_fitcomponents():
-                ia.open(noisy_image)
-                return ia.fitcomponents(mask=mask, includepix=includepix, excludepix=excludepix)
+                myia = iatool.create()
+                myia.open(noisy_image)
+                res = myia.fitcomponents(mask=mask, includepix=includepix, excludepix=excludepix)
+                myia.close()
+                return res
             def run_imfit():
                 default('imfit')
                 return imfit(imagename=noisy_image, mask=mask, includepix=includepix, excludepix=excludepix)
     
             for code in [run_fitcomponents, run_imfit]:
                 res = code()
-    
                 clist = res['results']
                 if (not res['converged']):
                     success = False
@@ -419,10 +433,13 @@ class imfit_test(unittest.TestCase):
         global msgs
         box="100,100,200,200"
         def run_fitcomponents(model, residual):
-            ia.open(noisy_image)
-            return ia.fitcomponents(
+            myia = iatool.create()
+            myia.open(noisy_image)
+            res = myia.fitcomponents(
                 box=box, residual=residual, model=model
             )
+            myia.done()
+            return res
         def run_imfit(model, residual):
             default('imfit')
             return imfit(
@@ -602,8 +619,10 @@ class imfit_test(unittest.TestCase):
             newestimates = "newestimates" + str(i) + ".txt"
             if (i == 0):
                 def run_fitcomponents():
-                    ia.open(two_gaussians_image)
-                    return ia.fitcomponents(estimates=two_gaussians_estimates, newestimates=newestimates)
+                    myia = iatool.create()
+                    myia.open(two_gaussians_image)
+                    res = myia.fitcomponents(estimates=two_gaussians_estimates, newestimates=newestimates)
+                    return res
                 code = run_fitcomponents
                 method = test + "ia.fitcomponents: "
             else:

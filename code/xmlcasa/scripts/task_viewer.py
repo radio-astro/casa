@@ -115,13 +115,12 @@ class __viewer_class(object):
 			try:
 				old_path = vwr.cwd( )
 			except:
-				raise Exception, "viewer() failed to get the current working directory"
+				raise Exception, "viewer() failed to get the current working directory [" + str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1]) + "]"
 
 			try:
 				vwr.cwd(os.path.abspath(os.curdir))
 			except:
-				raise Exception, "viewer() failed to change to the new working directory"
-				
+				raise Exception, "viewer() failed to change to the new working directory (" + os.path.abspath(os.curdir) + ") [" + str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1]) + "]"
 
 			panel = vwr.panel("viewer")
 			data = None
@@ -161,7 +160,7 @@ class __viewer_class(object):
 			try:
 				vwr.cwd(old_path)
 			except:
-				raise Exception, "viewer() failed to restore the old working directory"
+				raise Exception, "viewer() failed to restore the old working directory (" + old_path + ") [" + str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1]) + "]"
 
 		else:
 			viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py

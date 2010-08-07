@@ -75,7 +75,6 @@ add_custom_command( OUTPUT version.cc
 )
 
 casa_add_library( xmlcasa
-  implement/alma/asdm2msfillertask_cmpt.cc
   implement/atmosphere/atmosphere_cmpt.cc
   implement/calibrater/calplot_cmpt.cc
   implement/casa/logsink_cmpt.cc
@@ -378,7 +377,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/msmoments.xml )
 
 casa_add_tools( tools_idl tools_sources 
-  implement/alma/asdm2msfillertask.xml
   implement/atmosphere/atmosphere.xml
   implement/calibrater/calplot.xml
   implement/casa/logsink.xml

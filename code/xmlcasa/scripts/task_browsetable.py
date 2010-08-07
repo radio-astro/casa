@@ -40,7 +40,8 @@ def browsetable(tablename=None, mightedit=None,
                 if type(skipcols) == str:
                     skipcols = re.split(r',?\s+', skipcols)
                 for c in skipcols:
-                    colnames.remove(c.upper())
+                    if c.upper() in colnames:
+                        colnames.remove(c.upper())
                 if type(sortlist) == list:
                     sortlist = ', '.join(sortlist)
                    

@@ -24,8 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include <msvis/MSVis/SubMS.h>
+#include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
+#include <casa/Arrays/Array.h>
 #include <casa/BasicSL/String.h>
 #include <casa/System/ProgressMeter.h>
 #include <cmath>
@@ -76,8 +78,8 @@ template<class M>
 void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 			const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
 			const Int nrow, const Bool calcImgWts, 
-			const Bool calcWtSig, ROArrayColumn<Float>& rowWt,
-			ROArrayColumn<Float>& sigma)
+			const Bool calcWtSig, const ROArrayColumn<Float>& rowWt,
+			const ROArrayColumn<Float>& sigma)
 {
   Bool deleteIptr;
   Matrix<M> indatatmp;
@@ -91,11 +93,9 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
   Bool deleteIFptr;
   Matrix<Bool> outflag;
   
-  ROArrayColumn<Float> inrowwt(mscIn_p->weight());
   Vector<Float> inrowwttmp;
   Vector<Float> outrowwt;
   
-  ROArrayColumn<Float> inrowsig(mscIn_p->sigma());
   Vector<Float> inrowsigtmp;
   Vector<Float> outrowsig;
   
@@ -192,6 +192,10 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
 	outrowwt.resize(ncorr_p[ddID]);
 	inrowsigtmp.resize(inNumCorr_p[ddID]);
 	outrowsig.resize(ncorr_p[ddID]);
+	os << LogIO::DEBUG1
+	   << "inNumCorr_p[ddID] = " << inNumCorr_p[ddID]
+	   << ", ncorr_p[ddID] = " << ncorr_p[ddID]
+	   << LogIO::POST;
       }
 
       avcounter.resize(ncorr_p[ddID]);
@@ -203,10 +207,12 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     outflag.set(false);
     data.get(row, indatatmp);
     flag.get(row, inflagtmp);
-    //os << LogIO::DEBUG1 << "calcImgWts: " << calcImgWts << LogIO::POST;
+    // os << LogIO::DEBUG1 << "calcImgWts: " << calcImgWts << LogIO::POST;
     if(calcImgWts)
       inImgWts.get(row, inImgWtsSpectrum);
+    // These were more to say "I made it here!" than anything.
     //os << LogIO::DEBUG1 << "doSpWeight: " << doSpWeight << LogIO::POST;
+    //os << LogIO::DEBUG1 << "calcWtSig: " << calcWtSig << LogIO::POST;
     if(doSpWeight){
       outrowwt.set(0.0);
       if(calcWtSig)
@@ -216,7 +222,7 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
       rowWt.get(row, inrowwttmp);
     if(calcWtSig)
       sigma.get(row, inrowsigtmp);
-
+    
     uInt outChanInd = 0;
     Int chancounter = 0;
     outdatatmp.set(0); outwgtspectmp.set(0);

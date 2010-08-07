@@ -350,7 +350,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', scales=[0], weight='natural',
-          contclean=False, visinmem=False, 
+          contclean=False, visinmem=False, interactive=False,
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''):
 
@@ -465,9 +465,9 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         #   else:
         #        substr=substr+'_spw_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
         ####new version to keep filename small
-        substr='Temp_'+string.join(random.sample(char_set,8), sep='')
+        substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
         while (os.path.exists(substr+'.model')):
-            substr='Temp_'+string.join(random.sample(char_set,8), sep='')
+            substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
         ###############
         imlist.append(substr)
         cfcachelist.append(cfcache+'_'+str(k));
@@ -492,13 +492,17 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             print 'command is ', runcomm,cfcachelist[k];
             out[k]=c.odo(runcomm,k)
         over=False
+        printkounter=0
         while(not over):
             time.sleep(5)
+            #printkounter +=1
             overone=True
             for k in range(numcpu):
                 #print 'k', k, out[k]
-                overone=(overone and c.check_job(out[k],False)) 
-                #print 'overone', overone 
+                overone=(overone and c.check_job(out[k],False))
+                #if((printkounter==10) and not(c.check_job(out[k],False))):
+                #    print 'job ', k, 'is waiting'
+                #    printkounter=0
             over=overone
         residual=imagename+'.residual'
         psf=imagename+'.psf'
@@ -510,8 +514,13 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             residuals[k]=imlist[k]+'.residual'
             restoreds[k]=imlist[k]+'.image'
 	averimages(residual, residuals)
+        if (interactive):
+            im.drawmask(residual,'lala.mask');
+        else:
+            if (maj==0):
+                copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0);
         if(maj==0):
-            copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
+#            copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
             if(not contclean or (not os.path.exists(model))):
                 copyimage(inimage=residual, outimage=model, 
                           init=True, initval=0.0)    

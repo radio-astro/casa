@@ -208,7 +208,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 				     amodel, fixed, String(complist),
 				     amask, aimage, aresidual, apsf,
 				     Bool(interactive), npercycle,
-				     String(masktemplate), Bool(async));
+				     String(masktemplate));
 	 } 
        catch  (AipsError x) 
 	 {

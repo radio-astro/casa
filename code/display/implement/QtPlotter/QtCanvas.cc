@@ -186,12 +186,12 @@ void QtCanvas::setDataRange()
        settings.minY = zoomStack[curZoom].minY;
        settings.maxY = zoomStack[curZoom].maxY;
     }
-    if (xmax == xmin)
+    if (fabs(xmax - xmin) < 0.1)
     {
         xmax = xmax + 0.5;
         xmin = xmin - 0.5;
     }
-    if (ymax == ymin)
+    if (fabs(ymax - ymin) < 0.1)
     {
         ymax = ymax + 0.5;
         ymin = ymin - 0.5;
@@ -727,6 +727,25 @@ void QtCanvas::drawCurves(QPainter *painter)
 
         colorFolds[id] = getLinearColor(n);
 
+        //cout << "maxPoints=" << maxPoints << endl;
+        if (maxPoints == 1) {
+        //cout << "x=" << data[0] << " y=" << data[1] << endl;
+            double dx = data[0] - settings.minX;
+            double dy = data[1] - settings.minY;
+            double x = rect.left() + (dx * (rect.width() - 1)
+                                      / settings.spanX());
+            double y = rect.bottom() - (dy * (rect.height() - 1)
+                                        / settings.spanY());
+            if (fabs(x) < 32768 && fabs(y) < 32768)
+            {
+                points.moveTo((int)x + 1, (int)y);
+                points.lineTo((int)x, (int)y - 1);
+                points.lineTo((int)x - 1, (int)y);
+                points.lineTo((int)x, (int)y + 1);
+                points.lineTo((int)x + 1, (int)y);
+            }
+        }
+        else {
         for (int i = 0; i < maxPoints; ++i)
         {
             double dx = data[2 * i] - settings.minX;
@@ -741,6 +760,7 @@ void QtCanvas::drawCurves(QPainter *painter)
                     points.moveTo((int)x, (int)y);
                 points.lineTo((int)x, (int)y);
             }
+        }
         }
         painter->setPen(colorFolds[(uint)id % 6]);
         painter->drawPath(points);

@@ -169,6 +169,7 @@ class asdmv1_import(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
         self.res = importasdm(myasdm_dataset_name)
+        self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
                             "table.f0",
@@ -220,9 +221,9 @@ class asdmv1_import(unittest.TestCase):
         try:
             ms.open(msname)
         except:
-            print myname, ": Error  Cannot open MS table", tablename
+            print myname, ": Error  Cannot open MS table", msname
             retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
         else:
             ms.close()
             print myname, ": OK. Checking tables in detail ..."
@@ -283,7 +284,7 @@ class asdmv1_import(unittest.TestCase):
             else:
                 retValue['success']=True
                 
-        self.assertTrue(results)
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
                 
 # ENABLE the following when exportasdm works in Mac 10.6
             
@@ -323,6 +324,7 @@ class asdmv1_import(unittest.TestCase):
             tb.close()
             tb.open(reimp_msname)
             nrowsreimp = tb.nrows()
+            tb.close()
             print "Reimported MS contains ", nrowsreimp, "integrations."
             if(not nrowsreimp==nrowsorig):
                 print "Numbers of integrations disagree."

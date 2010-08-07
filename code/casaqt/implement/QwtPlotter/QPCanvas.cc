@@ -1,3 +1,4 @@
+#include <stdio.h>
 //# QPCanvas.cc: Qwt implementation of generic PlotCanvas class.
 //# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
@@ -1354,7 +1355,11 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
         }
         accept = true;
         
-    } /* else if(text == "!" || text == "@" || text == "#" || text == "$" ||
+    } else if (key == Qt::Key_Space)  {
+		c = ' ';
+		accept=true; 
+		
+    }/* else if(text == "!" || text == "@" || text == "#" || text == "$" ||
               text == "%" || text == "^" || text == "&" || text == "*" ||
               text == "(" || text == ")") {
         if(mods.testFlag(Qt::ControlModifier))
@@ -1373,7 +1378,7 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
         else if(text == "(") c = '9';
         else if(text == ")") c = '0';
     } */
-    
+printf(" DSW CHECKPOINT: KEY! char = %04X accept=%d\n", key, (int)accept);  /* DSW HACK - remove, if i forget */   
     if(accept) accept = notifyKeyHandlers(c, modifiers);
     
     if(accept) event->accept();

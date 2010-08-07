@@ -194,9 +194,9 @@ bool LogModel::removeRows (int row, int count, const QModelIndex &parent){
 
 bool LogModel::insertRows (int row, int count, const QModelIndex &parent){
     //qDebug() << "child=" << rootItem->childCount() 
-    //         << " remove rows=" << row << " count=" << count;
-    int last = row + count;
+    //         << " insert rows=" << row << " count=" << count;
     if (row < 0) row = 0;
+    int last = row + count;
     if (row > rowCount()) row = rowCount();
     if (count < 1)
        return false;
@@ -292,8 +292,8 @@ bool LogModel::insert(int row, const QString &msg)
    if (msg.isEmpty())
       return false;
    QList<QVariant> columnData;
-   QDateTime dt = QDateTime::currentDateTime();
-   columnData << dt.toString();
+   QDateTime dt = QDateTime::currentDateTime().toUTC();
+   columnData << dt.toString(Qt::ISODate).replace("T", " ");
    columnData << "NOTE";
    columnData << QString(getenv("USER"));
    columnData << msg.trimmed();

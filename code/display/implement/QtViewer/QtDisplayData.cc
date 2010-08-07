@@ -976,7 +976,16 @@ Int QtDisplayData::spectralAxis() {
     Int coordno, axisincoord;
     cs->findWorldAxis(coordno, axisincoord, ax);
     
-    if(cs->showType(coordno)=="Spectral") return ax;  }
+    //cout << "coordno=" << coordno << endl;
+    if(cs->showType(coordno)=="Spectral") {
+        //if (im_ != 0) 
+        //   cout << "shape=" << im_->shape() << endl; 
+        //if (cim_ != 0)
+        //   cout << "cshape=" << cim_->shape() << endl; 
+        return ax;  
+    }
+
+  }
 
   return -1;  }
 
@@ -1206,10 +1215,14 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     
     SubImage<Float> subImg(*im_, imgReg);
 
+    
+
     //cout << "subImg=" << subImg.shape() << endl;
     ImageStatistics<Float> stats(subImg, False);
     PrincipalAxesDD* padd =
           dynamic_cast<PrincipalAxesDD*>(dd_);
+
+
 
     if (padd == 0)
         return False;
@@ -1275,21 +1288,87 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     } else {
        zLabel = ((CoordinateSystem)cs).format(tStr, 
                  Coordinate::DEFAULT, tWrld(zPos), zPos);
-       zLabel += tStr;
+       zLabel += tStr + "  ";
        hLabel = ((CoordinateSystem)cs).format(tStr, 
                  Coordinate::DEFAULT, tWrld(hPos), hPos);
-       hLabel += tStr;
+       hLabel += tStr + "  ";
     }
     //cout << "zLabel=" << zLabel << " hLabel=" << hLabel << endl;
     //cout << "tStr=" << tStr << endl;
 
-    String head = description() + "\n" +  
-            zaxis + "=" + zLabel + " " +
-            haxis + "=" + hLabel + " " +
-            "FluxUnit=" + unit + "\n";
+    Int spInd = cs.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate spCoord;
+    Int wSp=-1;
+    if (spInd>=0){
+       wSp= (cs.worldAxes(spInd))[0];
+       spCoord=cs.spectralCoordinate(spInd);
+       spCoord.setVelocity();
+       Double vel;
+       if (downcase(zaxis).contains("freq")) {
+          if (spCoord.pixelToVelocity(vel, zIndex)) {
+             zLabel += "Velocity=" + String::toString(vel) + 
+                  "km/s  Frame=" + 
+                  MFrequency::showType(spCoord.frequencySystem()) + 
+                  "  Doppler=" +
+                  MDoppler::showType(spCoord.velocityDoppler()) + 
+                  "  ";
+          } 
+       }
+       if (downcase(haxis).contains("freq")) {
+          if (spCoord.pixelToVelocity(vel, hIndex)) {
+             hLabel += "\nVelocity=" + String::toString(vel) + 
+                  "km/s  Frame=" + 
+                  MFrequency::showType(spCoord.frequencySystem()) + 
+                  "  Doppler=" +
+                  MDoppler::showType(spCoord.velocityDoppler()) + 
+                  "  ";
+          } 
+       }
+    }
 
-    //stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
-    stats.getLayerStats(layerStats, nm, zPos, zIndex, hPos, hIndex); 
+    //the position will have the frequency coord in it
+    //Vector<Double> lin(2);
+    //lin(0) = 1; lin(1) = 1;
+    //Vector<Double> wld(2);
+    //dd_->linToWorld(wld, lin);
+    //cout << "world=" << wld << endl;
+    //cout << "Tracking=" << dd_->showPosition(wld) << endl;
+
+   Double beamArea = 0;
+   ImageInfo ii = im_->imageInfo();
+   Vector<Quantum<Double> > beam = ii.restoringBeam();
+   CoordinateSystem cSys = im_->coordinates();
+   String imageUnits = im_->units().getName();
+   imageUnits.upcase();
+
+   Int afterCoord = -1;
+   Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
+   // use contains() not == so moment maps are dealt with nicely
+   if (beam.nelements()==3 && dC!=-1 && imageUnits.contains("JY/BEAM")) {
+      DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
+      Vector<String> units(2);
+      units(0) = units(1) = "rad";
+      dCoord.setWorldAxisUnits(units);
+      Vector<Double> deltas = dCoord.increment();
+
+      Double major = beam(0).getValue(Unit("rad"));
+      Double minor = beam(1).getValue(Unit("rad"));
+      beamArea = C::pi/(4*log(2)) * major * minor / 
+                 abs(deltas(0) * deltas(1));
+    }
+
+    String head = description() + "\n" +  
+            zaxis + "=" + zLabel + 
+            haxis + "=" + hLabel + 
+            "BrightnessUnit=" + unit;
+    if (beamArea > 0) {
+        head += "  BeamArea=" + String::toString(beamArea) + "\n"; 
+    }
+    else {
+        head += "  BeamArea=Unknown\n";
+    }
+
+    stats.getLayerStats(layerStats, beamArea, nm, zPos, zIndex, hPos, hIndex); 
     //cout << layerStats << endl;
 
     layerStats = head + layerStats;

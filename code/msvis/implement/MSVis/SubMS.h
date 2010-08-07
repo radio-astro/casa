@@ -29,13 +29,11 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
-#include <ms/MeasurementSets/MSSelection.h>
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <map>
 #include <vector>
-//#include <ms/MeasurementSets/MSColumns.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
 
@@ -72,8 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // These forward declarations are so the corresponding .h files don't have to
 // be included in this .h file, but it's only worth it if a lot of other files
 // include this file.
-class MSColumns;
-class ROMSColumns;
+class MSSelection; // #include <ms/MeasurementSets/MSSelection.h>
 
   // These typedefs are necessary because a<b::c> doesn't work.
   typedef std::vector<uInt> uivector;
@@ -399,8 +396,8 @@ class SubMS
   void filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 		   const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
 		   const Int nrow, const Bool calcImgWts, 
-		   const Bool calcWtSig, ROArrayColumn<Float>& rowWt,
-		   ROArrayColumn<Float>& sigma);
+		   const Bool calcWtSig, const ROArrayColumn<Float>& rowWt,
+		   const ROArrayColumn<Float>& sigma);
 
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,

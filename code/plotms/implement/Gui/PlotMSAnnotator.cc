@@ -163,6 +163,8 @@ void PlotMSAnnotator::clearRectangles(PlotCanvas* canvas) {
 }
 
 void PlotMSAnnotator::clearAll(PlotCanvas* canvas) {
+	(void)canvas;
+	
     QMap<PlotCanvas*, vector<PlotItemPtr> > items;
     
     foreach(PlotCanvas* canvas, itsAText_.keys()) {

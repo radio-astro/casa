@@ -580,7 +580,7 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.comment("SCons' -j option is used to enable parallel builds. See scons --help for more.")
         b.comment("The --extra-cppflags option specifies the compile flags (for C++ code), you can add -g in order to compile with debugging info enabled.")
         if ops == "Linux":
-            b.comment("Also, you should use -fno-omit-frame-pointer in order to debug on 64-bit Linux.")
+            b.comment("Also, you should use -fno-omit-frame-pointer for better debugging support on 64-bit Linux.")
             b.do("", "scons -j ", threads, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -fno-omit-frame-pointer -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW", extra_cpp_flags, "\" --libdir=", prefix, "/", builddir, "/lib --data-dir=", prefix, "/data --cfitsio-libdir=/usr/lib --cfitsio-incdir=/usr/include/cfitsio --extra-cflags=\"-g -fno-omit-frame-pointer\" --extra-fflags=\"-g  -fno-omit-frame-pointer\" --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static")
         elif ops == "Darwin":
             b.do("", "scons -j ", threads, " --extra-root=", prefix, "/../", third, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW -DCASACORE_NOEXIT -fopenmp\" --data-dir=", prefix, "/../data --wcs-root=", prefix, "/", builddir, " --cfitsio-libdir=", prefix, "/../", third, "/lib --cfitsio-incdir=", prefix, "/../", third, "/include --fftw3-root=", prefix, "/../", third, " --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static")

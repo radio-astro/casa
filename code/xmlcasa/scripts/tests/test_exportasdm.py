@@ -202,6 +202,7 @@ class exportasdm_test2(unittest.TestCase):
         shutil.rmtree(self.vis_e,ignore_errors=True)
         shutil.rmtree(self.vis_f,ignore_errors=True)
         shutil.rmtree(self.vis_g,ignore_errors=True)
+        os.system('rm -rf test*exportasdm*.asdm')
     
     def test1a(self):
         '''Exportasdm: Cleanup'''

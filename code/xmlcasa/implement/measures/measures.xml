@@ -571,7 +571,25 @@ print me.observatory('ATCA')
 # 'm2': {'value': 6372960.2577234386, 'unit': 'm'},
 # 'refer': 'ITRF',
 # 'type': 'position'}
+
+###One can use a quantity-vectors  especially when dealing with multiple antenna positions  for e.g for 3 positions
+
+ants=me.position('itrf',qa.quantity([3828763.11,3828746.55, 3828727.43],'m'), qa.quantity([442449.106,442592.14, 442580.12],'m'), 
+             qa.quantity([5064923.01, 5064923.01, 5064923.51],'m')) 
+
+print ants
+ 
+#{'m0': {'unit': 'rad',
+#        'value': array([ 0.11504897,  0.11508633,  0.1150838 ])},
+# 'm1': {'unit': 'rad',
+#        'value': array([ 0.92031276,  0.92031276,  0.92031535])},
+# 'm2': {'unit': 'm',
+#        'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587])},
+# 'refer': 'ITRF',
+# 'type': 'position'}
+
 \end{verbatim}
+
 </example>
 </method>
  
@@ -1111,6 +1129,44 @@ print me.getvalue(me.touvw(b))
 # 'm2': {'value': 37.416573867739416, 'unit': 'm'}}
 print me.getvalue(me.touvw(b))['m0']
 #{'value': -0.094777304811312649, 'unit': 'rad'}
+
+###Or when you are dealing with multiple antennas
+####set the frame..i,e where, direction and when.
+me.doframe(me.observatory('VLA'))
+me.doframe(me.direction('J2000', '19h20m00', '20d10m00'))
+me.doframe(me.epoch('utc', '2007/07/08/20:30:00'))
+####antenna positions 
+ants=me.position('itrf',qa.quantity([3828763.11,3828746.55, 3828727.43],'m'), qa.quantity([442449.106,442592.14, 442580.12],'m'), qa.quantity([5064923.01, 5064923.01, 5064923.51],'m')) 
+###convert to baseline measures
+bl=me.asbaseline(ants)
+###convert to uvw
+me.touvw(bl)
+
+#{'dot': {'unit': 'm/s',
+#         'value': array([ 181.25190155,  -73.29924893,  199.57974846,  181.25985238,
+#        -73.29691498,  199.57339353,  181.2583565 ,  -73.29668498,
+#        199.57276731])},
+# 'return': {'m0': {'unit': 'rad',
+#                   'value': array([ 2.21611194,  2.21610131,  2.21609887])},
+#            'm1': {'unit': 'rad',
+#                   'value': array([ 0.6984441 ,  0.69846521,  0.69846285])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587])},
+#            'refer': 'J2000',
+#            'type': 'uvw'},
+# 'xyz': {'unit': 'm',
+#         'value': array([-2931661.69632123,  3894141.52172208,  4092634.20894752,
+#       -2931568.34776551,  3894103.64373003,  4092737.08879791,
+#       -2931559.14911939,  3894111.22249941,  4092717.89890567])}}
+
+
+####print the (n-1)n/2 baselines(u,v,w)
+me.expand(me.touvw(bl)['return'])['xyz']
+#{'unit': 'm',
+# 'value': array([  93.34855573,  -37.87799205,  102.8798504 ,  102.54720184,
+#        -30.29922267,   83.68995815,    9.19864612,    7.57876938,
+#        -19.18989224])}
+
 \end{verbatim}
 <!--
 An example with more than one value:
@@ -1213,14 +1269,23 @@ variable {\em xyz} will be set to an array of values.
 <example>
 \begin{verbatim}
 print "\t----\t expand Ex 1 \t----"
-b=me.baseline('itrf','10m','20m','30m')
+b=me.baseline('itrf', qa.quantity([10, 20, 30], 'm'), qa.quantity([10, 20, 30], 'm'), qa.quantity([0, 0, 0], 'm'))
 print me.expand(b)
-#{'return': {'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-#            'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-#            'm2': {'value': 37.416573867739416, 'unit': 'm'},
-#            'refer': 'J2000',
-#            'type': 'uvw'},
-# 'xyz': {'value': [10.000000000000004, 20.000000000000004, 30.0], 'unit': 'm'}}
+me.expand(b)
+ 
+#{'return': {'m0': {'unit': 'rad',
+#                   'value': array([ 0.78539816,  0.78539816,  0.78539816])},
+#            'm1': {'unit': 'rad', 'value': array([ 0.,  0.,  0.])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 14.14213562,  28.28427125,  14.14213562])},
+#            'refer': 'ITRF',
+#            'type': 'baseline'},
+# 'xyz': {'unit': 'm',
+#         'value': array([ 10.,  10.,   0.,  20.,  20.,   0.,  10.,  10.,   0.])}}
+
+print me.expand(b)['xyz']['value']
+
+#[ 10.  10.   0.  20.  20.   0.  10.  10.   0.]
 \end{verbatim}
 <!--
 sb = me.baseline('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
@@ -1424,19 +1489,41 @@ positions, with subtractions to obtain baselines at a later stage.
 <example>
 \begin{verbatim}
 print "\t----\t asbaseline Ex 1 \t----"
-b = me.position('itrf', '10m', '20m', '30m');
-print b
-#{'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-# 'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-# 'm2': {'value': 37.416573867739416, 'unit': 'm'},
-# 'refer': 'ITRF',
-# 'type': 'position'}
-print me.asbaseline(b)
-#{'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-# 'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-# 'm2': {'value': 37.416573867739416, 'unit': 'm'},
-# 'refer': 'J2000',
-# 'type': 'baseline'}
+
+####An example of getting baselines with 3 antenna positions
+#### Define the frame ; where, which-direction and when
+me.doframe(me.observatory('VLA'))
+me.doframe(me.direction('J2000', '19h20m00', '20d10m00'))
+me.doframe(me.epoch('utc', '2007/07/08/20:30:00'))
+
+##antenna position
+ants=me.position('itrf',qa.quantity([3828763.11,3828746.55, 3828727.43],'m'), qa.quantity([442449.106,442592.14, 442580.12],'m'), qa.quantity([5064923.01, 5064923.01, 5064923.51],'m')) 
+print ants
+#{'type': 'position', 'refer': 'ITRF', 'm1': {'value': array([ 0.92031276,  0.92031276,  0.92031535]), 'unit': 'rad'}, 
+#'m0': {'value': array([ 0.11504897,  0.11508633,  0.1150838 ]), 'unit': 'rad'}, 
+#'m2': {'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587]), 'unit': 'm'}}
+
+bl=me.asbaseline(ants)
+print bl
+#{'type': 'baseline', 'refer': 'J2000', 'm1': {'value': array([ 0.92068328,  0.92068326,  0.92068585]), 'unit': 'rad'}, 
+#'m0': {'value': array([-2.08658811, -2.08655073, -2.08655326]), 'unit': 'rad'}, 
+#'m2': {'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587]), 'unit': 'm'}}
+
+me.expand(bl)
+
+#{'return': {'m0': {'unit': 'rad',
+#                  'value': array([-0.51637894, -0.36575235,  1.50036599])},
+#            'm1': {'unit': 'rad',
+#                   'value': array([-0.00060966,  0.00302388,  0.02206414])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 143.98943974,  135.78652583,   22.58992696])},
+#            'refer': 'J2000',
+#            'type': 'baseline'},
+# 'xyz': {'unit': 'm',
+#         'value': array([  1.25215025e+02,  -7.10925354e+01,  -8.77850493e-02,
+#         1.26804339e+02,  -4.85640980e+01,   4.10601842e-01,
+#         1.58931410e+00,   2.25284374e+01,   4.98386892e-01])}}
+
 \end{verbatim}
 <!--
 sb = me.position('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),

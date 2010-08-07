@@ -54,6 +54,7 @@
 #include <synthesis/MeasurementComponents/WPConvFunc.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <synthesis/MeasurementComponents/ComponentFTMachine.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
 
 
@@ -510,7 +511,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
         os << "PSF calculation resulted in a PSF with its peak being 0 or less." << LogIO::POST;
       }
       else{
-	throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
+	throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
       }
     }
   }

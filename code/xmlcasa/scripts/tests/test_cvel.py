@@ -83,7 +83,7 @@ class cvel_test(unittest.TestCase):
 
 
     def tearDown(self):
-#        os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')   
+        os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')   
         pass
     
     def test1(self):
