@@ -126,7 +126,7 @@ class fitter:
         self.fitted = False
         return
 
-    #@print_log_dec
+    @print_log_dec
     def fit(self, row=0, estimate=False):
         """
         Execute the actual fitting process. All the state has to be set.
@@ -221,7 +221,7 @@ class fitter:
             else:
                 self.data._addfit(fit,self._fittedrow)
 
-    #@print_log_dec
+    @print_log_dec
     def set_parameters(self,*args,**kwargs):
         """
         Set the parameters to be fitted.
@@ -543,7 +543,7 @@ class fitter:
                 raise RuntimeError(msg)
         return self.fitter.getfit()
 
-    #@print_log_dec
+    @print_log_dec
     def commit(self):
         """
         Return a new scan where the fits have been commited (subtracted)
@@ -572,7 +572,7 @@ class fitter:
         print_log()
         return scan
 
-    #@print_log_dec
+    @print_log_dec
     def plot(self, residual=False, components=None, plotparms=False,
              filename=None):
         """
@@ -673,7 +673,7 @@ class fitter:
             self._p.save(filename)
         print_log()
 
-    #@print_log_dec
+    @print_log_dec
     def auto_fit(self, insitu=None, plot=False):
         """
         Return a scan where the function is applied to all rows for

@@ -223,9 +223,14 @@ void Scantable::setupMainTable()
 
   td.addColumn(ScalarColumnDesc<uInt>("FREQ_ID"));
   td.addColumn(ScalarColumnDesc<uInt>("MOLECULE_ID"));
-  td.addColumn(ScalarColumnDesc<Int>("REFBEAMNO"));
 
-  td.addColumn(ScalarColumnDesc<uInt>("FLAGROW"));
+  ScalarColumnDesc<Int> refbeamnoColumn("REFBEAMNO");
+  refbeamnoColumn.setDefault(Int(-1));
+  td.addColumn(refbeamnoColumn);
+
+  ScalarColumnDesc<uInt> flagrowColumn("FLAGROW");
+  flagrowColumn.setDefault(uInt(0));
+  td.addColumn(flagrowColumn);
 
   td.addColumn(ScalarColumnDesc<Double>("TIME"));
   TableMeasRefDesc measRef(MEpoch::UTC); // UTC as default
@@ -360,7 +365,7 @@ void Scantable::attachAuxColumnDef(ArrayColumn<T>& col,
       Array<T>& arr(ip);
       for (int i = 0; i < size; ++i)
 	arr[i] = static_cast<T>(defValue[i]);
-      
+
       col.fillColumn(arr);
     } else {
       throw;
@@ -948,13 +953,13 @@ std::string Scantable::summary( bool verbose )
       if (t.nrow() >  0) {
           Vector<Double> vec(moleculeTable_.getRestFrequency(i));
           if (vec.nelements() > 0) {
-               if (firstline) { 
+               if (firstline) {
                    oss << setprecision(10) << vec << " [Hz]" << endl;
                    firstline=False;
                }
-               else{ 
+               else{
                    oss << setw(15)<<" " << setprecision(10) << vec << " [Hz]" << endl;
-               } 
+               }
           } else {
               oss << "none" << endl;
           }
@@ -1166,9 +1171,9 @@ void Scantable::setRestFrequencies( vector<double> rf, const vector<std::string>
   Unit u(unit);
   //Quantum<Double> urf(rf, u);
   Quantum<Vector<Double> >urf(rf, u);
-  Vector<String> formattedname(0); 
+  Vector<String> formattedname(0);
   //cerr<<"Scantable::setRestFrequnecies="<<urf<<endl;
-  
+
   //uInt id = moleculeTable_.addEntry(urf.getValue("Hz"), name, "");
   uInt id = moleculeTable_.addEntry(urf.getValue("Hz"), mathutil::toVectorString(name), formattedname);
   TableVector<uInt> tabvec(table_, "MOLECULE_ID");
@@ -1240,7 +1245,7 @@ void Scantable::shift(int npix)
   }
 }
 
-std::string Scantable::getAntennaName() const
+String Scantable::getAntennaName() const
 {
   String out;
   table_.keywordSet().get("AntennaName", out);
@@ -1346,7 +1351,7 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   // assumed that all rows have same nChan
   Vector<Float> arr = specCol_( 0 ) ;
   int nChan = arr.nelements() ;
-  
+
   // if nmin < 0 or nmax < 0, nothing to do
   if (  nmin < 0 ) {
     throw( casa::indexError<int>( nmin, "asap::Scantable::reshapeSpectrum: Invalid range. Negative index is specified." ) ) ;
@@ -1354,22 +1359,22 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   if (  nmax < 0  ) {
     throw( casa::indexError<int>( nmax, "asap::Scantable::reshapeSpectrum: Invalid range. Negative index is specified." ) ) ;
   }
-  
+
   // if nmin > nmax, exchange values
   if ( nmin > nmax ) {
     int tmp = nmax ;
     nmax = nmin ;
     nmin = tmp ;
     LogIO os( LogOrigin( "Scantable", "reshapeSpectrum()", WHERE ) ) ;
-    os << "Swap values. Applied range is [" 
+    os << "Swap values. Applied range is ["
        << nmin << ", " << nmax << "]" << LogIO::POST ;
   }
-  
+
   // if nmin exceeds nChan, nothing to do
   if ( nmin >= nChan ) {
     throw( casa::indexError<int>( nmin, "asap::Scantable::reshapeSpectrum: Invalid range. Specified minimum exceeds nChan." ) ) ;
   }
-  
+
   // if nmax exceeds nChan, reset nmax to nChan
   if ( nmax >= nChan ) {
     if ( nmin == 0 ) {
@@ -1385,7 +1390,7 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
       nmax = nChan - 1 ;
     }
   }
-  
+
   // reshape specCol_ and flagCol_
   for ( int irow = 0 ; irow < nrow() ; irow++ ) {
     reshapeSpectrum( nmin, nmax, irow ) ;
@@ -1405,22 +1410,22 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
      * note that channel nmin in old index will be channel 0 in new one
      ***/
     refval = refval - ( refpix - nmin ) * increment ;
-    refpix = 0 ;  
+    refpix = 0 ;
     freqTable_.setEntry( refpix, refval, increment, irow ) ;
   }
-  
+
   // update nchan
   int newsize = nmax - nmin + 1 ;
   table_.rwKeywordSet().define( "nChan", newsize ) ;
-  
+
   // update bandwidth
   // assumed all spectra in the scantable have same bandwidth
   table_.rwKeywordSet().define( "Bandwidth", increment * newsize ) ;
-  
+
   return ;
 }
 
-void asap::Scantable::reshapeSpectrum( int nmin, int nmax, int irow ) 
+void asap::Scantable::reshapeSpectrum( int nmin, int nmax, int irow )
 {
   // reshape specCol_ and flagCol_
   Vector<Float> oldspec = specCol_( irow ) ;
@@ -1461,18 +1466,18 @@ void asap::Scantable::regridChannel( int nChan, double dnu )
   setCoordInfo( coordinfo ) ;
   for ( int irow = 0 ; irow < nrow() ; irow++ ) {
     regridChannel( nChan, dnu, irow ) ;
-  } 
+  }
   coordinfo[0] = oldinfo ;
   setCoordInfo( coordinfo ) ;
 
 
-  // NOTE: this method does not update metadata such as 
+  // NOTE: this method does not update metadata such as
   //       FREQUENCIES subtable, nChan, Bandwidth, etc.
 
-  return ; 
+  return ;
 }
 
-void asap::Scantable::regridChannel( int nChan, double dnu, int irow ) 
+void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 {
   // logging
   //ofstream ofs( "average.log", std::ios::out | std::ios::app ) ;
@@ -1482,7 +1487,7 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
   Vector<uChar> oldflag = flagsCol_( irow ) ;
   Vector<Float> newspec( nChan, 0 ) ;
   Vector<uChar> newflag( nChan, false ) ;
-  
+
   // regrid
   vector<double> abcissa = getAbcissa( irow ) ;
   int oldsize = abcissa.size() ;
@@ -1501,14 +1506,14 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
   Vector<Float> yi( oldsize + 1 ) ;
   zi[0] = z[0] - 0.5 * dnu ;
   zi[1] = z[0] + 0.5 * dnu ;
-  for ( int ii = 2 ; ii < nChan ; ii++ ) 
+  for ( int ii = 2 ; ii < nChan ; ii++ )
     zi[ii] = zi[ii-1] + dnu ;
   zi[nChan] = z[nChan-1] + 0.5 * dnu ;
   yi[0] = abcissa[0] - 0.5 * olddnu ;
   yi[1] = abcissa[1] + 0.5 * olddnu ;
   for ( int ii = 2 ; ii < oldsize ; ii++ )
     yi[ii] = abcissa[ii-1] + olddnu ;
-  yi[oldsize] = abcissa[oldsize-1] + 0.5 * olddnu ; 
+  yi[oldsize] = abcissa[oldsize-1] + 0.5 * olddnu ;
   if ( dnu > 0.0 ) {
     for ( int ii = 0 ; ii < nChan ; ii++ ) {
       double zl = zi[ii] ;
@@ -1663,7 +1668,7 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 //    * ichan = nChan-1
 //    ***/
 //   // NOTE: Assumed that all spectra have the same bandwidth
-//   pile += dnu ; 
+//   pile += dnu ;
 //   newspec[nChan-1] += frac * olddnu * oldspec[refChan] ;
 //   newflag[nChan-1] = newflag[nChan-1] || oldflag[refChan] ;
 //   //ofs << "channel " << refChan << " is partly included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
@@ -1682,7 +1687,7 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 //   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
 //   newspec[nChan-1] /= wsum ;
 //   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << endl ;
-  
+
 //   specCol_.put( irow, newspec ) ;
 //   flagsCol_.put( irow, newflag ) ;
 

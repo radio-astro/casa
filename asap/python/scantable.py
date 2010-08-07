@@ -35,7 +35,7 @@ class scantable(Scantable):
         The ASAP container for scans
     """
 
-    #@print_log_dec
+    @print_log_dec
     def __init__(self, filename, average=None, unit=None, getpt=None, antenna=None, parallactify=None):
         """
         Create a scantable from a saved one or make a reference
@@ -74,14 +74,14 @@ class scantable(Scantable):
         elif type(antenna) == list:
             tmpstr = ''
             for i in range( len(antenna) ):
-                if type(antenna[i]) == int: 
-                    tmpstr = tmpstr + ('%s,'%(antenna[i])) 
+                if type(antenna[i]) == int:
+                    tmpstr = tmpstr + ('%s,'%(antenna[i]))
                 elif type(antenna[i]) == str:
                     tmpstr=tmpstr+antenna[i]+','
                 else:
                     asaplog.push('Bad antenna selection.')
                     print_log('ERROR')
-                    return 
+                    return
             antenna = tmpstr.rstrip(',')
         parallactify = parallactify or rcParams['scantable.parallactify']
         varlist = vars()
@@ -127,7 +127,7 @@ class scantable(Scantable):
         self._add_history("scantable", varlist)
         print_log()
 
-    #@print_log_dec
+    @print_log_dec
     def save(self, name=None, format=None, overwrite=False):
         """
         Store the scantable on disk. This can be an asap (aips++) Table,
@@ -484,7 +484,7 @@ class scantable(Scantable):
         rtnabc = False
         if stat.lower().endswith('_abc'): rtnabc = True
         getchan = False
-        if stat.lower().startswith('min') or stat.lower().startswith('max'): 
+        if stat.lower().startswith('min') or stat.lower().startswith('max'):
             chan = self._math._minmaxchan(self, mask, stat)
             getchan = True
             statvals = []
@@ -521,8 +521,8 @@ class scantable(Scantable):
             if self.nif(-1) > 1: out +=  ' IF[%d] ' % (self.getif(i))
             if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (self.getpol(i))
             #outvec.append(callback(i))
-            #out += ('= %'+form) % (outvec[i]) +'   '+refstr+'\n' 
-            out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n' 
+            #out += ('= %'+form) % (outvec[i]) +'   '+refstr+'\n'
+            out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n'
             out +=  sep+"\n"
 
         if rcParams['verbose']:
@@ -751,7 +751,7 @@ class scantable(Scantable):
         """
         return self._get_column(self._getdirectionvec, row)
 
-    #@print_log_dec
+    @print_log_dec
     def set_unit(self, unit='channel'):
         """
         Set the unit for all following operations on this scantable
@@ -767,7 +767,7 @@ class scantable(Scantable):
         self._setcoordinfo(inf)
         self._add_history("set_unit", varlist)
 
-    #@print_log_dec
+    @print_log_dec
     def set_instrument(self, instr):
         """
         Set the instrument for subsequent processing.
@@ -779,7 +779,7 @@ class scantable(Scantable):
         self._add_history("set_instument", vars())
         print_log()
 
-    #@print_log_dec
+    @print_log_dec
     def set_feedtype(self, feedtype):
         """
         Overwrite the feed type, which might not be set correctly.
@@ -790,7 +790,7 @@ class scantable(Scantable):
         self._add_history("set_feedtype", vars())
         print_log()
 
-    #@print_log_dec
+    @print_log_dec
     def set_doppler(self, doppler='RADIO'):
         """
         Set the doppler for all following operations on this scantable.
@@ -804,7 +804,7 @@ class scantable(Scantable):
         self._add_history("set_doppler", vars())
         print_log()
 
-    #@print_log_dec
+    @print_log_dec
     def set_freqframe(self, frame=None):
         """
         Set the frame type of the Spectral Axis.
@@ -926,7 +926,7 @@ class scantable(Scantable):
                 return
             else: raise
         self._add_history("flag_row", varlist)
-        
+
     def clip(self, uthres=None, dthres=None, clipoutside=True, unflag=False):
         """
         Flag the selected data outside a specified range (in channel-base)
@@ -949,7 +949,7 @@ class scantable(Scantable):
             else: raise
         self._add_history("clip", varlist)
 
-    #@print_log_dec
+    @print_log_dec
     def lag_flag(self, start, end, unit="MHz", insitu=None):
     #def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
         """
@@ -993,7 +993,7 @@ class scantable(Scantable):
         else:
             return s
 
-    #@print_log_dec
+    @print_log_dec
     def create_mask(self, *args, **kwargs):
         """
         Compute and return a mask based on [min, max] windows.
@@ -1220,7 +1220,7 @@ class scantable(Scantable):
         elif isinstance(freqs, list) or isinstance(freqs, tuple):
             # list values are scalars
             if isinstance(freqs[-1], int) or isinstance(freqs[-1], float):
-                self._setrestfreqs(freqs, [""],unit)
+                self._setrestfreqs(freqs, [""], unit)
             # list values are tuples, (value, name)
             elif isinstance(freqs[-1], dict):
                 #sel = selector()
@@ -1232,7 +1232,7 @@ class scantable(Scantable):
                 #    self._setrestfreqs(freqs[i], "",unit)
                 #self._setselection(savesel)
                 self._setrestfreqs(freqs["value"],
-                                   freqs["name"], "MHz")
+                                   freqs["name"], unit)
             elif isinstance(freqs[-1], list) or isinstance(freqs[-1], tuple):
                 sel = selector()
                 savesel = self._getselection()
@@ -1242,8 +1242,7 @@ class scantable(Scantable):
                 for i in xrange(len(freqs)):
                     sel.set_ifs(iflist[i])
                     self._setselection(sel)
-                    self._setrestfreqs(freqs[i]["value"],
-                                       freqs[i]["name"], "MHz")
+                    self._setrestfreqs(freqs[i], [""], unit)
                 self._setselection(savesel)
         # freqs are to be taken from a linecatalog
         elif isinstance(freqs, linecatalog):
@@ -1323,7 +1322,7 @@ class scantable(Scantable):
     #
     # Maths business
     #
-    #@print_log_dec
+    @print_log_dec
     def average_time(self, mask=None, scanav=False, weight='tint', align=False):
         """
         Return the (time) weighted average of a scan.
@@ -1375,7 +1374,7 @@ class scantable(Scantable):
         print_log()
         return s
 
-    #@print_log_dec
+    @print_log_dec
     def convert_flux(self, jyperk=None, eta=None, d=None, insitu=None):
         """
         Return a scan where all spectra are converted to either
@@ -1404,7 +1403,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-    #@print_log_dec
+    @print_log_dec
     def gain_el(self, poly=None, filename="", method="linear", insitu=None):
         """
         Return a scan after applying a gain-elevation correction.
@@ -1459,7 +1458,7 @@ class scantable(Scantable):
         else:
             return s
 
-    #@print_log_dec
+    @print_log_dec
     def freq_align(self, reftime=None, method='cubic', insitu=None):
         """
         Return a scan where all rows have been aligned in frequency/velocity.
@@ -1485,7 +1484,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-    #@print_log_dec
+    @print_log_dec
     def opacity(self, tau=None, insitu=None):
         """
         Apply an opacity correction. The data
@@ -1514,7 +1513,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-    #@print_log_dec
+    @print_log_dec
     def bin(self, width=5, insitu=None):
         """
         Return a scan where all spectra have been binned up.
@@ -1535,11 +1534,11 @@ class scantable(Scantable):
         else:
             return s
 
-    #@print_log_dec
+    @print_log_dec
     def resample(self, width=5, method='cubic', insitu=None):
         """
         Return a scan where all spectra have been binned up.
-        
+
         Parameters:
             width:       The bin width (default=5) in pixels
             method:      Interpolation method when correcting from a table.
@@ -1558,7 +1557,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-    #@print_log_dec
+    @print_log_dec
     def average_pol(self, mask=None, weight='none'):
         """
         Average the Polarisations together.
@@ -1576,7 +1575,7 @@ class scantable(Scantable):
         print_log()
         return s
 
-    #@print_log_dec
+    @print_log_dec
     def average_beam(self, mask=None, weight='none'):
         """
         Average the Beams together.
@@ -1606,7 +1605,7 @@ class scantable(Scantable):
         self._parallactify(pflag)
         self._add_history("parallactify", varlist)
 
-    #@print_log_dec
+    @print_log_dec
     def convert_pol(self, poltype=None):
         """
         Convert the data to a different polarisation type.
@@ -1631,7 +1630,7 @@ class scantable(Scantable):
         print_log()
         return s
 
-    #@print_log_dec
+    @print_log_dec
     def smooth(self, kernel="hanning", width=5.0, order=2, plot=False, insitu=None):
         """
         Smooth the spectrum by the specified kernel (conserving flux).
@@ -1705,7 +1704,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-    #@print_log_dec
+    @print_log_dec
     def poly_baseline(self, mask=None, order=0, plot=False, uselin=False,
                       insitu=None):
         """
@@ -1733,7 +1732,7 @@ class scantable(Scantable):
         varlist = vars()
         if mask is None:
             mask = [True for i in xrange(self.nchan(-1))]
-        
+
         from asap.asapfitter import fitter
         try:
             f = fitter()
@@ -1745,7 +1744,7 @@ class scantable(Scantable):
             rows = range(workscan.nrow())
             if len(rows) > 0:
                 self.blpars = []
-            
+
             for r in rows:
                 # take into account flagtra info (CAS-1434)
                 flagtra = workscan._getmask(r)
@@ -1778,7 +1777,7 @@ class scantable(Scantable):
             workscan._add_history("poly_baseline", varlist)
             print_log()
             if insitu: self._assign(workscan)
-            else: return workscan 
+            else: return workscan
         except RuntimeError:
             msg = "The fit failed, possibly because it didn't converge."
             if rcParams['verbose']:
@@ -1912,7 +1911,7 @@ class scantable(Scantable):
             f.y = workscan._getspectrum(r)
             f.data = None
             f.fit()
-            
+
             # Show mask list
             masklist=workscan.get_masklist(fl.get_mask(),row=r)
             msg = "mask range: "+str(masklist)
@@ -1938,7 +1937,7 @@ class scantable(Scantable):
         else:
             return workscan
 
-    #@print_log_dec
+    @print_log_dec
     def rotate_linpolphase(self, angle):
         """
         Rotate the phase of the complex polarization O=Q+iU correlation.
@@ -1955,7 +1954,7 @@ class scantable(Scantable):
         print_log()
         return
 
-    #@print_log_dec
+    @print_log_dec
     def rotate_xyphase(self, angle):
         """
         Rotate the phase of the XY correlation.  This is always done in situ
@@ -1972,7 +1971,7 @@ class scantable(Scantable):
         print_log()
         return
 
-    #@print_log_dec
+    @print_log_dec
     def swap_linears(self):
         """
         Swap the linear polarisations XX and YY, or better the first two
@@ -1984,7 +1983,7 @@ class scantable(Scantable):
         print_log()
         return
 
-    #@print_log_dec
+    @print_log_dec
     def invert_phase(self):
         """
         Invert the phase of the complex polarisation
@@ -1995,7 +1994,7 @@ class scantable(Scantable):
         print_log()
         return
 
-    #@print_log_dec
+    @print_log_dec
     def add(self, offset, insitu=None):
         """
         Return a scan where all spectra have the offset added
@@ -2016,7 +2015,7 @@ class scantable(Scantable):
         else:
             return s
 
-    #@print_log_dec
+    @print_log_dec
     def scale(self, factor, tsys=True, insitu=None):
         """
         Return a scan where all spectra are scaled by the give 'factor'
@@ -2084,7 +2083,7 @@ class scantable(Scantable):
         self.set_selection(basesel)
         self._add_history("set_sourcetype", varlist)
 
-    #@print_log_dec
+    @print_log_dec
     def auto_quotient(self, preserve=True, mode='paired', verify=False):
         """
         This function allows to build quotients automatically.
@@ -2128,7 +2127,7 @@ class scantable(Scantable):
         print_log()
         return s
 
-    #@print_log_dec
+    @print_log_dec
     def mx_quotient(self, mask = None, weight='median', preserve=True):
         """
         Form a quotient using "off" beams when observing in "MX" mode.
@@ -2151,7 +2150,7 @@ class scantable(Scantable):
         print_log()
         return q
 
-    #@print_log_dec
+    @print_log_dec
     def freq_switch(self, insitu=None):
         """
         Apply frequency switching to the data.
@@ -2171,7 +2170,7 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
-    #@print_log_dec
+    @print_log_dec
     def recalc_azel(self):
         """
         Recalculate the azimuth and elevation for each position.
@@ -2185,33 +2184,69 @@ class scantable(Scantable):
         print_log()
         return
 
-    #@print_log_dec
+    @print_log_dec
     def __add__(self, other):
-        """
-        implicit on all axes and on Tsys
-        """
-        return self._operation( other, "ADD" )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "ADD"))
+        elif isinstance(other, float):
+            s = scantable(self._math._unaryop(self, other, "ADD", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator +", varlist)
+        return s
 
-    #@print_log_dec
+    @print_log_dec
     def __sub__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        return self._operation( other, 'SUB' )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "SUB"))
+        elif isinstance(other, float):
+            s = scantable(self._math._unaryop(self, other, "SUB", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator -", varlist)
+        return s
 
-    #@print_log_dec
+    @print_log_dec
     def __mul__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        return self._operation( other, 'MUL' )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "MUL"))
+        elif isinstance(other, float):
+            s = scantable(self._math._unaryop(self, other, "MUL", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator *", varlist)
+        return s
 
-    #@print_log_dec
+
+    @print_log_dec
     def __div__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        return self._operation( other, 'DIV' )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "DIV"))
+        elif isinstance(other, float):
+            if other == 0.0:
+                raise ZeroDivisionError("Dividing by zero is not recommended")
+            s = scantable(self._math._unaryop(self, other, "DIV", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator /", varlist)
+        return s
 
     def get_fit(self, row=0):
         """
@@ -2388,32 +2423,3 @@ class scantable(Scantable):
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
-
-    def _operation(self, other, opmode):
-        varlist = vars()
-        s = None
-        import numpy
-        if isinstance(other, scantable):
-	    s = scantable(self._math._binaryop(self.copy(), other, opmode))
-        elif isinstance(other, float) or isinstance(other, int):
-            if opmode == 'DIV' and float(other) == 0.0:
-                raise ZeroDivisionError("Dividing by zero is not recommended")
-            s = scantable(self._math._unaryop(self.copy(), other, opmode, False))
-        elif isinstance(other, list) or isinstance(other, numpy.ndarray):
-            if isinstance(other[0], list) or isinstance(other[0], numpy.ndarray):
-                from asapmath import _array2dOp
-                s = _array2dOp( self.copy(), other, opmode, False )
-            else:
-                s = scantable(self._math._arrayop(self.copy(), other, opmode, False))
-        else:
-            raise TypeError("Other input is not a scantable or float value or float list")
-        opdic = {}
-        opdic['ADD'] = '+'
-        opdic['SUB'] = '-'
-        opdic['MUL'] = '*'
-        opdic['DIV'] = '/'
-        s._add_history("operator %s" % opdic[opmode], varlist)
-        print_log()
-        return s
-
-        

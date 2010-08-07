@@ -869,7 +869,6 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
   
   // Minimal handling on continuum data.
   Vector<Double> chanFreq = cChanFreqCol(iIF);
-  pksrec.nchan = nChan;
   if (nChan == 1) {
     //pksrec.freqInc  = chanFreq(0);
     pksrec.freqInc  = cTotBWCol(iIF); 

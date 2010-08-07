@@ -19,7 +19,7 @@ endif
 # compiler flags
 CXXFLAGS := -fPIC -O3 -g
 CXXFLAGS += -ansi -Wno-long-long -Wall
-CXXFLAGS := -Xlinker -rpath -Xlinker $(CASALIB)
+CXXFLAGS := -Xlinker -rpath -Xlinker $(CASALIB) -arch i386
 
 
 INCDIRS   := -I$(COREINCD)

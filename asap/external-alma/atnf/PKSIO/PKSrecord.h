@@ -66,7 +66,6 @@ class PKSrecord
     Double          refFreq;
     Double          bandwidth;
     Double          freqInc;
-    Int             nchan;
     Vector<Double>  restFreq;
     Vector<Float>   tcal;
     String          tcalTime;

@@ -173,7 +173,7 @@ else:
 Export("env")
 
 # build externals
-env.SConscript("external/SConscript")
+env.SConscript("external-alma/SConscript")
 # build library
 so = env.SConscript("src/SConscript", build_dir="build", duplicate=0)
 # test module import, to see if there are unresolved symbols

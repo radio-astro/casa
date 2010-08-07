@@ -5,7 +5,7 @@ from asap import selector
 from asap import asaplog
 from asap import asaplotgui
 
-#@print_log_dec
+@print_log_dec
 def average_time(*args, **kwargs):
     """
     Return the (time) average of a scan or list of scans. [in channels only]
@@ -122,7 +122,7 @@ def quotient(source, reference, preserve=True):
     print_log()
     return s
 
-#@print_log_dec
+@print_log_dec
 def dototalpower(calon, caloff, tcalval=0.0):
     """
     Do calibration for CAL on,off signals.
@@ -141,7 +141,7 @@ def dototalpower(calon, caloff, tcalval=0.0):
     print_log()
     return s
 
-#@print_log_dec
+@print_log_dec
 def dosigref(sig, ref, smooth, tsysval=0.0, tauval=0.0):
     """
     Calculate a quotient (sig-ref/ref * Tsys)
@@ -162,7 +162,7 @@ def dosigref(sig, ref, smooth, tsysval=0.0, tauval=0.0):
     print_log()
     return s
 
-#@print_log_dec
+@print_log_dec
 def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Calibrate GBT position switched data
@@ -445,7 +445,7 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
     print_log()
     return ress
 
-#@print_log_dec
+@print_log_dec
 def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Do full (but a pair of scans at time) processing of GBT Nod data
@@ -686,7 +686,7 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
     print_log()
     return resspec
 
-#@print_log_dec
+@print_log_dec
 def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Calibrate GBT frequency switched data.
@@ -894,7 +894,7 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
     print_log()
     return resspec
 
-#@print_log_dec
+@print_log_dec
 def merge(*args):
     """
     Merge a list of scanatables, or comma-sperated scantables into one

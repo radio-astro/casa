@@ -41,9 +41,9 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
 ifneq (,$(findstring "$(CASAARCH)", "darwin"))
-   #CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
+   CXXFLAGS +=-DAIPS_DARWIN -arch i386 #For 10.6
 else
-   CXXFLAGS +=-DAIPS_DARWIN
+   #CXXFLAGS +=-DAIPS_DARWIN
    #CXXFLAGS += -Wno-long-double
 endif
 
@@ -93,7 +93,7 @@ BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
-   LDFLAGS   := -bundle
+   LDFLAGS   := -bundle -arch i386
 endif
 
 
@@ -130,13 +130,19 @@ CCOBJECTS := MathUtils.o \
              STFITSImageWriter.o \
              STAtmosphere.o \
              Scantable.o \
+             FillerBase.o \
+             NROFiller.o \
+             PKSFiller.o \
+             AsapLogSink.o \
              Templates.o 
 PYOBJECTS := python_Scantable.o \
              python_STFiller.o \
              python_STSelector.o \
              python_STMath.o \
              python_Fitter.o \
+             python_Filler.o \
              python_Logger.o \
+             python_LogSink.o \
              python_STLineFinder.o \
              python_STFitEntry.o \
              python_STWriter.o \
@@ -183,7 +189,11 @@ HEADERS   := MathUtils.h \
              STFITSImageWriter.h \
              IndexedCompare.h \
              STAtmosphere.h \
-             STCoordinate.h
+             STCoordinate.h \
+             FillerBase.h \
+             NROFiller.h \
+             PKSFiller.h \
+             AsapLogSink.h
 
 STATICCCLIB := libasap.a
 MEMBERS := $(patsubst %,$(STATICCCLIB)(%),$(CCOBJECTS))

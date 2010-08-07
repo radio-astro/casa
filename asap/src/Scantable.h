@@ -236,7 +236,7 @@ public:
   void flagRow( const std::vector<casa::uInt>& rows = std::vector<casa::uInt>(), bool unflag=false);
 
   /**
-   * Get flagRow info at the specified row. If true, the whole data 
+   * Get flagRow info at the specified row. If true, the whole data
    * at the row should be flagged.
    */
   bool getFlagRow(int whichrow) const
@@ -249,11 +249,11 @@ public:
   void clip(const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag);
 
   /**
-   * Return a list of booleans with the size of nchan for a specified row, to get info 
+   * Return a list of booleans with the size of nchan for a specified row, to get info
    * about which channel is clipped.
    */
   std::vector<bool> getClipMask(int whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag);
-  void srchChannelsToClip(casa::uInt whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag, 
+  void srchChannelsToClip(casa::uInt whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag,
 			  casa::Vector<casa::uChar> flgs);
 
   /**
@@ -440,7 +440,7 @@ public:
    * Get the antenna name
    * @return antenna name string
    */
-  std::string getAntennaName() const;
+  casa::String getAntennaName() const;
 
   /**
    * For GBT MS data only. check a scan list
@@ -469,8 +469,8 @@ public:
    * Reshape spectrum
    * @param[in] nmin, nmax minimum and maximum channel
    * @param[in] irow       row number
-   * 
-   * 30/07/2008 Takeshi Nakazato  
+   *
+   * 30/07/2008 Takeshi Nakazato
    **/
   void reshapeSpectrum( int nmin, int nmax ) throw( casa::AipsError );
   void reshapeSpectrum( int nmin, int nmax, int irow ) ;
@@ -485,7 +485,7 @@ public:
   void regridChannel( int nchan, double dnu ) ;
   void regridChannel( int nchan, double dnu, int irow ) ;
 
- 
+
 private:
 
   casa::Matrix<casa::Float> getPolMatrix( casa::uInt whichrow ) const;
@@ -582,9 +582,9 @@ private:
   void initFactories();
 
   /**
-   * Add an auxiliary column to the main table and attach it to a 
+   * Add an auxiliary column to the main table and attach it to a
    * cached column. Use for adding new columns that the original asap2
-   * tables do not have. 
+   * tables do not have.
    * @param[in] col      reference to the cached column to be attached
    * @param[in] colName  column name in asap table
    * @param[in] defValue default value to fill in the column

@@ -320,11 +320,11 @@ void azel(const Vector<Double> position, Double ut1, Double ra, Double dec,
   Double ha = (gast + lng) - ra;
 
   // Azimuth and elevation (rad).
-  az = atan2(cos(dec)*sin(ha), 
-             cos(dec)*sin(lat)*cos(ha) - sin(dec)*cos(lat));
-  if (az < 0.0) az += C::_2pi;
+  az = atan2(-cos(dec)*sin(ha),
+            sin(dec)*cos(lat) - cos(dec)*sin(lat)*cos(ha));
   el = asin(sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(ha));
 
+  if (az < 0.0) az += C::_2pi;
 }
 
 //---------------------------------------------------------------------- solel

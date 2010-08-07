@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
-//# python_asap.h: python module for single dish package asap
+//# python_Logger.cc: python exposure of c++ LogSink
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2004
+//# Copyright (C) 2010
 //# ATNF
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -26,33 +26,26 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.h 1818 2010-08-02 06:10:43Z KanaSugimoto $
+//# $Id:
 //#---------------------------------------------------------------------------
-#ifndef PYTHON_ASAP_H
-#define PYTHON_ASAP_H
+#include <boost/python.hpp>
 
-class casa::AipsError;
+#include "AsapLogSink.h"
+
+using namespace boost::python;
 
 namespace asap {
   namespace python {
-    void translate_ex(const casa::AipsError& e);
-    void python_Scantable();
-    void python_STFiller();
-    void python_Filler();
-    void python_STSelector();
-    void python_STMath();
-    void python_Fitter();
-    void python_STLineFinder();
-    void python_STFitEntry();
-    void python_STWriter();
-    void python_LineCatalog();
-    void python_Logger();
-    void python_LogSink();
-    void python_STCoordinate();
-    void python_STAtmosphere();
-    void python_SrcType();
+    void python_LogSink() {
+      class_<AsapLogSink>("LogSink")
+        .def( init <> () )
+	.def("post", &AsapLogSink::postMessage,
+         (boost::python::arg("location")="",
+         boost::python::arg("priority")="INFO"))
+	.def("pop", &AsapLogSink::popMessages)
+      ;
+      def("set_global_sink", &setAsapSink);
+    };
 
-  } // python
-} //asap
-
-#endif
+  } //namespace python
+} // namespace asap

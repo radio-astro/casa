@@ -44,7 +44,8 @@ class model(object):
                             default is 0.5
             elevation:     observatory elevation about sea level (in meters)
         """
-        self._atm = atmosphere(temp, self._to_pascals(pressure), humidity)
+        self._atm = atmosphere(temperature, self._to_pascals(pressure), 
+                               humidity)
         self.set_observatory_elevation(elevation)
 
     def get_opacities(self, freq, elevation=None):
@@ -95,7 +96,7 @@ class model(object):
             elevation:  the elevation at which to compute the opacity. If `None`
                         is given (default) the zenith opacity is returned.
         """
-        self._atm.set_observatory_elevation(el)
+        self._atm.set_observatory_elevation(elevation)
 
 
 def _import_data(data):
@@ -161,7 +162,7 @@ def skydip(data, averagepol=True, tsky=300., plot=False,
     inos = scan.getifnos()
     pnos = scan.getpolnos()
     opacities = []
-    om = opacitymodel(temperature, pressure, humidity)
+    om = model(temperature, pressure, humidity)
     for ino in inos:
         sel.set_ifs(ino)
         opacity = []
