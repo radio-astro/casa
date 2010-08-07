@@ -261,10 +261,13 @@ def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell
         redopsf=True
         redokounter=0
         immode='mfs'
+        start=ch[0,1]
         if(mode=='cube'):
             immode='channel'
+            if(width >1):
+                start=start+ width/2
         while(redopsf):
-            im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter, spw=spwsel.tolist(), mode=immode, start=ch[0,1], step=width, nchan=nchan)
+            im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter, spw=spwsel.tolist(), mode=immode, start=start, step=width, nchan=nchan)
             im.weight(weighting)
             try:
                 im.makeimage(type='corrected', image=dirtyim)
