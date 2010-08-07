@@ -213,7 +213,7 @@ PlainTable::PlainTable (AipsIO&, uInt version, const String& tabname,
     tdescPtr_p->getFile (ios, attr);            // read description
     // Check if the given table type matches the type in the file.
     if ((! type.empty())  &&  type != tdescPtr_p->getType()) {
-	throw (TableInvType (type, tdescPtr_p->getType()));
+	throw (TableInvType (tableName(), type, tdescPtr_p->getType()));
 	return;
     }
     // In the older Table files the keyword set was written separately

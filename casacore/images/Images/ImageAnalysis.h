@@ -75,7 +75,12 @@ class ImageAnalysis
     ImageAnalysis();
 
     //ImageInterface constructor
-    ImageAnalysis(const casa::ImageInterface<casa::Float>* inImage);
+    ImageAnalysis(const ImageInterface<Float>* inImage);
+
+    //Use this constructor with cloneInputPointer=False if you want this object
+    // to take over management of the input pointer. The input pointer will be deleted
+    // when this object is destroyed.
+    ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer);
     
     virtual ~ImageAnalysis();
 

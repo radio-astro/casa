@@ -166,6 +166,11 @@ class MeasComet {
   // Fill Table lines
   Bool fillMeas(Double utf) const;
 
+  // Helper functions for accessing ldat_p.  index should be either 0 or 1, but
+  // that isn't checked!
+  MVPosition getRelPosition(const uInt index) const;
+  MVDirection getDiskLongLat(const uInt index) const;
+
   //# Data members
   // Actual table
   Table tab_p;

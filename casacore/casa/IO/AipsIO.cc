@@ -926,8 +926,13 @@ AipsIO& AipsIO::getnew (uInt& nrv, String*& var)
 // the object type.
 const String& AipsIO::getNextType()
 {
+    String message;
+    if (file_p != 0) {
+        message = file_p->fileName() + " - ";
+    }
     if (opened_p == 0  ||  swget_p < 0  ||  swput_p > 0) {
-	throw (AipsError ("AipsIO::getNextType: not opened or not readable"));
+	throw (AipsError ("AipsIO::getNextType: " + message + 
+                          "not opened or not readable"));
     }
     if (hasCachedType_p) {
 	return objectType_p;
@@ -939,7 +944,8 @@ const String& AipsIO::getNextType()
 	objlen_p[0] = 0;                   // length already read
 	operator>> (mval);
 	if (mval != magicval_p) {
-	    throw (AipsError ("AipsIO::getNextType: no magic value found"));
+	    throw (AipsError ("AipsIO::getNextType: " + message + 
+                              "no magic value found"));
 	}
     }
     level_p++;
