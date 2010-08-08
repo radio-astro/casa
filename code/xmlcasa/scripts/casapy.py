@@ -352,7 +352,9 @@ def go(taskname=None):
     """ Execute taskname: """
     myf = sys._getframe(len(inspect.stack())-1).f_globals
     if taskname==None: taskname=myf['taskname']
-    oldtaskname=myf['taskname']
+    oldtaskname=taskname
+    if(myf.has_key('taskname')):
+        oldtaskname=myf['taskname']
     #myf['taskname']=taskname
     if type(taskname)!=str:
         taskname=taskname.__name__

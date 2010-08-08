@@ -167,11 +167,6 @@ macro( casa_add_module module )
   set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include )
   set( ${module}_DEFINITIONS "" )
 
-  if( NOT EXISTS ${CMAKE_SOURCE_DIR}/include/${module} )
-    execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink ../${module}/implement ${module}
-                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include )
-  endif()
-
   # Which libraries to link against (internally used, not exported, by the module)
   set( ${module}_LINK_TO "" )
 

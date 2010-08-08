@@ -231,7 +231,7 @@ namespace casa {
 	datamap::iterator dmiter = managed_datas.find( data );
 	if ( dmiter == managed_datas.end( ) ) {
 	    char buf[50];
-	    sprintf( buf, "%", data );
+	    sprintf( buf, "%d", data );
 	    return error(QString("data id (") + buf + ") not found");
 	}
 	if ( dmiter->second->id() != data ) {
@@ -638,21 +638,21 @@ namespace casa {
     }
 
     QDBusVariant QtDBusViewerAdaptor::cwd( const QString &new_path ) {
+	static char p[MAXPATHLEN+1];
 	if ( new_path != "" ) {
 	    struct stat buf;
-	    const char *p = new_path.toAscii().constData();
+	    sprintf(p, "%s", new_path.toAscii().constData());
 	    if ( stat(p,&buf) == 0 && S_ISDIR(buf.st_mode) )
 		chdir(p);
 	    else if ( stat(p,&buf) != 0 )
 		return error( new_path + " does not exist" );
 	    else if ( ! S_ISDIR(buf.st_mode) )
-		return error( new_path + " is not a directory" );
+    		return error( new_path + " is not a directory" );
 	    else
-		return error( "cannot change to " + new_path );
+    		return error( "cannot change to " + new_path );
 	}
-	char buf[MAXPATHLEN+1];
-	getcwd(buf,MAXPATHLEN+1);
-	return QDBusVariant(QVariant(QString((const char*)buf)));
+	getcwd(p,MAXPATHLEN+1);
+	return QDBusVariant(QVariant(QString((const char*)p)));
     }
 
     QDBusVariant QtDBusViewerAdaptor::fileinfo( const QString &path ) {
