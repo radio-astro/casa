@@ -257,6 +257,7 @@ String SkyComponent::summarize(const CoordinateSystem * const coordinates) const
 }
 
 String SkyComponent::positionToString(const CoordinateSystem * const coordinates) const {
+	// FIXME essentially cut and paste of Gareth's python code. Needs work.
 	ostringstream position;
 	MDirection mdir = shape().refDirection();
 
