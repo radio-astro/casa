@@ -1,3 +1,0 @@
-https://svn.cv.nrao.edu/svn/casa/test/asap
-12133
-Aug 05 2010, 20:40:54
