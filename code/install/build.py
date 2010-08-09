@@ -322,7 +322,7 @@ def build_casa(b, url, revision, type, ops, architecture):
     builddir = platform('builddir', builddirs[ops][architecture])
 
     if ops == "Darwin":
-        datadir = machine('datadir', "/opt/casa_data/trunk")
+        datadir = machine('datadir', "/opt/casa/data")
         prefix = machine('prefix', "/opt/casa/active")    # Prefix is hardcoded in 3rd-party executables
         if architecture == '10.5':
             coredir = platform('coredir', "core2-apple-darwin8")
@@ -565,8 +565,8 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/geodetic geodetic")
         b.chdir(prefix)
         b.do("", "ln -s /opt/casa/data .")
+        b.comment("Compile CASACore.")
 
-    b.comment("Compile CASACore.")
 
     b.chdir("casacore")
     
@@ -598,7 +598,6 @@ def build_casa(b, url, revision, type, ops, architecture):
         if ops == "Darwin":
             b.comment("If the compilation of CASACore stops with the error message \"flex: fatal internal error, exec failed\", it might help to download and install flex-2.5.35 from sources, put it in your path and try again.")
     b.chdir("..")
-
 
     b.comment("Next up is CASA non-core,")
 
