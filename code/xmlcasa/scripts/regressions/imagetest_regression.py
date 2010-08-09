@@ -4949,7 +4949,7 @@ def imagetest(which=None, size=[32,32,8]):
         # Make image
         #
         imname = testdir+'/'+'ia.fromshape.image'
-        imshape = [128,128,1,1]
+        imshape = [128,128,1]
         myim = ia.newimagefromshape(imname, imshape)
         if not myim:
             stop('ia.fromshape constructor 1 failed')
@@ -4993,8 +4993,8 @@ def imagetest(which=None, size=[32,32,8]):
         #
 
         cl1 = myim.fitcomponents(
-            region=rg.box(blc=[.25,.25,.25,.25],
-            trc=[.75,.75,.75,.75], frac=true)
+            region=rg.box(blc=[.25,.25,.25],
+            trc=[.75,.75,.75], frac=true)
         )
         if not cl1:
             stop('fitcomponents 1 failed')
