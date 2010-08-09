@@ -502,12 +502,15 @@ def build_casa(b, url, revision, type, ops, architecture):
     if ops == "Darwin":
         b.comment("It is essential that 3rd-party/bin comes before other stuff in your $PATH.")
         b.set_env('PATH', prefix, "/../", third, "/bin:$PATH")
-        b.comment("This is a workaround for QWT and CASACore libraries not containing the proper rpaths (Note: Do not define the environment variable named DYLD_LIBRARY_PATH or something else might break.)")
+        b.comment("This is a workaround for QWT and CASACore libraries not containing the right rpaths (Note: Do not define the environment variable named DYLD_LIBRARY_PATH or something else might break.)")
         if architecture == "10.5":
             qwtdir = "qwt-5.2.0"
         else:
             qwtdir = "qwt-5.2.1-svn"
         b.set_env('DYLD_FALLBACK_LIBRARY_PATH', prefix, "/", builddir, "/lib:", prefix, "/../", third, "/" + qwtdir + "/lib:", prefix, "/../", third, "/lib")
+        if architecture == "10.6":
+            b.comment("Also, you need to define DYLD_FRAMEWORK_PATH in order to work around a linking issue with the ccmtools libraries,")
+            b.set_env('DYLD_FRAMEWORK_PATH', prefix, "/../", third, "/Library/Frameworks")
     else:
         b.set_env('PATH', "$PATH:", prefix, "/scons/bin:/usr/lib/casapy/bin")
 
