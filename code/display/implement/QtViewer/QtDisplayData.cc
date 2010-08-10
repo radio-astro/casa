@@ -1208,34 +1208,30 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
   // Compute and print statistics on DD's image for 
   // given region in all layers.  
 
+  //there are several possible path here
+  //(1) modify ImageRegion record then create SubImage of 1 plane
+  //(2) modify ImageRegion directly then creage SubImage of 1 plane
+  //(3) make SubImage of SubImage to get one plane
+  //(4) pass layer index to LatticeStatistcis
+  //(5) do single plane statistic right here
+
+  if (displayType_!="raster") return False;
+
   if(im_==0) return False;
     
   //cout << "imgReg=" << imgReg.toRecord("") << endl;
   try {  
     
     SubImage<Float> subImg(*im_, imgReg);
+    IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
+    IPosition sshp = subImg.shape();
+    //cout << "subImg.shape()=" << sshp << endl;
+    //cout << "im_.shape()=" << shp << endl;
 
-    
-
-    //cout << "subImg=" << subImg.shape() << endl;
-    ImageStatistics<Float> stats(subImg, False);
-    PrincipalAxesDD* padd =
-          dynamic_cast<PrincipalAxesDD*>(dd_);
-
-
-
+    PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd_);
     if (padd == 0)
         return False;
 
-    Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
-    IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
-    const CoordinateSystem& cs = 
-      (im_ != 0) ? im_->coordinates() : cim_->coordinates();
-    String unit =  
-      (im_ != 0) ? im_->units().getName() : cim_->units().getName();
-					   
-    Int zIndex = padd->activeZIndex();
-    IPosition pos = padd->fixedPosition();
     Vector<Int> dispAxes = padd->displayAxes();
     //cout << "dispAxes=" << dispAxes << endl;
 
@@ -1244,30 +1240,115 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     cursorAxes(1) = dispAxes[1]; //display axis 2
     //cout << "cursorAxes=" << cursorAxes << endl;;
 
+    Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
+    Vector<int> otherAxes(0);
+    otherAxes = IPosition::otherAxes(nAxes, cursorAxes).asVector();
+    //cout << "otherAxes=" << otherAxes << endl;;
 
-    if (!stats.setAxes(cursorAxes)) return False;
-    stats.setList(True);
-    String layerStats;
-    Vector<String> nm = cs.worldAxisNames();
-    //cout << "nm=" << nm << endl;
+    IPosition start(nAxes);
+    IPosition stride(nAxes);
+    IPosition end(sshp);
+    start = 0;
+    stride = 1;
 
     Record rec = dd_->getOptions();
     //cout << "dd=" << rec << endl;
     String zaxis = "";
     String haxis = "";
-    Int hIndex = 0;
+    Int zIndex = padd->activeZIndex();
+    Int hIndex = -1;
     try {
        //String xaxis = rec.subRecord("xaxis").asString("value");
        //String yaxis = rec.subRecord("yaxis").asString("value");
        zaxis = rec.subRecord("zaxis").asString("value");
        haxis = rec.subRecord("haxis1").asString("listname");
        hIndex = rec.subRecord("haxis1").asInt("value");
-       //cout << "z=" << zaxis << " w=" << haxis << endl;
+       //cout << "zaxis=" << zaxis << " haxis=" << haxis << endl;
     }
     catch(...){}
+    //cout << "zIndex=" << zIndex << " hIndex=" << hIndex << endl;
+    
+    /*
+    if (nAxes == 3 || hIndex == -1) {
+        start(otherAxes[0]) = zIndex;
+        end(otherAxes[0]) = zIndex;
+    }
+    if (nAxes == 4 && hIndex != -1) {
+        if (otherAxes[0] == dispAxes[2]) {
+           start(otherAxes[0]) = zIndex;
+           end(otherAxes[0]) = zIndex;
+           start(otherAxes[1]) = hIndex;
+           end(otherAxes[1]) = hIndex;
+        }
+        else {
+           start(otherAxes[0]) = hIndex;
+           end(otherAxes[0]) = hIndex;
+           start(otherAxes[1]) = zIndex;
+           end(otherAxes[1]) = zIndex;
+        }
+    }
 
-    Int zPos = 0;
-    Int hPos = 0;
+    //cout << "start=" << start << " end=" << end 
+    //     << " stride=" << stride << endl;
+    
+    IPosition cursorShape(2, sshp[dispAxes[0]], sshp[dispAxes[1]]);
+    IPosition matAxes(2, dispAxes[0], dispAxes[1]);
+    //cout << "cursorShape=" << cursorShape << endl;
+    IPosition axisPath(4, dispAxes[0], dispAxes[1], 
+                          otherAxes[0], otherAxes[1]);
+    //cout << "axisPath=" << axisPath << endl;;
+    LatticeStepper stepper(sshp, cursorShape, matAxes, axisPath);
+    cout << "stepper ok=" << stepper.ok() << endl;
+    //stepper.subSection(start, end, stride);
+    //cout << "stepper section ok=" << stepper.ok() << endl;
+
+    RO_LatticeIterator<Float> iterator(subImg, stepper);
+
+    //Vector<Float> spectrum(nFreqs);
+    //spectrum = 0.0;
+    uInt channel = 0;
+    uInt k = -1;
+    for (iterator.reset(); !iterator.atEnd(); iterator++) {
+       k++;
+       Int r = k / sshp[2];
+       int s = k % sshp[2];
+       cout << "z=" << r << " h=" << s << endl;
+       if (r != zIndex || s != hIndex)
+          continue; 
+       const Matrix<Float>& cursor = iterator.matrixCursor();
+       cout << " cursor=" << cursor << endl;
+       for (uInt col = 0; col < cursorShape(0); col++) {
+          for (uInt row = 0; row < cursorShape(1); row++) {
+          //spectrum(channel) += cursor(col, row);
+          cout << "col=" << col << " row=" << row
+               << " cursor=" << cursor(col, row) << endl; 
+          }
+       }
+    }
+
+
+    //Slicer slicer(start, end, stride);
+    //SubImage<Float> twoD(subImg, slicer);
+    //IPosition shp2 = twoD.shape();
+    //cout << "twoD.shape()=" << shp2 << endl;
+    */
+
+    const CoordinateSystem& cs = 
+      (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+    String unit =  
+      (im_ != 0) ? im_->units().getName() : cim_->units().getName();
+
+    IPosition pos = padd->fixedPosition();
+
+    ImageStatistics<Float> stats(subImg, False);
+    if (!stats.setAxes(cursorAxes)) return False;
+    stats.setList(True);
+    String layerStats;
+    Vector<String> nm = cs.worldAxisNames();
+    //cout << "nm=" << nm << endl;
+
+    Int zPos = -1;
+    Int hPos = -1;
     for (Int k = 0; k < nm.nelements(); k++) {
        if (nm(k) == zaxis)
           zPos = k;
@@ -1276,22 +1357,29 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     }
     //cout << "zPos=" << zPos << " hPos=" << hPos << endl;
 
+    String zLabel="";
+    String hLabel="";
     Vector<Double> tPix,tWrld;
     tPix = cs.referencePixel();
-    tPix(zPos) = zIndex;
-    tPix(hPos) = hIndex;
-    //cout << "tPix=" << tPix << endl;
     String tStr;
-    String zLabel;
-    String hLabel;
-    if (!cs.toWorld(tWrld,tPix)) {
-    } else {
-       zLabel = ((CoordinateSystem)cs).format(tStr, 
+    if (zPos > -1) {
+       tPix(zPos) = zIndex;
+       if (!cs.toWorld(tWrld,tPix)) {
+       } else {
+          zLabel = ((CoordinateSystem)cs).format(tStr, 
                  Coordinate::DEFAULT, tWrld(zPos), zPos);
-       zLabel += tStr + "  ";
-       hLabel = ((CoordinateSystem)cs).format(tStr, 
+          zLabel += tStr + "  ";
+       }
+    }
+    if (hPos > -1) {
+       tPix(hPos) = hIndex;
+       //cout << "tPix=" << tPix << endl;
+       if (!cs.toWorld(tWrld,tPix)) {
+       } else {
+          hLabel = ((CoordinateSystem)cs).format(tStr, 
                  Coordinate::DEFAULT, tWrld(hPos), hPos);
-       hLabel += tStr + "  ";
+          hLabel += tStr + "  ";
+       }
     }
     //cout << "zLabel=" << zLabel << " hLabel=" << hLabel << endl;
     //cout << "tStr=" << tStr << endl;
@@ -1316,7 +1404,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
        }
        if (downcase(haxis).contains("freq")) {
           if (spCoord.pixelToVelocity(vel, hIndex)) {
-             hLabel += "\nVelocity=" + String::toString(vel) + 
+             hLabel += "Velocity=" + String::toString(vel) + 
                   "km/s  Frame=" + 
                   MFrequency::showType(spCoord.frequencySystem()) + 
                   "  Doppler=" +
@@ -1357,19 +1445,31 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
                  abs(deltas(0) * deltas(1));
     }
 
-    String head = description() + "\n" +  
-            zaxis + "=" + zLabel + 
-            haxis + "=" + hLabel + 
-            "BrightnessUnit=" + unit;
+    String head = description().after(" ") + "\n";   
+    if (zaxis != "" )
+        head += zaxis + "=" + zLabel;  
+    if (haxis != "" )
+        head += haxis + "=" + hLabel; 
+    head += "BrightnessUnit=" + unit;
     if (beamArea > 0) {
         head += "  BeamArea=" + String::toString(beamArea) + "\n"; 
     }
     else {
         head += "  BeamArea=Unknown\n";
     }
-
-    stats.getLayerStats(layerStats, beamArea, nm, zPos, zIndex, hPos, hIndex); 
+    //cout << "head=" << head << endl;
+    //cout << "beamArea=" << beamArea 
+    //     << " zPos=" << zPos << " zIndex=" << zIndex
+    //     << " hPos=" << hPos << " hIndex=" << hIndex << endl;
+    Bool statsOk =
+    stats.getLayerStats(layerStats, beamArea, zPos, zIndex, hPos, hIndex); 
     //cout << layerStats << endl;
+    if (!statsOk) { 
+       cout << "stats not ok" << endl;
+       return False;
+    }
+
+
 
     layerStats = head + layerStats;
 
@@ -1380,10 +1480,12 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
   }
   catch (const casa::AipsError& err) {
     errMsg_ = err.getMesg();
+    //cout << "Error: " << errMsg_ << endl;
     return False;  
   }
   catch (...) { 
     errMsg_ = "Unknown error computing region statistics.";
+    //cout << "Error: " << errMsg_ << endl;
     return False;  
   }
     
