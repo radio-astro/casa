@@ -178,6 +178,8 @@ void NROFITSDataset::initialize()
     + sizeof( double ) * ARYNM             // F0CAL
     + sizeof( double ) * ARYNM * 10 * 3    // FQCAL, CHCAL, CWCAL
     + sizeof( char ) * 180 ;               // CDMY1
+
+  refFreq_.resize( ARYNM, 0.0 ) ;
 }
 
 // fill data header
@@ -1164,7 +1166,7 @@ int NROFITSDataset::fillRecord( int i )
     return status ;
   }
   else {
-    sprintf( record_->LAVST, "%d%d%d%d%d%d.000", itmp[0], itmp[1], itmp[2], itmp[3], itmp[4], itmp[5] ) ;
+    sprintf( record_->LAVST, "%4d%02d%02d%02d%02d%02d.000", itmp[0], itmp[1], itmp[2], itmp[3], itmp[4], itmp[5] ) ;
   }
   // DEBUG
   //cout << "LAVST(" << i << ") = " << record_->LAVST << endl ;
@@ -1459,6 +1461,15 @@ int NROFITSDataset::fillRecord( int i )
 //     //cout << "JDATA[" << i << "] = " << JDATA[i] << " " ;
 //   //cout << endl ;
   //
+
+
+  // Update IPTIM since it depends on the row for NROFITS
+  int integ ;
+  status = readTable( integ, "INTEG", same_, i ) ;
+  if ( !status ) {
+    IPTIM = (double)integ ;
+  }
+
   return status ;
 }
 
@@ -2714,3 +2725,15 @@ uInt NROFITSDataset::getArrayId( string type )
   }
   return ib ;
 }
+
+double NROFITSDataset::getStartIntTime( int i ) 
+{
+  double v ;
+  readTable( v, "MJDST", same_, i ) ;
+  return v/86400.0 ;
+}
+
+// double NROFITSDataset::toLSR( double v, double t, double x, double y ) 
+// {
+//   return v ;
+// }
