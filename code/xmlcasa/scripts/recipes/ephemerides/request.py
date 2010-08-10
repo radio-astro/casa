@@ -15,6 +15,8 @@ objnums = {'ceres':      1,
            'juno':       3,
            'vesta':      4,
            #'astraea': 5,      # Clashes with Jupiter's barycenter.
+           #'hygeia': 10,      # 10 clashes with the Sun.
+           'parthenope': 11,
            'victoria':   12,
            'davida':     511,  # Clashes with Carme.
            'mercury':    199,
@@ -87,7 +89,7 @@ objnums = {'ceres':      1,
            'pluto':      999,  # It's still a planet in this sense.
            'charon':     901,
            'nix':        902,
-           'charon':     903
+           'hydra':      903
 }
 
 def request_from_JPL(objnam, enddate,
@@ -197,6 +199,26 @@ def request_from_JPL(objnam, enddate,
     if not get_sub_long:
         quantities.remove(14)
         quantities.remove(15)
+
+    # It seems that STEP_SIZE must be an integer, but the unit can be changed
+    # to hours or minutes.
+    match = re.match(r'([0-9.]+)\s*([dhm])', date_incr)
+    n_time_units = float(match.group(1))
+    time_unit    = match.group(2)
+    if n_time_units < 1.0:
+        if time_unit == 'd':
+            n_time_units *= 24.0
+            time_unit = 'h'
+        if time_unit == 'h' and n_time_units < 1.0:     # Note fallthrough.
+            n_time_units *= 60.0
+            time_unit = 'm'
+        if n_time_units < 1.0:                          # Uh oh.
+            print date_incr, "is an odd request for a date increment."
+            print "Please change it or make your request manually."
+            return False
+        print "Translating date_incr from", date_incr,
+        date_incr = "%.0f %s" % (n_time_units, time_unit)
+        print "to", date_incr
     
     instructions = "\n".join(["!$$SOF",
                               "COMMAND= '%d'" % objnum,
