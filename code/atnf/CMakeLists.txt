@@ -41,6 +41,7 @@ casa_add_library( atnf
   implement/PKSIO/PKSSDwriter.cc
   implement/PKSIO/SDFITSreader.cc
   implement/PKSIO/SDFITSwriter.cc
+  implement/PKSIO/GBTFITSreader.cc
   implement/pks/pks_maths.cc
    )
 
