@@ -1523,16 +1523,16 @@ vector<double> NROFITSDataset::getSpectrum( int i )
     InterpolateArray1D<Double, Double>::interpolate( yout, xout, xin, yin, InterpolateArray1D<Double,Double>::cubic ) ;
     // debug
     //cout << "i=" << i << endl ;
-    if ( i == 16 ) {
-      //ofstream ofs0( "spgrid0.dat" ) ;
-      for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
-        //ofs0 << xout[ii] << "," ;
-      //ofs0 << endl ;
-      for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
-        //ofs0 << setprecision(16) << record->FREQ0+yout[ii] << "," ;
-      //ofs0 << endl ;
-      //ofs0.close() ;
-    }
+//     if ( i == 16 ) {
+//       ofstream ofs0( "spgrid0.dat" ) ;
+//       for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
+//         ofs0 << xout[ii] << "," ;
+//       ofs0 << endl ;
+//       for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
+//         ofs0 << setprecision(16) << record->FREQ0+yout[ii] << "," ;
+//       ofs0 << endl ;
+//       ofs0.close() ;
+//     }
     //
     Vector<Double> z( nchan ) ;
     Double bw = abs( yout[nchan-1] - yout[0] ) ;
