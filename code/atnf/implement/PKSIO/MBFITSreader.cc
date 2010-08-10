@@ -145,7 +145,7 @@ int MBFITSreader::open(
   int jstat = -3;
   if (rpfitsin(jstat)) {
     sprintf(cMsg, "Failed to open MBFITS file\n%s", rpname);
-    os << LogIO::SEVERE << cMsg << LogIO::POST ;
+    //os << LogIO::SEVERE << cMsg << LogIO::POST ;
     return 1;
   }
 
@@ -164,7 +164,7 @@ int MBFITSreader::open(
   if (rpfitsin(jstat)) {
     sprintf(cMsg, "Failed to read MBFITS header in file\n"
                   "%s", rpname);
-    os << LogIO::SEVERE << cMsg << LogIO::POST ;
+    //os << LogIO::SEVERE << cMsg << LogIO::POST ;
     close();
     return 1;
   }

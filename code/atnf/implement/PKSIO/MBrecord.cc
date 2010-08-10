@@ -36,6 +36,7 @@
 //#---------------------------------------------------------------------------
 
 #include <atnf/PKSIO/MBrecord.h>
+#include <atnf/PKSIO/SrcType.h>
 
 #include <string.h>
 
@@ -57,6 +58,9 @@ MBrecord::MBrecord(int nif)
   raRate  = 0.0f;
   decRate = 0.0f;
   nIF     = 0;
+
+  srcType = SrcType::NOTYPE ;
+  srcVelocity = 0.0 ;
 }
 
 //-------------------------------------------------------- MBrecord::~MBrecord
@@ -324,6 +328,8 @@ MBrecord &MBrecord::operator=(const MBrecord &other)
   polNo = other.polNo ;
   srcVelocity = other.srcVelocity ;
 
+  srcType = other.srcType ;
+
   return *this;
 }
 
@@ -440,6 +446,8 @@ int MBrecord::extract(const MBrecord &other, int iIF)
 
   polNo = other.polNo ;
   srcVelocity = other.srcVelocity ;
+
+  srcType = other.srcType ;
 
   return 0;
 }

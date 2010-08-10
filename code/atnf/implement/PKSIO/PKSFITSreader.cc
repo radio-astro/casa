@@ -35,6 +35,7 @@
 
 #include <atnf/PKSIO/MBFITSreader.h>
 #include <atnf/PKSIO/SDFITSreader.h>
+#include <atnf/PKSIO/GBTFITSreader.h>
 #include <atnf/PKSIO/PKSFITSreader.h>
 #include <atnf/PKSIO/PKSrecord.h>
 
@@ -57,6 +58,8 @@ PKSFITSreader::PKSFITSreader(
 
   if (fitsType == "SDFITS") {
     cReader = new SDFITSreader();
+  } else if (fitsType == "GBTFITS") {
+    cReader = new GBTFITSreader();
   } else {
     cReader = new MBFITSreader(retry, interpolate ? 1 : 0);
   }
@@ -428,6 +431,8 @@ Int PKSFITSreader::read(PKSrecord &pksrec)
       pksrec.srcName = pksrec.fieldName + "_nod" ;
     }
   }
+  
+  pksrec.srcType = cMBrec.srcType ;
 
   pksrec.srcDir.resize(2);
   pksrec.srcDir(0) = cMBrec.srcRA;
