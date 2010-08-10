@@ -172,6 +172,8 @@ class sdsave_test1(unittest.TestCase,sdsave_test_base):
     def tearDown(self):
         if (os.path.exists(self.sdfile)):
             shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.basefile)):
+            shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test00(self):
@@ -229,6 +231,8 @@ class sdsave_test2(unittest.TestCase,sdsave_test_base):
     def tearDown(self):
         if (os.path.exists(self.sdfile)):
             shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.basefile)):
+            shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test00(self):
@@ -286,6 +290,8 @@ class sdsave_test3(unittest.TestCase,sdsave_test_base):
     def tearDown(self):
         if (os.path.exists(self.sdfile)):
             os.system( 'rm -f '+self.sdfile )
+        if (os.path.exists(self.basefile)):
+            shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test00(self):
@@ -456,4 +462,6 @@ class sdsave_test5(unittest.TestCase):
 
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
-            sdsave_test3,sdsave_test4,sdsave_test5]
+            sdsave_test3,sdsave_test4]
+#    return [sdsave_test0,sdsave_test1,sdsave_test2,
+#            sdsave_test3,sdsave_test4,sdsave_test5]
