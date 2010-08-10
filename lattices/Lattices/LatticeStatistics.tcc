@@ -1122,27 +1122,135 @@ Bool LatticeStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 template <class T>
 Bool LatticeStatistics<T>::getLayerStats(
         String& stats, Double area, 
-        Vector<String>& zName, Int zAxis, Int layer,
-        Int hAxis, Int hLayer) { 
+        Int zAxis, Int zLayer, Int hAxis, Int hLayer) { 
 
+   //cout << "getlayerStats" << endl;
    if (!goodParameterStatus_p) {
+     cout << "bad parameter" << endl;
      return False;
    }
 
    if (needStorageLattice_p) {
-      if (!generateStorageLattice()) 
+      if (!generateStorageLattice()) { 
+         cout << "could not generate storage lattice" << endl;
          return False;
+      }
    }
 
    if (displayAxes_p.nelements() == 0) {
-     //summStats ();
-     return True;
+
+      const IPosition shape = statsSliceShape();
+      Array<AccumType> statsV(shape);
+      pStoreLattice_p->getSlice (statsV, IPosition(1,0), shape, IPosition(1,1));
+      IPosition pos(1);
+      pos(0) = NPTS;
+      AccumType nPts = statsV(pos);
+      pos(0) = SUM;
+      AccumType  sum = statsV(pos);
+      pos(0) = MEDIAN;
+      AccumType  median = statsV(pos);
+      pos(0) = MEDABSDEVMED;
+      AccumType  medAbsDevMed = statsV(pos);
+      pos(0) = QUARTILE;
+      AccumType  quartile= statsV(pos);
+      pos(0) = SUMSQ;
+      AccumType  sumSq = statsV(pos);
+
+      AccumType  mean = LattStatsSpecialize::getMean(sum, nPts);
+      AccumType  var = LattStatsSpecialize::getVariance(sum, sumSq, nPts);
+      AccumType  rms = LattStatsSpecialize::getRms(sumSq, nPts);
+      AccumType  sigma = LattStatsSpecialize::getSigma(var);
+
+      pos(0) = MIN;
+      AccumType  dMin = statsV(pos);
+      pos(0) = MAX;
+      AccumType  dMax = statsV(pos);
+
+      if (!LattStatsSpecialize::hasSomePoints(nPts)) 
+          return False;
+
+      stringstream os;
+      const Int oPrec = 6;
+      Int oDWidth = 15;
+      T* dummy = 0;
+      DataType type = whatType(dummy);
+      if (type==TpComplex) {
+         oDWidth = 2*oDWidth + 3; 
+      }
+
+      os.setf(ios::left, ios::adjustfield);
+      os << setw(10) << "Npts";
+      os << setw(oDWidth) << "Sum";
+      if (area > 0) 
+         os << setw(oDWidth) << "Flux (Jy)";
+      os << setw(oDWidth) << "Mean";  
+      if (doRobust_p) 
+         os << setw(oDWidth) << "Median"; 
+      os << setw(oDWidth) << "Rms";
+      os << setw(oDWidth) << "Std dev";
+      os << setw(oDWidth) << "Minimum";
+      os << setw(oDWidth) << "Maximum" << endl;
+
+      os.fill(' '); 
+      os.precision(0);
+      os.setf(ios::fixed, ios::floatfield);
+      os.setf(ios::left, ios::adjustfield);
+      os << setw(10)
+         << nPts;
+
+      setStream(os, oPrec);
+      os << setw(oDWidth)
+         << sum;
+      if (area > 0) { 
+            setStream(os, oPrec);
+            os << setw(oDWidth)
+               << sum / area;
+       }
+       setStream(os, oPrec);
+       os << setw(oDWidth)
+          << mean;
+       if (doRobust_p){ 
+          setStream(os, oPrec);
+          os << setw(oDWidth)
+             << median;
+       }
+       setStream(os, oPrec);
+       os << setw(oDWidth)
+          << rms;
+       setStream(os, oPrec);
+       os << setw(oDWidth)
+          << sigma;
+       setStream(os, oPrec);
+       os << setw(oDWidth)
+          << dMin;
+       setStream(os, oPrec);
+       os << setw(oDWidth)
+          << dMax;
+
+      /*
+      if (!fixedMinMax_p) {
+         os << "Minimum value ";
+         os << setw(oWidth) << String(os6);
+         if (type==TpFloat) {
+            os <<  " at " << blcParent_p + minPos_p+1;
+         }
+
+         os << "Maximum value ";
+         os << setw(oWidth) << String(os7);
+         if (type==TpFloat) {
+            os <<  " at " << blcParent_p + maxPos_p+1 << endl;
+         }
+      }
+      */
+
+      stats += os.str();
+      stats += '\n';
+      return True;
    }
 
    const uInt n1 = pStoreLattice_p->shape()(0);
    //cout << "pStoreLattice_p->shape()=" 
    //     << pStoreLattice_p->shape() << endl;
-   //cout << "n1=" << n1 << endl;
 
    Matrix<AccumType> ord(n1,NSTATS);
 
@@ -1155,47 +1263,55 @@ Bool LatticeStatistics<T>::getLayerStats(
    matrixAxes(0) = 0; 
    matrixAxes(1) = pStoreLattice_p->ndim()-1;
 
+   //cout << "cursorShape=" << cursorShape << endl;
+   //cout << "matrixAxes=" << matrixAxes << endl;
+   //cout << "axisPath=" 
+   //     << IPosition::makeAxisPath(pStoreLattice_p->ndim()) << endl; 
    LatticeStepper 
        stepper(pStoreLattice_p->shape(), cursorShape, matrixAxes, 
                 IPosition::makeAxisPath(pStoreLattice_p->ndim()));
    RO_LatticeIterator<AccumType> 
        pixelIterator(*pStoreLattice_p, stepper);
 
-   Double beamArea;
-   Bool hasBeam = getBeamArea(beamArea);
-
-   uInt zAx = 0;
-   uInt hAx = 0;
+   //cout << "zAxis=" << zAxis << " hAxis=" << hAxis << endl;
+   uInt zAx = -1;
+   uInt hAx = -1;
    for (uInt j=0; j<displayAxes_p.nelements(); j++) {
       if (zAxis == displayAxes_p(j))
          zAx = j;
       if (hAxis == displayAxes_p(j))
          hAx = j;
    }
-   //cout << "zAx=" << zAx << " zAxis=" << zAxis
-   //     << " layer=" << layer << endl;
-   //cout << "hAx=" << hAx << " hAxis=" << hAxis
-   //     << " hLayer=" << hLayer << endl;
+   //cout << "zAx=" << zAx << " hAx=" << hAx << endl;
 
+   Int layer = 0;
    ostringstream os;
    for (pixelIterator.reset(); 
         !pixelIterator.atEnd(); pixelIterator++) {
       IPosition dPos = pixelIterator.position();
-      //cout << "pixelIterator.position()=" 
-      //     << dPos << endl;
-      //Int lyr = locInLattice(dPos,True)(zAx);
-      //cout << "lyr=" << lyr << endl;
-      //Int hyr = locInLattice(dPos,True)(hAx);
-      //cout << "hyr=" << hyr << endl;
-      //if (zAx == 1 && hyr != hLayer) 
-      //   continue;
+      //cout << "pixelIterator.position()=" << dPos << endl;
+      if (displayAxes_p.nelements() == 2) {
+          if (zAx == 1) 
+          if (dPos[1] != zLayer) 
+                continue;
+          else
+                layer = hLayer;
+          if (hAx == 1)
+          if (dPos[1] != hLayer) 
+                continue;
+          else
+                layer = zLayer;
+      }
+      if (displayAxes_p.nelements() == 1)
+         layer = zLayer;
+
       Matrix<AccumType>  matrix(pixelIterator.matrixCursor());  
       for (uInt i=0; i<n1; i++) {
          const AccumType& nPts = matrix(i,NPTS);
          if (LattStatsSpecialize::hasSomePoints(nPts)) {
             ord(i,MEAN) = 
                LattStatsSpecialize::getMean(matrix(i,SUM), nPts);
-            if (hasBeam) ord(i,FLUX) = matrix(i,SUM) / beamArea;
+            if (area > 0) ord(i,FLUX) = matrix(i,SUM) / area;
             ord(i,VARIANCE) = LattStatsSpecialize::getVariance(
                               matrix(i,SUM), matrix(i,SUMSQ), nPts);
             ord(i,SIGMA) = LattStatsSpecialize::getSigma(
@@ -1209,8 +1325,9 @@ Bool LatticeStatistics<T>::getLayerStats(
          for (uInt j=0; j<n1; j++) ord(j,i) = matrix(j,i);
       }
 
-      listLayerStats(area, pixelIterator.position(), ord,
-                     os, zName, zAxis, layer, hAxis, hLayer);
+      listLayerStats(area, ord, os, layer);
+      //cout << "=======pixelIterator.position()=" << dPos << endl;
+      break;
    }
    stats += os.str();
    stats += '\n';
@@ -1220,28 +1337,11 @@ Bool LatticeStatistics<T>::getLayerStats(
 
 template <class T>
 Bool LatticeStatistics<T>::listLayerStats (Double beamArea, 
-    const IPosition& dPos, const Matrix<AccumType>& stats,
-    ostringstream& os, Vector<String>& zName,
-    Int zAxis, Int layer, 
-    Int hAxis, Int hLayer) 
+    const Matrix<AccumType>& stats, ostringstream& os, Int zLayer) 
 {
 
-   const uInt nDisplayAxes = displayAxes_p.nelements();
+   //const uInt nDisplayAxes = displayAxes_p.nelements();
    const uInt n1 = stats.shape()(0);
-
-   //cout << "displayAxes_p=" << displayAxes_p << endl;
-   uInt zAx = -1;
-   uInt hAx = -1;
-   for (uInt j=0; j<nDisplayAxes; j++) {
-      if (zAxis == displayAxes_p(j))
-         zAx = j;
-      if (hAxis == displayAxes_p(j))
-         hAx = j;
-   }
-   //cout << "zAx=" << zAx << " zAxis=" << zAxis
-   //     << " layer=" << layer << endl;
-   //cout << "hAx=" << hAx << " hAxis=" << hAxis
-   //     << " hLayer=" << hLayer << endl;
 
    Int oDWidth = 15;
    T* dummy = 0;
@@ -1251,47 +1351,6 @@ Bool LatticeStatistics<T>::listLayerStats (Double beamArea,
    }
 
    Int oPrec = 6;   
-
-   Int lyr = locInLattice(dPos,True)(zAx);
-   //cout << "lyr=" << lyr << endl;
-   Int hyr = locInLattice(dPos,True)(hAx);
-   //cout << "hyr=" << hyr << endl;
-   //Write the pixel and world coordinate of the higher order 
-   //display axes to the logger
-   //if (nDisplayAxes > 1) {
-   //   Vector<String> sWorld(1);
-   //   Vector<Double> pixels(1);
-   //   IPosition blc(pInLattice_p->ndim(),0);
-   //   IPosition trc(pInLattice_p->shape()-1);
-
-   //   Int lyr = locInLattice(dPos,True)(1);
-   //   if (lyr != layer)
-   //      return 0; 
-      //os << "zIndex=" << layer << endl;
-      //os <<  "Axis " << displayAxes_p(j) + 1 << " = " 
-      //   << locInLattice(dPos,True)(j)+1;
-   //}
-
-   if (zAx != 0 && lyr != layer)
-         return 0; 
-
-   if (hAx != 0 && hyr != hLayer)
-         return 0; 
-
-   /*
-   for (uInt s = 0; s < nDisplayAxes; s++) { 
-      if (s == zAx)
-         os << zName[displayAxes_p(s)] 
-            << "=" << layer;
-      else 
-         os << zName[displayAxes_p(s)] 
-            << "=" << locInLattice(dPos, True)(s);
-      if (s < nDisplayAxes - 1)
-         os << ", ";
-   }
-   os << endl;
-   */
-   //os << "zIndex=" << layer << endl;
 
    setStream(os, oPrec);
    Vector<String> sWorld(1);
@@ -1335,8 +1394,9 @@ Bool LatticeStatistics<T>::listLayerStats (Double beamArea,
 
    //Write statistics to logger.  We write the pixel location
    //relative to the parent lattice
+   //cout << "n1=" << n1 << " layer=" << zLayer << endl;
    for (uInt j=0; j<n1; j++) {
-      if (/*zAx != 0 && */layer == (Int)j)  {
+      if (zLayer == (Int)j || n1 == 1)  {
 
       //os << setw(len0)     
       //   << j+blcParent_p(displayAxes_p(0));
