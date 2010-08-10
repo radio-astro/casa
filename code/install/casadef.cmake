@@ -64,7 +64,7 @@ execute_process( COMMAND
   )
 
 execute_process( COMMAND
-  ${casadef_perl} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Revision:\\s+//) { print; } }"
+  ${casadef_perl} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Last Changed Rev:\\s+//) { print; } }"
   WORKING_DIRECTORY ${casadef_source_dir}
   OUTPUT_VARIABLE SVNREVISION
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -86,7 +86,7 @@ if( NOT TAGGEDTIME )
   message( FATAL_ERROR "Could not read \"Last Changed Date\" from the output of \"svn info ${casadef_source_dir}/VERSION\"" )
 endif()
 if( NOT SVNREVISION )
-  message( FATAL_ERROR "Could not read \"Revision\" from the output of \"svn info\"" )
+  message( FATAL_ERROR "Could not read \"Last Changed Rev\" from the output of \"svn info\"" )
 endif()
 if( NOT SVNURL )
   message( FATAL_ERROR "Could not read \"URL\" from the output of \"svn info\"" )
@@ -97,5 +97,3 @@ if( NOT casadef_quiet )
   execute_process( COMMAND echo "subversion_revision = \"${SVNREVISION}\"" )
   execute_process( COMMAND echo "subversion_url = \"${SVNURL}\"" )
 endif()
-
-
