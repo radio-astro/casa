@@ -316,7 +316,7 @@ class sdsave_test3(unittest.TestCase,sdsave_test_base):
 ###
 # Test to read GBT SDFITS and write various types of format
 ###
-class sdsave_test4(unittest.TestCase,sdsave_test_base):
+class sdsave_test4(unittest.TestCase):
     """
     Read GBT SDFITS data, write various types of format.
     """
@@ -347,6 +347,7 @@ class sdsave_test4(unittest.TestCase,sdsave_test_base):
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
+        self.assertTrue(self._compare())
 
     def test01(self):
         """Test 401: test to read GBT SDFITS and to write as MS"""
@@ -365,11 +366,28 @@ class sdsave_test4(unittest.TestCase,sdsave_test_base):
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile3))
+
+    def _compare(self,filename=''):
+        """
+        Check a few things for the data.
+        """
+        s=sd.scantable(self.sdfile,False)
+        if ( s.nrow() != 48 ):
+            return False
+        if ( s.nif() != 6 ):
+            return False
+        if ( s.nchan(0) != 4096 ):
+            return False
+        if ( s.nchan(2) != 8192 ):
+            return False
+        if ( s.npol() != 1 ):
+            return False
+        return True
         
 ###
 # Test to read NROFITS and write various types of format
 ###
-class sdsave_test5(unittest.TestCase,sdsave_test_base):
+class sdsave_test5(unittest.TestCase):
     """
     Read NROFITS data, write various types of format.
     """
@@ -400,6 +418,7 @@ class sdsave_test5(unittest.TestCase,sdsave_test_base):
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
+        self.assertTrue(self._compare())
 
     def test01(self):
         """Test 501: test to read NROFITS and to write as MS"""
@@ -419,9 +438,22 @@ class sdsave_test5(unittest.TestCase,sdsave_test_base):
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile3))
         
+    def _compare(self,filename=''):
+        """
+        Check a few things for the data.
+        """
+        s=sd.scantable(self.sdfile,False)
+        if ( s.nrow() != 36 ):
+            return False
+        if ( s.nif() != 4 ):
+            return False
+        if ( s.nchan() != 2048 ):
+            return False
+        if ( s.npol() != 1 ):
+            return False
+        return True        
 
 
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5]
-    #return [sdsave_test0,sdsave_test1]
