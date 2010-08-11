@@ -55,7 +55,7 @@ namespace CorrelatorTypeMod
   //! CorrelatorType.
   //! defines the type of a correlator.
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum CorrelatorType

@@ -55,7 +55,7 @@ namespace ACAPolarizationMod
   //! ACAPolarization.
   //!  ACA-specific ways to store pre-processed data products
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum ACAPolarization
