@@ -53,6 +53,8 @@ class builder:
         self.do("", "export ", env, '="', self._transform(texts), '"')
 
     def svn_exe(self, repository, revision, local_dir):
+#        if os.uname()[0] == "Linux":
+#            os.system("sudo /sbin/route add default gw 192.168.158.2") # internet dies often...
         if self.type == "full":
             if not self.temp:
                 self.comment("svn might prompt you to accept a fingerprint; in that case answer t(emporarily). Or you can send a 't' to the standard input of svn, in order to do so in a script")
@@ -335,7 +337,7 @@ def build_casa(b, url, revision, type, ops, architecture):
         prefix = machine('prefix', "/opt/casa")
 
     if ops == "Linux":
-        threads = machine("threads", "2")
+        threads = machine("threads", "1")
     else:
         threads = machine("threads", "4")
 
@@ -439,18 +441,6 @@ def build_casa(b, url, revision, type, ops, architecture):
                b.comment("installer: Package name is GNU Fortran 4.2.4 for Xcode 3.2 (build 5646)")
                b.comment("installer: Installing at base path /")
                b.comment("installer: The install was successful.")
-
-
-
-           b.comment("If you did not already install CMake, do it now.")
-           b.chdir(prefix, "/..")
-           b.do("", "curl http://www.cmake.org/files/v2.8/cmake-2.8.0-Darwin-universal.dmg -o cmake-2.8.0-Darwin-universal.dmg")
-           b.do("", "hdiutil attach cmake-2.8.0-Darwin-universal.dmg  -mountroot .")
-           b.comment("sudo installer -package cmake-2.8.0-Darwin-universal/cmake-2.8.0-Darwin-universal.pkg -target /")
-           b.comment("Password:")
-           b.comment("installer: Package name is CMake")
-           b.comment("installer: Installing at base path /")
-           b.comment("installer: The install was successful.")
 
         else:
             # Linux
@@ -643,7 +633,8 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.do("", "ln -s ", datadir, " ", prefix, "/data")
 
         b.do("Then launch the python unit test suite,", "casapy --nogui --log2term -c ", prefix, "/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --mem")
-        b.comment("which will summarize near the end if your build is okay or if there were problems.")
+
+        b.comment("which will summarize near the end if your build is okay or if there were any problems.")
         #
         # Does not seem to return here... 
         #
@@ -700,6 +691,13 @@ def main(argv):
     b = exe_and_doc_builder(doc_dir,
                             oss, arch, type = type, dry = dry)
     build_casa(b, url, revision, type, oss, arch)
+
+    os.system("mkdir -p " + os.getenv('HOME') + "/documentation")
+    prefix = "/opt/casa/active/code"
+    if not os.path.isdir(prefix):
+        prefix = "/opt/casa/code"
+    os.system("svn info " + prefix + " | egrep \"^Revision\" | awk '{print $2}' > " + os.getenv('HOME') + "/documentation/revision.txt")
+        
     return 0          
 
 if __name__ == "__main__":
