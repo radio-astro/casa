@@ -358,7 +358,8 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
 	      arr2 += arr1;
 	    }
 	    else if (merge.matches("replace")) {
-	      arr2 = arr1;
+              arr2.resize();
+              arr2 = arr1;
 	    }
 	    toFlag.put(i,arr2);
 	  }
