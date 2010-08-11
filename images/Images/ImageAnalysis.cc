@@ -156,19 +156,18 @@ itsLog(new LogIO()), pStatistics_p(0), pHistograms_p(0),
 
 ImageAnalysis::~ImageAnalysis() {
   
-	if (pImage_p != 0) {
-	  if(pImage_p->isPersistent()){
+        if (pImage_p != 0) {
+	  if((pImage_p->isPersistent()) && ((pImage_p->imageType()) == "PagedImage")){
 	    ImageOpener::ImageTypes type = ImageOpener::imageType(pImage_p->name());
-	    if ((type == ImageOpener::AIPSPP) && 
-		((pImage_p->imageType()) == "PagedImage")) {
+	    if (type == ImageOpener::AIPSPP) {
 	      (static_cast<PagedImage<Float> *>(pImage_p))->table().relinquishAutoLocks(True);
 	      (static_cast<PagedImage<Float> *>(pImage_p))->table().unlock();
 	    }
 	  }
-
-
-		delete pImage_p;
-		pImage_p = 0;
+    
+    
+	  delete pImage_p;
+	  pImage_p = 0;
 	}
 	deleteHistAndStats();
 
