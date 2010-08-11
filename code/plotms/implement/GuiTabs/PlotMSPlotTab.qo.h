@@ -175,8 +175,8 @@ protected:
     // Inserts the given subtab in the tab widget.
     void insertSubtab(int index, PlotMSPlotSubtab* tab);
     
-    // Inserts one of the known subtab types IF it is not already present,
-    // and returns it.
+    // Inserts one of the known subtab types if it is not already present,
+    // and returns a pointer to it.
     // <group>
     PlotMSAxesTab* addAxesSubtab();
     PlotMSAxesTab* insertAxesSubtab(int index);

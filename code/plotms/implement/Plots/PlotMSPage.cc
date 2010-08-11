@@ -99,7 +99,6 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
             if(r >= oldrows || c >= oldcols) {
                 canvas = factory->canvas();
                 itsCanvases_[r][c] = canvas;
-							/* !!!!!! */  printf("DSW DEBUG: just made new canvas[r=%d][c=%d]    \n", r,c); /*DSW:TEST*/
                 
                 // connect new canvases' tracker to tool tab
                 tools = canvas->standardMouseTools();

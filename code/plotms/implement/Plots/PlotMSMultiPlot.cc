@@ -103,9 +103,10 @@ void PlotMSMultiPlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
     tab.insertAxesSubtab(1);
     tab.insertCacheSubtab(2);
     tab.insertDisplaySubtab(3);
-    tab.insertCanvasSubtab(4);
-    tab.insertExportSubtab(5);
-    tab.clearSubtabsAfter(6);
+    tab.insertIterateSubtab(4);
+    tab.insertCanvasSubtab(5);
+    tab.insertExportSubtab(6);
+    tab.clearSubtabsAfter(7);
     
     const PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
     if(c == NULL) return; // shouldn't happen

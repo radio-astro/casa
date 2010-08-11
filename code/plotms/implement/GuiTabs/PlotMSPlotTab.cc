@@ -96,6 +96,7 @@ QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
 
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
+	(void)updateFlag;
     if(&p == itsCurrentParameters_ && itsCurrentPlot_ != NULL)
         setupForPlot(itsCurrentPlot_);
 }
@@ -234,6 +235,8 @@ void PlotMSPlotTab::clearSubtabsAfter(int index) {
     }
 }
 
+
+
 void PlotMSPlotTab::addSubtab(PlotMSPlotSubtab* tab) {
     insertSubtab(itsSubtabs_.size(), tab); }
 
@@ -252,30 +255,216 @@ void PlotMSPlotTab::insertSubtab(int index, PlotMSPlotSubtab* tab) {
     tabWidget->insertTab(index, tab, tab->tabName());
 }
 
-// Helper macro for adding/insert known subtab types.
-#define PT_ST(TYPE)                                                           \
-PlotMS##TYPE##Tab* PlotMSPlotTab::add##TYPE##Subtab() {                       \
-    return insert##TYPE##Subtab(itsSubtabs_.size()); }                        \
-PlotMS##TYPE##Tab* PlotMSPlotTab::insert##TYPE##Subtab(int index) {           \
-    PlotMS##TYPE##Tab* tab = NULL;                                            \
-    foreach(PlotMSPlotSubtab* t, itsSubtabs_) {                               \
-        tab = dynamic_cast<PlotMS##TYPE##Tab*>(t);                            \
-        if(tab != NULL) break;                                                \
-    }                                                                         \
-    if(tab == NULL) tab = new PlotMS##TYPE##Tab(this, itsPlotter_);           \
-    insertSubtab(index, tab);                                                 \
-    return tab;                                                               \
+
+
+
+PlotMSAxesTab*  PlotMSPlotTab::addAxesSubtab ()
+{
+     return insertAxesSubtab (itsSubtabs_.size ());
 }
 
-PT_ST(Axes)
-PT_ST(Cache)
-PT_ST(Canvas)
-PT_ST(Data)
-PT_ST(Display)
-PT_ST(Iterate)
-PT_ST(Export)
-PT_ST(MultiAxes)
-PT_ST(Transformations)
+
+PlotMSAxesTab* PlotMSPlotTab::insertAxesSubtab (int index)
+{
+     PlotMSAxesTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSAxesTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSAxesTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSCacheTab* PlotMSPlotTab::addCacheSubtab ()
+{
+     return insertCacheSubtab (itsSubtabs_.size ());
+}
+
+
+
+PlotMSCacheTab* PlotMSPlotTab::insertCacheSubtab (int index)
+{
+     PlotMSCacheTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSCacheTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSCacheTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSCanvasTab*  PlotMSPlotTab::addCanvasSubtab ()
+{
+     return insertCanvasSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSCanvasTab*  PlotMSPlotTab::insertCanvasSubtab (int index)
+{
+     PlotMSCanvasTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSCanvasTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSCanvasTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+
+PlotMSDataTab*  PlotMSPlotTab::addDataSubtab ()
+{
+     return insertDataSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSDataTab*  PlotMSPlotTab::insertDataSubtab (int index)
+{
+     PlotMSDataTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSDataTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSDataTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSDisplayTab*  PlotMSPlotTab::addDisplaySubtab ()
+{
+     return insertDisplaySubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSDisplayTab *PlotMSPlotTab::insertDisplaySubtab (int index)
+{
+     PlotMSDisplayTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSDisplayTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSDisplayTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSIterateTab*  PlotMSPlotTab::addIterateSubtab ()
+{
+     return insertIterateSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSIterateTab*  PlotMSPlotTab::insertIterateSubtab (int index)
+{
+     PlotMSIterateTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSIterateTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSIterateTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSExportTab*  PlotMSPlotTab::addExportSubtab ()
+{
+     return insertExportSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSExportTab*  PlotMSPlotTab::insertExportSubtab (int index)
+{
+     PlotMSExportTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSExportTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSExportTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSMultiAxesTab*  PlotMSPlotTab::addMultiAxesSubtab ()
+{
+     return insertMultiAxesSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSMultiAxesTab*  PlotMSPlotTab::insertMultiAxesSubtab (int index)
+{
+     PlotMSMultiAxesTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSMultiAxesTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSMultiAxesTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab ()
+{
+     return insertTransformationsSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSTransformationsTab*  PlotMSPlotTab::insertTransformationsSubtab (int index)
+{
+     PlotMSTransformationsTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSTransformationsTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSTransformationsTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
 
 // Private //
 

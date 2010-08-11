@@ -331,6 +331,15 @@ bool PlotMSSinglePlot::updateCanvas() {
         
         // Show/hide axes
         itsCanvas_->showAxes(false);
+
+#if (0) // DSW debugging - this should be removed after ticket (??) resolved.
+bool xxx = set && c->xAxisShown();
+bool yyy = set && c->yAxisShown();
+unsigned int xxxbare = c->xAxisShown();
+unsigned int yyybare = c->yAxisShown();
+printf("DSW CHKPOINT 333:  showx %d(%08X), showy %d(%08X) set=%08X", xxx, xxxbare,yyy,yyybare,(unsigned int)set);
+#endif
+
         itsCanvas_->showAxis(cx, set && c->xAxisShown());
         itsCanvas_->showAxis(cy, set && c->yAxisShown());
         
