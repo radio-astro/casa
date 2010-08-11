@@ -25,7 +25,7 @@
 using namespace ScanIntentMod;
 
 template<>
- struct enum_set_traits<ScanIntent> : public enum_set_traiter<ScanIntent,19,ScanIntentMod::UNSPECIFIED> {};
+ struct enum_set_traits<ScanIntent> : public enum_set_traiter<ScanIntent,21,ScanIntentMod::UNSPECIFIED> {};
 
 template<>
 class enum_map_traits<ScanIntent,void> : public enum_map_traiter<ScanIntent,void> {
@@ -71,6 +71,10 @@ public:
      (ScanIntentMod::MAP_PRIMARY_BEAM,ep((int)ScanIntentMod::MAP_PRIMARY_BEAM,"MAP_PRIMARY_BEAM","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
      (ScanIntentMod::OBSERVE_TARGET,ep((int)ScanIntentMod::OBSERVE_TARGET,"OBSERVE_TARGET","un-documented")));
+    m_.insert(pair<ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_POL_LEAKAGE,ep((int)ScanIntentMod::CALIBRATE_POL_LEAKAGE,"CALIBRATE_POL_LEAKAGE","un-documented")));
+    m_.insert(pair<ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_POL_ANGLE,ep((int)ScanIntentMod::CALIBRATE_POL_ANGLE,"CALIBRATE_POL_ANGLE","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
      (ScanIntentMod::TEST,ep((int)ScanIntentMod::TEST,"TEST","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >

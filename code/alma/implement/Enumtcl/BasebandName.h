@@ -25,7 +25,7 @@
 using namespace BasebandNameMod;
 
 template<>
- struct enum_set_traits<BasebandName> : public enum_set_traiter<BasebandName,10,BasebandNameMod::BB_ALL> {};
+ struct enum_set_traits<BasebandName> : public enum_set_traiter<BasebandName,16,BasebandNameMod::BD_8BIT> {};
 
 template<>
 class enum_map_traits<BasebandName,void> : public enum_map_traiter<BasebandName,void> {
@@ -57,6 +57,18 @@ public:
      (BasebandNameMod::BB_8,ep((int)BasebandNameMod::BB_8,"BB_8","un-documented")));
     m_.insert(pair<BasebandName,EnumPar<void> >
      (BasebandNameMod::BB_ALL,ep((int)BasebandNameMod::BB_ALL,"BB_ALL","un-documented")));
+    m_.insert(pair<BasebandName,EnumPar<void> >
+     (BasebandNameMod::A1C1_3BIT,ep((int)BasebandNameMod::A1C1_3BIT,"A1C1_3BIT","un-documented")));
+    m_.insert(pair<BasebandName,EnumPar<void> >
+     (BasebandNameMod::A2C2_3BIT,ep((int)BasebandNameMod::A2C2_3BIT,"A2C2_3BIT","un-documented")));
+    m_.insert(pair<BasebandName,EnumPar<void> >
+     (BasebandNameMod::AC_8BIT,ep((int)BasebandNameMod::AC_8BIT,"AC_8BIT","un-documented")));
+    m_.insert(pair<BasebandName,EnumPar<void> >
+     (BasebandNameMod::B1D1_3BIT,ep((int)BasebandNameMod::B1D1_3BIT,"B1D1_3BIT","un-documented")));
+    m_.insert(pair<BasebandName,EnumPar<void> >
+     (BasebandNameMod::B2D2_3BIT,ep((int)BasebandNameMod::B2D2_3BIT,"B2D2_3BIT","un-documented")));
+    m_.insert(pair<BasebandName,EnumPar<void> >
+     (BasebandNameMod::BD_8BIT,ep((int)BasebandNameMod::BD_8BIT,"BD_8BIT","un-documented")));
     return true;
   }
   static map<BasebandName,EnumPar<void> > m_;
