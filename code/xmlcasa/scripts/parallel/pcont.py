@@ -156,7 +156,6 @@ def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq
                         spwcounter+=1
             actualchan=actualchan+1
             if(actualchan==totchan):
-                actualchan=actualchan-1
                 break
         #pdb.set_trace()
         if(len(nchansel[k]) != len(spwsel[k])):
