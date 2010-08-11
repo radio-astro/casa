@@ -49,6 +49,7 @@ add_custom_target( xmlcasa_python_casadef_fast ${CMAKE_BUILD_TOOL} xmlcasa_pytho
 add_dependencies( xmlcasa_fast xmlcasa_python_casadef_fast )
 
 install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
+install( PROGRAMS install/buildmytasks DESTINATION bin )
 
 # set SVNREVISION and BUILDTIME
 set( casadef_quiet TRUE )
