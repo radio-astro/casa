@@ -159,7 +159,8 @@ ImageAnalysis::~ImageAnalysis() {
 	if (pImage_p != 0) {
 	  if(pImage_p->isPersistent()){
 	    ImageOpener::ImageTypes type = ImageOpener::imageType(pImage_p->name());
-	    if (type == ImageOpener::AIPSPP) {
+	    if ((type == ImageOpener::AIPSPP) && 
+		((pImage_p->imageType()) == "PagedImage")) {
 	      (static_cast<PagedImage<Float> *>(pImage_p))->table().relinquishAutoLocks(True);
 	      (static_cast<PagedImage<Float> *>(pImage_p))->table().unlock();
 	    }
