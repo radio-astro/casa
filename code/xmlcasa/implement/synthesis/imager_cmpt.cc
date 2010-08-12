@@ -298,9 +298,9 @@ imager::done()
    return close();
 }
 
-bool imager::drawmask(const std::string& image, const std::string& mask ){
+int imager::drawmask(const std::string& image, const std::string& mask ){
 
-
+  int rstat=-1;
   try{
     String elmask(mask);
     if(elmask==String("")){
@@ -309,13 +309,13 @@ bool imager::drawmask(const std::string& image, const std::string& mask ){
     Int dummy=0;
     Int dummier=0;
     String dummiest="0.0Jy";
-    itsImager->interactivemask(image, elmask,dummy, dummier, dummiest);
+    rstat=itsImager->interactivemask(image, elmask,dummy, dummier, dummiest);
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
-  return True;
+  return rstat;
 }
 
 
@@ -718,18 +718,18 @@ imager::plotvis(const std::string& type, const int increment)
  imager::plotweights(const bool gridded, const int increment)
  {
     Bool rstat(False);
-//    if(hasValidMS_p){
-//       try {
-//         // Has a tendency to dump core.  Add to plotms, replace with
-//         // something else, or fix.
-//         rstat = itsImager->plotweights(gridded, increment);
-//       } catch  (AipsError x) {
-//          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-// 	 RETHROW(x);
-//       }
-//    } else {
-//       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-//    }
+   if(hasValidMS_p){
+       try {
+         // Has a tendency to dump core.  Add to plotms, replace with
+         // something else, or fix.
+         rstat = itsImager->plotweights(gridded, increment);
+      } catch  (AipsError x) {
+          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+ 	 RETHROW(x);
+       }
+    } else {
+       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+    }
     return rstat;
  }
 

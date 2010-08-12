@@ -478,6 +478,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     else:
         for k in range(len(imlist)):
             shutil.rmtree(imlist[k]+'.model', True)
+    intmask=0
     for maj in range(majorcycles):
         for k in range(numcpu):
             imnam='"%s"'%(imlist[k])
@@ -513,8 +514,15 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             residuals[k]=imlist[k]+'.residual'
             restoreds[k]=imlist[k]+'.image'
 	averimages(residual, residuals)
-        if (interactive):
-            im.drawmask(residual,'lala.mask');
+        if (interactive and (intmask==0)):
+            if(maj==0):
+                ia.removefile('lala.mask')
+            intmask=im.drawmask(residual,'lala.mask');
+            print 'intmask', intmask
+            if(intmask==1):
+                im.done()
+            if(intmask==2):
+                break;
         else:
             if (maj==0):
                 copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0);
@@ -888,7 +896,7 @@ def pcontmultims(msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000],
                 k=jj*numcpuperhost+kk
                 imnam='"%s"'%(imlist[k])
                 #c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k)
-                runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spwsel)+', freq='+freq+', band='+band+', imname='+imnam+')'
+                runcomm='a.imagecontbychan(msname='+'"'+msname+'", start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spwsel)+', freq='+freq+', band='+band+', imname='+imnam+')'
                 print 'command is ', runcomm
                 out[k]=c.odo(runcomm,k)
         over=False
