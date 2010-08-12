@@ -98,7 +98,7 @@ public:
 
 private:
      // Disable constructor.
-     PMS_PP () {
+     PMS_PP() {
      }
 };
 
@@ -119,28 +119,28 @@ public:
      
      /* Copy constructor.  See operator=(). */
      PMS_PP_MSData (const PMS_PP_MSData & copy);
-     ~PMS_PP_MSData ();
+     ~PMS_PP_MSData();
 
 
      /* Overrides PlotMSPlotParameters::Group::operator=(). */
-     Group *clone () const {
+     Group *clone() const {
           return new PMS_PP_MSData (*this);
      }
 
      /* Implements PlotMSPlotParameters::Group::name(). */ 
-     const String & name () const {
+     const String & name() const {
           static String groupName = PMS_PP::UPDATE_MSDATA_NAME;
           return groupName;
      }
 
      /* Implements PlotMSPlotParameters::Group::toRecord(). */
-     Record toRecord () const;
+     Record toRecord() const;
 
      /* Implements PlotMSPlotParameters::Group::fromRecord(). */
      void fromRecord (const Record & record);
      
      /* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */ 
-     bool requiresRedrawOnChange () const {
+     bool requiresRedrawOnChange() const {
           return true;
      }
 
@@ -150,77 +150,69 @@ public:
      /* Overrides PlotMSPlotParameters::Group::operator==(). */
      bool operator== (const Group & other) const;
 
-public:
 
-     bool isSet () const {
-          return !itsFilename_.empty ();
+     bool isSet() const {
+          return !itsFilename_.empty();
      }
 
-public:
-     const String & filename () const {
+     const String & filename() const {
           return itsFilename_;
      }
      void setFilename (const String & value) {
           if (itsFilename_ != value) {
                itsFilename_ = value;
-               updated ();
+               updated();
           }
      }
 
-private:
-     /* Parameter. */ 
-     String itsFilename_;
- 
-     /* Record key for the indicated parameter. */     
-     static const String REC_FILENAME;
 
-public:
-     const PlotMSSelection & selection () const {
+     const PlotMSSelection & selection() const {
           return itsSelection_;
      }
      void setSelection (const PlotMSSelection & value) {
           if (itsSelection_ != value) {
                itsSelection_ = value;
-               updated ();
+               updated();
           }
      }
 
-private:
-     PlotMSSelection itsSelection_;
-     static const String REC_SELECTION;
 
-public:
-     const PlotMSAveraging & averaging () const {
+     const PlotMSAveraging & averaging() const {
           return itsAveraging_;
      }
      void setAveraging (const PlotMSAveraging & value) {
           if (itsAveraging_ != value) {
                itsAveraging_ = value;
-               updated ();
+               updated();
           }
      }
 
-private:
-     PlotMSAveraging itsAveraging_;
-     static const String REC_AVERAGING;
 
-public:
-     const PlotMSTransformations & transformations () const {
+     const PlotMSTransformations & transformations() const {
           return itsTransformations_;
      }
      void setTransformations (const PlotMSTransformations & value) {
           if (itsTransformations_ != value) {
                itsTransformations_ = value;
-               updated ();
+               updated();
           }
      }
 
 private:
+	 /* Parameters' values */
+     PlotMSSelection itsSelection_;
+     String itsFilename_;
+     PlotMSAveraging itsAveraging_;
      PlotMSTransformations itsTransformations_;
+
+     /* Key strings for Record */
+     static const String REC_SELECTION;
+     static const String REC_FILENAME;
+     static const String REC_AVERAGING;
      static const String REC_TRANSFORMATIONS;
 
-private:
-     void setDefaults ();
+
+     void setDefaults();
 };
 
 
@@ -243,27 +235,27 @@ public:
      /* Copy constructor.  See operator=(). */
      PMS_PP_Cache (const PMS_PP_Cache & copy);
 
-     ~PMS_PP_Cache ();
+     ~PMS_PP_Cache();
 
      /* Implements PlotMSPlotParameters::Group::clone(). */   
-     Group *clone () const {
+     Group *clone() const {
           return new PMS_PP_Cache (*this);
      }
 
      /* Implements PlotMSPlotParameters::Group::name(). */ 
-     const String & name () const {
+     const String & name() const {
           static String groupName = PMS_PP::UPDATE_CACHE_NAME;
           return groupName;
      }
 
      /* Implements PlotMSPlotParameters::Group::toRecord(). */
-     Record toRecord () const;
+     Record toRecord() const;
 
      /* Implements PlotMSPlotParameters::Group::fromRecord(). */
      void fromRecord (const Record & record);
      
      /* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */ 
-     bool requiresRedrawOnChange () const {
+     bool requiresRedrawOnChange() const {
           return true;
      }
 
@@ -274,11 +266,11 @@ public:
      bool operator== (const Group & other) const;
 
 
-public:
+
      // Gets how many axes and data columns there are.
      // <group>
-     unsigned int numXAxes () const;
-     unsigned int numYAxes () const;
+     unsigned int numXAxes() const;
+     unsigned int numYAxes() const;
      // </group>
 
 
@@ -295,26 +287,26 @@ public:
                    const PMS::DataColumn & yData, unsigned int index = 0);
 
 
-     const vector<PMS::Axis> &xAxes () const {
+     const vector<PMS::Axis> &xAxes() const {
           return itsXAxes_;
      }
      void setXAxes (const vector<PMS::Axis> &value) {
           if (itsXAxes_ != value) {
                itsXAxes_ = value;
-               updated ();
+               updated();
           }
      }
      PMS::Axis xAxis (unsigned int index = 0) const {
-          if (index >= itsXAxes_.size ())
+          if (index >= itsXAxes_.size())
                const_cast< vector<PMS::Axis>& >(itsXAxes_).resize (index + 1);
           return itsXAxes_[index];
      }
      void setXAxis (const PMS::Axis & value, unsigned int index = 0) {
-          if (index >= itsXAxes_.size ())
+          if (index >= itsXAxes_.size())
                itsXAxes_.resize (index + 1);
           if (itsXAxes_[index] != value) {
                itsXAxes_[index] = value;
-               updated ();
+               updated();
           }
      }
 
@@ -325,20 +317,20 @@ public:
      void setYAxes (const vector<PMS::Axis> &value) {
           if (itsYAxes_ != value) {
                itsYAxes_ = value;
-               updated ();
+               updated();
           }
      }
      PMS::Axis yAxis (unsigned int index = 0) const {
-          if (index >= itsYAxes_.size ())
+          if (index >= itsYAxes_.size())
                const_cast< vector<PMS::Axis> &>(itsYAxes_).resize (index + 1);
           return itsYAxes_[index];
      }
      void setYAxis (const PMS::Axis & value, unsigned int index = 0) {
-          if (index >= itsYAxes_.size ())
+          if (index >= itsYAxes_.size())
                itsYAxes_.resize (index + 1);
           if (itsYAxes_[index] != value)   {
                itsYAxes_[index] = value;
-               updated ();
+               updated();
           }
      }
 
@@ -349,7 +341,7 @@ public:
      void setXDataColumns (const vector < PMS::DataColumn > &value) {
           if (itsXData_ != value)   {
                itsXData_ = value;
-               updated ();
+               updated();
           }
      }
      PMS::DataColumn xDataColumn (unsigned int index = 0) const {
@@ -364,18 +356,18 @@ public:
                itsXData_.resize (index + 1);
           if (itsXData_[index] != value)   {
                itsXData_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PMS::DataColumn > &yDataColumns () const {
+     const vector < PMS::DataColumn > &yDataColumns() const {
           return itsYData_;
      }
      void setYDataColumns (const vector < PMS::DataColumn > &value) {
           if (itsYData_ != value) {
                itsYData_ = value;
-               updated ();
+               updated();
           }
      }
      PMS::DataColumn yDataColumn (unsigned int index = 0) const {
@@ -390,7 +382,7 @@ public:
                itsYData_.resize (index + 1);
           if (itsYData_[index] != value)   {
                itsYData_[index] = value;
-               updated ();
+               updated();
           }
      }
 
@@ -409,7 +401,7 @@ private:
      static const String REC_YDATACOLS;
 
 
-     void setDefaults ();
+     void setDefaults();
 };
 
 
@@ -432,28 +424,28 @@ public:
      /* Copy constructor.  See operator=(). */
      PMS_PP_Axes (const PMS_PP_Axes & copy);
 
-     ~PMS_PP_Axes ();
+     ~PMS_PP_Axes();
 
 
      /* Implements PlotMSPlotParameters::Group::clone(). */   
-     Group *clone () const {
+     Group *clone() const {
           return new PMS_PP_Axes (*this);
      }
 
      /* Implements PlotMSPlotParameters::Group::name(). */ 
-     const String & name () const {
+     const String & name() const {
           static String groupName = PMS_PP::UPDATE_AXES_NAME;
           return groupName;
      }
 
      /* Implements PlotMSPlotParameters::Group::toRecord(). */
-     Record toRecord () const;
+     Record toRecord() const;
 
      /* Implements PlotMSPlotParameters::Group::fromRecord(). */
      void fromRecord (const Record & record);
      
      /* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */ 
-     bool requiresRedrawOnChange () const {
+     bool requiresRedrawOnChange() const {
           return true;
      }
 
@@ -463,11 +455,11 @@ public:
      /* Overrides PlotMSPlotParameters::Group::operator==(). */
      bool operator== (const Group & other) const;
 
-public:
+
      // Gets how many axes there are.
      // <group>
-     unsigned int numXAxes () const;
-     unsigned int numYAxes () const;
+     unsigned int numXAxes() const;
+     unsigned int numYAxes() const;
     // </group>
 
 
@@ -489,150 +481,162 @@ public:
     // </group>
 
 
-     const vector < PlotAxis > &xAxes () const {
+     const vector < PlotAxis > &xAxes() const {
           return itsXAxes_;
      }
      void setXAxes (const vector < PlotAxis > &value) {
           if (itsXAxes_ != value) {
                itsXAxes_ = value;
-               updated ();
+               updated();
           }
      }
+     
+     
      PlotAxis xAxis (unsigned int index = 0) const {
-          if (index >= itsXAxes_.size ())
+          if (index >= itsXAxes_.size())
                const_cast < vector < PlotAxis > &>(itsXAxes_).resize (index + 1);
           return itsXAxes_[index];
      }
-     void setXAxis (const PlotAxis & value, unsigned int index = 0) {
-          if (index >= itsXAxes_.size ())
+     void setXAxis(const PlotAxis & value, unsigned int index = 0) {
+          if (index >= itsXAxes_.size())
                itsXAxes_.resize (index + 1);
           if (itsXAxes_[index] != value) {
                itsXAxes_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotAxis > &yAxes () const {
+     const vector<PlotAxis> &yAxes() const {
           return itsYAxes_;
      }
      void setYAxes (const vector < PlotAxis > &value) {
           if (itsYAxes_ != value) {
                itsYAxes_ = value;
-               updated ();
+               updated();
           }
      }
+     
+     
      PlotAxis yAxis (unsigned int index = 0) const {
-          if (index >= itsYAxes_.size ())
+          if (index >= itsYAxes_.size())
                const_cast < vector < PlotAxis > &>(itsYAxes_).resize (index + 1);
           return itsYAxes_[index];
      }
      void setYAxis (const PlotAxis & value, unsigned int index = 0) {
-          if (index >= itsYAxes_.size ())
+          if (index >= itsYAxes_.size())
                itsYAxes_.resize (index + 1);
           if (itsYAxes_[index] != value) {
                itsYAxes_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &xRangesSet () const {
+     const vector<bool> &xRangesSet() const {
           return itsXRangesSet_;
      }
      void setXRanges (const vector < bool > &value) {
           if (itsXRangesSet_ != value) {
                itsXRangesSet_ = value;
-               updated ();
+               updated();
           }
      }
+     
+     
      bool xRangeSet (unsigned int index = 0) const {
-          if (index >= itsXRangesSet_.size ())
+          if (index >= itsXRangesSet_.size())
                const_cast < vector < bool > &>(itsXRangesSet_).resize (index + 1);
           return itsXRangesSet_[index];
      }
      void setXRange (const bool & value, unsigned int index = 0) {
-          if (index >= itsXRangesSet_.size ())
+          if (index >= itsXRangesSet_.size())
                itsXRangesSet_.resize (index + 1);
           if (itsXRangesSet_[index] != value) {
                itsXRangesSet_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &yRangesSet () const {
+     const vector < bool > &yRangesSet() const {
           return itsYRangesSet_;
      }
      void setYRanges (const vector < bool > &value) {
           if (itsYRangesSet_ != value) {
                itsYRangesSet_ = value;
-               updated ();
+               updated();
           }
      }
+     
+     
      bool yRangeSet (unsigned int index = 0) const {
-          if (index >= itsYRangesSet_.size ())
+          if (index >= itsYRangesSet_.size())
                const_cast < vector < bool > &>(itsYRangesSet_).resize (index + 1);
           return itsYRangesSet_[index];
      }
      void setYRange (const bool & value, unsigned int index = 0) {
-          if (index >= itsYRangesSet_.size ())
+          if (index >= itsYRangesSet_.size())
                itsYRangesSet_.resize (index + 1);
           if (itsYRangesSet_[index] != value) {
                itsYRangesSet_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
 
-     const vector < prange_t > &xRanges () const {
+     const vector < prange_t > &xRanges() const {
           return itsXRanges_;
      }
      void setXRanges (const vector < prange_t > &value) {
           if (itsXRanges_ != value) {
                itsXRanges_ = value;
-               updated ();
+               updated();
           }
      }
+     
+     
      const prange_t & xRange (unsigned int index = 0) const {
           return itsXRanges_[index];
      }
      void setXRange (const prange_t & value, unsigned int index = 0) {
           if (itsXRanges_[index] != value) {
                itsXRanges_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < prange_t > &yRanges () const {
+     const vector < prange_t > &yRanges() const {
           return itsYRanges_;
      }
      void setYRanges (const vector < prange_t > &value) {
           if (itsYRanges_ != value) {
                itsYRanges_ = value;
-               updated ();
+               updated();
           }
      }
+     
+     
      const prange_t & yRange (unsigned int index = 0) const {
           return itsYRanges_[index];
      }
      void setYRange (const prange_t & value, unsigned int index = 0) {
           if (itsYRanges_[index] != value) {
                itsYRanges_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 private:
 	 /* Parameters' values */
-     vector < PlotAxis > itsXAxes_;
-     vector < PlotAxis > itsYAxes_;
-     vector < bool > itsXRangesSet_;
-     vector < bool > itsYRangesSet_;
-     vector < prange_t > itsXRanges_;
-     vector < prange_t > itsYRanges_;
+     vector<PlotAxis> itsXAxes_;
+     vector<PlotAxis> itsYAxes_;
+     vector<bool> itsXRangesSet_;
+     vector<bool> itsYRangesSet_;
+     vector<prange_t> itsXRanges_;
+     vector<prange_t> itsYRanges_;
 
      /* Key strings for Record */
      static const String REC_XAXES;
@@ -643,7 +647,7 @@ private:
      static const String REC_YRANGES;
 
 
-     void setDefaults ();
+     void setDefaults();
 };
 
 
@@ -668,27 +672,27 @@ public:
      /* Copy constructor.  See operator=(). */
      PMS_PP_Canvas (const PMS_PP_Canvas & copy);
 
-     ~PMS_PP_Canvas ();
+     ~PMS_PP_Canvas();
 
      /* Implements PlotMSPlotParameters::Group::clone(). */   
-     Group *clone () const {
+     Group *clone() const {
           return new PMS_PP_Canvas (*this);
      }
 
      /* Implements PlotMSPlotParameters::Group::name(). */ 
-     const String & name () const {
+     const String & name() const {
           static String groupName = PMS_PP::UPDATE_CANVAS_NAME;
           return groupName;
      }
 
      /* Implements PlotMSPlotParameters::Group::toRecord(). */
-     Record toRecord () const;
+     Record toRecord() const;
 
      /* Implements PlotMSPlotParameters::Group::fromRecord(). */
      void fromRecord (const Record & record);
      
      /* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */ 
-     bool requiresRedrawOnChange () const {
+     bool requiresRedrawOnChange() const {
           return true;
      }
 
@@ -698,9 +702,9 @@ public:
      /* Overrides PlotMSPlotParameters::Group::operator==(). */
      bool operator== (const Group & other) const;
 
-public:
+
      // Gets how many canvases there are.
-     unsigned int numCanvases () const;
+     unsigned int numCanvases() const;
 
     // Sets single versions of the parameters for the given index.
     // <group>
@@ -729,14 +733,14 @@ public:
     // </group>
 
 
-public:
-     const vector < PlotMSLabelFormat > &xLabelFormats () const {
+
+     const vector < PlotMSLabelFormat > &xLabelFormats() const {
           return itsXLabels_;
      }
      void setXLabelFormats (const vector < PlotMSLabelFormat > &value) {
           if (itsXLabels_ != value) {
                itsXLabels_ = value;
-               updated ();
+               updated();
           }
      }
      const PlotMSLabelFormat & xLabelFormat (unsigned int index = 0) const {
@@ -746,18 +750,18 @@ public:
                            unsigned int index = 0) {
           if (itsXLabels_[index] != value) {
                itsXLabels_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotMSLabelFormat > &yLabelFormats () const {
+     const vector < PlotMSLabelFormat > &yLabelFormats() const {
           return itsYLabels_;
      }
      void setYLabelFormats (const vector < PlotMSLabelFormat > &value) {
           if (itsYLabels_ != value) {
                itsYLabels_ = value;
-               updated ();
+               updated();
           }
      }
      const PlotMSLabelFormat & yLabelFormat (unsigned int index = 0) const {
@@ -767,116 +771,116 @@ public:
                            unsigned int index = 0) {
           if (itsYLabels_[index] != value) {
                itsYLabels_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &xAxesShown () const {
+     const vector < bool > &xAxesShown() const {
           return itsXAxesShown_;
      }
      void showXAxes (const vector < bool > &value) {
           if (itsXAxesShown_ != value) {
                itsXAxesShown_ = value;
-               updated ();
+               updated();
           }
      }
      bool xAxisShown (unsigned int index = 0) const {
-          if (index >= itsXAxesShown_.size ())
+          if (index >= itsXAxesShown_.size())
                const_cast < vector < bool > &>(itsXAxesShown_).resize (index + 1);
           return itsXAxesShown_[index];
      }
      void showXAxis (const bool & value, unsigned int index = 0) {
-          if (index >= itsXAxesShown_.size ())
+          if (index >= itsXAxesShown_.size())
                itsXAxesShown_.resize (index + 1);
           if (itsXAxesShown_[index] != value) {
                itsXAxesShown_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &yAxesShown () const {
+     const vector < bool > &yAxesShown() const {
           return itsYAxesShown_;
      }
      void showYAxes (const vector < bool > &value) {
           if (itsYAxesShown_ != value) {
                itsYAxesShown_ = value;
-               updated ();
+               updated();
           }
      }
      bool yAxisShown (unsigned int index = 0) const {
-          if (index >= itsYAxesShown_.size ())
+          if (index >= itsYAxesShown_.size())
                const_cast < vector < bool > &>(itsYAxesShown_).resize (index + 1);
           return itsYAxesShown_[index];
      }
      void showYAxis (const bool & value, unsigned int index = 0) {
-          if (index >= itsYAxesShown_.size ())
+          if (index >= itsYAxesShown_.size())
                itsYAxesShown_.resize (index + 1);
           if (itsYAxesShown_[index] != value) {
                itsYAxesShown_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &legendsShown () const {
+     const vector < bool > &legendsShown() const {
           return itsLegendsShown_;
      }
      void showLegends (const vector < bool > &value) {
           if (itsLegendsShown_ != value) {
                itsLegendsShown_ = value;
-               updated ();
+               updated();
           }
      }
      bool legendShown (unsigned int index = 0) const {
-          if (index >= itsLegendsShown_.size ())
+          if (index >= itsLegendsShown_.size())
                const_cast < vector < bool > &>(itsLegendsShown_).resize (index + 1);
           return itsLegendsShown_[index];
      }
      void showLegend (const bool & value, unsigned int index = 0) {
-          if (index >= itsLegendsShown_.size ())
+          if (index >= itsLegendsShown_.size())
                itsLegendsShown_.resize (index + 1);
           if (itsLegendsShown_[index] != value) {
                itsLegendsShown_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotCanvas::LegendPosition > &legendPositions () const {
+     const vector < PlotCanvas::LegendPosition > &legendPositions() const {
           return itsLegendsPos_;
      }
      void showLegends (const vector < PlotCanvas::LegendPosition > &value) {
           if (itsLegendsPos_ != value) {
                itsLegendsPos_ = value;
-               updated ();
+               updated();
           }
      }
      PlotCanvas::LegendPosition legendPosition (unsigned int index = 0) const {
-          if (index >= itsLegendsPos_.size ())
+          if (index >= itsLegendsPos_.size())
                const_cast < vector < PlotCanvas::LegendPosition >
                &>(itsLegendsPos_).resize (index + 1);
           return itsLegendsPos_[index];
      }
      void showLegend (const PlotCanvas::LegendPosition & value,
                       unsigned int index = 0) {
-          if (index >= itsLegendsPos_.size ())
+          if (index >= itsLegendsPos_.size())
                itsLegendsPos_.resize (index + 1);
           if (itsLegendsPos_[index] != value) {
                itsLegendsPos_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotMSLabelFormat > &titleFormats () const {
+     const vector < PlotMSLabelFormat > &titleFormats() const {
           return itsTitles_;
      }
      void setTitleFormats (const vector < PlotMSLabelFormat > &value) {
           if (itsTitles_ != value) {
                itsTitles_ = value;
-               updated ();
+               updated();
           }
      }
      const PlotMSLabelFormat & titleFormat (unsigned int index = 0) const {
@@ -886,105 +890,105 @@ public:
                                0) {
           if (itsTitles_[index] != value) {
                itsTitles_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &gridMajorsShown () const {
+     const vector < bool > &gridMajorsShown() const {
           return itsGridMajsShown_;
      }
      void showGridMajors (const vector < bool > &value) {
           if (itsGridMajsShown_ != value) {
                itsGridMajsShown_ = value;
-               updated ();
+               updated();
           }
      }
      bool gridMajorShown (unsigned int index = 0) const {
-          if (index >= itsGridMajsShown_.size ())
+          if (index >= itsGridMajsShown_.size())
                const_cast < vector < bool > &>(itsGridMajsShown_).resize (index + 1);
           return itsGridMajsShown_[index];
      }
      void showGridMajor (const bool & value, unsigned int index = 0) {
-          if (index >= itsGridMajsShown_.size ())
+          if (index >= itsGridMajsShown_.size())
                itsGridMajsShown_.resize (index + 1);
           if (itsGridMajsShown_[index] != value) {
                itsGridMajsShown_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &gridMinorsShown () const {
+     const vector < bool > &gridMinorsShown() const {
           return itsGridMinsShown_;
      }
      void showGridMinors (const vector < bool > &value) {
           if (itsGridMinsShown_ != value) {
                itsGridMinsShown_ = value;
-               updated ();
+               updated();
           }
      }
      bool gridMinorShown (unsigned int index = 0) const {
-          if (index >= itsGridMinsShown_.size ())
+          if (index >= itsGridMinsShown_.size())
                const_cast < vector < bool > &>(itsGridMinsShown_).resize (index + 1);
           return itsGridMinsShown_[index];
      }
      void showGridMinor (const bool & value, unsigned int index = 0) {
-          if (index >= itsGridMinsShown_.size ())
+          if (index >= itsGridMinsShown_.size())
                itsGridMinsShown_.resize (index + 1);
           if (itsGridMinsShown_[index] != value) {
                itsGridMinsShown_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotLinePtr > &gridMajorLines () const {
+     const vector < PlotLinePtr > &gridMajorLines() const {
           return itsGridMajLines_;
      }
      void setGridMajorLines (const vector < PlotLinePtr > &value) {
           if (itsGridMajLines_ != value) {
                itsGridMajLines_ = value;
-               updated ();
+               updated();
           }
      }
      PlotLinePtr gridMajorLine (unsigned int index = 0) const {
-          if (index >= itsGridMajLines_.size ())
+          if (index >= itsGridMajLines_.size())
                const_cast < vector < PlotLinePtr >
                &>(itsGridMajLines_).resize (index + 1);
           return itsGridMajLines_[index];
      }
      void setGridMajorLine (const PlotLinePtr & value, unsigned int index = 0) {
-          if (index >= itsGridMajLines_.size ())
+          if (index >= itsGridMajLines_.size())
                itsGridMajLines_.resize (index + 1);
           if (itsGridMajLines_[index] != value) {
                itsGridMajLines_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotLinePtr > &gridMinorLines () const {
+     const vector < PlotLinePtr > &gridMinorLines() const {
           return itsGridMinLines_;
      }
      void setGridMinorLines (const vector < PlotLinePtr > &value) {
           if (itsGridMinLines_ != value) {
                itsGridMinLines_ = value;
-               updated ();
+               updated();
           }
      }
      PlotLinePtr gridMinorLine (unsigned int index = 0) const {
-          if (index >= itsGridMinLines_.size ())
+          if (index >= itsGridMinLines_.size())
                const_cast < vector < PlotLinePtr >
                &>(itsGridMinLines_).resize (index + 1);
           return itsGridMinLines_[index];
      }
      void setGridMinorLine (const PlotLinePtr & value, unsigned int index = 0) {
-          if (index >= itsGridMinLines_.size ())
+          if (index >= itsGridMinLines_.size())
                itsGridMinLines_.resize (index + 1);
           if (itsGridMinLines_[index] != value) {
                itsGridMinLines_[index] = value;
-               updated ();
+               updated();
           }
      }
 
@@ -1017,7 +1021,7 @@ private:
      static const String REC_GRIDMINLINES;
      
      
-     void setDefaults ();
+     void setDefaults();
 };
 
 
@@ -1040,28 +1044,28 @@ public:
      /* Copy constructor.  See operator=(). */
      PMS_PP_Display (const PMS_PP_Display & copy);
 
-     ~PMS_PP_Display ();
+     ~PMS_PP_Display();
 
 
      /* Implements PlotMSPlotParameters::Group::clone(). */   
-     Group *clone () const {
+     Group *clone() const {
           return new PMS_PP_Display (*this);
      }
 
      /* Implements PlotMSPlotParameters::Group::name(). */ 
-     const String & name () const {
+     const String & name() const {
           static String groupName = PMS_PP::UPDATE_DISPLAY_NAME;
           return groupName;
      }
 
      /* Implements PlotMSPlotParameters::Group::toRecord(). */
-     Record toRecord () const;
+     Record toRecord() const;
 
      /* Implements PlotMSPlotParameters::Group::fromRecord(). */
      void fromRecord (const Record & record);
      
      /* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */ 
-     bool requiresRedrawOnChange () const {
+     bool requiresRedrawOnChange() const {
           return true;
      }
 
@@ -1079,65 +1083,65 @@ public:
      void resizeVectors (unsigned int newSize);
 
 
-     const vector < PlotSymbolPtr > &unflaggedSymbols () const {
+     const vector < PlotSymbolPtr > &unflaggedSymbols() const {
           return itsUnflaggedSymbols_;
      }
      void setUnflaggedSymbols (const vector < PlotSymbolPtr > &value) {
           if (itsUnflaggedSymbols_ != value) {
                itsUnflaggedSymbols_ = value;
-               updated ();
+               updated();
           }
      }
      PlotSymbolPtr unflaggedSymbol (unsigned int index = 0) const {
-          if (index >= itsUnflaggedSymbols_.size ())
+          if (index >= itsUnflaggedSymbols_.size())
                const_cast < vector < PlotSymbolPtr >
                &>(itsUnflaggedSymbols_).resize (index + 1);
           return itsUnflaggedSymbols_[index];
      }
      void setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
                                    0) {
-          if (index >= itsUnflaggedSymbols_.size ())
+          if (index >= itsUnflaggedSymbols_.size())
                itsUnflaggedSymbols_.resize (index + 1);
           if (itsUnflaggedSymbols_[index] != value) {
                itsUnflaggedSymbols_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotSymbolPtr > &flaggedSymbols () const {
+     const vector < PlotSymbolPtr > &flaggedSymbols() const {
           return itsFlaggedSymbols_;
      }
      void setFlaggedSymbols (const vector < PlotSymbolPtr > &value) {
           if (itsFlaggedSymbols_ != value) {
                itsFlaggedSymbols_ = value;
-               updated ();
+               updated();
           }
      }
      PlotSymbolPtr flaggedSymbol (unsigned int index = 0) const {
-          if (index >= itsFlaggedSymbols_.size ())
+          if (index >= itsFlaggedSymbols_.size())
                const_cast < vector < PlotSymbolPtr >
                &>(itsFlaggedSymbols_).resize (index + 1);
           return itsFlaggedSymbols_[index];
      }
      void setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
                                  0) {
-          if (index >= itsFlaggedSymbols_.size ())
+          if (index >= itsFlaggedSymbols_.size())
                itsFlaggedSymbols_.resize (index + 1);
           if (itsFlaggedSymbols_[index] != value) {
                itsFlaggedSymbols_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PlotMSLabelFormat > &titleFormats () const {
+     const vector < PlotMSLabelFormat > &titleFormats() const {
           return itsTitleFormats_;
      }
      void setTitleFormats (const vector < PlotMSLabelFormat > &value) {
           if (itsTitleFormats_ != value) {
                itsTitleFormats_ = value;
-               updated ();
+               updated();
           }
      }
      const PlotMSLabelFormat & titleFormat (unsigned int index = 0) const {
@@ -1147,67 +1151,67 @@ public:
                                0) {
           if (itsTitleFormats_[index] != value) {
                itsTitleFormats_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < bool > &colorizeFlags () const {
+     const vector < bool > &colorizeFlags() const {
           return itsColorizeFlags_;
      }
      void setColorize (const vector < bool > &value) {
           if (itsColorizeFlags_ != value) {
                itsColorizeFlags_ = value;
-               updated ();
+               updated();
           }
      }
      bool colorizeFlag (unsigned int index = 0) const {
-          if (index >= itsColorizeFlags_.size ())
+          if (index >= itsColorizeFlags_.size())
                const_cast < vector < bool > &>(itsColorizeFlags_).resize (index + 1);
           return itsColorizeFlags_[index];
      }
      void setColorize (const bool & value, unsigned int index = 0) {
-          if (index >= itsColorizeFlags_.size ())
+          if (index >= itsColorizeFlags_.size())
                itsColorizeFlags_.resize (index + 1);
           if (itsColorizeFlags_[index] != value) {
                itsColorizeFlags_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const vector < PMS::Axis > &colorizeAxes () const {
+     const vector < PMS::Axis > &colorizeAxes() const {
           return itsColorizeAxes_;
      }
      void setColorize (const vector < PMS::Axis > &value) {
           if (itsColorizeAxes_ != value) {
                itsColorizeAxes_ = value;
-               updated ();
+               updated();
           }
      }
      PMS::Axis colorizeAxis (unsigned int index = 0) const {
-          if (index >= itsColorizeAxes_.size ())
+          if (index >= itsColorizeAxes_.size())
                const_cast < vector < PMS::Axis >
                &>(itsColorizeAxes_).resize (index + 1);
           return itsColorizeAxes_[index];
      }
      void setColorize (const PMS::Axis & value, unsigned int index = 0) {
-          if (index >= itsColorizeAxes_.size ())
+          if (index >= itsColorizeAxes_.size())
                itsColorizeAxes_.resize (index + 1);
           if (itsColorizeAxes_[index] != value) {
                itsColorizeAxes_[index] = value;
-               updated ();
+               updated();
           }
      }
 
 
 private:
 	 /* Parameters' values */
-     vector < PlotSymbolPtr > itsUnflaggedSymbols_;
-     vector < PlotSymbolPtr > itsFlaggedSymbols_;
-     vector < PlotMSLabelFormat > itsTitleFormats_;
-     vector < bool > itsColorizeFlags_;
-     vector < PMS::Axis > itsColorizeAxes_;
+     vector<PlotSymbolPtr> itsUnflaggedSymbols_;
+     vector<PlotSymbolPtr> itsFlaggedSymbols_;
+     vector<PlotMSLabelFormat> itsTitleFormats_;
+     vector<bool> itsColorizeFlags_;
+     vector<PMS::Axis> itsColorizeAxes_;
 
      /* Key strings for Record */
      static const String REC_UNFLAGGEDS;
@@ -1216,7 +1220,7 @@ private:
      static const String REC_COLFLAGS;
      static const String REC_COLAXES;
 
-     void setDefaults ();
+     void setDefaults();
 };
 
 
@@ -1230,35 +1234,45 @@ private:
 //
 class PMS_PP_Iteration:public PlotMSPlotParameters::Group {
 
+
+	
 public:
+	enum AxisSharingMode   {
+		COMMON_AXIS,
+		REPEAT_AXES,
+		INDIV_AXES,
+		NO_AXES
+	};
+
+
      /* Constructor which takes a factory */
      PMS_PP_Iteration (PlotFactoryPtr factory);
      
      /* Copy constructor.  See operator=(). */
      PMS_PP_Iteration (const PMS_PP_Iteration & copy);
 
-     ~PMS_PP_Iteration ();
+     ~PMS_PP_Iteration();
 
 
      /* Implements PlotMSPlotParameters::Group::clone(). */   
-     Group *clone () const {
+     Group *clone() const {
           return new PMS_PP_Iteration (*this);
      }
      
      /* Implements PlotMSPlotParameters::Group::name(). */ 
-     const String & name () const {
+     const String & name() const {
           static String groupName = PMS_PP::UPDATE_ITERATION_NAME;
           return groupName;
      }
 
      /* Implements PlotMSPlotParameters::Group::toRecord(). */
-     Record toRecord () const;
+     Record toRecord() const;
 
      /* Implements PlotMSPlotParameters::Group::fromRecord(). */
      void fromRecord (const Record & record);
      
      /* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */ 
-     bool requiresRedrawOnChange () const {
+     bool requiresRedrawOnChange() const {
           return true;
      }
 
@@ -1268,72 +1282,73 @@ public:
      /* Overrides PlotMSPlotParameters::Group::operator==(). */
      bool operator== (const Group & other) const;
 
-public:
-     const bool & enableIteration () const {
+
+     bool enableIteration() const {
           return itsEnableIteration_;
      }
      void setEnableIteration (const bool & value) {
           if (itsEnableIteration_ != value) {
                itsEnableIteration_ = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const PMS::Axis & iterationAxis () const {
+     PMS::Axis  iterationAxis() const {
           return itsIterationAxis_;
      }
      void setIterationAxis (const PMS::Axis & value) {
           if (itsIterationAxis_ != value) {
                itsIterationAxis_ = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const int &numRows () const {
+     int numRows() const  {
           return itsNumRows_;
      }
-     void setNumRows (const int &value) {
+     void setNumRows(const int &value)  {
           if (itsNumRows_ != value) {
                itsNumRows_ = value;
-               updated ();
+               updated();
           }
      }
 
 
-     const int &numColumns () const {
+     int numColumns() const  {
           return itsNumColumns_;
      }
-     void setNumColumns (const int &value) {
+     void setNumColumns(const int &value)  {
           if (itsNumColumns_ != value) {
                itsNumColumns_ = value;
-               updated ();
+               updated();
           }
      }
 
 
 
-     const int &xAxisDisplayMode () const {
-          return itsXAxisDisplayMode_;
+     AxisSharingMode xAxisSharingMode() const {
+          return itsXAxisSharingMode_;
      }
-     void setXAxisDisplayMode (const int &value) {
-          if (itsXAxisDisplayMode_ != value) {
-               itsXAxisDisplayMode_ = value;
-               updated ();
+     void setXAxisSharingMode(AxisSharingMode value) {
+          if (itsXAxisSharingMode_ != value) {
+               itsXAxisSharingMode_ = value;
+               updated();
           }
      }
 
 
-     const int &yAxisDisplayMode () const {
-          return itsYAxisDisplayMode_;
+     AxisSharingMode yAxisSharingMode() const {
+          return itsYAxisSharingMode_;
      }
-     void setYAxisDisplayMode (const int &value) {
-          if (itsYAxisDisplayMode_ != value) {
-               itsYAxisDisplayMode_ = value;
-               updated ();
+     void setYAxisSharingMode (AxisSharingMode value) {
+          if (itsYAxisSharingMode_ != value) {
+               itsYAxisSharingMode_ = value;
+               updated();
           }
      }
+
 
 private:
 	 /* Parameters' values */
@@ -1341,18 +1356,18 @@ private:
      PMS::Axis itsIterationAxis_;
      int itsNumRows_;
      int itsNumColumns_;
-     int itsXAxisDisplayMode_;
-     int itsYAxisDisplayMode_;
+     AxisSharingMode itsXAxisSharingMode_;
+     AxisSharingMode itsYAxisSharingMode_;
 
      /* Key strings for Record */
      static const String REC_ENABLEITERATION;
      static const String REC_ITERATIONAXIS;
      static const String REC_NUMROWS;
      static const String REC_NUMCOLUMNS;
-     static const String REC_XAXISDISPLAYMODE;
-     static const String REC_YAXISDISPLAYMODE;
+     static const String REC_XAXISSHARINGMODE;
+     static const String REC_YAXISSHARINGMODE;
 
-     void setDefaults ();
+     void setDefaults();
 };
 
 }

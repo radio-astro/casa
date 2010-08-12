@@ -40,18 +40,55 @@ PlotMSTab::PlotMSTab(PlotMSPlotter* parent) : itsParent_(parent->getParent()),
 PlotMSTab::~PlotMSTab() { }
 
 
-void PlotMSTab::changedText(QLabel* label, bool changed) {
-    if(itsLabelDefaults_.contains(label))
-        label->setText(changedText(itsLabelDefaults_.value(label),
-                       changed));
+
+void PlotMSTab::highlightWidgetText(QLabel* label, bool highlight) {
+    label->setText( highlightifyText( label->text(), highlight) );
 }
 
-QString PlotMSTab::changedText(const QString& t, bool changed) {
-    QString str(t);
-    //str.replace(' ', "&nbsp;");
-    if(changed) str = "<font color=\"#FF0000\">"+ t + "</font>";
-    return str;
+
+void PlotMSTab::highlightWidgetText(QAbstractButton* but, bool highlight)   {
+    but->setText( highlightifyText( but->text(), highlight) );
 }
+
+
+void PlotMSTab::highlightWidgetText(QGroupBox* box, bool highlight)   {
+    box->setTitle( highlightifyText( box->title(), highlight) );
+}
+
+
+
+
+QString PlotMSTab::highlightifyText(const QString& text, bool highlight) {
+	// note (dsw, aug. 2010): older code used to replace spaces with &nbsp;
+	// but this was removed for unknown reasons
+	
+	// Is the string already highlighted?  Presence of HTML closing
+	// bracket is assumed to be sign of highlighted by previous
+	// use of highlightifyText
+	int igt = text.indexOf(QChar('>'));
+	bool already = (igt >2);
+	if (already==highlight)  {
+		return text;
+	}
+	else
+		if (highlight)	 {
+			// text lacks tags, so add them
+			return QString("<font color=\"#FF0000\">"+ text + "</font>");
+		}
+		else   {
+			// text has html to be stripped off
+			// find start of </font> 
+			int iclose = text.lastIndexOf(QChar('<'));
+			
+			// Check for insanse results.  If so,
+			// don't know what to do, just parrot back the input
+			if (iclose <= igt) return text;  
+			
+			// Return the part between the tags.
+			return text.left(iclose).mid(igt+1);
+		}
+}
+
 
 bool PlotMSTab::setChooser(QComboBox* chooser, const QString& value) {
     for(int i = 0; i < chooser->count(); i++) {

@@ -60,6 +60,13 @@ p, li { white-space: pre-wrap; }
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="iterationAxisChooserLabel" >
+      <property name="text" >
+       <string>Axis of Iteration</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QComboBox" name="iterationAxisChooser" >
       <property name="toolTip" >
        <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
@@ -72,7 +79,7 @@ p, li { white-space: pre-wrap; }
     <item>
      <layout class="QHBoxLayout" >
       <item>
-       <widget class="QGroupBox" name="VertAxesGroupBox" >
+       <widget class="QGroupBox" name="VertAxisSharingGroup" >
         <property name="enabled" >
          <bool>true</bool>
         </property>
@@ -108,7 +115,7 @@ p, li { white-space: pre-wrap; }
            <number>4</number>
           </property>
           <item>
-           <widget class="QRadioButton" name="VertAxisRepetitionRadio" >
+           <widget class="QRadioButton" name="VertAxisRadio_common" >
             <property name="text" >
              <string>Common</string>
             </property>
@@ -121,21 +128,21 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton" >
+           <widget class="QRadioButton" name="VertAxisRadio_repeat" >
             <property name="text" >
              <string>Repeated</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_3" >
+           <widget class="QRadioButton" name="VertAxisRadio_indiv" >
             <property name="text" >
              <string>Individual</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_2" >
+           <widget class="QRadioButton" name="VertAxisRadio_none" >
             <property name="text" >
              <string>None</string>
             </property>
@@ -146,7 +153,7 @@ p, li { white-space: pre-wrap; }
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="HorizAxesGroupBox" >
+       <widget class="QGroupBox" name="HorizAxisSharingGroup" >
         <property name="toolTip" >
          <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -167,7 +174,7 @@ p, li { white-space: pre-wrap; }
          </property>
          <layout class="QVBoxLayout" >
           <item>
-           <widget class="QRadioButton" name="HorizAxisRepetitionRadio" >
+           <widget class="QRadioButton" name="HorizAxisRadio_common" >
             <property name="text" >
              <string>Common</string>
             </property>
@@ -180,21 +187,21 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_4" >
+           <widget class="QRadioButton" name="HorizAxisRadio_repeat" >
             <property name="text" >
              <string>Repeated</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_5" >
+           <widget class="QRadioButton" name="HorizAxisRadio_indiv" >
             <property name="text" >
              <string>Individual</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_6" >
+           <widget class="QRadioButton" name="HorizAxisRadio_none" >
             <property name="text" >
              <string>None</string>
             </property>
@@ -227,12 +234,12 @@ p, li { white-space: pre-wrap; }
              <number>30</number>
             </property>
             <property name="value" >
-             <number>3</number>
+             <number>1</number>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_3" >
+           <widget class="QLabel" name="rowsLabel" >
             <property name="text" >
              <string>Rows</string>
             </property>
@@ -257,12 +264,12 @@ p, li { white-space: pre-wrap; }
              <number>30</number>
             </property>
             <property name="value" >
-             <number>3</number>
+             <number>1</number>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_4" >
+           <widget class="QLabel" name="columnsLabel" >
             <property name="text" >
              <string>Columns</string>
             </property>

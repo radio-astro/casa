@@ -1120,17 +1120,17 @@ void PMS_PP_Display::resizeVectors(unsigned int newSize)
 
 
 
-////////////////////////////////
+//////////////////////////////////
 // PMS_PP_ITERATION DEFINITIONS //
-////////////////////////////////
+//////////////////////////////////
 
 // PMS_PP_Iteration record keys.
 const String PMS_PP_Iteration::REC_ENABLEITERATION = "enableIteration";
 const String PMS_PP_Iteration::REC_ITERATIONAXIS = "iterationAxis";
 const String PMS_PP_Iteration::REC_NUMROWS = "numRows";
 const String PMS_PP_Iteration::REC_NUMCOLUMNS = "numColumns";
-const String PMS_PP_Iteration::REC_XAXISDISPLAYMODE = "xAxisDisplayMode";
-const String PMS_PP_Iteration::REC_YAXISDISPLAYMODE = "yAxisDisplayMode";
+const String PMS_PP_Iteration::REC_XAXISSHARINGMODE = "xAxisSharingMode";
+const String PMS_PP_Iteration::REC_YAXISSHARINGMODE = "yAxisSharingMode";
 
 
 
@@ -1152,8 +1152,8 @@ Record PMS_PP_Iteration::toRecord() const
     rec.define(REC_ITERATIONAXIS, itsIterationAxis_);
     rec.define(REC_NUMROWS, itsNumRows_);
     rec.define(REC_NUMCOLUMNS, itsNumColumns_);
-    rec.define(REC_XAXISDISPLAYMODE, itsXAxisDisplayMode_);
-    rec.define(REC_YAXISDISPLAYMODE, itsYAxisDisplayMode_);
+    rec.define(REC_XAXISSHARINGMODE, itsXAxisSharingMode_);
+    rec.define(REC_YAXISSHARINGMODE, itsYAxisSharingMode_);
     return rec;
     }
 
@@ -1182,14 +1182,14 @@ void PMS_PP_Iteration::fromRecord(const Record& record)
         itsNumColumns_ = record.asInt(REC_NUMCOLUMNS);
         valuesChanged = true;
         }
-    if (record.isDefined(REC_XAXISDISPLAYMODE) && record.dataType(REC_XAXISDISPLAYMODE) == TpInt && itsXAxisDisplayMode_ != record.asInt(REC_XAXISDISPLAYMODE))
+    if (record.isDefined(REC_XAXISSHARINGMODE) && record.dataType(REC_XAXISSHARINGMODE) == TpInt && itsXAxisSharingMode_ != record.asInt(REC_XAXISSHARINGMODE))
         {
-        itsXAxisDisplayMode_ = record.asInt(REC_XAXISDISPLAYMODE);
+        itsXAxisSharingMode_ = (AxisSharingMode)record.asInt(REC_XAXISSHARINGMODE);
         valuesChanged = true;
         }
-    if (record.isDefined(REC_YAXISDISPLAYMODE) && record.dataType(REC_YAXISDISPLAYMODE) == TpInt && itsYAxisDisplayMode_ != record.asInt(REC_YAXISDISPLAYMODE))
+    if (record.isDefined(REC_YAXISSHARINGMODE) && record.dataType(REC_YAXISSHARINGMODE) == TpInt && itsYAxisSharingMode_ != record.asInt(REC_YAXISSHARINGMODE))
         {
-        itsYAxisDisplayMode_ = record.asInt(REC_YAXISDISPLAYMODE);
+        itsYAxisSharingMode_ = (AxisSharingMode)record.asInt(REC_YAXISSHARINGMODE);
         valuesChanged = true;
         }
     if (valuesChanged) updated();
@@ -1206,8 +1206,8 @@ PlotMSPlotParameters::Group& PMS_PP_Iteration::operator=(const Group& other)
         itsIterationAxis_ = o->itsIterationAxis_;
         itsNumRows_ = o->itsNumRows_;
         itsNumColumns_ = o->itsNumColumns_;
-        itsXAxisDisplayMode_ = o->itsXAxisDisplayMode_;
-        itsYAxisDisplayMode_ = o->itsYAxisDisplayMode_;
+        itsXAxisSharingMode_ = o->itsXAxisSharingMode_;
+        itsYAxisSharingMode_ = o->itsYAxisSharingMode_;
         updated();
         }
     return *this;
@@ -1223,8 +1223,8 @@ bool PMS_PP_Iteration::operator==(const Group& other) const
     if (itsIterationAxis_ != o->itsIterationAxis_) return false;
     if (itsNumRows_ != o->itsNumRows_) return false;
     if (itsNumColumns_ != o->itsNumColumns_) return false;
-    if (itsXAxisDisplayMode_ != o->itsXAxisDisplayMode_) return false;
-    if (itsYAxisDisplayMode_ != o->itsYAxisDisplayMode_) return false;
+    if (itsXAxisSharingMode_ != o->itsXAxisSharingMode_) return false;
+    if (itsYAxisSharingMode_ != o->itsYAxisSharingMode_) return false;
     return true;
     }
 
@@ -1234,10 +1234,10 @@ void PMS_PP_Iteration::setDefaults()
     {
     itsEnableIteration_ = 0;
     itsIterationAxis_ = PMS::DEFAULT_COLOR_AXIS;
-    itsNumRows_ = 3;
-    itsNumColumns_ = 3;
-    itsXAxisDisplayMode_ = 0;
-    itsYAxisDisplayMode_ = 0;
+    itsNumRows_ = 1;
+    itsNumColumns_ = 1;
+    itsXAxisSharingMode_ = COMMON_AXIS;
+    itsYAxisSharingMode_ = COMMON_AXIS;
     }
 
 

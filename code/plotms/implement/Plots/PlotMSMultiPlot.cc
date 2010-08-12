@@ -48,9 +48,14 @@ PlotMSPlotParameters PlotMSMultiPlot::makeParameters(PlotMS* plotms) {
     return p;
 }
 
-void PlotMSMultiPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotms) {\
+void PlotMSMultiPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotms) {
     // Uses the same parameter groups as PlotMSSinglePlot.
     PlotMSSinglePlot::makeParameters(params, plotms);
+    
+    // Add iteration parameters if needed.
+    if(params.typedGroup<PMS_PP_Iteration>() == NULL)
+        params.setGroup<PMS_PP_Iteration>();
+
 }
 
 
@@ -101,9 +106,9 @@ vector<PlotCanvasPtr> PlotMSMultiPlot::canvases() const {
 void PlotMSMultiPlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
     tab.insertDataSubtab(0);
     tab.insertAxesSubtab(1);
-    tab.insertCacheSubtab(2);
-    tab.insertDisplaySubtab(3);
-    tab.insertIterateSubtab(4);
+    tab.insertIterateSubtab(2);
+    tab.insertCacheSubtab(3);
+    tab.insertDisplaySubtab(4);
     tab.insertCanvasSubtab(5);
     tab.insertExportSubtab(6);
     tab.clearSubtabsAfter(7);
