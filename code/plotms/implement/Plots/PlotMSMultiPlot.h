@@ -94,7 +94,9 @@ protected:
     
     // Overrides PlotMSPlot::constructorSetup().
     void constructorSetup();
-    
+
+    // A temporary override until cache iterated slicing works
+    virtual void releaseDrawing();    
 private:
     // Grid of plots.
     vector<vector<MaskedScatterPlotPtr> > itsPlots_;
