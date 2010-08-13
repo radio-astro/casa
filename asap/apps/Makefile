@@ -22,9 +22,7 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 CXXFLAGS += -Xlinker -rpath -Xlinker $(CASALIB)
 ifneq (,$(findstring "$(CASAARCH)", "darwin"))
    CXXFLAGS +=-DAIPS_DARWIN
-   ifneq (,$(shell sw_vers | grep 10.6))
-      CXXFLAGS += -arch i386
-   endif
+   # CXXFLAGS += -arch i386
 endif
 
 INCDIRS   := -I$(COREINCD)
