@@ -172,10 +172,10 @@ void PlotMSIterateTab::update(const PlotMSPlot& plot) {
 	highlightWidgetText(columnsLabel,  d->numColumns() != d2->numColumns() );
 	highlightWidgetText(rowsLabel,     d->numRows() != d2->numRows() );
 
-#if (0)  // turn off for now - text shows explicitly the html, not making text red!	
+#if (1)  // turn on for testing, off for demo - somehow thisis crashing
 	highlightWidgetText(HorizAxisSharingGroup, d->xAxisSharingMode() != d2->xAxisSharingMode());
 	highlightWidgetText(VertAxisSharingGroup, d->yAxisSharingMode() != d2->yAxisSharingMode());	
-	highlightWidgetText(enableIterationChk,  d->enableIteration()  != d2->enableIteration());
+	highlightWidgetText(enableIterationLabel,  d->enableIteration()  != d2->enableIteration());
 #endif
 }
 
