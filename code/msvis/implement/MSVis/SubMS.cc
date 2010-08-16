@@ -885,8 +885,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         Int spw = spwId(j);
         for(uInt k = 0; k < nSpws; ++k){
           if(spw == spw_p[k]){
-            ++npols_per_spw[spw_p[k]];
-            spw2ddid_p[spw_p[k]] = j;
+            ++npols_per_spw[spw];
+            spw2ddid_p[spw] = j;
           }
         }
       }
@@ -1261,12 +1261,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
          << LogIO::POST;
     }
 
-    Vector<Int> newPolId(spw_uniq_p.nelements());
+    Vector<Int> newPolId(nuniqSpws);
     for(uInt k = 0; k < nuniqSpws; ++k){
       Bool found = false;
       
       for(uInt j = 0; j < nPol; ++j){ 
-	if(selectedPolId[j] == polID_p[k]){
+	if(selectedPolId[j] == polID_p[spw2ddid_p[spw_uniq_p[k]]]){
 	  newPolId[k] = j;
 	  found = true;
 	  break;
