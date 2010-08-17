@@ -18,18 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
-  benchmark.py
-  checknan.py
-  cluster.py
-  cmpmses.py
-  find_autocorr.py
+casa_add_python( xmlcasa xmlcasa_ephemerides_python python/${PYTHONV}/recipes/ephemerides
   __init__.py
-  lsms.py
-  make_labelled_ms.py
-  psplit.py
-  taskutil.py
-  listshapes.py
+  JPLephem_reader.py
+  request.py
 )
-
-add_subdirectory( ephemerides )
