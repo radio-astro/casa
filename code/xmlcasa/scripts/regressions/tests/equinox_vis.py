@@ -50,7 +50,7 @@ def run_tasks(origvis='0420+417.ms', advice=None, lazy=True,
     equinoxes, and the original one.
     """
     if not advice:
-        im.open(origvis, False, True)
+        im.open(origvis)
         advice = im.advise()
         im.close()
     origphasecenter = advice['phasecenter']
