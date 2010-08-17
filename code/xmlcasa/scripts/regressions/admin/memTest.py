@@ -141,15 +141,15 @@ class MemTest(nose.plugins.xunit.Xunit):
         tb = ''.join(traceback.format_exception(*err))
         self.stats['errors'] += 1
         id = test.id()
-        name = self._xmlsafe(id)[-self._xmlsafe(id)[::-1].find("."):]
+        name = id[-id[::-1].find("."):]
         self.errorlist.append(
             '<testsuite name="nosetests" tests="1" errors="1" failures="0" skip="0">'
             '<testcase classname="%(cls)s" name="%(name)s" time="%(taken)d">'
             '<error type="%(errtype)s">%(tb)s</error></testcase>' %
-            {'cls': self._xmlsafe('.'.join(id.split('.')[:-1])),
+            {'cls': '.'.join(id.split('.')[:-1]),
              'name': name,
-             'errtype': self._xmlsafe(nice_classname(err[0])),
-             'tb': self._xmlsafe(tb),
+             'errtype': nice_classname(err[0]),
+             'tb': tb,
              'taken': taken,
              })
         self.errorlist.append(write_message(self._fileleak, self._memoryleak))
@@ -163,15 +163,15 @@ class MemTest(nose.plugins.xunit.Xunit):
         tb = ''.join(traceback.format_exception(*err))
         self.stats['failures'] += 1
         id = test.id()
-        name = self._xmlsafe(id)[-self._xmlsafe(id)[::-1].find("."):]
+        name = id[-id[::-1].find("."):]
         self.errorlist.append(
             '<testsuite name="nosetests" tests="1" errors="0" failures="1" skip="0">'
             '<testcase classname="%(cls)s" name="%(name)s" time="%(taken)d">'
             '<failure type="%(errtype)s">%(tb)s</failure></testcase>' %
-            {'cls': self._xmlsafe('.'.join(id.split('.')[:-1])),
+            {'cls': '.'.join(id.split('.')[:-1]),
              'name': name,
-             'errtype': self._xmlsafe(nice_classname(err[0])),
-             'tb': self._xmlsafe(tb),
+             'errtype': nice_classname(err[0]),
+             'tb': tb,
              'taken': taken,
              })
         self.errorlist.append(write_message(self._fileleak, self._memoryleak))
@@ -184,12 +184,12 @@ class MemTest(nose.plugins.xunit.Xunit):
         taken = time.time() - self._timer
         self.stats['passes'] += 1
         id = test.id()
-        name = self._xmlsafe(id)[-self._xmlsafe(id)[::-1].find("."):]
+        name = id[-id[::-1].find("."):]
         self.errorlist.append(
             '<testsuite name="nosetests" tests="1" errors="0" failures="0" skip="0">'
             '<testcase classname="%(cls)s" name="%(name)s" '
             'time="%(taken)d" />' %
-            {'cls': self._xmlsafe('.'.join(id.split('.')[:-1])),
+            {'cls': '.'.join(id.split('.')[:-1]),
              'name': name,
              'taken': taken,
              })
