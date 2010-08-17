@@ -836,16 +836,13 @@ Bool GBTDCRFiller::fill(const String &backendFile,
 	    for (uInt whichRow=rownr;whichRow<(rownr+outdata.nelements());whichRow++) {
 		modelData().setShape(whichRow, thisShape);
 		correctedData().setShape(whichRow, thisShape);
-		imagingWeight().setShape(whichRow, thisShape.getLast(1));
 	    }
 
 	    Array<Complex> modData(outdata.shape(), 1.0);
 	    Array<Complex> cdata(outdata.shape());
-	    Array<Float> imagingWt(IPosition(2,thisShape(1),outdata.shape()(2)), 1.0);
 	    convertArray(cdata,outdata);
 	    modelData().putColumnRange(columnSlicer,modData);
 	    correctedData().putColumnRange(columnSlicer,cdata);
-	    imagingWeight().putColumnRange(columnSlicer,imagingWt);
 
 	    rownr += outdata.nelements();
 	    offset = 0;
@@ -939,17 +936,14 @@ Bool GBTDCRFiller::fill(const String &backendFile,
 	for (Int whichRow=rownr;whichRow<(rownr+nleft);whichRow++) {
 	    modelData().setShape(whichRow, thisShape);
 	    correctedData().setShape(whichRow, thisShape);
-	    imagingWeight().setShape(whichRow, thisShape.getLast(1));
 	}
 
 	IPosition outShape = outdata(blc,trc).shape();
 	Array<Complex> modData(outShape, 1.0);
 	Array<Complex> cdata(outShape);
-	Array<Float> imagingWt(IPosition(2,thisShape(1),outShape(2)), 1.0);
 	convertArray(cdata,outdata(blc,trc));
 	modelData().putColumnRange(columnSlicer,modData);
 	correctedData().putColumnRange(columnSlicer,cdata);
-	imagingWeight().putColumnRange(columnSlicer,imagingWt);
     }
 
     // set CHANNEL_SELECTION on MODEL_DATA

@@ -6629,44 +6629,17 @@ casa::String
     else if( (upcase(column)).matches("IMAGING_WEIGHT") 
    || (upcase(column)).matches("IMAGING_WEIGHTS") 
    || (upcase(column)).matches("IMAGE_WEIGHTS") 
-   || (upcase(column)).matches("IMAGEWEIGHTS") )
+   || (upcase(column)).matches("IMAGEWEIGHTS")
+   || (upcase(column)).matches("WEIGHTEDDATA")
+   || (upcase(column)).matches("WEIGHTED") 
+   || (upcase(column)).matches("WEIGHTED_DATA")
+   || (upcase(column)).matches("WEIGHTEDCORRECTED")
+   || (upcase(column)).matches("WEIGHTED_CORRECTED")
+   || (upcase(column)).matches("WEIGHTED_CORRECTED_DATA")
+   || (upcase(column)).matches("WEIGHTEDMODEL") 
+   || (upcase(column)).matches("WEIGHTED_MODEL") )
     {
-   //# General Syntax needed is
-   //#  IIF(FLAG[<pol>,<chan>],1.0,0.0)
-   //#          *ARRAY(IMAGING_WEIGHT[<chan>],[<numPol>,<numChan>])
-   String flagStr;
-   if ( showflags ) 
-       flagStr = String( "IIF( FLAG" ) + index + String( ", 1.0, 0.0 ) " );
-   else
-       flagStr = String( "IIF( FLAG" ) + index + String( ", 0.0, 1.0 ) " );
-   columntaql = flagStr
-       + String( "* ARRAY( IMAGING_WEIGHT[" ) + indexchan + String( "],[" )
-       + String::toString( totalcorr ) + String(",")
-       + String::toString( totalchan ) + String("] )");
-   label = String("Imaging Weights");
-    }
-    else if( (upcase(column)).matches("WEIGHTEDDATA")
-             || (upcase(column)).matches("WEIGHTED") 
-             || (upcase(column)).matches("WEIGHTED_DATA") )
-    {
-       columntaql = String("IMAGING_WEIGHT[") + indexchan + String("]") + 
-               String("*DATA") + index;
-       label = String("Weighted Observed Data");
-    }
-    else if( (upcase(column)).matches("WEIGHTEDCORRECTED")
-             || (upcase(column)).matches("WEIGHTED_CORRECTED")
-             || (upcase(column)).matches("WEIGHTED_CORRECTED_DATA") )
-    {
-       columntaql = String("IMAGING_WEIGHT[") + indexchan + String("]") + 
-               String("*CORRECTED_DATA") + index;
-       label = String("Weighted Corrected Data");
-    }
-    else if( (upcase(column)).matches("WEIGHTEDMODEL") 
-            || (upcase(column)).matches("WEIGHTED_MODEL") )
-    {
-       columntaql = String("IMAGING_WEIGHT[") + indexchan + String("]") + 
-               String("*MODEL_DATA") + index;
-       label = String("Weighted Model Data");
+        throw AipsError("Cannot plot " + column + ": No IMAGING_WEIGHT column");
     }
     else
     {

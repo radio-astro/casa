@@ -50,8 +50,8 @@ def run_tasks(origvis='0420+417.ms', advice=None, lazy=True,
     equinoxes, and the original one.
     """
     if not advice:
-        im.open(origvis, False, True) # advise looks like a read-only function,
-        advice = im.advise()          # but it needs the imaging_weight col.
+        im.open(origvis, False, True)
+        advice = im.advise()
         im.close()
     origphasecenter = advice['phasecenter']
 

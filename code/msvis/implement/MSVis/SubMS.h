@@ -242,9 +242,6 @@ class SubMS
 			  Vector<Vector<Int> >& outToIn,
 			  const Bool areSelecting=false);
   
-  Bool doWriteImagingWeight(const ROMSColumns& msc,
-                            const Vector<MS::PredefinedColumns>& colNames);
-
   // Transform spectral data to different reference frame,
   // optionally regrid the frequency channels 
   // return values: -1 = MS not modified, 1 = MS modified and OK, 
@@ -395,7 +392,7 @@ class SubMS
   template<class M>
   void filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 		   const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-		   const Int nrow, const Bool calcImgWts, 
+		   const Int nrow, 
 		   const Bool calcWtSig, const ROArrayColumn<Float>& rowWt,
 		   const ROArrayColumn<Float>& sigma);
 
@@ -534,9 +531,6 @@ class SubMS
   // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to
   // the slot.
   Vector<ui2vmap> bin_slots_p;
-
-  Bool doImgWts_p; // Use doWriteImagingWeight() to get this!  Cutting corners
-                   // just leads to trouble...
 
   Vector<Slice> corrSlice_p;
 };

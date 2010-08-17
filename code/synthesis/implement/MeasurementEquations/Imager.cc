@@ -551,16 +551,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
 	 << polType(0) << endl
 	 << "Results open to question!" << LogIO::POST;
     }
-    
-    // Initialize the weights if the IMAGING_WEIGHT column
-    // was just created
-    if(initialize && useModelCol_p) {
-      os << LogIO::NORMAL // Loglevel PROGRESS
-	 << "Initializing natural weights"
-	 << LogIO::POST;
-      Double sumwt=0.0;
-      VisSetUtil::WeightNatural(*wvi_p, sumwt);
-    }
+
     this->unlock();
 
 #ifdef PABLO_IO
@@ -2411,11 +2402,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
                             mDataStart_p, mDataStep_p);
     ///Tell iterator to use on the fly imaging weights if scratch columns is
     ///not in use
-    if(!useModelCol_p){
-        imwgt_p=VisImagingWeight("natural");
-        rvi_p->useImagingWeight(imwgt_p);
-    }
-
+    imwgt_p=VisImagingWeight("natural");
+    rvi_p->useImagingWeight(imwgt_p);
+    
     // Guess that the beam is no longer valid
     beamValid_p=False;
     destroySkyEquation();
@@ -3737,18 +3726,12 @@ Bool Imager::weight(const String& type, const String& rmode,
   try {
     
     os << LogIO::NORMAL // Loglevel INFO
-       << "Weighting MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
-    
-    Double sumwt=0.0;
+       << "Weighting MS: Imaging weights will be changed" << LogIO::POST;
     
     if (type=="natural") {
       os << LogIO::NORMAL // Loglevel INFO
          << "Natural weighting" << LogIO::POST;
-      if(useModelCol_p)
-	VisSetUtil::WeightNatural(*wvi_p, sumwt);
-      else{
-	imwgt_p=VisImagingWeight("natural");
-      }
+      imwgt_p=VisImagingWeight("natural");
     }
     else if(type=="superuniform"){
       if(!assertDefinedImageParameters()) return False;
@@ -3759,20 +3742,9 @@ Bool Imager::weight(const String& type, const String& rmode,
          << "SuperUniform weighting over a square cell spanning [" 
 	 << -actualNpix 
 	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
-      if(useModelCol_p){
-	VisSetUtil::WeightUniform(*wvi_p, rmode, noise, robust, nx_p,
-				  ny_p,
-				  mcellx_p, mcelly_p, sumwt, actualNpix, 
-				  actualNpix);
-      }
-      else{
-	imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, nx_p, 
-				 ny_p, mcellx_p, mcelly_p, actualNpix, 
-				 actualNpix);
-
-      }
-	
-
+      imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, nx_p, 
+                               ny_p, mcellx_p, mcelly_p, actualNpix, 
+                               actualNpix);
     }
     else if ((type=="robust")||(type=="uniform")||(type=="briggs")) {
       if(!assertDefinedImageParameters()) return False;
@@ -3819,29 +3791,15 @@ Bool Imager::weight(const String& type, const String& rmode,
          << "Weighting used " << actualNPixels << " uv pixels."
          << LogIO::POST;
       Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
-      if(useModelCol_p){
-	VisSetUtil::WeightUniform(*wvi_p, rmode, noise, robust, actualNPixels,
-				  actualNPixels,
-				  actualCellSize, actualCellSize, sumwt);
-      }
-      else{
 
-	imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, 
-				 actualNPixels, actualNPixels, actualCellSize, 
-				 actualCellSize, 0, 0);
-
-      }
-
+      imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, 
+                               actualNPixels, actualNPixels, actualCellSize, 
+                               actualCellSize, 0, 0);
+      
     }
     else if (type=="radial") {
       os << "Radial weighting" << LogIO::POST;
-      if(useModelCol_p){
-	VisSetUtil::WeightRadial(*wvi_p, sumwt);
-      }
-      else{
-	imwgt_p=VisImagingWeight("radial");
-      }
-
+      imwgt_p=VisImagingWeight("radial");
     }
     else {
       this->unlock();
@@ -3850,21 +3808,7 @@ Bool Imager::weight(const String& type, const String& rmode,
       return False;
     }
     
-    if(useModelCol_p){
-      if(sumwt>0.0) {
-	os << LogIO::NORMAL << "Sum of weights = " << sumwt << LogIO::POST; // Loglevel INFO
-      }
-      else {
-	this->unlock();
-      os << LogIO::SEVERE << "Sum of weights is not positive" 
-	 << LogIO::EXCEPTION;
-      return False;
-      }
-    }
-    else{
       rvi_p->useImagingWeight(imwgt_p);
-
-    }
     
     // Beam is no longer valid
     beamValid_p=False;
@@ -3895,38 +3839,12 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
   
   this->lock();
   try {
-    
-   
-    
-    Double sumwt=0.0;
-    Double maxfilter=0.0;
-    Double minfilter=1.0;
-    
-    if(useModelCol_p){
-      os << LogIO::NORMAL // Loglevel INFO
-         << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
-      VisSetUtil::Filter(*wvi_p, type, bmaj, bmin, bpa, sumwt, minfilter,
-			 maxfilter);
       
-      if(sumwt>0.0) {
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Sum of weights = " << sumwt << endl;
-	os << "Max, min taper = " << maxfilter << ", " << minfilter << LogIO::POST;
-      }
-      else {
-	os << LogIO::SEVERE
-	   << "Sum of weights is zero: perhaps you need to weight the data"
-	   << LogIO::EXCEPTION;
-      }
-    }
-    else{
-       os << LogIO::NORMAL // Loglevel INFO
-          << "Imaging weights will be tapered" << LogIO::POST;
-      imwgt_p.setFilter(type, bmaj, bmin, bpa);
-      rvi_p->useImagingWeight(imwgt_p);
-
-    }
-    
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Imaging weights will be tapered" << LogIO::POST;
+    imwgt_p.setFilter(type, bmaj, bmin, bpa);
+    rvi_p->useImagingWeight(imwgt_p);
+      
     // Beam is no longer valid
     beamValid_p=False;
     destroySkyEquation();
@@ -4087,7 +4005,7 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
   try {
     
     os << LogIO::NORMAL // Loglevel INFO
-       << "Calculating sensitivity from IMAGING_WEIGHT and SIGMA columns"
+       << "Calculating sensitivity from imaging weights and from SIGMA column"
        << LogIO::POST;
     os << LogIO::NORMAL // Loglevel INFO
        << "(assuming that SIGMA column is correct, otherwise scale appropriately)"
@@ -7239,7 +7157,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
     
     
     os << LogIO::NORMAL // Loglevel PROGRESS
-       << "Plotting IMAGING_WEIGHT column for currently selected data"
+       << "Plotting imaging weights for currently selected data"
        << LogIO::POST;
     
     ROVisIter& vi(*rvi_p);
@@ -8935,18 +8853,19 @@ void Imager::makeVisSet(MeasurementSet& ms,
   if(useModelCol_p)
     VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
   
+  if(imwgt_p.getType()=="none"){
+      imwgt_p=VisImagingWeight("natural");
+  }
+
   if(!useModelCol_p){
     rvi_p=new ROVisibilityIterator(ms, sort, timeInterval);
-    if(imwgt_p.getType()=="none"){
-      imwgt_p=VisImagingWeight("natural");
-    }
-    rvi_p->useImagingWeight(imwgt_p);
   }
   else{
     wvi_p=new VisibilityIterator(ms, sort, timeInterval);
     rvi_p=wvi_p;    
   }
-  
+  rvi_p->useImagingWeight(imwgt_p);
+
 }
 /*
 void Imager::makeVisSet(MeasurementSet& ms, 

@@ -583,9 +583,6 @@ Int PKSMS2writer::write(
   //Vector<Float> weight(1, 1.0f);
   Vector<Float> weight(nPol, 1.0f);
   cMSCols->weight().put(irow, weight);
-  //imaging weight
-  //Vector<Float> imagingWeight(nChan); 
-  //cMSCols->imagingWeight().put(irow, imagingWeight);
 
   // Flag information.
   Cube<Bool> flags(nPol, nChan, 1, False);

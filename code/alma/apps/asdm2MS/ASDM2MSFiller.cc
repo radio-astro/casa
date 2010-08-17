@@ -243,14 +243,7 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
     if (withCompression) MS::addColumnCompression(td, MS::FLOAT_DATA, true);
   }
 
-  /*  
-  // Add MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns
-  MS::addColumnToDesc(td, MS::MODEL_DATA,2);
-  MS::addColumnToDesc(td, MS::CORRECTED_DATA,2);
-  MS::addColumnToDesc(td, MS::IMAGING_WEIGHT,1);
-  */
-
-  // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns, model_data, corrected_data and imaging_weight.
+  // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns.
   const Vector<String> coordCols(0);
   const Vector<String> idCols(0);
     
@@ -269,26 +262,6 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   }
 
   //cout << "defined float data Hypercolumn" << endl;
-
-  /*
-    String colModelData = MS::columnName(MS::MODEL_DATA);
-    td.defineHypercolumn("TiledModelData", 3, stringToVector(colModelData),
-    coordCols, idCols);
-    //cout << "defined model data Hypercolumn" << endl;
-
-    String colCorrData = MS::columnName(MS::CORRECTED_DATA);
-    td.defineHypercolumn("TiledCorrectedData", 3,
-    stringToVector(colCorrData),
-    coordCols, idCols);
-    //cout << "defined corrected data Hypercolumn" << endl;
-
-    String colImWgt = MS::columnName(MS::IMAGING_WEIGHT);
-    td.defineHypercolumn("TiledImWgt", 2,
-    stringToVector(colImWgt),
-    coordCols, idCols);
-    //cout << "defined imaging weight Hypercolumn" << endl;
-    */
-    
 
   td.defineHypercolumn("TiledFlag", 3,
 		       stringToVector(MS::columnName(MS::FLAG)));
@@ -463,13 +436,6 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
 
   TiledShapeStMan corrDataStMan("TiledCorrectedData", corrDataTileShape);
   newTab.bindColumn(MS::columnName(MS::CORRECTED_DATA), corrDataStMan);
-
-  // IMAGING WEIGHT hypercolumn
-  nTileRow = (tileSizeKBytes * 1024 / (4 * nTileChan));
-  IPosition imWgtTileShape(2, nTileChan, nTileRow);
-
-  TiledShapeStMan imWgtStMan("TiledImWgt", imWgtTileShape);
-  newTab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT), imWgtStMan);
   */
     
   // WEIGHT and SIGMA hypercolumn

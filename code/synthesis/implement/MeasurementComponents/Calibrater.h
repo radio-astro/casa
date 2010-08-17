@@ -295,7 +295,7 @@ class Calibrater
 
   // Initialize the calibrator object from an input MeasurementSet.
   // Optional compression of the calibration columns (MODEL_DATA,
-  // CORRECTED_DATA and IMAGING_WEIGHT) is supported.
+  // and CORRECTED_DATA) is supported.
   Bool initialize(MeasurementSet& inputMS, 
 		  Bool compress=True,
 		  Bool addScratch=True);

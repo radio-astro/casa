@@ -351,7 +351,6 @@ protected:
   ArrayColumn<Float> RWcolWeight;
   ArrayColumn<Float> RWcolWeightSpectrum;
   ArrayColumn<Float> RWcolSigma;
-  ArrayColumn<Float> RWcolImagingWeight;
   ArrayColumn<Bool> RWcolFlag;
   ScalarColumn<Bool> RWcolFlagRow;
 

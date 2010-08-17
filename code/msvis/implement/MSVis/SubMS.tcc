@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template<class M>
 void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 			const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-			const Int nrow, const Bool calcImgWts, 
+			const Int nrow,
 			const Bool calcWtSig, const ROArrayColumn<Float>& rowWt,
 			const ROArrayColumn<Float>& sigma)
 {
@@ -101,14 +101,7 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
   
   Matrix<Float> inwgtspectmp;
   Bool deleteIWptr;
-  
-  ROArrayColumn<Float> inImgWts;
-  if(calcImgWts)
-    inImgWts.reference(mscIn_p->imagingWeight());
-  Float outImgWtsAccum = 0;
-  Vector<Float> inImgWtsSpectrum;
-  Vector<Float> outImgWts;
-  
+   
   Matrix<M> outdata;
   Vector<M> outdatatmp;
   //    const Complex *optr = outdatatmp.getStorage(deleteOptr);
@@ -172,10 +165,6 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
 	outspweight.resize(ncorr_p[ddID], nchan_p[ddID]);
 	outwgtspectmp.resize(ncorr_p[ddID]);
       }
-      if(calcImgWts){
-        inImgWtsSpectrum.resize(inNumChan_p[ddID]);
-        outImgWts.resize(nchan_p[ddID]);
-      }
 
       if(calcWtSig){
 	rowwtfac = static_cast<Float>(nchan_p[ddID]) / inNumChan_p[ddID];
@@ -207,9 +196,6 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     outflag.set(false);
     data.get(row, indatatmp);
     flag.get(row, inflagtmp);
-    // os << LogIO::DEBUG1 << "calcImgWts: " << calcImgWts << LogIO::POST;
-    if(calcImgWts)
-      inImgWts.get(row, inImgWtsSpectrum);
     // These were more to say "I made it here!" than anything.
     //os << LogIO::DEBUG1 << "doSpWeight: " << doSpWeight << LogIO::POST;
     //os << LogIO::DEBUG1 << "calcWtSig: " << calcWtSig << LogIO::POST;
@@ -237,16 +223,9 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
       if(chancounter == nperbin){
         outdatatmp.set(0); outwgtspectmp.set(0);
         chancounter = 0;
-        outImgWtsAccum = 0;
         avcounter.set(0);
       }
       ++chancounter;
-
-      if(calcImgWts){
-        outImgWtsAccum += inImgWtsSpectrum[inChanInd];
-        if(chancounter == chanStep_p[0])
-          outImgWts[outChanInd] = outImgWtsAccum / chancounter;
-      }
 
       for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
         Int offset = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
@@ -322,8 +301,6 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     }
     if(doSpWeight)
       msc_p->weightSpectrum().put(row, outspweight);
-    if(calcImgWts)
-      msc_p->imagingWeight().put(row, outImgWts);
 
     meter.update(row);
   }

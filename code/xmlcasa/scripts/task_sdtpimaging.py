@@ -551,9 +551,6 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             subtb.close()
             fdatacm=fdatcol.reshape(npol,1,len(fdatac))
             tb.putcol('FLAG', fdatacm, startrow=startrow, rowincr=rowincr)
-            # need flip True -> 0
-            iw=numpy.array(-fdatacm[0].reshape(1,len(fdatac)), dtype=numpy.int64)
-            tb.putcol('IMAGING_WEIGHT', iw, startrow=startrow, rowincr=rowincr)
             #print "Scans flagged: %s" % list(flagscanset)
             casalog.post( "Scans flagged: %s" % list(flagscanset) )
             tb.close()

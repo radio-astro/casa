@@ -134,10 +134,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         median, median absolute deviation, quartile, minimum, maximum,
         variance, standard deviation, root mean square.
 
-        The following axes are supported: uvw, flag, weight, sigma, imaging_weight,
-        antenna1, antenna2, feed1, feed2, field_id, array_id, data_desc_id, flag_row,
-        interval, scan, scan_number, time, weight_spectrum, amp, amplitude, phase, real, 
-        imag, imaginary, uvrange.
+        The following axes are supported: uvw, flag, weight, sigma, antenna1,
+        antenna2, feed1, feed2, field_id, array_id, data_desc_id, flag_row, interval,
+        scan, scan_number, time, weight_spectrum, amp, amplitude, phase, real, imag,
+        imaginary, uvrange.
 
         If selectdata = True, the statistical information is computed based only
         on a given subset of the measurement set.

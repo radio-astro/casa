@@ -40,7 +40,7 @@ template<class T> class Vector;
 
 // <summary>
 // Object to hold type of imaging weight scheme to be used on the fly and to provide
-// facilities to do that..especially when no IMAGING_WEIGHT scratch column exist disk
+// facilities to do that.
 // </summary>
 
 // <reviewed reviewer="" date="" tests="" demos="">
