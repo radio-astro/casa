@@ -209,7 +209,7 @@ private:
 
   MeasurementSet* ms_p;
 
-  TiledDataStManAccessor dataAcc_p, scratchDataAcc_p, sigmaAcc_p, flagAcc_p, imweightAcc_p;
+  TiledDataStManAccessor dataAcc_p, scratchDataAcc_p, sigmaAcc_p, flagAcc_p;
 
   Double maxData_p;
 

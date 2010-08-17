@@ -103,7 +103,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	  dataColName == MS::columnName(MS::LAG_DATA) ||
 	  dataColName == MS::columnName(MS::SIGMA) || 
 	  dataColName == MS::columnName(MS::WEIGHT) || 
-	  dataColName == MS::columnName(MS::IMAGING_WEIGHT) || 
 	  dataColName == MS::columnName(MS::VIDEO_POINT)) {
 	const ColumnDesc& colDesc = td.columnDesc(dataColNames(dc));
 	isFixed = colDesc.isFixedShape();
@@ -127,7 +126,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       << " to " << itsMS.tableName() << endl << LogIO::POST;
 
   // check if certain columns are present and set flags accordingly
-  Bool doCorrectedData=False, doImagingWeight=False, doModelData=False;
+  Bool doCorrectedData=False, doModelData=False;
   Bool doFloatData=False;
   if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
       otherMS.tableDesc().isColumn("FLOAT_DATA"))
@@ -161,15 +160,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     log << itsMS.tableName() 
 	<<" has CORRECTED_DATA column but not " << otherMS.tableName()
 	<< LogIO::EXCEPTION;
-  if (itsMS.tableDesc().isColumn("IMAGING_WEIGHT") && 
-      otherMS.tableDesc().isColumn("IMAGING_WEIGHT"))
-    doImagingWeight=True;
-  else if (itsMS.tableDesc().isColumn("IMAGING_WEIGHT") && 
-	   !otherMS.tableDesc().isColumn("IMAGING_WEIGHT"))
-    log << itsMS.tableName() 
-	<< " has IMAGING_WEIGHT column but not " << otherMS.tableName() 
-	<< LogIO::EXCEPTION;
-
   
   // verify that shape of the two MSs as described in POLARISATION, SPW, and DATA_DESCR
   //   is the same
@@ -253,9 +243,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
 
   ROArrayColumn<Complex> otherModelData, otherCorrectedData;
-  ROArrayColumn<Float> otherImagingWeight;
   ArrayColumn<Complex> thisModelData, thisCorrectedData;
-  ArrayColumn<Float> thisImagingWeight;
   
   if(doCorrectedData){
     thisCorrectedData.reference(correctedData());
@@ -264,10 +252,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   if(doModelData){
     thisModelData.reference(modelData());
     otherModelData.reference(otherMainCols.modelData());
-  }
-  if(doImagingWeight){
-    thisImagingWeight.reference(imagingWeight());
-    otherImagingWeight.reference(otherMainCols.imagingWeight());
   }
   const ROScalarColumn<Double>& otherTime = otherMainCols.time();
   ScalarColumn<Double>& thisTime = time();
@@ -514,8 +498,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       if(doCorrectedData)
 	thisCorrectedData.put(curRow, otherCorrectedData, r);
     }
-    if(doImagingWeight)
-      thisImagingWeight.put(curRow, otherImagingWeight, r);
     thisSigma.put(curRow, otherSigma, r);
     thisWeight.put(curRow, otherWeight, r);
     thisFlag.put(curRow, otherFlag, r);
