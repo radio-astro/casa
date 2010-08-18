@@ -56,6 +56,8 @@ void PlotMSSelection::fromRecord(const RecordInterface& record) {
     for(unsigned int i = 0; i < fields.size(); i++)
         if(record.isDefined(fields[i])&&record.dataType(fields[i]) == TpString)
             setValue(field(fields[i]), record.asString(fields[i]));
+    if (record.isDefined("forceNew")&&record.dataType("forceNew")==TpInt)
+      setForceNew(record.asInt("forceNew"));
 }
 
 Record PlotMSSelection::toRecord() const {
@@ -64,6 +66,7 @@ Record PlotMSSelection::toRecord() const {
     const vector<Field>& f = fields();
     for(unsigned int i = 0; i < f.size(); i++)
         record.define(field(f[i]), getValue(f[i]));
+    record.define("forceNew",forceNew());
     
     return record;
 }
@@ -88,15 +91,24 @@ void PlotMSSelection::setValue(Field f, const String& value) {
 
 
 bool PlotMSSelection::operator==(const PlotMSSelection& other) const {    
-    vector<Field> f = fields();
-    for(unsigned int i = 0; i < f.size(); i++)
-        if(getValue(f[i]) != other.getValue(f[i])) return false;
-    
-    return true;
+
+  // Check forceNew counter first
+  //  not equal (first reset forceNew so that it isn't sticky)
+  if (forceNew()!=other.forceNew())  {
+    cout << "this/other forceNew_ = " << forceNew() << "/" << other.forceNew() << endl;
+    return false;
+  }
+
+  vector<Field> f = fields();
+  for(unsigned int i = 0; i < f.size(); i++)
+    if(getValue(f[i]) != other.getValue(f[i])) return false;
+  
+  return true;
 }
 
 PlotMSSelection& PlotMSSelection::operator=(const PlotMSSelection& copy) {
     itsValues_ = copy.itsValues_;    
+    forceNew_ = copy.forceNew_;
     return *this;
 }
 
@@ -105,6 +117,9 @@ void PlotMSSelection::initDefaults() {
     vector<Field> f = fields();
     for(unsigned int i = 0; i < f.size(); i++)
         itsValues_[f[i]] = defaultValue(f[i]);
+
+    // forceNew_ is a counter, start it at zero
+    forceNew_=0;
 }
 
 }
