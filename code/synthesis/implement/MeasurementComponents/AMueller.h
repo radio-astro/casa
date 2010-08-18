@@ -104,11 +104,19 @@ public:
   virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 
 protected:
-  // umm... 2 like an M, for each of parallel hands?
+  // umm... 2 for each of parallel hands?
   virtual Int nPar() { return 2; };
 
   // Jones matrix elements are trivial
-  virtual Bool trivialMuellerElem() { return True; };
+  virtual Bool trivialMuellerElem() { return (not onthefly_); };
+
+  // override VC default of timeDepMat=F for OTF simulatio:
+  virtual Bool timeDepMat() { return onthefly_; };
+
+  // Calculate a single Mueller matrix by some means
+  // override SolvableVisMueller::calcOneMueller
+  virtual void calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
+			      const Vector<Complex>& par, const Vector<Bool>& pOk);
 
 private:
   ANoiseCorruptor *acorruptor_p;

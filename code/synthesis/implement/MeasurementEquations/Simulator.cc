@@ -1118,7 +1118,7 @@ Bool Simulator::setnoise(const String& mode,
     simpar.define ("mode", mode);
     simpar.define ("combine", ""); // SPW,FIELD, etc
 
-    if (mode=="simple") {
+    if (mode=="simplenoise") {
       os << "Using simple noise model with noise level of " << simplenoise.getValue("Jy")
 	 << " Jy" << LogIO::POST;
       simpar.define ("amplitude", Float(simplenoise.getValue("Jy")) );
@@ -1133,6 +1133,12 @@ Bool Simulator::setnoise(const String& mode,
     } else {
       throw(AipsError("unsupported mode "+mode+" in setnoise()"));
     }
+
+    Bool saveOnthefly=False;
+    if (simpar.isDefined("onthefly")) {
+      saveOnthefly=simpar.asBool("onthefly");
+    }
+    simpar.define("onthefly",True);
 
     // create the ANoise
     if (!create_corrupt(simpar)) 
@@ -1203,6 +1209,8 @@ Bool Simulator::setnoise(const String& mode,
       if (strlen>1) 
 	simpar.define ("caltable", caltbl+".M.cal");
       
+      simpar.define("onthefly",saveOnthefly);
+
       // create the M
       if (!create_corrupt(simpar)) 
 	throw(AipsError("could not create M in Simulator::setnoise"));        

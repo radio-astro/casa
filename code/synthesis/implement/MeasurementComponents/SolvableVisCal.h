@@ -395,6 +395,11 @@ protected:
   // Set state flag to simulate cal terms
   inline void setSimulated(const Bool& flag) {simulated_=flag;};
 
+  // RI todo implement calcOneJones like calcAllMueller
+  // calculate terms during apply, or up front during setSim?
+  inline Bool& simOnTheFly() { return onthefly_; };
+  Bool onthefly_;  
+
 
 
 private:
@@ -592,6 +597,7 @@ protected:
 
   // SVM-specific state
   virtual void stateSVM(const Bool& doVC);
+
 
 private:
 
