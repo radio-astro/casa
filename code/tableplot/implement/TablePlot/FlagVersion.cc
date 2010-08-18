@@ -410,9 +410,24 @@ Bool FlagVersion::saveFlagVersion( String versionname ,
       {
           ArrayColumn<Bool> fromFlag(tab_p, dataflagcolname_p);
           
+          /* Have to figure out the maximum cell shape,
+             i.e. max number of channels/polarizations and use that
+             to define the tile shape. There ought to be an easier way. */
+          unsigned npol_max  = fromFlag.shape(0)(0);
+          unsigned nchan_max = fromFlag.shape(0)(1);
+          {
+              unsigned nrow = tab_p.nrow();
+              for (unsigned i = 0; i < nrow; i++) {
+                  unsigned n0 = fromFlag.shape(i)(0);
+                  unsigned n1 = fromFlag.shape(i)(1);
+                  if (n0 > npol_max)  npol_max  = n0;
+                  if (n1 > nchan_max) nchan_max = n1;
+              }
+          }
+
           uInt tile_size = 1024*1024; // bytes
-          IPosition tileShape(3, fromFlag.shape(0)(0), fromFlag.shape(0)(1), 
-			      tile_size*8 / (fromFlag.shape(0)(0) * fromFlag.shape(0)(1)));
+          IPosition tileShape(3, npol_max, nchan_max,
+                              tile_size*8 / (npol_max * nchan_max));
       
           TiledShapeStMan flagStMan("TiledFlag", tileShape);
           aNewTab.bindColumn(dataflagcolname_p, flagStMan);
