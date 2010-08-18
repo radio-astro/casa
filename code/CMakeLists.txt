@@ -144,7 +144,7 @@ if( APPLE )
         ## Apple no longer supplies fortran compilers, checking for x86_64 with fortran
 	## compiler will be a good indication if x86_64 is available or not...
 	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-libgcc-file-name
-        		 COMMAND perl -pe "s|^.*?(x86_64).*|$1|"
+        		 COMMAND perl -e "while(<>){ print if s|^.*?(x86_64).*|$1| }"
 			 OUTPUT_VARIABLE archflag
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
 	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
