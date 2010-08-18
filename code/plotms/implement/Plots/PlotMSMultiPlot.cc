@@ -143,7 +143,8 @@ void PlotMSMultiPlot::detachFromCanvases() {
 }
 
 void PlotMSMultiPlot::plotTabHasChanged(PlotMSPlotTab& tab) {
-
+	(void)tab;
+	
     /* (gmoellen, 2010Aug12) the following is no longer necessary
        since we will only support one pair of X/Y axes for now 
     

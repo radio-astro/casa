@@ -88,13 +88,23 @@ const String PMS_PP_MSData::REC_TRANSFORMATIONS = "transformations";
 
 PMS_PP_MSData::PMS_PP_MSData(PlotFactoryPtr factory) 
 	:  PlotMSPlotParameters::Group(factory)
-    {
+{
     setDefaults();
-    } PMS_PP_MSData::PMS_PP_MSData(const PMS_PP_MSData& copy) : PlotMSPlotParameters::Group(copy)
-    {
+} 
+
+
+
+PMS_PP_MSData::PMS_PP_MSData(const PMS_PP_MSData& copy) : PlotMSPlotParameters::Group(copy)
+{
     setDefaults();
     operator=(copy);
-    } PMS_PP_MSData::~PMS_PP_MSData() { }
+} 
+    
+
+    
+PMS_PP_MSData::~PMS_PP_MSData()   { }
+
+
 
 
 Record PMS_PP_MSData::toRecord() const
@@ -146,8 +156,12 @@ void PMS_PP_MSData::fromRecord(const Record& record)
             valuesChanged = true;
             }
         }
+
+
+
     if (valuesChanged) updated();
     }
+
 
 
 PlotMSPlotParameters::Group& PMS_PP_MSData::operator=(const Group& other)
@@ -175,6 +189,7 @@ bool PMS_PP_MSData::operator==(const Group& other) const
     if (itsTransformations_ != o->itsTransformations_) return false;
     return true;
     }
+
 
 
 void PMS_PP_MSData::setDefaults()

@@ -63,7 +63,8 @@ PlotMSPlotParameters PlotMSPlotSubtab::currentlySetParameters() const {
 PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
         itsPlotManager_(parent->getParent()->getPlotManager()),
         itsCurrentPlot_(NULL), itsCurrentParameters_(NULL),
-        itsUpdateFlag_(true) {
+        itsUpdateFlag_(true),forceReloadCounter_(0),its_force_reload(false)
+    {
     setupUi(this);
     
     // Add as watcher.
@@ -82,11 +83,21 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     connect(goChooser, SIGNAL(currentIndexChanged(int)), SLOT(goChanged(int)));
     connect(goButton, SIGNAL(clicked()), SLOT(goClicked()));
     
-    // Synchronize plot button.
+    // Additional slot for Plot button for shift+plot forced redraw feature.
+    // All this does is note if shift was down during the click.
+    // This slot should be called before the main one in synchronize action.
+    connect( plotButton, SIGNAL(clicked()),  SLOT(observeModKeys()) );
+
+    // Synchronize plot button.  This makes the reload/replot happen.
     itsPlotter_->synchronizeAction(PlotMSAction::PLOT, plotButton);
+    
 }
 
+
+
 PlotMSPlotTab::~PlotMSPlotTab() { }
+
+
 
 QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
     QList<QToolButton*> list;
@@ -94,12 +105,18 @@ QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
     return list;
 }
 
+
+
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
 	(void)updateFlag;
     if(&p == itsCurrentParameters_ && itsCurrentPlot_ != NULL)
         setupForPlot(itsCurrentPlot_);
 }
+
+
+
+#include<stdio.h>  //!!!!! REMOVE 
 
 void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     goChooser->clear();
@@ -139,7 +156,11 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     }
 }
 
+
+
 PlotMSPlot* PlotMSPlotTab::currentPlot() const { return itsCurrentPlot_; }
+
+
 
 PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
     PlotMSPlotParameters params(itsPlotter_->getFactory());
@@ -149,6 +170,8 @@ PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
     
     return params;
 }
+
+
 
 PlotExportFormat PlotMSPlotTab::currentlySetExportFormat() const {
     const PlotMSExportTab* tab;
@@ -178,6 +201,7 @@ PMS::SummaryType PlotMSPlotTab::msSummaryType() const {
 }
 
 
+
 // Public Slots //
 
 void PlotMSPlotTab::plot() {
@@ -188,18 +212,44 @@ void PlotMSPlotTab::plot() {
         PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>(),
                     *cc = itsCurrentParameters_->typedGroup<PMS_PP_Cache>();
         
-        // Plot if 1) parameters have changed, 2) cache loading was canceled
-        // previously.
-        bool pchanged = params != *itsCurrentParameters_,
-             cload = !itsCurrentPlot_->data().cacheReady();
-             
-        if(pchanged || cload) {
-            if(pchanged) {
+        // Redo the plot if any of:
+        //   1) Parameters have changed, 
+        //   2) Cache loading was canceled,
+        //   3) User was holding down the shift key
+        //       Case #3 works by changing dummyChangeCount to 
+        //       imitate case #1.
+		//
+		// note as of Aug 2010: .casheReady() seems to return false even if cache was cancelled.
+        bool paramsChanged = params != *itsCurrentParameters_;
+        bool cancelledCache = !itsCurrentPlot_->data().cacheReady();
+
+		cout << "existing forceNew value = " << d->selection().forceNew() << endl;
+        
+        if (its_force_reload)    {
+			forceReloadCounter_++;   
+			paramsChanged=true;   // just to make sure we're noticed
+		}
+		
+		// whether forced reload or not, must make sure PlotMSSelection in params
+		// has some value set.   Otherwise, we might always get a "no match" 
+		// and reload and therefore a bored user waiting.
+		// Must remove constness of the reference returned by d->selection()
+		PlotMSSelection &sel = (PlotMSSelection &)d->selection();
+		sel.setForceNew(forceReloadCounter_);
+		
+	
+		/*DEBUG*/printf("    DSW: paramsChanged %d   cancelledCache %d    forceReloadCounter_=%d\n",paramsChanged,cancelledCache,forceReloadCounter_);
+
+		
+        
+        if (paramsChanged || cancelledCache) {
+			
+            if (paramsChanged) {
                 // check for "clear selections on axes change" setting
                 if(itsParent_->getParameters().clearSelectionsOnAxesChange() &&
-                   ((c != NULL && cc != NULL && (c->xAxis() != cc->xAxis() ||
-                     c->yAxis() != cc->yAxis())) || (d != NULL && cd != NULL &&
-                     d->filename() != cd->filename()))) {
+                       ((c != NULL && cc != NULL && (c->xAxis() != cc->xAxis() ||
+                         c->yAxis() != cc->yAxis())) || (d != NULL && cd != NULL &&
+                         d->filename() != cd->filename())))    {
                     vector<PlotCanvasPtr> canv = itsCurrentPlot_->canvases();
                     for(unsigned int i = 0; i < canv.size(); i++)
                         canv[i]->standardMouseTools()->selectTool()
@@ -210,7 +260,7 @@ void PlotMSPlotTab::plot() {
                 itsCurrentParameters_->holdNotification(this);
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
-            } else if(cload) {
+            } else if (cancelledCache) {
                 // Tell the plot to redraw itself because of the cache.
                 itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
                         PMS_PP::UPDATE_REDRAW & PMS_PP::UPDATE_CACHE);
@@ -495,6 +545,8 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* plot) {
     tabChanged();
 }
 
+
+
 vector<PMS::Axis> PlotMSPlotTab::selectedLoadOrReleaseAxes(bool load) const {
     const PlotMSCacheTab* tab;
     foreach(const PlotMSPlotSubtab* t, itsSubtabs_) {
@@ -518,6 +570,8 @@ void PlotMSPlotTab::goChanged(int index) {
         goButton->setVisible(true);
     }
 }
+
+
 
 void PlotMSPlotTab::goClicked() {
     int index = goChooser->currentIndex();
@@ -557,6 +611,8 @@ void PlotMSPlotTab::goClicked() {
     }
 }
 
+
+
 void PlotMSPlotTab::tabChanged() {
     if(itsUpdateFlag_ && itsCurrentPlot_ != NULL) {
         itsUpdateFlag_ = false;
@@ -569,5 +625,17 @@ void PlotMSPlotTab::tabChanged() {
         itsUpdateFlag_ = true;
     }
 }
+
+
+
+void PlotMSPlotTab::observeModKeys()   {
+	itsModKeys = QApplication::keyboardModifiers(); 
+	bool using_shift_key = (itsModKeys & Qt::ShiftModifier) !=0;
+	bool always_replot_checked = forceReplotChk->isChecked();
+	
+	its_force_reload = using_shift_key  ||  always_replot_checked;
+printf("plot slot observeModKeys:  suing_shift=%d   always chk=%d  \n", 	using_shift_key, always_replot_checked);
+}
+
 
 }
