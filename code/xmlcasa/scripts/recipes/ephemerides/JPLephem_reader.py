@@ -67,17 +67,18 @@ cols = {
               'comment': 'phase angle',
               'unit':    'deg',
               'pat':     r'(?P<phang>[0-9.]+)'},
-    'L_s': {'header': 'L_s',
-            'unit': 'deg',
+    'L_s': {'header': 'L_s',  # 08/2010: JPL does not supply this and
+            'unit': 'deg',    # says they cannot.  Ask Bryan Butler.
             'comment': 'Season angle',
             'pat': r'(?P<L_s>[-+0-9.]+)'}
     }
 
 def readJPLephem(fmfile):
     """
-    Reads a JPL Horizons text file (ask Bryan Butler) for a solar system object
-    and returns various quantities in a dictionary.  The dict will be blank
-    ({}) if there is a failure.
+    Reads a JPL Horizons text file (see
+    http://ssd.jpl.nasa.gov/horizons.cgi#top ) for a solar system object and
+    returns various quantities in a dictionary.  The dict will be blank ({}) if
+    there is a failure.
     """
     retdict = {}
     casalog.origin('readJPLephem')
