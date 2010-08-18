@@ -404,6 +404,7 @@ void VisCal::syncMeta(const Int& spw,
   //  (in solve context, this is handled differently, outside this method)
   if (isApplied()) setCalChannelization(nchan);
 
+  if (prtlev()>5) cout << "      meta: t,fld,freq=" << time << field << freq << endl;
 }
 
 void VisCal::setCalChannelization(const Int& nChanDat) {
@@ -464,6 +465,8 @@ void VisCal::checkCurrCal() {
     //   (i.e., PValid=F may not yield _new_ parameters in
     //    calcPar, but this forces matrix re-sync anyway)
     if (timeDepMat()) invalidateCalMat();
+
+    //if (prtlev()>5 and timeDepMat()) cout << "      invalidateCalMat() " << endl;
 
   }
 
@@ -727,6 +730,9 @@ void VisMueller::syncCalMat(const Bool& doInv) {
 
 void VisMueller::syncMueller(const Bool& doInv) {
 
+  // RI
+  //prtlev()=10;
+
   if (prtlev()>6) cout << "      VM::syncMueller()" << endl;
 
   // If Mueller pars are just the matrix elements:
@@ -869,6 +875,10 @@ void VisMueller::createMueller() {
 
   // Nominal synchronization is with currMElem()(0,0,0);
   M().sync(currMElem()(0,0,0),currMElemOK()(0,0,0));
+
+  if (prtlev()>6) cout << "       currMElem()(0,0,0) = " << currMElem()(0,0,0) << endl;
+  if (prtlev()>6) cout << "       currMElem()(0,0,1) = " << currMElem()(0,0,1) << endl;
+
       
 }
 

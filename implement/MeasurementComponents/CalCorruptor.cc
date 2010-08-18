@@ -82,10 +82,16 @@ void CalCorruptor::setEvenSlots(const Double& dt) {
 
 
 Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
-  if (prtlev()>5) cout << "AN::simPar ";
+  if (prtlev()>5) cout << "AN::simPar(vi,type,ipar) ";
   if (type==VisCal::ANoise) {
     return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
-  } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar"));
+  } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar(vi,type,ipar)"));
+}
+
+
+Complex ANoiseCorruptor::simPar() {
+  if (prtlev()>5) cout << "AN::simPar() ";
+  return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
 }
 
 

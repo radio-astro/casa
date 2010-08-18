@@ -119,8 +119,6 @@ void ANoise::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
 }
 
 
-
-
 ANoise::ANoise(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
@@ -140,5 +138,27 @@ ANoise::ANoise(const Int& nAnt) :
 ANoise::~ANoise() {
   if (prtlev()>2) cout << "ANoise::~ANoise()" << endl;
 }
+
+
+
+void ANoise::calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
+			    const Vector<Complex>& par, const Vector<Bool>& pOk) {
+  
+  if (prtlev()>10) cout << "        AN::calcOneMueller()" << endl;
+
+  // If Mueller matrix is trivial, shouldn't get here
+  if (trivialMuellerElem()) 
+    throw(AipsError("Trivial Mueller Matrix logic error."));
+  else {
+    Int len=0;
+    mat.shape(len);
+    for (Int i=0; i<len; i++) {
+      mat[i]=acorruptor_p->simPar(); // single complex #
+      mOk[i]=True;
+    }    
+  }
+}
+
+
 
 } //# NAMESPACE CASA - END
