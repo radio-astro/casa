@@ -16,9 +16,6 @@
 #include <iostream>
 using namespace std;
 
-//#include <ATMSkyStatus.h>
-//using namespace atm;
-
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
 #include <atmosphere_cmpt.h>
