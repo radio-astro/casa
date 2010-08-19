@@ -46,13 +46,15 @@ namespace casa
       itsMapSize    (0),
       itsPosition   (0),
       itsPtr        (NULL),
-      itsIsWritable (False)
+      itsIsWritable (False),
+	itsRealFileSize(0)
   {}
 
     MMapfdIO::MMapfdIO (int fd, const String& fileName)
       :  itsMapOffset  (0),
          itsMapSize    (0),
-         itsPtr        (NULL)
+         itsPtr        (NULL),
+	 itsRealFileSize(0)
   {
     map (fd, fileName);
   }
@@ -62,7 +64,7 @@ namespace casa
     attach (fd, fileName);
     // Keep writable switch because it is used quite often.
     itsIsWritable = isWritable();
-    itsFileSize   = length();
+    itsRealFileSize = itsFileSize   = length();
     itsPosition   = 0;
     if (itsFileSize > 0) {
         mapFile(0, 1);
@@ -72,6 +74,10 @@ namespace casa
   MMapfdIO::~MMapfdIO()
   {
     unmapFile();
+    //
+    // this maybe dangerouse because we assume the actual file length was
+    if(itsRealFileSize)
+	    ftruncate(fd(), itsRealFileSize); 
   }
 
   void MMapfdIO::mapFile(Int64 offset, Int64 length)
@@ -215,20 +221,33 @@ namespace casa
       throw AipsError ("MMapfdIO file " + fileName() + " is not writable");
     }
     if (size > 0) {
+	    // 
+	    // OK, master of the kludge here, on the mac writing to extend the file or
+	    // using ftruncate is pretty slow, ok painfully slow, so rather than continually
+	    // extend the file with each write, lets ask for twice as much space each time
+	    // this avoids a lot of remapping and speeds things up quite a bit, not as fast
+	    // as the original cache scheme but we can tune later. When we're all done we 
+	    // trim back the file to desired size. anyway seems to work.
+	    //
         // Remap if required section is not currently mapped
         if (itsPosition < itsMapOffset || itsPosition + size > itsMapOffset + itsMapSize) {
             unmapFile();
             // If past end-of-file, write the last byte to extend the file.
             if (itsPosition + size > itsFileSize) {
                 itsFileSize = itsPosition + size;
+		/*
                 LargeFiledesIO::doSeek (itsFileSize-1, ByteIO::Begin);
                 char b=0;
                 LargeFiledesIO::write (1, &b);
+		*/
+		itsFileSize *= 2;
+		ftruncate(fd(), itsFileSize);
             }
             mapFile(itsPosition, size);
         }
         memcpy(itsPtr + itsPosition - itsMapOffset, buf, size);
         itsPosition += size;
+	itsRealFileSize = (itsRealFileSize < itsPosition) ? itsPosition : itsRealFileSize;
     }
   }
 

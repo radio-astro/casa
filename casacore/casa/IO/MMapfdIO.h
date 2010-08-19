@@ -133,7 +133,7 @@ public:
 
   // Get the file size.
   Int64 getFileSize() const
-    { return itsFileSize; }
+    { return itsRealFileSize; }
 
 protected:
   // Reset the position pointer to the given value. It returns the
@@ -150,7 +150,8 @@ private:
   MMapfdIO& operator= (const MMapfdIO&);
   // </group>
 
-  Int64  itsFileSize;       //# File size
+  Int64  itsFileSize;       //# File size but maybe bigger the real file size!
+  Int64  itsRealFileSize;   //# Real File size
   Int64  itsMapOffset;      //# Start of memory map in file
   Int64  itsMapSize;        //# Size of currently memory mapped region
   Int64  itsPosition;       //# Current seek position
