@@ -358,18 +358,6 @@ macro( casa_find package )
       endif()
 
       casa_append( ${package}_INCLUDE_DIR ${${package}_${_include}} )
-      ## also include the base-path for added base-path + suffix paths...
-      ##   (needed on osx for <ATM/*.h> includes)
-      foreach ( _s ${_includes_suffixes} )
-        string( REPLACE "." "\\." _r ${_s} )
-	string( REPLACE "*" "\\*" _r ${_r} )
-	string( REPLACE "+" "\\+" _r ${_r} )
-	string( REPLACE "?" "\\?" _r ${_r} )
-        if( ${${package}_${_include}} MATCHES "${_r}$" )
-	    string( REGEX REPLACE "/${_r}$" "" ${package}_${_include}_root ${${package}_${_include}} )
-	    casa_append( ${package}_INCLUDE_DIR  ${${package}_${_include}_root} )
-	endif()
-      endforeach()
     endforeach()
 
     if( _found )
