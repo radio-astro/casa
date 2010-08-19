@@ -139,19 +139,10 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 # 
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
-    set (archflag "" )
-    if( CMAKE_Fortran_COMPILER )
-        ## Apple no longer supplies fortran compilers, checking for x86_64 with fortran
-	## compiler will be a good indication if x86_64 is available or not...
-	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-libgcc-file-name
-        		 COMMAND perl -e "while(<>){ print if s|^.*?(x86_64).*|$1| }"
-			 OUTPUT_VARIABLE archflag
-			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-			 COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;}}}}"
-			 OUTPUT_VARIABLE _gfortran_lib_path
-			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-    endif()
+    execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;}}}}"
+                     OUTPUT_VARIABLE _gfortran_lib_path
+                     OUTPUT_STRIP_TRAILING_WHITESPACE )
     if( NOT arch )
     	set( arch darwin )
     endif()
@@ -163,8 +154,19 @@ if( APPLE )
         if( NOT archflag )
             if( EXISTS /opt/casa/darwin10-64b )
                 set( archflag x86_64 )
-            else()
+            elseif( EXISTS /opt/casa/core2-apple-darwin10 )
                 set( archflag i386 )
+            else()
+              ## Apple no longer supplies fortran compilers, checking for x86_64 with fortran
+	      ## compiler will be a good indication if x86_64 is available or not...
+	      execute_process( 
+                COMMAND ${CMAKE_Fortran_COMPILER} -print-libgcc-file-name
+        	COMMAND perl -e "while(<>){ print if s|^.*?(x86_64).*|$1| }"
+		OUTPUT_VARIABLE archflag
+		OUTPUT_STRIP_TRAILING_WHITESPACE )
+              if( NOT archflag )
+                set( archflag x86_64 )
+              endif()
             endif()
         endif()
         if( archflag STREQUAL x86_64 )
@@ -181,7 +183,7 @@ if( APPLE )
 	if( NOT _gfortran_version STREQUAL "4.4.4" )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
         endif()
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag}" )
         set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
@@ -348,7 +350,6 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux )
 elseif( CMAKE_SYSTEM_NAME STREQUAL Darwin )
   add_definitions(
     -DAIPS_DARWIN 
-    -DMACOSXBUILT
     )
 else(
     message( WARNING "Not on Linux nor Darwin!" )
@@ -411,14 +412,14 @@ if( NOT FORTRAN_LIBRARIES )
     )
  
   if( _have_gfortran )
-      if( _gfortran_lib_path )
-          set( FORTRAN_LIBRARIES ${_gfortran_lib_path}
-	       CACHE STRING "Fortran library linker option" FORCE )
-       else()
-          set( FORTRAN_LIBRARIES -lgfortran 
-               CACHE STRING "Fortran library linker option" FORCE )
-       endif()
-       message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
+    if( _gfortran_lib_path )
+      set( FORTRAN_LIBRARIES ${_gfortran_lib_path}
+	CACHE STRING "Fortran library linker option" FORCE )
+    else()
+      set( FORTRAN_LIBRARIES -lgfortran 
+        CACHE STRING "Fortran library linker option" FORCE )
+    endif()
+    message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
   elseif( _have_g2c )
     set( FORTRAN_LIBRARIES -lg2c
       CACHE STRING "Fortran library linker option" FORCE )
