@@ -46,10 +46,11 @@ namespace casa
 // cache of tiles. When using memory-mapped IO it does not need to do that
 // anymore.
 //
-// Best performance on Linux and Mac was achieved when mapping only
-// the part of the file that is currently in use, but at least a couple
-// of MB. Thus, using memory mapping with > 4 GB files which do not
-// fit in the virtual memory address space on 32-bit system, is a non-issue.
+// On 32-bit non-Linux systems its use is limited because for large files
+// the 4 GB memory space is insufficient. On 32-bit systems, the mmap2 system 
+// call (Linux) or mmap (Mac) is used to map a < 4GB section of a large file
+// into memory. On 64-bit systems the memory space is large enough to make 
+// use of memory mapping for files up to 16K Petabytes.
 //
 // In the general case there is direct access to the mapped file space.
 // The read and write methods copies the data into/from a buffer.
@@ -69,7 +70,7 @@ public:
   // A file can be memory-mapped using the map function.
   MMapfdIO();
 
-  // Map the beginning of the given file into memory with read access.
+  // Map the given file descriptor entirely into memory with read access.
   // The map has also write access if the file is opened for write.
   // The file name is only used in possible error messages.
   MMapfdIO (int fd, const String& fileName);
@@ -78,15 +79,18 @@ public:
   // If needed, it will flush and unmap the file, but not close it.
   ~MMapfdIO();
 
-  // Map the beginning of the given file into memory with read access.
+  // Map the given file descriptor entirely into memory with read access.
   // The map has also write access if the file is opened for write.
   // An exception is thrown if a file descriptor was already attached.
   // The file name is only used in possible error messages.
   void map (int fd, const String& fileName);
 
-  // Map or remap the file. Only the required section of the file,
-  // as given by the offset and length parameters, is mapped.
-  // Remapping is needed if the file has grown elsewhere.
+  // Map or remap the file. If the mapping of the entire file to memory
+  // succeeds, the offset and length parameters have no effect. If mapping
+  // the entire file fails (large files on 32 bit systems), attempts are
+  // made to map as large section as possible, which includes the section 
+  // specified by offset and length. Remapping is needed if the file has
+  // grown elsewhere.
   void mapFile(Int64 offset, Int64 length);
 
   // Flush changed mapped data to the file.
@@ -129,7 +133,7 @@ public:
 
   // Get the file size.
   Int64 getFileSize() const
-    { return itsFileSize; }
+    { return itsRealFileSize; }
 
 protected:
   // Reset the position pointer to the given value. It returns the
@@ -146,7 +150,8 @@ private:
   MMapfdIO& operator= (const MMapfdIO&);
   // </group>
 
-  Int64  itsFileSize;       //# File size
+  Int64  itsFileSize;       //# File size but maybe bigger the real file size!
+  Int64  itsRealFileSize;   //# Real File size
   Int64  itsMapOffset;      //# Start of memory map in file
   Int64  itsMapSize;        //# Size of currently memory mapped region
   Int64  itsPosition;       //# Current seek position
