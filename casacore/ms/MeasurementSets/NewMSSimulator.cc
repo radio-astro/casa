@@ -92,14 +92,12 @@ const uInt nCat = 6; // Number of Flag categories
 const String sigmaCol = "sigmaHyperColumn";
 const String dataCol = "dataHyperColumn";
 const String scratchDataCol = "scratchDataHyperColumn";
-const String imweightCol = "imWeightHyperColumn";
 const String flagCol = "flagHyperColumn";
 
 const String sigmaTileId = "SIGMA_HYPERCUBE_ID";
 const String dataTileId = "DATA_HYPERCUBE_ID";
 const String scratchDataTileId = "SCRATCH_DATA_HYPERCUBE_ID";
 const String flagTileId = "FLAG_CATEGORY_HYPERCUBE_ID";
-const String imweightTileId = "IMAGING_WEIGHT_HYPERCUBE_ID";
 
 // a but ugly solution to use the feed table parser of MSIter
 // to extract antennaMounts and BeamOffsets.
@@ -141,7 +139,7 @@ void NewMSSimulator::defaults() {
 }
   
 NewMSSimulator::NewMSSimulator(const String& MSName) :
-  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(), imweightAcc_p(),
+  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(),
   maxData_p(2e9)
 {
   LogIO os(LogOrigin("NewMSSimulator", "NewMSSimulator<const String& MSName)", WHERE));
@@ -155,7 +153,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   MS::addColumnToDesc(msDesc,MS::DATA,2);
   MS::addColumnToDesc(msDesc,MS::MODEL_DATA,2);
   MS::addColumnToDesc(msDesc,MS::CORRECTED_DATA,2);
-  MS::addColumnToDesc(msDesc,MS::IMAGING_WEIGHT,1);
   
   // Add index columns for tiling. We use three tiles: data, sigma, and flag.
   // Some of these contain more than one column
@@ -166,8 +163,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
 					 "Index for Scratch Data tiling"));
   msDesc.addColumn(ScalarColumnDesc<Int>(sigmaTileId,
 					 "Index for Sigma tiling"));
-  msDesc.addColumn(ScalarColumnDesc<Int>(imweightTileId,
-  					 "Index for Imaging Weight tiling"));
   msDesc.addColumn(ScalarColumnDesc<Int>(flagTileId,
 					 "Index for Flag Category tiling"));
   */
@@ -222,14 +217,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
     msDesc.defineHypercolumn("WeightColumn", 2, dataCols);
   }
 
-  {
-    Vector<String> dataCols(1);
-    dataCols(0) = MeasurementSet::columnName(MeasurementSet::IMAGING_WEIGHT);
-    const Vector<String> coordCols(0);
-    const Vector<String> idCols(1, imweightTileId);
-    //msDesc.defineHypercolumn(imweightCol, 2, dataCols, coordCols, idCols);
-    msDesc.defineHypercolumn(imweightCol, 2, dataCols);
-  }
   {
     Vector<String> dataCols(1);
     dataCols(0) = MeasurementSet::columnName(MeasurementSet::FLAG_CATEGORY);
@@ -291,14 +278,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   }
 
   {
-    TiledShapeStMan dataMan(imweightCol, IPosition(2,tileShape(1), 
-						   tileShape(2)));
-    newMS.bindColumn(MeasurementSet::
- 		     columnName(MeasurementSet::IMAGING_WEIGHT), dataMan);
-    // newMS.bindColumn(imweightTileId, dataMan);
-  }
-
-  {
     TiledShapeStMan dataMan(flagCol, 
 			    IPosition(4,tileShape(0),tileShape(1), 1,
 				      tileShape(2)));
@@ -340,7 +319,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   scratchDataAcc_p = TiledDataStManAccessor(*ms_p, scratchDataCol);
   sigmaAcc_p = TiledDataStManAccessor(*ms_p, sigmaCol);
   flagAcc_p = TiledDataStManAccessor(*ms_p, flagCol);
-  imweightAcc_p = TiledDataStManAccessor(*ms_p, imweightCol);
   */
   // We're done - wasn't that easy?
 
@@ -352,7 +330,7 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
 }
 
 NewMSSimulator::NewMSSimulator(MeasurementSet& theMS) :
-  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(), imweightAcc_p(),
+  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(),
   maxData_p(2e9)
 {
   LogIO os(LogOrigin("NewMSSimulator", "NewMSSimulator(MeasurementSet& theMS)", WHERE));
@@ -372,7 +350,6 @@ NewMSSimulator::NewMSSimulator(MeasurementSet& theMS) :
     scratchDataAcc_p = TiledDataStManAccessor(*ms_p, scratchDataCol);
     sigmaAcc_p = TiledDataStManAccessor(*ms_p, sigmaCol);
     flagAcc_p = TiledDataStManAccessor(*ms_p, flagCol);
-    imweightAcc_p = TiledDataStManAccessor(*ms_p, imweightCol);
     
     ScalarColumn<Int> hyperCubeIDColumn(*ms_p, dataTileId);
     hyperCubeID_p=max(hyperCubeIDColumn.getColumn());
@@ -417,11 +394,6 @@ void NewMSSimulator::addHyperCubes(const Int id, const Int nBase, const Int nCha
   flagAcc_p.addHypercube(IPosition(4, nCorr, nChan, nCat, 0), 
 			 IPosition(4, nCorr, chanTiles, nCat, nBase),
 			 tileId);
-  
-  tileId.define(imweightTileId, static_cast<Int>(10*id + 4));
-  imweightAcc_p.addHypercube(IPosition(2, nChan, 0), 
-			     IPosition(2, chanTiles, nBase),
-			     tileId);
 }
 
 NewMSSimulator::NewMSSimulator(const NewMSSimulator & mss)
@@ -1379,8 +1351,6 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
     scratchDataAcc_p.extendHypercube(nNewRows, tileId);
     tileId.define(flagTileId, static_cast<Int>(10*hyperCubeID_p + 3));
     flagAcc_p.extendHypercube(nNewRows, tileId);
-    tileId.define(imweightTileId, static_cast<Int>(10*hyperCubeID_p + 4));
-    imweightAcc_p.extendHypercube(nNewRows, tileId);
     // Size of scratch columns
     Double thisChunk=16.0*Double(nChan)*Double(nCorr)*Double(nNewRows);
     dataWritten_p+=thisChunk;
@@ -1392,10 +1362,6 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 
   Matrix<Bool> flag(nCorr,nChan); 
   flag=False;
-    
-  Vector<Float> imagingWeight(nChan);
-  imagingWeight.set(1.0);
-
 
   os << "Calculating a total of " << nIntegrations << " integrations" << endl 
      << LogIO::POST;
@@ -1592,8 +1558,6 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 	  msc.correctedData().put(row,data);
 	  msc.modelData().setShape(row,data.shape());
 	  msc.modelData().put(row, data);
-	  msc.imagingWeight().setShape(row, data.shape().getLast(1));
-	  msc.imagingWeight().put(row, imagingWeight);
 	  
 	  if (ant1 != ant2) {
 	    blockage(fractionBlocked1, fractionBlocked2,

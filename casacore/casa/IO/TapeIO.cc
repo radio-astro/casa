@@ -38,7 +38,7 @@
 // No tape support on Cray XT3 or OSX 10.6
 #ifndef CASA_NOTAPE
 #include <sys/mtio.h>             // needed for ioctl
-#if defined(AIPS_SOLARIS) || defined(AIPS_DARWIN)
+#if defined(AIPS_SOLARIS) || defined(__APPLE__)
 #include <sys/ioctl.h>            // needed for ioctl
 #include <sys/types.h>            // needed for ioctl
 #endif
