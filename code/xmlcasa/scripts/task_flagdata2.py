@@ -59,7 +59,7 @@ def flagdata2(vis = None,
              rfi_bs_cutoff = None,
              rfi_ant_cutoff = None,
              rfi_flag_level = None,
-             sumary = None,
+             summary = None,
              minrel = None,
              maxrel = None,
              minabs = None,
@@ -85,8 +85,8 @@ def flagdata2(vis = None,
             mode == 'clip'
                 # In manualflag and quack modes,
                 # filter out the parameters which are not used
-
-            clipmode(selectdata, flagbackup,
+            casalog.post('Start flagging using clip mode')
+            clip_mode(selectdata, flagbackup,
                          autocorr=autocorr,
                          unflag=unflag,
                          clipexpr=clipexpr,       # manualflag only
@@ -103,11 +103,15 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            casalog.post("End flagging in clip mode")
         if quack:
             mode == 'quack'
-            quackmode(selectdata, flagbackup,
+            casalog.post('Start flagging using quack mode')
+            quack_mode(selectdata, flagbackup,
                          autocorr=autocorr,
                          unflag=unflag,
+                         clipminmax=[], clipoutside=False,
+                         clipcolumn="",channelavg=False,
                          quackinterval=quackinterval,   # quack only
                          quackmode=quackmode,           # quack only
                          quackincrement=quackincrement, # quack only
@@ -120,8 +124,10 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
-        elif shadow:
+            casalog.post('End flagging in quack mode')
+        if shadow:
             mode == 'shadow'
+            casalog.post('Start flagging using shadow mode')
             fg.setdata()
             fg.setshadowflags( \
                         field = field, \
@@ -138,9 +144,11 @@ def flagdata2(vis = None,
             if flagbackup:
                 backup_flags(mode)
             fg.run()
+            casalog.post('End flagging in shadow mode')
             
-        elif autoflag:
+        if autoflag:
             mode == 'autoflag'
+            casalog.post('Start flagging using autoflag mode')
             fg.setdata(field = field, \
                            spw = spw, \
                            array = array, \
@@ -165,9 +173,11 @@ def flagdata2(vis = None,
             if flagbackup:
                 backup_flags(mode)
             fg.run()
+            casalog.post('End flagging in autoflag mode')
 
-        elif rfi:
+        if rfi:
             mode == 'rfi'
+            casalog.post('Start flagging using rfi mode')
             fg.setdata(field = field, \
                            spw = spw, \
                            array = array, \
@@ -193,36 +203,36 @@ def flagdata2(vis = None,
     ## a lengthy sequence of plots (CAS-1655)
                 
             ## channel range (1 based)
-            par['start_chan']=start_chan 
-            par['end_chan']=end_chan
+            par['start_chan']=rfi_start_chan 
+            par['end_chan']=rfi_end_chan
                 
             ## number of time-steps in each chunk
-            par['num_time']=num_time
+            par['num_time']=rfi_num_time
 
             ## flag on cross-correlations and auto-correlations. (0 : only autocorrelations)
-            par['auto_cross']= auto_cross   
+            par['auto_cross']= rfi_auto_cross   
                 
             ## Flag Level :
             ## 0: flag only what is found. 
             ## 1: extend flags one timestep before and after
             ## 2: 1 and extend flags one channel before/after.
-            par['flag_level']=flag_level
+            par['flag_level']=rfi_flag_level
 
             ## data expression on which to flag.
-            par['expr']=clipexpr
+            par['expr']=rfi_clipexpr
 
             ## data column to use.
-            par['column']=clipcolumn
+            par['column']=rfi_clipcolumn
 
             ## False : Fit the bandpass with a piecewise polynomial
             ## True : Fit the bandpass with a straight line.
-            par['freqlinefit']=freqlinefit
+            par['freqlinefit']=rfi_freqlinefit
 
             ## Flagging thresholds ( N sigma ), where 'sigma' is the stdev of the "fit".
             #par['freq_amp_cutoff']=3
             #par['time_amp_cutoff']=4
-            par['freq_amp_cutoff']=freq_amp_cutoff
-            par['time_amp_cutoff']=time_amp_cutoff
+            par['freq_amp_cutoff']=rfi_freq_amp_cutoff
+            par['time_amp_cutoff']=rfi_time_amp_cutoff
                 
             # Tell the 'fg' tool which algorithm to use, and set the parameters.
             # Note : Can set multiple instances of this (will be done one after the other)
@@ -233,9 +243,11 @@ def flagdata2(vis = None,
                 backup_flags(mode)
 
             fg.run()
+            casalog.post('End flagging in rfi mode')
 
-        elif summary:
+        if summary:
             mode == 'summary'
+            casalog.post('Start flagging using summary mode')
             fg.setdata()
             fg.setflagsummary(field=field, \
                                   spw=spw, \
@@ -250,6 +262,7 @@ def flagdata2(vis = None,
             # do not backup existing flags
             stats = fg.run()
             fg.done()
+            casalog.post('End flagging in sumary mode')
 
             # filter out baselines/antennas/fields/spws/...
             # which do not fall within limits
@@ -268,6 +281,8 @@ def flagdata2(vis = None,
                                 del stats[x][xx]
                 
             return stats
+        
+        # Add unflag mode here. Remove it from modes above
         
         elif query:
             mode == 'query'
@@ -300,7 +315,7 @@ def flagdata2(vis = None,
 #
 # Handle clip=True mode
 #
-def clipmode(selectdata, flagbackup, **params):
+def clip_mode(selectdata, flagbackup, **params):
     if debug: print params
 
     if not selectdata:
@@ -310,7 +325,7 @@ def clipmode(selectdata, flagbackup, **params):
     for x in params.keys():
         print 'x=%s'%x
 
-    casalog.post('Starting clip mode')
+#    casalog.post('Start flagging using clip mode')
 
     fg.setdata()
     rename_params(params)
@@ -320,11 +335,12 @@ def clipmode(selectdata, flagbackup, **params):
         backup_flags('clip')
         
     fg.run()
+#    casalog.post('End flagging using clip mode')
 
 #
 # Handle quack=True mode
 #
-def quackmode(selectdata, flagbackup, **params):
+def quack_mode(selectdata, flagbackup, **params):
     if debug: print params
 
     if not selectdata:
@@ -334,16 +350,19 @@ def quackmode(selectdata, flagbackup, **params):
     for x in params.keys():
         print 'x=%s'%x
 
-    casalog.post('Starting quack mode')
+#    casalog.post('Starting quack mode')
 
     fg.setdata()
+    print "end fg.setdata"
     rename_params(params)
     fg.setmanualflags(**params)
+    print "end fg.setmanualflags"
 
     if flagbackup:
         backup_flags('quack')
         
     fg.run()
+#    casalog.post('Ending quack mode')
 
 
 
