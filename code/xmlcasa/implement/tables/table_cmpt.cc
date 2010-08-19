@@ -1964,7 +1964,13 @@ table::statistics(const std::string& column,
     } catch (AipsError x) {
         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
         RETHROW(x);
+    } catch (std::exception &e) {
+        *itsLog << LogIO::SEVERE << "Exception Reported: " << e.what() << LogIO::POST;
+        RETHROW(e);
+    } catch (...) {
+        *itsLog << LogIO::SEVERE << "Unknown exception happened!" << LogIO::POST;
     }
+    
     return retval;
 }
 
