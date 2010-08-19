@@ -73,7 +73,8 @@ PagedImage<Float>* ImageReorderer::reorder() const {
 	}
 	PagedImage<Float>* output = new PagedImage<Float>(TiledShape(newShape), newCsys, _outputImage);
 	output->put(reorderArray(dataCopy, _order));
-	return output;
+    output->flush();
+    return output;
 }
 
 ImageReorderer::~ImageReorderer() {

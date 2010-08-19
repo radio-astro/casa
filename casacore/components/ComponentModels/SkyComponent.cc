@@ -310,8 +310,8 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 	position << "       --- dec: " << dec << " +/- " << ddec << endl;
 
 	if (coordinates) {
-		Vector<Double> world(4,0), pixel(4,0);
-		coordinates->toWorld(world, pixel);
+		Vector<Double> world(coordinates->nWorldAxes(), 0), pixel(coordinates->nPixelAxes(), 0);
+        coordinates->toWorld(world, pixel);
 		world[0] = longitude.getValue();
 		world[1] = lat.getValue();
 		// TODO do the pixel computations in another method

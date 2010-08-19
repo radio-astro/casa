@@ -280,7 +280,7 @@ public:
 // indicates an invalid plotting device, or that the internal state of the class is bad.
 
    Bool display();
-   Bool getLayerStats(String& stats, Double area, Vector<String>& zName,
+   Bool getLayerStats(String& stats, Double area, 
                       Int zAxis=-1, Int zLayer=-1, 
                       Int hAxis=-1, Int hLayer=-1); 
 
@@ -391,11 +391,8 @@ protected:
    virtual Bool listStats (Bool hasBeam, const IPosition& dPos,
                            const Matrix<AccumType>& ord);
    virtual Bool listLayerStats (Double hasBeam, 
-             const IPosition& dPos, const Matrix<AccumType>& ord,
-             ostringstream& rslt, 
-             Vector<String>& zName,
-             Int zAxis, Int zLayer, 
-             Int hAxis, Int hLayer); 
+             const Matrix<AccumType>& ord,
+             ostringstream& rslt, Int zLayer); 
 
 // Gets labels for higher order axes and x axis.
 // dPos is the location of the start of the cursor in the
