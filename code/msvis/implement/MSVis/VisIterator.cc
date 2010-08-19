@@ -599,7 +599,6 @@ VisIterator::operator=(const VisIterator& other)
 	RWcolWeight.reference(other.RWcolWeight);
         RWcolWeightSpectrum.reference(other.RWcolWeightSpectrum);
 	RWcolSigma.reference(other.RWcolSigma);
-	RWcolImagingWeight.reference(other.RWcolImagingWeight);
     }
     return *this;
 }
@@ -642,8 +641,6 @@ void VisIterator::attachColumns(const Table &t)
   RWcolSigma.attach(t,MS::columnName(MS::SIGMA));
   RWcolFlag.attach(t,MS::columnName(MS::FLAG));
   RWcolFlagRow.attach(t,MS::columnName(MS::FLAG_ROW));
-  if (cds.isDefined("IMAGING_WEIGHT"))
-    RWcolImagingWeight.attach(t,"IMAGING_WEIGHT");
 }
 
 void VisIterator::setFlagRow(const Vector<Bool>& rowflags)

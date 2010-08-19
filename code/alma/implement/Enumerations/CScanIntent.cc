@@ -47,7 +47,7 @@ string CScanIntent::revision () {
 }
 
 unsigned int CScanIntent::size() {
-	return 19;
+	return 21;
 	}
 	
 	
@@ -84,6 +84,10 @@ const std::string& CScanIntent::sMAP_ANTENNA_SURFACE = "MAP_ANTENNA_SURFACE";
 const std::string& CScanIntent::sMAP_PRIMARY_BEAM = "MAP_PRIMARY_BEAM";
 	
 const std::string& CScanIntent::sOBSERVE_TARGET = "OBSERVE_TARGET";
+	
+const std::string& CScanIntent::sCALIBRATE_POL_LEAKAGE = "CALIBRATE_POL_LEAKAGE";
+	
+const std::string& CScanIntent::sCALIBRATE_POL_ANGLE = "CALIBRATE_POL_ANGLE";
 	
 const std::string& CScanIntent::sTEST = "TEST";
 	
@@ -125,6 +129,10 @@ const std::vector<std::string> CScanIntent::names() {
     enumSet.insert(enumSet.end(), CScanIntent::sMAP_PRIMARY_BEAM);
     
     enumSet.insert(enumSet.end(), CScanIntent::sOBSERVE_TARGET);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_POL_LEAKAGE);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_POL_ANGLE);
     
     enumSet.insert(enumSet.end(), CScanIntent::sTEST);
     
@@ -186,6 +194,12 @@ std::string CScanIntent::name(const ScanIntentMod::ScanIntent& f) {
     
     case ScanIntentMod::OBSERVE_TARGET:
       return CScanIntent::sOBSERVE_TARGET;
+    
+    case ScanIntentMod::CALIBRATE_POL_LEAKAGE:
+      return CScanIntent::sCALIBRATE_POL_LEAKAGE;
+    
+    case ScanIntentMod::CALIBRATE_POL_ANGLE:
+      return CScanIntent::sCALIBRATE_POL_ANGLE;
     
     case ScanIntentMod::TEST:
       return CScanIntent::sTEST;
@@ -268,6 +282,14 @@ ScanIntentMod::ScanIntent CScanIntent::newScanIntent(const std::string& name) {
         return ScanIntentMod::OBSERVE_TARGET;
     }
     	
+    if (name == CScanIntent::sCALIBRATE_POL_LEAKAGE) {
+        return ScanIntentMod::CALIBRATE_POL_LEAKAGE;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_POL_ANGLE) {
+        return ScanIntentMod::CALIBRATE_POL_ANGLE;
+    }
+    	
     if (name == CScanIntent::sTEST) {
         return ScanIntentMod::TEST;
     }
@@ -347,6 +369,14 @@ ScanIntentMod::ScanIntent CScanIntent::literal(const std::string& name) {
     	
     if (name == CScanIntent::sOBSERVE_TARGET) {
         return ScanIntentMod::OBSERVE_TARGET;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_POL_LEAKAGE) {
+        return ScanIntentMod::CALIBRATE_POL_LEAKAGE;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_POL_ANGLE) {
+        return ScanIntentMod::CALIBRATE_POL_ANGLE;
     }
     	
     if (name == CScanIntent::sTEST) {

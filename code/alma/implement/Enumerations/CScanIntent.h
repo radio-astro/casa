@@ -55,7 +55,7 @@ namespace ScanIntentMod
   //! ScanIntent.
   //!  [ASDM.Scan] Scan intents
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum ScanIntent
@@ -93,6 +93,10 @@ namespace ScanIntentMod
     MAP_PRIMARY_BEAM /*!< Data on a celestial calibration source are used to derive a map of the primary beam. */
      ,
     OBSERVE_TARGET /*!< Target source scan */
+     ,
+    CALIBRATE_POL_LEAKAGE /*!<  */
+     ,
+    CALIBRATE_POL_ANGLE /*!<  */
      ,
     TEST /*!< used for development. */
      ,
@@ -149,6 +153,10 @@ class CScanIntent {
 	static const std::string& sMAP_PRIMARY_BEAM; /*!< A const string equal to "MAP_PRIMARY_BEAM".*/
 	
 	static const std::string& sOBSERVE_TARGET; /*!< A const string equal to "OBSERVE_TARGET".*/
+	
+	static const std::string& sCALIBRATE_POL_LEAKAGE; /*!< A const string equal to "CALIBRATE_POL_LEAKAGE".*/
+	
+	static const std::string& sCALIBRATE_POL_ANGLE; /*!< A const string equal to "CALIBRATE_POL_ANGLE".*/
 	
 	static const std::string& sTEST; /*!< A const string equal to "TEST".*/
 	

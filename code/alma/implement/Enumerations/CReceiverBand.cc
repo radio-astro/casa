@@ -47,7 +47,7 @@ string CReceiverBand::revision () {
 }
 
 unsigned int CReceiverBand::size() {
-	return 17;
+	return 27;
 	}
 	
 	
@@ -82,6 +82,26 @@ const std::string& CReceiverBand::sBURE_02 = "BURE_02";
 const std::string& CReceiverBand::sBURE_03 = "BURE_03";
 	
 const std::string& CReceiverBand::sBURE_04 = "BURE_04";
+	
+const std::string& CReceiverBand::sEVLA_4 = "EVLA_4";
+	
+const std::string& CReceiverBand::sEVLA_P = "EVLA_P";
+	
+const std::string& CReceiverBand::sEVLA_L = "EVLA_L";
+	
+const std::string& CReceiverBand::sEVLA_C = "EVLA_C";
+	
+const std::string& CReceiverBand::sEVLA_S = "EVLA_S";
+	
+const std::string& CReceiverBand::sEVLA_X = "EVLA_X";
+	
+const std::string& CReceiverBand::sEVLA_Ku = "EVLA_Ku";
+	
+const std::string& CReceiverBand::sEVLA_K = "EVLA_K";
+	
+const std::string& CReceiverBand::sEVLA_Ka = "EVLA_Ka";
+	
+const std::string& CReceiverBand::sEVLA_Q = "EVLA_Q";
 	
 const std::string& CReceiverBand::sUNSPECIFIED = "UNSPECIFIED";
 	
@@ -119,6 +139,26 @@ const std::vector<std::string> CReceiverBand::names() {
     enumSet.insert(enumSet.end(), CReceiverBand::sBURE_03);
     
     enumSet.insert(enumSet.end(), CReceiverBand::sBURE_04);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_4);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_P);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_L);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_C);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_S);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_X);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_Ku);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_K);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_Ka);
+    
+    enumSet.insert(enumSet.end(), CReceiverBand::sEVLA_Q);
     
     enumSet.insert(enumSet.end(), CReceiverBand::sUNSPECIFIED);
         
@@ -175,6 +215,36 @@ std::string CReceiverBand::name(const ReceiverBandMod::ReceiverBand& f) {
     
     case ReceiverBandMod::BURE_04:
       return CReceiverBand::sBURE_04;
+    
+    case ReceiverBandMod::EVLA_4:
+      return CReceiverBand::sEVLA_4;
+    
+    case ReceiverBandMod::EVLA_P:
+      return CReceiverBand::sEVLA_P;
+    
+    case ReceiverBandMod::EVLA_L:
+      return CReceiverBand::sEVLA_L;
+    
+    case ReceiverBandMod::EVLA_C:
+      return CReceiverBand::sEVLA_C;
+    
+    case ReceiverBandMod::EVLA_S:
+      return CReceiverBand::sEVLA_S;
+    
+    case ReceiverBandMod::EVLA_X:
+      return CReceiverBand::sEVLA_X;
+    
+    case ReceiverBandMod::EVLA_Ku:
+      return CReceiverBand::sEVLA_Ku;
+    
+    case ReceiverBandMod::EVLA_K:
+      return CReceiverBand::sEVLA_K;
+    
+    case ReceiverBandMod::EVLA_Ka:
+      return CReceiverBand::sEVLA_Ka;
+    
+    case ReceiverBandMod::EVLA_Q:
+      return CReceiverBand::sEVLA_Q;
     
     case ReceiverBandMod::UNSPECIFIED:
       return CReceiverBand::sUNSPECIFIED;
@@ -250,6 +320,46 @@ ReceiverBandMod::ReceiverBand CReceiverBand::newReceiverBand(const std::string& 
         return ReceiverBandMod::BURE_04;
     }
     	
+    if (name == CReceiverBand::sEVLA_4) {
+        return ReceiverBandMod::EVLA_4;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_P) {
+        return ReceiverBandMod::EVLA_P;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_L) {
+        return ReceiverBandMod::EVLA_L;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_C) {
+        return ReceiverBandMod::EVLA_C;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_S) {
+        return ReceiverBandMod::EVLA_S;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_X) {
+        return ReceiverBandMod::EVLA_X;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_Ku) {
+        return ReceiverBandMod::EVLA_Ku;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_K) {
+        return ReceiverBandMod::EVLA_K;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_Ka) {
+        return ReceiverBandMod::EVLA_Ka;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_Q) {
+        return ReceiverBandMod::EVLA_Q;
+    }
+    	
     if (name == CReceiverBand::sUNSPECIFIED) {
         return ReceiverBandMod::UNSPECIFIED;
     }
@@ -321,6 +431,46 @@ ReceiverBandMod::ReceiverBand CReceiverBand::literal(const std::string& name) {
     	
     if (name == CReceiverBand::sBURE_04) {
         return ReceiverBandMod::BURE_04;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_4) {
+        return ReceiverBandMod::EVLA_4;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_P) {
+        return ReceiverBandMod::EVLA_P;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_L) {
+        return ReceiverBandMod::EVLA_L;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_C) {
+        return ReceiverBandMod::EVLA_C;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_S) {
+        return ReceiverBandMod::EVLA_S;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_X) {
+        return ReceiverBandMod::EVLA_X;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_Ku) {
+        return ReceiverBandMod::EVLA_Ku;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_K) {
+        return ReceiverBandMod::EVLA_K;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_Ka) {
+        return ReceiverBandMod::EVLA_Ka;
+    }
+    	
+    if (name == CReceiverBand::sEVLA_Q) {
+        return ReceiverBandMod::EVLA_Q;
     }
     	
     if (name == CReceiverBand::sUNSPECIFIED) {

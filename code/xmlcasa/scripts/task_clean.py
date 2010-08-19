@@ -54,6 +54,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
                 raise Exception, instance
             reffreqVal=rff['value'];  # This is the frequency in Hz
+            if(reffreqVal == 0.0):
+                raise Exception,'Reference Frequency is 0.0. Please set a value within your data range.';
             #qat.close()
             
         # if (gridmode =='widefield'):

@@ -232,6 +232,9 @@ class NRODataset
   // show primary information
   void show() ;
 
+  // convert frequency frame
+  virtual double toLSR( double v, double t, double x, double y ) ;
+
   // Type of file record
   string LOFIL ;
 
@@ -505,6 +508,9 @@ class NRODataset
 
   // Logger
   //LogIO os ;
+
+  // reference frequency for each array
+  vector<double> refFreq_ ;
 } ;
 
 

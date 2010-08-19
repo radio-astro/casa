@@ -168,13 +168,6 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     // Size-up the chanmask PB
     initChanMask();
 
-    // Initialize the weights if the scratch columns
-    // were just created
-    if(addScratch && !hadScratch) {
-      Double sumwt=0.0;
-      VisSetUtil::WeightNatural(*vs_p, sumwt);
-    }
-
     // Create the associated VisEquation
     //  TBD: move to ctor and make it non-pointer
     if (ve_p) {

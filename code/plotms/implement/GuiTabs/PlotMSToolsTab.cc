@@ -132,7 +132,6 @@ void PlotMSToolsTab::takeSnapshotOfTrackerValue()    {
 
 
 void PlotMSToolsTab::clearRecordedValues()  {
-	printf("DSW CHKPOINT: clearRecordedValues\n");
 	trackerRecordedValues->setText("");
 }
 

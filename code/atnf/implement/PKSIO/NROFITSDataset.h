@@ -94,6 +94,7 @@ class NROFITSDataset : public NRODataset
   virtual int getIndex( int irow ) ;
   virtual int getPolarizationNum() ;
   virtual uInt getArrayId( string type ) ;
+  virtual double getStartIntTime( int i ) ;
 
  protected:
   // fill header information
@@ -151,6 +152,9 @@ class NROFITSDataset : public NRODataset
 
   // get offset bytes for attributes
   int getOffset( char *name ) ;
+
+  // convert frequency frame
+//   virtual double toLSR( double v, double t, double x, double y ) ;
 
   // number of column for scan header
   int numField_ ;

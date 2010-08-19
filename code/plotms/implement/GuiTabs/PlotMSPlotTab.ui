@@ -24,6 +24,9 @@
   <property name="windowTitle" >
    <string>PlotMS Plot Tab</string>
   </property>
+  <property name="toolTip" >
+   <string>Draw the plot using newest settings, re-reading data if needed.  Hold down shift to force re-read of data.</string>
+  </property>
   <layout class="QVBoxLayout" >
    <property name="spacing" >
     <number>3</number>
@@ -84,6 +87,13 @@
      <property name="spacing" >
       <number>3</number>
      </property>
+     <item>
+      <widget class="QCheckBox" name="forceReplotChk" >
+       <property name="text" >
+        <string>force replot</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer>
        <property name="orientation" >

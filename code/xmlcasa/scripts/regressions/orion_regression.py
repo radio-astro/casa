@@ -259,14 +259,14 @@ print >>logfile,'*                               *'
 
 #              Test name          Stat type Expected  Label irregularities 
 test_descs = (('Feather 1',           'max',  0.780,  ' '),
-	      ('Feather 2',           'max',  0.868,  ' '),
-	      ('SD Model (MS)',       'max',  1.04),
-	      ('SD Model (MEM)',      'max',  0.87),
+	      ('Feather 2',           'max',  1.428,  ' '),
+	      ('SD Model (MS)',       'max',  1.925),
+	      ('SD Model (MEM)',      'max',  2.23),
 	      ('Joint Deconvolution', 'max',  0.96, '', 'Joint Decon1'), # 1.014
 	      ('Feather 1',           'flux', 242.506,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
 	      ('SD Model (MS)',       'flux', 364, ' ', 'SD Model (MS)', 'Feather 3'),
-	      ('SD Model (MEM)',      'flux', 289, '', 'SD Model (MEM)', 'Joint Deconvolution'),
+	      ('SD Model (MEM)',      'flux', 194, '', 'SD Model (MEM)', 'Joint Deconvolution'),
 	      ('Joint Deconvolution', 'flux', 326, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):

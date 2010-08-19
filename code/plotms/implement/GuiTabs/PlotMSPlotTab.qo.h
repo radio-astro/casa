@@ -161,6 +161,8 @@ public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
     // current plot.
     void plot();
+	void observeModKeys();
+    
     
 protected:
     // Clears set subtabs.
@@ -175,8 +177,8 @@ protected:
     // Inserts the given subtab in the tab widget.
     void insertSubtab(int index, PlotMSPlotSubtab* tab);
     
-    // Inserts one of the known subtab types IF it is not already present,
-    // and returns it.
+    // Inserts one of the known subtab types if it is not already present,
+    // and returns a pointer to it.
     // <group>
     PlotMSAxesTab* addAxesSubtab();
     PlotMSAxesTab* insertAxesSubtab(int index);
@@ -226,12 +228,18 @@ private:
     // accordingly.
     bool itsUpdateFlag_;
     
+    // Bitflags report if shift, etc were down during click of Plot button
+    Qt::KeyboardModifiers itsModKeys;  
+    
+    // Flag set if user uses shift+plot or otherwise requests reload&replot
+    bool its_force_reload;
+    int forceReloadCounter_;
     
     // Sets up the GUI to display the parameters for the given plot.
     void setupForPlot(PlotMSPlot* plot);
     
     // Returns the axes the user has selected to load or release, depending on
-    // the load flag.
+    // the load flag. 
     vector<PMS::Axis> selectedLoadOrReleaseAxes(bool load) const;
     
 private slots:
@@ -244,6 +252,8 @@ private slots:
     // Slot for when the user changes the value for any parameters.  Updates
     // the GUI to show which parameters have been changed (if any).
     void tabChanged();
+
+    
 };
 
 }

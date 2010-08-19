@@ -4,7 +4,7 @@ from taskinit import *
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
           timebin, timerange, scan, array, uvrange, correlation,
-          ignorables):
+          ignorables, keepflags):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -52,6 +52,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     ignorables -- Data descriptors that time averaging can ignore:
                   array, scan, and/or state
                   Default '' (none)
+    keepflags -- Keep flagged data, if possible
+                 Default True
     """
 
     #Python script
@@ -155,6 +157,11 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             ms.open(cavms)
             casalog.post('Starting time averaging')
 
+        if keepflags:
+            taqlstr = ''
+        else:
+            taqlstr = 'NOT (FLAG_ROW OR ALL(FLAG))'
+
         ms.split(outputms=outputvis,  field=field,
                  spw=spw,             step=width,
                  baseline=antenna,    subarray=array,
@@ -162,7 +169,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                  whichcol=datacolumn,
                  scan=scan,           uvrange=uvrange,
                  ignorables=ignorables,
-                 correlation=correlation)
+                 correlation=correlation,
+                 taql=taqlstr)
         ms.close()
 
         if do_both_chan_and_time_avg:

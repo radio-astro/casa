@@ -520,9 +520,47 @@ class split_test_singchan(unittest.TestCase):
         
         # For all correlations, compare output channel 0 to input channel 25.
         check_eq(data_sp[:,0], data_orig[:,25], 0.0001)
-        
+
+class split_test_unorderedpolspw(SplitChecker):
+    """
+    Check spw selection from a tricky MS.
+    """
+    need_to_initialize = True
+    inpms = 'unittest/split/unordered_polspw.ms'
+    corrsels = ['']
+    records = {}
+
+    def do_split(self, corrsel):
+        outms = 'pss' + re.sub(',\s*', '', corrsel) + '.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "\nSelecting spws 1, 3, and 5."
+            splitran = split(self.inpms, outms, datacolumn='data',
+                             field='', spw='1,3,5', width=1, antenna='',
+                             timebin='0s', timerange='18:32:40~18:33:20',
+                             scan='', array='', uvrange='',
+                             correlation=corrsel, async=False)
+            tb.open(outms)
+            record['data'] = tb.getcell('DATA', 2)
+            tb.close()
+        except Exception, e:
+            print "Error selecting spws 1, 3, and 5 from", self.inpms
+            raise e
+        self.__class__.records[corrsel] = record
+        return splitran
+
+    def test_datashape(self):
+        """Data shape"""
+        assert self.records['']['data'].shape == (2, 128)
+
+    def test_subtables(self):
+        """DATA_DESCRIPTION, SPECTRAL_WINDOW, and POLARIZATION shapes"""
+        self.check_subtables('', [(2, 128)])
+    
 
 def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
-            split_test_singchan]
+            split_test_singchan, split_test_unorderedpolspw]
     

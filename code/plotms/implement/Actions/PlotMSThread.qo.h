@@ -41,17 +41,6 @@ namespace casa {
 class QtProgressWidget;
 
 
-// Useful macro for using post-thread methods.
-#define PMS_POST_THREAD_METHOD(CLASS, METHOD)                                 \
-public:                                                                       \
-    static void METHOD (void* obj, bool wasCanceled) {                        \
-        CLASS * cobj = static_cast< CLASS *>(obj);                            \
-        if(cobj != NULL) cobj -> METHOD##_(wasCanceled);                      \
-    }                                                                         \
-                                                                              \
-private:                                                                      \
-    void METHOD##_(bool wasCanceled);
-
 // Typedefs for using post-thread methods.
 // <group>
 typedef void* PMSPTObject;

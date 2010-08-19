@@ -33,9 +33,18 @@ set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
-if( APPLE AND EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
-    set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
-    set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
+if( APPLE )
+    set( SO dylib )
+    if( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
+        set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
+	set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
+    elseif( EXISTS        /opt/local/bin/gfortran )
+        set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran )
+    elseif( EXISTS        /opt/local/bin/gfortran-mp-4.4 )
+        set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.4 )
+    endif()
+else()
+    set( SO so )
 endif()
 
 project( CASA C CXX Fortran )
@@ -131,6 +140,18 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     set (archflag "" )
+    if( CMAKE_Fortran_COMPILER )
+        ## Apple no longer supplies fortran compilers, checking for x86_64 with fortran
+	## compiler will be a good indication if x86_64 is available or not...
+	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-libgcc-file-name
+        		 COMMAND perl -e "while(<>){ print if s|^.*?(x86_64).*|$1| }"
+			 OUTPUT_VARIABLE archflag
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+			 COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;}}}}"
+			 OUTPUT_VARIABLE _gfortran_lib_path
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+    endif()
     if( NOT arch )
     	set( arch darwin )
     endif()
@@ -138,17 +159,30 @@ if( APPLE )
     if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
         set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
-      elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )        
-	set (archflag "-arch i386" )
-        set( casa_packages /opt/casa/core2-apple-darwin10 )
-	if( ${arch} MATCHES 64 )
-		set (archflag "-arch x86_64" )
-		set (casa_packages /opt/casa/darwin10-64b )
-		add_definitions( -DAIPS_64B )
+    elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )
+        if( NOT archflag )
+            if( EXISTS /opt/casa/darwin10-64b )
+                set( archflag x86_64 )
+            else()
+                set( archflag i386 )
+            endif()
+        endif()
+        if( archflag STREQUAL x86_64 )
+            set ( casa_packages /opt/casa/darwin10-64b )
+            add_definitions( -DAIPS_64B )
+        else()
+            set( casa_packages /opt/casa/core2-apple-darwin10 )
 	endif()
-        set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${archflag}" )
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error ${archflag} -framework AppKit" )
-        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${archflag}" )
+	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} --version
+			 COMMAND head -1
+			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 OUTPUT_VARIABLE _gfortran_version
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	if( NOT _gfortran_version STREQUAL "4.4.4" )
+	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
+        endif()
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
@@ -363,17 +397,28 @@ if( NOT FORTRAN_LIBRARIES )
     "int main() { return 0; }\n"
     )
   
-  try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
-    CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lgfortran"
-    )
+  if( _gfortran_lib_path )
+    try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
+      CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=${_gfortran_lib_path}"
+      )
+  else()
+    try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
+      CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lgfortran"
+      )
+  endif()
   try_compile( _have_g2c ${CMAKE_BINARY_DIR} ${_try}
     CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lg2c"
     )
  
   if( _have_gfortran )
-    set( FORTRAN_LIBRARIES -lgfortran 
-      CACHE STRING "Fortran library linker option" FORCE )
-    message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
+      if( _gfortran_lib_path )
+          set( FORTRAN_LIBRARIES ${_gfortran_lib_path}
+	       CACHE STRING "Fortran library linker option" FORCE )
+       else()
+          set( FORTRAN_LIBRARIES -lgfortran 
+               CACHE STRING "Fortran library linker option" FORCE )
+       endif()
+       message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
   elseif( _have_g2c )
     set( FORTRAN_LIBRARIES -lg2c
       CACHE STRING "Fortran library linker option" FORCE )
@@ -492,7 +537,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.18
+           VERSION 1.0.20
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK

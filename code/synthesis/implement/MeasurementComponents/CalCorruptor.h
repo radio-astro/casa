@@ -178,6 +178,7 @@ class ANoiseCorruptor : public CalCorruptor {
       amp_=amp;
     };
     virtual Complex simPar(const VisIter& vi,VisCal::Type type,Int ipar);
+    virtual Complex simPar();
 
   private:
     MLCG *rndGen_p;

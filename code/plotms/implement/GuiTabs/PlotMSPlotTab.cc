@@ -63,7 +63,8 @@ PlotMSPlotParameters PlotMSPlotSubtab::currentlySetParameters() const {
 PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
         itsPlotManager_(parent->getParent()->getPlotManager()),
         itsCurrentPlot_(NULL), itsCurrentParameters_(NULL),
-        itsUpdateFlag_(true) {
+        itsUpdateFlag_(true),forceReloadCounter_(0),its_force_reload(false)
+    {
     setupUi(this);
     
     // Add as watcher.
@@ -82,11 +83,21 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     connect(goChooser, SIGNAL(currentIndexChanged(int)), SLOT(goChanged(int)));
     connect(goButton, SIGNAL(clicked()), SLOT(goClicked()));
     
-    // Synchronize plot button.
+    // Additional slot for Plot button for shift+plot forced redraw feature.
+    // All this does is note if shift was down during the click.
+    // This slot should be called before the main one in synchronize action.
+    connect( plotButton, SIGNAL(clicked()),  SLOT(observeModKeys()) );
+
+    // Synchronize plot button.  This makes the reload/replot happen.
     itsPlotter_->synchronizeAction(PlotMSAction::PLOT, plotButton);
+    
 }
 
+
+
 PlotMSPlotTab::~PlotMSPlotTab() { }
+
+
 
 QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
     QList<QToolButton*> list;
@@ -94,11 +105,18 @@ QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
     return list;
 }
 
+
+
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
+	(void)updateFlag;
     if(&p == itsCurrentParameters_ && itsCurrentPlot_ != NULL)
         setupForPlot(itsCurrentPlot_);
 }
+
+
+
+#include<stdio.h>  //!!!!! REMOVE 
 
 void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     goChooser->clear();
@@ -138,7 +156,11 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     }
 }
 
+
+
 PlotMSPlot* PlotMSPlotTab::currentPlot() const { return itsCurrentPlot_; }
+
+
 
 PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
     PlotMSPlotParameters params(itsPlotter_->getFactory());
@@ -148,6 +170,8 @@ PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
     
     return params;
 }
+
+
 
 PlotExportFormat PlotMSPlotTab::currentlySetExportFormat() const {
     const PlotMSExportTab* tab;
@@ -177,6 +201,7 @@ PMS::SummaryType PlotMSPlotTab::msSummaryType() const {
 }
 
 
+
 // Public Slots //
 
 void PlotMSPlotTab::plot() {
@@ -187,18 +212,44 @@ void PlotMSPlotTab::plot() {
         PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>(),
                     *cc = itsCurrentParameters_->typedGroup<PMS_PP_Cache>();
         
-        // Plot if 1) parameters have changed, 2) cache loading was canceled
-        // previously.
-        bool pchanged = params != *itsCurrentParameters_,
-             cload = !itsCurrentPlot_->data().cacheReady();
-             
-        if(pchanged || cload) {
-            if(pchanged) {
+        // Redo the plot if any of:
+        //   1) Parameters have changed, 
+        //   2) Cache loading was canceled,
+        //   3) User was holding down the shift key
+        //       Case #3 works by changing dummyChangeCount to 
+        //       imitate case #1.
+		//
+		// note as of Aug 2010: .casheReady() seems to return false even if cache was cancelled.
+        bool paramsChanged = params != *itsCurrentParameters_;
+        bool cancelledCache = !itsCurrentPlot_->data().cacheReady();
+
+		cout << "existing forceNew value = " << d->selection().forceNew() << endl;
+        
+        if (its_force_reload)    {
+			forceReloadCounter_++;   
+			paramsChanged=true;   // just to make sure we're noticed
+		}
+		
+		// whether forced reload or not, must make sure PlotMSSelection in params
+		// has some value set.   Otherwise, we might always get a "no match" 
+		// and reload and therefore a bored user waiting.
+		// Must remove constness of the reference returned by d->selection()
+		PlotMSSelection &sel = (PlotMSSelection &)d->selection();
+		sel.setForceNew(forceReloadCounter_);
+		
+	
+		/*DEBUG*/printf("    DSW: paramsChanged %d   cancelledCache %d    forceReloadCounter_=%d\n",paramsChanged,cancelledCache,forceReloadCounter_);
+
+		
+        
+        if (paramsChanged || cancelledCache) {
+			
+            if (paramsChanged) {
                 // check for "clear selections on axes change" setting
                 if(itsParent_->getParameters().clearSelectionsOnAxesChange() &&
-                   ((c != NULL && cc != NULL && (c->xAxis() != cc->xAxis() ||
-                     c->yAxis() != cc->yAxis())) || (d != NULL && cd != NULL &&
-                     d->filename() != cd->filename()))) {
+                       ((c != NULL && cc != NULL && (c->xAxis() != cc->xAxis() ||
+                         c->yAxis() != cc->yAxis())) || (d != NULL && cd != NULL &&
+                         d->filename() != cd->filename())))    {
                     vector<PlotCanvasPtr> canv = itsCurrentPlot_->canvases();
                     for(unsigned int i = 0; i < canv.size(); i++)
                         canv[i]->standardMouseTools()->selectTool()
@@ -209,7 +260,7 @@ void PlotMSPlotTab::plot() {
                 itsCurrentParameters_->holdNotification(this);
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
-            } else if(cload) {
+            } else if (cancelledCache) {
                 // Tell the plot to redraw itself because of the cache.
                 itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
                         PMS_PP::UPDATE_REDRAW & PMS_PP::UPDATE_CACHE);
@@ -234,6 +285,8 @@ void PlotMSPlotTab::clearSubtabsAfter(int index) {
     }
 }
 
+
+
 void PlotMSPlotTab::addSubtab(PlotMSPlotSubtab* tab) {
     insertSubtab(itsSubtabs_.size(), tab); }
 
@@ -252,30 +305,216 @@ void PlotMSPlotTab::insertSubtab(int index, PlotMSPlotSubtab* tab) {
     tabWidget->insertTab(index, tab, tab->tabName());
 }
 
-// Helper macro for adding/insert known subtab types.
-#define PT_ST(TYPE)                                                           \
-PlotMS##TYPE##Tab* PlotMSPlotTab::add##TYPE##Subtab() {                       \
-    return insert##TYPE##Subtab(itsSubtabs_.size()); }                        \
-PlotMS##TYPE##Tab* PlotMSPlotTab::insert##TYPE##Subtab(int index) {           \
-    PlotMS##TYPE##Tab* tab = NULL;                                            \
-    foreach(PlotMSPlotSubtab* t, itsSubtabs_) {                               \
-        tab = dynamic_cast<PlotMS##TYPE##Tab*>(t);                            \
-        if(tab != NULL) break;                                                \
-    }                                                                         \
-    if(tab == NULL) tab = new PlotMS##TYPE##Tab(this, itsPlotter_);           \
-    insertSubtab(index, tab);                                                 \
-    return tab;                                                               \
+
+
+
+PlotMSAxesTab*  PlotMSPlotTab::addAxesSubtab ()
+{
+     return insertAxesSubtab (itsSubtabs_.size ());
 }
 
-PT_ST(Axes)
-PT_ST(Cache)
-PT_ST(Canvas)
-PT_ST(Data)
-PT_ST(Display)
-PT_ST(Iterate)
-PT_ST(Export)
-PT_ST(MultiAxes)
-PT_ST(Transformations)
+
+PlotMSAxesTab* PlotMSPlotTab::insertAxesSubtab (int index)
+{
+     PlotMSAxesTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSAxesTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSAxesTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSCacheTab* PlotMSPlotTab::addCacheSubtab ()
+{
+     return insertCacheSubtab (itsSubtabs_.size ());
+}
+
+
+
+PlotMSCacheTab* PlotMSPlotTab::insertCacheSubtab (int index)
+{
+     PlotMSCacheTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSCacheTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSCacheTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSCanvasTab*  PlotMSPlotTab::addCanvasSubtab ()
+{
+     return insertCanvasSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSCanvasTab*  PlotMSPlotTab::insertCanvasSubtab (int index)
+{
+     PlotMSCanvasTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSCanvasTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSCanvasTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+
+PlotMSDataTab*  PlotMSPlotTab::addDataSubtab ()
+{
+     return insertDataSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSDataTab*  PlotMSPlotTab::insertDataSubtab (int index)
+{
+     PlotMSDataTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSDataTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSDataTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSDisplayTab*  PlotMSPlotTab::addDisplaySubtab ()
+{
+     return insertDisplaySubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSDisplayTab *PlotMSPlotTab::insertDisplaySubtab (int index)
+{
+     PlotMSDisplayTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSDisplayTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSDisplayTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSIterateTab*  PlotMSPlotTab::addIterateSubtab ()
+{
+     return insertIterateSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSIterateTab*  PlotMSPlotTab::insertIterateSubtab (int index)
+{
+     PlotMSIterateTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSIterateTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSIterateTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSExportTab*  PlotMSPlotTab::addExportSubtab ()
+{
+     return insertExportSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSExportTab*  PlotMSPlotTab::insertExportSubtab (int index)
+{
+     PlotMSExportTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSExportTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSExportTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+
+PlotMSMultiAxesTab*  PlotMSPlotTab::addMultiAxesSubtab ()
+{
+     return insertMultiAxesSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSMultiAxesTab*  PlotMSPlotTab::insertMultiAxesSubtab (int index)
+{
+     PlotMSMultiAxesTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSMultiAxesTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSMultiAxesTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
+PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab ()
+{
+     return insertTransformationsSubtab (itsSubtabs_.size ());
+}
+
+
+PlotMSTransformationsTab*  PlotMSPlotTab::insertTransformationsSubtab (int index)
+{
+     PlotMSTransformationsTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSTransformationsTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSTransformationsTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
+
+
 
 // Private //
 
@@ -306,6 +545,8 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* plot) {
     tabChanged();
 }
 
+
+
 vector<PMS::Axis> PlotMSPlotTab::selectedLoadOrReleaseAxes(bool load) const {
     const PlotMSCacheTab* tab;
     foreach(const PlotMSPlotSubtab* t, itsSubtabs_) {
@@ -329,6 +570,8 @@ void PlotMSPlotTab::goChanged(int index) {
         goButton->setVisible(true);
     }
 }
+
+
 
 void PlotMSPlotTab::goClicked() {
     int index = goChooser->currentIndex();
@@ -368,6 +611,8 @@ void PlotMSPlotTab::goClicked() {
     }
 }
 
+
+
 void PlotMSPlotTab::tabChanged() {
     if(itsUpdateFlag_ && itsCurrentPlot_ != NULL) {
         itsUpdateFlag_ = false;
@@ -380,5 +625,17 @@ void PlotMSPlotTab::tabChanged() {
         itsUpdateFlag_ = true;
     }
 }
+
+
+
+void PlotMSPlotTab::observeModKeys()   {
+	itsModKeys = QApplication::keyboardModifiers(); 
+	bool using_shift_key = (itsModKeys & Qt::ShiftModifier) !=0;
+	bool always_replot_checked = forceReplotChk->isChecked();
+	
+	its_force_reload = using_shift_key  ||  always_replot_checked;
+printf("plot slot observeModKeys:  suing_shift=%d   always chk=%d  \n", 	using_shift_key, always_replot_checked);
+}
+
 
 }

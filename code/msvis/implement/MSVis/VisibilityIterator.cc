@@ -254,7 +254,6 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   colTimeInterval.reference(other.colTimeInterval);
   colWeight.reference(other.colWeight);
   colWeightSpectrum.reference(other.colWeightSpectrum);
-  colImagingWeight.reference(other.colImagingWeight);
   colVis.reference(other.colVis);
   colFloatVis.reference(other.colFloatVis);
   colModelVis.reference(other.colModelVis);
@@ -615,7 +614,6 @@ void ROVisibilityIterator::setTileCache(){
     columns(1)=MS::columnName(MS::CORRECTED_DATA);
     columns(2)=MS::columnName(MS::MODEL_DATA);
     //cout << "COL " << columns << endl;
-    //columns(4)=MS::columnName(MS::IMAGING_WEIGHT);
     for (uInt k=0; k< 3; ++k){
       //cout << "IN loop k " << k << endl;
       if (thems.tableDesc().isColumn(columns(k)) ) {
@@ -702,8 +700,6 @@ void ROVisibilityIterator::attachColumns(const Table &t)
   colWeight.attach(t, MS::columnName(MS::WEIGHT));
   if (cds.isDefined("WEIGHT_SPECTRUM")) 
     colWeightSpectrum.attach(t, "WEIGHT_SPECTRUM");
-  if (cds.isDefined("IMAGING_WEIGHT")) 
-    colImagingWeight.attach(t, "IMAGING_WEIGHT");
 }
 
 ROVisibilityIterator & ROVisibilityIterator::operator++(int)
@@ -1401,61 +1397,44 @@ Cube<Float>& ROVisibilityIterator::weightSpectrum(Cube<Float>& wtsp) const
 
 Matrix<Float>& ROVisibilityIterator::imagingWeight(Matrix<Float>& wt) const
 {
-
-
-  
-  if ((!colImagingWeight.isNull()) && (imwgt_p.getType()=="none")) {
-    if (velSelection_p) {
-      if (!weightSpOK_p) {
-	getInterpolatedVisFlagWeight(Corrected);
-	This->weightSpOK_p=This->visOK_p[Corrected]=This->flagOK_p=True;
-      }
-      wt.resize(imagingWeight_p.shape()); wt=imagingWeight_p; 
-    } else {
-      if (useSlicer_p) getCol(colImagingWeight, weightSlicer_p,wt,True);
-      else getCol(colImagingWeight, wt,True);
+    if(imwgt_p.getType() == "none")
+        throw(AipsError("Programmer Error... imaging weights not set"));
+    Vector<Float> weightvec;
+    weight(weightvec);
+    Matrix<Bool> flagmat;
+    flag(flagmat);
+    wt.resize(flagmat.shape());
+    if(imwgt_p.getType()=="uniform"){
+        Vector<Double> fvec;
+        frequency(fvec);
+        Matrix<Double> uvwmat;
+        uvwMat(uvwmat);
+        imwgt_p.weightUniform(wt, flagmat, uvwmat, fvec, weightvec);
+        if(imwgt_p.doFilter())
+	    imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
     }
-  }
-  else{
-
-      if(imwgt_p.getType() == "none")
-          throw(AipsError("Programmer Error...no scratch column with imaging weight object"));
-      Vector<Float> weightvec;
-      weight(weightvec);
-      Matrix<Bool> flagmat;
-      flag(flagmat);
-      wt.resize(flagmat.shape());
-      if(imwgt_p.getType()=="uniform"){
-          Vector<Double> fvec;
-          frequency(fvec);
-          Matrix<Double> uvwmat;
-          uvwMat(uvwmat);
-          imwgt_p.weightUniform(wt, flagmat, uvwmat, fvec, weightvec);
-	  if(imwgt_p.doFilter())
+    else if(imwgt_p.getType()=="radial"){
+        Vector<Double> fvec;
+        frequency(fvec);
+        Matrix<Double> uvwmat;
+        uvwMat(uvwmat);
+        imwgt_p.weightRadial(wt, flagmat, uvwmat, fvec, weightvec);
+        if(imwgt_p.doFilter())
 	    imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
-      }
-      else if(imwgt_p.getType()=="radial"){
-          Vector<Double> fvec;
-          frequency(fvec);
-          Matrix<Double> uvwmat;
-          uvwMat(uvwmat);
-          imwgt_p.weightRadial(wt, flagmat, uvwmat, fvec, weightvec);
-	  if(imwgt_p.doFilter())
-	    imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
-      }
-      else{
+    }
+    else{
 	imwgt_p.weightNatural(wt, flagmat, weightvec);
 	if(imwgt_p.doFilter()){
-	  Matrix<Double> uvwmat;
-          uvwMat(uvwmat);
-	  Vector<Double> fvec;
-          frequency(fvec);
-	  imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
+            Matrix<Double> uvwmat;
+            uvwMat(uvwmat);
+            Vector<Double> fvec;
+            frequency(fvec);
+            imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
 
 	}
-      }
-  }
-  return wt;
+    }
+
+    return wt;
 }
 
 Int ROVisibilityIterator::nSubInterval() const
@@ -2083,7 +2062,6 @@ VisibilityIterator::operator=(const VisibilityIterator& other)
 	RWcolWeight.reference(other.RWcolWeight);
         RWcolWeightSpectrum.reference(other.RWcolWeightSpectrum);
 	RWcolSigma.reference(other.RWcolSigma);
-	RWcolImagingWeight.reference(other.RWcolImagingWeight);
     }
     return *this;
 }
@@ -2126,8 +2104,6 @@ void VisibilityIterator::attachColumns(const Table &t)
   RWcolSigma.attach(t, MS::columnName(MS::SIGMA));
   RWcolFlag.attach(t, MS::columnName(MS::FLAG));
   RWcolFlagRow.attach(t, MS::columnName(MS::FLAG_ROW));
-  if (cds.isDefined("IMAGING_WEIGHT"))
-    RWcolImagingWeight.attach(t, "IMAGING_WEIGHT");
 }
 
 void VisibilityIterator::setFlag(const Matrix<Bool>& flag)
@@ -2263,20 +2239,6 @@ void VisibilityIterator::setSigma(const Vector<Float>& sigma)
   }
   putCol(RWcolSigma, sigmat);
 }
-
-void VisibilityIterator::setImagingWeight(const Matrix<Float>& wt)
-{
-  if (velSelection_p) {
-    setInterpolatedWeight(wt);
-    if (useSlicer_p) putCol(RWcolImagingWeight, weightSlicer_p,imagingWeight_p);
-    else putCol(RWcolImagingWeight, imagingWeight_p);
-  } else {
-    if (useSlicer_p) putCol(RWcolImagingWeight, weightSlicer_p,wt);
-    else putCol(RWcolImagingWeight, wt);
-  }
-}
-
-
 
 void VisibilityIterator::setInterpolatedVisFlag(const Cube<Complex>& vis, 
 						const Cube<Bool>& flag)

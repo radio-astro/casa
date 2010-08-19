@@ -1028,7 +1028,7 @@ drawmask  is used to interactively draw  regions over a template image which you
      </param>
 
 </input>
-<returns type="bool"/>
+<returns type="int"/>
 <example>
 \begin{verbatim}
 im.drawmask(image='mytemplate.image', mask='myregions.mask')

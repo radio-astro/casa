@@ -762,6 +762,8 @@ void LogViewer::findNext()
    QModelIndex idx = QModelIndex();
    int k = nextRow;
    int i = nextRow;
+   //qDebug() << "i=" << i << " k=" << k 
+   //         << " rowCount=" << logModel->rowCount() ;;
    for (i = nextRow + 1; i < logModel->rowCount(); i++) {
      QString str = proxyModel->data(
          proxyModel->index(i, 3, idx), Qt::DisplayRole).toString();
@@ -771,7 +773,7 @@ void LogViewer::findNext()
         logView->setCurrentIndex(idx);
         logView->scrollTo(idx);
         nextRow = i;
-        break;
+        return;
      }
    }
    //qDebug() << "i=" << i;
@@ -787,7 +789,7 @@ void LogViewer::findNext()
         logView->setCurrentIndex(idx);
         logView->scrollTo(idx);
         nextRow = i;
-        break;
+        return;
      }
    }
 

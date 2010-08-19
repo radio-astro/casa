@@ -113,8 +113,8 @@ public:
   // all channels selected.
   // Specify a time interval for iterating in 'chunks' of time.
   // The default time interval of 0 groups all times together.
-  // This constructor creates three new columns:
-  // MODEL_DATA and CORRECTED_DATA and IMAGING_WEIGHT
+  // This constructor creates two new columns:
+  // MODEL_DATA and CORRECTED_DATA
   // If they already exist and have the
   // same channel selection applied, they are reused.
   // Note that the contents of these columns are NOT initialized,
@@ -218,14 +218,13 @@ private:
   //Add the scratch columns
   void addScratchCols(MeasurementSet& ms, Bool compress=False);
 
-  // Add a calibration set (comprising a set of CORRECTED_DATA, MODEL_DATA
-  // and IMAGING_WEIGHT columns) to the MeasurementSet (MS). Optionally
-  // compress these columns using the CompressComplex column engine.
+  // Add a calibration set (comprising a set of CORRECTED_DATA and MODEL_DATA)
+  // to the MeasurementSet (MS). Optionally compress these columns using the 
+  // CompressComplex column engine.
   void addCalSet(MeasurementSet& ms, Bool compress=True);
 
-  // Remove an existing cal set (a CORRECTED_DATA, MODEL_DATA 
-  // and IMAGING_WEIGHT column set and, optionally, any associated
-  // compression columns)
+  // Remove an existing cal set (a CORRECTED_DATA and MODEL_DATA 
+  // column set and, optionally, any associated compression columns)
   void removeCalSet(MeasurementSet& ms);
 
   MeasurementSet ms_p;

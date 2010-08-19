@@ -110,6 +110,10 @@ average over frequency (channels) and time (integrations).
 		<any type="variant" limittypes="string stringArray"/>
 		<value type="string"></value>
 	</param>
+	<param type="bool" name="keepflags">
+	  <description>If practical, keep flagged data instead of dropping it.</description>
+	  <value>True</value>
+	</param>
         <constraints>
 	  <when param="timebin">
             <notequals type="string" value="0s">
@@ -234,7 +238,14 @@ average over frequency (channels) and time (integrations).
                       ignorables = 'state,subarr': Same as above.  ignorables
                                                    matches on 'arr', 'scan', and
                                                    'state'.
-
+        keepflags -- If practical, keep flagged data instead of dropping it.
+                     All of the channels and correlations of a row must be
+                     flagged for it to be droppable, and a row must be well
+                     defined to be keepable.  The latter condition means that
+                     this option has no effect on time averaging - in that case
+                     fully flagged rows are automatically omitted.  Regardless
+                     of this parameter, flagged data is never included in
+                     averaging calculations.
 </example> 
 </task>
 </casaxml>

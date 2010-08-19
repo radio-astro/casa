@@ -1435,9 +1435,9 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
  
 
    <method type="function" name="setnoise">
-   <shortdescription>Set the noise level fixed sigma (mode=simple) or
+   <shortdescription>Set the noise level fixed sigma (mode=simplenoise) or
    Brown's equation using the ATM model for frequency-dependent atmospheric
-   opacity (mode=tsys) or Brown's equation, manually specifying the zenith
+   opacity (mode=tsys-atm) or Brown's equation, manually specifying the zenith
    opacity (constant across the band) and atmospheric temperature 
    (mode=tsys-manual)</shortdescription>
    

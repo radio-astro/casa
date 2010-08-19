@@ -996,7 +996,6 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 		}
 		modelData().setShape(thisrow, thisShape);
 		correctedData().setShape(thisrow, thisShape);
-		imagingWeight().setShape(thisrow, thisShape.getLast(1));
 		thisrow += ncorr;
 	    }
 	    feedDDFiller().next();
@@ -1096,7 +1095,6 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 	    
 	    Array<Complex> modData(outdata.shape().getFirst(2),1.0);
 	    Array<Complex> cdata(modData.shape());
-	    Array<Float> imagingWt(modData.shape().getLast(1), 1.0);
 	    Array<Float> sigma(outdata.shape().getFirst(1), 1.0);
 	    Array<Float> weight(sigma.shape(), 1.0);
 	    ArrayIterator<Float> dataIter(outdata,2);
@@ -1113,7 +1111,6 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 		convertArray(cdata,dataIter.array());
 		correctedData().put(thisRow, cdata);
 		dataIter.next();
-		imagingWeight().put(thisRow, imagingWt);
 	    }
 	    
 	    // FLAG - all False

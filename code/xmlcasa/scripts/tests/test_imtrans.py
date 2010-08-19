@@ -74,6 +74,8 @@ from __main__ import *
 import unittest
 
 good_image = "reorder_in.fits"
+cas_2364im = "CAS-2364.im"
+
 
 def run_reorder(imagename, outfile, order):
     myia = iatool.create()
@@ -167,6 +169,33 @@ class imtrans_test(unittest.TestCase):
                 self.assertTrue(expectednames[1] == gotnames[0])
                 self.assertTrue(expectednames[2] == gotnames[1])
                 count += 1
+
+    def test_cas_2364(self):
+        "test CAS-2364 fix"
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imtrans/'
+        shutil.copytree(datapath + cas_2364im, cas_2364im)
+        order="0132"
+        out1 = "blah.im"
+        myia = iatool.create()
+        myia.open(cas_2364im)
+        myia.reorder(out1, order)
+        myia.close()
+        # to verify fix, just open the image. bug was that exception was thrown when opening output from reorder
+        myia.open(out1)
+        self.assertTrue(myia)
+        myia.close()
+        out1 = "blah2.im"
+        imtrans(outfile=out1, order=order)
+        myia.open(out1)
+        self.assertTrue(myia)
+        myia.close()
+        shutil.rmtree(cas_2364im)
+ 
+    def tearDown(self):
+        os.remove(good_image)
+
+        
+        
 
 def suite():
     return [imtrans_test]

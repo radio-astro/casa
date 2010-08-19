@@ -127,6 +127,8 @@ void NROOTFDataset::initialize()
     + sizeof( double ) * NRO_ARYMAX             // F0CAL
     + sizeof( double ) * NRO_ARYMAX * 10 * 3    // FQCAL, CHCAL, CWCAL
     + sizeof( char ) * 180 ;                    // CDMY1
+
+  refFreq_.resize( NRO_ARYMAX, 0.0 ) ;
 }
 
 // fill data header

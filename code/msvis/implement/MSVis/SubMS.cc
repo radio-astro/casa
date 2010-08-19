@@ -789,7 +789,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   copyWeather();
     
   sameShape_p = areDataShapesConstant();
-  doImgWts_p = doWriteImagingWeight(*mscIn_p, datacols);
     
   if(timeBin_p <= 0.0){
     success = fillMainTable(datacols);
@@ -885,8 +884,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         Int spw = spwId(j);
         for(uInt k = 0; k < nSpws; ++k){
           if(spw == spw_p[k]){
-            ++npols_per_spw[spw_p[k]];
-            spw2ddid_p[spw_p[k]] = j;
+            ++npols_per_spw[spw];
+            spw2ddid_p[spw] = j;
           }
         }
       }
@@ -1031,14 +1030,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
     }
     
-    if (isAllColumns(colNamesTok))
-      {
-        MS::addColumnToDesc(td, MS::IMAGING_WEIGHT, 1);
-        td.defineHypercolumn("TiledImagingWeight", 2, 
-                             stringToVector(MS::columnName(MS::IMAGING_WEIGHT)));
-      }
-    
-    
     // add this optional column because random group fits has a
     // weight per visibility
     MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
@@ -1145,13 +1136,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
     newtab.bindColumn(MS::columnName(MS::SIGMA),tiledStMan5);
 
-    if (isAllColumns(colNamesTok))
-      {
-        TiledShapeStMan tiledStManImgWts("TiledImagingWeight",
-                                         IPosition(1, tileShape(0) * tileShape(1) * tileShape(2)));
-        newtab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT),tiledStManImgWts);
-      }
-    
     // avoid lock overheads by locking the table permanently
     TableLock lock(TableLock::AutoLocking);
     MeasurementSet *ms = new MeasurementSet (newtab,lock);
@@ -1261,12 +1245,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
          << LogIO::POST;
     }
 
-    Vector<Int> newPolId(spw_uniq_p.nelements());
+    Vector<Int> newPolId(nuniqSpws);
     for(uInt k = 0; k < nuniqSpws; ++k){
       Bool found = false;
       
       for(uInt j = 0; j < nPol; ++j){ 
-	if(selectedPolId[j] == polID_p[k]){
+	if(selectedPolId[j] == polID_p[spw2ddid_p[spw_uniq_p[k]]]){
 	  newPolId[k] = j;
 	  found = true;
 	  break;
@@ -1604,22 +1588,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
   }
 
-  Bool SubMS::doWriteImagingWeight(const ROMSColumns& inMsc, const Vector<MS::PredefinedColumns>& columnName)
-  {
-    Bool allCols=isAllColumns(columnName);
-    Bool inputImgWtsExist=(!inMsc.imagingWeight().isNull() &&
-			inMsc.imagingWeight().isDefined(0));
-    if (allCols && !inputImgWtsExist)
-      {
-	LogIO os(LogOrigin("SubMS", "doWriteImagingWeight()"));
-	os << LogIO::WARN 
-	   << "All data columns found, but not the IMAGING_WEIGHT column in the input MS. "
-	   << "This is strange.  Brace for unnatural results."
-	   << LogIO::POST;
-      }
-    return  (allCols && inputImgWtsExist);
-  }
-
   Int SubMS::regridSpw(String& regridMessage,
 		       const String& outframe,
 		       const String& regridQuant,
@@ -1778,7 +1746,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       createPartnerColumn(origMSTD, "CORRECTED_DATA", "oldCORRECTED_DATA", 3, tileShape);
       createPartnerColumn(origMSTD, "DATA", "oldDATA", 3, tileShape);
       createPartnerColumn(origMSTD, "FLOAT_DATA", "oldFLOAT_DATA", 3, tileShape);
-      createPartnerColumn(origMSTD, "IMAGING_WEIGHT", "oldIMAGING_WEIGHT", 3, tileShape);
       createPartnerColumn(origMSTD, "LAG_DATA", "oldLAG_DATA", 3, tileShape);
       createPartnerColumn(origMSTD, "MODEL_DATA", "oldMODEL_DATA", 3, tileShape);
       createPartnerColumn(origMSTD, "SIGMA_SPECTRUM", "oldSIGMA_SPECTRUM", 3, tileShape);
@@ -1792,7 +1759,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     MSMainColumns mainCols(ms_p);
 
     // columns which depend on the number of frequency channels and may need to be regridded:
-    // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, IMAGING_WEIGHT, LAG_DATA, SIGMA_SPECTRUM,
+    // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, LAG_DATA, SIGMA_SPECTRUM,
     // WEIGHT_SPECTRUM, FLAG, and FLAG_CATEGORY    
     ArrayColumn<Complex> CORRECTED_DATACol =  mainCols.correctedData();
     ArrayColumn<Complex>* oldCORRECTED_DATAColP  = 0;
@@ -1800,8 +1767,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ArrayColumn<Complex>* oldDATAColP = 0;
     ArrayColumn<Float> FLOAT_DATACol =  mainCols.floatData();
     ArrayColumn<Float>* oldFLOAT_DATAColP = 0;
-    ArrayColumn<Float> IMAGING_WEIGHTCol =  mainCols.imagingWeight();
-    ArrayColumn<Float>* oldIMAGING_WEIGHTColP = 0;
     ArrayColumn<Complex> LAG_DATACol =  mainCols.lagData();
     ArrayColumn<Complex>* oldLAG_DATAColP = 0;
     ArrayColumn<Complex> MODEL_DATACol =  mainCols.modelData();
@@ -1845,9 +1810,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
       if(!FLOAT_DATACol.isNull()){
 	oldFLOAT_DATAColP = new ArrayColumn<Float>(ms_p, "oldFLOAT_DATA");
-      }
-      if(!IMAGING_WEIGHTCol.isNull()){
-	oldIMAGING_WEIGHTColP = new ArrayColumn<Float>(ms_p, "oldIMAGING_WEIGHT");
       }
       if(!LAG_DATACol.isNull()){
 	oldLAG_DATAColP = new ArrayColumn<Complex>(ms_p, "oldLAG_DATA");
@@ -2075,19 +2037,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    youtFlagsWritten = True;
 	  }
 	}
-	if(!IMAGING_WEIGHTCol.isNull()){
-	  yinf.assign((*oldIMAGING_WEIGHTColP)(mainTabRow));
-
-	  if(yinFlags.shape().isEqual(yinf.shape())){ // shape must be the same 
-	    InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
-							   yinf, yinFlags, methodF[iDone], False, doExtrapolate);
-	  }
-	  else{ // don't use the flags 
-	    InterpolateArray1D<Double, Float>::interpolate(youtf, xout[iDone], xindd, 
-							   yinf, methodF[iDone]);
-	  }
-	  IMAGING_WEIGHTCol.put(mainTabRow, youtf);
-	}
 
 	if(!SIGMA_SPECTRUMCol.isNull()){
 	  yinf.assign((*oldSIGMA_SPECTRUMColP)(mainTabRow));
@@ -2164,9 +2113,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(!FLOAT_DATACol.isNull()){
 	  ms_p.removeColumn("oldFLOAT_DATA");
 	}
-	if(!IMAGING_WEIGHTCol.isNull()){
-	  ms_p.removeColumn("oldIMAGING_WEIGHT");
-	}
 	if(!LAG_DATACol.isNull()){
 	  ms_p.removeColumn("oldLAG_DATA");
 	}
@@ -2193,7 +2139,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // in at least imager to decide if MODEL_DATA and CORRECTED_DATA
       // columns should be initialized or not.
       //
-      if (!CORRECTED_DATACol.isNull() && !MODEL_DATACol.isNull() && !IMAGING_WEIGHTCol.isNull()){
+      if (!CORRECTED_DATACol.isNull() && !MODEL_DATACol.isNull()){
 	MSSpWindowColumns msSpW(ms_p.spectralWindow());
 	Int nSpw=ms_p.spectralWindow().nrow();
 	if(nSpw==0) nSpw=1;
@@ -4522,7 +4468,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt nMainTabRows = ms_p.nrow();
       
       // columns which depend on the number of frequency channels and may need to be combined:
-      // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, IMAGING_WEIGHT, LAG_DATA, SIGMA_SPECTRUM,
+      // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, LAG_DATA, SIGMA_SPECTRUM,
       // WEIGHT_SPECTRUM, FLAG, and FLAG_CATEGORY    
       ArrayColumn<Complex> CORRECTED_DATACol =  mainCols.correctedData();
       ArrayColumn<Complex> oldCORRECTED_DATACol = oldMainCols.correctedData();
@@ -4530,8 +4476,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       ArrayColumn<Complex>  oldDATACol = oldMainCols.data();
       ArrayColumn<Float> FLOAT_DATACol =  mainCols.floatData();
       ArrayColumn<Float> oldFLOAT_DATACol = oldMainCols.floatData();
-      ArrayColumn<Float> IMAGING_WEIGHTCol =  mainCols.imagingWeight();
-      ArrayColumn<Float> oldIMAGING_WEIGHTCol = oldMainCols.imagingWeight();
       ArrayColumn<Complex> LAG_DATACol =  mainCols.lagData();
       ArrayColumn<Complex> oldLAG_DATACol = oldMainCols.lagData();
       ArrayColumn<Complex> MODEL_DATACol =  mainCols.modelData();
@@ -4566,7 +4510,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Matrix<Complex> newCorrectedData; 
       Matrix<Complex> newData;
       Matrix<Float> newFloatData;
-      Vector<Float> newImagingWeight; // imaging weight is independent of the correlator
       Matrix<Complex> newLagData;
       Matrix<Complex> newModelData;
       Matrix<Float> newSigmaSpectrum;
@@ -4593,7 +4536,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Bool CORRECTED_DATAColIsOK = !CORRECTED_DATACol.isNull();
       Bool DATAColIsOK = !DATACol.isNull();
       Bool FLOAT_DATAColIsOK = !FLOAT_DATACol.isNull();
-      Bool IMAGING_WEIGHTColIsOK = !IMAGING_WEIGHTCol.isNull();
       Bool LAG_DATAColIsOK = !LAG_DATACol.isNull();
       Bool MODEL_DATAColIsOK = !MODEL_DATACol.isNull();
       Bool SIGMA_SPECTRUMColIsOK = !SIGMA_SPECTRUMCol.isNull();
@@ -4601,7 +4543,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Bool FLAGColIsOK = !FLAGCol.isNull();
       Bool FLAG_CATEGORYColIsOK = False; // to be set to the correct value further below
       
-      allScratchColsPresent = CORRECTED_DATAColIsOK && MODEL_DATAColIsOK && IMAGING_WEIGHTColIsOK;
+      allScratchColsPresent = CORRECTED_DATAColIsOK && MODEL_DATAColIsOK;
 
       // initialize arrays to store combined column data
       if(CORRECTED_DATAColIsOK){
@@ -4612,16 +4554,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
       if(FLOAT_DATAColIsOK){
 	newFloatData.resize(newShape);
-      }
-      if(IMAGING_WEIGHTColIsOK){
-	if(oldIMAGING_WEIGHTCol.shape(firstAffRow).nelements() == 1){
-	  newImagingWeight.resize(newNUM_CHAN);
-	}
-	else{
-	  os << LogIO::SEVERE << "Error: unexpected shape of imaging weight column: " 
-	     << oldIMAGING_WEIGHTCol.shape(firstAffRow) << LogIO::POST;
-	  return False;
-	}
       }
       if(LAG_DATAColIsOK){
 	newLagData.resize(newShape); 
@@ -4787,9 +4719,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(FLOAT_DATAColIsOK){
 	    newFloatData.set(0);
 	  }
-	  if(IMAGING_WEIGHTColIsOK){
-	    newImagingWeight.set(0);
-	  }
 	  if(LAG_DATAColIsOK){
 	    newLagData.set(0);
 	  }
@@ -4812,7 +4741,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  vector<Matrix<Complex> > newCorrectedDataI(nSpwsToCombine); 
 	  vector<Matrix<Complex> > newDataI(nSpwsToCombine);
 	  vector<Matrix<Float> > newFloatDataI(nSpwsToCombine);
-	  vector<Vector<Float> > newImagingWeightI(nSpwsToCombine);
 	  vector<Matrix<Complex> > newLagDataI(nSpwsToCombine);
 	  vector<Matrix<Complex> > newModelDataI(nSpwsToCombine);
 	  vector<Matrix<Float> > newSigmaSpectrumI(nSpwsToCombine);
@@ -4833,9 +4761,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      }
 	      if(FLOAT_DATAColIsOK){
 		newFloatDataI[theRowSPWId].reference(oldFLOAT_DATACol(theRow));
-	      }
-	      if(IMAGING_WEIGHTColIsOK){
-		newImagingWeightI[theRowSPWId].reference(oldIMAGING_WEIGHTCol(theRow));
 	      }
 	      if(LAG_DATAColIsOK){
 		newLagDataI[theRowSPWId].reference(oldLAG_DATACol(theRow));
@@ -4957,11 +4882,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    } // end if flagged
 		  } // end for k = 0
 		
-		  // imaging weight is independent of the correlator
-		  if(IMAGING_WEIGHTColIsOK){
-		    newImagingWeight(i) += newImagingWeightI[ averageWhichSPW[i][j] ]( averageWhichChan[i][j] ) * weight;
-		  }
-		  
 		  // special treatment for flag cat
 		  if(FLAG_CATEGORYColIsOK){
 		    for(uInt k=0; k<nCorrelations; k++){ // logical OR of all input spws
@@ -4998,9 +4918,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	  if(FLOAT_DATAColIsOK){
 	    FLOAT_DATACol.put(newMainTabRow, newFloatData);
-	  }
-	  if(IMAGING_WEIGHTColIsOK){
-	    IMAGING_WEIGHTCol.put(newMainTabRow, newImagingWeight);
 	  }
 	  if(LAG_DATAColIsOK){
 	    LAG_DATACol.put(newMainTabRow, newLagData);
@@ -5366,10 +5283,6 @@ Bool SubMS::fillAccessoryMainCols(){
       }
       if(doFloat)
         msc_p->floatData().putColumn(mscIn_p->floatData());
-      if(doImgWts_p){
-        ROArrayColumn<Float> imgWts(mscIn_p->imagingWeight());
-        msc_p->imagingWeight().putColumn(imgWts);
-      }
 
       msc_p->flag().putColumn(mscIn_p->flag());
       if(!(mscIn_p->weightSpectrum().isNull()) &&
@@ -5571,7 +5484,6 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
   // sigma		ant1		ant2		time
   // timeCentroid	feed1 		feed2		exposure
   // stateId		processorId	observationId	arrayId
-  // imaging_weight (optional)
   return fillTimeAverData(colNames); 
 }
   
@@ -5951,10 +5863,6 @@ Bool SubMS::copyState()
   //   Matrix<Bool> chanFlag;
 
   //   Cube<Float> spWeight;
-  //   Matrix<Float> inImgWts;
-  //   Matrix<Float> avgImgWts;
-  //   Float *oproxyImgWtsP;
-  //   Float *iproxyImgWtsP;
     
   //   Cube<Bool> locflag;
   //   Vector<Int> ddIds;
@@ -6123,48 +6031,6 @@ Bool SubMS::copyState()
   // 		      msc_p->correctedData().putColumnCells(rowstoadd, averdata);
   // 		  }
   // 	      } // End ntok loop
-
-  // 	    //
-  // 	    //----------------------------------------------------------------------
-  // 	    // Average the imaging weights - if required.
-  // 	    //
-  // 	    if (doImgWts_p)
-  // 	      {
-  //               inImgWts.reference(vb.imagingWeight());
-  //               iproxyImgWtsP = inImgWts.getStorage(idelete);
-  //               avgImgWts.resize(nchan_p[spw], rowsnow);
-  //               avgImgWts.set(0.0);
-  //               oproxyImgWtsP = avgImgWts.getStorage(idelete);
-            
-  //               for(Int r = 0; r < rowsnow; ++r){
-  //                 for(Int c = 0; c < nchan_p[spw]; ++c){
-  //                   Int outImgWtsoffset = r * nchan_p[spw] + c;
-  //                   Int imgWtsCounter = 0;
-  //                   Int whichChan = chanStart_p[spw] + c * chanStep_p[spw];
-
-  //                   if(!averageChannel_p){
-  //                     avgImgWts(r, c) = inImgWts(r, whichChan);
-  //                   }
-  //                   else{
-  //                     for(Int m = 0; m < chanStep_p[spw]; ++m){
-  //                       Int inImgWtsoffset = r * inNumChan_p[spw] + c * chanStep_p[spw] + m;
-
-  //                       oproxyImgWtsP[outImgWtsoffset] += iproxyImgWtsP[inImgWtsoffset];
-  //                       ++imgWtsCounter;
-  //                     }
-  //                   }
-                    
-  //                   if(averageChannel_p){
-  //                     if(imgWtsCounter > 0)
-  //                       oproxyImgWtsP[outImgWtsoffset] /= imgWtsCounter;
-  //                     else
-  //                       oproxyImgWtsP[outImgWtsoffset] = 0;
-  //                   }
-  //                 }
-  //               }
-  //               msc_p->imagingWeight().putColumnCells(rowstoadd, avgImgWts);
-  // 	      }
-  // 	    //----------------------------------------------------------------------
 	    
   // 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
   //           if(doSpWeight)
@@ -6204,12 +6070,12 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
     
     if(datacols[colind] == MS::FLOAT_DATA)
       filterChans<Float>(mscIn_p->floatData(), msc_p->floatData(),
-			 doSpWeight, wgtSpec, nrow, doImgWts_p && !colind,
+			 doSpWeight, wgtSpec, nrow,
 			 !colind, rowWt, sigma);
     else
       filterChans<Complex>(right_column(mscIn_p, datacols[colind]),
 			   right_column(msc_p, datacols[colind], writeToDataCol),
-			   doSpWeight, wgtSpec, nrow, doImgWts_p && !colind,
+			   doSpWeight, wgtSpec, nrow,
 			   !colind, rowWt, sigma);
   }
   return True;
@@ -6608,10 +6474,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
     data[datacol].reference(right_column(mscIn_p, columnNames[datacol]));
   if(doFloat)
     floatData.reference(mscIn_p->floatData());
-  
-
-  const ROArrayColumn<Float> inImagingWeight(mscIn_p->imagingWeight());
-  Vector<Float> inImgWtsSpectrum;
 
   //const ROScalarColumn<Double> time(mscIn_p->time());
   const ROScalarColumn<Double> inTC(mscIn_p->timeCentroid());
@@ -6666,8 +6528,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   
   Vector<Float> outRowWeight;
 
-  // These get resized + initialized later.
-  Vector<Float> outImagingWeight;
+  // This gets resized + initialized later.
   Matrix<Bool> outFlag;
 
   Matrix<Float> outSpWeight;
@@ -6777,8 +6638,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             unflgWtSpec.resize(sliceShape);
             outSpWeight.resize(sliceShape);
           }
-          if(doImgWts_p)
-            outImagingWeight.resize(nchan_p[ddID]);
 
 	  rowwtfac = static_cast<Double>(nchan_p[ddID]) / inNumChan_p[ddID];
         }
@@ -6793,8 +6652,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         outFloatData.set(0.0);      
       if(doSpWeight)
         outSpWeight.set(0.0);
-      if(doImgWts_p)
-        outImagingWeight.set(0.0);
 
       // Iterate through mscIn_p's rows that belong to the slot.
       Double swv = 0.0; // Sum of the weighted visibilities.
@@ -6920,24 +6777,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             }
           }
           
-          if(doImgWts_p){
-            for(Int c = 0; c < nchan_p[ddID]; ++c){
-              Bool unflagged = false;
-                  
-	      // Here we are looking at flag again.  Can't unflagged be set
-	      // earlier?
-              for(Int polind = 0; polind < ncorr_p[ddID]; ++polind){
-                if(!flag(*toikit)(IPosition(2, polind, chanStart_p[ddID] + c))){
-                  unflagged = true;
-                  break;
-                }
-              }
-	      if(unflagged)
-		outImagingWeight[c] += totrowwt *
-		  inImagingWeight(*toikit)(IPosition(1, chanStart_p[ddID] + c));
-            }
-          }
-
           Double wv = 0.0;
           Array<Complex>::const_iterator dataEnd = data_toikit.end();
           for(Array<Complex>::const_iterator dit = data_toikit.begin();
@@ -6984,18 +6823,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
             ++oDIter;
           }
         }
-        if(doImgWts_p){
-          uInt npol = ncorr_p[ddID];          
-          uInt nchan = chanStop - chanStart_p[ddID];
-
-          for(uInt c = 0; c < nchan; ++c){
-            Float totchanwt = 0.0;
-            for(uInt polind = 0; polind < npol; ++polind)
-              totchanwt += outSpWeight(polind, c);
-            if(totchanwt > 0.0)
-              outImagingWeight[c] /= totchanwt;
-          }
-        }        
       }
       else{
         uInt ncorr  = ncorr_p[ddID];
@@ -7014,11 +6841,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
                 outData[datacol](corrind, c) = 0.0;
             }
           }
-        }
-        if(doImgWts_p){
-          if(totslotwt > 0.0)
-            for(uInt c = 0; c < nchan; ++c)
-              outImagingWeight[c] /= totslotwt;
         }
       }
 
@@ -7070,8 +6892,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         msc_p->floatData().put(orn, outFloatData);
       if(doSpWeight)
         msc_p->weightSpectrum().put(orn, outSpWeight);
-      if(doImgWts_p)
-        msc_p->imagingWeight().put(orn, outImagingWeight);
       
       // And it's a good idea in general (always?), since it avoids arrays that
       // hold all of the output rows.

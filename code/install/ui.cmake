@@ -345,6 +345,12 @@ macro( casa_add_tools out_idl out_sources )
 
     set( ${out_sources} ${${out_sources}} ${_outputs} )
 
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
+             DESTINATION include/casa/xmlcasa/${_base} )
+
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
+             DESTINATION include/casa/impl )
+
     # Create tool documentation
     if ( NOT ${_base} STREQUAL plotms )    # because there is already a plotms task, and there would be a name conflict!
 	casa_add_doc( ${_xml} ${CASA_DOC_DIR} tool )
@@ -375,13 +381,29 @@ macro( casa_idl outfiles input )
     set( _outputs "" )
 
     foreach( _t ${_types} )     
-      set( _outputs ${_outputs}
+      list( APPEND _outputs
         Python_Converter/${_t}_python.h
         Python_Converter/${_t}_python.cc
         )
 
+      if( NOT ${_t} MATCHES "(^shape_type|Vec)$" )
+          # This condition matches which files ccmtools outputs
+
+          list( APPEND _outputs
+                impl/casac/${_t}.h )
+          install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/casac/${_t}.h
+                   DESTINATION include/casa/impl/casac )
+          install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/casac/${_t}.h
+                   DESTINATION include/casa/casac )
+      endif()
+
+      list( APPEND _outputs
+            CCM_Local/casac/${_t}.h )
+      install( FILES ${CMAKE_CURRENT_BINARY_DIR}/CCM_Local/casac/${_t}.h
+               DESTINATION include/casa/CCM_Local/casac )
+
     endforeach()
-     
+
     casa_ccmtools(
       INPUT ${_idl}
       OUTPUT ${_outputs}
@@ -412,6 +434,7 @@ macro( casa_pybinding outfiles )
   set( ${outfiles} 
     pybinding/Python_Converter/casac_python.cc
     pybinding/Python_Converter/casac_python.h
+    pybinding/impl/casac/casac.h
     )
 
   casa_ccmtools(
@@ -425,6 +448,9 @@ macro( casa_pybinding outfiles )
     # input files, and therefore does *not* need to be regenerated 
     # whenever an input file changes (which takes much time). The
     # output only depends on the input filenames.
+
+  install( FILES ${CMAKE_CURRENT_BINARY_DIR}/pybinding/impl/casac/casac.h
+           DESTINATION include/casa/impl/casac )
 
 endmacro()
 

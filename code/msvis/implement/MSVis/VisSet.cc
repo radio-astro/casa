@@ -568,13 +568,13 @@ Int VisSet::numberCoh() const
 
 void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 
-    // Add and initialize calibration set (comprising a set of CORRECTED_DATA, 
-    // MODEL_DATA and IMAGING_WEIGHT columns) to the MeasurementSet.
+    // Add and initialize calibration set (comprising a set of CORRECTED_DATA 
+    // and MODEL_DATA columns) to the MeasurementSet.
     
     LogSink logSink;
     LogMessage message(LogOrigin("VisSet","addCalSet"));
     
-    message.message("Adding MODEL_DATA (initialized to unity), CORRECTED_DATA (initialized to DATA) and IMAGING_WEIGHT columns");
+    message.message("Adding MODEL_DATA (initialized to unity) and CORRECTED_DATA (initialized to DATA) columns");
     logSink.post(message);
     
     {
@@ -696,37 +696,8 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
         };
         MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
 
-        // Add the IMAGING_WEIGHT column
-        TableDesc tdImWgt, tdImWgtComp, tdImWgtScale;
-        CompressFloat* ccImWgt=NULL;
-        String colImWgt=MS::columnName(MS::IMAGING_WEIGHT);
-
-        tdImWgt.addColumn(ArrayColumnDesc<Float>(colImWgt,"imaging weight", 1));
-        IPosition imwgtTileShape = dataTileShape.getLast(2);
-        if (compress) {
-            tdImWgtComp.addColumn(ArrayColumnDesc<Short>(colImWgt+"_COMPRESSED",
-                                                         "imaging weight compressed",
-                                                         1));
-            tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_SCALE"));
-            tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_OFFSET"));
-            ccImWgt = new CompressFloat(colImWgt, colImWgt+"_COMPRESSED",
-                                        colImWgt+"_SCALE", colImWgt+"_OFFSET", True);
-
-            StandardStMan imwgtScaleStMan("ImWgtScaleOffset");
-            ms.addColumn(tdImWgtScale, imwgtScaleStMan);
-
-            TiledShapeStMan imwgtCompStMan("", imwgtTileShape);
-            ms.addColumn(tdImWgtComp, imwgtCompStMan);
-            ms.addColumn(tdImWgt, *ccImWgt);
-
-        } else {
-            TiledShapeStMan imwgtStMan("", imwgtTileShape);
-            ms.addColumn(tdImWgt, imwgtStMan);
-        };
-        MeasurementSet::addColumnToDesc(td, MeasurementSet::IMAGING_WEIGHT, 1);
         if (ccModel) delete ccModel;
         if (ccCorr) delete ccCorr;
-        if (ccImWgt) delete ccImWgt;
 
         /* Set the shapes for each row
            and initialize CORRECTED_DATA to DATA
@@ -734,7 +705,6 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
         */
         ArrayColumn<Complex> modelData(ms, "MODEL_DATA");
         ArrayColumn<Complex> correctedData(ms, "CORRECTED_DATA");
-        ArrayColumn<Float> imagingWeight(ms, "IMAGING_WEIGHT");
 
         // Get data description column
         ROScalarColumn<Int> dd_col = MSMainColumns(ms).dataDescId();
@@ -761,7 +731,6 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 
             correctedData.setShape(row, rowShape);
             modelData.setShape(row, rowShape);
-            imagingWeight.setShape(row, rowShape.getLast(1));
 
             Matrix<Complex> vis(rowShape);
 
@@ -837,13 +806,12 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 }
 
 void VisSet::removeCalSet(MeasurementSet& ms) {
-  // Remove an existing calibration set (comprising a set of CORRECTED_DATA, 
-  // MODEL_DATA and IMAGING_WEIGHT columns) from the MeasurementSet.
+  // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
+  // and MODEL_DATA columns) from the MeasurementSet.
 
-  Vector<String> colNames(3);
+  Vector<String> colNames(2);
   colNames(0)=MS::columnName(MS::MODEL_DATA);
   colNames(1)=MS::columnName(MS::CORRECTED_DATA);
-  colNames(2)=MS::columnName(MS::IMAGING_WEIGHT);
 
   for (uInt j=0; j<colNames.nelements(); j++) {
     if (ms.tableDesc().isColumn(colNames(j))) {

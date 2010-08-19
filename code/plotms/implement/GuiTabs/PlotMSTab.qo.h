@@ -34,6 +34,7 @@
 #include <QLabel>
 #include <QList>
 #include <QToolButton>
+#include <QGroupBox>
 
 #include <casa/namespace.h>
 
@@ -96,23 +97,39 @@ protected:
     QMap<QLabel*, QString> itsLabelDefaults_;
     
     
-    // Updates the text for the given label using the given changed flag.
-    // Uses the static changedText method along with the label default text in
-    // itsLabelDefaults_.
-    void changedText(QLabel* label, bool changed);
-    
-    
-    // Returns the given text altered as required by the changed flag.  If
-    // changed is false, the text is not changed (except to replace spaces with
-    // &nbsp;); if changed is true, the text is made red.
+    // These alter the displayed text of 
+    // Some widget types have a .title not a .text, and there's no
+    // Qt4 abstract class that encompasses all types that do have .text,
+    // so we overload highlightWidgetText for several classes.
+    // Note that the Button version is meant for QCheckBox and QRadioButton,
+    // and probably isn't as useful for pushbuttons.
+    // Note: was formerly named changedText(). Name and purpose was unclear.
     // <group>
-    static QString changedText(const QString& text, bool changed);
-    static QString changedText(const String& text, bool changed) {
+    void highlightWidgetText(QLabel* label,  bool highlight);
+    void highlightWidgetText(QGroupBox *box,  bool highlight);
+    void highlightWidgetText(QAbstractButton *but,  bool highlight);
+    // </group>
+    
+    
+    // Returns the given text altered with HTML tags for highlighting,
+    // meant to be assigned to a Qt widget's title or similar property.
+    // If highlight is false, the text is returned stripped of any HTML.
+    // If highlighted, the text is made red using a <font> tag.
+    // <group>
+    static QString highlightifyText(const QString& text, bool highlight);
+    
+    // Variation taking a casacore String.
+    static QString highlightifyText(const String& text, bool changed)  {
         QString str(text.c_str());
-        return changedText(str, changed); }
-    static QString changedText(const char* text, bool changed) {
+        return highlightifyText(str, changed); }
+        
+    // Variation of highlightifyText taking plain C-style text.
+    static QString highlightifyText(const char* text, bool changed)  {
         QString str(text);
-        return changedText(str, changed); }
+        return highlightifyText(str, changed); }
+        
+
+      
     // </group>
 };
 

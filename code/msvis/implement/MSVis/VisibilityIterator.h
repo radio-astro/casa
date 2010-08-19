@@ -511,8 +511,7 @@ public:
   // Returns True in convert if given spw was not observed 
   // in the LSRK frame
   void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert);
-  //assign a VisImagingWeight object to this iterator...necessary if no scracth
-  //imaging_weight column exists
+  //assign a VisImagingWeight object to this iterator
   void useImagingWeight(const VisImagingWeight& imWgt);
   //return number  of Ant 
   Int numberAnt();
@@ -662,7 +661,6 @@ protected:
   mutable Vector<Double> allTimeInterval;
   ROArrayColumn<Float> colWeight;
   ROArrayColumn<Float> colWeightSpectrum;
-  ROArrayColumn<Float> colImagingWeight;
   ROArrayColumn<Complex> colVis;
   ROArrayColumn<Float> colFloatVis;
   ROArrayColumn<Complex> colModelVis;
@@ -675,7 +673,7 @@ protected:
   mutable   Vector<Int> allScans;
   ROArrayColumn<Double> colUVW;
   mutable Matrix<Double> allUVW;
-  //object to calculate imaging weight in case of no imaging_weight column
+  //object to calculate imaging weight
   VisImagingWeight imwgt_p;
 
 };
@@ -840,9 +838,6 @@ public:
   // Set/modify the Sigma
   void setSigma(const Vector<Float>& sig);
 
-  // Set/modify the imaging weights
-  void setImagingWeight(const Matrix<Float>& wt);
-
   virtual void slurp() const;
 
 protected:
@@ -878,7 +873,6 @@ protected:
   ArrayColumn<Float> RWcolWeight;
   ArrayColumn<Float> RWcolWeightSpectrum;
   ArrayColumn<Float> RWcolSigma;
-  ArrayColumn<Float> RWcolImagingWeight;
   ArrayColumn<Bool> RWcolFlag;
   ScalarColumn<Bool> RWcolFlagRow;
 };

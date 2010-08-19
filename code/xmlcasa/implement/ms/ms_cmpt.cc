@@ -775,10 +775,6 @@ ms::statistics(const std::string& column,
                  vi.sigmaMat(static_cast<Matrix<Float>&>(data_float_chunk));
                  append<Float>(data_float, length, nrow, data_float_chunk, column);
              }
-             else if (column == "IMAGING_WEIGHT") {
-                 vi.imagingWeight(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
-             }
              else if (column == "ANTENNA1") {
                  vi.antenna1(static_cast<Vector<Int>&>(data_int_chunk));
                  append<Int>(data_int, length, nrow, data_int_chunk, column);

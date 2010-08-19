@@ -55,13 +55,13 @@ public:
     QString tabName() const { return "Export"; }
     
     // Implements PlotMSPlotSubtab::getValue().  Does nothing.
-    void getValue(PlotMSPlotParameters& params) const { }
+    void getValue(PlotMSPlotParameters& params) const { (void)params; }
     
     // Implements PlotMSPlotSubtab::setValue().  Does nothing.
-    void setValue(const PlotMSPlotParameters& params) { }
+    void setValue(const PlotMSPlotParameters& params) { (void)params; }
     
     // Implements PlotMSPlotSubtab::update().  Does nothing.
-    void update(const PlotMSPlot& plot) { }
+    void update(const PlotMSPlot& plot) { (void)plot; }
     
     
     // See PlotMSTab::currentlySetExportFormat().

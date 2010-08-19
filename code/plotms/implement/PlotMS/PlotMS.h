@@ -161,7 +161,7 @@ private:
 public:
     // Open the PlotMS object from an input MeasurementSet.
     // Optional compression of the calibration columns (MODEL_DATA,
-    // CORRECTED_DATA and IMAGING_WEIGHT) is supported.
+    // and CORRECTED_DATA) is supported.
     bool open(MeasurementSet& inputMS, Bool compress=true);
     
     void close(const Bool apply);

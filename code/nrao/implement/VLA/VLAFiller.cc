@@ -118,11 +118,9 @@ const String modDataCol = "modDataHyperColumn";
 const String corrDataCol = "corrDataHyperColumn";
 const String chanFlagCol = "flagChanHyperColumn";
 //====
-const String imagingWeightCol = "imagingWeightHyperColumn";
 const RecordFieldId sigmaTileId("SIGMA_HYPERCUBE_ID");
 const RecordFieldId dataTileId("DATA_HYPERCUBE_ID");
 const RecordFieldId flagTileId("FLAG_CATEGORY_HYPERCUBE_ID");
-const RecordFieldId imagingWeightTileId("IMAGING_WEIGHT_HYPERCUBE_ID");
 //=====new addition
 const RecordFieldId modDataTileId("MODEL_DATA_HYPERCUBE_ID");
 const RecordFieldId corrDataTileId("CORR_DATA_HYPERCUBE_ID");
@@ -176,7 +174,6 @@ VLAFiller::VLAFiller(MeasurementSet& output, VLALogicalRecord& input, Double fre
   itsTileId(),
   itsSigmaAcc(),
   itsFlagAcc(),
-  itsImagingWeightAcc(),
   itsModDataAcc(),
   itsCorrDataAcc(),
   itsChanFlagAcc(),
@@ -203,7 +200,6 @@ VLAFiller::VLAFiller(MeasurementSet& output, VLALogicalRecord& input, Double fre
   itsChanFlagAcc=TiledDataStManAccessor(itsMS,chanFlagCol);
   itsSigmaAcc = TiledDataStManAccessor(itsMS, sigmaCol);
   itsFlagAcc = TiledDataStManAccessor(itsMS, flagCol);
-  itsImagingWeightAcc = TiledDataStManAccessor(itsMS, imagingWeightCol);
   const uInt nShapes = itsDataAcc.nhypercubes();
   itsDataShapes.resize(nShapes);
   for (uInt s = 0; s < nShapes; s++) {
@@ -1390,8 +1386,6 @@ Bool VLAFiller::fillOne() {
 	  data().put(row, cData);
 	  correctedData().put(row,cData);
 	  modelData().put(row, modData);
-	  Vector<Float> imagingWgt(nChan, weights(0)/nChan);
-	  imagingWeight().put(row, imagingWgt);
 	  uInt a1Index = ant1*3, a2Index = ant2*3;
 	  if(isHolo) {
 	    blUvw=0.0;
@@ -1433,7 +1427,6 @@ emptyMS(const Path& tableName, const Bool overwrite) {
   //Scratch columns
   MeasurementSet::addColumnToDesc(msDesc, MeasurementSet::MODEL_DATA, 2);
   MeasurementSet::addColumnToDesc(msDesc, MeasurementSet::CORRECTED_DATA, 2);
-  MeasurementSet::addColumnToDesc(msDesc, MeasurementSet::IMAGING_WEIGHT, 1);
 
   // Add the tiled id column indices
   /*
@@ -1444,9 +1437,6 @@ emptyMS(const Path& tableName, const Bool overwrite) {
   msDesc.addColumn(ScalarColumnDesc<Int>(flagTileId.fieldName(),
 				     "Index for Flag Category tiling"));
   
-  msDesc.addColumn(ScalarColumnDesc<Int>(imagingWeightTileId.fieldName(),
-					 "Index for imaging weight  tiling"));
-
   msDesc.addColumn(ScalarColumnDesc<Int>(modDataTileId.fieldName(),
 				     "Index for Model Data tiling"));
   msDesc.addColumn(ScalarColumnDesc<Int>(corrDataTileId.fieldName(),
@@ -1511,15 +1501,6 @@ emptyMS(const Path& tableName, const Bool overwrite) {
     const Vector<String> idCols(1, flagTileId.fieldName());
     //   msDesc.defineHypercolumn(flagCol, 4, dataCols, coordCols, idCols);
     msDesc.defineHypercolumn(flagCol, 4, dataCols);
-  }
-  
-  {
-    const Vector<String> dataCols
-      (1, MeasurementSet::columnName(MeasurementSet::IMAGING_WEIGHT));
-    const Vector<String> coordCols(0);
-    const Vector<String> idCols(1, imagingWeightTileId.fieldName());
-    //   msDesc.defineHypercolumn(imagingWeightCol, 2, dataCols, coordCols, idCols);
-     msDesc.defineHypercolumn(imagingWeightCol, 2, dataCols);
   }
   
   Table::TableOption option = Table::NewNoReplace;
@@ -1601,16 +1582,6 @@ emptyMS(const Path& tableName, const Bool overwrite) {
     newMS.bindColumn(MeasurementSet::
  		     columnName(MeasurementSet::WEIGHT), dataMan2);
     //  newMS.bindColumn(sigmaTileId.fieldName(), dataMan);
-  }
-  
-  {
-    // TiledDataStMan dataMan(imagingWeightCol);
-    TiledShapeStMan dataMan(imagingWeightCol, IPosition(2,tileShape(1), tileShape(2)));
-
-    newMS.bindColumn(MeasurementSet::
- 		     columnName(MeasurementSet::IMAGING_WEIGHT), dataMan);
-
-    // newMS.bindColumn(imagingWeightTileId.fieldName(), dataMan);
   }
   
   {
@@ -2299,11 +2270,6 @@ void  VLAFiller::extendHypercubes(const Block<uInt>& nPol,
       itsFlagAcc.extendHypercube(rows, itsTileId);
       itsTileId.removeField(flagTileId);
     }
-    {
-      itsTileId.define(imagingWeightTileId, static_cast<Int>(10*nChan[s]));
-      itsImagingWeightAcc.extendHypercube(rows, itsTileId);
-      itsTileId.removeField(imagingWeightTileId);
-    }
   }
 }
 
@@ -2312,7 +2278,6 @@ void  VLAFiller::addHypercubes(uInt nPol, uInt nChan) {
   DebugAssert(nPol > 0 && nPol <= 4, AipsError);
   Bool addDataCube = True;
   Bool addSigmaCube = True;
-  Bool addImagingWeightCube=True;
   uInt s = itsDataShapes.nelements();
   while (addDataCube && s > 0) {
     s--;
@@ -2323,9 +2288,6 @@ void  VLAFiller::addHypercubes(uInt nPol, uInt nChan) {
     if (curShape(0) == static_cast<Int>(nPol) && 
 	curShape(1) == static_cast<Int>(nChan)) {
       addDataCube = False;
-    }
-    if (curShape(1) == static_cast<Int>(nChan)) {
-      addImagingWeightCube = False;
     }
     
     DebugAssert(addDataCube || !addSigmaCube, AipsError);
@@ -2342,19 +2304,7 @@ void  VLAFiller::addHypercubes(uInt nPol, uInt nChan) {
 			       IPosition(2, nPol, rowTiles),
 			       itsTileId);
     }
-    
-    //  if (addImagingWeightCube)
-    {
-      itsTileId.define(imagingWeightTileId, static_cast<Int>(10*nChan));
-      // 1 MB tile size
-      uInt rowTiles = 131072 / nChan;
-      if (rowTiles < 1) rowTiles = 1;
-      itsImagingWeightAcc.addHypercube(IPosition(2, nChan, 0), 
-			       IPosition(2, nChan, rowTiles),
-			       itsTileId);
-      itsTileId.removeField(imagingWeightTileId);
-    }
-    
+        
     itsTileId.define(dataTileId, static_cast<Int>(10*nChan + nPol));
     // 1 MB tile size
     uInt rowTiles = 131072 / nChan / nPol;

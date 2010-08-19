@@ -2119,6 +2119,8 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
 
     if ((mode == 'mfs') and (nterms > 1)): 
         alg = 'msmfs';
+        if(imagermode == 'mosaic'): 
+               raise Exception, 'msmfs (nterms>1) not allowed with imagermode=' + imagermode + '. For now, msmfs automatically performs cs-clean type iterations';
         if (multifield): addMultiField = True;
 
 #    if (gridmode == 'widefield'): alg='mfclark';
@@ -2140,7 +2142,7 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
 # if facets > 1 && mutliscale ==> fail
 
 
-    if (addMultiField and (alg[0:2] != 'mf')):  alg = 'mf' + alg;
+    if (addMultiField and (alg[0:2] != 'mf') and (alg != 'msmfs')):  alg = 'mf' + alg;
     return alg;
 
 # Function to compute Calculate alpha
