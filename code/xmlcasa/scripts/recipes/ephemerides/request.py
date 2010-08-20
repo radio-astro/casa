@@ -1,11 +1,30 @@
 import os
+import re
 import smtplib
 import socket
+import time
 from email.mime.text import MIMEText
 
 ## # This seems like overkill just to get me and qa.
 ## from taskinit import *
 ## im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
+
+"""
+Utilities for having JPL-Horizons ephemerides mailed to you (or your enemies).
+See JPL_ephem_reader.py for doing something with them.
+
+Examples:
+
+import recipes.ephemerides.request as jplreq
+
+for thing in jplreq.objnums:
+    jplreq.request_from_JPL(thing, '2011-12-31')
+
+# A trick to avoid fast moving objects:
+for thing in jplreq.objnums:
+    if thing not in jplreq.default_date_incrs:
+        jplreq.request_from_JPL(thing, '2011-12-31')
+"""
 
 # A map from object names to numbers that JPL-Horizons will recognize without
 # fussing around with barycenters, substrings, etc..
@@ -92,14 +111,36 @@ objnums = {'ceres':      1,
            'hydra':      903
 }
 
+should_have_orientation = ['mars', 'jupiter', 'uranus', 'neptune', 'ariel', 'miranda']
+should_have_sublong = ['mars']
+
+# Getting positions once a day is not enough for many moons, if the position of
+# the moon relative to its primary will be needed.  Note that a maximum
+# suitable increment is imposed by Earth's motion.
+default_date_incrs = {
+    'default': "1 d",  # The default default.
+    'ariel': '0.5d',
+    'cordelia': '0.05d',
+    'deimos': '0.25d',
+    'dione': '0.5d',
+    'enceladus': '0.25d',
+    'io': '0.25d',
+    'janus': '0.1d',
+    'mimas': '0.2d',
+    'miranda': '0.25 d',
+    'phobos': '0.05d',
+    'tethys': '0.4d'
+    }
+
 def request_from_JPL(objnam, enddate,
                      startdate=None,
-                     date_incr="1 d",
+                     date_incr=None,
                      get_axis_orientation=None,
                      get_sub_long=None,
                      obsloc="",
                      return_address=None,
-                     mailserver=None):
+                     mailserver=None,
+                     use_apparent=True):
     """
     Request an ASCII ephemeris table from JPL-Horizons for a Solar System
     object.  If all goes well it should arrive by email in a few minutes to
@@ -120,19 +161,24 @@ def request_from_JPL(objnam, enddate,
         The increment between dates in the ephemeris.  casapy's setjy
         task and me tool automatically interpolate.  It can be a (time) quantity
         or a string (which will be interpreted as if it were a quantity).
+        
+        Unlike the JPL email interface, this does not need it to be an integer
+        number of time units.  request_from_JPL() will do its best to convert
+        it to fit JPL's required format.
+        
         Default: 1 Earth day.
     get_axis_orientation:
         Request the orientation of the object's polar axis relative to the line
         of sight.  This is needed (along with the flattening) if treating the
         disk as an ellipse, but it is often unavailable.
         True or False
-        Default: a guess based on objnam.
+        Defaults to whether or not objnam is in should_have_orientation.
     get_sub_long:
         Request the planetographic (geodetic) longitudes and latitudes of the
         subobserver and sub-Solar points.  Only needed if the object has
         significant known surface features.
         True or False
-        Default: a guess based on objnam.
+        Defaults to whether or not objnam is in should_have_sublong.
     obsloc:
         Observatory name, used to get topocentric coordinates.
         Obviously not all observatories are recognized.
@@ -143,18 +189,24 @@ def request_from_JPL(objnam, enddate,
     mailserver:
         The computer at _your_ end to send the mail from.
         Default: a semi-intelligent guess.
+    use_apparent:
+        Get the apparent instead of J2000 RA and Dec.  No refraction by Earth's
+        atmosphere will be applied; MeasComet assumes apparent directions and
+        JPL_ephem_reader would be confused if both apparent and J2000
+        directions were present.
+        Default: True
     """
     lobjnam = objnam.lower()
 
     # Handle defaults
     if get_axis_orientation == None:        # remember False is valid.
-        if lobjnam in ['mars', 'jupiter', 'uranus', 'neptune']:
+        if lobjnam in should_have_orientation:
             get_axis_orientation = True
         else:
             get_axis_orientation = False
 
     if get_sub_long == None:                # remember False is valid.
-        if lobjnam in ['mars']:
+        if lobjnam in should_have_sublong:
             get_sub_long = True
         else:
             get_sub_long = False
@@ -180,6 +232,10 @@ def request_from_JPL(objnam, enddate,
         syr, smon, s_d, s_h, smin, s_s, swday, syday, sisdst = time.gmtime()
         startdate = "%d-%02d-%02d" % (syr, smon, s_d)
 
+    if not date_incr:
+        date_incr = default_date_incrs.get(lobjnam,
+                                           default_date_incrs['default'])
+
     # Get to work.
     if not objnums.has_key(lobjnam):
         print objnam, "is not in the objnums dictionary.  Try looking it up at"
@@ -193,7 +249,9 @@ def request_from_JPL(objnam, enddate,
         print "Defaulting to geocentric."
     center = '500@399'
 
-    quantities = [1, 10, 14, 15, 17, 19, 20, 24]
+    quantities = [2, 10, 14, 15, 17, 19, 20, 24]
+    if not use_apparent:
+        quantities[0] = 1
     if not get_axis_orientation:
         quantities.remove(17)
     if not get_sub_long:
