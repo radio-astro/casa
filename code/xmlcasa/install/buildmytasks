@@ -70,6 +70,9 @@ INFOFILE=/tmp/.casapy.taskinfo
 SAXONJAR=${CASAARCH}/lib/saxon8.jar
 if [[ ! -e ${SAXONJAR} ]]; then
    SAXONJAR=${CASAROOT}/java/saxon8.jar
+   if [[ ! -e ${SAXONJAR} ]] ; then
+      SAXONJAR=${CASAROOT}/lib/saxon8.jar
+   fi
 fi
 SAXON="java -jar ${SAXONJAR}"
 cp /dev/null ${INFOFILE}
