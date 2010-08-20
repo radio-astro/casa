@@ -467,7 +467,7 @@ macro( casa_add_doc xml prefix type )
 
     # Create htex
     set( _htex  ${prefix}/helpfiles/${_base}.htex )
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2latex.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2tlatex.xsl )
 
     add_custom_command(
       OUTPUT ${_htex}

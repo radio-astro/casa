@@ -275,7 +275,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="doubleArray" name="cell" units="arcsec">
-    <description>x &amp; y cell size(s). Default unit arcsec.</description>
+    <description>x and y cell size(s). Default unit arcsec.</description>
     <value type="vector"><value>1.0</value></value>
     </param>
 <!--========================================================= -->
@@ -616,7 +616,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-
        The clean task has many options:
  
         1)  Make 'dirty' image and 'dirty' beam (psf)
@@ -1145,7 +1144,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          2 20 20 40 40
                  then [45 66 123 124] is assigned to first field (imagename[0], or first line
                  of outlierfile).
-                
   </example>
 
 </task>

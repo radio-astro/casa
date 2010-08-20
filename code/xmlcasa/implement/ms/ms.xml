@@ -334,7 +334,7 @@ weight               &amp; \all  &amp; \none  &amp; \bul    &amp; \bul    &amp; 
 
 <example>
 Example:
-\begin{verbatim}
+
 ms.open("3C273XC1.MS",nomodify=False)
 ms.selectinit(datadescid=0)
 ms.select({'antenna1':[1,3,5],'uvdist':[1200.,1900.]})
@@ -342,7 +342,7 @@ rec=ms.getdata(["weight","data"])
 # modify rec['weight'] and rec['data'] values as desired
 ms.putdata(rec)
 ms.close()
-\end{verbatim}
+
 
 We open the MS for writing, select an array and spectral window
 and then select a few antennas and a uv range. We then get out
@@ -551,9 +551,9 @@ the ms definition itself. -->
     wrong, like an error in a file name.
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.fromfits("3C273XC1.MS", "3C273XC1.fits")
-    \end{verbatim}
+    
   </example>
 </method>
 -->
@@ -614,9 +614,9 @@ the ms definition itself. -->
     wrong, like an error in a file name.
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.fromfits("3C273XC1.MS", "3C273XC1.fits")
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -680,10 +680,10 @@ the ms definition itself. -->
 
   </description>
   <example>
-    \begin{verbatim}
+    
       include 'ms.g'
       myms = sdfitstoms("dishdemo1.ms", "dishdemo1.fits")
-    \end{verbatim}
+    
   </example>
 </method>
 -->
@@ -707,11 +707,11 @@ the ms definition itself. -->
   </description>
   <returns type="int"/>
   <example>
-    \begin{verbatim}
+    
       ms.open('3C273XC1.MS')
       print "Number of rows in ms =", ms.nrow()
       #Number of rows in ms = 7669
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -727,14 +727,14 @@ the ms definition itself. -->
   </description>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       ms.open('3C273XC1.MS',nomodify=False)
       if ms.iswritable():
         print "MeasurementSet is writable"
       else:
         print "MeasurementSet is readonly"
       #MeasurementSet is writable
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -771,11 +771,11 @@ the ms definition itself. -->
     the server does not have to be restarted.-->
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.open('3C273XC1.MS')
       ms.close()
       ms.open("anotherms", nomodify=False, lock=False)
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -814,11 +814,11 @@ the ms definition itself. -->
   </description>
   <returns type="string"/>
   <example>
-    \begin{verbatim}
+    
       
       ms.open('3C273XC1.MS')
       print "Processing file", ms.name()
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -882,14 +882,14 @@ the ms definition itself. -->
     may delete the selected measurement set and keep the original one.
   </description>
   <example>
-    \begin{verbatim}
+    
       NOT IMPLEMENTED!!!
       ms.open('3C273XC1.MS')
       subms = ms.command('3C273XC1-dd1.ms', 'DATA_DESC_ID == 0')
       print 'The original ms has', ms.nrow(), 'rows.'
       print 'The selected one has', subms.nrow(), 'rows.'
       subms.close()
-    \end{verbatim}
+    
     In this example a new ms \tool, called subms, is created that
     accesses a newly created measurement set called
     \verb|3C273XC1-dd1.ms|. The new tool provides access only to the
@@ -908,7 +908,7 @@ the ms definition itself. -->
     set.
   </example>
   <example>
-    \begin{verbatim}
+    
       NOT IMPLEMENTED
       ms.open('3C273XC1.MS')
       subms = ms.command('3C273XC1-a12.ms', 
@@ -916,7 +916,7 @@ the ms definition itself. -->
       print 'The original ms has', ms.nrow(), 'rows.'
       print 'The selected one has', subms.nrow(), 'rows.'
       subms.close()
-    \end{verbatim}
+    
     This is identical to the previous example except that a more
     complex command has been used. In this case all the data from one
     baseline are selected. The baseline chosen corresponds to data
@@ -924,14 +924,14 @@ the ms definition itself. -->
     of the antenna sub-table of the measurement set.
   </example>
   <example>
-    \begin{verbatim}
+    
       NOT IMPLEMENTED!!!
       ms.open('3C273XC1.MS')
       subms = ms.command('3C273XC1-a12.ms',
                          'ANTENNA1 == ANTENNA2', nomodify=False)
       subms.
       subms.close()
-    \end{verbatim}
+    
     This example selects all the auto-correlations in the measurement
     set. The resultant ms tool will allow you to modify the
     data. Because the selected measurement set references the data in
@@ -1112,20 +1112,20 @@ the ms definition itself. -->
   </description>
 
   <example>
-    \begin{verbatim}
+    
       
       ms.open('3C273XC1.MS')
       ms.tofits('3C273XC1.fits', column='DATA'); 
       ms.done()
-    \end{verbatim}
+    
      This example writes  the observed data of a measurement set to a 
      \uvfits\ file.
-\begin{verbatim}
+
       
       ms.open('big.ms')
       ms.tofits('part.fits', column='CORRECTED', field=[0,1], spw=[2]); 
       ms.done()
-    \end{verbatim}
+    
      This example writes part (the first 2 fields and the third spectral 
      window) of the corrected data to the fits file.  
     
@@ -1167,7 +1167,7 @@ the ms definition itself. -->
     \end{description}
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open('3C273XC1.MS')
       outr=ms.summary(verbose=True)
@@ -1175,7 +1175,7 @@ the ms definition itself. -->
       print qa.time(qa.quantity(outr['header']['BeginTime'],'d'), form='ymd')
       ###print  a dictionary of the info of scan 1
       outr['header']['scan_1']
-    \end{verbatim}
+    
     This example will send a verbose summary of the measurement
     set to the logger.
   </example>
@@ -1191,10 +1191,10 @@ the ms definition itself. -->
   </description>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       ms.open('3C273XC1.MS')
       ms.listhistory()
-    \end{verbatim}
+    
     The history table contents are listed in the logger.
   </example>
 </method>
@@ -1242,11 +1242,11 @@ the ms definition itself. -->
     application is 'ms' and the input parameters field is empty.
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.open('3C273XC1.MS')
       ms.writehistory('an arbitrary history message')
       ms.listhistory()
-    \end{verbatim}
+    
     A row is appended to the measurement set history table.
   </example>
 </method>
@@ -1325,11 +1325,11 @@ the ms definition itself. -->
     which derived real value is used for the statistics computation.
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS")
       ms.statistics(column="DATA", antenna="2")
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -1396,7 +1396,7 @@ the ms definition itself. -->
     calibrator tools.
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS")
       ms.selectinit(datadescid=0)
@@ -1406,7 +1406,7 @@ the ms definition itself. -->
 #                    14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]),
 # 'time': array([  4.12162940e+09,   4.12164267e+09]),
 # 'uvdist': array([   46.26912101,  3727.97385983])}
-    \end{verbatim}
+    
     In this example the minimum and maximum observation times,
     uvdistances, data amplitudes are returned as well as a list of all the
     antennas in the antenna1 column. <!-- Note that the double quoted
@@ -1544,12 +1544,12 @@ F           &amp; Flag: `F' = flagged datum; ` ' = unflagged \\
   </description>
   <example>
 
-    \begin{verbatim}
+    
       ms.open('AZ136.ms')
       ms.lister()
-    \end{verbatim}
+    
     These commands yeild the following listing: 
-    \begin{verbatim}
+    
 Date/Time:                         RR:                      RL:                      LR:                      LL:                     
 2001/12/01/  Intrf UVDist Fld SpW      Amp   Phs       Wt F     Amp   Phs       Wt F     Amp   Phs       Wt F     Amp   Phs       Wt F
 ------------|-----|------|---|---|-------------------------|------------------------|------------------------|------------------------
@@ -1563,7 +1563,7 @@ Date/Time:                         RR:                      RL:                 
     .  
     .  
     .  
-    \end{verbatim}
+    
 
     Notice that the channel column is not displayed.  This measurement set
     contains only one channel; since the channel column values are uniform,
@@ -1627,13 +1627,13 @@ Date/Time:                         RR:                      RL:                 
     The datadescid must always be a non-negative integer.
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.open("3C273XC1.MS")
       ms.selectinit(datadescid=0)
       print ms.range(["uvdist"])
       ms.selectinit(reset=True)
       print ms.range("uvdist")
-    \end{verbatim}
+    
 
     In this example we display the range of uv distances for the data
     in the specified measurement set. The first print statement will
@@ -1682,7 +1682,7 @@ Date/Time:                         RR:                      RL:                 
     function (with reset=True).
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.open("3C273XC1.MS")
       ms.selectinit(datadescid=0)
       ms.select({'antenna1':[1,3,5],'uvdist':[1200.,1900.]})
@@ -1692,7 +1692,7 @@ Date/Time:                         RR:                      RL:                 
       rec = {}
       rec['time'] = [start, stop]
       ms.select(items=rec)
-    \end{verbatim}
+    
     This example selects all the data from the measurement set where
     the value in the DATA_DESC_ID column is zero. This
     corresponds to a particular spectral window and polarization
@@ -1743,7 +1743,7 @@ Date/Time:                         RR:                      RL:                 
 <!--    whereas the other commands in this tool use one-based indices. -->
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS")
       ms.selectinit(datadescid=0)
@@ -1752,7 +1752,7 @@ Date/Time:                         RR:                      RL:                 
       ms.range(["ANTENNA1","ANTENNA2"])
       # {'antenna1': array([2]),
       #  'antenna2': array([ 6,  9, 11, 18, 20, 21, 24])}
-    \end{verbatim}
+    
     This example selects all the data from the measurement set where
     the value in the DATA_DESC_ID column is zero. This
     corresponds to a particular spectral window and polarization
@@ -1828,12 +1828,12 @@ Date/Time:                         RR:                      RL:                 
     called for you with default arguments.
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.fromfits("NGC5921.MS",
                   "/usr/lib/casapy/data/demo/NGC5921.fits")
       ms.selectinit(datadescid=0)
       ms.selectchannel(3,2,5,3)
-    \end{verbatim}
+    
     This example selects all the data from the measurement set where
     the value in the DATA_DESC_ID column is zero. This
     corresponds to a particular spectral window and polarization
@@ -1879,13 +1879,13 @@ Date/Time:                         RR:                      RL:                 
     called for you with default arguments.
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS")
       ms.selectinit(datadescid=0)
       ms.selectpolarization(["I","V"])
       rec = ms.getdata("data")
-    \end{verbatim}
+    
     This example selects all the data from the measurement set where
     the value in the DATA_DESC_ID column is zero. This
     corresponds to a particular spectral window and polarization
@@ -2011,33 +2011,33 @@ Date/Time:                         RR:                      RL:                 
 
   </description>
   <example>
-    \begin{verbatim}
+    
       ms.fromfits("NGC5921.MS", "/usr/lib/casapy/data/demo/NGC5921.fits")
       ms.regridspw(outframe="LSRK")
-    \end{verbatim}
+    
     This example reads a measurement set and transforms its spectral axis to
     the LSRK reference frame.
-    \begin{verbatim}
+    
       ms.regridspw(outframe="BARY", mode="vrad", 
       center=73961800., chanwidth=50., bandwidth=1000.,
       restfreq=1420405750e6)
-    \end{verbatim}
+    
     In this example, all spectral windows in the MS will be transformed 
     to the BARY reference frame and then be regridded such that the center of the 
     new spectral window is at radio velocity = 73961800. m/s (BARY). If the bandwidth 
     of the observation is large enough the total width of the spectral window will
     be 1000 m/s, i.e. 20 channels of width 50 m/s, 10 on each side of the given
     center.
-    \begin{verbatim}
+    
       ms.regridspw(mode="vopt", restfreq=1420405750e6)
-    \end{verbatim}
+    
     In this example the channels are regridded such that they are
     equidistant in optical velocity. The reference frame and number of channels 
     is kept as is.
-    \begin{verbatim}
+    
       ms.regridspw(mode="chan", center=64, chanwidth=2,
       bandwidth=102)
-    \end{verbatim}
+    
     In this example, the channels are regridded such that the new bandwidth is
     102 of the original channels centered on the original channel 64, and the new
     channels are twice as wide as the original channels. 
@@ -2256,7 +2256,7 @@ Date/Time:                         RR:                      RL:                 
     calibrator tools.
   </description>
   <example>
-    \begin{verbatim}
+    
 ms.open("3C273XC1.MS")
 ms.selectinit(datadescid=0)
 # The following line causes an EXCEPTION
@@ -2311,7 +2311,7 @@ for i in range(len(tcoord)):
 # 4121642650.0 30.9974422455
 # 4121642660.0 31.0648326874
 # 4121642670.0 31.0638961792
-\end{verbatim}
+
 
     This example selects all the data from the
     measurement set where the value in the DATA_DESC_ID column is
@@ -2366,7 +2366,7 @@ for i in range(len(tcoord)):
     calibrator tools.
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS", nomodify=False)
       ms.selectinit(datadescid=0)
@@ -2377,7 +2377,7 @@ for i in range(len(tcoord)):
       print "Mean data value = ", meanrec
       rec['data'][:,:,:] -= meanrec
       ms.putdata(rec)
-    \end{verbatim}
+    
     This example selects all the data from the measurement set where
     the value in the DATA_DESC_ID column is zero. This
     corresponds to a particular spectral window and polarization
@@ -2437,12 +2437,12 @@ for i in range(len(tcoord)):
     fromfits function).
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS", nomodify=False)
       ms.concatenate("BLLAC.ms", '1GHz', '1arcsec')
       ms.done()
-    \end{verbatim}
+    
     This example appends the data from the BLLAC measurement set to
     the end of the 3C273 measurement set. Its going to assume a
     frequency tolerance of 1GHz and position tolerance of 1 arcsec in
@@ -2475,12 +2475,12 @@ for i in range(len(tcoord)):
     The new MS is renamed to the name of the original MS and then reopened.
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS", nomodify=False)
       ms.timesort()
       ms.done()
-    \end{verbatim}
+    
     This example sorts the main table of 3C273XC1.MS by time.
     The original MS is overwritten by the sorted one.
   </example>
@@ -2591,36 +2591,36 @@ for i in range(len(tcoord)):
   </description>
   <example>
   
-  \begin{verbatim}
+  
       
   ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
-  \end{verbatim}
+  
 
   In this example we split out data from the 1st field and 1st
   spectral window. The output data will have 10 channels which is
   taken from 50 channels from the input data starting at channel 0 and
   averaging every 5.
 
- \begin{verbatim}
+ 
       
   ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
- \end{verbatim}
+ 
 
 In this example we split out data from the 1st field and four spectral
 windows. The output data will have 4 spectral windows each of 10
 channels which is taken from 50 channels from the input data starting
 at channel 0 and averaging every 5.
 
-\begin{verbatim}
+
       
   ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10,10,30,40],
            start=[0,4,9,9], step=[1,10,5,2], whichcol='CORRECTED_DATA') 
-\end{verbatim}
+
 
 In this example we split out data from the 1st field and four spectral
 windows. There will be four spectral windows in the output data,
@@ -2632,11 +2632,11 @@ will consists of 10 channels and is formed by picking 100 channels
 from spwid 1 of the input data, starting at channel 4, and every
 10 channels to make one output channel.
 
-\begin{verbatim}     
+     
   ms.open("WSRT.ms")
   ms.split('subms.ms', timebin='20s', whichcol='all', ignorables='scan')
   ms.close()
-\end{verbatim}
+
 
 This example averages a WSRT MS into 20s bins, selecting whichever of
 DATA, MODEL_DATA, CORRECTED_DATA, or FLOAT_DATA, or LAG_DATA is present.
@@ -2754,7 +2754,7 @@ ignored for setting the bins.
     See the example below.
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open("3C273XC1.MS")
       ms.selectinit(datadescid=0)
@@ -2763,7 +2763,7 @@ ignored for setting the bins.
       rec=ms.getdata(["u","v","data"])
       ms.iternext()
       ms.iterend()
-    \end{verbatim}
+    
     We open the MS, select an array and spectral window and then
     specify an iteration over interferometer and time, with a 60s time
     interval.  We then set the iterator to the start of the data and
@@ -2799,11 +2799,11 @@ information which can not be represented in an SDFITS binary table.
 </description>
 
 <example>
-\begin{verbatim}
+
 # NOT IMPLEMENTED!!!
 ms.open('myfile.ms')          # open the MS
 ms.tosdfits("myfile.sdfits")  # write SDFITS file
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2830,13 +2830,13 @@ returns False.
 </description>
 
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS",nomodify=False)
 ms.createflaghistory(3)
 # 2008-05-27 22:28:03 WARN casa:::: FLAG_CATEGORY column already exists
 #  Out[13]: False
 
-\end{verbatim}
+
 
 We (try to) open the MS for writing and then create a FLAG\_HISTORY column with
 3 levels of flagging.
@@ -2864,7 +2864,7 @@ column. Copies to the current level by default and to a new level, if
 available, when newlevel=True
 </description>
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS",nomodify=False)
 ms.saveflags()
 # 2008-05-27 22:31:29 SEVERE  casa::ms::open 
@@ -2877,7 +2877,7 @@ ms.saveflags()
 # type 'exceptions.StandardError': RecordInterface: field FLAG_LEVEL is unknown
 
 
-\end{verbatim}
+
 
 We open the MS for writing and then (try to) copy the flags to the current
 level (see flaglevel() function) in the FLAG\_HISTORY column, 
@@ -2907,7 +2907,7 @@ back to the FLAG and FLAG\_ROW columns.
 See the example below.
 </description>
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS",nomodify=False)
 ms.restoreflags(2)
 # 2008-05-27 23:15:58 SEVERE  casa::ms::open 
@@ -2922,7 +2922,7 @@ ms.restoreflags(2)
 # type 'exceptions.StandardError': Table DataManager error:
 # Invalid operation: TSM: no array in row 0 of column FLAG_CATEGORY
 # in /home/aips2mgr/testing/3C273XC1.MS/table.f4
-\end{verbatim}
+
 
 We open the MS for writing and then (try to) copy the flags from level
 2 in the FLAG\_HISTORY column to the FLAG and FLAG\_ROW columns,
@@ -2943,7 +2943,7 @@ Return the currently active flagging level of the FLAG\_HISTORY
 column as specified by the FLAG\_LEVEL keyword of this column.
 </description>
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS")
 flaglev=ms.flaglevel()
 #2008-05-28 16:21:16     SEVERE  casa::ms::open  Exception Reported: RecordInterface: field FLAG_LEVEL is unknown
@@ -2954,7 +2954,7 @@ flaglev=ms.flaglevel()
 #
 #type 'exceptions.StandardError': RecordInterface: field FLAG_LEVEL is unknown
 #
-\end{verbatim}
+
 
 We open the MS and ask for the current flag level.
 </example>
@@ -2983,11 +2983,11 @@ Read the specified data item from the table, including its flags
 and keep the results in an internal buffer
 </description>
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS")
 ms.select({'antenna1':[3]})
 ms.fillbuffer("PHASE",True)
-\end{verbatim}
+
 
 <comments>
 We open the MS for reading, select a subset and then 
@@ -3030,7 +3030,7 @@ direction and over all pixels.
 </description>
 
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS")
 ms.select({'antenna1':[3]})
 ms.fillbuffer("DATA")
@@ -3043,7 +3043,7 @@ ms.diffbuffer("TIME",15)
 #       [ 0.32471114],
 #       [ 0.37952924],
 #       [ 2.60897708]])}
-\end{verbatim}
+
 
 <comments>
 We open the MS for reading, select a subset and then 
@@ -3069,12 +3069,12 @@ flags and buffer statistics (if a difference operation was performed).
 </description>
 
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS")
 ms.select({'antenna1':[3]})
 ms.fillbuffer("PHASE")
 rec=ms.getbuffer()
-\end{verbatim}
+
 
 <comments>
 We open the MS for reading, select a subset and then 
@@ -3111,7 +3111,7 @@ their deviation from the median. The cliplevel is specified in units of
 the corresponding average absolute deviation (a robust version of rms).
 </description>
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS")
 ms.select({'antenna1':[3]})
 ms.fillbuffer("DATA")
@@ -3125,7 +3125,7 @@ ms.clipbuffer(6,5,5)
 #/home/aips2mgr/testing/ipython console in module()
 #
 #type 'exceptions.StandardError': RecordInterface: field medTmeF is unknown
-\end{verbatim}
+
 
 <comments>
 We open the MS for reading, select a subset and
@@ -3153,14 +3153,14 @@ times this for channels and timeslots.
      returned by getbuffer(). The other fields in the record are ignored.
    </description>
    <example>
-     \begin{verbatim}
+     
      ms.open("3C273XC1.MS",False)
      ms.select({'antenna1':[3]})
      ms.fillbuffer("PHASE")
      rec=ms.getbuffer()
      rec['flag_row'][17]=True
      ms.setbufferflags(rec)
-     \end{verbatim}
+     
      <comments>
        We open the MS for reading, select a subset and
        read the data. We get the data into casapy, flag timeslot 17 and put
@@ -3178,7 +3178,7 @@ times this for channels and timeslots.
        table.
      </description>
      <example>
-       \begin{verbatim}
+       
        ms.open("3C273XC1.MS",False)
        ms.select({'antenna1':[3]})
        ms.fillbuffer("PHASE")
@@ -3186,7 +3186,7 @@ times this for channels and timeslots.
        rec['flag_row'][17]=True
        ms.setbufferflags(rec)
        ms.writebufferflags()
-       \end{verbatim}
+       
 
        <comments>
 	 We open the MS for reading, select a subset and
@@ -3210,7 +3210,7 @@ This can be used after the (final) clipping/flagging operations have
 been performed.
 </description>
 <example>
-\begin{verbatim}
+
 ms.open("3C273XC1.MS",False)
 ms.select({'antenna1':[3]})
 ms.fillbuffer("PHASE")
@@ -3219,7 +3219,7 @@ rec['flag_row'][17]=True
 ms.setbufferflags(rec)
 ms.writebufferflags()
 ms.clearbuffer()
-\end{verbatim}
+
 
 <comments>
 We open the MS for reading, select a subset and
@@ -3310,7 +3310,7 @@ for editing based on the rms fit will be added in the near future.
 
   </description>
   <example>
-    \begin{verbatim}
+    
  ms.fromfits('ngc5921.ms','/aips++/data/demo/NGC5921.fits')
  ms.close()
  cb.open('ngc5921.ms')  # add MODEL_DATA, CORRECTED_DATA columns
@@ -3319,7 +3319,7 @@ for editing based on the rms fit will be added in the near future.
  ms.continuumsub(fldid=2,fitspw='0:5~9;50~59',
                  solint=0.0,fitorder=1,mode='sub')
  ms.done()
-    \end{verbatim}
+    
     This example will fit a linear continuum to channels 5-9 and 50-59 in 
     spectral window 0 in each scan-averaged spectrum for field 2, and 
     store the result in the MODEL\_DATA column and subtract it from the 
@@ -3361,12 +3361,12 @@ for point sources, yields the correct flux density.
 
   </description>
   <example>
-    \begin{verbatim}
+    
       
       ms.open('ap366.ms'); 
       ms.ptsrc(fldid=[9,11],spwid=1)
       ms.done()
-    \end{verbatim}
+    
     This example calculates the point source flux density for field ids 9 \&amp; 11
 in spectral window 1.
 
@@ -3387,11 +3387,11 @@ in spectral window 1.
   </description>
 <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       ms.open("3C273XC1.MS")
       ...
       ms.done()
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -3458,7 +3458,7 @@ in spectral window 1.
  Utility function that will return the ids of the selection used. 
   </description>
   <example>
-    \begin{verbatim}
+    
      a= ms.msseltoindex(vis='3C273XC1.MS', field='3C*')
      print a['field']
      # [0]
@@ -3469,7 +3469,7 @@ in spectral window 1.
      #  'field': array([0]),
      #  'scan': array([], dtype=int32),
      #  'spw': array([], dtype=int32)}
-    \end{verbatim}
+    
 
   Field name '3C*', in this case 3C273, corresponds to field id 0.
 
@@ -3496,11 +3496,11 @@ in spectral window 1.
     to be flagged.
   </description>
   <example>
-    \begin{verbatim}
+    
     ms.open('ngc5921.ms',nomodify=False)
     ms.hanningsmooth('data')
     ms.close()
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -3525,17 +3525,17 @@ in spectral window 1.
   <example>
   The following example subtracts a model from the visibility data leaving
   the residuals in the corrected data column.
-    \begin{verbatim}
+    
    ms.open('ngc5921.ms',nomodify=False)
    ms.uvsub()
    ms.close()    
-    \end{verbatim}
+    
    The following example adds the model back into the residuals.
-    \begin{verbatim}
+    
    ms.open('ngc5921.ms',nomodify=False)
    ms.uvsub(reverse=True)
    ms.close()    
-    \end{verbatim}
+    
   </example>
 </method>
 

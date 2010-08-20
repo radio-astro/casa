@@ -440,7 +440,7 @@ intensity (constant).  Gaussian noise with a standard deviation of
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t imagepoltestimage Ex 1 \t----"
@@ -451,7 +451,7 @@ ia.statistics()
 #viewer()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
  
@@ -482,7 +482,7 @@ images.  You must therefore write the Complex image to disk.  The
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t complexlinpol Ex 1 \t----"
@@ -492,7 +492,7 @@ tb.open('cplx')
 #tb.browse()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -522,7 +522,7 @@ images.  You must therefore write the Complex image to disk.  The
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t complexfraclinpol Ex 1 \t----"
@@ -532,7 +532,7 @@ tb.open('cplx2')
 #tb.browse()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -596,7 +596,7 @@ You can get the depolarization ratio error image with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 #print "\t----\t depolratio Ex 1 \t----"
@@ -607,7 +607,7 @@ You can get the depolarization ratio error image with function
 #edpr.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -626,7 +626,7 @@ error.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t close Ex 1 \t----"
@@ -640,7 +640,7 @@ po.summary()            # No error
 po.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
  
@@ -663,7 +663,7 @@ This function is the same as close().
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t done Ex 1 \t----"
@@ -676,7 +676,7 @@ po.summary()          # No error
 po.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -752,7 +752,7 @@ would normally fall into the central bin.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fourierrotationmeasure Ex 1 \t----"
@@ -764,7 +764,7 @@ ia.statistics()
 #viewer()                     # And reorder to put RM along X-axis 
 #
 """
-\end{verbatim}
+
 </example>
 In this example we give two RM components and recover them.
 </method>
@@ -808,7 +808,7 @@ mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fraclinpol Ex 1 \t----"
@@ -818,7 +818,7 @@ flp.summary()
 flp.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -864,7 +864,7 @@ those components contribute to the total polarized intensity.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fractotpol Ex 1 \t----"
@@ -874,7 +874,7 @@ ftp.statistics()
 ftp.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -940,7 +940,7 @@ mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t linpolint Ex 1 \t----"
@@ -950,7 +950,7 @@ lpi.statistics()
 lpi.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -974,7 +974,7 @@ polarized position angle image ($0.5 \tan^{-1}(U/Q)$) in degrees.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t linpolposang Ex 1 \t----"
@@ -984,7 +984,7 @@ lppa.statistics()
 lppa.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1031,7 +1031,7 @@ parts are formed.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t makecomplex Ex 1 \t----"
@@ -1045,7 +1045,7 @@ po.makecomplex('qu.cplx2', real='q', imag='u')
 po.close()
 #
 """
-\end{verbatim}
+
 In this example we make two complex linear polarization
 images which should be identical.   
 </example>
@@ -1103,7 +1103,7 @@ with the new \imagefile, but this saves you the \tool\ creation.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t open Ex 1 \t----"
@@ -1111,7 +1111,7 @@ po.open('stokes.image')
 po.close()
 #
 """
-\end{verbatim}
+
 The {\stff open} function first closes the old \imagefile\ if one exists.
 </example>
 </method>
@@ -1180,7 +1180,7 @@ This argument can take the values:
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t pol Ex 1 \t----"
@@ -1190,7 +1190,7 @@ lpi.statistics()
 lpi.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1346,7 +1346,7 @@ the fit are written in the title.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t rotationmeasure Ex 1 \t----"
@@ -1356,7 +1356,7 @@ po.open('stokes.image')
 ok = po.rotationmeasure(rm='rm', rmerr='rmerr', rmmax=800, maxpaerr=10)
 #
 """
-\end{verbatim}
+
 
 Say we have 5 images, each with axes RA, DEC, Stokes, and Frequency in
 that order.  We use the Image \tool\ to concatenate these images
@@ -1394,7 +1394,7 @@ clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sigma Ex 1 \t----"
@@ -1403,7 +1403,7 @@ sigma = po.sigma()
 print "sigma=", sigma
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1466,8 +1466,8 @@ You can get the depolarization ratio image with function
 </description>
 
 <example>
-\begin{verbatim}
-\begin{verbatim}
+
+
 """
 #
 #print "\t----\t sigmadepolratio Ex 1 \t----"
@@ -1478,7 +1478,7 @@ You can get the depolarization ratio image with function
 #edpr.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1520,8 +1520,8 @@ with outliers from the mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
-\begin{verbatim}
+
+
 """
 #
 print "\t----\t sigmafraclinpol Ex 1 \t----"
@@ -1531,7 +1531,7 @@ sigflp.statistics()
 sigflp.done()           # free up resources
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1572,8 +1572,8 @@ with outliers from the mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
-\begin{verbatim}
+
+
 """
 #
 print "\t----\t sigmafractotpol Ex 1 \t----"
@@ -1583,7 +1583,7 @@ sigftp.statistics()
 sigftp.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1625,8 +1625,8 @@ with outliers from the mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
-\begin{verbatim}
+
+
 """
 #
 print "\t----\t sigmalinpolint Ex 1 \t----"
@@ -1635,7 +1635,7 @@ siglpi = po.sigmalinpolint()
 print "siglpi=", siglpi
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1677,8 +1677,8 @@ with outliers from the mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
-\begin{verbatim}
+
+
 """
 #
 print "\t----\t sigmalinpolposang Ex 1 \t----"
@@ -1688,7 +1688,7 @@ siglppa.statistics()
 siglppa.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1720,7 +1720,7 @@ are clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sigmastokes Ex 1 \t----"
@@ -1729,7 +1729,7 @@ sigq = po.sigmastokes('q', 10.0)
 print "sigq=", sigq
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1755,7 +1755,7 @@ level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sigmastokesi Ex 1 \t----"
@@ -1764,7 +1764,7 @@ sigi = po.sigmastokesi(10.0)
 print "sigi=", sigi
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1790,7 +1790,7 @@ level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sigmastokesq Ex 1 \t----"
@@ -1799,7 +1799,7 @@ sigq = po.sigmastokesq(10.0)
 print "sigq=", sigq
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1825,7 +1825,7 @@ are clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sigmastokesu Ex 1 \t----"
@@ -1834,7 +1834,7 @@ sigu = po.sigmastokesu(10.0)
 print "sigu=", sigu
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1860,7 +1860,7 @@ are clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sigmastokesv Ex 1 \t----"
@@ -1869,7 +1869,7 @@ sigv = po.sigmastokesv(10.0)
 print "sigv=", sigv
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1906,7 +1906,7 @@ with outliers from the mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sigmastotpolint Ex 1 \t----"
@@ -1915,7 +1915,7 @@ sigtpi = po.sigmatotpolint()
 print "sigtpi=", sigtpi
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1946,7 +1946,7 @@ specified Stokes only.  This interface can be useful for scripts.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t stokes Ex 1 \t----"
@@ -1956,7 +1956,7 @@ q.statistics()
 q.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1977,7 +1977,7 @@ This function returns an on-the-fly image tool containing Stokes I only.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t stokesi Ex 1 \t----"
@@ -1987,7 +1987,7 @@ i.statistics()
 i.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2008,7 +2008,7 @@ This function returns an on-the-fly image tool containing Stokes Q only.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t stokesq Ex 1 \t----"
@@ -2018,7 +2018,7 @@ q.statistics()
 q.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2039,7 +2039,7 @@ This function returns an on-the-fly image tool containing Stokes U only.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t stokesu Ex 1 \t----"
@@ -2049,7 +2049,7 @@ u.statistics()
 u.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2070,7 +2070,7 @@ This function returns an on-the-fly image tool containing Stokes V only.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t stokesv Ex 1 \t----"
@@ -2080,7 +2080,7 @@ v.statistics()
 v.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2100,7 +2100,7 @@ Currently it just summarizes the image to which the tool is attached.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t summary Ex 1 \t----"
@@ -2132,7 +2132,7 @@ po.summary()
 #
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2177,7 +2177,7 @@ mean clipped at the specified level.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t totpolint Ex 1 \t----"
@@ -2187,7 +2187,7 @@ tpi.statistics()
 tpi.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2215,14 +2215,14 @@ before you start applying Imagepol \toolfunctions.
 </description>  
 
 <example>
-\begin{verbatim}
+
 - p=imagepol('myimage')
 - is_imagepol(p)
 T 
 - p2 = [10,20]   
 - is_imagepol(p2)   
 F
-\end{verbatim}
+
 </example>
 </task>
  
@@ -2257,17 +2257,17 @@ integers.
 </description>
 
 <example>
-\begin{verbatim}
+
 - imagepoltest()
-\end{verbatim}
+
 
 Runs all tests.
 </example>
 
 <example>
-\begin{verbatim}
+
 - imagepoltest(2)
-\end{verbatim}
+
 
 Runs test 2.
 """

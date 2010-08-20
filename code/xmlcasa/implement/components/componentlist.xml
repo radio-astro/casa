@@ -74,10 +74,10 @@ function.
 <returns type="casacomponentlist">A componentlist tool</returns>
 
 <example>
-\begin{verbatim}
+
 include 'componentlist.g'
 cl := emptycomponentlist();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -124,10 +124,10 @@ cl := emptycomponentlist();
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
 include 'componentlist.g'
 cl := componentlist('crux.cl');
-\end{verbatim}
+
 </example>
 </method>
 
@@ -348,10 +348,10 @@ have chosen to represent these as actual sizes.
 <returns type="int">Number of components found</returns>
 
 <example>
-\begin{verbatim}
+
 mycl := asciitocomponentlist('sgra-stars.cl', 'sgra-stars.stfile', refer='j2000', 
 format='ST')
-\end{verbatim}
+
 </example>
 <comments>
 This takes an AIPS stars file in J2000 positions, and converts the
@@ -398,7 +398,7 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
        cl.addcomponent(flux=1.0, dir='J2000 19h00m00 -40d00m00')
        cl.addcomponent(flux=2.0, dir='J2000 19h10m00 -40d00m00')
        cl.addcomponent(flux=3.0, dir='J2000 19h00m00 -40d00m00')
@@ -412,8 +412,8 @@ and available in Glish as mycl.
     that was initially empty. These components are then saved to the
     table called part_list.cl.
 
-    \end{verbatim}
-\begin{verbatim}
+    
+
       cl.close() ### make sure we start with empty componentlist
       cl.concatenate('crux.cl', [0,2]);
       cl.rename('crux-copy.cl');
@@ -424,7 +424,7 @@ and available in Glish as mycl.
     that was initially empty. These components are then saved to the
     table called crux-copy.cl.
 
-    \end{verbatim}
+    
   </example>
 
 
@@ -453,14 +453,14 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       
       cl2 = cltool.create();
      
       cl2.fromrecord(ia.findsources())
       cl2.rename('sourcesfound.cl');
       cl2.done()
-    \end{verbatim}
+    
   </example>
   <comments>
     This example uses the image analysis tool source finding function that returns a componentlist record. A componentlist tool is created and the componentlist is saved to disk.
@@ -485,14 +485,14 @@ and available in Glish as mycl.
   </input>
   <returns type="any"><any type="record"/>Componentlist tool </returns>
   <example>
-    \begin{verbatim}
+    
       cl2=cltool.create()
       cl.open('mycomp.cl');
      
       cl2.fromrecord(ia.deconvolvecomponentlist(cl.torecord()))
       cl2.rename('deconvolved_sources.cl');
       cl2.done()
-    \end{verbatim}
+    
   </example>
   <comments>
     This example uses the image analysis tool to deconvolve the components in componentlist 'mycomp.cl' and stores the resultant componentlist in 'deconvolved_sources.cl'
@@ -543,11 +543,11 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.remove(1);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a componentlist from an \aipspp\ table and
@@ -573,12 +573,12 @@ and available in Glish as mycl.
   </description>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.remove(1);
       cl.purge();
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a componentlist from a table and removes the first
@@ -609,12 +609,12 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.remove(1);
       cl.recover();
-    \end{verbatim}
+    
   </example>
   <comments> 
     This example reads a componentlist from a table and removes the
@@ -635,11 +635,11 @@ and available in Glish as mycl.
   </description>
   <returns type="int"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := emptycomponentlist();
       n := cl.length();
-    \end{verbatim}
+    
   </example>
   <comments>
     This example creates an empty componentlist. Hence the variable
@@ -661,7 +661,7 @@ and available in Glish as mycl.
   </description>
   <returns type="intArray"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       allcomp := cl.indices();
@@ -671,7 +671,7 @@ and available in Glish as mycl.
       for (i in allcomp) {
         totalflux +:= cl.getfluxvalue(i);
       }
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a componentlist from disk and then proceeds to
@@ -721,11 +721,11 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.sort('Polarization');
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a componentlist from disk and then proceeds to
@@ -770,13 +770,13 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := emptycomponentlist();
       cl.simulate(2);
       cl.setflux(1, [10, 1+3i, 1-4i, 0]print cl.isphysical(1:2), polarization='linear');
       print cl.isphysical(1:2)
-    \end{verbatim}
+    
   </example>
   <comments>
     This example creates a non-physical component hence the print
@@ -832,14 +832,14 @@ and available in Glish as mycl.
     in the I,~Q,~U,~\&amp;~V polarizations
   </description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       include 'measures.g'
       cl := componentlist('crux.cl', readonly=T);
       dir := dm.direction('J2000', '12h26m35.9', '-63d5m56');
       pixelsize := dm.quantity('1arcsec');
       flux := cl.sample(dir, pixelsize);
-    \end{verbatim}
+    
   </example>
   <comments>
     In this example the componentlist is sampled at the position of
@@ -893,7 +893,7 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := emptycomponentlist();
       cl.simulate(1);
@@ -902,7 +902,7 @@ and available in Glish as mycl.
       cl.rename('smallblob.cl');
       cl.close();
       n := cl.length();
-    \end{verbatim}
+    
   </example>
   <comments>
     This example creates and empty componentlist tool and then adds
@@ -946,7 +946,7 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := emptycomponentlist();
       cl.simulate(2)
@@ -954,7 +954,7 @@ and available in Glish as mycl.
       cl.setflux(2, [2.78, 0, 0, 0]);
       cl.rename('test.cl');
       cl.close();
-    \end{verbatim}
+    
   </example>
   <comments>
     This example creates a componentlist with two components. The
@@ -1230,11 +1230,11 @@ Indices must be between 0 and one less than the list length, inclusively</descri
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.select([1,3]);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a list from disk and then marks the first and
@@ -1270,12 +1270,12 @@ Indices must be between 0 and one less than the list length, inclusively</descri
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.select([1,3]);
       cl.deselect([2,3]);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a list from disk. After the deselect operation
@@ -1304,13 +1304,13 @@ Indices must be between 0 and one less than the list length, inclusively</descri
   </description>
   <returns type="intArray"><description>A vector of integers between 0 and one less than the list length</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.select([1,3]);
       cl.deselect([2,3]);
       cl.selected()
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a list from disk. After the deselect operation
@@ -1338,11 +1338,11 @@ Indices must be between 0 and one less than the list length, inclusively</descri
   </input>
   <returns type="string"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       print cl.getlabel(1);
-    \end{verbatim}
+    
   </example>
   <comments>
   This example prints the label associated with the first
@@ -1379,13 +1379,13 @@ Indices must be between 0 and one less than the list length, inclusively</descri
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('centarusA.cl');
       cl.setlabel(1, 'Core')
       cl.setlabel(2:10, 'Left Lobe')
       cl.setlabel(11:23, 'Right Lobe')
-    \end{verbatim}
+    
   </example>
   <comments>
     This example reads a model of Centarus A which contains at least
@@ -1421,14 +1421,14 @@ Indices must be between 0 and one less than the list length, inclusively</descri
   <returns type="doubleArray"><description>A vector of length 4 with the flux values in the current
 		  units and polarization representation.</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       flux := cl.getfluxvalue(1);
       unit := cl.getfluxunit(1);
       pol := cl.getfluxpol(1);
       err := cl.getfluxerror(1);
-    \end{verbatim}
+    
     This example returns the values, units, polarization and error of the
     first component in the list.
   </example>
@@ -1590,12 +1590,12 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.setflux(cl.indices(), [1,0,0,0], unit='jy', 
 	         polarization='stokes', error=[.3, 0, 0, 0])
-    \end{verbatim}
+    
   </example>
   <comments>
   This example sets all the components in the list to a flux of 1 Jy
@@ -1627,13 +1627,13 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       print cl.getfluxvalue(1);
       cl.convertflux(cl.indices(), 'WU');
       print cl.getfluxvalue(1);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example converts the flux of all components to ``Westerbork
@@ -1669,13 +1669,13 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('centarusA.cl');
       print cl.getfluxvalue(1);
       cl.convertpol(1, 'linear');
       print cl.getfluxvalue(1);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example converts the flux of the first component to a linear
@@ -1706,11 +1706,11 @@ specified component</shortdescription>
   </input>
   <returns type="any"><description>Workaround should return an MDirection</description><any type="record"/></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       dir := cl.getrefdir(1);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example returns the direction of the centre of the first
@@ -1770,13 +1770,13 @@ specified component</shortdescription>
   </input>
   <returns type="string"><description>A formatted string containing the RA of the reference direction.</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       print 'The first component is at RA: ', cl.getrefdirra(1, 'time'),
             ' Dec: ', cl.getrefdirdec(1, 'angle'), 
             ' (', cl.getrefdirframe(1), ')'
-    \end{verbatim}
+    
   </example>
   <comments>
     This example prints the following:
@@ -1907,14 +1907,14 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := emptycomponentlist('crux.cl');
       cl.simulate(3);
       cl.setrefdir(1, '12:26:35.9', '-63.5.56')
       cl.setrefdir(2, '12h26m35.9', '-63d5m56')
       cl.setrefdir(3, '-173.35deg', '-1.10128rad')
-    \end{verbatim}
+    
   </example>
   <comments>
     This example sets the reference direction for three newly created
@@ -1960,11 +1960,11 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.setrefdirframe(cl.indices(), 'B1950');
-    \end{verbatim}
+    
   </example>
   <comments>
     This example sets the reference frame for all the components in
@@ -2005,11 +2005,11 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.convertrefdirframe(cl.indices(), 'J2000');
-    \end{verbatim}
+    
   </example>
   <comments>
     This example illustrates what you would do if you had a list where
@@ -2042,11 +2042,11 @@ specified component</shortdescription>
   </input>
   <returns type="string"><description>A string specifying the current component shape</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       print 'The first component has a', cl.shapetype(1), ' shape';
-    \end{verbatim}
+    
   </example>
   <comments>
     This example prints the following:
@@ -2202,12 +2202,12 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl', readonly=F);
       cl.setshape(3, 'disk',  '45mas', '45mas');
       print cl.getshape(3).majoraxis;
-    \end{verbatim}
+    
   </example>
   <comments>
     This example revises the model for Gamma-Crux changing its shape
@@ -2274,12 +2274,12 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       cl.convertshape(3, 'arcsec', 'arcsec');
       print cl.getshape(3).minoraxis;
-    \end{verbatim}
+    
   </example>
   <comments>
     This example converts the units for the majoraxis and minor axis
@@ -2313,11 +2313,11 @@ specified component</shortdescription>
   <returns type="string">
 	  <description>A string specifying the spectral shape of the specified component</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('crux.cl');
       print 'The first component has a', cl.spectrumtype(1), ' spectrum';
-    \end{verbatim}
+    
   </example>
   <comments>
     This example prints the following:
@@ -2427,12 +2427,12 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl.open('centarusA.cl');
       cl.setspectrum(2, 'spectral index', -0.5);
       print cl.getcomponent(2)['spectrum']['index']
-    \end{verbatim}
+    
   </example>
   <comments>
     This example revises the model for Centaurus-A changing the
@@ -2467,11 +2467,11 @@ specified component</shortdescription>
   </input>
   <returns type="any"><any type="record"/><description>A frequency measure (a record)</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('centarusA.cl');
       f := cl.getfreq(2);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example returns the reference frequency of the first
@@ -2506,12 +2506,12 @@ specified component</shortdescription>
   </input>
   <returns type="double"><description>A number containing the value of the reference frequency.</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('centarusA.cl');
       print 'The reference frequency is ', cl.getfreqvalue(1), ' ', 
             cl.getfrequnit(1), '(', cl.getfreqframe(1), ')'
-    \end{verbatim}
+    
   </example>
   <comments>
     This example prints the following:
@@ -2621,11 +2621,11 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('centarusA.cl');
       cl.setfreq(1, 1.415, 'GHz');
-    \end{verbatim}
+    
   </example>
   <comments>
     This example sets the reference frequency of the first component
@@ -2674,11 +2674,11 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('centarusA.cl');
       cl.setfreqframe(1:23, 'LSR')
-    \end{verbatim}
+    
   </example>
   <comments>
     This example sets the reference frequency frame for the first
@@ -2719,13 +2719,13 @@ specified component</shortdescription>
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       cl := componentlist('centarusA.cl');
       cl.convertfrequnit(1, 'kHz');
       print 'The reference frequency is ', cl.getfreqvalue(1), ' ', 
             cl.getfrequnit(1), '(', cl.getfreqframe(1), ')'
-    \end{verbatim}
+    
   </example>
   <comments>
     This example prints, when used in conjunction with example from
@@ -2844,12 +2844,12 @@ list in the second argument</description>
 </method>
 
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       newcl := componentlist('core', readonly=F);
       othercl := componentlist('centarusA.cl', readonly=T);
       newcl.replace(1:2, othercl, [10,13]);
-    \end{verbatim}
+    
   </example>
   <comments>
     This example replaces components 1 and 2 in the newcl list with
@@ -2896,14 +2896,14 @@ list in the second argument</description>
   <returns type="bool"><description>T or F, indicating if the argument is a componentlist
 		  tool or not.</description></returns>
   <example>
-    \begin{verbatim}
+    
       include 'componentlist.g'
       if (iscomponentlist(cl)) {
         cl.simulate(2);
       } else { 
         fail 'Not a componentlist';
       }
-    \end{verbatim}
+    
   </example>
   <comments>
     This example shows how you can use this function to determine if
