@@ -113,7 +113,7 @@
      <item>
       <widget class="QPushButton" name="plotButton" >
        <property name="toolTip" >
-        <string>Pressing this button initiates the data loading and plot drawing sequence.  Data will not be reloaded if the selection and averaging  parameters have not changed from the previous plot.  Use "shift+Plot"  to force a reload (or use the "force reload" checkbox).</string>
+        <string>Reload data, replot. Hold down shift to force reload</string>
        </property>
        <property name="text" >
         <string>Plot</string>

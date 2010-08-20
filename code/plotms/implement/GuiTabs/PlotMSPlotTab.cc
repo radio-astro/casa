@@ -87,6 +87,14 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     // All this does is note if shift was down during the click.
     // This slot should be called before the main one in synchronize action.
     connect( plotButton, SIGNAL(clicked()),  SLOT(observeModKeys()) );
+    
+    // To fix zoom stack first-element bug, must be sure Zoom, Pan, etc
+    // in toolbar are all unclicked.   Leave it to the Plotter aka 
+    // "parent" know how to do this, offering a slot  
+    // we can plug the Plot button into.
+    // The prepareForPlotting() slot is available for other things to do
+    // at this point in time (like evil diagnostic experiements).
+    connect( plotButton, SIGNAL(clicked()),  parent, SLOT(prepareForPlotting()) );
 
     // Synchronize plot button.  This makes the reload/replot happen.
     itsPlotter_->synchronizeAction(PlotMSAction::PLOT, plotButton);
@@ -624,6 +632,7 @@ void PlotMSPlotTab::tabChanged() {
 
 
 void PlotMSPlotTab::observeModKeys()   {
+
 	itsModKeys = QApplication::keyboardModifiers(); 
 	bool using_shift_key = (itsModKeys & Qt::ShiftModifier) !=0;
 	bool always_replot_checked = forceReplotChk->isChecked();
