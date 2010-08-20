@@ -63,7 +63,7 @@ PlotMSPlotParameters PlotMSPlotSubtab::currentlySetParameters() const {
 PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
         itsPlotManager_(parent->getParent()->getPlotManager()),
         itsCurrentPlot_(NULL), itsCurrentParameters_(NULL),
-        itsUpdateFlag_(true),forceReloadCounter_(0),its_force_reload(false)
+        itsUpdateFlag_(true),its_force_reload(false),forceReloadCounter_(0)
     {
     setupUi(this);
     

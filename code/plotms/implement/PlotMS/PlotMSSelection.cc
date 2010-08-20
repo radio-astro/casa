@@ -98,6 +98,12 @@ bool PlotMSSelection::operator==(const PlotMSSelection& other) const {
     return false;
   }
 
+  return fieldsEqual(other);
+
+}
+
+bool PlotMSSelection::fieldsEqual(const PlotMSSelection& other) const {    
+
   vector<Field> f = fields();
   for(unsigned int i = 0; i < f.size(); i++)
     if(getValue(f[i]) != other.getValue(f[i])) return false;
