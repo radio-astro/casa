@@ -1993,13 +1993,18 @@ class cleanhelper:
         qat=qatool.create();
         q = qat.quantity
 
-        if len(spw)==1:
-            if width>1:
-                visnchan=width
-            else:
-                visnchan=1
-        else:
-            visnchan=-1
+        # 2010-08-18 note: disable this. Has the problem 
+        # getting imaging weights correctly when the beginning 
+        # channels were flagged.
+        #if type(spw)==int or len(spw)==1:
+        #    if width>1:
+        #        visnchan=width
+        #    else:
+        #        visnchan=1
+        #else:
+        #    visnchan=-1
+
+        visnchan=-1
         retparms['visnchan']=visnchan
         visstart=0
 
