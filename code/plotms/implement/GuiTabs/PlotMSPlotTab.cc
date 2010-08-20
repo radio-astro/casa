@@ -223,8 +223,6 @@ void PlotMSPlotTab::plot() {
         bool paramsChanged = params != *itsCurrentParameters_;
         bool cancelledCache = !itsCurrentPlot_->data().cacheReady();
 
-		cout << "existing forceNew value = " << d->selection().forceNew() << endl;
-        
         if (its_force_reload)    {
 			forceReloadCounter_++;   
 			paramsChanged=true;   // just to make sure we're noticed
@@ -238,9 +236,6 @@ void PlotMSPlotTab::plot() {
 		sel.setForceNew(forceReloadCounter_);
 		
 	
-		/*DEBUG*/printf("    DSW: paramsChanged %d   cancelledCache %d    forceReloadCounter_=%d\n",paramsChanged,cancelledCache,forceReloadCounter_);
-
-		
         
         if (paramsChanged || cancelledCache) {
 			
@@ -634,7 +629,6 @@ void PlotMSPlotTab::observeModKeys()   {
 	bool always_replot_checked = forceReplotChk->isChecked();
 	
 	its_force_reload = using_shift_key  ||  always_replot_checked;
-printf("plot slot observeModKeys:  suing_shift=%d   always chk=%d  \n", 	using_shift_key, always_replot_checked);
 }
 
 

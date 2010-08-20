@@ -25,7 +25,7 @@
    <string>PlotMS Plot Tab</string>
   </property>
   <property name="toolTip" >
-   <string>Draw the plot using newest settings, re-reading data if needed.  Hold down shift to force re-read of data.</string>
+   <string/>
   </property>
   <layout class="QVBoxLayout" >
    <property name="spacing" >
@@ -89,8 +89,11 @@
      </property>
      <item>
       <widget class="QCheckBox" name="forceReplotChk" >
+       <property name="toolTip" >
+        <string>If checked, force a reload of the data when the Plot button is pressed.</string>
+       </property>
        <property name="text" >
-        <string>force replot</string>
+        <string>force reload</string>
        </property>
       </widget>
      </item>
@@ -109,6 +112,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="plotButton" >
+       <property name="toolTip" >
+        <string>Pressing this button initiates the data loading and plot drawing sequence.  Data will not be reloaded if the selection and averaging  parameters have not changed from the previous plot.  Use "shift+Plot"  to force a reload (or use the "force reload" checkbox).</string>
+       </property>
        <property name="text" >
         <string>Plot</string>
        </property>
