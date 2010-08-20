@@ -126,6 +126,14 @@ set( DEFAULT_C_FLAGS
      "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
      )
 
+# OpenMP
+find_package( OpenMP )
+if( OPENMP_FOUND )
+  set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+  set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
+endif()
+dump( DEFAULT_CXX_FLAGS )
+
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
 add_custom_target( check ${CMAKE_CTEST_COMMAND} )
