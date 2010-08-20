@@ -28,6 +28,7 @@
 #ifndef TRIALDISPLAY_COLORMAPDEFINITION_H
 #define TRIALDISPLAY_COLORMAPDEFINITION_H
 
+#include <map>
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/IO/AipsIO.h>
@@ -166,7 +167,8 @@ class ColormapDefinition {
   // Return the names of the built-in colormaps.  If <src>uniqueonly</src>
   // is True (default), only the names of the unique colormaps 
   // are returned, otherwise all colormap names are returned.
-  static Vector<String> builtinColormapNames(Bool uniqueonly = True);
+  typedef std::map<String,bool> colormapnamemap;
+  static colormapnamemap builtinColormapNames(Bool uniqueonly = True);
 
   // Load Colormap definitions for a specified colormap<src>name</src>
   Bool loadColormap(const String& name);

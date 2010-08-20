@@ -44,10 +44,34 @@ DParameterChoice::DParameterChoice(const String name, const String description,
   itsOptions(options),
   itsDefaultValue(defaultvalue),
   itsValue(value) {
+
   if (!existsOption(defaultvalue) || !existsOption(value)) {
     throw(AipsError("Invalid default or value in DParameterChoice"));
   }
 }
+
+
+DParameterChoice::DParameterChoice( const String name, const String description,
+				    const String help, const ColormapDefinition::colormapnamemap &options,
+				    const String defaultvalue, const String value, 
+				    const String context, const Bool editable ) :
+		DisplayParameter(name, description, help, context, False, False),
+		itsEditable(editable),
+		itsDefaultValue(defaultvalue),
+		itsValue(value) {
+
+    itsOptions.resize(options.size());
+    int i=0;
+    for ( ColormapDefinition::colormapnamemap::const_iterator iter = options.begin( );
+	  iter != options.end( ); ++iter ) {
+	itsOptions[i++] = iter->first;
+    }
+
+    if (!existsOption(defaultvalue) || !existsOption(value)) {
+	throw(AipsError("Invalid default or value in DParameterChoice"));
+    }
+}
+
 
 // Copy constructor.
 DParameterChoice::DParameterChoice(const DParameterChoice &other) :

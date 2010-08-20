@@ -5,6 +5,7 @@ import time
 import base64
 import string
 import inspect
+from taskinit import casac       ### needed for regionmanager
 
 try:
     import dbus
@@ -44,6 +45,7 @@ class viewertool(object):
     "manage task engines"
 
     __t = string.maketrans("abcdefghijklmnopqrstuvwxyz0123456789/*:%$#@!&()~+,.:;{}[]|\\\"'^","abcdefghijklmnopqrstuvwxyz0123456789__________________________")
+    __rgm = casac.homefinder.find_home_by_name('regionmanagerHome').create( )
 
     ###
     ### 'use_existing' defaults to false because:
@@ -194,7 +196,7 @@ class viewertool(object):
 
         return t(result)
 
-    def panel( self, paneltype="viewer" ):
+    def panel( self, paneltype="viewer" ) :
         if type(paneltype) != str or (paneltype != "viewer" and paneltype != "clean"):
             raise Exception, "the only valid panel types are 'viewer' and 'clean'"
         if self.__state['proxy'] == None:
@@ -202,14 +204,15 @@ class viewertool(object):
 
         return self.__invoke( dbus.Int32, int, self.__state['proxy'].panel, paneltype )
 
-    def load( self, path, displaytype="raster", panel=0 ):
-        if type(path) != str or type(displaytype) != str:
+    def load( self, path, displaytype="raster", scaling=0, panel=0 ):
+        if type(path) != str or type(displaytype) != str or \
+               (type(scaling) != float and type(scaling) != int) :
             raise Exception, "load() takes two strings; only the first arg is required..."
 
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return self.__invoke( dbus.Int32, int, self.__state['proxy'].load, path, displaytype, panel )
+        return self.__invoke( dbus.Int32, int, self.__state['proxy'].load, path, displaytype, float(scaling), panel )
 
     def close( self, panel=0 ):
         if type(panel) != int :
@@ -228,6 +231,25 @@ class viewertool(object):
             self.__connect( )
 
         return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].popup, what, panel )
+
+    def freeze( self, panel=0 ):
+        if type(panel) != int :
+            raise Exception, "freeze() takes only a panel id..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].freeze, panel )
+
+    def unfreeze( self, panel=0 ):
+        if type(panel) != int :
+            raise Exception, "unfreeze() takes only a panel id..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].unfreeze, panel )
+
 
     def restore( self, path, panel=0 ):
         if type(path) != str or type(panel) != int:
@@ -259,6 +281,57 @@ class viewertool(object):
 
         return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].output, device, devicetype, panel, scale, dpi, format, orientation, media )
 
+    def axes( self, x='', y='', z='', panel=0 ):
+        if type(x) != str or type(y) != str or type(z) != str or type(panel) != int :
+            raise Exception, "axes() takes one to three strings and an optional panel id..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].axes, x, y, z, panel )
+
+    def datarange( self, range, data=0 ):
+        if type(range) != list or type(data) != int or \
+           all( map( lambda x: type(x) == int or type(x) == float, range ) ) == False:
+            raise Exception, "datarange() takes (numeric list,int)..."
+        if len(range) != 2 or range[0] > range[1] :
+            raise Exception, "range should be [ min, max ]..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].datarange, map( lambda(x): float(x), range ), data )
+    
+    def contourlevels( self, levels=[], baselevel=2147483648.0, unitlevel=2147483648.0, data=0 ):
+        if type(levels) != list or type(data) != int or \
+           all( map( lambda x: type(x) == int or type(x) == float, levels ) ) == False:
+            raise Exception, "contorlevels() takes (numeric list,int)..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].contourlevels, dbus.Array(map( lambda(x): float(x), levels),signature="d"), baselevel, unitlevel, data )
+
+    def colormap( self, map, data_or_panel=0 ):
+        if type(map) != str or type(data_or_panel) != int :
+            raise Exception, "colormap() takes a colormap name and an optional panel or data id..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].colormap, map, data_or_panel )
+    
+
+    def colorwedge( self, show, data_or_panel=0 ):
+        if type(show) != bool or type(data_or_panel) != int :
+            raise Exception, "colorwedge() takes a boolean and an optional panel or data id..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].colorwedge, show, data_or_panel )
+    
+
     def channel( self, num=-1, panel=0 ):
         if type(num) != int or type(panel) != int:
             raise Exception, "frame() takes (int,int); each argument is optional..."
@@ -268,14 +341,42 @@ class viewertool(object):
 
         return self.__invoke( dbus.Int32, int, self.__state['proxy'].channel, num, panel )
 
-    def zoom( self, level, panel=0 ):
-        if type(level) != int or type(panel) != int:
-            raise Exception, "zoom() takes (int,int); each argument is optional..."
+    def zoom( self, level=None, blc=[], trc=[], coordinates="pixel", region="", panel=0 ):
+        if (type(level) != int and level != None) or \
+               type(blc) != list or type(trc) != list or type(panel) != int or \
+               type(coordinates) != str or (type(region) != str and type(region) != dict) :
+            raise Exception, "zoom() takes (int|None,list,list,str,int); each argument is optional..."
 
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].zoom, level, panel )
+        if (type(region) == str and os.path.isfile( region )) or \
+               type(region) == dict :
+            reg = region
+            if type(region) == str :
+                try:
+                    reg = self.__rgm.fromfiletorecord( region )
+                except:
+                    raise Exception, "region file (" + str(region) + ") exists but is not a valid region file"
+
+            if type(reg) != dict :
+                raise Exception, "invalid regions or failed to load region"
+
+            ( _blc, _trc, _coord ) = self.__extract_region_box( reg )
+
+            return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].zoom, _blc, _trc, _coord, panel )
+            
+        elif len(blc) == 2 and len(trc) == 2 and \
+               all( map( lambda x,y: (type(x) == int or type(x) == float) and (type(y) == int or type(y) == float), blc, trc ) ) == True:
+            if coordinates != "pixel" and coordinates != "world":
+                raise Exception, "zoom() coordinates must be either world or pixel"
+            return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].zoom, map( lambda(x): float(x), blc ), map( lambda(x): float(x), trc ), coordinates, panel )
+        elif level != None:
+            return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].zoom, level, panel )
+        else:
+            raise Exception, "must supply either blc and trc or a level for zoom"
+
+
 
     def hide( self, panel=0 ):
         if type(panel) != int:
@@ -323,3 +424,50 @@ class viewertool(object):
         self.__state['launched'] = False
         return result
 
+    def __extract_region_box( self, reg ):
+
+        if reg.has_key( 'regions' ) :
+            if type(reg['regions']) != dict or not reg['regions'].has_key( '*1' ) :
+                raise Exception, "invalid region, has 'regions' field but wrong format"
+            reg=reg['regions']['*1']
+
+        if not reg.has_key('trc') or not reg.has_key('blc'):
+            raise Exception, "region must have a 'blc' and 'trc' field"
+
+        blc_r = reg['blc']
+        trc_r = reg['trc']
+
+        if type(blc_r) != dict or type(trc_r) != dict :
+            raise Exception, "region blc/trc of wrong type"
+
+        blc_k = blc_r.keys( )
+        trc_k = trc_r.keys( )
+
+        if len(blc_k) < 2 or len(trc_k) < 2:
+            raise Exception, "degenerate region"
+
+        blc_k.sort( )
+        trc_k.sort( )
+
+        if type(blc_r[blc_k[0]]) != dict or type(blc_r[blc_k[1]]) != dict or \
+               type(trc_r[trc_k[0]]) != dict or type(trc_r[trc_k[1]]) != dict :
+            raise Exception, "invalid blc/trc in region"
+
+        if not blc_r[blc_k[0]].has_key('value') or not blc_r[blc_k[1]].has_key('value') or \
+               not trc_r[trc_k[0]].has_key('value') or not trc_r[trc_k[1]].has_key('value'):
+            raise Exception, "invalid shape for blc/trc in region"
+
+        if (type(blc_r[blc_k[0]]['value']) != float and type(blc_r[blc_k[0]]['value']) != int) or \
+               (type(blc_r[blc_k[1]]['value']) != float and type(blc_r[blc_k[1]]['value']) != int) or \
+               (type(trc_r[trc_k[0]]['value']) != float and type(trc_r[trc_k[0]]['value']) != int) or \
+               (type(trc_r[trc_k[0]]['value']) != float and type(trc_r[trc_k[0]]['value']) != int) :
+            raise Exception, "invalid type for blc/trc value in region"
+
+        blc = [ float(blc_r[blc_k[0]]['value']), float(blc_r[blc_k[1]]['value']) ]
+        trc = [ float(trc_r[trc_k[0]]['value']), float(trc_r[trc_k[1]]['value']) ]
+
+        coord = "pixel"
+        if reg.has_key('name') and reg['name'] == "WCBox":
+            coord = "world"
+
+        return ( blc, trc, coord )

@@ -30,54 +30,34 @@
 	
 	</description>
 	<input>
-		<param type="string" name="infile" mustexist="true" allowblank='true'>
-			<description> (Optional)  Name of file to visualize.</description>
-			<value></value>
+		<param type="any" name="raster">
+			<description> (Optional)  Raster filename or complete raster config dictionary.</description>
+			<any type="variant" limittypes="string record"/>
+			<value type="record"></value>
 		</param>
 
-		<param type="string" name="displaytype">
-			<description> (Optional)  Type of visual rendering (raster, contour, vector or marker).  lel  if an lel expression is given for infile  (advanced).</description>
-			<value>raster</value>
+		<param type="any" name="contour">
+			<description> (Optional)  Contour filename or complete contour config dictionary.</description>
+			<any type="variant" limittypes="string record"/>
+			<value type="record"></value>
 		</param>
 
-		<param type="int" name="channel">
-			<description> (Optional)  access a specific channel in the image cube</description>
-			<value>0</value>
+		<param type="any" name="zoom">
+			<description> (Optional)  integer for intermental zoom or dictionary specifying a rectangle.</description>
+			<any type="variant" limittypes="int string record"/>
+			<value type="int">1</value>
 		</param>
 
-		<param type="int" name="zoom">
-			<description> (Optional)  zoom in/out by increments</description>
-			<value>1</value>
+		<param type="any" name="axes">
+			<description> (Optional)  dictionary or 3 member string list.</description>
+			<any type="variant" limittypes="string record"/>
+			<value type="record"></value>
 		</param>
 
-		<param type="string" name="outfile">
-			<description> (Optional)  name of the output file to generate</description>
-			<value></value>
-		</param>
-
-		<param type="double" name="outscale">
-			<description> (Optional)  amount to scale output bitmap formats (non-PS, non-PDF)</description>
-			<value>1.0</value>
-		</param>
-
-		<param type="int" name="outdpi">
-			<description> (Optional)  output DPI for PS/PDF</description>
-			<value>300</value>
-		</param>
-
-		<param type="string" name="outformat">
-			<description> (Optional)  format of the output e.g. jpg or pdf (this is overridden by the output files extension</description>
-			<value>jpg</value>
-		</param>
-
-		<param type="bool" name="outlandscape">
-			<description> (Optional)  should the output mode be landscape (PS or PDF)</description>
-			<value>False</value>
-		</param>
-
-		<param type="bool" name="gui">
-			<description> (Optional)  Display the panel in a GUI.</description>
-			<value>True</value>
+		<param type="any" name="out">
+			<description> (Optional)  Output filename or complete output config dictionary.</description>
+			<any type="variant" limittypes="string record"/>
+			<value type="string"></value>
 		</param>
 
                 <constraints>

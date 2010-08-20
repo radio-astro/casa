@@ -185,6 +185,9 @@ class QtDisplayData : public QObject {
   
   // Does this DD currently own a colormap?
   virtual Bool hasColormap() const { return clrMap_!=0;  }
+  // Different DisplayDatas *could* have different colormap palettes
+  // thus this is non-static and specific to a display data
+  virtual bool isValidColormap( const QString &name ) const;
 
   // Get/set colormap shift/slope ('fiddle') and brightness/contrast
   // settings.  (At present this is usually set for the PC's current
@@ -225,6 +228,7 @@ class QtDisplayData : public QObject {
   // the options gui does receive all option updates (via the optionsChanged
   // signal) and updates its user interface accordingly.
   virtual void setOptions(Record opts, Bool emitAll=False);
+  void emitOptionsChanged( Record changedOpts );
   
   
   virtual void done();
@@ -329,7 +333,7 @@ class QtDisplayData : public QObject {
  private:
   
   // Not intended for use.
-  QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0), clrMaps_(0) {  }
+  QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0) {  }
 
   //# data
   QtDisplayPanelGui *panel_;
@@ -351,14 +355,16 @@ class QtDisplayData : public QObject {
   
   // All the valid ('primary') colormap names.
   // (This interface doesn't support use of 'synonym' names).
-  Vector<String> clrMapNames_;
+  typedef ColormapDefinition::colormapnamemap colormapnamemap;
+  colormapnamemap clrMapNames_;
   
   // Set of colormaps currently or previously used by this DD.  Once
   // a Colormap is created, it is retained for the life of the DD.
   //# (A main reason for this is to remember the colormap's 
   //# 'transfer function' state (brightness/contrast/shift/slope) in case
   //# it is reused -- see PCITFiddler.h (colormap mouse tools)).
-  SimpleOrderedMap<String, Colormap*> clrMaps_;
+  typedef std::map<String, Colormap*> colormapmap;
+  colormapmap clrMaps_;
   
   
   // Latest error message, retrievable via errMsg().  (Where possible, errors

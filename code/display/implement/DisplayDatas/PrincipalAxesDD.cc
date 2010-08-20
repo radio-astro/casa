@@ -1756,9 +1756,6 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 	  itsOptionsYAxis = oldXAxis;
 	  y_axischange = True;
 	  Record yaxis;
-	  yaxis.define("dlformat", "yaxis");
-	  yaxis.define("listname", "Y-axis");
-	  yaxis.define("ptype", "choice");
 	  yaxis.define("value",itsOptionsYAxis);
 	  recOut.defineRecord("yaxis", yaxis);
       } else if ( x_axischange && ! z_axischange &&
@@ -1766,9 +1763,6 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 	  itsOptionsZAxis = oldXAxis;
 	  z_axischange = True;
 	  Record zaxis;
-	  zaxis.define("dlformat", "zaxis");
-	  zaxis.define("listname", "Z-axis");
-	  zaxis.define("ptype", "choice");
 	  zaxis.define("value",itsOptionsZAxis);
 	  recOut.defineRecord("zaxis", zaxis);
       } else if ( y_axischange && ! x_axischange &&
@@ -1776,9 +1770,6 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 	  itsOptionsXAxis = oldYAxis;
 	  x_axischange = True;
 	  Record xaxis;
-	  xaxis.define("dlformat", "xaxis");
-	  xaxis.define("listname", "X-axis");
-	  xaxis.define("ptype", "choice");
 	  xaxis.define("value",itsOptionsXAxis);
 	  recOut.defineRecord("xaxis", xaxis);
       } else if ( y_axischange && ! z_axischange &&
@@ -1786,9 +1777,6 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 	  itsOptionsZAxis = oldYAxis;
 	  z_axischange = True;
 	  Record zaxis;
-	  zaxis.define("dlformat", "zaxis");
-	  zaxis.define("listname", "Z-axis");
-	  zaxis.define("ptype", "choice");
 	  zaxis.define("value",itsOptionsZAxis);
 	  recOut.defineRecord("zaxis", zaxis);
       } else if ( z_axischange && ! x_axischange &&
@@ -1796,9 +1784,6 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 	  itsOptionsXAxis = oldZAxis;
 	  x_axischange = True;
 	  Record xaxis;
-	  xaxis.define("dlformat", "xaxis");
-	  xaxis.define("listname", "X-axis");
-	  xaxis.define("ptype", "choice");
 	  xaxis.define("value",itsOptionsXAxis);
 	  recOut.defineRecord("xaxis", xaxis);
       } else if ( z_axischange && ! y_axischange &&
@@ -1806,9 +1791,6 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 	  itsOptionsYAxis = oldZAxis;
 	  y_axischange = True;
 	  Record yaxis;
-	  yaxis.define("dlformat", "yaxis");
-	  yaxis.define("listname", "Y-axis");
-	  yaxis.define("ptype", "choice");
 	  yaxis.define("value",itsOptionsYAxis);
 	  recOut.defineRecord("yaxis", yaxis);
       } else {

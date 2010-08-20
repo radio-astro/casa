@@ -53,6 +53,7 @@
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -398,8 +399,28 @@ void QtDisplayPanel::resetTools() {
     for(Int i=0; i<Int(mouseToolNames_.nelements()); i++) {
       resetTool(mouseToolNames_[i]);  }  }
   
+Bool QtDisplayPanel::worldToLin(Vector<Double> &lin, const Vector<Double> &world) {
+    Bool filled = False;
+    lin.resize(world.nelements( ));
+    ConstListIter<WorldCanvas*>& wcs = *(pd_->myWCLI);
+    for(wcs.toStart(); !wcs.atEnd(); wcs++) {
+	if ( filled == False ) {
+	    wcs.getRight()->worldToLin(lin,world);
+	    filled = True;
+	} else {
+	    Vector<Double> tmp((uInt)world.nelements());
+	    wcs.getRight()->worldToLin(tmp,world);
+	    if ( tmp.nelements() != lin.nelements() )
+		return False;
+	    for ( int i=0; i < tmp.nelements(); ++i )
+		if ( tmp[i] != lin[i] )
+		    return False;
+	}
+    }
+    return filled;
+}
 
-
+ 
 void QtDisplayPanel::installEventHandlers_() {
   pc_->addPositionEventHandler(*this);
   ConstListIter<WorldCanvas*>& wcs = *(pd_->myWCLI);
