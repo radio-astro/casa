@@ -322,7 +322,7 @@ Bool ColormapDefinition::save(const String &fullPathName,
 }
 
 
-Vector<String> ColormapDefinition::builtinColormapNames(Bool uniqueonly) {
+std::map<String,bool> ColormapDefinition::builtinColormapNames(Bool uniqueonly) {
   // uniqueonly is not used at the moment
   // static data members
   if (ourDefaultColormap.empty()) {
@@ -336,7 +336,7 @@ Vector<String> ColormapDefinition::builtinColormapNames(Bool uniqueonly) {
   uInt defaultLength = 0;
   uInt userLength = 0;
 
-  Vector<String> vec;
+  colormapnamemap vec;
   ROScalarColumn<String>* name1Col(0);
   ROScalarColumn<String>* name2Col(0);
   if (!ourDefaultColormapTable.isNull()) {
@@ -347,17 +347,15 @@ Vector<String> ColormapDefinition::builtinColormapNames(Bool uniqueonly) {
     name2Col = new ROScalarColumn<String>(ourUserColormapTable, "CMAP_NAME");
     userLength = ourUserColormapTable.nrow();
   }
-  vec.resize(1+defaultLength+userLength);
-  // add default colormap 
-  //vec(0) = "<default>";
-  vec(0) = "Greyscale 1";
 
+  vec.insert(colormapnamemap::value_type("Greyscale 1",true));
+  
   // add colormap table entries
   for (uInt i=0; i <defaultLength; i++) {
-    vec[i+1] = name1Col->operator()(i);
+    vec.insert(colormapnamemap::value_type(name1Col->operator()(i),true));
   }
   for (uInt i=0; i <userLength; i++) {
-    vec[i+1+defaultLength] = name2Col->operator()(i);
+    vec.insert(colormapnamemap::value_type(name2Col->operator()(i),true));
   }
   if (name1Col) { 
     delete name1Col;

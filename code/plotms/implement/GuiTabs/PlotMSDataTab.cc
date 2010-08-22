@@ -107,7 +107,7 @@ void PlotMSDataTab::update(const PlotMSPlot& plot) {
     
     highlightWidgetText(locationLabel, itsFileWidget_->getFile() != d->filename());
     highlightWidgetText(selectionLabel,
-            itsSelectionWidget_->getValue() != d->selection());
+	    itsSelectionWidget_->getValue().fieldsNotEqual(d->selection()));
     highlightWidgetText(averagingLabel,
             itsAveragingWidget_->getValue() != d->averaging());
 }

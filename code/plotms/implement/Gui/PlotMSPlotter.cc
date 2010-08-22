@@ -294,6 +294,27 @@ void PlotMSPlotter::showAbout() {
 }
 
 
+
+
+
+void PlotMSPlotter::prepareForPlotting()   {
+	
+	PlotMSToolsTab *ttab =  getToolsTab();
+	
+	// This is a fix for the zoom stack bug, JIRA CAS-1770.
+	// The fix is to force all tool buttons unpressed
+	// before doing a reload/redraw of the plot.
+	// toolsUnchecked() has a slightly misleading name.  It causes
+	// all the tool buttons - Zoom, Pan etc to become unchecked by
+	// checking the "None" radio button in the tools tab.
+	// These radio buttons are wired to the tool bar, causing them
+	// to also become unchecked.
+	ttab->toolsUnchecked();
+}
+
+
+
+
 // Protected Methods //
 
 void PlotMSPlotter::closeEvent(QCloseEvent* event) {
@@ -688,5 +709,7 @@ String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
 
     return ss.str();
 }
+
+
 
 }

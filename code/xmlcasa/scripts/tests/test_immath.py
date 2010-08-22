@@ -1367,9 +1367,8 @@ class immath_test3(unittest.TestCase):
 
         sysbits = struct.calcsize("P") * 8
         # epsilon necessary because of differences between 32 and 64 bit images
-        epsilon = 0
-        if (sysbits == 32):
-            epsilon = 3e-7
+        epsilon = 3e-7
+
         # POLA
         mode = 'pola'
         myia = iatool.create()

@@ -130,6 +130,11 @@ public:
     bool operator==(const PlotMSSelection& other) const;
     bool operator!=(const PlotMSSelection& other) const {
         return !(operator==(other)); }
+
+    bool fieldsEqual(const PlotMSSelection& other) const;
+    bool fieldsNotEqual(const PlotMSSelection& other) const {
+        return !fieldsEqual(other); }
+
     // </group>
     
     // Copy operator.

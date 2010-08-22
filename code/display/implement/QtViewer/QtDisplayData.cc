@@ -84,7 +84,6 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 	       clrMapName_(""),
 	       clrMap_(0),
 	       clrMapOpt_(0),
-	       clrMaps_(static_cast<Colormap*>(0)),
 	       colorBar_(0),
 	       colorBarDisplayOpt_(0),
 	       colorBarThicknessOpt_(0),
@@ -327,11 +326,11 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 	// custom colormap table as well, using .aipsrc (see
 	// builtinColormapNames()); improvements are also planned.
 
-    for(uInt i=0; i<clrMapNames_.nelements(); i++) {
-      if(defaultCMName==clrMapNames_[i]) {
+    colormapnamemap::iterator cmniter = clrMapNames_.find(defaultCMName);
+    if ( cmniter != clrMapNames_.end() ) {
+	// defaultCMName is a valid choice -- use it.
         initialCMName = defaultCMName;
-	break;  }  }	// defaultCMName is a valid choice -- use it.
-
+    }
     
     setColormap_(initialCMName);
     
@@ -470,9 +469,14 @@ void QtDisplayData::done() {
   
   if(usesClrMap_()) {
     removeColormap_();
-    for(uInt i=0; i<clrMaps_.ndefined(); i++) delete clrMaps_.getVal(i);
-	// Remove/delete any existing dd colormap[s].
-    delete clrMapOpt_; clrMapOpt_=0;  }
+
+    for ( colormapmap::iterator iter = clrMaps_.begin( );
+	  iter != clrMaps_.end( ); ++iter ) {
+	delete iter->second;		// Remove/delete any existing dd colormap[s].
+    }
+
+    delete clrMapOpt_;
+    clrMapOpt_=0;  }
     
   if(hasColorBar()) {
     delete colorBar_;
@@ -594,7 +598,10 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
   
 
   if(dd_==0) return;  // (safety, in case construction failed.).
-  
+
+  // dump out information about the set-options message flow...
+//cout << "\t>>== " << (emitAll ? "true" : "false") << "==>> " << opts << endl;
+
   Record chgdOpts;
   
   Bool held=False;
@@ -795,7 +802,11 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 	// original opts sent into this method and are more recent;
 	// they overwrite the original opts if the same option
 	// is present in both.
-  
+
+  // emit an event to sync up GUIs based upon changes registered
+  // by the display datas, e.g. update changed axis dimensionality
+  // triggered in PrincipalAxesDD::setOptions( ) to keep all
+  // axis dimensions unique...
   if(chgdOpts.nfields()!=0) emit optionsChanged(chgdOpts);
     
   if(chgdOpts.isDefined("trackingchange")) emit trackingChange(this);  }
@@ -816,8 +827,9 @@ void QtDisplayData::setColorBarOrientation_() {
                                       "vertical" : "horizontal" );
   setOptions(orientation);  }
 
-
-
+void QtDisplayData::emitOptionsChanged( Record changedOpts ) {
+    emit optionsChanged(changedOpts);
+}
 
 void QtDisplayData::setColormap_(const String& clrMapName) {
   // Set named colormap onto underlying dd (done publicly via setOptions).
@@ -847,21 +859,19 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
     // emit qddOK();
     return;  }
     
-  Colormap* clrMap = clrMaps_(clrMapName);
+  colormapmap::iterator cmiter = clrMaps_.find(clrMapName);
+  Colormap* clrMap = (cmiter == clrMaps_.end() ? 0 : cmiter->second);
 
   if(clrMap==0) {
   
     // clrMapName not (yet) in set of DD's used colormaps:
     // see if it's a valid name.
-
-    for(uInt i=0; i<clrMapNames_.nelements(); i++) {
-      if(clrMapName==clrMapNames_[i]) {
-      
+    colormapnamemap::iterator cmniter = clrMapNames_.find(clrMapName);
+    if ( cmniter != clrMapNames_.end( ) ) {
         // valid name -- create and store corresponding Colormap.
-        
 	clrMap = new Colormap(clrMapName);
-	clrMaps_.define(clrMapName, clrMap);
-	break;  }  }
+	clrMaps_.insert(colormapmap::value_type(clrMapName, clrMap));
+    }
     
     if(clrMap==0) {
    
@@ -887,6 +897,15 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
   
   dd_->setColormap(clrMap, 1.);
   if(hasColorBar()) colorBar_->setColormap(clrMap, 1.);
+
+  // sets value for any currently-open data option panel
+  Record cm;
+  cm.define( "value", clrMapName );
+  Record rec;
+  rec.defineRecord("colormap",cm);
+  emit optionsChanged(rec);
+  // sets value for any to-be-opened data option panel
+  if ( clrMapOpt_ ) clrMapOpt_->setValue( clrMapName );
   
   panel_->viewer()->release();
 
@@ -899,6 +918,11 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 
   
     
+
+bool QtDisplayData::isValidColormap( const QString &name ) const {
+    colormapnamemap::const_iterator iter = clrMapNames_.find(name.toAscii().constData());
+    return iter != clrMapNames_.end() ? true : false;
+}
 
 // Get/set colormap shift/slope ('fiddle') and brightness/contrast
 // settings.  (At present this is usually set for the PC's current
@@ -1757,8 +1781,6 @@ Display::DisplayDataType QtDisplayData::ddType() {
   if(isEmpty()) return Display::Annotation;	// (anything...)
   return dd_->classType();  }
   
-
-
 
 Float QtDisplayData::colorBarLabelSpaceAdj() {
   // Used (by QtDisplayPanel) to compute margin space for colorbar labels.

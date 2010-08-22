@@ -4,7 +4,7 @@ import sys
 from taskinit import *
 im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
 
-debug = True
+debug = False
 mode = ''
 def flagdata2(vis = None,
              flagbackup = None,
@@ -59,7 +59,7 @@ def flagdata2(vis = None,
              rfi_bs_cutoff = None,
              rfi_ant_cutoff = None,
              rfi_flag_level = None,
-             sumary = None,
+             summary = None,
              minrel = None,
              maxrel = None,
              minabs = None,
@@ -85,15 +85,14 @@ def flagdata2(vis = None,
             mode == 'clip'
                 # In manualflag and quack modes,
                 # filter out the parameters which are not used
-
-            clipmode(selectdata, flagbackup,
+            casalog.post('Start flagging using clip mode')
+            clipquack(selectdata, flagbackup,
                          autocorr=autocorr,
-                         unflag=unflag,
-                         clipexpr=clipexpr,       # manualflag only
-                         clipminmax=clipminmax,   # manualflag only
-                         clipcolumn=clipcolumn,   # manualflag only
-                         clipoutside=clipoutside, # manualflag only
-                         channelavg=channelavg,   # manualflag only
+                         clipexpr=clipexpr,       
+                         clipminmax=clipminmax,   
+                         clipcolumn=clipcolumn,   
+                         clipoutside=clipoutside, 
+                         channelavg=channelavg,   
                          spw=spw,
                          field=field,
                          antenna=antenna,
@@ -103,11 +102,14 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            casalog.post("End flagging in clip mode")
         if quack:
             mode == 'quack'
-            quackmode(selectdata, flagbackup,
+            casalog.post('Start flagging using quack mode')
+            clipquack(selectdata, flagbackup,
                          autocorr=autocorr,
-                         unflag=unflag,
+                         clipminmax=[], clipoutside=False,
+                         clipcolumn="",channelavg=False,
                          quackinterval=quackinterval,   # quack only
                          quackmode=quackmode,           # quack only
                          quackincrement=quackincrement, # quack only
@@ -120,8 +122,10 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
-        elif shadow:
+            casalog.post('End flagging in quack mode')
+        if shadow:
             mode == 'shadow'
+            casalog.post('Start flagging using shadow mode')
             fg.setdata()
             fg.setshadowflags( \
                         field = field, \
@@ -137,10 +141,12 @@ def flagdata2(vis = None,
 
             if flagbackup:
                 backup_flags(mode)
-            fg.run()
+#            fg.run()
+            casalog.post('End flagging in shadow mode')
             
-        elif autoflag:
+        if autoflag:
             mode == 'autoflag'
+            casalog.post('Start flagging using autoflag mode')
             fg.setdata(field = field, \
                            spw = spw, \
                            array = array, \
@@ -164,10 +170,12 @@ def flagdata2(vis = None,
                 
             if flagbackup:
                 backup_flags(mode)
-            fg.run()
+#            fg.run()
+            casalog.post('End flagging in autoflag mode')
 
-        elif rfi:
+        if rfi:
             mode == 'rfi'
+            casalog.post('Start flagging using rfi mode')
             fg.setdata(field = field, \
                            spw = spw, \
                            array = array, \
@@ -193,36 +201,36 @@ def flagdata2(vis = None,
     ## a lengthy sequence of plots (CAS-1655)
                 
             ## channel range (1 based)
-            par['start_chan']=start_chan 
-            par['end_chan']=end_chan
+            par['start_chan']=rfi_start_chan 
+            par['end_chan']=rfi_end_chan
                 
             ## number of time-steps in each chunk
-            par['num_time']=num_time
+            par['num_time']=rfi_num_time
 
             ## flag on cross-correlations and auto-correlations. (0 : only autocorrelations)
-            par['auto_cross']= auto_cross   
+            par['auto_cross']= rfi_auto_cross   
                 
             ## Flag Level :
             ## 0: flag only what is found. 
             ## 1: extend flags one timestep before and after
             ## 2: 1 and extend flags one channel before/after.
-            par['flag_level']=flag_level
+            par['flag_level']=rfi_flag_level
 
             ## data expression on which to flag.
-            par['expr']=clipexpr
+            par['expr']=rfi_clipexpr
 
             ## data column to use.
-            par['column']=clipcolumn
+            par['column']=rfi_clipcolumn
 
             ## False : Fit the bandpass with a piecewise polynomial
             ## True : Fit the bandpass with a straight line.
-            par['freqlinefit']=freqlinefit
+            par['freqlinefit']=rfi_freqlinefit
 
             ## Flagging thresholds ( N sigma ), where 'sigma' is the stdev of the "fit".
             #par['freq_amp_cutoff']=3
             #par['time_amp_cutoff']=4
-            par['freq_amp_cutoff']=freq_amp_cutoff
-            par['time_amp_cutoff']=time_amp_cutoff
+            par['freq_amp_cutoff']=rfi_freq_amp_cutoff
+            par['time_amp_cutoff']=rfi_time_amp_cutoff
                 
             # Tell the 'fg' tool which algorithm to use, and set the parameters.
             # Note : Can set multiple instances of this (will be done one after the other)
@@ -232,10 +240,28 @@ def flagdata2(vis = None,
             if flagbackup:
                 backup_flags(mode)
 
-            fg.run()
+#            fg.run()
+            casalog.post('End flagging in rfi mode')
 
-        elif summary:
+        if unflag:
+            casalog.post('Start flagging using unflag mode')
+            clipquack(selectdata, flagbackup,
+                         autocorr=autocorr,
+                         unflag=unflag,
+                         spw=spw,
+                         field=field,
+                         antenna=antenna,
+                         timerange=timerange,
+                         correlation=correlation,
+                         scan=scan,
+                         feed=feed,
+                         array=array,
+                         uvrange=uvrange)
+            casalog.post('End flagging in unflag mode')
+
+        if summary:
             mode == 'summary'
+            casalog.post('Start flagging using summary mode')
             fg.setdata()
             fg.setflagsummary(field=field, \
                                   spw=spw, \
@@ -247,39 +273,45 @@ def flagdata2(vis = None,
                                   time=timerange, \
                                   correlation=correlation)
                 
+            casalog.post('End flagging in summary mode')
             # do not backup existing flags
-            stats = fg.run()
-            fg.done()
 
-            # filter out baselines/antennas/fields/spws/...
-            # which do not fall within limits
-            if type(stats) is dict:
-                for x in stats.keys():
-                    if type(stats[x]) is dict:
-                        for xx in stats[x].keys():
-                            flagged = stats[x][xx]
-                            assert type(flagged) is dict
-                            assert flagged.has_key('flagged')
-                            assert flagged.has_key('total')
-                            if flagged['flagged'] < minabs or \
+#        elif query:
+#            mode == 'query'
+#            print "Sorry - not yet implemented !"
+#            fg.done()
+#            return False
+        
+#        elif extend:
+#            mode == 'extend'
+#            print "Sorry - not yet implemented !"
+#            fg.done()
+#            return False
+            
+        # Finallly, run the flagging
+        stats = fg.run()
+        fg.done()
+
+        # filter out baselines/antennas/fields/spws/...
+        # which do not fall within limits
+        if type(stats) is dict:
+            for x in stats.keys():
+                if type(stats[x]) is dict:
+                    for xx in stats[x].keys():
+                        flagged = stats[x][xx]
+                        assert type(flagged) is dict
+                        assert flagged.has_key('flagged')
+                        assert flagged.has_key('total')
+                        if flagged['flagged'] < minabs or \
                                 (flagged['flagged'] > maxabs and maxabs >= 0) or \
                                 flagged['flagged']*1.0/flagged['total'] < minrel or \
                                 flagged['flagged']*1.0/flagged['total'] > maxrel:
-                                del stats[x][xx]
-                
-            return stats
+                            del stats[x][xx]
+        if summary==True:               
+            return stats        
         
-        elif query:
-            mode == 'query'
-            print "Sorry - not yet implemented !"
-            fg.done()
-            return False
+        # Add unflag mode here. Remove it from modes above
         
-        elif extend:
-            mode == 'extend'
-            print "Sorry - not yet implemented !"
-            fg.done()
-            return False
 
     except Exception, instance:
         fg.done()
@@ -300,54 +332,29 @@ def flagdata2(vis = None,
 #
 # Handle clip=True mode
 #
-def clipmode(selectdata, flagbackup, **params):
+def clipquack(selectdata, flagbackup, **params):
     if debug: print params
 
     if not selectdata:
         params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = ''
     
-    print params.keys()
-    for x in params.keys():
-        print 'x=%s'%x
+#    print params.keys()
+#    for x in params.keys():
+#        print 'x=%s'%x
 
-    casalog.post('Starting clip mode')
+#    casalog.post('Start flagging using clip mode')
 
     fg.setdata()
     rename_params(params)
     fg.setmanualflags(**params)
 
     if flagbackup:
-        backup_flags('clip')
+        if params.keys().__contains__('quackmode'):
+            backup_flags('quack')
+        else:
+            backup_flags('clip')
         
-    fg.run()
-
-#
-# Handle quack=True mode
-#
-def quackmode(selectdata, flagbackup, **params):
-    if debug: print params
-
-    if not selectdata:
-        params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = ''
-    
-    print params.keys()
-    for x in params.keys():
-        print 'x=%s'%x
-
-    casalog.post('Starting quack mode')
-
-    fg.setdata()
-    rename_params(params)
-    fg.setmanualflags(**params)
-
-    if flagbackup:
-        backup_flags('quack')
-        
-    fg.run()
-
-
-
-
+#    fg.run()
 
 #
 # Handle mode = 'manualflag' and mode = 'quack'
@@ -438,7 +445,7 @@ def manualflag_quack(mode, selectdata, flagbackup, **params):
 # rename some parameters,
 # in order to match the interface of fg.tool
 #
-# validate parameter quackmode
+# validate parameters for clip quack and unflag modes
 def rename_params(params):
                 
     if params.has_key('quackmode') and \
@@ -448,8 +455,10 @@ def rename_params(params):
     params['baseline']        = params['antenna']     ; del params['antenna']
     params['time']            = params['timerange']   ; del params['timerange']
     params['autocorrelation'] = params['autocorr']    ; del params['autocorr']
-    params['cliprange']       = params['clipminmax']  ; del params['clipminmax']
-    params['outside']         = params['clipoutside'] ; del params['clipoutside']
+    if params.has_key('clipminmax'):
+        params['cliprange']       = params['clipminmax']  ; del params['clipminmax']
+    if params.has_key('clipoutside'):
+        params['outside']         = params['clipoutside'] ; del params['clipoutside']
 
 def backup_flags(mode):
 

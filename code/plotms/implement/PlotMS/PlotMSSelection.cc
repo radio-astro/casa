@@ -95,9 +95,14 @@ bool PlotMSSelection::operator==(const PlotMSSelection& other) const {
   // Check forceNew counter first
   //  not equal (first reset forceNew so that it isn't sticky)
   if (forceNew()!=other.forceNew())  {
-    cout << "this/other forceNew_ = " << forceNew() << "/" << other.forceNew() << endl;
     return false;
   }
+
+  return fieldsEqual(other);
+
+}
+
+bool PlotMSSelection::fieldsEqual(const PlotMSSelection& other) const {    
 
   vector<Field> f = fields();
   for(unsigned int i = 0; i < f.size(); i++)

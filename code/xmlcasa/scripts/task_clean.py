@@ -137,7 +137,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
                 print "Processing channel %s of %s" % (j+1, nchaniter)
                 casalog.post("Processing channel %s of %s"% (j+1, nchaniter))
-                chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
+                #chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
+                chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,width,freqs,finc,tmppath)
                 imagename=chaniterParms['imagename']
                 imnchan=chaniterParms['imnchan']
                 chanslice=chaniterParms['chanslice']
@@ -145,7 +146,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 imstart=chaniterParms['imstart']
                 visnchan=chaniterParms['visnchan']
                 visstart=chaniterParms['visstart']
-
 
             # change to handle multifield masks
             maskimage=''
@@ -398,7 +398,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                             image=restoredimage, psfimage=psfimage,
                             mask=maskimage, interactive=interactive,
                             npercycle=npercycle);
-                      
+		
                 #In the interactive mode, deconvlution can be skipped and in that case
                 #psf is not generated. So check if all psfs are there if not, generate
                 if interactive:
@@ -406,7 +406,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         if not os.path.isdir(psfim):
                             imCln.approximatepsf(psf=psfim) 
             
-            if dochaniter:
+            if dochaniter and not imset.skipclean :
                 imset.storeCubeImages(finalimagename,imset.imagelist,j,imagermode)
         
         imCln.close()

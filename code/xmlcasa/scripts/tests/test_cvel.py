@@ -12,6 +12,7 @@ vis_b = 'test.ms'
 vis_c = 'jupiter6cm.demo.ms'
 vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
 vis_e = 'g19_d2usb_targets_line-shortened.ms'
+vis_f = 'evla-highres-sample.ms'
 outfile = 'cvel-output.ms'
 
 def verify_ms(msname, expnumspws, expnumchan, inspw):
@@ -80,6 +81,8 @@ class cvel_test(unittest.TestCase):
                          vis=vis_d)
         if(not os.path.exists(vis_e)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
+        if(not os.path.exists(vis_f)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample.ms .')
 
 
     def tearDown(self):
@@ -657,6 +660,20 @@ class cvel_test(unittest.TestCase):
             )
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 128, 0)
+        self.assertTrue(ret[0],ret[1])
+
+    def test34(self):
+        '''Cvel 34: EVAL high-res input MS, 2 spws to combine'''
+        myvis = vis_f
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode = 'velocity',
+            restfreq  = '6035.092MHz'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 260, 0)
         self.assertTrue(ret[0],ret[1])
 
 def suite():

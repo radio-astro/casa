@@ -1632,9 +1632,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     vector< Vector<Double> > xold; 
     vector< Vector<Double> > xout; 
     vector< Vector<Double> > xin; 
-    //    vector< InterpolateArray1D<Double,Complex>::InterpolationMethod > method;
-    // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-    vector< InterpolateArray1D<Float,Complex>::InterpolationMethod > method;
+    vector< InterpolateArray1D<Double,Complex>::InterpolationMethod > method;
     vector< InterpolateArray1D<Double,Float>::InterpolationMethod > methodF;
     
 
@@ -1901,14 +1899,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Array<Complex> yin;
 	Array<Bool> yinFlags((*oldFLAGColP)(mainTabRow));
 	
-	// Note: to use a  Vector<Float> here instead of the original Vector<Double>
-	// is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	Vector<Float> xinff(xold[iDone].size());
 	Vector<Double> xindd(xold[iDone].size());
-	Vector<Float> xoutff(xout[iDone].size()); 
-	for(uInt i=0; i<xout[iDone].size(); i++){
-	  xoutff[i] = xout[iDone][i];
-	}
 
 	if(transform[iDone]){
 
@@ -1920,7 +1911,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  // transform from this timestamp to the one of the output SPW
 	  for(uInt i=0; i<xindd.size(); i++){
 	    xindd[i] = freqTrans2(xold[iDone][i]).get(unit).getValue();
-	    xinff[i] = xindd[i];
 	  }
 // 	  if(mainTabRow==0){ // debug output
 // 	    Int i = 25;
@@ -1934,7 +1924,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else{ // no additional transformation of input grid
 	  for(uInt i=0; i<xin[iDone].size(); i++){ // cannot use assign due to different data type
 	    xindd[i] = xin[iDone][i];
-	    xinff[i] = xindd[i];
 	  }
 	}
 	
@@ -1959,10 +1948,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    hanningDone = True;
 	  }
 
-	  InterpolateArray1D<Float, Complex>::interpolate(yout, // the new visibilities
+	  InterpolateArray1D<Double,Complex>::interpolate(yout, // the new visibilities
 							  youtFlags, // the new flags
-							  xoutff, // the new channel centers
-							  xinff, // the old channel centers
+							  xout[iDone], // the new channel centers
+							  xindd, // the old channel centers
 							  yin, // the old visibilities 
 							  yinFlags,// the old flags
 							  method[iDone], // the interpol method
@@ -1984,7 +1973,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    yinFlagsUnsmoothed.assign(yinFlags);
 	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
-	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
+	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
@@ -2001,14 +1990,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    yinFlagsUnsmoothed.assign(yinFlags);
 	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
-	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
+	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  LAG_DATACol.put(mainTabRow, yout);
 	}
 	if(!MODEL_DATACol.isNull()){
 	  yin.assign((*oldMODEL_DATAColP)(mainTabRow));
 
-	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
+	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
 							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  MODEL_DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
@@ -3146,10 +3135,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				  vector< Vector<Double> >& xold, 
 				  vector< Vector<Double> >& xout, 
 				  vector< Vector<Double> >& xin, 
-				  // This is a temporary fix until
-				  // InterpolateArray1D<Double, Complex>&
-				  // works.
-				  vector<InterpolateArray1D<Float, Complex>::InterpolationMethod >& method,
+				  vector<InterpolateArray1D<Double, Complex>::InterpolationMethod >& method,
 				  vector<InterpolateArray1D<Double, Float>::InterpolationMethod >& methodF,
 				  Bool& msModified,
 				  const String& outframe,
@@ -3481,9 +3467,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Double newTOTAL_BANDWIDTH = transTOTAL_BANDWIDTH;
 	Vector<Double> newEFFECTIVE_BW;
 	newEFFECTIVE_BW.assign(oldEFFECTIVE_BW);
-	//	InterpolateArray1D<Double,Complex>::InterpolationMethod theMethod;
-	// This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	InterpolateArray1D<Float,Complex>::InterpolationMethod theMethod;
+	InterpolateArray1D<Double,Complex>::InterpolationMethod theMethod;
 	InterpolateArray1D<Double,Float>::InterpolationMethod theMethodF;
 
 	// check if theSPWId was already handled
@@ -3526,9 +3510,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	     ){
 	    // No regridding will take place.
 	    // Set the interpol methods to some dummy value
-	    //	  theMethod = InterpolateArray1D<Double,Complex>::linear;
-	    // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	    theMethod = InterpolateArray1D<Float,Complex>::linear;
+	    theMethod = InterpolateArray1D<Double,Complex>::linear;
 	    theMethodF = InterpolateArray1D<Double,Float>::linear;
 	    methodName = "linear";
 	    message = " output frame = " + MFrequency::showType(theFrame) + " (pure transformation of the channel definition)";
@@ -3540,21 +3522,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    String meth=regridInterpMeth;
 	    meth.downcase();
 	    if(meth.contains("nearest")){
-	      //	    theMethod = InterpolateArray1D<Double,Complex>::linear;
-	      // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	      theMethod = InterpolateArray1D<Float,Complex>::nearestNeighbour;
+	      theMethod = InterpolateArray1D<Double,Complex>::nearestNeighbour;
 	      theMethodF = InterpolateArray1D<Double,Float>::nearestNeighbour;
 	      methodName = "nearestNeighbour";
 	    }
 	    else if(meth.contains("splin")){
-	      //	    theMethod = InterpolateArray1D<Double,Complex>::spline;
-	      theMethod = InterpolateArray1D<Float,Complex>::spline;
+	      theMethod = InterpolateArray1D<Double,Complex>::spline;
 	      theMethodF = InterpolateArray1D<Double,Float>::spline;
 	      methodName = "spline";
 	    }	    
 	    else if(meth.contains("cub")){
-	      //	    theMethod = InterpolateArray1D<Double,Complex>::cubic;
-	      theMethod = InterpolateArray1D<Float,Complex>::cubic;
+	      theMethod = InterpolateArray1D<Double,Complex>::cubic;
 	      theMethodF = InterpolateArray1D<Double,Float>::cubic;
 	      methodName = "cubic spline";
 	    }
@@ -3565,9 +3543,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		   << LogIO::POST;
 		return False;
 	      }
-	      // theMethod = InterpolateArray1D<Double,Complex>::linear;
-	      // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	      theMethod = InterpolateArray1D<Float,Complex>::linear;
+	      theMethod = InterpolateArray1D<Double,Complex>::linear;
 	      theMethodF = InterpolateArray1D<Double,Float>::linear;
 	      methodName = "linear";
 	    }

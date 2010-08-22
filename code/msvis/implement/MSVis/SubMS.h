@@ -317,8 +317,7 @@ class SubMS
 			   vector< Vector<Double> >& xold, 
 			   vector< Vector<Double> >& xout, 
 			   vector< Vector<Double> >& xin, 
-			   // This is a temporary fix until InterpolateArray1D<Double, Complex>& works.
-			   vector< InterpolateArray1D<Float,Complex>::InterpolationMethod >& method,
+			   vector< InterpolateArray1D<Double,Complex>::InterpolationMethod >& method,
 			   vector< InterpolateArray1D<Double,Float>::InterpolationMethod >& methodF,
 			   Bool& msMod,
 			   const String& outframe,

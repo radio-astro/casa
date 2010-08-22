@@ -103,7 +103,10 @@ void PlotMSToolsTab::showIterationButtons(bool show) {
     iterationBox->setVisible(show); }
 
 
-void PlotMSToolsTab::toolsUnchecked() { handNone->setChecked(true); }
+
+void PlotMSToolsTab::toolsUnchecked() { 
+	handNone->setChecked(true); 
+}
 
 
 void PlotMSToolsTab::notifyTrackerChanged(PlotTrackerTool& tool)   {

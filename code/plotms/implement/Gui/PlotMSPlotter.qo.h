@@ -202,6 +202,12 @@ public slots:
     // Slot for showing an "about" dialog.
     void showAbout();
     
+    // Take any clean-up actions before a Plot is made
+    // 1) unclick any zoom, pan, etc buttons to avoid bug in zoom stack
+    // 2) ... anything else needed in the future ...
+    void prepareForPlotting();
+    
+    
 protected:
     // Overrides QWidget::closeEvent(), in case we're dealing with a plotter
     // that isn't Qt and thus is in its own window (and possibly its own

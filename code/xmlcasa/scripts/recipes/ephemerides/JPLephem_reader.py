@@ -262,8 +262,31 @@ def mean_radius(a, b, c):
     is uniformly distributed over the whole sphere, and "apparent mean radius"
     means a radius that would give the same area as the apparent disk.
     """
-    # This is an approximation, but it's not bad if b ~= a.
-    return numpy.sqrt(0.5 * a * (a + (2.0 * b + c) / 3.0))
+    # This is an approximation, but it's not bad.
+    # The exact equations for going from a, b, c, and the Euler angles to the
+    # apparent ellipse are given in Drummond et al, Icarus, 1985a.
+    # It's the integral over the spin phase that I have approximated, so the
+    # approximation is exact for b == a, and appears to hold well for b << a.
+    R = 0.5 * c**2 * (1.0 / b**2 + 1.0 / a**2)   # The magic ratio.
+    if R < 0.95:
+        sqrt1mR = numpy.sqrt(1.0 - R)
+        # There is fake singularity (RlnR) at R = 0, but it is unlikely to
+        # be a problem.
+        try:
+            Rterm = 0.5 * R * numpy.log((1.0 + sqrt1mR) / (1.0 - sqrt1mR)) / sqrt1mR
+        except:
+            Rterm = 0.0
+    else:
+        # Use a (rapidly converging) series expansion to avoid a fake
+        # singularity at R = 1.
+        Rterm = 1.0               # 0th order
+        onemR = 1.0 - R
+        onemRtothei = 1.0
+        for i in xrange(1, 5):    # Start series at 1st order.
+            onemRtothei *= onemR
+            Rterm -= onemRtothei / (0.5 + 2.0 * i**2)
+    avalfabeta = 0.5 * a * b * (1.0 + Rterm)
+    return numpy.sqrt(avalfabeta)
 
 def datestr_to_epoch(datestr):
     """

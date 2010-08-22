@@ -63,7 +63,7 @@ PlotMSPlotParameters PlotMSPlotSubtab::currentlySetParameters() const {
 PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
         itsPlotManager_(parent->getParent()->getPlotManager()),
         itsCurrentPlot_(NULL), itsCurrentParameters_(NULL),
-        itsUpdateFlag_(true),forceReloadCounter_(0),its_force_reload(false)
+        itsUpdateFlag_(true),its_force_reload(false),forceReloadCounter_(0)
     {
     setupUi(this);
     
@@ -87,6 +87,14 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     // All this does is note if shift was down during the click.
     // This slot should be called before the main one in synchronize action.
     connect( plotButton, SIGNAL(clicked()),  SLOT(observeModKeys()) );
+    
+    // To fix zoom stack first-element bug, must be sure Zoom, Pan, etc
+    // in toolbar are all unclicked.   Leave it to the Plotter aka 
+    // "parent" know how to do this, offering a slot  
+    // we can plug the Plot button into.
+    // The prepareForPlotting() slot is available for other things to do
+    // at this point in time (like evil diagnostic experiements).
+    connect( plotButton, SIGNAL(clicked()),  parent, SLOT(prepareForPlotting()) );
 
     // Synchronize plot button.  This makes the reload/replot happen.
     itsPlotter_->synchronizeAction(PlotMSAction::PLOT, plotButton);
@@ -223,8 +231,6 @@ void PlotMSPlotTab::plot() {
         bool paramsChanged = params != *itsCurrentParameters_;
         bool cancelledCache = !itsCurrentPlot_->data().cacheReady();
 
-		cout << "existing forceNew value = " << d->selection().forceNew() << endl;
-        
         if (its_force_reload)    {
 			forceReloadCounter_++;   
 			paramsChanged=true;   // just to make sure we're noticed
@@ -238,9 +244,6 @@ void PlotMSPlotTab::plot() {
 		sel.setForceNew(forceReloadCounter_);
 		
 	
-		/*DEBUG*/printf("    DSW: paramsChanged %d   cancelledCache %d    forceReloadCounter_=%d\n",paramsChanged,cancelledCache,forceReloadCounter_);
-
-		
         
         if (paramsChanged || cancelledCache) {
 			
@@ -629,12 +632,12 @@ void PlotMSPlotTab::tabChanged() {
 
 
 void PlotMSPlotTab::observeModKeys()   {
+
 	itsModKeys = QApplication::keyboardModifiers(); 
 	bool using_shift_key = (itsModKeys & Qt::ShiftModifier) !=0;
 	bool always_replot_checked = forceReplotChk->isChecked();
 	
 	its_force_reload = using_shift_key  ||  always_replot_checked;
-printf("plot slot observeModKeys:  suing_shift=%d   always chk=%d  \n", 	using_shift_key, always_replot_checked);
 }
 
 

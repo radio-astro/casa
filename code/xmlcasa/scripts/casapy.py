@@ -193,12 +193,17 @@ if os.uname()[0]=='Darwin' :
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## ensure default initialization occurs before this point...
+##
+##      prelude.py  =>  setup/modification of casa settings
+##      init.py     =>  user setup (with task access)
+##
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
+if os.path.exists( casa['dirs']['rc'] + '/prelude.py' ) :
     try:
-        execfile ( casa['dirs']['rc'] + '/init.py' )
+        execfile ( casa['dirs']['rc'] + '/prelude.py' )
     except:
-        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
+        print str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1])
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/prelude.py'
         exit(1)
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -970,6 +975,21 @@ from parameter_dictionary import *
 from task_help import *
 #
 home=os.environ['HOME']
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##
+##      prelude.py  =>  setup/modification of casa settings (above)
+##      init.py     =>  user setup (with task access)
+##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
+    try:
+        execfile ( casa['dirs']['rc'] + '/init.py' )
+    except:
+        print str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1])
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
+        exit(1)
+
 if ipython:
     startup()
 

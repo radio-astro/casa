@@ -422,10 +422,13 @@ public:
   //<group>
   virtual void zoomIn (Double fctr=2.) { if(zoom_!=0) zoom_->zoomIn (fctr);  }
   virtual void zoomOut(Double fctr=2.) { if(zoom_!=0) zoom_->zoomOut(fctr);  }
+  virtual void zoom (const Vector<Double> &blc, const Vector<Double> &trc )
+				{if ( zoom_ != 0 ) zoom_->zoom( blc, trc ); }
   virtual void unzoom() { if(zoom_!=0) zoom_->unzoom();  }
   //</group>
 
-     
+
+  Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
   
   // Returns the pixel canvas's current size.
   QSize canvasSize() { return pc_->size(); }
