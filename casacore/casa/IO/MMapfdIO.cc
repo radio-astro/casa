@@ -240,7 +240,7 @@ namespace casa
                 char b=0;
                 LargeFiledesIO::write (1, &b);
 		*/
-		itsFileSize *= 2;
+		itsFileSize += (1024*1024*20);
 		ftruncate(fd(), itsFileSize);
             }
             mapFile(itsPosition, size);
