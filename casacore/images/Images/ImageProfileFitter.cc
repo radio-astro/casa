@@ -53,7 +53,7 @@ ImageProfileFitter::ImageProfileFitter(
 }
 
 ImageProfileFitter::ImageProfileFitter(
-	const ImageInterface<Float>* image, const String& region, const String& box,
+	const ImageInterface<Float> * const image, const String& region, const String& box,
 	const String& chans, const String& stokes, const String& mask,
 	const Int axis, const Bool multiFit, const String& residual, const String& model,
 	const uInt ngauss, const Int polyOrder
