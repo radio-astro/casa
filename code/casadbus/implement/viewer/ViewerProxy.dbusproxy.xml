@@ -14,6 +14,7 @@
     <method name="load" >
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="s" name="displaytype" />
+      <arg direction="in" type="d" name="scaling" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
