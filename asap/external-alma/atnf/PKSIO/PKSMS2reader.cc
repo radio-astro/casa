@@ -100,7 +100,9 @@ Int PKSMS2reader::open(
   // data selection by antenna
   if ( antenna.length() == 0 ) {
     cAntId.resize( 1 ) ;
-    cAntId[0] = 0 ;
+    //cAntId[0] = 0 ;
+    ROScalarColumn<Int> ant1Col( cPKSMS, "ANTENNA1" ) ;
+    cAntId[0] = ant1Col(0) ;
   }
   else {
     setupAntennaList( antenna ) ;

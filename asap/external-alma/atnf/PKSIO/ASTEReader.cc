@@ -87,9 +87,12 @@ vector<double> ASTEReader::getAntennaPosition()
   // W67d42m11s S22d58m18s 4800m 
   // Ref.: Ezawa, H. et al. 2004, Proc. SPIE, 5489, 763
   //
-  double elon = -67. - 42. / 60. - 11. / 3600. ;
-  double nlat = -22. - 58. / 60. - 18. / 3600. ;
-  double alti = 2400. ;
+  // double elon = -67. - 42. / 60. - 11. / 3600. ;
+  // double nlat = -22. - 58. / 60. - 18. / 3600. ;
+  // double alti = 2400. ;
+  double elon = -67.7031 ;
+  double nlat = -22.9717 ;
+  double alti = 4800.0 ;
 
   // APEX value
   //double elon = -67.7592 ;
@@ -100,6 +103,7 @@ vector<double> ASTEReader::getAntennaPosition()
                            Quantity( elon, "deg" ),
                            Quantity( nlat, "deg" ) ),
                MPosition::Ref( MPosition::WGS84 ) ) ;
+
   MeasFrame frame( p ) ;
   MVPosition mvp ;
   frame.getITRF( mvp ) ;

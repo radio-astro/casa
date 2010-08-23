@@ -1,6 +1,7 @@
-from asap import rcParams, print_log, print_log_dec
-from asap import selector, scantable
-from asap import asaplog
+from asap.parameters import rcParams
+from asap.selector import selector
+from asap.scantable import scantable
+from asap.logging import asaplog, asaplog_post_dec
 import matplotlib.axes
 from matplotlib.font_manager import FontProperties
 from matplotlib.text import Text
@@ -12,9 +13,12 @@ class asapplotter:
     The ASAP plotter.
     By default the plotter is set up to plot polarisations
     'colour stacked' and scantables across panels.
-    Note:
+
+    .. note::
+
         Currenly it only plots 'spectra' not Tsys or
         other variables.
+
     """
     def __init__(self, visible=None , **kwargs):
         self._visible = rcParams['plotter.gui']
@@ -76,7 +80,7 @@ class asapplotter:
             return CustomToolbarTkAgg(self)
         else: return None
 
-    @print_log_dec
+    @asaplog_post_dec
     def plot(self, scan=None):
         """
         Plot a scantable.
@@ -97,11 +101,6 @@ class asapplotter:
         self._plotter.clear()
         if not self._data and not scan:
             msg = "Input is not a scantable"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push( msg )
-                print_log( 'ERROR' )
-                return
             raise TypeError(msg)
         if scan: self.set_data(scan,refresh=False)
         self._plot(self._data)
@@ -111,7 +110,6 @@ class asapplotter:
         self._plotter.release()
         self._plotter.tidy()
         self._plotter.show(hardrefresh=False)
-        print_log()
         return
 
     def gca(self):
@@ -273,18 +271,19 @@ class asapplotter:
         self._plotter.axes.set_autoscale_on(True)
     # end matplotlib.axes fowarding functions
 
+    @asaplog_post_dec
     def set_data(self, scan, refresh=True):
         """
-        Set a scantable to plot. 
+        Set a scantable to plot.
         Parameters:
             scan:      a scantable
             refresh:   True (default) or False. If True, the plot is
-                       replotted based on the new parameter setting(s). 
+                       replotted based on the new parameter setting(s).
                        Otherwise,the parameter(s) are set without replotting.
         Note:
            The user specified masks and data selections will be reset
            if a new scantable is set. This method should be called before
-           setting data selections (set_selection) and/or masks (set_mask). 
+           setting data selections (set_selection) and/or masks (set_mask).
         """
         from asap import scantable
         if isinstance(scan, scantable):
@@ -295,17 +294,11 @@ class asapplotter:
                     self._reset()
                     msg = "A new scantable is set to the plotter. The masks and data selections are reset."
                     asaplog.push( msg )
-                    print_log( 'INFO' )
             else:
                 self._data = scan
                 self._reset()
         else:
             msg = "Input is not a scantable"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push( msg )
-                print_log( 'ERROR' )
-                return
             raise TypeError(msg)
 
         # ranges become invalid when unit changes
@@ -315,8 +308,8 @@ class asapplotter:
             self._abcunit = self._data.get_unit()
             self._datamask = None
         if refresh: self.plot()
-        
 
+    @asaplog_post_dec
     def set_mode(self, stacking=None, panelling=None, refresh=True):
         """
         Set the plots look and feel, i.e. what you want to see on the plot.
@@ -326,7 +319,7 @@ class asapplotter:
             panelling:    tell the plotter which variable to plot
                           across multiple panels (default 'scan'
             refresh:      True (default) or False. If True, the plot is
-                          replotted based on the new parameter setting(s). 
+                          replotted based on the new parameter setting(s).
                           Otherwise,the parameter(s) are set without replotting.
         Note:
             Valid modes are:
@@ -339,17 +332,15 @@ class asapplotter:
         msg = "Invalid mode"
         if not self.set_panelling(panelling) or \
                not self.set_stacking(stacking):
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push( msg )
-                print_log( 'ERROR' )
-                return
-            else:
-                raise TypeError(msg)
+            raise TypeError(msg)
         if refresh and self._data: self.plot(self._data)
         return
 
     def set_panelling(self, what=None):
+        """Set the 'panelling' mode i.e. which type of spectra should be
+        spread across different panels.
+        """
+
         mode = what
         if mode is None:
              mode = rcParams['plotter.panelling']
@@ -368,7 +359,7 @@ class asapplotter:
              rows:   The number of rows of plots
              cols:   The number of columns of plots
              refresh:  True (default) or False. If True, the plot is
-                       replotted based on the new parameter setting(s). 
+                       replotted based on the new parameter setting(s).
                        Otherwise,the parameter(s) are set without replotting.
         Note:
              If no argument is given, the potter reverts to its auto-plot
@@ -380,6 +371,9 @@ class asapplotter:
         return
 
     def set_stacking(self, what=None):
+        """Set the 'stacking' mode i.e. which type of spectra should be
+        overlayed.
+        """
         mode = what
         if mode is None:
              mode = rcParams['plotter.stacking']
@@ -396,7 +390,7 @@ class asapplotter:
         Parameters:
             [x,y]start,[x,y]end:  The start and end points of the 'zoom' window
             refresh:  True (default) or False. If True, the plot is
-                      replotted based on the new parameter setting(s). 
+                      replotted based on the new parameter setting(s).
                       Otherwise,the parameter(s) are set without replotting.
         Note:
             These become non-sensical when the unit changes.
@@ -439,7 +433,7 @@ class asapplotter:
                         9: upper center
                         10: center
             refresh:    True (default) or False. If True, the plot is
-                        replotted based on the new parameter setting(s). 
+                        replotted based on the new parameter setting(s).
                         Otherwise,the parameter(s) are set without replotting.
 
         Example:
@@ -464,7 +458,7 @@ class asapplotter:
         multiple titles have to be specified.
         Parameters:
             refresh:    True (default) or False. If True, the plot is
-                        replotted based on the new parameter setting(s). 
+                        replotted based on the new parameter setting(s).
                         Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
@@ -485,7 +479,7 @@ class asapplotter:
             ordinate:    a list of ordinate labels. None (default) let
                          data determine the labels
             refresh:     True (default) or False. If True, the plot is
-                         replotted based on the new parameter setting(s). 
+                         replotted based on the new parameter setting(s).
                          Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
@@ -507,7 +501,7 @@ class asapplotter:
             abcissa:     a list of abcissa labels. None (default) let
                          data determine the labels
             refresh:     True (default) or False. If True, the plot is
-                         replotted based on the new parameter setting(s). 
+                         replotted based on the new parameter setting(s).
                          Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
@@ -528,7 +522,7 @@ class asapplotter:
         Parameters:
             colmap:     a list of colour names
             refresh:    True (default) or False. If True, the plot is
-                        replotted based on the new parameter setting(s). 
+                        replotted based on the new parameter setting(s).
                         Otherwise,the parameter(s) are set without replotting.
         Example:
              plotter.set_colors("red green blue")
@@ -552,7 +546,7 @@ class asapplotter:
                          is taken from the .asaprc setting
                          plotter.histogram
             refresh:     True (default) or False. If True, the plot is
-                         replotted based on the new parameter setting(s). 
+                         replotted based on the new parameter setting(s).
                          Otherwise,the parameter(s) are set without replotting.
         """
         self._hist = hist
@@ -572,7 +566,7 @@ class asapplotter:
                              'dashdotdot' and 'dashdashdot' are
                              possible
             refresh:         True (default) or False. If True, the plot is
-                             replotted based on the new parameter setting(s). 
+                             replotted based on the new parameter setting(s).
                              Otherwise,the parameter(s) are set without replotting.
         Example:
              plotter.set_colors("black")
@@ -599,7 +593,7 @@ class asapplotter:
             size:      the 'general' font size, individual elements can be adjusted
                        seperately
             refresh:   True (default) or False. If True, the plot is
-                       replotted based on the new parameter setting(s). 
+                       replotted based on the new parameter setting(s).
                        Otherwise,the parameter(s) are set without replotting.
         """
         from matplotlib import rc as rcp
@@ -615,20 +609,20 @@ class asapplotter:
         Set the layout of subplots.
         Parameters:
             layout:   a list of subplots layout in figure coordinate (0-1),
-                      i.e., fraction of the figure width or height. 
+                      i.e., fraction of the figure width or height.
                       The order of elements should be:
                       [left, bottom, right, top, horizontal space btw panels,
-                      vertical space btw panels]. 
+                      vertical space btw panels].
             refresh:  True (default) or False. If True, the plot is
-                      replotted based on the new parameter setting(s). 
+                      replotted based on the new parameter setting(s).
                       Otherwise,the parameter(s) are set without replotting.
         Note
         * When layout is not specified, the values are reset to the defaults
           of matplotlib.
-        * If any element is set to be None, the current value is adopted. 
+        * If any element is set to be None, the current value is adopted.
         """
         if layout == []: self._panellayout=self._reset_panellayout()
-        else: 
+        else:
             self._panellayout=[None]*6
             self._panellayout[0:len(layout)]=layout
         #print "panel layout set to ",self._panellayout
@@ -734,7 +728,7 @@ class asapplotter:
         self._plotter.save(filename,orientation,dpi)
         return
 
-
+    @asaplog_post_dec
     def set_mask(self, mask=None, selection=None, refresh=True):
         """
         Set a plotting mask for a specific polarization.
@@ -743,7 +737,7 @@ class asapplotter:
              mask:           a mask from scantable.create_mask
              selection:      the spectra to apply the mask to.
              refresh:        True (default) or False. If True, the plot is
-                             replotted based on the new parameter setting(s). 
+                             replotted based on the new parameter setting(s).
                              Otherwise,the parameter(s) are set without replotting.
         Example:
              select = selector()
@@ -752,13 +746,7 @@ class asapplotter:
         """
         if not self._data:
             msg = "Can only set mask after a first call to plot()"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push( msg )
-                print_log( 'ERROR' )
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         if len(mask):
             if isinstance(mask, list) or isinstance(mask, tuple):
                 self._usermask = array(mask)
@@ -845,7 +833,7 @@ class asapplotter:
             msg ="Scan to be plotted contains more than %d selections.\n" \
                   "Selecting first %d selections..." % (maxn, maxn)
             asaplog.push(msg)
-            print_log('WARN')
+            asaplog.post('WARN')
             n = min(n,maxpanel)
             nstack = min(nstack,maxstack)
         if n > 1:
@@ -960,7 +948,7 @@ class asapplotter:
             r+=1 # next row
         #reset the selector to the scantable's original
         scan.set_selection(savesel)
-        
+
         #temporary switch-off for older matplotlib
         #if self._fp is not None:
         if self._fp is not None and getattr(self._plotter.figure,'findobj',False):
@@ -972,7 +960,7 @@ class asapplotter:
         Parameters:
             selection:  a selector object (default unset the selection)
             refresh:    True (default) or False. If True, the plot is
-                        replotted based on the new parameter setting(s). 
+                        replotted based on the new parameter setting(s).
                         Otherwise,the parameter(s) are set without replotting.
         """
         if selection is None:
@@ -1048,7 +1036,7 @@ class asapplotter:
         lef, bot, rig, top, wsp, hsp = self._panellayout
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
                                  wspace=wsp,hspace=hsp)
-        
+
         tdel = max(t) - min(t)
         ax = PL.subplot(2,1,1)
         el = array(self._data.get_elevation())*180./pi
@@ -1160,6 +1148,7 @@ class asapplotter:
 
     # plot total power data
     # plotting in time is not yet implemented..
+    @asaplog_post_dec
     def plottp(self, scan=None, outfile=None):
         if self._plotter.is_dead:
             if hasattr(self._plotter.figmgr,'casabar'):
@@ -1171,11 +1160,6 @@ class asapplotter:
         from asap import scantable
         if not self._data and not scan:
             msg = "Input is not a scantable"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push( msg )
-                print_log( 'ERROR' )
-                return
             raise TypeError(msg)
         if isinstance(scan, scantable):
             if self._data is not None:
@@ -1205,7 +1189,6 @@ class asapplotter:
         self._plotter.release()
         self._plotter.tidy()
         self._plotter.show(hardrefresh=False)
-        print_log()
         return
 
     def _plottp(self,scan):
@@ -1266,21 +1249,24 @@ class asapplotter:
 
 
     # printing header information
+    @asaplog_post_dec
     def print_header(self, plot=True, fontsize=9, logger=False, selstr='', extrastr=''):
         """
         print data (scantable) header on the plot and/or logger.
         Parameters:
-            plot:      whether or not print header info on the plot. 
+            plot:      whether or not print header info on the plot.
             fontsize:  header font size (valid only plot=True)
             autoscale: whether or not autoscale the plot (valid only plot=True)
             logger:    whether or not print header info on the logger.
             selstr:    additional selection string (not verified)
             extrastr:  additional string to print (not verified)
         """
-        if not plot and not logger: return
-        if not self._data: raise RuntimeError("No scantable has been set yet.")
-        # Now header will be printed on plot and/or logger. 
-        # Get header information and format it. 
+        if not plot and not logger:
+            return
+        if not self._data:
+            raise RuntimeError("No scantable has been set yet.")
+        # Now header will be printed on plot and/or logger.
+        # Get header information and format it.
         ssum=self._data.__str__()
         # Print Observation header to the upper-left corner of plot
         if plot:
@@ -1292,7 +1278,7 @@ class asapplotter:
             ssel='***Selections***\n'+(selstr+self._data.get_selection().__str__() or 'none')
             headstr.append(ssel)
             nstcol=len(headstr)
-            
+
             self._plotter.hold()
             for i in range(nstcol):
                 self._plotter.figure.text(0.03+float(i)/nstcol,0.98,
@@ -1311,7 +1297,4 @@ class asapplotter:
             asaplog.push("----------------\n  Plot Summary\n----------------")
             asaplog.push(extrastr)
             asaplog.push(ssum[ssum.find('Beams:'):])
-            print_log()
         del ssum
-
-

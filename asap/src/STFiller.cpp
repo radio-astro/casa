@@ -793,16 +793,22 @@ int STFiller::readNRO()
       *azCol = azimuth ;
       RecordFieldPtr<Float> elCol(rec, "ELEVATION") ;
       *elCol = elevation ;
-      RecordFieldPtr<Float> parCol(rec, "PARANGLE") ;
-      *parCol = parangle ;
+      //RecordFieldPtr<Float> parCol(rec, "PARANGLE") ;
+      //*parCol = parangle ;
       RecordFieldPtr<Float> tauCol(rec, "OPACITY") ;
       *tauCol = opacity ;
-      RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID") ;
-      *mcalidCol = tcalid ;
+      id = table_->tcal().addEntry("",Vector<Float>(1,0.0));
+      RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID");
+      *mcalidCol = id;
+      //RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID") ;
+      //*mcalidCol = tcalid ;
       RecordFieldPtr<Int> fitCol(rec, "FIT_ID") ;
       *fitCol = fitid ;
-      RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID") ;
-      *mfocusidCol = focusid ;
+      //RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID") ;
+      //*mfocusidCol = focusid ;
+      RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID");
+      id = table_->focus().addEntry(parangle, 0.0, 0.0, 0.0 ) ;
+      *mfocusidCol = id;
       RecordFieldPtr<uInt> mweatheridCol(rec, "WEATHER_ID") ;
       id = table_->weather().addEntry( temperature,
                                        pressure,

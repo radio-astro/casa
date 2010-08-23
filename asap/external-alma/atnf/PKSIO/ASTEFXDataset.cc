@@ -123,6 +123,8 @@ void ASTEFXDataset::initialize()
     + sizeof( double ) * ASTE_ARYMAX_FX * 10 * 3    // FQCAL, CHCAL, CWCAL
     + sizeof( char ) * 116                          // CDMY1
     + sizeof( double ) * ASTE_ARYMAX_FX ;           // DSBFC
+
+  refFreq_.resize( ASTE_ARYMAX_FX, 0.0 ) ;
 }
 
 // fill data header

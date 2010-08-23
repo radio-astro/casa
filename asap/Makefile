@@ -12,6 +12,7 @@ PYDIR := $(PREFIX)/python/$(PYTHONVER)
 ifndef ASAPROOT
    ASAPROOT := $(shell pwd)
 endif
+ATNFD := external-alma
 
 #PY := $(wildcard python/*.py)
 PY := $(wildcard python/*.py python/svninfo.txt)
@@ -27,6 +28,7 @@ all: module #doc
 
 module:
 	@if ( test -f getsvnrev.sh ) ; then /bin/bash getsvnrev.sh ; fi
+	@cd $(ASAPROOT)/$(ATNFD); make
 	@cd $(ASAPROOT)/src; make
 	@cd $(ASAPROOT)/apps; make
 
@@ -41,14 +43,16 @@ install:
 	@for file in $(LIBS) ; do cp -f $$file $(PYDIR)/asap ; done
 	@for file in $(BINS) ; do cp -f $$file $(PREFIX)/bin ; done
 	@for file in $(PY) ; do cp -f $$file $(PYDIR)/asap ; done
-	@for file in $(APPS) ; do cp -f $$file $(PREFIX)/asap ; done
+	@for file in $(APPS) ; do cp -f $$file $(PREFIX)/bin ; done
 	@if ( test ! -d $(PREFIX)/share/asap ) ; then mkdir -p $(PREFIX)/share/asap ; fi
 	@cp -f share/ipythonrc-asap $(PREFIX)/share/asap/
+	@cd $(ASAPROOT)/$(ATNFD); make install
 	@echo "Successfully installed asap module to" $(PYDIR)
 
 clean:
 	@cd $(ASAPROOT)/src; make clean
 	@cd $(ASAPROOT)/doc; make clean
+	@cd $(ASAPROOT)/$(ATNFD); make realclean
 
 datadist:
 	@echo "Generating ASAP data archive from aips++ installation..."

@@ -20,8 +20,8 @@ using namespace casa;
 namespace asap {
 
   void AsapLogSink::postMessage(const std::string& msg,
-				const std::string& location,
-                                const std::string& priority)
+				const std::string& priority,
+                                const std::string& origin)
   {
     LogMessage::Priority p;
     if (priority == "INFO") {
@@ -31,7 +31,7 @@ namespace asap {
     } else if (priority == "ERROR") {
       p = LogMessage::SEVERE;
     }
-    LogMessage message(msg, LogOrigin(location), p);
+    LogMessage message(msg, LogOrigin(origin), p);
 
     MemoryLogSink::postLocally(message);
   }

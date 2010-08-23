@@ -80,10 +80,19 @@ PKSreader* getPKSreader(
       file.read(30, buf, False);
       buf[30] = '\0';
       if (String(buf) == "SIMPLE  =                    T") {
-        // Looks like SDFITS.
-        format = "SDFITS";
-        reader = new PKSFITSreader("SDFITS");
-
+        file.seek(560);
+        file.read(26, buf, False);
+        buf[26] = '\0' ;
+        if ( String(buf) == "ORIGIN  = 'NRAO Green Bank" ) {
+          // Looks like GBT SDFITS
+          format = "GBTFITS" ;
+          reader = new PKSFITSreader("GBTFITS") ;
+        }
+        else {
+          // Looks like SDFITS.
+          format = "SDFITS";
+          reader = new PKSFITSreader("SDFITS");
+        }
        } else {
          // Assume it's MBFITS.
          format = "MBFITS";

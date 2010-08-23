@@ -16,12 +16,12 @@ class asaplotgui(asaplotbase):
     """
 
     def __init__(self, rows=1, cols=0, title='', size=None, buffering=False):
-	"""
-	Create a new instance of the ASAPlot plotting class.
+        """
+        Create a new instance of the ASAPlot plotting class.
 
-	If rows < 1 then a separate call to set_panels() is required to define
-	the panel layout; refer to the doctext for set_panels().
-	"""
+        If rows < 1 then a separate call to set_panels() is required to define
+        the panel layout; refer to the doctext for set_panels().
+        """
         v = vars()
         del v['self']
 
@@ -48,37 +48,37 @@ class asaplotgui(asaplotbase):
 	self.canvas.show()
 
     def map(self):
-	"""
-	Reveal the ASAPlot graphics window and bring it to the top of the
-	window stack.
-	"""
-	self.window.wm_deiconify()
-	self.window.lift()
+        """
+        Reveal the ASAPlot graphics window and bring it to the top of the
+        window stack.
+        """
+        self.window.wm_deiconify()
+        self.window.lift()
 
     def quit(self):
-	"""
-	Destroy the ASAPlot graphics window.
-	"""
-	self.window.destroy()
+        """
+        Destroy the ASAPlot graphics window.
+        """
+        self.window.destroy()
 
     def show(self, hardrefresh=True):
-	"""
-	Show graphics dependent on the current buffering state.
-	"""
-	if not self.buffering:
+        """
+        Show graphics dependent on the current buffering state.
+        """
+        if not self.buffering:
             if hardrefresh:
                 asaplotbase.show(self)
-	    self.window.wm_deiconify()
-	    self.canvas.show()
+            self.window.wm_deiconify()
+            self.canvas.show()
 
     def terminate(self):
-	"""
-	Clear the figure.
-	"""
-	self.window.destroy()
+        """
+        Clear the figure.
+        """
+        self.window.destroy()
 
     def unmap(self):
-	"""
-	Hide the ASAPlot graphics window.
-	"""
-	self.window.wm_withdraw()
+        """
+        Hide the ASAPlot graphics window.
+        """
+        self.window.wm_withdraw()

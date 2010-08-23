@@ -1,4 +1,6 @@
-from asap import scantable
+__all_ = ['lagplotter']
+
+from asap.scantable import scantable
 from matplotlib.pylab import *
 from numpy import array, ma, logical_not
 from numpy.fft import fft, ifft

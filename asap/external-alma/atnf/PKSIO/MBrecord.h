@@ -166,7 +166,9 @@ class MBrecord
     short  refBeam;		// Reference beam, in beam-switching (MX)
 				// mode (added 1999/03/17).
     int polNo ;                 // polarization ID
-    float srcVelocity ;         // source velocity w.r.t. reference frame
+    double srcVelocity ;        // source velocity w.r.t. reference frame
+
+    int srcType ;               // source type
 
   private:
     int    cNIF;		// Number of IFs allocated.

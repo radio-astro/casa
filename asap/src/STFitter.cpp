@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STFitter.cpp 1700 2010-02-16 05:21:26Z WataruKawasaki $
+//# $Id: STFitter.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>

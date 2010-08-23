@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STLineFinder.h 1757 2010-06-09 09:03:06Z KanaSugimoto $
+//# $Id: STLineFinder.h 1644 2009-10-03 14:53:18Z MaximVoronkov $
 //#---------------------------------------------------------------------------
 #ifndef STLINEFINDER_H
 #define STLINEFINDER_H

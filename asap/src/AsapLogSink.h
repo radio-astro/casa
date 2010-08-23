@@ -36,8 +36,8 @@ public:
   virtual ~AsapLogSink() {;};
 
   virtual void postMessage(const std::string& msg,
-			   const std::string& location="",
-                           const std::string& priority="INFO");
+                           const std::string& priority="INFO",
+                           const std::string& origin="");
 
   std::string popMessages();
 

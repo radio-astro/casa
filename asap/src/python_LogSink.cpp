@@ -40,8 +40,8 @@ namespace asap {
       class_<AsapLogSink>("LogSink")
         .def( init <> () )
 	.def("post", &AsapLogSink::postMessage,
-         (boost::python::arg("location")="",
-         boost::python::arg("priority")="INFO"))
+         (boost::python::arg("priority")="INFO",
+         boost::python::arg("origin")=""))
 	.def("pop", &AsapLogSink::popMessages)
       ;
       def("set_global_sink", &setAsapSink);

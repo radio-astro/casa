@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STDefs.h 1757 2010-06-09 09:03:06Z KanaSugimoto $
+//# $Id: STDefs.h 1569 2009-06-29 02:00:27Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 
 #ifndef ASAPDEFS_H
