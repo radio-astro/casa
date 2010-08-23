@@ -355,6 +355,12 @@ public:
   void chanAveVisCube(Cube<Complex>& data,Int nChanOut);
   void chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut);
 
+  // Form Stokes parameters from correlations
+  //  (these are preliminary versions)
+  void formStokes();
+  void formStokesWeightandFlag();
+  void formStokes(Cube<Complex>& vis);
+
   // Sort/unsort the correlations, if necessary
   //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
   void sortCorr();
