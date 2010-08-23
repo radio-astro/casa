@@ -6332,61 +6332,41 @@ def imagetest(which=None, size=[32,32,8]):
         info('')
         info('')
         info('Test 39 - fitprofile')
-        # Make data
-        #include 'functionals.g'
-        #fs := functionals();
-        #if not fs: fail()
-        ##
-        #shp = 64
-        #g = fs.gaussian1d(1, shp/2, shp/8)
-        #if (is_fail(g)) fail;
-        ##
-        #x = 1:shp
-        #y = g.f(x)
-        #if len(y)==0: fail()
-        y=[8.30588e-19,1.16698e-17,1.50353e-16,1.77636e-15,1.92451e-14,
-           1.91198e-13,1.74187e-12,1.45519e-11,1.1148e-10,7.83146e-10,
-           5.045e-09,2.98023e-08,1.6144e-07,8.01941e-07,3.65297e-06,
-           1.52588e-05,5.84475e-05,0.000205297,0.000661258,0.00195312,
-           0.00529006,0.013139,0.0299251,0.0625,0.1197,0.210224,0.338564,
-           0.5,0.677128,0.840896,0.957603,1,0.957603,0.840896,0.677128,0.5,
-           0.338564,0.210224,0.1197,0.0625,0.0299251,0.013139,0.00529006,
-           0.00195312,0.000661258,0.000205297,5.84475e-05,1.52588e-05,
-           3.65297e-06,8.01941e-07,1.6144e-07,2.98023e-08,5.045e-09,
-           7.83146e-10,1.1148e-10,1.45519e-11,1.74187e-12,1.91198e-13,
-           1.92451e-14,1.77636e-15,1.50353e-16,1.16698e-17,8.30588e-19,
-           5.42101e-20]
+        y = [ 
+            8.30588e-19,1.16698e-17,1.50353e-16,1.77636e-15,1.92451e-14,
+            1.91198e-13,1.74187e-12,1.45519e-11,1.1148e-10,7.83146e-10,
+            5.045e-09,2.98023e-08,1.6144e-07,8.01941e-07,3.65297e-06,
+            1.52588e-05,5.84475e-05,0.000205297,0.000661258,0.00195312,
+            0.00529006,0.013139,0.0299251,0.0625,0.1197,0.210224,0.338564,
+            0.5,0.677128,0.840896,0.957603,1,0.957603,0.840896,0.677128,0.5,
+            0.338564,0.210224,0.1197,0.0625,0.0299251,0.013139,0.00529006,
+            0.00195312,0.000661258,0.000205297,5.84475e-05,1.52588e-05,
+            3.65297e-06,8.01941e-07,1.6144e-07,2.98023e-08,5.045e-09,
+            7.83146e-10,1.1148e-10,1.45519e-11,1.74187e-12,1.91198e-13,
+            1.92451e-14,1.77636e-15,1.50353e-16,1.16698e-17,8.30588e-19,
+            5.42101e-20
+        ]
         # Make image
         myim = ia.newimagefromarray(pixels=y)
         if not myim:
             stop('ia.fromarray constructor 1 failed')
-        #
-        # Simple run test
-        #
-        #local values, resid
-        est={}
-        est['xunit'] = 'pix'
-        est = myim.fitprofile(axis=0, ngauss=1, estimate=est, fit=F)
-        if not est:
-            stop('fitprofile 1 failed')
-        #
-        fit = myim.fitprofile(axis=0, estimate=est['return'], fit=T)
+        testdir = 'imagetest_temp'
+        os.mkdir(testdir)
+        model = testdir +'/xmodel.im'
+        fit = myim.fitprofile(axis=0, model=model)
+        myim.close()
         if not fit:
             stop('fitprofile 2 failed')
         #
         tol = 1e-4
-        values=fit['values']
+        myim.open(model)
+        values = myim.getchunk().flatten()
         for i in range(len(y)):
             if not abs(y[i]-values[i]) < tol:
                 stop('fitprofile gives wrong values')
         #
         ok = myim.done()
         if not ok: fail()
-        #ok = fs.done()
-        #if not ok: fail()
-        #ok = g.done()
-        #if not ok: fail()
-        #
         return True
 
     def test40():

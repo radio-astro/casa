@@ -59,6 +59,7 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
+#include <images/Images/ImageProfileFitter.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageReorderer.h>
 #include <images/Images/ImageSourceFinder.h>
@@ -102,40 +103,41 @@ using namespace std;
 
 namespace casac {
 
-image::image()
-{
-  try {
-    itsLog = new LogIO();
-    *itsLog << LogOrigin("image", "image");
-    itsImage= new ImageAnalysis();
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
+image::image() {
+	try {
+		itsLog = new LogIO();
+		*itsLog << LogOrigin("image", "image");
+		itsImage= new ImageAnalysis();
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
 }
 
 // private ImageInterface constructor for on the fly components
-image::image(const casa::ImageInterface<casa::Float>* inImage) :
-       itsLog(new LogIO()), itsImage(new ImageAnalysis(inImage))
- {
-   try {
-     *itsLog << LogOrigin("image", "image");
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
+image::image(
+	const casa::ImageInterface<casa::Float>* inImage)
+	: itsLog(new LogIO()), itsImage(new ImageAnalysis(inImage)
+) {
+	try {
+		*itsLog << LogOrigin("image", "image");
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
 }
 
 // private ImageInterface constructor for on the fly components
-image::image(casa::ImageInterface<casa::Float>* inImage, const bool cloneInputPointer) :
-       itsLog(new LogIO()), itsImage(new ImageAnalysis(inImage, cloneInputPointer))
-{
-  try {
-    *itsLog << LogOrigin("image", "image");
-   } catch (AipsError x) {
-     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-     RETHROW(x);
-   }
+image::image(
+	casa::ImageInterface<casa::Float>* inImage, const bool cloneInputPointer)
+	: itsLog(new LogIO()), itsImage(new ImageAnalysis(inImage, cloneInputPointer)
+) {
+	try {
+		*itsLog << LogOrigin("image", "image");
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
 }
 
 image::~image()
@@ -246,6 +248,7 @@ casac::image * image::collapse(
 
 	try {
 		String aggString = function;
+		// FIXME allow user to specify multiple axes at python level
 		ImageCollapser collapser(
 			aggString, itsImage->name(), region,
 		    box, chans, stokes, mask, axis,
@@ -791,9 +794,11 @@ image::convolve2d(const std::string& outFile, const std::vector<int>& axes,
 			   overwrite, async);
     rstat = new ::casac::image(tmpIm);
     delete tmpIm;
+    return rstat;
+
 
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1179,72 +1184,71 @@ image::findsources(const int nMax, const double cutoff,
   return rstat;
 }
 
-bool
-image::fitallprofiles(const ::casac::record& region, const int axis,
-		      const ::casac::variant& vmask, const int nGauss,
-		      const int poly, const std::string& sigmaFileName,
-		      const std::string& fitFileName,
-		      const std::string& residFileName)
-{
-  bool rstat(false);
-  try {
-    *itsLog << LogOrigin("image", "fitallprofiles");
-    if (detached()) return rstat;
+record* image::fitallprofiles(
+	const string& box, const string& region,
+	const string& chans, const string& stokes,
+	const int axis, const variant& vmask,
+	const int ngauss, const int poly,
+	const string& model, const string& residual
+) {
+	*itsLog << LogOrigin("image", __FUNCTION__);
 
-    Record *Region = toRecord(region);
-    String mask = vmask.toString();
-    if(mask == "[]")
-      mask = "";
-    rstat=itsImage->fitallprofiles(*Region, axis, mask, nGauss, poly,
-				  sigmaFileName, fitFileName, residFileName);
+	*itsLog << LogIO::WARN << "DEPRECATED: " << __FUNCTION__
+		<< " will be removed in an upcoming release. "
+		<< "Use fitprofile instead with multi=True."
+		<< LogIO::POST;
+	if (detached()) {
+		return 0;
+	}
+	record *rstat = 0;
+	try {
 
+		return fitprofile(
+			box, region, chans, stokes,
+			axis, vmask, ngauss, poly,
+			true, model, residual
+		);
 
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+	return rstat;
 }
 
-::casac::record*
-image::fitprofile(std::vector<double>& d_values, std::vector<double>& d_resid,
-		  const ::casac::record& region, int axis,
-		  const ::casac::variant& vmask,
-		  const ::casac::record& estimate, const int ngauss,
-		  const int poly, const bool fitIt,
-		  const std::string& sigmaFileName)
-{
-  ::casac::record *rstat = 0;
-  try {
-    *itsLog << LogOrigin("image", "fitprofile");
-    if (detached()) return rstat;
-
-    Vector<Float> values;
-    Vector<Float> residual;
-    Record *Region = toRecord(region);
-     Record *Estimate = toRecord(estimate);
-    String mask = vmask.toString();
-    if(mask == "[]")
-	    mask = "";
-
-    Record recOut2=itsImage->fitprofile(values, residual, *Region, axis, mask,
-					 *Estimate, ngauss, poly, fitIt,
-					 sigmaFileName);
-    // Generate output parameters d_values and d_resid
-    int v_elem = values.nelements();
-    d_values.resize(v_elem);
-    for (int i = 0; i < v_elem; i++) d_values[i]=values[i];
-    int r_elem = residual.nelements();
-    d_resid.resize(r_elem);
-    for (int i = 0; i < r_elem; i++) d_resid[i]=residual[i];
-
-
-    rstat = fromRecord(recOut2);
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
+record* image::fitprofile(
+	const string& box, const string& region,
+	const string& chans, const string& stokes,
+	const int axis, const variant& vmask,
+	int ngauss, const int poly,
+	const bool multifit, const string& model,
+	const string& residual
+) {
+	*itsLog << LogOrigin("image", __FUNCTION__);
+	if (detached()) {
+		return 0;
+	}
+    if (ngauss < 0) {
+        *itsLog << LogIO::WARN << "ngauss < 0 is meaningless. Setting ngauss = 0 " << LogIO::POST;
+        ngauss = 0;
+    }
+	record *rstat = 0;
+	try {
+		String mask = vmask.toString();
+		if(mask == "[]") {
+			mask = "";
+		}
+		ImageProfileFitter fitter(
+			itsImage->getImage(), region, box, chans, stokes,
+			mask, axis, multifit, residual, model,
+			ngauss, poly
+		);
+		rstat = fromRecord(fitter.fit());
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+	return rstat;
 }
 
 ::casac::image *
@@ -1256,6 +1260,10 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
   ::casac::image *rstat = 0;
   try {
     *itsLog << LogOrigin("image", "fitpolynomial");
+	*itsLog << LogIO::WARN << "DEPRECATED: " << __FUNCTION__
+		<< " will be removed in an upcoming release. "
+		<< "Use fitprofile instead with ngauss=0."
+		<< LogIO::POST;
     if (detached()) return rstat;
 
     Record *Region = toRecord(region);
@@ -1305,7 +1313,6 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 		}
 		outImage = new ::casac::image(reorderer->reorder(), False);
 	} catch (AipsError x) {
-		delete reorderer;
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
@@ -1378,12 +1385,10 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 		returnRecord.defineRecord("results", compListRecord);
 		returnRecord.define("converged", converged);
 	    rstat = fromRecord(returnRecord);
-
 	}catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-
 	return rstat;
 }
 
@@ -1937,6 +1942,7 @@ bool image::open(const std::string& infile)
   }
   return rstat;
 }
+
 
 bool image::open(const casa::ImageInterface<casa::Float>* inImage)
 {
