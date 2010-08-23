@@ -57,6 +57,9 @@ void PlotMSTransformations::fromRecord(const RecordInterface& record) {
   if (record.isDefined("YpcOffset"))
     setYpcOffset(record.asDouble("YpcOffset"));
 
+  if (record.isDefined("formStokes"))
+    setFormStokes(record.asBool("formStokes"));
+
 
 }
 
@@ -69,6 +72,7 @@ Record PlotMSTransformations::toRecord() const {
   rec.define("RestFreq",restFreq());
   rec.define("XpcOffset",xpcOffset());
   rec.define("YpcOffset",ypcOffset());
+  rec.define("formStokes",formStokes());
 
   // Return it
   return rec;
@@ -83,7 +87,8 @@ bool PlotMSTransformations::operator==(const PlotMSTransformations& other) const
 	  mdoppType_ == other.mdoppType_ &&
 	  restFreq_  == other.restFreq_  &&
 	  XpcOffset_ == other.XpcOffset_ &&
-	  YpcOffset_ == other.YpcOffset_);
+	  YpcOffset_ == other.YpcOffset_ &&
+	  formStokes_ == other.formStokes_);
 
 }
 
@@ -95,6 +100,7 @@ void PlotMSTransformations::setDefaults() {
   setRestFreq(0.0);               // Means generate relative velocity axis
   setXpcOffset(0.0);
   setYpcOffset(0.0);
+  setFormStokes(False);
 
 }
 
@@ -104,12 +110,12 @@ String PlotMSTransformations::summary() const {
   ss.precision(12);
 
   ss << "Plot Data Transformations:" << endl;
-  ss << " Frame    = " << frameStr() << endl;
-  ss << " VelDef   = " << veldefStr() << endl;
-  ss << " RestFreq = " << restFreq() << " MHz" << endl;
-  ss << " dX       = " << xpcOffset() << " arcsec" << endl;
-  ss << " dY       = " << ypcOffset() << " arcsec" << endl;
-
+  ss << " Frame      = " << frameStr() << endl;
+  ss << " VelDef     = " << veldefStr() << endl;
+  ss << " RestFreq   = " << restFreq() << " MHz" << endl;
+  ss << " dX         = " << xpcOffset() << " arcsec" << endl;
+  ss << " dY         = " << ypcOffset() << " arcsec" << endl;
+  ss << " formStokes = " << boolalpha << formStokes() << endl;
   return ss.str();
 }
   
