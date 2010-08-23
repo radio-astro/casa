@@ -17,102 +17,111 @@ Examples:
 
 import recipes.ephemerides.request as jplreq
 
-for thing in jplreq.objnums:
+for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
     jplreq.request_from_JPL(thing, '2011-12-31')
 
 # A trick to avoid fast moving objects:
-for thing in jplreq.objnums:
+for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
     if thing not in jplreq.default_date_incrs:
         jplreq.request_from_JPL(thing, '2011-12-31')
 """
 
-# A map from object names to numbers that JPL-Horizons will recognize without
-# fussing around with barycenters, substrings, etc..
+# Maps from object names to numbers that JPL-Horizons will recognize without
+# fussing around with choosing between barycenters, substrings, etc..
 # Use lower case keys.
-objnums = {'ceres':      1,
-           'pallas':     2,
-           'juno':       3,
-           'vesta':      4,
-           #'astraea': 5,      # Clashes with Jupiter's barycenter.
-           #'hygeia': 10,      # 10 clashes with the Sun.
-           'parthenope': 11,
-           'victoria':   12,
-           'davida':     511,  # Clashes with Carme.
-           'mercury':    199,
-           'venus':      299,
-           'mars':       499,
-           'phobos':     401,
-           'deimos':     402,
-           'jupiter':    599,
-           'io':         501,
-           'europa':     502,
-           'ganymede':   503,
-           'callisto':   504,
-           'saturn':     699,
-           'mimas':      601,
-           'enceladus':  602,
-           'tethys':     603,
-           'dione':      604,
-           'rhea':       605,
-           'titan':      606,
-           'hyperion':   607,
-           'iapetus':    608,
-           'phoebe':     609,
-           'janus':      610,
-           'epimetheus': 611,
-           'helene':     612,
-           'telesto':    613,
-           'calypso':    614,
-           'atlas':      615,
-           'prometheus': 616,
-           'pandora':    617,
-           'pan':        618,
-           'ymir':       619, # I've been to Ymir, so I have a soft spot for it.
-           'uranus':     799,
-           'ariel':      701,
-           'umbriel':    702,
-           'titania':    703,
-           'oberon':     704,
-           'miranda':    705,
-           'cordelia':   706,
-           'ophelia':    707,
-           'bianca':     708,
-           'cressida':   709,
-           'desdemona':  710,
-           'juliet':     711,
-           'portia':     712,
-           'rosalind':   713,
-           'belinda':    714,
-           'puck':       715,
-           'caliban':    716,
-           'sycorax':    717,
-           'prospero':   718,
-           'setebos':    719,
-           'stephano':   720,
-           'trinculo':   721,
-           'francisco':  722,
-           'margaret':   723,
-           'ferdinand':  724,
-           'perdita':    725,
-           'mab':        726,
-           'cupid':      727,
-           'neptune':    899,
-           'triton':     801,
-           'nereid':     802,
-           'naiad':      803,
-           'thalassa':   804,
-           'despina':    805,
-           'galatea':    806,
-           'larissa':    807,
-           'proteus':    808,
-           'pluto':      999,  # It's still a planet in this sense.
-           'charon':     901,
-           'nix':        902,
-           'hydra':      903
+# Do not use keys for asteroids that are also in planets_and_moons.  (The IAU
+# might enforce this anyway.)
+
+asteroids = {'ceres':        1,
+             'pallas':       2,
+             'juno':         3,
+             'vesta':        4,
+             'astraea':      5,
+             'hygeia':      10,
+             'parthenope':  11,
+             'victoria':    12,
+             'davida':     511}
+
+planets_and_moons = {'mercury':    199,
+                     'venus':      299,
+                     'mars':       499,
+                     'phobos':     401,
+                     'deimos':     402,
+                     'jupiter':    599,
+                     'io':         501,
+                     'europa':     502,
+                     'ganymede':   503,
+                     'callisto':   504,
+                     'saturn':     699,
+                     'mimas':      601,
+                     'enceladus':  602,
+                     'tethys':     603,
+                     'dione':      604,
+                     'rhea':       605,
+                     'titan':      606,
+                     'hyperion':   607,
+                     'iapetus':    608,
+                     'phoebe':     609,
+                     'janus':      610,
+                     'epimetheus': 611,
+                     'helene':     612,
+                     'telesto':    613,
+                     'calypso':    614,
+                     'atlas':      615,
+                     'prometheus': 616,
+                     'pandora':    617,
+                     'pan':        618,
+                     # I've been to Ymir, so I have a soft spot for it, but it
+                     # has an unknown radius (2010).
+                     #'ymir':       619, 
+                     'uranus':     799,
+                     'ariel':      701,
+                     'umbriel':    702,
+                     'titania':    703,
+                     'oberon':     704,
+                     'miranda':    705,
+                     'cordelia':   706,
+                     'ophelia':    707,
+                     'bianca':     708,
+                     'cressida':   709,
+                     'desdemona':  710,
+                     'juliet':     711,
+                     'portia':     712,
+                     'rosalind':   713,
+                     'belinda':    714,
+                     'puck':       715,
+                     # 'caliban':    716, Uncertain radius, 2010.
+                     # 'sycorax':    717, Uncertain radius, 2010.
+                     # 'prospero':   718, Unknown radius, 2010
+                     # 'setebos':    719, Unknown radius, 2010
+                     # 'stephano':   720, Unknown radius, 2010
+                     # 'trinculo':   721, Unknown radius, 2010
+                     # 'francisco':  722, "
+                     # 'margaret':   723, Unknown radius, 2010
+                     # 'ferdinand':  724, Unknown radius, 2010
+                     # 'perdita':    725, Unknown radius, 2010
+                     # 'mab':        726, Unknown radius, 2010
+                     # 'cupid':      727, "
+                     'neptune':    899,
+                     'triton':     801,
+                     'nereid':     802,
+                     'naiad':      803,
+                     'thalassa':   804,
+                     'despina':    805,
+                     'galatea':    806,
+                     'larissa':    807,
+                     'proteus':    808,
+                     'pluto':      999,  # It's still a planet in this sense.
+                     'charon':     901
+                     # 'nix':        902 Unknown radius, 2010
+                     # 'hydra':      903 Unknown radius, 2010
 }
 
-should_have_orientation = ['mars', 'jupiter', 'uranus', 'neptune', 'ariel', 'miranda']
-should_have_sublong = ['mars']
+should_have_orientation = ['mars', 'deimos', 'phobos', 'vesta', 'jupiter', 'io',
+                           'janus', 'hyperion', 'enceladus', 'mimas', 'iapetus',
+                           'phoebe', 'tethys', 'uranus', 'ariel', 'miranda', 'neptune']
+should_have_sublong = ['mars', 'deimos', 'phobos', 'io',
+                       'janus', 'enceladus', 'hyperion', 'phoebe', 'mimas', 'tethys']
 
 # Getting positions once a day is not enough for many moons, if the position of
 # the moon relative to its primary will be needed.  Note that a maximum
@@ -140,13 +149,15 @@ def request_from_JPL(objnam, enddate,
                      obsloc="",
                      return_address=None,
                      mailserver=None,
-                     use_apparent=True):
+                     use_apparent=True,
+                     get_sep=None):
     """
     Request an ASCII ephemeris table from JPL-Horizons for a Solar System
     object.  If all goes well it should arrive by email in a few minutes to
     an hour.  (The return value from this function is whether or not it sent
     the request.)
 
+    All but the first two parameters have hopefully sensible defaults:
     objnam:
         The name of the object (case-insensitive).  It will be used to refer to
         specifically its center, as opposed to other possible locations in the
@@ -195,6 +206,12 @@ def request_from_JPL(objnam, enddate,
         JPL_ephem_reader would be confused if both apparent and J2000
         directions were present.
         Default: True
+    get_sep:
+        Get the angular separation from the primary, and whether it is
+        transiting, in eclipse, etc..  This only makes sense for moons and does
+        not guarantee that nothing else (like Earth, Luna, a bright extrasolar
+        object) is in the line of sight!
+        Default: True if it is in the moons list, False otherwise.
     """
     lobjnam = objnam.lower()
 
@@ -236,27 +253,34 @@ def request_from_JPL(objnam, enddate,
         date_incr = default_date_incrs.get(lobjnam,
                                            default_date_incrs['default'])
 
+    if get_sep == None:
+        get_sep = (planets_and_moons.get(lobjnam, 99) % 100) < 99
+
     # Get to work.
-    if not objnums.has_key(lobjnam):
-        print objnam, "is not in the objnums dictionary.  Try looking it up at"
+    if lobjnam in asteroids:
+        objnum = str(asteroids[lobjnam]) + ';'
+    elif lobjnam in planets_and_moons:
+        objnum = str(planets_and_moons[lobjnam])
+    else:
+        print "The JPL object number for", objnam, "is not known.  Try looking it up at"
         print 'http://ssd.jpl.nasa.gov/horizons.cgi?s_body=1#top and adding it.'
         return False
 
-    objnum = objnums[lobjnam]
-    
     if obsloc and obsloc.lower() != 'geocentric':
         print "Topocentric coordinates are not yet supported by this script."
         print "Defaulting to geocentric."
     center = '500@399'
 
-    quantities = [2, 10, 14, 15, 17, 19, 20, 24]
+    quantities = [2, 10, 12, 19, 20, 24]
     if not use_apparent:
         quantities[0] = 1
-    if not get_axis_orientation:
-        quantities.remove(17)
-    if not get_sub_long:
-        quantities.remove(14)
-        quantities.remove(15)
+    if get_axis_orientation:
+        quantities.append(32)
+    if get_sub_long:
+        quantities.append(14)
+        quantities.append(15)
+    if not get_sep:
+        quantities.remove(12)
 
     # It seems that STEP_SIZE must be an integer, but the unit can be changed
     # to hours or minutes.
@@ -279,7 +303,7 @@ def request_from_JPL(objnam, enddate,
         print "to", date_incr
     
     instructions = "\n".join(["!$$SOF",
-                              "COMMAND= '%d'" % objnum,
+                              "COMMAND= '%s'" % objnum,
                               'CENTER= ' + center,
                               "MAKE_EPHEM= 'YES'",
                               "TABLE_TYPE= 'OBSERVER'",
