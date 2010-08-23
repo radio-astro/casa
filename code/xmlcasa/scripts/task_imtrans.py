@@ -64,16 +64,21 @@
 ###########################################################################
 from taskinit import *
 
-def imtrans(imagename=None, outfile=None, order=None):
+def imtrans(imagename=None, outfile=None, order=None, wantreturn=None):
     casalog.origin('imtrans')
-    retval = None
     myia = iatool.create()
+    newim = None
     try:
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
-        retval = myia.reorder(outfile=outfile, order=order)
+        newim = myia.reorder(outfile=outfile, order=order)
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-        retval = None
+        newim = None
     myia.done()
-    return retval
+    if (wantreturn):
+        return newim
+    else:
+        if (newim):
+            newim.done()
+        return False
