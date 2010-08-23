@@ -28,6 +28,8 @@
 #include <images/Images/ImageCollapser.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Containers/HashMap.h>
+#include <casa/Containers/HashMapIter.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
@@ -38,37 +40,81 @@
 
 namespace casa {
 
+	HashMap<uInt, String> *ImageCollapser::_funcNameMap = 0;
+	HashMap<uInt, String> *ImageCollapser::_minMatchMap = 0;
+	HashMap<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
+
     ImageCollapser::ImageCollapser(
     	String aggString, const String& imagename,
     	const String& region, const String& box,
     	const String& chanInp, const String& stokes,
-    	const String& maskInp, const uInt compressionAxis,
+    	const String& maskInp, const uInt axis,
         const String& outname, const Bool overwrite
-    ) : _log(new LogIO()), _image(0), _regionString(""),
+    ) : _log(new LogIO()), _image(0),
 		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-		_outname(outname), _compressionAxis(compressionAxis),
-		_overwrite(overwrite), _aggregateFunction(0) {
+		_outname(outname),
+		_overwrite(overwrite), _destructImage(True),
+		_invertAxesSelection(False),
+		_axes(Vector<uInt>(1, axis)), _aggType(UNKNOWN) {
         _construct(aggString, imagename, box, region);
+    }
+
+    ImageCollapser::ImageCollapser(
+    	String aggString, const String& imagename,
+    	const String& region, const String& box,
+    	const String& chanInp, const String& stokes,
+    	const String& maskInp, const Vector<uInt>& axes,
+        const String& outname, const Bool overwrite
+    ) : _log(new LogIO()), _image(0),
+		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
+		_outname(outname),
+		_overwrite(overwrite), _destructImage(True),
+		_invertAxesSelection(False),
+		_axes(axes), _aggType(UNKNOWN) {
+        _construct(aggString, imagename, box, region);
+    }
+
+    ImageCollapser::ImageCollapser(
+	    const ImageInterface<Float> * const image,
+	    const Vector<uInt>& axes, const Bool invertAxesSelection,
+	    const AggregateType aggregateType,
+	    const String& outname, const Bool overwrite
+	) : _log(new LogIO()), _image(image->cloneII()), _regionRecord(Record()),
+		_mask(""), _outname(outname),
+		_overwrite(overwrite), _destructImage(False),
+		_invertAxesSelection(invertAxesSelection),
+		_axes(axes), _aggType(aggregateType) {
+    	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
+        *_log << logOrigin;
+        if (_aggType == UNKNOWN) {
+        	*_log << "UNKNOWN aggregateType not allowed" << LogIO::EXCEPTION;
+        }
+        if (! _image) {
+        	*_log << "Cannot use a null image pointer with this constructor"
+        		<< LogIO::EXCEPTION;
+        }
+        _invert();
+        *_log << logOrigin;
     }
 
     ImageCollapser::~ImageCollapser() {
         delete _log;
-        delete _image;
+        if (_destructImage) {
+        	delete _image;
+        }
     }
 
     ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
         *_log << LogOrigin("ImageCollapser", __FUNCTION__);
     	ImageRegion *imageRegion = 0;
     	ImageRegion *maskRegion = 0;
-    	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+        SubImage<Float> subImage = SubImage<Float>::createSubImage(
     		imageRegion, maskRegion, *_image,
     		_regionRecord, _mask, _log, False
     	);
     	delete imageRegion;
     	delete maskRegion;
     	IPosition inShape = subImage.shape();
-    	IPosition outShape = inShape;
-    	outShape[_compressionAxis] = 1;
     	// Set the compressed axis reference pixel and reference value
     	CoordinateSystem outCoords(subImage.coordinates());
     	Vector<Double> blc, trc;
@@ -82,12 +128,21 @@ namespace casa {
     	}
 
     	Vector<Double> refValues = outCoords.referenceValue();
-    	refValues[_compressionAxis] = (blc[_compressionAxis] + trc[_compressionAxis])/2;
-       	if (! outCoords.setReferenceValue(refValues)) {
-        	*_log << "Unable to set reference value" << LogIO::EXCEPTION;
-        }
     	Vector<Double> refPixels = outCoords.referencePixel();
-    	refPixels[_compressionAxis] = 0;
+    	IPosition outShape = inShape;
+		IPosition shape(outShape.nelements(), 1);
+
+    	for (Vector<uInt>::const_iterator iter=_axes.begin(); iter != _axes.end(); iter++) {
+    		uInt i = *iter;
+    		refValues[i] = (blc[i] + trc[i])/2;
+        	refPixels[i] = 0;
+            outShape[i] = 1;
+        	shape[i] = inShape[i];
+    	}
+
+    	if (! outCoords.setReferenceValue(refValues)) {
+    		*_log << "Unable to set reference value" << LogIO::EXCEPTION;
+    	}
     	if (! outCoords.setReferencePixel(refPixels)) {
     		*_log << "Unable to set reference pixel" << LogIO::EXCEPTION;
     	}
@@ -124,12 +179,18 @@ namespace casa {
     		}
     		outImage = new PagedImage<Float>(outShape, outCoords, _outname);
     	}
-		IPosition shape(outShape.nelements(), 1);
-		shape[_compressionAxis] = inShape[_compressionAxis];
-    	for (uInt i=0; i<outShape.product(); i++) {
-    		IPosition start = toIPositionInArray(i, outShape);
-    		Array<Float> ary = subImage.getSlice(start, shape);
-    		outImage->putAt(_aggregateFunction(ary), start);
+    	if (_aggType == ZERO) {
+    		Array<Float> zeros(outShape, 0.0);
+    		outImage->put(zeros);
+    	}
+    	else {
+    		Float (*function)(const Array<Float>&) = (*funcMap())(_aggType);
+    		for (uInt i=0; i<outShape.product(); i++) {
+
+    			IPosition start = toIPositionInArray(i, outShape);
+    			Array<Float> ary = subImage.getSlice(start, shape);
+    			outImage->putAt(function(ary), start);
+    		}
     	}
     	if (! _outname.empty()) {
     		outImage->flush();
@@ -141,16 +202,64 @@ namespace casa {
     	return outImage;
     }
 
+    const HashMap<uInt, Float (*)(const Array<Float>&)>* ImageCollapser::funcMap() {
+    	if (! _funcMap) {
+    		_funcMap = new HashMap<uInt, Float (*)(const Array<Float>&)>(casa::mean);
+    		_funcMap->define((uInt)AVDEV, casa::avdev);
+    		_funcMap->define((uInt)MAX, casa::max);
+    		_funcMap->define((uInt)MEAN, casa::mean);
+    		_funcMap->define((uInt)MEDIAN, casa::median);
+    		_funcMap->define((uInt)MIN, casa::min);
+    		_funcMap->define((uInt)RMS, casa::rms);
+    		_funcMap->define((uInt)STDDEV, casa::stddev);
+    		_funcMap->define((uInt)SUM, casa::sum);
+    		_funcMap->define((uInt)VARIANCE, casa::variance);
+    	}
+    	return _funcMap;
+    }
+
+    const HashMap<uInt, String>* ImageCollapser::funcNameMap() {
+    	if (! _funcNameMap) {
+    		_funcNameMap = new HashMap<uInt, String>;
+    		_funcNameMap->define((uInt)AVDEV, "avdev");
+    		_funcNameMap->define((uInt)MAX, "max");
+    		_funcNameMap->define((uInt)MEAN, "mean");
+    		_funcNameMap->define((uInt)MEDIAN, "median");
+    		_funcNameMap->define((uInt)MIN, "min");
+    		_funcNameMap->define((uInt)RMS, "rms");
+    		_funcNameMap->define((uInt)STDDEV, "stddev");
+    		_funcNameMap->define((uInt)SUM, "sum");
+    		_funcNameMap->define((uInt)VARIANCE, "variance");
+    		_funcNameMap->define((uInt)ZERO, "zero");
+    	}
+    	return _funcNameMap;
+    }
+
+    const HashMap<uInt, String>* ImageCollapser::minMatchMap() {
+    	if (! _minMatchMap) {
+    		_minMatchMap = new HashMap<uInt, String>;
+    		_minMatchMap->define((uInt)AVDEV, "a");
+    		_minMatchMap->define((uInt)MAX, "ma");
+    		_minMatchMap->define((uInt)MEAN, "mea");
+    		_minMatchMap->define((uInt)MEDIAN, "med");
+    		_minMatchMap->define((uInt)MIN, "mi");
+    		_minMatchMap->define((uInt)RMS, "r");
+    		_minMatchMap->define((uInt)STDDEV, "st");
+    		_minMatchMap->define((uInt)SUM, "su");
+    		_minMatchMap->define((uInt)VARIANCE, "v");
+    		_minMatchMap->define((uInt)ZERO, "z");
+    	}
+    	return _minMatchMap;
+    }
+
     void ImageCollapser::_construct(
         String& aggString, const String& imagename,
         const String& box, const String& regionName
     ) {
     	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
+        _setAggregateType(aggString);
         *_log << logOrigin;
-        if (aggString.empty()) {
-        	*_log << "Aggregate function name is not specified and it must be."
-        		<< LogIO::EXCEPTION;
-        }
+
     	Vector<ImageInputProcessor::OutputStruct> outputs(0);
         _outname.trim();
         if (! _outname.empty()) {
@@ -169,52 +278,69 @@ namespace casa {
         	: 0;
         inputProcessor.process(
         	_image, _regionRecord, diagnostics,
-        	outputPtr, imagename, 0, regionName,
-        	box, _chan, _stokesString,
+        	outputPtr, _stokesString, imagename,
+        	0, regionName, box, _chan,
         	ImageInputProcessor::USE_ALL_STOKES,
-        	False
+        	False, 0
         );
         *_log << logOrigin;
-        if (_compressionAxis >= _image->ndim()) {
-        	*_log << "Specified zero-based compression axis (" << _compressionAxis
-        		<< ") must be less than the number of axes in " << _image->name()
-        		<< "(" << _image->ndim() << LogIO::EXCEPTION;
+        for (
+        	Vector<uInt>::const_iterator iter=_axes.begin();
+        		iter != _axes.end(); iter++
+        	) {
+        	if (*iter >= _image->ndim()) {
+        		*_log << "Specified zero-based axis (" << *iter
+        			<< ") must be less than the number of axes in " << _image->name()
+        			<< "(" << _image->ndim() << LogIO::EXCEPTION;
+        	}
         }
-        _setAggregateFunction(aggString);
+        _invert();
     }
 
-    void ImageCollapser::_setAggregateFunction(String& aggString) {
+    void ImageCollapser::_setAggregateType(String& aggString) {
+       	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
+        *_log << logOrigin;
+        if (aggString.empty()) {
+        	*_log << "Aggregate function name is not specified and it must be."
+        		<< LogIO::EXCEPTION;
+        }
     	aggString.downcase();
-    	String aString = aggString;
-    	if (aString.startsWith("a")) {
-			_aggregateFunction = casa::avdev;
+    	const HashMap<uInt, String> *funcNamePtr = funcNameMap();
+       	ConstHashMapIter<uInt, String> iter = *minMatchMap();
+    	for (iter.toStart(); ! iter.atEnd(); iter++) {
+    		uInt key = iter.getKey();
+    		String minMatch = iter.getVal();
+    		String funcName = (*funcNamePtr)(key);
+    		if (
+    			aggString.startsWith(minMatch)
+    			&& funcName.startsWith(aggString)
+    		) {
+				_aggType = (AggregateType)key;
+				return;
+    		}
     	}
-    	else if (aString.startsWith("ma")) {
-			_aggregateFunction = casa::max;
-    	}
-    	else if (aString.startsWith("mea")) {
-			_aggregateFunction = casa::mean;
-    	}
-    	else if (aString.startsWith("med")) {
-			_aggregateFunction = casa::median;
-    	}
-    	else if (aString.startsWith("mi")) {
-			_aggregateFunction = casa::min;
-    	}
-    	else if (aString.startsWith("r")) {
-			_aggregateFunction = casa::rms;
-    	}
-    	else if (aString.startsWith("st")) {
-			_aggregateFunction = casa::stddev;
-    	}
-    	else if (aString.startsWith("su")) {
-			_aggregateFunction = casa::sum;
-    	}
-    	else if (aString.startsWith("v")) {
-			_aggregateFunction = casa::variance;
-    	}
-    	else {
-    		*_log << "Unknown aggregate function specified by " << aggString << LogIO::EXCEPTION;
+    	*_log << "Unknown aggregate function specified by " << aggString << LogIO::EXCEPTION;
+    }
+
+    void ImageCollapser::_invert() {
+    	if (_invertAxesSelection) {
+    		Vector<uInt> newAxes(_image->ndim() - _axes.size(), 0);
+    		uInt index=0;
+    		for (uInt i=0; i<_image->ndim(); i++) {
+				Bool found = False;
+    			for (uInt j=0; j<_axes.size(); j++) {
+    				if (i == _axes[j]) {
+    					found = True;
+						break;
+    				}
+    			}
+    			if (! found) {
+    				newAxes[index] = i;
+    				index++;
+    			}
+    		}
+    		_axes.resize(newAxes.size());
+    		_axes = newAxes;
     	}
     }
 }
