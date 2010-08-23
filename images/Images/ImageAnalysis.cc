@@ -73,6 +73,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
+#include <images/Images/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -81,7 +82,6 @@
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageHistograms.h>
-#include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageOpener.h>
@@ -141,17 +141,17 @@ ImageAnalysis::ImageAnalysis() :
 }
 
 ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
-    pImage_p(inImage->cloneII()), itsLog(new LogIO()), pStatistics_p(0),
-    pHistograms_p(0), pOldStatsRegionRegion_p(0),
-    pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+	pImage_p(inImage->cloneII()), itsLog(new LogIO()), pStatistics_p(0),
+	pHistograms_p(0), pOldStatsRegionRegion_p(0),
+	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
 	pOldHistMaskRegion_p(0) {}
 
 ImageAnalysis::ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer) :
 itsLog(new LogIO()), pStatistics_p(0), pHistograms_p(0),
-    pOldStatsRegionRegion_p(0),
-    pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
-    pOldHistMaskRegion_p(0) {
-    pImage_p = cloneInputPointer ? inImage->cloneII() : inImage;
+	pOldStatsRegionRegion_p(0),
+	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+	pOldHistMaskRegion_p(0) {
+	pImage_p = cloneInputPointer ? inImage->cloneII() : inImage;
 }
 
 ImageAnalysis::~ImageAnalysis() {
@@ -170,7 +170,6 @@ ImageAnalysis::~ImageAnalysis() {
 	  pImage_p = 0;
 	}
 	deleteHistAndStats();
-
 }
 
 Bool ImageAnalysis::toRecord(RecordInterface& rec) {
@@ -1394,7 +1393,6 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
         delete pImOut;
         RETHROW(x);
     }
-
 	// Return image
 	return pImOut;
 }
@@ -1576,7 +1574,7 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 		LatticeStatistics<Float> stats(subImage);
 		Array<Double> out;
 		//Bool ok = stats.getSigma (out, True); //what did this do?
-		Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
+		// Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
 		threshold = 5.0 * out(IPosition(subImage.ndim(), 0));
 	}
 
@@ -1865,12 +1863,14 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	return listOut;
 }
 
-Bool ImageAnalysis::fitallprofiles(Record& Region, const Int axis,
-		const String& mask, const Int nGauss, const Int poly,
-		const String& sigmaFileName, const String& fitFileName,
-		const String& residFileName) {
+Vector<ImageFit1D<Float> > ImageAnalysis::fitallprofiles(
+	Record& region, SubImage<Float>& subImage, String& xUnit, const Int axis,
+	const String& mask, const Int nGauss, const Int poly,
+	const String& weightsImageName, const String& modelImageName,
+	const String& residImageName
+) const {
 
-	*itsLog << LogOrigin("ImageAnalysis", "fitallprofiles");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Int baseline(poly);
 	if (!(nGauss > 0 || baseline >= 0)) {
@@ -1878,34 +1878,34 @@ Bool ImageAnalysis::fitallprofiles(Record& Region, const Int axis,
 				<< "You must specify a number of gaussians and/or a polynomial order to fit"
 				<< LogIO::EXCEPTION;
 	}
+
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+	subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
-		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&region)),
 		mask, 0, True
 	);
 	delete pRegionRegion;
 	delete pMaskRegion;
+
 	IPosition imageShape = subImage.shape();
 	PtrHolder<ImageInterface<Float> > weightsImage;
 	ImageInterface<Float>* pWeights = 0;
-	if (!sigmaFileName.empty()) {
-		PagedImage<Float> sigmaImage(sigmaFileName);
+	if (! weightsImageName.empty()) {
+		PagedImage<Float> sigmaImage(weightsImageName);
 		if (!sigmaImage.shape().conform(pImage_p->shape())) {
 			*itsLog << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
-
 		ImageRegion* pR = ImageRegion::fromRecord(
 			itsLog, sigmaImage.coordinates(),
-			sigmaImage.shape(), Region
+			sigmaImage.shape(), region
 		);
 		weightsImage.set(new SubImage<Float> (sigmaImage, *pR, False));
 		pWeights = weightsImage.ptr();
 		delete pR;
 	}
-
 	// Set default axis
 	CoordinateSystem cSys = subImage.coordinates();
 	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
@@ -1917,81 +1917,75 @@ Bool ImageAnalysis::fitallprofiles(Record& Region, const Int axis,
 			axis2 = subImage.ndim() - 1;
 		}
 	}
-
 	// Create output images with a mask
 	PtrHolder<ImageInterface<Float> > fitImage, residImage;
 	ImageInterface<Float>* pFit = 0;
 	ImageInterface<Float>* pResid = 0;
-	if (makeExternalImage(fitImage, fitFileName, cSys, imageShape, subImage,
+	if (makeExternalImage(fitImage, modelImageName, cSys, imageShape, subImage,
 			*itsLog, True, False, True))
 		pFit = fitImage.ptr();
-	if (makeExternalImage(residImage, residFileName, cSys, imageShape,
+	if (makeExternalImage(residImage, residImageName, cSys, imageShape,
 			subImage, *itsLog, True, False, True))
 		pResid = residImage.ptr();
-
 	// Do fits
-	Bool showProgress(True);
+	// FIXME give users the option to show a progress bar
+	Bool showProgress = False;
 	uInt axis3(axis2);
 	uInt nGauss2 = max(0, nGauss);
-	ImageUtilities::fitProfiles(pFit, pResid, subImage, pWeights, axis3,
-			nGauss2, baseline, showProgress);
-	return True;
+	return ImageUtilities::fitProfiles(
+		pFit, pResid, xUnit, subImage,
+		axis3, nGauss2, baseline, showProgress
+	);
+
 }
 
-Record ImageAnalysis::fitprofile(Vector<Float>& values,
-		Vector<Float>& residual, Record& Region, const Int axis,
-		const String& mask, Record& estimate, const Int ngauss, const Int poly,
-		const Bool fitIt, const String sigmaFileName) {
+ImageFit1D<Float> ImageAnalysis::fitprofile(
+	Record& regionRecord, SubImage<Float>& subImage,
+	String& xUnit, const uInt axis,
+	const String& mask, const Record& estimate,
+	const uInt ngauss, const Int poly,
+	const String& modelName, const String& residualName,
+	const Bool fitIt, const String weightsImageName
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
-	*itsLog << LogOrigin("ImageAnalysis", "fitprofile");
+	//Int nMax = ngauss; // unset value for ngauss is -1
 
-	Int nMax = ngauss; // unset value for ngauss is -1
-	Int baseline = poly; // unset value for poly is -1
-
-	//
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+	subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
-		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&regionRecord)),
 		mask, 0, False
 	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 	IPosition imageShape = subImage.shape();
 
-	PtrHolder<ImageInterface<Float> > weightsImage;
+	PtrHolder<ImageInterface<Float> > weightsImagePtrHolder;
 	ImageInterface<Float> *pWeights = 0;
-	if (! sigmaFileName.empty()) {
-		PagedImage<Float> sigmaImage(sigmaFileName);
-		if (! sigmaImage.shape().conform(pImage_p->shape())) {
+	if (! weightsImageName.empty()) {
+		PagedImage<Float> weightsImage(weightsImageName);
+		if (! weightsImage.shape().conform(pImage_p->shape())) {
 			*itsLog << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
-
 		ImageRegion* pR = ImageRegion::fromRecord(
-			itsLog, sigmaImage.coordinates(),
-			sigmaImage.shape(), Region
+			itsLog, weightsImage.coordinates(),
+			weightsImage.shape(), regionRecord
 		);
-		weightsImage.set(new SubImage<Float> (sigmaImage, *pR, False));
-		pWeights = weightsImage.ptr();
+		weightsImagePtrHolder.set(new SubImage<Float> (weightsImage, *pR, False));
+		pWeights = weightsImagePtrHolder.ptr();
 		delete pR;
 	}
 
 	// Set default axis
 	const uInt nDim = subImage.ndim();
 	CoordinateSystem cSys = subImage.coordinates();
-	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
-	Int axis2 = axis;
-	if (axis2 < 0) {
-		if (pAxis != -1) {
-			axis2 = pAxis;
-		} else {
-			axis2 = nDim - 1;
-		}
-	}
-
-	Record *recIn = new Record(estimate);
+	String doppler = "";
+	ImageUtilities::getUnitAndDoppler(
+		xUnit, doppler, axis, cSys
+	);
 
 	// Fish out request units from input estimate record
 	// Fields  are
@@ -2008,45 +2002,29 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 	// SpectralElement fromRecord handles each numbered elements
 	// field (type, parameters, errors). It does not yet handle
 	// the 'fixed' field (see below)
-	String xUnit, yUnit, doppler;
-	if (recIn->isDefined("xunit")) {
-		xUnit = recIn->asString("xunit");
-	}
-	if (recIn->isDefined("doppler")) {
-		doppler = recIn->asString("doppler");
-	}
 
-	Bool xAbs = True;
-	if (recIn->isDefined("xabs")) {
-		xAbs = recIn->asBool("xabs");
-	}
-	if (recIn->isDefined("yunit")) { // Not used presently.Drop ?
-		yUnit = recIn->asString("yunit");
-	}
-
+	Bool xAbs = estimate.isDefined("xabs")
+		? estimate.asBool("xabs")
+		: True;
 	// Figure out the abcissa type specifying what abcissa domain the fitter
 	// is operating in.  Convert the CoordinateSystem to this domain
 	// and set it back in the image
 	String errMsg;
-	uInt axis3(axis2);
-	ImageFit1D<Float>::AbcissaType abcissaType = ImageFit1D<Float>::PIXEL;
-	Bool ok = ImageFit1D<Float>::setAbcissaState(errMsg, abcissaType, cSys,
-			xUnit, doppler, axis3);
+	ImageFit1D<Float>::AbcissaType abcissaType;
+	Bool ok = ImageFit1D<Float>::setAbcissaState(
+		errMsg, abcissaType, cSys, xUnit, doppler, axis
+	);
 	subImage.setCoordinateInfo(cSys);
 
 	if (!ok) {
-		*itsLog << "xUnit, doAbs, doppler, axis = " << xUnit << ", " << xAbs
-				<< ", " << doppler << ", " << axis3 << endl;
-		*itsLog << "abcissa type = " << abcissaType << endl;
-		*itsLog << "nMax = " << nMax << endl << LogIO::POST;
+		*itsLog << LogIO::WARN << errMsg << LogIO::POST;
 	}
 
-	// Make fitter
 	ImageFit1D<Float> fitter;
 	if (pWeights) {
-		fitter.setImage(subImage, *pWeights, axis3);
+		fitter.setImage(subImage, *pWeights, axis);
 	} else {
-		fitter.setImage(subImage, axis3);
+		fitter.setImage(subImage, axis);
 	}
 	// Set data region averaging data in region.  We could also set the
 	// ImageRegion from that passed in to this function rather than making
@@ -2055,22 +2033,22 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 	Slicer sl(IPosition(nDim, 0), imageShape, Slicer::endIsLength);
 	LCSlicer sl2(sl);
 	ImageRegion region(sl2);
-	if (!fitter.setData(region, abcissaType, xAbs)) {
+	if (! fitter.setData(region, abcissaType, xAbs)) {
 		*itsLog << fitter.errorMessage() << LogIO::EXCEPTION;
 	}
 
 	// If we have the "elements" field, decode it into a list
 	SpectralList list;
-	if (recIn->isDefined("elements")) {
-		if (!list.fromRecord(errMsg, recIn->asRecord(String("elements")))) {
+	if (estimate.isDefined("elements")) {
+		if (!list.fromRecord(errMsg, estimate.asRecord("elements"))) {
 			*itsLog << errMsg << LogIO::EXCEPTION;
 		}
 
 		// Handle the 'fixed' record here. This is a work around until we
 		// redo this stuff properly in SpectralList and friends.
-		Record tmpRec = recIn->asRecord("elements");
+		Record tmpRec = estimate.asRecord("elements");
 		const uInt nRec = tmpRec.nfields();
-		AlwaysAssert(nRec==list.nelements(), AipsError);
+		AlwaysAssert(nRec == list.nelements(), AipsError);
 
 		for (uInt i = 0; i < nRec; i++) {
 			Record tmpRec2 = tmpRec.asRecord(i);
@@ -2082,14 +2060,12 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 			}
 		}
 	}
-	delete recIn;
 
 	// Now we do one of three things:
 	// 1) make a fit and evaluate
 	// 2) evaluate a model
 	// 3) make an estimate and evaluate
-	values.resize(0);
-	residual.resize(0);
+	Vector<Float> model(0), residual(0);
 	Bool addExtras = False;
 	Record recOut;
 
@@ -2102,52 +2078,73 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 					list2.add(list[i]);
 				}
 			}
-			fitter.setElements(list2); // Set estimate
+			// Set estimate
+			fitter.setElements(list2);
 		} else {
-			fitter.setGaussianElements(nMax); // Set auto estimate
+			// Set auto estimate
+			if (! fitter.setGaussianElements(ngauss)) {
+				*itsLog << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
+			}
 		}
-		if (baseline >= 0) {
-			SpectralElement polyEl(baseline); // Add baseline
+		if (poly >= 0) {
+			// Add baseline
+			SpectralElement polyEl(poly);
 			fitter.addElement(polyEl);
 		}
-		if (! fitter.fit()) { // Fit
+		if (! fitter.fit()) {
 			*itsLog << LogIO::WARN << "Fit failed to converge" << LogIO::POST;
 		}
-		values = fitter.getFit(); // Evaluate
-		residual = fitter.getResidual(-1, True);
+		if (! modelName.empty()) {
+			model = fitter.getFit();
+			ImageCollapser collapser(
+				&subImage, Vector<uInt>(1, axis), True,
+				ImageCollapser::ZERO, modelName, True
+			);
+			PagedImage<Float> *modelImage = static_cast<PagedImage<Float>*>(
+												collapser.collapse(True)
+											);
+			modelImage->put(model.reform(modelImage->shape()));
+			modelImage->flush();
+			delete modelImage;
+		}
+		if (! residualName.empty()) {
+			residual = fitter.getResidual(-1, True);
+            ImageCollapser collapser(
+				&subImage, Vector<uInt>(1, axis), True,
+				ImageCollapser::ZERO, residualName, True
+			);
+			PagedImage<Float> *residualImage = static_cast<PagedImage<Float>*>(
+												collapser.collapse(True)
+											);
+			residualImage->put(residual.reform(residualImage->shape()));
+			residualImage->flush();
+			delete residualImage;
+		}
 		const SpectralList& fitList = fitter.getList(True);
 		fitList.toRecord(recOut);
 		addExtras = True;
-	} else {
+	}
+	else {
 		if (list.nelements() > 0) {
 			fitter.setElements(list); // Set list
-			values = fitter.getEstimate(); // Evaluate list
+			model = fitter.getEstimate(); // Evaluate list
 			residual = fitter.getResidual(-1, False);
-		} else {
-			if (fitter.setGaussianElements(nMax)) { // Auto estimate
-				values = fitter.getEstimate(); // Evaluate
+		}
+		else {
+			if (fitter.setGaussianElements(ngauss)) { // Auto estimate
+				model = fitter.getEstimate(); // Evaluate
 				residual = fitter.getResidual(-1, False);
 				const SpectralList& list = fitter.getList(False);
-				//
 				list.toRecord(recOut);
 				addExtras = True;
-			} else {
+			}
+			else {
 				*itsLog << LogIO::SEVERE << fitter.errorMessage()
-						<< LogIO::POST;
+					<< LogIO::POST;
 			}
 		}
 	}
-	// Generate return value
-	Record recOut2;
-	recOut2.defineRecord("elements", recOut);
-	if (addExtras) {
-		recOut2.define("xunit", xUnit);
-		recOut2.define("doppler", doppler);
-		recOut2.define("xabs", xAbs);
-		recOut2.define("yunit", yUnit);
-	}
-
-	return recOut2;
+	return fitter;
 }
 
 ImageInterface<Float> *
@@ -2712,23 +2709,16 @@ Bool ImageAnalysis::getchunk(Array<Float>& pixels, Array<Bool>& pixelMask,
 
 }
 
+const ImageInterface<Float>* ImageAnalysis::getImage() const {
+	return pImage_p;
+}
+
+
 Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 		Record& Region, const Vector<Int>& axes, const String& Mask,
 		const Bool list, const Bool dropdeg, const Bool getmask) {
 	// Recover some pixels and their mask from a region in the image
 	*itsLog << LogOrigin("ImageAnalysis", "getregion");
-
-	// Convert region from Glish record to ImageRegion. Convert mask to
-	// ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
-		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
-		Mask, (list ? itsLog : 0), False
-	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Get the region
 	pixels.resize(IPosition(0, 0));
@@ -2736,14 +2726,23 @@ Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 
 	// Drop degenerate axes
 	IPosition iAxes = IPosition(Vector<Int> (axes));
+
+    ImageRegion* pRegionRegion = 0;
+	ImageRegion* pMaskRegion = 0;
+    SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		Mask, (list ? itsLog : 0), False
+	);
+	delete pRegionRegion;
+	delete pMaskRegion; 
 	if (getmask) {
-		LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
-		return True;
+        LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
 	} else {
 		LatticeUtilities::collapse(pixels, iAxes, subImage, dropdeg);
-		return True;
 	}
-}
+    return True;
+ }
 
 Record*
 ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
@@ -5644,54 +5643,7 @@ Bool ImageAnalysis::deleteHistAndStats() {
 	}
 	return rstat;
 }
-/*
-SubImage<Float> ImageAnalysis::SubImage<Float>::createSubImage(
-	ImageRegion*& pRegionRegion, ImageRegion*& pMaskRegion,
-	ImageInterface<Float>& inImage, const Record& region,
-	const String& mask, LogIO *os,
-	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
-) {
-// The ImageRegion pointers must be null on entry
-// either pointer may be null on exit
-	SubImage<Float> subImage;
-	pMaskRegion = ImageRegion::fromLatticeExpression(mask);
 
-	// We can get away with no region processing if the region record
-	// is empty and the user is not dropping degenerate axes
-	//*itsLog << "in SubImage<Float>::createSubImage, doing the subimage: " << theRegion.nfields() << " "<< axesSpecifier.keep()<< LogIO::POST;
-
-	if (region.nfields() == 0 && axesSpecifier.keep()) {
-		subImage = (pMaskRegion == 0)
-			? SubImage<Float>(inImage, True)
-			: SubImage<Float>(
-				inImage, *pMaskRegion,
-				writableIfPossible
-			);
-	}
-	else {
-		pRegionRegion = ImageRegion::fromRecord(
-			os, inImage.coordinates(),
-			inImage.shape(), region
-		);
-		if (pMaskRegion == 0) {
-			subImage = SubImage<Float>(
-				inImage, *pRegionRegion,
-				writableIfPossible, axesSpecifier
-			);
-		}
-		else {
-			SubImage<Float> subImage0(
-				inImage, *pMaskRegion, writableIfPossible
-			);
-			subImage = SubImage<Float>(
-				subImage0, *pRegionRegion,
-				writableIfPossible, axesSpecifier
-			);
-		}
-	}
-	return subImage;
-}
-*/
 Bool ImageAnalysis::makeMask(ImageInterface<Float>& out, String& maskName,
 		Bool init, Bool makeDefault, LogIO& os, Bool list) const {
 	*itsLog << LogOrigin("ImageAnalysis", "makeMask");
@@ -5812,8 +5764,7 @@ Bool ImageAnalysis::make_image(String &error, const String& outfile,
 Bool ImageAnalysis::makeExternalImage(PtrHolder<ImageInterface<Float> >& image,
 		const String& fileName, const CoordinateSystem& cSys,
 		const IPosition& shape, const ImageInterface<Float>& inImage,
-		LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask)
-
+		LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask) const
 {
 	if (fileName.empty()) {
 		if (allowTemp) {
