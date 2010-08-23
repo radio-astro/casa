@@ -51,10 +51,11 @@ ImageInputProcessor::~ImageInputProcessor() {
 void ImageInputProcessor::process(
 	ImageInterface<Float>*& image, Record& regionRecord,
 	String& diagnostics, Vector<OutputStruct> *outputStruct,
-	const String& imagename, const Record* regionPtr,
+	String& stokes, const String& imagename, const Record* regionPtr,
 	const String& regionName, const String& box,
-	const String& chans, const String& stokes,
-	const StokesControl& stokesControl, const Bool allowMultipleBoxes
+	const String& chans,
+	const StokesControl& stokesControl, const casa::Bool& allowMultipleBoxes,
+	const Vector<Coordinate::Type> *requiredCoordinateTypes
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
@@ -70,8 +71,55 @@ void ImageInputProcessor::process(
     	*_log << origin;
     	*_log << "Unable to open image " << imagename << LogIO::EXCEPTION;
     }
+	_process(
+		regionRecord, diagnostics, outputStruct, stokes,
+		image, regionPtr, regionName, box, chans, stokesControl,
+		allowMultipleBoxes, requiredCoordinateTypes
+	);
+}
+
+void ImageInputProcessor::process(
+	Record& regionRecord, String& diagnostics,
+	Vector<OutputStruct> *outputStruct, String& stokes,
+	const ImageInterface<Float>*& image,
+	const Record* regionPtr, const String& regionName,
+	const String& box, const String& chans,
+	const StokesControl& stokesControl, const Bool& allowMultipleBoxes,
+	const Vector<Coordinate::Type> *requiredCoordinateTypes
+) {
+	_process(
+		regionRecord, diagnostics, outputStruct, stokes,
+		image, regionPtr, regionName, box, chans, stokesControl,
+		allowMultipleBoxes, requiredCoordinateTypes
+	);
+}
+
+void ImageInputProcessor::_process(
+    Record& regionRecord,
+    String& diagnostics, Vector<OutputStruct>* outputStruct,
+    String& stokes, const ImageInterface<Float>* image,
+    const Record*& regionPtr,
+    const String& regionName, const String& box,
+    const String& chans, const StokesControl& stokesControl,
+    const Bool& allowMultipleBoxes,
+    const Vector<Coordinate::Type>* requiredCoordinateTypes
+) {
+	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+    *_log << origin;
     if (outputStruct != 0) {
     	_checkOutputs(outputStruct);
+    }
+    *_log << origin;
+    if (requiredCoordinateTypes) {
+    	for (
+    		Vector<Coordinate::Type>::const_iterator iter = requiredCoordinateTypes->begin();
+    		iter != requiredCoordinateTypes->end(); iter++
+    	) {
+    		if (image->coordinates().findCoordinate(*iter) < 0) {
+    			*_log << "Image " << image->name() << " does not have required coordinate "
+					<< Coordinate::typeToString(*iter) << LogIO::EXCEPTION;
+    		}
+    	}
     }
 	ImageMetaData metaData(*image);
 	_nSelectedChannels = metaData.nChannels();
@@ -125,7 +173,6 @@ void ImageInputProcessor::process(
     	Vector<uInt> polEndPts = _setPolarizationRanges(
     		stokes, metaData, image->name(), stokesControl
     	);
-
     	_setRegion(
     		regionRecord, diagnostics, boxCorners,
     		chanEndPts, polEndPts, metaData, image
@@ -156,6 +203,7 @@ void ImageInputProcessor::process(
     _processHasRun = True;
 }
 
+
 uInt ImageInputProcessor::nSelectedChannels() const {
 	if (! _processHasRun) {
 	    *_log << LogOrigin("ImageInputProcessor", __FUNCTION__);
@@ -164,6 +212,7 @@ uInt ImageInputProcessor::nSelectedChannels() const {
 	}
 	return _nSelectedChannels;
 }
+
 
 Vector<uInt> ImageInputProcessor::_setSpectralRanges(
 	String specification, const ImageMetaData& metaData
@@ -335,7 +384,7 @@ Vector<uInt> ImageInputProcessor::_consolidateAndOrderRanges(
 }
 
 Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
-	String specification, const ImageMetaData& metaData,
+	String& specification, const ImageMetaData& metaData,
 	const String& imageName, const StokesControl& stokesControl
 ) const {
     Vector<uInt> ranges(0);
@@ -356,14 +405,17 @@ Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
 		switch (stokesControl) {
 			case USE_FIRST_STOKES:
 				ranges[1] = 0;
+				specification = metaData.stokesAtPixel(0);
 				break;
 			case USE_ALL_STOKES:
 				ranges[1] = metaData.nStokes() - 1;
+				specification = "ALL";
 				break;
 			default:
 				// bug if we get here
 				*_log << "Logic error, unhandled stokes control" << LogIO::EXCEPTION;
 		};
+
 		return ranges;
 	}
     // First split on commas. Commas seem to have been supported at some point
@@ -482,7 +534,6 @@ void ImageInputProcessor::_setRegion(
 	const Vector<uInt>& polEndPts, const ImageMetaData& md,
 	const ImageInterface<Float> *image
 ) const {
-
 	String method(__FUNCTION__);
 	method += "_1";
 	LogOrigin origin("ImageInputProcessor", method);
@@ -528,12 +579,11 @@ void ImageInputProcessor::_setRegion(
     }
 
     HashMap<uInt, Vector<Double> > axisCornerMap;
-
     for (Int axisNumber=0; axisNumber<(Int)image->ndim(); axisNumber++) {
-    	if (axisNumber == directionAxisNumbers[0]) {
+    	if (directionAxisNumbers.size() > 1 && axisNumber == directionAxisNumbers[0]) {
 			axisCornerMap(axisNumber) = xCorners;
     	}
-    	else if (axisNumber == directionAxisNumbers[1]) {
+    	else if (directionAxisNumbers.size() > 1 && axisNumber == directionAxisNumbers[1]) {
     		axisCornerMap(axisNumber) = yCorners;
     	}
     	else if (axisNumber == spectralAxisNumber) {

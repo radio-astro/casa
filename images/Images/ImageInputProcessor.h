@@ -83,7 +83,8 @@ public:
 	// opened <src>image</src>, the specified region as a record (<src>
 	// regionRecord</src>, and a <src>diagnostics</src> String describing
 	// how the region was chosen. <src>stokesControl</src> indicates default
-	// stokes range to use if <src>stokes</src> is blank. If
+	// stokes range to use if <src>stokes</src> is blank. In this case <src>stokes</src>
+	// will be set the the value of stokes that will be used. If
 	// <src>allowMultipleBoxes</src> is False, an exception will be thrown if
 	// the inputs specify multiple n-dimensional rectangles. This should usually
 	// be set to false if the caller can only deal with a single n-dimensional
@@ -91,10 +92,34 @@ public:
     void process(
     	ImageInterface<Float>*& image, Record& regionRecord,
     	String& diagnostics, Vector<OutputStruct> *outputStruct,
+    	String& stokes,
     	const String& imagename, const Record* regionPtr,
     	const String& regionName, const String& box,
-    	const String& chans, const String& stokes,
-    	const StokesControl& stokesControl, Bool allowMultipleBoxes
+    	const String& chans,
+    	const StokesControl& stokesControl, const casa::Bool& allowMultipleBoxes,
+    	const Vector<Coordinate::Type> *requiredCoordinateTypes
+    );
+
+	// Process the inputs. Use this version if the associated image already exists.
+    // Output parameters the specified region as a record (<src>
+	// regionRecord</src>, and a <src>diagnostics</src> String describing
+	// how the region was chosen. <src>stokesControl</src> indicates default
+	// stokes range to use if <src>stokes</src> is blank. In this case <src>stokes</src>
+	// will be set the the value of stokes that will be used. If
+	// <src>allowMultipleBoxes</src> is False, an exception will be thrown if
+	// the inputs specify multiple n-dimensional rectangles. This should usually
+	// be set to false if the caller can only deal with a single n-dimensional
+	// rectangular region.
+    void process(
+    	Record& regionRecord,
+    	String& diagnostics, Vector<OutputStruct> *outputStruct,
+    	String& stokes,
+    	const ImageInterface<Float>*& image,
+    	const Record* regionPtr,
+    	const String& regionName, const String& box,
+    	const String& chans,
+    	const StokesControl& stokesControl, const Bool& allowMultipleBoxes,
+    	const Vector<Coordinate::Type> *requiredCoordinateTypes
     );
 
     // Get the number of channels that have been selected. The process() method must
@@ -105,6 +130,17 @@ private:
     LogIO *_log;
     Bool _processHasRun;
     uInt _nSelectedChannels;
+
+    void _process(
+    	Record& regionRecord,
+    	String& diagnostics, Vector<OutputStruct>* outputStruct,
+    	String& stokes, const ImageInterface<Float>* image,
+    	const Record*& regionPtr,
+    	const String& regionName, const String& box,
+    	const String& chans, const StokesControl& stokesControl,
+        const Bool& allowMultipleBoxes,
+    	const Vector<Coordinate::Type>* requiredCoordinateTypes
+    );
 
     void _setRegion(
     	Record& regionRecord, String& diagnostics,
@@ -131,7 +167,7 @@ private:
     Vector<uInt> _consolidateAndOrderRanges(const Vector<uInt>& ranges) const;
 
     Vector<uInt> _setPolarizationRanges(
-    	String specification, const ImageMetaData& metaData,
+    	String& specification, const ImageMetaData& metaData,
     	const String& imageName, const StokesControl& stokesControl
     ) const;
 
