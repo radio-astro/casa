@@ -98,8 +98,8 @@ public:
   // SubLattice is always set to non-writable).
   // <group>
   SubLattice (const Lattice<T>& lattice, AxesSpecifier=AxesSpecifier());
-  SubLattice (Lattice<T>& lattice, Bool writableIfPossible,
-	      AxesSpecifier=AxesSpecifier());
+  SubLattice (const Lattice<T>& lattice, const Bool writableIfPossible,
+	      const AxesSpecifier=AxesSpecifier());
   // </group>
 
   // Create a SubLattice from a MaskedLattice.
@@ -109,7 +109,7 @@ public:
   // SubLattice is always set to non-writable).
   // <group>
   SubLattice (const MaskedLattice<T>& lattice, AxesSpecifier=AxesSpecifier());
-  SubLattice (MaskedLattice<T>& lattice, Bool writableIfPossible,
+  SubLattice (const MaskedLattice<T>& lattice, const Bool writableIfPossible,
 	      AxesSpecifier=AxesSpecifier());
   // </group>
 
@@ -123,10 +123,10 @@ public:
   SubLattice (const Lattice<T>& lattice, const LatticeRegion& region,
 	      AxesSpecifier=AxesSpecifier());
   SubLattice (Lattice<T>& lattice, const LatticeRegion& region,
-	      Bool writableIfPossible, AxesSpecifier=AxesSpecifier());
+  	      Bool writableIfPossible, AxesSpecifier=AxesSpecifier());
   SubLattice (const MaskedLattice<T>& lattice, const LatticeRegion& region,
 	      AxesSpecifier=AxesSpecifier());
-  SubLattice (MaskedLattice<T>& lattice, const LatticeRegion& region,
+  SubLattice (const MaskedLattice<T>& lattice, const LatticeRegion& region,
 	      Bool writableIfPossible, AxesSpecifier=AxesSpecifier());
   // </group>
   
