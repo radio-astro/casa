@@ -43,7 +43,6 @@ Int main(Int argc, char *argv[]) {
 	input.create("function","");
 	input.create("outname");
 	input.create("overwrite", "F");
-	input.create("mode", "s");
 
 	input.readArguments(argc, argv);
 	String imagename = input.getString("imagename");
@@ -56,13 +55,14 @@ Int main(Int argc, char *argv[]) {
 	String function = input.getString("function");
 	String outname = input.getString("outname");
 	Bool overwrite = input.getBool("overwrite");
-	String mode = input.getString("mode");
 
     ImageCollapser imCollapser(
-		function,imagename, region, box,
+		function, imagename, region, box,
 		chans, stokes, mask, axis, outname,
-        overwrite, mode
+        overwrite
     );
+
+
 	imCollapser.collapse(False);
 
     return 0;
