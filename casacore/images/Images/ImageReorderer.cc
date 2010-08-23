@@ -32,12 +32,43 @@ ImageReorderer::ImageReorderer(
 }
 
 ImageReorderer::ImageReorderer(
+	const ImageInterface<Float> * const image, const String& order, const String& outputImage
+)
+: _log(new LogIO), _image(image->cloneII()), _order(IPosition()), _outputImage(outputImage) {
+	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_1");
+	*_log << origin;
+	_construct("", outputImage);
+	*_log << origin;
+	Regex intRegex("^[0-9]+$");
+	if (order.matches(intRegex)) {
+		_order = _getOrder(order);
+	}
+	else {
+		*_log << "Incorrect order specification " << order
+			<< ". All characters must be digits." << LogIO::EXCEPTION;
+	}
+}
+
+
+ImageReorderer::ImageReorderer(
 	const String& imagename, const Vector<String> order, const String& outputImage
 )
 : _log(new LogIO), _image(0), _order(IPosition()), _outputImage(outputImage) {
 	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_2");
 	*_log << origin;
 	_construct(imagename, outputImage);
+	*_log << origin;
+	Vector<String> orderCopy = order;
+	_order = _getOrder(orderCopy);
+}
+
+ImageReorderer::ImageReorderer(
+	const ImageInterface<Float> * const image, const Vector<String> order, const String& outputImage
+)
+: _log(new LogIO), _image(image->cloneII()), _order(IPosition()), _outputImage(outputImage) {
+	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_2");
+	*_log << origin;
+	_construct("", outputImage);
 	*_log << origin;
 	Vector<String> orderCopy = order;
 	_order = _getOrder(orderCopy);
@@ -54,8 +85,19 @@ ImageReorderer::ImageReorderer(
 	_order = _getOrder(order);
 }
 
+ImageReorderer::ImageReorderer(
+	const ImageInterface<Float> * const image, uInt order, const String& outputImage
+)
+: _log(new LogIO), _image(image->cloneII()), _order(IPosition()), _outputImage(outputImage) {
+	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_3");
+	*_log << origin;
+	_construct("", outputImage);
+	*_log << origin;
+	_order = _getOrder(order);
+}
 
-PagedImage<Float>* ImageReorderer::reorder() const {
+
+ImageInterface<Float>* ImageReorderer::reorder() const {
 	LogOrigin origin("ImageReorderer", __FUNCTION__);
 	*_log << origin;
 	// get the image data
@@ -71,10 +113,18 @@ PagedImage<Float>* ImageReorderer::reorder() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	PagedImage<Float>* output = new PagedImage<Float>(TiledShape(newShape), newCsys, _outputImage);
+	ImageInterface<Float>* output = 0;
+	if (_outputImage.empty()) {
+		output = new TempImage<Float>(TiledShape(newShape), newCsys);
+	}
+	else {
+		output = new PagedImage<Float>(TiledShape(newShape), newCsys, _outputImage);
+	}
 	output->put(reorderArray(dataCopy, _order));
-    output->flush();
-    return output;
+	if (! _outputImage.empty()) {
+		output->flush();
+	}
+	return output;
 }
 
 ImageReorderer::~ImageReorderer() {
@@ -85,38 +135,42 @@ ImageReorderer::~ImageReorderer() {
 void ImageReorderer::_construct(const String& imagename, const String& outfile) {
 	LogOrigin origin("ImageReorderer", __FUNCTION__);
 	*_log << origin;
-	if (imagename.empty()) {
+	if (_image != 0) {
+		// image specified in constructor, do nothing
+	}
+	else if (imagename.empty()) {
 		*_log << "imagename cannot be blank" << LogIO::EXCEPTION;
 	}
-	if (_outputImage.empty()) {
-		*_log << "output imagename cannot be blank" << LogIO::EXCEPTION;
-	}
-	File outputImageFile(_outputImage);
-	switch(outputImageFile.getWriteStatus()) {
-	case File::CREATABLE:
-		// handle just to avoid compiler warning
-		break;
-	case File::OVERWRITABLE:
-		// fall through to NOT_OVERWRITABLE
-		// FIXME add caller specified Bool overwrite flag
-	case File::NOT_OVERWRITABLE:
-		*_log << "Requested output image " << _outputImage
-			<< " already exists and will not be overwritten" << LogIO::EXCEPTION;
-	case File::NOT_CREATABLE:
-		*_log << "Requested output image " << _outputImage
-			<< " cannot be created. Perhaps a permissions issue?" << LogIO::EXCEPTION;
-	}
-	// Register the functions to create a FITSImage or MIRIADImage object.
-	FITSImage::registerOpenFunction();
-	MIRIADImage::registerOpenFunction();
-	try {
-		ImageUtilities::openImage(_image, imagename, *_log);
-	}
-	catch(AipsError err) {
-		if (_image == 0) {
-			*_log << "Unable to open image '" + imagename + "'" << LogIO::EXCEPTION;
+	else {
+		// Register the functions to create a FITSImage or MIRIADImage object.
+		FITSImage::registerOpenFunction();
+		MIRIADImage::registerOpenFunction();
+		try {
+			ImageUtilities::openImage(_image, imagename, *_log);
 		}
-		RETHROW(err);
+		catch(AipsError err) {
+			if (_image == 0) {
+				*_log << "Unable to open image '" + imagename + "'" << LogIO::EXCEPTION;
+			}
+			RETHROW(err);
+		}
+	}
+	if (! _outputImage.empty()) {
+		File outputImageFile(_outputImage);
+		switch(outputImageFile.getWriteStatus()) {
+		case File::CREATABLE:
+			// handle just to avoid compiler warning
+			break;
+		case File::OVERWRITABLE:
+			// fall through to NOT_OVERWRITABLE
+			// FIXME add caller specified Bool overwrite flag
+		case File::NOT_OVERWRITABLE:
+			*_log << "Requested output image " << _outputImage
+			<< " already exists and will not be overwritten" << LogIO::EXCEPTION;
+		case File::NOT_CREATABLE:
+			*_log << "Requested output image " << _outputImage
+			<< " cannot be created. Perhaps a permissions issue?" << LogIO::EXCEPTION;
+		}
 	}
 }
 

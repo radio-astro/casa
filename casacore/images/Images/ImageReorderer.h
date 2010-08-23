@@ -65,11 +65,16 @@ public:
 
 	ImageReorderer(const String& imagename, const Vector<String> order, const String& outputImage);
 
+	ImageReorderer(const ImageInterface<Float> * const image, uInt order, const String& outputImage);
+
+	ImageReorderer(const ImageInterface<Float> * const image, const String& order, const String& outputImage);
+
+	ImageReorderer(const ImageInterface<Float> * const image, const Vector<String> order, const String& outputImage);
 	// destructor
 	~ImageReorderer();
 
 	// reorder the axes and write the output image. Returns the associated PagedImage object.
-	PagedImage<Float>* reorder() const;
+	ImageInterface<Float>* reorder() const;
 
 private:
 	LogIO *_log;
