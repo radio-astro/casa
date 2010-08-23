@@ -37,6 +37,7 @@ test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
 test_report                     jmlarsen@eso.org
 test_smoothcal                  scastro@eso.org
+test_specfit                    dmehring@nrao.edu
 test_split                      rreid@nrao.edu
 test_vishead                    jmlarsen@eso.org
 test_visstat                    jmlarsen@eso.org
