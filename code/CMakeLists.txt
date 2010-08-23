@@ -923,6 +923,13 @@ get_filename_component(rpfitslibd ${rpfits_lib} PATH)
 
 string( REGEX REPLACE "/[^/]+/?$" "" rpfitslibd ${RPFITS_LIBRARIES} ) # What is the effect of this? Do the two lines above not set rpfitslibd to the path of the first library in RPFITS_LIBRARIES?
 
+
+# Get path from first of rpfits libraries.
+list( GET ${CFITSIO_LIBRARIES} 0 cfitsio_lib )
+get_filename_component(cfitsiolibd ${cfitsio_lib} PATH)
+
+string( REGEX REPLACE "/[^/]+/?$" "" cfitsiolibd ${RPFITS_LIBRARIES} ) # What is the effect of this? Do the two lines above not set cfitsiolibd to the path of the first library in CFITSIO_LIBRARIES?
+
 string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
 
 # convert semicolons to spaces...
@@ -939,24 +946,6 @@ foreach( _c ${CASACORE_LIBRARIES} )
     set( _cc "${_cc} ${_c}" )
   endif()
 endforeach()
-
-file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
-  "# This file exists only for ASAP\n"
-  PYTHONVER=${PYTHONV}\n
-  COREINCD = ${CASACORE_casa/aips.h}\n
-  CORELIB = ${_cc}\n
-  WCSLIBLIBD = .\n
-  WCSLIBLIB = ${WCSLIB_wcs}\n
-  PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${_pythonlibd}\n
-  PYTHONINCD = ${_ii}\n
-  PYTHONLIB = ${PYTHON_LIBRARIES}\n
-  BOOSTROOT = ${BOOST_ROOT}\n
-  RPFITSLIBD = ${rpfitslibd}\n
-  eval_vars :\n
-  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
-)
-
 #
 # The following variables are substitued into python scripts
 #
@@ -988,10 +977,41 @@ casa_add_module( calibration CASACORE tableplot msvis )
 casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
 casa_add_module( alma CASACORE LIBXML2 Boost )
 casa_add_module( oldalma CASACORE LIBXML2 Boost )
-casa_add_module( atnf CASACORE RPFITS CFITSIO )
+#casa_add_module( atnf CASACORE RPFITS CFITSIO )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao )
+
+get_property( MYDEFINES DIRECTORY xmlcasa PROPERTY COMPILE_DEFINITIONS )
+# convert semicolons to -Dmydefine...
+set( _dd "" )
+foreach( _d ${MYDEFINES} )
+	  set( _dd "${_dd} -D${_d}" )
+	  endforeach()
+
+
+file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
+  "# This file exists only for ASAP\n"
+  PYTHONVER=${PYTHONV}\n
+  CXXFLAGS = \"${CMAKE_CXX_FLAGS}\"\n
+  COPTFLAGS = \"${_dd}\"\n
+  LD_FLAGS = \"${CMAKE_SHARED_LINKER_FLAGS}\"\n
+  COREINCD = ${CASACORE_casa/aips.h}\n
+  CORELIB = ${_cc}\n
+  WCSLIBLIB = ${WCSLIB_wcs}\n
+  WCSLIBLIBD = .\n
+  PYTHONROOT = ${pyroot}\n
+  PYTHONLIBD = ${_pythonlibd}\n
+  PYTHONINCD = ${_ii}\n
+  PYTHONLIB = ${PYTHON_LIBRARIES}\n
+  BOOSTROOT = ${BOOST_ROOT}\n
+  RPFITSLIBD = ${rpfitslibd}\n
+  CFITSIOLIBD = ${cfitsiolibd}\n
+  CFITSIOINCD =  ${cfitsiolibd}/../include\n
+  eval_vars :\n
+  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
+)
+
 
 # demo atmosphere ionosphere jive nfra simulators vlbi vo
 
