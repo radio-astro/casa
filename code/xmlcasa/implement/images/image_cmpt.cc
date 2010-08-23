@@ -1288,21 +1288,20 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 ::casac::image * image::reorder(const std::string& outfile, const variant& order) {
 	::casac::image *outImage = 0;
 	ImageReorderer *reorderer = 0;
-
 	try {
 		*itsLog << LogOrigin("image", "reorder");
 		if (detached()) {
 			return 0;
 		}
 		if (order.type() == variant::INT) {
-			reorderer = new ImageReorderer(itsImage->name(), order.toInt(), outfile);
+			reorderer = new ImageReorderer(itsImage->getImage(), order.toInt(), outfile);
 		}
 		else if (order.type() == variant::STRING) {
-			reorderer = new ImageReorderer(itsImage->name(), order.toString(), outfile);
+			reorderer = new ImageReorderer(itsImage->getImage(), order.toString(), outfile);
 		}
 		else if (order.type() == variant::STRINGVEC) {
 			Vector<String> orderVec = toVectorString(order.toStringVec());
-			reorderer = new ImageReorderer(itsImage->name(), orderVec, outfile);
+			reorderer = new ImageReorderer(itsImage->getImage(), orderVec, outfile);
 		}
 		else {
 			*itsLog << "Unsupported type for order parameter " << order.type()
