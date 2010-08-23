@@ -38,10 +38,12 @@ Int main(Int argc, char *argv[]) {
 	input.create("region", "");
 	input.create("chans", ImageInputProcessor::ALL);
 	input.create("stokes", ImageInputProcessor::ALL);
-	input.create("mask","");
-	input.create("axis","");
+	input.create("mask", "");
+	input.create("axis", "");
 	input.create("function","");
 	input.create("outname");
+	input.create("overwrite", "F");
+	input.create("mode", "s");
 
 	input.readArguments(argc, argv);
 	String imagename = input.getString("imagename");
@@ -53,13 +55,14 @@ Int main(Int argc, char *argv[]) {
 	uInt axis = input.getInt("axis");
 	String function = input.getString("function");
 	String outname = input.getString("outname");
-    // FIXME create user input for overwrite parameter
+	Bool overwrite = input.getBool("overwrite");
+	String mode = input.getString("mode");
+
     ImageCollapser imCollapser(
 		function,imagename, region, box,
 		chans, stokes, mask, axis, outname,
-        False
+        overwrite, mode
     );
-
 	imCollapser.collapse(False);
 
     return 0;
