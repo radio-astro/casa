@@ -81,7 +81,8 @@ for file in $XMLFILES
 do
    xmlfile=${file%.xml}
    verbose "generating `basename $xmlfile` task ... "
-   xmlgenpy $xmlfile
+   ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2pycli.xsl > ${xmlfile}_cli.py
+   ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2pyimp.xsl > ${xmlfile}.py
    ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2tsum2.xsl >> ${INFOFILE}
    mv ${xmlfile}.py ${xmlfile}.py.bak
    sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}.py.bak > ${xmlfile}.py
