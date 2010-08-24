@@ -7,7 +7,6 @@
     casapy [casa-options] -c runUnitTest.py
     
     or from inside casapy:
-    import runUnitTest
     runUnitTest.main(['testname']) 
     runUnitTest.main()
     runUnitTest.main(['--short'])

@@ -973,6 +973,12 @@ from math import *
 from tasks import *
 from parameter_dictionary import *
 from task_help import *
+
+#
+# import testing environment
+#
+import publish_summary
+import runUnitTest
 #
 home=os.environ['HOME']
 
