@@ -1,4 +1,5 @@
 import numpy
+import re
 from taskinit import tbtool, me
 
 def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
@@ -22,6 +23,7 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
 
     Example:
     mydict = {'delta': [1.2866, 1.2957, 1.3047],
+              'obs_code': ['*', 'U', 't'],
               'date': {'m0': {'unit': 'd',
                               'value': [55317.0, 55318.0, 55319.0]},
                        'refer': 'UT1',
@@ -30,12 +32,12 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
                         'data': {'unit': 'deg',
                                  'value': array([37.30, 37.33, 37.36])}}}
                                  
-    # Produces a table with, in order, a measure column (date),
-    # a bare column (delta), and a commented quantity column (phang).
+    # Produces a table with, in order, a measure column (date), two bare
+    # columns (delta and obs_code), and a commented quantity column (phang).
     # The comment goes in the 'comment' field of the column description.
-    # Measure and straight array columns can also be described by using
-    # a {'comment': (description),
-    #    'data':    (measure, quantity, numpy.array or list)} dict.
+    # Measure and straight array columns can also be described by using a
+    # {'comment': (description), 'data': (measure, quantity, numpy.array or
+    # list)} dict.
     dict_to_table(mydict, 'd_vs_phang.tab')
 
     TODO: detect non-float data types, including array cells.
@@ -93,23 +95,31 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
 
     # Make the table's description.
     tabdesc = {}
+    # Initialize the column descriptor with defaults (these come from
+    # data/ephemerides/DE200, but I replaced IncrementalStMan with StandardStMan).
+    coldesc = {'comment': '',
+               'dataManagerGroup': '',
+               'dataManagerType': 'StandardStMan',
+               'maxlen': 0,
+               'option': 0,
+               'valueType': 'float'}
     for c in cols:
-        # Initialize the column descriptor with defaults (these come from
-        # data/ephemerides/DE200).
-        coldesc = {'comment': '',
-                   'dataManagerGroup': '',
-                   'dataManagerType': 'IncrementalStMan',
-                   'maxlen': 0,
-                   'option': 0,
-                   'valueType': 'double'}
+        #print "Setting coldesc for", c
+        data = indict[c]  # Place to find the valueType.
         
-        # data = indict[c]  # Place to find the valueType.
-        
-        if hasattr(indict[c], 'has_key'):
-            coldesc['comment'] = indict[c].get('comment', '')
-            # coldesc['valueType'] =
+        if hasattr(data, 'has_key'):
+            #print "comment =", data.get('comment', '')
+            coldesc['comment'] = data.get('comment', '')
+            
+        data = get_bare_col(data)
+        valtype = str(type(data[0]))[7:-2]
+        if valtype == 'str':
+            valtype = 'string'
+        valtype = valtype.replace('64', '')      # Table uses 'float', not 'float64'.
+        valtype = valtype.replace('numpy.', '')  # or 'numpy.float'.
+        coldesc['valueType'] = valtype
 
-        tabdesc[c] = coldesc
+        tabdesc[c] = coldesc.copy()
 
     # Create and fill the table.
     retval = True
@@ -122,6 +132,7 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
         retval = False
     for c in cols:
         try:
+            #print "tabdesc[%s] =" % c, tabdesc[c]
             data = indict[c]  # Note the trickle-down nature below.
             if hasattr(indict[c], 'has_key') and indict[c].has_key('comment'):
                 data = data['data']
@@ -137,6 +148,8 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
             mytb.putcol(c, data)
         except Exception, e:
             print "Error", e, "trying to put column", c, "in", tablepath
+            print "data[0] =", data[0]
+            print "tabdesc[c] =", tabdesc[c]
             retval = False
     for k in keywords:
         try:

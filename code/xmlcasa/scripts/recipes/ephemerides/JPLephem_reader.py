@@ -1,4 +1,4 @@
-import numpy
+import scipy.special
 import re
 import time                  # We can always use more time.
 from taskinit import me, qa
@@ -41,15 +41,15 @@ cols = {
                'comment': 'Sub-Solar longitude',
                'pat':    r'(?P<sl_lat>[-+0-9.]+|n\.a\.)',
                'unit': 'deg'},
-    'np_ang': {'header': r'NP.ang',
-               'comment': 'North Pole position angle',
-               'pat':    r'(?P<np_ang>[-+0-9.]+)',
-               'unit': 'deg'},
-    'np_dist': {'header': r'NP.dist',
-                'comment': 'North Pole distance from sub-observer point',
-                # Negative distance means the N.P. is on the hidden hemisphere.
-                'pat':    r'(?P<np_dist>[-+0-9.]+)',
-                'unit': 'deg'},
+
+    # These are J2000 whether or not ra and dec are apparent directions.
+    'np_ra': {'header': r'N\.Pole-RA',
+              'comment': 'North Pole right ascension',
+              'pat':    r'(?P<np_ra>(\d+ \d+ )?\d+\.\d+)'}, # require a . for safety
+    'np_dec': {'header': r'N\.Pole-DC',
+               'comment': 'North Pole declination',
+               'pat':    r'(?P<np_dec>([-+]?\d+ \d+ )?[-+]?\d+\.\d+)'},
+    
     'r': {'header': 'r',
           'comment': 'heliocentric distance',
           'unit':    'AU',
@@ -68,6 +68,17 @@ cols = {
               'comment': 'phase angle',
               'unit':    'deg',
               'pat':     r'(?P<phang>[0-9.]+)'},
+    'ang_sep': {'header': 'ang-sep/v',
+                'comment': 'Angular separation from primary',
+                'pat': r'(?P<ang_sep>[0-9.]+/.)'},  # arcsec, "visibility code".
+                                                    # t: transiting primary
+                                                    # O: occulted by primary
+                                                    # p: partial umbral eclipse
+                                                    # P: occulted partial umbral eclipse
+                                                    # u: total umbral eclipse
+                                                    # U: occulted total umbral eclipse
+                                                    # *: none of the above
+                                                    # -: target is primary
     'L_s': {'header': 'L_s',  # 08/2010: JPL does not supply this and
             'unit': 'deg',    # says they cannot.  Ask Bryan Butler.
             'comment': 'Season angle',
@@ -261,13 +272,33 @@ def readJPLephem(fmfile):
                 retdict[hk] = qa.convert(qa.totime(retdict[hk].replace('minutes', 'min')),
                                          'd')['value']
     
+    if retdict['data'].has_key('ang_sep'):
+        retdict['data']['obs_code'] = {'comment': 'Obscuration code'}
     for dk in retdict['data']:
+        if dk == 'obs_code':
+            continue
         if cols[dk].has_key('unit'):
             retdict['data'][dk]['data'] = {'unit': cols[dk]['unit'],
-                      'value': numpy.array([float(s) for s in retdict['data'][dk]['data']])}
-        if dk in ['ra', 'dec']:
-            retdict['data'][dk] = convert_radec(retdict['data'][dk]) 
-    retdict['data']['MJD'] = datestrs_to_MJDs(retdict['data']['MJD'])
+                      'value': scipy.array([float(s) for s in retdict['data'][dk]['data']])}
+        if re.match(r'.*(ra|dec)$', dk):
+            retdict['data'][dk] = convert_radec(retdict['data'][dk])
+        elif dk == 'MJD':
+            retdict['data']['MJD'] = datestrs_to_MJDs(retdict['data']['MJD'])
+        elif dk == 'ang_sep':
+            angseps = []
+            obscodes = []
+            for asoc in retdict['data'][dk]['data']:
+                angsep, obscode = asoc.split('/')
+                angseps.append(float(angsep))
+                obscodes.append(obscode)
+            retdict['data'][dk]['data'] = {'unit': 'arcseconds',
+                                           'value': angseps}
+            retdict['data']['obs_code']['data'] = obscodes
+
+    if len(retdict.get('radii', {'value': []})['value']) == 3 \
+           and retdict['data'].has_key('np_ra') and retdict['data'].has_key('np_dec'):
+        # Do a better mean radius estimate using the actual theta.
+        retdict['meanrad']['value'] = mean_radius_with_known_theta(retdict)
 
     # To be eventually usable as a MeasComet table, a few more keywords are needed.
     retdict['VS_TYPE'] = 'Table of comet/planetary positions'
@@ -320,7 +351,7 @@ def convert_radec(radec_col):
 
     return {'comment': radec_col['comment'],
             'data': {'unit': angq['unit'],
-                     'value': numpy.array(angq['value'])}}
+                     'value': scipy.array(angq['value'])}}
 
 def mean_radius(a, b, c):
     """
@@ -337,11 +368,11 @@ def mean_radius(a, b, c):
     # approximation is exact for b == a, and appears to hold well for b << a.
     R = 0.5 * c**2 * (1.0 / b**2 + 1.0 / a**2)   # The magic ratio.
     if R < 0.95:
-        sqrt1mR = numpy.sqrt(1.0 - R)
+        sqrt1mR = scipy.sqrt(1.0 - R)
         # There is fake singularity (RlnR) at R = 0, but it is unlikely to
         # be a problem.
         try:
-            Rterm = 0.5 * R * numpy.log((1.0 + sqrt1mR) / (1.0 - sqrt1mR)) / sqrt1mR
+            Rterm = 0.5 * R * scipy.log((1.0 + sqrt1mR) / (1.0 - sqrt1mR)) / sqrt1mR
         except:
             Rterm = 0.0
     else:
@@ -354,7 +385,38 @@ def mean_radius(a, b, c):
             onemRtothei *= onemR
             Rterm -= onemRtothei / (0.5 + 2.0 * i**2)
     avalfabeta = 0.5 * a * b * (1.0 + Rterm)
-    return numpy.sqrt(avalfabeta)
+    return scipy.sqrt(avalfabeta)
+
+def mean_radius_with_known_theta(retdict):
+    """
+    Return the average apparent mean radius of an ellipsoid with semiaxes
+    a >= b >= c (= retdict['radii']['value']).
+    "average" means average over a rotation period, and "apparent mean radius"
+    means the radius of a circle with the same area as the apparent disk.
+    """
+    a = retdict['radii']['value'][0]
+    b2 = retdict['radii']['value'][1]**2
+    c2 = retdict['radii']['value'][2]**2
+    onemboa2 = 1.0 - b2 / a**2
+    units = {}
+    values = {}
+    for c in ['ra', 'dec', 'np_ra', 'np_dec']:
+        units[c] = retdict['data'][c]['data']['unit']
+        values[c] = retdict['data'][c]['data']['value']
+    av = 0.0
+    nrows = len(retdict['data']['ra']['data']['value'])
+    for i in xrange(nrows):
+        radec = me.direction('app', {'unit': units['ra'], 'value': values['ra'][i]},
+                             {'unit': units['dec'], 'value': values['dec'][i]})
+        np = me.direction('j2000', {'unit': units['np_ra'], 'value': values['np_ra'][i]},
+                          {'unit': units['np_dec'], 'value': values['np_dec'][i]})
+        szeta2 = scipy.sin(qa.convert(me.separation(radec, np), 'rad')['value'])**2
+        csinz2 = c2 * szeta2
+        bcosz2 = b2 * (1.0 - szeta2)
+        bcz2pcsz2 = bcosz2 + csinz2
+        m = csinz2 * onemboa2 / bcz2pcsz2
+        av += (scipy.sqrt(bcz2pcsz2) * scipy.special.ellipe(m) - av) / (i + 1.0)
+    return scipy.sqrt(2.0 * a * av / scipy.pi)
 
 def datestr_to_epoch(datestr):
     """
@@ -381,7 +443,7 @@ def datestrs_to_MJDs(cdsdict):
         timeq['value'].append(qa.totime(datestr)['value'])
 
     return {'unit': timeq['unit'],
-            'value': numpy.array(timeq['value'])}
+            'value': scipy.array(timeq['value'])}
 
 
 def ephem_dict_to_table(fmdict, tablepath=''):
