@@ -7,13 +7,12 @@
     casapy [casa-options] -c runUnitTest.py
     
     or from inside casapy:
-    sys.path.append(os.environ["CASAPATH"].split()[0] + '/code/xmlcasa/scripts/regressions/admin')
     import runUnitTest
     runUnitTest.main(['testname']) 
     runUnitTest.main()
     runUnitTest.main(['--short'])
     
-    NOTE: tests must be located in ....scripts/tests
+    NOTE: Tests scripts must be located in ....scripts/tests and installed before usage.
     """
 
 # The main class in testwrapper.py is:
@@ -35,20 +34,14 @@ import nose
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
-TESTS_DIR = CASA_DIR+'/code/xmlcasa/scripts/tests/'
-UTILS_DIR = CASA_DIR+'/code/xmlcasa/scripts/regressions/admin/'
-if not os.access(UTILS_DIR, os.F_OK):
+TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/tests/'
+if not os.access(TESTS_DIR, os.F_OK):
     if os.access(CASA_DIR+'/lib64', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/tests/'
-        UTILS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/regressions/admin/'
     elif os.access(CASA_DIR+'/lib', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib/python/tests/'
-        UTILS_DIR = CASA_DIR+'/lib/python/regressions/admin/'
     else:            #Mac release
         TESTS_DIR = CASA_DIR+'/Resources/python/tests/'
-        UTILS_DIR = CASA_DIR+'/Resources/python/regressions/admin/'        
-
-sys.path.append(UTILS_DIR)
 
 import memTest
 import testwrapper

@@ -615,7 +615,13 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.do("Remove the link first (in case it already exists)", "rm -f ", prefix, "/data")
         b.do("", "ln -s ", datadir, " ", prefix, "/data")
 
-        b.do("Then launch the python unit test suite,", "casapy --nogui --log2term -c ", prefix, "/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --mem")
+        if os.path.isdir(prefix.value + "/" + builddir.value + "/python/2.6"):
+            pyver = platform("pyver", "2.6")
+        else:
+            pyver = platform("pyver", "2.5")
+
+
+        b.do("Then launch the python unit test suite,", "casapy --nogui --log2term -c ", prefix, "/", builddir, "/python/", pyver, "/runUnitTest.py --mem")
 
         b.comment("which will summarize near the end if your build is okay or if there were any problems.")
         #
@@ -667,7 +673,7 @@ def main(argv):
     dry = (len(argv) > 4)
     doc_dir = os.getenv('HOME') + "/documentation/" + type + "-" + oss + "-" + arch
     if dry:
-        print "Writing documentation for", oss, arch, "to", doc_dir
+        print "Writing documentation for", oss, arch, "to", doc_dir + "/build.html"
     else:
         print "Going to build on", oss, arch
     sys.stdout.flush()
@@ -679,7 +685,8 @@ def main(argv):
     prefix = "/opt/casa/active/code"
     if not os.path.isdir(prefix):
         prefix = "/opt/casa/code"
-    os.system("svn info " + prefix + " | egrep \"^Revision\" | awk '{print $2}' > " + os.getenv('HOME') + "/documentation/revision.txt")
+    if not dry:
+        os.system("svn info " + prefix + " | egrep \"^Revision\" | awk '{print $2}' > " + os.getenv('HOME') + "/documentation/revision.txt")
         
     return 0          
 

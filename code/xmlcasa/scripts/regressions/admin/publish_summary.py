@@ -19,33 +19,22 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 imager = casac.homefinder.find_home_by_name('imagerHome')
 image = casac.homefinder.find_home_by_name('imageHome')
 quantity=casac.Quantity
-# DATA_REPOS=[ '/home/onager4/Regression/Data/', '/aips++/data/', '/home/rohir2/jmcmulli/']
-# SCRIPT_REPOS='/home/ballista3/Regression/Scripts/'
-# WORKING_DIR='/home/onager4/Regression/WorkingDir/'
-# RESULT_DIR='/home/ballista3/Regression/Result/'
-# TEMPLATE_RESULT_DIR='/home/onager4/Regression/TemplateResults/'
-# RESULT_TEMPLATE_FOLDER='/home/ballista3/Regression/COMPARISON_VALUES_latest.txt'
-#DATA_REPOS=[ '/scratch/ALMA/casa/data/']
-#DATA_REPOS=['/tmp/hest']
-#INFRASTRUC_DIR='/scratch/ALMA/casa/test/admin/'
-#WORKING_DIR='/scratch/tmp/Regression/WorkingDir/'
-#RESULT_DIR='/scratch/tmp/Regression/Result/'
-#TEMPLATE_RESULT_DIR='/scratch/ALMA/casa/test/tests/third/reference/'
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 
-SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/regressions/'
-UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
-if not os.access(SCRIPT_REPOS, os.F_OK):
-    if os.access(AIPS_DIR+'/lib64', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib64/python'+PYVER+'/regressions/'
-        UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
-    elif os.access(AIPS_DIR+'/lib', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib/python'+PYVER+'/regressions/'
-        UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
-    else:            #Mac release
-        SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
-        UTILS_DIR = AIPS_DIR+'/MacOS/'        
+if os.access(AIPS_DIR+'/lib64', os.F_OK):
+    SCRIPT_REPOS = AIPS_DIR+'/lib64/python'+PYVER+'/regressions/'
+    UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
+elif os.access(AIPS_DIR+'/lib', os.F_OK):
+    SCRIPT_REPOS = AIPS_DIR+'/lib/python'+PYVER+'/regressions/'
+    UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
+elif os.access(AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/regressions/', os.F_OK):
+    # devel
+    SCRIPT_REPOS = AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/regressions/'
+    UTILS_DIR = ''
+else:            #Mac release
+    SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
+    UTILS_DIR = AIPS_DIR+'/MacOS/'        
 # because casapy releases have a different directory structure
 
 
@@ -139,7 +128,7 @@ class runTest:
                 os.system("echo -n > " + process_data)
                 pp = SCRIPT_REPOS + '/profileplot.py'  # for release
                 if not os.path.isfile(pp):
-                    pp = SCRIPT_REPOS + '/admin/profileplot.py' # for devel
+                    pp = SCRIPT_REPOS + '/../profileplot.py' # for devel
                 pyt = UTILS_DIR + '/python'  # for release
                 if not os.path.isfile(pyt):
                     pyt = '/usr/lib64/casapy/bin/python'    # for devel
@@ -416,8 +405,7 @@ class runTest:
             casapy = os.environ["CASAPATH"].split()[0] + '/' + \
                      os.environ["CASAPATH"].split()[1] + '/bin/casapy'
 
-            gprof2dot = os.environ["CASAPATH"].split()[0] + \
-                        '/code/xmlcasa/scripts/regressions/admin/gprof2dot.py'
+            gprof2dot = SCRIPT_REPOS + "/../gprof2dot.py"
             
             os.system("sudo opcontrol --stop && sudo opcontrol --dump")
             os.system("opreport -clf image-exclude:/no-vmlinux " + casapy + " > cpp_profile.txt")
