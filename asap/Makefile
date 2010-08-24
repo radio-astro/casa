@@ -51,8 +51,9 @@ install:
 
 clean:
 	@cd $(ASAPROOT)/src; make clean
-	@cd $(ASAPROOT)/doc; make clean
+#	@cd $(ASAPROOT)/doc; make clean
 	@cd $(ASAPROOT)/$(ATNFD); make realclean
+	@cd $(ASAPROOT)/apps; make clean
 
 datadist:
 	@echo "Generating ASAP data archive from aips++ installation..."

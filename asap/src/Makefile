@@ -43,6 +43,7 @@ ifndef CXX
 endif
 
 # compiler flags
+CXXFLAGS += -fPIC
 
 CFITSIOLIB := -lcfitsio
 

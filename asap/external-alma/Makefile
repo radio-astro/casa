@@ -25,7 +25,7 @@ CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
 #USELIB := lib64
 
-ifneq ("",$(findstring "darwin", "$(CASAARCH)"))
+ifneq (,$(findstring "darwin", "$(CASAARCH)"))
 	TARGETLIB   := libatnf.dylib
 else
         TARGETLIB   := libatnf.so
@@ -35,6 +35,9 @@ endif
 ifndef CXX
    CXX      := g++
 endif
+
+# compiler flags
+CXXFLAGS += -fPIC
 
 # casacore library dependencies
 CORELIBS := -lcasa_casa -lcasa_measures -lcasa_scimath -lcasa_ms -lcasa_tables
@@ -49,7 +52,7 @@ RPFITSLIB := -lrpfits
 LD        := $(CXX)
 
 LDFLAGS   += -shared
-ifneq ("", $(findstring "darwin", "$(CASAARCH)"))
+ifneq (, $(findstring "darwin", "$(CASAARCH)"))
 	   LDFLAGS += -headerpad_max_install_names -install_name $(CASAROOT)/$(CASAARCH)/lib/$(TARGETLIB)
 endif 
 
@@ -78,7 +81,7 @@ OBJECTS := $(ATNFDIR)/pks/pks_maths.o \
 	$(ATNFDIR)/PKSIO/PKSSDwriter.o \
 	$(ATNFDIR)/PKSIO/SDFITSreader.o \
 	$(ATNFDIR)/PKSIO/SDFITSwriter.o #\
-#	$(ATNFDIR)/PKSIO/PKSmsg.cc
+#	$(ATNFDIR)/PKSIO/PKSmsg.o
 
 HEADERS := $(ATNFDIR)/pks/pks_maths.h \
 	$(ATNFDIR)/PKSIO/ASTEDataset.h \
