@@ -252,6 +252,11 @@ find_program( LATEX2HTML_CONVERTER NAMES htlatex )
 set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,3" 
       CACHE STRING "LATEX2HTML_CONVERTER options" )
 
+# Use pdflatex
+find_program( PDFLATEX_COMPILER NAMES pdflatex )
+#set( LATEX2PDF_OPTIONS "htcasa,section+,next,p-width,3" 
+#CACHE STRING "LATEX2PDF_CONVERTER options" )
+
 set( CASA_DOC_DIR ${casaroot}/docs ) # Where to put documentation
 
 find_package( Doxygen )
