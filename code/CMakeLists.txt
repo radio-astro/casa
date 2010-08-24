@@ -928,7 +928,7 @@ string( REGEX REPLACE "/[^/]+/?$" "" rpfitslibd ${RPFITS_LIBRARIES} ) # What is 
 list( GET ${CFITSIO_LIBRARIES} 0 cfitsio_lib )
 get_filename_component(cfitsiolibd ${cfitsio_lib} PATH)
 
-string( REGEX REPLACE "/[^/]+/?$" "" cfitsiolibd ${RPFITS_LIBRARIES} ) # What is the effect of this? Do the two lines above not set cfitsiolibd to the path of the first library in CFITSIO_LIBRARIES?
+string( REGEX REPLACE "/[^/]+/?$" "" cfitsiolibd ${CFITSIO_LIBRARIES} ) # What is the effect of this? Do the two lines above not set cfitsiolibd to the path of the first library in CFITSIO_LIBRARIES?
 
 string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
 
@@ -1007,7 +1007,7 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   BOOSTROOT = ${BOOST_ROOT}\n
   RPFITSLIBD = ${rpfitslibd}\n
   CFITSIOLIBD = ${cfitsiolibd}\n
-  CFITSIOINCD =  ${cfitsiolibd}/../include\n
+  CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
   eval_vars :\n
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
