@@ -1,131 +1,183 @@
 #!/bin/bash
 
-IAM=`basename $0`
-VERBOSE="off"
+IAM=`basename -- "$0"`
+VERBOSE=
 WORKDIR=`pwd`
 XMLFILES=
 
-usage() {
-   echo "Usage: ${IAM} [-h|--help] [-v|--verbose] [-i|--installdir=<dir>] [-o|--outputfile=<file>] [<tasks>]"
-   echo "  -h|--help               : this help screen"
-   echo "  -v|--verbose            : print a diagnostic to standard output"
-   echo "  -i=|--installdir=<dir>  : directory where Casa local tasks were installed (default is \`pwd\`)"
-   echo "  -o=|--outputfile=<file> : name of the output file (default is \"mytasks.py\")"
-   echo "  <tasks>                 : list tasks (by default all tasks of the current directory)"
+# Usage of this script.
+function usage
+{
+ echo "Usage: $IAM [-h] [-v] [-i=<dir>] [-o=<file>] [<tasks>]"
+ echo "  -h|--help               : this help screen"
+ echo "  -v|--verbose            : print a diagnostic to standard output"
+ echo "  -i=|--installdir=<dir>  : directory where Casa local tasks were installed (default is \`pwd\`)"
+ echo "  -o=|--outputfile=<file> : name of the output file (default is \"mytasks.py\")"
+ echo "  <tasks>                 : list tasks (by default all tasks of the current directory)"
+ echo ""
+ echo "This program builds CASA tasks from XML descriptions."
 }
 
-message() {
-   echo "${IAM}: $1"
+# Send a message to stdout.
+function message
+{
+  echo "$@"
 }
 
-verbose() {
-   [[ "$VERBOSE" == "on" ]] && message "$1"
+# Send a warning message to stderr.
+function warning
+{
+ echo "[$IAM] *** WARNING: $@" 1>&2
 }
-while [ "$#" -gt 0 ]
-do
-   case $1 in
-      -h|--help)
-         usage
-         exit
-         ;;
-      -v|--verbose)
-         VERBOSE="on"
-         ;;
-      -i=*|--installdir=*)
-         TMP=$1
-         INSTALLDIR=`echo $TMP | sed 's/[-a-zA-Z0-9]*=//'`
-         ;;
-      -o=*|--outputfile=*)
-         TMP=$1
-         OUTPUTFILE=`echo $TMP | sed 's/[-a-zA-Z0-9]*=//'`
-         ;;
-      *)
-         XMLFILES="${XMLFILES} $1"
-         ;;
-   esac
-   shift
+
+# Send an error message to stderr and exit.
+function error
+{
+ echo "[$IAM] *** ERROR: $@" 1>&2
+ exit -1
+}
+
+# Verbose a message to stderr.
+function verbose
+{
+  [ -n "$VERBOSE" ] && echo "[$IAM] $@" 1>&2
+}
+
+# File functions.
+function file-realname
+{
+ [ "$#" != 1 ] && echo "[file-realname] *** ERROR: Need exactly one argument!" 1>&2 && return -1
+ if [ -a "$1" ]; then
+   echo $(cd -P -- "$(dirname -- "$1")" && printf '%s\n' "$(pwd -P)/$(basename -- "$1")")
+ else
+   echo "$1"
+ fi
+}
+
+# Directory functions.
+function dir-equal
+{
+ [ "$#" != 2 ] && echo "[dir-equal] *** ERROR: Need exactly two arguments!" 1>&2 && return -1
+ local dir1=`file-realname "$1"`
+ local dir2=`file-realname "$2"`
+ [ "$dir1" == "$dir2" ] && echo "$dir1"
+}
+
+while [ "$#" -gt 0 ]; do
+ case $1 in
+   -h|--help)
+     usage
+     exit 0
+     ;;
+   -v|--verbose)
+     VERBOSE="x"
+     ;;
+   -i=*|--installdir=*)
+     INSTALLDIR="$(echo "$1" | sed 's/[-a-zA-Z0-9]*=//')"
+     [ -z "$INSTALLDIR" ] && error "Need a directory with option '$(echo "$1" | sed 's/=$//')'!"
+     ;;
+   -o=*|--outputfile=*)
+     OUTPUTFILE="$(echo "$1" | sed 's/[-a-zA-Z0-9]*=//')"
+     [ -z "$OUTPUTFILE" ] && error "Need a file with option '$(echo "$1" | sed 's/=$//')'!"
+     ;;
+   *)
+     XMLFILES="$XMLFILES $1"
+     ;;
+ esac
+ shift
 done
-																    [[ -z $VERBOSE ]] && VERBOSE="off"
-[[ -z $INSTALLDIR ]] && INSTALLDIR=`pwd`
-[[ -z $OUTPUTFILE ]] && OUTPUTFILE="mytasks.py"
-[[ -z $XMLFILES ]] && XMLFILES=`ls *.xml`
 
-if [[ ${INSTALLDIR:0:1} != "/" ]]; then
-   verbose "converting ${INSTALLDIR} to an absolute path ..."
-   cd $INSTALLDIR
-   INSTALLDIR=`pwd`
-   cd $WORKDIR
-fi 
+verbose "Casa version: $(casapyinfo --version 2>&1 | cut -d' ' -f1)"
+#verbose "Casa version: $(casapyinfo --version 2>&1 | awk -F. '{print $1"."$2;}')"
 
-verbose "install directory is $INSTALLDIR"
-if [[ ! -d "$INSTALLDIR" ]]; then
-   verbose "creating $INSTALLDIR ..."
-   amkdir $INSTALLDIR
+[ -z "$INSTALLDIR" ] && INSTALLDIR=`pwd`
+[ -z "$OUTPUTFILE" ] && OUTPUTFILE="mytasks.py"
+[ -z "$XMLFILES" ] && XMLFILES=$(ls *.xml)
+#XMLFILES="$(echo $XMLFILES | sed 's/^[ \t]*//')"
+[ -z "$XMLFILES" ] && error "no tasks!"
+verbose "task(s) to process: $(echo "$XMLFILES" | sed 's/\(.\).xml/\1/g')"
+
+INSTALLDIR=`file-realname "$INSTALLDIR"`
+verbose "install directory: $INSTALLDIR"
+if [ ! -d "$INSTALLDIR" ]; then
+  verbose "creating $INSTALLDIR ..."
+  amkdir "$INSTALLDIR"
 fi
-verbose "output file is $OUTPUTFILE"
-OUTFILE=$INSTALLDIR/$OUTPUTFILE
+
+verbose "task file: $OUTPUTFILE"
+OUTFILE="$INSTALLDIR/$OUTPUTFILE"
+
+[ -z "$CASAPATH" ] && error "CASAPATH environment variable not defined!"
 CASAROOT=`echo $CASAPATH | awk '{print $1}'`
+verbose "Casa root directory: $CASAROOT"
+[ ! -d "$CASAROOT" ] && error "can't find Casa root directory $CASAROOT!"
+
 CASAARCH=`echo $CASAPATH | awk '{printf "%s/%s", $1, $2}'`
-INFOFILE=/tmp/.casapy.taskinfo
-SAXONJAR=${CASAARCH}/lib/saxon8.jar
+verbose "Casa architecture: $CASAARCH"
+
+SAXONJAR="$CASAARCH/lib/saxon8.jar"
 if [[ ! -e ${SAXONJAR} ]]; then
    SAXONJAR=${CASAROOT}/java/saxon8.jar
    if [[ ! -e ${SAXONJAR} ]] ; then
       SAXONJAR=${CASAROOT}/lib/saxon8.jar
    fi
 fi
-SAXON="java -jar ${SAXONJAR}"
-cp /dev/null ${INFOFILE}
 
-for file in $XMLFILES
-do
-   xmlfile=${file%.xml}
-   verbose "generating `basename $xmlfile` task ... "
-   ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2pycli.xsl > ${xmlfile}_cli.py
-   ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2pyimp.xsl > ${xmlfile}.py
-   ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2tsum2.xsl >> ${INFOFILE}
-   mv ${xmlfile}.py ${xmlfile}.py.bak
-   sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}.py.bak > ${xmlfile}.py
-   mv ${xmlfile}_cli.py ${xmlfile}_cli.py.bak
-   sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_cli.py.bak > ${xmlfile}_cli.py
-   if [ -e ${xmlfile}_pg.py ] ; then
-      mv ${xmlfile}_pg.py ${xmlfile}_pg.py.bak
-      sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_pg.py.bak > ${xmlfile}_pg.py
-   fi
-   if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
-      mv ${xmlfile}.py ${INSTALLDIR}
-      mv ${xmlfile}_cli.py ${INSTALLDIR}
-      mv ${xmlfile}_pg.py ${INSTALLDIR}
-      cp ${xmlfile}.xml ${INSTALLDIR}
-      cp task_${xmlfile}.py ${INSTALLDIR}
-   fi
+[ ! -e "$SAXONJAR" ] && error "can't find the Saxon processor $SAXONJAR!"
+verbose "Saxon processor: $SAXONJAR"
+SAXON="java -jar $SAXONJAR"
+verbose "Saxon command: $SAXON"
+
+INFOFILE=`mktemp bmt`
+verbose "intermediate task file: $INFOFILE"
+[ ! -e "$INFOFILE" ] && error "can't create an intermediate file $INFOFILE!"
+
+for FILE in $XMLFILES; do
+  XMLFILE=${FILE%.xml}
+ if [ ! -e "$XMLFILE.xml" ]; then
+   warning "$XMLFILE.xml not a file!"
+ else
+	  verbose "generating `basename -- "$XMLFILE"` task ... "
+	  xmlgenpy "$XMLFILE"
+	  $SAXON "$XMLFILE.xml" "$CASAROOT/share/xml/casa2tsum2.xsl" >> $INFOFILE
+	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "$XMLFILE.py"
+	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_cli.py"
+	  [ -e "${XMLFILE}_pg.py" ] && sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_pg.py"
+	  if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
+	    mv -f "${XMLFILE}.py" "${INSTALLDIR}"
+	    mv -f "${XMLFILE}_cli.py" "${INSTALLDIR}"
+	    [ -e "${XMLFILE}_pg.py" ] && mv -f "${XMLFILE}_pg.py" "${INSTALLDIR}"
+	    cp -f "${XMLFILE}.xml" "${INSTALLDIR}"
+	    cp -f "task_${XMLFILE}.py" "${INSTALLDIR}"
+	  fi
+	fi
 done
 
-verbose "generating `basename $OUTFILE` file ... "
+verbose "generating `basename -- "$OUTFILE"` file ... "
+sed -i -e 's/^tasksum/mytasks/g' "$INFOFILE"
 
-mv ${INFOFILE} ${INFOFILE}.bak
-sed -e s/^tasksum/mytasks/g ${INFOFILE}.bak >${INFOFILE}
+cat /dev/null > $OUTFILE
+echo "#" >> $OUTFILE
+echo "# User defined tasks setup." >> $OUTFILE
+echo "# Generated from buildmytask." >> $OUTFILE
+echo "#" >> $OUTFILE
+echo >> $OUTFILE
+echo "if sys.path[1] != '"$INSTALLDIR"':" >> $OUTFILE
+echo "  sys.path.insert(1, '"$INSTALLDIR"')" >> $OUTFILE
+echo "from odict import odict" >> $OUTFILE
+echo "if not globals().has_key('mytasks') :" >> $OUTFILE
+echo "  mytasks = odict()" >> $OUTFILE
+echo >> $OUTFILE
+grep "^mytasks" $INFOFILE >> $OUTFILE
+echo >> $OUTFILE
+echo "if not globals().has_key('task_location') :" >>$OUTFILE
+echo "  task_location = odict()" >> $OUTFILE
+echo >> $OUTFILE
+echo "for key in mytasks.keys() :" >> $OUTFILE
+echo "  task_location[key] = '$INSTALLDIR'" >> $OUTFILE
+echo "  tasksum[key] = mytasks[key]" >> $OUTFILE
+echo >> $OUTFILE
+grep "^from" $INFOFILE >> $OUTFILE
 
-cat /dev/null > ${OUTFILE}
-echo "#" >> ${OUTFILE}
-echo "# User defined tasks setup." >> ${OUTFILE}
-echo "# Generated from buildmytask." >> ${OUTFILE}
-echo "#" >> ${OUTFILE}
-echo >> ${OUTFILE}
-echo "sys.path.insert(1, '"$INSTALLDIR"')" >> ${OUTFILE}
-echo "from odict import odict" >> ${OUTFILE}
-echo "if not globals().has_key('mytasks') :" >> ${OUTFILE}
-echo "   mytasks = odict()" >> ${OUTFILE}
-echo >> ${OUTFILE}
-grep "^mytasks" ${INFOFILE} >> ${OUTFILE}
-echo >> ${OUTFILE}
-echo "if not globals().has_key('task_location') :" >>${OUTFILE}
-echo "   task_location = odict()" >> ${OUTFILE}
-echo >> ${OUTFILE}
-echo "for key in mytasks.keys() :" >> ${OUTFILE}
-echo "   task_location[key] = '${INSTALLDIR}'" >> ${OUTFILE}
-echo "   tasksum[key] = mytasks[key]" >> ${OUTFILE}
-echo >> ${OUTFILE}
-grep "^from" ${INFOFILE} >> ${OUTFILE}
-rm -f ${INFOFILE}
+rm -f "$INFOFILE"
 

@@ -49,7 +49,11 @@ add_custom_target( xmlcasa_python_casadef_fast ${CMAKE_BUILD_TOOL} xmlcasa_pytho
 add_dependencies( xmlcasa_fast xmlcasa_python_casadef_fast )
 
 install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
-install( PROGRAMS install/buildmytasks DESTINATION bin )
+install( PROGRAMS
+       install/buildmytasks
+       install/xmlgenpy
+       DESTINATION bin )
+
 install( FILES 
   install/casa2idl3.xsl
   install/casa2py.xsl
@@ -64,6 +68,7 @@ install( FILES
   install/casa2tsum.xsl
   install/casatlist.xsl
   DESTINATION ${CMAKE_INSTALL_PREFIX}/../share/xml )
+install( FILES install/saxon8.jar DESTINATION lib )
 
 # set SVNREVISION and BUILDTIME
 set( casadef_quiet TRUE )
