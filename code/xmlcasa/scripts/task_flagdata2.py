@@ -58,35 +58,44 @@ def flagdata2(vis = None,
              rfi_bs_cutoff = None,
              rfi_ant_cutoff = None,
              rfi_flag_level = None,
+             unflag = None,
              summary = None,
              minrel = None,
              maxrel = None,
              minabs = None,
-             maxabs = None,
-             unflag = None):
+             maxabs = None):
 
     casalog.origin('flagdata2')
 
     fg.done()
     fg.clearflagselection(0)
 #    autocorr = False
-    mode = ''
     try: 
         if ((type(vis)==str) & (os.path.exists(vis))):
             fg.open(vis)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
-
+        
+        if (not manualflag and not clip and not quack and not shadow and not rfi and 
+            not autoflag and not unflag and not summary):
+#            casalog.post('No flagging mode was selected', 'WARN')
+#            casalog.post('Please, set at least one mode to run this task', 'WARN')
+            msg = 'No flagging mode was selected. Please, set at least one mode to run this task.'
+            casalog.post(msg, 'SEVERE')
+            raise Exception
+        
+        if (unflag and (manualflag or clip or quack or shadow or rfi or autoflag)):
+            casalog.post('Cannot run unflag simultaneously with any other mode', 'SEVERE')
+            raise Exception
+        
         ## FIXME: autcorr
-        # The elif should be replaced by if
-        # Do we need the selectdata params for subsequent mode runs?
-        # Is the flagged MS saved between modes?
+
         # In manualflag, clip and quack modes,
         # filter out the parameters which are not used
         
         # FIXME: add subparameters to manualflag
         if manualflag:
-            mode == 'manualflag'
+            mode = 'manualflag'
             casalog.post('Flagging in manualflag mode')
             manual_clip_quack(mode, selectdata, flagbackup,
 #                         autocorr=autocorr,
@@ -105,7 +114,7 @@ def flagdata2(vis = None,
                          uvrange=uvrange)
 
         if clip:
-            mode == 'clip'
+            mode = 'clip'
                 # In manualflag and quack modes,
                 # filter out the parameters which are not used
             casalog.post('Flagging in clip mode')
@@ -126,7 +135,7 @@ def flagdata2(vis = None,
                          array=array,
                          uvrange=uvrange)
         if quack:
-            mode == 'quack'
+            mode = 'quack'
             casalog.post('Flagging in quack mode')
             manual_clip_quack(mode, selectdata, flagbackup,
 #                         autocorr=autocorr,
@@ -145,7 +154,7 @@ def flagdata2(vis = None,
                          array=array,
                          uvrange=uvrange)
         if shadow:
-            mode == 'shadow'
+            mode = 'shadow'
             casalog.post('Flagging in shadow mode')
             fg.setdata()
             fg.setshadowflags( \
@@ -164,7 +173,7 @@ def flagdata2(vis = None,
                 backup_flags(mode)
             
         if autoflag:
-            mode == 'autoflag'
+            mode = 'autoflag'
             casalog.post('Flagging in autoflag mode')
             fg.setdata(field = field, \
                            spw = spw, \
@@ -191,7 +200,7 @@ def flagdata2(vis = None,
                 backup_flags(mode)
 
         if rfi:
-            mode == 'rfi'
+            mode = 'rfi'
             casalog.post('Flagging in rfi mode')
             fg.setdata(field = field, \
                            spw = spw, \
@@ -260,8 +269,8 @@ def flagdata2(vis = None,
 
         if unflag:
             casalog.post('Flagging in unflag mode')
-            # pretends to be clip mode, but it will only unflag
-            mode = "clip"
+            # pretends to be manualflag mode, but it will only unflag
+            mode = "manualflag"
             manual_clip_quack(mode, selectdata, flagbackup,
 #                         autocorr=autocorr,
                          unflag=unflag,
@@ -276,7 +285,7 @@ def flagdata2(vis = None,
                          uvrange=uvrange)
 
         if summary:
-            mode == 'summary'
+            mode = 'summary'
             casalog.post('Flagging in summary mode')
             fg.setdata()
             fg.setflagsummary(field=field, \
@@ -290,20 +299,8 @@ def flagdata2(vis = None,
                                   correlation=correlation)
                 
             # do not backup existing flags
-
-#        elif query:
-#            mode == 'query'
-#            print "Sorry - not yet implemented !"
-#            fg.done()
-#            return False
-        
-#        elif extend:
-#            mode == 'extend'
-#            print "Sorry - not yet implemented !"
-#            fg.done()
-#            return False
             
-        # Finallly, run the flagging
+        # Finallly, run the flagging for all modes
         stats = fg.run()
         fg.done()
 
@@ -328,8 +325,8 @@ def flagdata2(vis = None,
 
     except Exception, instance:
         fg.done()
-        print '*** Error ***', instance
-        #raise
+#        print '*** Error ***', instance
+
     fg.done()
 
     
@@ -427,100 +424,11 @@ def manual_clip_quack(mode, selectdata, flagbackup, **params):
     if flagbackup:
         backup_flags(mode)
         
-#    fg.run()
-
-#
-# Handle mode = 'manualflag' and mode = 'quack'
-#
-def manualflag_quack(mode, selectdata, flagbackup, **params):
-        if debug: print params
-
-        if not selectdata:
-                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = ''
-        
-        vector_mode = False         # Are we in vector mode?
-        vector_length = -1          # length of all vectors
-        vector_var = ''             # reference parameter
-        is_vector_spec = {}         # is a variable a vector specification?
-        for x in params.keys():
-                is_vector_spec[x] = False
-                #print x, params[x], type(params[x])
-                if x != 'clipminmax':
-                        print x
-                        print type(params[x])
-                        if type(params[x]) == list:
-                                is_vector_spec[x] = True
-
-                else:
-                        # clipminmax is a special case
-                        if type(params[x]) == list and \
-                                len(params[x]) > 0 and \
-                                type(params[x][0]) == list:
-                                is_vector_spec[x] = True
-
-                if is_vector_spec[x]:
-                        vector_mode = True
-                        vector_length = len(params[x])
-                        vector_var = x
-                        if debug: print x, "is a vector => vector mode, length", vector_length
-                else:
-                        if debug: print x, "is not a vector"
-
-        if not vector_mode:
-                fg.setdata()
-                rename_params(params)
-                fg.setmanualflags(**params)
-        else:
-                # Vector mode
-                plural_s = ''
-                if vector_length > 1:
-                        plural_s = 's'
-                casalog.post('In parallel mode, will apply the following ' + str(vector_length) + \
-                             ' flagging specification' + plural_s)
-                
-                # Check that parameters are consistent,
-                # i.e. if they are vectors, they must have the same length
-                for x in params.keys():
-                        if is_vector_spec[x]:
-                                l = len(params[x])
-
-                                if debug: print x, "has length", l
-                                if l != vector_length:
-                                        raise Exception(str(x) + ' has length ' + str(l) + \
-                                                        ', but ' + str(vector_var) + ' has length ' + str(vector_length))
-                        else:
-                                # vectorize this parameter (e.g.  '7' -> ['7', '7', '7']
-                                params[x] = [params[x]] * vector_length
-
-                if debug: print params
-                
-                # Input validation done.
-                # Now call setmanualflags for every specification
-
-                fg.setdata()
-                for i in range(vector_length):
-                        param_i = {}
-                        param_list = ''
-                        for e in params.keys():
-                                param_i[e] = params[e][i]
-                                if param_i[e] != '':
-                                        if param_list != '':
-                                                param_list += '; '
-                                        param_list = param_list + e + ' = ' + str(param_i[e])
-
-                        casalog.post(param_list)
-                        rename_params(param_i)
-                        if debug: print param_i
-                        fg.setmanualflags(**param_i)
-
-        if flagbackup:
-                backup_flags(mode)
-#        fg.run()
 
 # rename some parameters,
 # in order to match the interface of fg.tool
 #
-# validate parameters for clip quack and unflag modes
+# validate parameters for manualflag, clip quack and unflag modes
 def rename_params(params):
                 
     if params.has_key('quackmode') and \
@@ -545,7 +453,6 @@ def backup_flags(mode):
     #
     # Generally  before_<mode>_<i>, where i is the smallest
     # integer giving a name, which does not already exist
-       
     existing = fg.getflagversionlist(printflags=False)
 
     # remove comments from strings
@@ -553,7 +460,6 @@ def backup_flags(mode):
     i = 1
     while True:
         versionname = mode +"_" + str(i)
-
         if not versionname in existing:
             break
         else:
