@@ -36,6 +36,7 @@
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/RegionManager.h>
+#include <measures/Measures/Stokes.h>
 
 const String ImageInputProcessor::ALL = "ALL";
 
@@ -151,12 +152,15 @@ void ImageInputProcessor::_process(
     	*_log << origin;
     	*_log << LogIO::NORMAL << "Set region from supplied region record"
     		<< LogIO::POST;
+    	stokes = _stokesFromRecord(regionRecord, metaData);
     }
     else if (! regionName.empty()) {
     	_setRegion(regionRecord, diagnostics, image, regionName);
     	*_log << origin;
        	*_log << LogIO::NORMAL << "Set region from supplied region file "
         	<< regionName << LogIO::POST;
+    	stokes = _stokesFromRecord(regionRecord, metaData);
+
     }
     else {
     	// nothing specified, use entire positional plane with spectral and polarization specs
@@ -189,13 +193,14 @@ void ImageInputProcessor::_process(
     			<< _pairsToString(chanEndPts) << LogIO::POST;
     	}
     	if (!stokes.empty()) {
-    		*_log << LogIO::NORMAL << "Using all polarizations" << LogIO::POST;
+    		*_log << LogIO::NORMAL << "Using polarizations " << stokes << LogIO::POST;
     	}
     	else {
     		*_log << LogIO::NORMAL << "Using polarization range(s) "
     			<< _pairsToString(polEndPts) << LogIO::POST;
     	}
     }
+    cout << "*** stokes " << stokes << endl;
     if (!allowMultipleBoxes && regionRecord.fieldNumber("regions") >= 0) {
     	*_log << "Only a single n-dimensional rectangular region is supported."
     		<< LogIO::EXCEPTION;
@@ -477,11 +482,35 @@ Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
     return _consolidateAndOrderRanges(ranges);
 }
 
+String ImageInputProcessor::_stokesFromRecord(const Record& region, const ImageMetaData& metaData) const {
+	String stokes = "";
+ 	if(metaData.hasPolarizationAxis()) {
+ 		Int polAxis = metaData.polarizationAxisNumber();
+ 		uInt stokesBegin, stokesEnd;
+ 		Array<Double> blc, trc;
+ 		region.toArray("blc", blc);
+ 		region.toArray("trc", trc);
+ 		stokesBegin = (uInt)((Vector<Double>)blc)[polAxis];
+ 		stokesEnd = (uInt)((Vector<Double>)trc)[polAxis];
+ 		if (region.isDefined("oneRel") && region.asBool("oneRel")) {
+ 			stokesBegin--;
+ 			stokesEnd--;
+ 		}
+ 		for (uInt i=stokesBegin; i<=stokesEnd; i++) {
+ 			stokes += metaData.stokesAtPixel(i);
+ 		}
+ 	}
+ 	return stokes;
+}
+
+
 void ImageInputProcessor::_setRegion(
-	Record& regionRecord, String& diagnostics, const Record* regionPtr
+	Record& regionRecord, String& diagnostics,
+	const Record* regionPtr
 ) const {
  	// region record pointer provided
  	regionRecord = *(regionPtr->clone());
+ 	// set stokes from the region record
  	diagnostics = "used provided region record";
 }
 
