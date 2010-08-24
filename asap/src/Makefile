@@ -59,7 +59,7 @@ CASAPPLIB := -L$(ASAPROOT)/$(ATNFD) -latnf $(CORELIB) \
              -L$(RPFITSLIBD) $(RPFITSLIB) $(CFITSIOLIB) $(G2CLIB) -lstdc++
 
 # darwin specific CASA flags
-ifneq (,$(findstring $(CASAARCH)", "darwin"))
+ifeq ($(shell uname), Darwin)
    CASAPPLIB += -framework vecLib
 else
    CASAPPLIB += -llapack -lblas

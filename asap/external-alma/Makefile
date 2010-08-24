@@ -5,7 +5,7 @@
 EXTDIR := $(shell pwd)
 ATNFDIR := $(EXTDIR)/atnf
 
-# the casa environment AIPSPATH has to be defined
+# the casa environment CASAPATH has to be defined
 CASAROOT  := $(word 1, $(CASAPATH))
 CASAARCH  := $(word 2, $(CASAPATH))
 
@@ -25,7 +25,7 @@ CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
 #USELIB := lib64
 
-ifneq (,$(findstring "darwin", "$(CASAARCH)"))
+ifeq ($(shell uname), Darwin)
 	TARGETLIB   := libatnf.dylib
 else
         TARGETLIB   := libatnf.so
@@ -52,7 +52,7 @@ RPFITSLIB := -lrpfits
 LD        := $(CXX)
 
 LDFLAGS   += -shared
-ifneq (, $(findstring "darwin", "$(CASAARCH)"))
+ifeq ($(shell uname), Darwin)
 	   LDFLAGS += -headerpad_max_install_names -install_name $(CASAROOT)/$(CASAARCH)/lib/$(TARGETLIB)
 endif 
 
