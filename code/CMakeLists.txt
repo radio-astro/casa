@@ -914,39 +914,6 @@ set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 casa_config_end()
 
 #
-# ASAP's build depends on something called a makedefs file. Fake one of those.
-#
-
-# Get path from first of rpfits libraries.
-list( GET ${RPFITS_LIBRARIES} 0 rpfits_lib )
-get_filename_component(rpfitslibd ${rpfits_lib} PATH)
-
-string( REGEX REPLACE "/[^/]+/?$" "" rpfitslibd ${RPFITS_LIBRARIES} ) # What is the effect of this? Do the two lines above not set rpfitslibd to the path of the first library in RPFITS_LIBRARIES?
-
-
-# Get path from first of rpfits libraries.
-list( GET ${CFITSIO_LIBRARIES} 0 cfitsio_lib )
-get_filename_component(cfitsiolibd ${cfitsio_lib} PATH)
-
-string( REGEX REPLACE "/[^/]+/?$" "" cfitsiolibd ${CFITSIO_LIBRARIES} ) # What is the effect of this? Do the two lines above not set cfitsiolibd to the path of the first library in CFITSIO_LIBRARIES?
-
-string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
-
-# convert semicolons to spaces...
-set( _ii "" )
-foreach( _i ${PYTHON_INCLUDE_DIRS} )
-  set( _ii "${_ii} ${_i}" )
-endforeach()
-
-set( _cc "" )
-foreach( _c ${CASACORE_LIBRARIES} )
-  if( _c MATCHES Framework )
-    # skip
-  else()
-    set( _cc "${_cc} ${_c}" )
-  endif()
-endforeach()
-#
 # The following variables are substitued into python scripts
 #
 set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
@@ -977,17 +944,45 @@ casa_add_module( calibration CASACORE tableplot msvis )
 casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
 casa_add_module( alma CASACORE LIBXML2 Boost )
 casa_add_module( oldalma CASACORE LIBXML2 Boost )
-#casa_add_module( atnf CASACORE RPFITS CFITSIO )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao )
+
+#
+# ASAP's build depends on something called a makedefs file. Fake one of those.
+#
+
+# Get library paths from the first of the rpfits/cfitsio/python library full paths.
+list( GET RPFITS_LIBRARIES 0 rpfits_lib )
+get_filename_component(rpfitslibd ${rpfits_lib} PATH)
+
+list( GET CFITSIO_LIBRARIES 0 cfitsio_lib )
+get_filename_component(cfitsiolibd ${cfitsio_lib} PATH)
+
+list( GET PYTHON_LIBRARIES 0 python_lib )
+get_filename_component(pythonlibd ${python_lib} PATH)
+
+# convert semicolons to spaces...
+set( _ii "" )
+foreach( _i ${PYTHON_INCLUDE_DIRS} )
+  set( _ii "${_ii} ${_i}" )
+endforeach()
+
+set( _cc "" )
+foreach( _c ${CASACORE_LIBRARIES} )
+  if( _c MATCHES Framework )
+    # skip
+  else()
+    set( _cc "${_cc} ${_c}" )
+  endif()
+endforeach()
 
 get_property( MYDEFINES DIRECTORY xmlcasa PROPERTY COMPILE_DEFINITIONS )
 # convert semicolons to -Dmydefine...
 set( _dd "" )
 foreach( _d ${MYDEFINES} )
-	  set( _dd "${_dd} -D${_d}" )
-	  endforeach()
+  set( _dd "${_dd} -D${_d}" )
+endforeach()
 
 
 file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
@@ -1001,7 +996,7 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   WCSLIBLIB = ${WCSLIB_wcs}\n
   WCSLIBLIBD = .\n
   PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${_pythonlibd}\n
+  PYTHONLIBD = ${pythonlibd}\n
   PYTHONINCD = ${_ii}\n
   PYTHONLIB = ${PYTHON_LIBRARIES}\n
   BOOSTROOT = ${BOOST_ROOT}\n
@@ -1011,9 +1006,6 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   eval_vars :\n
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
-
-
-# demo atmosphere ionosphere jive nfra simulators vlbi vo
 
 add_subdirectory( doc/taskref )
 add_subdirectory( doc/casaref )
