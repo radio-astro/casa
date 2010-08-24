@@ -166,6 +166,8 @@ private:
 
     Vector<uInt> _consolidateAndOrderRanges(const Vector<uInt>& ranges) const;
 
+    String _stokesFromRecord(const Record& region, const ImageMetaData& metaData) const;
+
     Vector<uInt> _setPolarizationRanges(
     	String& specification, const ImageMetaData& metaData,
     	const String& imageName, const StokesControl& stokesControl
