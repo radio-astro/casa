@@ -353,7 +353,7 @@ namespace casa {
 	return QDBusVariant(QVariant(true));
     }
 
-    QDBusVariant QtDBusViewerAdaptor::load( const QString &path, const QString &displaytype, double scaling, int panel ) {
+    QDBusVariant QtDBusViewerAdaptor::load( const QString &path, const QString &displaytype, int panel, double scaling ) {
 
 	struct stat buf;
 	if ( stat(path.toAscii().constData(),&buf) < 0 ) {
