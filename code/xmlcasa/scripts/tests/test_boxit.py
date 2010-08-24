@@ -57,8 +57,6 @@
 # casapy -c os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin/runUnitTest.py test_boxit
 #
 # inside casapy:
-# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
-# import runUnitTest
 # runUnitTest.main(['test_boxit'])
 #
 # </example>
