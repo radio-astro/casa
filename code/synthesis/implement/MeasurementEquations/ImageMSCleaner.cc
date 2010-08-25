@@ -227,9 +227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       matClean_p.setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold);
     }
     else if (algorithm=="hogbom") {
-      if(scales_p.nelements()==0) {
-	scales_p=Vector<Float>(1,0.0);
-      }
+      scales_p=Vector<Float>(1,0.0);
       matClean_p.defineScales(scales_p);
       matClean_p.setcontrol(CleanEnums::HOGBOM, niter, gain, threshold);
     } else {
@@ -253,6 +251,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int result=0;
     ///case of single plane mask
+    //now may be a time to set stuff  scales will be done later
+    if(!setupMatCleaner(algorithm, niter, gain, threshold))
+      return False;
     matClean_p.defineScales(scales_p);
     //cerr << "nPol " << nMaskPol_p << " " << nPsfPol_p << " " << nImPol_p << endl;
     //cerr << "nChan " << nMaskChan_p << " " << nPsfChan_p << " " << nImChan_p << endl;
@@ -290,9 +291,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
     }
 
-    //now may be a time to set stuff  scales will be done later
-    if(!setupMatCleaner(algorithm, niter, gain, threshold))
-      return False;
+    
 
     //has cube axis
     if(chanAxis_p > -1 && nImChan_p > 0){
