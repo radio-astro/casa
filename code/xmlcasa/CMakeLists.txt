@@ -214,6 +214,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_fixvis.py
   scripts/task_flagautocorr.py
   scripts/task_flagdata.py
+  scripts/task_flagdata2.py
   scripts/task_flagmanager.py
   scripts/task_fluxscale.py
   scripts/task_fringecal.py
@@ -323,6 +324,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/fixvis.xml
   tasks/flagautocorr.xml
   tasks/flagdata.xml
+  tasks/flagdata2.xml
   tasks/flagmanager.xml
   tasks/fluxscale.xml
   tasks/fringecal.xml
