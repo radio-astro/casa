@@ -178,6 +178,9 @@ private:
     String _cornersToString(const Vector<Double>& corners) const;
 
     void _checkOutputs(Vector<OutputStruct> *output) const;
+
+    Bool _isFractionalRegion(const Record& region) const;
+
 };
 
 }
