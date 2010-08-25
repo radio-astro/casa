@@ -22,16 +22,21 @@
 # Make sure that compile time definitions (build time, svn revision number)
 # are recomputed in every build.
 
-# This target is executed non-conditionally and before any other target that
+# This target is executed unconditionally and before any other target that
 # depends on the definitions file
-add_custom_target( xmlcasa_update_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
+add_custom_target( xmlcasa_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
 
 
 # This is delegated to the cmake script code/install/casadef.cmake in
 # order to allow setting environment variables portably.
 add_custom_command( OUTPUT definitions
-  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions
+  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions_tmp
+  COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 )
+# Using only shell redirection (>) to generate the definitions file, will cause
+# the file to be empty until the command has finished executing (which is a
+# feature of the shell), and thus trigger other make rules before the file is
+# complete.
 
 add_custom_target(
   xmlcasa_python_casadef
@@ -42,11 +47,10 @@ add_custom_target(
   DEPENDS definitions
   )
 
-add_dependencies( xmlcasa_python_casadef xmlcasa_update_definitions )
+add_dependencies( xmlcasa_python_casadef xmlcasa_definitions )
 
-add_dependencies( inst xmlcasa_python_casadef )
-add_custom_target( xmlcasa_python_casadef_fast ${CMAKE_BUILD_TOOL} xmlcasa_python_casadef/fast )
-add_dependencies( xmlcasa_fast xmlcasa_python_casadef_fast )
+add_dependencies( xmlcasa xmlcasa_python_casadef )
+add_dependencies( xmlcasa_fast xmlcasa_python_casadef )
 
 install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
 install( PROGRAMS
@@ -88,8 +92,9 @@ add_custom_command( OUTPUT version.cc
       -e 's|REVISION|${SVNREVISION}|'
       -e 's|DATE|${TAGGEDTIME}|'
       ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > tmp4.txt
-  COMMAND cat tmp3.txt tmp4.txt > version.cc
-      || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
+  COMMAND cat tmp3.txt tmp4.txt > version_tmp.cc
+      || ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different version_tmp.cc version.cc
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template
   DEPENDS definitions
 )
@@ -145,8 +150,8 @@ casa_add_library( xmlcasa
   implement/xerces/stdcasaXMLUtil.cc
   version.cc
   )
-add_dependencies( libxmlcasa_fast xmlcasa_update_definitions )
-add_dependencies( libxmlcasa      xmlcasa_update_definitions )
+add_dependencies( libxmlcasa_fast xmlcasa_definitions )
+add_dependencies( libxmlcasa      xmlcasa_definitions )
 
 casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
 casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
