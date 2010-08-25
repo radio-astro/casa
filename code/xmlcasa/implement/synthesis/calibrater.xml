@@ -37,9 +37,9 @@ are independent of the standard calibrater tool.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb2=calibrater.create()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -70,9 +70,9 @@ other methods.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
-\end{verbatim}
+
 </example>
 </method>
 
@@ -212,38 +212,38 @@ all {\stfaf selectvis} parameters.
 
 Open and select a field:
 
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.selectvis(field='N5921_2');  # by complete name
 cb.selectvis(field='N5921*');   # with wildcard
 cb.selectvis(field='2');        # by index
-\end{verbatim}
+
 
 Select a field and a channel range:
 
-\begin{verbatim}
+
 cb.selectvis(spw='0:10~40',field='N5921*');
-\end{verbatim}
+
 
 Select using all MS Selection parameters (these parameters are
 over-specified somewhat, i.e., scan 6 contains only field N5921_2,
 etc.):
 
-\begin{verbatim}
+
 cb.selectvis(time='>1995/04/13/10:40:00',   # times greater than this
              spw='0:20~40',                 # channels 20-40 in spw 0
              scan='6',                      # scan 6 only
              field='N59*',                  # fields matching N59*
              baseline='1 \&amp; *',              # baselines to antenna 1
              uvrange='>0.0klambda')         # baselines greater than zero length
-\end{verbatim}
+
 
 
 Reset selection to the entire dataset
 
-\begin{verbatim}
+
 cb.selectvis()
-\end{verbatim}
+
 
 </example>
 
@@ -485,14 +485,14 @@ Pending improvements:
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms')
 cb.selectvis(field='N5921*')            
 cb.setapply (type='G', table='gcal', field='1445*') 
 cb.setapply (type='P')     
 cb.correct();
 cb.close();
-\end{verbatim}
+
 
 In this example, we apply parallactic angle corrections and a gain
 calibration derived from a field whose name matches '1445*' in a caltable
@@ -674,27 +674,27 @@ Pending improvements:
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.setapply (type='P');
 cb.setsolve (type='G',t='300s', refant=3, table='gcal');
 cb.solve();
 cb.close();
-\end{verbatim}
+
 
 In this example, analytic (non-solvable) parallactic angle corrections
 are pre-applied before G solutions are obtained on a timescale of 300 
 seconds.  The resulting solutions are phase-referenced to antenna 3, 
 and stored in a calibration table called 'gcal'.
 
-\begin{verbatim}
+
 cb.reset();
 cb.setapply (type='P',t=5.0);
 cb.setapply (type='G',table='gcal');
 cb.setsolve (type='D',t=86400.0, preavg=60.0, refant=3, table='dcal');
 cb.solve();
 cb.close();
-\end{verbatim}
+
 
 In this example, the solve/apply state of the calibrater tool is reset
 and then the P and G corrections (from above) are applied before
@@ -816,7 +816,7 @@ Pending improvements:
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms')
 cb.selectvis(field='1445*')
 cb.setsolvegainspline (table='gcalph',mode='PHAS',splinetime=3600.0,preavg=60.0)cb.solve()
@@ -824,7 +824,7 @@ cb.setsolvegainspline (table='gcalph',mode='PHAS',splinetime=3600.0,preavg=60.0)
 cb.setsolvegainspline (table='gcalamp',mode='AMP',splinetime=10800.0);
 cb.solve();
 cb.close();
-\end{verbatim}
+
 
 In this example, a spline solution is first found for phase on a hourly timescale, then for amplitude on a three-hour timescale.
 </example>
@@ -965,13 +965,13 @@ a mean bandpass for the set of spws.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.selectvis(field='1331*')
 cb.setsolvebandpoly(table='bpoly',degamp=5,degphase=7);
 cb.solve();
 cb.close();
-\end{verbatim}
+
 
 In this example, amplitude (degree 5) and phase (degree 7) Chebychev
 polynomial bandpasses are determined using the default parameters.
@@ -994,12 +994,12 @@ solving is written to the logger.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.setapply ('P', 5.0);
 cb.setsolve ('G', 300.0, F, 3, 'gcal_1', T);
 cb.state();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1032,7 +1032,7 @@ setsolve.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms')
 cb.setapply ('P', 5.0)
 cb.setsolve ('G', 300.0, F, 3, 'gcal_1', T)
@@ -1041,7 +1041,7 @@ cb.reset(apply=T,solve=F);
 cb.state()
 cb.reset()
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1068,12 +1068,12 @@ MODEL\_DATA to unity (in total intensity, and unpolarized), and
 CORRECTED\_DATA to (observed) DATA.  </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.initcalset();
 cb.solve();
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1096,13 +1096,13 @@ position in the Measurement Equation, and their commutation properties.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.setapply ('P', t=10)
 cb.setsolve ('G', 300.0, F, 3, 'gcal_1', T);
 cb.solve();
 cb.close();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1123,13 +1123,13 @@ of the Measurement Set.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.selectvis(field='1445*')
 cb.setapply ('G', 10.0, 'gcal_1')
 cb.correct();
 cb.close();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1149,13 +1149,13 @@ Measurement Set.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms')
 cb.selectvis(field='1445*')
 cb.setapply ('G', 10.0, 'gcal_1')
 cb.corrupt()
 cb.close()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1282,7 +1282,7 @@ resolved calibrators
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms')
 cb.selectvis(field='1331*,1445*')
 cb.setsolve(type='G',table='gcal',t='inf')
@@ -1290,7 +1290,7 @@ cb.solve()
 cb.fluxscale (tablein='gcal', tableout='flxcal', 
               reference='1331*', transfer='1445*');
 cb.close();
-\end{verbatim}
+
 
 This example generates a calibration table containing {\tt G}
 solutuions ('gcal') and then writes a re-scaled version, using
@@ -1504,7 +1504,7 @@ types
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ap366.sim');
 
 # obtain G solutions from calibrator
@@ -1546,7 +1546,7 @@ cb.correct();
 #   (another round of imaging, etc.)
 
 cb.close();
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1602,13 +1602,13 @@ This function enables specifying calibration parameters externally.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ap366.sim');
 
 (TBD)
 
 cb.close();
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1686,12 +1686,12 @@ Pending improvements:
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.smooth(tablein='in.gcal',tableout='out.gcal',
          smoothtype='median',smoothtime=60);
 cb.close();
-\end{verbatim}
+
 
 In this example, 'G' solutions for all fields in the table 'in.gcal' are 
 smoothed using a median filter with a full-width of 60 seconds,
@@ -1787,7 +1787,7 @@ equivalent to the order output by task listobs (see ``Feeds'' in listobs output)
 
 <example>
 
-\begin{verbatim}
+
 Input:
 
 The following example imports a UVFITS file, performs a bandpass calibration, 
@@ -1846,7 +1846,7 @@ Time       Field           Chn|  Amp    Phs F   Amp    Phs F|  Amp    Phs F   Am
 
 Listed 108 antenna solutions.
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1883,9 +1883,9 @@ into a CASA  calibration table.
 
 <example>
 
-\begin{verbatim}
+
 cb.fromaipscal(fitsfile='n09m1.tasav.FITS',caltable='n09m1.gcal',extension='CL',whichhdu='')
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1951,12 +1951,12 @@ position angle calibration, rather than this method.)
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('polcal.ms');
 cb.posangcal(tablein='3C286.dcal', tableout='3C286.dpacal', 
              posangcor=[-12.0, 54.0]);
 cb.close();
-\end{verbatim}
+
 
 This example takes an existing calibration table containing {\tt D}
 Jones matrices, and applies a position angle calibration of 45 and 54
@@ -2015,12 +2015,12 @@ polarization for each field for each spectral window.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('atca.ms');
 cb.linpolcor(tablein='atca.gcal', tableout='atca.gcal2', 
              fields='2254-367');
 cb.close();
-\end{verbatim}
+
 
 This example takes an existing calibration table containing {\tt G}
 Jones matrices, and writes a corrected output table, correcting only
@@ -2158,11 +2158,11 @@ printer.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.plotcal(plottype='PHASE', tablename="gcal", antennas=[1,3], polarization=2);
 cb.close();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2206,23 +2206,23 @@ parameters may be specified in the {\stfaf par} parameter.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.selectvis(field='1331*')
 cb.modelfit(compshape='P',par=[15.0,0.0,0.0]) 
 cb.close();
-\end{verbatim}
+
 
 This example fits a point source mode using 15.0 Jy at the origin (phase center)
 as a first guess.
 
 
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.selectvis(field='1331*')
 cb.modelfit(compshape='G',par=[15.0,0.0,0.0,2.0,1.0,0.0]) 
 cb.close();
-\end{verbatim}
+
 
 This example fits a Guassian model with a starting
 guess of 15 Jy at the phase center (0,0), with 2.0 arcsec major axis,
@@ -2245,10 +2245,10 @@ Close the {\tt calibrater} tool, which is hardly ever necessary.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.close();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2266,10 +2266,10 @@ This function is redundant with the {\stfaf close} method.
 </description>
 
 <example>
-\begin{verbatim}
+
 cb.open('ngc5921.ms');
 cb.done();
-\end{verbatim}
+
 </example>
 </method>
 

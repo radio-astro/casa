@@ -65,12 +65,12 @@ imager.
 </input>
 <returns type="imager"/>
 <example>
-\begin{verbatim}
+
 im = imager('3C273XC1.MS')      
 im.defineimage(nx=256, ny=256, cellx='0.7arcsec', celly='0.7arcsec')
 im.image(type='corrected', image='3C273XC1.dirty')
 im.close()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -192,7 +192,7 @@ gridfunction='pb' was selected).
 <returns type="bool"/>
 <example>
 Eample of how to make the approximate psf for a mosaic
-\begin{verbatim}
+
 im.open('orion.ms')
 im.selectvis(spwid=[0, 1] ,field=range(2,11));
 im.defineimage(nx=300, ny=300, cellx='2.0arcsec',celly='2.0arcsec' , stokes="I", phasecenter=6, spwid=[0,1])
@@ -200,7 +200,7 @@ im.weight('natural')
 im.setvp(dovp=T, usedefaultvp=True)
 im.setoptions(ftmachine='mosaic', padding=1.0)
 im.approximatepsf(psf='LePSF.image')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -252,10 +252,10 @@ this requirement.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.boxmask(mask='bigmask', blc=[56,45,1,1], trc=[87,93,4,1])
 im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
-\end{verbatim}
+
 
 
 Makes the image bigmask, and then sets it to unity for all points in
@@ -299,11 +299,11 @@ mask.
    </input>  
    <returns type="bool"/>
    <example>
-     \begin{verbatim}
+     
      im.open("3C273XC1.MS")
      im.calcuvw()
      im.done()
-     \end{verbatim}
+     
    </example>
    </method>
  
@@ -534,10 +534,10 @@ the mask the first time</description>
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.clean(model='3C273XC1.clean.model',
 mask='3C283XC1.mask', niter=1000, gain=0.25, threshold='0.03Jy')
-\end{verbatim}
+
 
 A few points should be noted in this example:
 
@@ -554,7 +554,7 @@ A few points should be noted in this example:
       string is explicitly unset.
 \end{itemize}
 
-\begin{verbatim}
+
 include 'imager.g';
 msfile = 'vlac125K.ms';
 im.open(msfile);
@@ -589,7 +589,7 @@ im.clean('cs', model='vlac125K.csl', image='vlac125K.csl.restored',
 	   mask='vlac125K.mask', niter=1000, gain=0.1);
 
 im.done();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -621,9 +621,9 @@ threshold.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.clipimage(image='clean', threshold='50mJy')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -647,11 +647,11 @@ data.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.plotvis('residual')
 # determine threshold then apply it
 im.clipvis(threshold='50mJy')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -666,11 +666,11 @@ until a <link anchor="imager:imager.done.function">done</link> tool function cal
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.open('3C273XC1.MS')      
 im.makeimage(image='3C273XC1.dirty',type='corrected')
 im.close()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -885,7 +885,7 @@ the source is at the first time observed in the selected data.
 
 </input>
 <example>
-\begin{verbatim}
+
 ## Example 1
 im.defineimage(nx=1024,ny=1024, cellx='30marcsec',celly='30marcsec', 
 nchan=1, stokes='IV', phasecenter=me.direction('mars'));
@@ -912,7 +912,7 @@ im.clean(algorithm='mfclark', model=['box1', 'box2', 'box3'],
 	   image=['box1.restored', 'box2.restored', 'box3.restored'],
 	   residual=['box1.residual', 'box2.residual', 'box3.residual'])
 
-\end{verbatim}
+
 
 In the first example, the image parameters are set for 1024 by 1024
 pixels of 30marc, 1 channel will be made, Stokes I and V will be
@@ -939,40 +939,40 @@ parameters.
 
 
 defining channels cubes use the channel as defined in the data
-\begin{verbatim}
+
 im.defineimage(cellx=1000, mode='channel', nchan=100, start=10,
 step=1, spwid=range(0,10))
-\end{verbatim}
+
 
 now using frequency and overiding the rest frequency defined in
 the ms or if its not defined in the ms
-\begin{verbatim}
+
 im.defineimage(cellx=1000, mode='frequency', nchan=100, start='1GHz',
 step='10kHz', restfrequency='1.421GHz')
-\end{verbatim}
+
 
 in case you have a frame with the frequency
-\begin{verbatim}
+
 im.defineimage(cellx=1000, mode='frequency', nchan=100, start=['LSRK',
 '1GHz'], step='10kHz', restfrequency='1.421GHz')
-\end{verbatim}
+
 
 OR using measures
-\begin{verbatim}
+
 freqstart=me.frequency('LSRK', '1GHz')
 im.defineimage(cellx=1000, mode='frequency', nchan=100,
 start=freqstart, step='10kHz', restfrequency='1.421GHz')
-\end{verbatim}
+
 
 similarly if you want to use  velocity to define your cube
-\begin{verbatim}
+
 im.defineimage(cellx=1000, mode='velocity', nchan=100, start=['LSRK',
 '10km/s'], step='1m/s', restfrequency='1.421GHz')
 OR using measures
 velstart=me.radialvelocity('LSRK', '10km/s')
 im.defineimage(cellx=1000, mode='velocity', nchan=100, start=velstart,
 step='1m/s')
-\end{verbatim}
+
 
 Change mode to 'opticalvelocity' if your velocity values are using  optical definition
 
@@ -995,11 +995,11 @@ you no longer need it.
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.open('3C273XC1.MS')      
 im.makeimage(image='3C273XC1.dirty',type='corrected')
 im.done()
-\end{verbatim}
+
 </example>
 </method>
  
@@ -1030,10 +1030,10 @@ drawmask  is used to interactively draw  regions over a template image which you
 </input>
 <returns type="int"/>
 <example>
-\begin{verbatim}
+
 im.drawmask(image='mytemplate.image', mask='myregions.mask')
 im.clean(mask='myregions.mask', model='3C273XC1.clean.masked', niter=1000)
-\end{verbatim}
+
 
 
 Make mask image by drawing interactively over a given image 'mytemplate.image',   then image and clean the visibilties using it as the
@@ -1078,10 +1078,10 @@ be used in defining a mask. See the documentation on
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.exprmask(mask='bigmask', expr='3C273XC1.clean>0.5')
 im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
-\end{verbatim}
+
 
 Makes the image bigmask, and then sets it to unity for all points in
 the region where 3C273XC1.clean is greater than 0.5Jy.
@@ -1149,11 +1149,11 @@ and composite numbers. You may use <link anchor="image:image.subimage.function">
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.setvp(dovp=True, usedefaultvp=True)
 im.feather(image='feathered.image', highres='casa.vlaonly',
 lowres='casa.sd');
-\end{verbatim}
+
 In the above example its using the default beams and the observatory
 information is in the image header.
 
@@ -1161,7 +1161,7 @@ But if you have a single dish image with a beam which is not defined
 in the casa database then the example below is a guide of how to do
 that, say you know the beam of the single dish as a gaussian.
 
-\begin{verbatim}
+
 
 #create a beam pattern table using vpmanager
 include 'vpmanager.g'
@@ -1178,7 +1178,7 @@ lowres='casa.sd');
 
 ###
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1242,11 +1242,11 @@ is to perform this calculation and check the value obtained using
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.weight('uniform')
 im.filter(type='gaussian', bmaj='2.3arcsec', bmin='1.67arcsec',
 bpa='-34.5deg')
-\end{verbatim}
+
 </example>
 </method>
  
@@ -1288,20 +1288,20 @@ the weights. Use the function <link anchor="imager:imager.summary.function">summ
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.makeimage(type='psf', image='3C273XC1.psf')
 params=im.fitpsf('3C273XC1.psf')
 #This returns a python dict params here 
 print params['bmaj'].value, params['bmin'].value, params['bpa']
 im.restore(model='bla' , complist='', image='bla.restored' , residual='bla2.residual' )
-\end{verbatim}
+
 
 Or if one wants to generate a psf from the uv coverage and use that subsequently as in the  following example:
 
-\begin{verbatim}
+
 - im.fitpsf(psf='')
 - im.restore(model='bla' , complist='', image='bla.restored' , residual='bla2.residual' )
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1366,11 +1366,11 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
    </input>  
    <returns type="bool"/>
    <example>
-     \begin{verbatim}
+     
      im.open("3C273XC1.MS")
      im.fixvis()
      im.done()
-     \end{verbatim}
+     
    </example>
    </method>
  
@@ -1408,10 +1408,10 @@ T (in which case the results are added to the column).
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.ft(model='3C273XC1.nnls.model')
 im.ft(model='3C273XC1.another.model', incremental=True)
-\end{verbatim}
+
 
 Fourier transforms the model in the image 3C273XC1.nnls.model
 and then adds the visibility due to 3C273XC1.another.model
@@ -1475,10 +1475,10 @@ we specify the pointing center in terms of the row numbers of the FIELD subtable
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.linearmosaic(images=['orion.1.cln', 'orion.2.cln', 'orion.4.cln'], mosaic='orion.linmos',
 fluxscale='orion.linmos.fluxscale', fieldid=[1,2,4]);
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1507,7 +1507,7 @@ vector of strings.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.defineimage(nx=1024,ny=1024, cellx='30marcsec',celly='30marcsec', 
 nchan=1, stokes='IV', phasecenter=me.direction('mars'));
 im.make('mars.moving');
@@ -1517,7 +1517,7 @@ phasecenter=me.direction('J2000', '12:23:48.7', '-15:56:32.9')
 im.make('mars.fixed');
 im.clean(algorithm='mf', model=['mars.moving', 'mars.fixed'],
 image=['mars.moving.restored', 'mars.fixed.restored'])
-\end{verbatim}
+
 
 This makes two empty images, one moving with mars and one fixed
 in J2000, and then deconvolves the two jointly using clean.
@@ -1601,6 +1601,7 @@ ia.imagecalc('sdimage',
 ###ia.view(raster=True, axislabels=True);
 \end{verbatim}
 
+
 </description>
 <input>
 
@@ -1632,22 +1633,22 @@ ia.imagecalc('sdimage',
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.ft(model='3C273XC1.model', complist='3C273XC1.complist');
 im.makeimage(type='residual', image='3C273XC1.residual')
 im.makeimage(type='psf', image='3C273XC1.psf')
-\end{verbatim}
+
 
 Fill in the MODEL\_DATA column from Fourier transforming the model and
 the componentlist.  Make the residual image and write it to
 3C273XC1.residual. 
 </example>
 <example>
-\begin{verbatim}
+
 im.setvp(dovp=T, usedefaultvp=T, telescope='GBT');
 im.makeimage(type='pb', image='gbt.pb')
 
-\end{verbatim}
+
 
 In the above we may want to see what the primary beam we are using
 look like. May also be useful to deconvolve single dish images in the
@@ -1715,7 +1716,7 @@ cover the field defined by <link anchor="imager:imager.define.function">defineim
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 
 im.open('orion\_only.ms')
 im.selectvis(field=range(10), spw=range(2))
@@ -1727,7 +1728,7 @@ im.setsdoptions(scale=0.9);
 im.makemodelfromsd(sdimage='orion\_gbt.im', modelimage='orion\_model', maskimage='orion.mask')
 im.clean(algorithm='mfmultiscale', model='orion\_model',
 residual='orion.residual', image='orion.restored', gain=0.2, niter=500, mask='orion.mask')
-\end{verbatim}
+
 
 In the above example we are making a mosaic with the fields 1 to 10. A
 single dish image {\tt orion\_gbt.im} is used scaled down by a factor 0.9 to
@@ -1793,10 +1794,10 @@ further, the easiest fix is to use
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.mask( image='bigimage', mask='bigmask',threshold='0.07Jy')
 im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
-\end{verbatim}
+
 
 Makes the image bigmask, and then sets it to unity
 for all points where the Stokes I in bigimage is
@@ -1969,10 +1970,10 @@ may be acceptable.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.mem(model='3C273XC1.mem.model',
 mask='3C283XC1.mask', niter=40, sigma='0.001Jy')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2069,11 +2070,11 @@ solution phase will swap badly.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.nnls(image='3C273XC1.nnls.image', model='3C273XC1.nnls.model',
 fluxmask='3C283XC1.fluxmask', datamask='3C273XC1.datamask', niter=1000,
 tolerance=0.00001)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2186,7 +2187,7 @@ determine the primary beam function.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 # make a flat image
 im.make('flat.image');
 ia.open('flat.image');
@@ -2198,7 +2199,7 @@ arr = false;
 #
 # as we are using "pointingcenter=F", it defaults to the image center
 im.pb(inimage='flat.image', outimage='pb.image', pointingcenter=F)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2212,11 +2213,11 @@ versus time (after sorting).
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 m = fitstoms('3C273XC1.ms', '3C273XC1.fits'); m.close()
 im = imager('3C273XC1.ms')
 im.plotsummary()
-\end{verbatim}
+
 </example>
 <comments>
 </comments>
@@ -2241,10 +2242,10 @@ specified phase center (set via <link anchor="imager:defineimage">defineimage</l
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.open('3C273XC1.ms')
 im.plotuv(false)
-\end{verbatim}
+
 </example>
 <comments>
 </comments>
@@ -2276,11 +2277,11 @@ Performs a simple plot of the visibility amplitudes of all selected data.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 
 im.open('3C273XC1.ms')
 im.plotvis(increment=10)
-\end{verbatim}
+
 </example>
 <comments>
 </comments>
@@ -2310,12 +2311,12 @@ im.plotvis(increment=10)
   </input>
   <returns type="bool"/>
   <example>
-    \begin{verbatim}
+    
     im.open('3C273XC1.ms')
     im.defineimage(cellx='0.7arcsec', celly='0.7arcsec')
     im.weight('briggs')
     im.plotweights(gridded=True,increment=10)
-    \end{verbatim}
+    
   </example>
   <comments>
   </comments>
@@ -2387,7 +2388,7 @@ If both the parameters, {\tt regions} and {\tt boxes} are used the a union is do
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 
 Makes a mask  then cleans using it.
 
@@ -2418,7 +2419,7 @@ If quantities are to be used to define regions the following is a an example
 
 im.regionmask(mask='joetest',boxes=['15:23:32.902','+05.19.32.089','15:22:28.631','+05.28.52.474'])
 
-\end{verbatim}
+
 
 <!--
 PLEASE IGNORE below...needs updating
@@ -2438,7 +2439,7 @@ create a mask image as below. We use the function drm.namesintable()
 to remind ourselves under what names the regions was saved and hence
 allow us to pick the one we want.
 
-\begin{verbatim}
+
 
 - drm.namesintable('mytab.region')
 
@@ -2448,7 +2449,7 @@ myregionoftoday
 
 - imagr.regionmask(mask='newmask',region=myoldregion)
 
-\end{verbatim}
+
 -->
 </example>
 </method>
@@ -2505,7 +2506,7 @@ attached ms).
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 
 Makes a mask  then cleans using it.
 
@@ -2533,7 +2534,7 @@ If quantities are to be used to define regions the following is a an example
 
 im.regionmask(mask='joetest',boxes=['15:23:32.902','+05.19.32.089','15:22:28.631','+05.28.52.474'])
 
-\end{verbatim}
+
 
 <!--
 PLEASE IGNORE below...needs updating
@@ -2553,7 +2554,7 @@ create a mask image as below. We use the function drm.namesintable()
 to remind ourselves under what names the regions was saved and hence
 allow us to pick the one we want.
 
-\begin{verbatim}
+
 
 - drm.namesintable('mytab.region')
 
@@ -2563,7 +2564,7 @@ myregionoftoday
 
 - imagr.regionmask(mask='newmask',region=myoldregion)
 
-\end{verbatim}
+
 -->
 </example>
 </method>
@@ -2601,10 +2602,10 @@ componentlist. {\em Note that the model visibilities are updated}.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.residual(model='3C273XC1.clean', complist='3C273XC1.cl',
 image='3C273XC1.clean.residual')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2649,10 +2650,10 @@ parameters.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.setbeam(bmaj='2.0arcsec', bmin='2.0arcsec')
 - im.restore(model='3C273XC1.clean', image='3C273XC1.clean.restored',
-\end{verbatim}
+
 </example>
 </method>
  
@@ -2692,11 +2693,11 @@ of <link anchor="imager:imager.weight.function">weight</link> and <link anchor="
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
 a=im.sensitivity(false)
 print 'Sensitivity = ', a['pointsource']
 print 'Relative to Natural Weighting = ', a['relative']
-\end{verbatim}
+
 </example>
 
 
@@ -2780,39 +2781,39 @@ channels. For example, to average 512 visibility channels into 64
 image channels (producing image channels consisting of 8
 visibility channels):
 
-\begin{verbatim}
+
 im.defineimage(mode='channel', spw=0, nchan=64, start=1, step=8);
 im.selectvis(spw=0, nchan=512, start=1, step=1)
 im.clean(.....);
-\end{verbatim}
+
 
 This averages the spectral channels during the gridding process. If
 one wanted to only include every 8th channel in the
 deconvolution, one would do:
 
-\begin{verbatim}
+
 im.selectvis(nchan=64, start=1, step=8)
 im.defineimage(mode='channel', nchan=64, start=1, step=8);
 im.clean(....);
-\end{verbatim}
+
 
 For velocity and opticalvelocity modes, the mstart and mstep
 are the start and step velocities as strings.
 
-\begin{verbatim}
+
 im.defineimage(mode='velocity', nchan=64, start='20 km/s', step='-100m/s');
 im.selectvis(spwid=[-1]); ###selecting all data spectral windows
 im.clean(...);
-\end{verbatim}
+
 
 If the image and data selections differ, then averaging is done during
 the gridding and degridding process in the image deconvolution.
 
-\begin{verbatim}
+
 im.defineimage(mode='channel', nchan=64, start=1, step=8);
 im.selectvis(nchan=512, start=1, step=1)
 im.clean()
-\end{verbatim}
+
 
 Note:  The channels numbers used in {\tt defineimage}
 and {\tt selectvis} refers to the same channel. So if a channel is not
@@ -2820,25 +2821,25 @@ selected in {\tt selectvis} but is selected in {\tt defineimage}, then
 blank channels image are made. The example below will result in the 
 having the first 6 (0-5) channels in the image to be blank.
 
-\begin{verbatim}
+
 im.selectvis(nchan=50, start=6, step=1) #selected chan 6-55
 im.defineimage(mode='channel', nchan=50, start=0, step=1); 
 
-# will try to image channel 1-50. But as previously only channel 6-55 
-# was selected only channel 6-50 will have data; images of channels
-# 1-5 are blank 
+ # will try to image channel 1-50. But as previously only channel 6-55 
+ # was selected only channel 6-50 will have data; images of channels
+ # 1-5 are blank 
 im.clean(....)
-\end{verbatim}
+
 
 For multi-spectral window cube imaging the selection of the data can
 be done as follows
 
-\begin{verbatim}
+
 im.selectvis(nchan=[50,60], start=[0,0], step=[1,1],
              spw=[0,1]) 
 im.defineimage(mode='channel', nchan=110, start=0, step=1, spw=[0,1]); 
 
-\end{verbatim}
+
 
 The above means that you would make a data selection of 50 channels
 (starting from 0 steping 1) from the first spectral window and 60
@@ -2849,14 +2850,14 @@ the step size of channels of the two spectral windows are different
 then one is better off defining the image cube in velocities (e.g. as below). 
 
                                                                       
-\begin{verbatim}
+
 im.selectvis(nchan=[50,60], start=[0,0], step=[1,1],
              spw=[1,2]) 
 im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
              mstep='-100m/s'); 
 	
 
-\end{verbatim}
+
 
 </description>
 <input>
@@ -2934,27 +2935,27 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
 
 </input>
 <example>
-\begin{verbatim}
+
 im = imager('3C273XC1.MS');
 im.selectvis(nchan=512,start=1,step=1, taql='SCAN_NUMBER &gt; 10 &amp;&amp; FIELD_ID==2')
-\end{verbatim}
+
 
 Time range selection
-\begin{verbatim}
+
 im.selectvis(field=range(0,10), time='> 2000/09/21/12:00:00')
-\end{verbatim}
+
 
 select some antennas, for all fields that begins with {\tt 'ngc'} 
-\begin{verbatim}
+
 im.selectvis(field='ngc*', baseline=[0, 10, 20])
-\end{verbatim}
+
 
 And for those that the standard parameters are not flexible enough
 there is the taql parameter. This for people who knows the different
 columns of the MeasurementSet
-\begin{verbatim}
+
 im.selectvis(taql="ANTENNA1==0 &amp;&amp; ANTENNA2==3")
-\end{verbatim}
+
 
 Imager allows the user to make an image from multiple ms, without the
 need to concatenate them. To do this then the im.open method should
@@ -2962,11 +2963,11 @@ need to concatenate them. To do this then the im.open method should
 parameter vis pointing to each ms should be used. The other 
 parameters can be used to make selection on each ms
 
-\begin{verbatim}
+
 im.selectvis(vis='myms1.ms', field=0, spw=[0,1], nchan=[40, 50], start=[5,10])
 im.selectvis(vis='myms2.ms', field=10, spw=[2], nchan=[40], start=[5])
 im.selectvis(vis='myms3.ms', field=range(0,10), time='> 2002/10/15/20:30:45')
-\end{verbatim}
+
 
 </example>
 <returns type="bool"/>
@@ -3037,9 +3038,9 @@ one field, and will currently only process Stokes I.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.setjy(fieldid=2, spwid=-1, fluxdensity=[2.6,0.2,0.3,0.5],standard='Baars')
-\end{verbatim}
+
 
 Compute the model visibility for field id. 2 to the specified
 point-source (I,Q,U,V) for all spectral windows id.'s on the
@@ -3145,10 +3146,10 @@ deconvolution cycles are ended.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.setmfcontrol(cyclefactor=2.0, cyclespeedup=niter/10, 
 stoplargenegatives=T, stoppointmode=10, fluxscale='image.fluxscale');
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3319,17 +3320,17 @@ however not used yet.</description>
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.setoptions(cache=10000000, tile=32, gridfunction='BOX',
   location=dm.location('vla'))
-\end{verbatim}
+
 The above example is to tell imager to use memory to fit 10000000
 complex numbers and tile the image with tiles of 32 pixels on a side. 
 Also it tells imager to use a box function as gridding function.  The
 location parameter will make imager overide the position of the
 telescope to use (the default is the one it gets from the ms). 
 
-\begin{verbatim}
+
 im.open('n1333.ms')
 im.selectvis(fieldid=[2:6, 8:12], spwid=[1:2])
 im.defineimage(nx=800, ny=800, cellx='0.5arcsec', celly='0.5arcsec', mode='velocity', nchan=30, mstart='-10km/s', mstep='1.8km/s', spwid=[1,2],fieldid=3)
@@ -3338,13 +3339,13 @@ im.setvp(dovp=T)
 im.setoptions(ftmachine='mosaic')
 im.clean(algorithm='mfclark', model='try1', niter=200)
 
-\end{verbatim}
+
 
 In the above example we are making a mosaic using the fields
 2,3,4,5,6,8,9,10,11,12 and we use the mosaic ftmachine. This uses the
 primary beam of the telescope as the gridding function.
 
-\begin{verbatim}
+
 im.open('coma.ms')
 im.selectvis(spwid=1, fieldid=1);
 mydir=me.direction('J2000', '12h30m48', '12d24m0')
@@ -3356,7 +3357,7 @@ im.make('main')
 im.clean(algorithm='mfclark',model=['main', 'outlier1'], niter=10000, image=['coma.image', 'outlier1.image'])
 im.done()
 
-\end{verbatim}
+
 
 In the above example we are using the Wprojection algorithm for 3-D
 imaging. We are using 512 gridding functions. Sometimes if there is a
@@ -3367,7 +3368,7 @@ the {\tt wfclark} and {\tt wfhogbom} can be used for now. Note on how
 an outlier field (or flanking) field is set on an interfering  source
 outside of the field of interest.
 
-\begin{verbatim}
+
 pim = imager('coma.ms')
 
 pim.selectvis(spwid=1, fieldid=1);
@@ -3380,7 +3381,7 @@ pim.make('main')
 pim.clean(algorithm='wfclark',model=['main', 'outlier1'], niter=10000)
 pim.done()
 
-\end{verbatim}
+
 
 </example>
 
@@ -3433,15 +3434,15 @@ first value is zero.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.setscales(scalemethod='nscales', nscales=6);
-\end{verbatim}
+
 Here we make six scales automatically using the method described
 above.
 Or we could manually choose the scales in pixel numbers as follows:
-\begin{verbatim}
+
 - im.setscales(scalemethod='uservector', uservector=[0,3,10,30]);
-\end{verbatim}
+
 
 Note: 0 pixel is the delta function, so if one were to select scale 0 only
 it would be  equivalent to a Hogbom clean.
@@ -3468,9 +3469,9 @@ it would be  equivalent to a Hogbom clean.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.setsmallscalebias(inbias=0.6);
-\end{verbatim}
+
 
 
 </example>
@@ -3503,9 +3504,9 @@ Taylor terms to be used. Options are 1,2,3.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.settaylorterms(ntaylorterms=3);
-\end{verbatim}
+
 </example>
 
 </method>
@@ -3563,9 +3564,9 @@ is multiplied by this factor.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.setsdoptions(scale=1.0, weight=1.0, convsupport=5)
-\end{verbatim}
+
 </example>
 
 </method>
@@ -3636,9 +3637,9 @@ This will be corrected shortly.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
  im.setvp(dovp=True, usedefaultvp=True, dosquint=False)
-\end{verbatim}
+
 </example>
 
 </method>
@@ -3701,10 +3702,10 @@ not normalized.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im.smooth(model='3C273XC1.clean', image='3C273XC1.clean.restored',
 bmaj='2.0arcsec', bmin='2.0arcsec')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3738,11 +3739,11 @@ or <link anchor="imager:imager.setbeam.function">setbeam</link>.
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - im = imager('3C273XC1.MS');
 - im.defineimage(nx=256, ny=256)
 - im.summary()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3770,10 +3771,10 @@ to reset it if one changes one's mind. The points are not flagged! Further point
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 im.weight('uniform')
 im.uvrange(0, 4000.0)
-\end{verbatim}
+
 </example>
 </method>
 

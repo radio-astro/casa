@@ -333,6 +333,7 @@ weight               &amp; \all  &amp; \none  &amp; \bul    &amp; \bul    &amp; 
 \end{longtable}
 
 <example>
+	\begin{verbatim}
 Example:
 
 ms.open("3C273XC1.MS",nomodify=False)
@@ -342,6 +343,7 @@ rec=ms.getdata(["weight","data"])
 # modify rec['weight'] and rec['data'] values as desired
 ms.putdata(rec)
 ms.close()
+	\end{verbatim}
 
 
 We open the MS for writing, select an array and spectral window
