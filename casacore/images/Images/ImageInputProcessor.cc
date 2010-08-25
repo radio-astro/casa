@@ -150,13 +150,20 @@ void ImageInputProcessor::_process(
     else if (regionPtr != 0) {
     	_setRegion(regionRecord, diagnostics, regionPtr);
     	*_log << origin;
+        if (_isFractionalRegion(regionRecord)) {
+            *_log << "Fractional regions are not supported by this method/task" << LogIO::EXCEPTION;
+        }
     	*_log << LogIO::NORMAL << "Set region from supplied region record"
     		<< LogIO::POST;
-    	stokes = _stokesFromRecord(regionRecord, metaData);
+        stokes = _stokesFromRecord(regionRecord, metaData);
     }
     else if (! regionName.empty()) {
     	_setRegion(regionRecord, diagnostics, image, regionName);
     	*_log << origin;
+        if (_isFractionalRegion(regionRecord)) {
+            *_log << "Fractional regions are not supported by this method/task" << LogIO::EXCEPTION;
+        }
+ 
        	*_log << LogIO::NORMAL << "Set region from supplied region file "
         	<< regionName << LogIO::POST;
     	stokes = _stokesFromRecord(regionRecord, metaData);
@@ -200,7 +207,6 @@ void ImageInputProcessor::_process(
     			<< _pairsToString(polEndPts) << LogIO::POST;
     	}
     }
-    cout << "*** stokes " << stokes << endl;
     if (!allowMultipleBoxes && regionRecord.fieldNumber("regions") >= 0) {
     	*_log << "Only a single n-dimensional rectangular region is supported."
     		<< LogIO::EXCEPTION;
@@ -483,7 +489,7 @@ Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
 }
 
 String ImageInputProcessor::_stokesFromRecord(const Record& region, const ImageMetaData& metaData) const {
-	String stokes = "";
+    String stokes = "";
  	if(metaData.hasPolarizationAxis()) {
  		Int polAxis = metaData.polarizationAxisNumber();
  		uInt stokesBegin, stokesEnd;
@@ -537,6 +543,29 @@ void ImageInputProcessor::_setRegion(
 	}
     regionRecord = Record(imRegion.toRecord(""));
     diagnostics = "Used image region " + regionName;
+}
+
+Bool ImageInputProcessor::_isFractionalRegion(const Record& region) const {
+    if (region.isDefined("fracblc")) {
+        Vector<Bool> myArray;
+        region.toArray("fracblc", myArray);
+        for (uInt i=0; i<myArray.size(); i++) {
+            if (myArray[i]) {
+                return True;
+            }
+        }
+    }
+
+    if (region.isDefined("fractrc")) {
+        Vector<Bool> myArray;
+        region.toArray("fractrc", myArray);
+        for (uInt i=0; i<myArray.size(); i++) {
+            if (myArray[i]) {
+                return True;
+            }
+        }
+    }
+    return False;
 }
 
 Vector<Double> ImageInputProcessor::_setBoxCorners(const String& box) const {
