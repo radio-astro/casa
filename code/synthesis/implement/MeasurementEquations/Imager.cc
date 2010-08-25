@@ -4844,9 +4844,11 @@ Bool Imager::clean(const String& algorithm,
 	  return False;
 	}
 	if (scaleMethod_p=="uservector") {	
-	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p,smallScaleBias_p);
+	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p, stoplargenegatives_p, 
+					    stoppointmode_p, smallScaleBias_p);
 	} else {
-	  sm_p = new MSCleanImageSkyModel(nscales_p, smallScaleBias_p);
+	  sm_p = new MSCleanImageSkyModel(nscales_p, stoplargenegatives_p, 
+					    stoppointmode_p, smallScaleBias_p);
 	}
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
@@ -5071,13 +5073,13 @@ Bool Imager::clean(const String& algorithm,
 	  LoggerHolder& log = restoredImage.logger();
 	  log.append(imagelog);
 	  log.flush();
-	  restoredImage.table().relinquishAutoLocks();
+	  restoredImage.table().relinquishAutoLocks(True);
 	}
       }
-      
     }
     catch(exception& x){
       
+      this->unlock();
       os << LogIO::WARN << "Caught exception: " << x.what()
 	 << LogIO::POST;
       os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
@@ -5086,6 +5088,7 @@ Bool Imager::clean(const String& algorithm,
       
     }
     catch(...){
+      this->unlock();
       os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
       os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
 	 <<LogIO::POST;
@@ -5099,7 +5102,7 @@ Bool Imager::clean(const String& algorithm,
 #endif
 
     return converged;
-  } 
+  }
   catch (PSFZero&  x)
     {
       //os << LogIO::WARN << x.what() << LogIO::POST;
@@ -5120,6 +5123,7 @@ Bool Imager::clean(const String& algorithm,
   } 
 
   catch(...){
+    this->unlock();
     //Unknown exception...
     throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
   }

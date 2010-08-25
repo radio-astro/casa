@@ -47,12 +47,13 @@ template<class T> class LatticeConvolver;
 template<class T> class ResidualEquation;
 template<class T> class SubImage;
 
+
 class File;
 class CEMemModel;
 class ClarkCleanLatModel;
 class PGPlotter;
 class LatConvEquation;
-
+class ImageMSCleaner;
 
 // <summary> A simple deconvolver operating on images (no SkyEquation) </summary>
 
@@ -308,7 +309,7 @@ private:
   LatticeConvolver<Float>* convolver_p;
   ResidualEquation<Lattice<Float> >* residEqn_p;
   LatConvEquation* latConvEqn_p;
-  CountedPtr <LatticeCleaner<Float> > cleaner_p;
+  CountedPtr <ImageMSCleaner> cleaner_p;
 
   Bool scalesValid_p;
 
