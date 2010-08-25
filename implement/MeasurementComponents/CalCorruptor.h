@@ -136,7 +136,7 @@ class CalCorruptor {
   inline Vector<Int>& currChans() { return curr_chan_; };
 
   inline Bool& freqDepPar() { return freqdep_; };
- 
+
  protected:
    
    Int nSim_;
@@ -268,7 +268,7 @@ class AtmosCorruptor : public CalCorruptor {
      return screen_p->operator()(i,j); };
    virtual void initialize();
    // use ATM but no time dependence - e.g. for B[Tsys]
-   void initialize(const VisIter& vi, const Record& simpar);
+   void initialize(const VisIter& vi, const Record& simpar, VisCal::Type type);
    Vector<Double> antDiams;
 
    void initialize(const Int Seed, const Float Beta, const Float scale);

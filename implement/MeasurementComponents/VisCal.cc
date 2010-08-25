@@ -83,7 +83,8 @@ VisCal::VisCal(VisSet& vs) :
   PValid_(vs.numberSpw(),False),
   calWt_(False),
   currWtScale_(vs.numberSpw(),NULL),
-  prtlev_(PRTLEV)
+  prtlev_(PRTLEV),
+  extratag_("")
 {
   if (prtlev()>2) cout << "VC::VC(vs)" << endl;
 
@@ -116,7 +117,8 @@ VisCal::VisCal(const Int& nAnt) :
   PValid_(1,False),
   calWt_(False),
   currWtScale_(1,NULL),
-  prtlev_(PRTLEV)
+  prtlev_(PRTLEV),
+  extratag_("")
 {
   if (prtlev()>2) cout << "VC::VC(i,j,k)" << endl;
 
@@ -1053,8 +1055,8 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
     ArrayIterator<Float> wt(vb.weightMat(),1);
     Vector<Float> wtvec;
 
-    //    cout << "vb.weightMat() = " << vb.weightMat() << endl;
-
+    //cout << "VC:apply " << Vout(0,0,1216) << " ... ";
+    
     // iterate rows
     Int& nRow(vb.nRow());
     Int& nChanDat(vb.nChannel());
@@ -1092,6 +1094,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	  if (!*flag) {
 	    J1().applyRight(V(),*flag);
 	    J2().applyLeft(V(),*flag);
+
 	  }
 	  
 	  // inc soln ch axis if freq-dependent (and next dataChan within soln)
@@ -1104,6 +1107,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	  
 	} // chn
 	
+
 	// If requested, update the weights
 	if (calWt()) updateWt(wtvec,*a1,*a2);
 	
@@ -1113,7 +1117,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
       }
     }
 
-    //    cout << "vb.weightMat() = " << vb.weightMat() << endl;
+    //    cout << Vout(0,0,1216) << endl;
 
   }
 

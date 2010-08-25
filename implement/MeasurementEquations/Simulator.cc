@@ -1054,9 +1054,9 @@ Bool Simulator::setnoise(const String& mode,
 #ifndef RI_DEBUG
   try {
 #else
-    cout<<pground<<" "<<relhum<<" "<<altitude<<" "<<waterheight<<" "<<pwv<<endl;
+    cout<<"Sim::setnoise "<<pground<<" "<<relhum<<" "<<altitude<<" "<<waterheight<<" "<<pwv<<endl;
 #endif
-
+    
     noisemode_p = mode;
 
     RecordDesc simparDesc;
@@ -1153,9 +1153,12 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
 
-      if (pwv.getValue("mm")>0.)
+      if (pwv.getValue("mm")>0.) {
+	if (pwv.getValue("mm")>100.) 
+	  throw(AipsError(" you input PWV="+String(pwv.getValue("mm"))+"mm. The most common reason for this error is forgetting to set units, which default to meters"));
+ 
 	simpar.define ("mean_pwv", pwv.getValue("mm"));
-      else {
+      } else {
 	simpar.define ("mean_pwv", Double(1.));
 	// we want to set it, but it doesn't get used unless ATM is being used
 	if (mode=="tsys-atm") os<<"User has not set PWV, using 1mm"<<LogIO::POST;
@@ -1174,7 +1177,11 @@ Bool Simulator::setnoise(const String& mode,
 	// the relative opacity across the band, but it won't properly
 	// integrate the atmosphere to get T_ebb.  
 	// so for now we'll just make tsys-manual mean freqDepPar=False
-	simpar.define ("type", "M");
+
+	//RIXXXXX	
+	simpar.define ("type", "T");
+	//simpar.define ("type", "M");
+
       } else {
 	// otherwise ATM will be used to calculate tau from pwv
 	// catch uninitialized variant @#$^@! XML interface
@@ -1203,17 +1210,21 @@ Bool Simulator::setnoise(const String& mode,
 	  os<<"User has not set water scale height, using 2km"<<LogIO::POST;
 	}
 	// as a function of frequency  (freqDepPar=True)
-	simpar.define ("type", "MF");
+	//simpar.define ("type", "TF");
+	simpar.define ("type", "TF NOISE");
+	//simpar.define ("type", "MF");
       }
 
       if (strlen>1) 
-	simpar.define ("caltable", caltbl+".M.cal");
+	simpar.define ("caltable", caltbl+".T.cal");
+      //simpar.define ("caltable", caltbl+".M.cal");
       
       simpar.define("onthefly",saveOnthefly);
 
       // create the M
       if (!create_corrupt(simpar)) 
-	throw(AipsError("could not create M in Simulator::setnoise"));        
+	throw(AipsError("could not create T in Simulator::setnoise"));        
+      //throw(AipsError("could not create M in Simulator::setnoise"));        
     } 
 
 #ifndef RI_DEBUG
@@ -1348,7 +1359,7 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("mode", mode);
       simpar.define ("delta_pwv", deltapwv);
       simpar.define ("beta", beta);
-      simpar.define ("windspeed", deltapwv);
+      simpar.define ("windspeed", windspeed);
       simpar.define ("combine", "");
 
 //      if (tground>100.)

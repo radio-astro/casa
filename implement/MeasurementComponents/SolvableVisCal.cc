@@ -505,7 +505,7 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
 
 void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& solTimes) {
 
-  LogIO os(LogOrigin("SVC", "setSimulate()", WHERE));
+  LogIO os(LogOrigin("SVC["+typeName()+"]", "setSimulate()", WHERE));
   if (prtlev()>2) cout << "SVC::setSimulate(simpar)" << endl;
 
   // Extract calWt

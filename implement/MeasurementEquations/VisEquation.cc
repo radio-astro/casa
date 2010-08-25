@@ -325,28 +325,78 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
   Int lidx=0;
   Int ridx=napp_-1;
 
+#ifdef RI_DEBUG
+  cout << "vb.visCube    original: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl;
+  cout << "vb.model      original: " << vb.modelVisCube()(0,0,500) <<  vb.modelVisCube()(0,0,1216) <<  vb.modelVisCube()(0,0,1224) << endl;
+#endif
+
   // copy data to model, to be corrupted in place there.
   // 20091030 RI changed skyequation to use Observed.  the below 
   // should not require scratch columns 
   vb.setModelVisCube(vb.visCube());
 
-  // Corrupt Model down to (and including) the pivot
-  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
-    vc()[ridx]->corrupt(vb);
-    ridx--;
-  }
-  
   // zero the data. correct will operate in place on data, so 
   // if we don't have an AMueller we don't get anything from this.  
   vb.setVisCube(0.0);
-  // RI KLUDGE FOR BROKEN ANOISE
-  // vb.setVisCube(Complex(0.0001,0.0));
-  
+   
+#ifdef RI_DEBUG
+  cout << "vb.visCube before crct: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl;
+#endif
+
   // Correct DATA up to pivot 
   while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
-    vc()[lidx]->correct(vb);
+#ifdef RI_DEBUG
+    cout << vc()[lidx]->typeName();
+#endif
+    if (vc()[ridx]->extraTag()!="NoiseScale" or vc()[lidx]->type()!=VisCal::T) {
+      vc()[lidx]->correct(vb);
+#ifdef RI_DEBUG
+      cout << " -> correct";
+#endif
+    }
+    cout << endl;
     lidx++;
   }
+
+#ifdef RI_DEBUG
+  cout << "vb.visCube  after crct: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl;
+  cout << "vb.model   before crpt: " << vb.modelVisCube()(0,0,500) <<  vb.modelVisCube()(0,0,1216) <<  vb.modelVisCube()(0,0,1224) << endl;
+#endif
+
+  // Corrupt Model down to (and including) the pivot
+  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
+#ifdef RI_DEBUG
+    cout << vc()[lidx]->typeName();
+#endif
+    // manually pick off a T intended to be noise scaling T:
+    if (pivot_ <= VisCal::T and vc()[ridx]->type()==VisCal::T) {
+      if (vc()[ridx]->extraTag()=="NoiseScale") {
+	vc()[ridx]->correct(vb);  // correct DATA
+#ifdef RI_DEBUG
+	cout << " -> correct";
+#endif
+      } else {
+	vc()[ridx]->corrupt(vb);
+#ifdef RI_DEBUG
+	cout << " -> corrupt";
+#endif
+      }
+    } else { 
+      vc()[ridx]->corrupt(vb);
+#ifdef RI_DEBUG
+      cout << " -> corrupt";
+#endif
+    }
+#ifdef RI_DEBUG
+    cout << endl;
+#endif
+    ridx--;
+  }
+  
+#ifdef RI_DEBUG
+  cout << "vb.model    after crpt: " << vb.modelVisCube()(0,0,500) <<  vb.modelVisCube()(0,0,1216) <<  vb.modelVisCube()(0,0,1224) << endl;
+  cout << "vb.visCube  after crpt: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl << endl;
+#endif
 
   // add corrected/scaled data (e.g. noise) to corrupted model
   // vb.modelVisCube()+=vb.visCube();
