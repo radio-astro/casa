@@ -252,6 +252,11 @@ find_program( LATEX2HTML_CONVERTER NAMES htlatex )
 set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,3" 
       CACHE STRING "LATEX2HTML_CONVERTER options" )
 
+# Use pdflatex
+find_program( PDFLATEX_COMPILER NAMES pdflatex )
+#set( LATEX2PDF_OPTIONS "htcasa,section+,next,p-width,3" 
+#CACHE STRING "LATEX2PDF_CONVERTER options" )
+
 set( CASA_DOC_DIR ${casaroot}/docs ) # Where to put documentation
 
 find_package( Doxygen )
@@ -548,7 +553,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.20
+           VERSION 1.0.22
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -914,50 +919,6 @@ set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 casa_config_end()
 
 #
-# ASAP's build depends on something called a makedefs file. Fake one of those.
-#
-
-# Get path from first of rpfits libraries.
-list( GET ${RPFITS_LIBRARIES} 0 rpfits_lib )
-get_filename_component(rpfitslibd ${rpfits_lib} PATH)
-
-string( REGEX REPLACE "/[^/]+/?$" "" rpfitslibd ${RPFITS_LIBRARIES} ) # What is the effect of this? Do the two lines above not set rpfitslibd to the path of the first library in RPFITS_LIBRARIES?
-
-string( REGEX REPLACE "/[^/]+/?$" "" _pythonlibd ${PYTHON_LIBRARIES} )
-
-# convert semicolons to spaces...
-set( _ii "" )
-foreach( _i ${PYTHON_INCLUDE_DIRS} )
-  set( _ii "${_ii} ${_i}" )
-endforeach()
-
-set( _cc "" )
-foreach( _c ${CASACORE_LIBRARIES} )
-  if( _c MATCHES Framework )
-    # skip
-  else()
-    set( _cc "${_cc} ${_c}" )
-  endif()
-endforeach()
-
-file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
-  "# This file exists only for ASAP\n"
-  PYTHONVER=${PYTHONV}\n
-  COREINCD = ${CASACORE_casa/aips.h}\n
-  CORELIB = ${_cc}\n
-  WCSLIBLIBD = .\n
-  WCSLIBLIB = ${WCSLIB_wcs}\n
-  PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${_pythonlibd}\n
-  PYTHONINCD = ${_ii}\n
-  PYTHONLIB = ${PYTHON_LIBRARIES}\n
-  BOOSTROOT = ${BOOST_ROOT}\n
-  RPFITSLIBD = ${rpfitslibd}\n
-  eval_vars :\n
-  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
-)
-
-#
 # The following variables are substitued into python scripts
 #
 set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
@@ -988,12 +949,68 @@ casa_add_module( calibration CASACORE tableplot msvis )
 casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
 casa_add_module( alma CASACORE LIBXML2 Boost )
 casa_add_module( oldalma CASACORE LIBXML2 Boost )
-casa_add_module( atnf CASACORE RPFITS CFITSIO )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao )
 
-# demo atmosphere ionosphere jive nfra simulators vlbi vo
+#
+# ASAP's build depends on something called a makedefs file. Fake one of those.
+#
+
+# Get library paths from the first of the rpfits/cfitsio/python library full paths.
+list( GET RPFITS_LIBRARIES 0 rpfits_lib )
+get_filename_component(rpfitslibd ${rpfits_lib} PATH)
+
+list( GET CFITSIO_LIBRARIES 0 cfitsio_lib )
+get_filename_component(cfitsiolibd ${cfitsio_lib} PATH)
+
+list( GET PYTHON_LIBRARIES 0 python_lib )
+get_filename_component(pythonlibd ${python_lib} PATH)
+
+# convert semicolons to spaces...
+set( _ii "" )
+foreach( _i ${PYTHON_INCLUDE_DIRS} )
+  set( _ii "${_ii} ${_i}" )
+endforeach()
+
+set( _cc "" )
+foreach( _c ${CASACORE_LIBRARIES} )
+  if( _c MATCHES Framework )
+    # skip
+  else()
+    set( _cc "${_cc} ${_c}" )
+  endif()
+endforeach()
+
+get_property( MYDEFINES DIRECTORY xmlcasa PROPERTY COMPILE_DEFINITIONS )
+# convert semicolons to -Dmydefine...
+set( _dd "" )
+foreach( _d ${MYDEFINES} )
+  set( _dd "${_dd} -D${_d}" )
+endforeach()
+
+
+file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
+  "# This file exists only for ASAP\n"
+  PYTHONVER=${PYTHONV}\n
+  CXXFLAGS = \"${CMAKE_CXX_FLAGS}\"\n
+  COPTFLAGS = \"${_dd}\"\n
+  LD_FLAGS = \"${CMAKE_SHARED_LINKER_FLAGS}\"\n
+  COREINCD = ${CASACORE_casa/aips.h}\n
+  CORELIB = ${_cc}\n
+  WCSLIBLIB = ${WCSLIB_wcs}\n
+  WCSLIBLIBD = .\n
+  PYTHONROOT = ${pyroot}\n
+  PYTHONLIBD = ${pythonlibd}\n
+  PYTHONINCD = ${_ii}\n
+  PYTHONLIB = ${PYTHON_LIBRARIES}\n
+  BOOSTROOT = ${BOOST_ROOT}\n
+  RPFITSLIBD = ${rpfitslibd}\n
+  CFITSIOLIBD = ${cfitsiolibd}\n
+  CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
+  eval_vars :\n
+  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
+)
 
 add_subdirectory( doc/taskref )
 add_subdirectory( doc/casaref )

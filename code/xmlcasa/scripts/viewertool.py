@@ -204,7 +204,7 @@ class viewertool(object):
 
         return self.__invoke( dbus.Int32, int, self.__state['proxy'].panel, paneltype )
 
-    def load( self, path, displaytype="raster", scaling=0, panel=0 ):
+    def load( self, path, displaytype="raster", panel=0, scaling=0 ):
         if type(path) != str or type(displaytype) != str or \
                (type(scaling) != float and type(scaling) != int) :
             raise Exception, "load() takes two strings; only the first arg is required..."
@@ -212,7 +212,7 @@ class viewertool(object):
         if self.__state['proxy'] == None:
             self.__connect( )
 
-        return self.__invoke( dbus.Int32, int, self.__state['proxy'].load, path, displaytype, float(scaling), panel )
+        return self.__invoke( dbus.Int32, int, self.__state['proxy'].load, path, displaytype, panel, float(scaling) )
 
     def close( self, panel=0 ):
         if type(panel) != int :

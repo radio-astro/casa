@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( xmlcasa xmlcasa_regressions_admin_python python/${PYTHONV}/regressions/admin
+casa_add_python( xmlcasa xmlcasa_regressions_admin_python python/${PYTHONV}
   publish_summary.py
   runUnitTest.py
   memTest.py

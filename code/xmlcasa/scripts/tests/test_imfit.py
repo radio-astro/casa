@@ -217,6 +217,7 @@ class imfit_test(unittest.TestCase):
     
     def test_fit_using_box(self):
         '''Imfit: Fit using box'''
+        method = "test_fit_using_box"
         success = True
         global msgs
         for i in range(4):
@@ -256,7 +257,7 @@ class imfit_test(unittest.TestCase):
                 clist = res['results']
                 if (not res['converged']):
                     success = False
-                    msgs += method + "fit did not converge unexpectedly"
+                    msgs += method + " fit did not converge unexpectedly. box=" + box + " region=" + str(region)
                 epsilon = 1e-5
                 # I flux test
                 got = clist['component0']['flux']['value'][0]

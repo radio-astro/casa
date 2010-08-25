@@ -91,12 +91,12 @@ class test_vector(test_base):
         antenna = ['1', '2']
         clipcolumn = ['DATA', 'datA']
 
-        flagdata2(vis=self.vis, clipminmax=clipminmax, antenna=antenna, clipcolumn=clipcolumn)
-        test_eq(flagdata2(vis=self.vis, mode='summary'), 70902, 17897)
+        flagdata2(vis=self.vis, clip=True, selectdata=True, clipminmax=clipminmax, antenna=antenna, clipcolumn=clipcolumn)
+        test_eq(flagdata2(vis=self.vis, summary=True), 70902, 17897)
 
     def test2(self):
-        flagdata2(vis=self.vis, antenna=["2", "3", "5", "6"])
-        s = flagdata2(vis=self.vis, mode="summary")
+        flagdata2(vis=self.vis, selectdata=True, clip=True, antenna=["2", "3", "5", "6"])
+        s = flagdata2(vis=self.vis, summary=True)
         for a in ["VLA3", "VLA4", "VLA6", "VLA7"]:
             self.assertEqual(s['antenna'][a]['flagged'], 5252)
         for a in ["VLA1", "VLA2", "VLA5", "VLA8", "VLA9", "VLA10", "VLA11", "VLA24"]:
@@ -107,8 +107,8 @@ class test_vector_ngc5921(test_base):
         self.setUp_ngc5921()
 
     def test3(self):
-        flagdata2(vis=self.vis, antenna=["2", "3", "5", "6"], scan="4")
-        s = flagdata2(vis=self.vis, mode="summary")
+        flagdata2(vis=self.vis, selectdata=True, clip=True, antenna=["2", "3", "5", "6"], scan="4")
+        s = flagdata2(vis=self.vis, summary=True)
         for a in ["2", "3", "5", "6"]:
             self.assertEqual(s['antenna'][a]['flagged'], 6552)
         for a in ["1", "4", "7", "8", "9", "10", "24"]:
@@ -123,15 +123,15 @@ class test_vector_ngc5921(test_base):
 
         # Flag one after another
         for i in range(len(a)):
-            flagdata2(vis=self.vis, antenna=a[i], timerange=t[i])
+            flagdata2(vis=self.vis, selectdata=True, clip=True, antenna=a[i], timerange=t[i])
 
-        stats_serial = flagdata2(vis=self.vis, mode="summary")
+        stats_serial = flagdata2(vis=self.vis, summary=True)
 
         # Flag in parallel
         flagdata2(vis=self.vis, unflag=True)
-        flagdata2(vis=self.vis, antenna=a, timerange=t)
+        flagdata2(vis=self.vis, selectdata=True, clip=True, antenna=a, timerange=t)
         
-        stats_parallel = flagdata2(vis=self.vis, mode="summary")
+        stats_parallel = flagdata2(vis=self.vis, summary=True)
 
         # Did we get the same net results? (full recursive comparison of statistics dictionaries)
         self.assertEqual(stats_serial, stats_parallel)
@@ -187,25 +187,25 @@ class test_flagmanager(test_base):
     def test2(self):
         """Create, then restore autoflag"""
 
-        flagdata2(vis = self.vis, mode='summary')
+        flagdata2(vis = self.vis, summary=True)
         flagmanager(vis = self.vis)
         
-        flagdata2(vis = self.vis, antenna="2")
+        flagdata2(vis = self.vis, selectdata=True, antenna="2")
         
         flagmanager(vis = self.vis)
-        ant2 = flagdata2(vis = self.vis, mode='summary')['flagged']
+        ant2 = flagdata2(vis = self.vis, summary=True)['flagged']
 
         print "After flagging antenna 2 there were", ant2, "flags"
 
         # Change flags, then restore
-        flagdata2(vis = self.vis, antenna="3")
+        flagdata2(vis = self.vis, selectdata=True, antenna="3")
         flagmanager(vis = self.vis)
-        ant3 = flagdata2(vis = self.vis, mode='summary')['flagged']
+        ant3 = flagdata2(vis = self.vis, summary=True)['flagged']
 
         print "After flagging antenna 2 and 3 there were", ant3, "flags"
 
         flagmanager(vis = self.vis, mode='restore', versionname='manualflag_3')
-        restore2 = flagdata2(vis = self.vis, mode='summary')['flagged']
+        restore2 = flagdata2(vis = self.vis, summary=True)['flagged']
 
         print "After restoring pre-antenna 3 flagging, there are", restore2, "flags, should be", ant2
 
@@ -395,6 +395,9 @@ class test_selections(test_base):
         
         flagdata2(vis=self.vis, selectdata=True, scan='3', clip=True)
         test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 52416)
+        flagdata2(vis=self.vis, unflag=True)        
+        flagdata2(vis=self.vis, selectdata=True, scan='3', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 52416)
         
         # feed not implemented flagdata2(vis=vis, feed='27')
         # flagdata2(vis=vis, unflag=True)
@@ -494,12 +497,12 @@ def suite():
     return [
             test_selections,
             test_statistics_queries,
-#            test_vector,
-#            test_vector_ngc5921,
-#            test_flagmanager,
+            test_vector,
+            test_vector_ngc5921,
+            test_flagmanager,
             test_rfi,
             test_shadow,
             test_msselection,
             test_autoflag,
-            test_multimodes,
+#            test_multimodes,
             cleanup]

@@ -472,6 +472,148 @@ void VisBuffer::freqAveCubes()
 
 }
 
+void VisBuffer::formStokes() {
+
+  // We must form the weights and flags correctly
+  formStokesWeightandFlag();
+
+  // Now do whatever data is present
+  if (visCubeOK_p)
+    formStokes(visCube_p);
+
+  if (modelVisCubeOK_p)
+    formStokes(modelVisCube_p);
+
+  if (correctedVisCubeOK_p)
+    formStokes(correctedVisCube_p);
+
+}
+
+void VisBuffer::formStokesWeightandFlag() {
+
+  // Ensure corrType, weightMat and flagCube are filled 
+  corrType();
+  weightMat();
+  flagCube();
+
+  switch (nCorr()) {
+  case 4: {
+
+    Slice all=Slice();
+    Slice pp(0,1,1),pq(1,1,1),qp(2,1,1),qq(3,1,1);
+    Slice a(0,1,1),b(1,1,1),c(2,1,1),d(3,1,1);
+    
+    // Sort for linears
+    if (polFrame()==MSIter::Linear) {
+      d=Slice(1,1,1);  // Q
+      b=Slice(2,1,1);  // U
+      c=Slice(3,1,1);  // V
+    }
+    
+    Matrix<Float> newWtMat(weightMat_p.shape());
+    newWtMat(a,all)=newWtMat(d,all)=(weightMat_p(pp,all)+weightMat_p(qq,all));
+    newWtMat(b,all)=newWtMat(c,all)=(weightMat_p(pq,all)+weightMat_p(qp,all));
+    weightMat_p.reference(newWtMat);
+
+    Cube<Bool> newFlagCube(flagCube_p.shape());
+    newFlagCube(a,all,all)=newFlagCube(d,all,all)=(flagCube_p(pp,all,all)|flagCube_p(qq,all,all));
+    newFlagCube(b,all,all)=newFlagCube(c,all,all)=(flagCube_p(pq,all,all)|flagCube_p(qp,all,all));
+    flagCube_p.reference(newFlagCube);
+
+    corrType_p(0)=Stokes::I;
+    corrType_p(1)=Stokes::Q;
+    corrType_p(2)=Stokes::U;
+    corrType_p(3)=Stokes::V;
+
+    break;
+  }
+  case 2: {
+    // parallel hands only
+    Slice all=Slice();
+    Slice pp(0,1,1),qq(1,1,1);
+    Slice a(0,1,1),d(1,1,1);
+    
+    Matrix<Float> newWtMat(weightMat_p.shape());
+    newWtMat(a,all)=newWtMat(d,all)=weightMat_p(pp,all)+weightMat_p(qq,all);
+    weightMat_p.reference(newWtMat);
+
+    Cube<Bool> newFlagCube(flagCube_p.shape());
+    newFlagCube(a,all,all)=newFlagCube(d,all,all)=flagCube_p(pp,all,all)|flagCube_p(qq,all,all);
+    flagCube_p.reference(newFlagCube);
+
+    corrType_p(0)=Stokes::I;
+    corrType_p(1)=((polFrame()==MSIter::Circular) ? Stokes::V : Stokes::Q);
+
+    break;
+  }
+  case 1: {
+
+    // Just need to re-label as I
+    corrType_p(0)=Stokes::I;
+
+  }
+  default: {
+    cout << "Insufficient correlations to form Stokes" << endl;
+    break;
+  }
+  }
+
+}
+
+
+
+void VisBuffer::formStokes(Cube<Complex>& vis) {
+
+  Cube<Complex> newvis(vis.shape());
+  newvis.set(0.0);
+  Slice all=Slice();
+
+  switch (nCorr()) {
+  case 4: {
+
+    Slice pp(0,1,1),pq(1,1,1),qp(2,1,1),qq(3,1,1);
+    Slice a(0,1,1),b(1,1,1),c(2,1,1),d(3,1,1);
+    
+    if (polFrame()==MSIter::Linear) {
+      d=Slice(1,1,1);  // Q
+      b=Slice(2,1,1);  // U
+      c=Slice(3,1,1);  // V
+    }
+    
+    newvis(a,all,all)=(vis(pp,all,all)+vis(qq,all,all)); //  I / I
+    newvis(d,all,all)=(vis(pp,all,all)-vis(qq,all,all)); //  V / Q
+    
+    newvis(b,all,all)=(vis(pq,all,all)+vis(qp,all,all)); //  Q / U
+    newvis(c,all,all)=(vis(pq,all,all)-vis(qp,all,all))/Complex(0.0,1.0); //  U / V
+    newvis/=Complex(2.0);
+
+    vis.reference(newvis);
+
+    break;
+  }
+  case 2: {
+    // parallel hands only
+    Slice pp(0,1,1),qq(1,1,1);
+    Slice a(0,1,1),d(1,1,1);
+    
+    newvis(a,all,all)=(vis(pp,all,all)+vis(qq,all,all)); //  I / I
+    newvis(d,all,all)=(vis(pp,all,all)-vis(qq,all,all)); //  V / Q
+    newvis/=Complex(2.0);
+
+    vis.reference(newvis);
+
+    break;
+  }
+  case 1: {
+    // need do nothing for single correlation case
+    break;
+  }
+  default: {
+    cout << "Insufficient correlations to form Stokes" << endl;
+    break;
+  }
+  }
+}
 
 void VisBuffer::channelAve(const Matrix<Int>& chanavebounds) 
 {

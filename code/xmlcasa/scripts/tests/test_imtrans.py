@@ -156,19 +156,20 @@ class imtrans_test(unittest.TestCase):
         count = 0
         for order in ["120", 120, ['d', 'f', 'r'], ["declin", "freq", "righ"]]:
             for code in [run_reorder, run_imtrans]:
-                newim = code(imagename, "transpose_" + str(count), order)
-                gotdata = newim.getchunk()
-                inshape = expecteddata.shape
-                for i in range(inshape[0]):
-                    for j in range(inshape[1]):
-                        for k in range(inshape[2]):
-                            self.assertTrue(expecteddata[i][j][k] == gotdata[j][k][i])
-                gotnames = newim.coordsys().names()
-                newim.close()
-                self.assertTrue(expectednames[0] == gotnames[2])
-                self.assertTrue(expectednames[1] == gotnames[0])
-                self.assertTrue(expectednames[2] == gotnames[1])
-                count += 1
+                for outname in ["transpose_" + str(count), ""]:
+                    newim = code(imagename, outname, order)
+                    gotdata = newim.getchunk()
+                    inshape = expecteddata.shape
+                    for i in range(inshape[0]):
+                        for j in range(inshape[1]):
+                            for k in range(inshape[2]):
+                                self.assertTrue(expecteddata[i][j][k] == gotdata[j][k][i])
+                    gotnames = newim.coordsys().names()
+                    newim.close()
+                    self.assertTrue(expectednames[0] == gotnames[2])
+                    self.assertTrue(expectednames[1] == gotnames[0])
+                    self.assertTrue(expectednames[2] == gotnames[1])
+                    count += 1
 
     def test_cas_2364(self):
         "test CAS-2364 fix"
@@ -190,12 +191,7 @@ class imtrans_test(unittest.TestCase):
         self.assertTrue(myia)
         myia.close()
         shutil.rmtree(cas_2364im)
- 
-    def tearDown(self):
-        os.remove(good_image)
 
-        
-        
 
 def suite():
     return [imtrans_test]

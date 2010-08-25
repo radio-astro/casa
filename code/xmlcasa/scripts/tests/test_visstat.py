@@ -14,8 +14,6 @@ import unittest
 # or
 #
 # # This example shows who to run it manually from with casapy.
-# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
-# import runUnitTest
 # runUnitTest.main(['test_visstat'])
 #
 

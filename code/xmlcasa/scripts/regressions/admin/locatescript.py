@@ -5,8 +5,7 @@ import inspect
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
-SCRIPT_REPOS= os.environ["CASAPATH"].split()[0]
-SCRIPT_REPOS += "/code/xmlcasa/scripts"
+SCRIPT_REPOS = os.environ["CASAPATH"].split()[0] + '/' + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER
 
 # To support casapy-test releases which have different structure
 SCRIPT_REPOS2 = os.environ["CASAPATH"].split()[0]

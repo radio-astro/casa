@@ -12,8 +12,6 @@ Unit tests for task vishead. It tests the following modes:
     list, summary, get, put
     
  This example shows how to run it manually from within casapy.
- sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
- import runUnitTest
  runUnitTest.main(['test_imhead'])
 
  or outside casapy like this:

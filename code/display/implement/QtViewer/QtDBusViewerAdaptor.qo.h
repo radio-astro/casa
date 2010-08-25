@@ -68,16 +68,19 @@ namespace casa {
 	QDBusVariant colormap( const QString &map, int panel_or_data=0 );
 	QDBusVariant colorwedge( bool show=true, int panel_or_data=0 );
 
-	QDBusVariant load( const QString &path, const QString &displaytype = "raster", double scaling=0, int panel=0 );
+	QDBusVariant load( const QString &path, const QString &displaytype = "raster", int panel=0, double scaling=0 );
 	QDBusVariant reload( int panel_or_data );
 	QDBusVariant unload( int data );
+
 	QDBusVariant restore( const QString &path, int panel=0 );
-	QDBusVariant cwd( const QString &new_path = "" );
+
 	QDBusVariant panel( const QString &type="viewer", bool hidden=false  );
 	QDBusVariant hide( int panel=0 );
 	QDBusVariant show( int panel=0 );
 	QDBusVariant close( int panel=0 );
 	QDBusVariant popup( const QString &what, int panel=0 );
+
+	QDBusVariant cwd( const QString &new_path = "" );
 
 	QDBusVariant freeze( int panel=0 );
 	QDBusVariant unfreeze( int panel=0 );

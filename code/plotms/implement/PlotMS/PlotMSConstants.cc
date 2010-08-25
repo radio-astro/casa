@@ -96,7 +96,7 @@ void PMS::dateDouble(double value, unsigned int& year, unsigned int& mon,
     
     Time t(value + 2400000.5);
 
-    year = t.month();
+    year = t.year();
     mon = t.month();
     day = t.dayOfMonth();
     hour = t.hours();

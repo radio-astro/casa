@@ -470,7 +470,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                     sd.plotter.plot_lines(linc,doppler=linedop)
 
 	    # List observation header
-	    if not plotstyle or layout==[]:
+	    if header and (not plotstyle or layout==[]):
 		    # automatic layout
 		    sd.plotter._plotter.figure.subplots_adjust(top=0.8)
 	    datname='Data File:     '+sdfile

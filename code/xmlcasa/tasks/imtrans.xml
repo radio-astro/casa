@@ -34,17 +34,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>order=120</example>
         <example>order=["d", "f", "r"]</example>
     </param>
+    <param type="bool" name="wantreturn">
+        <description>Return the transposed image tool?</description>
+        <value>True</value>
+        <example>wantreturn=False</example>
+    </param>
 </input>
 <returns type="image"/>
 
 <example>
 PARAMETER SUMMARY
 imagename        Name of the input image
-outfile          Name of output CASA image
+outfile          Name of output CASA image. If blank, no disk image is written.
 order            Output axes mapping
 
 This task reorders (transposes) the axes in the input image to the specified
 order. The associated pixel values and coordinate system are transposed.
+
+If the outfile parameter is empty, only a temporary image is created; no output image
+is written to disk. The temporary image can be captured in the returned value (assuming
+wantreturn is true).
 
 The order parameter describes the mapping of the input axes to the output axes.
 It can be one of three types: a non-negative integer, a string, or a list of

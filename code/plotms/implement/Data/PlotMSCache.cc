@@ -324,6 +324,9 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
   // Now Load data.
     
   // Setup the selected Visiter (getting sort right to support averaging)
+  thread->setStatus("Applying MS selection. Please wait...");
+  thread->setAllowedOperations(false,false,false);
+  thread->setProgress(1);
   setUpVisIter(msname,selection,True,True,True);
   ROVisIterator& viter(*rvi_p);
 
@@ -344,7 +347,7 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
        averaging.antenna() ||
        averaging.spw() ) {
     
-    countChunks(viter,nIterPerAve,averaging);
+    countChunks(viter,nIterPerAve,averaging,thread);
     loadChunks(viter,averaging,nIterPerAve,
 	       loadAxes,loadData,thread);
     
@@ -352,7 +355,7 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
   else {
 
     // supports only channel averaging...    
-    countChunks(viter);
+    countChunks(viter,thread);
     loadChunks(viter,loadAxes,loadData,averaging,thread);
     
   }
@@ -389,6 +392,10 @@ void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
 			     const vector<PMS::DataColumn> loadData,
 			     const PlotMSAveraging& averaging,
 			     PlotMSCacheThread* thread) {
+
+  // permit cancel in progress meter:
+  if(thread != NULL)
+    thread->setAllowedOperations(false,false,true);
     
   logLoad("Loading chunks......");
   VisBuffer vb(vi);
@@ -459,6 +466,10 @@ void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
 			     const vector<PMS::DataColumn> loadData,
 			     PlotMSCacheThread* thread) {
   
+  // permit cancel in progress meter:
+  if(thread != NULL)
+    thread->setAllowedOperations(false,false,true);
+
   logLoad("Loading chunks with averaging.....");
 
   Bool verby(False);
@@ -554,6 +565,10 @@ void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
 
     // The averaged VisBuffer
     VisBuffer& avb(pmsvba.aveVisBuff());
+
+    // Form Stokes parameters, if requested
+    if (transformations_.formStokes())
+      avb.formStokes();
 
     // Cache the data shapes
     chshapes_(0,chunk)=avb.nCorr();
@@ -734,7 +749,13 @@ void PlotMSCache::setUpVisIter(const String& msname,
 
 
       
-void PlotMSCache::countChunks(ROVisibilityIterator& vi) {
+void PlotMSCache::countChunks(ROVisibilityIterator& vi,
+			      PlotMSCacheThread* thread) {
+
+  if (thread!=NULL) {
+    thread->setStatus("Establishing cache size.  Please wait...");
+    thread->setAllowedOperations(false,false,false);
+  }
 
   // This is the old way, with no averaging over chunks.
 
@@ -746,8 +767,18 @@ void PlotMSCache::countChunks(ROVisibilityIterator& vi) {
 
   // Count number of chunks.
   int chunk = 0;
-  for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
+  for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+    if (thread!=NULL) {
+      if (thread->wasCanceled()) {
+	dataLoaded_=false;
+	return;
+      }
+      else
+	thread->setProgress(2);
+    }
     for (vi.origin(); vi.more(); vi++) chunk++;
+  }
   if(chunk != nChunk_) increaseChunks(chunk);
   
   //  cout << "Found " << nChunk_ << " " << chunk << " chunks." << endl;
@@ -756,8 +787,13 @@ void PlotMSCache::countChunks(ROVisibilityIterator& vi) {
 
 
 void PlotMSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
-			      const PlotMSAveraging& averaging) {
+			      const PlotMSAveraging& averaging,
+			      PlotMSCacheThread* thread) {
 
+  if (thread!=NULL) {
+    thread->setStatus("Establishing cache size.  Please wait...");
+    thread->setAllowedOperations(false,false,false);
+  }
   Bool verby(False);
 
   Bool combscan(averaging_.scan());
@@ -791,6 +827,14 @@ void PlotMSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve
   stringstream ss;
   
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
+    if (thread!=NULL) {
+      if (thread->wasCanceled()) {
+	dataLoaded_=false;
+	return;
+      }
+      else
+	thread->setProgress(2);
+    }
     Int iter(0);
     for (vi.origin(); vi.more();vi++,iter++) {
 
@@ -1748,7 +1792,7 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
       Int ichan=(irel_/nperchan_(currChunk_))%ichanmax_(currChunk_);
       Int& lochan=chanAveBounds_p(spw)(ichan,0);
       Int& hichan=chanAveBounds_p(spw)(ichan,1);
-      ss << " new:<" << lochan << "~" << hichan  << "> ";
+      ss << " <" << lochan << "~" << hichan  << "> ";
 
     }
     else 
@@ -2061,6 +2105,7 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       break;
     case PMS::PA0: {
       pa0_(vbnum) = vb.parang0(vb.time()(0))*180.0/C::pi; // in degrees
+      if (pa0_(vbnum)<0.0) pa0_(vbnum)+=360.0;
       break;
     }
     case PMS::ANTENNA: {

@@ -312,9 +312,9 @@ protected:
 
 
   // Count the chunks required in the cache
-  void countChunks(ROVisibilityIterator& vi);  // old
+  void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);  // old
   void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
-		   const PlotMSAveraging& averaging);
+		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
 
   // Fill a chunk with a VisBuffer.  
   void append(const VisBuffer& vb, Int vbnum, PMS::Axis xAxis, PMS::Axis yAxis,

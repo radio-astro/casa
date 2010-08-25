@@ -301,6 +301,11 @@
                    <value>1</value>
             </param>
 
+        <param type="bool" name="unflag">
+               <description>Unflag the data specified</description>
+               <value>False</value>
+        </param>
+
         <param type="bool" name="summary">
                <description>List rows and data points flagged</description>
                <value>False</value>
@@ -322,11 +327,6 @@
                    <value type="int">-1</value>
             </param>
 
-        <param type="any" name="unflag">
-               <description>Unflag the data specified</description>
-               <any type="variant" limittypes="bool boolArray"/>
-               <value type="bool">False</value>
-        </param>
 
         <constraints>
             <when param="selectdata">
@@ -408,6 +408,11 @@
                 <default param="rfi_flag_level"><value type="int">1</value></default>
             </equals>
             </when>
+            <when param="unflag">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+            </equals>
+            </when>       
             <when param="summary">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
@@ -615,6 +620,12 @@
                    Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
                         'I','XX','YY','RR','LL'
 
+        unflag -- Unflag the specified data. Unflagging will only work if flags were set using
+                  modes manualflag, shadow, quack and shadow. It will raise an error if used
+                  with modes rfi and autoflag.
+               default: False
+               options: True,False
+
         summary -- lists number of rows and data points flagged
                   default: False
                   options: True,False
@@ -657,12 +668,6 @@
 
            would report only antennas/baselines/... with more than 80% flagged
            data and at the same time less than or equal to 3000 flagged values.
-
-        unflag -- Unflag the specified data. Unflagging will only work if flags were set using
-                  modes manualflag, shadow, quack and shadow. It will raise an error if used
-                  with modes rfi and autoflag.
-               default: False
-               options: True,False
 
 
         -- TO BE REWRITTEN Vector mode --

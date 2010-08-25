@@ -140,7 +140,7 @@ class __imview_class(object):
 		if raster.has_key('scaling'):
 			raster['scaling'] = self.__checknumeric(raster['scaling'], float, "raster scaling")
 
-		data = vwr.load( raster['file'], 'raster', scaling=scaling, panel=panel )
+		data = vwr.load( raster['file'], 'raster', panel=panel, scaling=scaling )
 		
 		if raster.has_key('range'):
 			vwr.datarange( self.__checknumeric(raster['range'], float, "data range", array_size=2), data=data )

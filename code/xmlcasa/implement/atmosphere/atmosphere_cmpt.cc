@@ -48,6 +48,18 @@ atmosphere::atmosphere()
 atmosphere::~atmosphere()
 {
   try {
+    if (pSkyStatus != 0) {
+      delete pSkyStatus;
+      pSkyStatus = 0;
+    }
+    if (pRefractiveIndexProfile != 0) {
+      delete pRefractiveIndexProfile;
+      pRefractiveIndexProfile = 0;
+    }
+    if (pSpectralGrid != 0) {
+      delete pSpectralGrid;
+      pSpectralGrid = 0;
+    }
     if (pAtmProfile != 0) {
       delete pAtmProfile;
       pAtmProfile = 0;
@@ -115,6 +127,19 @@ atmosphere::initAtmProfile(const Quantity& altitude,
     oss<<"Pressure step factor:         " << PstepFact          << " "    <<endl;
     oss<<"Tropospheric lapse rate:      " << TLR                << " K/km" <<endl;
 
+    // Reset all atmospheric and spectral settings for this function.
+    if (pSpectralGrid != 0) {
+      delete pSpectralGrid;
+      pSpectralGrid = 0;
+    }
+    if (pRefractiveIndexProfile != 0) {
+      delete pRefractiveIndexProfile;
+      pRefractiveIndexProfile = 0;
+    }
+    if (pSkyStatus != 0) {
+      delete pSkyStatus;
+      pSkyStatus = 0;
+    }
     if (pAtmProfile != 0) delete pAtmProfile;
     pAtmProfile = new AtmProfile( Alt, P, T, TLR, H, WVL, Pstep, PstepFact,
 				  topAtm, atmType );

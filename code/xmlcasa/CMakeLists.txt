@@ -49,23 +49,26 @@ add_custom_target( xmlcasa_python_casadef_fast ${CMAKE_BUILD_TOOL} xmlcasa_pytho
 add_dependencies( xmlcasa_fast xmlcasa_python_casadef_fast )
 
 install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
-install( PROGRAMS install/buildmytasks DESTINATION bin )
-#
-# seems like I can't install multiple files from the install subdirectory so we spell 'em all out
-#
-install( FILES install/casa2idl3.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2py.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2pyimp.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2summary.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2toolxml.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2tsum2.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2latex.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2pycli.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2pypg.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2tlatex.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casa2tsum.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-install( FILES install/casatlist.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../../share/xml )
-#install( FILES casa2idl3.xsl casa2py.xsl casa2pyimp.xsl casa2summary.xsl casa2toolxml.xsl casa2tsum2.xsl  casa2latex.xsl casa2pycli.xsl casa2pypg.xsl casa2tlatex.xsl casa2tsum.xsl casatlist.xsl DESTINATION $(CMAKE_INSTALL_PREFIX)/../share/xml )
+install( PROGRAMS
+       install/buildmytasks
+       install/xmlgenpy
+       DESTINATION bin )
+
+install( FILES 
+  install/casa2idl3.xsl
+  install/casa2py.xsl
+  install/casa2pyimp.xsl
+  install/casa2summary.xsl
+  install/casa2toolxml.xsl
+  install/casa2tsum2.xsl
+  install/casa2latex.xsl
+  install/casa2pycli.xsl
+  install/casa2pypg.xsl
+  install/casa2tlatex.xsl
+  install/casa2tsum.xsl
+  install/casatlist.xsl
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/../share/xml )
+install( FILES install/saxon8.jar DESTINATION lib )
 
 # set SVNREVISION and BUILDTIME
 set( casadef_quiet TRUE )
