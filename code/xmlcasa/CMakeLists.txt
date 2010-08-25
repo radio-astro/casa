@@ -49,7 +49,7 @@ add_custom_target(
 
 add_dependencies( xmlcasa_python_casadef xmlcasa_definitions )
 
-add_dependencies( xmlcasa xmlcasa_python_casadef )
+add_dependencies( inst xmlcasa_python_casadef )
 add_dependencies( xmlcasa_fast xmlcasa_python_casadef )
 
 install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
