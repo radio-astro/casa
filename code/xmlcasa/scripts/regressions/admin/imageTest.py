@@ -708,16 +708,34 @@ class ImageTest:
 
     def fitCube2(self,x0,y0):
         result=[]
+        box = str(x0) + ", " + str(y0) + ", " + str(x0) + ", " + str(y0)
         reg=self.rgTool.box(blc=[x0,y0], trc=[x0,y0])
-        retval=self.imTool.fitprofile(region=reg, ngauss=1, fit=True)
-        result.append(retval['return']['elements']['*1']['parameters'])
-        result.append(retval['return']['elements']['*1']['errors'])
+        model = "mymodel.im"
+        resid = "myresid.im"
+        myia = image.create()
+        for x in ([model, resid]):
+            if (os.path.exists(x)):
+                myia.open(x)
+                myia.remove()
+                myia.close()        
+        retval=self.imTool.fitprofile(box=box, ngauss=1, model=model, residual=resid)
+        myia.open(model)
+        theFit = myia.getchunk().flatten()
+        myia.close()
+        myia.open(resid)
+        theResid = myia.getchunk().flatten()
+        myia.done()
+        for x in ([model, resid]):
+            if (os.path.exists(x)):
+                myia.open(x)
+                myia.remove()
+                myia.close()        
+        result.append([retval['amp0'][0], retval['center0'][0], retval['fwhm0'][0]])
+        result.append([retval['ampErr0'][0], retval['centerErr0'][0], retval['fwhmErr0'][0]])
         s='fit at [%d,%d]\n\tFWHM: %f \n\peak: %f \t with errors: %f, %f '%(x0,y0, result[0][2], result[0][0], result[1][2], result[1][0]) 
         print s
         if self.write: self.body2.append('<pre>%s</pre>'%s)
         data=self.imTool.getchunk(blc=[x0,y0], trc=[x0,y0], dropdeg=True)
-        theFit=retval['values']
-        theResid=retval['resid']
         pylab.clf()
         pylab.plot(data,'r-')
         pylab.plot(theFit, 'bo')
