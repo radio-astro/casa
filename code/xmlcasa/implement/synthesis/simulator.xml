@@ -1249,8 +1249,8 @@ Set the atmosphere.
      </param>
 
      <param type="double" name="deltapwv">
-     <description>RMS PWV fluctuations in mm (typically about 15% of total PWV)</description>
-     <value>0.5</value>
+     <description>RMS PWV fluctuations *as a fraction of PWV parameter*</description>
+     <value>0.15</value>
      </param>
 
      <param type="double" name="beta">
