@@ -29,8 +29,8 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <synthesis/MeasurementComponents/MSCleanImageSkyModel.h>
 #include <casa/OS/File.h>
-#include <lattices/Lattices/LatticeCleaner.h>
-#include <lattices/Lattices/SubLattice.h>
+#include <synthesis/MeasurementEquations/ImageMSCleaner.h>
+#include <images/Images/SubImage.h>
 #include <lattices/Lattices/LCBox.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <synthesis/MeasurementEquations/LatticeModel.h>
@@ -49,16 +49,18 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales, const Float& smallScaleBias)
-: method_p(NSCALES), nscales_p(nscales), smallScaleBias_p(smallScaleBias), progress_p(0)
+MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales,  const Int stoplargenegatives, const Int stoppointmode, const Float smallScaleBias)
+  : method_p(NSCALES), nscales_p(nscales), stopLargeNegatives_p(stoplargenegatives), stopPointMode_p(stoppointmode), smallScaleBias_p(smallScaleBias)
 {
   modified_p=True;
   donePSF_p=False;
 
 };
 
-MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes, const Float& smallScaleBias)
-: method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), smallScaleBias_p(smallScaleBias), progress_p(0)
+  MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes, const Int stoplarge, const Int stoppoint, const Float smallScaleBias)
+: method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), 
+  stopLargeNegatives_p(stoplarge), stopPointMode_p(stoppoint),
+  smallScaleBias_p(smallScaleBias)
 {
   modified_p=True;
   donePSF_p=False;
@@ -67,9 +69,7 @@ MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes, 
 
 MSCleanImageSkyModel::~MSCleanImageSkyModel()
 {
-  if (progress_p) {
-    delete progress_p;
-  }
+ 
 };
 
 // Clean solver
@@ -81,11 +81,11 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   if(numberOfModels()>1) {
     os << "Cannot process more than one field" << LogIO::EXCEPTION;
   }
-  
+  /*
   if (displayProgress_p) {
     progress_p = new LatticeCleanProgress( pgplotter_p );
   }
-
+  */
   // Make the residual image
   if(modified_p)
     makeNewtonRaphsonStep(se);
@@ -164,14 +164,14 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   for (Int chan=0; chan<nchan; chan++) {
 
     LCBox psfbox(blcDirty, trcDirty,PSF(0).shape());
-    SubLattice<Float>  psf_sl (PSF(0), psfbox, False);
+    SubImage<Float>  psf_sl (PSF(0), psfbox, False);
     Float psfmax;
     {
       LatticeExprNode node = max(psf_sl);
       psfmax = node.getFloat();
     }
     if(nchan>1) {
-     os<<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
+     os<<"Processing channel "<<chan<<" of  0 to "<<nchan-1<<LogIO::POST;
     }
     if(psfmax==0.0) {
       os << "No data for this channel: skipping" << LogIO::POST;
@@ -179,8 +179,8 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
       blcDirty(3) = chan; trcDirty(3) = chan;
       blcDirty(2) = 0; trcDirty(2) = 0;
       LCBox firstPolPlane(blcDirty, trcDirty, image(0).shape());
-      SubLattice<Float> subPsf(PSF(0), firstPolPlane);
-      
+      SubImage<Float> subPsf(PSF(0), firstPolPlane);
+      SubImage<Float> subMask;
       for (Int pol=0; pol<npol; pol++) {
 	blcDirty(2) = pol; trcDirty(2) = pol;
 	if(npol>1) {
@@ -188,8 +188,9 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	}
 
 	LCBox onePlane(blcDirty, trcDirty, image(0).shape());
-	SubLattice<Float> subDirty(residual(0), onePlane, True);
-	LatticeCleaner<Float> cleaner(subPsf, subDirty);
+	SubImage<Float> subDirty(residual(0), onePlane, True);
+	ImageMSCleaner cleaner(subPsf, subDirty);
+	
 
 	Bool doClean=True;
 	if(hasMask(0)) {
@@ -216,7 +217,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	    trcMask(3)=0;
 	  }
 	  LCBox maskPlane(blcMask, trcMask, mask(0).shape());
-	  SubLattice<Float> subMask( mask(0), maskPlane, False); 
+	  subMask=SubImage<Float>( mask(0), maskPlane, False); 
 	  // Check for empty mask
 	  LatticeExprNode sumMask = sum(subMask);
 	  if(sumMask.getFloat()==0.0) {
@@ -224,7 +225,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	    doClean=False;
 	  }
 	  else {
-	    cleaner.setMask( subMask );
+	    cleaner.setMask(subMask);
 	    //Using mask so the user knows best.
 	    cleaner.ignoreCenterBox(True);
 	  }
@@ -233,7 +234,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	
 
 	if(doClean) {
-	  SubLattice<Float> subImage(image(0), onePlane, True);
+	  SubImage<Float> subImage(image(0), onePlane, True);
 	  
 	  if (method_p == USERVECTOR) {
 	    cleaner.setscales(userScaleSizes_p);   
@@ -241,11 +242,18 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	    cleaner.setscales(scaleSizes);   
 	  }
           cleaner.setSmallScaleBias(smallScaleBias_p);
-	  cleaner.setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
-			     Quantity(threshold(), "Jy"), True);
-	  
-	  converged=cleaner.clean(subImage, progress_p);
-	
+	  cleaner.stopPointMode(stopPointMode_p);
+	  //cleaner.setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
+	  //		     Quantity(threshold(), "Jy"), True);
+	  if(stopLargeNegatives_p >0)
+	    cleaner.stopAtLargeScaleNegative();
+	  converged=cleaner.clean(subImage, "multiscale", numberIterations(),gain(),  Quantity(threshold(), "Jy"), True);
+	  Int stoplarge=stopLargeNegatives_p;
+	  while( (converged==-2) && stoplarge > 0){
+	    --stoplarge;
+	    converged=cleaner.clean(subImage, "multiscale", numberIterations(),gain(),  
+				    Quantity(threshold(), "Jy"), True);
+	  }
 	  // calculate residuals 
 	  
 	  LatticeModel lm(subImage);
