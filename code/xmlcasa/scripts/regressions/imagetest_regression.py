@@ -4993,8 +4993,8 @@ def imagetest(which=None, size=[32,32,8]):
         #
 
         cl1 = myim.fitcomponents(
-            region=rg.box(blc=[.25,.25,.25],
-            trc=[.75,.75,.75], frac=true)
+            region=rg.box(blc=[32, 32, 0],
+            trc=[96, 96, 0])
         )
         if not cl1:
             stop('fitcomponents 1 failed')
