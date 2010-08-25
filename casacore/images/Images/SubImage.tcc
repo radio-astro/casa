@@ -57,7 +57,7 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
 }
 
 template<class T>
-SubImage<T>::SubImage (ImageInterface<T>& image,
+SubImage<T>::SubImage (const ImageInterface<T>& image,
 		       Bool writableIfPossible,
 		       AxesSpecifier axesSpec)
 : itsImagePtr (image.cloneII())
@@ -88,17 +88,25 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
 }
 
 template<class T>
-SubImage<T>::SubImage (ImageInterface<T>& image,
+SubImage<T>::SubImage (const ImageInterface<T>& image,
 		       const LattRegionHolder& region,
 		       Bool writableIfPossible,
 		       AxesSpecifier axesSpec)
 : itsImagePtr (image.cloneII())
 {
-  itsSubLatPtr = new SubLattice<T> (image, 
-				    region.toLatticeRegion(image.coordinates(),
-							   image.shape()),
-                                    writableIfPossible,
-				    axesSpec);
+    LatticeRegion latReg = region.toLatticeRegion(
+				 image.coordinates(),
+				 image.shape()
+    );
+
+        itsSubLatPtr = new SubLattice<T> (
+		  image,
+          latReg,
+          writableIfPossible,
+          axesSpec
+);
+
+
   const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
 //
   Vector<Float> blc, inc;
@@ -223,13 +231,14 @@ void SubImage<T>::setCoords (const CoordinateSystem& coords)
 
 template<class T> SubImage<T> SubImage<T>::createSubImage(
 	ImageRegion*& outRegion, ImageRegion*& outMask,
-	ImageInterface<T>& inImage, const Record& region,
+	const ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
 ) {
 // The ImageRegion pointers must be null on entry
 // either pointer may be null on exit
-	SubImage<T> subImage;	outMask = ImageRegion::fromLatticeExpression(mask);
+	SubImage<T> subImage;
+	outMask = ImageRegion::fromLatticeExpression(mask);
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
@@ -246,7 +255,7 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 			inImage.shape(), region
 		);
 		if (outMask == 0) {
-			subImage = SubImage<T>(
+            subImage = SubImage<T>(
 				inImage, *outRegion,
 				writableIfPossible, axesSpecifier
 			);

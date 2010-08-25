@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+//# Copyright (C) 1995,1996,1997,1998,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,43 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: $
+//   
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.22"
+#include <scimath/Mathematics/Combinatorics.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+    Vector<uInt> Combinatorics::_factorialCache(0);
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
 
+    uInt Combinatorics::factorial(const uInt n) {
+        if (n < _factorialCache.size()) {
+            return _factorialCache[n];
+        }
+        uInt oldSize = _factorialCache.size();
+        if (_factorialCache.size() < 2) {
+            _factorialCache.resize(2);
+            _factorialCache[0] = 1;
+            _factorialCache[1] = 1;
+        }
+        else {
+            _factorialCache.resize(n+1, True);
+        }
+        if (n < 2) {
+            return 1;
+        }
+        for (uInt i=oldSize-1; i<=n; i++) {
+            _factorialCache[i] = i * _factorialCache[i-1];
+        }
+        return _factorialCache[_factorialCache.size()-1];
+    }
+
+    uInt Combinatorics::choose(const uInt n, const uInt k) {
+        if (k > n) {
+            throw AipsError("k cannot be greater than n");
+        }
+        return factorial(n)/(factorial(k)*factorial(n-k));
+    }
 } //# NAMESPACE CASA - END
 
-#endif

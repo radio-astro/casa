@@ -1,5 +1,6 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Smooth.h: smooth vectors and arrays 
+//# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+//# Copyright (C) 1996,1997,1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +24,62 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#ifndef SCIMATH_COMBINATORICS_H
+#define SCIMATH_COMBINATORICS_H
 
-#include <string>
 
-#define CASACORE_VERSION "1.0.22"
+//# Includes
+#include <casa/aips.h>
+#include <casa/namespace.h>
+#include <casa/Arrays/Vector.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+// <summary>
+// Combinatorics related functions.
+// </summary>
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+// <use visibility=export>
 
+// <author>Dave Mehringer</author>
+// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
+// </reviewed>
+
+// <prerequisite>
+//   <li> <linkto class="Vector">Vector</linkto>
+//   <li> <linkto class="Array">Array</linkto>
+// </prerequisite>
+
+// <etymology>
+// self-explanatory
+// </etymology>
+
+// <synopsis>
+// Various factorial and combinatorical functions.
+// </synopsis>
+
+// <motivation>
+// Binomial coefficients needed for Images/ImageProfileFitter
+// </motivation>
+
+class Combinatorics {
+  
+  public:
+ 
+  // n!
+  static uInt factorial(const uInt n);
+  
+  // "n choose k" = n!/(k!(n-k)!)
+  // Exception is thrown if k > n.
+  static uInt choose(const uInt n, const uInt k);
+
+  private:
+
+  static Vector<uInt> _factorialCache;
+};
 } //# NAMESPACE CASA - END
 
 #endif
+

@@ -32,6 +32,7 @@
 #include <lattices/LatticeMath/Fit2D.h>
 #include <casa/Quanta.h>
 #include <measures/Measures/Stokes.h>
+#include <images/Images/ImageFit1D.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentType.h>
@@ -76,12 +77,12 @@ class ImageAnalysis
 
     //ImageInterface constructor
     ImageAnalysis(const ImageInterface<Float>* inImage);
-
+    
     //Use this constructor with cloneInputPointer=False if you want this object
     // to take over management of the input pointer. The input pointer will be deleted
     // when this object is destroyed.
     ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer);
-    
+
     virtual ~ImageAnalysis();
 
     Bool addnoise(const String& type, const Vector<Double>& pars,
@@ -220,16 +221,27 @@ class ImageAnalysis
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
 
-    Bool fitallprofiles(Record& region, const Int axis, const String& mask,
-                        const Int ngauss, const Int poly, 
-                        const String& sigma = "", const String& fit = "", 
-                        const String& resid = "");
+    // <src>subImage</src> will contain the subimage of the original image
+    // on which the fit is performed.
+    Vector<ImageFit1D<Float> >  fitallprofiles(
+    	Record& region, SubImage<Float>& subImage, String& xUnit,
+    	const Int axis, const String& mask,
+        const Int ngauss, const Int poly,
+        const String& weightsImageName = "", const String& fit = "",
+        const String& resid = ""
+    ) const;
 
-    Record fitprofile(Vector<Float>& values, Vector<Float>& resid, 
-                       Record& region, const Int axis, const String& mask, 
-                       Record& estimate, const Int ngauss = -1, 
-                       const Int poly = -1, const Bool fit = True, 
-                       const String sigma = "");
+    // <src>subImage</src> will contain the subimage of the original image
+    // on which the fit is performed.
+    ImageFit1D<Float> fitprofile(
+        Record& regionRecord, SubImage<Float>& subImage,
+        String& xUnit,
+        const uInt axis, const String& mask,
+        const Record& estimate, const uInt ngauss = 0,
+        const Int poly = -1, const String& modelName = "",
+        const String& residName = "", const Bool fit = True,
+        const String weightsImageName = ""
+    );
 
     ImageInterface<Float>* fitpolynomial(const String& residfile, 
                                          const String& fitfile, 
@@ -562,6 +574,10 @@ class ImageAnalysis
                          Quantity& paFit,
                          Bool& successFit,
                          const Vector<Quantity>& beam);
+
+    // get the associated ImageInterface object
+    const ImageInterface<Float>* getImage() const;
+
  private:
     
     ImageInterface<Float>* pImage_p;
@@ -630,7 +646,7 @@ class ImageAnalysis
                          const casa::ImageInterface<casa::Float>& inImage,
                          casa::LogIO& os, casa::Bool overwrite=casa::False,
                          casa::Bool allowTemp=casa::False,
-                         casa::Bool copyMask=casa::True);
+                         casa::Bool copyMask=casa::True) const;
     
     // Make a mask and define it in the image.
     casa::Bool makeMask(casa::ImageInterface<casa::Float>& out,

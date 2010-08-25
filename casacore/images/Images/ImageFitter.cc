@@ -110,7 +110,6 @@ namespace casa {
         uInt ngauss = estimates.nelements() > 0 ? estimates.nelements() : 1;
         Vector<String> models(ngauss);
         models.set("gaussian");
-        ImageAnalysis myImage(_image);
         Bool fit = True;
         Bool deconvolve = False;
         Bool list = True;
@@ -118,6 +117,7 @@ namespace casa {
         Record estimatesRecord;
 
         estimates.toRecord(errmsg, estimatesRecord);
+		ImageAnalysis myImage(_image);
 		try {
         	results = myImage.fitsky(
             	residPixels, residMask, converged,
@@ -218,20 +218,17 @@ namespace casa {
         outputs[2] = newEstFile;
         outputs[3] = logFile;
 
+        Vector<Coordinate::Type> reqCoordTypes(1);
+        reqCoordTypes[0] = Coordinate::DIRECTION;
+
         inputProcessor.process(
         	_image, _regionRecord, diagnostics, &outputs,
-        	imagename, regionPtr, regionName, box,
-        	String::toString(_chan), _stokesString,
-        	ImageInputProcessor::USE_FIRST_STOKES, False
+        	_stokesString, imagename, regionPtr,
+        	regionName, box, String::toString(_chan),
+        	ImageInputProcessor::USE_FIRST_STOKES, False,
+        	&reqCoordTypes
         );
         *_log << logOrigin;
-        if (_stokesString.empty()) {
-        	// use the first stokes plane
-        	ImageMetaData md(*_image);
-        	if (md.hasPolarizationAxis()) {
-        		_stokesString = md.stokesAtPixel(0);
-        	}
-        }
         // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
         String iquv = "IQUV";

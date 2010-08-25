@@ -113,8 +113,9 @@ int main() {
 	Directory workdir(dirName);
     String goodImage("collapse_in.fits");
     const String ALL = ImageInputProcessor::ALL;
+	workdir.create();
+	uInt retVal = 0;
     try {
-    	workdir.create();
     	testException(
     		"Exception if no image name given", "mean",
     		"", "", "", "", "", "", 0
@@ -197,16 +198,28 @@ int main() {
     		ImageInterface<Float> *collapsed = collapser.collapse(False);
     		AlwaysAssert(collapsed == NULL, AipsError);
     	}
-		workdir.removeRecursive();
+    	{
+    		writeTestString("average full image collapse along all axes but 0");
+    		Vector<uInt> axes(3);
+    		axes[0] = 1;
+    		axes[1] = 2;
+    		axes[2] = 3;
+
+    		ImageCollapser collapser(
+    			"max", goodImage, "", "", ALL,
+    			ALL, "", axes, outname(), False
+    		);
+    		collapser.collapse(False);
+    		checkImage(outname(), "collapse_max_0_a.fits");
+    	}
         cout << "ok" << endl;
     }
     catch (AipsError x) {
-    	if(workdir.exists()) {
-    		workdir.removeRecursive();
-    	}
         cerr << "Exception caught: " << x.getMesg() << endl;
-        return 1;
+        retVal = 1;
     } 
-    return 0;
+	workdir.removeRecursive();
+
+    return retVal;
 }
 

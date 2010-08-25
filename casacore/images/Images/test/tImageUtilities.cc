@@ -324,7 +324,8 @@ void doFits()
    uInt axis = 0;
    uInt nGauss = 0;
    Int poly = 1;
-   ImageUtilities::fitProfiles(pFit, pResid, im, pWeight,
+   String xUnit;
+   ImageUtilities::fitProfiles(pFit, pResid, xUnit, im,
                                axis, nGauss, poly, True);
    if (pWeight) delete pWeight;
 
