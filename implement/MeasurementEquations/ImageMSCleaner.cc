@@ -230,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(scales_p.nelements()==0) {
 	scales_p=Vector<Float>(1,0.0);
       }
-      //matClean_p.setscales(scales_p);
+      matClean_p.defineScales(scales_p);
       matClean_p.setcontrol(CleanEnums::HOGBOM, niter, gain, threshold);
     } else {
       os << LogIO::SEVERE << "Unknown algorithm: " << algorithm << LogIO::POST;
