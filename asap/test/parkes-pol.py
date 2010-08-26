@@ -16,6 +16,7 @@ plotter = asapplotter(False)
 print "Test of Parkes polarimetry (P484)"
 
 data_1665 = scantable('data/parkes-pol.rpf')
+data_1665.parallactify(True)
 data_1665.rotate_linpolphase(-45)
 data_1665.rotate_xyphase(-2)
 data_1665.set_unit('km/s')

@@ -27,7 +27,7 @@
 #                        Epping, NSW, 2121,
 #                        AUSTRALIA
 #
-# $Id: asap 1757 2010-06-09 09:03:06Z KanaSugimoto $
+# $Id: asap 1434 2008-08-28 03:55:49Z MalteMarquarding $
 #---------------------------------------------------------------------------
 [ -x /usr/bin/clear ] && /usr/bin/clear
 

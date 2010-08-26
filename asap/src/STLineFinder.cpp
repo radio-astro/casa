@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STLineFinder.cpp 1757 2010-06-09 09:03:06Z KanaSugimoto $
+//# $Id: STLineFinder.cpp 1670 2009-12-28 11:19:00Z MaximVoronkov $
 //#---------------------------------------------------------------------------
 
 

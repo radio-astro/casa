@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STMath.cpp 1677 2010-01-27 07:29:48Z TakeshiNakazato $
+//# $Id: python_STMath.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #include <vector>
 #include <boost/python.hpp>

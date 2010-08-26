@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.h 1757 2010-06-09 09:03:06Z KanaSugimoto $
+//# $Id: STWriter.h 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #ifndef STWRITER_H
 #define STWRITER_H

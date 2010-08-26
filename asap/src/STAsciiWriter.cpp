@@ -27,7 +27,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STAsciiWriter.cpp 1757 2010-06-09 09:03:06Z KanaSugimoto $
+//# $Id: STAsciiWriter.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 
 #include <casa/aips.h>

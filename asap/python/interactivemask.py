@@ -1,5 +1,5 @@
-from asap import rcParams
-from asap import _n_bools, mask_and, mask_or
+from asap.parameters import rcParams
+from asap.utils import _n_bools, mask_and, mask_or
 from asap.scantable import scantable
 
 class interactivemask:
@@ -14,14 +14,14 @@ class interactivemask:
 	   finish=raw_input('Press return to finish selection.\n')
 	   my_mask.finish_selection(callback=func)
 	   mask=my_mask.get_mask()
-	   
-	Modify mask region by selecting a region on a plot with mouse. 
+
+	Modify mask region by selecting a region on a plot with mouse.
 	"""
 
 	def __init__(self,plotter=None, scan=None):
 		"""
 		Create a interactive masking object.
-		Either or both 'plotter' or/and 'scan' should be defined. 
+		Either or both 'plotter' or/and 'scan' should be defined.
 
 		Parameters:
 		   plotter: an ASAP plotter object for interactive selection
@@ -62,21 +62,21 @@ class interactivemask:
 		self.xdataold=None
 		self.ydataold=None
 		self._polygons=[]
-	
+
 
 	def set_basemask(self,masklist=[],invert=False):
 		"""
 		Set initial channel mask.
-		
+
 		Parameters:
 		    masklist:  [[min, max], [min2, max2], ...]
-		               A list of pairs of start/end points (inclusive) 
+		               A list of pairs of start/end points (inclusive)
                                specifying the regions to be masked
 		    invert:    optional argument. If specified as True,
 		               return an inverted mask, i.e. the regions
 			       specified are excluded
 		You can reset the mask selection by running this method with
-		the default parameters. 
+		the default parameters.
 		"""
 		# Verify input parameters
 		if not (isinstance(masklist, list) or isinstance(masklist, tuple)) \
@@ -96,21 +96,21 @@ class interactivemask:
 	def set_startevent(self,event):
 		"""
 		Inherit an event from the parent function.
-		
+
 		Parameters:
 		    event: 'button_press_event' object to be inherited to
-		           start interactive region selection . 
+		           start interactive region selection .
 		"""
 		from matplotlib.backend_bases import MouseEvent
-		if isinstance(event,MouseEvent) and event.name=='button_press_event': 
+		if isinstance(event,MouseEvent) and event.name=='button_press_event':
 			self.event=event
 		else:
 			msg="Invalid event."
-			raise TypeError(msg)	
+			raise TypeError(msg)
 
 	def set_callback(self,callback):
 		"""
-		Set callback function to run when finish_selection() is executed. 
+		Set callback function to run when finish_selection() is executed.
 		    callback: The post processing function to run after
 		              the mask selections are completed.
 			      This will be overwritten if callback is defined in
@@ -122,17 +122,17 @@ class interactivemask:
 		"""
 		Do interactive mask selection.
 		Modify masks interactively by adding/deleting regions with
-		mouse drawing.(left-button: mask; right-button: UNmask) 
-		Note that the interactive region selection is available only 
-		when GUI plotter is active. 
+		mouse drawing.(left-button: mask; right-button: UNmask)
+		Note that the interactive region selection is available only
+		when GUI plotter is active.
 
 		Parameters:
 		    once:     If specified as True, you can modify masks only
-		              once. Else if False, you can modify them repeatedly. 
+		              once. Else if False, you can modify them repeatedly.
 		    showmask: If specified as True, the masked regions are plotted
 		              on the plotter.
 			      Note this parameter is valid only when once=True.
-			      Otherwise, maskes are forced to be plotted for reference. 
+			      Otherwise, maskes are forced to be plotted for reference.
 		"""
 		# Return if GUI is not active
 		if not rcParams['plotter.gui']:
@@ -180,7 +180,7 @@ class interactivemask:
 
 		if self.event != None:
 			self._region_start(self.event)
-		else: 
+		else:
 			self.p._plotter.register('button_press',None)
 			self.p._plotter.register('button_press',self._region_start)
 
@@ -204,7 +204,7 @@ class interactivemask:
 
 	def _region_draw(self,event):
 		sameaxes=(event.inaxes == self.rect['axes'])
-		if sameaxes: 
+		if sameaxes:
 			xnow=event.x
 			ynow=event.y
 			self.xold=xnow
@@ -223,8 +223,8 @@ class interactivemask:
 
 		# Delete the rubber band
 		self.p._plotter.figmgr.toolbar.release(event)
-                
-		if event.inaxes == self.rect['axes']: 
+
+		if event.inaxes == self.rect['axes']:
 			xend=event.x
 			yend=event.y
 			xdataend=event.xdata
@@ -234,7 +234,7 @@ class interactivemask:
 			yend=self.yold
 			xdataend=self.xdataold
 			ydataend=self.ydataold
-			
+
 		self.rect['world'][2:4] = [xdataend, ydataend]
 		self.rect['pixel'][2:4] = [xend, yend]
 		self._update_mask()
@@ -299,7 +299,7 @@ class interactivemask:
 				if  i == 0 : j += 1
 				if len(ifs) > 1:
 					for k in xrange(len(ifs)-1):
-						self._polygons.append(self.p._plotter.subplots[j]['axes'].axvspan(projs[k][i][0],projs[k][i][1],facecolor='#aaaaaa'))			
+						self._polygons.append(self.p._plotter.subplots[j]['axes'].axvspan(projs[k][i][0],projs[k][i][1],facecolor='#aaaaaa'))
 				self._polygons.append(self.p._plotter.subplots[j]['axes'].axvspan(msks[i][0],msks[i][1],facecolor='yellow'))
 		self.p._plotter.canvas.draw()
 
@@ -313,9 +313,9 @@ class interactivemask:
 		              the mask selections are completed.
 			      Specifying the callback function here will overwrite
 			      the one set by set_callback(func)
-		
+
 		Note this function is automatically called at the end of
-		select_mask() if once=True. 
+		select_mask() if once=True.
 		"""
 		if callback: self.callback=callback
 		if self.callback: self.callback()
@@ -323,7 +323,7 @@ class interactivemask:
 		# Finish the plot
 		if not self.newplot:
 			self.clear_polygon()
-		else: 
+		else:
 			self.p._plotter.unmap()
 			self.p._plotter = None
 			del self.p
@@ -333,7 +333,7 @@ class interactivemask:
 
 	def clear_polygon(self):
 		"""
-		Erase masks plots from the plotter. 
+		Erase masks plots from the plotter.
 		"""
                 if len(self._polygons)>0:
 			# Remove old polygons
@@ -346,8 +346,6 @@ class interactivemask:
 		"""
 		Get the interactively selected channel mask.
 		Returns:
-		    A list of channel mask. 
+		    A list of channel mask.
 		"""
 		return self.mask
-
-

@@ -187,7 +187,6 @@ bool PKSFiller::open( const std::string& filename)
   // set both "FRAME" and "BASEFRAME"
   table_->frequencies().setFrame(freqFrame, false);
   table_->frequencies().setFrame(freqFrame, true);
-  table_->focus().setParallactify(true);
 
   return true;
 }
@@ -263,13 +262,15 @@ void PKSFiller::fill( )
     Regex rx2("_S$");
     Int match = pksrec.srcName.matches(rx);
     std::string srcname;
+    Int srctype = Int(SrcType::NOTYPE);
     if (match) {
       srcname = pksrec.srcName;
+      srctype =  Int(SrcType::PSOFF);
     } else {
       srcname = pksrec.srcName.before(rx2);
+      srctype =  Int(SrcType::PSON);
     }
-    Int srctype = match;
-    if ( pksrec.srcType != -1 ) {
+    if ( pksrec.srcType != Int(SrcType::NOTYPE)) {
       srctype = pksrec.srcType ;
     }
     setTime(pksrec.mjd, pksrec.interval);
@@ -307,8 +308,8 @@ void PKSFiller::fill( )
       } else {
         polno = i;
       }
-      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1,
-               pksrec.beamNo-1, polno);
+      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1, polno,
+               pksrec.beamNo-1);
       setSpectrum(pksrec.spectra.column(i), pksrec.flagged.column(i), tsysvec);
       commitRow();
     }
@@ -322,16 +323,16 @@ void PKSFiller::fill( )
       /// @fixme this has to be a bitwise or of both pols
       /// pksrec.flagged.column(0) | pksrec.flagged.column(1);
 
-      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1,
-               pksrec.beamNo-1, polno);
+      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1, polno,
+               pksrec.beamNo-1);
       setSpectrum(r, pksrec.flagged.column(0), tsysvec);
       commitRow();
 
       // ad imaginary part of cross pol
       polno = 3;
       Vector<Float> im(imag(pksrec.xPol));
-      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1,
-               pksrec.beamNo-1, polno);
+      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1, polno,
+               pksrec.beamNo-1);
       setSpectrum(im, pksrec.flagged.column(0), tsysvec);
       commitRow();
     }

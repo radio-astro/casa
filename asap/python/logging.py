@@ -1,6 +1,10 @@
-__all__ = ["asaplog", "print_log", "print_log_dec"]
+"""This module presents a logging abstraction layer on top of casa.
+"""
+__all__ = ["asaplog", "asaplog_post_dec", "AsapLogger"]
 
+import inspect
 from asap.env import is_casapy
+from asap.parameters import rcParams
 from asap._asap import LogSink, set_global_sink
 try:
     from functools import wraps as wraps_dec
@@ -8,10 +12,17 @@ except ImportError:
     from asap.compatibility import wraps as wraps_dec
 
 
-class _asaplog(object):
-    """Wrapper object to allow for both casapy and asap logging"""
+class AsapLogger(object):
+    """Wrapper object to allow for both casapy and asap logging.
+
+    Inside casapy this will connect to `taskinit.casalog`. Otherwise it will
+    create its own casa log sink.
+
+    .. note:: Do instantiate a new one - use the :obj:`asaplog` instead.
+
+    """
     def __init__(self):
-        self._enabled = False
+        self._enabled = True
         self._log = ""
         if is_casapy():
             from taskinit import casalog
@@ -20,27 +31,44 @@ class _asaplog(object):
             self.logger = LogSink()
             set_global_sink(self.logger)
 
-    def post(self, level):
+    def post(self, level='INFO', origin=""):
         """Post the messages to the logger. This will clear the buffered
         logs.
+
+        Parameters:
+
+            level:  The log level (severity). One of INFO, WARN, ERROR.
+
         """
-        if len(self._log) > 0:
-            self.logger.post(self._log, priority=level)
+        if not self._enabled:
+            return
+
+        if not origin:
+            origin = inspect.getframeinfo(inspect.currentframe().f_back)[2]
+        logs = self._log.strip()
+        if len(logs) > 0:
+            self.logger.post(logs, priority=level, origin=origin)
         if isinstance(self.logger, LogSink):
-            logs = self.logger.pop()
-            if logs > 0:
+            logs = self.logger.pop().strip()
+            if len(logs) > 0:
                 print logs
         self._log = ""
 
     def push(self, msg, newline=True):
-        """Push logs into the buffer. post needs to be called to send them."""
-        from asap import rcParams
+        """Push logs into the buffer. post needs to be called to send them.
+
+        Parameters:
+
+            msg:        the log message (string)
+
+            newline:    should we terminate with a newline (default yes)
+
+        """
         if self._enabled:
-            if rcParams["verbose"]:
-                sep = ""
-                self._log = sep.join([self._log, msg])
-                if newline:
-                    self._log += "\n"
+            sep = ""
+            self._log = sep.join([self._log, msg])
+            if newline:
+                self._log += "\n"
 
     def enable(self, flag=True):
         """Enable (or disable) logging."""
@@ -50,16 +78,39 @@ class _asaplog(object):
         """Disable (or enable) logging"""
         self._enabled = flag
 
-asaplog = _asaplog()
+    def is_enabled(self):
+        return self._enabled
 
-def print_log_dec(f, level='INFO'):
+asaplog = AsapLogger()
+"""Default asap logger"""
+
+def asaplog_post_dec(f):
+    """Decorator which posts log at completion of the wrapped method.
+
+    Example::
+
+        @asaplog_post_dec
+        def test(self):
+            do_stuff()
+            asaplog.push('testing...', False)
+            do_more_stuff()
+            asaplog.push('finished')
+    """
     @wraps_dec(f)
     def wrap_it(*args, **kw):
-        val = f(*args, **kw)
-        print_log(level)
-        return val
+        level = "INFO"
+        try:
+            val = f(*args, **kw)
+            return val
+        except Exception, ex:
+            level = "ERROR"
+            asaplog.push(str(ex))
+            if rcParams['verbose']:
+                pass
+            else:
+                raise
+        finally:
+            asaplog.post(level, f.func_name)
+            #asaplog.post(level, ".".join([f.__module__,f.func_name]))
     return wrap_it
 
-def print_log(level='INFO'):
-    """Alias for asaplog.post."""
-    asaplog.post(level)

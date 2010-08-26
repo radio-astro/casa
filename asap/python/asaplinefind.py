@@ -70,7 +70,7 @@ class linefinder:
                               'mean80' use the 80% of the lowest deviations
                                        in the noise box (default)
                               'median' median of deviations in the noise box
-                             
+
         Note:  For bad baselines threshold should be increased,
                and avg_limit decreased (or even switched off completely by
                setting this parameter to 1) to avoid detecting baseline

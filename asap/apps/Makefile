@@ -8,7 +8,6 @@ CASAROOT  := $(word 1, $(CASAPATH))
 CASAARCH  := $(word 2, $(CASAPATH))
 
 COREINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=COREINCD eval_vars) && echo $$COREINCD)
-CORELIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=CORELIB eval_vars) && echo $$CORELIB)
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
 
 # the compiler
@@ -19,16 +18,11 @@ endif
 # compiler flags
 CXXFLAGS := -fPIC -O3 -g
 CXXFLAGS += -ansi -Wno-long-long -Wall
-CXXFLAGS += -Xlinker -rpath -Xlinker $(CASALIB)
-ifneq (,$(findstring "$(CASAARCH)", "darwin"))
-   CXXFLAGS +=-DAIPS_DARWIN
-   ifneq (,$(shell sw_vers | grep 10.6))
-      CXXFLAGS += -arch i386
-   endif
-endif
+CXXFLAGS := -Xlinker -rpath -Xlinker $(CASALIB)
+
 
 INCDIRS   := -I$(COREINCD)
-LIBS      := -L$(CASALIB) $(CORELIB)
+LIBS      := -L$(CASALIB) -lcasa_tables -lcasa_casa
 
 OBJECTS := asap2to3 
 

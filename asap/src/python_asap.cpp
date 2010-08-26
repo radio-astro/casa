@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.cpp 1818 2010-08-02 06:10:43Z KanaSugimoto $
+//# $Id: python_asap.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #include <string>
 #include <vector>
