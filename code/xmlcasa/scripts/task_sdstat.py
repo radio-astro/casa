@@ -1,6 +1,7 @@
 import os
 import sys
 from taskinit import *
+from casa_in_py import get_user
 
 import asap as sd
 import pylab as pl
@@ -15,11 +16,12 @@ def sdstat(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
         ### Now the actual task code
         ###
         retValue={}
-        if os.environ.has_key( 'USER' ):
-            usr = os.environ['USER']
-        else:
-            import commands
-            usr = commands.getoutput( 'whoami' )
+        ## if os.environ.has_key( 'USER' ):
+        ##     usr = os.environ['USER']
+        ## else:
+        ##     import commands
+        ##     usr = commands.getoutput( 'whoami' )
+        usr = get_user()
         tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
         resultstats = []
         try:
