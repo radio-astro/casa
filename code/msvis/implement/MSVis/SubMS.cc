@@ -41,7 +41,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
-//#include <casa/OS/Memory.h>              // Can be commented out along with
+#include <casa/OS/Memory.h>              // Can be commented out along with
 //                                         // Memory:: calls.
 #include <casa/Containers/Record.h>
 #include <casa/BasicSL/String.h>
@@ -90,7 +90,6 @@ namespace casa {
     sameShape_p(True),
     antennaSel_p(False),
     timeBin_p(-1.0),
-    numOutRows_p(0),
     scanString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
@@ -110,7 +109,6 @@ namespace casa {
     sameShape_p(True),
     antennaSel_p(False),
     timeBin_p(-1.0),
-    numOutRows_p(0),
     scanString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
@@ -768,9 +766,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
 
   // fill or update
-  if(!fillDDTables()){
+  if(!fillDDTables())
     return False;
-  }
 
   // SourceIDs need to be remapped around here.  It could not be done in
   // selectSource() because mssel_p was not setup yet.
@@ -790,23 +787,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     
   sameShape_p = areDataShapesConstant();
     
-  if(timeBin_p <= 0.0){
+  if(timeBin_p <= 0.0)
     success = fillMainTable(datacols);
-  }
-  else{
-    // if(!sameShape_p){
-    //   os << LogIO::WARN 
-    //      << "Time averaging of differing spw shapes is not handled yet."
-    //      << LogIO::POST;
-    //   os << LogIO::WARN
-    //      << "Work around: average differently shaped spws separately and then concatenate." 
-    //      << LogIO::POST;
-    //   return False;
-    // }
-    // else{
-      fillAverMainTable(datacols);
-      //    }
-  }
+  else
+    fillAverMainTable(datacols);
   return success;
 }
   
@@ -5427,33 +5411,31 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     return False;
 
   // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "Before numOfTimeBins(): "
+  //    << "Before binTimes(): "
   //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
   //    << LogIO::POST;
 
   //Int numBaselines=numOfBaselines(ant1, ant2, False);
-  Int numTimeBins = numOfTimeBins(timeBin);  // Sets up remappers as a side-effect.
+  Int numOutputRows = binTimes(timeBin);  // Sets up remappers as a side-effect.
     
-  if(numTimeBins < 1)
+  if(numOutputRows < 1)
     os << LogIO::SEVERE
        << "Number of time bins is < 1: time averaging bin size is not > 0"
        << LogIO::POST;
 
-  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "Before msOut_p.addRow(): "
-  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-  //    << LogIO::POST;
+  os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
+     << "Before msOut_p.addRow(): "
+     << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+     << LogIO::POST;
 
-  msOut_p.addRow(numOutRows_p, True);
+  msOut_p.addRow(numOutputRows, True);
         
   //    relabelIDs();
 
-  msc_p->interval().fillColumn(timeBin);
-
-  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "After numOfTimeBins(): "
-  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-  //    << LogIO::POST;
+  os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
+     << "After binTimes(): "
+     << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+     << LogIO::POST;
 
   //things to be taken care in fillTimeAverData...
   // flagRow		ScanNumber	uvw		weight		
@@ -6227,7 +6209,7 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
   return slotKey;
 }
 
-  Int SubMS::numOfTimeBins(const Double timeBin)
+  Int SubMS::binTimes(const Double timeBin)
   {
     // Figure out which bins each row (slot) will go in, and return the
     // number of bins (-1 on failure).
@@ -6265,7 +6247,6 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       
       GenSortIndirect<Double>::sort(tOI_p, timeRows);
 
-      newTimeVal_p.resize(numrows);
       bin_slots_p.resize(numrows);
 
       if(ignore_array){
@@ -6298,24 +6279,21 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       Double startoftb = timeRows[oldtoik] - 0.5 * intervalRows[oldtoik];
       Double endoftb   = startoftb + timeBin;
 
-      newTimeVal_p[0] = 0.5 * (startoftb + endoftb);
-      numOutRows_p = 0;
+      Int numOutRows = 0;
+
       for(uInt k = start_k; k < uInt(numrows); ++k){
 	uInt toik = tOI_p[k];
 
 	if(!rowFlag[toik]){
-	  Double time_toik = timeRows[toik];
-	  
+	  Double time_toik = timeRows[toik];	  
+
 	  if(time_toik >= endoftb){	// Start a new bin.
 	    // Finish the old one
-	    newTimeVal_p[numBin] = 0.5 * (startoftb +
-					  timeRows[oldtoik] +
-					  0.5 * intervalRows[oldtoik]);
 	    startoftb = time_toik - 0.5 * intervalRows[toik];
 	    endoftb   = startoftb + timeBin;
 	  
 	    if(bin_slots_p[numBin].size() > 0){
-	      numOutRows_p += bin_slots_p[numBin].size();
+	      numOutRows += bin_slots_p[numBin].size();
 	      ++numBin;
 	    }
 	  }
@@ -6333,15 +6311,12 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       
       // Finish the last bin.
       if(bin_slots_p[numBin].size() > 0){
-	newTimeVal_p[numBin] = 0.5 * (startoftb + timeRows[oldtoik] +
-				      0.5 * intervalRows[oldtoik]);
-	numOutRows_p += bin_slots_p[numBin].size();
+	numOutRows += bin_slots_p[numBin].size();
 	++numBin;
       }
 
-      newTimeVal_p.resize(numBin, true);
       bin_slots_p.resize(numBin, true);
-      return numBin;
+      return numOutRows;
     }
     return -1;
   }
@@ -6451,7 +6426,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   if(doFloat)
     floatData.reference(mscIn_p->floatData());
 
-  //const ROScalarColumn<Double> time(mscIn_p->time());
   const ROScalarColumn<Double> inTC(mscIn_p->timeCentroid());
   const ROScalarColumn<Double> inExposure(mscIn_p->exposure());
 
@@ -6493,8 +6467,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
   const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
   const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
  
+  uInt n_tbns = bin_slots_p.nelements();
   os << LogIO::NORMAL << "Writing time averaged data of "
-     << newTimeVal_p.nelements()<< " time slots" << LogIO::POST;
+     << n_tbns << " time slots" << LogIO::POST;
 
   //Vector<Cube<Complex> > outData(ntok);
   Matrix<Complex> outData[ntok];
@@ -6543,7 +6518,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 
   Double rowwtfac; // Adjusts row weight for channel selection.
 
-  uInt n_tbns = bin_slots_p.nelements();
   ProgressMeter meter(0.0, n_tbns * 1.0, "split", "bins averaged", "", "",
 		      True, n_tbns / 100);
 
@@ -6632,8 +6606,20 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       // Iterate through mscIn_p's rows that belong to the slot.
       Double swv = 0.0; // Sum of the weighted visibilities.
       outUVW.set(0.0);
+      Double minTime = mscIn_p->time()(slotv0);
+      Double maxTime = minTime;
+      Double startInterval = mscIn_p->interval()(slotv0);
+      Double endInterval = startInterval;
+      
       for(uivector::iterator toikit = slotv.begin();
           toikit != slotv.end(); ++toikit){
+        Double time = mscIn_p->time()(*toikit);
+        
+        if(time > maxTime){
+          maxTime = time;
+          endInterval = mscIn_p->interval()(*toikit);
+        }
+        
         // keepShape_p == false means the input channels cannot simply
         // be copied through to the output channels.
         // It's a bit faster if no slicing is done...so avoid it if possible.
@@ -6833,7 +6819,10 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       // Fill in the nonaveraging values from slotv0.
       // In general, _IDs which are row numbers in a subtable must be
       // remapped, and those which are not probably shouldn't be.
-      msc_p->time().put(orn, newTimeVal_p[tbn]);
+      msc_p->time().put(orn, 0.5 * (minTime + maxTime));
+      msc_p->interval().put(orn,
+                            maxTime - minTime + 0.5 * (startInterval
+                                                       + endInterval));
       msc_p->scanNumber().put(orn, scanNum(slotv0));	// Don't remap!
       if(antennaSel_p){
 	msc_p->antenna1().put(orn, antIndexer_p[ant1(slotv0)]);
@@ -6848,7 +6837,6 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       msc_p->fieldId().put(orn, fieldRelabel_p[fieldID(slotv0)]);
       msc_p->stateId().put(orn, stateRemapper_p[state(slotv0)]);
       msc_p->processorId().put(orn, procMapper[inProc(slotv0)]);
-      // interval is done in fillAverMainTable().
       msc_p->observationId().put(orn, obsMapper[inObs(slotv0)]);
       msc_p->arrayId().put(orn, inArr(slotv0));	        // Don't remap!
       msc_p->dataDescId().put(orn,
@@ -6879,12 +6867,12 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
     meter.update(tbn);
   }
   os << LogIO::NORMAL << "Data binned." << LogIO::POST; 
-
-  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-  //    << LogIO::POST;
-
   bin_slots_p.resize(0);           // Free some memory
+
+  os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+     << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+     << LogIO::POST;
+
   return True;
 }
 
