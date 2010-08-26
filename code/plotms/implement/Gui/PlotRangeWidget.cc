@@ -113,7 +113,9 @@ bool PlotRangeWidget::isCustom() const { return custom->isChecked(); }
 	this src file, but put somewhere it's available more widely
 	and easier to test.
 */
-
+#pragma GCC optimize 0
+#pragma GCC option ("-O0")
+  
 enum DateTimeStringQuality   {
 	DATETIME_BadSyntax,      // wrong characters, gibberish
 	DATETIME_Incomplete,     // good syntax so far
@@ -123,8 +125,8 @@ enum DateTimeStringQuality   {
 
 
 static 
-bool scandigits(const char *txt, int ndigits,  int *val)  {
-	int v=0;
+bool scandigits(const char *txt, int ndigits,  uInt *val)  {
+	uInt v=0;
 	while (ndigits--)   v = 10*v + (int)((*txt++)-'0');
 	*val=v;
 	return true;
@@ -153,34 +155,30 @@ DateTimeStringQuality EvaluateDateTimeText(const char *txt,  double &mjulian_sec
 	
 	const char *datetime_template1 = "####/##/##&##:##:##.###";
 	// const char *datetime_template2 = "???"; // for alternative formats TBD
-printf("DSWLOOP ");
 	int n = strlen(txt);
 	for (int i=0; i<n; i++)   {
 		char c=txt[i];
-printf("%d%c%c ", i, datetime_template1[i], c);
 		switch (datetime_template1[i])  {
 			case '#':  if (isdigit(c)) continue; break;
 			case '/':  if (c=='/' || c=='-') continue; break;
 			case '&':  if (c==' ' ||c=='/' ||c=='T') continue; break;
 			default:  if (c==datetime_template1[i]) continue; 
 		}
-		printf("  bad!!!  \n");
 		return DATETIME_BadSyntax;  
 	}
 	
-printf("\nDSW BUG: Syntax so far good.  n=%d chars \n", n);	
 	// Do we have at least yyyy/mm/dd/hh:mm?
 	if (n<16)
 		return DATETIME_Incomplete;
-printf("DSW BUG: counts as complete\n");
+
 	
 	// Okay, we have enough correct digits and punctuation.
 	// Now scan the numbers so we can construct a casacore Time() 
 	// While we could verify details like 0<=min<=59, we don't
 	// want to reinvent the wheels for checking leap years.
-	int yyyy, mm, dd;
-	int hour,min;
-	float sec;
+	uInt yyyy, mm, dd;
+	uInt hour,min;
+	double sec;
 
 	scandigits(&txt[0], 4, &yyyy);
 	scandigits(&txt[5], 2, &mm);
@@ -195,21 +193,22 @@ printf("DSW BUG: counts as complete\n");
 			sec =0.0;
 	
 
-printf("DSW DATETIME Evalutated <<%s>> --> %04d/%02d/%02d;%02dh%02dm%06.3fs   \n",
-txt,   yyyy,mm,dd,hour,min,sec);
+	// Check if numbers are in sensible ranges
+	if (yyyy>9999)  return DATETIME_ImproperValue;
+	if (mm<1 || mm>12) return DATETIME_ImproperValue;
+	if (dd>Time::howManyDaysInMonth(mm,yyyy))  return DATETIME_ImproperValue;
+	if (hour>23)  return DATETIME_ImproperValue;
+	if (min>59)   return DATETIME_ImproperValue;
+	if (sec>60.0) return DATETIME_ImproperValue;
 	
 	try   {
 			// Conversion to Mod Julian seconds by using a casacore Date
 			// is already coded for our convenience in PlotMSConstants
 			mjulian_sec = PMS::dateDouble(yyyy,mm,dd,hour,min,sec, DATE_MJ_SEC);
-			printf("    calculate modjulian %.4f seconds   \n", mjulian_sec);
 	}
 	catch (AipsError &err)   {
-			// set mjulian_sec to some particular value if conversion failed?
-			printf("DEFECTIVE VALUES!!!  \n");
 			return DATETIME_ImproperValue;
 	}
-	printf("EvaluateDateTimeText RETURN GOOD \n");
 	return DATETIME_GOOD;	
 }
 
