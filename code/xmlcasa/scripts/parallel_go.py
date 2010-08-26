@@ -29,7 +29,7 @@ class cluster(object):
 
    "control cluster engines for parallel tasks"
 
-   print 'start cluster---------'
+   #print 'start cluster---------'
    _instance = None
    
    __client=None
