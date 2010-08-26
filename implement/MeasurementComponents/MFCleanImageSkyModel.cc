@@ -329,6 +329,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     // model then we use convolutions to speed the processing
     os << LogIO::NORMAL2 << "Making residual images for all fields" << LogIO::POST; // Loglevel PROGRESS
     if(modified_p){ 
+      blankOverlappingModels();
       makeNewtonRaphsonStep(se, False);
       //makeNewtonRaphsonStep(se, (cycle>1));
     }
@@ -660,10 +661,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
       if(maxIterations != oldMaxIterations){
 	oldMaxIterations=maxIterations;
-	blankOverlappingModels();
 	for(Int model=0; model < numberOfModels(); ++model){
 	  image(model).copyData( LatticeExpr<Float>((image(model))+(deltaImage(model))));
-	  os << LogIO::NORMAL << LatticeExprNode(sum(image(model))).getFloat()  // Loglevel INFO
+	  os << LogIO::NORMAL << LatticeExprNode(sum(deltaImage(model))).getFloat()  // Loglevel INFO
 	     << " Jy <- sum of clean components of model " 
 	     << model << LogIO::POST;
 	}
@@ -698,6 +698,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   if(modified_p || lastCycleWriteModel) {
     os << LogIO::NORMAL2 // Loglevel PROGRESS
        << "Finalizing residual images for all fields" << LogIO::POST;
+    blankOverlappingModels();
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     restoreOverlappingModels();
     Float finalabsmax=maxField(resmax, resmin);
@@ -707,7 +708,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     os << LogIO::NORMAL; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min residuals = "
-	 << resmax(model) << ", " << resmin(model) << endl;
+	 << resmax(model) << ", " << resmin(model) << " clean flux" << LatticeExprNode(sum(image(model))).getFloat() << endl;
     }
   }
   else {
@@ -736,30 +737,30 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
   */
   //////////////
   for (Int model=0;model<(numberOfModels()-1); ++model) {
-    CoordinateSystem cs0=deltaImage(model).coordinates();
-    IPosition iblc0(deltaImage(model).shape().nelements(),0);
+    CoordinateSystem cs0=image(model).coordinates();
+    IPosition iblc0(image(model).shape().nelements(),0);
       
-      IPosition itrc0(deltaImage(model).shape());
+      IPosition itrc0(image(model).shape());
       itrc0=itrc0-Int(1);
-      LCBox lbox0(iblc0, itrc0, deltaImage(model).shape());
+      LCBox lbox0(iblc0, itrc0, image(model).shape());
 
       ImageRegion imagreg0(WCBox(lbox0, cs0));
     for (Int nextmodel=model+1; nextmodel < numberOfModels(); ++nextmodel){
-      CoordinateSystem cs=deltaImage(nextmodel).coordinates();
-      IPosition iblc(deltaImage(nextmodel).shape().nelements(),0);
+      CoordinateSystem cs=image(nextmodel).coordinates();
+      IPosition iblc(image(nextmodel).shape().nelements(),0);
       
-      IPosition itrc(deltaImage(nextmodel).shape());
+      IPosition itrc(image(nextmodel).shape());
       itrc=itrc-Int(1);
       
-      LCBox lbox(iblc, itrc, deltaImage(nextmodel).shape());
+      LCBox lbox(iblc, itrc, image(nextmodel).shape());
 
       ImageRegion imagreg(WCBox(lbox, cs));
       try{
-	SubImage<Float> partToMerge(deltaImage(nextmodel), imagreg0, True);
-	SubImage<Float> partToMask(deltaImage(model), imagreg, True);
-	LatticeRegion latReg0=imagreg0.toLatticeRegion(deltaImage(nextmodel).coordinates(), deltaImage(nextmodel).shape());
+	SubImage<Float> partToMerge(image(nextmodel), imagreg0, True);
+	SubImage<Float> partToMask(image(model), imagreg, True);
+	LatticeRegion latReg0=imagreg0.toLatticeRegion(image(nextmodel).coordinates(), image(nextmodel).shape());
 	ArrayLattice<Bool> pixmerge(latReg0.get());
-	LatticeRegion latReg=imagreg.toLatticeRegion(deltaImage(model).coordinates(), deltaImage(model).shape());
+	LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
 	ArrayLattice<Bool> pixmask(latReg.get());
 	/////////////////
 	/*Array<Bool> testoo;
