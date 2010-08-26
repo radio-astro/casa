@@ -379,7 +379,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
     absmax=maxField(resmax, resmin);
     if(cycle >1){
-      if(absmax < oldabsmax)
+      //check if its 5% above previous value 
+      if(absmax < 1.05*oldabsmax)
 	oldabsmax=absmax;
       else{
 	diverging=True;
@@ -664,7 +665,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	for(Int model=0; model < numberOfModels(); ++model){
 	  image(model).copyData( LatticeExpr<Float>((image(model))+(deltaImage(model))));
 	  os << LogIO::NORMAL << LatticeExprNode(sum(deltaImage(model))).getFloat()  // Loglevel INFO
-	     << " Jy <- sum of clean components of model " 
+	     << " Jy <- cleaned in this cycle for  model " 
 	     << model << LogIO::POST;
 	}
 
@@ -708,7 +709,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     os << LogIO::NORMAL; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min residuals = "
-	 << resmax(model) << ", " << resmin(model) << " clean flux" << LatticeExprNode(sum(image(model))).getFloat() << endl;
+	 << resmax(model) << ", " << resmin(model) << " clean flux " << LatticeExprNode(sum(image(model))).getFloat() << endl;
     }
   }
   else {
