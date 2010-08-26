@@ -482,7 +482,7 @@ def _format_output(scan=None,pars=None,rms=None,masklists=None):
 			out+="\n"
 		else: out += '  Not fitted\n'
 		out += "Results of baseline fit\n"
-		out += "  rms = %3.6f\n" % (rms[r])
+		out += "  rms = %3.6f\n" % (rms[r][0])
 		out+=sep
 	return out
 
