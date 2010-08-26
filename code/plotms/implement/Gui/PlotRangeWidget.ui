@@ -134,16 +134,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QDateTimeEdit" name="timeFrom" >
-           <property name="buttonSymbols" >
-            <enum>QAbstractSpinBox::NoButtons</enum>
-           </property>
-           <property name="currentSection" >
-            <enum>QDateTimeEdit::YearSection</enum>
-           </property>
-           <property name="displayFormat" >
-            <string>yyyy/MM/dd/hh:mm:ss.zzz</string>
-           </property>
+          <widget class="QLineEdit" name="timeFrom" >
           </widget>
          </item>
          <item>
@@ -154,16 +145,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QDateTimeEdit" name="timeTo" >
-           <property name="buttonSymbols" >
-            <enum>QAbstractSpinBox::NoButtons</enum>
-           </property>
-           <property name="currentSection" >
-            <enum>QDateTimeEdit::YearSection</enum>
-           </property>
-           <property name="displayFormat" >
-            <string>yyyy/MM/dd/hh:mm:ss.zzz</string>
-           </property>
+          <widget class="QLineEdit" name="timeTo" >
           </widget>
          </item>
          <item>
