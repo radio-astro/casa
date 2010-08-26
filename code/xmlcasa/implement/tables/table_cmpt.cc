@@ -852,7 +852,7 @@ table::rownumbers(const ::casac::record& tab, const int nbytes)
 bool
 table::setmaxcachesize(const std::string& columnname, const int nbytes)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  Bool rstat(False);
  try {
 	 if(itsTable){
@@ -879,7 +879,7 @@ table::setmaxcachesize(const std::string& columnname, const int nbytes)
 bool
 table::isscalarcol(const std::string& columnname)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  Bool rstat(False);
  try {
 	 if(itsTable){
@@ -897,7 +897,7 @@ table::isscalarcol(const std::string& columnname)
 bool
 table::isvarcol(const std::string& columnname)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  Bool rstat(False);
  try {
 	 if(itsTable){
@@ -916,7 +916,7 @@ table::isvarcol(const std::string& columnname)
 std::string
 table::coldatatype(const std::string& columnname)
 {
-    *itsLog << LogOrigin(__func__, name());
+    *itsLog << LogOrigin(__func__, columnname);
     std::string myDataType("");
     if(itsTable){
 	    myDataType = itsTable->columnDataType(columnname);
@@ -929,7 +929,7 @@ table::coldatatype(const std::string& columnname)
 std::string
 table::colarraytype(const std::string& columnname)
 {
-   *itsLog << LogOrigin(__func__, name());
+   *itsLog << LogOrigin(__func__, columnname);
    std::string myArrayTypeName("");
    if(itsTable){
 	   myArrayTypeName = itsTable->columnArrayType(columnname);
@@ -1080,7 +1080,7 @@ table::removecols(const std::vector<std::string>& columnames)
 bool
 table::iscelldefined(const std::string& columnname, const int rownr)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  Bool rstat(False);
  try {
 	 if(itsTable){
@@ -1099,7 +1099,7 @@ table::iscelldefined(const std::string& columnname, const int rownr)
 ::casac::variant*
 table::getcell(const std::string& columnname, const int rownr)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
@@ -1118,7 +1118,7 @@ table::getcell(const std::string& columnname, const int rownr)
 ::casac::variant*
 table::getcellslice(const std::string& columnname, const int rownr, const std::vector<int>& blc, const std::vector<int>& trc, const std::vector<int>& incr)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
@@ -1137,7 +1137,7 @@ table::getcellslice(const std::string& columnname, const int rownr, const std::v
 ::casac::variant*
 table::getcol(const std::string& columnname, const int startrow, const int nrow, const int rowincr)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
@@ -1157,7 +1157,7 @@ table::getcol(const std::string& columnname, const int startrow, const int nrow,
 ::casac::record*
 table::getvarcol(const std::string& columnname, const int startrow, const int nrow, const int rowincr)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::record *rstat(0);
  try {
 	 if(itsTable){
@@ -1176,7 +1176,7 @@ table::getvarcol(const std::string& columnname, const int startrow, const int nr
 ::casac::variant*
 table::getcolslice(const std::string& columnname, const std::vector<int>& blc, const std::vector<int>& trc, const std::vector<int>& incr, const int startrow, const int nrow, const int rowincr)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
@@ -1262,7 +1262,6 @@ table::putcol(const std::string& columnname, const ::casac::variant& value,
 {
  Bool rstat(False);
 
- *itsLog << LogOrigin(__func__, name());
  *itsLog << LogOrigin("putcol", columnname);
  
  try {
@@ -1360,7 +1359,7 @@ table::putcolslice(const std::string& columnname, const ::casac::variant& value,
 std::vector<std::string>
 table::getcolshapestring(const std::string& columnname, const int startrow, const int nrow, const int rowincr)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  std::vector<std::string> rstat(0);
  try {
 	 if(itsTable){
@@ -1429,7 +1428,7 @@ table::getkeywords()
 ::casac::variant*
 table::getcolkeyword(const std::string& columnname, const ::casac::variant& keyword)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
@@ -1465,7 +1464,7 @@ table::getcolkeyword(const std::string& columnname, const ::casac::variant& keyw
 ::casac::variant*
 table::getcolkeywords(const std::string& columnname)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
@@ -1536,7 +1535,7 @@ table::putkeywords(const ::casac::record& value)
 bool
 table::putcolkeyword(const std::string& columnname, const ::casac::variant& keyword, const ::casac::variant& value)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  Bool rstat(False);
  try {
 	 if(itsTable){
@@ -1568,7 +1567,7 @@ table::putcolkeyword(const std::string& columnname, const ::casac::variant& keyw
 bool
 table::putcolkeywords(const std::string& columnname, const ::casac::record& value)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  Bool rstat(False);
  try {
 	 if(itsTable){
@@ -1620,7 +1619,7 @@ table::removekeyword(const ::casac::variant& keyword)
 bool
 table::removecolkeyword(const std::string& columnname, const ::casac::variant& keyword)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  Bool rstat(False);
  try {
 	 if(itsTable){
@@ -1707,7 +1706,7 @@ table::fieldnames(const std::string& keyword)
 std::vector<std::string>
 table::colkeywordnames(const std::string& columnname)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  std::vector<std::string> rstat(0);
  try {
 	 if(itsTable){
@@ -1726,7 +1725,7 @@ table::colkeywordnames(const std::string& columnname)
 std::vector<std::string>
 table::colfieldnames(const std::string& columnname, const std::string& keyword)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  std::vector<std::string> rstat(0);
  try {
 	 if(itsTable){
@@ -1763,7 +1762,7 @@ table::getdesc(const bool actual)
 ::casac::record*
 table::getcoldesc(const std::string& columnname)
 {
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, columnname);
  ::casac::record *rstat(0);
  try {
 	 if(itsTable){
@@ -1851,7 +1850,7 @@ bool table::fromascii(const std::string& tablename, const std::string& asciifile
 
    bool rstatus(false);
 
-   *itsLog << LogOrigin(__func__, name());
+   *itsLog << LogOrigin(__func__, tablename);
    try {
       Vector<String> atmp, btmp;
       IPosition tautoshape;
@@ -1982,7 +1981,7 @@ void write_table(Table &outTab)
 bool table::fromASDM(const std::string& tablename, const std::string& xmlfile){
   bool rstatus(false);
 
- *itsLog << LogOrigin(__func__, name());
+ *itsLog << LogOrigin(__func__, tablename);
 
  try{
    asdmCasaXMLUtil myXMLUtil;
@@ -2014,7 +2013,7 @@ table::statistics(const std::string& column,
                   const std::string& complex_value, 
                   const bool useflags)
 {
-    *itsLog << LogOrigin(__func__, name());
+    *itsLog << LogOrigin(__func__, column);
     ::casac::record *retval(NULL);
 
     try {
