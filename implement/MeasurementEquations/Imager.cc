@@ -9457,7 +9457,6 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 	Vector<String> apsf(psfnames);
 	if( (apsf.nelements()==1) && apsf[0]==String(""))
 	  apsf.resize();
-	cerr << "threshold " << threshold << " amode " << amodel << " fixed " << fixed  << " clist " << complist << " amask " << amask << " ima " << aimage << " res " << aresidual << " psf " << apsf << endl;
 	if(!interactive){
 	  rstat = clean(String(algorithm), niter, gain,  
 			threshold, displayprogress, 
