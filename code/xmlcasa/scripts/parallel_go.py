@@ -10,7 +10,6 @@ import types
 import inspect
 import casadef
 from math import *
-#from casa_in_py import get_user
 from get_user import get_user
 
 a=inspect.stack()

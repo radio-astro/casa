@@ -7,9 +7,6 @@ import commands
 
 from get_user import get_user
 
-## Avoid a clash with the command for printing the working directory.
-#import pwd as pwd_module 
-
 try:
     import casac
 except ImportError, e:

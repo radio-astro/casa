@@ -1,7 +1,6 @@
 import os
 import sys
 from taskinit import *
-#from casa_in_py import get_user
 from get_user import get_user
 
 import asap as sd
