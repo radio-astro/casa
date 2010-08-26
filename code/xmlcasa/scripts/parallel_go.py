@@ -45,7 +45,9 @@ class cluster(object):
    __stop_engine_file='stop_engine.sh'
    __stop_controller_file='stop_controller.sh'
    __cluster_rc_file='clusterrc.sh'
-   __prefix='/tmp/'+os.environ['USER']+'-'
+   __prefix='/tmp/cluster-'
+   if os.environ.has_key('USER'):
+      __prefix='/tmp/'+os.environ['USER']+'-'
    __init_now=True
    __new_engs=[]
    #__result={}
@@ -1146,8 +1148,8 @@ class cluster(object):
       self.__client.execute('import os')
       self.__client.push(dict(clusterdir=clusterdir))
       self.__client.execute('os.chdir(clusterdir)')
-      self.__client.execute("user=os.environ['USER']")
-      self.__client.execute('print user')
+      #self.__client.execute("user=os.environ['USER']")
+      #self.__client.execute('print user')
       #self.__client.execute('import commands')
       #self.__client.execute('(exitstatus, outtext) = commands.getstatusoutput("uname -n")')
       #return self.__client.gather('outtext')
