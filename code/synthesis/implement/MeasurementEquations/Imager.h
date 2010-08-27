@@ -57,7 +57,6 @@ class MeasurementSet;
 class MFrequency;
 class File;
 class VPSkyJones;
-class PGPlotter;
 class EPJones;
 class ViewerProxy;
 template<class T> class ImageInterface;
@@ -73,7 +72,7 @@ class Imager
   Imager();
 
   Imager(MeasurementSet& ms, Bool compress=False, Bool useModel=False);
-  Imager(MeasurementSet& ms, PGPlotter& pgplotter, Bool compress=False);
+  Imager(MeasurementSet& ms, Bool compress=False);
 
   // Copy constructor and assignment operator
   Imager(const Imager&);
@@ -491,12 +490,6 @@ class Imager
   Bool clipvis(const Quantity& threshold);
 
 
-  //This is necessary for setting from the DO...but once its set properly from 
-  // the constructor...these two functions should go 
-
-  PGPlotter& getPGPlotter();
-  void setPGPlotter(PGPlotter& thePlotter);
-
   //Check if can proceed with this object
   Bool valid() const;
 
@@ -615,7 +608,6 @@ protected:
   BeamSquint::SquintType  squintType_p;
   Bool doDefaultVP_p;          // make default VPs, rather than reading in a vpTable
 
-  PGPlotter* pgplotter_p;
 
   Bool  doMultiFields_p;      // Do multiple fields?
   Bool  multiFields_p; 	      // multiple fields have been specified in setdata

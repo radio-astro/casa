@@ -19,8 +19,8 @@
 #include <deconvolver_cmpt.h>
 #include <synthesis/MeasurementEquations/Deconvolver.h>
 #include <casa/Logging/LogIO.h>
-#include <casa/System/PGPlotterNull.h>
-#include <graphics/Graphics/PGPlotterLocal.h>
+//#include <casa/System/PGPlotterNull.h>
+//#include <graphics/Graphics/PGPlotterLocal.h>
 
 
 using namespace std;
@@ -34,14 +34,14 @@ deconvolver::deconvolver()
 
   itsDeconv = new Deconvolver();
   itsLog = new LogIO();
-    PGPlotterInterface *worker(0);
-  try {
-    worker = new PGPlotterLocal("/NULL");
-  } catch (AipsError x) {
-    worker = new PGPlotterNull("/NULL");
-  }
-  itsPlotter = new PGPlotter(worker);
-  itsDeconv->setPGPlotter(*itsPlotter);
+    //PGPlotterInterface *worker(0);
+  //try {
+    //worker = new PGPlotterLocal("/NULL");
+  //} catch (AipsError x) {
+    //worker = new PGPlotterNull("/NULL");
+  //}
+  //itsPlotter = new PGPlotter(worker);
+  //itsDeconv->setPGPlotter(*itsPlotter);
 
 
 }
@@ -53,8 +53,6 @@ deconvolver::~deconvolver()
   itsDeconv=0;
   if(itsLog) delete itsLog;
   itsLog=0;
-  if(itsPlotter)delete itsPlotter;
-  itsPlotter=0;
 
 }
 
@@ -98,7 +96,7 @@ deconvolver::close()
     if(itsDeconv)
       delete itsDeconv;
     itsDeconv=new Deconvolver();
-    itsDeconv->setPGPlotter(*itsPlotter);
+    //itsDeconv->setPGPlotter(*itsPlotter);
     return true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

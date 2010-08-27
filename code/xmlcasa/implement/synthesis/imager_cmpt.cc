@@ -28,8 +28,8 @@
 #include <casa/Logging/LogIO.h>
 #include <imager_cmpt.h>
 #include <image_cmpt.h>
-#include <casa/System/PGPlotterNull.h>
-#include <graphics/Graphics/PGPlotterLocal.h>
+//#include <casa/System/PGPlotterNull.h>
+//#include <graphics/Graphics/PGPlotterLocal.h>
 
 using namespace std;
 using namespace casa;
@@ -44,14 +44,14 @@ imager::imager()
  itsImager = new ImagerMultiMS() ;
  itsLog = new LogIO();
  // OK this is probably not the way to set the plotter but it's OK for now I think.
- PGPlotterInterface *worker(0);
- try {
-    worker = new PGPlotterLocal("/NULL");
- } catch (AipsError x) {
-   worker = new PGPlotterNull("/NULL");
- }
- itsPlotter = new PGPlotter(worker);
- itsImager->setPGPlotter(*itsPlotter);
+ //PGPlotterInterface *worker(0);
+ //try {
+    //worker = new PGPlotterLocal("/NULL");
+ //} catch (AipsError x) {
+   //worker = new PGPlotterNull("/NULL");
+ //}
+ //itsPlotter = new PGPlotter(worker);
+ //itsImager->setPGPlotter(*itsPlotter);
 }
 
 imager::~imager()
@@ -62,9 +62,6 @@ imager::~imager()
  if(itsImager)
    delete itsImager;
  itsImager = 0;
- if(itsPlotter)
-   delete itsPlotter;
- itsPlotter = 0;
 }
 
 bool
@@ -280,7 +277,7 @@ imager::close()
    delete itsImager;
    hasValidMS_p=false;
    itsImager = new ImagerMultiMS();
-   itsImager->setPGPlotter(*itsPlotter);
+   //itsImager->setPGPlotter(*itsPlotter);
     
    rstat = True;
  } catch  (AipsError x) {
