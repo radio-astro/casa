@@ -39,9 +39,6 @@ endif
 # compiler flags
 CXXFLAGS += -fPIC
 
-# casacore library dependencies
-CORELIBS := -lcasa_casa -lcasa_measures -lcasa_scimath -lcasa_ms -lcasa_tables
-
 # cfitsio
 CFITSIOLIB := -lcfitsio
 
@@ -57,7 +54,7 @@ ifeq ($(shell uname), Darwin)
 endif 
 
 INCDIRS   := -I$(COREINCD) -I$(CFITSIOINCD) -I$(EXTDIR)
-LIBS      := -L$(CFITSIOLIBD) $(CFITSIOLIB) -L$(RPFITSLIBD) $(RPFITSLIB) -L$(CASALIB) $(CORELIBS) -lgfortran
+LIBS      := -L$(CFITSIOLIBD) $(CFITSIOLIB) -L$(RPFITSLIBD) $(RPFITSLIB) -L$(CASALIB) $(CORELIB) -lgfortran
 
 OBJECTS := $(ATNFDIR)/pks/pks_maths.o \
 	$(ATNFDIR)/PKSIO/ASTEDataset.o \
