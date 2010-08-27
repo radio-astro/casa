@@ -134,6 +134,8 @@ class runTest:
                     pyt = '/usr/lib64/casapy/bin/python'    # for devel
                 if not os.path.isfile(pyt):
                     pyt = '/usr/lib/casapy/bin/python'    # for devel
+                if not os.path.isfile(pyt):
+                    pyt = commands.getoutput('which python') # Mac devel
                 profileplot_pid=os.spawnlp(os.P_NOWAIT,
                                            pyt,
                                            pyt,
