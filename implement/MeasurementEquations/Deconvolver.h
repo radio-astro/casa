@@ -51,7 +51,6 @@ template<class T> class SubImage;
 class File;
 class CEMemModel;
 class ClarkCleanLatModel;
-class PGPlotter;
 class LatConvEquation;
 class ImageMSCleaner;
 
@@ -274,7 +273,6 @@ public:
   Bool makegaussian(const String& gaussianimage, Quantity& mbmaj, Quantity& mbmin,
 	      Quantity& mbpa, Bool normalizeVolume);
 
-  void setPGPlotter(PGPlotter& thePlotter);
   
 
 private:
@@ -327,7 +325,6 @@ private:
   Vector<Float> scaleSizes_p;
 
 
-  PGPlotter* pgplotter_p;
 
   // Set the defaults
   void defaults();
@@ -341,7 +338,6 @@ private:
 
   Bool valid() const;
 
-  PGPlotter& getPGPlotter(Bool newPlotter=True);
 };
 
 } //# NAMESPACE CASA - END

@@ -101,7 +101,6 @@
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementEquations/ImageMSCleaner.h>
 
-#include <casa/System/PGPlotter.h>
 
 
 #include <casa/sstream.h>
@@ -117,8 +116,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Deconvolver::Deconvolver() 
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0),
-    pgplotter_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
 {
 
   defaults();
@@ -142,8 +140,7 @@ void Deconvolver::defaults()
 }
 
 Deconvolver::Deconvolver(const String& dirty, const String& psf)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0),
-    pgplotter_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
 {
   LogIO os(LogOrigin("Deconvolver", "Deconvolver(String& dirty, Strong& psf)", WHERE));
   defaults();
@@ -151,8 +148,7 @@ Deconvolver::Deconvolver(const String& dirty, const String& psf)
 }
 
 Deconvolver::Deconvolver(const Deconvolver &other)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0),
-    pgplotter_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
 {
   defaults();
   open(other.dirty_p->table().tableName(), other.psf_p->table().tableName());
@@ -171,9 +167,6 @@ Deconvolver &Deconvolver::operator=(const Deconvolver &other)
   }
   if ((!cleaner_p.null()) && this != &other) {
     *cleaner_p = *(other.cleaner_p);
-  }
-  if (pgplotter_p && this != &other) {
-    *pgplotter_p = *(other.pgplotter_p);
   }
   return *this;
 }
@@ -197,11 +190,6 @@ Deconvolver::~Deconvolver()
     delete dirty_p;
   }
   dirty_p = 0;
-  // The PGPLotter has to be managed from the code that call setPGPlotter it
-  //  if (pgplotter_p) {
-  //   delete pgplotter_p;
-  //  }
-  // pgplotter_p = 0;
 }
 
 Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
@@ -399,7 +387,6 @@ Bool Deconvolver::close()
   os << "Closing images and detaching from Deconvolver" << LogIO::POST;
   if(psf_p) delete psf_p; psf_p = 0;
   if(dirty_p) delete dirty_p; dirty_p = 0;
-  if(pgplotter_p) delete pgplotter_p; pgplotter_p = 0;
   if (convolver_p) delete convolver_p; convolver_p = 0;
   if (residEqn_p) delete  residEqn_p;  residEqn_p = 0;
   if (latConvEqn_p) delete latConvEqn_p; latConvEqn_p = 0;
@@ -1039,8 +1026,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 	
 	//Now actually do the clean
 	if (displayProgress) {
-	  getPGPlotter(False);
-	  ccpp = new ClarkCleanProgress (pgplotter_p);
+	  ccpp = new ClarkCleanProgress ();
 	  myClarkCleaner.setProgress(*ccpp);
 	}
 	if(latConvEqn_p !=0) delete latConvEqn_p;
@@ -1095,8 +1081,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 
       //Now actually do the clean
       if (displayProgress) {
-	getPGPlotter(False);
-	ccpp = new ClarkCleanProgress (pgplotter_p);
+	ccpp = new ClarkCleanProgress ();
 	myClarkCleaner.setProgress(*ccpp);
       }
       latConvEqn_p = new LatConvEquation (psfSub, dirtySub);
@@ -1449,8 +1434,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
     
 	// Now actually do the MEM deconvolution
 	if (displayProgress) {
-	  getPGPlotter(False);
-	  memProgress_p = new  CEMemProgress (pgplotter_p);
+	  memProgress_p = new  CEMemProgress ();
 	  myMemer.setProgress(*memProgress_p);
 	}
 
@@ -1529,8 +1513,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	 myMemer.setMask(*maskQ);
       }
       if (displayProgress) {
-	getPGPlotter(False);
-	memProgress_p = new  CEMemProgress (pgplotter_p);
+	memProgress_p = new  CEMemProgress ();
 	myMemer.setProgress(*memProgress_p);
       }
 
@@ -2146,27 +2129,5 @@ void Deconvolver::checkMask(ImageInterface<Float>& maskImage, Int& xbeg, Int& xe
 
 
 }
-
-PGPlotter& Deconvolver::getPGPlotter(Bool newPlotter) {
-
-  // Destroy the old plotter?
-  // if(newPlotter) {
-  //   if(pgplotter_p) delete pgplotter_p;
-  //   pgplotter_p=0;
-  // }
-
-  // If a plotter does not exist create a new one
-  // if(!pgplotter_p) {
-  //   PlotDevice device=ApplicationEnvironment::defaultPlotter(id());
-  //  pgplotter_p = new PGPlotter(ApplicationEnvironment::getPlotter(device));
-  // }
-  // AlwaysAssert(pgplotter_p, AipsError);
-  return *pgplotter_p;
-};
-
-void Deconvolver::setPGPlotter(PGPlotter& thePlotter) {
-  pgplotter_p=&thePlotter;
-}
-
 
 } //# NAMESPACE CASA - END
