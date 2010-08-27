@@ -2,11 +2,11 @@ import sys
 import os
 import shutil
 import datetime
+from nose.tools import *
 from asap import scantable, selector, mask_not
 from asap.logging import asaplog
+# no need for log messages
 asaplog.disable()
-
-from nose.tools import *
 
 def tempdir_setup():
     os.makedirs("test_temp")
@@ -71,11 +71,11 @@ class TestScantable(object):
         sel = selector()
         sel.set_polarisations("YY")
         self.st.set_selection(sel)
-        assert_equal(self.st.getpolnos(), (1,))
+        assert_equal(self.st.getpolnos(), [1])
         sel1 = self.st.get_selection()
         assert_equal(sel1.get_pols(), [1])
         self.st.set_selection(pols="XX")
-        assert_equal(self.st.getpolnos(), (0,))
+        assert_equal(self.st.getpolnos(), [0])
 
 
     def stats(self, key, value, mask=False):
@@ -164,9 +164,9 @@ class TestScantable(object):
 
     def test_drop_scan(self):
         s0 = self.st.drop_scan(1)
-        assert_equal(s0.getscannos(), (0,))
+        assert_equal(s0.getscannos(), [0])
         s1 = self.st.drop_scan([0])
-        assert_equal(s1.getscannos(), (1,))
+        assert_equal(s1.getscannos(), [1])
 
     def test_flag(self):
         q = self.st.auto_quotient()

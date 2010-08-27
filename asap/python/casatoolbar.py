@@ -1,5 +1,6 @@
 import os
 import matplotlib
+
 ######################################
 ##    Add CASA custom toolbar       ##
 ######################################
@@ -143,12 +144,35 @@ class CustomToolbarCommon:
         # Selected mask
         mymask.select_mask(once=True,showmask=False)
 
+    def _mod_note(self,event):
+        # Do not fire event when in zooming/panning mode
+        if not self.figmgr.toolbar.mode == '':
+            return
+        if event.button ==1:
+            self.notewin.load_textwindow(event)
+        elif event.button == 3 and self._note_picked(event):
+            self.notewin.load_modmenu(event)
+        return
+
+    def _note_picked(self,event):
+        # just briefly check if any texts are picked
+        for textobj in self.canvas.figure.texts:
+            if textobj.contains(event)[0]:
+                return True
+        for ax in self.canvas.figure.axes:
+            for textobj in ax.texts:
+                if textobj.contains(event)[0]:
+                    return True
+        #print "No text picked"
+        return False
+
 #####################################
 ##    Backend dependent Classes    ##
 #####################################
 ### TkAgg
 if matplotlib.get_backend() == 'TkAgg':
     import Tkinter as Tk
+    from notationwindow import NotationWindowTkAgg
 
 class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
     def __init__(self,parent):
@@ -163,6 +187,7 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         self.mode=''
         self.button=True
         self._add_custom_toolbar()
+        self.notewin=NotationWindowTkAgg(master=self.canvas)
         CustomToolbarCommon.__init__(self,parent)
 
     def _add_custom_toolbar(self):
@@ -173,6 +198,9 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         self.bStat=self._NewButton(master=self,
                                    text='statistics',
                                    command=self.stat_cal)
+        self.bNote=self._NewButton(master=self,
+                                   text='notation',
+                                   command=self.modify_note)
         self.bQuit=self._NewButton(master=self,
                                    text='Quit',
                                    command=self.quit,
@@ -197,7 +225,9 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         if self.mode == 'spec': return
         self.bStat.config(relief='raised')
         self.bSpec.config(relief='sunken')
+        self.bNote.config(relief='raised')
         self.mode='spec'
+        self.notewin.close_widgets()
         self.__disconnect_event()
         #self.canvas.mpl_connect('button_press_event',self._select_spectrum)
         self._p.register('button_press',self._select_spectrum)
@@ -208,9 +238,22 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         if self.mode == 'stat': return
         self.bSpec.config(relief='raised')
         self.bStat.config(relief='sunken')
+        self.bNote.config(relief='raised')
         self.mode='stat'
+        self.notewin.close_widgets()
         self.__disconnect_event()
         self._p.register('button_press',self._single_mask)
+
+    def modify_note(self):
+        if not self.figmgr.toolbar.mode == '': return
+        self.figmgr.toolbar.set_message('text: select a position/text')
+        if self.mode == 'note': return
+        self.bSpec.config(relief='raised')
+        self.bStat.config(relief='raised')
+        self.bNote.config(relief='sunken')
+        self.mode='note'
+        self.__disconnect_event()
+        self._p.register('button_press',self._mod_note)
 
     def quit(self):
         self.__disconnect_event()

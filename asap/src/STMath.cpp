@@ -1798,6 +1798,32 @@ std::vector< float > STMath::statistic( const CountedPtr< Scantable > & in,
   return out;
 }
 
+std::vector< float > STMath::statisticRow( const CountedPtr< Scantable > & in,
+                                        const std::vector< bool > & mask,
+					const std::string& which,
+					int row )
+{
+
+  Vector<Bool> m(mask);
+  const Table& tab = in->table();
+  ROArrayColumn<Float> specCol(tab, "SPECTRA");
+  ROArrayColumn<uChar> flagCol(tab, "FLAGTRA");
+  std::vector<float> out;
+
+  Vector<Float> spec; specCol.get(row, spec);
+  Vector<uChar> flag; flagCol.get(row, flag);
+  MaskedArray<Float> ma  = maskedArray(spec, flag);
+  float outstat = 0.0;
+  if ( spec.nelements() == m.nelements() ) {
+    outstat = mathutil::statistics(which, ma(m));
+  } else {
+    outstat = mathutil::statistics(which, ma);
+  }
+  out.push_back(outstat);
+
+  return out;
+}
+
 std::vector< int > STMath::minMaxChan( const CountedPtr< Scantable > & in,
                                         const std::vector< bool > & mask,
                                         const std::string& which )

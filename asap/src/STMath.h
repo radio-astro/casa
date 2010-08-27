@@ -277,6 +277,11 @@ public:
                                const std::vector<bool>& mask,
                                const std::string& which);
 
+  std::vector<float> statisticRow(const casa::CountedPtr<Scantable>& in,
+                               const std::vector<bool>& mask,
+			       const std::string& which,
+			       int row);
+
   std::vector< int > minMaxChan(const casa::CountedPtr<Scantable>& in,
                                 const std::vector<bool>& mask,
                                 const std::string& which);

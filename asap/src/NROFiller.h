@@ -44,7 +44,7 @@ class NROFiller : public FillerBase
     explicit NROFiller(casa::CountedPtr<Scantable> stable);
     virtual ~NROFiller();
 
-    bool open(const std::string& filename) ;
+    bool open(const std::string& filename, const casa::Record& rec) ;
     void fill() ;
     void close() ;
 

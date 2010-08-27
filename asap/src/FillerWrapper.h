@@ -15,6 +15,7 @@
 #include <casa/aips.h>
 #include <casa/Exceptions.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <casa/Containers/Record.h>
 #include <casa/OS/File.h>
 
 #include <string>
@@ -37,21 +38,21 @@ public:
   virtual ~FillerWrapper() { close(); }
 
 
-//  void open(const std::string& filename, casa::Record rec) {
-  void open(const std::string& filename) {
+  void open(const std::string& filename, const casa::Record& rec) {
+    //  void open(const std::string& filename) {
     casa::File file(filename);
     if ( !file.exists() ) {
       throw(AipsError("File does not exist"));
     }
     filler_ = new PKSFiller(stable_);
-//    if (filler_->open(filename, rec)) {
-    if (filler_->open(filename)) {
+    if (filler_->open(filename, rec)) {
+      //    if (filler_->open(filename)) {
       attached_ = true;
       return;
     }
     filler_ = new NROFiller(stable_);
-//    if (filler_->open(filename, rec)) {
-    if (filler_->open(filename)) {
+    if (filler_->open(filename, rec)) {
+      //    if (filler_->open(filename)) {
       attached_ = true;
       return;
     }

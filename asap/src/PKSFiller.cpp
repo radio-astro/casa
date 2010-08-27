@@ -21,6 +21,7 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/Logging/LogIO.h>
 
+#include <casa/Containers/Record.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
 
@@ -57,7 +58,7 @@ PKSFiller::~PKSFiller()
   close();
 }
 
-bool PKSFiller::open( const std::string& filename)
+bool PKSFiller::open( const std::string& filename, const Record& rec)
 {
   Bool haveBase, haveSpectra;
 

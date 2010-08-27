@@ -46,6 +46,7 @@
 #include "STPol.h"
 #include "STFit.h"
 #include "STFitEntry.h"
+#include "STFitter.h"
 
 namespace asap {
 
@@ -485,6 +486,11 @@ public:
   void regridChannel( int nchan, double dnu ) ;
   void regridChannel( int nchan, double dnu, int irow ) ;
 
+  bool getFlagtraFast(int whichrow);
+
+  void polyBaselineBatch(const std::vector<bool>& mask, int order, int rowno);
+  void polyBaseline(const std::vector<bool>& mask, int order, int rowno, int pars_ptr, int pars_size, int errs_ptr, int errs_size, int fmask_ptr, int fmask_size);
+
 
 private:
 
@@ -505,7 +511,6 @@ private:
    * @return
    */
   std::string formatDirection(const casa::MDirection& md) const;
-
 
   /**
    * Create a unique file name for the paged (temporary) table
@@ -597,6 +602,8 @@ private:
   template<class T, class T2> void attachAuxColumnDef(casa::ArrayColumn<T>&,
 						      const casa::String&,
 						      const casa::Array<T2>&);
+
+  void doPolyBaseline(const std::vector<bool>& mask, int order, int rowno, Fitter& fitter);
 };
 
 

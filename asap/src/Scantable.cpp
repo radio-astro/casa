@@ -100,6 +100,7 @@ Scantable::Scantable(Table::TableType ttype) :
   table_.rwKeywordSet().defineTable("HISTORY", historyTable_.table());
   fitTable_ = STFit(*this);
   table_.rwKeywordSet().defineTable("FIT", fitTable_.table());
+  table_.tableInfo().setType( "Scantable" ) ;
   originalTable_ = table_;
   attach();
 }
@@ -119,6 +120,7 @@ Scantable::Scantable(const std::string& name, Table::TableType ttype) :
   } else {
     table_ = tab;
   }
+  table_.tableInfo().setType( "Scantable" ) ;
 
   attachSubtables();
   originalTable_ = table_;
@@ -164,6 +166,7 @@ Scantable::Scantable( const Scantable& other, bool clear )
       table_ = Table(newname, Table::Update);
       table_.markForDelete();
   }
+  table_.tableInfo().setType( "Scantable" ) ;
   /// @todo reindex SCANNO, recompute nbeam, nif, npol
   if ( clear ) copySubtables(other);
   attachSubtables();
@@ -1706,6 +1709,85 @@ std::vector<float> Scantable::getWeather(int whichrow) const
 
 
   return out;
+}
+
+bool Scantable::getFlagtraFast(int whichrow)
+{
+  uChar flag;
+  Vector<uChar> flags;
+  flagsCol_.get(uInt(whichrow), flags);
+  for (int i = 0; i < flags.size(); i++) {
+    if (i==0) {
+      flag = flags[i];
+    }
+    else {
+      flag &= flags[i];
+    }
+    return ((flag >> 7) == 1);
+   }
+}
+
+void Scantable::doPolyBaseline(const std::vector<bool>& mask, int order, int rowno, Fitter& fitter)
+{
+  fitter.setExpression("poly", order);
+
+  std::vector<double> abcsd = getAbcissa(rowno);
+  std::vector<float> abcs;
+  for (int i = 0; i < abcsd.size(); i++) {
+    abcs.push_back((float)abcsd[i]);
+  }
+  std::vector<float> spec = getSpectrum(rowno);
+  std::vector<bool> fmask = getMask(rowno);
+  if (fmask.size() != mask.size()) {
+    throw(AipsError("different mask sizes"));
+  }
+  for (int i = 0; i < fmask.size(); i++) {
+    fmask[i] = fmask[i] && mask[i];
+  }
+  fitter.setData(abcs, spec, fmask);
+
+  fitter.lfit();
+}
+
+void Scantable::polyBaselineBatch(const std::vector<bool>& mask, int order, int rowno)
+{
+  Fitter fitter = Fitter();
+  doPolyBaseline(mask, order, rowno, fitter);
+  setSpectrum(fitter.getResidual(), rowno);
+}
+
+void Scantable::polyBaseline(const std::vector<bool>& mask, int order, int rowno, int pars_ptr, int pars_size, int errs_ptr, int errs_size, int fmask_ptr, int fmask_size)
+{
+  Fitter fitter = Fitter();
+  doPolyBaseline(mask, order, rowno, fitter);
+  setSpectrum(fitter.getResidual(), rowno);
+
+  std::vector<float> pars = fitter.getParameters();
+  if (pars_size != pars.size()) {
+    throw(AipsError("wrong pars size"));
+  }
+  float *ppars = reinterpret_cast<float*>(pars_ptr);
+  for (int i = 0; i < pars_size; i++) {
+    ppars[i] = pars[i];
+  }
+
+  std::vector<float> errs = fitter.getErrors();
+  if (errs_size != errs.size()) {
+    throw(AipsError("wrong errors size"));
+  }
+  float *perrs = reinterpret_cast<float*>(errs_ptr);
+  for (int i = 0; i < errs_size; i++) {
+    perrs[i] = errs[i];
+  }
+
+  std::vector<bool> fmask = getMask(rowno);
+  if (fmask_size != fmask.size()) {
+    throw(AipsError("wrong fmask size"));
+  }
+  int *pfmask = reinterpret_cast<int*>(fmask_ptr);
+  for (int i = 0; i < fmask_size; i++) {
+    pfmask[i] = ((fmask[i] && mask[i]) ? 1 : 0);
+  }
 }
 
 }
