@@ -106,12 +106,12 @@ Bool MFCleanImageSkyModel::addResidual(Int image,
 Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
 
-  //blankOverlappingModels();
   LogIO os(LogOrigin("MFCleanImageSkyModel","solve"));
   Bool converged=True;
   //Make the PSFs, one per field
   /*back out for now
   if(modified_p){ 
+      blankOverlappingModels();
       makeNewtonRaphsonStep(se, False);
   }
   if(numberIterations() < 1){
@@ -230,6 +230,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
 
+  //merge the overlapping part of the masks if any
+  mergeOverlappingMasks();
+  
 
   PtrBlock<Matrix<Float> *>  lmaskCube(nmodels*nchan);
 
@@ -823,9 +826,8 @@ void MFCleanImageSkyModel::restoreOverlappingModels(){
         SubImage<Float> partToUnmask(image(model), imagreg, True);
         
         LatticeRegion latReg0=imagreg0.toLatticeRegion(image(nextmodel).coordinates(), image(nextmodel).shape());
-        LatticeRegion latReg=imagreg.toLatticeRegion(deltaImage(model).coordinates(), deltaImage(model).shape());
+        LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
         ArrayLattice<Bool> pixmask(latReg.get());
-
         LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
         partToUnmask.copyData(myexpr0);
 
@@ -840,6 +842,55 @@ void MFCleanImageSkyModel::restoreOverlappingModels(){
         continue;
       }
     }
+  }
+}
+
+void MFCleanImageSkyModel::mergeOverlappingMasks(){
+  LogIO os(LogOrigin("MFCleanImageSkyModel","restoreOverlappingModels"));
+  if(numberOfModels() == 1)
+    return;
+  for (Int model=0;model<(numberOfModels()-1); ++model) {
+    if(hasMask(model)){
+	CoordinateSystem cs0=mask(model).coordinates();
+	IPosition iblc0(mask(model).shape().nelements(),0);
+	
+	IPosition itrc0(mask(model).shape());
+	itrc0=itrc0-Int(1);
+	LCBox lbox0(iblc0, itrc0, mask(model).shape());
+	
+	ImageRegion imagreg0(WCBox(lbox0, cs0));
+	for (Int nextmodel=model+1; nextmodel < numberOfModels(); ++nextmodel){
+	  if(hasMask(nextmodel)){
+	    CoordinateSystem cs=mask(nextmodel).coordinates();
+	    IPosition iblc(mask(nextmodel).shape().nelements(),0);
+	    
+	    IPosition itrc(mask(nextmodel).shape());
+	    itrc=itrc-Int(1);
+	    
+	    LCBox lbox(iblc, itrc, image(nextmodel).shape());
+	    
+	    ImageRegion imagreg(WCBox(lbox, cs));
+	    try{
+	      SubImage<Float> partToMerge(mask(nextmodel), imagreg0, True);
+	      SubImage<Float> partToMask(mask(model), imagreg, True);
+	      LatticeExpr<Float> myexpr0(max(partToMerge,partToMask));	      
+	      partToMask.copyData(myexpr0);
+	      partToMerge.copyData(myexpr0);
+
+	    }
+	    catch(AipsError x){
+	      //most probably no overlap
+	      /*
+		os << LogIO::WARN
+		<< "no overlap or failure of copying the clean components"
+		<< x.getMesg()
+		<< LogIO::POST;
+	      */
+	      continue;
+	    }
+	  }
+	}
+    }//hasmask(model)
   }
 }
 
