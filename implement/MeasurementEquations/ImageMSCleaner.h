@@ -136,7 +136,8 @@ class ImageMSCleaner
   // -2 = not converged and either large scale hit negative or diverging 
   // -3 = clean is diverging rather than converging 
   Int clean(ImageInterface<Float> & model, const String& algorithm, 
-	    const Int niter, const Float gain, const Quantity& threshold,
+	    const Int niter, const Float gain, const Quantity& threshold, 
+	    const Quantity& fthresh=Quantity(0.0, "%"),
 	    Bool doPlotProgress=False);
   // Set the mask
   // mask - input mask lattice
@@ -187,7 +188,7 @@ class ImageMSCleaner
  private:
   //Helper function to setup some param
   Bool setupMatCleaner(const String& alg, const Int niter, const Float gain, 
-		       const Quantity& threshold);
+		       const Quantity& threshold, const Quantity& fthresh=Quantity(0.0, "%"));
   MatrixCleaner matClean_p;
   ImageInterface<Float>* psf_p;
   ImageInterface<Float>* dirty_p;

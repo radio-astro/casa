@@ -210,7 +210,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   Bool ImageMSCleaner::setupMatCleaner(const String& alg, const Int niter,
-			const Float gain, const Quantity& threshold){
+				       const Float gain, const Quantity& threshold, const Quantity& fthresh){
 
     LogIO os(LogOrigin("ImageMSCleaner", "setupclean()", WHERE));
     
@@ -224,12 +224,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	return False;
       }
       //matClean_p.setscales(scaleSizes_p);
-      matClean_p.setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold);
+      matClean_p.setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold, fthresh);
     }
     else if (algorithm=="hogbom") {
       scales_p=Vector<Float>(1,0.0);
       matClean_p.defineScales(scales_p);
-      matClean_p.setcontrol(CleanEnums::HOGBOM, niter, gain, threshold);
+      matClean_p.setcontrol(CleanEnums::HOGBOM, niter, gain, threshold, fthresh);
     } else {
       os << LogIO::SEVERE << "Unknown algorithm: " << algorithm << LogIO::POST;
       return False; 
@@ -243,7 +243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Int ImageMSCleaner::clean(ImageInterface<Float> & modelimage, const String& algorithm, 
 			    const Int niter,
-			    const Float gain, const Quantity& threshold, Bool doPlotProgress){
+			    const Float gain, const Quantity& threshold, const Quantity& fthresh, Bool doPlotProgress){
 
 
     
@@ -252,7 +252,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int result=0;
     ///case of single plane mask
     //now may be a time to set stuff  scales will be done later
-    if(!setupMatCleaner(algorithm, niter, gain, threshold))
+    if(!setupMatCleaner(algorithm, niter, gain, threshold, fthresh))
       return False;
     matClean_p.defineScales(scales_p);
     //cerr << "nPol " << nMaskPol_p << " " << nPsfPol_p << " " << nImPol_p << endl;

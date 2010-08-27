@@ -363,7 +363,6 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		    os << LogIO::NORMAL2    // Loglevel PROGRESS
                        << "Creating multiscale cleaner with psf and residual images"
                        << LogIO::POST;
-		    cout << "Creating MSCleaner " << endl;
 		    cleaner[model]=new ImageMSCleaner(subPSF, subResid);
 		    //setScales(*(cleaner[model]));
 		    cleaner[model]->setscales(userScaleSizes_p);
@@ -389,7 +388,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  }
 		  cleaner[model]->stopPointMode(stopPointMode_p);
 		  cleaner[model]->ignoreCenterBox(True);
-		  converging=cleaner[model]->clean(subDeltaImage, "fullmsclean", numberIterations(), gain(), aThreshold, displayProgress_p );
+		  converging=cleaner[model]->clean(subDeltaImage, "fullmsclean", numberIterations(), gain(), aThreshold, fThreshold, displayProgress_p );
 		  //diverging
 		  if(converging==-3)
 		    stop=True;
