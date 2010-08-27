@@ -452,8 +452,10 @@ class test_multimodes(test_base):
     def setUp(self):
         self.setUp_ngc5921()
 
-    def test_clip_auto(self):
-        '''Clip and autoflag modes'''
+    def test_manual_shadow(self):
+        '''Manualflag and shadow modes'''
+        # It will run flagdata then compare with flagdata2
+        
         # run clip mode only and verify
         flagdata2(vis=self.vis, selectdata=True, antenna="2,3,5,6", scan="4", manualflag=True)
         s = flagdata2(vis=self.vis, summary=True)
