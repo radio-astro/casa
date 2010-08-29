@@ -181,8 +181,6 @@ public:
   inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
-  inline Double getImWt(Int chnk,Int irel) { return *(imwt_[chnk]->data()+irel); };
-
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
@@ -226,7 +224,6 @@ public:
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
   inline Double getWt() { return *(wt_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))*nperchan_(currChunk_) + irel_%nperchan_(currChunk_)); };
-  inline Double getImWt() { return *(imwt_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanbslnmax_(currChunk_)); };
 
   // These are array-global (one value per chunk):
   inline Double getAz0() { return az0_(currChunk_); };
@@ -411,7 +408,6 @@ protected:
   PtrBlock<Vector<Bool>*> flagrow_;
   
   PtrBlock<Array<Float>*> wt_;
-  PtrBlock<Array<Float>*> imwt_;
 
   PtrBlock<Array<Bool>*> plmask_;
 
