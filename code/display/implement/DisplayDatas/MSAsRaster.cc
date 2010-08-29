@@ -35,6 +35,7 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/MsAverager.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -81,13 +82,17 @@ MSAsRaster::MSAsRaster(const String msname):
 	    // itsSelections(0),
 	    itsVisType(0), itsVisComp(0),
 	    itsNAvg(0),
-
+            itsAveTime(0),
+            itsAveChan(0),
 	    axisOn_(NLOCS,0),	  // (For true initial setting see initMSAR_).
 	    pos_(NAXES,0),
 	    visType_(OBSERVED),
 	    visComp_(AMPLITUDE),  // (reset to REAL for single-dish)
 	    visDev_(NORMAL),
 	    nAvg_(3),
+            aveTime_(0),
+            aveChan_(1),
+            msa(0),
 	    fieldIds_(),
 	    spwIds_(),
 
@@ -312,7 +317,7 @@ void MSAsRaster::selectVS_() {
 
   // Input: valid non-null itsMS (writable)
   //        MS selections (at present, fieldIds_ and spwIds_)
-
+  //cout << "selectVS_" << endl;
   Bool printwarning=True;
   undoEdits_("all", printwarning);
 	// Any unsaved flagging edits will be meaningless
@@ -330,32 +335,99 @@ void MSAsRaster::selectVS_() {
     delete mssel_;  }			// ...its selected MS.
   mssel_=0;
 
-  cerr<<endl<<"Sorting... "<<flush;	// progress feedback.  (Actually,
+   cerr<<endl<<"Sorting... "<<flush;	// progress feedback.  (Actually,
   		// we don't know whether it will have to sort or not...).
 
-   
-  // If the entire MS has been selected,
-  // use the original MS [and VisSet] as the selected ones.
+    // If the entire MS has been selected,
+    // use the original MS [and VisSet] as the selected ones.
   
-  if(Int(fieldIds_.nelements())==nFieldIds_ &&
-       Int(spwIds_.nelements())==nSpwIds_) {
-    mssel_ = itsMS;
-    if(vs_!=0) vssel_=vs_;  }	// unselected vs_ already created--use that.
-  
-  else {
-  
-    // Otherwise, create the selected MS using the vectors of selected
-    // field and spectral window IDs.  (Uses the relatively-newer
-    // MSSelection class).
 
-    MSSelection msseln;
+    if (Int(fieldIds_.nelements())==nFieldIds_ &&
+        Int(spwIds_.nelements())==nSpwIds_ ) {
+       mssel_ = itsMS;
+       if (vs_!=0) 
+          vssel_=vs_;  // unselected vs_ already created--use that.
+       cerr << "\n total rows=" <<  mssel_->nrow() << endl;;  
+    }
+    else { 
+       // create the selected MS using the vectors of selected
+       // field and spectral window IDs.  (Uses the relatively-newer
+       // MSSelection class).
 
-    msseln.setFieldExpr(MSSelection::indexExprStr(fieldIds_));
-    msseln.setSpwExpr(MSSelection::indexExprStr(spwIds_));
+       MSSelection msseln;
+       msseln.setFieldExpr(MSSelection::indexExprStr(fieldIds_));
+       msseln.setSpwExpr(MSSelection::indexExprStr(spwIds_));
+       mssel_ = new MS( (*itsMS)(msseln.toTableExprNode(itsMS)) );  
+       if (vssel_)
+          delete vssel_;
+       vssel_ = 0;
+       cerr << "\n selected rows=" <<  mssel_->nrow() << endl;;  
+    }
 
-    
-    mssel_ = new MS( (*itsMS)(msseln.toTableExprNode(itsMS)) );  }
+    if (aveTime_ > 0 || aveChan_> 1) {
+       //cerr << "aveTime=" << aveTime_ 
+       //     << " aveChan=" << aveChan_ << endl;
 
+       MSSelection msseln;
+       msseln.setFieldExpr(MSSelection::indexExprStr(fieldIds_));
+       msseln.setSpwExpr(MSSelection::indexExprStr(spwIds_));
+       mssel_ = new MS( (*itsMS)(msseln.toTableExprNode(itsMS)) );  
+       cerr << "\n selected rows=" <<  mssel_->nrow() << endl;;  
+
+       //chanlist is matrix of int its rows [spwid, start, end, step]
+       Matrix<Int> chanList = msseln.getChanList();
+       Matrix<int> blList = msseln.getBaselineList();
+       ROMSMainColumns msColumn(*itsMS);
+       Vector<Int> ant1 = msColumn.antenna1().getColumn();
+       Vector<Int> ant2 = msColumn.antenna2().getColumn();
+       uInt nrrec = ant1.nelements();
+       Matrix<Int> bls(nrrec, 2);
+       uInt nBase = 0;
+       for (uInt i = 0; i < nrrec; i++) {
+          Bool in = False;
+          for (uInt j = 0; j < nBase; j++) {
+             if (bls(j, 0) == ant1(i) && bls(j, 1) == ant2(i)) {
+                in = True;
+                break;
+             }
+          }
+          if (!in) {     
+             bls(nBase, 0) = ant1(i);
+             bls(nBase, 1) = ant2(i);
+             nBase++;
+          }
+       }
+       bls.resize(nBase, 2, True);
+       //cout << "bls=" << bls << endl;
+       blList.resize(bls.shape()[0], bls.shape()[1]);
+       blList = bls;
+       //cout << "chanList=" << chanList << endl; 
+       //cout << "blList=" << blList << endl; 
+       
+       MS ms(*mssel_);
+       if (!msa)
+            msa = new MsAverager(&ms);
+       else
+            msa->reset(&ms);
+       String vT = "data";
+       if (visType_!=OBSERVED)
+          vT = visTypeName_(visType_);
+       msa->setAverager(chanList, blList, aveTime_, 
+                        aveChan_, vT, "VECTOR");
+
+       //if (mssel_) {
+       //   delete mssel_;
+       //   mssel_ = 0;
+       //}
+       //mssel_= new MS();
+       if (msa->ok()) {
+           msa->getMS(*mssel_);
+       }
+       if (vssel_) 
+          delete vssel_;
+       vssel_ = 0;
+       cerr << " averaged rows=" <<  mssel_->nrow() << endl;  
+   }
     
   msselValid_ = (mssel_!=0 && mssel_->nrow()!=0u);  
   
@@ -367,7 +439,6 @@ void MSAsRaster::selectVS_() {
 	// Nothing will draw until selection is revised.
     return;  }
 
-    
   if(vssel_==0) {	// (True unless we're using the existing
 			// unselected vs_ as vssel_).
   
@@ -381,7 +452,7 @@ void MSAsRaster::selectVS_() {
     sort[3] = MS::TIME;		// (4/03).
 
     Matrix<Int> allChannels;	// No channel selection (yet).
-
+    //cout << "allChannels=" << allChannels << endl;
     vssel_ = new VisSet(*mssel_, sort, allChannels);  // create VisSet.
 	// (beware: VisSet constructor erases model and corrected data
 	// columns if chan selection changes(!))
@@ -669,7 +740,6 @@ void MSAsRaster::findRanges_() {
   
   
   // Reset msShape_ according to new ranges.
-    
   msShape_[TIME]   = nTime;
   msShape_[BASELN] = (nAnt_==1)?
 		     nFeed :	// single antenna case
@@ -786,7 +856,17 @@ void MSAsRaster::constructParameters_() {
               "The number of time slots in moving\n"
 	      "averages, for visibility difference\n"
 	      "or RMS displays",
-              2, 15, 1, nAvg_, nAvg_, "MS_and_Visibility_Selection");
+              2, 1500, 1, nAvg_, nAvg_, "MS_and_Visibility_Selection");
+
+  itsAveTime  =  new DParameterString("aveTime", "Averaging Time",
+              "The averaging time in seconds",
+              String::toString(aveTime_), 
+              String::toString(aveTime_), "MS_and_Visibility_Selection");
+
+  itsAveChan  =  new DParameterString("aveChan", "Averaging Channel",
+              "The number of channels to average",
+              String::toString(aveChan_), 
+              String::toString(aveChan_), "MS_and_Visibility_Selection");
 
   itsXAxis =  new DParameterChoice("xaxis", "X Axis",
               "Axis to show horizontally in the display",
@@ -939,7 +1019,8 @@ void MSAsRaster::setCS_() {
   linblc=-.5;
   lintrc(X) = msShape_[axX]-1 + .5;
   lintrc(Y) = msShape_[axY]-1 + .5;
-
+  //cout << "msShape_[axX]=" << msShape_[axX]
+  //     << " msShape_[axY]=" << msShape_[axY] << endl;
   // For now, there is little axis labelling in world terms.
   // Except for baselines, only the pixel indices of the the data
   // are shown on the axis scales.
@@ -1088,7 +1169,9 @@ Record MSAsRaster::getOptions() {
 
   itsVisType->toRecord(rec);
   itsVisComp->toRecord(rec);
-  itsNAvg->toRecord(rec);
+  //itsNAvg->toRecord(rec);
+  itsAveTime->toRecord(rec);
+  //itsAveChan->toRecord(rec);
 
   // (no DParameters for numeric array user entry boxes yet--do it
   // the old-fashioned longhand way for now).
@@ -1372,6 +1455,8 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
   Bool notfound;
   Bool fieldIdsChg = False,  spwIdsChg = False;
   			// indicates user _desired_ a selection change.
+  Bool aveTimeChg = False;
+  Bool aveChanChg = False;
 
   
   // This is just minor massaging of the field IDs user input vector
@@ -1522,6 +1607,30 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
     spwids.define("ptype", "array");
     recOut.defineRecord("spwids", spwids);  }
 
+  if(itsAveTime->fromRecord(rec)) {
+    Float aTime = fmax(0, String::toFloat(itsAveTime->value()));
+    if (aveTime_ != aTime) {
+       aveTime_ = aTime;
+       //cerr << "average time: " << aveTime_ << " seconds" << endl;
+       aveTimeChg=True;
+    }
+    Record at;
+    at.define("value", String::toString(aveTime_));
+    at.define("ptype", "string");
+    recOut.defineRecord("aveTime", at);  
+  }
+  if(itsAveChan->fromRecord(rec)) {
+    Int aChan = max(1, String::toInt(itsAveChan->value()));
+    if (aveChan_ != aChan) {
+       aveChan_ = aChan;
+       //cerr << "average channel: " << aveChan_ << endl;
+       aveChanChg=True;
+    }
+    Record at;
+    at.define("value", String::toString(aveChan_));
+    at.define("ptype", "string");
+    recOut.defineRecord("aveChan", at);  
+  }
     
   if((fieldIdsChg || spwIdsChg) && !newRanges) {
     cerr<<endl<<"  ***You must save (or undo) edits before changing "
@@ -1604,11 +1713,12 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
   // This work (which can take a little time on a large MS) is done here,
   // so that any new axis ranges may be returned to the user interface.
   
-  if(newRanges) {
-  
+  if(newRanges || aveTimeChg || aveChanChg) {
   
     selectVS_();
     findRanges_();
+    if (aveTime_ > 0)
+       setCS_();
 
 
     // This posts total MS visibility size to this slider's description.
@@ -1751,10 +1861,11 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
   // are recomputed whenever nAvg_ changes (or extract_ is called).
 
   if(itsNAvg->fromRecord(rec)) {
-    nAvg_ = max(2, itsNAvg->value());	// (min. of 2 just for safety)
+    nAvg_ = min(2, itsNAvg->value()); 
     if(visValid_) {
       computeTimeBoxcars_();
-      if(isDev) needsRefresh = True;  }  }
+      if(isDev) 
+      needsRefresh = True;  }  }
 
   
       
@@ -1887,7 +1998,7 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
   //			kept in sync to above--the user is allowed to expand
   //			slider ranges  beyond the range of the data, but
   //			they are reset to the computed ranges whenever
-  //			there is a change in visType/Comp or MS selection.
+  //			there is a change in vis Type/Comp or MS selection.
 
   if(visValid_ && isDev && devRngMin_==NO_DATA) computeDevRange_();
 	// deviation-mode data ranges still needed calculation in this case.
@@ -5021,6 +5132,7 @@ void MSAsRaster::deleteParameters_() {
   delete itsXAxis; delete itsYAxis; delete itsZAxis;
   delete itsSL0Pos; delete itsSL1Pos;
   delete itsVisComp; delete itsNAvg;
+  delete itsAveTime; delete itsAveChan;
   delete itsDataMin; delete itsDataMax;
   delete itsAxisLabelling; delete itsBslnSort; delete itsFlagColor;
   delete itsUnflag; delete itsEntireAnt; delete itsUndoOne;
