@@ -167,7 +167,6 @@
 #include <casadbus/session/DBusSession.h>
 
 #include <casa/OS/HostInfo.h>
-#include <casa/System/PGPlotter.h>
 
 #include <components/ComponentModels/ComponentList.h>
 
@@ -191,7 +190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 Imager::Imager() 
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
-     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
      viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   ms_p=0;
@@ -302,7 +301,7 @@ traceEvent(1,"Entering imager::defaults",25);
 Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
 
@@ -320,9 +319,9 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 
 
 
-Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
+Imager::Imager(MeasurementSet& theMS, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
@@ -335,14 +334,13 @@ Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
 
   defaults();
 
-  pgplotter_p=&thePlotter;
   latestObsInfo_p=ObsInfo();
 }
 
 Imager::Imager(const Imager & other)
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
      ft_p(0), cft_p(0), se_p(0),
-     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
      viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
@@ -403,9 +401,6 @@ Imager &Imager::operator=(const Imager & other)
   }
   if (gvp_p && this != &other) {
     *gvp_p = *(other.gvp_p);
-  }
-  if (pgplotter_p && this != &other) {
-    *pgplotter_p = *(other.pgplotter_p);
   }
   imageTileVol_p=other.imageTileVol_p;
   return *this;
@@ -475,9 +470,6 @@ Imager::~Imager()
 
   }
 
-
-  //Note we don't deal with pgplotter here.
-  
 
 }
 
@@ -602,7 +594,6 @@ Bool Imager::close()
   if(vp_p) delete vp_p; vp_p = 0;
   if(gvp_p) delete gvp_p; gvp_p = 0;
 
-  // if(pgplotter_p) delete pgplotter_p; pgplotter_p = 0;
   destroySkyEquation();
 
   return True;
@@ -4844,9 +4835,11 @@ Bool Imager::clean(const String& algorithm,
 	  return False;
 	}
 	if (scaleMethod_p=="uservector") {	
-	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p,smallScaleBias_p);
+	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p, stoplargenegatives_p, 
+					    stoppointmode_p, smallScaleBias_p);
 	} else {
-	  sm_p = new MSCleanImageSkyModel(nscales_p, smallScaleBias_p);
+	  sm_p = new MSCleanImageSkyModel(nscales_p, stoplargenegatives_p, 
+					    stoppointmode_p, smallScaleBias_p);
 	}
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
@@ -5071,13 +5064,13 @@ Bool Imager::clean(const String& algorithm,
 	  LoggerHolder& log = restoredImage.logger();
 	  log.append(imagelog);
 	  log.flush();
-	  restoredImage.table().relinquishAutoLocks();
+	  restoredImage.table().relinquishAutoLocks(True);
 	}
       }
-      
     }
     catch(exception& x){
       
+      this->unlock();
       os << LogIO::WARN << "Caught exception: " << x.what()
 	 << LogIO::POST;
       os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
@@ -5086,6 +5079,7 @@ Bool Imager::clean(const String& algorithm,
       
     }
     catch(...){
+      this->unlock();
       os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
       os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
 	 <<LogIO::POST;
@@ -5099,7 +5093,7 @@ Bool Imager::clean(const String& algorithm,
 #endif
 
     return converged;
-  } 
+  }
   catch (PSFZero&  x)
     {
       //os << LogIO::WARN << x.what() << LogIO::POST;
@@ -5120,6 +5114,7 @@ Bool Imager::clean(const String& algorithm,
   } 
 
   catch(...){
+    this->unlock();
     //Unknown exception...
     throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
   }
@@ -5303,7 +5298,6 @@ Bool Imager::mem(const String& algorithm,
     sm_p->setAlgorithm("mem");
     if (displayProgress) {
       sm_p->setDisplayProgress(True);
-      sm_p->setPGPlotter( getPGPlotter() );
     }
     sm_p->setNumberIterations(niter);
     sm_p->setCycleFactor(cyclefactor_p);   // used by mf algs
@@ -8244,17 +8238,7 @@ Bool Imager::valid() const {
   return True;
 }
 
-PGPlotter& Imager::getPGPlotter() {
 
- 
-  return *pgplotter_p;
-}
-
-
-void Imager::setPGPlotter(PGPlotter& thePlotter) {
-
-  pgplotter_p=&thePlotter;
-}
 Bool Imager::addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool>& fixed){
   LogIO os(LogOrigin("imager", "addMasksToSkyEquation()", WHERE));
 
@@ -9453,7 +9437,6 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 	Vector<String> apsf(psfnames);
 	if( (apsf.nelements()==1) && apsf[0]==String(""))
 	  apsf.resize();
-	cerr << "threshold " << threshold << " amode " << amodel << " fixed " << fixed  << " clist " << complist << " amask " << amask << " ima " << aimage << " res " << aresidual << " psf " << apsf << endl;
 	if(!interactive){
 	  rstat = clean(String(algorithm), niter, gain,  
 			threshold, displayprogress, 

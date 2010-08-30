@@ -5,6 +5,8 @@ import sys
 import string
 import commands
 
+from get_user import get_user
+
 try:
     import casac
 except ImportError, e:
@@ -1007,9 +1009,6 @@ def setcwd(dir='.'):
 def get_host():
     import commands
     return commands.getoutput("uname -n")
-
-def get_user():
-    return os.environ['USER']
 
 import shutil
 

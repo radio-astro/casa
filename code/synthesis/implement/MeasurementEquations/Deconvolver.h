@@ -47,12 +47,12 @@ template<class T> class LatticeConvolver;
 template<class T> class ResidualEquation;
 template<class T> class SubImage;
 
+
 class File;
 class CEMemModel;
 class ClarkCleanLatModel;
-class PGPlotter;
 class LatConvEquation;
-
+class ImageMSCleaner;
 
 // <summary> A simple deconvolver operating on images (no SkyEquation) </summary>
 
@@ -273,7 +273,6 @@ public:
   Bool makegaussian(const String& gaussianimage, Quantity& mbmaj, Quantity& mbmin,
 	      Quantity& mbpa, Bool normalizeVolume);
 
-  void setPGPlotter(PGPlotter& thePlotter);
   
 
 private:
@@ -308,7 +307,7 @@ private:
   LatticeConvolver<Float>* convolver_p;
   ResidualEquation<Lattice<Float> >* residEqn_p;
   LatConvEquation* latConvEqn_p;
-  CountedPtr <LatticeCleaner<Float> > cleaner_p;
+  CountedPtr <ImageMSCleaner> cleaner_p;
 
   Bool scalesValid_p;
 
@@ -326,7 +325,6 @@ private:
   Vector<Float> scaleSizes_p;
 
 
-  PGPlotter* pgplotter_p;
 
   // Set the defaults
   void defaults();
@@ -340,7 +338,6 @@ private:
 
   Bool valid() const;
 
-  PGPlotter& getPGPlotter(Bool newPlotter=True);
 };
 
 } //# NAMESPACE CASA - END

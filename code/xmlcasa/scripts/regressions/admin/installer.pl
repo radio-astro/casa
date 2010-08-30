@@ -206,13 +206,16 @@ if (`uname` eq "Linux\n") {
     } else {
 	die "could not update regression scripts";
     }
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.py \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/*.py \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.sh \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.txt \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl \$HOME/admin/");
 }
 else {
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/* \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/*.py \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.sh \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.txt \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.pl \$HOME/admin/");
 }
 
 exit 0;

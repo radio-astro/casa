@@ -21,7 +21,7 @@
 
 set( _base TaskRef )
 set( prefix  ${CASA_DOC_DIR} )
-set( _latex ${prefix}/htmlfiles/${_base}.tex )
+set( _latex ${prefix}/TaskRef/${_base}.tex )
 set( _latex ${_base}.latex )
 
 set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/taskref/:${CMAKE_SOURCE_DIR}/doc/taskref/TaskRef.dir/:/usr/share/texmf/tex/{latex,generic,}//:/usr/share/texmf/web2c//:/usr/share/texmf/tex4ht//:/usr/share/texmf/tex/:$ENV{TEXINPUTS} )
@@ -30,17 +30,17 @@ set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMA
     # Create HTML
     if( LATEX2HTML_CONVERTER )
 
-      set( _html ${prefix}/htmlfiles/${_base}.html )
+      set( _html ${prefix}/TaskRef/${_base}.html )
 
 #set ( LATEX2HTML_CONVERTER echo )
 #set( LATEX2HTML_OPTIONS htcasa,section+,next,p-width,5 )
 
       add_custom_command(
         OUTPUT ${_html}
-        COMMAND mkdir -p ${prefix}/htmlfiles
-        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
-        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
-        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND mkdir -p ${prefix}/TaskRef
+        COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         DEPENDS ${_latex}
         VERBATIM )
 
@@ -54,13 +54,13 @@ set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMA
       
     # Create PDF
     if( PDFLATEX_COMPILER )
-      set( _pdf  ${prefix}/pdf_files/${_base}.pdf )
+      set( _pdf  ${prefix}/TaskRef/${_base}.pdf )
       add_custom_command(
         OUTPUT ${_pdf}
-        COMMAND mkdir -p ${prefix}/pdf_files
-        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
-        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
-        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND mkdir -p ${prefix}/TaskRef
+        COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
         DEPENDS ${_latex}
         VERBATIM )
 

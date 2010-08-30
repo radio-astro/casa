@@ -124,7 +124,9 @@ def imstats(image):
     wid = (ia.summary()['header']['incr'][3]) /1e3
     del2 = (1e3*chn - ia.toworld([n/2,n/2,0,nch-2],'n')['numeric'][3]) /1e3
     try:
-        fit = ia.fitprofile(ngauss=1,poly=1,fit=False)['return']['elements']['*1']['parameters'][1]/1e3
+        center = ia.fitprofile(ngauss=1,poly=1)['center0'][0]
+        csys = ia.coordsys()
+        fit = csys.velocitytofrequency(center)/1e3
     except:
         fit=0.
     return (ch0,del1,wid,del2,nch,chn,fit)

@@ -293,7 +293,7 @@ def cvel(vis, outputvis,
                 raise TypeError, "start and width have to be integers with mode = %s" %mode            
 
         
-        # determine parameter data columns
+        # determine parameter "datacolumn"
         tb.open(vis)
         allcols = tb.colnames()
         tb.close()
@@ -457,6 +457,10 @@ def cvel(vis, outputvis,
 
     except Exception, instance:
         casalog.post("Error ...", 'SEVERE')
+        # delete temp output (comment out for debugging)
+        if os.path.exists(outputvis+".spwCombined"):
+            casalog.post("Deleting temporary output files ...", 'INFO')
+            shutil.rmtree(outputvis+".spwCombined")
 	raise Exception, instance
     
 

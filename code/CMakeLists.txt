@@ -249,7 +249,7 @@ dump( CMAKE_INSTALL_PREFIX )
 
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
-set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,3" 
+set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5" 
       CACHE STRING "LATEX2HTML_CONVERTER options" )
 
 # Use pdflatex

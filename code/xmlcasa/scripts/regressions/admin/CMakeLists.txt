@@ -41,4 +41,5 @@ install( PROGRAMS
          scheduler.pl
          runcasa_from_shell.sh
          tests_list.txt
+         runUnitTest.py
          DESTINATION python/${PYTHONV}/regressions/admin )

@@ -134,12 +134,16 @@ class runTest:
                     pyt = '/usr/lib64/casapy/bin/python'    # for devel
                 if not os.path.isfile(pyt):
                     pyt = '/usr/lib/casapy/bin/python'    # for devel
-                profileplot_pid=os.spawnlp( \
-                    os.P_NOWAIT,
-                    pyt,
-                    pyt,
-                    pp,
-                    testName, RESULT_DIR, profilepage, process_data)
+                if not os.path.isfile(pyt):
+                    pyt = commands.getoutput('which python') # Mac devel
+                profileplot_pid=os.spawnlp(os.P_NOWAIT,
+                                           pyt,
+                                           pyt,
+                                           pp,
+                                           testName, RESULT_DIR,
+                                           profilepage,
+                                           process_data,
+                                           str(os.getpid()))
                 presentDir=os.getcwd()
                 os.chdir(self.tester.workingDirectory)
 
@@ -155,7 +159,7 @@ class runTest:
                 try:
                     self.op_init(profile)
                     time1=time.time()
-
+                    mem1 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
                     #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
                     #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
                     #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
@@ -169,11 +173,13 @@ class runTest:
                     print >> sys.stderr, "%s failed, dumping traceback:" % testName
                     traceback.print_exc() # print and swallow exception
 
+                mem2 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
                 time2=time.time()
                 time2=(time2-time1)/60.0
+
+                print "Net memory allocated:", (int(mem2) - int(mem1))/1024, "MB"
                 
                 try:
-                    print "now in ", os.getcwd()
                     prof.dump_stats(self.resultsubdir+'/cProfile.profile')
                 except:
                     print >> sys.stderr, "Failed to write profiling data!"
@@ -243,7 +249,7 @@ class runTest:
                     self.result_common['description'] = "'" + short_description + "'", "test short description"
 
                 # Figure out data repository version
-                if os.system("which svnversion") == 0:
+                if os.system("which svnversion >/dev/null") == 0:
                     (errorcode, datasvnr) = commands.getstatusoutput('cd '+DATA_REPOS[0]+' && svnversion 2>&1 | grep -vi warning')
                 else:
                     errorcode = 1

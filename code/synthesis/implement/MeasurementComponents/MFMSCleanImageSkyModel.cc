@@ -31,10 +31,10 @@
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LatticeExprNode.h>
-#include <lattices/Lattices/SubLattice.h>
+#include <images/Images/SubImage.h>
 #include <casa/Arrays/IPosition.h>
 #include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LatticeCleaner.h>
+#include <synthesis/MeasurementEquations/ImageMSCleaner.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
@@ -162,7 +162,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
       blc(2) = 0;  trc(2) = 0;
       blc(3) = 0;  trc(3) = 0;
 
-      SubLattice<Float> subPSF;
+      SubImage<Float> subPSF;
       Int k =0;
       Int numchan= PSF(model).shape()(3);
       //PSF of first non zero plane
@@ -171,7 +171,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	trc(3)=k;
 	LCBox onePlane(blc, trc, PSF(model).shape());
 
-	subPSF=SubLattice<Float> ( PSF(model), onePlane, True);
+	subPSF=SubImage<Float> ( PSF(model), onePlane, True);
 	{
 	  LatticeExprNode node = max(subPSF);
 	  psfmax(model) = node.getFloat();
@@ -196,13 +196,13 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 
     
   // Loop over major cycles
-  if (displayProgress_p) {
+  /*if (displayProgress_p) {
     if(progress_p) delete progress_p;
     progress_p=0;
     progress_p = new LatticeCleanProgress( pgplotter_p );
-  }
+    }*/
 
-  Block<CountedPtr<LatticeCleaner<Float> > > cleaner(numberOfModels());
+  Block<CountedPtr<ImageMSCleaner > > cleaner(numberOfModels());
   cleaner=0;
 
   Int cycle=0;
@@ -320,7 +320,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	      // we simply make a new one for each channel
 	      if(nchan>1) {
 		os << LogIO::NORMAL    // Loglevel PROGRESS
-                   <<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
+                   <<"Processing channel "<<chan<<" of 0 to "<<nchan-1<<LogIO::POST;
 		if(!cleaner[model].null()) cleaner[model]=0;
 	      }
 	      
@@ -328,7 +328,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	      trcDirty(3) = chan;
 	      blcDirty(2) = 0; trcDirty(2) = 0;
 	      LCBox firstPlane(blcDirty, trcDirty, image(model).shape());
-              SubLattice<Float> subPSF( PSF(model), firstPlane);
+              SubImage<Float> subPSF( PSF(model), firstPlane);
 	      
 	      for (Int pol=0; pol<npol; pol++) {
 		blcDirty(2) = pol; trcDirty(2) = pol;
@@ -341,14 +341,14 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		}
 		LCBox onePlane(blcDirty, trcDirty, image(model).shape());
 		
-		SubLattice<Float> subImage( image(model), onePlane, True);
-		SubLattice<Float> subResid( residual(model), onePlane);
-		SubLattice<Float> subDeltaImage( deltaImage(model), onePlane, True);
-		SubLattice<Float> *subMaskPointer=0;
+		SubImage<Float> subImage( image(model), onePlane, True);
+		SubImage<Float> subResid( residual(model), onePlane);
+		SubImage<Float> subDeltaImage( deltaImage(model), onePlane, True);
+		SubImage<Float>  subMask;
 		Bool skipThisPlane=False;
 		if (doMask) {
-		  subMaskPointer = new SubLattice<Float> ( *maskPointer, onePlane, True);
-		  if(max(*subMaskPointer).getFloat() <= 0.0){
+		  subMask = SubImage<Float> ( *maskPointer, onePlane, True);
+		  if(max(subMask).getFloat() <= 0.0){
 		    skipThisPlane=True;
 		  }
 		}
@@ -363,17 +363,18 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		    os << LogIO::NORMAL2    // Loglevel PROGRESS
                        << "Creating multiscale cleaner with psf and residual images"
                        << LogIO::POST;
-		    cleaner[model]=new LatticeCleaner<Float>(subPSF, subResid);
-		    setScales(*(cleaner[model]));
+		    cleaner[model]=new ImageMSCleaner(subPSF, subResid);
+		    //setScales(*(cleaner[model]));
+		    cleaner[model]->setscales(userScaleSizes_p);
                     cleaner[model]->setSmallScaleBias(smallScaleBias_p);
 		    if (doMask) {		  
-		      cleaner[model]->setMask(*subMaskPointer);
+		      cleaner[model]->setMask(subMask);
 		    }
 		  }
 		  subDeltaImage.set(0.0);
 		  
 		  cleaner[model]->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
-				      aThreshold, fThreshold, True);
+				      aThreshold, fThreshold);
 		  
 		  if (cycleSpeedup_p > 1) {
 		    os << LogIO::NORMAL    // Loglevel INFO
@@ -387,7 +388,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  }
 		  cleaner[model]->stopPointMode(stopPointMode_p);
 		  cleaner[model]->ignoreCenterBox(True);
-		  converging=cleaner[model]->clean( subDeltaImage, progress_p );
+		  converging=cleaner[model]->clean(subDeltaImage, "fullmsclean", numberIterations(), gain(), aThreshold, fThreshold, displayProgress_p );
 		  //diverging
 		  if(converging==-3)
 		    stop=True;
@@ -418,9 +419,9 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		       << stopPointMode_p
 		       << " consecutive compact sources" << LogIO::POST;
 		  }
-		  if (doMask) {		  
-		    delete subMaskPointer;
-		  }
+		  //if (doMask) {		  
+		  //  delete subMaskPointer;
+		  //}
 		}
 	      }
 	    }
@@ -428,8 +429,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	  if (mustDeleteMask) {
 	    delete maskPointer;
 	  }
-	}
-      }
+	} // if solveable
+      } // for model
     }
   }
 
@@ -494,10 +495,12 @@ MFMSCleanImageSkyModel::getScales()
        << LogIO::POST;
 };
 
+ /*
 // Inlined here and not in the .h because the .h doesn't #include LatticeCleaner.
 inline void MFMSCleanImageSkyModel::setScales(LatticeCleaner<Float>& cleaner)
 { 
   cleaner.setscales(userScaleSizes_p);
 }
 
+*/
 } //#End casa namespace

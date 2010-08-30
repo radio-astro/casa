@@ -10,6 +10,7 @@ import types
 import inspect
 import casadef
 from math import *
+from get_user import get_user
 
 a=inspect.stack()
 stacklevel=0
@@ -29,7 +30,6 @@ class cluster(object):
 
    "control cluster engines for parallel tasks"
 
-   print 'start cluster---------'
    _instance = None
    
    __client=None
@@ -45,7 +45,8 @@ class cluster(object):
    __stop_engine_file='stop_engine.sh'
    __stop_controller_file='stop_controller.sh'
    __cluster_rc_file='clusterrc.sh'
-   __prefix='/tmp/'+os.environ['USER']+'-'
+   __user = get_user()
+   __prefix = '/tmp/' + __user + '-'
    __init_now=True
    __new_engs=[]
    #__result={}
@@ -69,6 +70,7 @@ class cluster(object):
       A Cluster enables parallel and distributed execution of CASA tasks and tools on a set of networked computers. A culster consists of one controller and one or more engines. Each engine is an independent Python instance that takes Python commands over a network connection. The controller provides an interface for working with a set of engines. A user uses casapy console to command the controller. A password-less ssh access to the computers that hosts engines is required for the communication between controller and engines.
       
       '''
+      # print 'start cluster---------'
       self.__client=None
       self.__controller=None
       self.__timestamp=None
@@ -1146,7 +1148,7 @@ class cluster(object):
       self.__client.execute('import os')
       self.__client.push(dict(clusterdir=clusterdir))
       self.__client.execute('os.chdir(clusterdir)')
-      self.__client.execute("user=os.environ['USER']")
+      self.__client.execute("user=self.__user")
       self.__client.execute('print user')
       #self.__client.execute('import commands')
       #self.__client.execute('(exitstatus, outtext) = commands.getstatusoutput("uname -n")')

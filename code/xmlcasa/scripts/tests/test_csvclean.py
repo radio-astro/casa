@@ -71,7 +71,9 @@ class csvclean_test1(unittest.TestCase):
                 results['success']=False
                 results['error_msgs']=results['error_msgs']\
                      +"\nError: Statistics failed for %s. "%r
-                        
+                
+                print 'expected %s=%s, got %s=%s'%(r,stats[r], r,ref[r])
+                
         return results
 
     def verify_field(self,image,phasecenter):

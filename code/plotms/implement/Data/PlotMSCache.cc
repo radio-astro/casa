@@ -141,7 +141,6 @@ void PlotMSCache::increaseChunks(Int nc) {
   flagrow_.resize(nChunk_,False,True);
 
   wt_.resize(nChunk_,False,True);
-  imwt_.resize(nChunk_,False,True);
 
   az0_.resize(nChunk_,True);
   el0_.resize(nChunk_,True);
@@ -178,7 +177,6 @@ void PlotMSCache::increaseChunks(Int nc) {
     flag_[ic] = new Array<Bool>();
     flagrow_[ic] = new Vector<Bool>();
     wt_[ic] = new Matrix<Float>();
-    imwt_[ic] = new Matrix<Float>();
     antenna_[ic] = new Vector<Int>();
     az_[ic] = new Vector<Double>();
     el_[ic] = new Vector<Double>();
@@ -251,11 +249,8 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
   
   if (averaging_.anyAveraging()) {
     if (axes[0] == (PMS::WT) |
-	axes[1] == (PMS::WT) |
-	axes[0] == (PMS::IMWT) |
-	axes[1] == (PMS::IMWT)) {
-      throw(AipsError("Sorry, the Wt and ImWt axes options do not yet support averaging."));
-    }
+	axes[1] == (PMS::WT))
+      throw(AipsError("Sorry, the Wt axis option does not yet support averaging."));
   }
 
   stringstream ss;
@@ -945,7 +940,6 @@ void PlotMSCache::release(const vector<PMS::Axis>& axes) {
         case PMS::FLAG_ROW: PMSC_DELETE(flagrow_) break;
 
         case PMS::WT: PMSC_DELETE(wt_) break;
-        case PMS::IMWT: PMSC_DELETE(imwt_) break;
 
 	case PMS::AZ0: az0_.resize(0); break;
 	case PMS::EL0: el0_.resize(0); break;
@@ -1104,7 +1098,6 @@ void PlotMSCache::getAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
   case PMS::FLAG_ROW:
     axismask(2)=True;
     break;
-  case PMS::IMWT:
   case PMS::UVDIST_L:
     axismask(1)=True;
     axismask(2)=True;
@@ -1256,9 +1249,6 @@ Double PlotMSCache::get(PMS::Axis axis) {
 
   case PMS::WT:
     return getWt();
-    break;
-  case PMS::IMWT:
-    return getImWt();
     break;
 
   case PMS::AZ0:
@@ -2088,10 +2078,6 @@ void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       *wt_[vbnum] = vb.weightMat();
       break;
     }
-    case PMS::IMWT: {
-      *imwt_[vbnum] = vb.imagingWeight();
-      break;
-    }
     case PMS::AZ0:
     case PMS::EL0: {
       Vector<Double> azel;
@@ -2157,7 +2143,6 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
     case PMS::W:
     case PMS::FLAG:
     case PMS::WT:
-    case PMS::IMWT:
     case PMS::ANTENNA: 
     case PMS::AZIMUTH: 
     case PMS::ELEVATION: 
@@ -2185,7 +2170,6 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
             else if(axis == PMS::W)        n += w_[i]->size();
             else if(axis == PMS::FLAG)     n += flag_[i]->size();
             else if(axis == PMS::WT)       n += wt_[i]->size();
-            else if(axis == PMS::IMWT)     n += imwt_[i]->size();
             else if(axis == PMS::ANTENNA)  n += antenna_[i]->size();
             else if(axis == PMS::AZIMUTH)  n += az_[i]->size();
             else if(axis == PMS::ELEVATION)n += el_[i]->size();
@@ -2266,7 +2250,6 @@ void PlotMSCache::computeRanges() {
 	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,1)),uInt(0));
 	  break;
 	}
-	case PMS::IMWT:
 	case PMS::UVDIST_L: {
 	  // collapse on corr
 	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(1,0)),uInt(0));
@@ -2437,12 +2420,6 @@ void PlotMSCache::computeRanges() {
 	    if (wt_[ic]->nelements()>0) {
 	      limits(2*ix)=min(limits(2*ix),min((*wt_[ic])(collmask)));
 	      limits(2*ix+1)=max(limits(2*ix+1),max((*wt_[ic])(collmask)));
-	    }
-	    break;
-	  case PMS::IMWT:
-	    if (imwt_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min((*imwt_[ic])(collmask)));
-	      limits(2*ix+1)=max(limits(2*ix+1),max((*imwt_[ic])(collmask)));
 	    }
 	    break;
 

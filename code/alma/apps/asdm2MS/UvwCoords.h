@@ -198,8 +198,12 @@ private:
       set<Tag> a, b;
       for(unsigned int na=0; na<v_ant.size(); na++){
 	a.insert(v_ant[na]);
+      }
+
+      for (unsigned int na=0; na<rhs.v_ant.size(); na++) {
 	b.insert(rhs.v_ant[na]);
       }
+
       if( a != b ) return false;
       return true;
     }

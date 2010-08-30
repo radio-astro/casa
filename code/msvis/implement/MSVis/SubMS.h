@@ -399,8 +399,8 @@ class SubMS
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
   //                   Bool includeAutoCorr=False);
 
-  // Figure out which bins each row (slot) will go in, and return the
-  // number of bins (-1 on failure).
+  // Figure out which timebins each input row will go in, and return the
+  // number of output rows (slots) (-1 on failure).
   //
   // Normally the bins are automatically separated by changes in any data
   // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
@@ -409,7 +409,7 @@ class SubMS
   // averaging!  (sub)array(_ID), scan #, and state ID can be ignored by
   // setting ignorables_p.
   //
-  Int numOfTimeBins(const Double timeBin);
+  Int binTimes(const Double timeBin);
 
   // Used in a couple of places to estimate how much memory to grab.
   Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * ncorr_p[0] *
@@ -467,8 +467,9 @@ class SubMS
 
   // A "Slot" is a subBin, i.e. rows within the same time bin that have
   // different Data Descriptors, Field_IDs, Array_IDs, or States, and so should
-  // not be averaged together.  This function returns the Slot number
-  // corresponding to the Data Descriptor (dd), Field_ID, Array_ID, and State.
+  // not be averaged together.  In other words a slot becomes an output row
+  // when time averaging.  This function returns the Slot number corresponding
+  // to the Data Descriptor (dd), Field_ID, Array_ID, and State.
   uInt rowProps2slotKey(const Int ant1,  const Int ant2, const Int dd, 
 			const Int field, const Int scan, const Int state,
                         const uInt array);
@@ -486,7 +487,6 @@ class SubMS
 				// vary with row number.
        antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
-  uInt numOutRows_p;
   String scanString_p, uvrangeString_p, taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
   uInt nant_p;
@@ -517,7 +517,6 @@ class SubMS
 
   Vector<Int> arrayId_p;
   Vector<Int> polID_p;	       // Map from input DDID to input polID, filled in fillDDTables(). 
-  Vector<Double> newTimeVal_p;
   Vector<uInt> tOI_p; //timeOrderIndex
   Vector<uInt> spw2ddid_p;
 

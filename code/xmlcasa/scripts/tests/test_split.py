@@ -27,17 +27,21 @@ datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
-    try:
-        if tol:
-            are_eq = abs(val - expval) < tol
-        else:
-            are_eq = val == expval
-        if hasattr(are_eq, 'all'):
-            are_eq = are_eq.all()
-        if not are_eq:
-            raise ValueError, '!='
-    except ValueError:
-        raise ValueError, "%r != %r" % (val, expval)
+    if type(val) == dict:
+        for k in val:
+            check_eq(val[k], expval[k], tol)
+    else:
+        try:
+            if tol:
+                are_eq = abs(val - expval) < tol
+            else:
+                are_eq = val == expval
+            if hasattr(are_eq, 'all'):
+                are_eq = are_eq.all()
+            if not are_eq:
+                raise ValueError, '!='
+        except ValueError:
+            raise ValueError, "%r != %r" % (val, expval)
 
 def slurp_table(tabname):
     """
@@ -99,6 +103,15 @@ class SplitChecker(unittest.TestCase):
     Base class for unit test suites that do multiple tests per split run.
     """
     # Don't setup class variables here - the children would squabble over them.
+    #
+    # DO define a do_split(corrsel) method in each subclass to do the work and
+    # record the results.  Any variables that it sets for use by the tests must
+    # be class variables, i.e. prefixed by self.__class__..  The tests,
+    # however, will refer to them as instance variables.  Example: usually
+    # do_split() will set self.__class__.records, and the tests will use it as
+    # self.records.  This quirk is a result of unittest.TestCase's preference
+    # for starting from scratch, and tearing down afterwards, for each test.
+    # That's exactly what SplitChecker is avoiding.
     
     def setUp(self):
         if self.need_to_initialize:
@@ -558,9 +571,129 @@ class split_test_unorderedpolspw(SplitChecker):
     def test_subtables(self):
         """DATA_DESCRIPTION, SPECTRAL_WINDOW, and POLARIZATION shapes"""
         self.check_subtables('', [(2, 128)])
+
+class split_test_tav_then_cvel(SplitChecker):
+    need_to_initialize = True
+    # doppler01fine-01.ms was altered by
+    # make_labelled_ms(vis, vis,
+    #                  {'SCAN_NUMBER': 1.0,
+    #                   'DATA_DESC_ID': 0.01,
+    #                   'chan': complex(0, 1),
+    #                   'STATE_ID': complex(0, 0.1),
+    #                   'time': 100.0}, ow=True)
+    inpms = 'unittest/split/doppler01fine-01.ms'
+    corrsels = ['']
+    records = {}
     
+    def do_split(self, corrsel):
+        tavms = 'doppler01fine-01-10s.ms'
+        cvms  = 'doppler01fine-01-10s-cvel.ms'
+        record = {'tavms': tavms, 'cvms': cvms,
+                  'tav': {},      'cv': False}
+        self.__class__._cvel_err = False
+
+        shutil.rmtree(tavms, ignore_errors=True)
+        shutil.rmtree(cvms, ignore_errors=True)
+        try:
+            print "\nTime averaging", corrsel
+            splitran = split(self.inpms, tavms, datacolumn='data',
+                             field='', spw='', width=1, antenna='',
+                             timebin='10s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation=corrsel, async=False)
+            tb.open(tavms)
+            for c in ['DATA', 'WEIGHT', 'INTERVAL', 'SCAN_NUMBER', 'STATE_ID']:
+                record['tav'][c] = {}
+                for r in [0, 4, 5, 6, 7, 90, 91]:
+                    record['tav'][c][r] = tb.getcell(c, r)
+            tb.close()
+        except Exception, e:
+            print "Error time averaging and reading", tavms
+            raise e
+        try:
+            print "Running cvel"
+            cvelran = cvel(tavms, cvms, passall=False, field='', spw='0~8',
+                           selectdata=True, timerange='', scan="", array="",
+                           mode="velocity", nchan=-1, start="-4km/s",
+                           width="-1.28km/s", interpolation="linear",
+                           phasecenter="", restfreq="6035.092MHz",
+                           outframe="lsrk", veltype="radio", hanning=False)
+        except Exception, e:
+            print "Error running cvel:", e
+            # Do NOT raise e: that would prevent the tav tests from running.
+            # Use test_cv() to register a cvel error.
+            self.__class__._cvel_err = True
+            
+        self.__class__.records = record
+        return splitran
+
+    def test_tav_data(self):
+        """Time averaged DATA"""
+        check_eq(self.records['tav']['DATA'],
+                 {0: numpy.array([[ 455.+0.10000001j,  455.+1.10000014j,
+                                    455.+2.10000014j,  455.+3.10000014j],
+                                  [ 455.+0.10000001j,  455.+1.10000014j,
+                                    455.+2.10000014j,  455.+3.10000014j]]),
+                  4: numpy.array([[4455.+0.10000001j, 4455.+1.10000014j,
+                                   4455.+2.10000014j, 4455.+3.10000014j],
+                                  [4455.+0.10000001j, 4455.+1.10000014j,
+                                   4455.+2.10000014j, 4455.+3.10000014j]]),
+                  5: numpy.array([[5405.+0.10000001j, 5405.+1.10000002j,
+                                   5405.+2.10000014j, 5405.+3.10000014j],
+                                  [5405.+0.10000001j, 5405.+1.10000002j,
+                                   5405.+2.10000014j, 5405.+3.10000014j]]),
+                  6: numpy.array([[5906.+0.1j, 5906.+1.10000002j,
+                                   5906.+2.0999999j, 5906.+3.0999999j],
+                                  [5906.+0.1j, 5906.+1.10000002j,
+                                   5906.+2.0999999j, 5906.+3.0999999j]]),
+                  7: numpy.array([[6456.+0.10000001j, 6456.+1.10000014j,
+                                   6456.+2.10000014j, 6456.+3.10000014j],
+                                  [6456.+0.10000001j, 6456.+1.10000014j,
+                                   6456.+2.10000014j, 6456.+3.10000014j]]),
+                 90: numpy.array([[89256.+0.1j, 89256.+1.10000002j,
+                                   89256.+2.10000014j, 89256.+3.10000014j],
+                                  [89256.+0.1j, 89256.+1.10000002j,
+                                   89256.+2.10000014j, 89256.+3.10000014j]]),
+                 91: numpy.array([[162467.015625+0.j, 162467.015625+1.j,
+                                   162467.015625+2.j, 162467.015625+3.j],
+                                  [162467.015625+0.j, 162467.015625+1.j,
+                                   162467.015625+2.j, 162467.015625+3.j]])},
+                 0.0001)
+
+    def test_tav_wt(self):
+        """Time averaged WEIGHT"""
+        check_eq(self.records['tav']['WEIGHT'],
+                 {0: numpy.array([ 10.,  10.]),
+                  4: numpy.array([ 10.,  10.]),
+                  5: numpy.array([ 9.,  9.]),
+                  6: numpy.array([ 1.,  1.]),
+                  7: numpy.array([ 10.,  10.]),
+                  90: numpy.array([ 6.,  6.]),
+                  91: numpy.array([ 10.,  10.])}, 0.01)
+
+    def test_tav_int(self):
+        """Time averaged INTERVAL"""
+        check_eq(self.records['tav']['INTERVAL'],
+                 {0: 10.0, 4: 10.0, 5: 9.0, 6: 1.0, 7: 10.0, 90: 6.0, 91: 10.0},
+                 0.01)
+
+    def test_tav_state_id(self):
+        """Time averaged STATE_ID"""
+        check_eq(self.records['tav']['STATE_ID'],
+                 {0: 1, 4: 1, 5: 1, 6: 1, 7: 1, 90: 1, 91: 0})
+
+    def test_tav_scan(self):
+        """Time averaged SCAN_NUMBER"""
+        check_eq(self.records['tav']['SCAN_NUMBER'],
+                 {0: 5, 4: 5, 5: 5, 6: 6, 7: 6, 90: 6, 91: 17})
+
+    def test_cv(self):
+        """cvel completed"""
+        assert self._cvel_err == False and os.path.isdir(self.records['cvms'])
+        
 
 def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
-            split_test_singchan, split_test_unorderedpolspw]
+            split_test_singchan, split_test_unorderedpolspw,
+            split_test_tav_then_cvel]
     

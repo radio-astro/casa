@@ -43,6 +43,7 @@
 #include <display/Display/DParameterButton.h>
 #include <display/DisplayCanvas/WCPowerScaleHandler.h>
 #include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/MsAverager.h>
 #include <display/DisplayDatas/WorldAxesDD.h>
 #include <display/Display/DisplayEnums.h>
 #include <display/Display/WorldCanvasHolder.h>
@@ -673,6 +674,8 @@ class MSAsRaster: public ActiveCaching2dDD {
 
   // how many values to use (ideally) in moving averages.
   DParameterRange<Int> *itsNAvg;
+  DParameterString *itsAveTime;
+  DParameterString *itsAveChan;
 
 
   //----derived from above: what is now requested-----------------------
@@ -701,6 +704,9 @@ class MSAsRaster: public ActiveCaching2dDD {
 			// RMS (RMS).
 
   Int nAvg_;		// value in itsNAvg (above).
+  Float aveTime_;
+  Int   aveChan_; 
+  MsAverager *msa;
 
   Vector<Int> fieldIds_;	// user-selected field IDs and
   Vector<Int> spwIds_;		// spectral window IDs (0-based).

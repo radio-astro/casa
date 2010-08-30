@@ -88,10 +88,10 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="GSPLINE") 
     return new GJonesSpline(vs);
   
-  else if (uptype=="TF" || uptype=="TF JONES") 
+  else if (uptype=="TF" || uptype=="TF JONES" || uptype=="TF NOISE") 
     return new TfJones(vs);
 
-  else if (uptype=="T" || uptype=="T JONES") 
+  else if (uptype=="T" || uptype=="T JONES" || uptype=="T NOISE") 
     return new TJones(vs);
 
   else if (uptype.before('+')=="DLIN" ||

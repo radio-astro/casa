@@ -203,14 +203,14 @@ Caveats:
 Currently, \aipspp\ can support 2 (refer='b1950'), 3
 (refer='j2000'), 4 (refer='gal'), 7 (refer='supergal'). If you
 need any of the others, please contact us.
-\end{itemize}
 
 \item[Caltech] The 
 \htmladdnormallink{Caltech package}
-{http://astro.caltech.edu/\~tjp/citvlb/index.html}
+{http://astro.caltech.edu/~tjp/citvlb/index.html}
 uses a format for specifying positions relative to an undefined
 position. In the documentation for {\em modelfit}, the format is
 described as follows:
+\end{itemize}
 
 \begin{verbatim}
      Model files are text files that can be typed or printed directly;
@@ -254,7 +254,6 @@ Caveats:
 \begin{itemize}
 \item In \aipspp, directions in componentlist are currently absolute
 only. Hence one must specify the reference direction.
-\end{itemize}
 
 \item[WENSS] The \htmladdnormallink{Westerbork Northern Sky Survey (WENSS)}
 {http://www.strw.leidenuniv.nl/\%7Edpf/wenss/} is a
@@ -292,6 +291,7 @@ search page}{http://www.cv.nrao.edu/NVSS/NVSS.html}, search for the
 sources that you want, cut out only the lines that include the sources
 (you can leave in the alternating lines with error information), put
 in a file and then convert.
+\end{itemize}
 
 Caveats:
 \begin{itemize}

@@ -176,6 +176,20 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
 	*itsLog << LogIO::WARN
 		<< "Atmospheric profile update failed!" << LogIO::POST;
       }
+      if (pRefractiveIndexProfile) {
+	if (! pRefractiveIndexProfile->setBasicAtmosphericParameters(Alt,P,T,TLR,H,WVL) ) {
+	  *itsLog << LogIO::WARN
+		  << "Refractive index profile update failed!" 
+		  << LogIO::POST;
+	}
+      }
+      if (pSkyStatus) {
+	if (! pSkyStatus->setBasicAtmosphericParameters(Alt,P,T,TLR,H,WVL) ) {
+	  *itsLog << LogIO::WARN
+		  << "Skystatus update failed!" 
+		  << LogIO::POST;
+	}
+      }
     } else {
       *itsLog << LogIO::WARN
 	      << "Please initialize atmospheric profile with initAtmProfile."

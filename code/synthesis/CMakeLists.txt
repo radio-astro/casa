@@ -19,6 +19,11 @@
 #
 
 casa_add_library( synthesis
+  implement/Parallel/Applicator.cc
+  implement/Parallel/MPIError.cc
+  implement/Parallel/MPITransport.cc
+  implement/Parallel/PabloIO.cc
+  implement/Parallel/SerialTransport.cc
   implement/DataSampling/DataSampling.cc
   implement/DataSampling/ImageDataSampling.cc
   implement/DataSampling/PixonProcessor.cc
@@ -118,11 +123,13 @@ casa_add_library( synthesis
   implement/MeasurementEquations/Entropy.cc
   implement/MeasurementEquations/Imager.cc
   implement/MeasurementEquations/ImagerMultiMS.cc
+  implement/MeasurementEquations/ImageMSCleaner.cc		
   implement/MeasurementEquations/IncCEMemModel.cc
   implement/MeasurementEquations/IncEntropy.cc
   implement/MeasurementEquations/IPLatConvEquation.cc
   implement/MeasurementEquations/LatConvEquation.cc
   implement/MeasurementEquations/LatticeModel.cc
+  implement/MeasurementEquations/MatrixCleaner.cc	
   implement/MeasurementEquations/MosaicSkyEquation.cc
   implement/MeasurementEquations/PSkyEquation.cc
   implement/MeasurementEquations/Qimager.cc
@@ -163,3 +170,4 @@ casa_add_assay( synthesis implement/MeasurementEquations/test/tImager.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tIncCEMemModel.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tLatConvEquation.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tStokesUtil.cc )
+casa_add_assay( synthesis implement/Parallel/test/tApplicator.cc )

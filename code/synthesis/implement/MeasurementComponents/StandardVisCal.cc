@@ -357,23 +357,31 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
   if (tcorruptor_p->mean_pwv()<=0)
     throw(AipsError("AtmCorruptor attempted initialization with undefined PWV"));
   
-  Float Scale(.15); // scale of fluctuations rel to mean
-  if (simpar.isDefined("delta_pwv") and simpar.isDefined("mean_pwv")) {    
-    Scale=simpar.asFloat("delta_pwv")/simpar.asFloat("mean_pwv");
-    if (Scale>.5) {
-      Scale=.5;  
-      os << LogIO::WARN << " decreasing PWV fluctuation magnitude to half of the mean PWV, " << simpar.asFloat("mean_pwv") << LogIO::POST;  
-    }
-  }
-
   if (simpar.isDefined("mode")) {    
     if (prtlev()>2) 
       cout << "initializing T:Corruptor with mode " << simpar.asString("mode") << endl;
+       String simMode=simpar.asString("mode");
     
-    if (simpar.asString("mode") == "test")
+    if (simMode == "test")
       tcorruptor_p->initialize();
-    else {
+    else if (simMode == "individual" or simMode == "screen") {
 
+      Float Scale(1.); // RELATIVE scale of fluctuations (to mean_pwv)
+      if (simpar.isDefined("delta_pwv")) {
+	if (simpar.asFloat("delta_pwv")>.8) {
+	  Scale=0.8;
+	  os << LogIO::WARN << " decreasing PWV fluctuation magnitude to 80% of the mean PWV " << LogIO::POST;  
+	} else {
+	  Scale=simpar.asFloat("delta_pwv");
+	}
+      } else {
+	os << LogIO::WARN << " setting PWV fluctuation magnitude to 15% of the mean PWV " << LogIO::POST;  
+	Scale=0.15;
+      }
+      
+      os << " PWV fluctuations = " << Scale << " of mean PWV = " << simpar.asFloat("mean_pwv") << "mm " << LogIO::POST;  
+      
+      
       // slot_times for a fBM-based corruption need to be even even if solTimes are not
       // so will define startTime and stopTime and reset nsim() here.
       
@@ -401,9 +409,17 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
 	  tcorruptor_p->initialize(Seed,Beta,Scale,antcols);
 	} else
 	  throw(AipsError("Unknown wind speed for T:Corruptor"));        
-      } else 
+      }
+
+    } else if (simMode == "tsys-atm" or simMode == "tsys-manual") {
+      // NEW 20100818 change from Mf to Tf
+      // M corruptor initialization didn't matter M or Mf here - it checks mode in 
+      // the Atmoscorruptor init.
+      tcorruptor_p->initialize(vi,simpar,VisCal::T); 
+      extraTag()="NoiseScale"; // collapseForSim catches this
+    
+    } else 
 	throw(AipsError("Unknown mode for T:Corruptor"));        
-    }
   } else {
     throw(AipsError("No Mode specified for T:Corruptor."));
   }  
@@ -1919,7 +1935,7 @@ void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const In
 
   // this is the M type corruptor - maybe we should make the corruptor 
   // take the VC as an argument
-  atmcorruptor_p->initialize(vi,simpar); 
+  atmcorruptor_p->initialize(vi,simpar,VisCal::M); 
 }
 
 
