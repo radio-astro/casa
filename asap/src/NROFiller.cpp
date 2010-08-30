@@ -19,6 +19,7 @@
 
 #include "NROFiller.h"
 #include "STHeader.h"
+#include <casa/Containers/Record.h>
 #include <atnf/PKSIO/SrcType.h>
 
 using namespace casa;
@@ -35,7 +36,7 @@ NROFiller::~NROFiller()
   close() ;
 }
 
-bool NROFiller::open(const std::string& filename) 
+  bool NROFiller::open(const std::string& filename, const Record& rec) 
 {
   bool status = true ;
 

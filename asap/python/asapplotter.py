@@ -50,6 +50,7 @@ class asapplotter:
         self._hist = rcParams['plotter.histogram']
         self._fp = FontProperties()
         self._panellayout = self.set_panellayout(refresh=False)
+        self._offset = None
 
     def _translate(self, instr):
         keys = "s b i p t".split()
@@ -102,7 +103,8 @@ class asapplotter:
         if not self._data and not scan:
             msg = "Input is not a scantable"
             raise TypeError(msg)
-        if scan: self.set_data(scan,refresh=False)
+        if scan: 
+            self.set_data(scan, refresh=False)
         self._plot(self._data)
         if self._minmaxy is not None:
             self._plotter.set_limits(ylim=self._minmaxy)
@@ -292,7 +294,8 @@ class asapplotter:
                     self._data = scan
                     # reset
                     self._reset()
-                    msg = "A new scantable is set to the plotter. The masks and data selections are reset."
+                    msg = "A new scantable is set to the plotter. "\
+                          "The masks and data selections are reset."
                     asaplog.push( msg )
             else:
                 self._data = scan
@@ -384,7 +387,7 @@ class asapplotter:
             return True
         return False
 
-    def set_range(self,xstart=None,xend=None,ystart=None,yend=None,refresh=True):
+    def set_range(self,xstart=None,xend=None,ystart=None,yend=None,refresh=True, offset=None):
         """
         Set the range of interest on the abcissa of the plot
         Parameters:
@@ -392,11 +395,14 @@ class asapplotter:
             refresh:  True (default) or False. If True, the plot is
                       replotted based on the new parameter setting(s).
                       Otherwise,the parameter(s) are set without replotting.
+            offset:   shift the abcissa by the given amount. The abcissa label will
+                      have '(relative)' appended to it.
         Note:
             These become non-sensical when the unit changes.
             use plotter.set_range() without parameters to reset
 
         """
+        self._offset = offset
         if xstart is None and xend is None:
             self._minmaxx = None
         else:
@@ -803,6 +809,7 @@ class asapplotter:
     def _reset(self):
         self._usermask = []
         self._usermaskspectra = None
+        self._offset = None
         self.set_selection(None, False)
 
     def _plot(self, scan):
@@ -868,6 +875,8 @@ class asapplotter:
                 #title
                 xlab = self._abcissa and self._abcissa[panelcount] \
                        or scan._getabcissalabel()
+                if self._offset and not self._abcissa:
+                    xlab += " (relative)"
                 ylab = self._ordinate and self._ordinate[panelcount] \
                        or scan._get_ordinate_label()
                 self._plotter.set_axes('xlabel', xlab)
@@ -894,8 +903,10 @@ class asapplotter:
                 if self._maskselection and len(self._usermask) == len(m):
                     if d[self._stacking](r) in self._maskselection[self._stacking]:
                         m = logical_and(m, self._usermask)
-                x = scan._getabcissa(r)
                 from numpy import ma, array
+                x = array(scan._getabcissa(r))
+                if self._offset:
+                    x += self._offset
                 y = ma.masked_array(y,mask=logical_not(array(m,copy=False)))
                 if self._minmaxx is not None:
                     s,e = self._slice_indeces(x)

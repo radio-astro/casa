@@ -101,7 +101,17 @@ PKSreader* getPKSreader(
     }
 
   } else if (inFile.isDirectory()) {
-    if (File(name + "/DATA_DESCRIPTION").exists()) {
+    Bool isMS = ( (File(name+"/table.info").exists()) 
+                  && File(name+"/table.dat").exists() );
+    if (isMS) {
+      RegularFileIO ifs(name+"/table.info") ;
+      char buf[128] ;
+      ifs.read(sizeof(buf),buf,False) ;
+      if ( strstr( buf, "Measurement Set" ) == NULL ) 
+        isMS = False ;
+    }
+    //if (File(name + "/DATA_DESCRIPTION").exists()) {
+    if (isMS) {
       // MS version 2.
       #ifdef NOPKSMS
       format = "MS2 INPUT FORMAT IS NO LONGER SUPPORTED";

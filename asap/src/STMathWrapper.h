@@ -131,6 +131,12 @@ public:
                                const std::string& which)
   { return STMath::statistic(in.getCP(), mask, which); }
 
+  std::vector<float> statisticRow(const ScantableWrapper& in,
+                               const std::vector<bool>& mask,
+			       const std::string& which,
+			       int row)
+  { return STMath::statisticRow(in.getCP(), mask, which, row); }
+
   std::vector<int> minMaxChan(const ScantableWrapper& in,
                                const std::vector<bool>& mask,
                                const std::string& which)

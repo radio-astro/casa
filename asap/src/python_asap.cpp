@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
+//# $Id: python_asap.cpp 1901 2010-08-26 01:24:33Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <string>
 #include <vector>
@@ -43,6 +43,8 @@
 #else
   #include <pyrap/Converters/PycExcp.h>
   #include <pyrap/Converters/PycBasicData.h>
+  #include <pyrap/Converters/PycValueHolder.h>
+  #include <pyrap/Converters/PycRecord.h>
 #endif
 
 #include "python_asap.h"
@@ -107,5 +109,13 @@ BOOST_PYTHON_MODULE(_asap) {
   casa::pyrap::register_convert_excp();
   casa::pyrap::register_convert_basicdata();
   casa::pyrap::register_convert_std_vector<asap::ScantableWrapper>();
+  casa::pyrap::register_convert_std_vector<int>();
+  casa::pyrap::register_convert_std_vector<uint>();
+  casa::pyrap::register_convert_std_vector<float>();
+  casa::pyrap::register_convert_std_vector<double>();
+  casa::pyrap::register_convert_std_vector<std::string>();
+  casa::pyrap::register_convert_std_vector<bool>();
+  casa::pyrap::register_convert_casa_valueholder();
+  casa::pyrap::register_convert_casa_record();
 #endif
 }

@@ -19,9 +19,11 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Arrays/Vector.h>
 
+
 #include "FillerBase.h"
 #include "Scantable.h"
 
+class casa::Record;
 class PKSreader;
 
 namespace asap
@@ -33,8 +35,8 @@ class PKSFiller : public FillerBase
     explicit PKSFiller(casa::CountedPtr<Scantable> stable);
     virtual ~PKSFiller();
 
-//    bool open(const std::string& filename, const Record& rec)=0;
-    bool open(const std::string& filename);
+    bool open(const std::string& filename, const casa::Record& rec);
+    //    bool open(const std::string& filename);
     void fill();
     void close();
 

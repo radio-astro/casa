@@ -13,6 +13,7 @@ ifndef ASAPROOT
    ASAPROOT := $(shell pwd)
 endif
 ATNFD := external-alma
+PYRAPD := external/libpyrap
 
 #PY := $(wildcard python/*.py)
 PY := $(wildcard python/*.py python/svninfo.txt)
@@ -28,6 +29,7 @@ all: module #doc
 
 module:
 	@if ( test -f getsvnrev.sh ) ; then /bin/bash getsvnrev.sh ; fi
+	@cd $(ASAPROOT)/$(PYRAPD); make
 	@cd $(ASAPROOT)/$(ATNFD); make
 	@cd $(ASAPROOT)/src; make
 	@cd $(ASAPROOT)/apps; make
@@ -41,6 +43,8 @@ install:
 	@cd $(ASAPROOT)/$(ATNFD); make install
 	@if ( test ! -d $(PYDIR)/asap ) ; then mkdir -p $(PYDIR)/asap ; fi
 	@if ( test ! -d $(PREFIX)/bin ) ; then mkdir -p $(PREFIX)/bin ; fi
+	@cd $(ASAPROOT)/$(ATNFD); make install
+	@cd $(ASAPROOT)/$(PYRAPD); make install
 	@for file in $(LIBS) ; do cp -f $$file $(PYDIR)/asap ; done
 	@for file in $(BINS) ; do cp -f $$file $(PREFIX)/bin ; done
 	@for file in $(PY) ; do cp -f $$file $(PYDIR)/asap ; done
@@ -54,6 +58,7 @@ clean:
 #	@cd $(ASAPROOT)/doc; make clean
 	@cd $(ASAPROOT)/$(ATNFD); make realclean
 	@cd $(ASAPROOT)/apps; make clean
+	@cd $(ASAPROOT)/$(PYRAPD); make clean
 
 datadist:
 	@echo "Generating ASAP data archive from aips++ installation..."

@@ -1,4 +1,4 @@
-from asap.scantable import scantable
+from asap.scantable import scantable, is_ms
 from asap.parameters import rcParams
 from asap.logging import asaplog, asaplog_post_dec
 from asap.selector import selector
@@ -956,9 +956,10 @@ def splitant(filename, outprefix='',overwrite=False):
             s = "File '%s' not found." % (filename)
             raise IOError(s)
         # check if input file is MS
-        if not os.path.isdir(filename) \
-               or not os.path.exists(filename+'/ANTENNA') \
-               or not os.path.exists(filename+'/table.f1'):
+        #if not os.path.isdir(filename) \
+        #       or not os.path.exists(filename+'/ANTENNA') \
+        #       or not os.path.exists(filename+'/table.f1'):
+        if not is_ms(filename):
             s = "File '%s' is not a Measurement set." % (filename)
             raise IOError(s)
     else:
@@ -995,12 +996,15 @@ def splitant(filename, outprefix='',overwrite=False):
     tb.close()
     tb.open(tablename=filename,nomodify=True)
     ant1=tb.getcol('ANTENNA1',0,-1,1)
+    tb.close()
     tmpname='asapmath.splitant.tmp'
     for antid in set(ant1):
-        tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid))
-        tbsel.copy(tmpname,deep=True)
-        #tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid),tmpname)
+        tb.open(tablename=filename,nomodify=True)
+        #tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid))
+        #tbsel.copy(tmpname,deep=True)
+        tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid),tmpname)
         tbsel.close()
+        tb.close()
         del tbsel
         scan=scantable(tmpname,average=False,getpt=True,antenna=int(antid))
         outname=prefix+antnames[antid]+'.asap'

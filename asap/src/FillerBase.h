@@ -42,8 +42,8 @@ class FillerBase
     explicit FillerBase(casa::CountedPtr<Scantable> stable);
     virtual ~FillerBase() {;}
 
-//    virtual bool open(const std::string& filename, const Record& rec) = 0;
-    virtual bool open(const std::string& filename) = 0;
+    virtual bool open(const std::string& filename, const casa::Record& rec) = 0;
+    //    virtual bool open(const std::string& filename) = 0;
     virtual void fill() = 0;
     virtual void close() = 0;
 
