@@ -81,8 +81,9 @@ class scantable(Scantable):
     """
 
     @asaplog_post_dec
-    def __init__(self, filename, average=None, unit=None, getpt=None,
-                 antenna=None, parallactify=None):
+    #def __init__(self, filename, average=None, unit=None, getpt=None,
+    #             antenna=None, parallactify=None):
+    def __init__(self, filename, average=None, unit=None, parallactify=None, **args):
         """\
         Create a scantable from a saved one or make a reference
 
@@ -116,26 +117,26 @@ class scantable(Scantable):
         """
         if average is None:
             average = rcParams['scantable.autoaverage']
-        if getpt is None:
-            getpt = True
-        if antenna is not None:
-            asaplog.push("Antenna selection currently unsupported."
-                         "Using ''")
-            asaplog.post('WARN')
-        if antenna is None:
-            antenna = ''
-        elif type(antenna) == int:
-            antenna = '%s' % antenna
-        elif type(antenna) == list:
-            tmpstr = ''
-            for i in range( len(antenna) ):
-                if type(antenna[i]) == int:
-                    tmpstr = tmpstr + ('%s,'%(antenna[i]))
-                elif type(antenna[i]) == str:
-                    tmpstr=tmpstr+antenna[i]+','
-                else:
-                    raise TypeError('Bad antenna selection.')
-            antenna = tmpstr.rstrip(',')
+        #if getpt is None:
+        #    getpt = True
+        #if antenna is not None:
+        #    asaplog.push("Antenna selection currently unsupported."
+        #                 "Using ''")
+        #    asaplog.post('WARN')
+        #if antenna is None:
+        #    antenna = ''
+        #elif type(antenna) == int:
+        #    antenna = '%s' % antenna
+        #elif type(antenna) == list:
+        #    tmpstr = ''
+        #    for i in range( len(antenna) ):
+        #        if type(antenna[i]) == int:
+        #            tmpstr = tmpstr + ('%s,'%(antenna[i]))
+        #        elif type(antenna[i]) == str:
+        #            tmpstr=tmpstr+antenna[i]+','
+        #        else:
+        #            raise TypeError('Bad antenna selection.')
+        #    antenna = tmpstr.rstrip(',')
         parallactify = parallactify or rcParams['scantable.parallactify']
         varlist = vars()
         from asap._asap import stmath
@@ -159,16 +160,25 @@ class scantable(Scantable):
                 #elif os.path.isdir(filename) \
                 #         and not os.path.exists(filename+'/table.f1'):
                 elif is_ms(filename):
-                    self._fill([filename], unit, average, getpt, antenna)
+                    # Measurement Set
+                    opts={'ms': {}}
+                    mskeys=['getpt','antenna']
+                    for key in mskeys:
+                        if key in args.keys():
+                            opts['ms'][key] = args[key]
+                    #self._fill([filename], unit, average, getpt, antenna)
+                    self._fill([filename], unit, average, opts)
                 elif os.path.isfile(filename):
-                    self._fill([filename], unit, average, getpt, antenna)
+                    #self._fill([filename], unit, average, getpt, antenna)
+                    self._fill([filename], unit, average)
                 else:
                     msg = "The given file '%s'is not a valid " \
                           "asap table." % (filename)
                     raise IOError(msg)
             elif (isinstance(filename, list) or isinstance(filename, tuple)) \
                   and isinstance(filename[-1], str):
-                self._fill(filename, unit, average, getpt, antenna)
+                #self._fill(filename, unit, average, getpt, antenna)
+                self._fill(filename, unit, average)
         self.parallactify(parallactify)
         self._add_history("scantable", varlist)
 
@@ -2662,7 +2672,8 @@ class scantable(Scantable):
         return (sum(nchans)/len(nchans) == nchans[0])
 
     @asaplog_post_dec
-    def _fill(self, names, unit, average, getpt, antenna):
+    #def _fill(self, names, unit, average, getpt, antenna):
+    def _fill(self, names, unit, average, opts={}):
         first = True
         fullnames = []
         for name in names:
@@ -2682,7 +2693,7 @@ class scantable(Scantable):
             r.setreferenceexpr(rx)
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
-            opts = {'ms': {'antenna' : antenna, 'getpt': getpt} }
+            #opts = {'ms': {'antenna' : antenna, 'getpt': getpt} }
             r.open(name, opts)# antenna, -1, -1, getpt)
             r.fill()
             if average:

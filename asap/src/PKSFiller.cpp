@@ -19,6 +19,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/Regex.h>
+#include <casa/Utilities/DataType.h>
 #include <casa/Logging/LogIO.h>
 
 #include <casa/Containers/Record.h>
@@ -34,6 +35,7 @@
 #include <casa/Logging/LogIO.h>
 
 #include <time.h>
+#include <sstream>
 
 #include "STDefs.h"
 #include "STAttr.h"
@@ -75,6 +77,27 @@ bool PKSFiller::open( const std::string& filename, const Record& rec)
   Vector<uInt> nchans,npols;
 
   String antenna("");
+  Bool getPt = False;
+
+  // parsing MS options
+  if ( rec.isDefined( "ms" ) ) {
+    Record msrec = rec.asRecord( "ms" ) ;
+    //msrec.print( cout ) ;
+    if ( msrec.isDefined( "getpt" ) ) {
+      getPt = msrec.asBool( "getpt" ) ;
+    }
+    if ( msrec.isDefined( "antenna" ) ) {
+      if ( msrec.type( msrec.fieldNumber( "antenna" ) ) == TpInt ) {
+        Int antInt = msrec.asInt( "antenna" ) ;
+        ostringstream oss ;
+        oss << antInt ;
+        antenna = String( oss ) ;
+      }
+      else {
+        antenna = msrec.asString( "antenna" ) ;
+      }
+    }
+  }
 
   reader_ = getPKSreader(inName, antenna, 0, 0, format, beams, ifs,
                          nchans, npols, haveXPol_, haveBase, haveSpectra);
@@ -146,7 +169,6 @@ bool PKSFiller::open( const std::string& filename, const Record& rec)
 
   Vector<Int> start(nIF_, 1);
   Vector<Int> end(nIF_, 0);
-  Bool getPt = False;
   reader_->select(beams, ifs, start, end, ref, True, haveXPol_[0], False, getPt);
   setHeader(header);
   //For MS, add the location of POINTING of the input MS so one get
