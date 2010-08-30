@@ -258,6 +258,7 @@ class SubMS
 		const Int phaseCenterFieldId=-2, // -2 = use pahse center from field table
 		MDirection phaseCenter=MDirection(), // this direction is used if phaseCenterFieldId==-1
 		const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+		const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
 		const Int nchan=0, // if >0: used instead of regridBandwidth, ==
 		const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
 		const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
@@ -295,6 +296,7 @@ class SubMS
 			const Vector<Double>& transCHAN_WIDTH,
 			String& message, // message to the user, epsecially in case of error 
 			const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
 			const Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
 			const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
 			const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
@@ -333,6 +335,7 @@ class SubMS
 			   LogIO& os,
 			   String& regridMessage,
 			   const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			   const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
 			   const Int nchan=0, // if >0: used instead of regridBandwidth
 			   const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
 			   const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter

@@ -1584,6 +1584,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		       const Int phaseCenterFieldId,
 		       MDirection phaseCenter,
 		       const Bool centerIsStart,
+		       const Bool startIsEnd,
 		       const Int nchan,
 		       const Int width,
 		       const Int start
@@ -1651,6 +1652,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    os,
 			    regridMessage,
 			    centerIsStart,
+			    startIsEnd,
 			    nchan,
 			    width,
 			    start
@@ -1688,6 +1690,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    os,
 			    regridMessage,
 			    centerIsStart,
+			    startIsEnd,
 			    nchan,
 			    width,
 			    start
@@ -2175,6 +2178,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			       const Vector<Double>& transCHAN_WIDTH,
 			       String& message,
 			       const Bool centerIsStartC,
+			       const Bool startIsEndC,
 			       const Int nchanC,
 			       const Int width,
 			       const Int start
@@ -2187,6 +2191,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     Int oldNUM_CHAN = transNewXin.size();
 
     Bool centerIsStart = centerIsStartC;
+    Bool startIsEnd = startIsEndC;
     Double regridChanWidth = regridChanWidthC;
     Double regridCenter = regridCenterC;
     Int nchan = nchanC;
@@ -2237,7 +2242,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
 
       if(centerIsStart){
-	regridCenterChan = regridCenterChan + regridBandwidthChan/2;
+	if(startIsEnd){
+	  regridCenterChan = regridCenterChan - regridBandwidthChan/2;
+	}
+	else{
+	  regridCenterChan = regridCenterChan + regridBandwidthChan/2;
+	}
 	centerIsStart = False;
       }
 
@@ -2402,8 +2412,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	lDouble regridCenterVel; 
 	if(regridCenter>-C::c){
           // (we deal with invalid values later)
-	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
-	    regridCenter += regridChanWidth/2.;
+	  if(centerIsStart && regridChanWidth > 0.){ 
+	    if(startIsEnd){ // start is the center of the last channel (in freq)
+	      regridCenter -= regridChanWidth/2.;
+	    }
+	    else{ // start is the center of the first channel (in freq)
+	      regridCenter += regridChanWidth/2.;
+	    }
 	  }
 
 	  regridCenterF = freq_from_vrad(regridCenter,regridVeloRestfrq);
@@ -2427,14 +2442,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  regridBandwidthF = nchan*regridChanWidthF;
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterF = regridCenterF + regridBandwidthF/2.;
+	    if(startIsEnd){
+	      regridCenterF = regridCenterF - regridBandwidthF/2.;
+	    }
+	    else{
+	      regridCenterF = regridCenterF + regridBandwidthF/2.;
+	    }
 	    centerIsStart = False;
 	  }
 	}
 	else if(regridBandwidth > 0.){
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterVel = regridCenter - regridBandwidth/2.;
+	    if(startIsEnd){
+	      regridCenterVel = regridCenter + regridBandwidth/2.;
+	    }
+	    else{
+	      regridCenterVel = regridCenter - regridBandwidth/2.;
+	    }
 	    regridCenterF = freq_from_vrad(regridCenterVel,regridVeloRestfrq);
 	    centerIsStart = False;
 	  }
@@ -2466,8 +2491,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	lDouble regridCenterVel; 
 	if(regridCenter > -C::c){
-	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
-	    regridCenter += regridChanWidth/2.;
+	  if(centerIsStart && regridChanWidth > 0.){ 
+	    if(startIsEnd){ // start is the center of the last channel
+	      regridCenter -= regridChanWidth/2.;
+	    }
+	    else{ // start is the center of the first channel
+	      regridCenter += regridChanWidth/2.;
+	    }
 	  }
           // (we deal with invalid values later)
 	  regridCenterF = freq_from_vopt(regridCenter,regridVeloRestfrq);
@@ -2492,12 +2522,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    lDouble loEdge = vopt(transNewXin[0]+transCHAN_WIDTH[0],regridVeloRestfrq);
 	    cw = abs(upEdge-loEdge); 
 	  }
-	  lDouble bwUpperEndF = freq_from_vopt(regridCenterVel - (lDouble)nchan*cw*divbytwo,
+	  lDouble bwUpperEndF = 0.;
+	  if(centerIsStart && !startIsEnd){ // start is end in velocity
+	    bwUpperEndF = freq_from_vopt(regridCenterVel - (lDouble)nchan*cw*divbytwo,
 					 regridVeloRestfrq);
-	  regridBandwidthF = (bwUpperEndF-regridCenterF)/divbytwo; 
+	  }
+	  else{
+	    bwUpperEndF = freq_from_vopt(regridCenterVel + (lDouble)nchan*cw*divbytwo,
+					 regridVeloRestfrq);
+	  }
+	  regridBandwidthF = abs(bwUpperEndF-regridCenterF)/divbytwo; 
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterVel = regridCenterVel - (lDouble)nchan*cw/2.;
+	    if(startIsEnd){
+	      regridCenterVel = regridCenterVel + (lDouble)nchan*cw/2.;
+	    }
+	    else{
+	      regridCenterVel = regridCenterVel - (lDouble)nchan*cw/2.;
+	    }
 	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
 	    centerIsStart = False;
 	  }
@@ -2506,7 +2548,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else if(regridBandwidth > 0.){
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterVel = regridCenter - regridBandwidth/2.;
+	    if(startIsEnd){
+	      regridCenterVel = regridCenter + regridBandwidth/2.;
+	    }
+	    else{
+	      regridCenterVel = regridCenter - regridBandwidth/2.;
+	    }
 	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
 	    centerIsStart = False;
 	  }
@@ -2530,13 +2577,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    oss << " *** Parameter start exceeds total number of channels which is "
 		<< transNewXin.size() << ". Set to 0." << endl;
 	    firstChan = 0;
-	  }	    
-	  regridCenter = transNewXin[firstChan]-transCHAN_WIDTH[firstChan]/2.;
+	    startIsEnd = False;
+	  }
+	  if(startIsEnd){
+	    regridCenter = transNewXin[firstChan]+transCHAN_WIDTH[firstChan]/2.;
+	  }
+	  else{
+	    regridCenter = transNewXin[firstChan]-transCHAN_WIDTH[firstChan]/2.;
+	  }
 	  centerIsStart = True;
 	}
 	else{
 	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
-	    regridCenter -= regridChanWidth/2.;
+	    if(startIsEnd){
+	      regridCenter += regridChanWidth/2.;
+	    }
+	    else{
+	      regridCenter -= regridChanWidth/2.;
+	    }
 	  }
 	}
 	regridCenterF = regridCenter;
@@ -2547,8 +2605,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// wavelength ...
 	lDouble regridCenterWav; 
 	if(regridCenter > 0.){
-	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
-	    regridCenter += regridChanWidth/2.;
+	  if(centerIsStart && regridChanWidth > 0.){
+	    if(startIsEnd){  // start is the center of the last channel
+	      regridCenter -= regridChanWidth/2.;
+	    }
+	    else{  // start is the center of the first channel
+	      regridCenter += regridChanWidth/2.;
+	    }
 	  }
 	  regridCenterF = freq_from_lambda(regridCenter); 
 	  regridCenterWav = regridCenter;
@@ -2572,11 +2635,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    lDouble loEdge = lambda(transNewXin[0]+transCHAN_WIDTH[0]);
 	    cw = abs(upEdge-loEdge); 
 	  }
-	  lDouble bwUpperEndF = freq_from_lambda(regridCenterWav - (lDouble)nchan*cw*divbytwo);
+	  lDouble bwUpperEndF = 0.;
+	  if(centerIsStart && !startIsEnd){
+	    bwUpperEndF = freq_from_lambda(regridCenterWav - (lDouble)nchan*cw*divbytwo);	    
+	  }
+	  else{
+	    bwUpperEndF = freq_from_lambda(regridCenterWav + (lDouble)nchan*cw*divbytwo);
+	  }
 	  regridBandwidthF = (bwUpperEndF-regridCenterF)/divbytwo; 
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterWav = regridCenterWav - (lDouble)nchan*cw/2.;
+	    if(startIsEnd){
+	      regridCenterWav = regridCenterWav + (lDouble)nchan*cw/2.;
+	    }
+	    else{
+	      regridCenterWav = regridCenterWav - (lDouble)nchan*cw/2.;
+	    }
 	    regridCenterF = freq_from_lambda(regridCenterWav);
 	    centerIsStart = False;
 	  }
@@ -2585,7 +2659,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else if(regridBandwidth > 0. && regridBandwidth/2. < regridCenterWav){
 	  // can convert start to center
 	  if(centerIsStart){
-	    regridCenterWav = regridCenter - regridBandwidth/2.;
+	    if(startIsEnd){
+	      regridCenterWav = regridCenter + regridBandwidth/2.;
+	    }
+	    else{
+	      regridCenterWav = regridCenter - regridBandwidth/2.;
+	    }
 	    regridCenterF = freq_from_lambda(regridCenterWav);
 	    centerIsStart = False;
 	  }
@@ -2622,23 +2701,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// keep center in limits
 	theRegridCenterF = regridCenterF;
 	if(theRegridCenterF > transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
-	  oss << "Requested center of SPW " << theRegridCenterF << " Hz is larger than maximum possible value";
-	  oss << "\n  by " << theRegridCenterF - (transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.) << " Hz";
-	  message = oss.str();
-	  return False;  
+	  oss << "*** Requested center of SPW " << theRegridCenterF << " Hz is too large by "
+	      << theRegridCenterF - transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2. << " Hz\n";
+	  theRegridCenterF = transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
+	  oss << "*** Reset to maximum possible value " <<  theRegridCenterF  << " Hz";
 	}
 	else if(theRegridCenterF < transNewXin[0]-transCHAN_WIDTH[0]/2.){
 	  lDouble diff = (transNewXin[0]-transCHAN_WIDTH[0]/2.) - theRegridCenterF;
 	  // cope with numerical accuracy problems
 	  if(diff>1.){
-	    oss << "Requested center of SPW " << theRegridCenterF << " Hz is smaller than minimum possible value";
-	    oss << "\n  by " << diff << " Hz";
-	    message = oss.str();
-	    return False;
+	    oss << "*** Requested center of SPW " << theRegridCenterF << " Hz is smaller than minimum possible value";
+	    oss << " by " << diff << " Hz";
 	  }  
-	  else{
-	    theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
-	  }
+	  theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
+	  oss << "\n*** Reset to minimum possible value " <<  theRegridCenterF  << " Hz";
 	}
       }
       if(regridBandwidthF<=0.|| nchan!=0){ // "not set" or use nchan instead
@@ -2659,7 +2735,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	// now can convert start to center
 	if(centerIsStart){
-	  theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
+	  if(startIsEnd){
+	    theRegridCenterF = theRegridCenterF - theRegridBWF/2.;
+	  }
+	  else{
+	    theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
+	  }
 	  centerIsStart = False;
 	}
       }
@@ -2670,7 +2751,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	theRegridBWF = regridBandwidthF;
 	// now can convert start to center
 	if(centerIsStart){
-	  theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
+	  if(startIsEnd){
+	    theRegridCenterF = theRegridCenterF - theRegridBWF/2.;
+	  }
+	  else{
+	    theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
+	  }
 	  centerIsStart = False;
 	}
 	if(theRegridCenterF + theRegridBWF / 2. >
@@ -3135,6 +3221,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				  LogIO& os,
 				  String& regridMessage,
 				  const Bool centerIsStart,
+				  const Bool startIsEnd,
 				  const Int nchan,
 				  const Int width,
 				  const Int start
@@ -3237,13 +3324,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	 << LogIO::POST;
       return rval; 
     }
-
-//     if(!writeTables){
-//       cout << "Verifying parameters and MS ..." << endl;
-//     }
-//     else {
-//       cout << "Writing modified spectral window parameters ..." << endl;
-//     }
 
     MPosition mObsPos = ANTPositionMeasCol(0); // transfer reference frame
     mObsPos.set(MVPosition(pos)); // set coordinates
@@ -3546,6 +3626,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				 transCHAN_WIDTH,
 				 message,
 				 centerIsStart,
+				 startIsEnd,
 				 nchan,
 				 width,
 				 start
