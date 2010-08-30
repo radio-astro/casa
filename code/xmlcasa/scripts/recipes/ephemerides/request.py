@@ -119,9 +119,11 @@ planets_and_moons = {'mercury':    199,
 
 should_have_orientation = ['mars', 'deimos', 'phobos', 'vesta', 'jupiter', 'io',
                            'janus', 'hyperion', 'enceladus', 'mimas', 'iapetus',
-                           'phoebe', 'tethys', 'uranus', 'ariel', 'miranda', 'neptune']
-should_have_sublong = ['mars', 'deimos', 'phobos', 'io',
-                       'janus', 'enceladus', 'hyperion', 'phoebe', 'mimas', 'tethys']
+                           'phoebe', 'tethys', 'uranus', 'ariel', 'miranda',
+                           'neptune']
+should_have_sublong = ['mars', 'deimos', 'phobos', 'jupiter', 'io',
+                       'janus', 'enceladus', 'hyperion', 'phoebe', 'mimas', 'tethys',
+                       'neptune']
 
 # Getting positions once a day is not enough for many moons, if the position of
 # the moon relative to its primary will be needed.  Note that a maximum
@@ -317,7 +319,7 @@ def request_from_JPL(objnam, enddate,
                               "RANGE_UNITS= 'AU'",
                               "APPARENT= 'AIRLESS'",
                               "SOLAR_ELONG= '0,180'",
-                              "SUPPRESS_RANGE_RATE= 'YES'",
+                              "SUPPRESS_RANGE_RATE= 'NO'",
                               "SKIP_DAYLT= 'NO'",
                               "EXTRA_PREC= 'NO'",
                               "R_T_S_ONLY= 'NO'",
