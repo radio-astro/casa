@@ -1667,9 +1667,7 @@ Bool Simulator::create_corrupt(Record& simpar)
   
   // RI todo sim::create_corrupt assert that ms has certain structure
   
-#ifndef RI_DEBUG
-    try {
-#endif
+  try {
     makeVisSet();
     
     String upType=simpar.asString("type");
@@ -1678,11 +1676,10 @@ Bool Simulator::create_corrupt(Record& simpar)
     
     svc = createSolvableVisCal(upType,*vs_p);
 
-#ifdef RI_DEBUG
+    //RI
     svc->setPrtlev(4);
-#else 
-    svc->setPrtlev(0);
-#endif
+    cout<<"Sim:create_corrupt ["<<upType<<"]"<<endl;
+    //
 
     Vector<Double> solTimes;
     svc->setSimulate(*vs_p,simpar,solTimes);
@@ -1694,14 +1691,12 @@ Bool Simulator::create_corrupt(Record& simpar)
     // svc=NULL;
     ve_p.setapply(vc_p);
             
-#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     if (svc) delete svc;
     throw(AipsError("Error in Simulator::create_corrupt"));
     return False;
   }
-#endif
   return True;
 }
 

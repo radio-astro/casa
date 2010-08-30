@@ -438,6 +438,8 @@ void SolvableVisCal::setApply(const Record& apply) {
 void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, const Int nSim) {
   LogIO os(LogOrigin("SVC", "createCorruptor", WHERE));
 
+  if (prtlev()>3) cout << "  SVC::createCorruptor:" << endl;
+
   // this is the generic create and init 
   // ** specialists should call this after createing their corruptor
   // and before initializing
@@ -469,9 +471,9 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
   corruptor_p->nPar()=nPar();
 
   const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();  
-  if (prtlev()>3) cout << " SpwCols accessed:" << endl;
-  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << " spwcols= " << nSpw() << endl;
-  if (prtlev()>3) cout << "   spwcols.nrow()= " << spwcols.nrow() << endl;  
+  //  if (prtlev()>3) cout << " SpwCols accessed:" << endl;
+  //if (prtlev()>3) cout << "   nSpw()= " << nSpw() << " spwcols= " << nSpw() << endl;
+  //if (prtlev()>3) cout << "   spwcols.nrow()= " << spwcols.nrow() << endl;  
   AlwaysAssert(uInt(nSpw())==spwcols.nrow(),AipsError);
   // there's a member variable in Simulator nSpw, should we verify that 
   // this is the same? probably.
@@ -498,7 +500,10 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
   }
   // see MSsummary.cc for more info/examples
   if (prtlev()>3) 
-    cout << "SVC::fnChan = "<<corruptor_p->fnChan()<<" reffreq = "<<corruptor_p->fRefFreq()<<" fWidth = "<<corruptor_p->fWidth()<<endl;
+    cout << "   SVC::fnChan = "<<corruptor_p->fnChan()<<" reffreq = "<<corruptor_p->fRefFreq()<<" fWidth = "<<corruptor_p->fWidth()<<endl;
+
+  if (prtlev()>3) cout << "  ~SVC::createCorruptor:" << endl;
+
 }
 
 
@@ -506,7 +511,7 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
 void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& solTimes) {
 
   LogIO os(LogOrigin("SVC["+typeName()+"]", "setSimulate()", WHERE));
-  if (prtlev()>2) cout << "SVC::setSimulate(simpar)" << endl;
+  if (prtlev()>2) cout << " SVC::setSimulate(simpar)" << endl;
 
   // Extract calWt
   if (simpar.isDefined("calwt"))
@@ -620,27 +625,22 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   Int nSim = 1;
   // independent of simpar details
 
+  nSim=sizeUpSim(vs,nChunkPerSol,solTimes);
+  if (prtlev()>1 and prtlev()<3) cout << "  VisCal sized for Simulation with " << nSim << " slots." << endl;
+  if (prtlev()>4) cout << "  solTimes = " << solTimes-solTimes[0] << endl;  
   
-  // RI this causes segv in corrupt - something is not getting initialized....
-  //  if (not simOnTheFly()) {
-    nSim=sizeUpSim(vs,nChunkPerSol,solTimes);
-    if (prtlev()>1 and prtlev()<3) cout << " VisCal sized for Simulation with " << nSim << " slots." << endl;
-    if (prtlev()>4) cout << " solTimes = " << solTimes-solTimes[0] << endl;  
-
-    if (!(simpar.isDefined("startTime"))) {    
-      throw(AipsError("can't add startTime field to Record"));
-      // Record seems to have been designed strangely, so this doesn't work:
-      //    RecordDesc simParDesc = simpar.description();
-      //    simParDesc.addField("startTime",TpDouble);
-      //    simpar.restructure(simParDesc);
-    }
+  if (!(simpar.isDefined("startTime"))) {    
+    throw(AipsError("can't add startTime field to Record"));
+    // Record seems to have been designed strangely, so this doesn't work:
+    //    RecordDesc simParDesc = simpar.description();
+    //    simParDesc.addField("startTime",TpDouble);
+    //    simpar.restructure(simParDesc);
     simpar.define("startTime",min(solTimes));
-    
-    if (!(simpar.isDefined("stopTime"))) {    
-      throw(AipsError("can't add stopTime field to Record"));
-    }
-    simpar.define("stopTime",max(solTimes));
-    //  }
+  }
+  if (!(simpar.isDefined("stopTime"))) {    
+    throw(AipsError("can't add stopTime field to Record"));
+  }
+  simpar.define("stopTime",max(solTimes));
   
   // assume only one ms attached to the VI. need vi for mscolumns in createCorruptor
   // note - sizeUpSim seems to break the reference to mscolumns inside of VI, 
@@ -675,8 +675,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 
   } else {
    
-    if (prtlev()>3) 
-      cout << " slot_times= " 
+    if (prtlev()>4) 
+      cout << "  slot_times= " 
 	   << corruptor_p->slot_time(1)-corruptor_p->slot_time(0) << " " 
 	   << corruptor_p->slot_time(2)-corruptor_p->slot_time(0) << " " 
 	   << corruptor_p->slot_time(3)-corruptor_p->slot_time(0) << " " 
@@ -730,7 +730,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     
         for (vi.origin(); vi.more(); vi++) {
     
-    	if (prtlev()>5) cout << "vi++"<<endl;
+    	if (prtlev()>5) cout << "  vi++"<<endl;
     	vi.antenna1(a1);
           vi.antenna2(a2);
           vi.flag(flags);
@@ -765,7 +765,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	    }
     	  }
     	}
-    	if (prtlev()>5) cout << "slot = "<< corruptor_p->curr_slot()<<endl;
+    	if (prtlev()>5) cout << "  slot = "<< corruptor_p->curr_slot()<<endl;
     	
     	solveCPar()=Complex(0.0);
     	solveParOK()=False;
@@ -826,7 +826,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	      }		      
     
     	    }   
-    	    if (prtlev()>4) cout << "row "<<irow<< " set; cparshape="<<solveCPar().shape()<<endl;
+    	    if (prtlev()>4) cout << "  row "<<irow<< " set; cparshape="<<solveCPar().shape()<<endl;
     	    // if using gpos and not changing these then they stay set this way
     	    //blc(1)=0;
     	    //trc(1)=nChanPar()-1;
@@ -835,7 +835,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	    solveParOK()(blc,trc)=True;	      
     	  }// if not flagged
     	}// row
-    	if (prtlev()>4) cout << "about to keep, cs.parshape="<<cs().par(currSpw()).shape()<<endl;
+    	if (prtlev()>4) cout << "  about to keep, cs.parshape="<<cs().par(currSpw()).shape()<<endl;
     	// sigh - need own keep too, to have all chans at once...
     	{
     	  if (slotidx(thisSpw)<cs().nTime(currSpw())) {
@@ -897,6 +897,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
        << "calTable name not set - not writing to disk." 
        << endl << LogIO::POST;
   }  
+
+  if (prtlev()>2) cout << " ~SVC::setSimulate(simpar)" << endl;
 }
 
 
@@ -1710,6 +1712,8 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   //   field and/or ddid) rather than chunks
   LogIO os(LogOrigin("SVC", "sizeUpSim()", WHERE));
 
+  if (prtlev()>2) cout << "  SVC::sizeUpSim" << endl;
+  
   // Interpret solution interval for the VisIter
   Double iterInterval(max(interval(),DBL_MIN));
   if (interval() < 0.0) {   // means no interval (infinite solint)
@@ -1718,7 +1722,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   }
 
   if (prtlev()>2) {
-    cout << " simint = " << interval() ;
+    cout << "   interval() = " << interval() ;
     cout << " combscan() = " << combscan();
     cout << " combfld()  = " << combfld() ;
     cout << " combspw()  = " << combspw() ;
@@ -1737,7 +1741,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   if (combspw()) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
   
   if (prtlev()>2) {
-    cout << " Sort columns: ";
+    cout << " sort columns: ";
     for (Int i=0;i<nsortcol;++i) 
       cout << columns[i] << " ";
     cout << endl;
@@ -1747,17 +1751,30 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   // instead of default which would go until the scan changed
   vs.resetVisIter(columns,iterInterval);
   
+  VisIter& vi(vs.iter());
+  vi.originChunks();
+  vi.origin();
+  VisBuffer vb(vi);
+
   // Number of VisIter chunks per spw
   Vector<Int> nChunkPerSpw(vs.numberSpw(),0);
+
+  Int nSol(1);
+
+  if (simOnTheFly()) {
+    nChunkPerSol.resize(1);
+    nChunkPerSol=1;
+
+    vi.origin();
+    solTimes.resize(1);
+    solTimes(0)=vb.time()(0);  // first time in this chunk
+
+  } else {
+
 
   // Number of VisIter chunks per solution
   nChunkPerSol.resize(100);
   nChunkPerSol=0;
-
-  VisIter& vi(vs.iter());
-  VisBuffer vb(vi);
-  vi.originChunks();
-  vi.origin();
     
   Double time0(86400.0*floor(vb.time()(0)/86400.0));
   Double time1(0.0),time(0.0);
@@ -1789,7 +1806,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
       sol++;
       if (prtlev()>4) {
 	cout << "--------------------------------" << endl;
-	cout << "sol = " << sol << endl;
+	cout << "   sol = " << sol << endl;
       }
       // increase size of nChunkPerSol array, if needed
       if (nChunkPerSol.nelements()<uInt(sol+1))
@@ -1828,24 +1845,31 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     
   }
   
-  Int nSol(sol+1);
+  nSol = sol+1;
 
   nChunkPerSol.resize(nSol,True);
   solTimes.resize(nSol,True);
 
-  if (prtlev()>4) {
-    cout << "    solTimes = " << solTimes-solTimes[0] << endl;
-    cout << "nChunkPerSol = " << nChunkPerSol << " " << sum(nChunkPerSol) << endl;
+  if (prtlev()>5) {
+    cout << "   solTimes = " << solTimes-solTimes[0] << endl;
+    cout << "   nChunkPerSol = " << nChunkPerSol << " " << sum(nChunkPerSol) << endl;
   }
+  } // if not inTheFly
 
   // Set Nominal per-spw channelization - this does set chanParList to full
   // # chans
   setSolveChannelization(vs);
-  if (prtlev()>3) cout<<" freqDepPar="<<freqDepPar()<<" nChanParList="<<nChanParList()<<endl;
+  if (prtlev()>3) cout<<"   freqDepPar="<<freqDepPar()<<endl;
+  if (prtlev()>2) cout<<"   nSpw()="<<nSpw()
+		      <<" nPar()="<<nPar()<<" nChanParList="<<nChanParList()
+		      <<" nElem()="<<nElem()<<" nSol="<<nSol
+		      <<" approx size = "<<(nSpw()*(nChanParList().size())*nElem()*nSol*nPar())
+		      <<"x size(complex)"<<endl;
   
   // makeCalSet(True);
   // do it ourselves in order to use nchanparlist just set in setsolvechan
 
+  if (not simOnTheFly()) {
   switch(parType())
     {
     case VisCalEnum::COMPLEX:
@@ -1871,8 +1895,10 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
       throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
 		      "COMPLEXREAL found in SolvableVisCal::makeCalSet()"));
     }
-  
-  if (prtlev()>3) cout<<" calset of size "<<cs().par(currSpw()).shape()<<" created"<<endl;
+
+  if (prtlev()>3) cout<<"   calset of size "<<cs().par(currSpw()).shape()<<" created"<<endl;
+  }
+
 
   spwMap().resize(vs.numberSpw());
   indgen(spwMap());
@@ -1880,12 +1906,12 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   Int spwlab=0;
   if (combspw()) {
     while (nChunkPerSpw(spwlab)<1) spwlab++;
-    if (prtlev()>2) cout << "Obtaining " << nSol << " solutions, labelled as spw=" << spwlab  << endl;
+    if (prtlev()>2) cout << "   obtaining " << nSol << " solutions, labelled as spw=" << spwlab  << endl;
     spwMap()=-1;  // TBD: needed?
     spwMap()(nChunkPerSpw>0)=spwlab;
 
     if (prtlev()>2)
-      cout << "nChanParList = " << nChanParList()(nChunkPerSpw>0).getCompressedArray() 
+      cout << "   nChanParList = " << nChanParList()(nChunkPerSpw>0).getCompressedArray() 
 	   << "==" << nChanParList()(spwlab) <<  endl;
 
     // Verify that all spws have same number of channels (so they can be combined!)
@@ -1897,13 +1923,13 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   }
 
   if (prtlev()>2) {
-    cout << " spwMap()  = " << spwMap() ;
+    cout << "   spwMap()  = " << spwMap() ;
     cout << " spwlist = " << spwlist ;
     cout << " nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << " = " << nSol << endl;
     //cout << "Total solutions = " << nSol << endl;
   }
   if (prtlev()>4) 
-    cout << "nChunkPerSim = " << nChunkPerSol << endl;
+    cout << "   nChunkPerSim = " << nChunkPerSol << endl;
   
   
   if (combscan())
@@ -1917,11 +1943,10 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
      <<  nSol << " solution intervals."
      << LogIO::POST;
   
-  // Inflate the CalSet - RI TODO redundant with create above?
-  inflate(nChanParList(),startChanList(),nChunkPerSpw);
-  
-  os << LogIO::DEBUG1 <<" calset inflated to "<<cs().par(currSpw()).shape() 
-     << LogIO::POST;
+  // Inflate the CalSet - RI: redundant with create above?
+  // inflate(nChanParList(),startChanList(),nChunkPerSpw);
+  //os << LogIO::DEBUG1 <<" calset inflated to "<<cs().par(currSpw()).shape() 
+  //   << LogIO::POST;
 
   // Size the solvePar arrays
   // Jones' insists on having 1 channel, but mullers have lots.  
@@ -1970,8 +1995,12 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
       }
   }
   
-  os << LogIO::DEBUG1 << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() 
-     << LogIO::POST;
+  if (not simOnTheFly()) {
+    os << LogIO::DEBUG1 << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() 
+       << LogIO::POST;
+  }
+
+  if (prtlev()>2) cout << "  ~SVC::sizeUpSim" << endl;
 
   // Return the total number of solution intervals
   return nSol;
