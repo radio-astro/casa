@@ -71,7 +71,8 @@ INCDIRS := -I$(COREINCD) -I$(BOOSTINCD) \
            -I$(PYRAPROOT) $(addprefix -I, $(PYTHONINCD))
 
 # link option
-LDFLAGS := -shared 
+LDFLAGS := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=LD_FLAGS eval_vars) && echo $$LD_FLAGS)
+LDFLAGS += -shared 
 
 OBJECTS := $(PYRAPDIR)/PycArray.o \
            $(PYRAPDIR)/PycArrayNP.o \
