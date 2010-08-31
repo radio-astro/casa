@@ -178,10 +178,15 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
   static const String names[MeasComet::N_Columns] = {
     "MJD",
     "RA", "DEC",
-    "Rho", "RadVel", "DiskLong", "DiskLat" };
+    "Rho",                    // Distance from Earth in AU.
+    "RadVel",		      // AU/d
+    "DiskLong", "DiskLat" };  // These must be made optional.
   static const String tplc = "measures.comet.directory";
 
   if (!measured_p && measFlag_p) {
+    LogIO os(LogOrigin("MeasComet", String("initMeas(String)"),
+		       WHERE));
+
     measFlag_p = False;
     tp_p = which;
     TableRecord kws;
@@ -197,7 +202,21 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
     };
     if (!kws.isDefined("MJD0") || kws.asDouble("MJD0") < 10000 ||
 	!kws.isDefined("dMJD") || kws.asDouble("dMJD") <= 0 ||
-	!kws.isDefined("NAME")) ok = False;
+	!kws.isDefined("NAME")){
+      ok = False;
+      os << LogIO::SEVERE;
+      if(!kws.isDefined("MJD0"))
+	os << "MJD0 is not defined.\n";
+      else if(kws.asDouble("MJD0") < 10000)
+	os << "MJD0, " << kws.asDouble("MJD0") << " is < 10000.\n";
+      if(!kws.isDefined("dMJD"))
+	os << "dMJD is not defined.\n";
+      else if(kws.asDouble("dMJD") <= 0.0)
+	os << "dMJD, " << kws.asDouble("dMJD") << " is < 0.\n";
+      if(!kws.isDefined("NAME"))
+	os << "NAME is not defined.";
+      os << LogIO::POST;
+    }
     if (ok) {
       name_p = kws.asString("NAME");
       topo_p = MVPosition(Quantity(kws.asDouble("GeoDist"), "km"),
@@ -209,15 +228,13 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
       nrow_p = tab_p.nrow();
       row_p.get(nrow_p-1);
       if (!nearAbs(*(rfp_p[0]), mjd0_p + nrow_p*dmjd_p, 0.1*dmjd_p)) { 
+	os << LogIO::SEVERE << "MJD has a problem." << LogIO::POST;
 	ok = False;
       } else {
 	mjdl_p = mjd0_p + nrow_p*dmjd_p;
       };
     };
     if (!ok) {
-      LogIO os(LogOrigin("MeasComet",
-			 String("initMeas(String)"),
-			 WHERE));
       os << String("Corrupted Comet table ") + tp_p << LogIO::EXCEPTION;
     };
     measured_p = True;
