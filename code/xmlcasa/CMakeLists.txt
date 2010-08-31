@@ -219,6 +219,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_find.py
   scripts/task_fixvis.py
   scripts/task_flagautocorr.py
+  scripts/task_flagcmd.py
   scripts/task_flagdata.py
   scripts/task_flagdata2.py
   scripts/task_flagmanager.py
@@ -329,6 +330,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/find.xml
   tasks/fixvis.xml
   tasks/flagautocorr.xml
+  tasks/flagcmd.xml
   tasks/flagdata.xml
   tasks/flagdata2.xml
   tasks/flagmanager.xml
