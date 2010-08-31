@@ -627,7 +627,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 
   nSim=sizeUpSim(vs,nChunkPerSol,solTimes);
   if (prtlev()>1 and prtlev()<3) cout << "  VisCal sized for Simulation with " << nSim << " slots." << endl;
-  if (prtlev()>4) cout << "  solTimes = " << solTimes-solTimes[0] << endl;  
+  if (prtlev()>5) cout << "  solTimes = " << solTimes-solTimes[0] << endl;  
   
   if (!(simpar.isDefined("startTime"))) {    
     throw(AipsError("can't add startTime field to Record"));
@@ -675,7 +675,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 
   } else {
    
-    if (prtlev()>4) 
+    if (prtlev()>5) 
       cout << "  slot_times= " 
 	   << corruptor_p->slot_time(1)-corruptor_p->slot_time(0) << " " 
 	   << corruptor_p->slot_time(2)-corruptor_p->slot_time(0) << " " 
@@ -747,25 +747,31 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	currField() = vi.fieldId();
     
     	// make sure we have the right slot in the corruptor 
-    	// RI todo SVC::setSim can the corruptor slot be the same for all chunks?
-    	// we were setting curr_time() to timevec[0], but I think refTime is more 
+    	// RI todo can the corruptor slot be the same for all chunks?
+    	// were setting curr_time() to timevec[0], but I think refTime is more 
     	// accurate
-    	if (corruptor_p->curr_time()!=refTime()) {
-    	  corruptor_p->curr_time()=refTime();
-    	  // find new slot if required
-    	  Double dt(1e10),dt0(-1);
-    	  dt0 = abs(corruptor_p->slot_time() - refTime());
-    	  
-    	  for (Int newslot=0;newslot<corruptor_p->nSim();newslot++) {
-    	    dt=abs(corruptor_p->slot_time(newslot) - refTime());
-    	    // is this newslot closer to the current time?
-    	    if (dt<dt0) {
-    	      corruptor_p->curr_slot()=newslot;
-    	      dt0 = dt;
-    	    }
-    	  }
-    	}
-    	if (prtlev()>5) cout << "  slot = "<< corruptor_p->curr_slot()<<endl;
+	// 20100831 make corruptor->setCurrtime() which does slot if ness, 
+	// and * invalidates any aux matrices like airmass in atmcorr, 
+	// if ness *
+
+    	if (corruptor_p->curr_time()!=refTime()) 
+	  corruptor_p->setCurrTime(refTime());
+
+//    	  corruptor_p->curr_time()=refTime();
+//    	  // find new slot if required
+//    	  Double dt(1e10),dt0(-1);
+//    	  dt0 = abs(corruptor_p->slot_time() - refTime());
+//    	  
+//    	  for (Int newslot=0;newslot<corruptor_p->nSim();newslot++) {
+//    	    dt=abs(corruptor_p->slot_time(newslot) - refTime());
+//    	    // is this newslot closer to the current time?
+//    	    if (dt<dt0) {
+//    	      corruptor_p->curr_slot()=newslot;
+//    	      dt0 = dt;
+//    	    }
+//    	  }
+//    	}
+//    	if (prtlev()>5) cout << "  slot = "<< corruptor_p->curr_slot()<<endl;
     	
     	solveCPar()=Complex(0.0);
     	solveParOK()=False;
@@ -826,7 +832,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	      }		      
     
     	    }   
-    	    if (prtlev()>4) cout << "  row "<<irow<< " set; cparshape="<<solveCPar().shape()<<endl;
+    	    if (prtlev()>5) cout << "  row "<<irow<< " set; cparshape="<<solveCPar().shape()<<endl;
     	    // if using gpos and not changing these then they stay set this way
     	    //blc(1)=0;
     	    //trc(1)=nChanPar()-1;
@@ -835,7 +841,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	    solveParOK()(blc,trc)=True;	      
     	  }// if not flagged
     	}// row
-    	if (prtlev()>4) cout << "  about to keep, cs.parshape="<<cs().par(currSpw()).shape()<<endl;
+    	if (prtlev()>5) cout << "  about to keep, cs.parshape="<<cs().par(currSpw()).shape()<<endl;
     	// sigh - need own keep too, to have all chans at once...
     	{
     	  if (slotidx(thisSpw)<cs().nTime(currSpw())) {
@@ -894,8 +900,12 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     store();
   } else {
     os << LogIO::NORMAL 
-       << "calTable name not set - not writing to disk." 
-       << endl << LogIO::POST;
+       << "calTable name not set - not writing to disk (note: ";
+    if (simOnTheFly()) 
+      os << "OTF sim - not creating Calset either)";
+    else
+      os << "NOT OTF sim - still creating Calset)";  
+    os << endl << LogIO::POST;
   }  
 
   if (prtlev()>2) cout << " ~SVC::setSimulate(simpar)" << endl;
@@ -1804,7 +1814,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 	 (sol==-1))  {                              // this is the first interval
       soltime1=time1;
       sol++;
-      if (prtlev()>4) {
+      if (prtlev()>5) {
 	cout << "--------------------------------" << endl;
 	cout << "   sol = " << sol << endl;
       }
@@ -1821,7 +1831,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     // Increment chunk-per-sol count for current solution
     nChunkPerSol(sol)++;
 
-    if (prtlev()>4) {
+    if (prtlev()>5) {
       cout << "          ck=" << chunk << " " << soltime1-time0 << endl;
       
       Int iter(0);
@@ -1928,7 +1938,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     cout << " nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << " = " << nSol << endl;
     //cout << "Total solutions = " << nSol << endl;
   }
-  if (prtlev()>4) 
+  if (prtlev()>5) 
     cout << "   nChunkPerSim = " << nChunkPerSol << endl;
   
   
@@ -2762,9 +2772,13 @@ void SolvableVisCal::syncSolvePar() {
 
 void SolvableVisCal::calcPar() {
 
+  if (simOnTheFly()) {
+    syncSolvePar(); // OTF simulation context RI 20100831
+  } else { 
+
   if (prtlev()>6) cout << "      SVC::calcPar()" << endl;
 
-  // This method is relevant only to the apply context
+  // This method is relevant only to the apply (& simulate) context
 
   Bool newcal(False);
 
@@ -2794,6 +2808,7 @@ void SolvableVisCal::calcPar() {
 
     // If new parameters, matrices (generically) are necessarily invalid now
     invalidateCalMat();
+  }
   }
 
 }
