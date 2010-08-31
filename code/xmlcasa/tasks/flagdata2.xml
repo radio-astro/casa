@@ -458,8 +458,10 @@
                     antenna='5&amp;6;7&amp;8' #baseline 5-6 and 7-8
                     antenna='5' # all baselines with antenna 5
                     antenna='5,6' # all baselines with antennas 5 and 6
-                    antenna='1&amp;&amp;1' # all auto-correlation baselines for antenna 1
-                    antenna='1~7&amp;&amp;&amp;' # all auto-correlation baselines for antennas in range 1~7
+                    antenna='1&amp;&amp;1' # only the auto-correlation baselines for antenna 1
+                    antenna='1&amp;&amp;*' # cross and auto-correlation baselines between antenna 1
+                                             and all the other available antennas
+                    antenna='1~7&amp;&amp;&amp;' # only the auto-correlation baselines for antennas in range 1~7
               spw -- Select data based on spectral window and channels
                     default: '' (all); example: spw='1'
                     spw='&lt;2' #spectral windows less than 2
@@ -670,36 +672,34 @@
            data and at the same time less than or equal to 3000 flagged values.
 
 
-        -- TO BE REWRITTEN Vector mode --
+        -- Vector mode --
 
         For reasons of performance (in order to reduce the number loops through
         the MS), several flagdata task invocations can be combined into a single
         flagdata() run by giving vectors of parameters.
 
-        This is possible for the modes 'manualflag' and 'quack', only.
+        This is possible for the modes 'manualflag', 'clip' and 'quack', only.
 
-        For example, the following three flagdata runs:
+        For example, the following two flagdata runs:
 
             vis = 'my.ms'
-            mode = 'manualflag'
+            manualflag = True
             selectdata = True
-            flagdata(vis='my.ms', mode='manualflag', field='3', autocorr=True)
-            flagdata(vis='my.ms', mode='manualflag', field='3', timerange = '6:0:0~6:23:00')
-            flagdata(vis='my.ms', mode='manualflag', field='3', scan='0', spw='0:60;62;64')
+            flagdata2(vis='my.ms', manualflag=True, selectdata=True, field='3', timerange = '6:0:0~6:23:00')
+            flagdata2(vis='my.ms', manualflag=True, selectdata=True, field='3', scan='0', spw='0:60;62;64')
 
         can be combined into a single run by:
 
             vis = 'my.ms'
-            mode = 'manualflag'
+            manualflag = True
             selectdata = True
 
             field     = '3'
             spw       = [ ''   , ''            , '0:60;62:64' ]
-            autocorr  = [ True , False         , False        ]
             timerange = [ ''   , '6:0:0~6:23:0', ''           ]
             scan      = [ ''   , ''            , '0'          ]
 
-            flagdata()
+            flagdata2()
 
         Note that field='3' is equivalent to field=['3','3','3']
 
@@ -707,7 +707,7 @@
         Another example of vector mode is
 
             vis = 'my.ms'
-            mode = 'manualflag'
+            clip = True
             clipminmax = [0.0, 0.7]
             clipexpr = ['ABS RR', 'ABS LL', 'ABS LR']
 
