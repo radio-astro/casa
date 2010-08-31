@@ -390,11 +390,8 @@ class test_selections(test_base):
     def setUp(self):
         self.setUp_ngc5921()
 
-    def test_scan(self):
-        
-        flagdata2(vis=self.vis, selectdata=True, scan='3', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 52416)
-        flagdata2(vis=self.vis, unflag=True)        
+    def test_scan1(self):
+        '''Flagdata: scan='3' manualflag'''
         flagdata2(vis=self.vis, selectdata=True, scan='3', manualflag=True)
         test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 52416)
         
@@ -452,9 +449,19 @@ class test_multimodes(test_base):
     def setUp(self):
         self.setUp_ngc5921()
 
-    def test_manual_shadow(self):
-        '''Manualflag and shadow modes'''
+    def test_manual_auto(self):
+        '''Manualflag and autoflag modes'''
         # It will run flagdata then compare with flagdata2
+        flagdata(vis=self.vis, scan='3')
+        flagdata(vis=self.vis, scan='3', mode='autoflag', algorithm='timemed', window=3)
+        res1 = flagdata(vis=self.vis, mode='summary')
+        
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata2(vis=self.vis,selectdata=True,scan='3',autoflag=True,algorithm='timemed',window=3)
+        res2 = flagdata2(vis=self.vis, summary=True)
+        
+        print res1['flagged']
+        print res2['flagged']
         
         # run clip mode only and verify
         flagdata2(vis=self.vis, selectdata=True, antenna="2,3,5,6", scan="4", manualflag=True)
@@ -488,7 +495,70 @@ class test_multimodes(test_base):
         
         # run clip and autoflag
 #        flagdata2(vis=self.vis, selectdata=True, antenna="2,3,5,6", scan="4", autoflag=True, algorithm='freqmed')
+
+class test_mfselections(test_base):
+    """Test various manualflag selections"""
+
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_mfscan(self):
+        '''Flagdata2: scan=2~6 mf_scan=3 manualflag'''
+        flagdata2(vis=self.vis, selectdata=True, scan='2~6', manualflag=True, mf_scan='3')
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, scan='2'), 238140, 0)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, scan='3'), 762048, 762048)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, scan='4'), 95256, 0)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, scan='5'), 142884, 0)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, scan='6'), 857304, 0)
         
+        # feed not implemented flagdata2(vis=vis, feed='27')
+        # flagdata2(vis=vis, unflag=True)
+
+    def test_mfantenna(self):
+        '''Flagdata2: antenna=1~20, mf_antenna=3~8'''
+        flagdata2(vis=self.vis, selectdata=True, antenna='1~20', manualflag=True, mf_antenna='3~8')
+        test_eq(flagdata2(vis=self.vis, summary=True, antenna='5'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True, antenna='9'), 196434, 45360)
+        
+        # compare with original flagdata
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata(vis=self.vis, selectdata=True, antenna='3~8')
+        test_eq(flagdata(vis=self.vis, mode='summary', selectdata=True, antenna='5'), 196434, 196434)
+        test_eq(flagdata(vis=self.vis, mode='summary', selectdata=True,antenna='9'), 196434, 45360)
+
+#FIXME: finish the next methods
+    def test_spw(self):
+        
+        flagdata2(vis=self.vis, selectdata=True, spw='0', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, antenna='2'), 196434, 196434)
+
+    def test_correlation(self):
+        flagdata2(vis=self.vis, selectdata=True, correlation='LL', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 98217)
+        flagdata2(vis=self.vis, selectdata=True, correlation='LL,RR', manualflag=True)
+        flagdata2(vis=self.vis, selectdata=True, correlation='LL RR', manualflag=True)
+        flagdata2(vis=self.vis, selectdata=True, correlation='LL ,, ,  ,RR', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
+
+    def test_field(self):
+        
+        flagdata2(vis=self.vis, selectdata=True, field='0', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 39186)
+
+    def test_uvrange(self):
+        
+        flagdata2(vis=self.vis, selectdata=True, uvrange='200~400m', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 55944)
+
+    def test_timerange(self):
+    
+        flagdata2(vis=self.vis, selectdata=True, timerange='09:50:00~10:20:00', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, antenna='2'), 196434, 6552)
+
+    def test_array(self):
+        flagdata2(vis=self.vis, selectdata=True, array='0', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
+     
 # Dummy class which cleans up created files
 class cleanup(test_base):
     
@@ -515,5 +585,6 @@ def suite():
             test_msselection,
             test_autoflag,
 #            test_multimodes,
+            test_mfselections,
   #          test_default,
             cleanup]
