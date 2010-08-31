@@ -292,6 +292,11 @@ class test_autoflag(test_base):
         flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 29101)
 
+    def test_cas2410(self):
+        flagdata(vis=self.vis, scan='3')
+        flagdata(vis=self.vis, scan='6', mode='autoflag', algorithm='timemed', window=3)
+        test_eq(flagdata(vis=self.vis, mode="summary"), 2854278, 763371)
+
 class test_statistics_queries(test_base):
 
     def setUp(self):
@@ -434,6 +439,7 @@ class test_selections(test_base):
     def test_array(self):
         flagdata(vis=self.vis, array='0')
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+
 
 # Dummy class which cleans up created files
 class cleanup(test_base):
