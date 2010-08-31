@@ -46,15 +46,13 @@ namespace casa
       itsMapSize    (0),
       itsPosition   (0),
       itsPtr        (NULL),
-      itsIsWritable (False),
-	itsRealFileSize(0)
+      itsIsWritable (False)
   {}
 
     MMapfdIO::MMapfdIO (int fd, const String& fileName)
       :  itsMapOffset  (0),
          itsMapSize    (0),
-         itsPtr        (NULL),
-	 itsRealFileSize(0)
+         itsPtr        (NULL)
   {
     map (fd, fileName);
   }
@@ -64,7 +62,7 @@ namespace casa
     attach (fd, fileName);
     // Keep writable switch because it is used quite often.
     itsIsWritable = isWritable();
-    itsRealFileSize = itsFileSize   = length();
+    itsFileSize   = length();
     itsPosition   = 0;
     if (itsFileSize > 0) {
         mapFile(0, 1);
@@ -74,134 +72,147 @@ namespace casa
   MMapfdIO::~MMapfdIO()
   {
     unmapFile();
-    //
-    // this maybe dangerouse because we assume the actual file length was
-    if(itsRealFileSize)
-	    ftruncate(fd(), itsRealFileSize); 
   }
 
   void MMapfdIO::mapFile(Int64 offset, Int64 length)
   {
-    // Unmap file if still mapped.
-    if (itsPtr != NULL) {
-      unmapFile();
-    }
+#if defined (AIPS_DARWIN) && defined(AIPS_64B)
+      /* On OS X 10.6 do not unmap the previous mapped section. Calling munmap()
+         has a cost which is proportional to the file size, even when unmapping
+         just a small part of the file. This seems like a problem in munmap()
+         which is specific to 10.6, not seen in 10.5 nor on Linux. When the file
+         is remapped often, this is a high cost. Instead, postpone all the
+         unmapping until the object is destroyed. This has a much lower cost per
+         munmap() call.
+
+         The 10.6 approach is a bad approach on non-10.6 because not unmapping
+         means spending physical memory, and starting to swap and perform badly
+         when out of physical memory. 10.6 is different in this respect too: Not
+         unmapping also spends physical memory, but the unused pages get swapped
+         out with no significant performance cost.
+
+         Not unmapping costs virtual memory, of which there is theoretically
+         256 TB available on 10.6, and in practise more than 100 TB. This is enough
+         to hold several TB-sized files.
+      */
+#else
+    unmapFile();
+#endif
     int prot = PROT_READ;
     if (itsIsWritable) {
       prot = PROT_READ | PROT_WRITE;
     }
+    
+    /* Mapping the entire file is runtime expensive on OS X 10.5 and 10.6
+       (though it is fine on Linux); therefore map only the section of the
+       file which is needed. */
 
-    // Attempt to map the entire file.
-    itsMapSize = itsFileSize;
-    itsMapOffset = 0;
+      uInt pageSize = getpagesize();
+      Int64 startPage = offset / pageSize;
+      Int64 endPage = (offset + length - 1) / pageSize;
+      
+      /* Empirically, it was found that for a repeated remapping to not 
+	 have too much overhead, the mapped size should be in the order of
+         MB, i.e. thousands of pages (given the pagesize of 4K used in current
+         OSs). Notice that if this code is used by TSM table columns with
+         tile sizes >= 1MB, the requested length is already large enough,
+         and the following extension of the mapped region is redundant
+         (but not harmful) */
+      startPage -= 1024;
+      endPage += 1024;
 
-    if ((uInt64) itsMapSize == (size_t) itsMapSize) {
-        /* This condition fails for example if sizeof(size_t) = 4 and itsFileSize > 2^32,
-           in which case there is no reason to even attempt to mmap the entire file. */
+      itsMapOffset = pageSize * startPage;
+      itsMapSize   = pageSize * (endPage - startPage + 1);
+      
+      if (itsMapOffset < 0) {
+	itsMapOffset = 0;
+      }
 
-        itsPtr = static_cast<char*>(::mmap (0, itsMapSize, prot, MAP_SHARED,
-                                            fd(), itsMapOffset));
-        if (itsPtr == MAP_FAILED) {
-	    itsPtr = NULL;
-	    itsMapSize = 0;
-	}
-    }
-
-    if (itsPtr == NULL) {
-
-        /* It did not work to mmap the entire file. Try to map a smaller and smaller sections,
-           until the memory map either succeeds, or the section gets smaller than the required
-           length. */
-        
-        uInt pageSize = getpagesize();
-	itsMapSize = itsFileSize;
-
-        do {
-            itsMapSize /= 2;
-
-            itsMapOffset = offset - itsMapSize / 2;
-            // Round down to nearest page start, as required by mmap
-            itsMapOffset = itsMapOffset - itsMapOffset % pageSize;
-
-            if (itsMapOffset < 0) {
-                itsMapOffset = 0;
-            }
-            if (itsMapOffset + itsMapSize > itsFileSize) {
-                itsMapSize = itsFileSize - itsMapOffset;
-            }
-
-            if (itsMapOffset + itsMapSize < offset + length) {
-                stringstream s;
-                s << "MMapfdIO::MMapfdIO - mmap " << length << " bytes from " << offset <<
-                    " of " << fileName() << " failed";
-                throw AipsError (s.str());
-            }
-
-	    //	    cout << "mapping " << itsMapSize << " from " << itsMapOffset << " to " << itsMapOffset + itsMapSize 
-	    //		 << " (requested " << offset << " to " << offset + length << ")" << endl;
-
-	    errno = 0;
-
+      if (itsMapOffset + itsMapSize > itsFileSize) {
+	itsMapSize = itsFileSize - itsMapOffset;
+      }
+      
 #if (defined(AIPS_LINUX) && !defined(AIPS_64B))
-	    /*
-              In principle, this section should also be enabled on 64 bit Linux,
-              which advertises to also provide the mmap2 system call. But in practise,
-              the compile error happened: "'SYS_mmap2' was not declared in this scope".
-              (This section is redundant though if mapping the entire file succeeded.)
-	    */
+      /*  Linux provides mmap2 to deal with the mapping of large files.
+
+          In principle, this section could be also enabled on 64 bit Linux,
+	  which advertises to also provide the mmap2 system call. But in practise,
+	  the compile error happened: "'SYS_mmap2' was not declared in this scope".
+      
+          From man mmap2: "Glibc does not provide a wrapper for this system call; call it using syscall(2)."
+	  Okay.
+      */
+
+      //itsPtr = static_cast<char *>(::mmap2(0, itsMapSize, prot, MAP_SHARED,
+      //                                                fd(), itsMapOffset / pageSize));
+
+      itsPtr = static_cast<char *>((void *)
+				   syscall(SYS_mmap2, NULL, (size_t)itsMapSize, prot, MAP_SHARED,
+					   fd(), (off_t) (itsMapOffset / pageSize)));
+#else 
+      /* Not 32-bit Linux */
+      
+      /* The following two tests should never fail on known OSs, 
+	 but rather be safe than sorry */
+      if ((uInt64) itsMapSize != (size_t) itsMapSize) {
+	/* size_t might be 32-bit, but the map size is in the order of megabytes. */
+	throw AipsError("MMapfdIO::MMapfdIO - mmap of " + fileName() +
+			" failed, map size " + itsMapSize + " is too large " +
+			"for sizeof(size_t) = " + sizeof(size_t));
+      }
+      if (itsMapOffset != (off_t) itsMapOffset) {
+	/* This would fail for large files on 32-bit Linux,
+           not on 32-bit builds on Mac though, where sizeof(off_t) = 8. */
+	throw AipsError("MMapfdIO::MMapfdIO - mmap of " + fileName() +
+			" failed, map offset " + itsMapOffset + " is too large " +
+			" for sizeof(off_t) = " + sizeof(off_t));
+      }
  
+      itsPtr = static_cast<char*>(::mmap (0, itsMapSize, prot, MAP_SHARED,
+					  fd(), itsMapOffset));
 
-	    // From man mmap2: "Glibc does not provide a wrapper for this system call; call it using syscall(2)."
-            //itsPtr = static_cast<char *>(::mmap2(0, itsMapSize, prot, MAP_SHARED,
-            //                                                fd(), itsMapOffset / pageSize));
-
-            itsPtr = static_cast<char *>((void *)syscall(SYS_mmap2, NULL, (size_t)itsMapSize, prot, MAP_SHARED,
-                                                         fd(), (off_t) (itsMapOffset / pageSize)));
-
-#else
-            // On some systems with sizeof(size_t) == 4 and without mmap2
-            // (in particular 64-bit Macs running 32-bit executables)
-            // the off_t argument is wide enough to hold a 64-bit offset
-            if (itsMapOffset == (off_t) itsMapOffset) {
-	        itsPtr = static_cast<char *>(::mmap(0, itsMapSize, prot, MAP_SHARED,
-                                                    fd(), itsMapOffset));
-	    }
-            else {
-	        // no mmap2 available, and size_t and off_t are too narrow, give up...
-
-                throw AipsError("MMapfdIO::MMapfdIO - " + fileName() +
-		                " is too large (" + itsFileSize + " bytes)" +
-			        " to memory map on non-Linux with sizeof(size_t) = " + sizeof(size_t));
-	    }
+      /* In the case that the virtual memory space ever becomes too small, one
+         could try this,
+         if (itsPtr == MAP_FAILED) {
+             unmapFile();
+             itsPtr = static_cast<char*>(::mmap (0, itsMapSize, prot, MAP_SHARED,
+                                               fd(), itsMapOffset));
+      */
+      }
 #endif
-            if (itsPtr == MAP_FAILED && errno != ENOMEM) {
-                itsPtr = NULL;
-		itsMapSize = 0;
-                throw AipsError ("MMapfdIO::MMapfdIO - mmap of " + fileName() +
-                                 " failed: " + strerror(errno));
-            } 
-            
-        } while (errno == ENOMEM);
+      if (itsPtr == MAP_FAILED) {
+	itsPtr = NULL;
+	itsMapSize = 0;
+	throw AipsError("MMapfdIO::MMapfdIO - mmap of " + fileName() +
+			" " + itsMapSize + " bytes from " + itsMapOffset +
+			" failed: " + strerror(errno));
+      }
+        
+      // Optimize for sequential access.
+      ::madvise (itsPtr, itsMapSize, MADV_SEQUENTIAL);
 
-    }
-   
-    assert( itsPtr != MAP_FAILED && itsPtr != NULL );
+      // Remember this mapping
+      itsMappedRegions.insert(std::pair<char *, Int64>(itsPtr, itsMapSize));
 
-    // Optimize for sequential access.
-    ::madvise (itsPtr, itsMapSize, MADV_SEQUENTIAL);
+      return;
   }
 
   void MMapfdIO::unmapFile()
   {
-    if (itsPtr != NULL) {
-      int res = ::munmap (itsPtr, itsMapSize);
-      itsMapSize = 0;
-      if (res != 0) {
-        throw AipsError ("MMapfdIO::unmapFile - munmap of " + fileName() +
-                         " failed: " + strerror(errno));
+      /* Unmap all sections of the file */
+      for (std::set<std::pair<char *, Int64> >::const_iterator i = itsMappedRegions.begin();
+           i != itsMappedRegions.end();
+           i++) {
+
+          int res = ::munmap (i->first, i->second);
+          if (res != 0) {
+              throw AipsError ("MMapfdIO::unmapFile - munmap of " + fileName() +
+                               " failed: " + strerror(errno));
+          }
       }
       itsPtr = NULL;
-    }
+      itsMapSize = 0;
+      itsMappedRegions.clear();
   }
 
   void MMapfdIO::flush()
@@ -221,33 +232,18 @@ namespace casa
       throw AipsError ("MMapfdIO file " + fileName() + " is not writable");
     }
     if (size > 0) {
-	    // 
-	    // OK, master of the kludge here, on the mac writing to extend the file or
-	    // using ftruncate is pretty slow, ok painfully slow, so rather than continually
-	    // extend the file with each write, lets ask for twice as much space each time
-	    // this avoids a lot of remapping and speeds things up quite a bit, not as fast
-	    // as the original cache scheme but we can tune later. When we're all done we 
-	    // trim back the file to desired size. anyway seems to work.
-	    //
         // Remap if required section is not currently mapped
         if (itsPosition < itsMapOffset || itsPosition + size > itsMapOffset + itsMapSize) {
-            unmapFile();
-            // If past end-of-file, write the last byte to extend the file.
+            // If past end-of-file, write the buffer to extend the file.
             if (itsPosition + size > itsFileSize) {
                 itsFileSize = itsPosition + size;
-		/*
-                LargeFiledesIO::doSeek (itsFileSize-1, ByteIO::Begin);
-                char b=0;
-                LargeFiledesIO::write (1, &b);
-		*/
-		itsFileSize *= 2;
-		ftruncate(fd(), itsFileSize);
+                LargeFiledesIO::doSeek(itsPosition, ByteIO::Begin);
+                LargeFiledesIO::write(size, buf);
             }
             mapFile(itsPosition, size);
         }
         memcpy(itsPtr + itsPosition - itsMapOffset, buf, size);
         itsPosition += size;
-	itsRealFileSize = (itsRealFileSize < itsPosition) ? itsPosition : itsRealFileSize;
     }
   }
 
