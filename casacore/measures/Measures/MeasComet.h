@@ -67,8 +67,10 @@ template <class T> class Vector;
 // (using <src>measures.<table>.directory</src>)
 // mechanism. If not provided they are assumed to reside in standard places
 // Tables are assumed to have the
-// VS_VERSION, VS_DATE, VS_CREATE and VS_TYPE keywords, and be of type IERS,
-// else an exception will be thrown.<br>
+// VS_VERSION, VS_DATE, VS_CREATE, VS_TYPE,
+// MJD0 (>= 10000), dMJD (> 0), and NAME
+// keywords, and be of type IERS,
+// or else an exception will be thrown.<br>
 // The <src>get()</src> method will obtain data from the cometary
 // tables. The data obtained will be in the specified frame.
 // Note that the normal usage of these tables is through the Measures system.
