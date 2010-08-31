@@ -177,8 +177,8 @@ namespace casa
              unmapFile();
              itsPtr = static_cast<char*>(::mmap (0, itsMapSize, prot, MAP_SHARED,
                                                fd(), itsMapOffset));
+         }
       */
-      }
 #endif
       if (itsPtr == MAP_FAILED) {
 	itsPtr = NULL;
