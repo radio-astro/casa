@@ -429,8 +429,8 @@ Defines data selection parameters.
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -505,8 +505,8 @@ Flag summary.
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -576,8 +576,8 @@ Flag query
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -679,8 +679,8 @@ Extend flags along a specific direction.
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
