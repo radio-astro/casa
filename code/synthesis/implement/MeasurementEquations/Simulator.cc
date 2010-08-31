@@ -1051,11 +1051,10 @@ Bool Simulator::setnoise(const String& mode,
 			 ) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
-#ifndef RI_DEBUG
+
   try {
-#else
-    cout<<"Sim::setnoise "<<pground<<" "<<relhum<<" "<<altitude<<" "<<waterheight<<" "<<pwv<<endl;
-#endif
+
+    //cout<<" Sim::setnoise "<<pground<<" "<<relhum<<" "<<altitude<<" "<<waterheight<<" "<<pwv<<endl;
     
     noisemode_p = mode;
 
@@ -1178,7 +1177,6 @@ Bool Simulator::setnoise(const String& mode,
 	// integrate the atmosphere to get T_ebb.  
 	// so for now we'll just make tsys-manual mean freqDepPar=False
 
-	//RIXXXXX	
 	simpar.define ("type", "T");
 	//simpar.define ("type", "M");
 
@@ -1227,12 +1225,10 @@ Bool Simulator::setnoise(const String& mode,
       //throw(AipsError("could not create M in Simulator::setnoise"));        
     } 
 
-#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-#endif
   return True;
 }
 
@@ -1246,9 +1242,7 @@ Bool Simulator::setgain(const String& mode,
 { 
   LogIO os(LogOrigin("Simulator", "setgain()", WHERE));
 
-#ifndef RI_DEBUG
   try {
-#endif
         
     if(mode=="table") {      
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
@@ -1295,12 +1289,10 @@ Bool Simulator::setgain(const String& mode,
 	throw(AipsError("unsupported mode "+mode+" in setgain()"));
       }
     }
-#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-#endif
   return True;
 }
 

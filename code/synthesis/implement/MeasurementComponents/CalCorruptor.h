@@ -88,7 +88,7 @@ class CalCorruptor {
   
   CalCorruptor(const Int nSim);
   virtual ~CalCorruptor();
-  inline Int& nSim() { return nSim_; };
+  inline uInt& nSim() { return nSim_; };
   inline Bool& times_initialized() { return times_initialized_; };
   inline Int& curr_slot() { return curr_slot_; };
   inline Double& curr_time() { return curr_time_; };
@@ -111,9 +111,9 @@ class CalCorruptor {
   void setEvenSlots(const Double& dt);
   virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
 
-  inline Int& nPar() { return nPar_; };
-  inline Int& nChan() { return fnChan_[currSpw()]; };  
-  inline const Int& focusChan() {return curr_chan_[currSpw()];};
+  inline uInt& nPar() { return nPar_; };
+  inline uInt& nChan() { return fnChan_[currSpw()]; };  
+  inline const uInt& focusChan() {return curr_chan_[currSpw()];};
   inline const Double& focusFreq() {return curr_freq_;};
   virtual void setFocusChan(Int chan) {
     curr_chan_[currSpw()]=chan;
@@ -122,37 +122,39 @@ class CalCorruptor {
     Double fRes(fWidth()[currSpw()]/Double(fnChan()[currSpw()]));
     curr_freq_=fRefFreq()[currSpw()]+chan*fRes;
   };
+
+  virtual void setCurrTime(const Double& time);
   
   // inherited from VC
-  inline Int& prtlev() { return prtlev_; };
-  inline Int& nAnt() { return nAnt_; };
-  inline Int& nSpw() { return nSpw_; };  
-  inline Int& currAnt() { return curr_ant_; };
-  inline Int& currAnt2() { return curr_ant2_; };
-  inline Int& currSpw() { return curr_spw_; };
+  inline uInt& prtlev() { return prtlev_; };
+  inline uInt& nAnt() { return nAnt_; };
+  inline uInt& nSpw() { return nSpw_; };  
+  inline uInt& currAnt() { return curr_ant_; };
+  inline uInt& currAnt2() { return curr_ant2_; };
+  inline uInt& currSpw() { return curr_spw_; };
   inline Vector<Float>& fRefFreq() { return fRefFreq_; };
   inline Vector<Float>& fWidth() { return fWidth_; };
-  inline Vector<Int>& fnChan() { return fnChan_; };
-  inline Vector<Int>& currChans() { return curr_chan_; };
+  inline Vector<uInt>& fnChan() { return fnChan_; };
+  inline Vector<uInt>& currChans() { return curr_chan_; };
 
   inline Bool& freqDepPar() { return freqdep_; };
 
  protected:
    
-   Int nSim_;
+   uInt nSim_;
    Int curr_slot_;
    Bool times_initialized_,freqdep_;
-   Int nPar_;
+   uInt nPar_;
    Double curr_time_,starttime_,stoptime_,curr_freq_;
    Float amp_;
    Vector<Double> slot_times_;   
    Record simpar_;
    String mode_; // general parameter for different kinds of corruptions
 
-   Int prtlev_;   
-   Int nAnt_,curr_ant_,nSpw_,curr_spw_,curr_ant2_;
+   uInt prtlev_;   
+   uInt nAnt_,curr_ant_,nSpw_,curr_spw_,curr_ant2_;
    Vector<Float> fRefFreq_,fWidth_; // for each spw
-   Vector<Int> fnChan_,curr_chan_;
+   Vector<uInt> fnChan_,curr_chan_;
 
  private:
 
@@ -313,6 +315,8 @@ class AtmosCorruptor : public CalCorruptor {
      Rtatmos() = 1./(exp(hn_k/tatmos())-1.);
   };
 
+  virtual void setCurrTime(const Double& time);
+  
  protected:
 
  private:   
@@ -327,7 +331,10 @@ class AtmosCorruptor : public CalCorruptor {
    atm::SpectralGrid *itsSpecGrid;
 
    PtrBlock<Vector<Float>*> pwv_p;
-   Vector<Float> antx_,anty_;   
+   Vector<Float> antx_,anty_;  // antenna positions in units of screen resl
+
+   Vector<Float> airMass_; // length= nAnt, recalculated if ness
+   Bool airMassValid_;
 };
 
 
