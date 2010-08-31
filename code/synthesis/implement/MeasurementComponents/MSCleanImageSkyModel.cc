@@ -247,12 +247,14 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  //		     Quantity(threshold(), "Jy"), True);
 	  if(stopLargeNegatives_p >0)
 	    cleaner.stopAtLargeScaleNegative();
-	  converged=cleaner.clean(subImage, "multiscale", numberIterations(),gain(),  Quantity(threshold(), "Jy"), True);
+	  
+	  cout << "Threshold " << Quantity(threshold(), "Jy") << endl;
+	  converged=cleaner.clean(subImage, "multiscale", numberIterations(),gain(),  Quantity(threshold(), "Jy"), Quantity(0.0, "%"), True);
 	  Int stoplarge=stopLargeNegatives_p;
 	  while( (converged==-2) && stoplarge > 0){
 	    --stoplarge;
 	    converged=cleaner.clean(subImage, "multiscale", numberIterations(),gain(),  
-				    Quantity(threshold(), "Jy"), True);
+				    Quantity(threshold(), "Jy"), Quantity(0, "%"),True);
 	  }
 	  // calculate residuals 
 	  
