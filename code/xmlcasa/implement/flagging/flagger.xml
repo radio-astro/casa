@@ -121,9 +121,8 @@ All data selection parameters follow the ms-selection syntax.
      </param>
     
      <param type="string" name="uvrange">
-     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
+     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'</description>
      <value>""</value>
-     </description>
      </param>
     
      <param type="string" name="time">
@@ -191,8 +190,8 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -228,7 +227,9 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <param type="doubleArray" name="cliprange">
      <description>Clip Range of the value defined by clipExpr [min,max] : example : [100.0,200.0] 
      </description>
-     <value type="vector"></value>
+     <value type="vector">
+     <value>0</value>
+     <value>0</value> </value>
      </param>
 
      <param type="string" name="clipcolumn">
