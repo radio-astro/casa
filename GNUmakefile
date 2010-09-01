@@ -136,6 +136,10 @@ FC  := $(shell type gfortran 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
 ifeq "$(FC)" ""
 FC  := $(shell type gfortran-mp-4.4 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
+ifneq "$(FC)" ""
+CC  := $(shell type gcc-mp-4.4 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
+C++  := $(shell type g++-mp-4.4 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
+endif
 endif
 ifeq "$(FC)" ""
 FC  := $(shell type g77 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
