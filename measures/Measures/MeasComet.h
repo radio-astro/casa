@@ -68,8 +68,10 @@ template <class T> class Vector;
 // mechanism. If not provided they are assumed to reside in standard places
 // Tables are assumed to have the
 // VS_VERSION, VS_DATE, VS_CREATE, VS_TYPE,
-// MJD0 (>= 10000), dMJD (> 0), and NAME
-// keywords, and be of type IERS,
+// MJD0 (first MJD in table - 1.0 * dMJD, >= 10000),
+// dMJD (increment between successive MJDs, in days, > 0),
+// and NAME
+// keywords, be gapless (constant dMJD), and be of type IERS,
 // or else an exception will be thrown.<br>
 // The <src>get()</src> method will obtain data from the cometary
 // tables. The data obtained will be in the specified frame.
@@ -196,7 +198,7 @@ class MeasComet {
   String name_p;
   // Position on Earth
   MVPosition topo_p;
-  // Type of ccordinates
+  // Type of coordinates
   MDirection::Types mtype_p;
   // Lines in memory
   mutable Int lnr_p[2];

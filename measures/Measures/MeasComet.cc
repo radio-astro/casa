@@ -235,7 +235,7 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
       };
     };
     if (!ok) {
-      os << String("Corrupted Comet table ") + tp_p << LogIO::EXCEPTION;
+      os << String("Invalid comet table ") + tp_p << LogIO::EXCEPTION;
     };
     measured_p = True;
   };

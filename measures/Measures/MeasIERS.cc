@@ -373,9 +373,9 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 			      "Int N, const String *, const String &, "
 			      "const String &, const String &)"),
 		       WHERE));
-    os << String("A ") + name + 
-      " table has been read that seems corrupted"
-      "\nNotify the CASA system manager about it" << LogIO::EXCEPTION;
+    os << name + " has an incompatible format."
+       << "\nYou may want to notify the CASA system manager about it."
+       << LogIO::EXCEPTION;
     return False;
   };
   table = tab;
