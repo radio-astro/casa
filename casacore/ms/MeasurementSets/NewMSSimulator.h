@@ -178,13 +178,28 @@ public:
   void observe(const String& sourceName,
 	       const String& spWindowName,
 	       const Quantity& qStartTime, 
-	       const Quantity& qStopTime);
+	       const Quantity& qStopTime,
+	       const Bool add_observation,
+	       const Bool state_sig,
+	       const Bool state_ref,
+	       const double& state_cal,
+	       const double& state_load,
+	       const unsigned int state_sub_scan,
+	       const String& state_obs_mode);
+
 
   void observe(const Vector<String>& sourceNames,
 	       const String& spWindowName,
 	       const Vector<Quantity>& qStartTimes, 
 	       const Vector<Quantity>& qStopTimes,
-	       const Vector<MDirection>& directions);
+	       const Vector<MDirection>& directions,
+	       const Bool add_observation,
+	       const Bool state_sig,
+	       const Bool state_ref,
+	       const double& state_cal,
+	       const double& state_load,
+	       const unsigned int state_sub_scan,
+	       const String& state_obs_mode);
 
 private:
 
