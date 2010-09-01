@@ -287,7 +287,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       psfMat.reference(mbuf);
       matClean_p.setPsf(psfMat);
       matClean_p.makePsfScales();
-      matClean_p.makeScaleMasks();
+      //matClean_p.makeScaleMasks();
       
     }
 
@@ -375,13 +375,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Array<Float> bufMod;
 	getModel=modelimage.getSlice(bufMod, sl, True);
 	subModel.reference(bufMod);
-	if(mask_p !=0 && (nMaskPol_p >1)){
-	  Matrix<Float> maskSub;
-	  Array<Float> buf2;
-	  mask_p->getSlice(buf2, sl, True);
-	  maskSub.reference(buf2);
-	  matClean_p.setMask(maskSub, maskThresh_p);
-	  //matClean_p.makeScaleMasks();
+	if(mask_p !=0){
+	  if((nMaskPol_p >1)){
+	    Matrix<Float> maskSub;
+	    Array<Float> buf2;
+	    mask_p->getSlice(buf2, sl, True);
+	    maskSub.reference(buf2);
+	    matClean_p.setMask(maskSub, maskThresh_p);
+	  }
+	  matClean_p.makeScaleMasks();
 	}
 	result=matClean_p.clean(subModel, True);
 	if(!getModel)
