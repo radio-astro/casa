@@ -1372,28 +1372,42 @@ def plotpb(pb,axes,lims=None):
     #rangle=rangle
     #bwidth=max(major*pl.cos(rangle),minor*pl.sin(rangle))*1.1
     #bheight=max(major*pl.sin(rangle),minor*pl.cos(rangle))*1.1
-    boxsize=pb*1.1
-    if not lims: lims=axes.get_xlim(),axes.get_ylim()
-    incx=1
-    incy=1
-    if axes.xaxis_inverted(): incx=-1
-    if axes.yaxis_inverted(): incy=-1
-    #ecx=lims[0][0]+bwidth/2.*incx
-    #ecy=lims[1][0]+bheight/2.*incy
-    ccx=lims[0][0]+boxsize/2.*incx
-    ccy=lims[1][0]+boxsize/2.*incy
     from matplotlib.patches import Rectangle, Circle #,Ellipse
-    #box=Rectangle((lims[0][0],lims[1][0]),incx*bwidth,incy*bheight,
-    box=Rectangle((lims[0][0],lims[1][0]),incx*boxsize,incy*boxsize,
-                  alpha=0.7,facecolor='w',
-                  transform=axes.transData) #Axes
-    #beam=Ellipse((ecx,ecy),major,minor,angle=rangle,
-    beam=Circle((ccx,ccy), radius=pb/2.,
-                 edgecolor='k',fill=False,
-                 label='beam',transform=axes.transData)
-    #props={'pad': 3, 'edgecolor': 'k', 'linewidth':2, 'facecolor': 'w', 'alpha': 0.5}
-    #pl.matplotlib.patches.bbox_artist(beam,axes.figure.canvas.get_renderer(),props=props)
-    axes.add_artist(box)
-    axes.add_artist(beam)
+    try:
+        from matplotlib.offsetbox import AnchoredOffsetbox, AuxTransformBox
+        box=AuxTransformBox(axes.transData)
+        box.set_alpha(0.7)
+        circ=Circle((pb,pb),radius=pb/2.,color='k',fill=False,\
+                    label='primary beam',linewidth=2.0)
+        box.add_artist(circ)
+        pblegend=AnchoredOffsetbox(loc=3,pad=0.2,borderpad=0.,\
+                                   child=box,prop=None,frameon=True)
+        pblegend.set_alpha(0.7)
+        axes.add_artist(pblegend)
+    except:
+        # work around for old matplotlib
+        boxsize=pb*1.1
+        if not lims: lims=axes.get_xlim(),axes.get_ylim()
+        incx=1
+        incy=1
+        if axes.xaxis_inverted(): incx=-1
+        if axes.yaxis_inverted(): incy=-1
+        #ecx=lims[0][0]+bwidth/2.*incx
+        #ecy=lims[1][0]+bheight/2.*incy
+        ccx=lims[0][0]+boxsize/2.*incx
+        ccy=lims[1][0]+boxsize/2.*incy
+    
+        #box=Rectangle((lims[0][0],lims[1][0]),incx*bwidth,incy*bheight,
+        box=Rectangle((lims[0][0],lims[1][0]),incx*boxsize,incy*boxsize,
+                      alpha=0.7,facecolor='w',
+                      transform=axes.transData) #Axes
+        #beam=Ellipse((ecx,ecy),major,minor,angle=rangle,
+        beam=Circle((ccx,ccy), radius=pb/2.,
+                    edgecolor='k',fill=False,
+                    label='beam',transform=axes.transData)
+        #props={'pad': 3, 'edgecolor': 'k', 'linewidth':2, 'facecolor': 'w', 'alpha': 0.5}
+        #pl.matplotlib.patches.bbox_artist(beam,axes.figure.canvas.get_renderer(),props=props)
+        axes.add_artist(box)
+        axes.add_artist(beam)
 
  
