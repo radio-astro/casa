@@ -795,7 +795,7 @@ def simdata(
                             ",trx="+str(t_rx)+",tau="+str(tau0)+
                             ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-                        msg("** this may take a few minutes, but will be faster in future releases",priority="warn")
+                        msg("** this may take some time if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
                                 tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,

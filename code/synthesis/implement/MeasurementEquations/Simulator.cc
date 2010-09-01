@@ -102,9 +102,9 @@ Simulator::Simulator():
   msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
   seed_p(11111),
   ac_p(0), distance_p(0), ve_p(), vc_p(),vp_p(0), gvp_p(0), 
+  nSpw(0),
   sim_p(0),
   // epJ_p(0),
-  nSpw(0),
   epJTableName_p()
 {
 }
@@ -113,6 +113,7 @@ Simulator::Simulator():
 Simulator::Simulator(String& msname) 
   : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111), 
     ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0), 
+    nSpw(0),
     sim_p(0),
     // epJ_p(0),
     epJTableName_p()
@@ -1669,8 +1670,8 @@ Bool Simulator::create_corrupt(Record& simpar)
     svc = createSolvableVisCal(upType,*vs_p);
 
     //RI
-    svc->setPrtlev(4);
-    cout<<"Sim:create_corrupt ["<<upType<<"]"<<endl;
+    //svc->setPrtlev(4);
+    //cout<<"Sim:create_corrupt ["<<upType<<"]"<<endl;
     //
 
     Vector<Double> solTimes;
@@ -1947,9 +1948,16 @@ Bool Simulator::corrupt() {
 
 
 Bool Simulator::observe(const String&   sourcename,
-			   const String&   spwname,
-			   const Quantity& startTime, 
-			   const Quantity& stopTime)
+			const String&   spwname,
+			const Quantity& startTime, 
+			const Quantity& stopTime,
+			const Bool add_observation=True,
+			const Bool state_sig=True,
+			const Bool state_ref=True,
+			const double& state_cal=0.,
+			const double& state_load=0.,
+			const unsigned int state_sub_scan=0,
+			const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE")
 {
   LogIO os(LogOrigin("Simulator", "observe()", WHERE));
   
@@ -1967,7 +1975,9 @@ Bool Simulator::observe(const String&   sourcename,
 	 << LogIO::WARN;
     }
 
-    sim_p->observe(sourcename, spwname, startTime, stopTime);
+    sim_p->observe(sourcename, spwname, startTime, stopTime, 
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode);
+
 
     if(ms_p) delete ms_p; ms_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;
@@ -1989,10 +1999,17 @@ Bool Simulator::observe(const String&   sourcename,
 
 
 Bool Simulator::observemany(const Vector<String>&   sourcenames,
-			   const String&   spwname,
-			   const Vector<Quantity>& startTimes, 
+			    const String&   spwname,
+			    const Vector<Quantity>& startTimes, 
 			    const Vector<Quantity>& stopTimes,
-			    const Vector<MDirection>& directions)
+			    const Vector<MDirection>& directions,
+			    const Bool add_observation=True,
+			    const Bool state_sig=True,
+			    const Bool state_ref=True,
+			    const double& state_cal=0.,
+			    const double& state_load=0.,
+			    const unsigned int state_sub_scan=0,
+			    const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE")
 {
   LogIO os(LogOrigin("Simulator", "observemany()", WHERE));
   
@@ -2010,7 +2027,8 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
 	 << LogIO::WARN;
     }
 
-    sim_p->observe(sourcenames, spwname, startTimes, stopTimes, directions);
+    sim_p->observe(sourcenames, spwname, startTimes, stopTimes, directions,
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode);
 
     if(ms_p) delete ms_p; ms_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;

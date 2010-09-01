@@ -907,7 +907,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
       os << "OTF sim - not creating Calset either)";
     else
       os << "NOT OTF sim - still creating Calset)";  
-    os << endl << LogIO::POST;
+    os << LogIO::POST;
   }  
 
   if (prtlev()>2) cout << " ~SVC::setSimulate(simpar)" << endl;

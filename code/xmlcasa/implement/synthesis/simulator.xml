@@ -356,6 +356,38 @@
       <any type="variant" />
       <value>3600s</value>
     </param>
+
+    <param type="bool" name="add_observation">
+      <description>Add a new line to the OBSERVATION subtable for this
+      call</description>
+      <value type="bool">false</value>
+    </param>
+
+    <param type="bool" name="state_sig">
+      <description>a new line will be added to STATE if the following don't match</description>
+      <value type="bool">false</value>
+    </param>
+    
+    <param type="bool" name="state_ref">
+      <value type="bool">false</value>
+    </param>
+    
+    <param type="double" name="state_cal">
+      <value>0.0</value>
+    </param>
+    
+    <param type="double" name="state_load">
+      <value>0.0</value>
+    </param>
+    
+    <param type="int" name="state_sub_scan">
+      <value>0</value>
+    </param>
+    
+    <param type="string" name="state_obs_mode">
+      <value>OBSERVE_TARGET.ON_SOURCE</value>
+    </param>
+
   </input>
   <returns type='bool'>Bool</returns>
 </method>
@@ -401,6 +433,39 @@
       <description></description>
       <value></value>
     </param>
+
+
+    <param type="bool" name="add_observation">
+      <description>Add a new line to the OBSERVATION subtable for this
+      call</description>
+      <value type="bool">false</value>
+    </param>
+
+    <param type="bool" name="state_sig">
+      <description>a new line will be added to STATE if the following don't match</description>
+      <value type="bool">false</value>
+    </param>
+    
+    <param type="bool" name="state_ref">
+      <value type="bool">false</value>
+    </param>
+    
+    <param type="double" name="state_cal">
+      <value>0.0</value>
+    </param>
+    
+    <param type="double" name="state_load">
+      <value>0.0</value>
+    </param>
+    
+    <param type="int" name="state_sub_scan">
+      <value>0</value>
+    </param>
+    
+    <param type="string" name="state_obs_mode">
+      <value>OBSERVE_TARGET.ON_SOURCE</value>
+    </param>
+
   </input>
   <returns type='bool'>Bool</returns>
 </method>
