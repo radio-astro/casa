@@ -15,23 +15,23 @@ cols = {
     'MJD': {'header': r'Date__\(UT\)__HR:MN',
             'comment': 'date',
             'pat':     r'(?P<MJD>\d+-\w+-\d+ \d+:\d+)'},
-    'ra': {'header': r'R.A._+\([^)]+',
+    'RA': {'header': r'R.A._+\([^)]+',
            'comment': 'Right Ascension',
-           'pat':    r'(?P<ra>(\d+ \d+ )?\d+\.\d+)'}, # require a . for safety
-    'dec': {'header': r'\)_+DEC.',
+           'pat':    r'(?P<RA>(\d+ \d+ )?\d+\.\d+)'}, # require a . for safety
+    'DEC': {'header': r'\)_+DEC.',
             'comment': 'Declination',
-            'pat':    r'(?P<dec>([-+]?\d+ \d+ )?[-+]?\d+\.\d+)'},
+            'pat':    r'(?P<DEC>([-+]?\d+ \d+ )?[-+]?\d+\.\d+)'},
     'illu': {'header': r'Illu%',
              'comment': 'Illumination',
              'pat':    r'(?P<illu>[0-9.]+)',
              'unit': r'%'},
-    'ob_lon': {'header': r'Ob-lon',
+    'DiskLong': {'header': r'Ob-lon',
                'comment': 'Sub-observer longitude',
-               'pat':    r'(?P<ob_lon>[0-9.]+|n\.a\.)',
+               'pat':    r'(?P<DiskLong>[0-9.]+|n\.a\.)',
                'unit': 'deg'},
-    'ob_lat': {'header': r'Ob-lat',
+    'DiskLat': {'header': r'Ob-lat',
                'comment': 'Sub-observer longitude',
-               'pat':    r'(?P<ob_lat>[-+0-9.]+|n\.a\.)',
+               'pat':    r'(?P<DiskLat>[-+0-9.]+|n\.a\.)',
                'unit': 'deg'},
     'sl_lon': {'header': r'Sl-lon',
                'comment': 'Sub-Solar longitude',
@@ -43,12 +43,12 @@ cols = {
                'unit': 'deg'},
 
     # These are J2000 whether or not ra and dec are apparent directions.
-    'np_ra': {'header': r'N\.Pole-RA',
+    'NP_RA': {'header': r'N\.Pole-RA',
               'comment': 'North Pole right ascension',
-              'pat':    r'(?P<np_ra>(\d+ \d+ )?\d+\.\d+)'}, # require a . for safety
-    'np_dec': {'header': r'N\.Pole-DC',
+              'pat':    r'(?P<NP_RA>(\d+ \d+ )?\d+\.\d+)'}, # require a . for safety
+    'NP_DEC': {'header': r'N\.Pole-DC',
                'comment': 'North Pole declination',
-               'pat':    r'(?P<np_dec>([-+]?\d+ \d+ )?[-+]?\d+\.\d+)'},
+               'pat':    r'(?P<NP_DEC>([-+]?\d+ \d+ )?[-+]?\d+\.\d+)'},
     
     'r': {'header': 'r',
           'comment': 'heliocentric distance',
@@ -57,13 +57,14 @@ cols = {
     'rdot': {'header': 'rdot',
              'pat': r'[-+0-9.]+',
              'unwanted': True},
-    'delta': {'header': 'delta',
-              'comment': 'geocentric distance',
-              'unit':    'AU',
-              'pat':     r'(?P<delta>[0-9.]+)'},
-    'deldot': {'header': 'deldot',
-               'pat': r'[-+0-9.]+',
-               'unwanted': True},
+    'Rho': {'header': 'delta',
+            'comment': 'geocentric distance',
+            'unit':    'AU',
+            'pat':     r'(?P<Rho>[0-9.]+)'},
+    'RadVel': {'header': 'deldot',
+               'comment': 'Radial velocity relative to the observer',
+               'pat': r'(?P<RadVel>[-+0-9.]+)',
+               'unit': 'km/s'},
     'phang': {'header':  'S-T-O',
               'comment': 'phase angle',
               'unit':    'deg',
@@ -121,6 +122,10 @@ def readJPLephem(fmfile):
         'T_mean': {'pat': r'Mean Temperature \(K\)\s*=\s*([0-9.]+)',
                    'unit': 'K'},
 
+         # Figure out the units later.
+        'rot_per': {'pat': r'(?i)(?<!Inferred )\b(rot(ation(al)?|\.)?\s*per.*=\s*([-0-9.]+\s*[dhr]*|Synchronous))'},
+        'orb_per': {'pat': r'Orbital period((, days)?\s*=\s*[-0-9.]+\s*[dhr](\s*\(?R\)?)?)'},
+
         # MeasComet does not read units for these! E-lon(deg),  Lat(deg),     Alt(km)
         'GeoLong': {'pat': r'^Center geodetic\s*: ([-+0-9.]+,\s*[-+0-9.]+,\s*[-+0-9.]+)'},
         'dMJD':    {'pat': r'^Step-size\s*:\s*(.+)'},
@@ -165,7 +170,7 @@ def readJPLephem(fmfile):
                 # Chomp trailing whitespace.
                 comp_mismatches.append(re.sub(r'\s*$', '', line))
         elif re.match(r'^\s*' + cols['MJD']['header'] + r'\s+'
-                      + cols['ra']['header'], line):
+                      + cols['RA']['header'], line):
             # See what columns are present, and finish setting up datapat and
             # retdict.
             havecols = []
@@ -271,6 +276,46 @@ def readJPLephem(fmfile):
             elif hk == 'dMJD':
                 retdict[hk] = qa.convert(qa.totime(retdict[hk].replace('minutes', 'min')),
                                          'd')['value']
+            elif hk == 'orb_per':
+                unit = 'h'
+                retrograde = False
+                if 'd' in retdict[hk].lower():
+                    unit = 'd'                 # Actually this is most common.
+                if 'r' in retdict[hk].lower():
+                    retrograde = True
+                value = get_num_from_str(retdict[hk], 'orbital period')
+                if value != False:
+                    if retrograde and value > 0.0:
+                        value = -value
+                    retdict[hk] = {'unit': unit, 'value': value}
+                else:
+                    del retdict[hk]
+                    
+    # The rotation period might depend on the orbital period ("Synchronous"),
+    # so handle it after all the other headers have been done.
+    if 'rot_per' in retdict:
+        rpstr = retdict['rot_per']
+        if 'ROTPER' in rpstr:                            # Asteroid
+            retdict['rot_per'] = {'unit': 'h',         # Always seems to be for asteroids.
+                                  'value': get_num_from_str(rpstr, 'rotation period')}
+        elif 'Synchronous' in rpstr:
+            retdict['rot_per'] = retdict['orb_per']
+        else:  # Most likely a planet.
+            match = re.search(r'(\d+)h\s*(\d+)m\s*([0-9.]+)s', rpstr)
+            if match:
+                hms = [float(match.group(i)) for i in range(1, 4)]
+                retdict['rot_per'] = {'unit': 'h',
+                                      'value': hms[0] + (hms[1] + hms[2] / 60.0) / 60.0}
+            else:
+                # DON'T include the optional r in hr!  qa.totime can't handle it.
+                try:
+                    match = re.search(r'([-0-9.]+)(?:\s*\+-[0-9.]+)?\s*([dh])', rpstr)
+                    if match:
+                        retdict['rot_per'] = {'unit': match.group(2),
+                                              'value': float(match.group(1))}
+                except:
+                    print "Error parsing the rotation period from"
+                    print rpstr
     
     if retdict['data'].has_key('ang_sep'):
         retdict['data']['obs_code'] = {'comment': 'Obscuration code'}
@@ -280,7 +325,13 @@ def readJPLephem(fmfile):
         if cols[dk].has_key('unit'):
             retdict['data'][dk]['data'] = {'unit': cols[dk]['unit'],
                       'value': scipy.array([float(s) for s in retdict['data'][dk]['data']])}
-        if re.match(r'.*(ra|dec)$', dk):
+            if dk == 'RadVel':
+                # Convert from km/s to AU/d.  Blame MeasComet, not me.
+                retdict['data'][dk]['data']['unit'] = 'AU/d'
+                kmps_to_AUpd = qa.convert('1km/s', 'AU/d')['value']
+                retdict['data'][dk]['data']['value'] *= kmps_to_AUpd
+
+        if re.match(r'.*(RA|DEC)$', dk):
             retdict['data'][dk] = convert_radec(retdict['data'][dk])
         elif dk == 'MJD':
             retdict['data']['MJD'] = datestrs_to_MJDs(retdict['data']['MJD'])
@@ -296,7 +347,7 @@ def readJPLephem(fmfile):
             retdict['data']['obs_code']['data'] = obscodes
 
     if len(retdict.get('radii', {'value': []})['value']) == 3 \
-           and retdict['data'].has_key('np_ra') and retdict['data'].has_key('np_dec'):
+           and retdict['data'].has_key('NP_RA') and retdict['data'].has_key('NP_DEC'):
         # Do a better mean radius estimate using the actual theta.
         retdict['meanrad']['value'] = mean_radius_with_known_theta(retdict)
 
@@ -310,7 +361,15 @@ def readJPLephem(fmfile):
                      priority="WARN")
         dt = time.gmtime()
     retdict['VS_CREATE'] = time.strftime('%Y/%m/%d/%H:%M', dt)
-    
+
+    # VS_DATE is required by MeasComet, but it doesn't seem to be actually used.
+    retdict['VS_DATE'] = time.strftime('%Y/%m/%d/%H:%M', time.gmtime())
+
+    if retdict['data'].has_key('MJD'):
+        retdict['MJD0'] = retdict['data']['MJD']['value'][0] - retdict['dMJD']
+    else:
+        print "The table will not be usable with me.framecomet because it lacks MJD."
+
     return retdict
 
 def convert_radec(radec_col):
@@ -352,6 +411,32 @@ def convert_radec(radec_col):
     return {'comment': radec_col['comment'],
             'data': {'unit': angq['unit'],
                      'value': scipy.array(angq['value'])}}
+
+def get_num_from_str(fstr, wanted="float"):
+    """
+    Like float(fstr) on steroids, in that it ignores things in fstr that aren't
+    numbers.  Returns False on failure.
+
+    wanted: an optional label for the type of number you wanted.
+            Only used for distinguishing error messages.
+            
+    Example:
+    >>> from JPLephem_reader import get_num_from_str
+    >>> get_num_from_str('  Sidereal rot. period  =    58.6462 d  ')
+    58.6462
+    >>> get_num_from_str('Rotation period = 16.11+-0.01 hr', wanted='rotation period')
+    16.109999999999999
+    >>> get_num_from_str('Rotation period = Synchronous', wanted='rotation period')
+    Could not convert "Rotation period = Synchronous" to a rotation period.
+    False
+    """
+    match = re.search(r'([-+]?(\d+(\.\d*)?|\d*\.\d+)([eEdD][-+]?\d+)?)', fstr)
+    if match:
+        value = float(match.group(1))
+    else:
+        print "Could not convert \"%s\" to a %s." % (fstr, wanted)
+        value = False
+    return value
 
 def mean_radius(a, b, c):
     """
@@ -400,16 +485,16 @@ def mean_radius_with_known_theta(retdict):
     onemboa2 = 1.0 - b2 / a**2
     units = {}
     values = {}
-    for c in ['ra', 'dec', 'np_ra', 'np_dec']:
+    for c in ['RA', 'DEC', 'NP_RA', 'NP_DEC']:
         units[c] = retdict['data'][c]['data']['unit']
         values[c] = retdict['data'][c]['data']['value']
     av = 0.0
-    nrows = len(retdict['data']['ra']['data']['value'])
+    nrows = len(retdict['data']['RA']['data']['value'])
     for i in xrange(nrows):
-        radec = me.direction('app', {'unit': units['ra'], 'value': values['ra'][i]},
-                             {'unit': units['dec'], 'value': values['dec'][i]})
-        np = me.direction('j2000', {'unit': units['np_ra'], 'value': values['np_ra'][i]},
-                          {'unit': units['np_dec'], 'value': values['np_dec'][i]})
+        radec = me.direction('app', {'unit': units['RA'], 'value': values['RA'][i]},
+                             {'unit': units['DEC'], 'value': values['DEC'][i]})
+        np = me.direction('j2000', {'unit': units['NP_RA'], 'value': values['NP_RA'][i]},
+                          {'unit': units['NP_DEC'], 'value': values['NP_DEC'][i]})
         szeta2 = scipy.sin(qa.convert(me.separation(radec, np), 'rad')['value'])**2
         csinz2 = c2 * szeta2
         bcosz2 = b2 * (1.0 - szeta2)
@@ -464,9 +549,25 @@ def ephem_dict_to_table(fmdict, tablepath=''):
         outdict = fmdict.copy() # Yes, I want a shallow copy.
         kws = fmdict.keys()
         kws.remove('data')
-        cols = outdict['data'].keys()
+        collist = outdict['data'].keys()
+
+        # For cosmetic reasons, encourage a certain order to the columns, i.e.
+        # start with alphabetical order,
+        collist.sort()
+        # but put these ones first, in the listed order (ignore the reverse and
+        # the pops) if they are present.
+        put_these_first = ['MJD', 'RA', 'DEC', 'Rho', 'RadVel', 'NP_RA', 'NP_DEC',
+                           'DiskLong', 'DiskLat', 'sl_lon', 'sl_lat', 'r',
+                           'ang_sep', 'obs_code']
+        # Like l.sort(), reverse() acts on its instance instead of returning a value.
+        put_these_first.reverse()
+        for c in put_these_first:
+            if c in collist:
+                collist.remove(c)
+                collist.insert(0, c)
+        
         clashing_cols = []
-        for c in cols:
+        for c in collist:
             if c in kws:
                 clashing_cols.append(c)
         if clashing_cols:
@@ -476,7 +577,13 @@ def ephem_dict_to_table(fmdict, tablepath=''):
         # 'data' as a key of outdict.
         outdict.update(outdict.pop('data'))
 
-        retval = dict_to_table(outdict, tablepath, kws, cols)
+        # This is primarily because MeasComet insists on it, not because it
+        # ever gets used.  Maybe subType should be changed to 'Asteroid',
+        # 'Moon', or 'Planet', but I'm leaving it at 'Comet' for now.
+        info = {'readme': 'Derived by JPLephem_reader.py from a JPL-Horizons ephemeris (http://ssd.jpl.nasa.gov/horizons.cgi#top)',
+                'subType': 'Comet', 'type': 'IERS'}
+
+        retval = dict_to_table(outdict, tablepath, kws, collist, info)
     except Exception, e:
         print 'Error', e, 'trying to export an ephemeris dict to', tablepath
         retval = False
