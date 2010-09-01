@@ -593,6 +593,15 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
 
     IPosition inc(model.shape().nelements(), 1);
     //cout << "support " << support.asVector()  << endl;
+    //support(0)=1024;
+    //support(1)=1024;
+    //support(0)=min(Int(support(0)), Int(trcDirty(0)-blcDirty(0)));
+    //support(1)=min(Int(support(1)), Int(trcDirty(1)-blcDirty(1)));
+    // support(0)=min(Int(support(0)), (trcDirty(0)-blcDirty(0)+
+    //				Int(2*abs(positionOptimum(0)-blcDirty(0)/2.0-trcDirty(0)/2.0))));
+    //support(1)=min(Int(support(1)), (trcDirty(1)-blcDirty(1)+
+    //				Int(2*abs(positionOptimum(1)-blcDirty(1)/2.0-trcDirty(1)/2.0))));
+
     IPosition blc(positionOptimum-support/2);
     IPosition trc(positionOptimum+support/2-1);
     LCBox::verify(blc, trc, inc, model.shape());
@@ -602,11 +611,11 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
     IPosition blcPsf(blc+itsPositionPeakPsf-positionOptimum);
     IPosition trcPsf(trc+itsPositionPeakPsf-positionOptimum);
     LCBox::verify(blcPsf, trcPsf, inc, model.shape());
-    //cout << "blcPsf " << blcPsf.asVector() << " trcPsf " << trcPsf.asVector() << endl;
     makeBoxesSameSize(blc,trc,blcPsf,trcPsf);
-    
-    LCBox subRegion(blc, trc, model.shape());
-    LCBox subRegionPsf(blcPsf, trcPsf, model.shape());
+    // cout << "blcPsf " << blcPsf.asVector() << " trcPsf " << trcPsf.asVector() << endl;
+    //cout << "blc " << blc.asVector() << " trc " << trc.asVector() << endl;
+    //    LCBox subRegion(blc, trc, model.shape());
+    //  LCBox subRegionPsf(blcPsf, trcPsf, model.shape());
     
     Matrix<Float> modelSub=model(blc, trc);
     Matrix<Float> scaleSub=(itsScales[optimumScale])(blcPsf,trcPsf);
