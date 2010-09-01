@@ -120,6 +120,10 @@ def manualflag_cmd(flagbackup, command):
 			if params.has_key('mode'):
 				mode = params['mode']
 				if mode=='': mode = 'manualflag'
+			elif params.has_key('cliprange'):
+				mode = 'clip'
+			elif params.has_key('quackinterval'):
+				mode = 'quack'
 			else:
 				mode = 'manualflag'
 			if kmodes.has_key(mode):
@@ -167,16 +171,16 @@ def manualflag_cmd(flagbackup, command):
 			fg.clearflagselection(0)
 			for s in param_set[mode].keys():
 				param_i = param_set[mode][s]
-				if mode=='manualflag':
-					if param_i.__len__()>0:
-						fg.setmanualflags(**param_i)
-					else:
-						fg.setmanualflags()
-				elif mode=='shadow':
+				if mode=='shadow':
 					if param_i.__len__()>0:
 						fg.setshadowflags(**param_i)
 					else:
 						fg.setshadowflags()
+				else:
+					if param_i.__len__()>0:
+						fg.setmanualflags(**param_i)
+					else:
+						fg.setmanualflags()
 			if flagbackup:
 				backup_flags('flagcmd_'+mode)
 			fg.run()
