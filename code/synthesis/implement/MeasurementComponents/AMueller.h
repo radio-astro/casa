@@ -108,10 +108,10 @@ protected:
   virtual Int nPar() { return 2; };
 
   // Jones matrix elements are trivial
-  virtual Bool trivialMuellerElem() { return (not onthefly_); };
+  virtual Bool trivialMuellerElem() { return (!simOnTheFly()); };
 
   // override VC default of timeDepMat=F for OTF simulatio:
-  virtual Bool timeDepMat() { return onthefly_; };
+  virtual Bool timeDepMat() { return simOnTheFly(); };
 
   // Calculate a single Mueller matrix by some means
   // override SolvableVisMueller::calcOneMueller
