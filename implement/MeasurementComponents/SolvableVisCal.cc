@@ -97,7 +97,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   srcPolPar_(),
   chanmask_(NULL),
   simulated_(False),
-  simint_("integration")
+  simint_("integration"),
+  onthefly_(False)
 {
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
@@ -151,7 +152,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   srcPolPar_(),
   chanmask_(NULL),
   simulated_(False),
-  simint_("inf")
+  simint_("inf"),
+  onthefly_(False)
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
@@ -2772,8 +2774,10 @@ void SolvableVisCal::syncSolvePar() {
 
 void SolvableVisCal::calcPar() {
 
-  if (simOnTheFly()) {
-    syncSolvePar(); // OTF simulation context RI 20100831
+  if (simOnTheFly() and isSimulated()) {
+    if (prtlev()>3) cout << "SVC:calcPar triggered simOTF with isSolved=" << isSolved()
+	 << " isApplied=" << isApplied() << " isSimulated=" << isSimulated() << endl;
+    syncSolvePar(); // OTF simulation context RI 20100831    
   } else { 
 
   if (prtlev()>6) cout << "      SVC::calcPar()" << endl;
