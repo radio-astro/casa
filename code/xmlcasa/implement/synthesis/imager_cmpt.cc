@@ -1542,7 +1542,7 @@ imager::weight(const std::string& type, const std::string& rmode,
   if(hasValidMS_p){
     try{
       rstat = itsImager->weight(String(type), String(rmode), casaQuantity(noise),
-                                robust, casaQuantity(fieldofview), npixels);
+                                robust, casaQuantity(fieldofview), npixels, mosaic);
     }
     catch(AipsError x){
       *itsLog << LogIO::SEVERE << "Exception Reported: "
