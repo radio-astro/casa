@@ -1409,7 +1409,7 @@ Matrix<Float>& ROVisibilityIterator::imagingWeight(Matrix<Float>& wt) const
         frequency(fvec);
         Matrix<Double> uvwmat;
         uvwMat(uvwmat);
-        imwgt_p.weightUniform(wt, flagmat, uvwmat, fvec, weightvec);
+        imwgt_p.weightUniform(wt, flagmat, uvwmat, fvec, weightvec, msId(), fieldId());
         if(imwgt_p.doFilter())
 	    imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
     }
