@@ -697,7 +697,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 
   // defining epoch as begining time from timerange in OBSERVATION subtable
   // Using first observation for now
-  MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  //MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  // modified to use main table's TIME column for better match with what
+  // VisIter does.
+  MEpoch obsEpoch = msc.timeMeas()(0);
 
   //Now finding the position of the telescope on Earth...needed for proper
   //frequency conversions
