@@ -287,9 +287,12 @@ class Imager
   IPosition imageshape() const;
 
   // Weight the MeasurementSet
+  //For some time of weighting briggs/uniform ...one can do it on a per field basis to calculate 
+  //weight density distribution. If that is what is wanted multiField should be set to True
+  //multifield is inoperative for natural, radial weighting
   Bool weight(const String& algorithm, const String& rmode,
 	      const Quantity& noise, const Double robust,
-              const Quantity& fieldofview, const Int npixels);
+              const Quantity& fieldofview, const Int npixels, const Bool multiField=False);
   
   // Filter the MeasurementSet
   Bool filter(const String& type, const Quantity& bmaj, const Quantity& bmin,
