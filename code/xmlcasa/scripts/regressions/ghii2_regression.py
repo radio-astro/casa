@@ -19,7 +19,7 @@ print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"30dor.fits",imagename="30dor.image")
-default("simdata2")
+default("simdata")
 
 project="ghii2"
 # Clear out results from previous runs.

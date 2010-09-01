@@ -1445,7 +1445,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 
      <param type="string" name="mode">
      <description>Mode of operation.</description>
-     <value>tsys</value>
+     <value>simplenoise</value>
      <choice>'simplenoise'</choice>
      <choice>'tsys-atm'</choice>
      <choice>'tsys-manual'</choice>
@@ -1460,7 +1460,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <param type="any" name="simplenoise" >
      <description>Level of noise if not calculated</description>
      <any type="variant" />
-     <value>0.0Jy</value>
+     <value>0.1Jy</value>
      </param>
 
 

@@ -283,8 +283,8 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdstat.py
   scripts/task_sdtpimaging.py
   scripts/task_setjy.py
-  scripts/task_simdata2.py
   scripts/task_simdata.py
+  scripts/task_oldsimdata.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
   scripts/task_split.py
@@ -391,8 +391,8 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdstat.xml
   tasks/sdtpimaging.xml
   tasks/setjy.xml
-  tasks/simdata2.xml
   tasks/simdata.xml
+  tasks/oldsimdata.xml
   tasks/smoothcal.xml
   tasks/specfit.xml
   tasks/split.xml

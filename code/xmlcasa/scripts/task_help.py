@@ -92,7 +92,7 @@ def tasklist():
     print 'Image Analysis  Simulation  Utilities           Single Dish'
     print '--------------  ----------  ---------           (after running asap_init())'
     print 'imcontsub       simdata     browsetable         ---------------------------'
-    print 'imhead          (simdata2)  casalogger          sdaverage'
+    print 'imhead                      casalogger          sdaverage'
     print 'imfit                       clearplot           sdbaseline'
     print 'immath                      clearstat           sdcal'
     print 'immoments                   csvclean            sdcoadd'
