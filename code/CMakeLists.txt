@@ -42,6 +42,9 @@ if( APPLE )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran )
     elseif( EXISTS        /opt/local/bin/gfortran-mp-4.4 )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.4 )
+	if( EXISTS /opt/local/bin/g++-mp-4.4 )
+	    set( CMAKE_CXX_COMPILER /opt/local/bin/g++-mp-4.4 )
+	endif()
     endif()
 else()
     set( SO so )
@@ -188,20 +191,34 @@ if( APPLE )
 			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
 			 OUTPUT_VARIABLE _gfortran_version
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
+			 COMMAND head -1
+			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 OUTPUT_VARIABLE _gcc_machine
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version
+			 COMMAND head -1
+			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 OUTPUT_VARIABLE _cxx_version
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
 	if( NOT _gfortran_version STREQUAL "4.4.4" )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
         endif()
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
-        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
+	if( NOT _cxx_version STREQUAL "4.4.4" )
+	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
+	endif()
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    set( DEFAULT_CXX_FLAGS
-      "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks"
-      )
+    if( _cxx_version STREQUAL "4.4.4" )
+	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
+    else()
+	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
+    endif()
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 

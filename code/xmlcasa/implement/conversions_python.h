@@ -1,6 +1,5 @@
 #ifndef _casac_conversions_python_h__
 #define _casac_conversions_python_h__
-#include <casac/complex.h>
 #include <Python.h>
 #include <complexobject.h>
 #include <xmlcasa/record.h>
@@ -11,6 +10,7 @@
 #include <casac/StringAry.h>
 #include <WX/Utils/value.h>
 #include <string>
+#include <casac/complex.h>
 
 namespace casac {
 
