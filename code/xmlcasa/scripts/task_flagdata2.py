@@ -4,7 +4,7 @@ import sys
 from taskinit import *
 im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
 
-debug = True
+debug = False
 def flagdata2(vis = None,
              flagbackup = None,
              selectdata = None,
@@ -171,7 +171,6 @@ def flagdata2(vis = None,
         if shadow:
             mode = 'shadow'
             casalog.post('Flagging in shadow mode')
-#            fglocal.setdata()
             fglocal.setshadowflags( \
                         field = field, \
                         spw = spw, \
@@ -303,15 +302,15 @@ def flagdata2(vis = None,
             mode = 'summary'
             casalog.post('Flagging in summary mode')
 #            fglocal.setdata()
-#            fglocal.setflagsummary(field=field, \
-#                                  spw=spw, \
-#                                  array=array, \
-#                                  feed=feed, \
-#                                  scan=scan, \
-#                                  baseline=antenna, \
-#                                  uvrange=uvrange, \
-#                                  time=timerange, \
-#                                  correlation=correlation)
+            fglocal.setflagsummary(field=field, \
+                                  spw=spw, \
+                                  array=array, \
+                                  feed=feed, \
+                                  scan=scan, \
+                                  baseline=antenna, \
+                                  uvrange=uvrange, \
+                                  time=timerange, \
+                                  correlation=correlation)
             fglocal.setflagsummary()
                 
             # do not backup existing flags

@@ -219,17 +219,20 @@ class test_msselection(test_base):
 
     def test_simple(self):
         baselines = flagdata2(vis = self.vis, selectdata=True, antenna="9", summary=True )['baseline'].keys()
-        assert "9&&9" not in baselines
+#        assert "9&&9" not in baselines
+        assert "9&&9" in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
         baselines = flagdata2(vis = self.vis, selectdata=True, antenna="9,10", summary=True )['baseline'].keys()
-        assert "9&&9" not in baselines
+#        assert "9&&9" not in baselines
+        assert "9&&9" in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
-        assert "10&&10" not in baselines
+#        assert "10&&10" not in baselines
+        assert "10&&10" in baselines
         assert "10&&11" in baselines
 
     def test_amp(self):
@@ -582,7 +585,7 @@ class cleanup(test_base):
 def suite():
     return [
 #            test_selections,
-#            test_statistics_queries,
+            test_statistics_queries,
 #             test_vector,
 #             test_vector_ngc5921,
 #             test_flagmanager,
