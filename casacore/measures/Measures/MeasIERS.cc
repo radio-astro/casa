@@ -246,6 +246,10 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 			const Table *tabin) {
   Table tab;
   Bool ok = True;
+  LogIO os(LogOrigin("MeasIERS",
+		     String("fillMeas(MeasIERS::Files, Double)"),
+		     WHERE));
+
   if (!tabin) {				// No table object given: search name
     const String path[2] = {
       "/ephemerides/",
@@ -317,9 +321,6 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
       };
     };
     if (!Table::isReadable(ldir + name)) {
-      LogIO os(LogOrigin("MeasIERS",
-			 String("fillMeas(MeasIERS::Files, Double)"),
-			 WHERE));
       os << LogIO::WARN <<
 	String("Requested data table ") << name <<
 	String(" cannot be found in the searched directories:\n");
@@ -335,6 +336,13 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
       !ks.isDefined("VS_CREATE") || !ks.isDefined("VS_TYPE") ||
       (tab.tableInfo().type() != String("IERS"))) {
     ok = False;
+    os << LogIO::DEBUG1
+       << "ks.isDefined(VS_DATE) " << ks.isDefined("VS_DATE")
+       << "\nks.isDefined(VS_VERSION) " << ks.isDefined("VS_VERSION")
+       << "\nks.isDefined(VS_CREATE) " << ks.isDefined("VS_CREATE")
+       << "\nks.isDefined(VS_TYPE) " << ks.isDefined("VS_TYPE")
+       << "\ntab.tableInfo().type() " << tab.tableInfo().type()
+       << LogIO::POST;
   };
   if (ok) {
     Quantity ldt;
@@ -347,9 +355,13 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
   };
   ROTableRow rw(tab);
   if (ok) {
+    // Check that the table is not missing any expected columns.
     for (Int i=0; i < N; i++) {
       if (!rw.record().isDefined(rfn[i])) {
-	ok = False; break;
+	os << LogIO::SEVERE
+	   << "Column " << rfn[i] << " is missing."
+	   << LogIO::POST;
+	ok = False;// break;
       };
     };
   };
@@ -361,9 +373,9 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 			      "Int N, const String *, const String &, "
 			      "const String &, const String &)"),
 		       WHERE));
-    os << String("A ") + name + 
-      " table has been read that seems corrupted"
-      "\nNotify the CASA system manager about it" << LogIO::EXCEPTION;
+    os << name + " has an incompatible format."
+       << "\nYou may want to notify the CASA system manager about it."
+       << LogIO::EXCEPTION;
     return False;
   };
   table = tab;
