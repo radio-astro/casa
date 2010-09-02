@@ -96,7 +96,8 @@ def flagdata2(vis = None,
         if selectdata:
             if(debug):
                 print "field=%s, spw=%s, array=%s, feed=%s, scan=%s, baseline=%s, uvrange=%s,"\
-                      " time=%s, correlation=%s"%(field,spw,array,feed,scan,antenna,uvrange,timerange)
+                      " time=%s, correlation=%s"%(field,spw,array,feed,scan,antenna,uvrange,timerange,
+                                                  correlation)
             fglocal.setdata(field = field, 
                            spw = spw, 
                            array = array, 
