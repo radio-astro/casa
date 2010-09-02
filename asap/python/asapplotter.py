@@ -51,9 +51,11 @@ class asapplotter:
         self._fp = FontProperties()
         self._panellayout = self.set_panellayout(refresh=False)
         self._offset = None
+        self._rowcount = 0
+        self._panelcnt = 0
 
     def _translate(self, instr):
-        keys = "s b i p t".split()
+        keys = "s b i p t r".split()
         if isinstance(instr, str):
             for key in keys:
                 if instr.lower().startswith(key):
@@ -93,6 +95,7 @@ class asapplotter:
             NO checking is done that the abcissas of the scantable
             are consistent e.g. all 'channel' or all 'velocity' etc.
         """
+        self._rowcount = self._panelcnt = 0
         if self._plotter.is_dead:
             if hasattr(self._plotter.figmgr,'casabar'):
                 del self._plotter.figmgr.casabar
@@ -336,6 +339,10 @@ class asapplotter:
         if not self.set_panelling(panelling) or \
                not self.set_stacking(stacking):
             raise TypeError(msg)
+        if self._panelling == 'r':
+            self._stacking = '_r'
+        elif self._stacking == 'r':
+            self._panelling = '_r'
         if refresh and self._data: self.plot(self._data)
         return
 
@@ -351,6 +358,8 @@ class asapplotter:
         if md:
             self._panelling = md
             self._title = None
+            if md == 'r':
+                self._stacking = '_r'
             return True
         return False
 
@@ -384,6 +393,8 @@ class asapplotter:
         if md:
             self._stacking = md
             self._lmap = None
+            if md == 'r':
+                self._panelling = '_r'
             return True
         return False
 
@@ -815,13 +826,13 @@ class asapplotter:
     def _plot(self, scan):
         savesel = scan.get_selection()
         sel = savesel +  self._selection
-        d0 = {'s': 'SCANNO', 'b': 'BEAMNO', 'i':'IFNO',
-              'p': 'POLNO', 'c': 'CYCLENO', 't' : 'TIME' }
-        order = [d0[self._panelling],d0[self._stacking]]
-        sel.set_order(order)
+        order = self._get_sortstring([self._panelling,self._stacking])
+        if order:
+            sel.set_order(order)
         scan.set_selection(sel)
         d = {'b': scan.getbeam, 's': scan.getscan,
-             'i': scan.getif, 'p': scan.getpol, 't': scan._gettime }
+             'i': scan.getif, 'p': scan.getpol, 't': scan._gettime,
+             'r': int, '_r': int}
 
         polmodes = dict(zip(self._selection.get_pols(),
                             self._selection.get_poltypes()))
@@ -832,17 +843,16 @@ class asapplotter:
         else: n = len(n0)
         if isinstance(nstack0, int): nstack = nstack0
         else: nstack = len(nstack0)
+        nptot = n
         maxpanel, maxstack = 16,16
-        if n > maxpanel or nstack > maxstack:
-            maxn = 0
-            if nstack > maxstack: maxn = maxstack
-            if n > maxpanel: maxn = maxpanel
-            msg ="Scan to be plotted contains more than %d selections.\n" \
-                  "Selecting first %d selections..." % (maxn, maxn)
+        if nstack > maxstack:
+            msg ="Scan to be overlayed contains more than %d selections.\n" \
+                  "Selecting first %d selections..." % (maxstack, maxstack)
             asaplog.push(msg)
             asaplog.post('WARN')
-            n = min(n,maxpanel)
             nstack = min(nstack,maxstack)
+        n = min(n,maxpanel)
+            
         if n > 1:
             ganged = rcParams['plotter.ganged']
             if self._panelling == 'i':
@@ -858,7 +868,8 @@ class asapplotter:
         else:
 #            self._plotter.set_panels()
             self._plotter.set_panels(layout=self._panellayout)
-        r=0
+        #r = 0
+        r = self._rowcount
         nr = scan.nrow()
         a0,b0 = -1,-1
         allxlim = []
@@ -882,6 +893,7 @@ class asapplotter:
                 self._plotter.set_axes('xlabel', xlab)
                 self._plotter.set_axes('ylabel', ylab)
                 lbl = self._get_label(scan, r, self._panelling, self._title)
+                #if self._panelling == 'r': lbl = ''
                 if isinstance(lbl, list) or isinstance(lbl, tuple):
                     if 0 <= panelcount < len(lbl):
                         lbl = lbl[panelcount]
@@ -890,7 +902,7 @@ class asapplotter:
                         lbl = self._get_label(scan, r, self._panelling, None)
                 self._plotter.set_axes('title',lbl)
                 newpanel = True
-                stackcount =0
+                stackcount = 0
                 panelcount += 1
             if (b > b0 or newpanel) and stackcount < nstack:
                 y = []
@@ -957,6 +969,19 @@ class asapplotter:
                     self._plotter.set_limits(ylim=[allylim[0],allylim[-1]])
                 break
             r+=1 # next row
+        ###-S
+        self._rowcount = r+1
+        self._panelcnt += panelcount
+        if self._plotter.figmgr.casabar:
+            if self._panelcnt >= nptot-1:
+                self._plotter.figmgr.casabar.disable_next()
+            else:
+                self._plotter.figmgr.casabar.enable_next()
+            #if self._panelcnt - panelcount > 0:
+            #    self._plotter.figmgr.casabar.enable_prev()
+            #else:
+            #    self._plotter.figmgr.casabar.disable_prev()
+        ###-E
         #reset the selector to the scantable's original
         scan.set_selection(savesel)
 
@@ -965,6 +990,20 @@ class asapplotter:
         if self._fp is not None and getattr(self._plotter.figure,'findobj',False):
             for o in self._plotter.figure.findobj(Text):
                 o.set_fontproperties(self._fp)
+
+    def _get_sortstring(self, lorders):
+        d0 = {'s': 'SCANNO', 'b': 'BEAMNO', 'i':'IFNO',
+              'p': 'POLNO', 'c': 'CYCLENO', 't' : 'TIME', 'r':None, '_r':None }
+        if not (type(lorders) == list) or not (type(lorders) == tuple):
+            return None
+        if len(lorders) > 0:
+            lsorts = []
+            for order in lorders:
+                ssort = d0[order]
+                if ssort:
+                    lsorts.append(ssort)
+            return lsorts
+        return None
 
     def set_selection(self, selection=None, refresh=True, **kw):
         """
@@ -989,20 +1028,21 @@ class asapplotter:
         else:
             raise TypeError("'selection' is not of type selector")
 
-        d0 = {'s': 'SCANNO', 'b': 'BEAMNO', 'i':'IFNO',
-              'p': 'POLNO', 'c': 'CYCLENO', 't' : 'TIME' }
-        order = [d0[self._panelling],d0[self._stacking]]
-        self._selection.set_order(order)
+        order = self._get_sortstring([self._panelling,self._stacking])
+        if order:
+            self._selection.set_order(order)
         if refresh and self._data: self.plot(self._data)
 
     def _get_selected_n(self, scan):
         d1 = {'b': scan.getbeamnos, 's': scan.getscannos,
-             'i': scan.getifnos, 'p': scan.getpolnos, 't': scan.ncycle }
+             'i': scan.getifnos, 'p': scan.getpolnos, 't': scan.ncycle,
+             'r': scan.nrow, '_r': False}
         d2 = { 'b': self._selection.get_beams(),
                's': self._selection.get_scans(),
                'i': self._selection.get_ifs(),
                'p': self._selection.get_pols(),
-               't': self._selection.get_cycles() }
+               't': self._selection.get_cycles(),
+               'r': False, '_r': 1}
         n =  d2[self._panelling] or d1[self._panelling]()
         nstack = d2[self._stacking] or d1[self._stacking]()
         return n,nstack
@@ -1021,7 +1061,10 @@ class asapplotter:
                   " ("+str(scan._getsourcename(row))+")",
              'i': "IF"+str(scan.getif(row)),
              'p': poleval,
-             't': str(scan.get_time(row)) }
+             't': str(scan.get_time(row)),
+             'r': "row "+str(row),
+             #'_r': str(scan.get_time(row))+",\nIF"+str(scan.getif(row))+", "+poleval+", Beam"+str(scan.getbeam(row)) }
+             '_r': "" }
         return userlabel or d[mode]
 
     def plotazel(self, scan=None, outfile=None):

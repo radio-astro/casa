@@ -166,6 +166,15 @@ class CustomToolbarCommon:
         #print "No text picked"
         return False
 
+    def _new_page(self,next=True):
+        self.plotter._plotter.hold()
+        self.plotter._plotter.clear()
+        self.plotter._plot(self.plotter._data)
+        self.plotter._plotter.release()
+        self.plotter._plotter.tidy()
+        self.plotter._plotter.show(hardrefresh=False)
+        pass
+
 #####################################
 ##    Backend dependent Classes    ##
 #####################################
@@ -201,6 +210,15 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         self.bNote=self._NewButton(master=self,
                                    text='notation',
                                    command=self.modify_note)
+        self.bPrev=self._NewButton(master=self,
+                                   text='- page',
+                                   command=self.prev_page)
+        self.bNext=self._NewButton(master=self,
+                                   text='+ page',
+                                   command=self.next_page)
+        if os.uname()[0] != 'Darwin':
+            self.bPrev.config(padx=5)
+            self.bNext.config(padx=5)
         self.bQuit=self._NewButton(master=self,
                                    text='Quit',
                                    command=self.quit,
@@ -255,6 +273,14 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         self.__disconnect_event()
         self._p.register('button_press',self._mod_note)
 
+    def prev_page(self):
+        self.figmgr.toolbar.set_message('plotting the previous page')
+        self._new_page(next=False)
+
+    def next_page(self):
+        self.figmgr.toolbar.set_message('plotting the next page')
+        self._new_page(next=True)
+
     def quit(self):
         self.__disconnect_event()
         #self.delete_bar()
@@ -272,9 +298,23 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         if not self.button: return
         self.bStat.config(relief='raised', state=Tk.DISABLED)
         self.bSpec.config(relief='raised', state=Tk.DISABLED)
+        self.bPrev.config(state=Tk.DISABLED)
+        #self.bNext.config(state=Tk.DISABLED)
         self.button=False
         self.mode=''
         self.__disconnect_event()
+
+    def enable_next(self):
+        self.bNext.config(state=Tk.NORMAL)
+
+    def disable_next(self):
+        self.bNext.config(state=Tk.DISABLED)
+
+    def enable_prev(self):
+        self.bPrev.config(state=Tk.NORMAL)
+
+    def disable_prev(self):
+        self.bPrev.config(state=Tk.DISABLED)
 
     def delete_bar(self):
         self.__disconnect_event()

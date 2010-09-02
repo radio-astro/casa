@@ -1,4 +1,4 @@
-from asap.scantable import scantable, is_ms
+from asap.scantable import scantable
 from asap.parameters import rcParams
 from asap.logging import asaplog, asaplog_post_dec
 from asap.selector import selector
@@ -945,6 +945,7 @@ def splitant(filename, outprefix='',overwrite=False):
     """
     # Import the table toolkit from CASA
     import casac
+    from asap.scantable import is_ms
     tbtool = casac.homefinder.find_home_by_name('tableHome')
     tb = tbtool.create()
     # Check the input filename
@@ -971,24 +972,6 @@ def splitant(filename, outprefix='',overwrite=False):
     else:
         prefix=filename.rstrip('/')
     # Now do the actual splitting.
-    # 2010/08/20 TN
-    # The antenna parameter for scantable constructor is ineffective at the moemnt.
-    # Thus, we should go back to original implementation of splitant.
-##     outfiles=[]
-##     tb.open(tablename=filename+'/ANTENNA',nomodify=True)
-##     nant=tb.nrows()
-##     antnames=tb.getcol('NAME',0,nant,1)
-##     antpos=tb.getcol('POSITION',0,nant,1).transpose()
-##     tb.close()
-##     tb.open(tablename=filename,nomodify=True)
-##     ant1=tb.getcol('ANTENNA1',0,-1,1)
-##     tb.close()
-##     for antid in set(ant1):
-##         scan=scantable(filename,average=False,getpt=True,antenna=int(antid))
-##         outname=prefix+antnames[antid]+'.asap'
-##         scan.save(outname,format='ASAP',overwrite=overwrite)
-##         del scan
-##         outfiles.append(outname)
     outfiles=[]
     tb.open(tablename=filename+'/ANTENNA',nomodify=True)
     nant=tb.nrows()
@@ -1000,19 +983,16 @@ def splitant(filename, outprefix='',overwrite=False):
     tmpname='asapmath.splitant.tmp'
     for antid in set(ant1):
         tb.open(tablename=filename,nomodify=True)
-        #tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid))
-        #tbsel.copy(tmpname,deep=True)
         tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid),tmpname)
-        tbsel.close()
-        tb.close()
-        del tbsel
         scan=scantable(tmpname,average=False,getpt=True,antenna=int(antid))
         outname=prefix+antnames[antid]+'.asap'
         scan.save(outname,format='ASAP',overwrite=overwrite)
+        tbsel.close()
+        tb.close()
+        del tbsel
         del scan
         outfiles.append(outname)
         os.system('rm -rf '+tmpname)
-    tb.close()
     del tb
     return outfiles
 

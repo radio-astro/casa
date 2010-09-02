@@ -305,7 +305,7 @@ class NotationWindowTkAgg(NotationWindowCommon):
         self.radio.pack(side=Tk.BOTTOM)
         #twin.deiconify()
         #twin.minsize(width=twin.winfo_width(),height=twin.winfo_height())
-        twin.lift()
+        #twin.lift()
         twin.withdraw()
         return twin
 
