@@ -127,6 +127,12 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
     freqFrameValid_p=other.freqFrameValid_p;
     selectedSpw_p.resize();
     selectedSpw_p=other.selectedSpw_p;
+    imageFreq_p.resize();
+    imageFreq_p=other.imageFreq_p;
+    lsrFreq_p.resize();
+    lsrFreq_p=other.lsrFreq_p;
+    interpVisFreq_p.resize();
+    interpVisFreq_p=other.interpVisFreq_p;
     multiChanMap_p=other.multiChanMap_p;
     chanMap.resize();
     chanMap=other.chanMap;
@@ -137,11 +143,12 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
     spectralCoord_p=other.spectralCoord_p;
     doConversion_p.resize();
     doConversion_p=other.doConversion_p;
-
+    pointingDirCol_p=other.pointingDirCol_p;
     //moving source stuff
     movingDir_p=other.movingDir_p;
     fixMovingSource_p=other.fixMovingSource_p;
     firstMovingDir_p=other.firstMovingDir_p;
+    
     //Double precision gridding for those FTMachines that can do
     useDoubleGrid_p=other.useDoubleGrid_p;
 
@@ -1018,26 +1025,20 @@ Bool FTMachine::matchChannel(const Int& spw,
   else{
     lsrFreq=vb.lsrFrequency();
   }
-  // cout << "freq " << vb.frequency() << endl;
-  // cout << "lsrFreq " << lsrFreq << endl;
   lsrFreq_p.resize(lsrFreq.nelements());
   lsrFreq_p=lsrFreq;
-  // cout << "FreqFrameValid " << freqFrameValid_p << " conversion " << doConversion_p[spw] << endl;
-  // cout << "freq sys " << spectralCoord_p.frequencySystem(True) << "    " << spectralCoord_p.frequencySystem(False) << endl;
-
   Vector<Double> c(1);
   c=0.0;
   Vector<Double> f(1);
   Int nFound=0;
 
-  //cout << "lsrFreq " << endl;
 
   //cout.precision(10);
   for (Int chan=0;chan<nvischan;chan++) {
     f(0)=lsrFreq[chan];
     if(spectralCoord_p.toPixel(c, f)) {
       Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
-      //cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+      //cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
       /////////////
       //c(0)=pixel;
       //spectralCoord_p.toWorld(f, c);
@@ -1057,7 +1058,6 @@ Bool FTMachine::matchChannel(const Int& spw,
     }
   }
 
-  //cout << "chanMap " << chanMap << endl; 
 
   multiChanMap_p[spw].resize();
   multiChanMap_p[spw]=chanMap;
@@ -1210,14 +1210,13 @@ void FTMachine::setFreqInterpolation(const String& method){
   }
 
   void FTMachine::setSpwChanSelection(const Cube<Int>& spwchansels) {
-	spwChanSelFlag_p.resize();
-	spwChanSelFlag_p=spwchansels;
+    spwChanSelFlag_p.resize();
+    spwChanSelFlag_p=spwchansels;
   }
 
   void FTMachine::setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube){
     
     modflagcube.resize(vb.flagCube().shape());
-    // cerr <<"vb.flagCube.shape..."<<vb.flagCube().shape()<< " mod " << modflagcube.shape() << endl;
     modflagcube=vb.flagCube();
 	uInt nchan = vb.nChannel();
 	uInt msid = vb.msId();
