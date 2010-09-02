@@ -105,7 +105,8 @@ Simulator::Simulator():
   nSpw(0),
   sim_p(0),
   // epJ_p(0),
-  epJTableName_p()
+  epJTableName_p(),
+  prtlev_(0)
 {
 }
 
@@ -116,19 +117,17 @@ Simulator::Simulator(String& msname)
     nSpw(0),
     sim_p(0),
     // epJ_p(0),
-    epJTableName_p()
+    epJTableName_p(),
+    prtlev_(0)
 {
-#ifdef RI_DEBUG
-  LogIO os(LogOrigin("simulator", "simulator(String& msname)", WHERE));
-#else
-  LogIO os(LogOrigin("simulator", "simulator(String& msname)"));
-#endif
-
   defaults();
 
   if(!sim_p) {
     sim_p= new NewMSSimulator(msname);
+    //sim_p->setPrtlev(prtlev());
   }
+
+  ve_p.setPrtlev(prtlev());
   
   // Make a MeasurementSet object for the disk-base MeasurementSet that we just
   // created
@@ -144,9 +143,10 @@ Simulator::Simulator(MeasurementSet &theMs)
     ac_p(0), distance_p(0), ve_p(), vc_p(), vp_p(0), gvp_p(0), 
     sim_p(0),
     // epJ_p(0),
-    epJTableName_p()
+    epJTableName_p(),
+    prtlev_(0)     //RI DEBUG
 {
-  LogIO os(LogOrigin("simulator", "simulator(MeasurementSet& theMs)", WHERE));
+  LogIO os(LogOrigin("simulator", "simulator(MeasurementSet& theMs)"));
 
   defaults();
 
@@ -154,8 +154,11 @@ Simulator::Simulator(MeasurementSet &theMs)
 
   if(!sim_p) {
     sim_p= new NewMSSimulator(theMs);
+    //sim_p->setPrtlev(prtlev());
   }
 
+  ve_p.setPrtlev(prtlev());
+  
   ms_p = new MeasurementSet(theMs);
   AlwaysAssert(ms_p, AipsError);
 
@@ -181,7 +184,8 @@ Simulator::Simulator(const Simulator &other)
     ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0),
     sim_p(0),
     // epJ_p(0),
-    epJTableName_p()
+    epJTableName_p(),
+    prtlev_(0)
 {
   defaults();
   ms_p = new MeasurementSet(*other.ms_p);
@@ -651,7 +655,7 @@ Bool Simulator::settimes(const Quantity& integrationTime,
 			 const MEpoch&   refTime)
 {
   
-  LogIO os(LogOrigin("simulator", "settimes()", WHERE));
+  LogIO os(LogOrigin("simulator", "settimes()"));
   try {
     
     integrationTime_p=integrationTime;
@@ -802,12 +806,8 @@ Bool Simulator::setfield(const String& sourceName,
 			 const String& calCode,
 			 const Quantity& distance)
 {
-  LogIO os(LogOrigin("Simulator", "setfield()", WHERE));
-  //#ifndef RI_DEBUG
+  LogIO os(LogOrigin("Simulator", "setfield()"));
   try {
-//#else 
-//    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
-//#endif
     
     if (sourceName == "") {
       os << LogIO::SEVERE << "must provide a source name" << LogIO::POST;  
@@ -815,9 +815,9 @@ Bool Simulator::setfield(const String& sourceName,
     }
 
     nField++;    
-#ifdef RI_DEBUG
-    os << "nField = " << nField << LogIO::POST;  
-#endif
+
+    if (prtlev()>2) os << "nField = " << nField << LogIO::POST;  
+
     distance_p.resize(nField,True);
     distance_p[nField-1]=distance;
     sourceName_p.resize(nField,True);
@@ -829,12 +829,10 @@ Bool Simulator::setfield(const String& sourceName,
 
     sim_p->initFields(sourceName, sourceDirection, calCode);
 
-    //#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  //#endif
   return True;
 };
 
@@ -909,7 +907,7 @@ Bool Simulator::setspwindow(const String& spwName,
 			    const String& stokes) 
 
 {
-  LogIO os(LogOrigin("Simulator", "setspwindow()", WHERE));
+  LogIO os(LogOrigin("Simulator", "setspwindow()"));
   try {
     if (nChan == 0) {
       os << LogIO::SEVERE << "must provide nchannels" << LogIO::POST;  
@@ -954,7 +952,7 @@ Bool Simulator::setfeed(const String& mode,
 			   const Vector<Double>& y,
 			   const Vector<String>& pol)
 {
-  LogIO os(LogOrigin("Simulator", "setfeed()", WHERE));
+  LogIO os(LogOrigin("Simulator", "setfeed()"));
   
   if (mode != "perfect R L" && mode != "perfect X Y" && mode != "list") {
     os << LogIO::SEVERE << 
@@ -982,7 +980,7 @@ Bool Simulator::setvp(const Bool dovp,
 			 const Quantity &skyPosThreshold,
 			 const Float &pbLimit)
 {
-  LogIO os(LogOrigin("Simulatore", "setvp()", WHERE));
+  LogIO os(LogOrigin("Simulatore", "setvp()"));
   
   os << "Setting voltage pattern parameters" << LogIO::POST;
   
@@ -1048,7 +1046,8 @@ Bool Simulator::setnoise(const String& mode,
 			 const Float correfficiency=0.85,
 			 const Float trx=150.0, 
 			 const Float tground=270.0, 
-			 const Float tcmb=2.7
+			 const Float tcmb=2.7, 
+			 const Bool OTF=True
 			 ) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
@@ -1138,7 +1137,7 @@ Bool Simulator::setnoise(const String& mode,
     if (simpar.isDefined("onthefly")) {
       saveOnthefly=simpar.asBool("onthefly");
     }
-    simpar.define("onthefly",True);
+    simpar.define("onthefly",OTF);
 
     // create the ANoise
     if (!create_corrupt(simpar)) 
@@ -1669,10 +1668,7 @@ Bool Simulator::create_corrupt(Record& simpar)
     
     svc = createSolvableVisCal(upType,*vs_p);
 
-    //RI
-    //svc->setPrtlev(4);
-    //cout<<"Sim:create_corrupt ["<<upType<<"]"<<endl;
-    //
+    svc->setPrtlev(prtlev());
 
     Vector<Double> solTimes;
     svc->setSimulate(*vs_p,simpar,solTimes);

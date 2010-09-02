@@ -158,6 +158,8 @@ public:
 
   inline const VisCal::Type pivot() const { return pivot_; };
 
+  // Set the print level
+  inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
   
 protected:
 

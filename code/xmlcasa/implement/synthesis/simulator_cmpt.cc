@@ -962,7 +962,8 @@ simulator::setnoise(const std::string& mode,
 		    const double correfficiency,	    
 		    const double trx, 
 		    const double tground, 
-		    const double tcmb
+		    const double tcmb,
+		    const bool OTF
 		    ) {
   Bool rstat(False);
   try {
@@ -979,7 +980,7 @@ simulator::setnoise(const std::string& mode,
 			     qpress,relhum,qalt,qwaterht,qpwv,
 			     tatmos,tau,
 			     antefficiency, spillefficiency, correfficiency, 
-			     trx, tground, tcmb);
+			     trx, tground, tcmb, OTF);
     }    
  } catch  (AipsError x) {
    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
