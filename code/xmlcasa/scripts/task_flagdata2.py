@@ -77,6 +77,11 @@ def flagdata2(vis = None,
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         
+        # MS HISTORY
+        mslocal.open(vis,nomodify=False)
+        mslocal.writehistory(message='taskname = flagdata2', origin='flagdata2')
+        mslocal.open(vis,nomodify=False)
+        
         if (not manualflag and not clip and not quack and not shadow and not rfi and 
             not autoflag and not unflag and not summary):
 #            casalog.post('No flagging mode was selected', 'WARN')
@@ -130,8 +135,8 @@ def flagdata2(vis = None,
                          clipcolumn="",   
                          clipoutside=False, 
                          channelavg=False)
-
-        
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+            
         if clip:
             mode = 'clip'
             casalog.post('Flagging in clip mode')
@@ -150,6 +155,8 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+            
         if quack:
             mode = 'quack'
             casalog.post('Flagging in quack mode')
@@ -168,6 +175,8 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+            
         if shadow:
             mode = 'shadow'
             casalog.post('Flagging in shadow mode')
@@ -182,6 +191,7 @@ def flagdata2(vis = None,
                         time = timerange, \
                         correlation = correlation, \
                        diameter = diameter)
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 #            fglocal.setshadowflags(diameter = diameter)
 
             if flagbackup:
@@ -210,6 +220,8 @@ def flagdata2(vis = None,
             #     rec['minpop'] = minpop;
             rec['column'] = column
             fglocal.setautoflag(algorithm = algorithm, parameters = rec)
+            
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
                 
             if flagbackup:
                 backup_flags(fglocal,mode)
@@ -277,6 +289,8 @@ def flagdata2(vis = None,
             # Note : Can set multiple instances of this (will be done one after the other)
             #
             fglocal.setautoflag(algorithm='tfcrop', parameters=par)
+            
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 
             if flagbackup:
                 backup_flags(fglocal,mode)
@@ -297,6 +311,7 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 
         if summary:
             mode = 'summary'
@@ -312,6 +327,7 @@ def flagdata2(vis = None,
                                   time=timerange, \
                                   correlation=correlation)
             fglocal.setflagsummary()
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
                 
             # do not backup existing flags
             
@@ -343,13 +359,8 @@ def flagdata2(vis = None,
         print '*** Error ***', instance
 
 #    fglocal.done()
-
     
-    # FIXME: write history
-    mslocal.open(vis,nomodify=False)
-    mslocal.writehistory(message='taskname = flagdata2', origin='flagdata2')
-    mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='flagdata2')
-    mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+    # Close MS history
     mslocal.close()
 
     return
