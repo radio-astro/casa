@@ -421,7 +421,7 @@ def simdata(
                 if os.path.exists(msfile):
                     if not overwrite:
                         util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
-                        return False
+                        return False                
                 sm.open(msfile)
                 posobs=me.observatory(telescopename)
                 diam=stnd;
@@ -949,56 +949,6 @@ def simdata(
             
 
 
-        if image or analyze:
-            if components_only:
-                newmodel=project+".compskymodel"
-                if not os.path.exists(project+".image"):
-                    msg("must image before analyzing",priority="error")
-                    return False
-                ia.imagecalc(pixels="'"+project+".image' * 0",outfile=newmodel,overwrite=True)
-                ia.open(newmodel)
-                cl.open(complist)
-                ia.setbrightnessunit("Jy/pixel")
-                ia.modify(cl.torecord(),subtract=False)
-                modelcsys=ia.coordsys()
-                modelshape=ia.shape()
-
-                modelflat=project+".compskymodel.flat"
-
-                # TODO should be able to simplify degen axes code using new
-                # image anal tools.
-                inspectax=modelcsys.findcoordinate('spectral')['pixel']
-                innchan=modelshape[inspectax]
-                
-                stokesax=modelcsys.findcoordinate('stokes')['pixel']
-                innstokes=modelshape[stokesax]
-
-                if innchan>1:
-                    # actually run ia.moments
-                    ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
-                    ia.done()
-                else:   
-                    ia.done()
-                    pdb.set_trace()
-
-                    # just remove degenerate axes from modelimage4d
-                    ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
-                    if innstokes<=1:
-                        os.rename(modelflat,modelflat+".tmp")
-                        ia.open(modelflat+".tmp")
-                        ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
-                        ia.done()
-                        shutil.rmtree(modelflat+".tmp")
-                if innstokes>1:
-                    os.rename(modelflat,modelflat+".tmp")
-                    po.open(modelflat+".tmp")
-                    foo=po.stokesi(outfile=modelflat,stokes='I')
-                    foo.done()
-                    po.done()
-                    shutil.rmtree(modelflat+".tmp")
-
-
-
         #####################################################################
         if image:
             tpms=None
@@ -1149,6 +1099,54 @@ def simdata(
                 file=project+".image.png"
             else:
                 file=""
+
+            # create fake model from components for analysis
+            if components_only:
+                newmodel=project+".compskymodel"
+                if not os.path.exists(project+".image"):
+                    msg("must image before analyzing",priority="error")
+                    return False
+                ia.imagecalc(pixels="'"+project+".image' * 0",outfile=newmodel,overwrite=True)
+                ia.open(newmodel)
+                cl.open(complist)
+                ia.setbrightnessunit("Jy/pixel")
+                ia.modify(cl.torecord(),subtract=False)
+                modelcsys=ia.coordsys()
+                modelshape=ia.shape()
+
+                modelflat=project+".compskymodel.flat"
+
+                # TODO should be able to simplify degen axes code using new
+                # image anal tools.
+                inspectax=modelcsys.findcoordinate('spectral')['pixel']
+                innchan=modelshape[inspectax]
+                
+                stokesax=modelcsys.findcoordinate('stokes')['pixel']
+                innstokes=modelshape[stokesax]
+
+                if innchan>1:
+                    # actually run ia.moments
+                    ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
+                    ia.done()
+                else:   
+                    ia.done()
+
+                    # just remove degenerate axes from modelimage4d
+                    ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
+                    if innstokes<=1:
+                        os.rename(modelflat,modelflat+".tmp")
+                        ia.open(modelflat+".tmp")
+                        ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
+                        ia.done()
+                        shutil.rmtree(modelflat+".tmp")
+                if innstokes>1:
+                    os.rename(modelflat,modelflat+".tmp")
+                    po.open(modelflat+".tmp")
+                    foo=po.stokesi(outfile=modelflat,stokes='I')
+                    foo.done()
+                    po.done()
+                    shutil.rmtree(modelflat+".tmp")
+
 
             if grscreen or grfile:
                 util.newfig(multi=[2,2,1],show=grscreen)
