@@ -697,7 +697,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 
   // defining epoch as begining time from timerange in OBSERVATION subtable
   // Using first observation for now
-  MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  //MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  // modified to use main table's TIME column for better match with what
+  // VisIter does.
+  MEpoch obsEpoch = msc.timeMeas()(0);
 
   //Now finding the position of the telescope on Earth...needed for proper
   //frequency conversions
@@ -3707,7 +3710,7 @@ Bool Imager::pbguts(ImageInterface<Float>& inImage,
 Bool Imager::weight(const String& type, const String& rmode,
                  const Quantity& noise, const Double robust,
                  const Quantity& fieldofview,
-                 const Int npixels)
+		    const Int npixels, const Bool multiField)
 {
   if(!valid()) return False;
   logSink_p.clearLocally();
@@ -3735,7 +3738,7 @@ Bool Imager::weight(const String& type, const String& rmode,
 	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
       imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, nx_p, 
                                ny_p, mcellx_p, mcelly_p, actualNpix, 
-                               actualNpix);
+                               actualNpix, multiField);
     }
     else if ((type=="robust")||(type=="uniform")||(type=="briggs")) {
       if(!assertDefinedImageParameters()) return False;
@@ -3785,7 +3788,7 @@ Bool Imager::weight(const String& type, const String& rmode,
 
       imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, 
                                actualNPixels, actualNPixels, actualCellSize, 
-                               actualCellSize, 0, 0);
+                               actualCellSize, 0, 0, multiField);
       
     }
     else if (type=="radial") {

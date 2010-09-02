@@ -1224,6 +1224,8 @@ ms::cvel(const std::string& mode,
     Int t_nchan = -1; 
     Int t_width = 0;
     Int t_start = -1;
+    Bool t_startIsEnd = False; // False means that start specifies the lower end in frequency (default)
+                               // True means that start specifies the upper end in frequency
 
     if(!start.toString().empty()){ // start was set
       if(t_mode == "channel"){
@@ -1241,16 +1243,32 @@ ms::cvel(const std::string& mode,
     }
     if(!width.toString().empty()){ // channel width was set
       if(t_mode == "channel"){
-	t_width = abs(atoi(width.toString().c_str()));
+	Int w = atoi(width.toString().c_str());
+	t_width = abs(w);
+	if(w<0){
+	  t_startIsEnd = True;
+	}
       }
       else if(t_mode == "channel_b"){
-	t_cwidth = abs(Double(atoi(width.toString().c_str())));
+	Double w = atoi(width.toString().c_str());
+	t_cwidth = abs(w);
+	if(w<0){
+	  t_startIsEnd = True;
+	}	
       }
       else if(t_mode == "frequency"){
-	t_cwidth = abs(casaQuantity(width).getValue("Hz"));
+	Double w = casaQuantity(width).getValue("Hz");
+	t_cwidth = abs(w);
+	if(w<0){
+	  t_startIsEnd = True;
+	}	
       }
       else if(t_mode == "velocity"){
-	t_cwidth = abs(casaQuantity(width).getValue("m/s"));   
+	Double w = casaQuantity(width).getValue("m/s");
+	t_cwidth = abs(w);
+	if(w>=0){
+	  t_startIsEnd = True; 
+	}		
       }
     }
     if(nchan > 0){ // number of output channels was set
@@ -1383,6 +1401,7 @@ ms::cvel(const std::string& mode,
 			      t_phasec_fieldid, // == -1 if t_phaseCenter is valid
 			      t_phaseCenter,
 			      True, // use "center is start" mode
+			      t_startIsEnd,			      
 			      t_nchan,
 			      t_width,
 			      t_start

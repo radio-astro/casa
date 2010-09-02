@@ -491,17 +491,17 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    #	    print "Restoring colormap..."
 		    #	    sd.plotter._plotter.colormap=colormapold
 
-	    # Restore the previous line properties
-	    sd.plotter._plotter.colormap=colormapold
-	    sd.plotter._plotter.linestyles=linestylesold
-	    pl.rc('lines', linewidth=linewidthold)
-	    # Restore the previous plotter settings
-	    sd.plotter._minmaxx = oldxlim
-	    sd.plotter._minmaxy = oldylim
-	    sd.plotter._panelling = oldpanel
-	    sd.plotter._stacking = oldstack
-	    sd.plotter._hist = oldhist
-	    sd.plotter._panellayout = oldlayout
+	    ## Restore the previous line properties
+	    #sd.plotter._plotter.colormap=colormapold
+	    #sd.plotter._plotter.linestyles=linestylesold
+	    #pl.rc('lines', linewidth=linewidthold)
+	    ## Restore the previous plotter settings
+	    #sd.plotter._minmaxx = oldxlim
+	    #sd.plotter._minmaxy = oldylim
+	    #sd.plotter._panelling = oldpanel
+	    #sd.plotter._stacking = oldstack
+	    #sd.plotter._hist = oldhist
+	    #sd.plotter._panellayout = oldlayout
 
 	    # Define Pick event
 	    #if sd.plotter._visible:

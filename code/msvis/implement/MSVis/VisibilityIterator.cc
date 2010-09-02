@@ -721,7 +721,7 @@ void ROVisibilityIterator::update_rowIds() const
   if (rowIds_p.nelements() == 0) {
       rowIds_p = selRows_p.convert();
       
-      Vector<uInt> msIter_rowIds(msIter_p.table().rowNumbers());
+      Vector<uInt> msIter_rowIds(msIter_p.table().rowNumbers(msIter_p.ms()));
 
       for (uInt i = 0; i < rowIds_p.nelements(); i++) {
           rowIds_p(i) = msIter_rowIds(rowIds_p(i));
@@ -1409,7 +1409,7 @@ Matrix<Float>& ROVisibilityIterator::imagingWeight(Matrix<Float>& wt) const
         frequency(fvec);
         Matrix<Double> uvwmat;
         uvwMat(uvwmat);
-        imwgt_p.weightUniform(wt, flagmat, uvwmat, fvec, weightvec);
+        imwgt_p.weightUniform(wt, flagmat, uvwmat, fvec, weightvec, msId(), fieldId());
         if(imwgt_p.doFilter())
 	    imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
     }

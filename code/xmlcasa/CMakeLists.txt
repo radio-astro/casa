@@ -217,6 +217,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_find.py
   scripts/task_fixvis.py
   scripts/task_flagautocorr.py
+  scripts/task_flagcmd.py
   scripts/task_flagdata.py
   scripts/task_flagdata2.py
   scripts/task_flagmanager.py
@@ -280,8 +281,8 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdstat.py
   scripts/task_sdtpimaging.py
   scripts/task_setjy.py
-  scripts/task_simdata2.py
   scripts/task_simdata.py
+  scripts/task_oldsimdata.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
   scripts/task_split.py
@@ -327,6 +328,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/find.xml
   tasks/fixvis.xml
   tasks/flagautocorr.xml
+  tasks/flagcmd.xml
   tasks/flagdata.xml
   tasks/flagdata2.xml
   tasks/flagmanager.xml
@@ -387,8 +389,8 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdstat.xml
   tasks/sdtpimaging.xml
   tasks/setjy.xml
-  tasks/simdata2.xml
   tasks/simdata.xml
+  tasks/oldsimdata.xml
   tasks/smoothcal.xml
   tasks/specfit.xml
   tasks/split.xml

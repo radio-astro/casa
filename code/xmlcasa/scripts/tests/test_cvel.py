@@ -1,6 +1,7 @@
 # unit test for the cvel task
 
 import os
+import numpy
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -15,11 +16,12 @@ vis_e = 'g19_d2usb_targets_line-shortened.ms'
 vis_f = 'evla-highres-sample.ms'
 outfile = 'cvel-output.ms'
 
-def verify_ms(msname, expnumspws, expnumchan, inspw):
+def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
     msg = ''
     tb.open(msname+'/SPECTRAL_WINDOW')
     nc = tb.getcell("NUM_CHAN", inspw)
     nr = tb.nrows()
+    cf = tb.getcell("CHAN_FREQ", inspw)
     tb.close()
     tb.open(msname)
     dimdata = tb.getcell("FLAG", 0)[0].size
@@ -33,35 +35,21 @@ def verify_ms(msname, expnumspws, expnumchan, inspw):
     if not (dimdata == expnumchan):
         msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
         return [False,msg]
-    
+
+    if not (expchanfreqs==[]):
+        print "Testing channel frequencies ..."
+        print cf
+        print expchanfreqs
+        if not (expchanfreqs.size == expnumchan):
+            msg =  "Internal error: array of expected channel freqs should have dimension ", expnumchan
+            return [False,msg]
+        df = (cf - expchanfreqs)/expchanfreqs
+        if not (abs(df) < 1E-8).all:
+            msg = "channel frequencies in spw "+str(inspw)+" differ from expected values by (relative error) "+str(df)
+            return [False,msg]
+
     return [True,msg]
 
-#def verify_ms(msname, expnumspws, expnumchan, inspw):
-#    msg = ''
-#    tb.open(msname+'/SPECTRAL_WINDOW')
-#    nc = tb.getcell("NUM_CHAN", inspw)
-#    nr = tb.nrows()
-#    tb.close()
-#    tb.open(msname)
-#    dimdata = tb.getcell("FLAG", 0)[0].size
-#    tb.close()
-#    if not (nr==expnumspws):
-#        msg = '"Found '+str(nr)+', expected '+str(expnumspws)+' spectral windows in '+msname
-#        return [False,msg]
-##        print "Found "+str(nr)+", expected "+str(expnumspws)+" spectral windows in "+msname
-##        raise Exception
-#    if not (nc == expnumchan):
-#        msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in spw "+str(inspw)+" in "+msname
-#        return [False,msg]
-##        print "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in spw "+str(inspw)+" in "+msname
-##        raise Exception
-#    if not (dimdata == expnumchan):
-#        msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
-#        return [False,msg]
-##        print "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
-##        raise Exception
-#    
-#    return [True,msg]
 
 class cvel_test(unittest.TestCase):
 
@@ -447,7 +435,7 @@ class cvel_test(unittest.TestCase):
         self.assertTrue(ret[0],ret[1])
     
     def test22(self):
-        '''Cvel 22: SMA input MS, 24 spws to combine, frequency mode, 210 output channels, negative width (sign will be ignored)'''
+        '''Cvel 22: SMA input MS, 24 spws to combine, frequency mode, 210 output channels, negative width'''
         myvis = vis_e
         os.system('cp -R ' + myvis + ' myinput.ms')
         rval = cvel(
@@ -462,6 +450,7 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 210, 0)
         self.assertTrue(ret[0],ret[1])
+        os.system('mv '+outfile+' xxx.ms')
     
     def test23(self):
         '''Cvel 23: SMA input MS, 24 spws to combine, radio velocity mode, 30 output channels'''
@@ -675,6 +664,197 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 260, 0)
         self.assertTrue(ret[0],ret[1])
+
+    def test35(self):
+        '''Cvel 35: test effect of sign of width parameter: channel mode, width positive'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array([a[1], a[2], a[3]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            nchan = 3,
+            start = 1,
+            width=1
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test36(self):
+        '''Cvel 36: test effect of sign of width parameter: channel mode, width negative'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array([a[1], a[2], a[3]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            nchan = 3,
+            start = 3,
+            width=-1
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test37(self):
+        '''Cvel 37: test effect of sign of width parameter: freq mode, width positive'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array([a[1], a[2], a[3]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode = 'frequency',
+            nchan = 3,
+            start = str(a[1])+'Hz',
+            width=str(a[2]-a[1])+'Hz'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test38(self):
+        '''Cvel 38: test effect of sign of width parameter: freq mode, width negative'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array([a[1], a[2], a[3]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode = 'frequency',
+            nchan = 3,
+            start = str(a[3])+'Hz',
+            width='-'+str(a[2]-a[1])+'Hz'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test39(self):
+        '''Cvel 39: test effect of sign of width parameter: radio velocity mode, width positive'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        c =  qa.constants('c')['value']
+        
+        restf = a[0] 
+        bv1 = c * (restf-a[5])/restf 
+        bv2 = c * (restf-a[4])/restf 
+        wv = abs(bv2-bv1)
+        b = numpy.array([a[3], a[4], a[5]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode = 'velocity',
+            veltype = 'radio',
+            nchan = 3,
+            start = str(bv1)+'m/s',
+            width=str(wv)+'m/s',
+            restfreq=str(restf)+'Hz'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test40(self):
+        '''Cvel 40: test effect of sign of width parameter: radio velocity mode, width negative'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        c =  qa.constants('c')['value']
+        
+        restf = a[0] 
+        bv1 = c * (restf-a[3])/restf 
+        bv2 = c * (restf-a[4])/restf 
+        wv = abs(bv2-bv1)
+        b = numpy.array([a[3], a[4], a[5]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode = 'velocity',
+            veltype = 'radio',
+            nchan = 3,
+            start = str(bv1)+'m/s',
+            width="-"+str(wv)+'m/s',
+            restfreq=str(restf)+'Hz'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test41(self):
+        '''Cvel 41: test effect of sign of width parameter: optical velocity mode, width positive'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        c =  qa.constants('c')['value']
+        
+        restf = a[0] 
+        bv1 = c * (restf-a[5])/a[5] 
+        bv2 = c * (restf-a[4])/a[4] 
+        wv = abs(bv2-bv1+1.)
+        bv2 = bv1 + wv
+        bv3 = bv2 + wv
+        a4 = restf/(bv2/c+1.)        
+        a3 = restf/(bv3/c+1.)
+        b = numpy.array([a3, a4, a[5]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode = 'velocity',
+            veltype = 'optical',
+            nchan = 3,
+            start = str(bv1)+'m/s',
+            width=str(wv)+'m/s',
+            restfreq=str(restf)+'Hz'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test42(self):
+        '''Cvel 42: test effect of sign of width parameter: optical velocity mode, width negative'''
+        myvis = vis_b
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        c =  qa.constants('c')['value']
+        
+        restf = a[0] 
+        bv1 = c * (restf-a[5])/a[5] 
+        bv2 = c * (restf-a[4])/a[4] 
+        wv = abs(bv2-bv1+1.)
+        bv2 = bv1 + wv
+        bv3 = bv2 + wv
+        a4 = restf/(bv2/c+1.)        
+        a3 = restf/(bv3/c+1.)
+        b = numpy.array([a3, a4, a[5]])
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode = 'velocity',
+            veltype = 'optical',
+            nchan = 3,
+            start = str(bv3)+'m/s',
+            width='-'+str(wv)+'m/s',
+            restfreq=str(restf)+'Hz'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
 
 def suite():
     return [cvel_test]

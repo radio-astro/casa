@@ -1073,7 +1073,7 @@ class par(str):
 		in Jy/pixel.
 		default: 'unchanged'
 		
-		[alpha alert] If you specify 'unchanged' it will take the
+		[alert] If you specify 'unchanged' it will take the
 		numerical values in your image and assume they are in Jy/pixel,
 		even if it says some other unit in the header. This will be made
 		more flexible in the future.

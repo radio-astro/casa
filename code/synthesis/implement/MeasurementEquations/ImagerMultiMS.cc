@@ -420,7 +420,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 {
 
   if(!dataSet_p){
-    LogIO os(LogOrigin("imager", "setimage()"), logSink_p);  
+    LogIO os(LogOrigin("imagerMultiMS", "setimage()"), logSink_p);  
     os << LogIO::SEVERE 
        << "Please use setdata before setimage as imager need one ms at least " 
        << LogIO::POST;

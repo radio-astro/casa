@@ -6,7 +6,7 @@ from asap._asap import Scantable
 import pylab as pl
 
 
-def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
+def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, batch, outfile, outform, overwrite, plotlevel):
 	
 	
 	casalog.origin('sdbaseline')
@@ -281,7 +281,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 					# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
 					basemask=s.create_mask(masklist)
 					for r in xrange(nrow):
-						s.poly_baseline(mask=basemask,order=blpoly,plot=verify,batch=False,rows=r)
+						s.poly_baseline(mask=basemask,order=blpoly,plot=verify,batch=batch,rows=r)
 						msk = s.actualmask[0]
 						rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
 						masklistofrow = s.masklists[0]
@@ -292,7 +292,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 					del basemask
 				else:
 					for r in xrange(nrow):
-						s.poly_baseline(order=blpoly,plot=verify,batch=False,rows=r)
+						s.poly_baseline(order=blpoly,plot=verify,batch=batch,rows=r)
 						msk = s.actualmask[0]
 						rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
 						masklistofrow = s.masklists[0]
@@ -327,12 +327,12 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			
 			# Calculate base-line RMS
 			if len(msks) > 0:
-				s.poly_baseline(mask=msk,order=blpoly,plot=verify)
+				s.poly_baseline(mask=msk,order=blpoly,plot=verify,batch=False)
 				rmsl=list(s.stats('rms',msk))
 				# NOTICE: Do not modify scantable before formatting output
 				dataout=_format_output(s,s.blpars,rmsl)
 			else:
-				s.poly_baseline(order=blpoly,plot=verify)
+				s.poly_baseline(order=blpoly,plot=verify,batch=False)
 				rmsl=list(s.stats('rms'))
 				# NOTICE: Do not modify scantable before formatting output
 				dataout=_format_output(s,s.blpars,rmsl)

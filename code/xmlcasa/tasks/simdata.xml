@@ -5,291 +5,394 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
- 
 <task type="function" name="simdata" category="simulation">
 
-  <shortdescription>simulation task:</shortdescription>
+  <shortdescription>mosaic simulation task:</shortdescription>
   <description>
-    Simulate synthesis data. [alert] Parameters are expected to 
-    change as development continues through at least CASA 3.1 - be careful.
+    This task will simulate interferometric data.  
+    2010 version 2.0
     Please contact CASA helpdesk with questions.
   </description>
   
   <input>
-
+    
     <param type="string" name="project">
-      <description>root for output files</description>
+      <description>root for output file names</description>
       <value>sim</value>
     </param>
     
 
-<!--  SETUP  -->
 
-    <param type="string" name="complist">
-      <description>[optional] componentlist table to observe</description>
-      <value></value>
+
+
+
+
+    <param type="bool" name="modifymodel">
+      <description>modify model image </description>
+      <value type="bool">False</value>
+    </param>
+    <!-- all parms default to keep what's in the image, if the param=="" -->
+
+    <param type="string" name="skymodel" subparam='true'>
+      <!-- modifying the description in constraints doesn't work yet -->
+      <description>model image to observe or modify</description>
+      <value type="string">$project.skymodel</value>
     </param>
 
-    <param type="string" name="modelimage">
-      <description>model sky image name</description>
-      <value></value>
+    <param type="string" name="inbright" subparam='true'>
+       <description>set peak surface brightness e.g. "1.2Jy/pixel" or ""</description>
+       <value type="string"></value>
+    </param>
+    <!-- TODO parse Jy/pixel, MJy/Sr, eventually K, etc -->
+    <!-- TODO document permitted units in online help -->
+
+    <param type="string" name="indirection" subparam="true">
+      <description>"J2000 19h00m00 -40d00m00" or ""</description>
+      <value type="string"></value>
     </param>
 
-    <param type="string" name="inbright">
-       <description>set peak surface brightness in Jy/pixel or "unchanged"</description>
-       <value>unchanged</value>
-    </param>
-
-    <param type="bool" name="ignorecoord">
-      <description>change model coordinates</description>
-      <value>False</value>
-    </param>
-
-<!-- 
     <param type="string" name="incell" subparam='true'>
-       <description>[only if ignorecoord=T] model image pixel size</description>
-       <value>''</value>
+      <description>cell/pixel size e.g. "0.1arcsec" or ""</description>
+      <value type="string"></value>
     </param>
-    <param type="int" name="nchan">
-      <description>number of channels</description>
-      <value type="int">1</value>
-      <allowed kind="range"><value range="min">1</value></allowed>
+    
+    <param type="string" name="incenter" subparam="true">
+      <description>frequency of center channel e.g. "89GHz" or ""</description>
+      <value type="string"></value>
+    </param>    
+
+    <param type="string" name="inwidth" subparam="true">
+      <description>channel width e.g. "10MHz" or ""</description>
+      <value type="string"></value>
+    </param>
+
+<!--
+    <param type="int" name="innchan" subparam="true">
+      <description>number of channels or 0 to use model image</description>
+      <value>0</value>
     </param>
 -->
 
-    <param type="string" name="startfreq">
-      <description>[only if ignorecoord=T] frequency of first channel</description>
-      <value>89GHz</value>
-    </param>
-    
-    <param type="string" name="chanwidth">
-      <description>[only if ignorecoord=T] channel width</description>
-      <value>10MHz</value>
-    </param>
-    
+
+<!--*************************************************************-->
+<!--*************************************************************-->
 
 
+    <param type="bool" name="setpointings">
+      <description></description>
+      <value>True</value>
+    </param>
 
-    <param type="string" name="refdate">
-      <description>center time/date of observation *see help</description>
-      <value>2012/05/21/22:05:00</value>
+    <param type="string" name="ptgfile" subparam="true">
+      <description>list of pointing positions</description>
+      <value type="string">$project.ptg.txt</value>
     </param>
-    
-    <param type="string" name="totaltime">
-      <description>total time of observation</description>
-      <value>7200s</value>
-    </param>
-    
-    <param type="string" name="integration">
+
+    <param type="string" name="integration" subparam="true">
       <description>integration (sampling) time</description>
       <value>10s</value>
     </param>
 
-    <param type="int" name="scanlength">
-      <description>number of integrations per pointing in the mosaic</description>
+<!--  The user can edit the ptg file to repeat ptgs if they wish a scan length
+      Longer than the integration time
+    <param type="variant" name="scanlength" subparam="true">
+      <description>number of integrations or time per pointing</description>
       <value type="int">5</value>
-      <allowed kind="range"><value range="min">1</value></allowed>
+    </param>
+-->
+
+    <param type="stringArray" name="direction" subparam="true">
+      <description>"J2000 19h00m00 -40d00m00" or "" to center on model</description>
+      <value type="string"></value>
     </param>
 
-    <param type="stringArray" name="direction">
-      <description>mosaic center, or list of pointings</description>
-<!-- eventually, put "header" to use modelimage ctr -->
-      <value>J2000 19h00m00 -40d00m00</value>
-    </param>
-
-    <param type="string" name="pointingspacing">
-      <description>spacing in between beams in mosaic</description>
-<!-- allow "pb3,pb2," for fractions of the primary beam --> 
-      <value>1arcmin</value>
-    </param>
-    
-    <param type="stringArray" name="mosaicsize">
-      <description>angular size of desired area to map [*NEW*]</description>
+    <param type="stringArray" name="mapsize" subparam="true">
+      <description>angular size of map or "" to cover model</description>
       <value type="vector">
-	<value type="string">1.0arcmin</value>
-	<value type="string">1.0arcmin</value>
+	<value type="string"></value>
+	<value type="string"></value>
       </value>
     </param>
 
-    <param type="string" name="caldirection">
+    <param type="string" name="maptype" subparam="true">
+      <description>hexagonal, square, etc</description>
+      <value type="string">hexagonal</value>
+      <allowed kind="enum">
+	<value type="string">hexagonal</value>
+	<value type="string">square</value>
+	<value type="string">hex</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="pointingspacing" subparam="true">
+      <description>spacing in between pointings or "" for 0.5 PB</description>
+      <value></value>
+    </param>
+
+<!--
+    <param type="any" name="relmargin">
+      <any type="variant" limittypes="double int"/>
+      <description>space btw. pointings and edge, relative to pointingspacing</description>
+      <value type="double">1.0</value>
+    </param>
+-->
+    <param type="string" name="caldirection" subparam="true">
       <description>pt source calibrator [experimental]</description>
       <value type="string"></value>
     </param>
 
-    <param type="string" name="calflux">
+    <param type="string" name="calflux" subparam="true">
       <description></description>
       <value>1Jy</value>
     </param>
 
-    <param type="string" name="checkinputs">
-      <description>graphically verify parameters [yes|no|only]</description>
-      <value>no</value>
-	<allowed kind="enum">
-	  <value>yes</value>
-	  <value>no</value>
-	  <value>only</value>
-	</allowed>
+
+
+
+
+
+
+<!--*************************************************************-->
+<!--  predict always reads from $project.skymodel file now -->
+
+    <param type="bool" name="predict">
+      <description>calculate visibilites using ptgfile</description>
+      <value>True</value>
     </param>
-            
 
-<!--  PREDICT  -->
+    <param type="string" name="refdate" subparam="true">
+      <description>time/date of observation *see help</description>
+      <value>2012/05/21/22:05:00</value>
+    </param>
+    
+    <param type="string" name="complist" subparam="true">
+      <description>optional componentlist to observe with skymodel</description>
+      <value></value>
+    </param>
 
-    <param type="string" name="antennalist" mustexist="true">
-      <description>antenna position file</description>
+    <param type="string" name="totaltime" subparam="true">
+      <description>total time of observation</description>
+      <value>7200s</value>
+    </param>
+
+    <param type="string" name="antennalist" subparam="true">
+      <description>antenna position file or "" for no interferometric MS</description>
       <value>alma.out10.cfg</value>
     </param>
 
+<!-- TODO put in more than one synth_antfile to do ALMA and ACA config - 
+it'll do them for the same amount of time -->
 
-<!--  PROCESS  -->
+    <param type="string" name="sdantlist" subparam="true">
+      <description>single dish antenna position file or "" for no total power MS</description>
+      <value>aca.tp.cfg</value>
+    </param>
 
-    <param type="bool" name="noise_thermal">
-      <description>add thermal noise</description><value>True</value></param>    
-    <param type="string" name="noise_mode" subparam="true">
-      <description>tsys-atm: set PWV and use ATM library; tsys-manual: set t_sky and tau</description><value>tsys-atm</value></param>
+    <param type="int" name="sdant" subparam="true">
+      <description>single dish antenna index in file</description>
+      <value>0</value>
+    </param>
 
+
+
+
+
+<!--  NOISE  -->
+
+    <param type="string" name="thermalnoise">
+      <description>add thermal noise: [tsys-atm|tsys-manual|""]</description>
+      <value type="string"></value>
+      <allowed type="enum">
+	<value type="string"></value>
+	<value type="string">tsys-atm</value>
+	<value type="string">tsys-manual</value>
+	<value type="string">False</value>
+	<value type="string">F</value>
+      </allowed>
+    </param>    
     <param type="double" name="user_pwv" subparam="true">
-      <description>Precipitable Water Vapor in mm [tsys-atm only]</description><value>1.</value>
-       <allowed kind="range"><value range="min">0</value></allowed>
+      <description>Precipitable Water Vapor in mm</description>
+      <value>1.</value>
     </param>
 
     <param type="double" name="t_ground" subparam="true">
       <description>ambient temperature</description><value>270.</value>
-      <allowed kind="range"><value range="min">0</value></allowed>
     </param>
     <param type="double" name="t_sky" subparam="true">
-       <description>atmospheric temperature [tsys-manual only]</description><value>260.</value>
-       <allowed kind="range"><value range="min">0</value></allowed>
+       <description>atmospheric temperature</description>
+       <value>260.</value>
     </param>	
     <param type="double" name="tau0" subparam="true">
-      <description>zenith opacity [tsys-manual only]</description><value>0.1</value>
-      <allowed kind="range"><value range="min">0</value></allowed>
+      <description>zenith opacity</description><value>0.1</value>
     </param>
     
-<!--
-    <param type="double" name="cross_pol">
-      <description>add polarization leakage of magnitude</description>
-      <value>0.</value>
-       <allowed kind="range"><value range="min">0</value></allowed>
+    <param type="double" name="leakage">
+      <description>cross polarization</description>
+      <value>0.0</value>
     </param>    
--->
 
 
 
-<!-- IMAGE -->
 
-    <param type="string" name="cell">
-      <description>output cell/pixel size</description>
-      <value>0.1arcsec</value></param>
+
+
+
+<!--  IMAGE   -->    
+
+    <param type="bool" name="image">
+      <description>(re)image $project.ms to $project.image</description>
+      <value type="bool">False</value>
+    </param>    
+
+    <param type="string" name="vis" subparam='true'>
+      <description>Measurement Set(s) to image</description>
+      <value>$project.ms,$project.sd.ms</value>
+    </param>
+
+    <param type="string" name="modelimage" subparam='true'>
+      <description>prior image to use in clean e.g. existing single dish image</description>
+      <value type="string"></value>
+    </param>
     
-    <param type="intArray" name="imsize">
-      <description>output image size in pixels (x,y) </description>
+    <param type="string" name="cell" subparam='true'>
+      <description>cell size with units or "" to equal model</description>
+      <value type="string"></value>
+    </param>
+    
+    <param type="intArray" name="imsize" subparam="true">
+      <description>output image size in pixels (x,y) or 0 to match model</description>
       <value type="vector"><value>128</value><value>128</value></value>
-      <allowed kind="range">
-        <value><value range="min">1</value><value range="min">1</value></value>
+    </param>
+
+<!-- force the same channelization as the ms -->
+<!--
+    <param type="string" name="start" subparam="true">
+      <description>frequency of first channel (default=ms)</description>
+      <value>89GHz</value>
+    </param>    
+    <param type="string" name="width" subparam="true">
+      <description>channel width (default=ms)</description>
+      <value>10MHz</value>
+    </param>
+    <param type="int" name="nchan" subparam="true">
+      <description>number of channels or -1 for full range</description>
+      <value>-1</value>
+    </param>
+-->    
+    <param type="int" name="niter" subparam="true">
+      <description>maximum number of iterations (0 for dirty image)</description>
+      <value>500</value>
+    </param>
+
+    <param type="string" name="threshold" subparam="true">
+      <description>flux level (+units) to stop cleaning</description>
+      <value>0.1mJy</value>
+    </param>
+
+    <param type="string" name="weighting" subparam="true">
+      <description>weighting to apply to visibilities</description>
+      <value>natural</value>
+      <allowed kind="enum">
+	<value>natural</value>
+	<value>uniform</value>
+	<value>briggs</value>  <!-- robust=0.5  -->
       </allowed>
     </param>
 
-    <param type="double" name="threshold" units="mJy">
-      <description>flux level (+units) to stop cleaning</description>
-      <value>0.01</value></param>
-    
-    <param type="int" name="niter">
-      <description>maximum number of iterations</description>
-      <value>500</value>
-       <allowed kind="range"><value range="min">0</value></allowed>
-    </param>
-
-    <param type="string" name="psfmode">
-	    <description>minor cycle PSF calculation method </description>
-	    <value>clark</value>
-	    <allowed kind="enum">
-	      <value>none</value>
-	      <value>clark</value>
-	      <value>hogbom</value>
-	    </allowed>
-    </param>
-
-    <param type="string" name="weighting">
-    <description>weighting to apply to visibilities</description>
-    <value>natural</value>
-    <allowed kind="enum">
-	    <value>natural</value>
-	    <value>uniform</value>
-	    <value>briggs</value>
-	    <value>briggsabs</value>
-	    <value>radial</value>
-	    <value>superuniform</value>
-    </allowed>
-    </param>
-
-    <param type="double" name="robust" subparam='true'>
-	    <description>briggs robustness parameter</description>
-	    <value>0.0</value>
-	    <allowed kind="range">
-	    <value range="min">-2.0</value>
-	    <value range="max">2.0</value>
-    </allowed>
-    </param>
-
-    <param type="bool" name="uvtaper">
-	    <description>apply additional uv tapering of  visibilities.</description>
-	    <value>False</value>
-    </param>
-
     <param type="stringArray" name="outertaper" subparam="true">
-	    <description>uv-taper on outer baselines in uv-plane</description>
-	    <value type="vector">
-	      <value></value>
-	    </value>
+      <description>uv-taper on outer baselines in uv-plane</description>
+      <value type="vector">
+	<value></value>
+      </value>
     </param>
 
-    <param type="stringArray" name="innertaper" subparam="true">
-	    <description>uv-taper in center of uv-plane</description>
-	    <value>1.0</value>
-    </param>
-
-    <param type="double" name="noise" units="Jy" subparam='true'>
-	    <description>noise parameter for briggsabs mode weighting</description>
-	    <value>0.0</value>
-            <allowed kind="range"><value range="min">0</value></allowed>
-    </param>
-
-    <param type="int" name="npixels" subparam='true'>
-	    <description>number of pixels for superuniform or briggs weighting</description>
-	    <value>0</value>
-            <allowed kind="range"><value range="min">0</value></allowed>
-    </param>
-
-    <param type="string" name="stokes">
-	    <description>Stokes params to image</description>
-	    <value>I</value>
-    <allowed kind="enum">
-	    <value>I</value>
-	    <value>IV</value>
-	    <value>QU</value>
-	    <value>IQUV</value>
-	    <value>RR</value>
-	    <value>LL</value>
-	    <value>RRLL</value>
-	    <value>XX</value>
+    <param type="string" name="stokes" subparam="true">
+      <description>Stokes params to image</description>
+      <value>I</value>
+      <allowed kind="enum">
+	<value>I</value>
+	<value>IV</value>
+	<value>QU</value>
+	<value>IQUV</value>
+	<value>RR</value>
+	<value>LL</value>
+	<value>RRLL</value>
+	<value>XX</value>
 	    <value>YY</value>
 	    <value>XXYY</value>
-    </allowed>
+      </allowed>
     </param>
 
 
 
 
-<!--   DISPLAY  (will become analysis)  -->    
+
+<!--  ANALYZE   -->    
     
-    <param type="bool" name="fidelity">
-      <description>Calculate fidelity images</description>
+    <param type="bool" name="analyze">
+      <description>(only first 6 selected outputs will be displayed)</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="showarray" subparam="true">
+      <description>like plotants</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="showuv" subparam="true">
+      <description>display uv coverage</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="showpsf" subparam="true">
+      <description>display synthesized (dirty) beam</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="showmodel" subparam="true">
+      <description>display sky model at original resolution</description>
       <value>True</value>
     </param>
     
-    <param type="bool" name="display">
-      <description>Plot simulation result images,figures</description>
+    <param type="bool" name="showconvolved" subparam="true">
+      <description>display sky model convolved with output beam</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="showclean" subparam="true">
+      <description>display the synthesized image</description>
       <value>True</value>
+    </param>
+
+    <param type="bool" name="showresidual" subparam="true">
+      <description>display the clean residual image</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="showdifference" subparam="true">
+      <description>display difference image</description>
+      <value>True</value>
+    </param>
+    
+    <param type="bool" name="showfidelity" subparam="true">
+      <description>display fidelity</description>
+      <value>True</value>
+    </param>
+    
+
+
+
+
+    <param type="string" name="graphics">
+      <description>display graphics at each stage to [screen|file|both|none]</description>
+      <value type="string">screen</value>
+      <allowed kind="enum">
+	<value>screen</value>
+	<value>file</value>
+	<value>both</value>
+	<value>none</value>
+	<value></value>
+      </allowed>
     </param>
 
     <param type="bool" name="verbose">
@@ -297,50 +400,149 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
-            
+    <param type="bool" name="overwrite">
+      <description>overwrite files starting with $project</description>
+      <value>False</value>
+    </param>
+
+
+
+        
+    
 <!--  CONSTRAINTS  -->    
     
     <constraints>
-      <!-- in simdata2, cell will get listed in setup for ignorecoord, 
-	   as well as in cleal -->
-      <when param="noise_thermal">
+      <when param="modifymodel">
+	<equals type="bool" value="False">
+	  <default param="skymodel">
+<!--  
+modifying the description doesn't work yet but its an improvement ticket.
+note for help: a symlink will be created from this to $project.model.image
+if that's not the file the user is using.   
+-->
+	    <description>model sky image</description>
+	    <value type="string">$project.skymodel</value>
+	  </default>
+	</equals>
+	<!-- ******************** -->
+	<equals type="bool" value="True">
+	  <default param="skymodel">
+<!--  
+modifying the description doesn't work yet but its an improvement ticket.
+-->
+	    <description>original model (modified will be $project.skymodel)</description>
+	    <value type="string"></value>
+	  </default>
+	  <default param="inbright"><value type="string"></value></default>
+	  <default param="indirection">
+	    <description>center of model sky image</description>
+	    <value type="string"></value>
+	  </default>
+	  <default param="incell"><value type="string"></value></default>
+	  <default param="incenter">
+	    <description>center of centerchan; if 1 chan, the freq of the continuum image</description>
+	    <value type="string"></value>
+	  </default>
+	  <default param="inwidth">
+	    <description>chan width or bandwidth of 1-chan (continuum)</description>
+	    <value type="string"></value>
+	  </default>
+<!--
+	  <default param="innchan">
+	    <description>1 for continuum</description>
+	    <value>0</value>
+	  </default>
+-->
+	</equals>
+      </when>
+      <!-- **********************************************************  -->
+      <when param="setpointings">
 	<equals type="bool" value="True">	  
-	  <default param="noise_mode"><value>"tsys-atm"</value></default>
+	  <default param="integration"><value type="string">10s</value></default>
+	  <default param="direction">
+	    <description>center of map or "" to center on the model</description>
+	    <value type="string"></value>
+	  </default>
+	  <default param="mapsize" type="stringArray">
+	    <value type="vector">
+	      <value type="string">"1arcmin"</value>
+	      <value type="string">"1arcmin"</value>
+	    </value>
+	  </default>
+	  <default param="maptype" type="string">
+	    <value type="string">hexagonal</value>
+	  </default>
+	  <default param="pointingspacing"><value type="string">1arcmin</value></default>
+	</equals>
+	<equals type="bool" value="False">
+	  <default param="ptgfile"><value type="string">$project.ptg.txt</value></default>
+	</equals>
+      </when>
+      <!-- **********************************************************  -->
+      <when param="predict">
+	<equals type="bool" value="True">
+	  <default param="complist">
+	    <description>optional model componentlist file</description>
+	    <value type="string"></value>
+	  </default>
+	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
+	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
+	  <default param="totaltime"><value>"7200s"</value></default>
+	  <default param="caldirection"><value type="string"></value></default>
+	  <default param="calflux"><value type="string">1Jy</value></default>
+	  <default param="sdantlist"><value type="string"></value></default>
+	  <default param="sdant"><value type="int">0</value></default>
+	</equals>
+	<equals type="bool" value="False">
+	  <default param="antennalist"><value type="string"></value>
+	  <description>antenna info can be used to calculate the primary beam</description></default>
+	</equals>
+      </when>
+      <!-- **********************************************************  -->
+      <when param="thermalnoise">
+	<equals type="string" value=""/>
+	<equals type="string" value="False"/>
+	<equals type="string" value="F"/>
+	<equals type="string" value="tsys-atm">
 	  <default param="user_pwv"><value>1.</value></default>
+	  <default param="t_ground"><value>269.</value></default>
+	</equals>
+	<equals type="string" value="tsys-manual">
 	  <default param="t_ground"><value>269.</value></default>
 	  <default param="t_sky"><value>263.</value></default>
 	  <default param="tau0"><value>0.1</value></default>
 	</equals>
-	<equals type="bool" value="False"/>
       </when>
-      <!--      -->
-      <when param="weighting">
-	<equals value="natural"/>
-	<equals value="uniform"/>
-	<equals value="briggs">
-	  <default param="robust"><value>0.0</value></default>
-	  <default param="npixels"><value>0</value>
-	    <description>number of pixels to determine uv-cell size 0=&gt; field of view</description>
-	  </default>
-	</equals>
-	<equals value="briggsabs">
-	  <default param="robust"><value>0.0</value></default>
-	  <default param="noise"><value>0.0</value></default>
-	  <default param="npixels"><value>0</value>
-	    <description>number of pixels to determine uv-cell size 0=&gt; field of view</description>
-	  </default>
-	</equals>
-	<equals value="superuniform">
-	  <default param="npixels"><value>0</value>
-	    <description>number of pixels to determine uv-cell size 0=&gt; +/-3pixels</description>
-	  </default>
-	</equals>
-      </when>
-      <when param="uvtaper">
+      <!-- **********************************************************  -->
+      <when param="image">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
-	  <default param="outertaper"><value type="vector"></value></default>
-	  <default param="innertaper"><value type="vector"></value></default>
+	  <default param="vis"><value type="string">$project.ms</value></default>
+	  <default param="modelimage"><value type="string"></value></default>
+	  <default param="imsize">
+	    <value>0</value>
+	  </default>
+	  <default param="cell"><value type="string"></value></default>
+	  <default param="niter"><value>500</value></default>
+	  <default param="threshold"><value type="string">0.1mJy</value></default>
+	  <default param="weighting"><value type="string">natural</value></default>
+	  <default param="outertaper"><value type="vector"><value></value></value></default>
+	  <default param="stokes"><value type="string">I</value></default>
+	</equals>
+      </when>
+      <!-- **********************************************************  -->
+      <when param="analyze">
+	<equals type="bool" value="False"/>
+	<equals type="bool" value="True">
+	  <default param="showarray"><value type="bool">False</value></default>
+	  <default param="showuv"><value type="bool">True</value></default>
+	  <default param="showpsf"><value type="bool">True</value></default>
+	  <default param="showmodel"><value type="bool">True</value></default> 
+	  <default param="showconvolved"><value type="bool">False</value></default>
+	  <default param="showclean"><value type="bool">True</value></default>
+	  <default param="showresidual"><value type="bool">False</value></default>
+	  <default param="showdifference"><value type="bool">True</value></default>
+	  <default param="showfidelity"><value type="bool">True</value></default>
 	</equals>
       </when>
     </constraints>
@@ -353,121 +555,150 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
 mosaic simulation task (prototype):	
 
-    This task simulates interfermetric observations.  
-    New functionality is actively being added, so if you have 
-    changed versions of CASA, check the inputs carefully.
-    Please contact CASA experts with any questions.  
-    For single-dish / total power simulation, consult the sdsim task.
+    This task simulates interfermetric observations (currently 
+    only ALMA can be done easily).  New functionality is actively 
+    being added, so if you have changed versions of CASA, check 
+    the inputs carefully.
+    Please contact CASA experts with any questions, especially 
+    about features noted below as *experimental*    
     -------------------------------
-    Keyword arguments:
+    project -- root filename for all output files.
     -------------------------------
-    project -- Name of project simulated; created ms and images will
-        start with this string
+    modifymodel -- change the coordinate system of the model sky image?
+       * if graphics selected, display the rescaled model image
+    skymodel -- if modifymodel=False, use this as the sky model. 
+       * if modifyimage=True, use this as the starting point, modify it 
+         write the output to a different image (default $project.skymodel)
+         and use that new image as the sky model
+    inbright -- peak brightness in Jy/pixel, or "" for unchanged
+       * NOTE: "unchanged" will take the numerical values in your image 
+         and assume they are in Jy/pixel, even if it says some other unit 
+         in the header. 
+    indirection -- central direction, or "" for unchanged
+    incell -- spatial pixel size, or "" for unchanged
+    incenter -- frequency of center channel e.g. "89GHz", or "" for unchanged
+    inwidth -- width of channels, or "" for unchanged - this should be a 
+         string representing a quantity with units e.g. "10MHz"
+       * NOTE: only works reliably with frequencies, not velocities
+       * NOTE: it is not possible to change the number of spectral planes
+         of the sky model, only to relabel them with different frequencies
+         That kind of regridding can be accomplished with the CASA toolkit.
     -------------------------------
-    complist -- optional componentlist table to use to simulate the data.
-        * may be used with or without modelimage
-    modelimage -- name of an image to simulate (see below for explanation and examples!)
-    inbright -- peak surface brightness to scale input image 
-        in Jy/pixel.  
-        [warning] If you specify "unchanged" it will take the 
-        numerical values in your image and assume they are in Jy/pixel, 
-        even if it says some other unit in the header.
-    ignorecoord -- ignore whatever is in the image header for coordinates (see below)
-    startfreq -- Frequency of first channel e.g '89MHz'
-    chanwidth -- Channel width e.g '10MHz'
-        start and width are taken from the model image header if ignorecoord=False
-    -------------------------------
-    refdate -- central time of simulated observation eg: '2012/05/21/22:05:00'
-        * observations are centered at the nearest transit, so only the day is meaningful
-    totaltime -- total time of observation e.g '7200s'
-        * the observation will cycle through all pointings of the mosaic, then
-          optionally observe a calibrator, and then cycle through the mosaic 
-          again, until totaltime is expended.
-        * if this time is insufficient to cover all of pointings of your
-          mosaic, imaging may fail because the default imaging parameters
-          assume the specified mosaic center to be *in* the output dataset.  
-    integration -- time interval for each integration e.g '10s'
-    scanlength --- number of integrations at each pointing before moving on
+    setpointings -- calculate a map of pointings, or if false, provide ptgfile
+       * if graphics selected, display the pointings shown on the model image
+    ptgfile -- a text file specifying directions in the same 
+         format as the example, and optional integration times, e.g.
+         #Epoch     RA          DEC      TIME(optional)
+         J2000 23h59m28.10 -019d52m12.35 10.0
+       * if the time column is not present in the file, it will use
+         "integration" for all pointings.
+       * NOTE: at this time the file should contain only science pointings:
+         simdata will observe these, then optionally the calibrator, 
+         then the list of science pointings again, etc, until totaltime
+         is used up. 
+    integration --- Time interval for each integration e.g '10s'
+       * NOTE: to simulate a "scan" longer than one integration, use 
+         setpointings to generate a pointing file, and then edit the 
+         file to repeat each pointing several times before moving to the 
+         next point.
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
-        * if a single direction, mosaicsize will be filled with a hexagonal
-          mosaic of pointings centered on that direction.
-        * if you want a single pointing, make mosaicsize small and/or
-          pointingspacing large.
-        * if a list with more than one element, the mosaic will consist of 
-          exactly those directions and can be as irregular as desired 
-          (although a poorly sampled mosaic may not produce a good image)
-        * if the name of a text file on disk, it will read pointings from that 
-          file.  The file needs to have these columns: direction in the same 
-          format as the example, and an optional integration time, e.g.
-          #Epoch     RA          DEC      TIME(optional)
-          J2000 23h59m28.10 -019d52m12.35 10.0
-        * if the time column is not present in the file, it will use
-          "integration" for all pointings.
-    pointingspacing -- spacing in between primary beams e.g '1arcmin'
-    mosaicsize -- *NEW* the desired angular area to map, if a single 
-        direction is specified, and a hex pattern is calculated
-    caldirection -- *NEW* an unresolved calibrator can be observed 
-        interleaved with the science pointings.  This feature is 
-        experimental, so please contact us with any questions.
-        The calibrator is implemented as a point source clean component 
-        with this direction and flux=calflux
-    checkinputs -- plot scaled model image and desired mosaic pointings, 
-        target altitude, and [alpha] atmospheric transmission.
-        choose yes|no, or "only" to just check your inputs and stop without 
-        creating the ms.
-    antennalist -- ascii file containing antenna positions.
-        each row has x y z coordinates and antenna diameter; 
-        header lines are required to specify the observatory name
-        and coordinate system e.g. 
-          # observatory=ALMA
-          # coordsys=UTM
-          # datum=WGS84
-          # zone=19
-        * standard arrays are found in your CASA data repository, 
-          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
+       * can optionally be a list of pointings
+       * otherwise simdata will pack mapsize according to maptype
+    mapsize -- angular size of map 
+       * set to "" to span the model image
+    maptype -- hexagonal or linear 
+    pointingspacing -- spacing in between beams e.g '1arcsec'    
     -------------------------------
-    noise_thermal -- add thermal noise 
-        * currently only knows about ALMA and (E)VLA receiver temperatures 
-        tsys-atm: J. Pardo's ATM library will be used to construct an
-          atmospheric profile for the ALMA site and user_pwv. 
-          noise is calculated from the specified ground temperature, 
-          internally tabulated antenna spillover parameters, the sky brightness
-          temperature returned by ATM, and internally tabulated receiver 
-          temperatures
-        tsys-manual: instead of using the ATM model, specify the zenith 
-          sky brightness and opacity manually.  Noise is added and then
-          the visibility flux scale is referenced above the atmosphere. 
-    user_pwv -- precipitable water vapor if constructing an atmospheric model
-        [for mode tsys-atm]
+    predict -- calculate visibilities from skymodel (which may have been 
+         modified above, (optionally) complist, and $ptgfile (which 
+         may have been generated above)
+       * if graphics selected, display the array (like plotants), the uv 
+         coverage, the synthesized (dirty) beam, and ephemeris information
+    refdate -- central time of simulated observation eg: '2012/05/21/22:05:00'
+       * NOTE: observations are currently centered at the nearest transit *
+    totaltime --- total time of observation e.g '7200s'
+    antennalist -- ascii file containing antenna positions.
+         each row has x y z coordinates and antenna diameter; 
+         header lines are required to specify the observatory name
+         and coordinate system e.g. 
+           # observatory=ALMA
+           # coordsys=UTM
+           # datum=WGS84
+           # zone=19
+       * standard arrays are found in your CASA data repository, 
+         os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
+       * if "", will not not produce an interferometric MS
+       * NEW: a string of the form "alma;0.5arcsec" will be parsed into a full 12m ALMA
+         configuration.  This only works for full ALMA and may fail to find the 
+         standard configuration files on some systems - see casaguides.nrao.edu
+    caldirection -- *NEW* an unresolved calibrator can be observed 
+         interleaved with the science pointings.  This feature is 
+         experimental, so please contact us with any questions.
+       * The calibrator is implemented as a point source clean component 
+         with this direction and flux=calflux
+    sdantlist -- antenna position file with antennas to be used for 
+         single dish or total power simulation 
+       * if "", will not produce a total power MS
+    sdant -- the index of the antenna in the list to use for total 
+         power.  defaults to the first antenna on the list. 
+    -------------------------------
+    thermalnoise -- add thermal noise 
+       * NOTE: both the interferometric and single-dish MS will be 
+         corrupted if they've been created above.
+       * currently only knows correct temps for ALMA and EVLA receivers
+       * this parameter takes two possible values:
+       tsys-atm: J. Pardo's ATM library will be used to construct an
+         atmospheric profile for the ALMA site and user_pwv. 
+         noise is calculated from the specified ground temperature, 
+         internally tabulated antenna spillover parameters, the sky brightness
+         temperature returned by ATM, and internally tabulated receiver 
+         temperatures
+       tsys-manual: instead of using the ATM model, specify the zenith 
+         sky brightness and opacity manually.  Noise is added and then
+         the visibility flux scale is referenced above the atmosphere. 
     t_ground -- ground/spillover temperature in K 
+    user_pwv -- precipitable water vapor if constructing an atmospheric model
     t_sky -- atmospheric temperature in K [for tsys-manual]
     tau0 -- zenith opacity at observing frequency [for tsys-manual]
-    * see casaguides.nrao.edu for more information on noise, in particular how 
-      to add a phase screen and cross-polarization corruption to your data, 
-      which is only currently available at the tool level.
+       * see casaguides.nrao.edu for more information on noise, 
+         in particular how to add a phase screen using the toolkit
     -------------------------------
-    cell -- Cell size e.g '10arcsec'
-        can be set to "incell" to use the cell/pixel size of the model image
-    imsize -- Image size in spatial pixels (x,y)
-    	default = [250,250]; example: imsize=[500,500]
-    ** see "help clean" for more information
+    leakage -- add cross polarization corruption of this fractional magnitude
+    -------------------------------
+    image -- invert and deconvolve the measurement set(s)
+       * NOTE: interactive clean or more parameters than the subset visible
+         here are available by simply running the clean task directly, 
+         then returning to simdata to run "analyze" if desired.
+       * NOTE: the channelization of the output image cube will be the 
+         same as that in the simulated Measurement Set.
+       * if graphics selected, display the clean image and residual image
+       * uses Cotton-Schwab clean for single fields and Mosaic gridding
+         for multiple fields (with Clark PSF calculation in minor cycles).
+    ms -- the simulated interferometric MS, or total-power one, or both
+    modelimage -- prior (e.g. SD) image to be used in clean
+    cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
+    imsize -- image size in spatial pixels (x,y)
+       0 or -1 will use the model image size; example: imsize=[500,500]
+    niter -- mumber of clean/deconvolution iterations, 0 for no cleaning
     threshold -- flux level to stop cleaning
-    niter -- number of clean/deconvolution iterations, 
-        0 for no cleaning i.e. dirty image
-    psfmode -- minor cycle deconvolution algorithm 
-    	options: 'clark','hogbom','none' 
-        ("none" means don't even create a dirty image)
     weighting -- weighting to apply to visibilities
-    	options: 'natural','uniform','briggs','briggsabs','radial','superuniform'
-    robust -- Brigg's robustness parameter 
-    	options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
-    uvtaper -- apply additional uv taper of visibilities
-    stokes -- Stokes parameters to image
-    	default='I'; example: stokes='IQUV'; 
-    	options: 'I','IV','IQU','IQUV'
+       options: 'natural','uniform','briggs' (robust=0.5)
+    outertaper -- apply additional uv outer taper of visibilities
+    stokes -- Stokes parameters to image; 'I','IV','IQU','IQUV'
     -------------------------------
-    fidelity -- calculate fidelity image
-    display -- display array config, uv coverage, beam, and images
+    analyze -- compute and display difference between model and output, 
+         fidelity, etc. 
+       * it is recommended to have graphics turned on for this subtask
+    showarray -- like plotants
+    showuv -- display uv coverage
+    showpsf -- display synthesized (dirty) beam
+    showmodel -- display sky model at original resolution
+    showconvolved -- display sky model convolved with output beam 
+    showclean -- display the synthesized image
+    showresidual -- display the clean residual image
+    showdifference -- display difference image 
+    showfidelity -- display fidelity image
+    
 
 
 
@@ -480,28 +711,16 @@ mosaic simulation task (prototype):
     
     * simdata does NOT require a coordinate system in the header. If the
       coordinate information is incomplete, missing, or you would like to
-      override it, set "ignorecoord=False".  simdata will then assume that the
+      override it, set "modifymodel=True".  simdata will then assume that the
       axes of your input correspond to RA, Dec, and (optionally) frequency and
-      (optionally) Stokes parameter.  It will assume that the spatial pixel
-      size equals the output parameter "cell", the center of the image is in
-      the (average of the) parameter "direction", the spectral reference
-      frequency and starting frequency equal the parameter "startfreq",
-      and the channel width equals the parameter "chanwidth".  
-
-    * simdata does not change the number of channels, although it can relabel
-      them as just noted.
+      (optionally) Stokes parameter.  
 
     * If you have a proper Coordinate System, simdata will so its best to
       generate visibilities from that, and then create a synthesis image
-      according to the specified user parameters. 
+      according to the specified user parameters.  Regridding the
+      spectral dimension may not have complete flexibility yet.
 
-    * If you would like finer control of the input Coordinate System, you can 
-      run simdata once with 'ignorecoord=True' and 'checkinputs="only"' (the
-      latter causes it to stop before doing the time-intensive visibility
-      calculations). Then modify the (header of the) .coord image that gets
-      created, and start simulating from that model image.
-
-    * You can manipulate the image header with the "imhead" task, or you can
+    * You can manipulate an image header with the "imhead" task, or you can
       delve deeper with the ia and cs tools.  If you use the tools, you should
       be aware that a CoordinateSystem in CASA can exist independently of an
       Image.  Once the CoordinateSystem is detached from the image, it is the
@@ -525,23 +744,7 @@ mosaic simulation task (prototype):
     -------------------------------
     Output produced:
     -------------------------------
-    $project.$modelimage.coord = input image recast into 4d image
-    $project.$modelimage.flat  = input image regridded to size, moment zero
-        image if the input was a cube.
-    $project.convolved = input image regridded to output size and 
-        convolved with Gaussian synthesized beam for the observation
-    $project.ms = synthesized visibilities
-    $project.noisy.ms = visibilities with noise added 
-      ** if noise is requested, then the noisy visibilities will be 
-         used to create the synthsized image.
-    $project.clean.image = output cleaned synthesized image
-    $project.clean.psf = output synthesized beam
-      ** only one of dirty.image and clean.image will be created as output, 
-         depending on whether niter=0 (invert to dirty) or niter>0 (clean)
-    $project.clean.image = output cleaned synthesized image moment zero if a cube
-    $project.diff.im = convolved input - output (2D)
-    $project.absdiff.im = max[ abs(diff) , 0.7*rms(diff) ]
-    $project.fidelity.im = convolved input / absdiff
+    Needs rewriting...
 
 </example>
 </task>

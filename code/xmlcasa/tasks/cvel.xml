@@ -310,12 +310,12 @@ Regrid an MS to a new spectral window / channel structure or frame
  		  or velocity as indicated by mode 
                nchan -- Number of channels in output spw
                  default: -1 = all channels; example: nchan=3
-               start -- Start input channel (relative-0)
+               start -- Start or end input channel (zero-based) depending on the sign of the width parameter
                  default=0; example: start=5
                width -- Output channel width in units of the input
- 		     channel width (&gt;1 indicates channel averaging)
+ 		     channel width (sign indicates whether the start parameter is lower(+) or upper(-) end of the range)
                  default=1; example: width=4
-               interpolation -- Interpolation method
+               interpolation -- Interpolation method (linear, nearest, cubic, spline)
                  default = 'linear'
            examples:
                spw = '0,1'; mode = 'channel'

@@ -72,10 +72,12 @@ template<class T> class Vector;
      //Constructor to calculate natural and radial weights
      VisImagingWeight(const String& type);
      //Constructor to calculate uniform weight schemes; include Brigg's and super/uniform
+     //If multiField=True, the weight density calcution is done on a per field basis, 
+     //else it is all fields combined
      VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
                                const Double robust, const Int nx, const Int ny,
                                const Quantity& cellx, const Quantity& celly,
-                               const Int uBox, const Int vBox);
+		      const Int uBox, const Int vBox, const Bool multiField=False);
      virtual ~VisImagingWeight();
 
 
@@ -86,8 +88,9 @@ template<class T> class Vector;
 
      // Function to calculate the  uniform style weights, include Brigg's for example
      // imagingWeight should be sized by (nchan, row) already
+     // The fieldid and msid parameters must correspond to what VisBuffer  or VisIter fieldId() and msId() returns
      virtual void weightUniform(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag, const Matrix<Double>& uvw,
-                                const Vector<Double>& frequency, const Vector<Float>& weight) const;
+                                const Vector<Double>& frequency, const Vector<Float>& weight, const Int msid, const Int fieldid ) const;
 
      //Natural weighting scheme
      //imagingWeight should be sized by (nchan, row) already
@@ -118,10 +121,11 @@ template<class T> class Vector;
 
     private:
 
-     Matrix<Float> gwt_p;
+     SimpleOrderedMap <String, Int> multiFieldMap_p;
+     Block<Matrix<Float> > gwt_p;
      String wgtType_p;
      Float uscale_p, vscale_p;
-     Float f2_p, d2_p;
+     Vector<Float> f2_p, d2_p;
      Int uorigin_p, vorigin_p;
      Int nx_p, ny_p;
      Bool doFilter_p;

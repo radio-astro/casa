@@ -205,7 +205,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
           saveinputs = self.__globals__['saveinputs']
           saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
 	except Exception, instance:
-	  print '**** Error **** ',instance
+          if(self.__globals__.has_key('__rethrow_casa_exceptions') and self.__globals__['__rethrow_casa_exceptions']) :
+             raise Exception, instance
+          else :
+             print '**** Error **** ',instance
 </xsl:text>
 <xsl:for-each select="aps:output">
    <xsl:call-template name="checkoutput"/>

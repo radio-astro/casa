@@ -1,5 +1,5 @@
 ############################################
-# Regression Script for simdata of a 3d cube #
+# Regression Script for oldsimdata of a 3d cube #
 
 import os, time
 
@@ -9,7 +9,7 @@ os.system('rm -rf testcube tc*')
 startTime = time.time()
 startProc = time.clock()
 
-print '--Running simdata of test cube--'
+print '--Running oldsimdata of test cube--'
 # configs are in the repository
 l=locals() 
 if not l.has_key("repodir"): 
@@ -19,7 +19,7 @@ print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"testcube.fits",imagename="testcube")
-default("simdata")
+default("oldsimdata")
 project="tc"
 
 modelimage="testcube"
@@ -63,7 +63,7 @@ endProc = time.clock()
 
 # Regression
 
-test_name = """simdata observation of test cube"""
+test_name = """oldsimdata observation of test cube"""
 ms.open(project+".ms")
 newdata= ms.getdata(items="data")['data']
 
@@ -145,7 +145,7 @@ if regstate:
     print >> logfile, 'Passed',
 else:
     print >> logfile, 'FAILED',
-print >> logfile, 'regression test for simdata of test cube.'
+print >> logfile, 'regression test for oldsimdata of test cube.'
 print >>logfile,'---'
 print >>logfile,'*********************************'
     
@@ -168,4 +168,4 @@ print >>logfile,'*************************************'
     
 logfile.close()
 						    
-print '--Finished simdata of test cube regression--'
+print '--Finished oldsimdata of test cube regression--'

@@ -275,12 +275,27 @@ public:
   // or just created measurement set
   Bool observe(const String& sourcename, const String& spwname,
 	       const Quantity& startTime, 
-	       const Quantity& stopTime);
+	       const Quantity& stopTime,
+	       const Bool add_observation,
+	       const Bool state_sig,
+	       const Bool state_ref,
+	       const double& state_cal,
+	       const double& state_load,
+	       const unsigned int state_sub_scan,
+	       const String& state_obs_mode);
+
 
   Bool observemany(const Vector<String>& sourcenames, const String& spwname,
 		   const Vector<Quantity>& startTimes, 
 		   const Vector<Quantity>& stopTimes,
-		   const Vector<MDirection>& directions);
+		   const Vector<MDirection>& directions,
+		   const Bool add_observation,
+		   const Bool state_sig,
+		   const Bool state_ref,
+		   const double& state_cal,
+		   const double& state_load,
+		   const unsigned int state_sub_scan,
+		   const String& state_obs_mode);
 
   // Given a model image, predict the visibilities onto the (u,v) coordinates
   // of our MS

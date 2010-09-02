@@ -1,3 +1,4 @@
+##loolooaaa
 import casac
 import os
 import commands
@@ -633,23 +634,9 @@ class cleanhelper:
         #weighting and tapering should be done together
         if(weighting=='natural'):
             mosweight=False
-        if(mosweight):
-            calready=True
-            for k in self.fieldindex :
-                self.im.selectvis(field=k, spw=self.spwindex,time=timerange, usescratch=calready)
-                self.im.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=qa.quantity(noise,'Jy'))
-            ###now redo the selectvis
-            #self.im.selectvis(field=field,spw=spw,time=timerange,
-            #                  baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
+        self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
                               baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-        else:
-            #self.im.selectvis(field=field,spw=spw,time=timerange,
-            #                  baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
-                              baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-            self.im.weight(type=weighting,rmode=rmode,robust=robust,
-                           npixels=npixels, noise=qa.quantity(noise, 'Jy'))
+        self.im.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
         if((type(outertaper)==list) and (len(outertaper) > 0)):
             if(len(outertaper)==1):
                 outertaper.append(outertaper[0])

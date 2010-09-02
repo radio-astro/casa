@@ -1,5 +1,5 @@
 ########################################
-# Regression Script for simdata of  #
+# Regression Script for oldsimdata of  #
 #        a protoplanetary disk         #
 
 import os, time
@@ -12,7 +12,7 @@ if not l.has_key("repodir"):
 startTime = time.time()
 startProc = time.clock()
 
-print '--Running simdata of input672GHz_50pc.image--'
+print '--Running oldsimdata of input672GHz_50pc.image--'
 
 my_project="psim"
 my_modelimage="diskmodel.im"
@@ -24,7 +24,7 @@ tb.clearlocks()
 print 'I think the data repository is at '+repodir
 importfits(fitsimage=repodir+"/data/regression/simdata/input50pc_672GHz.fits",imagename=my_modelimage)
 
-default("simdata")
+default("oldsimdata")
 project=my_project
 modelimage=my_modelimage
 #complist=repodir+"star672GHz.cl"
@@ -66,7 +66,7 @@ endProc = time.clock()
 
 # Regression
 
-test_name_ppd = """simdata observation of Wolf & D'Angelo's protoplanetary disk"""
+test_name_ppd = """oldsimdata observation of Wolf & D'Angelo's protoplanetary disk"""
 
 ppdso_im=ia.open(project + '.clean.image')
 ppdso_stats=ia.statistics()
@@ -129,7 +129,7 @@ if regstate:
     print >> logfile, 'Passed',
 else:
     print >> logfile, 'FAILED',
-print >> logfile, 'regression test for simdata of protoplanetary disk.'
+print >> logfile, 'regression test for oldsimdata of protoplanetary disk.'
 print >>logfile,'---'
 print >>logfile,'*********************************'
     
@@ -152,4 +152,4 @@ print >>logfile,'*************************************'
     
 logfile.close()
 						    
-print '--Finished simdata of input672GHz_50pc.image regression--'
+print '--Finished oldsimdata of input672GHz_50pc.image regression--'

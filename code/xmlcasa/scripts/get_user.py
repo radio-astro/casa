@@ -31,4 +31,8 @@ def get_user():
         if e.errno == errno.ENOTTY:
             # Known failure case for gksu.
             return __get_username()
-        raise
+        else:
+            print "os.getlogin() raised exception", e
+            print "Since we'd rather get on with our lives, get_user() is moving on to __get_username()."
+            return __get_username()
+        #raise

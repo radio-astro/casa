@@ -210,7 +210,7 @@ void VisCal::corrupt(VisBuffer& vb) {
 
 void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
 
-  if (prtlev()>3) cout << " VC::correct()" << endl;
+  if (prtlev()>3) cout << " VC::correct(vb,Vout)" << endl;
   
   // Prepare output Cube<Complex> for its own in-place apply:
   //  (this is a no-op if referencing same storage)

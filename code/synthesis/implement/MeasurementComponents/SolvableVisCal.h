@@ -397,8 +397,9 @@ protected:
 
   // RI todo implement calcOneJones like calcAllMueller
   // calculate terms during apply, or up front during setSim?
-  inline Bool& simOnTheFly() { return onthefly_; };
-  Bool onthefly_;  
+  inline Bool& simOnTheFly() { 
+    //    cout << "simOTF=" << onthefly_ << endl;
+    return onthefly_; };
 
 
 
@@ -483,6 +484,7 @@ private:
   // simulation interval
   String simint_;
 
+  Bool onthefly_;  
 
 };
 

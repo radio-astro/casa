@@ -2,16 +2,16 @@ import numpy
 import re
 from taskinit import tbtool, me
 
-def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
+def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None):
     """
     Converts a dictionary to a CASA table, and attempts to
     save it to tablepath.  Returns whether or not it was successful.
 
     kwkeys is a list of keys in dict that should be treated as table keywords,
-    and colkeys is a list of keys to be treated as table columns.  If a key is
-    not in either of them, it will be appended to colkeys if it refers to a
-    list, array, or specially formed dict with the right number of rows, or
-    kwkeys otherwise.
+    and colkeys is a list of keys to be treated as table columns.  If a key in
+    indict is not in either kwkeys or colkeys, it will be appended to colkeys
+    if it refers to a list, array, or specially formed dict with the right
+    number of rows, or kwkeys otherwise.
 
     "Specially formed dict" means a python dictionary with the right keys to
     provide a comment and/or keywords to specify a (measure) frame or
@@ -102,7 +102,8 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
                'dataManagerType': 'StandardStMan',
                'maxlen': 0,
                'option': 0,
-               'valueType': 'float'}
+               'valueType': 'double'} # Use double (not float!) for columns
+                                      # that will be read by MeasIERS.
     for c in cols:
         #print "Setting coldesc for", c
         data = indict[c]  # Place to find the valueType.
@@ -117,6 +118,11 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
             valtype = 'string'
         valtype = valtype.replace('64', '')      # Table uses 'float', not 'float64'.
         valtype = valtype.replace('numpy.', '')  # or 'numpy.float'.
+
+        # Use double (not float!) for columns that will be read by MeasIERS.
+        if valtype == 'float':
+            valtype = 'double'
+            
         coldesc['valueType'] = valtype
 
         tabdesc[c] = coldesc.copy()
@@ -126,6 +132,8 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
     try:
         mytb = tbtool.create()
         mytb.create(tablepath, tabdesc)
+        if type(info) == dict:
+            mytb.putinfo(info)
         mytb.addrows(nrows)     # Must be done before putting the columns.
     except Exception, e:
         print "Error", e, "trying to create", tablepath
@@ -138,7 +146,7 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[]):
                 data = data['data']
             if me.ismeasure(data):
                 mytb.putcolkeyword(c, 'MEASINFO', {'Ref': data['refer'],
-                                                 'type': data['type']})
+                                                   'type': data['type']})
                 data = data['m0']   # = quantity         
             # if qa.isquantity(data) can't be trusted.
             if hasattr(data, 'has_key') and data.has_key('unit') and data.has_key('value'):

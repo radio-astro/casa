@@ -145,7 +145,7 @@ from imfit_pg import imfit_pg as imfit
 from deconvolve_pg import deconvolve_pg as deconvolve
 
 from simdata_pg import simdata_pg as simdata
-from simdata2_pg import simdata2_pg as simdata2
+from oldsimdata_pg import oldsimdata_pg as oldsimdata
 
 from importasdm_pg import importasdm_pg as importasdm
 from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
