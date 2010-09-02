@@ -46,7 +46,10 @@ MeasComet::MeasComet() :
   row_p(),
   mjd0_p(0), mjdl_p(0), dmjd_p(0), nrow_p(0), name_p(), topo_p(),
   mtype_p(MDirection::APP),
-  msgDone_p(False), tp_p() {
+  msgDone_p(False), tp_p(),
+  haveDiskLongLat_p(false),
+  ncols_p(5)
+{
   String path;
   if (Aipsrc::find(path, String("measures.comet.file"))) initMeas(path);
   for (uInt i=0; i<2; i++) lnr_p[i] = -1;
@@ -57,7 +60,10 @@ MeasComet::MeasComet(const String &path) :
   row_p(),
   mjd0_p(0), mjdl_p(0), dmjd_p(0), nrow_p(0), name_p(), topo_p(),
   mtype_p(MDirection::APP),
-  msgDone_p(False), tp_p(path) {
+  msgDone_p(False), tp_p(path),
+  haveDiskLongLat_p(false),
+  ncols_p(5)
+{
   initMeas(path);
   for (uInt i=0; i<2; i++) lnr_p[i] = -1;
 }
@@ -67,7 +73,10 @@ MeasComet::MeasComet(const Table &tabin, const String &path) :
   row_p(),
   mjd0_p(0), mjdl_p(0), dmjd_p(0), nrow_p(0), name_p(), topo_p(),
   mtype_p(MDirection::APP),
-  msgDone_p(False), tp_p(path) {
+  msgDone_p(False), tp_p(path),
+  haveDiskLongLat_p(false),
+  ncols_p(5)
+{
   initMeas(path, &tabin);
   for (uInt i=0; i<2; i++) lnr_p[i] = -1;
 }
@@ -77,7 +86,10 @@ MeasComet::MeasComet(const MeasComet &other) :
   row_p(),
   mjd0_p(0), mjdl_p(0), dmjd_p(0), nrow_p(0), name_p(), topo_p(),
   mtype_p(MDirection::APP),
-  msgDone_p(False), tp_p(other.tp_p) {
+  msgDone_p(False), tp_p(other.tp_p),
+  haveDiskLongLat_p(other.haveDiskLongLat_p),
+  ncols_p(other.ncols_p)
+{
   initMeas(other.tp_p);
 }
 
@@ -137,7 +149,7 @@ MVPosition MeasComet::getRelPosition(const uInt index) const
 }
 
 Bool MeasComet::getDisk(MVDirection &returnValue, Double date) const {
-  if(!fillMeas(date)){
+  if(!haveDiskLongLat_p || !fillMeas(date)){
     returnValue = MVDirection();
     return False;
   }
@@ -175,16 +187,19 @@ MeasComet *MeasComet::clone() const {
 }
 
 Bool MeasComet::initMeas(const String &which, const Table *tabin) {
-  static const String names[MeasComet::N_Columns] = {
-    "MJD",
-    "RA", "DEC",
-    "Rho",                    // Distance from Earth in AU.
-    "RadVel",		      // AU/d
-    "DiskLong", "DiskLat" };  // These must be made optional.
+  Vector<String> reqcols(5);  // Required columns.
+  reqcols[0] = "MJD";
+  reqcols[1] = "RA";
+  reqcols[2] = "DEC";  
+  reqcols[3] = "Rho";                    // Distance from Earth in AU.
+  reqcols[4] = "RadVel";		 // AU/d
+  Vector<String> optcols(2);  // Get these columns if the table has them.
+  optcols[0] = "DiskLong";    // The positions of surface features may be 
+  optcols[1] = "DiskLat";     // neither known nor needed.
   static const String tplc = "measures.comet.directory";
 
   if (!measured_p && measFlag_p) {
-    LogIO os(LogOrigin("MeasComet", String("initMeas(String)"),
+    LogIO os(LogOrigin("MeasComet", String("initMeas(String, Table *)"),
 		       WHERE));
 
     measFlag_p = False;
@@ -195,11 +210,21 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
     Bool ok = True;
     if (!MeasIERS::getTable(tab_p, kws, row_p,
 			    rfp_p, vs, dt, 
-			    MeasComet::N_Columns, names, tp_p,
+			    reqcols, optcols, tp_p,
 			    tplc,
       			    String("ephemerides"), tabin)) {
       return False;
     };
+
+    ncols_p = reqcols.nelements() + optcols.nelements();
+    ldat_p[0].resize(ncols_p);
+    ldat_p[1].resize(ncols_p);
+    
+    // Make this more sophisticated if the number of optional columns grows.
+    // That could also cause problems where enums like MeasComet::DiskLong are
+    // used in ldat_p.
+    haveDiskLongLat_p = (optcols.nelements() == 2);
+    
     if (!kws.isDefined("MJD0") || kws.asDouble("MJD0") < 10000 ||
 	!kws.isDefined("dMJD") || kws.asDouble("dMJD") <= 0 ||
 	!kws.isDefined("NAME")){
@@ -229,6 +254,12 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
       row_p.get(nrow_p-1);
       if (!nearAbs(*(rfp_p[0]), mjd0_p + nrow_p*dmjd_p, 0.1*dmjd_p)) { 
 	os << LogIO::SEVERE << "MJD has a problem." << LogIO::POST;
+	os << LogIO::DEBUG1
+	   << "*(rfp_p[0]) = " << *(rfp_p[0])
+	   << "\nmjd0_p = " << mjd0_p
+	   << "\nnrow_p = " << nrow_p
+	   << "\ndmjd_p = " << dmjd_p
+	   << LogIO::POST;
 	ok = False;
       } else {
 	mjdl_p = mjd0_p + nrow_p*dmjd_p;
@@ -263,21 +294,20 @@ Bool MeasComet::fillMeas(Double utf) const {
   if (ut != lnr_p[0]) {
     if (ut == lnr_p[1]) { 
       // Shift one
-      for (Int i=0; i<MeasComet::N_Columns; i++) ldat_p[0][i] = ldat_p[1][i];
+      for(uInt i = 0; i < ncols_p; ++i)
+	ldat_p[0][i] = ldat_p[1][i];
       lnr_p[0] = lnr_p[1];
     } else {
       // Read first line
       row_p.get(ut);
-      for (Int i=0; i<MeasComet::N_Columns; i++) {
+      for(uInt i = 0; i < ncols_p; ++i)
 	ldat_p[0][i] = *(rfp_p[i]);
-      };
       lnr_p[0] = ut;
     };
     // Read second line
     row_p.get(ut+1);
-    for (Int i=0; i<MeasComet::N_Columns; i++) {
+    for(uInt i = 0; i < ncols_p; ++i)
       ldat_p[1][i] = *(rfp_p[i]);
-    };
     lnr_p[1] = ut+1;
   };
   return True;
