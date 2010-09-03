@@ -16,6 +16,7 @@ test_cvel                       dpetry@eso.org
 test_exportasdm                 dpetry@eso.org
 test_fixvis                     rreid@nrao.edu
 test_flagdata                   jmlarsen@eso.org
+test_flagdata2                  scastro@eso.org
 test_hanningsmooth              scastro@eso.org
 test_imcollapse                 dmehring@nrao.edu
 test_imcontsub                  dmehring@nrao.edu
