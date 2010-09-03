@@ -87,6 +87,7 @@ template <class T> class Vector;
 // </synopsis>
 //
 // <example>
+// See test/tMeasComet.cc.
 // <srcblock>
 //   tbd
 // </srcblock>
