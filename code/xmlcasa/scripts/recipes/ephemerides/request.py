@@ -13,13 +13,17 @@ Examples:
 
 import recipes.ephemerides.request as jplreq
 
+# I recommend you not ask for more than ~18 months of anything with date_incr
+# ~ 1h, because the result would be split into multiple emails which you would
+# have to stitch together.
+
 for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
     jplreq.request_from_JPL(thing, '2011-12-31')
 
 # A trick to avoid fast moving objects:
 for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
     if thing not in jplreq.default_date_incrs:
-        jplreq.request_from_JPL(thing, '2011-12-31')
+        jplreq.request_from_JPL(thing, '2012-12-31')
 """
 
 # Maps from object names to numbers that JPL-Horizons will recognize without
