@@ -5,10 +5,6 @@ import socket
 import time
 from email.mime.text import MIMEText
 
-## # This seems like overkill just to get me and qa.
-## from taskinit import *
-## im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
-
 """
 Utilities for having JPL-Horizons ephemerides mailed to you (or your enemies).
 See JPL_ephem_reader.py for doing something with them.
@@ -118,11 +114,11 @@ planets_and_moons = {'mercury':    199,
 }
 
 should_have_orientation = ['mars', 'deimos', 'phobos', 'vesta', 'jupiter', 'io',
-                           'janus', 'hyperion', 'enceladus', 'mimas', 'iapetus',
+                           'janus', 'enceladus', 'mimas', 'iapetus',
                            'phoebe', 'tethys', 'uranus', 'ariel', 'miranda',
                            'neptune']
 should_have_sublong = ['mars', 'deimos', 'phobos', 'jupiter', 'io',
-                       'janus', 'enceladus', 'hyperion', 'phoebe', 'mimas', 'tethys',
+                       'janus', 'enceladus', 'phoebe', 'mimas', 'tethys',
                        'neptune']
 
 # Getting positions once a day is not enough for many moons, if the position of

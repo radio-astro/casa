@@ -1,7 +1,12 @@
-import scipy.special
+from glob import glob
 import re
+import scipy.special
 import time                  # We can always use more time.
-from taskinit import me, qa
+
+## # This seems like overkill just to get me and qa, but it creates local copies.
+from taskinit import gentools, qa, casalog
+im, cb, ms, tb, fg, af, me, ia, po, sm, cl, cs, rg, dc, vp = gentools()
+
 from dict_to_table import dict_to_table
 
 # Possible columns, as announced by their column titles.
@@ -530,18 +535,35 @@ def datestrs_to_MJDs(cdsdict):
     return {'unit': timeq['unit'],
             'value': scipy.array(timeq['value'])}
 
+def construct_tablepath(fmdict, prefix=''):
+    """
+    Construct a suitable pathname for a CASA table made from fmdict,
+    starting with prefix.  prefix can contain a /.
 
-def ephem_dict_to_table(fmdict, tablepath=''):
+    If prefix is not given, it will be set to
+    "ephem_JPL-Horizons_%s" % fmdict['NAME']
+    """
+    if not prefix:
+        prefix = "ephem_JPL-Horizons_%s" % fmdict['NAME']
+    return prefix + "_%.0f-%.0f%s%s.tab" % (fmdict['earliest']['m0']['value'],
+                                            fmdict['latest']['m0']['value'],
+                                            fmdict['latest']['m0']['unit'],
+                                            fmdict['latest']['refer'])
+
+def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
     """
     Converts a dictionary from readJPLephem() to a CASA table, and attempts to
-    save it to tablepath.  Returns whether or not it was successful.
+    save it to either to tablepath or a constructed directory name.
+    Returns whether or not it was successful.
+
+    If tablepath is blank and prefix is not given, the table will go to
+    something like ephem_JPL-Horizons_NAME_EARLIEST-LATESTdUTC.tab.
+
+    If tablepath is blank and prefix is given, the table will go to
+    something like prefix_EARLIEST-LATESTdUTC.tab.  prefix can contain a /.
     """
     if not tablepath:
-        tablepath = "ephem_JPL-Horizons_%s_%.0f-%.0f%s%s.tab" % (fmdict['NAME'],
-                                                              fmdict['earliest']['m0']['value'],
-                                                              fmdict['latest']['m0']['value'],
-                                                              fmdict['latest']['m0']['unit'],
-                                                              fmdict['latest']['refer'])
+        tablepath = construct_tablepath(fmdict, prefix)
         print "Writing to", tablepath
         
     retval = True
@@ -589,3 +611,75 @@ def ephem_dict_to_table(fmdict, tablepath=''):
         retval = False
 
     return retval
+
+
+def jplfiles_to_repository(objs, jpldir='.', jplext='.ephem',
+                           log='null'):
+    """
+    For each Solar System object obj in the list objs,
+        look for matching JPL-Horizons ASCII files with jplext in jpldir,
+        read them into python dictionaries,
+        write the dicts to CASA tables in $CASAROOT/data/ephemerides/JPL-Horizons/,
+        and check that they can be read by me.framecomet().
+    Returns the number of ephemerides processed + readable by me.framecomet.
+
+    jpldir and jplext can be glob patterns.
+
+    $CASAROOT is derived from $CASAPATH.
+
+    Log messages will be directed to log for the duration of this function.
+    Note that 'null' makes a NullLogSink, so it might be better than /dev/null.
+
+    Example:
+    import recipes.ephemerides.request as jplreq
+    objs = jplreq.asteroids.keys() + jplreq.planets_and_moons.keys()
+    jplfiles_to_repository(objs, '../../gnuactive')
+    """
+    neph = 0
+    casapath = os.getenv('CASAPATH')
+    if not casapath:
+        print "CASAPATH is not set."
+        return 0
+    datadir = casapath.split()[0] + '/data/ephemerides/JPL-Horizons'
+    if not os.path.isdir(datadir):
+        try:
+            os.mkdir(datadir)
+            print "Created", datadir
+            print "You should probably svn add it."
+        except Exception, e:
+            "Error", e, "creating", datadir
+            return 0
+    datadir += '/'
+
+    #oldlog = casalog.logfile()
+    # This is needed to stop WARN and above from printing to the console,
+    # but it permanently severs the logger window.
+    #casalog.setglobal(True)
+    #casalog.setlogfile(log)
+
+    if jpldir[-1] != '/':
+        jpldir += '/'
+    for sob in objs:
+        capob = sob.capitalize()
+        lob = sob.lower()
+        jplfiles = glob(jpldir + lob + jplext) + glob(jpldir + capob + jplext)
+        for jplfile in jplfiles:
+            casalog.post('Reading ' + jplfile)
+            fmdict = readJPLephem(jplfile)
+            tabpath = construct_tablepath(fmdict, datadir + capob)
+            ephem_dict_to_table(fmdict, tabpath)
+
+            # Check if it is readable by me.framecomet.
+            epoch = fmdict['earliest']
+            epoch['m0']['value'] += 0.5 * (fmdict['latest']['m0']['value'] -
+                                           epoch['m0']['value'])
+            me.doframe(epoch)
+            if me.framecomet(tabpath):
+                neph += 1
+            else:
+                casalog.post(tabpath + " was not readable by me.framecomet.",
+                             'WARN')
+
+    #casalog.setlogfile(oldlog)
+
+    return neph
