@@ -592,6 +592,6 @@ def backup_flags(fglocal, modes):
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
         fglocal.saveflagversion(versionname=versionname,
-                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
+                           comment='flagdata autosave before ' + modes + ' on ' + time_string,
                            merge='replace')
 
