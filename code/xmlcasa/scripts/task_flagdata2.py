@@ -587,11 +587,11 @@ def backup_flags(fglocal, modes):
         else:
             i = i + 1
 
-        time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+    time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
 
-        casalog.post("Saving current flags to " + versionname + " before applying new flags")
+    casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-        fglocal.saveflagversion(versionname=versionname,
+    fglocal.saveflagversion(versionname=versionname,
                            comment='flagdata autosave before ' + modes + ' on ' + time_string,
                            merge='replace')
 
