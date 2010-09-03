@@ -18,7 +18,7 @@ import recipes.ephemerides.request as jplreq
 # have to stitch together.
 
 for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
-    jplreq.request_from_JPL(thing, '2011-12-31')
+    jplreq.request_from_JPL(thing, '2012-12-31')
 
 # A trick to avoid fast moving objects:
 for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
@@ -37,10 +37,13 @@ asteroids = {'ceres':        1,
              'juno':         3,
              'vesta':        4,
              'astraea':      5,
-             'hygeia':      10,
+             'hygiea':      10, # Careful with the spelling.  It used to be Hygeia, and it
+                                # is named after the Greek goddess Hygieia (or Hygeia).
+                                # Also, it is fairly oblate and eccentric.
              'parthenope':  11,
              'victoria':    12,
-             'davida':     511}
+             'davida':     511,
+             'interamnia', 704}
 
 planets_and_moons = {'mercury':    199,
                      'venus':      299,
