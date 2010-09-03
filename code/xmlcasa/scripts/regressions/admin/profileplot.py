@@ -88,7 +88,7 @@ def getmem(pid):
     if not os.path.isfile(lsof):
         print "Warning: Could not find lsof at /usr/sbin/lsof or /usr/bin/lsof"
 
-    (errorcode, numoffile) = commands.getstatusoutput(lsof + ' -p ' + str(pid) + ' | wc -l')
+    (errorcode, numoffile) = commands.getstatusoutput(lsof + ' -p ' + str(pid) + ' 2>/dev/null | wc -l')
     if errorcode != 0:
         numoffile = -1
 
