@@ -235,7 +235,6 @@ void MeasIERS::closeTables() {
   };
 }
 
-
 // Table handling
 Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 			RORecordFieldPtr<Double> rfp[],
@@ -245,30 +244,147 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 			const String &rc, const String &dir,
 			const Table *tabin) {
   Table tab;
-  Bool ok = True;
+  Bool ok = findTab(tab, tabin, rc, dir, name);
+
+  if(!ok)
+    return false;            // findTab logs its own errors.
+  
   LogIO os(LogOrigin("MeasIERS",
-		     String("fillMeas(MeasIERS::Files, Double)"),
+		     String("getTable(Table &, TableRecord &, "
+			    "ROTableRow &, RORecordFieldPtr<Double> *, "
+			    "String &vs, Double &dt, "
+			    "Int N, const String *, const String &, "
+			    "const String &, const String &)"),
 		     WHERE));
 
-  if (!tabin) {				// No table object given: search name
+  TableRecord ks(tab.keywordSet());
+
+  ok = handle_keywords(dt, vs, ks, tab);
+  
+  ROTableRow rw(tab);
+  if (ok) {
+    // Check that the table is not missing any expected columns.
+    for (Int i=0; i < N; i++) {
+      if (!rw.record().isDefined(rfn[i])) {
+	os << LogIO::SEVERE
+	   << "Column " << rfn[i] << " is missing."
+	   << LogIO::POST;
+	ok = False;// break;
+      };
+    };
+  };
+  if (!ok) {
+    os << name + " has an incompatible format."
+       << "\nYou may want to notify the CASA system manager about it."
+       << LogIO::EXCEPTION;
+    return False;
+  };
+  table = tab;
+  kws = ks;
+  row = rw;
+  for (Int i=0; i < N; i++)
+    rfp[i] = RORecordFieldPtr<Double>(row.record(), rfn[i]);
+  return True;
+}
+
+Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
+			Vector<RORecordFieldPtr<Double> >& rfp,
+			String &vs, Double &dt,
+			const Vector<String>& reqcols,
+			Vector<String>& optcols,
+			const String &name,
+			const String &rc, const String &dir,
+			const Table *tabin)
+{
+  Table tab;
+  Bool ok = findTab(tab, tabin, rc, dir, name);
+
+  if(!ok)
+    return false;            // findTab logs its own errors.
+  
+  LogIO os(LogOrigin("MeasIERS", "getTable(Vector<String>& optcols)",
+		     WHERE));
+
+  TableRecord ks(tab.keywordSet());
+
+  ok = handle_keywords(dt, vs, ks, tab);
+  
+  ROTableRow rw(tab);
+  if(ok){
+    // Check that the table is not missing any required columns.
+    for(Int i = reqcols.nelements(); i--;){
+      if(!rw.record().isDefined(reqcols[i])){
+	os << LogIO::SEVERE
+	   << "Required column " << reqcols[i] << " is missing."
+	   << LogIO::POST;
+	ok = False;// break;
+      };
+    };
+  };
+  if(!ok){
+    os << name + " has an incompatible format."
+       << "\nYou may want to notify the CASA system manager about it."
+       << LogIO::EXCEPTION;
+    return False;
+  };
+
+  // Now look for optional columns.
+  Vector<String> foundoptcols;
+  uInt noptcolsfound = 0;
+  for(uInt i = 0; i < optcols.nelements(); ++i){
+    if(rw.record().isDefined(optcols[i])){
+      ++noptcolsfound;
+      foundoptcols.resize(noptcolsfound, true);
+      foundoptcols[noptcolsfound - 1] = optcols[i];
+    }
+  }
+
+  // Together these are equiv. to optcols.assign(foundoptcols), but I find this clearer.
+  optcols.resize(noptcolsfound);
+  optcols = foundoptcols;
+  
+  table = tab;
+  kws = ks;
+  row = rw;
+  rfp.resize(reqcols.nelements() + noptcolsfound);
+  for(uInt i = 0; i < reqcols.nelements(); ++i)
+    rfp[i] = RORecordFieldPtr<Double>(row.record(), reqcols[i]);
+  for(uInt i = 0; i < noptcolsfound; ++i)
+    rfp[reqcols.nelements() + i] = RORecordFieldPtr<Double>(row.record(), optcols[i]);
+  return True;
+}
+
+// Helper function for getTable().
+Bool MeasIERS::findTab(Table& tab, const Table *tabin, const String &rc,
+		       const String &dir, const String &name)
+{
+  Bool ok = true;
+  LogIO os(LogOrigin("MeasIERS", "findTab", WHERE));
+  
+  if(!tabin){				// No table object given: search name
     const String path[2] = {
       "/ephemerides/",
-      "/geodetic/" };
+      "/geodetic/"
+    };
     String ldir;
     Vector<String> searched;
-    if (Aipsrc::find(ldir, rc)) {
+
+    if (Aipsrc::find(ldir, rc)){
       ldir += '/';
-      searched.resize(searched.nelements()+1, True);
-      searched[searched.nelements()-1] = ldir;
-    } else {
+      searched.resize(searched.nelements() + 1, True);
+      searched[searched.nelements() - 1] = ldir;
+    }
+    else{
       String udir;
-      if (!dir.empty()) udir = dir + '/';
+
+      if(!dir.empty())
+	udir = dir + '/';
       ldir = "./";
       searched.resize(searched.nelements()+1, True);
       searched[searched.nelements()-1] = ldir;
       if (!Table::isReadable(ldir + name)) {
 	ldir = "./data/";
-	searched.resize(searched.nelements()+1, True);
+	searched.resize(searched.nelements() + 1, True);
 	searched[searched.nelements()-1] = ldir;
 	if (!Table::isReadable(ldir + name)) {
           Bool found = False;
@@ -300,8 +416,8 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
               };
               Path cdatapath(String(CASADATA));
               ldir = cdatapath.absoluteName() + path[i];
-              searched.resize(searched.nelements()+1, True);
-              searched[searched.nelements()-1] = ldir;
+              searched.resize(searched.nelements() + 1, True);
+              searched[searched.nelements() - 1] = ldir;
               if (Table::isReadable(ldir + name)) {
                 found = True;
                 break;
@@ -309,8 +425,8 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
               ldir = cdatapath.absoluteName() + "/share/casacore/data/" \
                 + path[i];
               ldir = cdatapath.absoluteName() + path[i];
-              searched.resize(searched.nelements()+1, True);
-              searched[searched.nelements()-1] = ldir;
+              searched.resize(searched.nelements() + 1, True);
+              searched[searched.nelements() - 1] = ldir;
               if (Table::isReadable(ldir + name)) {
                 found = True;
                 break;
@@ -320,21 +436,33 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
         };
       };
     };
-    if (!Table::isReadable(ldir + name)) {
+    if(!Table::isReadable(ldir + name)){
       os << LogIO::WARN <<
 	String("Requested data table ") << name <<
 	String(" cannot be found in the searched directories:\n");
-      for (uInt i=0; i<searched.nelements(); ++i) os << searched[i] << "\n";
+      for(uInt i = 0; i < searched.nelements(); ++i)
+	os << searched[i] << "\n";
       os << LogIO::POST;
       return False;
     };
     tab = Table(ldir + name);
-  } else tab = *tabin;
+  }
+  else
+    tab = *tabin;
 
-  TableRecord ks(tab.keywordSet());
-  if (!ks.isDefined("VS_DATE") || !ks.isDefined("VS_VERSION") ||
-      !ks.isDefined("VS_CREATE") || !ks.isDefined("VS_TYPE") ||
-      (tab.tableInfo().type() != String("IERS"))) {
+  return ok;
+}
+
+// Helper function for getTable().
+Bool MeasIERS::handle_keywords(Double &dt, String &vs, const TableRecord& ks,
+			       const Table& tab)
+{
+  LogIO os(LogOrigin("MeasIERS", "handle_keywords", WHERE));
+  Bool ok = true;
+  
+  if(!ks.isDefined("VS_DATE") || !ks.isDefined("VS_VERSION") ||
+     !ks.isDefined("VS_CREATE") || !ks.isDefined("VS_TYPE") ||
+     (tab.tableInfo().type() != String("IERS"))){
     ok = False;
     os << LogIO::DEBUG1
        << "ks.isDefined(VS_DATE) " << ks.isDefined("VS_DATE")
@@ -353,37 +481,7 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
       ok = False;
     };
   };
-  ROTableRow rw(tab);
-  if (ok) {
-    // Check that the table is not missing any expected columns.
-    for (Int i=0; i < N; i++) {
-      if (!rw.record().isDefined(rfn[i])) {
-	os << LogIO::SEVERE
-	   << "Column " << rfn[i] << " is missing."
-	   << LogIO::POST;
-	ok = False;// break;
-      };
-    };
-  };
-  if (!ok) {
-    LogIO os(LogOrigin("MeasIERS",
-		       String("getTable(Table &, TableRecord &, "
-			      "ROTableRow &, RORecordFieldPtr<Double> *, "
-			      "String &vs, Double &dt, "
-			      "Int N, const String *, const String &, "
-			      "const String &, const String &)"),
-		       WHERE));
-    os << name + " has an incompatible format."
-       << "\nYou may want to notify the CASA system manager about it."
-       << LogIO::EXCEPTION;
-    return False;
-  };
-  table = tab;
-  kws = ks;
-  row = rw;
-  for (Int i=0; i < N; i++)
-    rfp[i] = RORecordFieldPtr<Double>(row.record(), rfn[i]);
-  return True;
+  return ok;
 }
 
 Bool MeasIERS::fillMeas(MeasIERS::Files which, Double utf) {

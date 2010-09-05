@@ -87,6 +87,7 @@ template <class T> class Vector;
 // </synopsis>
 //
 // <example>
+// See test/tMeasComet.cc.
 // <srcblock>
 //   tbd
 // </srcblock>
@@ -152,7 +153,8 @@ class MeasComet {
   Int nelements() const;
   // Get a comet position
   Bool get(MVPosition &returnValue, Double date) const;
-  // Get the local on-disk direction
+  // Get the local on-disk direction.  Returns False if the time or sub-observer
+  // longitude and latitude are unavailable, True on success.
   Bool getDisk(MVDirection &returnValue, Double date) const;
   // Get the velocity from a comet table, interpolated for date(in MJD(TDB)).
   Bool getRadVel(MVRadialVelocity &returnValue, Double date) const;
@@ -173,9 +175,12 @@ class MeasComet {
   // Helper functions for accessing ldat_p.  index should be either 0 or 1, but
   // that isn't checked!
   MVPosition getRelPosition(const uInt index) const;
-  MVDirection getDiskLongLat(const uInt index) const;
+  MVDirection getDiskLongLat(const uInt index) const;  // Must not be called if !haveDiskLongLat_p
 
   //# Data members
+
+  // Initialized in the "initialization list" of the c'tors, so maintain order:
+
   // Actual table
   Table tab_p;
   // Measured data readable
@@ -184,8 +189,6 @@ class MeasComet {
   Bool measured_p;
   // Row descriptions
   ROTableRow row_p;
-  // Field pointers
-  RORecordFieldPtr<Double> rfp_p[MeasComet::N_Columns];
   // First (-1) MJD in list
   Double mjd0_p;
   // Last MJD in list
@@ -200,15 +203,26 @@ class MeasComet {
   MVPosition topo_p;
   // Type of coordinates
   MDirection::Types mtype_p;
-  // Lines in memory
-  mutable Int lnr_p[2];
-  // Last read data (measlow - meashigh)
-  mutable Double ldat_p[2][N_Columns];
   // Message given
   Bool msgDone_p;
   // File names
   String tp_p;
 
+  // Whether or not the sub-observer longitude and latitude are available.
+  Bool haveDiskLongLat_p;
+
+  uInt ncols_p;	// # of columns.
+
+  // These may be initialized _inside_ the c'tors, but the order here is
+  // unimportant:
+
+  // Field pointers
+  Vector<RORecordFieldPtr<Double> > rfp_p;
+  // Lines in memory
+  mutable Int lnr_p[2];			    // Why are these mutables here?
+  // Last read data (measlow - meashigh)
+  mutable Vector<Double> ldat_p[2];         // They allow declaring a const
+					    // which isn't.
 };
 
 //# Inline Implementations

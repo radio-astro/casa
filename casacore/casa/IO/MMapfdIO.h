@@ -157,6 +157,7 @@ private:
 
   // Mapped regions of the file which have not been unmapped
   std::set<std::pair<char *, Int64> > itsMappedRegions;
+  Int64 itsTotalMapSize;
 };
 
 } // end namespace

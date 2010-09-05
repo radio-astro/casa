@@ -44,6 +44,7 @@ namespace casa
     : itsFileSize   (0),
       itsMapOffset  (0),
       itsMapSize    (0),
+      itsTotalMapSize(0),
       itsPosition   (0),
       itsPtr        (NULL),
       itsIsWritable (False)
@@ -52,6 +53,7 @@ namespace casa
     MMapfdIO::MMapfdIO (int fd, const String& fileName)
       :  itsMapOffset  (0),
          itsMapSize    (0),
+	 itsTotalMapSize(0),
          itsPtr        (NULL)
   {
     map (fd, fileName);
@@ -94,7 +96,17 @@ namespace casa
          Not unmapping costs virtual memory, of which there is theoretically
          256 TB available on 10.6, and in practise more than 100 TB. This is enough
          to hold several TB-sized files.
+
+         For random access patterns the virtual memory usage could grow very
+         rapidly (depending on user parameters); therefore, as safety, flush the
+         mapped sections once in a while. "Once in a while" should be seldom enough
+         to keep the total unmapping costs down, i.e. something that scales with
+         the file size. Add 1 GB to the threshold in order to avoid munmap overhead
+         for small files.
       */
+    if (itsTotalMapSize > 1024*1024*1024 + 10 * itsFileSize) {
+      unmapFile();
+    }
 #else
     unmapFile();
 #endif
@@ -193,6 +205,7 @@ namespace casa
 
       // Remember this mapping
       itsMappedRegions.insert(std::pair<char *, Int64>(itsPtr, itsMapSize));
+      itsTotalMapSize += itsMapSize;
 
       return;
   }
@@ -213,6 +226,7 @@ namespace casa
       itsPtr = NULL;
       itsMapSize = 0;
       itsMappedRegions.clear();
+      itsTotalMapSize = 0;
   }
 
   void MMapfdIO::flush()
