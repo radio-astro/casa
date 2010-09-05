@@ -189,7 +189,7 @@ class MeasComet {
   Bool measured_p;
   // Row descriptions
   ROTableRow row_p;
-  // First (-1) MJD in list
+  // First MJD in list - 1.0 * dmjd_p
   Double mjd0_p;
   // Last MJD in list
   Double mjdl_p;

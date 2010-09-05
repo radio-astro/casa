@@ -362,79 +362,85 @@ Bool MeasIERS::findTab(Table& tab, const Table *tabin, const String &rc,
   LogIO os(LogOrigin("MeasIERS", "findTab", WHERE));
   
   if(!tabin){				// No table object given: search name
-    const String path[2] = {
-      "/ephemerides/",
-      "/geodetic/"
-    };
     String ldir;
     Vector<String> searched;
 
-    if (Aipsrc::find(ldir, rc)){
-      ldir += '/';
-      searched.resize(searched.nelements() + 1, True);
-      searched[searched.nelements() - 1] = ldir;
+    if(name[0] == '/'){			// Absolute path given.
+      ldir = "";
     }
     else{
-      String udir;
+      const String path[2] = {
+	"/ephemerides/",
+	"/geodetic/"
+      };
 
-      if(!dir.empty())
-	udir = dir + '/';
-      ldir = "./";
-      searched.resize(searched.nelements()+1, True);
-      searched[searched.nelements()-1] = ldir;
-      if (!Table::isReadable(ldir + name)) {
-	ldir = "./data/";
+      if (Aipsrc::find(ldir, rc)){
+	ldir += '/';
 	searched.resize(searched.nelements() + 1, True);
+	searched[searched.nelements() - 1] = ldir;
+      }
+      else{
+	String udir;
+
+	if(!dir.empty())
+	  udir = dir + '/';
+	ldir = "./";
+	searched.resize(searched.nelements()+1, True);
 	searched[searched.nelements()-1] = ldir;
 	if (!Table::isReadable(ldir + name)) {
-          Bool found = False;
-          String mdir;
-          if (Aipsrc::find(mdir, "measures.directory")) {
-            mdir += "/";
-            ldir = mdir + udir;
-            searched.resize(searched.nelements()+1, True);
-            searched[searched.nelements()-1] = ldir;                        
-            if  (Table::isReadable(ldir + name)) {
-              found = True;
-            }
-          }
-          if (!found) {
-            for (Int i=0; i<2; i++) {
-              ldir = Aipsrc::aipsHome() + "/data/" + path[i];
-              searched.resize(searched.nelements()+1, True);
-              searched[searched.nelements()-1] = ldir;
-              if (Table::isReadable(ldir + name)) {
-                found = True;
-                break;
-              };
-              ldir = Aipsrc::aipsRoot() + "/data/" + path[i];
-              searched.resize(searched.nelements()+1, True);
-              searched[searched.nelements()-1] = ldir;
-              if (Table::isReadable(ldir + name)) {
-                found = True;
-                break;
-              };
-              Path cdatapath(String(CASADATA));
-              ldir = cdatapath.absoluteName() + path[i];
-              searched.resize(searched.nelements() + 1, True);
-              searched[searched.nelements() - 1] = ldir;
-              if (Table::isReadable(ldir + name)) {
-                found = True;
-                break;
-              };
-              ldir = cdatapath.absoluteName() + "/share/casacore/data/" \
-                + path[i];
-              ldir = cdatapath.absoluteName() + path[i];
-              searched.resize(searched.nelements() + 1, True);
-              searched[searched.nelements() - 1] = ldir;
-              if (Table::isReadable(ldir + name)) {
-                found = True;
-                break;
-              };              
-            }
-          };
-        };
-      };
+	  ldir = "./data/";
+	  searched.resize(searched.nelements() + 1, True);
+	  searched[searched.nelements()-1] = ldir;
+	  if (!Table::isReadable(ldir + name)) {
+	    Bool found = False;
+	    String mdir;
+	    if (Aipsrc::find(mdir, "measures.directory")) {
+	      mdir += "/";
+	      ldir = mdir + udir;
+	      searched.resize(searched.nelements()+1, True);
+	      searched[searched.nelements()-1] = ldir;                        
+	      if  (Table::isReadable(ldir + name)) {
+		found = True;
+	      }
+	    }
+	    if (!found) {
+	      for (Int i=0; i<2; i++) {
+		ldir = Aipsrc::aipsHome() + "/data/" + path[i];
+		searched.resize(searched.nelements()+1, True);
+		searched[searched.nelements()-1] = ldir;
+		if (Table::isReadable(ldir + name)) {
+		  found = True;
+		  break;
+		};
+		ldir = Aipsrc::aipsRoot() + "/data/" + path[i];
+		searched.resize(searched.nelements()+1, True);
+		searched[searched.nelements()-1] = ldir;
+		if (Table::isReadable(ldir + name)) {
+		  found = True;
+		  break;
+		};
+		Path cdatapath(String(CASADATA));
+		ldir = cdatapath.absoluteName() + path[i];
+		searched.resize(searched.nelements() + 1, True);
+		searched[searched.nelements() - 1] = ldir;
+		if (Table::isReadable(ldir + name)) {
+		  found = True;
+		  break;
+		};
+		ldir = cdatapath.absoluteName() + "/share/casacore/data/" \
+		  + path[i];
+		ldir = cdatapath.absoluteName() + path[i];
+		searched.resize(searched.nelements() + 1, True);
+		searched[searched.nelements() - 1] = ldir;
+		if (Table::isReadable(ldir + name)) {
+		  found = True;
+		  break;
+		};              
+	      }
+	    };
+	  };
+	};
+      }
     };
     if(!Table::isReadable(ldir + name)){
       os << LogIO::WARN <<
