@@ -312,7 +312,7 @@ void VisEquation::collapse(VisBuffer& vb) {
 //----------------------------------------------------------------------
 void VisEquation::collapseForSim(VisBuffer& vb) {
 
-  if (prtlev()>0) cout << "VE::collapse()" << endl;
+  if (prtlev()>0) cout << "VE::collapseforSim()" << endl;
 
   // Handle origin of model data here (?):
 
@@ -345,16 +345,12 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
 
   // Correct DATA up to pivot 
   while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
-#ifdef RI_DEBUG
-    cout << vc()[lidx]->typeName();
-#endif
+    if (prtlev()>2) cout << vc()[lidx]->typeName();
     if (vc()[ridx]->extraTag()!="NoiseScale" or vc()[lidx]->type()!=VisCal::T) {
       vc()[lidx]->correct(vb);
-#ifdef RI_DEBUG
-      cout << " -> correct";
-#endif
+      if (prtlev()>2) cout << " -> correct";
     }
-    cout << endl;
+    if (prtlev()>2) cout << endl;
     lidx++;
   }
 
@@ -365,31 +361,21 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
 
   // Corrupt Model down to (and including) the pivot
   while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
-#ifdef RI_DEBUG
-    cout << vc()[lidx]->typeName();
-#endif
+    if (prtlev()>2) cout << vc()[lidx]->typeName();
     // manually pick off a T intended to be noise scaling T:
     if (pivot_ <= VisCal::T and vc()[ridx]->type()==VisCal::T) {
       if (vc()[ridx]->extraTag()=="NoiseScale") {
 	vc()[ridx]->correct(vb);  // correct DATA
-#ifdef RI_DEBUG
-	cout << " -> correct";
-#endif
+	if (prtlev()>2) cout << " -> correct";
       } else {
 	vc()[ridx]->corrupt(vb);
-#ifdef RI_DEBUG
-	cout << " -> corrupt";
-#endif
+	if (prtlev()>2) cout << " -> corrupt";
       }
     } else { 
       vc()[ridx]->corrupt(vb);
-#ifdef RI_DEBUG
-      cout << " -> corrupt";
-#endif
+      if (prtlev()>2) cout << " -> corrupt";
     }
-#ifdef RI_DEBUG
-    cout << endl;
-#endif
+    if (prtlev()>2) cout << endl;
     ridx--;
   }
   

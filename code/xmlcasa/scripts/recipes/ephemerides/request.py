@@ -5,10 +5,6 @@ import socket
 import time
 from email.mime.text import MIMEText
 
-## # This seems like overkill just to get me and qa.
-## from taskinit import *
-## im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
-
 """
 Utilities for having JPL-Horizons ephemerides mailed to you (or your enemies).
 See JPL_ephem_reader.py for doing something with them.
@@ -17,13 +13,17 @@ Examples:
 
 import recipes.ephemerides.request as jplreq
 
+# I recommend you not ask for more than ~18 months of anything with date_incr
+# ~ 1h, because the result would be split into multiple emails which you would
+# have to stitch together.
+
 for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
-    jplreq.request_from_JPL(thing, '2011-12-31')
+    jplreq.request_from_JPL(thing, '2012-12-31')
 
 # A trick to avoid fast moving objects:
 for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
     if thing not in jplreq.default_date_incrs:
-        jplreq.request_from_JPL(thing, '2011-12-31')
+        jplreq.request_from_JPL(thing, '2012-12-31')
 """
 
 # Maps from object names to numbers that JPL-Horizons will recognize without
@@ -37,10 +37,13 @@ asteroids = {'ceres':        1,
              'juno':         3,
              'vesta':        4,
              'astraea':      5,
-             'hygeia':      10,
+             'hygiea':      10, # Careful with the spelling.  It used to be Hygeia, and it
+                                # is named after the Greek goddess Hygieia (or Hygeia).
+                                # Also, it is fairly oblate and eccentric.
              'parthenope':  11,
              'victoria':    12,
-             'davida':     511}
+             'davida':     511,
+             'interamnia', 704}
 
 planets_and_moons = {'mercury':    199,
                      'venus':      299,
@@ -118,11 +121,11 @@ planets_and_moons = {'mercury':    199,
 }
 
 should_have_orientation = ['mars', 'deimos', 'phobos', 'vesta', 'jupiter', 'io',
-                           'janus', 'hyperion', 'enceladus', 'mimas', 'iapetus',
+                           'janus', 'enceladus', 'mimas', 'iapetus',
                            'phoebe', 'tethys', 'uranus', 'ariel', 'miranda',
                            'neptune']
 should_have_sublong = ['mars', 'deimos', 'phobos', 'jupiter', 'io',
-                       'janus', 'enceladus', 'hyperion', 'phoebe', 'mimas', 'tethys',
+                       'janus', 'enceladus', 'phoebe', 'mimas', 'tethys',
                        'neptune']
 
 # Getting positions once a day is not enough for many moons, if the position of

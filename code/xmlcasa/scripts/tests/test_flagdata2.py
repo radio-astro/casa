@@ -179,7 +179,7 @@ class test_flagmanager(test_base):
         fg.done()
 
         print "Test of flagmanager mode=rename"
-        flagmanager(vis=self.vis, mode='rename', oldname='manualflag_2', versionname='Ha! The best version ever!', comment='This is a *much* better name')
+        flagmanager(vis=self.vis, mode='rename', oldname='unflag_2', versionname='Ha! The best version ever!', comment='This is a *much* better name')
         flagmanager(vis=self.vis, mode='list')
         fg.open(self.vis)
         self.assertEqual(len(fg.getflagversionlist()), 4)
@@ -191,7 +191,7 @@ class test_flagmanager(test_base):
         flagdata2(vis = self.vis, summary=True)
         flagmanager(vis = self.vis)
         
-        flagdata2(vis = self.vis, selectdata=True, antenna="2")
+        flagdata2(vis = self.vis, selectdata=True, antenna="2", manualflag=True)
         
         flagmanager(vis = self.vis)
         ant2 = flagdata2(vis = self.vis, summary=True)['flagged']
@@ -199,13 +199,13 @@ class test_flagmanager(test_base):
         print "After flagging antenna 2 there were", ant2, "flags"
 
         # Change flags, then restore
-        flagdata2(vis = self.vis, selectdata=True, antenna="3")
+        flagdata2(vis = self.vis, selectdata=True, antenna="3", manualflag=True)
         flagmanager(vis = self.vis)
         ant3 = flagdata2(vis = self.vis, summary=True)['flagged']
 
         print "After flagging antenna 2 and 3 there were", ant3, "flags"
 
-        flagmanager(vis = self.vis, mode='restore', versionname='manualflag_3')
+        flagmanager(vis = self.vis, mode='restore', versionname='manualflag_2')
         restore2 = flagdata2(vis = self.vis, summary=True)['flagged']
 
         print "After restoring pre-antenna 3 flagging, there are", restore2, "flags, should be", ant2
@@ -219,17 +219,20 @@ class test_msselection(test_base):
 
     def test_simple(self):
         baselines = flagdata2(vis = self.vis, selectdata=True, antenna="9", summary=True )['baseline'].keys()
-        assert "9&&9" not in baselines
+#        assert "9&&9" not in baselines
+        assert "9&&9" in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
         baselines = flagdata2(vis = self.vis, selectdata=True, antenna="9,10", summary=True )['baseline'].keys()
-        assert "9&&9" not in baselines
+#        assert "9&&9" not in baselines
+        assert "9&&9" in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
-        assert "10&&10" not in baselines
+#        assert "10&&10" not in baselines
+        assert "10&&10" in baselines
         assert "10&&11" in baselines
 
     def test_amp(self):
@@ -309,8 +312,7 @@ class test_statistics_queries(test_base):
     def test021(self):
         print "Test of flagging statistics and queries"
         
-        #It's failing because the first call to flagdata2 doesn't work
-        flagdata2(vis=self.vis, selectdata=True,correlation='LL',manualflag=True, mf_correlation='LL')
+        flagdata2(vis=self.vis, selectdata=True,correlation='LL',manualflag=True)
         flagdata2(vis=self.vis, selectdata=True,spw='0',manualflag=True, mf_spw='0:17~19')
         flagdata2(vis=self.vis, selectdata=True,antenna='5&&9',manualflag=True)
         flagdata2(vis=self.vis, selectdata=True,antenna='14',manualflag=True)
@@ -349,7 +351,7 @@ class test_statistics_queries(test_base):
 
     def test8(self):
         print "Test of parallel manualflagging"
-        flagdata2(vis=self.vis, manualflag=True, mf_correlation='RR', mf_antenna=['2', '3'])
+        flagdata2(vis=self.vis, selectdata=True, correlation='RR', manualflag=True, mf_antenna=['2', '3'])
         test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 192654)
 #        print "Test of mode = 'quack'"
 #        print "parallel quack"
@@ -391,7 +393,8 @@ class test_statistics_queries(test_base):
 
 
 class test_selections(test_base):
-    """Test various selections"""
+    """Test various selections using manual flag mode"""
+    # It's taking into account that antenna='2' selects autocorr ALSO
 
     def setUp(self):
         self.setUp_ngc5921()
@@ -399,7 +402,7 @@ class test_selections(test_base):
     def test_scan1(self):
         '''Flagdata: scan='3' manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, scan='3', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 52416)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 54432)
         
         # feed not implemented flagdata2(vis=vis, feed='27')
         # flagdata2(vis=vis, unflag=True)
@@ -407,49 +410,42 @@ class test_selections(test_base):
     def test_antenna(self):
         '''Flagdata2: antenna=2 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, antenna='2', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, antenna='2'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
 
     def test_spw(self):
         '''Flagdata2: spw=0 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, spw='0', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, antenna='2'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
 
     def test_correlation(self):
         '''Flagdata2: correlation=LL manualflag=true'''
-        flagdata2(vis=self.vis, selectdata=True, correlation='LL', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 98217)
+        flagdata2(vis=self.vis,  selectdata=True, correlation='LL', manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 101997)
         flagdata2(vis=self.vis, selectdata=True, correlation='LL,RR', manualflag=True)
         flagdata2(vis=self.vis, selectdata=True, correlation='LL RR', manualflag=True)
         flagdata2(vis=self.vis, selectdata=True, correlation='LL ,, ,  ,RR', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
 
     def test_field(self):
         '''Flagdata2: field=0 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, field='0', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 39186)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 40698)
 
     def test_uvrange(self):
         '''Flagdata2: uvrange=200~400m manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, uvrange='200~400m', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 55944)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 55944)
 
     def test_timerange(self):
         '''Flagdata2: timerange=09:50:00~10:20:00 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, timerange='09:50:00~10:20:00', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, antenna='2'), 196434, 6552)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 6804)
 
     def test_array(self):
         '''Flagdata2: array=0 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, array='0', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
 
-class test_default(test_base):
-    def setUp(self):
-        self.setUp_ngc5921()
-        
-    def test_default(self):
-        '''Flagdata without any mode'''
-        ret = flagdata2(vis=self.vis)
         
         
 class test_multimodes(test_base):
@@ -458,41 +454,21 @@ class test_multimodes(test_base):
         self.setUp_ngc5921()
 
     def test_manual_auto(self):
-        '''Manualflag and autoflag modes'''
+        '''Flagdata2: manual and autoflag modes together'''
         # It will run flagdata then compare with flagdata2
-        flagdata(vis=self.vis, scan='3')
-        flagdata(vis=self.vis, scan='3', mode='autoflag', algorithm='timemed', window=3)
-        res1 = flagdata(vis=self.vis, mode='summary')
+        flagdata(vis=self.vis, selectdata=True, field='0')
+        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
+        res1 = flagdata2(vis=self.vis, summary=True)
         
         flagdata2(vis=self.vis, unflag=True)
-        flagdata2(vis=self.vis,selectdata=True,scan='3',autoflag=True,algorithm='timemed',window=3)
+        flagdata2(vis=self.vis, autoflag=True,algorithm='timemed',window=3,
+                  manualflag=True, mf_field='0')
         res2 = flagdata2(vis=self.vis, summary=True)
         
-        print res1['flagged']
-        print res2['flagged']
+        self.assertEqual(res1['flagged'], res2['flagged'])
         
-        # run clip mode only and verify
-        flagdata2(vis=self.vis, selectdata=True, antenna="2,3,5,6", scan="4", manualflag=True)
-        s = flagdata2(vis=self.vis, summary=True)
-        for a in ["2", "3", "5", "6"]:
-            self.assertEqual(s['antenna'][a]['flagged'], 6552)
-        for a in ["1", "4", "7", "8", "9", "10", "24"]:
-            self.assertEqual(s['antenna'][a]['flagged'], 1008)
-            
-        # unflag all and verify
-        flagdata2(vis=self.vis, unflag=True)
-        reset = flagdata2(vis=self.vis, summary=True)
-        for a in ["2", "3", "5", "6"]:
-            self.assertEqual(reset['antenna'][a]['flagged'], 0)
-        for a in ["1", "4", "7", "8", "9", "10", "24"]:
-            self.assertEqual(reset['antenna'][a]['flagged'], 0)
-            
-        # run autoflag mode only and verify
-        flagdata2(vis=self.vis, selectdata=True, autoflag=True, algorithm='freqmed')
-        auto = flagdata2(vis=self.vis, summary=True)
-        print auto['antenna']["2"]
-        self.assertEqual(auto['antenna']["2"]['flagged'], 1262)
-
+    def test_unflag_summary(self):
+        '''Flagdata2: unflag and summary modes'''
         # unflag all and verify
         flagdata2(vis=self.vis, unflag=True)
         reset = flagdata2(vis=self.vis, summary=True)
@@ -501,8 +477,6 @@ class test_multimodes(test_base):
         for a in ["1", "4", "7", "8", "9", "10", "24"]:
             self.assertEqual(reset['antenna'][a]['flagged'], 0)
         
-        # run clip and autoflag
-#        flagdata2(vis=self.vis, selectdata=True, antenna="2,3,5,6", scan="4", autoflag=True, algorithm='freqmed')
 
 class test_mfselections(test_base):
     """Test various manualflag selections"""
@@ -522,9 +496,9 @@ class test_mfselections(test_base):
         # flagdata2(vis=vis, unflag=True)
 
     def test_mfantenna(self):
-        flagdata2(vis=self.vis, selectdata=True, antenna='1~20', manualflag=True, mf_antenna='3~8')
-        test_eq(flagdata2(vis=self.vis, summary=True, antenna='5'), 196434, 196434)
-        test_eq(flagdata2(vis=self.vis, summary=True, antenna='9'), 196434, 45360)
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna='3~8')
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='5'), 203994, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='9'), 203994, 45360)
         
         # compare with original flagdata
         flagdata2(vis=self.vis, unflag=True)
@@ -536,34 +510,37 @@ class test_mfselections(test_base):
     def test_channel(self):
         # should flag only channels 10~15
         flagdata2(vis=self.vis, selectdata=True, spw='0:10~20', manualflag=True, mf_spw='0:5~15')
-        test_eq(flagdata2(vis=self.vis, summary=True, antenna='2'), 196434, 34298)
-
-    def test_correlation(self):
-        flagdata2(vis=self.vis, selectdata=True, correlation='LL', manualflag=True, mf_correlation='')
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 98217)
-        flagdata2(vis=self.vis, selectdata=True, correlation='LL,RR', manualflag=True)
-        flagdata2(vis=self.vis, selectdata=True, correlation='LL RR', manualflag=True)
-        flagdata2(vis=self.vis, selectdata=True, correlation='LL ,, ,  ,RR', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 271836)
 
     def test_field(self):
-        # It should not flag field=0
+        # It should flag only field 1
         flagdata2(vis=self.vis, selectdata=True, field='1~2', manualflag=True, mf_field='0~1')
         test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 666792)
         test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, field='0'), 568134, 0)
 
     def test_uvrange(self):
-        flagdata2(vis=self.vis, selectdata=True, uvrange='200~400m', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 55944)
+        flagdata2(vis=self.vis, selectdata=True, field='0',manualflag=True, mf_uvrange='200~400m')
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, field='0'), 568134, 156744)
+        res1 = flagdata2(vis=self.vis, summary=True, selectdata=True, field='0')
+        
+        # compare with original flagdata
+        flagdata2(vis='ngc5921.ms', unflag=True)
+        flagdata(vis='ngc5921.ms',selectdata=True, field='0', uvrange='200~400m')
+        res2 = flagdata2(vis=self.vis, summary=True, selectdata=True, field='0')
+        
+        self.assertEqual(res1['flagged'], res2['flagged'])
 
     def test_timerange(self):
-        flagdata2(vis=self.vis, selectdata=True, timerange='09:50:00~10:20:00', manualflag=True,
-                  mf_timerange='09:20:00~10:20:00')
-        test_eq(flagdata2(vis=self.vis, summary=True, antenna='2'), 196434, 6552)
+        # global timerange selects only field 1 and mf_timerange asks for fields 1 and 2
+        # only field 1 should be flagged
+        flagdata2(vis=self.vis, selectdata=True, timerange='09:50:00~10:23:00', manualflag=True,
+                  mf_timerange='09:33:00~10:43:00')
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, field='2'), 1619352, 0)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, field='1'), 666792, 238140)
 
     def test_array(self):
         flagdata2(vis=self.vis, selectdata=True, array='0', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 2854278)
      
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -581,16 +558,15 @@ class cleanup(test_base):
 
 def suite():
     return [
-#            test_selections,
-#            test_statistics_queries,
-#             test_vector,
-#             test_vector_ngc5921,
-#             test_flagmanager,
-#            test_rfi,
-#            test_shadow,
+            test_selections,
+            test_statistics_queries,
+             test_vector,
+             test_vector_ngc5921,
+             test_flagmanager,
+            test_rfi,
+            test_shadow,
             test_msselection,
-#            test_autoflag,
-#            test_multimodes,
-#            test_mfselections,
-  #          test_default,
+            test_autoflag,
+            test_multimodes,
+            test_mfselections,
             cleanup]

@@ -1602,6 +1602,10 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <value>2.7</value>
      </param>
 
+     <param type="bool" name="OTF">
+     <description>calculate noise on-the-fly (WARNING: only experts with high-RAM machines should use False)</description>
+     <value type="bool">true</value>
+     </param>
 
 
 

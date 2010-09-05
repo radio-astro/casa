@@ -42,8 +42,7 @@
 #include <display/Display/DParameterString.h>
 #include <display/Display/DParameterButton.h>
 #include <display/DisplayCanvas/WCPowerScaleHandler.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/MsAverager.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <display/DisplayDatas/WorldAxesDD.h>
 #include <display/Display/DisplayEnums.h>
 #include <display/Display/WorldCanvasHolder.h>
@@ -553,9 +552,9 @@ class MSAsRaster: public ActiveCaching2dDD {
   static const AxisLoc X=0, Y=1, Z=2, SL0=3, SL1=4,   NLOCS=5;
 
   typedef Int VisType;
-  static const VisType OBSERVED=VisIter::Observed,
-		       CORRECTED=VisIter::Corrected,
-		       MODEL=VisIter::Model,
+  static const VisType OBSERVED=VisibilityIterator::Observed,
+		       CORRECTED=VisibilityIterator::Corrected,
+		       MODEL=VisibilityIterator::Model,
 		       RESIDUAL=3,  // RATIO=4,
 		       NTYPES=4,   INVALID_VT=-1;
 
@@ -674,8 +673,6 @@ class MSAsRaster: public ActiveCaching2dDD {
 
   // how many values to use (ideally) in moving averages.
   DParameterRange<Int> *itsNAvg;
-  DParameterString *itsAveTime;
-  DParameterString *itsAveChan;
 
 
   //----derived from above: what is now requested-----------------------
@@ -704,9 +701,6 @@ class MSAsRaster: public ActiveCaching2dDD {
 			// RMS (RMS).
 
   Int nAvg_;		// value in itsNAvg (above).
-  Float aveTime_;
-  Int   aveChan_; 
-  MsAverager *msa;
 
   Vector<Int> fieldIds_;	// user-selected field IDs and
   Vector<Int> spwIds_;		// spectral window IDs (0-based).
@@ -720,187 +714,187 @@ class MSAsRaster: public ActiveCaching2dDD {
   
       // The original, unselected MS
 
-  MeasurementSet *itsMS;	// The (unselected) MS to be displayed.
-  VisSet* vs_;			// VisSet for (unselected) itsMS
-  Bool msValid_;	// valid, writable, non-null (unselected) MS?
-			// (should be set True (permanently) during
-			// construction, or this object will be useless,
-			// and do nothing).
-  ROMSColumns* msCols_;	// utility object for (unselected) itsMS.
-  Int nFieldIds_;	// Total number of fields, spectral windows,
-  Int nSpwIds_;		// in the (unselected) MS.
-  Vector<Int> nChan_;	// Number of channels, by Spectral window ID.
-  Bool dish_;		// true if the MS is 'single-dish' (has FLOAT_DATA,
-  			// which will then be used instead of the DATA column).
+  MeasurementSet *itsMS;		// The (unselected) MS to be displayed.
+  VisibilityIterator* vs_;		// VisSet of (unselected) itsMS
+  Bool msValid_;			// valid, writable, non-null (unselected) MS?
+					// (should be set True (permanently) during
+					// construction, or this object will be useless,
+					// and do nothing).
+  ROMSColumns* msCols_;			// utility object for (unselected) itsMS.
+  Int nFieldIds_;			// Total number of fields, spectral windows,
+  Int nSpwIds_;				// in the (unselected) MS.
+  Vector<Int> nChan_;			// Number of channels, by Spectral window ID.
+  Bool dish_;				// true if the MS is 'single-dish' (has FLOAT_DATA,
+  					// which will then be used instead of the DATA column).
  
 			     
       // The selected MS.
 
-  MS* mssel_;		// the selected MS and its VisSet--kept in sync
-  VisSet* vssel_;	// with user input (itsMS, fieldIds_, spwIds_).
-  Bool msselValid_;	// mssel_ and vssel_ are valid and non-null.  We will
-			// not draw until this is set True (in selectVS_).
+  MS* mssel_;				// the selected MS and its VisSet--kept in sync
+  VisibilityIterator* wvi_p;		// with user input (itsMS, fieldIds_, spwIds_).
+  Bool msselValid_;			// mssel_ and vssel_ are valid and non-null.  We will
+					// not draw until this is set True (in selectVS_).
   
-  Int nAnt_;		// # rows in antenna table (for now).  Later: size
-			// of the set of antennas appearing in mssel_
-			// main data rows.  
-			// NB: nAnt_==1 is tested, rather than dish_ (which
-			// should be equivalent), to determine whether feeds
-			// are displayed instead of baselines.
+  Int nAnt_;				// # rows in antenna table (for now).  Later: size
+					// of the set of antennas appearing in mssel_
+					// main data rows.  
+					// NB: nAnt_==1 is tested, rather than dish_ (which
+					// should be equivalent), to determine whether feeds
+					// are displayed instead of baselines.
 
-  Block<Int> msShape_;  // shape of visibilites of the whole selected MS
-			// = {nTime, nBsln, nChan, nPol, nSpw}.
-			// msShape_[BASELN] reflects the size requirement for
-			// the baseline sort in use (see antSort_, below).
-  Block<Int> msShapeA_; // Identical to msShape_, except possibly on BASELN
-			// axis when baselines are sorted by length
-			// (antSort==False).  In that case, msShapeA_[BASELN]
-			// is the number of baseline slots that _would_ be 
-			// required if the antenna sort were used, including
-			// 1-element 'gaps' where antenna1 changes.
-			// msShape_[BASELN] is the number of actual baselines
-			// needed; the gaps are not needed when displaying the
-			// sort by baseline length.  However, when able to fit
-			// into memory, vis_ is sized according to the larger
-			// msShapeA_[BASELN] in any case, so that switching
-			// between sorts does not require resizing or
-			// reloading vis_, but only reshuffling of the
-			// baseline planes in memory.
+  Block<Int> msShape_;			// shape of visibilites of the whole selected MS
+					// = {nTime, nBsln, nChan, nPol, nSpw}.
+					// msShape_[BASELN] reflects the size requirement for
+					// the baseline sort in use (see antSort_, below).
+  Block<Int> msShapeA_;			// Identical to msShape_, except possibly on BASELN
+					// axis when baselines are sorted by length
+					// (antSort==False).  In that case, msShapeA_[BASELN]
+					// is the number of baseline slots that _would_ be 
+					// required if the antenna sort were used, including
+					// 1-element 'gaps' where antenna1 changes.
+					// msShape_[BASELN] is the number of actual baselines
+					// needed; the gaps are not needed when displaying the
+					// sort by baseline length.  However, when able to fit
+					// into memory, vis_ is sized according to the larger
+					// msShapeA_[BASELN] in any case, so that switching
+					// between sorts does not require resizing or
+					// reloading vis_, but only reshuffling of the
+					// baseline planes in memory.
   
-  Bool antSort_;	// True (the default) means baselines are (to be)
-			// sorted by antenna1-antenna2.  False means sorting
-			// by (unprojected, uvw) baseline length.
+  Bool antSort_;			// True (the default) means baselines are (to be)
+					// sorted by antenna1-antenna2.  False means sorting
+					// by (unprojected, uvw) baseline length.
   
-  Matrix<Double> bLen_; // (Unprojected) baseline lengths, indexed by antenna
-			// numbers (symmetric, 0 along diagonal).  Used to
-			// order baselines by length on request.
+  Matrix<Double> bLen_;			// (Unprojected) baseline lengths, indexed by antenna
+					// numbers (symmetric, 0 along diagonal).  Used to
+					// order baselines by length on request.
   
-  Vector<Int> a1_, a2_, // These Arrays provide quick conversions between
-             a1A_, a2A_,// (antenna1,antenna2) and baseline index.  Of course
-             a1L_, a2L_,// arguments ( a1_(bsl), a2_(bsl),  bsl_(a1, a2) )
-    len2ant_, ant2len_;	// must be Ints within range; their values are
-  Matrix<Int> bsl_,	// according to the _current_ baseline sort
-       bslA_, bslL_;	// (antSort_).  (In contrast, methods a1a2_() and
-  Int         nbsl_,	// bsln_() may take Float arguments, but convert
-      nbslA_, nbslL_;	// _only_ according to the Antenna1-Antenna2 sort).
-			// The A and L versions are for antenna and length
-			// sorts, respectively; they are copied into a1_, a2_,
-			// and bsl_ in accordance with the current sort.
-			// len2ant_ and ant2len_ provide conversion between
-			// baseline indices for the two sorts.  nbsl* give
-			// the number of baselines for the applicable case
-			// (if sgl dish, they will be 1, but irrelevant;
-			// msShape_[BASELN] will be set to number of feeds
-			// instead).
+  Vector<Int> a1_, a2_,			// These Arrays provide quick conversions between
+             a1A_, a2A_,		// (antenna1,antenna2) and baseline index.  Of course
+             a1L_, a2L_,		// arguments ( a1_(bsl), a2_(bsl),  bsl_(a1, a2) )
+    len2ant_, ant2len_;			// must be Ints within range; their values are
+  Matrix<Int> bsl_,			// according to the _current_ baseline sort
+       bslA_, bslL_;			// (antSort_).  (In contrast, methods a1a2_() and
+  Int         nbsl_,			// bsln_() may take Float arguments, but convert
+      nbslA_, nbslL_;			// _only_ according to the Antenna1-Antenna2 sort).
+					// The A and L versions are for antenna and length
+					// sorts, respectively; they are copied into a1_, a2_,
+					// and bsl_ in accordance with the current sort.
+					// len2ant_ and ant2len_ provide conversion between
+					// baseline indices for the two sorts.  nbsl* give
+					// the number of baselines for the applicable case
+					// (if sgl dish, they will be 1, but irrelevant;
+					// msShape_[BASELN] will be set to number of feeds
+					// instead).
 
   
-  Vector<Double> time_;	// sorted vector of actual times in mssel_
-			// only first msShape_[TIME] ( <= time_.shape() )
-			// are valid.
-  Vector<Int> field_;	// vector for field ids corresponding to time slots;
-  			// indexed as time_ is, above.  For now, field id
-			// is assumed to be unique for a given time.  Used
-			// to avoid computing running averages across
-			// field boundaries.
-  Vector<Int> scan_;	// same as above, for scan numbers.
-  Vector<String> fieldName_;	// Names corresponding to field_ above.
+  Vector<Double> time_;			// sorted vector of actual times in mssel_
+					// only first msShape_[TIME] ( <= time_.shape() )
+					// are valid.
+  Vector<Int> field_;			// vector for field ids corresponding to time slots;
+		  			// indexed as time_ is, above.  For now, field id
+					// is assumed to be unique for a given time.  Used
+					// to avoid computing running averages across
+					// field boundaries.
+  Vector<Int> scan_;			// same as above, for scan numbers.
+  Vector<String> fieldName_;		// Names corresponding to field_ above.
 
-  Block<Int> spwId_;	// Spectral window index-to-ID translation.
-  			// The user can select the spectral windows to
-			// view.  This Block holds the (sorted) spectral
-			// windows actually found in the selected MS--usually
-			// it will be identical to the user selection (spwIds_,
-			// above).  Its length is the size of the Spectral
-			// Window axis (msShape_[SP_W]). 
-			// Note that throughout the code, the variable 'spw'
-			// refers to the _index_ into this block, not the
-			// Spectral window ID itself.  Actual IDs will have
-			// 'Id' in the variable name.
-  Block<void*> freq_;	// *freq_[spw] is really a Vector<Double>.  
-			// (*freq_[spw])[chan] holds the CHAN_FREQ for 
-			// the given spw index and channel (in Hz).
+  Block<Int> spwId_;			// Spectral window index-to-ID translation.
+		  			// The user can select the spectral windows to
+					// view.  This Block holds the (sorted) spectral
+					// windows actually found in the selected MS--usually
+					// it will be identical to the user selection (spwIds_,
+					// above).  Its length is the size of the Spectral
+					// Window axis (msShape_[SP_W]). 
+					// Note that throughout the code, the variable 'spw'
+					// refers to the _index_ into this block, not the
+					// Spectral window ID itself.  Actual IDs will have
+					// 'Id' in the variable name.
+  Block<void*> freq_;			// *freq_[spw] is really a Vector<Double>.  
+					// (*freq_[spw])[chan] holds the CHAN_FREQ for 
+					// the given spw index and channel (in Hz).
 
   // The following translate pol ID and the polarization index within a cell
   // of data in the MS, to the 'pol' index within the internal visibility
   // cube.  There is no 'polID axis' separate from the pol axis internally or
   // for the display; it is flattened to a single pol axis, using these
   // tables.  They are set up in findRanges_.
-  Int nPolIds_;		   // Number of rows in the POLARIZATION subtable
-  			   // (and the size of the next two vectors).
-  Vector<Int> nPolsIn_;	   // number of correlations in each polId.
-  Vector<Int> pidBase_;    // difference between a visibility's 'pol' index
-			   // within msShape_[POL] and its index within
-			   // the MS table's visibility data cell, for given
-			   // polId (or -1, if the polID is not in the 
-			   // selected data).
+  Int nPolIds_;				// Number of rows in the POLARIZATION subtable
+					// (and the size of the next two vectors).
+  Vector<Int> nPolsIn_;			// number of correlations in each polId.
+  Vector<Int> pidBase_;			// difference between a visibility's 'pol' index
+					// within msShape_[POL] and its index within
+					// the MS table's visibility data cell, for given
+					// polId (or -1, if the polID is not in the 
+					// selected data).
 	// The following 2 vectors will have sizes = msShape_[POL], and
 	// are indexed according to the internal polarization 'data pixel
 	// number' (generally referred to as 'pol').
-  Vector<Int> polId_;		// polarizationId for given pol.
-  Vector<String> polName_;	// name of the pol.
+  Vector<Int> polId_;			// polarizationId for given pol.
+  Vector<String> polName_;		// name of the pol.
 
 
       // The visibility hypercube.
 
-  Array<Float> vis_;	 // the (large) memory buffer: 5-axis hypercube of
-        // gridded MS visibilities (for t, bsl, chan, pol, spw, in that
-        // order).  Conceptually, this is a (contiguous, hyper-rectangular)
-	// 'window' or 'cursor' into the whole gridded ms as characterized
-	// by msShape_ above.  It _will_ be the whole thing, if it fits
-	// into memory; in any case, the two display axes will be full size.
-  Bool visValid_;	 // Is vis_ valid for current selected MS?
-  Block<Int> visShape_;  // shape of extracted vis_ Array (used*) and
-  Block<Int> visStart_;  // start of extracted vis_ Array, within msShape_
+  Array<Float> vis_;			// the (large) memory buffer: 5-axis hypercube of
+				        // gridded MS visibilities (for t, bsl, chan, pol, spw, in that
+				        // order).  Conceptually, this is a (contiguous, hyper-rectangular)
+					// 'window' or 'cursor' into the whole gridded ms as characterized
+					// by msShape_ above.  It _will_ be the whole thing, if it fits
+					// into memory; in any case, the two display axes will be full size.
+  Bool visValid_;			// Is vis_ valid for current selected MS?
+  Block<Int> visShape_;			// shape of extracted vis_ Array (used*) and
+  Block<Int> visStart_;			// start of extracted vis_ Array, within msShape_
 
-  Block<Int> visShapeA_; // *Identical to visShape_ except possibly on the
-			 // BASELN axis, and then only when computeVisShape_()
-			 // determines that the entire msShapeA_[BASELN]
-			 // will fit into memory, and the length sort
-			 // is also in effect.  In that case,
-			 // visShapeA_[BASELN] == msShapeA_[BASELN] and
-			 // visShape_[BASELN] == msShape_[BASELN] (which is
-			 // msShapeA_[BASELN] - (nAnt_-1) ).
-			 // vis_ is actually sized according to visShapeA_.
+  Block<Int> visShapeA_;		// *Identical to visShape_ except possibly on the
+					// BASELN axis, and then only when computeVisShape_()
+					// determines that the entire msShapeA_[BASELN]
+					// will fit into memory, and the length sort
+					// is also in effect.  In that case,
+					// visShapeA_[BASELN] == msShapeA_[BASELN] and
+					// visShape_[BASELN] == msShape_[BASELN] (which is
+					// msShapeA_[BASELN] - (nAnt_-1) ).
+					// vis_ is actually sized according to visShapeA_.
   
   VisType curVisType_;
-  VisComp curVisComp_;  // type and component of current vis_.
+  VisComp curVisComp_;			// type and component of current vis_.
 
   Float dataRngMin_, dataRngMax_;	// The 'data ranges' for vis_.
-		// Used (only) for scaling data values to colors; they are
-		// too expensive to compute except during extract_().
-		// Not the actual min/max of the data in general, since they
-		// may be sampled and/or clipped to 3-sigma limits.
+					// Used (only) for scaling data values to colors; they are
+					// too expensive to compute except during extract_().
+					// Not the actual min/max of the data in general, since they
+					// may be sampled and/or clipped to 3-sigma limits.
   Float devRngMin_, devRngMax_;		// same thing, for the case when
-		// visibility deviations are being displayed.  Both types
-		// of ranges are kept, in case the user switches from one
-		// type ot display to the other.  devRngMin_ is set to
-		// NO_DATA if these haven't been computed yet.
-		// computeDevRange_() is called from extract_ or
-		// setOptions to compute these when needed.
+					// visibility deviations are being displayed.  Both types
+					// of ranges are kept, in case the user switches from one
+					// type ot display to the other.  devRngMin_ is set to
+					// NO_DATA if these haven't been computed yet.
+					// computeDevRange_() is called from extract_ or
+					// setOptions to compute these when needed.
 
   
       // The display matrices which are drawn on the canvas.
 
-  Matrix<Float> disp_; 	   // Matrix of data values actually passed to the
-			   // display canvas.
-  Axis dispX_, dispY_;     // displayed axes that disp_ represents.
-  Block<Int> dispPos_;	   // non-display axis ('slice') positions disp_
-			   // represents, by Axis.  Settings for display axes,
-			   // (i.e. dispPos_[dispX_] and dispPos_[dispY_]),
-			   // are irrelevant).
-  Bool dispValid_;	   // Has disp_ been created since extract_ was
-  			   // called?
-  Bool dispNotLoaded_;	   // Is the entire disp_ Matrix set to the
-			   // NOT_LOADED value?
+  Matrix<Float> disp_; 			// Matrix of data values actually passed to the
+					// display canvas.
+  Axis dispX_, dispY_;			// displayed axes that disp_ represents.
+  Block<Int> dispPos_;			// non-display axis ('slice') positions disp_
+					// represents, by Axis.  Settings for display axes,
+					// (i.e. dispPos_[dispX_] and dispPos_[dispY_]),
+					// are irrelevant).
+  Bool dispValid_;			// Has disp_ been created since extract_ was
+					// called?
+  Bool dispNotLoaded_;			// Is the entire disp_ Matrix set to the
+					// NOT_LOADED value?
 
-  Matrix<Float> dispDev_;  // Similar to disp_, but for visibility deviation
-  			   // data displays.  (Filled by createDevSlice_()).
-  Bool dispDevValid_;	   // Is dispDev_ valid for current disp_ and
-  			   // (if necessary) the state of flag edits?
-  VisDev dispDevType_;	   // Type of deviation (RMS or DIFF) that dispDev_
-			   // represents.
-  Int dispDevNAvg_;	   // Nominal number of values in running averages
-			   // in effect when dispDev_ was last computed.
+  Matrix<Float> dispDev_;		// Similar to disp_, but for visibility deviation
+					// data displays.  (Filled by createDevSlice_()).
+  Bool dispDevValid_;			// Is dispDev_ valid for current disp_ and
+					// (if necessary) the state of flag edits?
+  VisDev dispDevType_;			// Type of deviation (RMS or DIFF) that dispDev_
+					// represents.
+  Int dispDevNAvg_;			// Nominal number of values in running averages
+					// in effect when dispDev_ was last computed.
 
 
 

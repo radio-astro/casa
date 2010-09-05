@@ -4,7 +4,7 @@ import sys
 from taskinit import *
 im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
 
-debug = True
+debug = False
 def flagdata2(vis = None,
              flagbackup = None,
              selectdata = None,
@@ -23,7 +23,6 @@ def flagdata2(vis = None,
              mf_antenna = None,
              mf_uvrange = None,
              mf_timerange = None,
-             mf_correlation = None,
              mf_scan = None,
              mf_feed = None, 
              mf_array = None,
@@ -77,6 +76,11 @@ def flagdata2(vis = None,
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         
+        # MS HISTORY
+        mslocal.open(vis,nomodify=False)
+        mslocal.writehistory(message='taskname = flagdata2', origin='flagdata2')
+        mslocal.open(vis,nomodify=False)
+        
         if (not manualflag and not clip and not quack and not shadow and not rfi and 
             not autoflag and not unflag and not summary):
 #            casalog.post('No flagging mode was selected', 'WARN')
@@ -90,13 +94,17 @@ def flagdata2(vis = None,
             casalog.post('Please, verify your parameters.', 'SEVERE')
             raise Exception
         
+        # Set string for flagbackup name
+        modestr = ""
+        
         ## FIXME: autocorr
         # Select the data
         casalog.post('Flagging selection')
         if selectdata:
             if(debug):
                 print "field=%s, spw=%s, array=%s, feed=%s, scan=%s, baseline=%s, uvrange=%s,"\
-                      " time=%s, correlation=%s"%(field,spw,array,feed,scan,antenna,uvrange,timerange)
+                      " time=%s, correlation=%s"%(field,spw,array,feed,scan,antenna,uvrange,timerange,
+                                                  correlation)
             fglocal.setdata(field = field, 
                            spw = spw, 
                            array = array, 
@@ -115,12 +123,12 @@ def flagdata2(vis = None,
             mode = 'manualflag'
             casalog.post('Flagging in manualflag mode')
             
-            manual_mode(fglocal, mode, flagbackup,
+            manual_mode(fglocal, mode,
                          spw=mf_spw,
                          field=mf_field,
                          antenna=mf_antenna,
                          timerange=mf_timerange,
-                         correlation=mf_correlation,
+                         correlation=correlation,
                          scan=mf_scan,
                          feed=mf_feed,
                          array=mf_array,
@@ -129,12 +137,13 @@ def flagdata2(vis = None,
                          clipcolumn="",   
                          clipoutside=False, 
                          channelavg=False)
-
-        
+            modestr = modestr+"manualflag_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+            
         if clip:
             mode = 'clip'
             casalog.post('Flagging in clip mode')
-            clip_quack(fglocal, mode, selectdata, flagbackup,
+            clip_quack(fglocal, mode, selectdata,
                          clipexpr=clipexpr,       
                          clipminmax=clipminmax,   
                          clipcolumn=clipcolumn,   
@@ -149,10 +158,13 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            modestr = modestr+"clip_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+            
         if quack:
             mode = 'quack'
             casalog.post('Flagging in quack mode')
-            clip_quack(fglocal, mode, selectdata, flagbackup,
+            clip_quack(fglocal, mode, selectdata,
                          clipminmax=[], clipoutside=False,
                          clipcolumn="",channelavg=False,
                          quackinterval=quackinterval,
@@ -167,10 +179,12 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            modestr = modestr+"quack_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+            
         if shadow:
             mode = 'shadow'
             casalog.post('Flagging in shadow mode')
-#            fglocal.setdata()
             fglocal.setshadowflags( \
                         field = field, \
                         spw = spw, \
@@ -182,10 +196,9 @@ def flagdata2(vis = None,
                         time = timerange, \
                         correlation = correlation, \
                        diameter = diameter)
+            modestr = modestr+"shadow_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 #            fglocal.setshadowflags(diameter = diameter)
-
-            if flagbackup:
-                backup_flags(fglocal,mode)
             
         if autoflag:
             mode = 'autoflag'
@@ -210,10 +223,10 @@ def flagdata2(vis = None,
             #     rec['minpop'] = minpop;
             rec['column'] = column
             fglocal.setautoflag(algorithm = algorithm, parameters = rec)
+            
+            modestr = modestr+"autoflag_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
                 
-            if flagbackup:
-                backup_flags(fglocal,mode)
-
         if rfi:
             mode = 'rfi'
             casalog.post('Flagging in rfi mode')
@@ -277,16 +290,16 @@ def flagdata2(vis = None,
             # Note : Can set multiple instances of this (will be done one after the other)
             #
             fglocal.setautoflag(algorithm='tfcrop', parameters=par)
+            
+            modestr = modestr+"rfi_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 
-            if flagbackup:
-                backup_flags(fglocal,mode)
-        
         
         if unflag:
             casalog.post('Flagging in unflag mode')
             # pretends to be manualflag mode, but it will only unflag
             mode = "unflag"
-            clip_quack(fglocal, mode, selectdata, flagbackup,
+            clip_quack(fglocal, mode, selectdata,
                          unflag=unflag,
                          spw=spw,
                          field=field,
@@ -297,25 +310,32 @@ def flagdata2(vis = None,
                          feed=feed,
                          array=array,
                          uvrange=uvrange)
+            modestr = modestr+"unflag_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 
         if summary:
             mode = 'summary'
             casalog.post('Flagging in summary mode')
 #            fglocal.setdata()
-#            fglocal.setflagsummary(field=field, \
-#                                  spw=spw, \
-#                                  array=array, \
-#                                  feed=feed, \
-#                                  scan=scan, \
-#                                  baseline=antenna, \
-#                                  uvrange=uvrange, \
-#                                  time=timerange, \
-#                                  correlation=correlation)
+            fglocal.setflagsummary(field=field, \
+                                  spw=spw, \
+                                  array=array, \
+                                  feed=feed, \
+                                  scan=scan, \
+                                  baseline=antenna, \
+                                  uvrange=uvrange, \
+                                  time=timerange, \
+                                  correlation=correlation)
             fglocal.setflagsummary()
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
                 
             # do not backup existing flags
             
-        # Finallly, run the flagging for all modes
+        # Finallly, backup flags and run flagging for all modes
+#        print "flagbackup=%s"%flagbackup
+        if flagbackup:
+            backup_flags(fglocal, modestr)
+            
         stats = fglocal.run()
         fglocal.done()
 
@@ -343,18 +363,13 @@ def flagdata2(vis = None,
         print '*** Error ***', instance
 
 #    fglocal.done()
-
     
-    # FIXME: write history
-    mslocal.open(vis,nomodify=False)
-    mslocal.writehistory(message='taskname = flagdata2', origin='flagdata2')
-    mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='flagdata2')
-    mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+    # Close MS history
     mslocal.close()
 
     return
 
-def manual_mode(fglocal, mode, flagbackup, **params):
+def manual_mode(fglocal, mode, **params):
     if debug: print params
 
     # Check if it is in vector mode            
@@ -434,10 +449,8 @@ def manual_mode(fglocal, mode, flagbackup, **params):
             
             fglocal.setmanualflags(**param_i)
 
-    if flagbackup:
-        backup_flags(fglocal, mode)
 
-def clip_quack(fglocal, mode, selectdata, flagbackup, **params):
+def clip_quack(fglocal, mode, selectdata, **params):
     if debug: print params
 
     if not selectdata:
@@ -446,9 +459,6 @@ def clip_quack(fglocal, mode, selectdata, flagbackup, **params):
     rename_params(params)
     fglocal.setmanualflags(**params)
     
-    if flagbackup:
-        backup_flags(fglocal, mode)
-
 
 # VECTOR mode is not supported at this time for quack and clip
             
@@ -550,8 +560,8 @@ def rename_params(params):
     if params.has_key('clipoutside'):
         params['outside']         = params['clipoutside'] ; del params['clipoutside']
 
-def backup_flags(fglocal, mode):
-
+def backup_flags(fglocal, modes):
+#    print "modes="+modes
     # Create names like this:
     # before_manualflag_1,
     # before_manualflag_2,
@@ -561,22 +571,27 @@ def backup_flags(fglocal, mode):
     # Generally  before_<mode>_<i>, where i is the smallest
     # integer giving a name, which does not already exist
     existing = fglocal.getflagversionlist(printflags=False)
+#    print "existing=%s"%existing
 
     # remove comments from strings
     existing = [x[0:x.find(' : ')] for x in existing]
+#    print "existing=%s"%existing
     i = 1
     while True:
-        versionname = mode +"_" + str(i)
+#        versionname = mode +"_" + str(i)
+        versionname = modes + str(i)
+#        print "versioname=%s"%versionname
         if not versionname in existing:
+#            print "not existing"
             break
         else:
             i = i + 1
 
-        time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+    time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
 
-        casalog.post("Saving current flags to " + versionname + " before applying new flags")
+    casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-        fglocal.saveflagversion(versionname=versionname,
-                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
+    fglocal.saveflagversion(versionname=versionname,
+                           comment='flagdata autosave before ' + modes + ' on ' + time_string,
                            merge='replace')
 

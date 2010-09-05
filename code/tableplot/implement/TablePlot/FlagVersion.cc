@@ -52,6 +52,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TiledShapeStMan.h>
+#include <tables/Tables/DataManError.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>
@@ -273,38 +274,8 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
       ArrayColumn<Bool> fromFlag(fromFTab, dataflagcolname_p);
       ArrayColumn<Bool> toFlag(toFTab, dataflagcolname_p);
 
-      Bool fixedshape=False;
-
-      /* Check if the FLAG column has the same shape for all rows */
-      /* If so - then loop through in large chunks.
-         If not - read/write row by row. 
-         TODO : This is slow, and TableIterator is perhaps a faster way
-                 to do this.
-
-         getColumn/putColumn would work for small MSs but runs out of
-         memory for large MSs.
-      */
-           
-      // Check if fixed shape. probably the better way... but it sometimes
-      // tells us that fixed shaped columns are not!
-      TableDesc td = fromFTab.actualTableDesc();
-      fixedshape = (td.columnDesc( dataflagcolname_p )).isFixedShape();
-
-      if (! fixedshape) {
-	/* If we can read the column with getColumn, it is fixed shape.
-	   If we couldn't, it may not be fixed shape or we ran out of memory.
-	*/
-	try  {
-	  Array<Bool> rfs = fromFlag.getColumn();
-	  fixedshape = True;
-	}
-	catch(...) {
-	}
-      }
       
-      //cout << " is Fixed Shape : " << fixedshape << endl;
-      
-      if( fixedshape ) { 
+      try { 
 	
 	IPosition shape(fromFlag.shape(0));
 	/* Process large chunks at a time in order to avoid overhead, e.g. 100 MB.
@@ -336,34 +307,44 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
 	    toFlag.putColumnCells(arraySection,arr2);
 	  }
       }
-      else {
-	// Check if DATA_DESC_ID is a column
-	//    if so, use the TableIterator on this.
-	// For now, go row by row....
-	Array<Bool> arr1;
-	Array<Bool> arr2;
-	ProgressMeter pm(0, nrows_p, "Saving flags");
-	for(unsigned i=0;i<nrows_p;i++)
-	  {
-	    if (i % 16384 == 0) {
-	      pm.update(i);
-	    }
-	    fromFlag.get(i,arr1,True);
-	    if( merge.matches("and") ) {
-	      toFlag.get(i,arr2,True);
-	      arr2 *= arr1;
-	    }
-	    else if (merge.matches("or")) {
-	      toFlag.get(i,arr2,True);
-	      arr2 += arr1;
-	    }
-	    else if (merge.matches("replace")) {
-              arr2.resize();
-              arr2 = arr1;
-	    }
-	    toFlag.put(i,arr2);
-	  }
-      }
+      catch (DataManError &e)
+          {
+              // happens if the FLAG column is of non-fixed shape.
+              // There is probably not a better way to check the if
+              // the shape is fixed than assuming it is, and catch
+              // the error. In particular, note that ColumnDesc::isFixedShape
+              // is not always accurate.
+              // Trying to read in the entire column using getColumn()
+              // would reveal if it is of fixed shape; but this approach
+              // is memory intensive.
+
+              // Check if DATA_DESC_ID is a column
+              //    if so, use the TableIterator on this.
+              // For now, go row by row....
+              Array<Bool> arr1;
+              Array<Bool> arr2;
+              ProgressMeter pm(0, nrows_p, "Saving flags");
+              for(unsigned i=0;i<nrows_p;i++)
+                  {
+                      if (i % 16384 == 0) {
+                          pm.update(i);
+                      }
+                      fromFlag.get(i,arr1,True);
+                      if( merge.matches("and") ) {
+                          toFlag.get(i,arr2,True);
+                          arr2 *= arr1;
+                      }
+                      else if (merge.matches("or")) {
+                          toFlag.get(i,arr2,True);
+                          arr2 += arr1;
+                      }
+                      else if (merge.matches("replace")) {
+                          arr2.resize();
+                          arr2 = arr1;
+                      }
+                      toFlag.put(i,arr2);
+                  }
+          }
    } // end if fcol_p
    
    toFTab.flush();

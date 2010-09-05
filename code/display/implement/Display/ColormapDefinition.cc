@@ -172,8 +172,12 @@ void ColormapDefinition::loadColormapTable() {
       }
     }    
   } catch (const AipsError &x) {
-    if (&x) { };
-  } 
+      fprintf( stderr, "fatal error, could not read default colormaps: %s\n", x.what() );
+      exit(1);
+  } catch (...) {
+      fprintf( stderr, "fatal error, could not read default colormaps...\n" );
+      exit(1);
+  }
 }
 
 Bool ColormapDefinition::loadBuiltinColormap(const String& name) {

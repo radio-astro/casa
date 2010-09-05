@@ -55,8 +55,7 @@ def simdata(
         return False
 
     if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
-        msg("No skymodel found.  simdata may not work for predicting from components only.",priority="error")
-        return False
+        msg("No skymodel found. Some functionality is not supported when predicting from only components.",priority="warn")
 
     grscreen=False
     grfile=False
@@ -140,10 +139,31 @@ def simdata(
             # if only components, the pointings 
             # can be displayed on blank sky, with symbols at the locations 
             # of components, but if analysis is going to be peformed, 
-            # TODO create a sky model image here!!!
+            # TODO create a sky model image here ?
 
-            # TODO we need model_center below for calibrator, so get that from 
-            # components
+            # we need model_refdir below for calibrator
+            compdirs=[]
+            cl.open(complist)
+            for i in range(cl.length()):
+                compdirs.append(util.dir_m2s(cl.getrefdir(i)))
+
+            model_refdir, coffs = util.average_direction(compdirs)
+            model_center = cl.getspectrum(0)['frequency']['m0']
+            # components don't yet support spectrum
+            model_width = "10GHz"
+            model_nchan = 1
+
+            cmax=0.0014 # ~5 arcsec
+            for i in range(coffs.shape[1]):
+                xc= pl.absolute(coffs[0,i])  # offsets in deg
+                yc= pl.absolute(coffs[1,i])
+                if xc>cmax:
+                    cmax=xc
+                if yc>cmax:
+                    cmax=yc
+
+            model_size=qa.quantity(2*cmax,'deg'),qa.quantity(2*cmax,'deg')
+            model_cell=["0.1arcsec","0.1arcsec"]
 
 
 
@@ -331,6 +351,9 @@ def simdata(
                 if components_only:
                     pl.plot()
                     # TODO add symbols at locations of components
+                    pl.plot(coffs[0,]*3600,coffs[1,]*3600,'o',c="#dddd66")
+                    pl.axis("equal")
+
                 else:
                     discard = util.statim(modelflat,plot=True,incell=model_cell)
                 lims=pl.xlim(),pl.ylim()
@@ -398,7 +421,7 @@ def simdata(
                 if os.path.exists(msfile):
                     if not overwrite:
                         util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
-                        return False
+                        return False                
                 sm.open(msfile)
                 posobs=me.observatory(telescopename)
                 diam=stnd;
@@ -534,9 +557,10 @@ def simdata(
                 util.newfig(multi=multi,show=grscreen)
                 if tp_only: telescopename=tp_telescopename
                 util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
+                casalog.origin('simdata')
                 if predict_uv:
                     util.nextfig()
-                    util.plotants(stnx, stny, stnz, stnd, padnames)                
+                    util.plotants(stnx, stny, stnz, stnd, padnames)
                     
                     # uv coverage
                     util.nextfig()
@@ -565,7 +589,7 @@ def simdata(
                     im.approximatepsf(psf=project+".quick.psf")
                     quickpsf_current=True
                     beam=im.fitpsf(psf=project+".quick.psf")
-                    im.done()
+                    im.done()                    
                     ia.open(project+".quick.psf")            
                     beamcs=ia.coordsys()
                     beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
@@ -922,6 +946,8 @@ def simdata(
             imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
                       int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
 
+            
+
 
         #####################################################################
         if image:
@@ -1074,6 +1100,54 @@ def simdata(
             else:
                 file=""
 
+            # create fake model from components for analysis
+            if components_only:
+                newmodel=project+".compskymodel"
+                if not os.path.exists(project+".image"):
+                    msg("must image before analyzing",priority="error")
+                    return False
+                ia.imagecalc(pixels="'"+project+".image' * 0",outfile=newmodel,overwrite=True)
+                ia.open(newmodel)
+                cl.open(complist)
+                ia.setbrightnessunit("Jy/pixel")
+                ia.modify(cl.torecord(),subtract=False)
+                modelcsys=ia.coordsys()
+                modelshape=ia.shape()
+
+                modelflat=project+".compskymodel.flat"
+
+                # TODO should be able to simplify degen axes code using new
+                # image anal tools.
+                inspectax=modelcsys.findcoordinate('spectral')['pixel']
+                innchan=modelshape[inspectax]
+                
+                stokesax=modelcsys.findcoordinate('stokes')['pixel']
+                innstokes=modelshape[stokesax]
+
+                if innchan>1:
+                    # actually run ia.moments
+                    ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
+                    ia.done()
+                else:   
+                    ia.done()
+
+                    # just remove degenerate axes from modelimage4d
+                    ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
+                    if innstokes<=1:
+                        os.rename(modelflat,modelflat+".tmp")
+                        ia.open(modelflat+".tmp")
+                        ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
+                        ia.done()
+                        shutil.rmtree(modelflat+".tmp")
+                if innstokes>1:
+                    os.rename(modelflat,modelflat+".tmp")
+                    po.open(modelflat+".tmp")
+                    foo=po.stokesi(outfile=modelflat,stokes='I')
+                    foo.done()
+                    po.done()
+                    shutil.rmtree(modelflat+".tmp")
+
+
             if grscreen or grfile:
                 util.newfig(multi=[2,2,1],show=grscreen)
 
@@ -1112,19 +1186,13 @@ def simdata(
         # analysis
 
         if analyze:
-            # will need skymodel, so skymodel has to be set:
-            if not os.path.exists(skymodel):
-                msg("skymodel "+str(skymodel)+" not found",priority="warn")
-                msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the skymodel parameter",priority="error")
-            tmpname=skymodel.replace(project,'$project')
+            if not os.path.exists(newmodel):
+                msg("skymodel "+str(newmodel)+" not found",priority="warn")
+                if not os.path.exists(complist):
+                    return False
+                else:
+                    msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the skymodel parameter.",priority="warn")
 
-            #if tmpname=="$project.skymodel":
-                # TODO clarify the logic for newmodel vs skymodel
-                # i.e. here, if util.is4d(skymodel) then use skymodel
-                # unchanged, otherwise newmodel will have been created 
-                # above, and use that
-                # for now, we're *always* creating newmodel, so use newmodel here
-                # whether tmpname is skymodel or not.
             modelim=newmodel
 
             if not os.path.exists(modelim):

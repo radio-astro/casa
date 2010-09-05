@@ -121,11 +121,6 @@
                    <any type="variant" limittypes="string stringArray"/>
                    <value type="string"></value>
             </param>
-            <param type="any" name="mf_correlation" subparam="true">
-                   <description>Select data based on correlation</description>
-                   <any type="variant" limittypes="string stringArray"/>
-                   <value type="string"></value>
-            </param>
             <param type="any" name="mf_scan" subparam="true">
                    <description>scan numbers: \'\'==>all</description>
                    <any type="variant" limittypes="string stringArray"/>
@@ -350,7 +345,6 @@
                 <default param="mf_spw"><value type="string"></value></default>
                 <default param="mf_antenna"><value type="string"></value></default>
                 <default param="mf_timerange"><value type="string"></value></default>
-                <default param="mf_correlation"><value type="string"></value></default>
                 <default param="mf_scan"><value type="string"></value></default>
                 <default param="mf_feed"><value type="string"></value></default>
                 <default param="mf_array"><value type="string"></value></default>
@@ -517,9 +511,6 @@
                     spw='&gt;1' #spectral windows greater than 1
                     spw='0:0~10' # first 10 channels from spw 0
                     spw='0:0~5;56~60' # multiple separated channel chunks.
-              mf_correlation -- Correlation types
-                    default: '' (all);
-                    example: correlation='RR LL'
               mf_field -- Select data based on field id(s) or name(s)
                     default: '' (all); example: field='1'
                     field='0~2' # field ids inclusive from 0 to 2

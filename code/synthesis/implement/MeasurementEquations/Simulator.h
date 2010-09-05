@@ -258,7 +258,8 @@ public:
 		const Float correfficiency,
 		const Float trx, 
 		const Float tground,		
-		const Float tcmb);
+		const Float tcmb, 
+		const Bool OTF);
 
   // apply errors to the data in our MS
   Bool corrupt();
@@ -318,6 +319,10 @@ public:
 		  const Double maxData,const Int wprojPlanes);
 
  
+  // Set the print level
+  inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
+  // Return print (cout) level
+  inline Int& prtlev() { return prtlev_; };
 
   
 private:
@@ -493,6 +498,9 @@ private:
   Bool applyPointingOffsets_p;
   Bool doPBCorrection_p;
   // </group>
+  
+  Int prtlev_;
+
 };
 
 } //# NAMESPACE CASA - END

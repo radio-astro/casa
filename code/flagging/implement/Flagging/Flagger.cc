@@ -78,7 +78,7 @@
 
 namespace casa {
 
-  const bool Flagger::dbg = false;
+    const bool Flagger::dbg = false;
     
   LogIO Flagger::os( LogOrigin("Flagger") );
   static char str[1024];
@@ -474,17 +474,28 @@ namespace casa {
     
     /* Create selected reference MS */
     MeasurementSet mssel_p2(*originalms_p);
+
     msselection_p->getSelectedMS(mssel_p2, String(""));
     
-    //os << "Original ms has nrows : " << originalms.nrow() << LogIO::POST;
-    //os << "Selected ms has " << mssel_p2.nrow() << " rows." << LogIO::POST;
+    if (dbg) cout << "Original ms has nrows : " << originalms.nrow() << LogIO::POST;
+    if (dbg) cout << "Selected ms has " << mssel_p2.nrow() << " rows." << LogIO::POST;
     
     if ( mssel_p2.nrow() ) {
 	if (mssel_p) {
 	    delete mssel_p; 
 	    mssel_p=NULL;
 	}
-	mssel_p = new MeasurementSet(mssel_p2);
+        if (mssel_p2.nrow() == originalms_p->nrow()) {
+            mssel_p = new MeasurementSet(*originalms_p);
+        }
+        else {
+	    os << LogIO::WARN << "Looping through a subset of the MS is likely to be slow" << LogIO::POST;
+            /* Because Table::rowNumbers(ms), used in VisIter's slurp mode, will take a
+	       long time when the MS is a selection of another MS. Using VisIter in non-slurp mode
+	       performs badly for non-sorted MS. The solution to this is probably to optimize 
+	       Table::rowNumbers() */
+	    mssel_p = new MeasurementSet(mssel_p2);
+        }
 	if (dbg)cout << "assigned new MS to mssel_p" << endl;
 	ROScalarColumn<String> fname( mssel_p->field(),"NAME" );
 	if (dbg)cout << "fields : " << fname.getColumn() << endl;
@@ -568,7 +579,7 @@ namespace casa {
     // This should not be done for manual flagging, because the channel indices for the
     //  selected subset start from zero - and throw everything into confusion.
     Vector<Int> spwlist = msselection_p->getSpwList();
-    
+
     if ( spwlist.nelements() && spw_selection ) {
       Matrix<Int> spwchan = msselection_p->getChanList();
       IPosition cshp = spwchan.shape();
@@ -769,6 +780,7 @@ namespace casa {
     /* Loop over SPW and chan ranges. */
     
     Vector<Int> spwlist = msselection_p->getSpwList();
+
     Matrix<Int> spwchan = msselection_p->getChanList();
     Matrix<Double> uvrangelist = msselection_p->getUVList();
     Vector<Bool> uvrangeunits = msselection_p->getUVUnitsList();
@@ -2347,7 +2359,7 @@ namespace casa {
     catch (AipsError x)
       {
 	os << LogIO::SEVERE << "Could not save Flag Version : " << x.getMesg() << LogIO::POST;
-	return False;
+        throw;
       }
     return True;
   }
