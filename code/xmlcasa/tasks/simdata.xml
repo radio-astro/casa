@@ -553,7 +553,7 @@ modifying the description doesn't work yet but its an improvement ticket.
   <returns type="void"/>
   
 <example>
-mosaic simulation task (prototype):	
+mosaic simulation task:
 
     This task simulates interfermetric observations (currently 
     only ALMA can be done easily).  New functionality is actively 
@@ -628,7 +628,7 @@ mosaic simulation task (prototype):
        * standard arrays are found in your CASA data repository, 
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
        * if "", will not not produce an interferometric MS
-       * NEW: a string of the form "alma;0.5arcsec" will be parsed into a full 12m ALMA
+       * a string of the form "alma;0.5arcsec" will be parsed into a full 12m ALMA
          configuration.  This only works for full ALMA and may fail to find the 
          standard configuration files on some systems - see casaguides.nrao.edu
     caldirection -- *NEW* an unresolved calibrator can be observed 
@@ -643,19 +643,34 @@ mosaic simulation task (prototype):
          power.  defaults to the first antenna on the list. 
     -------------------------------
     thermalnoise -- add thermal noise 
-       * NOTE: both the interferometric and single-dish MS will be 
-         corrupted if they've been created above.
-       * currently only knows correct temps for ALMA and EVLA receivers
        * this parameter takes two possible values:
-       tsys-atm: J. Pardo's ATM library will be used to construct an
-         atmospheric profile for the ALMA site and user_pwv. 
-         noise is calculated from the specified ground temperature, 
-         internally tabulated antenna spillover parameters, the sky brightness
-         temperature returned by ATM, and internally tabulated receiver 
-         temperatures
-       tsys-manual: instead of using the ATM model, specify the zenith 
-         sky brightness and opacity manually.  Noise is added and then
-         the visibility flux scale is referenced above the atmosphere. 
+       - tsys-atm: J. Pardo's ATM library will be used to construct an
+           atmospheric profile for the ALMA site:
+           altitude 5000m, ground pressure 650mbar, relhum=20%, 
+           a water layer of user_pwv at altitude of 2km,
+           the sky brightness temperature returned by ATM, 
+           and internally tabulated receiver temperatures
+       - tsys-manual: instead of using the ATM model, specify the zenith 
+           sky brightness and opacity manually.  Noise is added and then
+           the visibility flux scale is referenced above the atmosphere. 
+       * In either mode, noise is calculated using an antenna spillover 
+           efficiency of 0.96, taper of 0.86, 
+           surface accuracy of 25 and 300 microns for ALMA and EVLA
+           respectively (using the Ruze formula for surface efficiency),
+           correlator efficiencies of 0.95 and 0.91 for ALMA and EVLA, 
+           receiver temperatures for ALMA of 
+               17, 30, 37, 51, 65, 83,147,196,175,230 K interpolated between
+               35, 75,110,145,185,230,345,409,675,867 GHz,
+           for EVLA of 
+               500, 70,  60,  55,  100, 130, 350 K interpolated between
+               0.33,1.47,4.89,8.44,22.5,33.5,43.3 GHz,
+           for SMA of
+               67,  116, 134, 500 K interpolated between
+               212.,310.,383.,660. GHz
+       * These are only approximate numbers and do not take into account 
+         performance at edges of receiver bands, neither are they guaranteed
+         to reflect the most recent measurements.  Caveat emptor and use the 
+         sm tool to add noise if you want more precise control.
     t_ground -- ground/spillover temperature in K 
     user_pwv -- precipitable water vapor if constructing an atmospheric model
     t_sky -- atmospheric temperature in K [for tsys-manual]
@@ -744,7 +759,7 @@ mosaic simulation task (prototype):
     -------------------------------
     Output produced:
     -------------------------------
-    Needs rewriting...
+
 
 </example>
 </task>

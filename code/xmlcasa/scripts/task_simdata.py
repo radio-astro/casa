@@ -35,6 +35,12 @@ def simdata(
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
 
+    #from casa_in_py import saveinputs
+    #saveinputs(taskname="simdata",outfile=project+".simdata.last")
+
+
+
+
     # some hardcoded variables that may be reintroduced in future development
     relmargin=.5  # number of PB between edge of model and pointing centers
     scanlength=1  # number of integrations per scan
@@ -819,7 +825,7 @@ def simdata(
                             ",trx="+str(t_rx)+",tau="+str(tau0)+
                             ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-                        msg("** this may take some time if your MS is finely sampled in time ** ",priority="warn")
+                        msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
                                 tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
@@ -831,7 +837,7 @@ def simdata(
                             ",trx="+str(t_rx)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
                             ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
-                        msg("** this may take a few minutes, but will be faster in the future",priority="warn")
+                        msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
                                 tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
@@ -960,18 +966,21 @@ def simdata(
                 tpimage=modelimage
                 tpset=True
 
-            # parse ms parameter and check for existance
-            # TODO if noisy ms was created, switch automagically?  probably best do 
-            # do that in the xml defaults instead so the user can change it if they want
-            # if noise_any:
+            # parse ms parameter and check for existance; 
+            # if noise_any
             #     mstoimage = noisymsfile
             # else:
             #     mstoimage = msfile            
-                        
+                 
             mslist=vis.split(',')
             mstoimage=[]
             for ms0 in mslist:
                 if not len(ms0): continue
+                # if noisy ms was created, check for defaults:
+                if ms0=="$project.ms" and noise_any:
+                    msg("you are requesting to image $project.ms, but have created a corrupted $project.noisy.ms",priority="error");
+                    msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy.ms in the image subtask",priority="error");
+
                 ms1=ms0.replace('$project',project)
                 if os.path.exists(ms1):
                     # check if the ms is tp data or not.
@@ -1163,7 +1172,12 @@ def simdata(
 
                 # disprange from skymodel.regrid is in Jy/pix, but convolved im is in Jy/bm
                 # bmarea is in units of output image pixels
-                disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
+                # unless we simulated from components in which case things 
+                # are off
+                if components_only:
+                    disprange=[]
+                else:
+                    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
 
                 # convolved sky model - units of Jy/bm
                 discard = util.statim(modelflat+".regrid.conv",disprange=disprange)                
