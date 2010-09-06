@@ -2716,7 +2716,10 @@ class simutil:
         cleanlast.write('reffreq                 = ""\n');
         cleanlast.write('chaniter                = False\n');
         cleanstr=cleanstr+")"
-        self.msg(cleanstr,priority="warn")
+        if self.verbose:
+            self.msg(cleanstr,priority="warn")
+        else:
+            self.msg(cleanstr)
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
