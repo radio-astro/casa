@@ -1756,7 +1756,7 @@ void Scantable::polyBaselineBatch(const std::vector<bool>& mask, int order, int 
   setSpectrum(fitter.getResidual(), rowno);
 }
 
-void Scantable::polyBaseline(const std::vector<bool>& mask, int order, int rowno, int pars_ptr, int pars_size, int errs_ptr, int errs_size, int fmask_ptr, int fmask_size)
+void Scantable::polyBaseline(const std::vector<bool>& mask, int order, int rowno, long pars_ptr, long pars_size, long errs_ptr, long errs_size, long fmask_ptr, long fmask_size)
 {
   Fitter fitter = Fitter();
   doPolyBaseline(mask, order, rowno, fitter);

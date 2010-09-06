@@ -2058,13 +2058,14 @@ class scantable(Scantable):
             else:
                 return workscan
             
-        except RuntimeError:
+        except RuntimeError, e:
             msg = "The fit failed, possibly because it didn't converge."
             if rcParams["verbose"]:
+                asaplog.push(str(e))
                 asaplog.push(str(msg))
                 return
             else:
-                raise RuntimeError(msg)
+                raise RuntimeError(str(e)+'\n'+msg)
 
 
     def auto_poly_baseline(self, mask=None, edge=(0, 0), order=0,
