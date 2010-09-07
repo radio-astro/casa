@@ -1,0 +1,81 @@
+%% Copyright (C) 1999,2000,2001,2002,2003
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+
+\begin{ahmodule}{sd}{Single-dish data analysis package}
+
+\begin{ahdescription}
+
+The sd module provides functions and tools to reduce and analyse 
+single-dish data. 
+The module can be categorised as 
+
+\begin{itemize}
+
+\item \ahlink{sd}{sd:sd} - Top level tool that contains the following sub 
+tools and general functions for single-dish data reduction 
+and analysis such as calibration, data averaging, etc. 
+
+\item \ahlink{sd.scantable}{sd:sd.scantable} - Representation of single-dish data 
+format. The tool also contains getter/setter functions as well as functions 
+that manipulates data contents such as baseline fitting, flagging, etc. 
+
+\item \ahlink{sd.selector}{sd:sd.selector} - Data selector that operates on 
+scantable.
+
+\item \ahlink{sd.fitter}{sd:sd.fitter} - This tool is an engine to perform both 
+baseline and spectral line fitting.
+
+\item \ahlink{sd.linefinder}{sd:sd.linefinder} - This tool performs automatic 
+line finding according to the user specified thresholds.
+
+\item \ahlink{sd.linecatalog}{sd:sd.linecatalog} - Line catalog. The module has 
+its own line catalog for this tool. The tool also accepts user provided 
+catalog in the form of ASCII table with specific format.
+
+\item \ahlink{sd.plotter}{sd:sd.plotter} - Plotter tool dedicated for 
+single-dish data (scantable)
+
+%\item \ahlink{interactivemask}{sd:sd.interactivemask} - Tool for GUI based 
+%region selection.
+
+\item \ahlink{sd.coordinate}{sd:sd.coordinate} - Tool for conversion from pixel to 
+velocity or frequency.
+
+%\item \ahlink{lagflagger}{sd:sd.lagflatter} - 
+
+\item \ahlink{sd.opacity_model}{sd:sd.opacity_model} - MIRIAD like opacity model.
+
+\end{itemize}
+
+
+\end{ahdescription}
+
+\ahobjs{}
+\ahfuncs{}
+
+\input{sd.htex}
+
+\end{ahmodule}
