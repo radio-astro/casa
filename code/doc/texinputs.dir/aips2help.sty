@@ -74,6 +74,18 @@
 \hrule
 }
 %
+\newenvironment{ahsdfunction}[3]
+{
+\NextFile{#1.html}
+\ifthenelse{\boolean{isModule} \or \boolean{isObject}}
+{\subsubsection{ #1 - Function\label{\itsModule:#2}{\index{#1}}}\ref{\itsModule:#1}}
+{\section{ #1 - Function\label{#2}{\index{#1}}}\ref{#1}}
+#3\\
+}{
+\vspace{.18in}
+\hrule
+}
+%
 \newenvironment{ahconstructor}[2]
 {
 \subsubsection{ #1 - Constructor\label{#1}{\index{#1}}}
