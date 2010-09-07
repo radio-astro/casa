@@ -134,9 +134,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if (negate) makeBaselineList(-antennaIds,a2,baselineList,autoCorr, negate);
       else        makeBaselineList(antennaIds,a2,baselineList,autoCorr, negate);
     }
-    //    setTEN(condition,autoCorr);
+    setTEN(condition, autoCorr, negate);
     //    setTEN(condition, True, negate);
-    setTEN(condition,AutoCorrAlso , negate);
+    //    setTEN(condition,AutoCorrAlso , negate);
     return node();
   }
 
