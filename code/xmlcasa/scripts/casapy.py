@@ -1,4 +1,6 @@
 import os
+if os.environ.has_key('LD_PRELOAD'):
+    del os.environ['LD_PRELOAD']
 import sys
 import time
 import signal
