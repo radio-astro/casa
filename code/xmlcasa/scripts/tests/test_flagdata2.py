@@ -115,6 +115,21 @@ class test_vector_ngc5921(test_base):
         for a in ["1", "4", "7", "8", "9", "10", "24"]:
             self.assertEqual(s['antenna'][a]['flagged'], 1008)
 
+    def test300(self):
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna=["2", "3", "5", "6"])
+        manual= flagdata2(vis=self.vis, summary=True)
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata2(vis=self.vis, clip=True, clipminmax=[0.0,0.1])
+        rfi=flagdata2(vis=self.vis, summary=True)
+        flagdata2(vis=self.vis, unflag=True)
+        
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna=["2", "3", "5", "6"], clip=True,
+                  clipminmax=[0.0,0.1])
+        s = flagdata2(vis=self.vis, summary=True)
+        
+        print 's=%s rfi+manual=%s rfi=%s manual=%s'%(s['flagged'],rfi['flagged']+manual['flagged'],
+                                                       rfi['flagged'],manual['flagged'])
+
     def test4(self):
         a = ["2", "13", "5", "9"]
         t = ["09:30:00~09:40:00",
@@ -445,10 +460,9 @@ class test_selections(test_base):
         '''Flagdata2: array=0 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, array='0', manualflag=True)
         test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
-
         
         
-class test_multimodes(test_base):
+class test_multimode1(test_base):
 
     def setUp(self):
         self.setUp_ngc5921()
@@ -476,7 +490,57 @@ class test_multimodes(test_base):
             self.assertEqual(reset['antenna'][a]['flagged'], 0)
         for a in ["1", "4", "7", "8", "9", "10", "24"]:
             self.assertEqual(reset['antenna'][a]['flagged'], 0)
+
+    def test_vector_multimode(self):
+        '''Flagdata2: manual vector-mode and clip'''
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna=["2", "3", "5", "6"], mf_scan="1",
+                  clip=True, clipminmax=[0.1, 0.3])
+        s1 = flagdata2(vis=self.vis, summary=True)
         
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna=["2", "3", "5", "6"], mf_scan="1")
+        flagdata2(vis=self.vis, clip=True, clipminmax=[0.1, 0.3])
+        s2 = flagdata2(vis=self.vis, summary=True)
+
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna="2", mf_scan="1")
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna="3", mf_scan="1")
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna="5", mf_scan="1")
+        flagdata2(vis=self.vis, manualflag=True, mf_antenna="6", mf_scan="1")
+        flagdata2(vis=self.vis, clip=True, clipminmax=[0.1, 0.3])
+        s3 = flagdata2(vis=self.vis, summary=True)
+        
+        print 's1=%s s2=%s s3=%s'%(s1['flagged'], s2['flagged'], s3['flagged'])
+        self.assertEqual(s1['flagged'], s2['flagged'])
+        self.assertEqual(s1['flagged'], s3['flagged'])
+
+        
+class test_multimode2(test_base):
+    def setUp(self):
+        self.setUp_flagdata2test()
+
+    def test100(self):
+        '''Flagdata2: multi-mode: clip, manualflag and shadow together'''
+        flagdata2(vis=self.vis, shadow=True, diameter=40, manualflag=True, mf_antenna='12~13', clip=True,
+                  clipminmax=[0.0,0.2])
+        res1 = flagdata2(vis=self.vis, summary=True)
+        
+        # Compare with flagdata2 single runs
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata(vis=self.vis, mode='manualflag', selectdata=True, antenna='12~13')
+        flagdata2(vis=self.vis, clip=True, clipminmax=[0.0,0.2])
+        flagdata2(vis=self.vis, shadow=True, diameter=40)
+        res2 = flagdata2(vis=self.vis, summary=True)
+        
+        # Compare with original flagdata single runs
+#        flagdata2(vis=self.vis, unflag=True)
+#        flagdata(vis=self.vis, mode='manualflag', selectdata=True, antenna='12~13')
+#        flagdata(vis=self.vis, mode='manualflag', clipminmax=[0.0,0.2])
+#        flagdata(vis=self.vis,mode='shadow', diameter=40)
+#        res3 = flagdata2(vis=self.vis, summary=True)
+#        print 'res1=%s, res2=%s res3=%s' %(res1['flagged'], res2['flagged'], res3['flagged'])
+        self.assertEqual(res1['flagged'], res2['flagged'])
+
 
 class test_mfselections(test_base):
     """Test various manualflag selections"""
@@ -506,7 +570,6 @@ class test_mfselections(test_base):
         test_eq(flagdata(vis=self.vis, mode='summary', selectdata=True, antenna='5'), 196434, 196434)
         test_eq(flagdata(vis=self.vis, mode='summary', selectdata=True,antenna='9'), 196434, 45360)
 
-#FIXME: finish the next methods
     def test_channel(self):
         # should flag only channels 10~15
         flagdata2(vis=self.vis, selectdata=True, spw='0:10~20', manualflag=True, mf_spw='0:5~15')
@@ -560,13 +623,14 @@ def suite():
     return [
             test_selections,
             test_statistics_queries,
-             test_vector,
-             test_vector_ngc5921,
-             test_flagmanager,
+            test_vector,
+            test_vector_ngc5921,
+            test_flagmanager,
             test_rfi,
             test_shadow,
             test_msselection,
             test_autoflag,
-            test_multimodes,
+            test_multimode1,
+            test_multimode2,
             test_mfselections,
             cleanup]
