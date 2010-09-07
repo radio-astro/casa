@@ -514,6 +514,18 @@ class test_multimode1(test_base):
         self.assertEqual(s1['flagged'], s2['flagged'])
         self.assertEqual(s1['flagged'], s3['flagged'])
 
+    def test_autocorr(self):
+        '''Flagdata2: quack and manual modes on autocorr data only'''
+        flagdata2(vis=self.vis,selectdata=True,antenna='1~9&&&',quack=True,quackinterval=0.1, 
+                  manualflag=True, mf_antenna='8&&&')
+        
+        res = flagdata2(vis=self.vis, summary=True)
+        
+        self.assertEqual(res['antenna']['10']['flagged'],0)
+        self.assertEqual(res['antenna']['10']['flagged'],0)
+        self.assertTrue(res['antenna']['8']['flagged'] > res['antenna']['1']['flagged'])
+        self.assertEqual(res['antenna']['2']['flagged'], res['antenna']['6']['flagged'])
+
         
 class test_multimode2(test_base):
     def setUp(self):
