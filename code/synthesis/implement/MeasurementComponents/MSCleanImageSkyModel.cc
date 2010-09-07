@@ -50,7 +50,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales,  const Int stoplargenegatives, const Int stoppointmode, const Float smallScaleBias)
-  : method_p(NSCALES), nscales_p(nscales), stopLargeNegatives_p(stoplargenegatives), stopPointMode_p(stoppointmode), smallScaleBias_p(smallScaleBias)
+  : method_p(NSCALES), nscales_p(nscales), userScaleSizes_p(0), stopLargeNegatives_p(stoplargenegatives), stopPointMode_p(stoppointmode), smallScaleBias_p(smallScaleBias)
 {
   modified_p=True;
   donePSF_p=False;
@@ -58,7 +58,7 @@ MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales,  const Int stoplar
 };
 
   MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes, const Int stoplarge, const Int stoppoint, const Float smallScaleBias)
-: method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), 
+    : method_p(USERVECTOR), nscales_p(0), userScaleSizes_p(userScaleSizes), 
   stopLargeNegatives_p(stoplarge), stopPointMode_p(stoppoint),
   smallScaleBias_p(smallScaleBias)
 {
@@ -94,6 +94,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   if(!donePSF_p)
     makeApproxPSFs(se);
 
+
   if(numberIterations() <1){
     return True;
   }
@@ -103,7 +104,8 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
     os << "Model 1 is not solveable!" << LogIO::EXCEPTION;
   }
   
-  Vector<Float> scaleSizes(nscales_p);  
+
+  Vector<Float> scaleSizes(0);  
   if (method_p == USERVECTOR) {
     if (userScaleSizes_p.nelements() <= 0) {
       os << LogIO::SEVERE 
@@ -112,7 +114,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
     }
     os << "Creating scales from uservector method: " << LogIO::POST;
     for(uInt scale=0; scale < userScaleSizes_p.nelements(); scale++) {
-      os << "scale " << scale+1 << " = " << userScaleSizes_p(scale)
+      os << "scale " << scale << " = " << userScaleSizes_p(scale)
 	 << " pixels" << LogIO::POST;
     }
   } else {
@@ -193,6 +195,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	
 
 	Bool doClean=True;
+	String algorithm="msclean";
 	if(hasMask(0)) {
 	  IPosition blcMask(mask(0).shape().nelements(), 0);
 	  IPosition trcMask(mask(0).shape()-1);
@@ -228,6 +231,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	    cleaner.setMask(subMask);
 	    //Using mask so the user knows best.
 	    cleaner.ignoreCenterBox(True);
+	    algorithm="fullmsclean";
 	  }
 	}
 
@@ -249,11 +253,11 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	    cleaner.stopAtLargeScaleNegative();
 	  
 	  cout << "Threshold " << Quantity(threshold(), "Jy") << endl;
-	  converged=cleaner.clean(subImage, "multiscale", numberIterations(),gain(),  Quantity(threshold(), "Jy"), Quantity(0.0, "%"), True);
+	  converged=cleaner.clean(subImage, algorithm, numberIterations(),gain(),  Quantity(threshold(), "Jy"), Quantity(0.0, "%"), True);
 	  Int stoplarge=stopLargeNegatives_p;
 	  while( (converged==-2) && stoplarge > 0){
 	    --stoplarge;
-	    converged=cleaner.clean(subImage, "multiscale", numberIterations(),gain(),  
+	    converged=cleaner.clean(subImage, algorithm, numberIterations(),gain(),  
 				    Quantity(threshold(), "Jy"), Quantity(0, "%"),True);
 	  }
 	  // calculate residuals 
