@@ -138,8 +138,6 @@ Methods
 
 	\ahlink{is\_casapy}{sd:sd.is_casapy} & Check if the tool is loaded as part of \casa\ or is launched as standalone software \\
 
-	\ahlink{is\_ipython}{sd:sd.is_ipython} &Check if the tool is loaded on iPython \\
-
 	\ahlink{linecatalog}{sd:sd.linecatalog} &Create a linecatalog object \\
 
 	\ahlink{linefinder}{sd:sd.linefinder} &Create a linefinder object \\
@@ -209,8 +207,7 @@ bool
 \newline
 
 \newpage
-\ahsdfunction{sd.average\_time}{sd.average_time}{Averaging data in time}
-%\subsection{sd.average\_time\label{sd.average_time}{index{sd.average\_time}}\ref{sd.average_time}}
+\ahsdfunction{sd.average\_time}{sd.average_time}{Averaging data in Time}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -340,7 +337,7 @@ bool
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
+\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap_cli}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -354,19 +351,6 @@ bool
 
 \newpage
 \ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
-
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
-
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\flushleft\vspace{.20in}\textbf {Returns}\newline
-
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
-
-\newpage
-\ahsdfunction{sd.is\_ipython}{sd.is_python}{Check if the tool is loaded on iPython}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -983,7 +967,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.create\_mask}{sd.scantable.create}{Return a bool array based on [min,max] windows}
+\ahsdfunction{sd.scantable.create\_mask}{sd.scantable.create_mask}{Return a bool array based on [min,max] windows}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1035,7 +1019,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.flag\_row}{sd.scantable.flag}{Flag spectra based on specified rows (row based flag)}
+\ahsdfunction{sd.scantable.flag\_row}{sd.scantable.flag_row}{Flag spectra based on specified rows (row based flag)}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1126,7 +1110,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_column\_names}{sd.scnatable_get_column_names}{Get a list of column names in the main table}
+\ahsdfunction{sd.scantable.get\_column\_names}{sd.scanatable.get_column_names}{Get a list of column names in the main table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1152,7 +1136,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_direction}{sd.scnatable.get_direction}{Get a list of positions on the sky as a string}
+\ahsdfunction{sd.scantable.get\_direction}{sd.scantable.get_direction}{Get a list of positions on the sky as a string}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1165,7 +1149,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_directionval}{sd.scntable.get_directionval}{Get a list of positions on the sky as a float}
+\ahsdfunction{sd.scantable.get\_directionval}{sd.scantable.get_directionval}{Get a list of positions on the sky as a float}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1178,7 +1162,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_elevation}{sd.scntable.get_elevation}{Get a list of elevation during the observation}
+\ahsdfunction{sd.scantable.get\_elevation}{sd.scantable.get_elevation}{Get a list of elevation during the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1191,7 +1175,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_fit}{sd.scntable.get_fit}{Get the stored fits for a row in scantable}
+\ahsdfunction{sd.scantable.get\_fit}{sd.scantable.get_fit}{Get the stored fits for a row in scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1204,7 +1188,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_fluxunit}{get_fluxunit}{Get a flux unit}
+\ahsdfunction{sd.scantable.get\_fluxunit}{sd.scantable.get_fluxunit}{Get a flux unit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1256,7 +1240,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_masklist}{sd.cantable.get_masklist}{Compute and return a list of mask windows [min,max] from the given bool array}
+\ahsdfunction{sd.scantable.get\_masklist}{sd.scantable.get_masklist}{Compute and return a list of mask windows [min,max] from the given bool array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1282,7 +1266,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_restfreqs}{sd.scnatable.get_restfreqs}{Get the rest frequency(s) stored in the scantable}
+\ahsdfunction{sd.scantable.get\_restfreqs}{sd.scantable.get_restfreqs}{Get the rest frequency(s) stored in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1321,7 +1305,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_scan}{sd.scnatable.get_scan}{Return a specified scan(s) specified by scan number or source name as a new scantable}
+\ahsdfunction{sd.scantable.get\_scan}{sd.scantable.get_scan}{Return a specified scan(s) specified by scan number or source name as a new scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1360,7 +1344,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_spectrum}{sd.scnatable.get_spectrum}{Get the spectrum for the current row}
+\ahsdfunction{sd.scantable.get\_spectrum}{sd.scantable.get_spectrum}{Get the spectrum for the current row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1581,7 +1565,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.lag\_flag}{sd.scntable.lag_flag}{Perform Fourier filtering on the spectra}
+\ahsdfunction{sd.scantable.lag\_flag}{sd.scantable.lag_flag}{Perform Fourier filtering on the spectra}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1763,7 +1747,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.recalc\_azel}{sd.scntable.recalc_azel}{Recalculate azimuth and elevation for each sky position}
+\ahsdfunction{sd.scantable.recalc\_azel}{sd.scantable.recalc_azel}{Recalculate azimuth and elevation for each sky position}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2209,7 +2193,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.selector.get\_order}{get_order}{Return a list of columns used for sorting}
+\ahsdfunction{sd.selector.get\_order}{sd.selector.get_order}{Return a list of columns used for sorting}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2235,7 +2219,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.selector.get\_poltypes}{get_poltypes}{Return a polarization type for current polarization selection}
+\ahsdfunction{sd.selector.get\_poltypes}{sd.selector.get_poltypes}{Return a polarization type for current polarization selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2503,6 +2487,40 @@ Methods
 
 	\ahlink{auto\_fit}{sd:sd.fitter.auto_fit} & Return a scan where the function is applied to all rows \\
 
+	\ahlink{commit}{sd:sd.fitter.commit} & Return a new scan where the fits have been subtracted \\
+
+	\ahlink{fit}{sd:sd.fitter.fit} & Execute actual fitting process\\
+
+	\ahlink{get\_area}{sd:sd.fitter.get_area} & Return the area under the fitted gaussian/lorentzian component \\
+
+	\ahlink{get\_chi2}{sd:sd.fitter.get_chi2} & Return chi^2 value \\
+
+	\ahlink{get\_errors}{sd:sd.fitter.get_errors} & Return the errors in parameters \\
+
+	\ahlink{get\_estimates}{sd:sd.fitter.get_estimates} & Return the parameter estimates \\
+
+	\ahlink{get\_fit}{sd:sd.fitter.get_fit} & Return the fitted ordinate values \\
+
+	\ahlink{get\_parameters}{sd:sd.fitter.get_parameters} & Return the fit parameters \\
+
+	\ahlink{get\_residual}{sd:sd.fitter.get_residual} & Return the residual of the fit \\
+
+	\ahlink{plot}{sd:sd.fitter.plot} & Plot fit \\
+
+	\ahlink{set\_data}{sd:sd.fitter.set_data} & Set the abcissa and ordinate for the fit \\
+
+	\ahlink{set\_function}{sd:sd.fitter.set_function} & Set the function to be fitted \\
+
+	\ahlink{set\_gauss\_parameters}{sd:sd.fitter.set_gauss_parameters} & Set the parameters of Gaussian component \\
+
+	\ahlink{set\_lorentz\_parameters}{sd:sd.fitter.set_lorentz_parameters} & Set the parameters of Lorentzian component \\
+
+	\ahlink{set\_parameters}{sd:sd.fitter.set_parameters} & Set the parameters to be fitted \\
+
+	\ahlink{set\_scan}{sd:sd.fitter.set_scan} & Set the data as a scantable \\
+
+	\ahlink{store\_fit}{sd:sd.fitter.store_fit} & Save fit parameters \\
+
 \end{longtable}
 
 \newpage
@@ -2518,11 +2536,226 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
-
-%%%%% sd.linefinder
 \newpage
-\ahobject{sd.linefinder}{Line finder tool for single-dish spectrum}
-%\ahfunction{sd.linefinder}{Line finder tool for single-dish spectrum}
+\ahfunction{sd.fitter.commit}{Return a new scan where the fits have been subtracted}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.fitter.fit}{Execute actual fitting process}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.get\_area}{sd.fitter.get_area}{Return the area under the fitted gaussian/lorentzian component}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.get\_chi2}{sd.fitter.get_chi2}{Return chi^2 value}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.get\_errors}{sd.fitter.get_errors}{Return the errors in parameters}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.get\_estimates}{sd.fitter.get_estimates}{Return the parameter estimates}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.get\_fit}{sd.fitter.get_fit}{Return the fitted ordinate values}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.get\_parameters}{sd.fitter.get_parameters}{Return the fit parameters}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.get\_residual}{sd.fitter.get_residual}{Return the residual of the fit}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.fitter.plot}{Plot fit}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.set\_data}{sd.fitter.set_data}{Set the abcissa and ordinate for the fit}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.set\_function}{sd.fitter.set_function}{Set the function to be fitted}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.set\_gauss\_parameters}{sd.fitter.set_gauss_parameters}{Set the parameters of Gaussian component}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.set\_lorentz\_parameters}{sd.fitter.set_lorentz_parameters}{Set the parameters of Lorentzian component}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.set\_parameters}{sd.fitter.set_parameters}{Set the parameters to be fitted}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.set\_scan}{sd.fitter.set_scan}{Set the data as a scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.fitter.store\_fit}{sd.fitter.store_fit}{Save fit parameters}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
 
 
 %%%%% sd.linecatalog
@@ -2530,23 +2763,1064 @@ Methods
 \ahobject{sd.linecatalog}{Line catalog}
 %\ahfunction{sd.linecatalog}{Line catalog}
 
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  The linecatalog is a wrapper for line catalog data base. 
+  These can be either ASCII tables or the tables saved from this class.
+  The table consists of the following items:
+
+  \begin{itemize}
+  \item row index in the table
+  \item name of the species
+  \item line frequency 
+  \item frequency error
+  \item line intensity
+  \end{itemize}
+
+  The user can filter lines by name, frequency range, or intensity range.
+  It is possible to overlay line catalog on the spectral plot using 
+  \ahlink{plotter.plot\_lines}{sd:sd.plotter.plot_lines}.
+
+  For ASCII type input table, Comments can be present through lines 
+  starting with '\#'.
+
+  \medskip\noindent\textbf{Known Issues}
+
+   The name of species canno't contain spaces. If it does, it has to be 
+   wrapped in double-quotes. 
+
+  
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{get\_frequency}{sd:sd.linecatalog.get_frequency} & Get frequency in a specified row \\
+
+	\ahlink{get\_name}{sd:sd.linecatalog.get_name} & Get name of specie in a specified row \\
+
+	\ahlink{get\_row}{sd:sd.linecatalog.get_row} & Get the values in a specified row \\
+
+	\ahlink{nrow}{sd:sd.linecatalog.nrow} & Get number of rows in the table \\
+
+	\ahlink{reset}{sd:sd.linecatalog.reset} & Unset all filtering to the table \\
+
+	\ahlink{save}{sd:sd.linecatalog.save} & Save the subset of the table to disk \\
+
+	\ahlink{set\_frequency\_limits}{sd:sd.linecatalog.set_frequency_limits} & Set frequency limit on the table \\
+
+	\ahlink{set\_name}{sd:sd.linecatalog.set_name} & Set a name restriction on the table \\
+
+	\ahlink{set\_strength\_limits}{sd:sd.linecatalog.set_strength_limits} & Set line strength limit on the table \\
+
+	\ahlink{summary}{sd:sd.linecatalog.summary} & Print the contents of the table \\
+
+\end{longtable}
+
+\newpage
+\ahsdfunction{sd.linecatalog.get\_frequency}{sd.linecatalog.get_frequency}{Get frequency in a specified row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linecatalog.get\_name}{sd.linecatalog.get_name}{Get name of specie in a specified row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linecatalog.get\_row}{sd.linecatalog.get_row}{Get the values in a specified row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.linecatalog.nrow}{Get number of rows in the table}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.linecatalog.reset}{Unset all filtering to the table}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.linecatalog.save}{Save the subset of the table to disk}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linecatalog.set\_frequency\_limits}{sd.linecatalog.set_frequency_limits}{Set frequency limit on the table}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linecatalog.set\_name}{sd.linecatalog.set_name}{Set a name restriction on the table}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linecatalog.set\_strength\_limits}{sd.linecatalog.set_strength_limits}{Set line strength limit on the table}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.linecatalog.summary}{Print the contents of the table}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+
+%%%%% sd.linefinder
+\newpage
+\ahobject{sd.linefinder}{Line finder tool for single-dish spectrum}
+%\ahfunction{sd.linefinder}{Line finder tool for single-dish spectrum}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+  
+  The linefinder performs automated spectral line search.
+  The algorithm involves a simple threshold criterion. The line is
+  considered to be detected if a specified number of consequtive
+  channels (default is 3) is brighter (with respect to the current baseline
+  estimate) than the threshold times the noise level. This criterion is
+  applied in the iterative procedure updating baseline estimate and trying
+  reduced spectral resolutions to detect broad lines as well. The off-line
+  noise level is determined at each iteration as an average of 80% of the
+  lowest variances across the spectrum (i.e. histogram equalization is
+  used to avoid missing weak lines if strong ones are present). For
+  bad baseline shapes it is recommended to increase the threshold and
+  possibly switch the averaging option off (see set_options) to
+  detect strong lines only, fit a high order baseline and repeat the line
+  search.
+
+  
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{find\_lines}{sd:sd.linefinder.find_lines} & Search for spectral lines in the scan \\
+
+	\ahlink{get\_mask}{sd:sd.linefinder.get_mask} & Get the mask to mask all lines that have been found \\
+
+	\ahlink{get\_ranges}{sd:sd.linefinder.get_ranges} & Get ranges for all spectral lines found \\
+
+	\ahlink{set\_options}{sd:sd.linefinder.set_options} & Set the parameters of the line finding algorithm \\
+
+	\ahlink{set\_scan}{sd:sd.linefinder.set_scan} & Set the data as a scantable \\
+
+\end{longtable}
+
+\newpage
+\ahsdfunction{sd.linefinder.find\_lines}{sd.linefinder.find_lines}{Search for spectral lines in the scan}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linefinder.get\_mask}{sd.linefinder.get_mask}{Get the mask to mask all lines that have been found}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linefinder.get\_ranges}{sd.linefinder.get_ranges}{Get ranges for all spectral lines found}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linefinder.set\_options}{sd.linefinder.set_options}{Set the parameters of the line finding algorithm}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.linefinder.set\_scan}{sd.linefinder.set_scan}{Set the data as a scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
 
 %%%%% sd.plotter
 \newpage
 \ahobject{sd.plotter}{Single-dish specific plotter tool}
 %\ahfunction{sd.sdplotter}{Single-dish specific plotter tool}
 
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  This is a plotter object that is properly designed for single-dish tool.
+  It supports stacking, multi-panel plotting, and multi-page plotting of 
+  spectral plot (channel/frequency/velocity versus spectral data).
+  For total power (single-channel) data, it provides special function to 
+  plot total power data versus time. 
+  It also supports to plot time variation of azimuth and elevation and 
+  to plot pointing directions on the sky.
+
+  \medskip\noindent\textbf{Known Issues}
+
+   The multi-page plotting doesn't support to go back previous page 
+   at the moment, it only allows to go forward.  
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{annotate}{sd:sd.plotter.annotate} & Annotate text at specified location \\
+
+	\ahlink{arrow}{sd:sd.plotter.arrow} & Draw arrow on specified axis \\
+
+	\ahlink{axhline}{sd:sd.plotter.axhline} & Draw a horizontal line \\
+
+	\ahlink{axhspan}{sd:sd.plotter.axhspan} & Draw a horizontal rectangle \\
+
+	\ahlink{axvline}{sd:sd.plotter.axvline} & Draw a vertical line \\
+
+	\ahlink{axvspan}{sd:sd.plotter.axvspan} & Draw a vertical rectangle \\
+
+	\ahlink{create\_mask}{sd:sd.plotter.create_mask} & Interactively define a mask \\
+
+	\ahlink{figtext}{sd:sd.plotter.figtext} & Add text to figure at specified location \\
+
+	\ahlink{gca}{sd:sd.plotter.gca} & Get current axes \\
+
+	\ahlink{plot}{sd:sd.plotter.plot} & Plot a scantable \\
+
+	\ahlink{plot\_lines}{sd:sd.plotter.plot_lines} & Plot a line catalog \\
+
+	\ahlink{plotazel}{sd:sd.plotter.plotazel} & Plot azimuth and elevation versus time of a scantable \\
+
+	\ahlink{plotpointing}{sd:sd.plotter.plotpointing} & Plot telescope pointings in a scantable \\
+
+	\ahlink{plottp}{sd:sd.plotter.plottp} & Plot total power data \\
+
+	\ahlink{print\_header}{sd:sd.plotter.print_header} & Print header of the scantable on the plot and/or logger \\
+
+	\ahlink{refresh}{sd:sd.plotter.refresh} & Do a soft refresh on the plot \\
+
+	\ahlink{save}{sd:sd.plotter.save} & Save the plot to a file \\
+
+	\ahlink{set\_abcissa}{sd:sd.plotter.set_abcissa} & Set the x-axis label of the plot \\
+
+	\ahlink{set\_colors}{sd:sd.plotter.set_colors} & Set the colors to be used \\
+
+	\ahlink{set\_colours}{sd:sd.plotter.set_colours} & Set the colors to be used \\
+
+	\ahlink{set\_data}{sd:sd.plotter.set_data} & Set a scantable to plot \\
+
+	\ahlink{set\_font}{sd:sd.plotter.set_font} & Set font properties \\
+
+	\ahlink{set\_histogram}{sd:sd.plotter.set_histogram} & Enable/Disable histogram plotting \\
+
+	\ahlink{set\_layout}{sd:sd.plotter.set_layout} & Set the multi-panel layout \\
+
+	\ahlink{set\_legend}{sd:sd.plotter.set_legend} & Specify a mapping for the legend \\
+
+	\ahlink{set\_linestyles}{sd:sd.plotter.set_linestyles} & Set the linestyles to be used \\
+
+	\ahlink{set\_mask}{sd:sd.plotter.set_mask} & Set a plotting mask for a specific selection of the data \\
+
+	\ahlink{set\_mode}{sd:sd.plotter.set_mode} & Set the plots look and feel \\
+
+	\ahlink{set\_ordinate}{sd:sd.plotter.set_ordinate} & Set y-axis label of the plot \\
+
+	\ahlink{set\_panellayout}{sd:sd.plotter.set_panellayout} & Set layout of subplots \\
+
+	\ahlink{set\_panelling}{sd:sd.plotter.set_panelling} & Set the panelling mode \\
+
+	\ahlink{set\_range}{sd:sd.plotter.set_range} & Set the range of interest on the abcissa of the plot \\
+
+	\ahlink{set\_selection}{sd:sd.plotter.set_selection} & Set selection to the data \\
+
+	\ahlink{set\_stacking}{sd:sd.plotter.set_stacking} & Set the stacking mode \\
+
+	\ahlink{set\_title}{sd:sd.plotter.set_title} & Set the title of the plot \\
+
+	\ahlink{text}{sd:sd.plotter.text} & Add text in a specified location \\
+
+\end{longtable}
+
+\newpage
+\ahfunction{sd.plotter.annotate}{Annotate text at specified location}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.arrow}{Draw arrow on specified axis}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.axhline}{Draw a horizontal line}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.axhspan}{Draw a horizontal rectangle}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.axvline}{Draw a vertical line}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.axvspan}{Draw a vertical rectangle}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.create\_mask}{sd.plotter.create_mask}{Interactively define a mask}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.figtext}{Add text to figure at specified location}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.gca}{Get current axes}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.plot}{Plot a scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.plot\_lines}{sd.plotter.plot_lines}{Plot a line catalog}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.plotazel}{Plot azimuth and elevation versus time of a scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.plotpointing}{Plot telescope pointings in a scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.plottp}{Plot total power data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.print\_header}{sd.plotter.print_header}{Print header of the scantable on the plot and/or logger}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.refresh}{Do a soft refresh on the plot}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.save}{Save the plot to a file}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_abcissa}{sd.plotter.set_abcissa}{Set the x-axis label of the plot}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_colors}{sd.plotter.set_colors}{Set the colors to be used}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_colours}{sd.plotter.set_colours}{Set the colors to be used}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_data}{sd.plotter.set_data}{Set a scantable to plot}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_font}{sd.plotter.set_font}{Set font properties}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_histogram}{sd.plotter.set_histogram}{Enable/Disable histogram plotting}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_layout}{sd.plotter.set_layout}{Set the multi-panel layout}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_legend}{sd.plotter.set_legend}{Specify a mapping for the legend}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_linestyles}{sd.plotter.set_linestyles}{Set the linestyles to be used}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_mask}{sd.plotter.set_mask}{Set a plotting mask for a specific selection of the data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_mode}{sd.plotter.set_mode}{Set the plots look and feel}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_ordinate}{sd.plotter.set_ordinate}{Set y-axis label of the plot}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_panellayout}{sd.plotter.set_panellayout}{Set layout of subplots}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_panelling}{sd.plotter.set_panelling}{Set the panelling mode}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_range}{sd.plotter.set_range}{Set the range of interest on the abcissa of the plot}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_selection}{sd.plotter.set_selection}{Set selection to the data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_stacking}{sd.plotter.set_stacking}{Set the stacking mode}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.plotter.set\_title}{sd.plotter.set_title}{Set the title of the plot}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.plotter.text}{Add text in a specified location}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
 
 %%%%% sd.coordinate
-\newpage
+%\newpage
 \ahobject{sd.coordinate}{Single-dish specific spectral coordinate conversion}
 %\ahfunction{sd.coordinate}{Single-dish specific spectral coordinate conversion}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  The coordinate class is a representation of the spectral coordinate 
+  (frequency axis) of the data. It handles a conversion between 
+  pixel/channel values and frequency/velocity ones under the current 
+  spectral coordinate.
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{coordinate}{sd:sd.coordinate.coordinate} & Constructor \\
+
+	\ahlink{coordinate.get\_increment}{sd:sd.coordinate.coordinate.get_increment} & Get increment of this coordinate system \\
+
+	\ahlink{coordinate.get\_reference\_pixel}{sd:sd.coordinate.coordinate.get_reference_pixel} & Get reference pixel of this coordinate system \\
+
+	\ahlink{coordinate.get\_reference\_value}{sd:sd.coordinate.coordinate.get_reference_value} & Get reference value of this coordinate system \\
+
+	\ahlink{coordinate.to\_frequency}{sd:sd.coordinate.coordinate.to_frequency} & Convert a channel/pixel value to a frequency \\
+
+	\ahlink{coordinate.to\_pixel}{sd:sd.coordinate.coordinate.to_pixel} & Convert a frequency/velocity value to a channel/pixel  \\
+
+	\ahlink{coordinate.to\_velocity}{sd:sd.coordinate.coordinate.to_velocity} & Convert a channel/pixel value to a velocity \\
+
+\end{longtable}
+
+\newpage
+\ahfunction{sd.coordinate.coordinate}{Constructor}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.coordinate.coordinate.get\_increment}{sd.coordinate.coordinate.get_increment}{Get increment of this coordinate system}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.coordinate.coordinate.get\_reference\_pixel}{sd.coordinate.coordinate.get_reference_pixel}{Get reference pixel of this coordinate system}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.coordinate.coordinate.get\_reference\_value}{sd.coordinate.coordinate.get_reference_value}{Get reference value of this coordinate system}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.coordinate.coordinate.to\_frequency}{sd.coordinate.coordinate.to_frequency}{Convert a channel/pixel value to a frequency}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.coordinate.coordinate.to\_pixel}{sd.coordinate.coordinate.to_pixel}{Convert a frequency/velocity value to a channel/pixel}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.coordinate.coordinate.to\_velocity}{sd.coordinate.coordinate.to_velocity}{Convert a channel/pixel value to a velocity}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
 
 
 %%%%% sd.opacity_model
 \newpage
-\ahobject{sd.opacity\_model}{Single-dish specific opacity model}
+\ahsdobject{sd.opacity\_model}{sd.opacity_model}{Single-dish specific opacity model}
+%\ahobject{sd.opacity_model}{Single-dish specific opacity model}
 %\ahfunction{sd.opacity_model}{Single-dish specific opacity model}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  This class implements opacity/atmospheric brightness temperature model
+  equivalent to the model available in MIRIAD. The actual math is a
+  convertion of the Fortran code written by Bob Sault for MIRIAD.
+  It implements a simple model of the atmosphere and Liebe's model (1985)
+  of the complex refractive index of air.
+    
+  The model of the atmosphere is one with an exponential fall-off in
+  the water vapour content (scale height of 1540 m) and a temperature
+  lapse rate of 6.5 mK/m. Otherwise the atmosphere obeys the ideal gas
+  equation and hydrostatic equilibrium.
+  
+  Note that the model includes atmospheric lines up to 800 GHz, but was not
+  rigorously tested above 100 GHz and for instruments located at
+  a significant elevation. For high-elevation sites it may be necessary to
+  adjust scale height and lapse rate.
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{get\_opacities}{sd:sd.opacity_model.get_opacities} & Get the opacity value(s) for the given frequency(ies) \\
+
+	\ahlink{set\_observatory\_elevation}{sd:sd.opacity_model.set_observatory_elevation} & Update the model using the given observatory elevation \\
+
+	\ahlink{set\_weather}{sd:sd.opacity_model.set_weather} & Update the model using the given environmental parameters \\
+
+\end{longtable}
+
+\newpage
+\ahsdfunction{sd.opacity\_model.get\_opacities}{sd.opacity_model.get_opacities}{Get the opacity value(s) for the given frequency(ies)}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.opacity\_model.set\_observatory\_elevation}{sd.opacity_model.set_observatory_elevation}{Update the model using the given observatory elevation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.opacity\_model.set\_weather}{sd.opacity_model.set_weather}{Update the model using the given environmental parameters}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
 
 
 
