@@ -1641,6 +1641,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
 
+
   os << LogIO::NORMAL << "Defining image properties:"; // Loglevel INFO
   os << "nx=" << nx << " ny=" << ny
      << " cellx='" << cellx.getValue() << cellx.getUnit()
@@ -1721,6 +1722,12 @@ Bool Imager::defineImage(const Int nx, const Int ny,
       }
       
     }
+
+
+    if((abs(Double(nx)*cellx.getValue("rad")) > C::pi) || (abs(Double(ny)*celly.getValue("rad")) > C::pi))
+      throw(AipsError("Cannot image the extent requested for this image;  more that PI ialong one or both of the axes " ));
+    
+
 
     nx_p=nx;
     ny_p=ny;
