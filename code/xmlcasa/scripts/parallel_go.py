@@ -1474,6 +1474,9 @@ class cluster(object):
 
   
       '''
+      if type(job)==type(None):
+          print "job None has no status"
+          return True
       try:
          x=job.get_result(block=False)
          if x==None:
@@ -1605,7 +1608,6 @@ do ssh casa-dev-$i "ps -ef | grep hye" ; done
 '''
 c.pgc('import time', {0: 'time.sleep(10); x=5; y="y is y"', 1: 'time.sleep(12);a=7;b="b is not y"'},block=False,job="wakeup")
 
-c.check_job('wakeup')
 c.pull('x',0)
 c.pull('y',0)
 c.pull('a',1)

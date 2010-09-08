@@ -117,7 +117,7 @@ def pclean(vis, imagename, field, spw, imsize, cell,
     if imagename=='':
        imagename=vis
 
-    if mode=='continum':
+    if mode=='continuum':
        pcont(msname=vis, 
           imagename=imagename, imsize=imsize, 
           pixsize=cell, phasecenter=phasecenter, 
