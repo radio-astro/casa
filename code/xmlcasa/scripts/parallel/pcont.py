@@ -160,8 +160,9 @@ def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq
         #pdb.set_trace()
         if(len(nchansel[k]) != len(spwsel[k])):
             nchansel[k].update({spwsel[k][spwcounter]:(flatchan[sortind[actualchan-1]]-startsel[k][spwcounter]+1)})
+        if(actualchan==totchan):
+                break
         spwcounter=0
-    
     retchan=[]
     for k in range(numproc):
         retchan.append([])
@@ -348,7 +349,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
           pixsize=['1arcsec', '1arcsec'], phasecenter='', 
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
-          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', scales=[0], weight='natural',
+          numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0], weight='natural',
           contclean=False, visinmem=False, interactive=False,
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''):
@@ -368,6 +369,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     numcpuperhos = integer ...number of processes to launch on each host
     majorcycles= integer number of CS major cycles to do, 
     niter= integer ...total number of clean iteration 
+    threshold=quantity ...residual peak at which to stop deconvolving
     alg= string  possibilities are 'clark', 'hogbom', 'msclean'
     scales = scales to use when using alg='msclean'
     contclean = boolean ...if False the imagename.model is deleted if its on 
@@ -550,7 +552,7 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
             averimages(psf, psfs)
         #incremental clean...get rid of tempmodel
         shutil.rmtree('tempmodel', True)
-        rundecon='a.cleancont(alg="'+str(alg)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
+        rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
         print 'Deconvolution command', rundecon
         out[0]=c.odo(rundecon,0)
         over=False
@@ -597,7 +599,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           pixsize=['1arcsec', '1arcsec'], phasecenter='', 
           field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
           hostnames='', 
-          numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', scales=[0],
+          numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
           imagetilevol=1000000,
           contclean=False, chanchunk=1, visinmem=False, 
@@ -619,6 +621,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     numcpuperhos = integer ...number of processes to launch on each host
     majorcycles= integer number of CS major cycles to do, 
     niter= integer ...total number of clean iteration 
+    threshold=quantity string ...residual peak at which to stop deconvolving
     alg= string  possibilities are 'clark', 'hogbom', 'multiscale' and their 'mf'
     scales= list of scales in pixel for multiscale clean e.g [0, 3, 10]
     weight= type of weight to apply
@@ -721,7 +724,8 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
                     getchanimage(model, imagename+str(chancounter)+'.model', 
                                  chancounter*chanchunk, chanchunk)
                     donegetchan[chancounter]=True
-                runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+')'
+                #runcomm='a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(chancounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
+                runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
                 print 'command is ', runcomm
                 out[k]=c.odo(runcomm,k)
                 chancounter=chancounter+1
@@ -747,11 +751,11 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
             over=overone
     ##sweep the remainder channels in case they are missed
     for k in range(nchanchunk):
-         if(not doneputchan[k]):
-             putchanimage(model, imagename+str(k)+'.model', k*chanchunk)
-             putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
-             putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
-             doneputchan[k]=True
+        if(not doneputchan[k]):
+            putchanimage(model, imagename+str(k)+'.model', k*chanchunk)
+            putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
+            putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
+            doneputchan[k]=True
     time2=time.time()
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
     c.stop_cluster()
@@ -775,7 +779,7 @@ def pcontmultims(msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000],
                  pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                  field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
                  hostnames='', 
-                 numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', weight='natural',
+                 numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', weight='natural',
                  contclean=False, visinmem=False,
                  painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                  epjtablename=''):
@@ -896,7 +900,7 @@ def pcontmultims(msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000],
                 k=jj*numcpuperhost+kk
                 imnam='"%s"'%(imlist[k])
                 #c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k)
-                runcomm='a.imagecontbychan(msname='+'"'+msname+'", start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spwsel)+', freq='+freq+', band='+band+', imname='+imnam+')'
+                runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spwsel)+', freq='+freq+', band='+band+', imname='+imnam+')'
                 print 'command is ', runcomm
                 out[k]=c.odo(runcomm,k)
         over=False
@@ -940,7 +944,7 @@ def pcontmultims(msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000],
 	########
         #incremental clean...get rid of tempmodel
         shutil.rmtree('tempmodel', True)
-        rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
+        rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask", thr="'+str(threshold)+'")'
         print 'Deconvolution command', rundecon
         out[0]=c.odo(rundecon,numcpu)
         over=False
