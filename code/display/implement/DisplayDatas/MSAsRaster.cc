@@ -5047,6 +5047,7 @@ bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec ) {
 	itsNAvg->setName( "navg" );
 	itsNAvg->setDescription( help );
 	itsNAvg->setMinimum( 2 );
+	itsNAvg->setMaximum( 15 );
 	itsNAvg->setDefaultValue( 3 );
 	itsNAvg->setValue( 3 );
 	Record navg;
@@ -5062,6 +5063,7 @@ bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec ) {
 	itsNAvg->setName( "navg" );
 	itsNAvg->setDescription( help );
 	itsNAvg->setMinimum( 1 );
+	itsNAvg->setMaximum( 1 );
 	itsNAvg->setDefaultValue( 1 );
 	itsNAvg->setValue( 1 );
 	Record navg;
