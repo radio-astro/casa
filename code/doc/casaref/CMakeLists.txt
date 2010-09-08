@@ -25,6 +25,7 @@ set( _latex ${prefix}/CasaRef/${_base}.tex )
 set( _latex ${_base}.latex )
 
 set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/casaref/:${CMAKE_SOURCE_DIR}/doc/casaref/CasaRef.dir/:/usr/share/texmf/tex/{latex,generic,}//:/usr/share/texmf/web2c//:/usr/share/texmf/tex4ht//:/usr/share/texmf/tex/:$ENV{TEXINPUTS} )
+set( CASAGOOGLESEARCH 006707099318971825654:vqush9mvpes )
 
 
     # Create HTML
@@ -35,8 +36,12 @@ set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMA
 #set ( LATEX2HTML_CONVERTER echo )
 #set( LATEX2HTML_OPTIONS htcasa,section+,next,p-width,5 )
 
+#execute_process( COMMAND sed -e "s/CASADOCUMENT/CASA Toolkit Reference Manual/" -e "s/CASAGOOGLESEARCH/${CASAGOOGLESEARCH}/" ${casaroot}/code/doc/texinputs.dir/nraoheader.4ht
+#OUTPUT_FILE  ${prefix}/nraoheader.4ht
+#)
       add_custom_command(
         OUTPUT ${_html}
+	COMMAND sed -e "s/CASADOCUMENT/CASA Toolkit Reference Manual/" -e "s/CASAGOOGLESEARCH/${CASAGOOGLESEARCH}/" ${casaroot}/code/doc/texinputs.dir/nraoheader.4ht > ${prefix}/nraoheader.4ht
         COMMAND mkdir -p ${prefix}/CasaRef
         COMMAND cd ${prefix}/CasaRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         COMMAND cd ${prefix}/CasaRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}

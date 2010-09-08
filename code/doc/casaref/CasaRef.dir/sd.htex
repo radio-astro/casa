@@ -209,7 +209,8 @@ bool
 \newline
 
 \newpage
-\ahfunction{sd.average_time}{Averaging data in time}
+\ahsdfunction{sd.average\_time}{sd.average_time}{Averaging data in time}
+%\subsection{sd.average\_time\label{sd.average_time}{index{sd.average\_time}}\ref{sd.average_time}}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -326,7 +327,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.get_revision}{Get revision of the source code for the tool}
+\ahsdfunction{sd.get\_revision}{sd.get_revision}{Get revision of the source code for the tool}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -339,7 +340,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.is_asap_cli}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
+\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -352,7 +353,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.is_casapy}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
+\ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -365,7 +366,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.is_ipython}{Check if the tool is loaded on iPython}
+\ahsdfunction{sd.is\_ipython}{sd.is_python}{Check if the tool is loaded on iPython}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -404,7 +405,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.list_files}{Return a list of files readable by sd tool}
+\ahsdfunction{sd.list\_files}{sd.list_files}{Return a list of files readable by sd tool}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -417,7 +418,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.list_rcparameters}{Print a list of rc parameters}
+\ahsdfunction{sd.list\_rcparameters}{sd.list_rcparameters}{Print a list of rc parameters}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -430,7 +431,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.list_scans}{Return a list of scantables created by the user}
+\ahsdfunction{sd.list\_scans}{sd.list_scans}{Return a list of scantables created by the user}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -443,7 +444,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.mask_and}{Logical operation function on array}
+\ahsdfunction{sd.mask\_and}{sd.mask_and}{Logical operation function on array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -456,7 +457,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.mask_or}{Logical operation function on array}
+\ahsdfunction{sd.mask\_or}{sd.mask_or}{Logical operation function on array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -469,7 +470,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.mask_not}{Logical operation function on array}
+\ahsdfunction{sd.mask\_not}{sd.mask_not}{Logical operation function on array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -495,7 +496,7 @@ bool
 \hfill \\
 
 \newpage
-\ahfunction{sd.opacity_model}{Create an opacity\_model object}
+\ahsdfunction{sd.opacity\_model}{sd.opacity_model}{Create an opacity\_model object}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -839,7 +840,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.auto_poly_baseline}{Perform automatic line finding and baseline subtraction}
+\ahsdfunction{sd.scantable.auto\_poly\_baseline}{sd.scantable.auto_poly_baseline}{Perform automatic line finding and baseline subtraction}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -852,7 +853,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.auto_quotient}{Automatic quotient for coordinated scans}
+\ahsdfunction{sd.scantable.auto\_quotient}{sd.scantable.auto_quotient}{Automatic quotient for coordinated scans}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -865,7 +866,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.average_beam}{Average beams together for multi-beam observation}
+\ahsdfunction{sd.scantable.average\_beam}{sd.scantable.average_beam}{Average beams together for multi-beam observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -878,7 +879,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.average_pol}{Average polarizations together}
+\ahsdfunction{sd.scantable.average\_pol}{sd.scantable.average_pol}{Average polarizations together}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -891,7 +892,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.average_time}{Return time average of a scan}
+\ahsdfunction{sd.scantable.average\_time}{sd.scantable.average_time}{Return time average of a scan}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -943,7 +944,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.convert_flux}{Return a scan where all spectra are converted to Jy or K}
+\ahsdfunction{sd.scantable.convert\_flux}{sd.scantable.convert_flux}{Return a scan where all spectra are converted to Jy or K}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -956,7 +957,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.convert_pol}{Convert data to a different polarization type}
+\ahsdfunction{sd.scantable.convert\_pol}{sd.scantable.convert_pol}{Convert data to a different polarization type}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -982,7 +983,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.create_mask}{Return a bool array based on [min,max] windows}
+\ahsdfunction{sd.scantable.create\_mask}{sd.scantable.create}{Return a bool array based on [min,max] windows}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -995,7 +996,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.drop_scan}{Return a new scantable where the specified scan number(s) are dropped}
+\ahsdfunction{sd.scantable.drop\_scan}{sd.scantable.drop_scan}{Return a new scantable where the specified scan number(s) are dropped}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1021,7 +1022,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.flag_nan}{Flag NaN values}
+\ahsdfunction{sd.scantable.flag\_nan}{sd.scantable.flag_nan}{Flag NaN values}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1034,7 +1035,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.flag_row}{Flag spectra based on specified rows (row based flag)}
+\ahsdfunction{sd.scantable.flag\_row}{sd.scantable.flag}{Flag spectra based on specified rows (row based flag)}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1047,7 +1048,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.freq_align}{Perform frequency alignment}
+\ahsdfunction{sd.scantable.freq\_align}{sd.scantable.freq_align}{Perform frequency alignment}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1060,7 +1061,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.freq_switch}{Apply frequency switching to the data}
+\ahsdfunction{sd.scantable.freq\_switch}{sd.scantable.freq_switch}{Apply frequency switching to the data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1073,7 +1074,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.gain_el}{Apply gain-elevation correction based on user-provided correction factors}
+\ahsdfunction{sd.scantable.gain\_el}{sd.scantable.gain_el}{Apply gain-elevation correction based on user-provided correction factors}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1086,7 +1087,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_abcissa}{Get the abcissa values and format string that represents current coordinate setup}
+\ahsdfunction{sd.scantable.get\_abcissa}{sd.scantable.get_abcissa}{Get the abcissa values and format string that represents current coordinate setup}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1099,7 +1100,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_antennaname}{Get antenna name}
+\ahsdfunction{sd.scantable.get\_antennaname}{sd.scantable.get_antennaname}{Get antenna name}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1112,7 +1113,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_azimuth}{Get a list of azimuth during the observation}
+\ahsdfunction{sd.scantable.get\_azimuth}{sd.scantable.get_azimuth}{Get a list of azimuth during the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1125,7 +1126,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_column_names}{Get a list of column names in the main table}
+\ahsdfunction{sd.scantable.get\_column\_names}{sd.scnatable_get_column_names}{Get a list of column names in the main table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1138,7 +1139,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_coordinate}{Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd.coordinate} object}
+\ahsdfunction{sd.scantable.get\_coordinate}{sd.scantable.get_coordinate}{Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd.coordinate} object}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1151,7 +1152,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_direction}{Get a list of positions on the sky as a string}
+\ahsdfunction{sd.scantable.get\_direction}{sd.scnatable.get_direction}{Get a list of positions on the sky as a string}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1164,7 +1165,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_directionval}{Get a list of positions on the sky as a float}
+\ahsdfunction{sd.scantable.get\_directionval}{sd.scntable.get_directionval}{Get a list of positions on the sky as a float}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1177,7 +1178,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_elevation}{Get a list of elevation during the observation}
+\ahsdfunction{sd.scantable.get\_elevation}{sd.scntable.get_elevation}{Get a list of elevation during the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1190,7 +1191,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_fit}{Get the stored fits for a row in scantable}
+\ahsdfunction{sd.scantable.get\_fit}{sd.scntable.get_fit}{Get the stored fits for a row in scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1203,7 +1204,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_fluxunit}{Get a flux unit}
+\ahsdfunction{sd.scantable.get\_fluxunit}{get_fluxunit}{Get a flux unit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1216,7 +1217,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_inttime}{Get a list of integration times for the observation}
+\ahsdfunction{sd.scantable.get\_inttime}{sd.scantable.get_inttime}{Get a list of integration times for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1229,7 +1230,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_mask}{Get mask for the specified row as a bool list}
+\ahsdfunction{sd.scantable.get\_mask}{sd.scantable.get_mask}{Get mask for the specified row as a bool list}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1242,7 +1243,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_mask_indices}{Compute and return lists of mask start indices and mask end indices from the given bool array}
+\ahsdfunction{sd.scantable.get\_mask\_indices}{sd.scantable.get_mask_indices}{Compute and return lists of mask start indices and mask end indices from the given bool array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1255,7 +1256,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_masklist}{Compute and return a list of mask windows [min,max] from the given bool array}
+\ahsdfunction{sd.scantable.get\_masklist}{sd.cantable.get_masklist}{Compute and return a list of mask windows [min,max] from the given bool array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1268,7 +1269,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_parangle}{Get a list of parallactic angles for the observation}
+\ahsdfunction{sd.scantable.get\_parangle}{sd.scantable.get_parangle}{Get a list of parallactic angles for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1281,7 +1282,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_restfreqs}{Get the rest frequency(s) stored in the scantable}
+\ahsdfunction{sd.scantable.get\_restfreqs}{sd.scnatable.get_restfreqs}{Get the rest frequency(s) stored in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1294,7 +1295,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_row}{Return a scantable with single row}
+\ahsdfunction{sd.scantable.get\_row}{sd.scantable.get_row}{Return a scantable with single row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1307,7 +1308,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_row_selector}{Return a \ahlink{selector}{sd:sd.selector} object that only selects target row}
+\ahsdfunction{sd.scantable.get\_row\_selector}{sd.scantable.get_row_selector}{Return a \ahlink{selector}{sd:sd.selector} object that only selects target row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1320,7 +1321,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_scan}{Return a specified scan(s) specified by scan number or source name as a new scantable}
+\ahsdfunction{sd.scantable.get\_scan}{sd.scnatable.get_scan}{Return a specified scan(s) specified by scan number or source name as a new scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1333,7 +1334,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_selection}{Get current selection that is currently set on this scantable}
+\ahsdfunction{sd.scantable.get\_selection}{sd.scantable.get_selection}{Get current selection that is currently set on this scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1346,7 +1347,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_sourcename}{Get a list of source names for the observation}
+\ahsdfunction{sd.scantable.get\_sourcename}{sd.scantable.get_sourcename}{Get a list of source names for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1359,7 +1360,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_spectrum}{Get the spectrum for the current row}
+\ahsdfunction{sd.scantable.get\_spectrum}{sd.scnatable.get_spectrum}{Get the spectrum for the current row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1372,7 +1373,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_time}{Get a list of time stamps for the observation}
+\ahsdfunction{sd.scantable.get\_time}{sd.scantable.get_time}{Get a list of time stamps for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1385,7 +1386,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_tsys}{Get a list of system temperatures}
+\ahsdfunction{sd.scantable.get\_tsys}{sd.scantable.get_tsys}{Get a list of system temperatures}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1398,7 +1399,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_unit}{Get the default unit of spectral axis}
+\ahsdfunction{sd.scantable.get\_unit}{sd.scantable.get_unit}{Get the default unit of spectral axis}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1411,7 +1412,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.get_weather}{Get the weather informations}
+\ahsdfunction{sd.scantable.get\_weather}{sd.scantable.get_weather}{Get the weather informations}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1567,7 +1568,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.invert_phase}{Invert the phase of the complex polarization}
+\ahsdfunction{sd.scantable.invert\_phase}{sd.scantable.invert_phase}{Invert the phase of the complex polarization}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1580,7 +1581,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.lag_flag}{Perform Fourier filtering on the spectra}
+\ahsdfunction{sd.scantable.lag\_flag}{sd.scntable.lag_flag}{Perform Fourier filtering on the spectra}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1593,7 +1594,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.mx_quotient}{Form a quotient using "off" beams when observing in "MX" mode}
+\ahsdfunction{sd.scantable.mx\_quotient}{sd.scantable.mx_quotient}{Form a quotient using "off" beams when observing in "MX" mode}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1697,7 +1698,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.old_poly_baseline}{Older version of baseline subtraction function}
+\ahsdfunction{sd.scantable.old\_poly\_baseline}{sd.scantable.old_poly_baseline}{Older version of baseline subtraction function}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1749,7 +1750,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.poly_baseline}{Perform a baseline subtraction}
+\ahsdfunction{sd.scantable.poly\_baseline}{sd.scantable.poly_baseline}{Perform a baseline subtraction}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1762,7 +1763,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.recalc_azel}{Recalculate azimuth and elevation for each sky position}
+\ahsdfunction{sd.scantable.recalc\_azel}{sd.scntable.recalc_azel}{Recalculate azimuth and elevation for each sky position}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1788,7 +1789,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.rotate_linpolphase}{Rotate a phase of the complex polarization}
+\ahsdfunction{sd.scantable.rotate\_linpolphase}{sd.scantable.rotate_linpolphase}{Rotate a phase of the complex polarization}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1801,7 +1802,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.rotate_xyphase}{Rotate a phase of the XY correlation}
+\ahsdfunction{sd.scantable.rotate\_xyphase}{sd.scantable.rotate_xyphase}{Rotate a phase of the XY correlation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1840,7 +1841,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_dirframe}{Set the frame type of the direction on the sky}
+\ahsdfunction{sd.scantable.set\_dirframe}{sd.scantable.set_dirframe}{Set the frame type of the direction on the sky}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1853,7 +1854,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_doppler}{Set definition of the Doppler correction}
+\ahsdfunction{sd.scantable.set\_doppler}{sd.scantable.set_doppler}{Set definition of the Doppler correction}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1866,7 +1867,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_feedtype}{Set the feed type}
+\ahsdfunction{sd.scantable.set\_feedtype}{sd.scantable.set_feedtype}{Set the feed type}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1879,7 +1880,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_fluxunit}{Set flux unit}
+\ahsdfunction{sd.scantable.set\_fluxunit}{sd.scantable.set_fluxunit}{Set flux unit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1892,7 +1893,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_freqframe}{Set the frame type of the spectral axis}
+\ahsdfunction{sd.scantable.set\_freqframe}{sd.scantable.set_freqframe}{Set the frame type of the spectral axis}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1905,7 +1906,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_instrument}{Set antenna name}
+\ahsdfunction{sd.scantable.set\_instrument}{sd.scantable.set_instrument}{Set antenna name}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1918,7 +1919,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_restfreqs}{Set rest frequency}
+\ahsdfunction{sd.scantable.set\_restfreqs}{sd.scantable.set_restfreqs}{Set rest frequency}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1931,7 +1932,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_selection}{Select a subset of the data}
+\ahsdfunction{sd.scantable.set\_selection}{sd.scantable.set_selection}{Select a subset of the data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1944,7 +1945,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_sourcetype}{Set the types of source to be source or reference scan}
+\ahsdfunction{sd.scantable.set\_sourcetype}{sd.scantable.set_sourcetype}{Set the types of source to be source or reference scan}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1957,7 +1958,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_spectrum}{Set spectrum for specified row}
+\ahsdfunction{sd.scantable.set\_spectrum}{sd.scantable.set_spectrum}{Set spectrum for specified row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1970,7 +1971,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.set_unit}{Set unit for spectral axis}
+\ahsdfunction{sd.scantable.set\_unit}{sd.scantable.set_unit}{Set unit for spectral axis}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1983,7 +1984,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.shift_refpix}{Shift the reference pixel of the spectral coordinate}
+\ahsdfunction{sd.scantable.shift\_refpix}{sd.scantable.shift_refpix}{Shift the reference pixel of the spectral coordinate}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2071,7 +2072,7 @@ Methods
 
   The selector is a data selection object that affects a 
   \ahlink{scantable}{sd:sd.scantable} object via 
-  \ahlink{set_selection}{sd:sd.scantable.set_selection} function.
+  \ahlink{set\_selection}{sd:sd.scantable.set_selection} function.
   Selection by the following attributes are available:
 
 \begin{itemize}
@@ -2156,7 +2157,7 @@ Methods
 \end{longtable}
 
 \newpage
-\ahfunction{sd.selector.get_beams}{Return a list of current beam selection}
+\ahsdfunction{sd.selector.get\_beams}{sd.selector.get_beams}{Return a list of current beam selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2544,7 +2545,7 @@ Methods
 
 %%%%% sd.opacity_model
 \newpage
-\ahobject{sd.opacity_model}{Single-dish specific opacity model}
+\ahobject{sd.opacity\_model}{Single-dish specific opacity model}
 %\ahfunction{sd.opacity_model}{Single-dish specific opacity model}
 
 
