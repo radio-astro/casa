@@ -73,6 +73,9 @@ template <class T> class Vector;
 // and NAME
 // keywords, be gapless (constant dMJD), and be of type IERS,
 // or else an exception will be thrown.<br>
+// They are also assumed to have the MJD, RA, DEC, Rho, and RadVel columns.
+// The DiskLong and DiskLat columns can be used if they are present, but they
+// are no longer expected.
 // The <src>get()</src> method will obtain data from the cometary
 // tables. The data obtained will be in the specified frame.
 // Note that the normal usage of these tables is through the Measures system.
@@ -189,7 +192,7 @@ class MeasComet {
   Bool measured_p;
   // Row descriptions
   ROTableRow row_p;
-  // First (-1) MJD in list
+  // First MJD in list - 1.0 * dmjd_p
   Double mjd0_p;
   // Last MJD in list
   Double mjdl_p;
