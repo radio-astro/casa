@@ -18,7 +18,7 @@ Copyright \copyright 2008 AUI
 CASA Reference Manual.
 
 The CASA Reference Manual contains the documentation on the tool-based functionality
-within the system. There are three broad packages:
+within the system. There are five broad packages:
 
 \begin{itemize}
 \item General- modules that are of general use for astronomical processing
@@ -38,6 +38,10 @@ within the system. There are three broad packages:
 	\item \ahlink{Simulator}{simulator:simulator} - facilities for simulation of telescope data
 	\item \ahlink{vpmanager}{imager:vpmanager} - facilities for specifying voltage patterns and primary beams
 	\end{itemize}
+\item Single-dish - functionality for processing single-dish data
+        \begin{itemize}
+        \item \ahlink{ASAP}{sd} - single-dish data analysis package 
+        \end{itemize}
 \item Utility - non-astronomy specific functionality
 	\begin{itemize}
 	\item \ahlink{Table}{table} - functionality for manipulating tables in CASA
@@ -51,6 +55,7 @@ within the system. There are three broad packages:
 \tableofcontents
 \input{General.tex}
 \input{SynthesisRef.tex}
+\input{SingleDish.tex}
 \input{Utility.tex}
 \input{ThirdParty.tex}
 \printindex

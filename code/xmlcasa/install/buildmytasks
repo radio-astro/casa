@@ -87,7 +87,7 @@ while [ "$#" -gt 0 ]; do
  shift
 done
 
-verbose "Casa version: $(casapyinfo --version 2>&1 | cut -d' ' -f1)"
+verbose "Casa version: $(casapyinfo --version 2>&1 | cut -d' ' -f1-2 | sed -e 's/\$Revision: //')"
 #verbose "Casa version: $(casapyinfo --version 2>&1 | awk -F. '{print $1"."$2;}')"
 
 [ -z "$INSTALLDIR" ] && INSTALLDIR=`pwd`
@@ -128,7 +128,11 @@ verbose "Saxon processor: $SAXONJAR"
 SAXON="java -jar $SAXONJAR"
 verbose "Saxon command: $SAXON"
 
-INFOFILE=`mktemp bmt`
+if [[ `uname -s` = "Darwin" ]]; then
+   INFOFILE=`mktemp bmt`
+else 
+   INFOFILE=`mktemp`
+fi
 verbose "intermediate task file: $INFOFILE"
 [ ! -e "$INFOFILE" ] && error "can't create an intermediate file $INFOFILE!"
 

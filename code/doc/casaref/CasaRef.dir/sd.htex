@@ -1,0 +1,2552 @@
+
+\newpage
+\ahtool{sd}{Single-dish data analysis package}
+Requires:
+Synopsis
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  The sd tool provides data reduction functions for single-dish 
+  (auto-correlation) data. It is actually a standalone 
+  software that is called ASAP (ATNF Spectral Analysis Package). 
+  For more information about ASAP, 
+  visit \htmladdnormallink{here}{http://svn.atnf.csiro.au/trac/asap}.
+
+  The sd tool is a top level object and it contains various 
+  sub tools as well as a number of functions.
+
+  \medskip\noindent\textbf{Data format}
+
+    There are various types of data format for single-dish data.
+    Currently, sd tool supports the following data formats for 
+    reading and writing.
+
+\begin{itemize}
+\item reading: Scantable, Measurement Set, SDFITS (GBT, ATNF), NRO
+\item writing: Scantable, Measurement Set, SDFITS (ATNF)
+\end{itemize}
+
+    An internal data format for sd tool is Scantable.
+    The Scantable is defined as \casa\ table and is specially 
+    designed for single-dish data. The data is converted to Scantable  
+    during the processing whatever its oritinal data format is.
+    The result of the processing can be stored in other data format 
+    than Scantable. 
+    The Scantable is implemented as \ahlink{sd.scantable}{sd:sd.scantable}
+    object in sd tool. 
+    See \ahlink{sd.scantable}{sd:sd.scantable} for details. 
+
+  \medskip\noindent\textbf{Selecting data}
+
+    The Scantable can contain data with different frequency setting, 
+    different polarization component, and so on. In case when you want 
+    to select data by some conditions, \ahlink{sd.selector}{sd:sd.selector} 
+    is available for this. The \ahlink{sd.selector}{sd:sd.selector} provides 
+    various functions to select data as well as it also provides 
+    an interface to select data by  
+    \htmladdnormallink{TaQL}{http://aips2.nrao.edu/docs/notes/199/199.html}.
+    See \ahlink{sd.selector}{sd:sd.selector} for details.
+
+  \medskip\noindent\textbf{Fitting}
+
+    The \ahlink{sd.fitter}{sd:sd.fitter} is an object to perform fitting. 
+    Both baseline and line fitting for spectral data can be done by this 
+    object if appropriate fitting function and masked region are set.
+    Currently, Gaussian and Lorentzian are supported for line fitting, 
+    while polynomials with arbitrary order are available for baseline 
+    fitting. Masking should be applied in the form of Bool array.
+    See \ahlink{sd.fitter}{sd:sd.fitter} for details.  
+
+  \medskip\noindent\textbf{Line finding}
+
+    The sd tool provides automatic line finding functionality that is 
+    called \ahlink{sd.linefinder}{sd:sd.linefinder}. 
+    \ahlink{sd.linefinder}{sd:sd.linefinder} has a few control parameter 
+    for line finding. The user can customize behavior of line finding 
+    process by changing these parameters.
+    See \ahlink{sd.linefinder}{sd:sd.linefinder} for details.
+
+  \medskip\noindent\textbf{Line catalog}
+
+    The \ahlink{sd.linecatalog}{sd:sd.linecatalog} object is a wrapper for 
+    line catalog. The input data should be provided from the user.
+    Supported format is ASCII table or specific format for 
+    \ahlink{sd.linecatalog}{sd:sd.linecatalog}.
+    \casa\ package contains a default line catalog that is a part of 
+    JPL line catalog. 
+    Benefit of this object is that it provides an interface to the 
+    catalog such as selecting lines by frequency and/or line intensity.
+    It also enables an interaction between 
+    spectral data on the \ahlink{sd.plotter}{sd:sd.plotter} such as 
+    overlaying line catalog on the plotted spectra.
+    See \ahlink{sd.linecatalog}{sd:sd.linecatalog} for details.
+
+  \medskip\noindent\textbf{Plotter}
+
+    The \ahlink{sd.plotter}{sd:sd.plotter} is a plotter object that is 
+    exclusively designed for sd tool. That provides plotting functionalities 
+    for spectral data, time variation of azimuth and elevation, and 
+    pointing information. For plotting spectral data, it supports 
+    multi-panel and multi-page plot.
+    See \ahlink{sd.plotter}{sd:sd.plotter} for details.   
+
+  \medskip\noindent\textbf{Coordinate system}
+
+    The \ahlink{sd.coordinate}{sd:sd.coordinate} is a representation of 
+    spectral coordinate of the data (frequency axis). It provides functions 
+    for conversion between pixel (channel), frequency, and velocity.
+    See \ahlink{sd.coordinate}{sd:sd.coordinate} for details. 
+		
+  \medskip\noindent\textbf{Opacity model}
+
+    In the sd tool, MIRIAD like atmospheric opacity model is implemented 
+    as \ahlink{sd.opacity\_model}{sd:sd.opacity_model}. It calculates opacities from 
+    given atmospheric conditions (temperature, pressure, and humidity) 
+    and elevation.
+    See \ahlink{sd.opacity\_model}{sd:sd.opacity_model} for details.
+		
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{almacal}{sd:sd.almacal} &Calibration function specific for ALMA data \\
+
+	\ahlink{apexcal}{sd:sd.apexcal} &Calibration function specific for APEX data \\
+
+	\ahlink{average\_time}{sd:sd.average_time} &Averaging data in time \\
+
+	\ahlink{calfs}{sd:sd.calfs} &Calibration function for frequency switched data \\
+
+	\ahlink{calibrate}{sd:sd.calibrate} &High level function for calibration that calls appropriate calibration function depending on the data \\
+
+	\ahlink{calnod}{sd:sd.calnod} &Calibration function for nodding data \\
+
+	\ahlink{calps}{sd:sd.calps} &Calibration function for position switched data \\
+
+	\ahlink{commands}{sd:sd.commands} &Show a list of commands and their short descriptions \\
+
+	\ahlink{dosigref}{sd:sd.dosigref} &Equivalent function with dosigref in \htmladdnormallink{GBTIDL}{http://gbtidl.nrao.edu/} \\
+
+	\ahlink{dototalpower}{sd:sd.dototalpower} &Equivalent function with dototalpower in \htmladdnormallink{GBTIDL}{http://gbtidl.nrao.edu/} \\
+
+	\ahlink{fitter}{sd:sd.fitter} &Create a fitter object \\
+
+	\ahlink{get\_revision}{sd:sd.get_revision} &Get revision of the source code for the tool \\
+
+	\ahlink{is\_asap\_cli}{sd:sd.is_asap_cli} &Check if the tool is loaded as part of \casa\ or is launched as standalone software \\
+
+	\ahlink{is\_casapy}{sd:sd.is_casapy} & Check if the tool is loaded as part of \casa\ or is launched as standalone software \\
+
+	\ahlink{is\_ipython}{sd:sd.is_ipython} &Check if the tool is loaded on iPython \\
+
+	\ahlink{linecatalog}{sd:sd.linecatalog} &Create a linecatalog object \\
+
+	\ahlink{linefinder}{sd:sd.linefinder} &Create a linefinder object \\
+
+	\ahlink{list\_files}{sd:sd.list_files} &Return a list of files readable by sd tool \\
+
+	\ahlink{list\_rcparameters}{sd:sd.list_rcparameters} &Print a list of rc parameters \\
+
+	\ahlink{list\_scans}{sd:sd.list_scans} &Return a list of scantables created by the user \\
+
+	\ahlink{mask\_and}{sd:sd.mask_and} &Logical operation function on array\\
+
+	\ahlink{mask\_or}{sd:sd.mask_or} &Logical operation function on array \\
+
+	\ahlink{mask\_not}{sd:sd.mask_not} &Logical operation function on array\\
+
+	\ahlink{merge}{sd:sd.merge} &Merge a list of scantables into one \\
+
+	\ahlink{opacity\_model}{sd:sd.opacity_model} &Create a opacity\_model object \\
+
+	\ahlink{quotient}{sd:sd.quotient} &Take a quotient of a signal and reference scan \\
+
+	\ahlink{scantable}{sd:sd.scantable} &Create scantable object \\
+
+	\ahlink{selector}{sd:sd.selector} &Create selector object \\
+
+	\ahlink{skydip}{sd:sd.skydip} &Determine the opacity from a set of 'skydip' observations \\
+
+	\ahlink{splitant}{sd:sd.splitant} &Split Measurement Set data by antenna and save them as scantable \\
+
+	\ahlink{unique}{sd:sd.unique} &Return the unique values in a list \\
+
+	\ahlink{welcome}{sd:sd.welcome} &Print a welcome message \\
+
+\end{longtable}
+
+
+
+
+\newpage
+\ahfunction{sd.almacal}{Calibration function specific for ALMA data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+  
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+bool
+\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+  
+\newpage
+\ahfunction{sd.apexcal}{Calibration function specific for APEX data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+\newline
+
+\newpage
+\ahsdfunction{sd.average\_time}{sd.average_time}{Averaging data in time}
+%\subsection{sd.average\_time\label{sd.average_time}{index{sd.average\_time}}\ref{sd.average_time}}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.calfs}{Calibration function for frequency switched data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.calibrate}{High level function for calibration that calls appropriate calibration function depending on the data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.calnod}{Calibration function for nodding data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.calps}{Calibration function for position switched data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.commands}{Show a list of commands and their short descriptions}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.dosigref}{Equivalent function with dosigref in GBTIDL}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.dototalpower}{Equivalent function with dototalpower in GBTIDL}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.fitter}{Create a fitter object}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.get\_revision}{sd.get_revision}{Get revision of the source code for the tool}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.is\_ipython}{sd.is_python}{Check if the tool is loaded on iPython}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.linecatalog}{Create a linecatalog object}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.linefinder}{Create a linefinder object}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.list\_files}{sd.list_files}{Return a list of files readable by sd tool}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.list\_rcparameters}{sd.list_rcparameters}{Print a list of rc parameters}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.list\_scans}{sd.list_scans}{Return a list of scantables created by the user}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.mask\_and}{sd.mask_and}{Logical operation function on array}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.mask\_or}{sd.mask_or}{Logical operation function on array}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.mask\_not}{sd.mask_not}{Logical operation function on array}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.merge}{Merge a list of scantables into one}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.opacity\_model}{sd.opacity_model}{Create an opacity\_model object}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.quotient}{Take a quotient of a signal and reference scan}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable}{Create a scantable object}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.selector}{Create a selector object}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.skydip}{Determine the opacity from a set of 'skydip' observations}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.splitant}{Split Measurement Set data by antenna and save them as scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.unique}{Return the unique values in a list}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.welcome}{Print a welcome message}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%%%%%% sd.scantable
+\newpage
+\ahobject{sd.scantable}{Representation of single-dish data format}
+%\ahfunction{sd.scantable}{Representation of single-dish data format}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  The scantable is a representation of the Scantable, which is a data 
+  format designed properly for single-dish data. 
+  The scantable is implemented as \casa\ table so that it is possible 
+  to access data via \ahlink{table}{table} tool. 
+  On the other hand, the scantable has its own functions to get/set some data. 
+  In addition to the simple setter/getter and utility functions, 
+  the scantable has some data reduction function such as calibration, 
+  baseline fitting, etc. 
+  
+  The 'insitu' option often appears in the functions. This parameter 
+  controls if a certain operation is applied to the scantable itself 
+  (true) or return another scantable that is a result of the operation 
+  (false). 
+  In former case, the original scantable will be lost. 
+  The default value of the option depends on sd.rcParams dictionary. 
+  See \ahlink{sd.list\_rcparameters}{sd:sd.list_rcparameters} for 
+  details about sd.rcParams.
+
+  \medskip\noindent\textbf{Definition}
+
+    A documentation for detailed definition of the Scantable will be 
+    prepared by ATNF.
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{add}{sd:sd.scantable.add} &Return a scan where all spectra have the offset added \\
+
+	\ahlink{auto\_poly\_baseline}{sd:sd.scantable.auto_poly_baseline} &Perform automatic line finding and baseline subtraction \\
+
+	\ahlink{auto\_quotient}{sd:sd.scantable.auto_quotient} &Automatic quotient for coordinated scans \\
+
+	\ahlink{average\_beam}{sd:sd.scantable.average_beam} &Average beams together for multi-beam observation \\
+
+	\ahlink{average\_pol}{sd:sd.scantable.average_pol} &Average polarizations together \\
+
+	\ahlink{average\_time}{sd:sd.scantable.average_time} &Return time average of a scan \\
+
+	\ahlink{bin}{sd:sd.scantable.bin} &Perform binning of spectra \\
+
+	\ahlink{chan2data}{sd:sd.scantable.chan2data} &Return channel/frequency/velocity and spectral value at an arbitrary row and channel \\
+
+	\ahlink{clip}{sd:sd.scantable.clip} &Flag data by its spectral value \\
+
+	\ahlink{convert\_flux}{sd:sd.scantable.convert_flux} &Return a scan where all spectra are converted to Jy or K \\
+
+	\ahlink{convert\_pol}{sd:sd.scantable.convert_pol} &Convert data to a different polarization type \\
+
+	\ahlink{copy}{sd:sd.scantable.copy} &Return a copy of this scantable \\
+
+	\ahlink{create\_mask}{sd:sd.scantable.create_mask} &Return a bool array based on [min,max] windows \\
+
+	\ahlink{drop\_scan}{sd:sd.scantable.drop_scan} &Return a new scantable where the specified scan number(s) are dropped \\
+
+	\ahlink{flag}{sd:sd.scantable.flag} & Flag selected data using specified mask (channel based flag) \\
+
+	\ahlink{flag\_nan}{sd:sd.scantable.flag_nan} &Flag NaN values\\
+
+	\ahlink{flag\_row}{sd:sd.scantable.flag_row} &Flag spectra based on specified rows (row based flag)\\
+
+	\ahlink{freq\_align}{sd:sd.scantable.freq_align} &Perform frequency alignment \\
+
+	\ahlink{freq\_switch}{sd:sd.scantable.freq_switch} &Apply frequency switching to the data\\
+
+	\ahlink{gain\_el}{sd:sd.scantable.gain_el} &Apply gain-elevation correction based on user-provided correction factors\\
+
+	\ahlink{get\_abcissa}{sd:sd.scantable.get_abcissa} &Get the abcissa values and format string that represents current coordinate setup \\
+
+	\ahlink{get\_antennaname}{sd:sd.scantable.get_antennaname} &Get antenna name\\
+
+	\ahlink{get\_azimuth}{sd:sd.scantable.get_azimuth} &Get a list of azimuth during the observation \\
+
+	\ahlink{get\_column\_names}{sd:sd.scantable.get_column_names} &Get a list of column names in the main table\\
+
+	\ahlink{get\_coordinate}{sd:sd.scantable.get_coordinate} &Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd.coordinate} object \\
+
+	\ahlink{get\_direction}{sd:sd.scantable.get_direction} &Get a list of positions on the sky as a string \\
+
+	\ahlink{get\_directionval}{sd:sd.scantable.get_directionval} &Get a list of positions on the sky as a float \\
+
+	\ahlink{get\_elevation}{sd:sd.scantable.get_elevation} &Get a list of elevation during the observation \\
+
+	\ahlink{get\_fit}{sd:sd.scantable.get_fit} &Get the stored fits for a row in scantable \\
+
+	\ahlink{get\_fluxunit}{sd:sd.scantable.get_fluxunit} &Get a flux unit \\
+
+	\ahlink{get\_inttime}{sd:sd.scantable.get_inttime} &Get a list of integration times for the observation \\
+
+	\ahlink{get\_mask}{sd:sd.scantable.get_mask} &Get mask for the specified row as a bool list \\
+
+	\ahlink{get\_mask\_indices}{sd:sd.scantable.get_mask_indices} &Compute and return lists of mask start indices and mask end indices from the given bool array \\
+
+	\ahlink{get\_masklist}{sd:sd.scantable.get_masklist} &Compute and return a list of mask windows [min,max] from the given bool array \\
+
+	\ahlink{get\_parangle}{sd:sd.scantable.get_parangle} &Get a list of parallactic angles for the observation \\
+
+	\ahlink{get\_restfreqs}{sd:sd.scantable.get_restfreqs} &Get the rest frequency(s) stored in the scantable \\
+
+	\ahlink{get\_row}{sd:sd.scantable.get_row} &Return a scantable with single row \\
+
+	\ahlink{get\_row\_selector}{sd:sd.scantable.get_row_selector} &Return a \ahlink{selector}{sd:sd.selector} object that only selects target row \\
+
+	\ahlink{get\_scan}{sd:sd.scantable.get_scan} &Return a specified scan(s) specified by scan number or source name as a new scantable\\
+
+	\ahlink{get\_selection}{sd:sd.scantable.get_selection} &Get current selection that is currently set on this scantable \\
+
+	\ahlink{get\_sourcename}{sd:sd.scantable.get_sourcename} &Get a list of source names for the observation \\
+
+	\ahlink{get\_spectrum}{sd:sd.scantable.get_spectrum} &Get the spectrum for the current row \\
+
+	\ahlink{get\_time}{sd:sd.scantable.get_time} &Get a list of time stamps for the observation \\
+
+	\ahlink{get\_tsys}{sd:sd.scantable.get_tsys} &Get a list of system temperatures \\
+
+	\ahlink{get\_unit}{sd:sd.scantable.get_unit} &Get the default unit of spectral axis \\
+
+	\ahlink{get\_weather}{sd:sd.scantable.get_weather} &Get the weather informations \\
+
+	\ahlink{getbeam}{sd:sd.scantable.getbeam} &Get beam number of the given row \\
+
+	\ahlink{getbeamnos}{sd:sd.scantable.getbeamnos} &Get a list of beam numbers in the scantable \\
+
+	\ahlink{getcycle}{sd:sd.scantable.getcycle} &Get cycle number of the given row \\
+
+	\ahlink{getif}{sd:sd.scantable.getif} &Get IF number of the given row \\
+
+	\ahlink{getifnos}{sd:sd.scantable.getifnos} &Get a list of IF nubers in the scantable \\
+
+	\ahlink{getmolnos}{sd:sd.scantable.getmolnos} &Get a list of molecule ids in the scantable \\
+
+	\ahlink{getpol}{sd:sd.scantable.getpol} &Get polarization number of the given row \\
+
+	\ahlink{getpolnos}{sd:sd.scantable.getpolnos} &Get a list of polarization numbers in the scantable \\
+
+	\ahlink{getscan}{sd:sd.scantable.getscan} &Get scan number of the given row \\
+
+	\ahlink{getscannos}{sd:sd.scantable.getscannos} &Get a list of scan numbers in the scantable \\
+
+	\ahlink{history}{sd:sd.scantable.history} &Print a history \\
+
+	\ahlink{invert\_phase}{sd:sd.scantable.invert_phase} &Invert the phase of the complex polarization \\
+
+	\ahlink{lag\_flag}{sd:sd.scantable.lag_flag} &Perform Fourier filtering on the spectra \\
+
+	\ahlink{mx\_quotient}{sd:sd.scantable.mx_quotient} &Form a quotient using "off" beams when observing in "MX" mode \\
+
+	\ahlink{nbeam}{sd:sd.scantable.nbeam} &Return a number of beams \\
+
+	\ahlink{nchan}{sd:sd.scantable.nchan} &Return a number of channels \\
+
+	\ahlink{ncycle}{sd:sd.scantable.ncycle} &Return a number of cycles \\
+
+	\ahlink{nif}{sd:sd.scantable.nif} &Return a number of IFs \\
+
+	\ahlink{npol}{sd:sd.scantable.npol} &Return a number of polarizations \\
+
+	\ahlink{nrow}{sd:sd.scantable.nrow} &Return a number of rows \\
+
+	\ahlink{nscan}{sd:sd.scantable.nscan} &Return a number of scans \\
+
+	\ahlink{old\_poly\_baseline}{sd:sd.scantable.old_poly_baseline} &Older version of baseline subtraction function \\
+
+	\ahlink{opacity}{sd:sd.scantable.opacity} &Apply an opacity correction \\
+
+	\ahlink{parallactify}{sd:sd.scantable.parallactify} &Set a flag to indicate the data should be treated as "parallactified"  \\
+
+	\ahlink{poltype}{sd:sd.scantable.poltype} &Get a plarization type \\
+
+	\ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline} &Perform a baseline subtraction \\
+
+	\ahlink{recalc\_azel}{sd:sd.scantable.recalc_azel} &Recalculate azimuth and elevation for each sky position \\
+
+	\ahlink{resample}{sd:sd.scantable.resample} &Perform a binning \\
+
+	\ahlink{rotate\_linpolphase}{sd:sd.scantable.rotate_linpolphase} &Rotate a phase of the complex polarization \\
+
+	\ahlink{rotate\_xyphase}{sd:sd.scantable.rotate_xyphase} &Rotate a phase of the XY correlation \\
+
+	\ahlink{save}{sd:sd.scantable.save} &Store the scantable on disk \\
+
+	\ahlink{scale}{sd:sd.scantable.scale} &Scale spectra by the given factor \\
+
+	\ahlink{set\_dirframe}{sd:sd.scantable.set_dirframe} &Set the frame type of the direction on the sky \\
+
+	\ahlink{set\_doppler}{sd:sd.scantable.set_doppler} &Set definition of the Doppler correction  \\
+
+	\ahlink{set\_feedtype}{sd:sd.scantable.set_feedtype} &Set the feed type \\
+
+	\ahlink{set\_fluxunit}{sd:sd.scantable.set_fluxunit} &Set flux unit \\
+
+	\ahlink{set\_freqframe}{sd:sd.scantable.set_freqframe} &Set the frame type of the spectral axis \\
+
+	\ahlink{set\_instrument}{sd:sd.scantable.set_instrument} &Set antenna name \\
+
+	\ahlink{set\_restfreqs}{sd:sd.scantable.set_restfreqs} &Set rest frequency \\
+
+	\ahlink{set\_selection}{sd:sd.scantable.set_selection} &Select a subset of the data \\
+
+	\ahlink{set\_sourcetype}{sd:sd.scantable.set_sourcetype} &Set the types of source to be source or reference scan \\
+
+	\ahlink{set\_spectrum}{sd:sd.scantable.set_spectrum} &Set spectrum for specified row \\
+
+	\ahlink{set\_unit}{sd:sd.scantable.set_unit} &Set unit for spectral axis \\
+
+	\ahlink{shift\_refpix}{sd:sd.scantable.shift_refpix} &Shift the reference pixel of the spectral coordinate \\
+
+	\ahlink{smooth}{sd:sd.scantable.smooth} &Smooth the spectra \\
+
+	\ahlink{stats}{sd:sd.scantable.stats} &Compute specified statistics of the spectra \\
+
+	\ahlink{stddev}{sd:sd.scantable.stddev} &Compute standard deviation of the spectra \\
+
+	\ahlink{summary}{sd:sd.scantable.summary} &Print a summary of the contents of the scantable \\
+
+	\ahlink{swap\_linears}{sd:sd.scantable.swap_linears} &Swap the linear polarizations XX and YY \\
+
+\end{longtable}
+
+\newpage
+\ahfunction{sd.scantable.add}{Return a scan where all spectra have the offset added}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.auto\_poly\_baseline}{sd.scantable.auto_poly_baseline}{Perform automatic line finding and baseline subtraction}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.auto\_quotient}{sd.scantable.auto_quotient}{Automatic quotient for coordinated scans}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.average\_beam}{sd.scantable.average_beam}{Average beams together for multi-beam observation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.average\_pol}{sd.scantable.average_pol}{Average polarizations together}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.average\_time}{sd.scantable.average_time}{Return time average of a scan}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.bin}{Perform binning of spectra}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.chan2data}{Return channel/frequency/velocity and spectral value at an arbitrary row and channel}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.clip}{Flag data by its spectral value}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.convert\_flux}{sd.scantable.convert_flux}{Return a scan where all spectra are converted to Jy or K}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.convert\_pol}{sd.scantable.convert_pol}{Convert data to a different polarization type}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.copy}{Return a copy of this scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.create\_mask}{sd.scantable.create}{Return a bool array based on [min,max] windows}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.drop\_scan}{sd.scantable.drop_scan}{Return a new scantable where the specified scan number(s) are dropped}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.flag}{Flag selected data using specified mask (channel based flag)}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.flag\_nan}{sd.scantable.flag_nan}{Flag NaN values}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.flag\_row}{sd.scantable.flag}{Flag spectra based on specified rows (row based flag)}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.freq\_align}{sd.scantable.freq_align}{Perform frequency alignment}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.freq\_switch}{sd.scantable.freq_switch}{Apply frequency switching to the data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.gain\_el}{sd.scantable.gain_el}{Apply gain-elevation correction based on user-provided correction factors}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_abcissa}{sd.scantable.get_abcissa}{Get the abcissa values and format string that represents current coordinate setup}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_antennaname}{sd.scantable.get_antennaname}{Get antenna name}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_azimuth}{sd.scantable.get_azimuth}{Get a list of azimuth during the observation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_column\_names}{sd.scnatable_get_column_names}{Get a list of column names in the main table}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_coordinate}{sd.scantable.get_coordinate}{Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd.coordinate} object}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_direction}{sd.scnatable.get_direction}{Get a list of positions on the sky as a string}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_directionval}{sd.scntable.get_directionval}{Get a list of positions on the sky as a float}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_elevation}{sd.scntable.get_elevation}{Get a list of elevation during the observation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_fit}{sd.scntable.get_fit}{Get the stored fits for a row in scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_fluxunit}{get_fluxunit}{Get a flux unit}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_inttime}{sd.scantable.get_inttime}{Get a list of integration times for the observation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_mask}{sd.scantable.get_mask}{Get mask for the specified row as a bool list}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_mask\_indices}{sd.scantable.get_mask_indices}{Compute and return lists of mask start indices and mask end indices from the given bool array}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_masklist}{sd.cantable.get_masklist}{Compute and return a list of mask windows [min,max] from the given bool array}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_parangle}{sd.scantable.get_parangle}{Get a list of parallactic angles for the observation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_restfreqs}{sd.scnatable.get_restfreqs}{Get the rest frequency(s) stored in the scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_row}{sd.scantable.get_row}{Return a scantable with single row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_row\_selector}{sd.scantable.get_row_selector}{Return a \ahlink{selector}{sd:sd.selector} object that only selects target row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_scan}{sd.scnatable.get_scan}{Return a specified scan(s) specified by scan number or source name as a new scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_selection}{sd.scantable.get_selection}{Get current selection that is currently set on this scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_sourcename}{sd.scantable.get_sourcename}{Get a list of source names for the observation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_spectrum}{sd.scnatable.get_spectrum}{Get the spectrum for the current row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_time}{sd.scantable.get_time}{Get a list of time stamps for the observation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_tsys}{sd.scantable.get_tsys}{Get a list of system temperatures}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_unit}{sd.scantable.get_unit}{Get the default unit of spectral axis}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.get\_weather}{sd.scantable.get_weather}{Get the weather informations}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getbeam}{Get beam number of the given row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getbeamnos}{Get a list of beam numbers in the scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getcycle}{Get cycle number of the given row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getif}{Get IF number of the given row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getifnos}{Get a list of IF nubers in the scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getmolnos}{Get a list of molecule ids in the scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getpol}{Get polarization number of the given row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getpolnos}{Get a list of polarization numbers in the scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getscan}{Get scan number of the given row }
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.getscannos}{Get a list of scan numbers in the scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.history}{Print a history}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.invert\_phase}{sd.scantable.invert_phase}{Invert the phase of the complex polarization}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.lag\_flag}{sd.scntable.lag_flag}{Perform Fourier filtering on the spectra}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.mx\_quotient}{sd.scantable.mx_quotient}{Form a quotient using "off" beams when observing in "MX" mode}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.nbeam}{Return a number of beams}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.nchan}{Return a number of channels}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.ncycle}{Return a number of cycles}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.nif}{Return a number of IFs}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.npol}{Return a number of polarizations}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.nrow}{Return a number of rows}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.nscan}{Return a number of scans}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.old\_poly\_baseline}{sd.scantable.old_poly_baseline}{Older version of baseline subtraction function}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.opacity}{Apply an opacity correction}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.parallactify}{Set a flag to indicate the data should be treated as "parallactified"}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.poltype}{Get a plarization type}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.poly\_baseline}{sd.scantable.poly_baseline}{Perform a baseline subtraction}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.recalc\_azel}{sd.scntable.recalc_azel}{Recalculate azimuth and elevation for each sky position}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.resample}{Perform a binning}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.rotate\_linpolphase}{sd.scantable.rotate_linpolphase}{Rotate a phase of the complex polarization}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.rotate\_xyphase}{sd.scantable.rotate_xyphase}{Rotate a phase of the XY correlation}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.save}{Store the scantable on disk}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.scale}{Scale spectra by the given factor}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_dirframe}{sd.scantable.set_dirframe}{Set the frame type of the direction on the sky}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_doppler}{sd.scantable.set_doppler}{Set definition of the Doppler correction}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_feedtype}{sd.scantable.set_feedtype}{Set the feed type}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_fluxunit}{sd.scantable.set_fluxunit}{Set flux unit}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_freqframe}{sd.scantable.set_freqframe}{Set the frame type of the spectral axis}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_instrument}{sd.scantable.set_instrument}{Set antenna name}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_restfreqs}{sd.scantable.set_restfreqs}{Set rest frequency}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_selection}{sd.scantable.set_selection}{Select a subset of the data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_sourcetype}{sd.scantable.set_sourcetype}{Set the types of source to be source or reference scan}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_spectrum}{sd.scantable.set_spectrum}{Set spectrum for specified row}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.set\_unit}{sd.scantable.set_unit}{Set unit for spectral axis}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.shift\_refpix}{sd.scantable.shift_refpix}{Shift the reference pixel of the spectral coordinate}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.smooth}{Smooth the spectra}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.stats}{Compute specified statistics of the spectra}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.stddev}{Compute standard deviation of the spectra}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.scantable.summary}{Print a summary of the contents of the scantable}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.scantable.swap\_linears}{sd.scantable.swap_linears}{Swap the linear polarizations XX and YY}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%%%%% sd.selector
+\newpage
+\ahobject{sd.selector}{Data selection tool for single-dish data}
+%\ahfunction{sd.selector}{Data selection tool for single-dish data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  The selector is a data selection object that affects a 
+  \ahlink{scantable}{sd:sd.scantable} object via 
+  \ahlink{set\_selection}{sd:sd.scantable.set_selection} function.
+  Selection by the following attributes are available:
+
+\begin{itemize}
+\item scan number
+\item beam number
+\item cycle number
+\item IF number
+\item source name (allows regular expression)
+\item polarization number
+\item row number
+\item source type
+\item value of system temperature (minimum and maximum threshold)
+\end{itemize}
+
+  In addition, the selector provides interface for more flexible data 
+  selection using
+  \htmladdnormallink{TaQL}{http://aips2.nrao.edu/docs/notes/199/199.html}.
+
+  The selector also support sorting data. 
+  The selector sorts data based on values of columns specified by the user.
+
+  \medskip\noindent\textbf{Known Issues}
+
+    After the data in scantable is selected by the selector object, 
+    \ahlink{save}{sd:sd.scantable.save} function doesn't work.
+    Before saving selected data, you must \ahlink{copy}{sd:sd.scantable.copy} 
+    scantable first, and save it as usual.
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{get\_beams}{sd:sd.selector.get_beams} &Return a list of current beam selection \\
+
+	\ahlink{get\_cycles}{sd:sd.selector.get_cycles} &Return a list of current cycle selection \\
+
+	\ahlink{get\_ifs}{sd:sd.selector.get_ifs} &Return a list of current IF selection \\
+
+	\ahlink{get\_name}{sd:sd.selector.get_name} &Return a list of selection strings for source name  \\
+
+	\ahlink{get\_order}{sd:sd.selector.get_order} &Return a list of columns used for sorting \\
+
+	\ahlink{get\_pols}{sd:sd.selector.get_pols} &Return a list of current polarization selection \\
+
+	\ahlink{get\_poltypes}{sd:sd.selector.get_poltypes} &Return a polarization type for current polarization selection \\
+
+	\ahlink{get\_query}{sd:sd.selector.get_query} &Return current selection string for TaQL selection \\
+
+	\ahlink{get\_scans}{sd:sd.selector.get_scans} &Return a list of current scan selection \\
+
+	\ahlink{get\_types}{sd:sd.selector.get_types} &Return a list of current source type selection \\
+
+	\ahlink{is\_empty}{sd:sd.selector.is_empty} &Check if any selection has been set \\
+
+	\ahlink{reset}{sd:sd.selector.reset} &Unset all selections \\
+
+	\ahlink{set\_beams}{sd:sd.selector.set_beams} &Set a sequence of beam numbers \\
+
+	\ahlink{set\_cycles}{sd:sd.selector.set_cycles} &Set a sequence of cycle numbers \\
+
+	\ahlink{set\_ifs}{sd:sd.selector.set_ifs} &Set a sequence of IF numbers \\
+
+	\ahlink{set\_name}{sd:sd.selector.set_name} &Set a selection based on a source name \\
+
+	\ahlink{set\_order}{sd:sd.selector.set_order} &Set column names that is used for sorting data \\
+
+	\ahlink{set\_polarisations}{sd:sd.selector.set_polarisations} &Set a sequence of polarization numbers or strings \\
+
+	\ahlink{set\_polarizations}{sd:sd.selector.set_polarizations} &Set a sequence of polarization numbers or strings\\
+
+	\ahlink{set\_pols}{sd:sd.selector.set_pols} &Set a sequence of polarization numbers or strings \\
+
+	\ahlink{set\_query}{sd:sd.selector.set_query} &Set a selection string based on TaQL \\
+
+	\ahlink{set\_rows}{sd:sd.selector.set_rows} &Set a sequence of row numbers \\
+
+	\ahlink{set\_scans}{sd:sd.selector.set_scans} &Set a sequence of scan numbers  \\
+
+	\ahlink{set\_tsys}{sd:sd.selector.set_tsys} &Set range of system temperature \\
+
+	\ahlink{set\_types}{sd:sd.selector.set_types} &Set a sequence of source types \\
+
+\end{longtable}
+
+\newpage
+\ahsdfunction{sd.selector.get\_beams}{sd.selector.get_beams}{Return a list of current beam selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_cycles}{sd.selector.get_cycles}{Return a list of current cycle selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_ifs}{sd.selector.get_ifs}{Return a list of current IF selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_name}{sd.selector.get_name}{Return a list of selection strings for source name }
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_order}{get_order}{Return a list of columns used for sorting}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_pols}{sd.selector.get_pols}{Return a list of current polarization selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_poltypes}{get_poltypes}{Return a polarization type for current polarization selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_query}{sd.selector.get_query}{Return current selection string for TaQL selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_scans}{sd.selector.get_scans}{Return a list of current scan selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.get\_types}{sd.selector.get_types}{Return a list of current source type selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.is\_empty}{sd.selector.is_empty}{Check if any selection has been set}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahfunction{sd.selector.reset}{Unset all selections}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_beams}{sd.selector.set_beams}{Set a sequence of beam numbers}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_cycles}{sd.selector.set_cycles}{Set a sequence of cycle numbers}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_ifs}{sd.selector.set_ifs}{Set a sequence of IF numbers}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_name}{sd.selector.set_name}{Set a selection based on a source name}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_order}{sd.selector.set_order}{Set column names that is used for sorting data}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_polarisations}{sd.selector.set_polarisations}{Set a sequence of polarization numbers or strings}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_polarizations}{sd.selector.set_polarizations}{Set a sequence of polarization numbers or strings}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_pols}{sd.selector.set_pols}{Set a sequence of polarization numbers or strings}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_query}{sd.selector.set_query}{Set a selection string based on TaQL}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_rows}{sd.selector.set_rows}{Set a sequence of row numbers}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_scans}{sd.selector.set_scans}{Set a sequence of scan numbers}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_tsys}{sd.selector.set_tsys}{Set range of system temperature}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage
+\ahsdfunction{sd.selector.set\_types}{sd.selector.set_types}{Set a sequence of source types}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%%%%% sd.fitter
+\newpage
+\ahobject{sd.fitter}{General fitting tool}
+%\ahfunction{sd.fitter}{General fitting tool}
+
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+  The fitter is an object to fit data. This contains both baseline fitting 
+  and spectral line fitting. For baseline fitting, simple polynomial fitting 
+  with arbitrary order is available. For spectral line fitting, Gaussian 
+  and Lorentzian fitting are supported. It allows fitting of multiple 
+  lines, but it doesn't support hyperfine fitting, i.e. multiple line 
+  fitting under some constraints.
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{auto\_fit}{sd:sd.fitter.auto_fit} & Return a scan where the function is applied to all rows \\
+
+\end{longtable}
+
+\newpage
+\ahsdfunction{sd.fitter.auto\_fit}{sd.fitter.auto_fit}{Return a scan where the function is applied to all rows}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%%%%% sd.linefinder
+\newpage
+\ahobject{sd.linefinder}{Line finder tool for single-dish spectrum}
+%\ahfunction{sd.linefinder}{Line finder tool for single-dish spectrum}
+
+
+%%%%% sd.linecatalog
+\newpage
+\ahobject{sd.linecatalog}{Line catalog}
+%\ahfunction{sd.linecatalog}{Line catalog}
+
+
+%%%%% sd.plotter
+\newpage
+\ahobject{sd.plotter}{Single-dish specific plotter tool}
+%\ahfunction{sd.sdplotter}{Single-dish specific plotter tool}
+
+
+%%%%% sd.coordinate
+\newpage
+\ahobject{sd.coordinate}{Single-dish specific spectral coordinate conversion}
+%\ahfunction{sd.coordinate}{Single-dish specific spectral coordinate conversion}
+
+
+%%%%% sd.opacity_model
+\newpage
+\ahobject{sd.opacity\_model}{Single-dish specific opacity model}
+%\ahfunction{sd.opacity_model}{Single-dish specific opacity model}
+
+
+

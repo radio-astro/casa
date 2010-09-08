@@ -263,7 +263,7 @@ class simutil:
         lowvalue=imhist['values'][ii]
         ii=nbin-1
         highcounts=imhist['counts'][ii]
-        while imhist['counts'][ii]>0.995*highcounts and ii>0: 
+        while imhist['counts'][ii]>0.995*highcounts and ii>0 and 0.995*highcounts>lowcounts: 
             ii=ii-1
         highvalue=imhist['values'][ii]
         if disprange != None:
@@ -279,7 +279,7 @@ class simutil:
                     disprange.append(highvalue)
             else:
                 highvalue=disprange  # assume if scalar passed its the max
-            
+
         if plot:
             img=pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue,vmin=lowvalue)            
             ax=pl.gca()
@@ -799,12 +799,12 @@ class simutil:
         if telescope==None: telescope=self.telescopename
         telescope=str.upper(telescope)
         
-        obs =['ALMA','ACA','EVLA','VLA']
-        d   =[ 12.   ,7.,   25.  , 25. ]
-        ds  =[ 0.75,  0.75, 0.364, 0.364] # what is subreflector size for ACA?!
-        eps =[ 25.,   25.,  300,   300 ]  # antenna surface accuracy
+        obs =['ALMA','ACA','EVLA','VLA','SMA']
+        d   =[ 12.   ,7.,   25.  , 25.  , 6. ]
+        ds  =[ 0.75,  0.75, 0.364, 0.364,0.35] # what is subreflector size for ACA?!
+        eps =[ 25.,   25.,  300,   300  ,15. ]  # antenna surface accuracy
         
-        cq  =[ 0.95, 0.95,  0.91,  0.79]  # correlator quantization eff
+        cq  =[ 0.95, 0.95,  0.91,  0.79, 0.86]  # correlator quantization eff
         # VLA includes additional waveguide loss from correlator loss of 0.809
         
         if obs.count(telescope)>0:
@@ -867,12 +867,17 @@ class simutil:
                     f0=[0.32, 1.5, 4.75, 8.4, 14.9, 23, 45 ]
                     t0=[165,  56,  44,   34,  110, 110, 110]
                     flim=[0.305,50]
-                    if self.verbose: self.msg("using old VLA Rx specs",origin="noisetemp")
+                    if self.verbose: self.msg("using old VLA Rx specs",origin="noisetemp")                    
                 else:
-                    self.msg("I don't know about the "+telescope+" receivers, using 200K",priority="warn",origin="noisetemp")
-                    f0=[10,900]
-                    t0=[200,200]
-                    flim=[0,5000]
+                    if telescope=='SMA':
+                        f0=[212.,310.,383.,660.]
+                        t0=[67,  116, 134, 500]
+                        flim=[180.,700]
+                    else:
+                        self.msg("I don't know about the "+telescope+" receivers, using 200K",priority="warn",origin="noisetemp")
+                        f0=[10,900]
+                        t0=[200,200]
+                        flim=[0,5000]
 
 
         obsfreq=freq_ghz.get("value")
@@ -2611,7 +2616,7 @@ class simutil:
         
         # print clean inputs no matter what, so user can use them.
         # and write a clean.last file
-        cleanlast=open("clean.last","write")
+        cleanlast=open(image+".clean.last","write")
         cleanlast.write('taskname            = "clean"\n')
 
         self.msg("clean inputs:")
@@ -2711,7 +2716,10 @@ class simutil:
         cleanlast.write('reffreq                 = ""\n');
         cleanlast.write('chaniter                = False\n');
         cleanstr=cleanstr+")"
-        self.msg(cleanstr,priority="warn")
+        if self.verbose:
+            self.msg(cleanstr,priority="warn")
+        else:
+            self.msg(cleanstr)
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         

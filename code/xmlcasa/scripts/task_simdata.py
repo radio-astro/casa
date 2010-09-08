@@ -35,6 +35,12 @@ def simdata(
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
 
+    #from casa_in_py import saveinputs
+    #saveinputs(taskname="simdata",outfile=project+".simdata.last")
+
+
+
+
     # some hardcoded variables that may be reintroduced in future development
     relmargin=.5  # number of PB between edge of model and pointing centers
     scanlength=1  # number of integrations per scan
@@ -56,6 +62,8 @@ def simdata(
 
     if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
         msg("No skymodel found. Some functionality is not supported when predicting from only components.",priority="warn")
+        if analyze:
+            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
 
     grscreen=False
     grfile=False
@@ -120,15 +128,6 @@ def simdata(
             bandwidth=qa.mul(qa.quantity(model_nchan),qa.quantity(model_width))
             util.bandwidth=bandwidth
 
-            if len(mapsize)==0:
-                mapsize=model_size
-                if verbose: msg("setting map size to "+str(model_size))
-            else:
-                 if type(mapsize)==type([]):
-                     if len(mapsize[0])==0:
-                         mapsize=model_size
-                         if verbose: msg("setting map size to "+str(model_size))
-
         else:
             # if there are only components, modifymodel=T doesn't 
             # make sense
@@ -144,6 +143,7 @@ def simdata(
             # we need model_refdir below for calibrator
             compdirs=[]
             cl.open(complist)
+
             for i in range(cl.length()):
                 compdirs.append(util.dir_m2s(cl.getrefdir(i)))
 
@@ -162,8 +162,31 @@ def simdata(
                 if yc>cmax:
                     cmax=yc
 
-            model_size=qa.quantity(2*cmax,'deg'),qa.quantity(2*cmax,'deg')
+            #model_size=qa.quantity(2*cmax,'deg'),qa.quantity(2*cmax,'deg')
+            model_size= ["%fdeg" % (2*cmax), "%fdeg" % (2*cmax)]
             model_cell=["0.1arcsec","0.1arcsec"]
+
+            
+            if type(cell)==type([]):
+                if len(cell)>0:
+                    cell0=cell[0]
+                else:
+                    cell0=""
+            else:
+                cell0=cell
+
+            if len(cell0)>0:
+                model_cell=[cell0,cell0]
+
+
+        if len(mapsize)==0:
+            mapsize=model_size
+            if verbose: msg("setting map size to "+str(model_size))
+        else:
+             if type(mapsize)==type([]):
+                 if len(mapsize[0])==0:
+                     mapsize=model_size
+                     if verbose: msg("setting map size to "+str(model_size))
 
 
 
@@ -365,10 +388,11 @@ def simdata(
                 else:
                     plotcolor='k'
 
-                if offsets.shape[1]>18 or pb<=0:
+                if offsets.shape[1]>10 or pb<=0 or pb>pl.absolute(lims[0][0]):
                     pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
                             plotcolor+'+',markeredgewidth=1)
-                    if pb>0:
+                    lims=pl.xlim(),pl.ylim()
+                    if pb>0 and pl.absolute(lims[0][0])>pb:
                         plotpb(pb,pl.gca(),lims=lims)
                 else:
                     from matplotlib.patches import Circle
@@ -531,12 +555,21 @@ def simdata(
 
                 if not components_only:                
                     if len(complist)>1:
-                        msg("predicting from "+newmodel+" and "+complist,priority="warn")
+                        if verbose:
+                            msg("predicting from "+newmodel+" and "+complist,priority="warn")
+                        else:
+                            msg("predicting from "+newmodel+" and "+complist)
                     else:
-                        msg("predicting from "+newmodel,priority="warn")
+                        if verbose:
+                            msg("predicting from "+newmodel,priority="warn")
+                        else:
+                            msg("predicting from "+newmodel)
                     sm.predict(imagename=newmodel,complist=complist)
                 else:   # if we're doing only components
-                    msg("predicting from "+complist,priority="warn")
+                    if verbose:
+                        msg("predicting from "+complist,priority="warn")
+                    else:
+                        msg("predicting from "+complist)
                     sm.predict(complist=complist)
             
                 sm.done()        
@@ -774,8 +807,8 @@ def simdata(
         msroot=project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
-            if not (telescopename == 'ALMA' or telescopename == 'ACA'):
-                msg("thermal noise only works properly for ALMA/ACA",origin="noise",priority="warn")
+            if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
+                msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
                 
             noise_any=True
 
@@ -795,10 +828,15 @@ def simdata(
 
             # check for interferometric ms:
             if os.path.exists(msroot+".ms"):
-                msg('copying '+msroot+'.ms to ' + 
-                    noisymsroot+'.ms and adding thermal noise',
-                    origin="noise",priority="warn")
-                
+                if verbose:
+                    msg('copying '+msroot+'.ms to ' + 
+                        noisymsroot+'.ms and adding thermal noise',
+                        origin="noise",priority="warn")
+                else:
+                    msg('copying '+msroot+'.ms to ' + 
+                        noisymsroot+'.ms and adding thermal noise',
+                        origin="noise")
+
                 if os.path.exists(noisymsroot+".ms"):
                     shutil.rmtree(noisymsroot+".ms")                
                 shutil.copytree(msfile,noisymsroot+".ms")
@@ -819,7 +857,7 @@ def simdata(
                             ",trx="+str(t_rx)+",tau="+str(tau0)+
                             ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-                        msg("** this may take some time if your MS is finely sampled in time ** ",priority="warn")
+                        msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
                                 tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
@@ -831,7 +869,7 @@ def simdata(
                             ",trx="+str(t_rx)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
                             ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
-                        msg("** this may take a few minutes, but will be faster in the future",priority="warn")
+                        msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
                                 tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
@@ -960,18 +998,21 @@ def simdata(
                 tpimage=modelimage
                 tpset=True
 
-            # parse ms parameter and check for existance
-            # TODO if noisy ms was created, switch automagically?  probably best do 
-            # do that in the xml defaults instead so the user can change it if they want
-            # if noise_any:
+            # parse ms parameter and check for existance; 
+            # if noise_any
             #     mstoimage = noisymsfile
             # else:
             #     mstoimage = msfile            
-                        
+                 
             mslist=vis.split(',')
             mstoimage=[]
             for ms0 in mslist:
                 if not len(ms0): continue
+                # if noisy ms was created, check for defaults:
+                if ms0=="$project.ms" and noise_any:
+                    msg("you are requesting to image $project.ms, but have created a corrupted $project.noisy.ms",priority="error");
+                    msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy.ms in the image subtask",priority="error");
+
                 ms1=ms0.replace('$project',project)
                 if os.path.exists(ms1):
                     # check if the ms is tp data or not.
@@ -1100,54 +1141,55 @@ def simdata(
             else:
                 file=""
 
-            # create fake model from components for analysis
-            if components_only:
-                newmodel=project+".compskymodel"
-                if not os.path.exists(project+".image"):
-                    msg("must image before analyzing",priority="error")
-                    return False
-                ia.imagecalc(pixels="'"+project+".image' * 0",outfile=newmodel,overwrite=True)
-                ia.open(newmodel)
-                cl.open(complist)
-                ia.setbrightnessunit("Jy/pixel")
-                ia.modify(cl.torecord(),subtract=False)
-                modelcsys=ia.coordsys()
-                modelshape=ia.shape()
+        # create fake model from components for analysis
+        if components_only:
+            newmodel=project+".compskymodel"
+            if not os.path.exists(project+".image"):
+                msg("must image before analyzing",priority="error")
+                return False
+            ia.imagecalc(pixels="'"+project+".image' * 0",outfile=newmodel,overwrite=True)
+            ia.open(newmodel)
+            cl.open(complist)
+            ia.setbrightnessunit("Jy/pixel")
+            ia.modify(cl.torecord(),subtract=False)
+            modelcsys=ia.coordsys()
+            modelshape=ia.shape()
 
-                modelflat=project+".compskymodel.flat"
+            modelflat=project+".compskymodel.flat"
 
-                # TODO should be able to simplify degen axes code using new
-                # image anal tools.
-                inspectax=modelcsys.findcoordinate('spectral')['pixel']
-                innchan=modelshape[inspectax]
-                
-                stokesax=modelcsys.findcoordinate('stokes')['pixel']
-                innstokes=modelshape[stokesax]
+            # TODO should be able to simplify degen axes code using new
+            # image anal tools.
+            inspectax=modelcsys.findcoordinate('spectral')['pixel']
+            innchan=modelshape[inspectax]
+            
+            stokesax=modelcsys.findcoordinate('stokes')['pixel']
+            innstokes=modelshape[stokesax]
 
-                if innchan>1:
-                    # actually run ia.moments
-                    ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
-                    ia.done()
-                else:   
-                    ia.done()
+            if innchan>1:
+                # actually run ia.moments
+                ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
+                ia.done()
+            else:   
+                ia.done()
 
-                    # just remove degenerate axes from modelimage4d
-                    ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
-                    if innstokes<=1:
-                        os.rename(modelflat,modelflat+".tmp")
-                        ia.open(modelflat+".tmp")
-                        ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
-                        ia.done()
-                        shutil.rmtree(modelflat+".tmp")
-                if innstokes>1:
+                # just remove degenerate axes from modelimage4d
+                ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
+                if innstokes<=1:
                     os.rename(modelflat,modelflat+".tmp")
-                    po.open(modelflat+".tmp")
-                    foo=po.stokesi(outfile=modelflat,stokes='I')
-                    foo.done()
-                    po.done()
+                    ia.open(modelflat+".tmp")
+                    ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
+                    ia.done()
                     shutil.rmtree(modelflat+".tmp")
+            if innstokes>1:
+                os.rename(modelflat,modelflat+".tmp")
+                po.open(modelflat+".tmp")
+                foo=po.stokesi(outfile=modelflat,stokes='I')
+                foo.done()
+                po.done()
+                shutil.rmtree(modelflat+".tmp")
 
 
+        if image and len(mstoimage)>0:
             if grscreen or grfile:
                 util.newfig(multi=[2,2,1],show=grscreen)
 
@@ -1163,7 +1205,12 @@ def simdata(
 
                 # disprange from skymodel.regrid is in Jy/pix, but convolved im is in Jy/bm
                 # bmarea is in units of output image pixels
-                disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
+                # unless we simulated from components in which case things 
+                # are off
+                if components_only:
+                    disprange=[]
+                else:
+                    disprange=[disprange[0]*bmarea,disprange[1]*bmarea]
 
                 # convolved sky model - units of Jy/bm
                 discard = util.statim(modelflat+".regrid.conv",disprange=disprange)                
