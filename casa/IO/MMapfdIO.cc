@@ -44,17 +44,17 @@ namespace casa
     : itsFileSize   (0),
       itsMapOffset  (0),
       itsMapSize    (0),
-      itsTotalMapSize(0),
       itsPosition   (0),
       itsPtr        (NULL),
-      itsIsWritable (False)
+      itsIsWritable (False),
+      itsTotalMapSize(0)
   {}
 
     MMapfdIO::MMapfdIO (int fd, const String& fileName)
       :  itsMapOffset  (0),
          itsMapSize    (0),
-	 itsTotalMapSize(0),
-         itsPtr        (NULL)
+         itsPtr        (NULL),
+	 itsTotalMapSize(0)
   {
     map (fd, fileName);
   }
