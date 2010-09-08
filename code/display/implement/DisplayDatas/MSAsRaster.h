@@ -700,7 +700,8 @@ class MSAsRaster: public ActiveCaching2dDD {
 			// from a running average (DIFF) or a running
 			// RMS (RMS).
 
-  Int nAvg_;		// value in itsNAvg (above).
+  Int nDAvg_;		// RMS/Diff average value in itsNAvg (above).
+  Int nPAvg_;		// number of planes to average
 
   Vector<Int> fieldIds_;	// user-selected field IDs and
   Vector<Int> spwIds_;		// spectral window IDs (0-based).
@@ -1255,6 +1256,10 @@ class MSAsRaster: public ActiveCaching2dDD {
   // by the user for mapping data values.  It has rigid single colors
   // for the different conditions.
   Colormap flagCM_;
+
+private:
+
+  bool adjustAvgRange( VisDev newstate, Record &outrec );
 
 };
 
