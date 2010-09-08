@@ -2049,7 +2049,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.scantable.swap_linears}{Swap the linear polarizations XX and YY}
+\ahsdfunction{sd.scantable.swap\_linears}{sd.scantable.swap_linears}{Swap the linear polarizations XX and YY}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2170,7 +2170,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_cycles}{Return a list of current cycle selection}
+\ahsdfunction{sd.selector.get\_cycles}{sd.selector.get_cycles}{Return a list of current cycle selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2183,7 +2183,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_ifs}{Return a list of current IF selection}
+\ahsdfunction{sd.selector.get\_ifs}{sd.selector.get_ifs}{Return a list of current IF selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2196,7 +2196,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_name}{Return a list of selection strings for source name }
+\ahsdfunction{sd.selector.get\_name}{sd.selector.get_name}{Return a list of selection strings for source name }
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2209,7 +2209,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_order}{Return a list of columns used for sorting}
+\ahsdfunction{sd.selector.get\_order}{get_order}{Return a list of columns used for sorting}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2222,7 +2222,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_pols}{Return a list of current polarization selection}
+\ahsdfunction{sd.selector.get\_pols}{sd.selector.get_pols}{Return a list of current polarization selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2235,7 +2235,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_poltypes}{Return a polarization type for current polarization selection}
+\ahsdfunction{sd.selector.get\_poltypes}{get_poltypes}{Return a polarization type for current polarization selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2248,7 +2248,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_query}{Return current selection string for TaQL selection}
+\ahsdfunction{sd.selector.get\_query}{sd.selector.get_query}{Return current selection string for TaQL selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2261,7 +2261,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_scans}{Return a list of current scan selection}
+\ahsdfunction{sd.selector.get\_scans}{sd.selector.get_scans}{Return a list of current scan selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2274,7 +2274,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.get_types}{Return a list of current source type selection}
+\ahsdfunction{sd.selector.get\_types}{sd.selector.get_types}{Return a list of current source type selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2287,7 +2287,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.is_empty}{Check if any selection has been set}
+\ahsdfunction{sd.selector.is\_empty}{sd.selector.is_empty}{Check if any selection has been set}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2313,7 +2313,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_beams}{Set a sequence of beam numbers}
+\ahsdfunction{sd.selector.set\_beams}{sd.selector.set_beams}{Set a sequence of beam numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2326,7 +2326,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_cycles}{Set a sequence of cycle numbers}
+\ahsdfunction{sd.selector.set\_cycles}{sd.selector.set_cycles}{Set a sequence of cycle numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2339,7 +2339,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_ifs}{Set a sequence of IF numbers}
+\ahsdfunction{sd.selector.set\_ifs}{sd.selector.set_ifs}{Set a sequence of IF numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2352,7 +2352,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_name}{Set a selection based on a source name}
+\ahsdfunction{sd.selector.set\_name}{sd.selector.set_name}{Set a selection based on a source name}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2365,7 +2365,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_order}{Set column names that is used for sorting data}
+\ahsdfunction{sd.selector.set\_order}{sd.selector.set_order}{Set column names that is used for sorting data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2378,7 +2378,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_polarisations}{Set a sequence of polarization numbers or strings}
+\ahsdfunction{sd.selector.set\_polarisations}{sd.selector.set_polarisations}{Set a sequence of polarization numbers or strings}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2391,7 +2391,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_polarizations}{Set a sequence of polarization numbers or strings}
+\ahsdfunction{sd.selector.set\_polarizations}{sd.selector.set_polarizations}{Set a sequence of polarization numbers or strings}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2404,7 +2404,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_pols}{Set a sequence of polarization numbers or strings}
+\ahsdfunction{sd.selector.set\_pols}{sd.selector.set_pols}{Set a sequence of polarization numbers or strings}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2417,7 +2417,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_query}{Set a selection string based on TaQL}
+\ahsdfunction{sd.selector.set\_query}{sd.selector.set_query}{Set a selection string based on TaQL}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2430,7 +2430,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_rows}{Set a sequence of row numbers}
+\ahsdfunction{sd.selector.set\_rows}{sd.selector.set_rows}{Set a sequence of row numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2443,7 +2443,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_scans}{Set a sequence of scan numbers}
+\ahsdfunction{sd.selector.set\_scans}{sd.selector.set_scans}{Set a sequence of scan numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2456,7 +2456,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_tsys}{Set range of system temperature}
+\ahsdfunction{sd.selector.set\_tsys}{sd.selector.set_tsys}{Set range of system temperature}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2469,7 +2469,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahfunction{sd.selector.set_types}{Set a sequence of source types}
+\ahsdfunction{sd.selector.set\_types}{sd.selector.set_types}{Set a sequence of source types}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -2506,7 +2506,7 @@ Methods
 \end{longtable}
 
 \newpage
-\ahfunction{sd.fitter.auto_fit}{Return a scan where the function is applied to all rows}
+\ahsdfunction{sd.fitter.auto\_fit}{sd.fitter.auto_fit}{Return a scan where the function is applied to all rows}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
