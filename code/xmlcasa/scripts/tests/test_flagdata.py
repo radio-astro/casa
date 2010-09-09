@@ -79,12 +79,68 @@ class test_shadow(test_base):
         test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 1456)
 
 
+class test_shadow_ngc5921(test_base):
+    """More test of mode = 'shadow'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_CAS2399(self):
+        flagdata(vis = self.vis,
+                 unflag = True)
+        flagdata(vis = self.vis,
+                 mode = "shadow",
+                 diameter = 35)
+        allbl = flagdata(vis = self.vis,
+                         mode = "summary")
+
+        # Sketch of what is being shadowed:
+        #
+        #  A23 shadowed by A1
+        #
+        #  A13 shadowed by A2 shadowed by A9
+        #
+        
+        # Now remove baseline 2-13   (named 3-14)
+        outputvis = "missing-baseline.ms"
+        os.system("rm -rf " + outputvis)
+        split(vis = self.vis, 
+              outputvis = outputvis,
+              datacolumn = "data",
+              antenna = "!3&&14")
+        
+        flagdata(vis = outputvis,
+                 unflag = True)
+        flagdata(vis = outputvis,
+                 mode = "shadow",
+                 diameter = 35)
+        
+        missingbl = flagdata(vis = outputvis,
+                             mode = "summary")
+
+        # With baseline based flagging, A13 will not get flagged
+        # when the baseline is missing
+        #
+        # With antenna based flagging, A13 should be flagged
+        
+        assert allbl['antenna']['3']['flagged'] > 1000
+        assert allbl['antenna']['24']['flagged'] > 1000
+        
+        assert missingbl['antenna']['3']['flagged'] > 1000
+        assert missingbl['antenna']['24']['flagged'] == allbl['antenna']['24']['flagged']
+        
+        assert allbl['antenna']['14']['flagged'] > 1000
+        # When the baseline is missing, the antenna is not flagged as before
+        assert missingbl['antenna']['14']['flagged'] < 1000
+        
+        # For antenna based flagging, it should be (to be uncommented when CAS-2399
+        # is solved):
+        #assert missingbl['antenna']['14']['flagged'] > 1000
+
 class test_vector(test_base):
     def setUp(self):
         self.setUp_flagdatatest()
 
     def test1(self):
-
         print "Test of vector mode"
         
         clipminmax=[0.0, 0.2]
@@ -292,7 +348,7 @@ class test_autoflag(test_base):
         flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 29101)
 
-    def test_cas2410(self):
+    def test_CAS2410(self):
         flagdata(vis=self.vis, scan='3')
         flagdata(vis=self.vis, scan='6', mode='autoflag', algorithm='timemed', window=3)
         test_eq(flagdata(vis=self.vis, mode="summary"), 2854278, 763371)
@@ -463,6 +519,7 @@ def suite():
             test_flagmanager,
             test_rfi,
             test_shadow,
+            test_shadow_ngc5921,
             test_msselection,
             test_autoflag,
             cleanup]
