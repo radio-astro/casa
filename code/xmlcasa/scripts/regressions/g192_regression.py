@@ -9,17 +9,14 @@ import os
 
 os.system('rm -rf g192*.ms g192_a* g192.*.im')
 
-default('importvla')
-
 startTime = time.time()
 startProc = time.clock()
 
 print '--Import--'
-#importvla(['../../Data/G192/AS758_C030425.xp1','../../Data/G192/AS758_C030425.xp2','../../Data/G192/AS758_C030425.xp3','../../Data/G192/AS758_C030426.xp4','../../Data/G192/AS758_C030426.xp5'],'g192_a.ms',bandname='K',frequencytol=10000000.0)
 datapath=os.environ.get('CASAPATH').split()[0] +'/data/regression/ATST1/G192/'
 
 default('importvla')
-importvla(archivefiles=[datapath+'AS758_C030425.xp1',datapath+'AS758_C030425.xp2',datapath+'AS758_C030425.xp3',datapath+'AS758_C030426.xp4',datapath+'AS758_C030426.xp5'],
+importvla(archivefiles=[datapath + 'AS758_C030425.xp1',datapath+'AS758_C030425.xp2',datapath+'AS758_C030425.xp3',datapath+'AS758_C030426.xp4',datapath+'AS758_C030426.xp5'],
 	  vis='g192_a.ms',bandname='K',frequencytol=10000000.0)
 importtime = time.time() 
 print '--Observation summary--'

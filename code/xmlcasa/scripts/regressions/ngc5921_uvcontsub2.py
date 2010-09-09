@@ -487,26 +487,31 @@ os.system('rm -f ' + listcalOut + '.tmp')
 # Test the listcal output
 print "Comparing listcal output with standard..."
 standardOut = pathname+'/data/regression/ngc5921/listcal.default.out'
-passlistcal = True
+passlistcal = False
 
 # Test metadata
 print "  1. Checking that metadata agree."
-if (listing.diffMetadata(listcalOut,standardOut,prefix=prefix+".listcal")):
-    print "  Metadata agree"
-else:
-    print "  Metadata do not agree!"
-    passlistcal = False
+try:
+    if listing.diffMetadata(listcalOut,standardOut,prefix=prefix+".listcal"):
+        print "  Metadata agree"
+        passlistcal = True
+    else:
+        print "  Metadata do not agree!"
 
-# Test data (floats)
-print "  2. Checking that data agree to within allowed imprecision..."
-precision = '0.003'
-print "     Allowed visibility imprecision is " + precision
-if ( listing.diffAmpPhsFloat(listcalOut,standardOut,prefix=prefix+".listcal",
-                             precision=precision) ):
-    print "  Data agree"
-else:
-    print "  Data do not agree!"
-    passlistcal = False
+    # Test data (floats)
+    print "  2. Checking that data agree to within allowed imprecision..."
+    precision = '0.003'
+    print "     Allowed visibility imprecision is " + precision
+    if listing.diffAmpPhsFloat(listcalOut,standardOut,
+                               prefix=prefix+".listcal",
+                               precision=precision):
+        passlistcal &= True
+        print "  Data agree"
+    else:
+        print "  Data do not agree!"
+except Exception, e:
+    print "Error", e, "checking listcal."
+    raise e
 
 if (passlistcal): print "Passed listcal output test"
 else:             print "FAILED listcal output test"

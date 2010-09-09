@@ -3032,6 +3032,7 @@ one field, and will currently only process Stokes I.
      <value>Perley 90</value>
      <value>Perley-Taylor 95</value>
      <value>Perley-Taylor 99</value>
+     <value>Perley-Butler 2010</value>
      <value>SOURCE</value>
      </param>
 </input>
