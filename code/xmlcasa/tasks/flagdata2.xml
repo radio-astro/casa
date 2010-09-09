@@ -695,6 +695,7 @@
            data and at the same time less than or equal to 3000 flagged values.
 
         -- EXAMPLES --
+        
         1) Run multiple modes at the same time. 
         
            -- Flag shadowed antennas and quack data in selected fields 0~5 and manually flag field 2:
@@ -738,7 +739,7 @@
 
             Note that mf_field='3' is equivalent to mf_field=['3','3','3']
 
-           -- Another example of vector mode combined with another non-vector mode is:
+           -- Another example of vector mode combined with a non-vector mode (clip) is:
 
            vis = 'my.ms'
            manualflag = True
@@ -754,6 +755,26 @@
                      clip=True, clipminmax=[0.0,0.2])
                      
            At run time, flagdata2 will first flag manually in parallel mode, then it will clip.
+           
+           -- Flag the following using vector-mode:
+              Get rid of the autocorrelations from the MS.        
+              Flag antenna with antennaid 8.  
+              Flag data (which is bad) in a time range.    
+              Flag all antenna 14, 15 data in the time ranges stated.
+              
+              vis = 'ngc1333.ms'
+              manualflag = True
+              mf_antenna   = ['*&amp;&amp;&amp;'  , 'VA09', ''   , 'VA14', 'VA15']
+              mf_timerange = [''  , ''    , '2003/05/02/21:40:58~2003/05/02/22:01:30', \
+                             '2003/05/02/18:50:50~2003/05/02/19:13:30', \
+                             '2003/05/02/22:38:49~2003/05/02/22:39:11'] 
+              mf_spw       = [''  , ''    , ''   , ''    , '0'   ]
+              
+              in this example, antenna='*&amp;&amp;&amp;' will flag all auto-correlations in the MS.
+              
+              flagdata2()
+              
+
 
  </example>
  </task>
