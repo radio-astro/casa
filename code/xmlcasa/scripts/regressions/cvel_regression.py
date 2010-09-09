@@ -134,8 +134,8 @@ hanningsmooth(vis=clean_inputvis_local_copy2)
 # the most critical one is CMB (largest freq shift)
 #frames_to_do = ['CMB']
 
-# in order to shorten the test, leave out LSRD, GALACTO, and LGROUP
-frames_to_do = ['TOPO', 'LSRK', 'BARY', 'CMB']
+# in order to shorten the test, leave out LSRD, GALACTO, and TOPO
+frames_to_do = ['LGROUP', 'LSRK', 'BARY', 'CMB']
 
 for frame in frames_to_do:
     
@@ -419,7 +419,7 @@ for frame in frames_to_do:
 # Analysis
 
 passed = True
-tolerance = 0.001
+tolerance = 0.0009
 numpoints = 0.
 avdev = 0.
 maxdev = 0.
