@@ -52,23 +52,15 @@ from testwrapper import *
 # to this program
 LISTofTESTS = TESTS_DIR+'unittests_list.txt'
 
-SHORT_LIST = ['test_boxit',
-             'test_clean',
-             'test_csvclean',
-             'test_exportasdm',
-             'test_imfit',
-             'test_imhead',
-             'test_importasdm',
+SHORT_LIST = [
              'test_importevla',
-             'test_imregrid',
-             'test_imstat',
-             'test_imtrans',
-             'test_imval',
              'test_listvis',
-             'test_plotants',
              'test_plotms',
-             'test_smoothcal',
-             'test_vishead']
+             'test_sdplot',
+             'test_sdsave',
+             'test_version',
+             'test_viewer'
+             ]
 
 # memory mode variable
 MEM = 0
