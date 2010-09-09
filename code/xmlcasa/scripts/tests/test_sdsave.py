@@ -462,6 +462,4 @@ class sdsave_test5(unittest.TestCase):
 
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
-            sdsave_test3,sdsave_test4]
-#    return [sdsave_test0,sdsave_test1,sdsave_test2,
-#            sdsave_test3,sdsave_test4,sdsave_test5]
+            sdsave_test3,sdsave_test4,sdsave_test5]
