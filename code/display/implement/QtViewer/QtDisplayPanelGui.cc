@@ -1384,7 +1384,7 @@ TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
     
   
   trkgEdit_->setMinimumWidth(355);
-  trkgEdit_->setFixedHeight(47);
+  trkgEdit_->setFixedHeight( qdd->dataType() == "ms" ? 81 : 47 );
   // trkgEdit_->setFixedHeight(81);	// (obs.)
   //trkgEdit_->setPlainText("\n  ");	// (Doesn't work on init,
   //setTrackingHeight_();		// for some reason...).
