@@ -16,6 +16,12 @@ Synopsis
   The sd tool is a top level object and it contains various 
   sub tools as well as a number of functions.
 
+  \medskip\noindent\textbf{Important note}
+
+    To access sd tool from \casa\ , the user must execute asap_init(). 
+    This command imports ASAP package as sd tool and make single-dish 
+    tasks available.
+
   \medskip\noindent\textbf{Data format}
 
     There are various types of data format for single-dish data.
@@ -160,6 +166,8 @@ Methods
 
 	\ahlink{quotient}{sd:sd.quotient} &Take a quotient of a signal and reference scan \\
 
+        \ahlink{rc}{sd:sd.rc} &Set the current rc parameters \\
+
 	\ahlink{scantable}{sd:sd.scantable} &Create scantable object \\
 
 	\ahlink{selector}{sd:sd.selector} &Create selector object \\
@@ -170,112 +178,464 @@ Methods
 
 	\ahlink{unique}{sd:sd.unique} &Return the unique values in a list \\
 
-	\ahlink{welcome}{sd:sd.welcome} &Print a welcome message \\
+	\ahlink{welcome}{sd:sd.welcome} &Return a welcome message \\
 
 \end{longtable}
 
 
 
 
+%% sd.almacal
 \newpage
 \ahfunction{sd.almacal}{Calibration function specific for ALMA data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
   
+  This method is properly defined for calibration of ALMA data.
+  Input data must be a scantable object. The calibration scheme is, 
+
+  \begin{displaymath}
+  T_{\rm a}^* = T_{\rm sys} { {ON - OFF} \over OFF },
+  \end{displaymath}
+
+  where $T_{\rm a}^*$ is an antenna temperature, $T_{\rm sys}$ is a 
+  system temperature, $ON$ and $OFF$ are raw (uncalibrated) spectral 
+  data that correspond to on-source and off-source position, 
+  respectively. The $OFF$ scan is linearly interpolated in time if it exists 
+  in the vicinity of target $ON$ scan.
+  The calmode argument specifies calibration mode. Supported calibration 
+  modes are 'ps' (position switch) and 'fs' (frequency switch). 
+  The 'ps' includes calibration for nutator switching 
+  as well as classical position switching.
+  The 'ps' mode also supports calibration of OTF position raster scanned 
+  data that consists of on-source scans with simple scan pattern and 
+  explicit off-source scans. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scantab&& \multicolumn{2}{p{3.36in}|}{input data as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+scannos&& \multicolumn{2}{p{3.36in}|}{a list of scan numbers to be calibrated}\\
+& &allowed: & (list of) integer, string \\
+& &Default: & [] (all data)
+\\
+calmode&& \multicolumn{2}{p{3.36in}|}{Calibration mode}\\
+& &allowed: & string ('ps', 'fs', 'none')\\
+& &Default: & 'none'
+\\
+verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
-bool
+scantable that contains calibrated spectra
 \newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+\begin{verbatim}
+
+    
+    asap_init()
+    s=sd.scantable('alma-scans.asap',average=False,getpt=True)
+    scal=sd.almacal(s,calmode='ps')
+    
   
+\end{verbatim}
+
+%% sd.apexcal
 \newpage
 \ahfunction{sd.apexcal}{Calibration function specific for APEX data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+  This method is properly defined for calibration of APEX data.
+  Input data must be a scantable object. The calibration scheme is 
+  essentially same as ALMA data, 
+
+  \begin{displaymath}
+  T_{\rm a}^* = T_{\rm sys} { {ON - OFF} \over OFF },
+  \end{displaymath}
+
+  where $T_{\rm a}^*$ is an antenna temperature, $T_{\rm sys}$ is a 
+  system temperature, $ON$ and $OFF$ are raw (uncalibrated) spectral 
+  data that correspond to on-source and off-source position, 
+  respectively. Only difference with ALMA calibration is that 
+  $T_{\rm sys}$ doesn't provided. Instead, it is computed from 
+  a calibration temperature and two calibration scans: a blank sky 
+  and a load with known temperature.
+  The $OFF$ scan is linearly interpolated in time if it exists 
+  in the vicinity of target $ON$ scan.
+  The calmode argument specifies calibration mode. Supported calibration 
+  modes are 'ps' (position switch) and 'fs' (frequency switch). 
+  The 'ps' includes calibration for nutator switching 
+  as well as classical position switching.
   
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scantab&& \multicolumn{2}{p{3.36in}|}{input data as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+scannos&& \multicolumn{2}{p{3.36in}|}{a list of scan numbers to be calibrated}\\
+& &allowed: & (list of) integer, string \\
+& &Default: & [] (all data)
+\\
+calmode&& \multicolumn{2}{p{3.36in}|}{Calibration mode}\\
+& &allowed: & string ('ps', 'fs', 'none')\\
+& &Default: & 'none'
+\\
+verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains calibrated spectra
 \newline
 
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+\begin{verbatim}
+
+    
+    asap_init()
+    s=sd.scantable('alma-scans.asap',average=False,getpt=True)
+    scal=sd.apexcal(s,calmode='ps')
+    
+  
+\end{verbatim}
+
+
+%% sd.average_time
 \newpage
 \ahsdfunction{sd.average\_time}{sd.average_time}{Averaging data in Time}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
+  \hfill \\
+  The function computes a weighted time average of a scantable or a 
+  list of scantables. The averaging is done in channel only. 
+  Supported weighting schemes are as follows:
+
+  \begin{itemize}
+  \item none --- no weighting
+  \item var --- 1/var(spectrum) weighted
+  \item tsys --- 1/Tsys**2 weighted
+  \item tint --- integration time weighted
+  \item tintsys --- Tint/Tsys**2 weighted
+  \item median] --- median averaging
+  \end{itemize}
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+  && \multicolumn{2}{p{3.36in}|}{Input data as a scantable}\\
+& &allowed: & scantable or a list of scantables\\
+& &Default: & 
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask (only used for 'var' and 'tsys' weighting)}\\
+& &allowed: & bool list\\
+& &Default: & none
+\\
+scanav && \multicolumn{2}{p{3.36in}|}{True averages each scan separately, False averages all scans together}\\
+& &allowed: & bool\\
+& &Default: & False
+\\
+weight && \multicolumn{2}{p{3.36in}|}{Weighting scheme (see description)}\\
+& &allowed: & string\\
+& &Default: & 'tint'
+\\
+align && \multicolumn{2}{p{3.36in}|}{Align the spectra in velocity before averaging. It takes the time of the first spectrum in the first scantable as reference time.}\\
+& &allowed: & bool\\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains time averaged scans
+\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+\begin{verbatim}
 
+    
+        # return a time averaged scan from scana and scanb
+        # without using a mask
+        scanav = average_time(scana,scanb)
+        # or equivalent
+        # scanav = average_time([scana, scanb])
+        # return the (time) averaged scan, i.e. the average of
+        # all correlator cycles
+        scanav = average_time(scan, scanav=True)
+
+
+
+\end{verbatim}
+
+%% sd.calfs
 \newpage
 \ahfunction{sd.calfs}{Calibration function for frequency switched data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    Calibrate GBT frequency switched data.
+    Adopted from GBTIDL getfs.
+    Currently calfs identify the scans as frequency switched data if source
+    type enum is fson and fsoff. The data must contains 'CAL' signal
+    on/off in each integration. To identify 'CAL' on state, the source type 
+    enum of foncal and foffcal need to be present in the source name field.
+    (GBT MS data reading via scantable automatically append these
+    id names to the source names)
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scantab&& \multicolumn{2}{p{3.36in}|}{Input data as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+scannos&& \multicolumn{2}{p{3.36in}|}{A list of scan numbers to be calibrated}\\
+& &allowed: & (list of) integer \\
+& &Default: & [] (all data)
+\\
+smooth&& \multicolumn{2}{p{3.36in}|}{Optional box smoothing order for the reference}\\
+& &allowed: & int\\
+& &Default: & 1 (no smoothing)
+\\
+tsysval&& \multicolumn{2}{p{3.36in}|}{Optional user specified Tsys}\\
+& &allowed: & float \\
+& &Default: & 0.0 (use Tsys in the data)
+\\
+tauval&& \multicolumn{2}{p{3.36in}|}{Optional user specified optical depth}\\
+& &allowed: & float \\
+& &Default: & 0.0
+\\
+verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains calibrated spectra
+\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.calibrate
 \newpage
 \ahfunction{sd.calibrate}{High level function for calibration that calls appropriate calibration function depending on the data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   This method is a high level function for calibration. It calls appropriate 
+   calibration function depending on the origin of the data. It checks an 
+   calmode argument first, and then looks antenna name in the data. 
+   Calibration functions that can be called from the method are:
+
+   \begin{itemize}
+   \item \ahlink{calnod}{sd:sd.calnod} if calmode is 'nod'
+   \item \ahlink{auto\_quotient}{sd:sd.scantable.auto_quotient} if calmode is 'quotient'
+   \item \ahlink{calps}{sd:sd.calps} if calmode is 'ps' and antenna name is 'GBT' 
+   \item \ahlink{calfs}{sd:sd.calfs} if calmode is 'fs' and antenna name is 'GBT'
+   \item \ahlink{apexcal}{sd:sd.apexcal} if calmode is 'ps' or 'fs' and antenna name contains 'APEX'
+   \item \ahlink{almacal}{sd:sd.almacal} if calmode is 'ps', 'fs', or 'otf' and antenna name contains 'ALMA' or 'OSF'
+   \end{itemize}
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scantab&& \multicolumn{2}{p{3.36in}|}{input data as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+scannos&& \multicolumn{2}{p{3.36in}|}{a list of scan numbers to be calibrated}\\
+& &allowed: & (list of) integer, string \\
+& &Default: & [] (all data)
+\\
+calmode&& \multicolumn{2}{p{3.36in}|}{Calibration mode}\\
+& &allowed: & string ('ps', 'fs', 'none')\\
+& &Default: & 'none'
+\\
+verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains calibrated spectra
+\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+\begin{verbatim}
 
+    
+    asap_init()
+    s=sd.scantable('alma-scans.asap',average=False,getpt=True)
+    scal=sd.apexcal(s,calmode='ps')
+    
+  
+\end{verbatim}
+
+
+%% sd.calnod
 \newpage
 \ahfunction{sd.calnod}{Calibration function for nodding data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    This method performs full (but a pair of scans at time) processing of 
+    GBT Nod data calibration.
+    Adopted from  GBTIDL's getnod
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scantab&& \multicolumn{2}{p{3.36in}|}{Input data as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+scannos&& \multicolumn{2}{p{3.36in}|}{A pair of scan numbers, or the first scan number of the pair}\\
+& &allowed: & (list of) integer \\
+& &Default: & [] (all data)
+\\
+smooth&& \multicolumn{2}{p{3.36in}|}{Box car smoothing order}\\
+& &allowed: & int\\
+& &Default: & 1 (no smoothing)
+\\
+tsysval&& \multicolumn{2}{p{3.36in}|}{Optional user specified Tsys}\\
+& &allowed: & float \\
+& &Default: & 0.0 (use Tsys in the data)
+\\
+tauval&& \multicolumn{2}{p{3.36in}|}{Optional user specified optical depth (not implemented yet)}\\
+& &allowed: & float \\
+& &Default: & 0.0
+\\
+tcalval&& \multicolumn{2}{p{3.36in}|}{Optional user specified Tcal}\\
+& &allowed: & float \\
+& &Default: & 0.0
+\\
+verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains calibrated spectra
+\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.calps
 \newpage
 \ahfunction{sd.calps}{Calibration function for position switched data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    The method calibrates GBT position switched data
+    Adopted from GBTIDL getps
+    Currently calps identify the scans as position switched data if source
+    type enum is pson or psoff. The data must contains 'CAL' signal
+    on/off in each integration. To identify 'CAL' on state, the source type 
+    enum of poncal and poffcal need to be present in the source name field.
+    (GBT MS data reading process to scantable automatically append these
+    id names to the source names)
+
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scantab&& \multicolumn{2}{p{3.36in}|}{Input data as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+scannos&& \multicolumn{2}{p{3.36in}|}{A list of scan numbers to be calibrated}\\
+& &allowed: & (list of) integer \\
+& &Default: & [] (all data)
+\\
+smooth&& \multicolumn{2}{p{3.36in}|}{Optional box smoothing order for the reference}\\
+& &allowed: & int\\
+& &Default: & 1 (no smoothing)
+\\
+tsysval&& \multicolumn{2}{p{3.36in}|}{Optional user specified Tsys}\\
+& &allowed: & float \\
+& &Default: & 0.0 (use Tsys in the data)
+\\
+tauval&& \multicolumn{2}{p{3.36in}|}{Optional user specified optical depth}\\
+& &allowed: & float \\
+& &Default: & 0.0
+\\
+tcalval&& \multicolumn{2}{p{3.36in}|}{Optional user specified Tcal}\\
+& &allowed: & float \\
+& &Default: & 0.0 (use Tcal in the data)
+\\
+verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains calibrated spectra
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.commands
 \newpage
 \ahfunction{sd.commands}{Show a list of commands and their short descriptions}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   The method prints a list of commands and their short descriptions.
+   The output is sorted by their intents and/or subtools that the commands 
+   associate. 
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -284,141 +644,264 @@ bool
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.dosigref
 \newpage
 \ahfunction{sd.dosigref}{Equivalent function with dosigref in GBTIDL}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    The method calculates a quotient (sig-ref/ref * Tsys).
+    Adopted from GBTIDL dosigref.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+sig&& \multicolumn{2}{p{3.36in}|}{On-source data as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+ref&& \multicolumn{2}{p{3.36in}|}{Reference data as a scantable}\\
+& &allowed: & scantable \\
+& &Default: & 
+\\
+smooth&& \multicolumn{2}{p{3.36in}|}{Width of box car smoothing for reference}\\
+& &allowed: & int\\
+& &Default: & 1 (no smoothing)
+\\
+tsysval&& \multicolumn{2}{p{3.36in}|}{User specified Tsys}\\
+& &allowed: & float \\
+& &Default: & 0.0 (use Tsys in the data)
+\\
+tauval&& \multicolumn{2}{p{3.36in}|}{User specified optical depth (required if tsysval is set)}\\
+& &allowed: & float \\
+& &Default: & 0.0
+\\
+
+\hline
+\end{tabular}
+
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains processed spectra
+\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.dototalpower
 \newpage
 \ahfunction{sd.dototalpower}{Equivalent function with dototalpower in GBTIDL}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    The method performs calibration for CAL on,off signals.
+    Adopted from GBTIDL dototalpower.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+calon&& \multicolumn{2}{p{3.36in}|}{The 'cal on' subintegration as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+caloff&& \multicolumn{2}{p{3.36in}|}{The 'cal off' subintegration as a scantable}\\
+& &allowed: & scantable \\
+& &Default: & 
+\\
+tcalval&& \multicolumn{2}{p{3.36in}|}{User supplied Tsys}\\
+& &allowed: & float \\
+& &Default: & 0.0 (use Tcal in the data)
+\\
+
+\hline
+\end{tabular}
+
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains processed spectra
+\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
-\newpage
-\ahfunction{sd.fitter}{Create a fitter object}
 
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
-
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\flushleft\vspace{.20in}\textbf {Returns}\newline
-
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
-
+%% sd.get_revision
 \newpage
 \ahsdfunction{sd.get\_revision}{sd.get_revision}{Get revision of the source code for the tool}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   Get the revision of the software.
+   Actually it returns a revision number of the source code that is managed 
+   by subversion.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+revision number string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.is_asap_cli
 \newpage
 \ahsdfunction{sd.is\_asap\_cli}{sd.is_asap_cli}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   The method checks if sd tool (ASAP) is running standalone.
+   This always returns False if you use \casa\ .
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool (False)
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.is_casapy
 \newpage
 \ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   The method checks if sd tool is running on \casa.
+   This always returns True if you use \casa.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool (True)
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.list_files
 \newpage
-\ahfunction{sd.linecatalog}{Create a linecatalog object}
+\ahsdfunction{sd.list\_files}{sd.list_files}{Return list of files readable by sd tool}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   Return a list files readable by asap, such as MS, rpf, sdfits, mbf, asap.
+   The method looks a directory that is indicated by path argument, and 
+   searches files with extension specified by suffix. Allowed extensions 
+   are:
+
+   \begin{itemize}
+   \item rpf --- RPFITS (default)
+   \item rpf.1 --- RPFITS
+   \item rpf.2 --- RPFITS
+   \item sdf --- SDFITS
+   \item sdfits -- SDFITS
+   \item mbf --- MBFITS
+   \item asap --- Scantable
+   \item ms --- Measurement Set
+   \end{itemize}
+
+   Note that the method just checks the extension of the file name. 
+   Thus, the returned list doesn't contains files that don't have 
+   the above extensions even if they are readable.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
-\flushleft\vspace{.20in}\textbf {Returns}\newline
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+path&& \multicolumn{2}{p{3.36in}|}{The directory to list}\\
+& &allowed: & string\\
+& &Default: & './' (current directory)
+\\
+suffix&& \multicolumn{2}{p{3.36in}|}{The file extension}\\
+& &allowed: & string \\
+& &Default: & 'rpf'
+\\
 
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+string list
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
-\newpage
-\ahfunction{sd.linefinder}{Create a linefinder object}
+\begin{verbatim}
 
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
+        asap_init()
+        files = sd.list_files("data/","sdfits")
+        print files
+        ['data/2001-09-01_0332_P363.sdfits',
+        'data/2003-04-04_131152_t0002.sdfits',
+        'data/Sgr_86p262_best_SPC.sdfits']
 
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\flushleft\vspace{.20in}\textbf {Returns}\newline
+\end{verbatim}
 
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
 
-\newpage
-\ahsdfunction{sd.list\_files}{sd.list_files}{Return a list of files readable by sd tool}
-
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
-
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\flushleft\vspace{.20in}\textbf {Returns}\newline
-
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
-
+%% sd.list_rcparameters
 \newpage
 \ahsdfunction{sd.list\_rcparameters}{sd.list_rcparameters}{Print a list of rc parameters}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   Print a list of rc parameters and its default values that determine 
+   basic behavior of the tool.
+   The user can be accessed rc parameters directory since the rc parameters 
+   are available as a Python dictionary sd.rcParams. There is also a method 
+   to set rc parameters called \ahlink{rc}{sd:sd.rc}.
+   Contents of the rc paramters are described below.
+
+   \begin{itemize}
+   \item verbose \\ It will disable exceptions and just print the messages (only valid in standalone mode)
+   \item useplotter \\ Preload a default plotter
+   \item insitu \\ Apply operations on the input scantable or retuern new one
+   \item plotter.gui \\ Do we want a GUI or plot to a file
+   \item plotter.stacking \\ Default mode for color stacking
+   \item plotter.panelling \\ Default mode for panelling
+   \item plotter.ganged \\ Push panels together, to share axis labels
+   \item plotter.decimate \\ Decimate the number of points plotted by a factor of nchan/1024
+   \item plotter.colours \\ Default color
+   \item plotter.linestyles \\ Default linestyles
+   \item plotter.histogram \\ Enable/disable histogram plotting
+   \item plotter.papertype \\ Postscript paper type
+   \item plotter.axesformatting \\ The formatting style of the x-axis
+   \item scantable.storage \\ Default storage of scantable ('memory'/'disk')
+   \item scantable.history \\ Write history of each call to scantable
+   \item scantable.save \\ Default output format when saving
+   \item scantable.autoaverage \\ Auto averaging on read
+   \item scantable.freqframe \\ Default frequency frame to set when function \ahlink{set\_freqframe}{sd:sd.scantable.set_freqframe} is called
+   \item scantable.verbosesummary \\ Control the level of information printed by \ahlink{summary}{sd:sd.scantable.summary}
+   \item scantable.reference \\ Control the identification of reference (off) scans (has to be regular expression)
+   \item scantable.parallactify \\ Indicate whether the data was parallactified (total phase offset is 0.0)
+   \end{itemize}
+
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string describing rc parameters
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.list_scans
 \newpage
 \ahsdfunction{sd.list\_scans}{sd.list_scans}{Return a list of scantables created by the user}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   The method prints and returns a list of scantables that the user created.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -427,158 +910,420 @@ bool
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.mask_and
 \newpage
 \ahsdfunction{sd.mask\_and}{sd.mask_and}{Logical operation function on array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   This is an utility function that performs logical 'and' operation 
+   on specified two boolean arrays in element-by-element manner.
+   Input arrays should have same length.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+a&& \multicolumn{2}{p{3.36in}|}{Input boolean array}\\
+& &allowed: & bool array\\
+& &Default: & 
+\\
+b&& \multicolumn{2}{p{3.36in}|}{Input boolean array}\\
+& &allowed: & bool array \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+%% sd.mask_or
 \newpage
 \ahsdfunction{sd.mask\_or}{sd.mask_or}{Logical operation function on array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   This is an utility function that performs logical 'or' operation 
+   on specified two boolean arrays in element-by-element manner.
+   Input arrays should have same length.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+a&& \multicolumn{2}{p{3.36in}|}{Input boolean array}\\
+& &allowed: & bool array\\
+& &Default: & 
+\\
+b&& \multicolumn{2}{p{3.36in}|}{Input boolean array}\\
+& &allowed: & bool array \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.mask_not
 \newpage
 \ahsdfunction{sd.mask\_not}{sd.mask_not}{Logical operation function on array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   This is an utility function that performs logical 'not' operation 
+   on the input boolean array in element-by-element manner.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+a&& \multicolumn{2}{p{3.36in}|}{Input boolean array}\\
+& &allowed: & bool array\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.merge
 \newpage
 \ahfunction{sd.merge}{Merge a list of scantables into one}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   Merge a list of scanatables, or comma-sperated scantables into one scnatble.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{Input scantables}\\
+& &allowed: & list of scantables or comma-separated scantables\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+merged (sinble) scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
-\newpage
-\ahsdfunction{sd.opacity\_model}{sd.opacity_model}{Create an opacity\_model object}
+\begin{verbatim}
 
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
+        asap_init()
+        scan1 = sd.scantable('scan1.asap')
+        scan2 = sd.scantable('scan2.asap')
+        myscans = [scan1, scan2]
+        allscans = sd.merge(myscans)
+        # or equivalent
+        sameallscans = sd.merge(scan1, scan2)
 
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\flushleft\vspace{.20in}\textbf {Returns}\newline
+\end{verbatim}
 
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
 
+%% sd.quotient
 \newpage
 \ahfunction{sd.quotient}{Take a quotient of a signal and reference scan}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   Return the quotient of a 'source' (signal) scan and a 'reference' scan.
+   The reference can have just one scan, even if the signal has many. Otherwise
+   they must have the same number of scans.
+   The cursor of the output scan is set to 0.
+
+   The preserve argument controls if continuum is preserved or not.
+   The equation used in the method depends on its value. 
+   If preserve is True, the equation is,
+
+   \begin{displaymath}
+   T_{\rm a}^* = T_{\rm sys}^{\rm OFF} { ON \over OFF } - T_{\rm sys}^{\rm OFF},
+   \end{displaymath}
+   
+   while if preserve is False, 
+
+   \begin{displaymath}
+   T_{\rm a}^* = T_{\rm sys}^{\rm OFF} { ON \over OFF } - T_{\rm sys}^{\rm ON},
+   \end{displaymath}
+
+   where $T_{\rm a}^*$ is antenna temperature, $ON$ and $OFF$ are 
+   raw (uncalibrated) spectral data that correspond to on-source 
+   and off-source position, $T_{\rm sys}^{\rm ON}$ and 
+   $T_{\rm sys}^{\rm OFF}$ are system temperatures of $ON$ and $OFF$ scans, 
+   respectively. 
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+source && \multicolumn{2}{p{3.36in}|}{The on-source scan as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+reference && \multicolumn{2}{p{3.36in}|}{The reference scan as a scantable}\\
+& &allowed: & scantable\\
+& &Default: & 
+\\
+preserve && \multicolumn{2}{p{3.36in}|}{Preserve the continuum or remove it}\\
+& &allowed: & bool\\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable that contains calibrated specrta
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.rc
 \newpage
-\ahfunction{sd.scantable}{Create a scantable object}
+\ahfunction{sd.rc}{Set the current rc parameters}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    Set the current rc parameters.  Group is the grouping for the rc, eg
+    for scantable.save the group is 'scantable', for plotter.stacking, the
+    group is 'plotter', and so on.  kwargs is a list of attribute
+    name/value pairs, eg
+
+      \begin{verbatim}
+      rc('scantable', save='SDFITS')
+      \end{verbatim}
+
+    sets the current rc params and is equivalent to
+
+      \begin{verbatim}
+      rcParams['scantable.save'] = 'SDFITS'
+      \end{verbatim}
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+group && \multicolumn{2}{p{3.36in}|}{Grouping for the rc}\\
+& &allowed: & string ('','scantable','plotter') \\
+& &Default: & 
+\\
+ && \multicolumn{2}{p{3.36in}|}{A list of attribute name/value pairs}\\
+& &allowed: & comma separated list of name/value pairs\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
-\newpage
-\ahfunction{sd.selector}{Create a selector object}
+\begin{verbatim}
 
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
+     asap_init()
+     # set scantable.save as 'SDFITS' and scantable.storage as 'disk'
+     sd.rc('scantable',save='SDFITS', storage='disk')
+     # set insitu as False
+     sd.rc('',insitu=False)
 
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\flushleft\vspace{.20in}\textbf {Returns}\newline
+\end{verbatim}
 
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
 
+%% sd.skydip
 \newpage
 \ahfunction{sd.skydip}{Determine the opacity from a set of 'skydip' observations}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    Determine the opacity from a set of 'skydip' obervations.
+    This can be any set of observations over a range of elevations,
+    but will ususally be a dedicated (set of) scan(s).
+    Return a list of 'n' opacities for 'n' IFs. In case of averagepol
+    being 'False' a list of 'n*m' elements where 'm' is the number of
+    polarisations, e.g.
+    nIF = 3, nPol = 2 => [if0pol0, if0pol1, if1pol0, if1pol1, if2pol0, if2pol1]
+    
+    The opacity is determined by fitting a first order polynomial to:
+    
+        \begin{displaymath}
+        T_{\rm sys}(airmass) = p_0 + airmass * p1,
+        \end{displaymath}
+    
+    where
+        \begin{displaymath}
+        airmass = {1 \over \sin(elevation)}
+        \end{displaymath}
+        \begin{displaymath}
+        \tau =  {p_1 \over T_{\rm sky} }
+        \end{displaymath}
+    
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+data && \multicolumn{2}{p{3.36in}|}{File name or scantable or list of them}\\
+& &allowed: & string, string array, scantable, list of scantables \\
+& &Default: & 
+\\
+averagepol && \multicolumn{2}{p{3.36in}|}{Return opacity values per polarization or average of opacities for the polarizations}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+tsky && \multicolumn{2}{p{3.36in}|}{The sky temperature}\\
+& &allowed: & float \\
+& &Default: & 300.0 
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot each fit (airmass versus Tsys)}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array (computed opacities)
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.splitant
 \newpage
 \ahfunction{sd.splitant}{Split Measurement Set data by antenna and save them as scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    Split Measurement Set by antenna name, save data as a scantables,
+    and return a list of filename.
+    Notice this method can only be available from \casa.
+    The outprefix argument specifies a prefix of output scantable name.
+    The names of output scantables will be 'outprefix.antenna1.asap', 
+    'outprefix.antenna2.asap', ... where antenna1 and antenna2 is 
+    antenna name that are stored in ANTENNA subtable of input Measurement 
+    Set.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+filename && \multicolumn{2}{p{3.36in}|}{The name of Measurement Set to be read}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+outprefix && \multicolumn{2}{p{3.36in}|}{The prefix of output scantable name}\\
+& &allowed: & string \\
+& &Default: & ''
+\\
+overwrite && \multicolumn{2}{p{3.36in}|}{If the file should be overwritten if it exists}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+
+     asap_init()
+     # assume that input MS contains data from 'DV01' and 'PM03'
+     outfiles=sd.splitant('osfdata.ms',outprefix='test')
+     print outfiles
+     ['test.DV01.asap','test.PM03.asap']
+ 
+\end{verbatim}
+
+
+%% sd.unique
 \newpage
 \ahfunction{sd.unique}{Return the unique values in a list}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
-
+    This is an utility function that returns the unique values in a list
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+x && \multicolumn{2}{p{3.36in}|}{The list to reduce}\\
+& &allowed: & array \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+array 
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+
+   x=[1,2,3,3,4]
+   y=sd.unique(x)
+   print y
+   [1,2,3,4]
+
+\end{verbatim}
+
+
+%% sd.welcome
 \newpage
-\ahfunction{sd.welcome}{Print a welcome message}
+\ahfunction{sd.welcome}{Return a welcome message}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+   Return a welcome message
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -610,10 +1355,59 @@ bool
   See \ahlink{sd.list\_rcparameters}{sd:sd.list_rcparameters} for 
   details about sd.rcParams.
 
+  The constructor takes several arguments that handles some of optional 
+  behavior of it. The getpt and antenna arguments are only effective if 
+  file specified by filename argument is Measurement Set format.
+
   \medskip\noindent\textbf{Definition}
 
     A documentation for detailed definition of the Scantable will be 
     prepared by ATNF.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+filename && \multicolumn{2}{p{3.36in}|}{Name of an input file, or a reference to an existing scantable (advanced)}\\
+& &allowed: & string, scantable \\
+& &Default: & 
+\\
+average && \multicolumn{2}{p{3.36in}|}{Average all integrations within a scan on read}\\
+& &allowed: & bool \\
+& &Default: & None (taken from scantable.autoaverage attribute of rc parameters)\\
+unit && \multicolumn{2}{p{3.36in}|}{Brightness unit. It must be consistent with K or Jy. It overrides the default value or replaces the value in existing scantables}
+\\
+& &allowed: & string \\
+& &Default: & None
+\\
+getpt && \multicolumn{2}{p{3.36in}|}{Measurement Set input data only. If True, all pointing data are filled.}\\
+& &allowed: & bool\\
+& &Default: & False
+\\
+antenna && \multicolumn{2}{p{3.36in}|}{Measurement Set input data only. Antenna selection by ID or name}\\
+& &allowed: & string, integer\\
+& &Default: & "" (first antenna in the ANTENNA table) 
+\\
+parallactify && \multicolumn{2}{p{3.36in}|}{Indicate that the data had been parallactified.}\\
+& &allowed: & bool\\
+& &Default: & None (taken from scantable.parallactify attribute of rc parameters)
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+
+     asap_init()
+     # create scantable from the data from the second antenna in Measurement Set
+     s=sd.scantable('sddata.ms',average=False,getpt=True,antenna=1)
+
+\end{verbatim}
+
 
 Methods
 \begin{longtable}{ll}
@@ -2078,12 +2872,74 @@ Methods
   The selector also support sorting data. 
   The selector sorts data based on values of columns specified by the user.
 
+  The constructor takes some arguments to set selection criteria. So,  
+  the user can set selection either using constructor options and 
+  available setter functions.
+
   \medskip\noindent\textbf{Known Issues}
 
     After the data in scantable is selected by the selector object, 
     \ahlink{save}{sd:sd.scantable.save} function doesn't work.
     Before saving selected data, you must \ahlink{copy}{sd:sd.scantable.copy} 
     scantable first, and save it as usual.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+beams && \multicolumn{2}{p{3.36in}|}{Beam selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (no selection)
+\\
+cycles && \multicolumn{2}{p{3.36in}|}{Cycle number selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (no selection)
+\\
+ifs && \multicolumn{2}{p{3.36in}|}{IF selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (no selection)
+\\
+name && \multicolumn{2}{p{3.36in}|}{Source name selection. Allows regular expression.}\\
+& &allowed: & string\\
+& &Default: & None (no selection)
+\\
+pols && \multicolumn{2}{p{3.36in}|}{Polarization selection}\\
+& &allowed: & integer, integer array, string, string array \\
+& &Default: & None (no selection)
+\\
+query && \multicolumn{2}{p{3.36in}|}{TaQL selection query}\\
+& &allowed: & string \\
+& &Default: & None (no selection)
+\\
+scans && \multicolumn{2}{p{3.36in}|}{Scan number selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (no selection)\\
+
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+
+     asap_init()
+     # create a selector object
+     sel=sd.selector()
+     # These are equivalent if data is 'linear'
+     sel.set_polarisations(["XX","Re(XY)"])
+     sel.set_polarisations([0,2])
+     # reset the polarisation selection
+     sel.set_polarisations()
+     # these are equivalent
+     sel2=sd.selector(ifs=[0,1])
+     sel2=sd.selector()
+     sel2.set_ifs([0,1])
+
+\end{verbatim}
+
 
 Methods
 \begin{longtable}{ll}
@@ -2482,6 +3338,23 @@ Methods
   lines, but it doesn't support hyperfine fitting, i.e. multiple line 
   fitting under some constraints.
 
+  The constructor doesn't take any arguments. It just creates a fitter 
+  object that no state is set.
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+\begin{verbatim}
+
+        asap_init()
+        s = sd.scantable('myscan.asap')
+        s.set_cursor(thepol=1)        # select second pol
+        f = sd.fitter()               # create fitter object
+        f.set_scan(s)
+        f.set_function(poly=0)
+        f.fit(row=0)                  # fit first row
+
+\end{verbatim}
+
 Methods
 \begin{longtable}{ll}
 
@@ -2785,10 +3658,36 @@ Methods
   For ASCII type input table, Comments can be present through lines 
   starting with '\#'.
 
+  The constructor takes string that specifies a name of the catalog.
+
   \medskip\noindent\textbf{Known Issues}
 
    The name of species canno't contain spaces. If it does, it has to be 
    wrapped in double-quotes. 
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+name&& \multicolumn{2}{p{3.36in}|}{Name of the catalog}\\
+& &allowed: & string\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+\begin{verbatim}
+
+        asap_init()
+        l = sd.linecatalog('jpl_asap.tbl')
+        # print summary
+        l.summary()
+
+\end{verbatim}
 
   
 Methods
@@ -2971,7 +3870,34 @@ Methods
   detect strong lines only, fit a high order baseline and repeat the line
   search.
 
-  
+  The constructor doesn't take any arguments. It creates linefinder 
+  object without any settings for line finding.
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+\begin{verbatim}
+
+       asap_init()
+       fl=sd.linefinder()
+       sc=sd.scantable('sddata.asap',average=False)
+       # set data
+       fl.set_scan(sc)
+       # set linefinder options
+       fl.set_options(threshold=3)
+       # search lines
+       nlines=fl.find_lines(edge=(50,0))
+       # get range of lines found
+       if nlines!=0:
+          print "Found ",nlines," spectral lines"
+          print fl.get_ranges(False)
+       else:
+          print "No lines found!"
+       # baseline subtraction using masks provided by linefinder
+       sc2=sc.poly_baseline(fl.get_mask(),7)
+
+\end{verbatim}
+
+    
 Methods
 \begin{longtable}{ll}
 
@@ -3770,6 +4696,36 @@ Methods
   rigorously tested above 100 GHz and for instruments located at
   a significant elevation. For high-elevation sites it may be necessary to
   adjust scale height and lapse rate.
+
+  The constructor takes several arguments that specifies observatory and 
+  weather informations.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+temperature&& \multicolumn{2}{p{3.36in}|}{Air temperature at the observatory (K)}\\
+& &allowed: & float\\
+& &Default: & 288.0
+\\
+pressure&& \multicolumn{2}{p{3.36in}|}{Air pressure at the sea level if the observatory elevation is set to non-zero value (note, by default is set to 700m) or at the observatory ground level if the elevation is set to 0. The value is in Pascals or hPa.}\\
+& &allowed: & float\\
+& &Default: & 101325.0
+\\
+humidity&& \multicolumn{2}{p{3.36in}|}{Air humidity at the observatory (fractional)}\\
+& &allowed: & float\\
+& &Default: & 0.5
+\\
+elevation&& \multicolumn{2}{p{3.36in}|}{Observatory elevation about sea level (in meters)}\\
+& &allowed: & float\\
+& &Default: & 700.0
+\\
+
+\hline
+\end{tabular}
+
+
 
 Methods
 \begin{longtable}{ll}
