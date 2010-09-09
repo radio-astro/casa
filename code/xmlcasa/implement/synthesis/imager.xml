@@ -3051,6 +3051,89 @@ Baars flux density scale.
 </comments>
 </method>
 
+<!-- temporary copy of setjy while flux calibration with Solar System objects
+     is being tested. -->
+<method type="function" name="ssoflux">
+   <shortdescription>Compute the model visibility for a specified source flux density</shortdescription>
+   
+<description>
+*This is an experimental clone of setjy while flux calibration with Solar
+ System objects is being tested.  It will eventually be merged back into
+ setjy.*
+
+Compute the model visibility for a specified source flux density, and
+insert into the MODEL\_DATA column. The source flux density for
+a set of standard flux density reference sources may optionally
+be pre-computed, by setting the input flux density to -1 (the default).
+At present, these include 3C286, 3C48, 3C147, 3C138, and 1934-638.
+In this case, if the source is not in this set, an unpolarized
+flux density of 1 Jy will be assumed.  Users may also specify
+{\tt standard='SOURCE'} to use the model(s) in the SOURCE\_MODEL column of the
+SOURCE subtable.
+
+Users may also specify a model image that will be scaled to the
+specified total flux density (or that computed for reference sources).
+When a model image is specified, ssoflux will only permit processing
+one field, and will currently only process Stokes I.  
+
+</description>
+<input>
+
+     <param type="any" name="field">
+     <description>Field Id (0-relative) or name</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" name="spw">
+     <description>Spectral Window Id. (0-relative)</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="string" name="modimage">
+     <description>A model image</description>
+     <value></value>
+     </param>
+
+
+     <param type="doubleArray" name="fluxdensity">
+     <description>Specified flux density (I,Q,U,V) in Jy
+     (lookup the value; use 1.0 if not found)
+     </description>
+     <value type="vector">
+     <value>0.0</value>
+     <value>0.0</value>
+     <value>0.0</value>
+     <value>0.0</value>
+     </value>
+     </param>
+
+     <param type="string" name="standard">
+     <description>Flux density standard</description>
+     <value>Baars</value>
+     <value>Perley 90</value>
+     <value>Perley-Taylor 95</value>
+     <value>Perley-Taylor 99</value>
+     <value>Perley-Butler 2010</value>
+     <value>SOURCE</value>
+     </param>
+</input>
+
+<returns type="bool"/>
+<example>
+
+im.ssoflux(fieldid=2, spwid=-1, fluxdensity=[2.6,0.2,0.3,0.5],standard='Baars')
+
+
+Compute the model visibility for field id. 2 to the specified
+point-source (I,Q,U,V) for all spectral windows id.'s on the
+Baars flux density scale.
+</example>
+<comments>
+</comments>
+</method>
+
  
    <method type="function" name="setmfcontrol">
    <shortdescription>Set various cycle control parameters for 

@@ -6226,7 +6226,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
     Array<Double> freqArray;
     // .getUnits() is a little confusing - it seems to return a Vector which is
     // a list of all the units, not the unit for each row.
-    Unit freqUnit(msc.spectralWindow().chanFreqQuant().getUnits()[0]);
+    const Unit freqUnit(msc.spectralWindow().chanFreqQuant().getUnits()[0]);
     
     tempCLs.resize(nspws);
       
@@ -6370,6 +6370,379 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
           PagedImage<Float> modimage(model);
           modimage.table().unmarkForDelete();
           String tempmodname=File::newUniqueName("./", "setjyimage").baseName();
+          tmodimage = new PagedImage<Float>(modimage.shape(),modimage.coordinates(),tempmodname);
+          tmodimage->table().markForDelete();
+          tmodimage->set(0.0f);
+	  
+          CoordinateSystem csys(tmodimage->coordinates());
+
+          Int icoord(csys.findCoordinate(Coordinate::SPECTRAL));
+          SpectralCoordinate spcsys=csys.spectralCoordinate(icoord);
+
+          os << LogIO::DEBUG1
+             << "freqUnit.getName() = " << freqUnit.getName()
+             << LogIO::POST;
+          os << LogIO::DEBUG1
+             << "mfreqs[spwInd].get(freqUnit).getValue() = "
+             << mfreqs[spwInd].get(freqUnit).getValue()
+             << LogIO::POST;
+          
+          spcsys.setReferenceValue(Vector<Double>(1,
+                                                  mfreqs[spwInd].get(freqUnit).getValue()));
+          spcsys.setWorldAxisUnits(Vector<String>(1, freqUnit.getName()));
+          csys.replaceCoordinate(spcsys,icoord);
+          tmodimage->setCoordinateInfo(csys);
+	  
+
+          // Check direction consistency (reported in log message below)
+          Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
+          DirectionCoordinate dircsys=csys.directionCoordinate(dircoord);
+          MVDirection mvd;
+          dircsys.toWorld(mvd,dircsys.referencePixel());
+          Double sep=position.getValue().separation(mvd,"\"").getValue();
+	  
+          if(fluxUsed[0] != 0.0){
+            os << LogIO::NORMAL                                  // Loglevel INFO
+               << "Scaling model image to I=" << fluxUsed(0)
+               << " Jy for visibility prediction."
+               << LogIO::POST;
+
+            Float sumI=sum(modimage.get());
+            
+            // Scale factor
+            Float scale=fluxUsed(0)/sumI;
+
+            // scale the image
+            tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );
+          }
+          else{
+            os << LogIO::NORMAL                                  // Loglevel INFO
+               << "Using the model image's original unscaled flux density for visibility prediction."
+               << LogIO::POST;
+            tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
+          }
+            
+
+          os << LogIO::NORMAL << "Using model image " << modimage.name() // Loglevel INFO
+             << LogIO::POST;
+
+          os << LogIO::NORMAL // Loglevel INFO
+             << "The model image's reference pixel is " << sep << " arcsec from "
+             << fieldName << "'s phase center."
+             << LogIO::POST;
+	  
+        }
+        else{
+          useimage=False;
+
+          if(!precompute){
+            // fluxUsed was supplied by the user instead of FluxStandard, so
+            // make a component list for it now, for use in ft.
+
+            // Set the component flux density
+            Flux<Double> fluxval;
+            Flux<Double> fluxerr;
+            fluxval.setValue(fluxUsed);
+	            
+            // Create a point component at the field center
+            // with the specified flux density
+            PointShape point(position);
+
+            // No worries about varying fluxes or sizes here, so any time will do.
+            MEpoch mtime = msc.field().timeMeas()(fldid);
+
+            tempCLs[spwInd] = FluxStandard::makeComponentList(fieldName, mfreqs[spwInd],
+                                                              mtime, fluxval, point,
+                                                              cspectrum);
+          }
+        }
+
+        // Select the uv-data for this field and spw. id.;
+        // all frequency channels selected.
+        Vector<Int> selectSpw(1), selectField(1);
+        selectSpw(0)=spwid;
+        selectField(0)=fldid;
+        String msSelectString = "";
+        Vector<Int> numDeChan(1);
+        numDeChan[0]=0;
+        Vector<Int> begin(1);
+        begin[0]=0;
+        Vector<Int> stepsize(1);
+        stepsize[0]=1;
+        setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
+                MRadialVelocity(),
+                selectSpw, selectField, msSelectString, "", "",
+                Vector<Int>(), "", "", "", "", True);
+
+        if (!nullSelect_p) {
+
+          // Use ft to form visibilities
+          Vector<String> modelv;
+          if (useimage) {
+            modelv.resize(1);
+            modelv(0)=tmodimage->name();
+            ft(modelv, "", False);
+          }
+          else
+            ft(modelv, tempCLs[spwInd], False);
+
+        };
+	
+        // Delete the temporary component list and image tables
+        if (tempCLs[spwInd] != "")
+          Table::deleteTable(tempCLs[spwInd]);
+        if (tmodimage) delete tmodimage;
+        tmodimage=NULL;
+        //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
+      }
+    }
+    this->writeHistory(os);
+    this->unlock();
+    return True;
+
+  } catch (AipsError x) {
+    this->unlock();
+    for(Int i = tempCLs.nelements(); i--;){
+      if(tempCLs[i] != "")
+        Table::deleteTable(tempCLs[i]);
+    }
+    if (tmodimage) delete tmodimage; tmodimage=NULL;
+    os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+    return False;
+  } 
+  return True;
+}
+
+// Temporary copy of setjy() while flux calibration with Solar System objects
+// is being tested.
+Bool Imager::ssoflux(const Vector<Int>& fieldid, 
+                     const Vector<Int>& spectralwindowid,
+                     const String& fieldnames, const String& spwstring,
+                     const String& model,
+                     const Vector<Double>& fluxDensity, 
+                     const String& standard)
+{
+  if(!valid()) return False;
+  logSink_p.clearLocally();
+  LogIO os(LogOrigin("imager", "ssoflux()"), logSink_p);
+  this->lock();
+
+  Vector<Double> fluxdens=fluxDensity;
+  if (fluxDensity.nelements()<4) {
+    fluxdens.resize(4,True);
+    for (Int i=fluxDensity.nelements();i<4;++i)
+      fluxdens(i)=0.0;
+  }
+
+  Vector<String> tempCLs;
+  PagedImage<Float> *tmodimage(NULL);
+
+  try {
+    Bool precompute = (fluxdens(0) < 0 || (fluxdens(0) == 0.0 && model != ""));
+
+    // Figure out which fields/spws to treat
+    Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
+    Vector<Int> fldids(selrec.asArrayInt("field"));
+    Vector<Int> spwids(selrec.asArrayInt("spw"));
+
+    expand_blank_sel(spwids, ms_p->spectralWindow().nrow());
+    expand_blank_sel(fldids, ms_p->field().nrow());
+
+    // Forbid multiple fields for some circumstances
+    if (fldids.nelements()>1) {
+
+      if (model!="") {
+	String errmsg("ssoflux cannot apply a model image to multiple fields");
+	os << LogIO::SEVERE
+	   << errmsg << endl
+	   << "run ssoflux once per field, or use ft"
+	   << LogIO::POST;
+	throw(AipsError(errmsg));
+      }
+
+      if (!precompute) {
+	String errmsg("ssoflux cannot apply user flux density to multiple fields");
+	os << LogIO::SEVERE
+	   << errmsg << endl
+	   << "run ssoflux once per field"
+	   << LogIO::POST;
+	throw(AipsError(errmsg));
+      }
+    }
+
+    // Ignore user-polarization if using an image:
+    if (model!="") {
+      if (fluxdens(1)!=0.0 ||
+	  fluxdens(2)!=0.0 ||
+	  fluxdens(3)!=0.0 )
+	os << LogIO::WARN
+	   << "Using model image, so zeroing user QUV flux densities."
+	   << LogIO::POST;
+      fluxdens(1)=fluxdens(2)=fluxdens(3)=0.0;
+    }
+
+    // Loop over field id. and spectral window id.
+    Vector<Double> fluxUsed(4);
+    String fluxScaleName("user-specified");
+    FluxStandard::FluxScale fluxScaleEnum;
+    if(!FluxStandard::matchStandard(standard, fluxScaleEnum, fluxScaleName))
+      throw(AipsError(standard + " is not a recognized flux density scale"));
+
+    FluxStandard fluxStd(fluxScaleEnum);
+    Int spwid, fldid;
+    ROMSColumns msc(*ms_p);
+    ConstantSpectrum cspectrum;
+
+    uInt nspws = spwids.nelements();
+    Vector<Flux<Double> > returnFluxes(nspws), returnFluxErrs(nspws);
+    Vector<MFrequency> mfreqs(nspws);
+    Array<Double> freqArray;
+    // .getUnits() is a little confusing - it seems to return a Vector which is
+    // a list of all the units, not the unit for each row.
+    const Unit freqUnit(msc.spectralWindow().chanFreqQuant().getUnits()[0]);
+    
+    tempCLs.resize(nspws);
+      
+    IPosition ipos(1,0);
+
+    for(Int fldInd = fldids.nelements(); fldInd--;){
+      fldid = fldids[fldInd];
+      // Extract field name and field center position 
+      MDirection position=msc.field().phaseDirMeas(fldid);
+      String fieldName=msc.field().name()(fldid);
+      Bool foundSrc = false;
+     
+      for(uInt spwInd = 0; spwInd < nspws; ++spwInd){
+	spwid = spwids[spwInd];
+
+	// Determine spectral window center frequency
+	mfreqs[spwInd] = msc.spectralWindow().chanFreqMeas()(spwid)(ipos);
+	msc.spectralWindow().chanFreq().get(spwid, freqArray, True);
+	Double medianFreq=median(freqArray);
+	mfreqs[spwInd].set(MVFrequency(Quantum<Double>(medianFreq,
+                                                       freqUnit)));
+      }
+
+      fluxUsed=fluxdens;
+      if(precompute){
+        // Pre-compute flux density for standard sources if not specified
+        // using the specified flux scale standard or catalog.
+
+        if(model != ""){
+          // Just get the fluxes and their uncertainties for scaling the image.
+          foundSrc = fluxStd.compute(fieldName, mfreqs, returnFluxes,
+                                     returnFluxErrs);
+        }
+        else{
+          // Go ahead and get FluxStandard to make the ComponentList, since
+          // it knows what type of component to use. 
+
+          // This is _a_ time.  It would be more accurate and safer, but
+          // slower, to use the weighted average of the times at which this
+          // source was observed, and to use the range of times in the
+          // estimate of the error introduced by using a single time.
+          //
+          // Obviously that would be overkill if the source does not vary.
+          //
+          MEpoch mtime = msc.field().timeMeas()(fldid);
+            
+          foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, position,
+                                       cspectrum, returnFluxes, returnFluxErrs,
+                                       tempCLs);
+        }
+        if(!foundSrc){
+          if (standard==String("SOURCE")) {
+            // dgoscha, NCSA, 02 May, 2002
+            // this else condtion is to handle the case where the user
+            // specifies standard='SOURCE' in the ssoflux argument.  This will
+            // then look into the SOURCE_MODEL column of the SOURCE subtable
+            // for a table-record entry that points to a component list with the
+            // model information in it.
+
+            // Look in the SOURCE_MODEL column of the SOURCE subtable for 
+            // the name of the CL which contains the model.
+
+            // First test to make sure the SOURCE_MODEL column exists.
+            if (ms_p->source().tableDesc().isColumn("SOURCE_MODEL")) {
+              TableRecord modelRecord;
+              msc.source().sourceModel().get(0, modelRecord);
+	
+              // Get the name of the model component list from the table record
+              Table modelRecordTable = 
+                modelRecord.asTable(modelRecord.fieldNumber(String ("model")));
+              String modelCLName = modelRecordTable.tableName();
+              modelRecord.closeTable(modelRecord.fieldNumber(String ("model")));
+
+              // Now grab the flux from the model component list and use.
+              ComponentList modelCL = ComponentList(Path(modelCLName), True);
+              SkyComponent fluxComponent = modelCL.component(fldid);
+
+              fluxUsed = 0;
+              fluxUsed = real(fluxComponent.flux().value());
+              fluxScaleName = modelCLName;
+            }
+            else {
+              os << LogIO::SEVERE << "Missing SOURCE_MODEL column."
+                 << LogIO::SEVERE << "Using default, I=1.0"
+                 << LogIO::POST;
+              fluxUsed = 0;
+              fluxUsed(0) = 1.0;
+            }
+	  }
+	  else {
+	    // Source not found; use Stokes I=1.0 Jy for now
+	    fluxUsed=0;
+	    fluxUsed(0)=1.0;
+	    fluxScaleName="default";
+	  };
+
+          // Currently, if !foundSrc, then the flux density is the same for all
+          // spws.
+          // Log the flux density found for this field.
+          os.output().width(12);
+          os << fieldName << "  ";
+          os.output().width(0);
+          os.output().precision(4);
+          os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
+          os << "Q=" << fluxUsed(1) << ", ";
+          os << "U=" << fluxUsed(2) << ", ";
+          os << "V=" << fluxUsed(3) << "] Jy, ";
+          os << ("(" + fluxScaleName + ")") << LogIO::POST;
+	}
+      }
+      
+      for(uInt spwInd = 0; spwInd < nspws; ++spwInd){
+        spwid = spwids[spwInd];
+
+        if(foundSrc){
+          // Read this as fluxUsed = returnFluxes[spwInd].value().
+          returnFluxes[spwInd].value(fluxUsed);
+            
+          // Log flux density found for this field and spectral window
+          os.output().width(12);
+          os << fieldName << "  spwid=";
+          os.output().width(3);
+          os << spwid << "  ";
+          os.output().width(0);
+          os.output().precision(4);
+          os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
+          os << "Q=" << fluxUsed(1) << ", ";
+          os << "U=" << fluxUsed(2) << ", ";
+          os << "V=" << fluxUsed(3) << "] Jy, ";
+          os << ("(" + fluxScaleName + ")") << LogIO::POST;
+        }
+          
+        // If a model image has been specified, 
+        //  rescale it according to the I f.d. determined above
+
+        Bool useimage(False);
+        if (model!="") {
+	  
+          useimage=True;
+
+          PagedImage<Float> modimage(model);
+          modimage.table().unmarkForDelete();
+          String tempmodname=File::newUniqueName("./", "ssofluximage").baseName();
           tmodimage = new PagedImage<Float>(modimage.shape(),modimage.coordinates(),tempmodname);
           tmodimage->table().markForDelete();
           tmodimage->set(0.0f);
