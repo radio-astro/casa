@@ -570,7 +570,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.23
+           VERSION 1.0.24
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
