@@ -148,25 +148,34 @@ if not env.GetOption('clean') and not env.GetOption("help"):
     env.AddCustomPackage(pkgname)
 
     # Measures data directory
-    ddir = env.get("data_dir")
-    if ddir:
-        adir = os.path.abspath(os.path.expanduser(os.path.expandvars(ddir)))
-        if os.path.exists(adir) \
-               and os.path.exists(os.path.join(adir, 'ephemerides')) \
-               and os.path.exists(os.path.join(adir, 'geodetic')):
-            pass
-        else:
-            print """Warning: measures data directory given doesn't contain
-            geodetic and ephemerides.
-            Compiling in '%s' as default search location""" % ddir
+    #print "data_dir =", env.get("data_dir")
+    #print "sharedir =", env.get("sharedir")
+    #print "prefix =", env.get("prefix")
+    for ddir in (env.get("data_dir"), env.get("sharedir"),
+                 os.path.join(env.get("prefix"), "share"),
+                 os.path.join('..', 'data'),
+                 os.path.join('/usr', 'lib', 'casapy', 'data'),
+                 os.path.join('/usr', 'lib64', 'casapy', 'data')):
+        if ddir:
+            ddir = os.path.abspath(os.path.expanduser(os.path.expandvars(ddir)))
+            if os.path.exists(ddir) \
+                   and os.path.exists(os.path.join(ddir, 'ephemerides')) \
+                   and os.path.exists(os.path.join(ddir, 'geodetic')):
+                break
+            else:
+                ddir = os.path.join(ddir, "casacore", "data")
+            if os.path.exists(ddir) \
+                   and os.path.exists(os.path.join(ddir, 'ephemerides')) \
+                   and os.path.exists(os.path.join(ddir, 'geodetic')):
+                break
+    if not (os.path.exists(ddir) and
+            os.path.exists(os.path.join(ddir, 'ephemerides')) and
+            os.path.exists(os.path.join(ddir, 'geodetic'))):
+        print """Warning: the measures data directory given doesn't contain
+        geodetic and ephemerides.
+        Compiling in '%s' as default search location""" % ddir
 
-    else:
-        shrdir = env.get("sharedir") or \
-            os.path.join(env.get("prefix"), "share")
-        ddir = os.path.abspath(os.path.expanduser(os.path.expandvars(shrdir)))
-        ddir = os.path.join(shrdir, "casacore", "data")
     # Note the escaped single quotes to handle the string in the define
-    ddir = os.path.abspath(os.path.expanduser(os.path.expandvars(ddir)))
     env["DATA_DIR"] = '-DCASADATA=\'"%s"\'' % ddir
     conf.Finish()
 

@@ -130,6 +130,56 @@ Bool Aipsrc::find(uInt &value, const String &keyword,
   return True;
 }
 
+Bool Aipsrc::findDir(String& foundDir, const String& lastPart,
+                     const Vector<String>& prepends,
+                     const Vector<String>& appends,
+                     const Bool useStds)
+{
+  // Setup a string that is either "/" + lastPart or blank.
+  String myLastPart("");
+  if(lastPart != "")
+    myLastPart += "/" + lastPart;
+  
+  // Note that this function returns as soon as possible, i.e. it goes until it
+  // matches or runs out of possibilities.
+
+  for(uInt i = 0; i < prepends.nelements(); ++i){
+    foundDir = prepends[i] + myLastPart;
+    
+    File testPath(foundDir);
+    if(testPath.isDirectory())
+      return true;
+  }
+  if(useStds){
+    // Test . using lastPart or ., not "".
+    if(lastPart != "")
+      foundDir = lastPart;
+    else
+      foundDir = ".";
+    File testDot(foundDir);
+    if(testDot.isDirectory())
+      return true;
+
+    foundDir = aipsHome() + myLastPart;
+    File testAipsHome(foundDir);
+    if(testAipsHome.isDirectory())
+      return true;
+    
+    foundDir = aipsRoot() + myLastPart;
+    File testAipsRoot(foundDir);
+    if(testAipsRoot.isDirectory())
+      return true;
+  }
+  for(uInt i = 0; i < appends.nelements(); ++i){
+    foundDir = appends[i] + myLastPart;
+    
+    File testPath(foundDir);
+    if(testPath.isDirectory())
+      return true;
+  }
+  return false;
+}
+
 void Aipsrc::reRead() {
   parse();
 }
