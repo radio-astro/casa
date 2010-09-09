@@ -58,7 +58,6 @@ SHORT_LIST = [
              'test_plotms',
              'test_sdplot',
              'test_sdsave',
-             'test_version',
              'test_viewer'
              ]
 
