@@ -33,6 +33,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
+#include <components/ComponentModels/ConstantSpectrum.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
@@ -507,6 +508,14 @@ class Imager
 
   Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
 
+
+  // Supports the "[] or -1 => everything" convention using the rule:
+  // If v is empty or only has 1 element, and it is < 0, 
+  //     replace v with 0, 1, ..., nelem - 1.
+  // Returns whether or not it modified v.
+  //   If so, v is modified in place.
+  static Bool expand_blank_sel(Vector<Int>& v, const uInt nelem);  
+
 protected:
 
   CountedPtr<MeasurementSet> ms_p;
@@ -699,6 +708,13 @@ protected:
 
   //set the mosaic ft machine and right convolution function
   virtual void setMosaicFTMachine(Bool useDoublePrec=False); 
+
+  // Makes a component list on disk containing cmp (with fluxval and cspectrum)
+  // named msname_p.fieldName.spw<spwid>.tempcl and returns the name.
+  String makeComponentList(const String& fieldName, const Int spwid,
+                           const Flux<Double>& fluxval,
+                           const ComponentShape& cmp,
+                           const ConstantSpectrum& cspectrum) const;
  
   ComponentList* componentList_p;
 
