@@ -220,12 +220,12 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
                        - firstTimeStart - firstTimeLen - 1;
     uInt unitPos  = firstTimeStart + firstTimeLen + 1 + lastTimeLen;
     
-    Double firstTime = String::toDouble(basename.at(firstTimeStart, firstTimeLen));
-    Double lastTime = String::toDouble(basename.at(firstTimeLen + firstTimeLen + 1,
-                                                   lastTimeLen));
+    Double firstTime = String::toDouble(basename.substr(firstTimeStart, firstTimeLen));
+    Double lastTime = String::toDouble(basename.substr(firstTimeLen + firstTimeLen + 1,
+						       lastTimeLen));
     Unit unit(basename[unitPos]);
-    String ref(basename.at(unitPos + 1,
-                           basename.find('.', unitPos + 1) - unitPos - 1));
+    String ref(basename.substr(unitPos + 1,
+			       basename.find('.', unitPos + 1) - unitPos - 1));
     
     os << LogIO::DEBUG1
        << basename << ": (first, last)time = ("
