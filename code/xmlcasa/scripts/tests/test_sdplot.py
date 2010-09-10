@@ -11,6 +11,7 @@ import time
 
 asap_init()
 from sdplot import sdplot
+import asap as sd
 
 class sdplot_test_plot(unittest.TestCase):
     """
@@ -25,6 +26,7 @@ class sdplot_test_plot(unittest.TestCase):
       test16-19 --- plot style control (spectral plotting)
       test20-21 --- header control (spectral plotting)
       test22-23 --- plot layout control (spectral plotting)
+      test24-25 --- row panelling or stacking (spectral plotting)
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -37,8 +39,13 @@ class sdplot_test_plot(unittest.TestCase):
     fig='sdplottest.png'
     fig_minsize = 20000
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdplot/'
+    nogui = True
 
     def setUp(self):
+        # switch off GUI
+        if self.nogui:
+            sd.rcParams['plotter.gui'] = False
+            sd.plotter.__init__()
         self.res=None
         if (not os.path.exists(self.sdfile)):
             shutil.copytree(self.datapath+self.sdfile, self.sdfile)
@@ -64,7 +71,6 @@ class sdplot_test_plot(unittest.TestCase):
 
     def testplot01(self):
         """Test 1: test plot type --- az/el"""
-        #pl.ion()
         sdfile=self.sdfile
         plottype='azel'
         header=False
@@ -360,6 +366,30 @@ class sdplot_test_plot(unittest.TestCase):
         legendloc=3
         self.res=sdplot(sdfile=sdfile,iflist=iflist,plotstyle=plotstyle,
                         legendloc=legendloc,plotfile=self.fig)
+        self.assertEqual(self.res,None)
+        self._checkPlotFile()
+
+    def testplot24(self):
+        """
+        Test 24: test panelling and stacking (spectral plotting) --- panel='row' (16px1s)
+        """
+        sdfile=self.sdfile
+        panel='row'
+        header=False
+        self.res=sdplot(sdfile=sdfile,panel=panel,
+                        header=header,plotfile=self.fig)
+        self.assertEqual(self.res,None)
+        self._checkPlotFile()
+
+    def testplot25(self):
+        """
+        Test 25: test panelling and stacking (spectral plotting) --- panel='scan', stack='row' (1px16s)
+        """
+        sdfile=self.sdfile
+        stack='row'
+        header=False
+        self.res=sdplot(sdfile=sdfile,stack=stack,
+                        header=header,plotfile=self.fig)
         self.assertEqual(self.res,None)
         self._checkPlotFile()
 
