@@ -245,13 +245,24 @@ String FluxStandard::makeComponentList(const String& sourceName,
                                        const ComponentShape& cmp,
                                        const ConstantSpectrum& cspectrum)
 {
+  LogIO os(LogOrigin("FluxStandard", "makeComponentList"));
+
   // Make up the ComponentList's pathname.
   ostringstream oss;
-  oss << sourceName << "_" << setprecision(1)
+  oss << sourceName << "_" //<< setprecision(1)
       << mfreq.get("GHz").getValue() << "GHz";
   //  String datetime;  // to nearest minute.
-  oss << mtime << ".cl";
+  oss << mtime.get("d").getValue() << "d.cl";
   String clpath(oss);
+  uInt nspaces = clpath.gsub(" ", "_");
+
+  os << LogIO::DEBUG1
+     << "sourceName: " << sourceName
+     << "\nmfreq: " << mfreq.get("GHz").getValue() << "GHz"
+     << "\nmtime: " << mtime.get("d").getValue() << "d"
+     << "\nclpath: " << clpath << " (replaced " << nspaces
+     << " spaces)"
+     << LogIO::POST;
 
   // Create a component list containing cmp, and force a call to its d'tor
   // using scoping rules.
