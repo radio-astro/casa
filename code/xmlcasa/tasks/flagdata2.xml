@@ -668,7 +668,7 @@
            In this mode, the task returns a dictionary of flagging statistics.
            Example:
 
-               s = flagdata(..., summary=True)
+               s = flagdata2(..., summary=True)
 
            Then s will be a dictionary which contains
 
