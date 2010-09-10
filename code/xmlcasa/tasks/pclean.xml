@@ -6,9 +6,8 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
       <task type="function" name="pclean" category="utilities" async="never">
-	<shortdescription>This task does parallel clean</shortdescription>
-	<description>This task does parallel clean
-	</description>
+	<shortdescription>Invert and deconvolve images with parallel engines</shortdescription>
+	<description>Form images from visibilities. Handles continuum and spectral line cubes using module pcont and pcube respectively.</description>
 
 	<input>
 		<param type="string" vis="true" name="vis" mustexist="true">
@@ -21,6 +20,30 @@
 			<value></value>
 		</param>
 
+	        <param type="intArray" name="imsize">
+		    <description>Image size in pixels (nx,ny), symmetric for single value</description>
+		    <value type="vector">
+	            <value>256</value><value>256</value>
+		    </value>
+	        </param>
+
+	        <param type="doubleArray" name="cell" units="arcsec">
+	             <description>The image cell size in arcseconds. </description>
+	             <value type="vector"><value>1.0</value><value>1.0</value></value>
+	        </param>
+
+                <param type="any" name="phasecenter">
+                     <description>Image center: direction or field index</description>
+                     <any type="variant"/>
+                     <value type="string"></value>
+                </param>
+
+                <param type="any" name="mask">
+                     <description>Cleanbox(es), mask image(s), and/or mask region(s)</description>
+                     <any type="variant"/>
+                     <value type="stringArray"></value>
+                </param>
+
                 <param type="string" name="field">
                         <description>Field Name or id</description>
                         <value type="string"></value>
@@ -32,27 +55,47 @@
 	        	<value type="string"></value>
 		</param>
 
-	        <param type="intArray" name="imsize">
-		    <description>Image size in pixels (nx,ny), symmetric for single value</description>
-		    <value type="vector">
-	            <value>256</value><value>256</value>
-		    </value>
-	        </param>
 
-	        <param type="doubleArray" name="cell" units="arcsec">
-	             <description>The image cell size in arcseconds [x,y]. </description>
-	             <value type="vector"><value>1.0</value><value>1.0</value></value>
-	        </param>
+		<!--param type="stringArray" name="restoringbeam">
+			<description>Output Gaussian restoring beam for CLEAN image</description>
+	                <value></value>
+		</param-->
 
-                <param type="any" name="phasecenter">
-                     <description>Image center: direction or field index</description>
-                     <any type="variant"/>
-                     <value type="string"></value>
+                <param type="string" name="ftmachine">
+                        <description>Fourier Transform Engine</description>
+                        <value type="string">ft</value>
+                        <allowed kind="enum">
+                             <value>ft</value>
+                             <value>mosaic</value>
+                             <value>sd</value>
+                             <value>both</value>
+                             <value>pbwproject</value>
+                        </allowed>
                 </param>
+
+                <param type="string" name="alg">
+                        <description>Deconvolution algorithm</description>
+                        <value type="string">clark</value>
+                        <allowed kind="enum">
+                            <value>clark</value>
+                            <value>clarkstokes</value>
+                            <value>hogbom</value>
+                        </allowed>
+                </param>
+
+		<param type="int" name="majorcycles">
+			<description>Number of major cycles</description>
+			<value>1</value>
+		</param>
 
 		<param type="int" name="niter">
 			<description>Maximum number of iterations</description>
 			<value>500</value>
+		</param>
+
+		<param type="string" name="threshold">
+			<description>Flux level to stop cleaning, must include units: \'1.0mJy\'</description>
+			<value>0.0</value>
 		</param>
 
 		<param type="string" name="weighting">
@@ -68,79 +111,13 @@
 		    </allowed>
 		</param>
 
-		<param type="stringArray" name="restoringbeam">
-			<description>Output Gaussian restoring beam for CLEAN image</description>
-	                <value></value>
-		</param>
-
-                <param type="string" name="ftmachine">
-                        <description>Fourier Transform Engine</description>
-                        <value type="string">ft</value>
-                </param>
-
-                <param type="string" name="alg">
-                        <description>deconvolution algorithm</description>
-                        <value type="string">Clark</value>
-                </param>
-
-		<param type="int" name="wprojplanes">
-			<description>Number of w-projection planes</description>
-			<value>128</value>
-		</param>
-
-		<param type="int" name="facats">
-			<description>Number of facats</description>
-			<value>1</value>
-		</param>
-
-		<param type="int" name="majorcycles">
-			<description>Number of major cycles</description>
-			<value>1</value>
-		</param>
-
-		<param type="double" name="painc">
-			<description>painc</description>
-			<value>360.</value>
-		</param>
-
-		<param type="double" name="palimit">
-			<description>palimit</description>
-			<value>0.1</value>
-		</param>
-
-		<param type="boolean" name="popbcorr">
-			<description>popbcorr</description>
-			<value>True</value>
-		</param>
-
-		<param type="boolean" name="applyoffsets">
-			<description>applyoffsets</description>
-			<value>False</value>
-		</param>
-
-		<param type="string" name="cfcache">
-			<description>cfcache</description>
-			<value>cfcache.dir</value>
-		</param>
-
-		<param type="string" name="epjtablename">
-			<description>epjtablename</description>
-			<value></value>
-		</param>
-
-
-		<param type="boolean" name="contclean">
-			<description>contclean</description>
-			<value>False</value>
-		</param>
-
-		<param type="boolean" name="visinmem">
-			<description>Load visibilities into memory</description>
-			<value>False</value>
+		<param type="intArray" name="scales">
+			<description>Scales to use in deconvolution</description>
+			<value>[]</value>
 		</param>
 
 		<param type="string" name="mode">
-			<description>clean mode (continuum, channel, frequency, velocity, mfs)</description>
+			<description>Clean mode (continuum, channel, frequency, velocity, mfs)</description>
 			<value>continuum</value>
 	              <allowed kind="enum">
 		      <value>continuum</value>
@@ -151,23 +128,25 @@
 		    </allowed>
 		</param>
 
-		<param type="int" name="start" subparam="true">
+		<param type="any" name="start" subparam="true">
 			<description>Begin the output cube at the frequency of this channel in the MS</description>
-			<value>0</value>
+                        <any type="variant"/>
+			<value type="int">0</value>
 		</param>
 
 		<param type="int" name="nchan" subparam="true">
-			<description>Number of channels (planes) in output image; -1 = all</description>
+			<description>Number of channels (planes) in output image</description>
 			<value>1</value>
 		</param>
 
-		<param type="int" name="step" subparam="true">
+		<param type="any" name="step" subparam="true">
 			<description>Channel Steps</description>
-			<value>1</value>
+                        <any type="variant"/>
+			<value type="int">1</value>
 		</param>
 
 		<param type="int" name="imagetilevol" subparam="true">
-			<description>Image Tile</description>
+			<description>Size of the image mage tile</description>
 			<value>1000000</value>
 		</param>
 
@@ -176,9 +155,70 @@
 			<value>1</value>
 		</param>
 
-		<param type="intArray" name="scales" subparam="true">
-			<description>scales</description>
-			<value>[]</value>
+		<param type="boolean" name="interactive" subparam="true">
+			<description>Interactive clean</description>
+			<value>False</value>
+		</param>
+
+                <param type="string" name="gridmode">
+                   <description>Gridding kernel for FFT-based transforms, default=\'\' None</description>
+                   <value></value>
+                   <allowed kind="enum">
+                       <value></value>
+                       <value>widefield</value>
+                       <value>aprojection</value>
+                       <value>experimental</value>
+                   </allowed>
+                </param>
+
+		<param type="int" name="wprojplanes" subparam="true">
+			<description>Number of w-projection planes for convolution</description>
+			<value>128</value>
+		</param>
+
+		<param type="int" name="facats" subparam="true">
+			<description>Number of facats along each axis</description>
+			<value>1</value>
+		</param>
+
+		<param type="double" name="painc" subparam="true">
+			<description>Parallactic angle increment in degrees</description>
+			<value>360.</value>
+		</param>
+
+		<param type="double" name="pblimit" subparam="true">
+			<description>The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)</description>
+			<value>0.1</value>
+		</param>
+
+		<param type="boolean" name="dopbcorr" subparam="true">
+			<description>Correct for PB in the major cycles as well</description>
+			<value>True</value>
+		</param>
+
+		<param type="boolean" name="applyoffsets" subparam="true">
+			<description>Apply antenna pointing offsets in g table given by epjtablename</description>
+			<value>False</value>
+		</param>
+
+		<param type="string" name="cfcache" subparam="true">
+			<description>The disk cache directory for convolution functions</description>
+			<value>cfcache.dir</value>
+		</param>
+
+		<param type="string" name="epjtablename" subparam="true">
+			<description>Table containing antenna pointing offsets</description>
+			<value></value>
+		</param>
+
+		<param type="boolean" name="contclean">
+			<description>Use existing model image</description>
+			<value>False</value>
+		</param>
+
+		<param type="boolean" name="visinmem">
+			<description>Load visibilities into memory</description>
+			<value>False</value>
 		</param>
 
 		<param type="stringArray" name="hostnames">
@@ -191,17 +231,58 @@
 			<value>1</value>
 		</param>
 
+
         <constraints>
                  <when param="mode">
-                     <equals type="string" value="continuum"/>
+                     <equals type="string" value="continuum">
+                         <default param="interactive"><value>False</value></default>
+                     </equals>
                      <equals type="string" value="channel">
-                         <default param="start"><value>0</value></default>
+                         <default param="start"><value type="int">0</value></default>
                          <default param="nchan"><value>1</value></default>
-                         <default param="step"><value>1</value></default>
+                         <default param="step"><value type="int">1</value></default>
+                         <!--default param="imagetilevol"><value>1000000</value></default-->
+                         <default param="chanchunk"><value>1</value></default>
+                     </equals>
+                     <equals type="string" value="frequency">
+                         <default param="start"><value type="string"></value><description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in first SpW of MS)</description></default>
+                         <!--default param="nchan"><value>1</value></default-->
+                         <default param="step"><value type="string"></value><description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description></default>
                          <default param="imagetilevol"><value>1000000</value></default>
                          <default param="chanchunk"><value>1</value></default>
-                         <default param="scales"><value>[]</value></default>
                      </equals>
+                     <equals type="string" value="velocity">
+                         <default param="start"><value type="string"></value><description>Velocity of first channel: e.g \'0.0km/s\' (\'\'=first channel in first SpW of MS)</description></default>
+                         <!--default param="nchan"><value>1</value></default-->
+                         <default param="step"><value type="string"></value><description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description></default>
+                         <default param="imagetilevol"><value>1000000</value></default>
+                         <!--default param="chanchunk"><value>1</value></default-->
+                     </equals>
+                     <equals type="string" value="mfs"></equals>
+                 </when>
+                 <when param="gridmode">
+                     <equals value=""/>
+                     <equals value="widefield">
+                      <default param="wprojplanes"><value>128</value></default>
+                      <default param="facets"><value>1</value></default>
+                     </equals>
+                     <equals value="aprojection">
+                      <!-- <default param="wprojplanes"><value>1</value></default> -->
+                      <!-- <default param="facets"><value>1</value></default> -->
+                      <default param="cfcache"><value type="string">cfcache.dir</value></default>
+                      <default param="painc"><value>360.0</value></default>
+                      <!-- <default param="epjtable"><value type="string"></value></default> -->
+              </equals>
+
+                     <equals value="experimental">
+                      <!--default param="ftmachine"><value type="string">ft</value></default-->
+                      <default param="wprojplanes"><value>1</value></default>
+                      <default param="facets"><value>1</value></default>
+                      <default param="cfcache"><value type="string">cfcache.dir</value></default>
+                      <default param="painc"><value>360.0</value></default>
+                      <default param="epjtable"><value type="string"></value></default>
+                    </equals>
+
                  </when>
 
         </constraints>
@@ -211,89 +292,165 @@
 <example>
 
 	Keyword arguments:
-	vis -- Name of input visibility file
-        	default: none; example: vis='ngc5921.ms' 
-        	
-	imagename -- Name of output CASA image. (only the prefix)
-                   default: none; example: imagename='m2'
-                   output images are:
+        Invert and deconvolve images with parallel engines
+        Form images from visibilities. Handles continuum and spectral line 
+        cubes using module pcont and pcube respectively.
+ 
+        vis -- Name of input visibility file
+               default: none; example: vis='ngc5921.ms'    
+    
+	imagename -- Pre-name of output CASA image. (only the prefix)
+               default: none; 
+               example: imagename='m2', output images are:
                  m2.image; cleaned and restored image
-                        With or without primary beam correction
+                           With or without primary beam correction
                  m2dirty.image; dirty image
                  m2psf.image; point-spread function (dirty beam)
                  m2.model; image of clean components
                  m2.mask; image containing clean regions, when interative=True
-		         
-	field -- Select fields in mosaic.  Use field id(s) or field name(s).
-                  ['go listobs' to obtain the list id's or names]
-              default: ''= all fields
-              If field string is a non-negative integer, it is assumed to
-                  be a field index otherwise, it is assumed to be a 
-		  field name
-              field='0~2'; field ids 0,1,2
-              field='0,4,5~7'; field ids 0,4,5,6,7
-              field='3C286,3C295'; field named 3C286 and 3C295
-              field = '3,4C*'; field id 3, all names starting with 4C
-              
-	spw -- Select spectral window/channels
-           NOTE: This selects the data passed as the INPUT to mode
-           default: ''= all spectral windows and channels
-                spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
-                spw='0:5~61'; spw 0, channels 5 to 61
-                spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
-                spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
-				   channels 3 to 45.
-                spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-                spw='0:0~10;15~60'; spectral window 0 with channels 
-				    0-10,15-60
-                spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
-                      spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
-                      
-	imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
-               default = [256,256]; example: imsize=[350,350]
-               imsize = 500 is equivalent to [500,500].
+
+        imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
+               default: [256,256]; 
+               example: imsize=[350,350]
+               imsize=500 is equivalent to imsize=[500, 500]
                Avoid odd-numbered imsize.
+    
+        cell -- Cell size (x,y)
+               default: '1.0arcsec';
+               example: cell=['0.5arcsec', '0.5arcsec'] or
+                        cell=['1arcmin', '1arcmin']
+               cell='1arcsec' is equivalent to cell=['1arcsec', '1arcsec']
+               NOTE:cell=2.0 => cell=['2arcsec', '2arcsec']
 
-	cell -- Cell size (x,y)
-               default= '1.0arcsec';
-               example: cell=['0.5arcsec,'0.5arcsec'] or
-               cell=['1arcmin', '1arcmin']
-               cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
-               NOTE:cell = 2.0 => ['2arcsec', '2arcsec']
+        phasecenter -- direction measure  or fieldid for the mosaic center
+               default: '' => first field selected; 
+               example: phasecenter=6
+                     or phasecenter='J2000 19h30m00 -40d00m00'
+        
+        mask -- Specification of cleanbox(es), mask image(s), and/or
+               region(s) to be used for CLEANing. As long as the image has
+               the same shape (size), mask images from a previous
+               interactive session can be used for a new execution. NOTE:
+               the initial clean mask actually used is the union of what
+               is specified in mask and imagename.mask default: [] (no
+               masking); Possible specification types: 
+               (a) Explicit cleanbox pixel ranges 
+                  example: mask=[110,110,150,145] clean region with 
+                           blc=110,100; trc=150,145 (pixel values) 
+               (b) Filename with cleanbox pixel values with ascii format:
+                  example: mask='mycleanbox.txt' with 
+                    fieldid blc-x blc-y trc-x trc-y on each line
+                    1 45 66 123 124
+                    2 23 100 300 340
+               (c) Filename for image mask 
+                  example: mask='myimage.mask'
+               (d) Filename for region specification (e.g. from viewer)
+                  example: mask='myregion.rgn' 
+               (e) Combinations of any of the above 
+                  example: mask=[[110,110,150,145],'mycleanbox.txt',
+                                  'myimage.mask','myregion.rgn']
+                  If include outlier fields, then mask need to be 
+                  specified in nested lists: e.g. 
+                  mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
+               (A clean box with [110,110,150,145] and a image mask for main
+                field, no mask for 1st outlier field, 1 clean box for second
+                outlier field.)
 
-       phasecenter -- direction measure  or fieldid for the mosaic center
-                default: '' => first field selected ; example: phasecenter=6
-                or phasecenter='J2000 19h30m00 -40d00m00'
+        field -- Select fields in MS.  Use field id(s) or field name(s).
+                    ['go listobs' to obtain the list id's or names]
+               default: ''= all fields
+               If field string is a non-negative integer, it is assumed to
+               be a field index otherwise, it is assumed to be a field name
+               examples:
+                 field='0~2'; field ids 0,1,2
+                 field='0,4,5~7'; field ids 0,4,5,6,7
+                 field='3C286,3C295'; field named 3C286 and 3C295
+                 field = '3,4C*'; field id 3, all names starting with 4C
+    
+        spw --Select spectral window/channels
+               NOTE: This selects the data passed as the INPUT to mode
+               default: ''=all spectral windows and channels
+               examples:
+                 spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+                 spw='0:5~61'; spw 0, channels 5 to 61
+                 spw='&lt; 2';   spectral windows less than 2 (i.e. 0,1)
+                 spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
+                                     channels 3 to 45.
+                 spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+                 spw='0:0~10;15~60'; spectral window 0 with channels 
+                                      0-10,15-60
+                 spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
+                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
 
-	niter -- Maximum number of iterations,
+        ftmachine -- Fourier Transform Engine (Gridding method)
+               Options: 
+                 'ft' (standard interferometric gridding), 
+                 'sd' (standard single dish),
+                 'mosaic' (grid using PB as convolution function).
+                 'pbwproject'
+               default: 'ft'
+ 
+        alg -- Deconvolution algorithm
+               Options: 'clark', 'clarkstokes', 'hogbom'
+               default: 'clark'
+
+        majorcycles -- integer number of CS major cycles to do 
+               default: 1; 
+               example: majorcycles=10
+    
+        niter -- Maximum number iterations,
                if niter=0, then no CLEANing is done ("invert" only)
-               default: 500; example: niter=5000
+               default: 500; 
+               example: niter=5000
 
-	weighting -- Weighting to apply to visibilities:
-               default='natural'; example: weighting='uniform';
+        threshold -- Flux level (residual peak) at which to stop CLEANing
+               default: '0.0mJy';
+               example: 
+                 threshold='2.3mJy'  (always include units)
+                 threshold='0.0023Jy'
+                 threshold='0.0023Jy/beam' (okay also)
+    
+        weighting -- Weighting to apply to visibilities:
                Options: 'natural','uniform','briggs', 
-                       'superuniform','briggsabs','radial'
+                        'superuniform','briggsabs','radial'
+               default: 'natural'; 
+               example: weighting='uniform';
 
-	restoringbeam -- Output Gaussian restoring beam for CLEAN image
-               [bmaj, bmin, bpa] elliptical Gaussian restoring beam.
-               Default units are in arc-seconds for bmaj and bmin, and in degrees
-               for bpa. Default: restoringbeam=[]; Use PSF calculated
-               from dirty beam. 
-               example: restoringbeam=['10arcsec'] or restorinbeam='10arcsec', circular Gaussian.
-                        FWHM 10 arcseconds example:
-                        restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
-                        at 45 degrees
-	
+        scales -- list of scales in pixel for multiscale clean 
+               default: []
+               example: scales=[0, 3, 10]
+
+        mode -- type of image to be generated 
+               Options: 'continuum', 'channel', 'frequency',
+                        'velocity', 'mfs'
+               default: 'continuum'
+    
 	interactive -- Create a mask interactively or not.
-        		default=False; example: interactive=True
-        		The viewer will open with the image displayed. Select the
-        		region for the mask and double click in the middle of it.
+               default: False; 
+               example: interactive=True
+                 The viewer will open with the image displayed. Select the
+        	 region for the mask and double click in the middle of it.
 
-        ftmachine -- the ftmachine to use ...'ft', 'wproject' etc
+        contclean -- Use existing model image 
+               if False the imagename.model is deleted if it is exists
+               if True clean will continue from previous run
+               default: False
+
+        visinmem -- load visibility in memory for major cycles
+               make sure total memory available to all processes is more 
+               than the MS siz
+               default: False
+
+        hostnames -- list of strings of hostnames
+               default: ''; empty string means localhost
+               example: hostnames=['casa-dev-01', 'casa-dev-07']
+
+        numcpuperhost -- integer number of processes to launch on each host
+               default: 1
+               example: numcpuperhost=3
+
         wprojplanes -- an interger that is valid only of ftmachine is 'wproject',
         facets -- integer do split image facet,
-        hostnames -- list of strings ..empty string mean localhost
-        numcpuperhos -- integer number of processes to launch on each host
         majorcycles -- integer number of CS major cycles to do,
         alg -- string  possibilities are 'clark', 'hogbom', 'msclean'
         cfcache -- The disk cache directory for convolution functions rections are applied (default=0.1)
