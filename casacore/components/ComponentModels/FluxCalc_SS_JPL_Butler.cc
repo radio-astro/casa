@@ -290,6 +290,9 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
   }
 
   switch(objnum_p){
+  case FluxCalc_SS_JPL_Butler::Jupiter:
+    compute_jupiter(values, errors, angdiam, mfreqs);
+    break;
   case FluxCalc_SS_JPL_Butler::Uranus:
     compute_uranus(values, errors, angdiam, mfreqs);
     break;
