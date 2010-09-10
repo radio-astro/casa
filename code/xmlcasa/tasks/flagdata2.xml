@@ -6,7 +6,7 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="flagdata2" category="data editing">
-    <shortdescription> All purpose flagging task based on selections</shortdescription>
+    <shortdescription> All purpose flagging task based on selections. It allows the combination of several modes.</shortdescription>
     <description>
         The task will select a subset of data explicitly for flagging,
         quacking, clipping, autocorrelation flagging, rfi or flagging
@@ -668,7 +668,7 @@
            In this mode, the task returns a dictionary of flagging statistics.
            Example:
 
-               s = flagdata(...)
+               s = flagdata(..., summary=True)
 
            Then s will be a dictionary which contains
 
@@ -712,7 +712,7 @@
 
         2) Vector mode
 
-        For reasons of performance (in order to reduce the number loops through
+        For reasons of performance (in order to reduce the number of loops through
         the MS), several flagdata2 task invocations can be combined into a single
         flagdata2() run by giving vectors of parameters.
 
@@ -765,8 +765,8 @@
               vis = 'ngc1333.ms'
               manualflag = True
               mf_antenna   = ['*&amp;&amp;&amp;'  , 'VA09', ''   , 'VA14', 'VA15']
-              mf_timerange = [''  , ''    , '2003/05/02/21:40:58~2003/05/02/22:01:30', \
-                             '2003/05/02/18:50:50~2003/05/02/19:13:30', \
+              mf_timerange = [''  , ''    , '2003/05/02/21:40:58~2003/05/02/22:01:30', 
+                             '2003/05/02/18:50:50~2003/05/02/19:13:30', 
                              '2003/05/02/22:38:49~2003/05/02/22:39:11'] 
               mf_spw       = [''  , ''    , ''   , ''    , '0'   ]
               
