@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNode.h 20794 2009-11-05 03:47:24Z Malte.Marquarding $
+//# $Id: ExprFuncNode.h 20940 2010-08-25 09:08:06Z gervandiepen $
 
 #ifndef TABLES_EXPRFUNCNODE_H
 #define TABLES_EXPRFUNCNODE_H
@@ -285,10 +285,6 @@ public:
     static void fillChildNodes (TableExprFuncNode* thisNode,
 				PtrBlock<TableExprNodeRep*>& nodes,
 				const Block<Int>& dtypeOper);
-
-    // Fill the unit of the node for the functions with a predefined unit
-    // (like asin).
-    static void fillUnit (TableExprNodeRep& node, FunctionType func);
 
     // Set unit scale factor (needed for sqrt).
     void setScale (Double scale)

@@ -23,13 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Register.h 20921 2010-07-05 11:33:16Z gervandiepen $
+//# $Id: Register.h 20941 2010-08-25 18:35:26Z gervandiepen $
 
 #ifndef DERIVEDMSCAL_REGISTER_H
 #define DERIVEDMSCAL_REGISTER_H
 
 // <group name=DerivedMSCal>
-// This function registers the DerivedMSCal virtual column engine.
+// This function registers the DerivedMSCal virtual column engine and
+// the UDFMSCal UDFs.
 // It is called when the dynamic library derivedmscal.so/dylib is loaded.
 
 extern "C" {
