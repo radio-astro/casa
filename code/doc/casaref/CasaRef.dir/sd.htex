@@ -18,7 +18,7 @@ Synopsis
 
   \medskip\noindent\textbf{Important note}
 
-    To access sd tool from \casa\ , the user must execute asap_init(). 
+    To access sd tool from \casa\ , the user must execute asap\_init(). 
     This command imports ASAP package as sd tool and make single-dish 
     tasks available.
 
@@ -3366,7 +3366,7 @@ Methods
 
 	\ahlink{get\_area}{sd:sd.fitter.get_area} & Return the area under the fitted gaussian/lorentzian component \\
 
-	\ahlink{get\_chi2}{sd:sd.fitter.get_chi2} & Return chi^2 value \\
+	\ahlink{get\_chi2}{sd:sd.fitter.get_chi2} & Return $\chi^2$ value \\
 
 	\ahlink{get\_errors}{sd:sd.fitter.get_errors} & Return the errors in parameters \\
 
@@ -3449,7 +3449,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.fitter.get\_chi2}{sd.fitter.get_chi2}{Return chi^2 value}
+\ahsdfunction{sd.fitter.get\_chi2}{sd.fitter.get_chi2}{Return $\chi^2$ value}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -4047,7 +4047,7 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
   lowest variances across the spectrum (i.e. histogram equalization is
   used to avoid missing weak lines if strong ones are present). For
   bad baseline shapes it is recommended to increase the threshold and
-  possibly switch the averaging option off (see set_options) to
+  possibly switch the averaging option off (see \ahlink{set\_options}{sd:sd.linefinder.set_options}) to
   detect strong lines only, fit a high order baseline and repeat the line
   search.
 
@@ -4074,8 +4074,8 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
                       'box' means noise box is the same as running mean/median box.
                       Numeric values are defined as a fraction from the
                       spectrum size. Values should be positive.
-                      (noise_box == box_size has the same effect as
-                       noise_box = 'box')
+                      (noise\_box == box\_size has the same effect as
+                       noise\_box = 'box')
 
   \item noise\_stat \\ Statistics used to estimate noise. Allowed values are 
                        'mean80' that use the 80% of the lowest deviations in the noise box (default)
@@ -4252,7 +4252,7 @@ bool array
    \ahlink{description}{sd:sd.linefinder} of 
    this object for details about parameters.
 
-   Note that, for bad baselines, threshold should be increased, and avg_limit decreased 
+   Note that, for bad baselines, threshold should be increased, and avg\_limit decreased 
    (or even switched off completely by setting this parameter to 1) to avoid detecting baseline
    undulations instead of real lines.
 
