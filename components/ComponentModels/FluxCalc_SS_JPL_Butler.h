@@ -168,6 +168,26 @@ class FluxCalc_SS_JPL_Butler
                   Vector<Flux<Double> >& errors, const Double angdiam,
                   const Vector<MFrequency>& mfreqs);
 
+  // Like compute_BB(), except it uses a graybody model where each frequency
+  // has a corresponding temperature.
+  void compute_GB(Vector<Flux<Double> >& values,
+                  Vector<Flux<Double> >& errors, const Double angdiam,
+                  const Vector<MFrequency>& mfreqs,
+                  const Vector<Double>& temps);
+
+  void compute_uranus(Vector<Flux<Double> >& values,
+                       Vector<Flux<Double> >& errors, const Double angdiam,
+                       const Vector<MFrequency>& mfreqs);
+  void compute_neptune(Vector<Flux<Double> >& values,
+                       Vector<Flux<Double> >& errors, const Double angdiam,
+                       const Vector<MFrequency>& mfreqs);
+  void compute_pluto(Vector<Flux<Double> >& values,
+                     Vector<Flux<Double> >& errors, const Double angdiam,
+                     const Vector<MFrequency>& mfreqs);
+  void compute_titan(Vector<Flux<Double> >& values,
+                     Vector<Flux<Double> >& errors, const Double angdiam,
+                     const Vector<MFrequency>& mfreqs);  
+
   // Data members which are initialized in the c'tor's initialization list:
   String     name_p;
   Bool       hasName_p;
@@ -176,6 +196,7 @@ class FluxCalc_SS_JPL_Butler
   // MFrequency freq_p;
   // Bool       hasFreq_p;
   Bool       hasEphemInfo_p;
+  Unit       hertz_p;           // make it static and/or const?
 
   // These are also initialized by the c'tor, but not in the initialization
   // list:

@@ -51,7 +51,8 @@ FluxCalc_SS_JPL_Butler::FluxCalc_SS_JPL_Butler(const String& objname,
   hasName_p(true),
   time_p(time),
   hasTime_p(true),
-  hasEphemInfo_p(false)
+  hasEphemInfo_p(false),
+  hertz_p("Hz")
 {
   hasObjNum_p = setObjNum();
 }
@@ -61,7 +62,8 @@ FluxCalc_SS_JPL_Butler::FluxCalc_SS_JPL_Butler() :
   hasName_p(false),
   time_p(MEpoch()),
   hasTime_p(false),
-  hasEphemInfo_p(false)
+  hasEphemInfo_p(false),
+  hertz_p("Hz")
 {
 // Default constructor for making arrays, etc.
   hasObjNum_p = false;
@@ -288,11 +290,21 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
   }
 
   switch(objnum_p){
+  case FluxCalc_SS_JPL_Butler::Uranus:
+    compute_uranus(values, errors, angdiam, mfreqs);
+    break;
+  case FluxCalc_SS_JPL_Butler::Neptune:
+    compute_neptune(values, errors, angdiam, mfreqs);
+    break;
+  case FluxCalc_SS_JPL_Butler::Pluto:
+    compute_pluto(values, errors, angdiam, mfreqs);
+    break;
+  case FluxCalc_SS_JPL_Butler::Titan:
+    compute_titan(values, errors, angdiam, mfreqs);
+    break;
   default: 
-    {
-      os << LogIO::NORMAL << "Using blackbody model." << LogIO::POST;
-      compute_BB(values, errors, angdiam, mfreqs);
-    };
+    os << LogIO::NORMAL << "Using blackbody model." << LogIO::POST;
+    compute_BB(values, errors, angdiam, mfreqs);
   };
 
   return rettype;
@@ -303,23 +315,166 @@ void FluxCalc_SS_JPL_Butler::compute_BB(Vector<Flux<Double> >& values,
                                         const Double angdiam,
                                         const Vector<MFrequency>& mfreqs)
 {
-  uInt nfreqs = mfreqs.nelements();
+  const uInt nfreqs = mfreqs.nelements();
   Quantum<Double> temperature(temperature_p, "K");
   Quantum<Double> freq_peak(QC::h / (QC::k * temperature));
-  Quantum<Double> freq_ind_fac;  // Frequency independent factor.
   Quantum<Double> rocd2(0.5 * angdiam / QC::c);
-  Unit freq_unit("Hz");
 
   rocd2 *= rocd2;
-  freq_ind_fac = 2.0e26 * QC::h * C::pi * rocd2;
+
+  // Frequency independent factor.
+  Quantum<Double> freq_ind_fac(2.0e26 * QC::h * C::pi * rocd2);
 
   for(uInt f = 0; f < nfreqs; ++f){
-    Quantum<Double> freq(mfreqs[f].get(freq_unit));
+    Quantum<Double> freq(mfreqs[f].get(hertz_p));
     
     values[f].setValue((freq_ind_fac * freq * freq * freq).getValue() /
                        (exp((freq / freq_peak).getValue()) - 1.0));
     errors[f].setValue(0.0);
   }
+}
+
+void FluxCalc_SS_JPL_Butler::compute_GB(Vector<Flux<Double> >& values,
+                                        Vector<Flux<Double> >& errors,
+                                        const Double angdiam,
+                                        const Vector<MFrequency>& mfreqs,
+                                        const Vector<Double>& temps)
+{
+  const uInt nfreqs = mfreqs.nelements();
+  Quantum<Double> rocd2(0.5 * angdiam / QC::c);
+
+  rocd2 *= rocd2;
+
+  // Frequency independent factor.
+  Quantum<Double> freq_ind_fac(2.0e26 * QC::h * C::pi * rocd2);
+
+  for(uInt f = 0; f < nfreqs; ++f){
+    Quantum<Double> freq(mfreqs[f].get(hertz_p));
+    Quantum<Double> temperature(temps[f], "K");
+    Quantum<Double> freq_peak(QC::h / (QC::k * temperature));
+    
+    values[f].setValue((freq_ind_fac * freq * freq * freq).getValue() /
+                       (exp((freq / freq_peak).getValue()) - 1.0));
+    errors[f].setValue(0.0);
+  }
+}
+
+void FluxCalc_SS_JPL_Butler::compute_uranus(Vector<Flux<Double> >& values,
+                                            Vector<Flux<Double> >& errors,
+                                            const Double angdiam,
+                                            const Vector<MFrequency>& mfreqs)
+{
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_uranus"));
+  Bool outOfFreqRange = false;
+  const uInt nfreqs = mfreqs.nelements();
+  Vector<Double> temps(nfreqs);
+
+  for(uInt f = 0; f < nfreqs; ++f){
+    Double freq = mfreqs[f].get(hertz_p).getValue();
+    Double lambdacm = 100.0 * C::c / freq;      // Wavelength in cm.
+
+    if(lambdacm < 0.07 || lambdacm > 6.2){
+      outOfFreqRange = true;
+      temps[f] = temperature_p;
+    }
+    else if(lambdacm < 0.4){
+      // 32.46063842 = 40.0 / ln(4.0)
+      temps[f] = 90.0 + 32.46063842 * log(10.0 * lambdacm);
+    }
+    else if(lambdacm < 1.0){
+      temps[f] = 135.0;
+    }
+    else
+      temps[f] = 135.0 + 105.0 * log10(lambdacm);
+  }
+
+  if(outOfFreqRange)
+    os << LogIO::WARN
+       << "At least one of the wavelengths went outside the nominal range\n"
+       << "of 0.7mm to 6.2cm, so the ephemeris value ("
+       << temperature_p << ") was used."
+       << LogIO::POST;
+
+  compute_GB(values, errors, angdiam, mfreqs, temps);
+}
+
+void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
+                                             Vector<Flux<Double> >& errors,
+                                             const Double angdiam,
+                                             const Vector<MFrequency>& mfreqs)
+{
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_neptune"));
+  Bool outOfFreqRange = false;
+  const uInt nfreqs = mfreqs.nelements();
+  Vector<Double> temps(nfreqs);
+
+  for(uInt f = 0; f < nfreqs; ++f){
+    Double freq = 1.0e-9 * mfreqs[f].get(hertz_p).getValue(); // GHz
+
+    if(freq < 4.0 || freq > 1000.0){
+      outOfFreqRange = true;
+      temps[f] = temperature_p;
+    }
+    else if(freq < 70.0){
+      // 30.083556662 = 80.0 / ln(1000.0 / 70.0)
+      temps[f] = 140.0 - 30.083556662 * log(freq / 70.0);
+    }
+    else
+      // 34.93815 = 100.0 / ln(70.0 / 4.0)
+      temps[f] = 240.0 - 34.93815 * log(freq);
+  }
+
+  if(outOfFreqRange)
+    os << LogIO::WARN
+       << "At least one of the frequencies went outside the nominal range\n"
+       << "of 4 to 1000 GHz, so the ephemeris value ("
+       << temperature_p << ") was used."
+       << LogIO::POST;
+
+  compute_GB(values, errors, angdiam, mfreqs, temps);
+}
+
+void FluxCalc_SS_JPL_Butler::compute_pluto(Vector<Flux<Double> >& values,
+                                           Vector<Flux<Double> >& errors,
+                                           const Double angdiam,
+                                           const Vector<MFrequency>& mfreqs)
+{
+  // Using the value from:
+  //   Altenhoff, W. J., R. Chini, H. Hein, E. Kreysa, P. G. Mezger, 
+  //      C. Salter, and J. B. Schraml, First radio astronomical estimate 
+  //      of the temperature of Pluto, A&ALett, 190, L15-L17, 1988
+  // which is: Tb = 35 K at 1.27 mm.  this is a correction from the 
+  // value of 39 K in the paper, due to the incorrect geometric mean size 
+  // used for Pluto and Charon (1244 km vs the correct 1320 km).  this is
+  // similar to the value found in:
+  //   Stern, S. A., D. A. Weintraub, and M. C. Festou, Evidence for a Low 
+  //      Surface Temperature on Pluto from Millimeter-Wave Thermal
+  //      Emission Measurements, Science, 261, 1713-1716, 1993
+  // and is a good match to the physical temperature reported in:
+  //   Tryka, K. A., R. H. Brown, D. P. Cruikshank, T. C. Owen, T. R.
+  //      Geballe, and C. DeBergh, Temperature of Nitrogen Ice on Pluto and
+  //      Its Implications for Flux Measurements, Icarus, 112, 513-527, 
+  //      1994
+  // where they give a surface temperature of 40+-2 K.  this would imply
+  // an emissivity of 0.875, which is certainly reasonable.
+  
+  Double ephem_temp = temperature_p;    // Store it.
+
+  temperature_p = 35.0;
+  compute_BB(values, errors, angdiam, mfreqs);
+  temperature_p = ephem_temp;           // Restore it.
+}
+
+void FluxCalc_SS_JPL_Butler::compute_titan(Vector<Flux<Double> >& values,
+                                           Vector<Flux<Double> >& errors,
+                                           const Double angdiam,
+                                           const Vector<MFrequency>& mfreqs)
+{
+  Double ephem_temp = temperature_p;    // Store it.
+
+  temperature_p = 76.6;
+  compute_BB(values, errors, angdiam, mfreqs);
+  temperature_p = ephem_temp;           // Restore it.
 }
 
 Bool FluxCalc_SS_JPL_Butler::setObj(const String& objname)
