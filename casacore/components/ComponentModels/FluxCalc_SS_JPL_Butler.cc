@@ -359,6 +359,50 @@ void FluxCalc_SS_JPL_Butler::compute_GB(Vector<Flux<Double> >& values,
   }
 }
 
+void FluxCalc_SS_JPL_Butler::compute_jupiter(Vector<Flux<Double> >& values,
+                                             Vector<Flux<Double> >& errors,
+                                             const Double angdiam,
+                                             const Vector<MFrequency>& mfreqs)
+{
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_jupiter"));
+  Bool outOfFreqRange = false;
+  const uInt nfreqs = mfreqs.nelements();
+  Vector<Double> temps(nfreqs);
+
+  for(uInt f = 0; f < nfreqs; ++f){
+    Double freq = mfreqs[f].get(hertz_p).getValue();
+    Double lambdacm = 100.0 * C::c / freq;      // Wavelength in cm.
+
+    if(lambdacm < 0.1 || lambdacm > 6.2){
+      outOfFreqRange = true;
+      temps[f] = temperature_p;
+    }
+    else if(lambdacm < 0.44){
+      temps[f] = 170.0;
+    }
+    else if(lambdacm < 0.7){
+      // 21.537539 = 10.0 / ln(0.7 / 0.44)
+      temps[f] = 160.0 + 21.537539 * log(0.7 / lambdacm);
+    }
+    else if(lambdacm < 1.3){
+      // 48.462196889 = 30.0 / ln(1.3 / 0.7)
+      temps[f] = 130.0 + 48.462196889 * log(1.3 / lambdacm);
+    }
+    else
+      // 65.38532335444 = 100.0 / ln(6.0 / 1.3)
+      temps[f] = 130.0 + 65.38532335444 * log10(lambdacm / 1.3);
+  }
+
+  if(outOfFreqRange)
+    os << LogIO::WARN
+       << "At least one of the wavelengths went outside the nominal range\n"
+       << "of 1mm to 6.2cm, so the ephemeris value ("
+       << temperature_p << ") was used."
+       << LogIO::POST;
+
+  compute_GB(values, errors, angdiam, mfreqs, temps);
+}
+
 void FluxCalc_SS_JPL_Butler::compute_uranus(Vector<Flux<Double> >& values,
                                             Vector<Flux<Double> >& errors,
                                             const Double angdiam,
