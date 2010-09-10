@@ -616,6 +616,55 @@ class test_mfselections(test_base):
     def test_array(self):
         flagdata2(vis=self.vis, selectdata=True, array='0', manualflag=True)
         test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 2854278)
+
+class test_shadow_ngc5921(test_base):
+    """More test of mode = 'shadow'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_CAS2399(self):
+        flagdata2(vis = self.vis, unflag = True)
+        flagdata2(vis = self.vis, shadow = True, diameter = 35)
+        allbl = flagdata2(vis = self.vis, summary = True)
+
+        # Sketch of what is being shadowed:
+        #
+        #  A23 shadowed by A1
+        #
+        #  A13 shadowed by A2 shadowed by A9
+        #
+        
+        # Now remove baseline 2-13   (named 3-14)
+        outputvis = "missing-baseline.ms"
+        os.system("rm -rf " + outputvis)
+        split(vis = self.vis, 
+              outputvis = outputvis,
+              datacolumn = "data",
+              antenna = "!3&&14")
+        
+        flagdata2(vis = outputvis, unflag = True)
+        flagdata2(vis = outputvis, shadow = True, diameter = 35)
+        
+        missingbl = flagdata2(vis = outputvis, summary = True)
+
+        # With baseline based flagging, A13 will not get flagged
+        # when the baseline is missing
+        #
+        # With antenna based flagging, A13 should be flagged
+        
+        assert allbl['antenna']['3']['flagged'] > 1000
+        assert allbl['antenna']['24']['flagged'] > 1000
+        
+        assert missingbl['antenna']['3']['flagged'] > 1000
+        assert missingbl['antenna']['24']['flagged'] == allbl['antenna']['24']['flagged']
+        
+        assert allbl['antenna']['14']['flagged'] > 1000
+        # When the baseline is missing, the antenna is not flagged as before
+        assert missingbl['antenna']['14']['flagged'] < 1000
+        
+        # For antenna based flagging, it should be (to be uncommented when CAS-2399
+        # is solved):
+        #assert missingbl['antenna']['14']['flagged'] > 1000
      
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -645,4 +694,5 @@ def suite():
             test_multimode1,
             test_multimode2,
             test_mfselections,
+            test_shadow_ngc5921,
             cleanup]
