@@ -40,6 +40,7 @@ class sdplot_test_plot(unittest.TestCase):
     fig_minsize = 20000
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdplot/'
     nogui = True
+    oldgui = sd.rcParams['plotter.gui'] # store previous GUI setting
 
     def setUp(self):
         # switch off GUI
@@ -56,6 +57,9 @@ class sdplot_test_plot(unittest.TestCase):
         if (os.path.exists(self.sdfile)):
             os.system('rm -rf ' + self.sdfile)
         os.system('rm -rf ' + self.fig)
+        if self.oldgui:
+            sd.rcParams['plotter.gui'] = True
+            sd.plotter.__init__()
 
     def _checkPlotFile(self):
         self.assertTrue(os.path.exists(self.fig))
