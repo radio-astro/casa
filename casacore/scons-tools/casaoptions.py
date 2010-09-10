@@ -65,7 +65,7 @@ def generate(env):
                                  action="store_true", default=False,
                                  help="Enable the HDF5 library")
         env.CLOptions.add_option("--enable-fftw3", dest="enable_fftw3",
-                                 action="store_true", default=False,
+                                 action="store_true", default=True,
                                  help="Enable the FFTW3 library")
         env.CLOptions.add_option("--disable-fftw3-threads", dest="disable_fftw3_threads",
                                  action="store_true", default=False,
