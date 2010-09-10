@@ -136,6 +136,43 @@ class test_shadow_ngc5921(test_base):
         # is solved):
         #assert missingbl['antenna']['14']['flagged'] > 1000
 
+    def test1(self):
+        flagdata(vis = self.vis,
+                 mode = "shadow",
+                 diameter = 50)
+
+        s = flagdata(vis = self.vis,
+                     mode = "summary")['antenna']
+
+        assert s['1']['flagged'] == 58968; assert s['1']['total'] == 203994
+        assert s['10']['flagged'] == 117432; assert s['10']['total'] == 203994
+        assert s['11']['flagged'] == 175392; assert s['11']['total'] == 203994
+        assert s['12']['flagged'] == 58968; assert s['12']['total'] == 203994
+        assert s['13']['flagged'] == 203994; assert s['13']['total'] == 203994
+        assert s['14']['flagged'] == 203994; assert s['14']['total'] == 203994
+        assert s['15']['flagged'] == 152838; assert s['15']['total'] == 203994
+        assert s['16']['flagged'] == 58968; assert s['16']['total'] == 203994
+        assert s['17']['flagged'] == 57960; assert s['17']['total'] == 200718
+        assert s['18']['flagged'] == 58968; assert s['18']['total'] == 203994
+        assert s['19']['flagged'] == 58968; assert s['19']['total'] == 203994
+        assert s['2']['flagged'] == 203994; assert s['2']['total'] == 203994
+        assert s['20']['flagged'] == 58968; assert s['20']['total'] == 203994
+        assert s['21']['flagged'] == 58968; assert s['21']['total'] == 203994
+        assert s['22']['flagged'] == 58968; assert s['22']['total'] == 203994
+        assert s['24']['flagged'] == 203994; assert s['24']['total'] == 203994
+        assert s['25']['flagged'] == 58968; assert s['25']['total'] == 203994
+        assert s['26']['flagged'] == 58968; assert s['26']['total'] == 203994
+        assert s['27']['flagged'] == 58968; assert s['27']['total'] == 203994
+        assert s['28']['flagged'] == 58968; assert s['28']['total'] == 203994
+        assert s['3']['flagged'] == 203994; assert s['3']['total'] == 203994
+        assert s['4']['flagged'] == 87570; assert s['4']['total'] == 203994
+        assert s['5']['flagged'] == 163674; assert s['5']['total'] == 203994
+        assert s['6']['flagged'] == 58968; assert s['6']['total'] == 203994
+        assert s['7']['flagged'] == 58968; assert s['7']['total'] == 203994
+        assert s['8']['flagged'] == 58968; assert s['8']['total'] == 203994
+        assert s['9']['flagged'] == 58968; assert s['9']['total'] == 203994
+
+
 class test_vector(test_base):
     def setUp(self):
         self.setUp_flagdatatest()
