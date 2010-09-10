@@ -46,6 +46,10 @@
 			<value></value>
 		</param>
 
+		<param type="bool" name="scalebychan" subparam="true">
+		  <description>scale the flux density on a per channel basis or else on a per spw basis</description>
+		  <value>False</value>
+		</param>
 		<param type="any" name="fluxdensity">
 			<any type="variant" limittypes="int intArray doubleArray"/>
 			<description>Specified flux density [I,Q,U,V]; -1 will lookup values</description>
@@ -64,6 +68,17 @@
                         <value>Butler-JPL-Horizons 2010</value>
 			</allowed>
 		</param>
+
+		<constraints>
+		  <when param="modimage">
+		    <notequals type="string" value="">
+		      <default param="scalebychan">
+			<value>False</value>
+		      </default>
+		    </notequals>
+		  </when>
+		</constraints>
+
 
 	</input>
 <returns type="void"/>
@@ -125,6 +140,10 @@
               At the AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
                    lib64
+ &gt;&gt;&gt; scaleperchan=False expandable parameter
+               This determines whether the fluxdensity set in the model is 
+               calculated on a per channel basis. If False then it only one fluxdensity
+               value is given per spw
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for all sources,
