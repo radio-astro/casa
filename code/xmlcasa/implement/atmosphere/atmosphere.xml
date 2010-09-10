@@ -1049,7 +1049,7 @@ for i in range(at.getNumSpectralWindows()):
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated H2O Lines Opacity for one channel in a band.
 
 </description>
 
