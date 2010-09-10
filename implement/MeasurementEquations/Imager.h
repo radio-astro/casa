@@ -452,11 +452,15 @@ class Imager
 	     const String& fieldnames, const String& spwstring, 
 	     const Vector<Double>& fluxDensity, const String& standard);
 
+  
+  //Setjy with model image. If chanDep=True then the scaling is calulated on a 
+  //per channel basis for the model image...otherwise the whole spw get the same scaling
   Bool setjy(const Vector<Int>& fieldid, 
 	     const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
 	     const String& model,
-	     const Vector<Double>& fluxDensity, const String& standard);
+	     const Vector<Double>& fluxDensity, const String& standard, 
+	     const Bool chanDep=False);
 
   // Temporary copy of setjy() while flux calibration with Solar System objects
   // is being tested.
