@@ -394,7 +394,8 @@ void AtmosCorruptor::initAtm() {
 
   os << "after setting WH20 to " << itsSkyStatus->getUserWH2O().get("mm")
      << ", DispersiveH2ODelay (RefIPfl) = " 
-     << itsRIP->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg, " 
+    //<< itsRIP->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg, " 
+     << itsRIP->getDispersiveH2OPhaseDelay(itsRIP->getGroundWH2O(),currSpw(),focusChan()).get("deg") << " deg, " 
      << "DispersiveH2ODelay (SkyStat) = " 
      << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << "deg = " 
      << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("rad") << "rad" 
@@ -596,7 +597,8 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 Float AtmosCorruptor::opac(const Int ichan) {
   // CHANINDEX
   Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
-    mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
+    //mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
+    mean_pwv()*(itsRIP->getWetOpacity(itsRIP->getGroundWH2O(),currSpw(),ichan).get())  ;
   return opac;
 }
 
