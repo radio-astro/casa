@@ -23,13 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBucketMapped.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tBucketMapped.cc 20933 2010-08-16 10:38:18Z gervandiepen $
 
 #include <casa/IO/BucketMapped.h>
 #include <casa/IO/BucketFile.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Timer.h>
 #include <casa/iostream.h>
+#include <string.h>
 
 #include <casa/namespace.h>
 // <summary>

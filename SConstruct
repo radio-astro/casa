@@ -108,6 +108,29 @@ if not env.GetOption('clean') and not env.GetOption("help"):
         pass
         # quiet_print("Building without HDF5 support")
 
+    # FFTW3
+    if conf.env.get("enable_fftw3"):
+        pkgname = "fftw3"
+        deflib = "fftw3,fftw3f"
+        if not conf.env.get("disable_fftw3_threads"):
+            deflib += ",fftw3_threads,fftw3f_threads,pthread"
+            env.Append(CPPFLAGS=['-DHAVE_FFTW3_THREADS'])
+        # The fftw3_lib variable is defined as 'fftw3' if not explicitly given.
+        # So set to default if the value is 'fftw3'.
+        # Note that if explicitly given, it can never be done as 'fftw3'.
+        libstr = conf.env.get(pkgname+"_lib")
+        if libstr == 'fftw3':
+            libstr= deflib
+        libname = libstr.split(",")
+        conf.env.AddCustomPackage(pkgname)
+        if not conf.CheckLib(libname, autoadd=0):
+            env.Exit(1)
+        env.PrependUnique(LIBS=[libname])
+        env.Append(CPPFLAGS=['-DHAVE_FFTW3'])
+    else:
+        pass
+        # quiet_print("Building without FFTW3 support")
+
     # cfitsio
     pkgname = "cfitsio"
     cfitsioname = conf.env.get(pkgname+"_lib")
@@ -127,15 +150,6 @@ if not env.GetOption('clean') and not env.GetOption("help"):
                 env["%s_incdir" % pkgname] = suseincdir
             
     env["CFITSIO"] = [cfitsioname]
-    env.AddCustomPackage(pkgname)
-
-    # fftw
-    pkgname = "fftw3"
-    fftwlibname = conf.env.get(pkgname+"_lib")
-    conf.env.AddCustomPackage(pkgname)
-    if not conf.CheckLibWithHeader(fftwlibname, "fftw3.h", "c", autoadd=0):
-        env.Exit(1)
-    env["FFTW3"] = [fftwlibname]
     env.AddCustomPackage(pkgname)
 
     # wcslib

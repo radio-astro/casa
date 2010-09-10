@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRep.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: ExprNodeRep.h 20940 2010-08-25 09:08:06Z gervandiepen $
 
 #ifndef TABLES_EXPRNODEREP_H
 #define TABLES_EXPRNODEREP_H
@@ -612,15 +612,14 @@ public:
     const PtrBlock<TableExprNodeRep*>& getChildren() const
       { return operands_p; }
 
-protected:
-    PtrBlock<TableExprNodeRep*> operands_p;
-
-
     // Check datatype of nodes and return output type.
     // It also sets the expected data type of the operands (from dtIn).
     static NodeDataType checkDT (Block<Int>& dtypeOper,
 				 NodeDataType dtIn, NodeDataType dtOut,
 				 const PtrBlock<TableExprNodeRep*>& nodes);
+
+protected:
+    PtrBlock<TableExprNodeRep*> operands_p;
 };
 
 

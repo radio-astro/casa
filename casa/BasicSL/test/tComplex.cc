@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tComplex.cc 20501 2009-01-19 08:11:30Z gervandiepen $
+//# $Id: tComplex.cc 20939 2010-08-25 09:06:51Z gervandiepen $
 
 //# Includes
 
@@ -83,9 +83,19 @@ int main() {
 
   cout << "- - - - - - - - - - - - - - - - - - - -" << endl;
   cout << f1 << " + " << 13 << " = " << f1 + 13.0f << endl;
-  cout << f1 << " * " << 13 << " = " << f1 * 13 << endl;
+  cout << f1 << " * " << "13.0f" << " = " << f1 * 13.0f << endl;
+  cout << f1 << " * " << "13" << " = " << f1 * 13 << endl;
+  cout << f1 << " * " << "13." << " = " << f1 * 13. << endl;
+  cout << "13.0f" << " * " << f1 << " = " << 13.0f * f1 << endl;
+  cout << "13" << " * " << f1 << " = " << 13 * f1 << endl;
+  cout << "13." << " * " << f1 << " = " << 13. * f1 << endl;
   cout << f1 << " - " << 13 << " = " << f1 - 13.0f << endl;
-  cout << f1 << " / " << 13 << " = " << f1 /  13 << endl;
+  cout << f1 << " / " << "13.0f" << " = " << f1 / 13.0f << endl;
+  cout << f1 << " / " << "13" << " = " << f1 / 13 << endl;
+  cout << f1 << " / " << "13." << " = " << f1 / 13. << endl;
+  cout << "13.0f" << " / " << f1 << " = " << 13.0f / f1 << endl;
+  cout << "13" << " / " << f1 << " = " << 13 / f1 << endl;
+  cout << "13." << " / " << f1 << " = " << 13. / f1 << endl;
   cout << endl;
 
   cout << "- - - - - - - - - - - - - - - - - - - -" << endl;

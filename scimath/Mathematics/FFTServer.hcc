@@ -23,24 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTServer.tcc 20932 2010-07-08 09:06:37Z gervandiepen $
+//# $Id: FFTServer.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
 
 #include <scimath/Mathematics/FFTServer.h>
-#include <scimath/Mathematics/NumericTraits.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/VectorIter.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicMath/Math.h>
+#include <scimath/Mathematics/NumericTraits.h>
+#include <scimath/Mathematics/FFTPack.h>
 #include <casa/Utilities/Assert.h>
+
+//# This file contains the templated functions dependent on uisng FFTW3
+//# or FFTPack. They are not in the .tcc file to make that independent
+//# of the underlying package used.
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T, class S> FFTServer<T,S>::
-  FFTServer()
+FFTServer()
   : itsTransformType (FFTEnums::REALTOCOMPLEX)
 {}
-  
+
 template<class T, class S> FFTServer<T,S>::
 FFTServer(const IPosition & fftSize, 
 	  const FFTEnums::TransformType transformType)
@@ -55,7 +60,6 @@ FFTServer(const FFTServer<T,S> & other)
 {
   resize (other.itsSize, other.itsTransformType);
 }
-
 
 template<class T, class S> FFTServer<T,S>::
 ~FFTServer()
@@ -75,10 +79,8 @@ operator=(const FFTServer<T,S> & other)
     }
     resize (other.itsSize, other.itsTransformType);
   }
-
   return *this;
 }
-
 
 template<class T, class S> void FFTServer<T,S>::
 resize(const IPosition & fftSize,
@@ -251,7 +253,6 @@ fft0(Array<S> & cResult, Array<T> & rData, const Bool)
   // Ensure the output Array is the required size
   IPosition resultShape = shape;
   resultShape(0) = (shape(0)+2)/2;
-
   if (cResult.nelements() != 0) {
     AlwaysAssert(resultShape.isEqual(cResult.shape()), AipsError);
   } else {
@@ -370,7 +371,6 @@ fft0(Array<T> & rResult, Array<S> & cData, const Bool constInput)
   const IPosition cShape = cCopy.shape();
   const IPosition rShape = determineShape(rResult.shape(), cCopy);
   rResult.resize(rShape);
-
   // Early exit if the Array is all zero;
   if (allNearAbs(cData, S(0), NumericTraits<S>::minimum)) {
     rResult = T(0);
@@ -428,7 +428,7 @@ fft0(Array<T> & rResult, Array<S> & cData, const Bool constInput)
       stride *= fftLen;
     }
   }
-
+  // Do complex to real transforms along all the rows
   T * realDataPtr = (T *) dataPtr;
   workPtr = itsWork[0]->storage();
 
@@ -561,12 +561,6 @@ fft0(Array<S> & cValues, const Bool toFrequency)
   cValues.putStorage(complexPtr, valuesIsAcopy);
 }
 
-  objcopy(complexPtr, itsWorkC2C, itsSize.product());
-  cValues.putStorage(complexPtr, valuesIsAcopy);
-
-  return;
-
-}
 
 
 template<class T, class S> void FFTServer<T,S>::
@@ -583,8 +577,7 @@ fft0(Array<S> & cResult, const Array<S> & cData, const Bool toFrequency)
 
 
 template<class T, class S> IPosition FFTServer<T,S>::
-determineShape(const IPosition & rShape, const Array<S> & cData)
-{
+determineShape(const IPosition & rShape, const Array<S> & cData){
   const IPosition cShape=cData.shape();
   const uInt cDim = cShape.nelements();
   DebugAssert(cDim > 0, AipsError);
@@ -633,7 +626,6 @@ determineShape(const IPosition & rShape, const Array<S> & cData)
   }
   IPosition defShape(cShape);
   defShape(0) = 2*cShape(0) - 2;
-
   return defShape;
 }
 

@@ -1,5 +1,5 @@
-//# derivedmscal.dox: doxygen description of derivedmscal package
-//# Copyright (C) 2010
+//# FFTServer.cc: A class with methods for Fast Fourier Transforms
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,6 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: derivedmscal.dox 20088 2007-06-05 03:57:23Z Malte.Marquarding $
+//# $Id: FFTServer.cc 20932 2010-07-08 09:06:37Z gervandiepen $
 
-// \defgroup derivedmscal derivedmscal package (libcasa_derivedmscal)
+#include <scimath/Mathematics/FFTServer.hcc>
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+  // Instantiate the templates.
+  template class FFTServer<Float, Complex>;
+  template class FFTServer<Double, DComplex>;
+
+} //# NAMESPACE CASA - END
+
