@@ -66,7 +66,7 @@ imager.
 <returns type="imager"/>
 <example>
 
-im = imager('3C273XC1.MS')      
+im.open('3C273XC1.MS')      
 im.defineimage(nx=256, ny=256, cellx='0.7arcsec', celly='0.7arcsec')
 im.image(type='corrected', image='3C273XC1.dirty')
 im.close()
@@ -2215,7 +2215,7 @@ versus time (after sorting).
 <example>
 
 m = fitstoms('3C273XC1.ms', '3C273XC1.fits'); m.close()
-im = imager('3C273XC1.ms')
+im.open('3C273XC1.ms')
 im.plotsummary()
 
 </example>
@@ -2936,7 +2936,7 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
 </input>
 <example>
 
-im = imager('3C273XC1.MS');
+im.open('3C273XC1.MS');
 im.selectvis(nchan=512,start=1,step=1, taql='SCAN_NUMBER &gt; 10 &amp;&amp; FIELD_ID==2')
 
 
@@ -3035,6 +3035,12 @@ one field, and will currently only process Stokes I.
      <value>Perley-Butler 2010</value>
      <value>SOURCE</value>
      </param>
+
+     <param type="bool" name="scalebychan">
+     <description>Do the flux scaling on a per channel basis else on a spw basis</description>
+     <value>false</value>
+     </param>
+
 </input>
 
 <returns type="bool"/>
@@ -3272,9 +3278,9 @@ case, an antenna position must be chosen. One can use functions of
 <link anchor="measures">measures</link>: either
 <link anchor="measures:measures.observatory.function">observatory</link> to
 get the position of a named observatory ({\em e.g.}
-dm.observatory('ATCA')) or
+me.observatory('ATCA')) or
 <link anchor="measures:measures.position.function">position</link> to set
-the position ({\em e.g.} dm.position('wgs84','30deg','40deg','10m')).
+the position ({\em e.g.}me.position('wgs84','30deg','40deg','10m')).
 Although this information is available from the MeasurementSet, what
 location is ambiguous in some cases {\em e.g.} VLBI.
 \item[padding] When gridding and transforming, the array may be
@@ -3406,7 +3412,7 @@ however not used yet.</description>
 <example>
 
 - im.setoptions(cache=10000000, tile=32, gridfunction='BOX',
-  location=dm.location('vla'))
+  location=me.location('vla'))
 
 The above example is to tell imager to use memory to fit 10000000
 complex numbers and tile the image with tiles of 32 pixels on a side. 
@@ -3453,17 +3459,17 @@ an outlier field (or flanking) field is set on an interfering  source
 outside of the field of interest.
 
 
-pim = imager('coma.ms')
+im.open('coma.ms')
 
-pim.selectvis(spwid=1, fieldid=1);
-mydir = dm.direction('J2000', '12h30m48', '12d24m0')
-pim.defineimage(nx=200, ny=200, cellx='30arcsec', celly='30arcsec', doshift=T, phasecenter=mydir); 
-pim.make('outlier1');
-pim.defineimage(nx=3000, ny=3000, cellx='30arcsec',celly='30arcsec',facets=3);
-pim.setoptions(ftmachine='wproject',wprojplanes=200, padding=1.2)
-pim.make('main')
-pim.clean(algorithm='wfclark',model=['main', 'outlier1'], niter=10000)
-pim.done()
+im.selectvis(spwid=1, fieldid=1);
+mydir = me.direction('J2000', '12h30m48', '12d24m0')
+im.defineimage(nx=200, ny=200, cellx='30arcsec', celly='30arcsec', phasecenter=mydir); 
+im.make('outlier1');
+im.defineimage(nx=3000, ny=3000, cellx='30arcsec',celly='30arcsec',facets=3);
+im.setoptions(ftmachine='wproject',wprojplanes=200, padding=1.2)
+im.make('main')
+im.clean(algorithm='wfclark',model=['main', 'outlier1'], niter=10000)
+im.done()
 
 
 
@@ -3824,7 +3830,7 @@ or <link anchor="imager:imager.setbeam.function">setbeam</link>.
 <returns type="bool"/>
 <example>
 
-- im = imager('3C273XC1.MS');
+- im.open('3C273XC1.MS');
 - im.defineimage(nx=256, ny=256)
 - im.summary()
 

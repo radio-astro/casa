@@ -67,6 +67,7 @@
 #include <casa/Arrays/Slice.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
+#include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <msvis/MSVis/VisSet.h>
@@ -6146,7 +6147,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
                    const String& fieldnames, const String& spwstring,
                    const String& model,
                    const Vector<Double>& fluxDensity, 
-                   const String& standard)
+                   const String& standard, const Bool chanDep)
 {
 
   if(!valid()) return False;
@@ -6162,10 +6163,10 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
   }
 
   Vector<String> tempCLs;
-  PagedImage<Float> *tmodimage(NULL);
+  TempImage<Float> *tmodimage(NULL);
 
   try {
-    Bool precompute = (fluxdens(0) < 0 || (fluxdens(0) == 0.0 && model != ""));
+    Bool precompute = (fluxdens(0) < 0 || (model != ""));
 
     // Figure out which fields/spws to treat
     Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
@@ -6210,6 +6211,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
     // Loop over field id. and spectral window id.
     Vector<Double> fluxUsed(4);
+    Matrix<Double> fluxUsedPerChan; // 4 rows nchan col ...will resize when needed
     String fluxScaleName("user-specified");
     FluxStandard::FluxScale fluxScaleEnum;
     if(!FluxStandard::matchStandard(standard, fluxScaleEnum, fluxScaleName))
@@ -6235,17 +6237,15 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
     for(Int fldInd = fldids.nelements(); fldInd--;){
       fldid = fldids[fldInd];
       // Extract field name and field center position 
-      MDirection position=msc.field().phaseDirMeas(fldid);
+      MDirection fieldDir=msc.field().phaseDirMeas(fldid);
       String fieldName=msc.field().name()(fldid);
       Bool foundSrc = false;
      
       for(uInt spwInd = 0; spwInd < nspws; ++spwInd){
 	spwid = spwids[spwInd];
-
+	Double medianFreq=median(msc.spectralWindow().chanFreq()(spwid));
 	// Determine spectral window center frequency
 	mfreqs[spwInd] = msc.spectralWindow().chanFreqMeas()(spwid)(ipos);
-	msc.spectralWindow().chanFreq().get(spwid, freqArray, True);
-	Double medianFreq=median(freqArray);
 	mfreqs[spwInd].set(MVFrequency(Quantum<Double>(medianFreq,
                                                        freqUnit)));
       }
@@ -6273,7 +6273,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
           //
           MEpoch mtime = msc.field().timeMeas()(fldid);
             
-          foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, position,
+          foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                        cspectrum, returnFluxes, returnFluxErrs,
                                        tempCLs);
         }
@@ -6365,19 +6365,58 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
         Bool useimage(False);
         if (model!="") {
 	  
+	  Vector<Double> freqArray=msc.spectralWindow().chanFreq()(spwid);
+	  Vector<Double> freqInc=msc.spectralWindow().chanWidth()(spwid);
+	  Double medianFreq=median(freqArray);
+	  Double freqWidth=(max(freqArray)-min(freqArray)) + 2*max(freqInc); // 2 channel extra
+	  if(chanDep){
+	    IPosition whichChan(1,0);
+	    Flux<Double> returnFlux;
+	    Flux<Double> returnFluxErr;
+	    fluxUsedPerChan.resize(4, freqArray.nelements());
+	    for (uInt k =0 ; k < freqArray.nelements(); ++k){
+	      whichChan[0]=k;
+	      fluxStd.compute(fieldName, msc.spectralWindow().chanFreqMeas()(spwid)(whichChan), returnFlux, returnFluxErr);
+	      returnFlux.value(fluxUsed);
+	      fluxUsedPerChan.column(k)=fluxUsed;
+	    }
+	  }
+
           useimage=True;
 
           PagedImage<Float> modimage(model);
           modimage.table().unmarkForDelete();
-          String tempmodname=File::newUniqueName("./", "setjyimage").baseName();
-          tmodimage = new PagedImage<Float>(modimage.shape(),modimage.coordinates(),tempmodname);
-          tmodimage->table().markForDelete();
-          tmodimage->set(0.0f);
-	  
-          CoordinateSystem csys(tmodimage->coordinates());
+	  IPosition imshape=modimage.shape();
+	  CoordinateSystem csys(modimage.coordinates());
+	  Int freqAxis=CoordinateUtil::findSpectralAxis(csys);
+	  Vector<Stokes::StokesTypes> whichPols;
+	  Int polAxis=CoordinateUtil::findStokesAxis(whichPols, csys);
+	  Int icoord(csys.findCoordinate(Coordinate::SPECTRAL));
+	  SpectralCoordinate spcsys=csys.spectralCoordinate(icoord);
+	  spcsys.setReferenceValue(Vector<Double>(1,medianFreq));
+	  spcsys.setReferencePixel(Vector<Double>(1,0.0));
+	  spcsys.setWorldAxisUnits(Vector<String>(1,mfreqs[spwInd].getUnit().getName()));
+	  spcsys.setIncrement(Vector<Double>(1,freqWidth));
+	  // make a cube model
+	  if(chanDep && (fluxUsedPerChan.ncolumn() > 1)){
+	    spcsys=SpectralCoordinate(MFrequency::castType(mfreqs[spwInd].getRef().getType()), freqArray, spcsys.restFrequency());
+	    if(freqAxis < 2 || polAxis < 2)
+	      throw(AipsError("Cannot setjy with a model that has spectral or stokes axis before direction axes.\n Please reorder the axes of the image"));
+	    if(freqAxis ==2) {//pol and freq are swapped
+	      imshape(3)=freqArray.nelements();
+	      Vector<Int> trans(4);
+	      trans[0]=0; trans[1]=1; trans[2]=3; trans[3]=2;
+	      csys.transpose(trans, trans);
+	    }
+	    else{
+	      imshape(freqAxis)=freqArray.nelements();
+	    }
+	  } 
 
-          Int icoord(csys.findCoordinate(Coordinate::SPECTRAL));
-          SpectralCoordinate spcsys=csys.spectralCoordinate(icoord);
+	  csys.replaceCoordinate(spcsys,icoord);
+	  tmodimage = new TempImage<Float>(imshape, csys);
+	  tmodimage->set(0.0f);
+	  
 
           os << LogIO::DEBUG1
              << "freqUnit.getName() = " << freqUnit.getName()
@@ -6387,34 +6426,67 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
              << mfreqs[spwInd].get(freqUnit).getValue()
              << LogIO::POST;
           
-          spcsys.setReferenceValue(Vector<Double>(1,
-                                                  mfreqs[spwInd].get(freqUnit).getValue()));
-          spcsys.setWorldAxisUnits(Vector<String>(1, freqUnit.getName()));
-          csys.replaceCoordinate(spcsys,icoord);
-          tmodimage->setCoordinateInfo(csys);
-	  
+        	  
 
           // Check direction consistency (reported in log message below)
+	  String err;
+	  if(!CoordinateUtil::setDirectionConversion(err, csys, fieldDir.getRefString())){
+	    os << "LogIO::WARN " 
+	       << "Could not set direction conversion between flux image and " 
+	       << fieldDir.getRefString() << LogIO::POST;
+	  }
           Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
           DirectionCoordinate dircsys=csys.directionCoordinate(dircoord);
           MVDirection mvd;
           dircsys.toWorld(mvd,dircsys.referencePixel());
-          Double sep=position.getValue().separation(mvd,"\"").getValue();
+          Double sep=fieldDir.getValue().separation(mvd,"\"").getValue();
 	  
-          if(fluxUsed[0] != 0.0){
-            os << LogIO::NORMAL                                  // Loglevel INFO
-               << "Scaling model image to I=" << fluxUsed(0)
-               << " Jy for visibility prediction."
-               << LogIO::POST;
+          if(fluxdens[0] != 0.0){
 
-            Float sumI=sum(modimage.get());
-            
-            // Scale factor
-            Float scale=fluxUsed(0)/sumI;
+            Float sumI=1.0;
+	    if(whichPols.nelements() >1)
+	      sumI=sum(ImagePolarimetry(modimage).stokesI()).getFloat();
+	    else
+	      sumI=sum(modimage).getFloat();
 
-            // scale the image
-            tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );
-          }
+            os << LogIO::NORMAL << "Using model image " << modimage.name() // Loglevel INFO
+	       << LogIO::POST;
+	    // scale the image
+	    if(imshape(3)>1){
+	      if(modimage.shape()(freqAxis) ==1){
+		IPosition blc(imshape.nelements(), 0);
+		IPosition trc=imshape-1;
+		os << LogIO::NORMAL << "Scaling channels model image to I= " 
+		   << fluxUsedPerChan.row(0) 
+		   << " Jy for visibility prediction."
+		   << LogIO::POST;
+		for (uInt k =0; k < fluxUsedPerChan.ncolumn() ; ++k){
+		  Float scale=fluxUsedPerChan.column(k)(0)/sumI;
+		  blc[3]=k;
+		  trc[3]=k;
+		  Slicer sl(blc, trc, Slicer::endIsLast);
+		  SubImage<Float> subim(*tmodimage, sl, True);
+		  subim.copyData((LatticeExpr<Float>)(modimage*scale));
+		}
+	      }
+	      else{// model image is a cube...just regrid it then
+		if(freqAxis != 3)
+		  throw(AipsError("Cannot setjy with a cube model that does not have the spectral axis as the last one.\n Please reorder the axes of the image"));
+		ImageRegrid<Float> ir;
+		IPosition axes(1,freqAxis);   // regrid the spectral only
+		ir.regrid(*tmodimage, Interpolate2D::LINEAR, axes, modimage);
+	      }
+	    }
+	    else{
+	      // Scale factor
+		Float scale=fluxUsed(0)/sumI;
+		tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );	
+		os << LogIO::NORMAL << "Scaling model image to I=" << fluxUsed(0) // Loglevel INFO
+		   << " Jy for visibility prediction."
+		   << LogIO::POST;
+	    }
+	  
+	  }
           else{
             os << LogIO::NORMAL                                  // Loglevel INFO
                << "Using the model image's original unscaled flux density for visibility prediction."
@@ -6422,9 +6494,6 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
             tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
           }
             
-
-          os << LogIO::NORMAL << "Using model image " << modimage.name() // Loglevel INFO
-             << LogIO::POST;
 
           os << LogIO::NORMAL // Loglevel INFO
              << "The model image's reference pixel is " << sep << " arcsec from "
@@ -6446,7 +6515,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	            
             // Create a point component at the field center
             // with the specified flux density
-            PointShape point(position);
+            PointShape point(fieldDir);
 
             // No worries about varying fluxes or sizes here, so any time will do.
             MEpoch mtime = msc.field().timeMeas()(fldid);
@@ -6479,9 +6548,14 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
           // Use ft to form visibilities
           Vector<String> modelv;
           if (useimage) {
-            modelv.resize(1);
-            modelv(0)=tmodimage->name();
-            ft(modelv, "", False);
+	    if(sm_p) destroySkyEquation();
+	    if(!ft_p) createFTMachine();
+	    sm_p = new CleanImageSkyModel();
+	    sm_p->add(*tmodimage,1);
+	    useModelCol_p=True;
+	    setSkyEquation();
+	    se_p->predict(False);
+	    destroySkyEquation();
           }
           else
             ft(modelv, tempCLs[spwInd], False);

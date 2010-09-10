@@ -1273,7 +1273,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 bool
 imager::setjy(const ::casac::variant& field, const ::casac::variant& spw, 
 	      const std::string& modimage,
-	      const std::vector<double>& fluxdensity, const std::string& standard)
+	      const std::vector<double>& fluxdensity, const std::string& standard, const bool scalebychan)
 {
    Bool rstat(False);
    if(hasValidMS_p){
@@ -1294,7 +1294,7 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
 	}
 
 	rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
-				 modimage,fluxdensity, standard);
+				 modimage,fluxdensity, standard, scalebychan);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
