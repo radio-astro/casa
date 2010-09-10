@@ -1387,7 +1387,7 @@ getpt && \multicolumn{2}{p{3.36in}|}{Measurement Set input data only. If True, a
 \\
 antenna && \multicolumn{2}{p{3.36in}|}{Measurement Set input data only. Antenna selection by ID or name}\\
 & &allowed: & string, integer\\
-& &Default: & "" (first antenna in the ANTENNA table) 
+& &Default: & '' (first antenna in the ANTENNA table) 
 \\
 parallactify && \multicolumn{2}{p{3.36in}|}{Indicate that the data had been parallactified.}\\
 & &allowed: & bool\\
@@ -1460,7 +1460,7 @@ Methods
 
 	\ahlink{get\_column\_names}{sd:sd.scantable.get_column_names} &Get a list of column names in the main table\\
 
-	\ahlink{get\_coordinate}{sd:sd.scantable.get_coordinate} &Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd.coordinate} object \\
+	\ahlink{get\_coordinate}{sd:sd.scantable.get_coordinate} &Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd:sd.coordinate} object \\
 
 	\ahlink{get\_direction}{sd:sd.scantable.get_direction} &Get a list of positions on the sky as a string \\
 
@@ -1917,7 +1917,7 @@ Methods
 \hfill \\
 
 \newpage
-\ahsdfunction{sd.scantable.get\_coordinate}{sd.scantable.get_coordinate}{Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd.coordinate} object}
+\ahsdfunction{sd.scantable.get\_coordinate}{sd.scantable.get_coordinate}{Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd:sd.coordinate} object}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -3684,6 +3684,8 @@ name&& \multicolumn{2}{p{3.36in}|}{Name of the catalog}\\
 
         asap_init()
         l = sd.linecatalog('jpl_asap.tbl')
+        # set name restriction
+        l.set_name('NH3')
         # print summary
         l.summary()
 
@@ -3715,64 +3717,124 @@ Methods
 
 \end{longtable}
 
+
+%% sd.linecatalog.get_frequency
 \newpage
 \ahsdfunction{sd.linecatalog.get\_frequency}{sd.linecatalog.get_frequency}{Get frequency in a specified row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method returns a frequency value in the catalog for given row number.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+&& \multicolumn{2}{p{3.36in}|}{Row number}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.get_name
 \newpage
 \ahsdfunction{sd.linecatalog.get\_name}{sd.linecatalog.get_name}{Get name of specie in a specified row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method returns a name of species in the catalog for given row number.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+&& \multicolumn{2}{p{3.36in}|}{Row number}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.get_row
 \newpage
 \ahsdfunction{sd.linecatalog.get\_row}{sd.linecatalog.get_row}{Get the values in a specified row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method returns the values in a specified row of the catalog.
+   Returned value is a dictionary that contains a name of the species and its frequency 
+   for that row.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{The row to retrieve}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+dictionary
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.nrow
 \newpage
 \ahfunction{sd.linecatalog.nrow}{Get number of rows in the table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method returns a number of rows of the catalog.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.reset
 \newpage
 \ahfunction{sd.linecatalog.reset}{Unset all filtering to the table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    This method resets the table to its initial state, i.e. undo all calls of filtering methods 
+    on the catalog.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -3780,70 +3842,189 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.save
 \newpage
 \ahfunction{sd.linecatalog.save}{Save the subset of the table to disk}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Save the subset of the table to disk. This uses an internal data format and can be read in again.
+   If no filtering is done on the catalog, it just copies the original catalog. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+name && \multicolumn{2}{p{3.36in}|}{The name of the output catalog}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+overwrite && \multicolumn{2}{p{3.36in}|}{Overwrite existing table if True}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.set_frequency_limits
 \newpage
 \ahsdfunction{sd.linecatalog.set\_frequency\_limits}{sd.linecatalog.set_frequency_limits}{Set frequency limit on the table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set frequency limits on the table.
+
+    Note that the underlying table contains frequency values in MHz
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+fmin && \multicolumn{2}{p{3.36in}|}{The lower bound}\\
+& &allowed: & float \\
+& &Default: & 1.0
+\\
+fmax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
+& &allowed: & float \\
+& &Default: & 120.0
+\\
+unit && \multicolumn{2}{p{3.36in}|}{The frequency unit}\\
+& &allowed: & string ('GHz' or 'MHz') \\
+& &Default: & 'GHz'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.set_name
 \newpage
 \ahsdfunction{sd.linecatalog.set\_name}{sd.linecatalog.set_name}{Set a name restriction on the table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set a name restriction on the table. This can be a standard unix-style
+    pattern or a regular expression.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+name && \multicolumn{2}{p{3.36in}|}{The name pattern/regex}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+mode && \multicolumn{2}{p{3.36in}|}{The matching mode, i.e. 'pattern' or 'regex'}\\
+& &allowed: & string \\
+& &Default: & 'pattern'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.set_strength_limits
 \newpage
 \ahsdfunction{sd.linecatalog.set\_strength\_limits}{sd.linecatalog.set_strength_limits}{Set line strength limit on the table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set line strength limits on the table (arbitrary units).
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+smin && \multicolumn{2}{p{3.36in}|}{The lower bound}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linecatalog.summary
 \newpage
 \ahfunction{sd.linecatalog.summary}{Print the contents of the table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Print the contents of the table. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   l=sd.linecatalog('jpl_asap.tbl')
+   l.set_name('NH3')
+   l.summary()
+   # the output should look like the following
+   --------------------------------------------------------------------------------
+   Line Catalog summary
+   --------------------------------------------------------------------------------
+
+         0  NH3                 10293.659   -7.9334     
+         1  NH3                 10426.949   -7.6822     
+         2  NH3                 10536.183   -7.3906     
+         3  NH3                 10836.127   -7.8889     
+         4  NH3                 11132.722   -7.6055     
+         5  NH3                 11673.171   -7.6559     
+         6  NH3                 11947.244   -7.2809     
+         7  NH3                 12251.33    -6.9818     
+         8  NH3                 12336.462   -7.4568     
+         9  NH3                 12923.04    -6.9522     
+        10  NH3                 12951.048   -7.4088     
+        11  NH3                 13296.342   -6.7014     
+        12  NH3                 13297.266   -7.316      
+        13  NH3                 13612.146   -7.5443     
+        14  NH3                 13700.883   -6.6744     
+        15  NH3                 13719.23    -6.9543     
+        16  NH3                 13974.605   -6.897      
+        17  NH3                 14224.647   -6.3276     
+        18  NH3                 14376.817   -6.1817     
+\end{verbatim}
 
 
 
@@ -3869,6 +4050,38 @@ Methods
   possibly switch the averaging option off (see set_options) to
   detect strong lines only, fit a high order baseline and repeat the line
   search.
+
+  There are six parameters for the algorithm. These can be set by 
+  \ahlink{set\_options}{sd:sd.linefinder.set_options} method of this object. 
+
+  \begin{itemize}
+  \item threshold \\ A single channel S/N ratio above which the channel is considered to be a detection.
+                     Default is sqrt(3), which together with min\_nchan=3 gives a 3-sigma criterion
+
+  \item min\_nchan \\ A minimal number of consequtive channels, which should satisfy a threshold 
+                      criterion to be a detection. Default is 3.
+
+  \item avg\_limit \\ A number of consequtive channels not greater than
+                      this parameter can be averaged to search for
+                      broad lines. Default is 8.
+  \item box\_size \\ A running mean/median box size specified as a fraction
+                     of the total spectrum length. Default is 1/5
+
+  \item noise\_box \\ Area of the spectrum used to estimate noise stats.
+                      Both string values and numbers are allowed
+                      Allowed string values are 
+                      'all' that use all the spectrum (default), and 
+                      'box' means noise box is the same as running mean/median box.
+                      Numeric values are defined as a fraction from the
+                      spectrum size. Values should be positive.
+                      (noise_box == box_size has the same effect as
+                       noise_box = 'box')
+
+  \item noise\_stat \\ Statistics used to estimate noise. Allowed values are 
+                       'mean80' that use the 80% of the lowest deviations in the noise box (default)
+                       and 'median' means median of deviations in the noise box.
+
+  \end{itemize}
 
   The constructor doesn't take any arguments. It creates linefinder 
   object without any settings for line finding.
@@ -3913,70 +4126,203 @@ Methods
 
 \end{longtable}
 
+
+%% sd.linefineder.find_lines
 \newpage
 \ahsdfunction{sd.linefinder.find\_lines}{sd.linefinder.find_lines}{Search for spectral lines in the scan}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Search for spectral lines in the scan assigned in \ahlink{set\_scan}{sd:sd.linefinder.set_scan}.
+    A number of lines found will be returned.
+
+    The method allows to set optional masks for the search. The mask parameter is a bool array 
+    that sets channel-by-channel masking. On the other hand, the edge parameter set a number of 
+    channels to drop at the edge of the spectrum. The number can be set for each side as an integer 
+    array with length of two. 
+    If only one value is specified, the same number will be dropped from both sides of the spectrum.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+nRow&& \multicolumn{2}{p{3.36in}|}{A row number in the scantable to work with}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+mask&& \multicolumn{2}{p{3.36in}|}{An optional mask}\\
+& &allowed: & bool array \\
+& &Default: & [] (no mask)
+\\
+edge&& \multicolumn{2}{p{3.36in}|}{An optional number of channels to drop at the edge of the spectrum}\\
+& &allowed: & integer, integer array \\
+& &Default: & (0,0) (keep all channels)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linefinder.get_mask
 \newpage
 \ahsdfunction{sd.linefinder.get\_mask}{sd.linefinder.get_mask}{Get the mask to mask all lines that have been found}
+
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   By default, the method returns the mask to mask out all lines that have been found. 
+   If the invert option is True, inverted mask that only channels belong to lines are unmasked, 
+   will be returned.
+
+   Note that all channels originally masked by the input mask or dropped out by the edge parameter 
+   will still be excluded regardless on the invert option.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+invert&& \multicolumn{2}{p{3.36in}|}{If True, only channels belong to lines will be unmasked}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linefinder.get_ranges
 \newpage
 \ahsdfunction{sd.linefinder.get\_ranges}{sd.linefinder.get_ranges}{Get ranges for all spectral lines found}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method returns ranges (start and end channels or velocities) for all spectral lines found.
+
+   By default, the unit of returned values will be used the same unit as set for the scan that is 
+   set by this object using \ahlink{set\_scan}{sd:sd.linefinder.set_scan}.
+   If defunits option is set to False, the range will always be expressed in channels.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+defunits&& \multicolumn{2}{p{3.36in}|}{If False, the returned range will be expressed in channels}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linefinder.set_options
 \newpage
 \ahsdfunction{sd.linefinder.set\_options}{sd.linefinder.set_options}{Set the parameters of the line finding algorithm}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   This method is used to set the parameters of the line finding algorithm.
+   There are six parameters that can be set by this method. See 
+   \ahlink{description}{sd:sd.linefinder} of 
+   this object for details about parameters.
+
+   Note that, for bad baselines, threshold should be increased, and avg_limit decreased 
+   (or even switched off completely by setting this parameter to 1) to avoid detecting baseline
+   undulations instead of real lines.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+threshold&& \multicolumn{2}{p{3.36in}|}{A single channel S/N ratio above which the channel is considered to be a detection.}\\
+& &allowed: & float \\
+& &Default: & sqrt(3)
+\\
+min\_nchan&& \multicolumn{2}{p{3.36in}|}{A minimal number of consequtive channels, which should satisfy a threshold criterion to be a detection.}\\
+& &allowed: & integer \\
+& &Default: & 3
+\\
+avg\_limit&& \multicolumn{2}{p{3.36in}|}{A number of consequtive channels not greater than this parameter can be averaged to search for broad lines.}\\
+& &allowed: & integer \\
+& &Default: & 8
+\\
+box\_size&& \multicolumn{2}{p{3.36in}|}{A running mean/median box size specified as a fraction of the total spectrum length.}\\
+& &allowed: & float \\
+& &Default: & 0.2
+\\
+noise\_box&& \multicolumn{2}{p{3.36in}|}{Area of the spectrum used to estimate noise stats}\\
+& &allowed: & float, string ('all' or 'box') \\
+& &Default: & 'all'
+\\
+noise\_stat&& \multicolumn{2}{p{3.36in}|}{Statistics used to estimate noise}\\
+& &allowed: & string ('mean80' or 'median') \\
+& &Default: & 'mean80'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.linefinder.set_scan
 \newpage
 \ahsdfunction{sd.linefinder.set\_scan}{sd.linefinder.set_scan}{Set the data as a scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method sets the data to work with.
+   The data must be given as a scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scan&& \multicolumn{2}{p{3.36in}|}{The data to be set}\\
+& &allowed: & scantable \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
 
 
 %%%%% sd.plotter
@@ -4560,6 +4906,42 @@ Methods
   pixel/channel values and frequency/velocity ones under the current 
   spectral coordinate.
 
+  Spectral coordinate is composed of a set of three values: a reference pixel, 
+  a frequency in Hz at the reference pixel, and an increment in Hz (width of each pixel). 
+
+  Normally, the object of this class is not created from scratch. 
+  Instead, the object can be obtained from \ahlink{scantable}{sd:sd.scantable} object 
+  using \ahlink{get\_coordinate}{sd:sd.scantable.get_coordinate} method.
+  Returned spectral coordinate contains spectral coordinate information and rest frequency value, 
+  which is needed to handle velocity conversion, of the given row.  
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+     asap_init()
+     # create a scantable object
+     s=sd.scantable('OrionS_rawACSmod',average=False)
+     # get coordinate system
+     c=s.get_coordinate(0)
+     # get coordinate system values
+     c.get_increment()
+     6104.2329788208008
+     c.get_reference_pixel()
+     4096.0
+     c.get_reference_value()
+     45489353563.344795
+     # get pixel value
+     c.to_pixel(4.5489e10)
+     4038.0789891175605
+     # get frequency at channel 0
+     c.to_frequency(0)
+     45464350625.063545
+     # get velocity at channel 0
+     c.to_velocity(0)
+     170.73624010940924
+\end{verbatim}
+
 Methods
 \begin{longtable}{ll}
 
@@ -4573,18 +4955,22 @@ Methods
 
 	\ahlink{coordinate.to\_frequency}{sd:sd.coordinate.coordinate.to_frequency} & Convert a channel/pixel value to a frequency \\
 
-	\ahlink{coordinate.to\_pixel}{sd:sd.coordinate.coordinate.to_pixel} & Convert a frequency/velocity value to a channel/pixel  \\
+	\ahlink{coordinate.to\_pixel}{sd:sd.coordinate.coordinate.to_pixel} & Convert a frequency value to a channel/pixel  \\
 
 	\ahlink{coordinate.to\_velocity}{sd:sd.coordinate.coordinate.to_velocity} & Convert a channel/pixel value to a velocity \\
 
 \end{longtable}
 
+
+%% sd.coordinate.coordinate
 \newpage
 \ahfunction{sd.coordinate.coordinate}{Constructor}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Constructor of this class. Not useful any more.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -4592,38 +4978,52 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.coordinate.coordinate.get_increment
 \newpage
 \ahsdfunction{sd.coordinate.coordinate.get\_increment}{sd.coordinate.coordinate.get_increment}{Get increment of this coordinate system}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return an increment of this spectral coordinate. The unit is Hz.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.coordinate.coordinate.get_reference_pixel
 \newpage
 \ahsdfunction{sd.coordinate.coordinate.get\_reference\_pixel}{sd.coordinate.coordinate.get_reference_pixel}{Get reference pixel of this coordinate system}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a reference pixel of this spectral coordinate.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.coordinate.coordinate.get_reference_value
 \newpage
 \ahsdfunction{sd.coordinate.coordinate.get\_reference\_value}{sd.coordinate.coordinate.get_reference_value}{Get reference value of this coordinate system}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a reference frequency of this spectral coordinate. The unit is Hz.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -4631,41 +5031,98 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.coordinate.coordinate.to_frequency
 \newpage
 \ahsdfunction{sd.coordinate.coordinate.to\_frequency}{sd.coordinate.coordinate.to_frequency}{Convert a channel/pixel value to a frequency}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method converts a given channel/pixel value to a frequency under this spectral coordinate.
+   Default unit of returned value is Hz.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+pixel && \multicolumn{2}{p{3.36in}|}{Channel/pixel value where frequency wants to know}\\
+& &allowed: & float\\
+& &Default: & 
+\\
+unit&& \multicolumn{2}{p{3.36in}|}{Unit of the returned value}\\
+& &allowed: & string ('Hz', 'kHz', 'MHz', 'GHz') \\
+& &Default: & 'Hz'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.coordinate.coordinate.to_pixel
 \newpage
-\ahsdfunction{sd.coordinate.coordinate.to\_pixel}{sd.coordinate.coordinate.to_pixel}{Convert a frequency/velocity value to a channel/pixel}
+\ahsdfunction{sd.coordinate.coordinate.to\_pixel}{sd.coordinate.coordinate.to_pixel}{Convert a frequency value to a channel/pixel}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method converts a given frequency value to a channel/pixel under this spectral coordinate.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{A frequency value that want to convert to channel/pixel}\\
+& &allowed: & float\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.coordinate.coordinate.to_velocity
 \newpage
 \ahsdfunction{sd.coordinate.coordinate.to\_velocity}{sd.coordinate.coordinate.to_velocity}{Convert a channel/pixel value to a velocity}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   The method converts a given channel/pixel value to a velocity under this spectral coordinate.
+   Default unit of returned value is km/s.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+pixel && \multicolumn{2}{p{3.36in}|}{Channel/pixel value where velocity wants to know}\\
+& &allowed: & float\\
+& &Default: & 
+\\
+unit&& \multicolumn{2}{p{3.36in}|}{Unit of the returned value}\\
+& &allowed: & string ('km/s', 'm/s') \\
+& &Default: & 'km/s'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -4725,7 +5182,18 @@ elevation&& \multicolumn{2}{p{3.36in}|}{Observatory elevation about sea level (i
 \hline
 \end{tabular}
 
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
 
+\begin{verbatim}
+
+     asap_init()
+     o=sd.opacity_model(temperature=300.0,elevation=1300.0)
+     tau=sd.get_opacities([1.0e11,1.1e11])
+     print tau
+     [0.2363221976673901, 0.3068089293871521]
+
+\end{verbatim}
 
 Methods
 \begin{longtable}{ll}
@@ -4738,40 +5206,106 @@ Methods
 
 \end{longtable}
 
+
+%% sd.opacity_model.get_opacities
 \newpage
 \ahsdfunction{sd.opacity\_model.get\_opacities}{sd.opacity_model.get_opacities}{Get the opacity value(s) for the given frequency(ies)}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get the opacity value(s) for the given frequency(ies).
+    If no elevation is given the opacities for the zenith are returned.
+    If an elevation is specified refraction is also taken into account.
+    The user is able to set frequency value(s) where the user want to compute opacity(ies).
+    One opacity value per frequency is returned as a scalar or list.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+freq && \multicolumn{2}{p{3.36in}|}{A frequency value in Hz, or a list of frequency values. }\\
+& &allowed: & float, float array\\
+& &Default: & 
+\\
+elevation&& \multicolumn{2}{p{3.36in}|}{The elevation in radian at which to compute the opacity.}\\
+& &allowed: & float\\
+& &Default: & None (zenith opacity)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float, float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.opacity_model.set_observatory_elevation
 \newpage
 \ahsdfunction{sd.opacity\_model.set\_observatory\_elevation}{sd.opacity_model.set_observatory_elevation}{Update the model using the given observatory elevation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Update the model using the given the observatory elevation in meter.
+    Note that, in constructor, the default value for the observatory elevation is 700m.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+elevation&& \multicolumn{2}{p{3.36in}|}{The site elevation in meter at which to compute the opacity.}\\
+& &allowed: & float\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.opacity_model.set_weather
 \newpage
 \ahsdfunction{sd.opacity\_model.set\_weather}{sd.opacity_model.set_weather}{Update the model using the given environmental parameters}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Update the model using the given environmental parameters.
+    The pressure value will be a pressure at sea level is the observatory elevation is set to 
+    non-zero value, while it will be a pressure at the observatory ground level if the elevation 
+    is set to 0.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+temperature&& \multicolumn{2}{p{3.36in}|}{Air temperature at the observatory (K)}\\
+& &allowed: & float\\
+& &Default: & 
+\\
+pressure&& \multicolumn{2}{p{3.36in}|}{Air pressure in Pascals or hPa.}\\
+& &allowed: & float\\
+& &Default: & 
+\\
+humidity&& \multicolumn{2}{p{3.36in}|}{Air humidity at the observatory (fractional)}\\
+& &allowed: & float\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
