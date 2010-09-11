@@ -129,7 +129,7 @@ private:
   Vector<Float> fitTS; 	// temporary fit array - ntimes
  
   Float T_TOL,F_TOL,ANT_TOL,BASELN_TOL; // Input parameters
-  uInt FlagLevel,CorrChoice,StartChan,EndChan,NumTime;//Input parameters
+  uInt FlagLevel,CorrChoice,StartChan,EndChan,NumTime,MaxNPieces;//Input parameters
   Bool ShowPlots;
   uInt nPol;
   Bool FreqLineFit;
