@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMRefractiveIndexProfile.cpp,v 1.9 2010/02/19 02:15:54 dbroguie Exp $"
+ * "@(#) $Id: ATMRefractiveIndexProfile.cpp,v 1.10 2010/09/02 22:33:55 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -808,12 +808,13 @@ Opacity RefractiveIndexProfile::getO3LinesOpacity(unsigned int spwid,
   return getO3LinesOpacity(v_transfertId_[spwid] + nc);
 }
 
-Opacity RefractiveIndexProfile::getWetOpacity()
+Opacity RefractiveIndexProfile::getWetOpacity(Length integratedwatercolumn)
 {
-  return getWetOpacity(0);
+  return getWetOpacity(integratedwatercolumn,0)*(integratedwatercolumn.get()/getGroundWH2O().get());
 }
 
-Opacity RefractiveIndexProfile::getWetOpacity(unsigned int nc)
+  Opacity RefractiveIndexProfile::getWetOpacity(Length integratedwatercolumn, 
+						unsigned int nc)
 {
   if(!chanIndexIsValid(nc)) return Opacity(-999.0);
   double kv = 0;
@@ -823,34 +824,36 @@ Opacity RefractiveIndexProfile::getWetOpacity(unsigned int nc)
         * v_layerThickness_[j];
 
   }
-  return Opacity(kv);
+  return Opacity(kv*(integratedwatercolumn.get()/getGroundWH2O().get()));
 }
 
-Opacity RefractiveIndexProfile::getWetOpacity(unsigned int spwid,
-                                              unsigned int nc)
+  Opacity RefractiveIndexProfile::getWetOpacity(Length integratedwatercolumn, 
+						unsigned int spwid,
+						unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) return Opacity(-999.0);
-  return getWetOpacity(v_transfertId_[spwid] + nc);
+  return getWetOpacity(integratedwatercolumn,v_transfertId_[spwid] + nc);
 }
 
-Opacity RefractiveIndexProfile::getAverageWetOpacity(unsigned int spwid)
+  Opacity RefractiveIndexProfile::getAverageWetOpacity(Length integratedwatercolumn, 
+						       unsigned int spwid)
 {
   if(!spwidAndIndexAreValid(spwid, 0)) return Opacity(-999.0);
   Opacity totalaverage;
   totalaverage = Opacity(0.0, "np");
   for(unsigned int nc = 0; nc < getNumChan(spwid); nc++) {
-    totalaverage = totalaverage + getWetOpacity(spwid, nc);
+    totalaverage = totalaverage + getWetOpacity(integratedwatercolumn, spwid, nc);
   }
   totalaverage = totalaverage / getNumChan(spwid);
   return totalaverage;
 }
 
-Opacity RefractiveIndexProfile::getH2OLinesOpacity()
+Opacity RefractiveIndexProfile::getH2OLinesOpacity(Length integratedwatercolumn)
 {
-  return getH2OLinesOpacity(0);
+  return getH2OLinesOpacity(integratedwatercolumn,0);
 }
 
-Opacity RefractiveIndexProfile::getH2OLinesOpacity(unsigned int nc)
+  Opacity RefractiveIndexProfile::getH2OLinesOpacity(Length integratedwatercolumn, unsigned int nc)
 {
   if(!chanIndexIsValid(nc)) return Opacity(-999.0);
   double kv = 0;
@@ -858,73 +861,79 @@ Opacity RefractiveIndexProfile::getH2OLinesOpacity(unsigned int nc)
     /*    cout <<"j="<<j<<" abs H2O Lines ="<<vv_N_H2OLinesPtr_[nc]->at(j) <<endl; */
     kv = kv + imag(vv_N_H2OLinesPtr_[nc]->at(j)) * v_layerThickness_[j];
   }
-  return Opacity(kv);
+  return Opacity(kv*(integratedwatercolumn.get()/getGroundWH2O().get()));
 }
 
-Opacity RefractiveIndexProfile::getH2OLinesOpacity(unsigned int spwid,
+  Opacity RefractiveIndexProfile::getH2OLinesOpacity(Length integratedwatercolumn, unsigned int spwid,
                                                    unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) return Opacity(-999.0);
-  return getH2OLinesOpacity(v_transfertId_[spwid] + nc);
+  return getH2OLinesOpacity(integratedwatercolumn,v_transfertId_[spwid] + nc);
 }
 
-Opacity RefractiveIndexProfile::getAverageH2OLinesOpacity(unsigned int spwid)
+  Opacity RefractiveIndexProfile::getAverageH2OLinesOpacity(Length integratedwatercolumn, unsigned int spwid)
 {
   if(!spwidAndIndexAreValid(spwid, 0)) return Opacity(-999.0);
   Opacity totalaverage;
   totalaverage = Opacity(0.0, "np");
   for(unsigned int nc = 0; nc < getNumChan(spwid); nc++) {
-    totalaverage = totalaverage + getH2OLinesOpacity(spwid, nc);
+    totalaverage = totalaverage + getH2OLinesOpacity(integratedwatercolumn,spwid, nc);
   }
   totalaverage = totalaverage / getNumChan(spwid);
   return totalaverage;
 }
+  
 
-Opacity RefractiveIndexProfile::getH2OContOpacity()
+  Opacity RefractiveIndexProfile::getH2OContOpacity(Length integratedwatercolumn)
 {
-  return getH2OContOpacity(0);
-}
+  return getH2OContOpacity(integratedwatercolumn,0);
+} 
+  
 
-Opacity RefractiveIndexProfile::getH2OContOpacity(unsigned int nc)
+  Opacity RefractiveIndexProfile::getH2OContOpacity(Length integratedwatercolumn,unsigned int nc)
 {
   if(!chanIndexIsValid(nc)) return Opacity(-999.0);
   double kv = 0;
   for(unsigned int j = 0; j < numLayer_; j++) {
     kv = kv + imag(vv_N_H2OContPtr_[nc]->at(j)) * v_layerThickness_[j];
   }
-  return Opacity(kv);
+  return Opacity(kv*(integratedwatercolumn.get()/getGroundWH2O().get()));
 }
 
-Opacity RefractiveIndexProfile::getH2OContOpacity(unsigned int spwid,
-                                                  unsigned int nc)
+
+  Opacity RefractiveIndexProfile::getH2OContOpacity(Length integratedwatercolumn,
+						    unsigned int spwid,
+						    unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) return Opacity(-999.0);
-  return getH2OContOpacity(v_transfertId_[spwid] + nc);
+  return getH2OContOpacity(integratedwatercolumn,v_transfertId_[spwid] + nc);
 }
 
-Opacity RefractiveIndexProfile::getAverageH2OContOpacity(unsigned int spwid)
+
+
+  Opacity RefractiveIndexProfile::getAverageH2OContOpacity(Length integratedwatercolumn,unsigned int spwid)
 {
   if(!spwidAndIndexAreValid(spwid, 0)) return Opacity(-999.0);
   Opacity totalaverage;
   totalaverage = Opacity(0.0, "np");
   for(unsigned int nc = 0; nc < getNumChan(spwid); nc++) {
-    totalaverage = totalaverage + getH2OContOpacity(spwid, nc);
+    totalaverage = totalaverage + getH2OContOpacity(integratedwatercolumn,spwid, nc);
   }
   totalaverage = totalaverage / getNumChan(spwid);
   return totalaverage;
 }
 
-Angle RefractiveIndexProfile::getDispersiveH2OPhaseDelay()
+Angle RefractiveIndexProfile::getDispersiveH2OPhaseDelay(Length integratedwatercolumn)
 {
-  return getDispersiveH2OPhaseDelay(0);
+  return getDispersiveH2OPhaseDelay(integratedwatercolumn,0);
 }
 
-Length RefractiveIndexProfile::getDispersiveH2OPathLength()
+Length RefractiveIndexProfile::getDispersiveH2OPathLength(Length integratedwatercolumn)
 {
-  return getDispersiveH2OPathLength(0);
+  return getDispersiveH2OPathLength(integratedwatercolumn,0);
 }
 
-Angle RefractiveIndexProfile::getDispersiveH2OPhaseDelay(unsigned int nc)
+  Angle RefractiveIndexProfile::getDispersiveH2OPhaseDelay(Length integratedwatercolumn,unsigned int nc)
 {
   if(!chanIndexIsValid(nc)) {
     return Angle(-999.0, "deg");
@@ -933,61 +942,63 @@ Angle RefractiveIndexProfile::getDispersiveH2OPhaseDelay(unsigned int nc)
   for(unsigned int j = 0; j < numLayer_; j++) {
     kv = kv + real(vv_N_H2OLinesPtr_[nc]->at(j)) * v_layerThickness_[j];
   }
-  Angle aa(kv * 57.29578, "deg");
+  Angle aa(kv*(integratedwatercolumn.get()/getGroundWH2O().get())* 57.29578, "deg");
   return aa;
 }
 
-Length RefractiveIndexProfile::getDispersiveH2OPathLength(unsigned int nc)
+  Length RefractiveIndexProfile::getDispersiveH2OPathLength(Length integratedwatercolumn,unsigned int nc)
 {
   if(!chanIndexIsValid(nc)) {
     return Length(-999.0, "m");
   }
   double wavelength = 299792458.0 / v_chanFreq_[nc]; // in m
-  Length ll((wavelength / 360.0) * getDispersiveH2OPhaseDelay(nc).get("deg"),
+  Length ll((wavelength / 360.0) * getDispersiveH2OPhaseDelay(integratedwatercolumn,nc).get("deg"),
             "m");
   return ll;
 }
 
-Angle RefractiveIndexProfile::getDispersiveH2OPhaseDelay(unsigned int spwid,
+  Angle RefractiveIndexProfile::getDispersiveH2OPhaseDelay(Length integratedwatercolumn,unsigned int spwid,
                                                          unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) {
     return Angle(-999.0, "deg");
   }
-  return getDispersiveH2OPhaseDelay(v_transfertId_[spwid] + nc);
+  return getDispersiveH2OPhaseDelay(integratedwatercolumn,v_transfertId_[spwid] + nc);
 }
 
-Angle RefractiveIndexProfile::getAverageDispersiveH2OPhaseDelay(unsigned int spwid)
+  Angle RefractiveIndexProfile::getAverageDispersiveH2OPhaseDelay(Length integratedwatercolumn,unsigned int spwid)
 {
   if(!spwidAndIndexAreValid(spwid, 0)) {
     return Angle(-999.0, "deg");
   }
   double av = 0.0;
   for(unsigned int i = 0; i < getNumChan(spwid); i++) {
-    av = av + getDispersiveH2OPhaseDelay(v_transfertId_[spwid] + i).get("deg");
+    av = av + getDispersiveH2OPhaseDelay(integratedwatercolumn,v_transfertId_[spwid] + i).get("deg");
   }
   av = av / getNumChan(spwid);
   Angle average(av, "deg");
   return average;
 }
 
-Length RefractiveIndexProfile::getDispersiveH2OPathLength(unsigned int spwid,
-                                                          unsigned int nc)
+  Length RefractiveIndexProfile::getDispersiveH2OPathLength(Length integratedwatercolumn,
+							    unsigned int spwid,
+							    unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) {
     return Length(-999.0, "m");
   }
-  return getDispersiveH2OPathLength(v_transfertId_[spwid] + nc);
+  return getDispersiveH2OPathLength(integratedwatercolumn,v_transfertId_[spwid] + nc);
 }
 
-Length RefractiveIndexProfile::getAverageDispersiveH2OPathLength(unsigned int spwid)
+  Length RefractiveIndexProfile::getAverageDispersiveH2OPathLength(Length integratedwatercolumn,
+								   unsigned int spwid)
 {
   if(!spwidAndIndexAreValid(spwid, 0)) {
     return Length(-999.0, "m");
   }
   double av = 0.0;
   for(unsigned int i = 0; i < getNumChan(spwid); i++) {
-    av = av + getDispersiveH2OPathLength(v_transfertId_[spwid] + i).get("mm");
+    av = av + getDispersiveH2OPathLength(integratedwatercolumn,v_transfertId_[spwid] + i).get("mm");
   }
   av = av / getNumChan(spwid);
   Length average(av, "mm");
@@ -1651,17 +1662,17 @@ Length RefractiveIndexProfile::getAverageSO2LinesPathLength(unsigned int spwid)
 }
 
 
-Angle RefractiveIndexProfile::getNonDispersiveH2OPhaseDelay()
+Angle RefractiveIndexProfile::getNonDispersiveH2OPhaseDelay(Length integratedwatercolumn)
 {
-  return getNonDispersiveH2OPhaseDelay(0);
+  return getNonDispersiveH2OPhaseDelay(integratedwatercolumn,0);
 }
 
-Length RefractiveIndexProfile::getNonDispersiveH2OPathLength()
+Length RefractiveIndexProfile::getNonDispersiveH2OPathLength(Length integratedwatercolumn)
 {
-  return getNonDispersiveH2OPathLength(0);
+  return getNonDispersiveH2OPathLength(integratedwatercolumn,0);
 }
 
-Angle RefractiveIndexProfile::getNonDispersiveH2OPhaseDelay(unsigned int nc)
+  Angle RefractiveIndexProfile::getNonDispersiveH2OPhaseDelay(Length integratedwatercolumn, unsigned int nc)
 {
   double kv = 0;
   if(!chanIndexIsValid(nc)) {
@@ -1670,32 +1681,30 @@ Angle RefractiveIndexProfile::getNonDispersiveH2OPhaseDelay(unsigned int nc)
   for(unsigned int j = 0; j < numLayer_; j++) {
     kv = kv + real(vv_N_H2OContPtr_[nc]->at(j)) * v_layerThickness_[j];
   }
-  Angle aa(kv * 57.29578, "deg");
+  Angle aa(kv*(integratedwatercolumn.get()/getGroundWH2O().get())* 57.29578, "deg");
   return aa;
 }
 
-Length RefractiveIndexProfile::getNonDispersiveH2OPathLength(unsigned int nc)
+  Length RefractiveIndexProfile::getNonDispersiveH2OPathLength(Length integratedwatercolumn, unsigned int nc)
 {
   if(!chanIndexIsValid(nc)) {
     return Length(-999.0, "m");
   }
   double wavelength = 299792458.0 / v_chanFreq_[nc]; // in m
-  Length
-      ll((wavelength / 360.0) * getNonDispersiveH2OPhaseDelay(nc).get("deg"),
-         "m");
+  Length ll((wavelength / 360.0) * getNonDispersiveH2OPhaseDelay(integratedwatercolumn,nc).get("deg"),"m");
   return ll;
 }
 
-Angle RefractiveIndexProfile::getNonDispersiveH2OPhaseDelay(unsigned int spwid,
+  Angle RefractiveIndexProfile::getNonDispersiveH2OPhaseDelay(Length integratedwatercolumn, unsigned int spwid,
                                                             unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) {
     return Angle(-999.0, "deg");
   }
-  return getNonDispersiveH2OPhaseDelay(v_transfertId_[spwid] + nc);
+  return getNonDispersiveH2OPhaseDelay(integratedwatercolumn,v_transfertId_[spwid] + nc);
 }
 
-Angle RefractiveIndexProfile::getAverageNonDispersiveH2OPhaseDelay(unsigned int spwid)
+  Angle RefractiveIndexProfile::getAverageNonDispersiveH2OPhaseDelay(Length integratedwatercolumn, unsigned int spwid)
 {
   if(!spwidAndIndexAreValid(spwid, 0)) {
     return Angle(-999.0, "deg");
@@ -1706,20 +1715,20 @@ Angle RefractiveIndexProfile::getAverageNonDispersiveH2OPhaseDelay(unsigned int 
         + getNonDispersiveH2OPhaseDelay(v_transfertId_[spwid] + i).get("deg");
   }
   av = av / getNumChan(spwid);
-  Angle average(av, "deg");
+  Angle average(av*(integratedwatercolumn.get()/getGroundWH2O().get()), "deg");
   return average;
 }
 
-Length RefractiveIndexProfile::getNonDispersiveH2OPathLength(unsigned int spwid,
+  Length RefractiveIndexProfile::getNonDispersiveH2OPathLength(Length integratedwatercolumn, unsigned int spwid,
                                                              unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) {
     return Length(-999.0);
   }
-  return getNonDispersiveH2OPathLength(v_transfertId_[spwid] + nc);
+  return getNonDispersiveH2OPathLength(integratedwatercolumn,v_transfertId_[spwid] + nc);
 }
 
-Length RefractiveIndexProfile::getAverageNonDispersiveH2OPathLength(unsigned int spwid)
+  Length RefractiveIndexProfile::getAverageNonDispersiveH2OPathLength(Length integratedwatercolumn, unsigned int spwid)
 {
   if(!spwidAndIndexAreValid(spwid, 0)) {
     return Length(-999.0);
@@ -1727,7 +1736,7 @@ Length RefractiveIndexProfile::getAverageNonDispersiveH2OPathLength(unsigned int
   double av = 0.0;
   for(unsigned int i = 0; i < getNumChan(spwid); i++) {
     av = av
-        + getNonDispersiveH2OPathLength(v_transfertId_[spwid] + i).get("deg");
+      + getNonDispersiveH2OPathLength(integratedwatercolumn,v_transfertId_[spwid] + i).get("deg");
   }
   av = av / getNumChan(spwid);
   Length average(av, "deg");

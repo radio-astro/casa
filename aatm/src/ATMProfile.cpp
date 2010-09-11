@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMProfile.cpp,v 1.9.2.1 2010/02/19 15:07:49 dbroguie Exp $"
+ * "@(#) $Id: ATMProfile.cpp,v 1.10 2010/05/06 21:34:51 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------

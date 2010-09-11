@@ -18,7 +18,7 @@
 * License along with this library; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 *
-* "@(#) $Id: ATMPercent.h,v 1.4 2010/02/08 17:37:52 jroche Exp $"
+* "@(#) $Id: ATMPercent.h,v 1.5 2010/09/02 22:54:42 dbroguie Exp $"
 *
 * who       when      what
 * --------  --------  ----------------------------------------------
@@ -54,10 +54,10 @@ public:
   ~Percent();
 
   //@{
-  /** Accessor to the percent value in International System units (K) */
+  /** Accessor to the percent value in International System units */
   double get()const;
-  /** Accessor to the percent value in specified units. Valid units are K [k], mK [mk], and C [c] */
-  double get(const string &units)const;
+  /** Accessor to the percent value in specified units.  */
+   double get(const string &units)const;
   //@}
 
   /** Operator "equal to a Percent" */

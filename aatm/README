@@ -56,9 +56,9 @@ rsync -r appcs:/home/bn204/d/almasw/TELCAL/TelCalResults/Libraries/ATM/test/ ote
 
 new branch
 
-rsync -r appcs:/home/bn204/d/almasw-wvr-branch-0-3/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+rsync -r appcs:/home/bn204/d/almasw-atm-4-b/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
 
-rsync -r appcs:/home/bn204/d/almasw-wvr-branch-0-3/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+rsync -r appcs:/home/bn204/d/almasw-atm-4-b/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
 
 
 

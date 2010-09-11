@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.cpp,v 1.10 2010/02/08 17:37:51 jroche Exp $"
+ * "@(#) $Id: ATMSpectralGrid.cpp,v 1.11 2010/09/02 14:21:42 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -109,7 +109,7 @@ void SpectralGrid::add(unsigned int numChan,
 
   unsigned int spwId = v_transfertId_.size();
 
-  if(sbSide == LSB) { // LSB tunin
+  if(sbSide == LSB) { // LSB tuning
     // the LSB:
     chSep = -fabs(chanSep.get());
     add(numChan, refChan, refFreq, chanSep); // LSB
@@ -140,7 +140,7 @@ void SpectralGrid::add(unsigned int numChan,
   } else { // USB tuning
     // the USB:
     chSep = fabs(chanSep.get());
-    add(numChan, refChan, refFreq, Frequency(chSep));
+    add(numChan, refChan, refFreq, chanSep);
     v_sidebandSide_[spwId] = USB;
     v_sidebandType_[spwId] = sbType;
     v_loFreq_[spwId] = refFreq.get() - intermediateFreq.get();
@@ -151,7 +151,8 @@ void SpectralGrid::add(unsigned int numChan,
 
     // the LSB:
     spwId = v_transfertId_.size();
-    chSep = -fabs(chanSep.get());
+    //    chSep = -fabs(chanSep.get());
+    chSep = fabs(chanSep.get());
     refChan = (unsigned int) ((double) refChan + 2. * intermediateFreq.get()
         / chSep);
     add(numChan, refChan, refFreq, Frequency(chSep)); // LSB
@@ -674,8 +675,8 @@ string SpectralGrid::getSidebandSide(unsigned int spwId)
     if(vv_assocSpwId_[spwId].size() == 0) {
       /* cout << "WARNING: the spectral window with the identifier "<< spwId
        << " has no associated spectral window "<< endl; */
+      return "";
     }
-    return "";
     if(v_sidebandSide_[spwId] == NOSB) return "NoSB";
     if(v_sidebandSide_[spwId] == LSB) return "LSB";
     if(v_sidebandSide_[spwId] == USB) return "USB";
