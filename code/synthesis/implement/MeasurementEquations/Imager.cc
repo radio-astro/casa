@@ -4928,6 +4928,7 @@ Bool Imager::clean(const String& algorithm,
       }
       else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
+	doMultiFields_p = True;
 	doWideBand_p = True;
 	if ( ftmachine_p != "ft" ) {
 	  os << LogIO::SEVERE
@@ -9939,6 +9940,9 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 	Vector<String> aimage(image);
 	Vector<String> aresidual(residual);
 	Vector<String> apsf(psfnames);
+	
+	if(String(algorithm) != "msmfs") ntaylor_p=1; /* masks increment by ntaylor_p only for msmfs */
+
 	if( (apsf.nelements()==1) && apsf[0]==String(""))
 	  apsf.resize();
 	if(!interactive){
@@ -9979,7 +9983,7 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
-	    for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+	    for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
 	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
 		PagedImage<Float> rest(aimage[nIm]);
 		PagedImage<Float> resi(aresidual[nIm]);
@@ -9990,9 +9994,9 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 						   elniter, nloop,thresh, forceReload);
 	      forceReload=False;
 	      if(continter>=1)
-		nointerac(nIm)=True;
+	        nointerac(nIm)=True;
 	      if(continter==2)
-		fixed(nIm)=True;
+	        fixed(nIm)=True;
 	      
 	    }
 	    if(allEQ(nointerac, True)){
@@ -10029,7 +10033,7 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 	      }
 	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
 		Int remainloop=nloop-k-1;
-		for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+		for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
 		  if(!nointerac(nIm)){
 		    continter=interactivemask(aresidual[nIm], amask[nIm],
 					      
