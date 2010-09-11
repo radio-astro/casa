@@ -388,6 +388,10 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
     if(niterpercycle == 0):
         niterpercycle=niter
         majorcycles=1
+    if(spw==''):
+        spw='*'
+    if(field==''):
+        field='*'
     spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
     c=cluster()
     hostname=os.getenv('HOSTNAME')
@@ -638,6 +642,10 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     epjtablename = Table containing antenna pointing offsets
     """
 
+    if(spw==''):
+        spw='*'
+    if(field==''):
+        field='*'
     spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
     c=cluster()
     hostname=os.getenv('HOSTNAME')
@@ -675,7 +683,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     csys.setconversiontype(spectral=originsptype)
     fstart=csys.toworld([0,0,0,0],'n')['numeric'][3]
     fstep=csys.toworld([0,0,0,1],'n')['numeric'][3]-fstart
-    fend=fstep*(nchan+1)+fstart
+    fend=fstep*(nchan)+fstart
     ia.done()
     imepoch=csys.epoch()
     imobservatory=csys.telescope()
@@ -705,7 +713,10 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     chancounter=0
     nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1
     ###spw and channel selection
-    spwsel,startsel,nchansel=findchansel(msname, spwids, nchanchunk, beginfreq=fstart, endfreq=fend, continuum=False)
+    spwsel,startsel,nchansel=findchansel(msname, spwids, nchanchunk, beginfreq=fstart, endfreq=fend, continuum=True)
+    #print 'spwsel', spwsel
+    #print 'startsel', startsel
+    #print  'nchansel', nchansel
     imnam='"%s"'%(imagename)
     donegetchan=np.array(range(nchanchunk),dtype=bool)
     doneputchan=np.array(range(nchanchunk),dtype=bool)
