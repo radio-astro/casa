@@ -86,7 +86,7 @@ is recommended in most applications.
 
 	<param type="int" name="minblperant">
 		<description>Minimum baselines _per antenna_ required for solve</description>
-		<value>4</value>
+		<value>2</value>
 	</param>
 
 	<param type="double" name="minsnr">
