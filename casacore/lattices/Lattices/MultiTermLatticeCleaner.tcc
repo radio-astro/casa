@@ -152,7 +152,21 @@ Bool MultiTermLatticeCleaner<T>::initialise(Int nx, Int ny)
   return True;
 }
 
-/* Input : PSFs */
+template <class T>
+Bool MultiTermLatticeCleaner<T>::setcontrol(CleanEnums::CleanType cleanType,
+				   const Int niter,
+				   const Float gain,
+				   const Quantity& aThreshold,
+				   const Bool choose)
+{
+  itsCleanType=cleanType;
+  itsMaxNiter=niter;
+  itsGain=gain;
+  itsThreshold=aThreshold;
+  totalIters_p=0;
+  return True;
+}
+
 template <class T>
 Bool MultiTermLatticeCleaner<T>::setpsf(int order, Lattice<T> & psf)
 {
@@ -183,6 +197,7 @@ Bool MultiTermLatticeCleaner<T>::setmodel(int order, Lattice<T> & model)
 	AlwaysAssert((order>=(int)0 && order<(int)vecModel_p.nelements()), AipsError);
 	//AlwaysAssert(model, AipsError);
 	vecModel_p[order]->copyData(LatticeExpr<Float>(model));
+	totalTaylorFlux_p[order] = (sum( LatticeExpr<Float>(*vecModel_p[order]) )).getFloat();
   return True;
 }
 
@@ -224,8 +239,8 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
   if(adbg)os << "SOLVER for Multi-Frequency Synthesis deconvolution" << LogIO::POST;
   
   Int convergedflag = 0;
-  static Bool choosespec = True;
-  static Int totalIters=0;
+  Bool choosespec = True;
+  //static Int totalIters=0;
   
   /* Set up the Mask image */
   setupUserMask();
@@ -234,8 +249,8 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
   Float zmaxval=0.0;
   IPosition zmaxpos;
   findMaxAbsLattice((*mask_p),(*vecDirty_p[0]),zmaxval,zmaxpos);
-  os << "Initial Max Residual at iteration " << totalIters << " : " << zmaxval << "  at " << zmaxpos << LogIO::POST;
-  if(totalIters==0)
+  os << "Initial Max Residual at iteration " << totalIters_p << " : " << zmaxval << "  at " << zmaxpos << LogIO::POST;
+  if(totalIters_p==0)
   {
     for(Int i=0;i<2*ntaylor_p-1;i++)
     {
@@ -262,9 +277,19 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
   IPosition maxpos(4,0),globalmaxpos(4,0);
   Int maxscaleindex=0;
   Int niters = itsMaxNiter;
-  
+ 
   /********************** START MINOR CYCLE ITERATIONS ***********************/
-  Int numiters = MIN(20,niters-totalIters);
+  Int numiters = MIN(40,niters-totalIters_p);
+  //cout << "niters,itsMaxiter : " << niters << " ,totalIters_p : " << totalIters_p << " , numiters : " << numiters << endl;
+  
+  /* If no iterations */
+  if(numiters<=0) 
+  {
+    os << "Reached max number of iterations" << LogIO::POST;
+    convergedflag=-1;
+    return (convergedflag);
+  }
+
   for(Int itercount=0;itercount<numiters;itercount++)
   {
     globalmaxval=-1e+10;
@@ -306,8 +331,8 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
     /* Print out coefficients at each iteration */
     if(adbg)
     {
-      //os << "[" << totalIters << "] Res: " << rmaxval << " Max: " << globalmaxval;
-      os << "[" << totalIters << "] Res: " << rmaxval;
+      //os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval;
+      os << "[" << totalIters_p << "] Res: " << rmaxval;
       os << " Pos: " <<  globalmaxpos << " Scale: " << scaleSizes_p[maxscaleindex];
       os << " Coeffs: ";
       for(Int taylor=0;taylor<ntaylor_p;taylor++)
@@ -316,7 +341,7 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
     }
     
     /* Increment iteration count */
-    totalIters++;
+    totalIters_p++;
     
     /* Check for convergence */
     convergedflag = checkConvergence(choosespec,thresh,fluxlimit);
@@ -331,20 +356,21 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
       convergedflag = 0;
       break;
     }
-    if(totalIters==itsMaxNiter) 
+    if(totalIters_p==itsMaxNiter) 
     {
-      os << "Failed to reach stopping threshold" << LogIO::POST;
+      os << "Reached max number of iterations. Failed to reach stopping threshold" << LogIO::POST;
       convergedflag=-1;
       break;
     }
     
   }
+
   /********************** END MINOR CYCLE ITERATIONS ***********************/		
   
   /* Print out flux counts so far */
   if(adbg)
   {
-     for(Int scale=0;scale<nscales_p;scale++) os << "Scale " << scale+1 << " with " << scaleSizes_p[scale] << " pixels has total flux = " << totalScaleFlux_p[scale] << LogIO::POST;
+     for(Int scale=0;scale<nscales_p;scale++) os << "Scale " << scale+1 << " with " << scaleSizes_p[scale] << " pixels has total flux = " << totalScaleFlux_p[scale] << " (in this run) " << LogIO::POST;
      for(Int taylor=0;taylor<ntaylor_p;taylor++) os << "Taylor " << taylor << " has total flux = " << totalTaylorFlux_p[taylor] << LogIO::POST;
   }
   
@@ -786,11 +812,12 @@ Int MultiTermLatticeCleaner<T>::computeMatrixA()
 	      // of Use invertSymPosDef...
 	      //
 	      Double deter=0.0;
-	      ////MatrixMathLA::invert((*invMatA_p[scale]),deter,(*matA_p[scale]));
-	      invertSymPosDef((*invMatA_p[scale]),deter,(*matA_p[scale]));
+	      invert((*invMatA_p[scale]),deter,(*matA_p[scale]));
+	      //invertSymPosDef((*invMatA_p[scale]),deter,(*matA_p[scale]));
 	      if(adbg)os << "A matrix determinant : " << deter << LogIO::POST;
 	      //if(fabs(deter) < 1.0e-08) os << "SINGULAR MATRIX !! STOP!! " << LogIO::EXCEPTION;
-	      if(adbg)os << "Lapack Cholesky Decomp Matrix inv(A) is : " << (*invMatA_p[scale]) << LogIO::POST;
+	      //if(adbg)os << "Lapack Cholesky Decomp Matrix inv(A) is : " << (*invMatA_p[scale]) << LogIO::POST;
+	      if(adbg)os << "Matrix Inverse : inv(A) : " << (*invMatA_p[scale]) << LogIO::POST;
 	      
       }
       
