@@ -508,7 +508,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     }
     else{
       if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-        os << "PSF calculation resulted in a PSF with its peak being 0 or less." << LogIO::POST;
+        os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
       }
       else{
 	throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
