@@ -37,13 +37,14 @@ asteroids = {'ceres':        1,
              'juno':         3,
              'vesta':        4,
              'astraea':      5,
-             'hygiea':      10, # Careful with the spelling.  It used to be Hygeia, and it
-                                # is named after the Greek goddess Hygieia (or Hygeia).
-                                # Also, it is fairly oblate and eccentric.
+             'hygiea':      10, # Careful with the spelling.  It used to be
+                                # Hygeia, and it is named after the Greek
+                                # goddess Hygieia (or Hygeia).  Also, it is
+                                # fairly oblate and eccentric.
              'parthenope':  11,
              'victoria':    12,
              'davida':     511,
-             'interamnia', 704}
+             'interamnia': 704}
 
 planets_and_moons = {'mercury':    199,
                      'venus':      299,
