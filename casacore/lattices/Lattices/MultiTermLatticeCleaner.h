@@ -61,6 +61,9 @@ public:
   // Initialize all the memory being used.
   Bool initialise(Int nx,Int ny);
 
+  // Set control parameters.
+  Bool setcontrol(CleanEnums::CleanType cleanType,const Int niter,const Float gain,const Quantity& aThreshold,const Bool choose);
+
   // Input : psfs and dirty images
   Bool setpsf(int order, Lattice<T> & psf);
   
@@ -105,6 +108,7 @@ private:
   Int nscales_p; // Number of scales to use for the multiscale part.
   Int nx_p;
   Int ny_p;
+  Int totalIters_p;
   
   // Image mask
   TempLattice<Float>* dirty_p;
