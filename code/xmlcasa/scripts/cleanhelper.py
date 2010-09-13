@@ -2138,7 +2138,7 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
     return alg;
 
 # Function to compute Calculate alpha
-def SimCalcAlphaBeta(imtemplate="",taylorlist=[],namealpha="",namebeta="",threshold=0.001):
+def msmfsCalcAlphaBeta(imtemplate="",taylorlist=[],namealpha="",namebeta="",threshold=0.001):
     nterms = len(taylorlist);
     if(nterms>1):
      if(not os.path.exists(namealpha)):
