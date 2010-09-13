@@ -269,8 +269,12 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 
 	// Thompson Moran Swenson say factor of 2 here:?
 	// factor = amp() / sqrt( 2 * deltaNu * tint ) ;
-	factor = amp() / sqrt( sqrt( deltaNu * tint ) ) ;
+	factor = sqrt( amp() / sqrt( deltaNu * tint ) ) ;
 	airmass = airMass_(currAnt());
+
+//	cout << "gain per baseline [mJy]=" << 
+//	  tsys(airmass) * (factor/antDiams(currAnt())) * (factor/antDiams(currAnt()))*1000 << 
+//	  " " << amp() << endl;
 	
 	// this is tsys above atmosphere
 	// tsys = tsys(airmass) * exp( tau*airmass )	
@@ -530,11 +534,7 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );
     // or divided by D for a T
-    if (type==VisCal::T) {
-      amp() = sqrt(amp());
-      os << LogIO::DEBUG1 << " noise(T) ~ " << amp()*1000 << "*sqrt(Tsys/sqrt(dnu dt)/Nant)/D" << LogIO::POST;
-    } else       
-    os << LogIO::DEBUG1 << " noise(M) ~ " << amp()*1000 << "*Tsys/D^2/sqrt(dnu dt)/Nant" << LogIO::POST;
+    os << LogIO::DEBUG1 << " noise ~ " << amp()*1000 << "*Tsys/D^2/sqrt(dnu dt)/Nant" << LogIO::POST;
   }
 
   if (prtlev()>3) cout<<" ~AtmCorr::init(vi,par,type)"<<endl;
@@ -559,8 +559,9 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 				 atm::Length(mean_pwv(),"mm"),airmass,
 				 spilleff(),tground());
       // 1/e(hn/kt)-1 recalculated for us by every setFocusChan
-      R = Rtcmb() +
-	exp(tau) *
+      // cmb is already in ATM Tebb (but not in manual one below)
+      // R = Rtcmb() +
+      R = exp(tau) *
 	( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + 
 	  Rtrx() );
       
