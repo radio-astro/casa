@@ -41,7 +41,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //# Constructor
   MSAntennaParse::MSAntennaParse ()
     : MSParse(),
-      node_p(0x0),
       colName1(MS::columnName(MS::ANTENNA1)),
       colName2(MS::columnName(MS::ANTENNA2)),
       ant1List(0),ant2List(0), baselineList(0,2)
@@ -51,7 +50,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //# Constructor with given ms name.
   MSAntennaParse::MSAntennaParse (const MeasurementSet* myms)
     : MSParse(myms, "Antenna"),
-      node_p(0x0),
       colName1(MS::columnName(MS::ANTENNA1)),
       colName2(MS::columnName(MS::ANTENNA2)),
       ant1List(0),ant2List(0), baselineList(0,2)
@@ -71,6 +69,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	condition = noAutoCorr && condition;
       }
     //    if (negate) cerr << "Generating a negation condition" << endl;
+    if(node_p.isNull()) node_p = condition;
+
     if (negate) node_p = node_p && !condition;
     else        node_p = node_p || condition;
 
