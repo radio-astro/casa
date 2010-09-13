@@ -2181,8 +2181,6 @@ def SimCalcAlphaBeta(imtemplate="",taylorlist=[],namealpha="",namebeta="",thresh
 	    if(nterms>2):
 	       mtay2 = ptay2[ii,jj,0,0];
 	       beta[ii,jj,0,0] = (mtay2/mtay0) - 0.5*alphaval*(alphaval-1);
-       if(ii%100 == 0):
-	 print ii;
     if(nterms>1):
      ia.open(namealpha);
      ia.putchunk(alpha);

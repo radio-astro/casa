@@ -79,12 +79,105 @@ class test_shadow(test_base):
         test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 1456)
 
 
+class test_shadow_ngc5921(test_base):
+    """More test of mode = 'shadow'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_CAS2399(self):
+        flagdata(vis = self.vis,
+                 unflag = True)
+        flagdata(vis = self.vis,
+                 mode = "shadow",
+                 diameter = 35)
+        allbl = flagdata(vis = self.vis,
+                         mode = "summary")
+
+        # Sketch of what is being shadowed:
+        #
+        #  A23 shadowed by A1
+        #
+        #  A13 shadowed by A2 shadowed by A9
+        #
+        
+        # Now remove baseline 2-13   (named 3-14)
+        outputvis = "missing-baseline.ms"
+        os.system("rm -rf " + outputvis)
+        split(vis = self.vis, 
+              outputvis = outputvis,
+              datacolumn = "data",
+              antenna = "!3&&14")
+        
+        flagdata(vis = outputvis,
+                 unflag = True)
+        flagdata(vis = outputvis,
+                 mode = "shadow",
+                 diameter = 35)
+        
+        missingbl = flagdata(vis = outputvis,
+                             mode = "summary")
+
+        # With baseline based flagging, A13 will not get flagged
+        # when the baseline is missing
+        #
+        # With antenna based flagging, A13 should be flagged
+        
+        assert allbl['antenna']['3']['flagged'] > 1000
+        assert allbl['antenna']['24']['flagged'] > 1000
+        
+        assert missingbl['antenna']['3']['flagged'] > 1000
+        assert missingbl['antenna']['24']['flagged'] == allbl['antenna']['24']['flagged']
+        
+        assert allbl['antenna']['14']['flagged'] > 1000
+        # When the baseline is missing, the antenna is not flagged as before
+        assert missingbl['antenna']['14']['flagged'] < 1000
+        
+        # For antenna based flagging, it should be (to be uncommented when CAS-2399
+        # is solved):
+        #assert missingbl['antenna']['14']['flagged'] > 1000
+
+    def test1(self):
+        flagdata(vis = self.vis,
+                 mode = "shadow",
+                 diameter = 50)
+
+        s = flagdata(vis = self.vis,
+                     mode = "summary")['antenna']
+
+        assert s['1']['flagged'] == 58968; assert s['1']['total'] == 203994
+        assert s['10']['flagged'] == 117432; assert s['10']['total'] == 203994
+        assert s['11']['flagged'] == 175392; assert s['11']['total'] == 203994
+        assert s['12']['flagged'] == 58968; assert s['12']['total'] == 203994
+        assert s['13']['flagged'] == 203994; assert s['13']['total'] == 203994
+        assert s['14']['flagged'] == 203994; assert s['14']['total'] == 203994
+        assert s['15']['flagged'] == 152838; assert s['15']['total'] == 203994
+        assert s['16']['flagged'] == 58968; assert s['16']['total'] == 203994
+        assert s['17']['flagged'] == 57960; assert s['17']['total'] == 200718
+        assert s['18']['flagged'] == 58968; assert s['18']['total'] == 203994
+        assert s['19']['flagged'] == 58968; assert s['19']['total'] == 203994
+        assert s['2']['flagged'] == 203994; assert s['2']['total'] == 203994
+        assert s['20']['flagged'] == 58968; assert s['20']['total'] == 203994
+        assert s['21']['flagged'] == 58968; assert s['21']['total'] == 203994
+        assert s['22']['flagged'] == 58968; assert s['22']['total'] == 203994
+        assert s['24']['flagged'] == 203994; assert s['24']['total'] == 203994
+        assert s['25']['flagged'] == 58968; assert s['25']['total'] == 203994
+        assert s['26']['flagged'] == 58968; assert s['26']['total'] == 203994
+        assert s['27']['flagged'] == 58968; assert s['27']['total'] == 203994
+        assert s['28']['flagged'] == 58968; assert s['28']['total'] == 203994
+        assert s['3']['flagged'] == 203994; assert s['3']['total'] == 203994
+        assert s['4']['flagged'] == 87570; assert s['4']['total'] == 203994
+        assert s['5']['flagged'] == 163674; assert s['5']['total'] == 203994
+        assert s['6']['flagged'] == 58968; assert s['6']['total'] == 203994
+        assert s['7']['flagged'] == 58968; assert s['7']['total'] == 203994
+        assert s['8']['flagged'] == 58968; assert s['8']['total'] == 203994
+        assert s['9']['flagged'] == 58968; assert s['9']['total'] == 203994
+
+
 class test_vector(test_base):
     def setUp(self):
         self.setUp_flagdatatest()
 
     def test1(self):
-
         print "Test of vector mode"
         
         clipminmax=[0.0, 0.2]
@@ -292,7 +385,7 @@ class test_autoflag(test_base):
         flagdata(vis=self.vis, mode='autoflag', algorithm='freqmed')
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 29101)
 
-    def test_cas2410(self):
+    def test_CAS2410(self):
         flagdata(vis=self.vis, scan='3')
         flagdata(vis=self.vis, scan='6', mode='autoflag', algorithm='timemed', window=3)
         test_eq(flagdata(vis=self.vis, mode="summary"), 2854278, 763371)
@@ -463,6 +556,7 @@ def suite():
             test_flagmanager,
             test_rfi,
             test_shadow,
+            test_shadow_ngc5921,
             test_msselection,
             test_autoflag,
             cleanup]

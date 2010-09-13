@@ -233,24 +233,23 @@ class test_msselection(test_base):
         self.setUp_ngc5921()
 
     def test_simple(self):
+        '''Flagdata2: flag only cross-corr between antenna and all others'''
         baselines = flagdata2(vis = self.vis, selectdata=True, antenna="9", summary=True )['baseline'].keys()
-#        assert "9&&9" not in baselines
-        assert "9&&9" in baselines
+        assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
         baselines = flagdata2(vis = self.vis, selectdata=True, antenna="9,10", summary=True )['baseline'].keys()
-#        assert "9&&9" not in baselines
-        assert "9&&9" in baselines
+        assert "9&&9" not in baselines
         assert "9&&10" in baselines
         assert "9&&11" in baselines
-#        assert "10&&10" not in baselines
-        assert "10&&10" in baselines
+        assert "10&&10" not in baselines
         assert "10&&11" in baselines
 
     def test_amp(self):
+        '''Flagdata2: flag only cross-corr between antennas in selction'''
 #        baselines = flagdata2(vis = self.vis, selectdata=True, antenna="9&", summary=True)['baseline'].keys()
         #??? assert "9&&9" not in baselines
         #assert "9&&10" not in baselines
@@ -417,7 +416,7 @@ class test_selections(test_base):
     def test_scan1(self):
         '''Flagdata: scan='3' manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, scan='3', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 54432)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 52416)
         
         # feed not implemented flagdata2(vis=vis, feed='27')
         # flagdata2(vis=vis, unflag=True)
@@ -425,41 +424,41 @@ class test_selections(test_base):
     def test_antenna(self):
         '''Flagdata2: antenna=2 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, antenna='2', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
 
     def test_spw(self):
         '''Flagdata2: spw=0 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, spw='0', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
 
     def test_correlation(self):
         '''Flagdata2: correlation=LL manualflag=true'''
         flagdata2(vis=self.vis,  selectdata=True, correlation='LL', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 101997)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 98217)
         flagdata2(vis=self.vis, selectdata=True, correlation='LL,RR', manualflag=True)
         flagdata2(vis=self.vis, selectdata=True, correlation='LL RR', manualflag=True)
         flagdata2(vis=self.vis, selectdata=True, correlation='LL ,, ,  ,RR', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
 
     def test_field(self):
         '''Flagdata2: field=0 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, field='0', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 40698)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 39186)
 
     def test_uvrange(self):
         '''Flagdata2: uvrange=200~400m manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, uvrange='200~400m', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 55944)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 55944)
 
     def test_timerange(self):
         '''Flagdata2: timerange=09:50:00~10:20:00 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, timerange='09:50:00~10:20:00', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 6804)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 6552)
 
     def test_array(self):
         '''Flagdata2: array=0 manualflag=true'''
         flagdata2(vis=self.vis, selectdata=True, array='0', manualflag=True)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 203994, 203994)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='2'), 196434, 196434)
         
         
 class test_multimode1(test_base):
@@ -572,9 +571,10 @@ class test_mfselections(test_base):
         # flagdata2(vis=vis, unflag=True)
 
     def test_mfantenna(self):
+        '''Flagdata2: flag cross-corr between ants 3~8 and all others'''
         flagdata2(vis=self.vis, manualflag=True, mf_antenna='3~8')
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='5'), 203994, 196434)
-        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='9'), 203994, 45360)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='5'), 196434, 196434)
+        test_eq(flagdata2(vis=self.vis, summary=True, selectdata=True, antenna='9'), 196434, 45360)
         
         # compare with original flagdata
         flagdata2(vis=self.vis, unflag=True)
@@ -616,6 +616,55 @@ class test_mfselections(test_base):
     def test_array(self):
         flagdata2(vis=self.vis, selectdata=True, array='0', manualflag=True)
         test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 2854278)
+
+class test_shadow_ngc5921(test_base):
+    """More test of mode = 'shadow'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_CAS2399(self):
+        flagdata2(vis = self.vis, unflag = True)
+        flagdata2(vis = self.vis, shadow = True, diameter = 35)
+        allbl = flagdata2(vis = self.vis, summary = True)
+
+        # Sketch of what is being shadowed:
+        #
+        #  A23 shadowed by A1
+        #
+        #  A13 shadowed by A2 shadowed by A9
+        #
+        
+        # Now remove baseline 2-13   (named 3-14)
+        outputvis = "missing-baseline.ms"
+        os.system("rm -rf " + outputvis)
+        split(vis = self.vis, 
+              outputvis = outputvis,
+              datacolumn = "data",
+              antenna = "!3&&14")
+        
+        flagdata2(vis = outputvis, unflag = True)
+        flagdata2(vis = outputvis, shadow = True, diameter = 35)
+        
+        missingbl = flagdata2(vis = outputvis, summary = True)
+
+        # With baseline based flagging, A13 will not get flagged
+        # when the baseline is missing
+        #
+        # With antenna based flagging, A13 should be flagged
+        
+        assert allbl['antenna']['3']['flagged'] > 1000
+        assert allbl['antenna']['24']['flagged'] > 1000
+        
+        assert missingbl['antenna']['3']['flagged'] > 1000
+        assert missingbl['antenna']['24']['flagged'] == allbl['antenna']['24']['flagged']
+        
+        assert allbl['antenna']['14']['flagged'] > 1000
+        # When the baseline is missing, the antenna is not flagged as before
+        assert missingbl['antenna']['14']['flagged'] < 1000
+        
+        # For antenna based flagging, it should be (to be uncommented when CAS-2399
+        # is solved):
+        #assert missingbl['antenna']['14']['flagged'] > 1000
      
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -645,4 +694,5 @@ def suite():
             test_multimode1,
             test_multimode2,
             test_mfselections,
+            test_shadow_ngc5921,
             cleanup]

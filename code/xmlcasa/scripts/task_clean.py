@@ -45,8 +45,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
     try:
         if nterms > 1:
-            print '***WARNING: Multi-term MFS imaging algorithm is new and under active development.  Use it on a shared risk basis.'
-            print '***WARNING: The algorithm is being tested.  Software implementation is known to sometimes crash casapy.  Work is in progress for fixing the software.'
+            print '***WARNING: Multi-term MFS imaging algorithm is new and under active development and testing.  Use it on a shared risk basis.'
             qat=qatool.create();
             try:
                 rff=qat.canonical(reffreq);
@@ -353,7 +352,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                          '.tt' + str(tt))
                     residualimage.append(imset.imagelist[0] + '.residual'
                                          + '.tt' + str(tt))
-                    imCln.make(modelimages[tt])
+                for tt in range(0, nterms):
+		    if not os.path.exists(modelimages[tt]):
+			 imCln.make(modelimages[tt])
             #####################################################################
             if len(multiscale) > 0:
                 imCln.setscales(scalemethod='uservector',
@@ -416,8 +417,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # Taylor term images.
         #
         if (localAlgorithm=='msmfs'):
+            casalog.post('Calculating Spectral Index Map from Restored Taylor-coefficient images','INFO') 
             SimCalcAlphaBeta(imtemplate=restoredimage[0],
-                             taylorlist=restoredimage[1:],
+                             taylorlist=restoredimage[0:],
                              namealpha=imset.imagelist[0]+'.restored.alpha',
                              namebeta=imset.imagelist[0]+'.restored.beta',
                              threshold=0.01)

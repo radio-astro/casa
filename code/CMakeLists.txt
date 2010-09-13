@@ -570,7 +570,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.22
+           VERSION 1.0.25
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -741,7 +741,7 @@ casa_find( DBUS
 
 # ATM
 casa_find( ATM
-  VERSION 0.3
+  VERSION 0.4
   INCLUDES ATMEnumerations.h ATMVersion.h
   INCLUDES_SUFFIXES ATM
   LIBS aatm

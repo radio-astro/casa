@@ -625,14 +625,14 @@ namespace casa {
       unsigned int bpTimesSize = 0; // only needed for data blanking
       //unsigned int bpTimesSize = numTimestampsCorr+numTimestampsAuto; 
       vector<AxisName> bpTimesAxes;
-      bpTimesAxes.push_back(AxisNameMod::TIM);
+//      bpTimesAxes.push_back(AxisNameMod::TIM);
       SDMDataObject::BinaryPart bpActualTimes(bpTimesSize, bpTimesAxes);
       //      cout << "TimesSize " << bpTimesSize << endl;
       
       unsigned int bpDurSize = 0; // only needed for data blanking
       //	unsigned int bpDurSize = numTimestampsCorr+numTimestampsAuto;
       vector<AxisName> bpDurAxes;
-      bpDurAxes.push_back(AxisNameMod::TIM);
+//      bpDurAxes.push_back(AxisNameMod::TIM);
       SDMDataObject::BinaryPart bpActualDurations(bpDurSize, bpDurAxes);
       //      cout << "DurSize " << bpDurSize << endl;
       
@@ -652,7 +652,7 @@ namespace casa {
       
       unsigned int bpCrossSize = numSpectralPoint * numStokes * numBaselines * 2; // real + imag
       vector<AxisName> bpCrossAxes;
-      bpCrossAxes.push_back(AxisNameMod::TIM);
+      //      bpCrossAxes.push_back(AxisNameMod::TIM);
       bpCrossAxes.push_back(AxisNameMod::BAL);
       bpCrossAxes.push_back(AxisNameMod::SPP); 
       bpCrossAxes.push_back(AxisNameMod::POL);
@@ -661,7 +661,7 @@ namespace casa {
       
       unsigned int bpAutoSize = numSpectralPoint * numStokes * numAutoCorrs;
       vector<AxisName> bpAutoAxes;
-      bpAutoAxes.push_back(AxisNameMod::TIM);
+      //      bpAutoAxes.push_back(AxisNameMod::TIM);
       bpAutoAxes.push_back(AxisNameMod::ANT);
       bpAutoAxes.push_back(AxisNameMod::SPP); 
       bpAutoAxes.push_back(AxisNameMod::POL);
@@ -1562,7 +1562,7 @@ namespace casa {
 	else if(processor().type()(irow) == "RADIOMETER"){
 	  processorType = ProcessorTypeMod::RADIOMETER; 
 	  if(processor().subType()(irow) == "ALMA_RADIOMETER"){
-	    processorSubType = ProcessorSubTypeMod::ALMA_RADIOMETER; 
+	    processorSubType = ProcessorSubTypeMod::ALMA_RADIOMETER;
 	  }
 	  else{
 	    os << LogIO::WARN << "Unsupported processor type " << processor().subType()(irow)
@@ -2192,11 +2192,9 @@ namespace casa {
 	asdm::StateRow* tR2 = 0;
 	
 	tR2 = tT.add(tR);
-	if(tR2 == tR){ // adding this row caused a new tag to be defined
-	  // enter tag into the map
-	  asdmStateId_p.define(irow, tR->getStateId());
-	}
-	else{
+	// enter tag into the map
+	asdmStateId_p.define(irow, tR2->getStateId());
+	if(tR2 != tR){ // adding this row did not cause a new tag to be defined
 	  os << LogIO::WARN << "Duplicate row in MS State table :" << irow << LogIO::POST;
 	}
       } // end loop over MS state table
@@ -2662,6 +2660,10 @@ namespace casa {
       }
     }
 
+    // temprorarily needed until all processor types are supported
+    vector<Int> goodSpwV;
+    vector<Int> badSpwV;
+
     // loop over MS processor table (typically, this loop will only be executed once)
     for(uInt uprocId=0; uprocId<nProcTabRows; uprocId++){
       
@@ -2711,6 +2713,15 @@ namespace casa {
 	  continue;
 	}
 	
+	// temprorary solution until other processro types are supported
+	if(processorType!=ProcessorTypeMod::CORRELATOR){
+	  badSpwV.push_back(dataDescription().spectralWindowId()(iDDId));
+	}
+	else{
+	  goodSpwV.push_back(dataDescription().spectralWindowId()(iDDId));
+	}	  
+        ///////////
+
 	if(!asdmDataDescriptionId_p.isDefined(iDDId)){
 	  os << LogIO::SEVERE << "Internal error: undefined mapping for data desc. id " << iDDId
 	     << " in main table row " << jrow << LogIO::POST;
@@ -2720,13 +2731,12 @@ namespace casa {
 	uInt spwId = dataDescription().spectralWindowId()(iDDId);
 	if(spectralWindow().numChan()(spwId)<5){
 // 	  spectralType = SpectralResolutionTypeMod::CHANNEL_AVERAGE;
-// 	  if(verbosity_p>0){
+ 	  if(verbosity_p>1){
 // 	    os << LogIO::NORMAL << "    Less than 5 channels. Assuming data is of spectral resolution type \"CHANNEL_AVERAGE\"." 
 // 	       << LogIO::POST;      
-// 	  }
-	  os << LogIO::WARN << "    Less than 5 channels. Probably should use spectral resolution type \"CHANNEL_AVERAGE\"." 
-	     << endl << "    But this is not yet implemented. Assuming FULL_RESOLUTION." << LogIO::POST;      
-
+	    os << LogIO::WARN << "    SPW " << spwId << ": less than 5 channels. Probably should use spectral resolution type \"CHANNEL_AVERAGE\"." 
+	       << endl << "    But this is not yet implemented. Assuming FULL_RESOLUTION." << LogIO::POST;      
+	  }
 	}
       
 	// loop over MS Main table
@@ -2948,6 +2958,18 @@ namespace casa {
       } // end loop over MS DD table
 
     } // end loop over MS processor table
+
+    // temporarily needed until all processor types are supported
+    if(badSpwV.size() > 0){
+      os << LogIO::SEVERE << "Input MS contains data which is not of processor type CORRELATOR.\n" 
+	 << "Writing this data to an ASDM is not yet properly supported by exportasdm.\n"
+	 << "As a temporary solution please create an input MS containing only the following SPWs" << LogIO::POST;
+      for(uInt ii=0; ii<goodSpwV.size(); ii++){
+	os <<  LogIO::SEVERE <<  "    " << goodSpwV[ii] << "  " << LogIO::POST;
+      }
+      os <<  LogIO::SEVERE << "using task \"split\"." << LogIO::POST;
+      return False;
+    }
 
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
@@ -3695,6 +3717,10 @@ namespace casa {
 	    EntityRef dataOid; // to be set by the following method call
 	    vector< Tag > stateIdV; // "
 	  
+	    // Note: for WVR data, a special case would have to be made here or inside
+            //       writeMainBinSubScanForOneDDIdFIdPair() which does not call corrDataHeader
+            //       and addIntegration but instead only SDMDataObjectWriter::wvrData()
+
 	    numIntegration = writeMainBinSubScanForOneDDIdFIdPair(theDDId, theFId, 
 								  datacolumn, 
 								  scanNumber, subscanNumber,

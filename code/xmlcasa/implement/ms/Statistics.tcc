@@ -306,7 +306,7 @@ Record
 Statistics<T>::get_stats_array(const Matrix<T> v,
                                const Vector<Bool> flags,
                                const std::string &column,
-                               bool &supported)
+                               bool &)
 {
     Record result;
 

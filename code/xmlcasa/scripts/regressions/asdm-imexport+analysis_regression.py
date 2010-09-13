@@ -731,7 +731,7 @@ if(not rval):
 #############
 #
 
-dopart4 = False
+dopart4 = True
 
 part4 = True
 
@@ -742,19 +742,19 @@ if dopart4:
     print "Export the previously imported ASDM ..."
     default('exportasdm')
     try:
-        os.system('rm -rf '+myasdm_dataset2_name+'-re-exported*')
-        #    os.system('rm -rf '+myasdm_dataset2_name+'-re-exported* '+myasdm_dataset2_name+'-split*')
+        # os.system('rm -rf '+myasdm_dataset2_name+'-re-exported*')
+        os.system('rm -rf '+myasdm_dataset2_name+'-re-exported* '+myasdm_dataset2_name+'-split*')
         
-        #    # use only the actual visibility data, not the WVR data
-        #    split(vis=myasdm_dataset2_name+'.ms',
-        #          outputvis=myasdm_dataset2_name+'-split.ms',
-        #          datacolumn='data',
-        #          spw='0~3'
-        #          )
+        # use only the actual visibility data, not the WVR data
+        split(vis=myasdm_dataset2_name+'.ms',
+              outputvis=myasdm_dataset2_name+'-split.ms',
+              datacolumn='data',
+              spw='0~3'
+              )
         
         rval = exportasdm(
-            vis = myasdm_dataset2_name+'.ms',
-            #        vis = myasdm_dataset2_name+'-split.ms',
+#            vis = myasdm_dataset2_name+'.ms',
+            vis = myasdm_dataset2_name+'-split.ms',
             asdm = myasdm_dataset2_name+'-re-exported',
             archiveid="X001",
             apcorrected=False,

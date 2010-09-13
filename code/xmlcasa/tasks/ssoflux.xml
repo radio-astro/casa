@@ -5,10 +5,14 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="setjy" category="modeling">
+<task type="function" name="ssoflux" category="modeling">
 	<shortdescription>Fills the model column with the visibilities of a calibrator</shortdescription>
 	<description>
-       This task places the model visibility amp and phase associated
+          *This is an experimental clone of setjy while flux calibration with
+           Solar System objects is being tested.  It will eventually be merged
+           back into setjy.*
+
+       The task places the model visibility amp and phase associated
        with a specified clean components image into the model column
        of the data set.  The flux density (I,Q,U,V) for a point source
        calibrator can be entered explicitly.
@@ -22,7 +26,7 @@
        models are in the directory::/usr/lib/casapy/data/nrao/VLA/CalModels/
        3C286_L.im (egs)
 
-       setjy need only be run on the calibrator sources with a known flux
+       ssoflux need only be run on the calibrator sources with a known flux
        density and/or model.
 	</description>
 	<input>
@@ -46,10 +50,6 @@
 			<value></value>
 		</param>
 
-		<param type="bool" name="scalebychan" subparam="true">
-		  <description>scale the flux density on a per channel basis or else on a per spw basis</description>
-		  <value>False</value>
-		</param>
 		<param type="any" name="fluxdensity">
 			<any type="variant" limittypes="int intArray doubleArray"/>
 			<description>Specified flux density [I,Q,U,V]; -1 will lookup values</description>
@@ -69,23 +69,15 @@
 			</allowed>
 		</param>
 
-		<constraints>
-		  <when param="modimage">
-		    <notequals type="string" value="">
-		      <default param="scalebychan">
-			<value>False</value>
-		      </default>
-		    </notequals>
-		  </when>
-		</constraints>
-
-
 	</input>
 <returns type="void"/>
 
 <example>
+       *This is an experimental clone of setjy while flux calibration with
+        Solar System objects is being tested.  It will eventually be merged
+        back into setjy.*
 
-       The task sets the model visibility amp and phase of a
+       This task sets the model visibility amp and phase of a
        specified source (generally a calibrator).  The simplest way is
        to enter the flux density (I,Q,U,V) explicitly, but this is
        valid only for a point source.
@@ -103,14 +95,14 @@
        the models are in the directory::/usr/lib/casapy/data/nrao/VLA/CalModels
        or /usr/lib64/casapy/data/nrao/VLA/CalModel.
 
-       setjy need only be run on the calibrator sources with a known flux
+       ssoflux need only be run on the calibrator sources with a known flux
        density and/or model.
 
        Keyword arguments:
        vis -- Name of input visibility file
                default: none.  example: vis='ngc5921.ms'
        field -- Select field using field id(s) or field name(s).
-              default: ''=all fields, but run setjy one field at a time.
+              default: ''=all fields, but run ssoflux one field at a time.
                  [run listobs to obtain the list id's or names of calibrators]
               If field is a non-negative integer, it is assumed to be a field
               index.  Otherwise, it is taken to be a field name.
@@ -140,10 +132,6 @@
               At the AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
                    lib64
- &gt;&gt;&gt; scaleperchan=False expandable parameter
-               This determines whether the fluxdensity set in the model is 
-               calculated on a per channel basis. If False then it only one fluxdensity
-               value is given per spw
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for all sources,

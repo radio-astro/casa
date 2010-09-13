@@ -33,6 +33,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
+#include <components/ComponentModels/ConstantSpectrum.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
@@ -451,11 +452,23 @@ class Imager
 	     const String& fieldnames, const String& spwstring, 
 	     const Vector<Double>& fluxDensity, const String& standard);
 
+  
+  //Setjy with model image. If chanDep=True then the scaling is calulated on a 
+  //per channel basis for the model image...otherwise the whole spw get the same scaling
   Bool setjy(const Vector<Int>& fieldid, 
 	     const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
 	     const String& model,
-	     const Vector<Double>& fluxDensity, const String& standard);
+	     const Vector<Double>& fluxDensity, const String& standard, 
+	     const Bool chanDep=False);
+
+  // Temporary copy of setjy() while flux calibration with Solar System objects
+  // is being tested.
+  Bool ssoflux(const Vector<Int>& fieldid, 
+               const Vector<Int>& spectralwindowid, 
+               const String& fieldnames, const String& spwstring, 
+               const String& model,
+               const Vector<Double>& fluxDensity, const String& standard);
 
   // Make an empty image
   Bool make(const String& model);
@@ -506,6 +519,14 @@ class Imager
   //helper function to copy a mask from one image to another
 
   Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
+
+
+  // Supports the "[] or -1 => everything" convention using the rule:
+  // If v is empty or only has 1 element, and it is < 0, 
+  //     replace v with 0, 1, ..., nelem - 1.
+  // Returns whether or not it modified v.
+  //   If so, v is modified in place.
+  static Bool expand_blank_sel(Vector<Int>& v, const uInt nelem);  
 
 protected:
 
@@ -699,6 +720,13 @@ protected:
 
   //set the mosaic ft machine and right convolution function
   virtual void setMosaicFTMachine(Bool useDoublePrec=False); 
+
+  // Makes a component list on disk containing cmp (with fluxval and cspectrum)
+  // named msname_p.fieldName.spw<spwid>.tempcl and returns the name.
+  String makeComponentList(const String& fieldName, const Int spwid,
+                           const Flux<Double>& fluxval,
+                           const ComponentShape& cmp,
+                           const ConstantSpectrum& cspectrum) const;
  
   ComponentList* componentList_p;
 

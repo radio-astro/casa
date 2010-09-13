@@ -107,7 +107,7 @@ WBCleanImageSkyModel::WBCleanImageSkyModel(const Int ntaylor,const Vector<Float>
 
 void WBCleanImageSkyModel::initVars()
 {
-  adbg=1; 
+  adbg=0; 
   ddbg=1; // output per iteration
   tdbg=0;
   
@@ -133,6 +133,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
 
   for(uInt i=0;i<lc_p.nelements();i++)
 	  if(lc_p[i] != NULL) delete lc_p[i];
+  lc_p.resize(0);
   
 //  if(adbg) cout << "... Successfully destroyed lattice-cleaners !!" << endl;
 };
@@ -144,7 +145,6 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 {
 	if(adbg)os << "SOLVER for Multi-Frequency Synthesis deconvolution" << LogIO::POST;
 	Int stopflag=0;
-	static bool firstloop=True;
 	Int nchan=0,npol=0;
 
 	/* Gather shape information */
@@ -173,24 +173,47 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
     
 	  AlwaysAssert(isSolveable(model), AipsError);
 	}
+	
+	/* Calculate the initial residual image for all models. */
+	if(adbg)os << "Calc initial solveResiduals(se)..." << LogIO::POST;
+	solveResiduals(se);
+
+	/* Check if this is an interactive-clean run */
+	if(adbg) cout << "NumberIterations : " << numberIterations() << endl;
+	if(numberIterations() < 1)
+	{
+		return True;
+	}
+
 
 	/* Initialize the MultiTermLatticeCleaners */
-	if(firstloop)
+	if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
+	if(lc_p.nelements()==0)
 	{
-	  lc_p.resize(nfields_p);
-	  for(Int thismodel=0;thismodel<nfields_p;thismodel++)
-	  {
-	    lc_p[thismodel] = new MultiTermLatticeCleaner<Float>();
-	    lc_p[thismodel]->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), Quantity(threshold(),"Jy"), false);
-	    //lc_p[thismodel]->ignoreCenterBox(true);
-	    lc_p[thismodel]->setscales(scaleSizes_p);
-	    lc_p[thismodel]->setntaylorterms(ntaylor_p);
-	    nx = image(thismodel).shape()(0);
-	    ny = image(thismodel).shape()(1);
-	    lc_p[thismodel]->initialise(nx,ny); // allocates memory once....
-	  }
-	  firstloop=False;
+		lc_p.resize(nfields_p);
+		for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+		{
+			lc_p[thismodel] = new MultiTermLatticeCleaner<Float>();
+			//lc_p[thismodel]->ignoreCenterBox(true);
+			lc_p[thismodel]->setscales(scaleSizes_p);
+			lc_p[thismodel]->setntaylorterms(ntaylor_p);
+			nx = image(thismodel).shape()(0);
+			ny = image(thismodel).shape()(1);
+			lc_p[thismodel]->initialise(nx,ny); // allocates memory once....
+
+		}
 	}
+	for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+	{
+		if(adbg) cout << "Number of iterations : " << numberIterations() << endl;
+		lc_p[thismodel]->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), Quantity(threshold(),"Jy"), false);
+	}
+
+        /* Check that the model is read in correctly */
+//	IPosition apos(4,0);apos[0]=nx/2;apos[1]=ny/2;
+//	cout << "Model 0 : Center value : " << image(0).getAt(apos) << endl; 
+//	cout << "Model 1 : Center value : " << image(1).getAt(apos) << endl; 
+
 
 	/* Create the Point Spread Functions */
 	if(!donePSF_p)
@@ -222,16 +245,14 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/* Set up the Mask image */
 	for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 	{
-	  if(hasMask(thismodel)) 
+	  //if(hasMask(thismodel)) 
+	  if(hasMask(getModelIndex(thismodel,0))) 
 	  {
 	    os << "Sending in the mask" << LogIO::POST;
-	    lc_p[thismodel]->setmask( mask(thismodel) );
+	    //lc_p[thismodel]->setmask( mask(thismodel) );
+	    lc_p[thismodel]->setmask( mask(getModelIndex(thismodel,0)) );
 	  }
 	}
-
-	/* Calculate the initial residual image for all models. */
-	if(adbg)os << "Calc initial solveResiduals(se)..." << LogIO::POST;
-	solveResiduals(se);
 
 	/******************* START MAJOR CYCLE LOOP *****************/
 	os << "Starting the solver major cycles" << LogIO::POST;
@@ -265,11 +286,14 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	   solveResiduals(se);
 	   
 	   if(abs(stopflag)) break;
+
+	   /* If reached 100 major cycles - something is wrong */
+	   if(itercountmaj==99) os << " Reached the allowed maximum of 100 major cycles " << LogIO::POST;
 	} 
 	/******************* END MAJOR CYCLE LOOP *****************/
 	
 	/* Compute and write alpha,beta results to disk */
-	writeResultsToDisk();
+	//writeResultsToDisk();
 	
 	if(stopflag>0) return(True);
 	else return(False);

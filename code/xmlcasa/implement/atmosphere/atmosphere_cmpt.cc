@@ -189,6 +189,8 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
 		  << "Skystatus update failed!" 
 		  << LogIO::POST;
 	}
+	// WORK AROUND to set the 1st guess water column as a coefficient
+	pSkyStatus->setUserWH2O(pSkyStatus->getGroundWH2O());
       }
     } else {
       *itsLog << LogIO::WARN
@@ -461,6 +463,8 @@ atmosphere::initSpectralWindow(const int nbands, const Quantity& fCenter,
 							   *pAtmProfile);
       if (pSkyStatus != 0) delete pSkyStatus;
       pSkyStatus = new SkyStatus(*pRefractiveIndexProfile);
+      // WORK AROUND to set the 1st guess water column as a coefficient
+      pSkyStatus->setUserWH2O(pSkyStatus->getGroundWH2O());
       rstat = numChan[0];
     } else {
       *itsLog << LogIO::WARN
@@ -955,7 +959,8 @@ atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
 	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
-      h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(spwId,chan).get("neper");
+      //h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(spwId,chan).get("neper");
+      h2oLinesOpacity = pSkyStatus->getH2OLinesOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -981,7 +986,8 @@ atmosphere::getH2OContOpacity(const int nc, const int spwId)
 	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
-      h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(spwId,chan).get("neper");
+      //h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(spwId,chan).get("neper");
+      h2oContOpacity = pSkyStatus->getH2OContOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -1090,7 +1096,8 @@ atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       dwpd.value.resize(1);
       std::string units("deg");
-      dwpd.value[0] = pRefractiveIndexProfile->getDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      //dwpd.value[0] = pRefractiveIndexProfile->getDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      dwpd.value[0] = pRefractiveIndexProfile->getDispersiveH2OPhaseDelay(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       dwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1118,7 +1125,8 @@ atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       ndwpd.value.resize(1);
       std::string units("deg");
-      ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      //ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPhaseDelay(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       ndwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1237,7 +1245,8 @@ atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       dwpl.value.resize(1);
       std::string units("m");
-      dwpl.value[0] = pRefractiveIndexProfile->getDispersiveH2OPathLength(spwId,chan).get(units);
+      //dwpl.value[0] = pRefractiveIndexProfile->getDispersiveH2OPathLength(spwId,chan).get(units);
+      dwpl.value[0] = pRefractiveIndexProfile->getDispersiveH2OPathLength(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       dwpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1265,7 +1274,8 @@ atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       ndwpl.value.resize(1);
       std::string units("m");
-      ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPathLength(spwId,chan).get(units);
+      //ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPathLength(spwId,chan).get(units);
+      ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPathLength(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       ndwpl.units = units;
     } else {
       *itsLog << LogIO::WARN

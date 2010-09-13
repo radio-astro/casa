@@ -86,7 +86,7 @@ MSAsRaster::MSAsRaster(const String msname):
 	    visType_(OBSERVED),
 	    visComp_(AMPLITUDE),  // (reset to REAL for single-dish)
 	    visDev_(NORMAL),
-	    nAvg_(3),
+	    nDAvg_(3), nPAvg_(1),
 	    fieldIds_(),
 	    spwIds_(),
 
@@ -790,11 +790,15 @@ void MSAsRaster::constructParameters_() {
                visCompName_, visCompName_(visComp_), visCompName_(visComp_),
 	       "MS_and_Visibility_Selection");
 
-  itsNAvg  =  new DParameterRange<Int>("navg", "Moving Average Size",
-              "The number of time slots in moving\n"
-	      "averages, for visibility difference\n"
-	      "or RMS displays",
-              2, 15, 1, nAvg_, nAvg_, "MS_and_Visibility_Selection");
+  itsNAvg  =  new DParameterRange<Int>("navg", "Average Size",
+            "Number of cube planes to include in the average",
+              1, 1, 1, nPAvg_, nPAvg_, "MS_and_Visibility_Selection");
+
+//   itsNAvg  =  new DParameterRange<Int>("navg", "RMS/Diff Moving Average Size",
+//               "The number of time slots in moving\n"
+//          "averages, for visibility difference\n"
+//          "or RMS displays",
+//               2, 15, 1, nDAvg_, nDAvg_, "MS_and_Visibility_Selection");
 
   itsXAxis =  new DParameterChoice("xaxis", "X Axis",
               "Axis to show horizontally in the display",
@@ -1739,12 +1743,15 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
 
   // Parse GUI choice box (itsVisComp) into visComp_ and visDev_.
 
+  bool avgrf = False;
   switch(visComp_) {
-    case AMPDIFF: { visComp_ = AMPLITUDE; visDev_ = DIFF;   break;  }
-    case AMPRMS:  { visComp_ = AMPLITUDE; visDev_ = RMS;    break;  }
-    case PHDIFF:  { visComp_ = PHASE;     visDev_ = DIFF;   break;  }
-    case PHRMS:   { visComp_ = PHASE;     visDev_ = RMS;    break;  }
-    default:      {			  visDev_ = NORMAL; break;  }  }
+    case AMPDIFF: { visComp_ = AMPLITUDE; avgrf = adjustAvgRange( DIFF, recOut );   visDev_ = DIFF;   break;  }
+    case AMPRMS:  { visComp_ = AMPLITUDE; avgrf = adjustAvgRange( RMS, recOut );    visDev_ = RMS;    break;  }
+    case PHDIFF:  { visComp_ = PHASE;     avgrf = adjustAvgRange( DIFF, recOut );   visDev_ = DIFF;   break;  }
+    case PHRMS:   { visComp_ = PHASE;     avgrf = adjustAvgRange( RMS, recOut );    visDev_ = RMS;    break;  }
+    default:      {                       avgrf = adjustAvgRange( NORMAL, recOut ); visDev_ = NORMAL; break;  }  }
+
+  needsRefresh = avgrf || needsRefresh;
 
   // Use REAL component for single-dish, whenever 'Amplitude' is
   // advertized to the user (a minor deception..).
@@ -1754,12 +1761,12 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
   Bool isDev = (visDev_>NORMAL);
 	// whether we're [now] in deviation display mode.
 
-  // nAvg_ is the nominal size of the 'boxcar', or interval of times
+  // nDAvg_ is the nominal size of the 'boxcar', or interval of times
   // for moving averages.  The actual boxcar boundaries for each time
-  // are recomputed whenever nAvg_ changes (or extract_ is called).
+  // are recomputed whenever nDAvg_ changes (or extract_ is called).
 
-  if(itsNAvg->fromRecord(rec)) {
-    nAvg_ = max(2, itsNAvg->value());	// (min. of 2 just for safety)
+  if( itsNAvg->fromRecord(rec) || (avgrf && visDev_ > NORMAL) ) {
+    nDAvg_ = max(2, itsNAvg->value());	// (min. of 2 just for safety)
     if(visValid_) {
       computeTimeBoxcars_();
       if(isDev) needsRefresh = True;  }  }
@@ -2132,7 +2139,7 @@ Bool MSAsRaster::draw_(Display::RefreshReason reason,
     // the dispDev_ Matrix instead of disp_.  Make sure dispDev_ is
     // up-to-date.
 
-    if(!dispDevValid_ || dispDevType_!=visDev_ || dispDevNAvg_!=nAvg_) {
+    if(!dispDevValid_ || dispDevType_!=visDev_ || dispDevNAvg_!=nDAvg_) {
 
       createDevSlice_();  }  }
 
@@ -2822,7 +2829,7 @@ AttributeBuffer MSAsRaster::optionsAsAttributes() {
   restrctns.set("msar vistype", visType_);
   restrctns.set("msar viscomp", visComp_);
   restrctns.set("msar visdev", visDev_);
-  if(visDev_!=NORMAL) restrctns.set("msar navg", nAvg_);
+  if(visDev_!=NORMAL) restrctns.set("msar navg", nDAvg_);
 
 
   restrctns.set("msar datamin", itsDataMin->value());
@@ -3429,15 +3436,15 @@ void MSAsRaster::computeTimeBoxcars_() {
   // 'local neighborhood' around each time slot, for running averages.
   // The neighborhood for slot t will be the loop values (tint) in
   //   "for (tint=lsTime_[t]; tint<leTime_[t]; tint++)"
-  // Normally this is just an interval of nAvg_ slots centered around slot t,
-  // i.e.  leTime_[t] = t + (nAvg_+1)/2  and  lsTime_[t] = leTime_[t] - nAvg_.
+  // Normally this is just an interval of nDAvg_ slots centered around slot t,
+  // i.e.  leTime_[t] = t + (nDAvg_+1)/2  and  lsTime_[t] = leTime_[t] - nDAvg_.
   // However, adjustments are made for boundaries between scans or fields,
   // and for beginning and ending time slots (for example, lsTime_[0] and
   // lsTime_[1] will both be 0).
 
   Int nTimes = msShape_[TIME];
   lsTime_.resize(nTimes); leTime_.resize(nTimes);
-  Int n = (nAvg_-1)/2;
+  Int n = (nDAvg_-1)/2;
 
   for(Int t=0; t<nTimes; t++) {
     Int fld=field_[t];
@@ -3447,10 +3454,10 @@ void MSAsRaster::computeTimeBoxcars_() {
     while(et<nTimes && et<=t+n && field_[et]==fld && scan_[et]==scn) et++;
 
     Int st=t-1;
-    while(st>=0 && st>=et-nAvg_ && field_[st]==fld && scan_[st]==scn) st--;
+    while(st>=0 && st>=et-nDAvg_ && field_[st]==fld && scan_[st]==scn) st--;
     st++;
 
-    while(et<nTimes && et<st+nAvg_ && field_[et]==fld && scan_[et]==scn) et++;
+    while(et<nTimes && et<st+nDAvg_ && field_[et]==fld && scan_[et]==scn) et++;
 
     lsTime_[t]=st;
     leTime_[t]=et;  }
@@ -3806,7 +3813,7 @@ void MSAsRaster::createDevSlice_() {
 
   dispDevValid_ = True;		// Indicate that dispDev_ is valid, for
   dispDevType_ = visDev_;	// the currently requested deviation type
-  dispDevNAvg_ = nAvg_;  }	// and size of moving average boxcars.
+  dispDevNAvg_ = nDAvg_;  }	// and size of moving average boxcars.
 
 
 
@@ -5031,6 +5038,45 @@ MSAsRaster::~MSAsRaster() {
     }
 }
 
+bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec ) {
+    if ( visDev_ == NORMAL && (newstate == DIFF || newstate == RMS) ) {
+	// switch to difference (RMS/Diff) averaging
+        const char *help = "The number of time slots in moving\n"
+				"averages, for visibility difference\n"
+				"or RMS displays";
+	itsNAvg->setName( "navg" );
+	itsNAvg->setDescription( help );
+	itsNAvg->setMinimum( 2 );
+	itsNAvg->setMaximum( 15 );
+	itsNAvg->setDefaultValue( 3 );
+	itsNAvg->setValue( 3 );
+	Record navg;
+	navg.define("value",nDAvg_);
+	navg.define("pmin",2);
+	navg.define("pmax",15);
+	navg.define("listname","RMS/Diff Moving Average Size");
+	navg.define("help",help);
+	outrec.defineRecord( "navg", navg );
+	return true;
+    } else if ( (visDev_ == DIFF || visDev_ == RMS) && newstate == NORMAL ) {
+	const char *help = "Number of cube planes to include in the average";
+	itsNAvg->setName( "navg" );
+	itsNAvg->setDescription( help );
+	itsNAvg->setMinimum( 1 );
+	itsNAvg->setMaximum( 1 );
+	itsNAvg->setDefaultValue( 1 );
+	itsNAvg->setValue( 1 );
+	Record navg;
+	navg.define("value",nPAvg_);
+	navg.define("pmin",1);
+	navg.define("pmax",1);
+	navg.define("help",help);
+	navg.define("listname","Average Size");
+	outrec.defineRecord( "navg", navg );
+	return true;
+    }
+    return false;
+}
 
 void MSAsRaster::deleteParameters_() {
   //#  delete itsSelections;

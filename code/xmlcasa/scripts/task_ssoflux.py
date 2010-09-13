@@ -1,8 +1,13 @@
 import os
 from taskinit import *
 
-def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensity=None,standard=None):
-       """ Fills the model column for flux density calibrators:
+def ssoflux(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=None):
+       """
+       *This is an experimental clone of setjy while flux calibration with
+       Solar System objects is being tested.  It will eventually be merged
+       back into setjy.*
+
+       Fills the model column for flux density calibrators:
 
        The task places the model visibility amp and phase associated
        with a specified clean components image into the model column
@@ -17,7 +22,7 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
        The location of the models are system dependent:  At the AOC, the
        models are in the directory::/usr/lib/casapy/data/nrao/VLA/CalModels
 
-       Setjy need only be run on the calibrator sources with a know flux
+       ssoflux need only be run on the calibrator sources with a know flux
        density and/or model.
 
        Keyword arguments:
@@ -66,26 +71,26 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
 
        try:
 
-         casalog.origin('setjy')
+         casalog.origin('ssoflux')
 
          if ((type(vis)==str) & (os.path.exists(vis))):
                      im.open(vis, usescratch=True)
          else:
                      raise Exception, 'Visibility data set not found - please verify the name'
 
-         im.setjy(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard, scalebychan=scalebychan)
+         im.ssoflux(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard)
          im.close()
 
 
               #write history
          ms.open(vis,nomodify=False)
-         ms.writehistory(message='taskname = setjy',origin='setjy')
-         ms.writehistory(message='vis         = "'+str(vis)+'"',origin='setjy')
-         ms.writehistory(message='field       = "'+str(field)+'"',origin='setjy')
-         ms.writehistory(message='spw       = '+str(spw),origin='setjy')
-         ms.writehistory(message='modimage = '+str(modimage),origin='setjy')
-         ms.writehistory(message='fluxdensity = '+str(fluxdensity),origin='setjy')
-         ms.writehistory(message='standard    = "'+str(standard)+'"',origin='setjy')
+         ms.writehistory(message='taskname = ssoflux',origin='ssoflux')
+         ms.writehistory(message='vis         = "'+str(vis)+'"',origin='ssoflux')
+         ms.writehistory(message='field       = "'+str(field)+'"',origin='ssoflux')
+         ms.writehistory(message='spw       = '+str(spw),origin='ssoflux')
+         ms.writehistory(message='modimage = '+str(modimage),origin='ssoflux')
+         ms.writehistory(message='fluxdensity = '+str(fluxdensity),origin='ssoflux')
+         ms.writehistory(message='standard    = "'+str(standard)+'"',origin='ssoflux')
          ms.close()
 
        except Exception, instance:

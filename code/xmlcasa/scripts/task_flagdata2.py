@@ -97,7 +97,6 @@ def flagdata2(vis = None,
         # Set string for flagbackup name
         modestr = ""
         
-        ## FIXME: autocorr
         # Select the data
         casalog.post('Flagging selection')
         if selectdata:
@@ -313,6 +312,12 @@ def flagdata2(vis = None,
             modestr = modestr+"unflag_"
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 
+        # Backup flags
+        if flagbackup:
+            if (manualflag or clip or quack or shadow or rfi 
+                or autoflag or unflag or not summary):
+                backup_flags(fglocal, modestr)
+
         if summary:
             mode = 'summary'
             casalog.post('Flagging in summary mode')
@@ -328,14 +333,10 @@ def flagdata2(vis = None,
                                   correlation=correlation)
             fglocal.setflagsummary()
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
-                
-            # do not backup existing flags
-            
-        # Finallly, backup flags and run flagging for all modes
+                            
+        # Finallly, run flagging for all modes
 #        print "flagbackup=%s"%flagbackup
-        if flagbackup:
-            backup_flags(fglocal, modestr)
-            
+                    
         stats = fglocal.run()
         fglocal.done()
 

@@ -1273,7 +1273,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 bool
 imager::setjy(const ::casac::variant& field, const ::casac::variant& spw, 
 	      const std::string& modimage,
-	      const std::vector<double>& fluxdensity, const std::string& standard)
+	      const std::vector<double>& fluxdensity, const std::string& standard, const bool scalebychan)
 {
    Bool rstat(False);
    if(hasValidMS_p){
@@ -1294,7 +1294,45 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
 	}
 
 	rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
-				 modimage,fluxdensity, standard);
+				 modimage,fluxdensity, standard, scalebychan);
+       } catch  (AipsError x) {
+          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	  RETHROW(x);
+       }
+    } else {
+      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+    }
+    return rstat;
+}
+
+// temporary copy of setjy while flux calibration with Solar System objects is
+// being tested.
+bool
+imager::ssoflux(const ::casac::variant& field, const ::casac::variant& spw, 
+                const std::string& modimage,
+                const std::vector<double>& fluxdensity,
+                const std::string& standard)
+{
+   Bool rstat(False);
+   if(hasValidMS_p){
+      try {
+	casa::String fieldnames="";
+	casa::Vector<Int> fieldIndex;
+	fieldnames=toCasaString(field);
+	if(fieldnames.contains(String("-"), -1)){
+	  fieldnames="";
+	  fieldIndex=Vector<Int>(1,-1);
+	}
+	casa::String spwstring="";
+	casa::Vector<Int> spwid;
+	spwstring=toCasaString(spw);
+	if(spwstring.contains(String("-"), -1)){
+	  spwstring="";
+	  spwid=Vector<Int>(1,-1);
+	}
+
+	rstat = itsImager->ssoflux(fieldIndex, spwid, fieldnames, spwstring, 
+                                   modimage,fluxdensity, standard);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);

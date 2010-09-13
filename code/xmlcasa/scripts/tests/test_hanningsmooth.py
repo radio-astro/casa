@@ -75,13 +75,13 @@ class hanningsmooth_test(unittest.TestCase):
 
     def test2(self):
         '''Test 2: Check that output column is created'''
-        self.res = hanningsmooth(vis=self.msfile)
+        self.res = hanningsmooth(vis=self.msfile, datacolumn='corrected')
         self.assertEqual(self.res,None)
         self.assertTrue(self.checkcol(self.msfile, 'CORRECTED_DATA'))
         
     def test3(self):
-        '''Test 3: Theoretical and calculated values should be the same'''
-        self.res = hanningsmooth(vis=self.msfile)
+        '''Test 3: Theoretical and calculated values should be the same with datacolumn==CORRECTED'''
+        self.res = hanningsmooth(vis=self.msfile, datacolumn='corrected')
         self.assertTrue(self.checkcol(self.msfile, 'CORRECTED_DATA'))
         data_col = self.getvarcol(self.msfile, 'DATA')
         corr_col = self.getvarcol(self.msfile, 'CORRECTED_DATA')
@@ -107,9 +107,9 @@ class hanningsmooth_test(unittest.TestCase):
                     self.assertTrue(abs(CorData-Smoothed) < max )
 
     def test4(self):
-        '''Test 4: Theoretical and calculated values should be the same with datacolumn==DATA'''
+        '''Test 4: Theoretical and calculated values should be the same with datacolumn==DATA (the default)'''
         data_col = self.getvarcol(self.msfile, 'DATA')
-        self.res = hanningsmooth(vis=self.msfile, datacolumn='data')
+        self.res = hanningsmooth(vis=self.msfile)
         corr_col = self.getvarcol(self.msfile, 'DATA')
         nrows = len(corr_col)
         
