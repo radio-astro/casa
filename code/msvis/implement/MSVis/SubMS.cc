@@ -2707,14 +2707,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  oss << "*** Reset to maximum possible value " <<  theRegridCenterF  << " Hz";
 	}
 	else if(theRegridCenterF < transNewXin[0]-transCHAN_WIDTH[0]/2.){
-	  lDouble diff = (transNewXin[0]-transCHAN_WIDTH[0]/2.) - theRegridCenterF;
+	  Double diff = (transNewXin[0]-transCHAN_WIDTH[0]/2.) - theRegridCenterF;
 	  // cope with numerical accuracy problems
 	  if(diff>1.){
 	    oss << "*** Requested center of SPW " << theRegridCenterF << " Hz is smaller than minimum possible value";
 	    oss << " by " << diff << " Hz";
 	  }  
 	  theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
-	  oss << "\n*** Reset to minimum possible value " <<  theRegridCenterF  << " Hz";
+	  if(diff>1.){
+	    oss << "\n*** Reset to minimum possible value " <<  theRegridCenterF  << " Hz";
+	  }
 	}
       }
       if(regridBandwidthF<=0.|| nchan!=0){ // "not set" or use nchan instead
@@ -2761,17 +2763,23 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	if(theRegridCenterF + theRegridBWF / 2. >
            transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
+	  oss << " *** Input spectral window exceeds upper end of original window. Adjusting to max. possible value." << endl;	  
 	  theRegridBWF = (transNewXin[oldNUM_CHAN-1] +
                           transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF)*2.;
-	  oss << " *** Defined new spectral window exceeds upper end of original window." << endl;
-	  message = oss.str();
-	  return False;  
+	  if(theRegridBWF<transCHAN_WIDTH[0]){
+	    theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
+	    theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
+	      +transCHAN_WIDTH[oldNUM_CHAN-1]/2. + transCHAN_WIDTH[0]/2.;
+	  }
 	}
 	if(theRegridCenterF - theRegridBWF/2. < transNewXin[0] - transCHAN_WIDTH[0]/2.){
+	  oss << " *** Input spectral window exceeds lower end of original window. Adjusting to min. possible value." << endl;
 	  theRegridBWF = (theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)*2.;
-	  oss << " *** Defined new spectral window exceeds lower end of original window." << endl;
-	  message = oss.str();
-	  return False;  
+	  if(theRegridBWF<transCHAN_WIDTH[0]){
+	    theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
+	    theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
+	      +transCHAN_WIDTH[oldNUM_CHAN-1]/2. + transCHAN_WIDTH[0]/2.;
+	  }
 	}
       }
       if(regridChanWidthF <= 0.){ // "not set"
@@ -3247,7 +3255,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     transform.resize(0);	
     
     // Determine the highest data_desc_id from the DATA_DESCRIPTION table
-    // (= number of rows).
     MSDataDescription ddtable = ms_p.dataDescription();
     Int origNumDataDescs = ddtable.nrow();
     Int nextDataDescId = origNumDataDescs - 1;

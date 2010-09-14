@@ -30,6 +30,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   cleanhelper_regression.py
   coordsystest_regression.py
   cvel_regression.py
+  cvel_regression2.py
   fits-import-export_regression.py
   fls3a_hi_regression.py
   g192_regression.py

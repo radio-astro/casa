@@ -20,6 +20,7 @@ cleanhelper_test                rindebet nrao.edu
 cleanchan_test                  rindebet nrao.edu
 coordsystest_regression         dpetry eso.org
 cvel_test                       dpetry eso.org
+#cvel_test2                     dpetry eso.org
 equinox_vis                     rreid nrao.edu
 fits-import-export              dpetry eso.org
 fls3a_hi_regression             kana.sugi nao.ac.jp
