@@ -419,12 +419,17 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # intensity is larger than 5 times the user-specified threshold.
         #
         if (localAlgorithm=='msmfs'):
-            casalog.post('Calculating Spectral Index for regions where total intensity > 5 x threshold = '+str(5*(qa.quantity(threshold)['value']))+' '+qa.quantity(threshold)['unit'],'INFO') 
-            msmfsCalcAlphaBeta(imtemplate=restoredimage[0],
-                               taylorlist=restoredimage[0:],
-                               namealpha=imset.imagelist[0]+'.restored.alpha',
-                               namebeta=imset.imagelist[0]+'.restored.beta',
-                               threshold=5*(qa.convert(threshold,'Jy')['value']))
+            calcspec = True;
+            for ii in range(0,len(restoredimage[0:])):
+	       if( not os.path.exists(restoredimage[ii]) ):
+                   calcspec = False;
+            if(calcspec):
+               casalog.post('Calculating Spectral Index for regions where total intensity > 5 x threshold = '+str(5*(qa.quantity(threshold)['value']))+' '+qa.quantity(threshold)['unit'],'INFO') 
+               msmfsCalcAlphaBeta(imtemplate=restoredimage[0],
+                                  taylorlist=restoredimage[0:],
+                                  namealpha=imset.imagelist[0]+'.restored.alpha',
+                                  namebeta=imset.imagelist[0]+'.restored.beta',
+                                  threshold=5*(qa.convert(threshold,'Jy')['value']))
 
         if dochaniter:
             imset.cleanupTempFiles(tmppath)
