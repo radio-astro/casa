@@ -161,6 +161,10 @@ class FitsInput : public FitsIO {
 	//</group>
 
 	int skip_hdu();
+
+	// skip all remaining data
+	void skip_all(FITS::HDUType);
+
 	//int skip_hdu2();
 	// read special or unrecognizable records
 	char *read_sp();
@@ -205,8 +209,6 @@ class FitsInput : public FitsIO {
 	int read(FITS::HDUType, char *, int );
 	// skip N bytes
 	int skip(FITS::HDUType, OFF_T);
-	// skip all remaining data
-	void skip_all(FITS::HDUType);
         //</group>
 };
 
