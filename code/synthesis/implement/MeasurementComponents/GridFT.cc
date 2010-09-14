@@ -144,13 +144,13 @@ GridFT& GridFT::operator=(const GridFT& other)
     cachesize=other.cachesize;
     tilesize=other.tilesize;
     convType=other.convType;
+    uvScale.resize();
+    uvOffset.resize();
+    uvScale=other.uvScale;
+    uvOffset=other.uvOffset;
     if(other.gridder==0)
       gridder=0;
-    else{
-      uvScale.resize();
-      uvOffset.resize();
-      uvScale=other.uvScale;
-      uvOffset=other.uvOffset;
+    else{  
       gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
 						     uvScale, uvOffset,
 						     convType);
