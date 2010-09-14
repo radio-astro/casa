@@ -170,9 +170,14 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  if(npol > 1) os << "Cannot process more than one output polarization" << LogIO::EXCEPTION;
 	  AlwaysAssert((nchan==1), AipsError);  
 	  AlwaysAssert((npol==1), AipsError);  
-    
-	  AlwaysAssert(isSolveable(model), AipsError);
 	}
+
+	for(Int field=0;field<=nfields_p;field++)
+	  if( !isSolveable(getModelIndex(field,0)) ) 
+	  {
+		  os << "No more processing on this field" << LogIO::POST;
+		  return True;
+	  }
 	
 	/* Calculate the initial residual image for all models. */
 	if(adbg)os << "Calc initial solveResiduals(se)..." << LogIO::POST;
