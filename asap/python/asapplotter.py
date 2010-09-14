@@ -1068,15 +1068,19 @@ class asapplotter:
         return userlabel or d[mode]
 
     def plotazel(self, scan=None, outfile=None):
-    #def plotazel(self):
         """
         plot azimuth and elevation versus time of a scantable
         """
+        visible = rcParams['plotter.gui']
         from matplotlib import pylab as PL
         from matplotlib.dates import DateFormatter, timezone
         from matplotlib.dates import HourLocator, MinuteLocator,SecondLocator, DayLocator
         from matplotlib.ticker import MultipleLocator
         from numpy import array, pi
+        if not visible or not self._visible:
+            PL.ioff()
+            from matplotlib.backends.backend_agg import FigureCanvasAgg
+            PL.gcf().canvas.switch_backends(FigureCanvasAgg)
         self._data = scan
         self._outfile = outfile
         dates = self._data.get_time(asdatetime=True)
@@ -1086,7 +1090,8 @@ class asapplotter:
         PL.ioff()
         PL.clf()
         # Adjust subplot layouts
-        if len(self._panellayout) !=6: self.set_panellayout(refresh=False)
+        if len(self._panellayout) != 6:
+            self.set_panellayout(refresh=False)
         lef, bot, rig, top, wsp, hsp = self._panellayout
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
                                  wspace=wsp,hspace=hsp)
@@ -1166,12 +1171,16 @@ class asapplotter:
            PL.savefig(self._outfile)
 
     def plotpointing(self, scan=None, outfile=None):
-    #def plotpointing(self):
         """
         plot telescope pointings
         """
+        visible = rcParams['plotter.gui']
         from matplotlib import pylab as PL
         from numpy import array, pi
+        if not visible or not self._visible:
+            PL.ioff()
+            from matplotlib.backends.backend_agg import FigureCanvasAgg
+            PL.gcf().canvas.switch_backends(FigureCanvasAgg)
         self._data = scan
         self._outfile = outfile
         dir = array(self._data.get_directionval()).transpose()
@@ -1181,7 +1190,8 @@ class asapplotter:
         #PL.ioff()
         PL.clf()
         # Adjust subplot layouts
-        if len(self._panellayout) !=6: self.set_panellayout(refresh=False)
+        if len(self._panellayout) != 6:
+            self.set_panellayout(refresh=False)
         lef, bot, rig, top, wsp, hsp = self._panellayout
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
                                  wspace=wsp,hspace=hsp)

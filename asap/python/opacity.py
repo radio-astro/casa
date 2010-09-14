@@ -146,7 +146,7 @@ def skydip(data, averagepol=True, tsky=300., plot=False,
                     This might be useful to set to 'False' if one polarisation
                     is corrupted (Mopra). If set to 'False', an opacity value
                     per polarisation is returned.
-        tksy:       The sky temperature (default 300.0K). This might
+        tsky:       The sky temperature (default 300.0K). This might
                     be read from the data in the future.
         plot:       Plot each fit (airmass vs. Tsys). Default is 'False'
     """

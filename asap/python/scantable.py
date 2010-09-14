@@ -109,7 +109,8 @@ class scantable(Scantable):
                           The deafult is False, which makes time to load
                           the MS data faster in some cases.
 
-            antenna:      Antenna selection. integer (id) or string (name or id).
+            antenna:      for MeasurementSet input data only:
+                          Antenna selection. integer (id) or string (name or id).
 
             parallactify: Indicate that the data had been parallatified. Default
                           is taken from rc file.
