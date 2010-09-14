@@ -192,7 +192,8 @@ public:
   
   // Read all the data from the FITS file and create the MeasurementSet. Throws
   // an exception when it has severe trouble interpreting the FITS file.
-  void readFitsFile(const String& msFile);
+  // Returns False if it encounters an unsupported extension.
+  Bool readFitsFile(const String& msFile);
   
   //is this the first UV_DATA extension
   Bool isfirstMain(){return firstMain;}

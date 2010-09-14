@@ -23,17 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FitsIDItoMS.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
-//# Mod: DP 2010
+//# $Id: $
 
-#include <msfits/MSFits/FitsIDItoMS.h> //
-#include <casa/Arrays/ArrayIO.h> //
+#include <msfits/MSFits/FitsIDItoMS.h> 
+#include <casa/Arrays/ArrayIO.h> 
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/Cube.h>
-#include <casa/Arrays/IPosition.h> //
-#include <casa/Arrays/Matrix.h> //
+#include <casa/Arrays/IPosition.h> 
+#include <casa/Arrays/Matrix.h> 
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Slice.h> 
@@ -46,7 +45,7 @@
 
 #include <casa/OS/Directory.h>
 
-#include <ms/MeasurementSets/MeasurementSet.h> //
+#include <ms/MeasurementSets/MeasurementSet.h> 
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -68,25 +67,25 @@
 
 #include <tables/Tables/Table.h> 
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/ArrColDesc.h> //     
-#include <tables/Tables/ScaColDesc.h> //
+#include <tables/Tables/ArrColDesc.h>      
+#include <tables/Tables/ScaColDesc.h> 
 
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ArrayColumn.h>           
 #include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ColumnDesc.h> //
-#include <tables/Tables/StManAipsIO.h> //
+#include <tables/Tables/ColumnDesc.h> 
+#include <tables/Tables/StManAipsIO.h> 
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/RowCopier.h> //
+#include <tables/Tables/RowCopier.h> 
 #include <tables/Tables/TiledColumnStMan.h>
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/TableLock.h>
 
-#include <casa/Utilities/Assert.h> //
+#include <casa/Utilities/Assert.h> 
 #include <casa/Utilities/Regex.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Utilities/Fallible.h>
@@ -1767,13 +1766,13 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
   Int iTime0 = getIndex(tType, "DATE");
   Int iTime1 = getIndex(tType, "TIME");
   // get index for source
-  Int iSource = getIndex(tType, "SOURCE_ID"); // DP
+  Int iSource = getIndex(tType, "SOURCE_ID"); 
   // get index for Freq
   Int iFreq = getIndex(tType, "FREQID");
   // get index for FLUX
   Int iFlux = getIndex(tType, "FLUX");
   // get index for Integration time
-  Int iInttim = getIndex(tType, "INTTIM"); //DP
+  Int iInttim = getIndex(tType, "INTTIM"); 
 
   /*
   cout << "iU=" << iU << endl;
@@ -1995,7 +1994,8 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 	    flag(p, chan) = False;
 	  }
 
-	  vis(p, chan) = Complex(visReal, visImag);
+	  vis(p, chan) = Complex(visReal, -visImag); // NOTE: conjugation of visibility!
+                                                     // FITS-IDI convention is conjugate of AIPS and CASA convention!
 
  	}
       }
@@ -2017,7 +2017,6 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       msc.exposure().put(row,interval);
       msc.scanNumber().put(putrow,nScan);
 
-      //msc.data().put(row,vis);
       msc.data().put(putrow,vis);
       // single channel case: make weight and weightSpectrum identical.
       // multichannel case: weight should not be used.
@@ -2239,7 +2238,7 @@ void FITSIDItoMS1::fillAntennaTable()
    //save value to set time reference frame elsewhere
    timsys_p=timsys;
 
-   Float diameter=0.01; // default (meaning "not set")
+   Float diameter=0.; // default (meaning "not set")
 
    Table anTab=oldfullTable("");
 
@@ -2257,11 +2256,11 @@ void FITSIDItoMS1::fillAntennaTable()
      diam.attach(anTab,"DIAMETER"); // this column is optional
    }
    else{
-     if (arrnam=="ATCA") diameter=22;
-     if (arrnam=="VLBA") diameter=25;
-     if (arrnam=="SMA")  diameter=6.0;
+     if (arrnam=="ATCA") diameter=22.;
+     if (arrnam=="VLBA") diameter=25.;
+     if (arrnam=="SMA")  diameter=6.;
      *itsLog << LogIO::WARN 
-	     << "ANTENNA input table does not contain dish DIAMETER column.\n Will assume default diameter for TELESCOPE " 
+	     << "ARRAY_GEOMETRY input table does not contain dish DIAMETER column.\n Will assume default diameter for TELESCOPE " 
 	     << arrnam << " which is " << diameter <<" m." << LogIO::POST; 
    }
 
@@ -2911,10 +2910,12 @@ void FITSIDItoMS1::updateTables(const String& MStmpDir)
 
 } 
 
-void FITSIDItoMS1::readFitsFile(const String& msFile)
+bool FITSIDItoMS1::readFitsFile(const String& msFile)
 {
 
   *itsLog << LogOrigin("FitsIDItoMS()", "readFitsFile");
+
+  
 
   Int nField=0, nSpW=0;
   
@@ -2932,44 +2933,59 @@ void FITSIDItoMS1::readFitsFile(const String& msFile)
       String tmpdir = msFile + "_tmp";
       getAxisInfo();
       
-      if(firstMain)
-	{
-	  Bool useTSM=True;
-	  Bool mainTbl=True;
-	  
-	  setupMeasurementSet(msFile, useTSM, mainTbl);
-	  
-	  fillMSMainTable(msFile, nField, nSpW);
-	  fillObsTables();
-	  
-	  fixEpochReferences();
-	  
-	  updateTables(tmpdir); 
-	  
-	  firstMain=False;
-	}
-      else
-	{
-	  fillMSMainTable(msFile, nField, nSpW);
-	  fillObsTables();
-	}
-    }
-  
-  else
-    {
-      Bool useTSM=False;
-      Bool mainTbl=False;
-      setupMeasurementSet(msFile, useTSM, mainTbl);
-      
-      if(extname=="ARRAY_GEOMETRY") fillAntennaTable();
-      else if (extname=="SOURCE") fillFieldTable();
-      else if (extname=="FREQUENCY") fillSpectralWindowTable();
-      else if (extname=="ANTENNA") fillFeedTable();
+      if(firstMain){
+	Bool useTSM=True;
+	Bool mainTbl=True;
+	
+	setupMeasurementSet(msFile, useTSM, mainTbl);
+	
+	fillMSMainTable(msFile, nField, nSpW);
+	fillObsTables();
+	
+	fixEpochReferences();
+	
+	updateTables(tmpdir); 
+	
+	firstMain=False;
+      }
       else{
-	*itsLog << LogIO::WARN 
-		<< "    Don\'t know how to handle this table type. Will ignore it." << LogIO::POST;
+	fillMSMainTable(msFile, nField, nSpW);
+	fillObsTables();
       }
     }
+  
+  else{
+    Bool useTSM=False;
+    Bool mainTbl=False;
+    setupMeasurementSet(msFile, useTSM, mainTbl);
+    
+    if(extname=="ARRAY_GEOMETRY") fillAntennaTable();
+    else if (extname=="SOURCE") fillFieldTable();
+    else if (extname=="FREQUENCY") fillSpectralWindowTable();
+    else if (extname=="ANTENNA") fillFeedTable();
+    else if(extname=="INTERFEROMETER_MODEL"
+	    || extname =="SYSTEM_TEMPERATURE"
+	    || extname =="GAIN_CURVE"
+	    || extname =="PHASE-CAL"
+	    || extname =="FLAG"
+	    || extname =="WEATHER"
+	    || extname =="BASELINE"
+	    || extname =="BANDPASS"
+	    || extname =="CALIBRATION"
+	    || extname =="MODEL_COMPS"
+	    ){
+      *itsLog << LogIO::WARN << "FITS-IDI table " << extname 
+	      << " not yet supported. Will ignore it." << LogIO::POST;
+      return False;
+    }
+    else {
+      *itsLog << LogIO::WARN << "Extension " << extname 
+	      << " not part of the FITS-IDI convention. Will ignore it." << LogIO::POST;
+      return False;
+    }  
+  }
+
+  return True;
 
 } 
 

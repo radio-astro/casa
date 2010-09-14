@@ -312,17 +312,24 @@ void MSFitsIDI::readFITSFile(Bool& atEnd)
       if (hduName != "") {
 	if (hduName != "UV_DATA") {
 	  tableName = tableName + "_tmp/" + hduName;
-	  subTableNr++;
-	  subTableName.resize(subTableNr+1, True);
-	  subTableName(subTableNr) = hduName;
 	};
 
 	// Process the FITS-IDI input
-	bintab.readFitsFile(tableName);
+	Bool success  = bintab.readFitsFile(tableName);
 	if (infits.err() != FitsIO::OK) {
 	  os << LogIO::SEVERE << "Error reading FITS input" 
 	     << LogIO::EXCEPTION;
 	};
+	if(success){
+	  if (hduName != "UV_DATA") {
+	    subTableNr++;
+	    subTableName.resize(subTableNr+1, True);
+	    subTableName(subTableNr) = hduName;	  
+	  }
+	}
+	else{ // ignore this subtable
+	  infits.skip_all(FITS::BinaryTableHDU);
+	}
       };
     };
   }; // end while
