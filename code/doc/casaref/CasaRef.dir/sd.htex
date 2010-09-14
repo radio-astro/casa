@@ -3370,7 +3370,7 @@ Methods
 
 	\ahlink{get\_errors}{sd:sd.fitter.get_errors} & Return the errors in parameters \\
 
-	\ahlink{get\_estimates}{sd:sd.fitter.get_estimates} & Return the parameter estimates \\
+	\ahlink{get\_estimate}{sd:sd.fitter.get_estimate} & Return the parameter estimates \\
 
 	\ahlink{get\_fit}{sd:sd.fitter.get_fit} & Return the fitted ordinate values \\
 
@@ -3396,239 +3396,759 @@ Methods
 
 \end{longtable}
 
+
+%% sd.fitter.auto_fit
 \newpage
 \ahsdfunction{sd.fitter.auto\_fit}{sd.fitter.auto_fit}{Return a scan where the function is applied to all rows}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   This method executes fitting for all rows in the current selection of the data.
+   It returns a scan where the function is applied to all rows for all Beams/IFs/Pols.
+   If any data is not set and/or fitting function is not specified, the function throws 
+   an exception.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+insitu && \multicolumn{2}{p{3.36in}|}{Apply operation on the input scantable or not}\\
+& &allowed: & bool \\
+& &Default: & None (use default setting defined in sd.rcParams)
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot and verify result or not}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   f=sd.fitter()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   f.set_scan(s)
+   f.set_function(poly=3)
+   s_bs=f.auto_fit()
+\end{verbatim}
+
+
+
+%% sd.fitter.commit
 \newpage
 \ahfunction{sd.fitter.commit}{Return a new scan where the fits have been subtracted}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a new scan where the fits have been subtracted.
+   You must fit the data before you execute this method. Otherwise, an exception will be thrown.
+   
+   If the data is set as a set of abcissa and ordinate values using \ahlink{set\_data}{sd:sd.fitter.set_data}, 
+   it will not work.
+   If you want to get data by this method, you must use \ahlink{set\_scan}{sd:sd.fitter.set_scan} that set 
+   the data as a scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   f=sd.fitter()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   # you must set data as a scantable
+   f.set_scan(s)
+   # set polynomial function of order 3 for baseline subtraction
+   f.set_function(poly=3)
+   # do fit
+   f.fit()
+   # get baseline subtracted scans
+   s_bs=f.commit()
+\end{verbatim}
+
+
+
+%% sd.fitter.fit
 \newpage
 \ahfunction{sd.fitter.fit}{Execute actual fitting process}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Execute the actual fitting process. All the state (data, selection, and function) has to be set before executing.
+
+   The method executes a fitting process for only one row that are specified by a row argument.
+   By default, the first row will be fitted. 
+
+   The estimate argument determines if the method computes an initial parameter set automatically.
+   This can be used to compute estimates even if fit was called before.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Specify the row in the scantable}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+estimate && \multicolumn{2}{p{3.36in}|}{Auto-compute an initial parameter set}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        s = scantable('myscan.asap')
+        s.set_cursor(thepol=1)        # select second pol (nb. 0-based)
+        f = fitter()
+        f.set_scan(s)
+        f.set_function(poly=0)
+        f.fit(row=0)                  # fit first row
+\end{verbatim}
+
+
+%% sd.fitter.get_area
 \newpage
 \ahsdfunction{sd.fitter.get\_area}{sd.fitter.get_area}{Return the area under the fitted gaussian/lorentzian component}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return the area under the fitted gaussian/lorentzian component.
+   The component argument specifies which component you want to get area.
+   By default, the method will return a sum of all gaussian/lorentzian components.
+
+   Note that this will only work for gaussian/lorentzian fits.
+   Otherwise, None will be returned.
+
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+component && \multicolumn{2}{p{3.36in}|}{The gaussian/lorentzian component selection}\\
+& &allowed: & integer \\
+& &Default: & None (sum of all components)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.get_chi2
 \newpage
 \ahsdfunction{sd.fitter.get\_chi2}{sd.fitter.get_chi2}{Return $\chi^2$ value}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return $\chi^2$ value of the fit. You must execute fitting process before getting $\chi^2$.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        s = scantable('myscan.asap')
+        s.set_cursor(thepol=1)        # select second pol (nb. 0-based)
+        f = fitter()
+        f.set_scan(s)
+        f.set_function(poly=0)
+        f.fit(row=0)                  # fit first row
+        ch2=f.get_chi2()
+\end{verbatim}
+
+
+
+
+%% sd.fitter.get_errors
 \newpage
 \ahsdfunction{sd.fitter.get\_errors}{sd.fitter.get_errors}{Return the errors in parameters}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return the errors in the parameters. You must execute fitting process before getting errors.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+component && \multicolumn{2}{p{3.36in}|}{get the errors for the specified component only}\\
+& &allowed: & integer \\
+& &Default: & None (all components)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.get_estimate
 \newpage
-\ahsdfunction{sd.fitter.get\_estimates}{sd.fitter.get_estimates}{Return the parameter estimates}
+\ahsdfunction{sd.fitter.get\_estimate}{sd.fitter.get_estimate}{Return the parameter estimates}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return the parameter estimates for non-linear functions.
+   It works only if fit is executed with estimate=True.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.get_fit
 \newpage
 \ahsdfunction{sd.fitter.get\_fit}{sd.fitter.get_fit}{Return the fitted ordinate values}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return the fitted ordinate values.
+   For spectral line fitting, it will represent model of the observed line.
+   You must execute fitting process before getting fitted result.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.get_parameters
 \newpage
 \ahsdfunction{sd.fitter.get\_parameters}{sd.fitter.get_parameters}{Return the fit parameters}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return the fit parameters as a dictionary. 
+   The returned value contains the following attributes:
+
+   \begin{itemize}
+   \item errors \\ errors for each parameter
+   \item fixed \\ list of fixed parameters
+   \item formatted \\ formatted string that shows a fitting result
+   \item params \\ list of resulting parameter values
+   \end{itemize}
+
+   The component argument specifies which component the user want to get fit parameters. 
+   It is effective only for gaussian/lorentzian fitting.
+
+   The error argument controls contents of formatted string. If error is True, the string 
+   contains parameter values and their errors.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+component && \multicolumn{2}{p{3.36in}|}{get the parameter values for the specified component only}\\
+& &allowed: & integer \\
+& &Default: & None (all components)
+\\
+errors && \multicolumn{2}{p{3.36in}|}{If True, include errors of fit parameters in formatted string}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.get_residual
 \newpage
 \ahsdfunction{sd.fitter.get\_residual}{sd.fitter.get_residual}{Return the residual of the fit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return the residual of the fit.
+   For baseline fitting, it will represent a baseline-subtracted spectrum.
+   You must execute fitting process before getting fitted result.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.plot
 \newpage
 \ahfunction{sd.fitter.plot}{Plot fit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Plot the last fit. 
+
+   There are three arguments that control plot. 
+   If residual argument is True, the plot contains residual in addition to 
+   original data and fit. If plotparms argument is True, the parameter values 
+   will be written on the plot explicitly. The components argument specifies 
+   a list of components to plot. components=-1 means total fit (sum of all 
+   components) will be plotted.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+residual && \multicolumn{2}{p{3.36in}|}{An optional parameter indicating if the residual should be plotted}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+components && \multicolumn{2}{p{3.36in}|}{a list of components to plot, e.g [0,1]}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (plot total fit)
+\\
+plotparms && \multicolumn{2}{p{3.36in}|}{Inidicates if the parameter values should be present on the plot}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.set_data
 \newpage
 \ahsdfunction{sd.fitter.set\_data}{sd.fitter.set_data}{Set the abcissa and ordinate for the fit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the absissa and ordinate for the fit. Also set the mask
+    indicationg valid points.
+    This can be used for data vectors retrieved from a scantable.
+
+    For scantable fitting use \ahlink{set\_scan}{sd:sd.fitter.set_scan}.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+xdat && \multicolumn{2}{p{3.36in}|}{The abcissa values}\\
+& &allowed: & float array \\
+& &Default: & 
+\\
+ydat && \multicolumn{2}{p{3.36in}|}{The ordinate values}\\
+& &allowed: & float array \\
+& &Default: & 
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask}\\
+& &allowed: & bool array \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.set_function
 \newpage
 \ahsdfunction{sd.fitter.set\_function}{sd.fitter.set_function}{Set the function to be fitted}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the function to be fit.
+
+   The argument to be set determines what the fitter will do.
+   If you want to do polynomial fitting, you have to set poly or lpoly arguments.
+   The value of poly or lpoly are interpreted as an order of the polynomial function to be 
+   used for fitting. The poly is for non-linear least squares fitting, while lpoly is for linear one.
+   If you want to do line fitting, you have to set either gauss or lorentz arguments.
+   In that case, values of gauss or lorentz arguments are interpreted as a number of gaussian/lorentzian 
+   components. Apparently, gauss=0 or lorentz=0 causes an exception.
+
+   Note that all the above arguments are exclusive each other.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+poly && \multicolumn{2}{p{3.36in}|}{Use a polynomial of the order given with nonlinear least squares fit}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+lpoly && \multicolumn{2}{p{3.36in}|}{Use a polynomial of the order given with linear least squares fit}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+gauss && \multicolumn{2}{p{3.36in}|}{Fit the number of gaussian specified}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+lorentz && \multicolumn{2}{p{3.36in}|}{Fit the number of lorentzian specified}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        fitter.set_function(poly=3)  # will fit a 3rd order polynomial via nonlinear method
+        fitter.set_function(lpoly=3)  # will fit a 3rd order polynomial via linear method
+        fitter.set_function(gauss=2) # will fit two gaussians
+        fitter.set_function(lorentz=2) # will fit two lorentzians
+\end{verbatim}
+
+
+
+%% sd.fitter.set_gauss_parameters
 \newpage
 \ahsdfunction{sd.fitter.set\_gauss\_parameters}{sd.fitter.set_gauss_parameters}{Set the parameters of Gaussian component}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the Parameters of a 'Gaussian' component, set with set_function.
+
+   Three arguments, peak, centre, and fwhm, are mandatory to be set. They specifies an initial model of 
+   Gaussian component. 
+
+   The peakfixed, centrefixed, and fwhmfixed are optional parameters to indicate if
+   the paramters should be held fixed during the fitting process. The default is to keep all parameters flexible.
+   If you want to fix one of those parameters, you can do it by setting corresponding 
+   arguments (peakfixed, centrefixed, and fwhmfixed) to 1.
+   
+   The component argument is only effective for multi-component Gaussian fitting.
+   It specifies the number of the component to set the specified parameters.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+peak && \multicolumn{2}{p{3.36in}|}{The gaussian parameters (peak intensity)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+centre && \multicolumn{2}{p{3.36in}|}{The gaussian parameters (line center)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+fwhm && \multicolumn{2}{p{3.36in}|}{The gaussian parameters (FWHM)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+peakfixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if peak should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+centrefixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if centre should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+fwhmfixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if fwhm should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+component && \multicolumn{2}{p{3.36in}|}{The number of the component}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   f=sd.fitter()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   f.set_scan(s)
+   # set fit function as gaussian
+   f.set_function(gauss=1)
+   # set gaussian parameter with centre fixed
+   f.set_gauss_parameters(peak=0.5,centre=4100,fwhm=200,centrefixed=1)
+   f.fit() 
+\end{verbatim}
+
+
+%% sd.fitter.set_lorentz_parameters
 \newpage
 \ahsdfunction{sd.fitter.set\_lorentz\_parameters}{sd.fitter.set_lorentz_parameters}{Set the parameters of Lorentzian component}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the Parameters of a 'Lorentzian' component, set with set_function.
+
+   Three arguments, peak, centre, and fwhm, are mandatory to be set. They specifies an initial model of 
+   Gaussian component. 
+
+   The peakfixed, centrefixed, and fwhmfixed are optional parameters to indicate if
+   the paramters should be held fixed during the fitting process. The default is to keep all parameters flexible.
+   If you want to fix one of those parameters, you can do it by setting corresponding 
+   arguments (peakfixed, centrefixed, and fwhmfixed) to 1.
+   
+   The component argument is only effective for multi-component Lorentzian fitting.
+   It specifies the number of the component to set the specified parameters.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+peak && \multicolumn{2}{p{3.36in}|}{The lorentzian parameters (peak intensity)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+centre && \multicolumn{2}{p{3.36in}|}{The lorentzian parameters (line center)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+fwhm && \multicolumn{2}{p{3.36in}|}{The lorentzian parameters (FWHM)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+peakfixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if peak should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+centrefixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if centre should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+fwhmfixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if fwhm should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+component && \multicolumn{2}{p{3.36in}|}{The number of the component}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   f=sd.fitter()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   f.set_scan(s)
+   # set fit function as lorentzian
+   f.set_function(lorentz=1)
+   # set lorentzian parameter with centre fixed
+   f.set_lorentz_parameters(peak=0.5,centre=4100,fwhm=200,centrefixed=1)
+   f.fit() 
+\end{verbatim}
+
+
+
+%% sd.fitter.set_parameters
 \newpage
 \ahsdfunction{sd.fitter.set\_parameters}{sd.fitter.set_parameters}{Set the parameters to be fitted}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the parameters to be fitted.
+
+   It takes an argument that indicates a list of parameter values and preference if those parameters 
+   are fixed or flexible during the fit. These lists should be given as a dictionary.
+   The params and fixed in the following argument list doesn't indicate argument itself here.
+   Instead, they indicate keywords in the above dictionary.
+
+   This method is normally called from \ahlink{set\_gauss\_parameters}{sd:sd.fitter.set_gauss_parameters} 
+   and \ahlink{set\_lorentz\_parameters}{sd:sd.fitter.set_lorentz_parameters} so that you may not need to call 
+   this method directly. 
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+params && \multicolumn{2}{p{3.36in}|}{A vector of parameters (peak, centre, fwhm)}\\
+& &allowed: & float array \\
+& &Default: & 
+\\
+fixed && \multicolumn{2}{p{3.36in}|}{A vector of which parameters are to be held fixed}\\
+& &allowed: & float array \\
+& &Default: & None (all parameters are flexible)
+\\
+component && \multicolumn{2}{p{3.36in}|}{In case of multiple gaussians/lorentzians, the index of the component}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.set_scan
 \newpage
 \ahsdfunction{sd.fitter.set\_scan}{sd.fitter.set_scan}{Set the data as a scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the 'data' (a scantable) of the fitter.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+thescan && \multicolumn{2}{p{3.36in}|}{A scantable}\\
+& &allowed: & scantable \\
+& &Default: & 
+\\
+mask && \multicolumn{2}{p{3.36in}|}{A retrieved from the scantable}\\
+& &allowed: & bool array \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.fitter.store_fit
 \newpage
 \ahsdfunction{sd.fitter.store\_fit}{sd.fitter.store_fit}{Save fit parameters}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Save the fit parameters.
+
+   If filename is specified, the method saves the result in an ASCII file.
+   Otherwise, the result will be stored in the scantable.
+   More specifically, the result will be stored in FIT subtable in the scantable.   
+
+   Currently, it works only for spectral line fitting (gaussian or lorentzian fitting).
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+filename && \multicolumn{2}{p{3.36in}|}{If specified, save as an ASCII table}\\
+& &allowed: & string \\
+& &Default: & None (store result in the scantable)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   f=sd.fitter()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   f.set_scan(s)
+   # set fit function as gaussian
+   f.set_function(gauss=1)
+   # set gaussian parameter with centre fixed
+   f.set_gauss_parameters(peak=0.5,centre=4100,fwhm=200,centrefixed=1)
+   f.fit() 
+   # store fit in the scantable
+   f.store_fit()
+   # store fit in an ASCII file
+   f.store_fit(filename='fitresult.txt')
+\end{verbatim}
+
 
 
 %%%%% sd.linecatalog
