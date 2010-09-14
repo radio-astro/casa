@@ -383,7 +383,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     absmax=maxField(resmax, resmin);
     if(cycle >1){
       //check if its 5% above previous value 
-      if(absmax < 1.05*oldabsmax)
+      if(absmax < 1.000005*oldabsmax)
 	oldabsmax=absmax;
       else{
 	diverging=True;
@@ -741,7 +741,8 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
   */
   //////////////
   for (Int model=0;model<(numberOfModels()-1); ++model) {
-    CoordinateSystem cs0=image(model).coordinates();
+    image(model).set(0);
+    /*    CoordinateSystem cs0=image(model).coordinates();
     IPosition iblc0(image(model).shape().nelements(),0);
       
       IPosition itrc0(image(model).shape());
@@ -760,38 +761,21 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
 
       ImageRegion imagreg(WCBox(lbox, cs));
       try{
-	SubImage<Float> partToMerge(image(nextmodel), imagreg0, True);
 	SubImage<Float> partToMask(image(model), imagreg, True);
-	LatticeRegion latReg0=imagreg0.toLatticeRegion(image(nextmodel).coordinates(), image(nextmodel).shape());
-	ArrayLattice<Bool> pixmerge(latReg0.get());
 	LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
 	ArrayLattice<Bool> pixmask(latReg.get());
-	/////////////////
-	/*Array<Bool> testoo;
-	testoo.assign(pixmask.get());
-       	cout << "Images " << model << "  and " << nextmodel << " shape " << pixmask.shape() << "  " << pixmerge.shape() << " number of T " << ntrue(testoo) << endl;
- 	*/
-	////////////////
-	//LatticeExpr<Float> myexpr0(iif((pixmerge && (abs(partToMask) > abs(partToMerge))), partToMask, partToMerge) );
-	//partToMerge.copyData(myexpr0);
 	LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
 	partToMask.copyData(myexpr);
 
       }
       catch(...){
-	//most probably no overlap
+	//no overlap you think ?
+	cout << "Did i fail " << endl;
 	continue;
       }
-      //////////
-      /*
-      {
-	LatticeExprNode maxIm=max(image(model));
-	cout << "MAX model " << model << "    " << maxIm.getFloat() << endl;
-      }
-      */
-      /////////
     
-    }
+    
+      }*/
     
     
     
