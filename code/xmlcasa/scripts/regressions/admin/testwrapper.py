@@ -134,21 +134,52 @@ class UnitTest:
         # get the classes
         classes = mytest.suite()
         testlist = []
-
-        for c in classes:
-            for attr, value in c.__dict__.iteritems():
-                if list:
-#                    print 'There is a list'
-                    for test in list:
-                        if test == attr:
-                            testlist.append(c(attr))
-                else:
+        
+        # Check if specific tests/classes were requested
+        if not list:
+#            print "no list"
+            for c in classes:
+                for attr, value in c.__dict__.iteritems():                
 #                    print attr, " = ", value
-                   if len(attr) >= len("test") and \
+                    if len(attr) >= len("test") and \
                         attr[:len("test")] == "test" : \
-#                        attr.rfind('test') != -1 :
                         testlist.append(c(attr))
-            
+                        
+        else:
+            # verify if list contains classes and/or methods
+            for input in list:
+                for c in classes:
+#                    print c
+                    if self.isaclass(c,input):
+#                        print "it is a class"
+                        # It is a class. Get all its methods
+                        for attr, value in c.__dict__.iteritems():
+                            if len(attr) >= len("test") and \
+                                attr[:len("test")] == "test" : \
+                                # append each test method to the list    
+                                testlist.append(c(attr))
+                    else:
+                        # maybe it is a method. Get only this one
+#                        print "maybe it is a method"
+                        for attr, value in c.__dict__.iteritems():
+                            if input == attr:
+                                testlist.append(c(attr))
+                                                                                        
+#            for attr, value in c.__dict__.iteritems():
+#                print attr, value
+#                if list:
+#                    print 'There is a list'
+#                    for test in list:
+#                        print test
+#                        if test == attr:
+#                            testlist.append(c(attr))
+#                else:
+#                    print attr, " = ", value
+#                   if len(attr) >= len("test") and \
+#                        attr[:len("test")] == "test" : \
+##                        attr.rfind('test') != -1 :
+#                        testlist.append(c(attr))
+#        print testlist
         return testlist
             
 
@@ -257,6 +288,14 @@ class UnitTest:
         else:    
             shutil.copy(scriptdir+'/'+testnamek, \
                     workdir+'/')
+
+    def isaclass(self,myclass,input):
+        '''Check if input equals the class name'''
+#        print "input=%s myclass=%s"%(input,myclass.__name__)
+        if input == myclass.__name__:
+            return True
+            
+        return False
 
 
 class ExecTest(unittest.TestCase,UnitTest):
