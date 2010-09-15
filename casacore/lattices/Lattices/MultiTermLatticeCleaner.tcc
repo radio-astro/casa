@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template<class T> MultiTermLatticeCleaner<T>::MultiTermLatticeCleaner():
   ntaylor_p(2),donePSF_p(False),donePSP_p(False),doneCONV_p(False)
   {
-	  adbg=True;
+	  adbg=False;
   }
 
 template <class T> MultiTermLatticeCleaner<T>::
@@ -329,7 +329,7 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
     Float rmaxval = maxres*norma;
     
     /* Print out coefficients at each iteration */
-    if(adbg)
+    //if(adbg)
     {
       //os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval;
       os << "[" << totalIters_p << "] Res: " << rmaxval;
@@ -368,7 +368,7 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
   /********************** END MINOR CYCLE ITERATIONS ***********************/		
   
   /* Print out flux counts so far */
-  if(adbg)
+  //if(adbg)
   {
      for(Int scale=0;scale<nscales_p;scale++) os << "Scale " << scale+1 << " with " << scaleSizes_p[scale] << " pixels has total flux = " << totalScaleFlux_p[scale] << " (in this run) " << LogIO::POST;
      for(Int taylor=0;taylor<ntaylor_p;taylor++) os << "Taylor " << taylor << " has total flux = " << totalTaylorFlux_p[taylor] << LogIO::POST;
@@ -421,13 +421,13 @@ Int MultiTermLatticeCleaner<T>::manageMemory(Bool direction)
 		memoryMB_p = Double(HostInfo::memoryTotal()/1024)/(2.0); // ? /(16.0) ?
 		Int ntemp = numberOfTempLattices(nscales_p,ntaylor_p);
 		Int numMB = nx_p*ny_p*4*ntemp/(1024*1024);
-		os << "This algorithm needs " << numMB << " MBytes for " << ntemp << " TempLattices " << LogIO::POST;
+		os << "This algorithm is allocating " << numMB << " MBytes for " << ntemp << " TempLattices " << LogIO::POST;
 		memoryMB_p = MIN(memoryMB_p, numMB);
-		os << "Allocating " << memoryMB_p << " MBytes." << LogIO::POST;
+		if(adbg)os << "Allocating " << memoryMB_p << " MBytes." << LogIO::POST;
 		
 	}
-	if(adbg && direction)os << "Allocating mem ... " ;
-	if(adbg && !direction)os << "Freeing mem ... " ;
+	if(adbg && direction)os << "Allocating memory ... " ;
+	if(adbg && !direction)os << "Freeing memory ... " ;
 	
 	Int ntotal4d = (nscales_p*(nscales_p+1)/2) * (ntaylor_p*(ntaylor_p+1)/2);
 	
@@ -718,7 +718,7 @@ Int MultiTermLatticeCleaner<T>::setupBlobs()
 	{
 		// Compute h(s1), h(s2),... depending on the number of scales chosen.
 		// NSCALES = 1;
-		os << "Calculating scales and their FTs " << LogIO::POST;
+		if(adbg) os << "Calculating scales and their FTs " << LogIO::POST;
 			
 		for (Int scale=0; scale<nscales_p;scale++) 
 		{
@@ -805,7 +805,7 @@ Int MultiTermLatticeCleaner<T>::computeMatrixA()
                 (*matA_p[scale])(taylor1,taylor2) = (*cubeA_p[IND4(taylor1,taylor2,scale,scale)])(wip);
 	      }
 	      
-	      if(adbg)os << "The Matrix A is : " << (*matA_p[scale]) << LogIO::POST;
+	      os << "The Matrix A is : " << (*matA_p[scale]) << LogIO::POST;
 	      
 	      // Compute inv(A) 
 	      // Use MatrixMathLA::invert
@@ -817,7 +817,7 @@ Int MultiTermLatticeCleaner<T>::computeMatrixA()
 	      if(adbg)os << "A matrix determinant : " << deter << LogIO::POST;
 	      //if(fabs(deter) < 1.0e-08) os << "SINGULAR MATRIX !! STOP!! " << LogIO::EXCEPTION;
 	      //if(adbg)os << "Lapack Cholesky Decomp Matrix inv(A) is : " << (*invMatA_p[scale]) << LogIO::POST;
-	      if(adbg)os << "Matrix Inverse : inv(A) : " << (*invMatA_p[scale]) << LogIO::POST;
+	      os << "Matrix Inverse : inv(A) : " << (*invMatA_p[scale]) << LogIO::POST;
 	      
       }
       
@@ -850,7 +850,7 @@ Int MultiTermLatticeCleaner<T>::computeRHS()
 	//storeAsImg("temp_residual_1",residualspec(0,1));
 	
 	/* I_D * (PSF * scale) -> matR_p [nx_p,ny_p,ntaylor,nscales] */
-	//os << "Calculating I_D * PSF_i * Scale_j " << LogIO::POST;
+	os << "Calculating convolutions of dirty image with scales and PSFs " << LogIO::POST;
 	for (Int taylor=0; taylor<ntaylor_p;taylor++) 
 	{
 	   /* Compute FT of dirty image */
@@ -913,7 +913,7 @@ Int MultiTermLatticeCleaner<T>::computeFluxLimit(Float &fluxlimit, Float thresho
 	
 	fluxlimit = max(threshold, (maxRes*norma) * ffactor);
 	
-	if(adbg)os << "Max Res : " << maxRes*norma << " FluxLimit : " << fluxlimit << LogIO::POST;
+	os << "Max Residual : " << maxRes*norma << " FluxLimit : " << fluxlimit << LogIO::POST;
 	
 	return 0;
 }/* end of computeFluxLimit() */
