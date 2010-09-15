@@ -10,10 +10,9 @@ import unittest
 myname = 'test_cvel'
 vis_a = 'ngc4826.ms'
 vis_b = 'test.ms'
-vis_c = 'jupiter6cm.demo.ms'
-vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
-vis_e = 'g19_d2usb_targets_line-shortened.ms'
-vis_f = 'evla-highres-sample.ms'
+vis_c = 'jupiter6cm.demo-thinned.ms'
+vis_d = 'g19_d2usb_targets_line-shortened-thinned.ms'
+vis_e = 'evla-highres-sample.ms'
 outfile = 'cvel-output.ms'
 
 def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
@@ -57,20 +56,16 @@ class cvel_test(unittest.TestCase):
         default('cvel')
         
         if(not os.path.exists(vis_a)):
-            importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', 
+            importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', # 10 MB
                          vis=vis_a)
         if(not os.path.exists(vis_b)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/fits-import-export/input/test.ms .')
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/fits-import-export/input/test.ms .') # 27 MB
         if(not os.path.exists(vis_c)):
-            importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/jupiter6cm/jupiter6cm.fits', 
-                         vis=vis_c)
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/jupiter6cm.demo-thinned.ms .') # 124 MB
         if(not os.path.exists(vis_d)):
-            importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', 
-                         vis=vis_d)
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened-thinned.ms .') # 15 MB
         if(not os.path.exists(vis_e)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
-        if(not os.path.exists(vis_f)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample.ms .')
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample.ms .') # 352 MB
 
 
     def tearDown(self):
@@ -80,21 +75,21 @@ class cvel_test(unittest.TestCase):
     def test1(self):
         '''Cvel 1: Testing default'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel()
         self.assertFalse(rval)
     
     def test2(self):
         '''Cvel 2: Only input vis set'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(vis = 'myinput.ms')
         self.assertEqual(rval,None)
             
     def test3(self):
         '''Cvel 3: Input and output vis set'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(vis = 'myinput.ms', outputvis = outfile)
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 64, 0)
@@ -103,7 +98,7 @@ class cvel_test(unittest.TestCase):
     def test4(self):
         '''Cvel 4: I/O vis set, more complex input vis, one field selected'''
         myvis = vis_a        
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(vis = 'myinput.ms', outputvis = outfile, field = '1')
         self.assertNotEqual(rval,False)
         ret = (verify_ms(outfile, 1, 64, 0))
@@ -112,7 +107,7 @@ class cvel_test(unittest.TestCase):
     def test5(self):
         '''Cvel 5: I/O vis set, more complex input vis, one field selected, passall = True'''
         myvis = vis_a
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
                     vis = 'myinput.ms',
                     outputvis = outfile,
@@ -126,7 +121,7 @@ class cvel_test(unittest.TestCase):
     def test6(self):
         '''Cvel 6: I/O vis set, more complex input vis, one field selected, one spw selected, passall = True'''
         myvis = vis_a
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -144,7 +139,7 @@ class cvel_test(unittest.TestCase):
         '''Cvel 7: I/O vis set, input vis with two spws, one field selected, 2 spws selected, 
            passall = False'''
         myvis = vis_c
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
                 vis = 'myinput.ms',
                 outputvis = outfile,
@@ -160,7 +155,7 @@ class cvel_test(unittest.TestCase):
         '''Cvel 8: I/O vis set, input vis with two spws, one field selected, 2 spws selected, 
            passall = False, regridding 1'''
         myvis = vis_c
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -178,7 +173,7 @@ class cvel_test(unittest.TestCase):
         '''Cvel 9: I/O vis set, input vis with two spws, one field selected, 2 spws selected, 
            passall = False, regridding 2'''
         myvis = vis_c
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -196,7 +191,7 @@ class cvel_test(unittest.TestCase):
     def test10(self):
         '''Cvel10: I/O vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 3...'''
         myvis = vis_c
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -217,7 +212,7 @@ class cvel_test(unittest.TestCase):
         '''Cvel 11: I/O vis set, input vis with two spws, one field selected, 
            2 spws selected, passall = False, regridding 4...'''
         myvis = vis_c
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
 
         rval = cvel(
             vis = 'myinput.ms',
@@ -238,7 +233,7 @@ class cvel_test(unittest.TestCase):
         '''Cvel 12: Input and output vis set, input vis with two spws, two fields selected, 
            2 spws selected, passall = False, regridding 5...'''
         myvis = vis_c
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -259,7 +254,7 @@ class cvel_test(unittest.TestCase):
         '''Cvel 13: I/O vis set, input vis with one spws, one field selected, one spws selected, 
            passall = False, regridding 6...'''
         myvis = vis_a
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -281,7 +276,7 @@ class cvel_test(unittest.TestCase):
         '''Cvel 14: I/O vis set, input vis with one spws, one field selected, one spws selected, 
            passall = False, non-existing phase center...'''
         myvis = vis_a
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         try:
             rval = cvel(
                 vis = 'myinput.ms',
@@ -305,7 +300,7 @@ class cvel_test(unittest.TestCase):
     def test15(self):
         '''Cvel 15: I/O vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 8...'''
         myvis = vis_c
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = 'cvel-output.ms',
@@ -324,8 +319,8 @@ class cvel_test(unittest.TestCase):
     
     def test16(self):
         '''Cvel 16: I/O vis set, input vis with one spw, two fields selected, passall = False, regridding 9...'''
-        myvis = vis_d
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_a
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -344,8 +339,8 @@ class cvel_test(unittest.TestCase):
     
     def test17(self):
         '''Cvel 17: I/O vis set, input vis with one spw, two fields selected, passall = False, regridding 9...'''
-        myvis = vis_d
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_a
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = 'cvel-output.ms',
@@ -364,8 +359,8 @@ class cvel_test(unittest.TestCase):
         
     def test18(self):
         '''Cvel 18: I/O vis set, input vis with one spw, two fields selected, passall = False, regridding 9...'''
-        myvis = vis_d
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_a
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -385,8 +380,8 @@ class cvel_test(unittest.TestCase):
     
     def test19(self):
         '''Cvel 19: SMA input MS, 24 spws to combine, channel mode, 10 output channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -402,8 +397,8 @@ class cvel_test(unittest.TestCase):
     
     def test20(self):
         '''Cvel 20: SMA input MS, 24 spws to combine, channel mode, 111 output channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -419,8 +414,8 @@ class cvel_test(unittest.TestCase):
     
     def test21(self):
         '''Cvel 21: SMA input MS, 24 spws to combine, frequency mode, 21 output channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -436,8 +431,8 @@ class cvel_test(unittest.TestCase):
     
     def test22(self):
         '''Cvel 22: SMA input MS, 24 spws to combine, frequency mode, 210 output channels, negative width'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -454,8 +449,8 @@ class cvel_test(unittest.TestCase):
     
     def test23(self):
         '''Cvel 23: SMA input MS, 24 spws to combine, radio velocity mode, 30 output channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         vrad = (220398.676E6 - 229586E6)/220398.676E6 * 2.99792E8
         vwidth = ((220398.676E6 - 229586E6+1600E3)/220398.676E6 * 2.99792E8) - vrad
         vrad = vrad-vwidth/2.
@@ -476,8 +471,8 @@ class cvel_test(unittest.TestCase):
     
     def test24(self):
         '''Cvel 24: SMA input MS, 24 spws to combine, radio velocity mode, 35 output channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         vrad = (220398.676E6 - 229586E6)/220398.676E6 * 2.99792E8
         vwidth = ((220398.676E6 - 229586E6+3200E3)/220398.676E6 * 2.99792E8) - vrad
         vrad = vrad-vwidth/2.
@@ -498,8 +493,8 @@ class cvel_test(unittest.TestCase):
     
     def test25(self):
         '''Cvel 25: SMA input MS, 24 spws to combine, optical velocity mode, 40 output channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         lambda0 = 2.99792E8/220398.676E6
         lambda1 = 2.99792E8/229586E6
         lambda2 = 2.99792E8/(229586E6+1600E3)
@@ -523,8 +518,8 @@ class cvel_test(unittest.TestCase):
     
     def test26(self):
         '''Cvel 26: SMA input MS, 24 spws to combine, optical velocity mode, 40 output channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         lambda0 = 2.99792E8/220398.676E6
         lambda1 = 2.99792E8/229586E6
         vopt = (lambda1-lambda0)/lambda0 * 2.99792E8
@@ -548,8 +543,8 @@ class cvel_test(unittest.TestCase):
     
     def test27(self):
         '''Cvel 27: SMA input MS, 24 spws to combine, scratch columns, no regridding'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         # no regrid
         rval = cvel(
             vis = 'myinput.ms',
@@ -561,8 +556,8 @@ class cvel_test(unittest.TestCase):
     
     def test28(self):
         '''Cvel 28: SMA input MS, 24 spws to combine, scratch columns, channel mode, 30 channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -577,8 +572,8 @@ class cvel_test(unittest.TestCase):
             
     def test29(self):
         '''Cvel 29: SMA input MS, 24 spws to combine, scratch columns, channel mode, 31 channels'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -593,8 +588,8 @@ class cvel_test(unittest.TestCase):
     
     def test30(self):
         '''Cvel 30: SMA input MS, 24 spws to combine, scratch columns, mode channel_b, no regridding'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -606,8 +601,8 @@ class cvel_test(unittest.TestCase):
     
     def test31(self):
         '''Cvel 31: SMA input MS, 24 spws to combine, scratch columns, mode channel, frame trafo'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -621,8 +616,8 @@ class cvel_test(unittest.TestCase):
 
     def test32(self):
         '''Cvel 32: SMA input MS, 24 spws to combine, scratch columns, mode channel, frame trafo, Hanning smoothing'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -637,8 +632,8 @@ class cvel_test(unittest.TestCase):
 
     def test33(self):
         '''Cvel 33: SMA input MS, 1 spw, scratch columns, mode channel, no trafo, Hanning smoothing'''
-        myvis = vis_e
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             spw='1',
@@ -653,8 +648,8 @@ class cvel_test(unittest.TestCase):
 
     def test34(self):
         '''Cvel 34: EVAL high-res input MS, 2 spws to combine'''
-        myvis = vis_f
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        myvis = vis_e
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -668,7 +663,7 @@ class cvel_test(unittest.TestCase):
     def test35(self):
         '''Cvel 35: test effect of sign of width parameter: channel mode, width positive'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
@@ -686,7 +681,7 @@ class cvel_test(unittest.TestCase):
     def test36(self):
         '''Cvel 36: test effect of sign of width parameter: channel mode, width negative'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
@@ -704,7 +699,7 @@ class cvel_test(unittest.TestCase):
     def test37(self):
         '''Cvel 37: test effect of sign of width parameter: freq mode, width positive'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
@@ -723,7 +718,7 @@ class cvel_test(unittest.TestCase):
     def test38(self):
         '''Cvel 38: test effect of sign of width parameter: freq mode, width negative'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
@@ -742,7 +737,7 @@ class cvel_test(unittest.TestCase):
     def test39(self):
         '''Cvel 39: test effect of sign of width parameter: radio velocity mode, width positive'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
@@ -769,7 +764,7 @@ class cvel_test(unittest.TestCase):
     def test40(self):
         '''Cvel 40: test effect of sign of width parameter: radio velocity mode, width negative'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
@@ -796,7 +791,7 @@ class cvel_test(unittest.TestCase):
     def test41(self):
         '''Cvel 41: test effect of sign of width parameter: optical velocity mode, width positive'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
@@ -827,7 +822,7 @@ class cvel_test(unittest.TestCase):
     def test42(self):
         '''Cvel 42: test effect of sign of width parameter: optical velocity mode, width negative'''
         myvis = vis_b
-        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
