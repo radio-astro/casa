@@ -1046,7 +1046,7 @@ Bool Simulator::setnoise(const String& mode,
 			 const Float correfficiency=0.85,
 			 const Float trx=150.0, 
 			 const Float tground=270.0, 
-			 const Float tcmb=2.7, 
+			 const Float tcmb=2.73, 
 			 const Bool OTF=True
 			 ) {
   
@@ -1503,7 +1503,7 @@ Bool Simulator::oldsetnoise(const String& mode,
 			    const Float tau=0.0,
 			    const Float trx=50.0, 
 			    const Float tatmos=250.0, 
-			    const Float tcmb=2.7) {
+			    const Float tcmb=2.73) {
   
   LogIO os(LogOrigin("Simulator", "oldsetnoise()", WHERE));
   try {

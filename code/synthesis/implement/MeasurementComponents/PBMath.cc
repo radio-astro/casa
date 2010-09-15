@@ -995,11 +995,17 @@ void PBMath::initByDiameter(Double diameter, Bool useSymmetricBeam,
   vlanum(17) = 0.000690041;
   vlanum(18) = 8.87288e-05;
 
-  Double scalesize = 1.1998662 * 25.0/diameter;
-  pb_pointer_p = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
-				     Quantity(43.0,"GHz"), False);
-
-
+  if(diameter>0.){
+    Double scalesize = 1.1998662 * 25.0/diameter;
+    pb_pointer_p = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
+				       Quantity(43.0,"GHz"), False);
+  }
+  else if(diameter==0.){
+    throw(AipsError("Attempt to initialize PBMath with zero dish diameter."));
+  }
+  else{
+    throw(AipsError("Attempt to initialize PBMath with negative dish diameter."));
+  }
 
 }
 

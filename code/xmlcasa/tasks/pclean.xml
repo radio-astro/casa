@@ -424,12 +424,61 @@
                Options: 'continuum', 'channel', 'frequency',
                         'velocity', 'mfs'
                default: 'continuum'
+               example:
+                 mode='channel'; Use with nchan, start, step to specify
+                        output image cube.
+                 mode='velocity', channels are specified in velocity.
+                 mode='frequency', channels are specified in frequency.
+  &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parame
+ters
+           nchan -- Total number of channels in the output image.
+              Example: nchan=100.
+              Default: -1; Automatically selects enough channels to cover
+              data selected by 'spw' and consistent with 'start' and 'step'
+              It is often easiest to leave nchan at the default value.
+           start -- First channel, velocity, or frequency.
+              For mode='channel'; This selects the channel index number
+              from the MS (0 based) that you want to correspond to the first
+              channel of the output cube. The output cube will be in frequency
+              space with the first channel having the frequency of the
+              MS channel selected by start.  start=0 refers to the first
+              channel in the first selected spw, even if that channel
+              is de-selected in the spw parameter. 
+              example:start=5
+
+              For mode='velocity' or 'frequency': default='';
+                 starts at first input channel of first input spw
+                 examples: start='5.0km/s', or start='22.3GHz'.
+           step -- Output channel width
+              For mode='channel', default=1; &gt;1 indicates channel averaging
+              example: width=4.
+
+              For mode=' 'velocity' or 'frequency', default=''; width of
+              first input channel, or more precisely, the difference
+              in frequencies between the first two selected channels.
+              (for example if channels 1 and 3 are selected with spw,
+              then the default width will be the difference between their
+              frequencies, and not the width of channel 1)
+              When not using the default, one must give units
+              examples: width='1.0km/s', or width='24.2kHz'.
+              Setting width>0 gives channels of increasing frequency for
+              mode='frequency', and increasing velocity for mode='velocity'.
+
+           chanchunk -- number of channel to process at a go per process
+              (careful not to go above total memory available)
     
 	interactive -- Create a mask interactively or not.
-               default: False; 
-               example: interactive=True
-                 The viewer will open with the image displayed. Select the
-        	 region for the mask and double click in the middle of it.
+              interactive clean allows the user to build the cleaning
+              mask interactively using the viewer.  The viewer will
+              appear every npercycle interation, but modify as needed
+              The final interactive mask is saved in the file
+              imagename_interactive.mask.  The initial masks use the
+              union of mask and cleanbox (see below).
+
+              default: False; 
+              example: interactive=True
+                The viewer will open with the image displayed. Select the
+        	region for the mask and double click in the middle of it.
 
         contclean -- Use existing model image 
                if False the imagename.model is deleted if it is exists
@@ -449,42 +498,72 @@
                default: 1
                example: numcpuperhost=3
 
-        wprojplanes -- an interger that is valid only of ftmachine is 'wproject',
-        facets -- integer do split image facet,
-        majorcycles -- integer number of CS major cycles to do,
-        alg -- string  possibilities are 'clark', 'hogbom', 'msclean'
-        cfcache -- The disk cache directory for convolution functions rections are applied (default=0.1)
-        dopbcorr -- If true, correct for PB in the major cycles as well pointing table given by epjtablename
-        epjtablename -- Table containing antenna pointing offsets
-        scales -- list of scales in pixel for multiscale clean e.g [0, 3, 10]
-        contclean -- boolean if False the imagename.model is deleted if its on disk otherwise clean will continue from previous run
-        chanchunk -- number of channel to process at a go per process...careful not to go above total memory available
-        visinmem -- load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
-        painc -- Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
-        pblimit -- The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
-        dopbcorr -- If true, correct for PB in the major cycles as well
-        applyoffsets -- If true, apply antenna pointing offsets from the pointing table given by epjtablename
+  &gt;&gt;&gt; gridmode='' expandable parameters
+               The default value of '' has no effect.
+
+  &gt;&gt;&gt; gridmode='widefield' expandable parameters
+               Apply corrections for non-coplanar effects during imaging
+               using the W-Projection algorithm (Cornwell et al. IEEE JSTSP
+               (2008)) or faceting or a combination of the two.
+
+               wprojplanes is the number of pre-computed w-planes used for
+                   the W-Projection algorithm.  wprojplanes=1 disables
+                   correction for non-coplanar effects.
+               facets is the number of facets used.  W-Projection is done
+                   for each facet.
+
+  &gt;&gt;&gt; gridmode='aprojection' expandable parameters
+               Corrects for the (E)VLA polarization squint using the
+               A-Projection algorithm (Bhatnagar et al., AandA (2008)).
+
+               cfcache is the name of the directory to be used to cache the
+                   convolution functions.  These functions can be reused
+                   again if the image parameters are unchanged.  If the imag
+e
+                   parameters change, a new cache must be created (or the
+                   existing one removed).
+               painc (in degrees) is the Parallactic Angle increment used to
+                   compute the convolution functions.
+
+  &gt;&gt;&gt; gridmode='experimental' expandable parameters
+               cfcache -- The disk cache directory for convolution 
+                   functions rections are applied (default=0.1)
+               epjtablename -- Table containing antenna pointing offsets
+               wprojplanes -- the number of pre-computed w-planes used for
+                   the W-Projection algorithm.  wprojplanes=1 disables
+                   correction for non-coplanar effects.
+               facets -- the number of facets used.  W-Projection is done
+                   for each facet.
+
+               applyoffsets -- apply antenna pointing offsets from the 
+                   pointing table given by epjtablename
+
+        dopbcorr -- correct for PB in the major cycles as well pointing 
+          table given by epjtablename
+
+        pblimit -- The fraction of the peak of the PB to which the PB c
+          orrections are applied (default=0.1)
 
 	
    pclean(vis='sim100g_4chan15kRows.ms',
           imagename='hundredG_cont', imsize=[1500, 1500],
-          pixsize=['0.135arcsec', '0.135arcsec'], phasecenter=0,
+          cell=['0.135arcsec', '0.135arcsec'], phasecenter=0,
           field='0', spw='*', ftmachine='ft', wprojplanes=128,
           hostnames=['casa-dev-03', 'casa-dev-04', 'casa-dev-02'], 
-          numcpuperhost=1, 
+          numcpuperhost=1,threshold='0.1mJy', 
           majorcycles=4, niter=10000, alg='clark',
-          weight='natural',
+          weighting='natural',
           contclean=False, visinmem=False)
 
    pclean(vis='sim100g_4chan15kRows.ms', 
           imagename='hundredG', imsize=[1200, 1200], 
-          pixsize=['0.135arcsec', '0.135arcsec'], phasecenter=0, 
+          cell=['0.135arcsec', '0.135arcsec'], phasecenter=0, 
           field='0', spw='*', ftmachine='ft', wprojplanes=128, 
           hostnames=['casa-dev-03', 'casa-dev-04', 'casa-dev-02'], 
-          numcpuperhost=1, 
+          numcpuperhost=1,threshold='0.1mJy', 
           majorcycles=4, niter=4000, alg='clark',
           mode='channel', start=0, nchan=1024, step=1, 
-          weight='natural',
+          weighting='natural',
           contclean=False, chanchunk=1, visinmem=False)
 
 

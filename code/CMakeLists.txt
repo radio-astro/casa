@@ -135,7 +135,6 @@ if( OPENMP_FOUND )
   set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
   set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
 endif()
-dump( DEFAULT_CXX_FLAGS )
 
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
@@ -745,7 +744,7 @@ casa_find( ATM
   INCLUDES ATMEnumerations.h ATMVersion.h
   INCLUDES_SUFFIXES ATM
   LIBS aatm
-  #CPP_VERSION ATM_VERSION  to be uncommented when ATM_VERSION is defined in devel-RPMs
+  CPP_VERSION ATM_VERSION
   RUN_VERSION "atm::getVersion()" 
 )
 

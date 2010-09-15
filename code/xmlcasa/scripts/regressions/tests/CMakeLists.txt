@@ -29,6 +29,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   cleanchan_test.py
   cleanhelper_test.py
   cvel_test.py
+  cvel_test2.py
   equinox_vis.py
   fits-import-export.py
   g192redux.py

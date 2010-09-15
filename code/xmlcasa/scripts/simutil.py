@@ -802,7 +802,7 @@ class simutil:
         obs =['ALMA','ACA','EVLA','VLA','SMA']
         d   =[ 12.   ,7.,   25.  , 25.  , 6. ]
         ds  =[ 0.75,  0.75, 0.364, 0.364,0.35] # what is subreflector size for ACA?!
-        eps =[ 25.,   25.,  300,   300  ,15. ]  # antenna surface accuracy
+        eps =[ 20.,   20.,  300,   300  ,15. ]  # antenna surface accuracy
         
         cq  =[ 0.95, 0.95,  0.91,  0.79, 0.86]  # correlator quantization eff
         # VLA includes additional waveguide loss from correlator loss of 0.809
@@ -900,6 +900,138 @@ class simutil:
         return eta_p, eta_s, eta_b, eta_t, eta_q, t_rx
     
     
+
+
+
+
+    def noiselevel(self, freq, bandwidth, etime, elevation, pwv=None,
+                   telescope=None, diam=None, nant=None,
+                   antennalist=None):
+        
+        msfile="tmp.ms"
+        sm.open(msfile)
+
+        if antennalist==None:
+            if telescope==None:
+                self.msg("Telescope name has not been set.",priority="error")
+                return False 
+            if diam==None:
+                self.msg("Antenna diameter has not been set.",priority="error")
+                return False
+            if nant==None:
+                self.msg("Number of antennas has not been set.",priority="error")
+                return False
+               
+            posobs=me.observatory(telescope)
+            obs=me.measure(posobs,'WGS84')
+            obslat=qa.convert(obs['m1'],'deg')['value']
+            obslon=qa.convert(obs['m0'],'deg')['value']
+            obsalt=qa.convert(obs['m2'],'m')['value']
+            stnx,stny,stnz = self.locxyz2itrf(obslat,obslon,0,0,obsalt)
+            antnames="A00"
+
+        else:
+            if os.path.exists(antennalist):
+                stnx, stny, stnz, stnd, padnames, nant, telescope = self.readantenna(antennalist)
+            else:
+                self.msg("antennalist "+antennalist+" not found",priority="error")
+                return False
+
+            # RI TODO average antenna instead of first?
+            diam = stnd[0]
+            antnames=padnames
+
+            posobs=me.observatory(telescope)
+            obs=me.measure(posobs,'WGS84')
+            obslat=qa.convert(obs['m1'],'deg')['value']
+            obslon=qa.convert(obs['m0'],'deg')['value']
+            obsalt=qa.convert(obs['m2'],'m')['value']
+
+ 
+        if (telescope==None or diam==None):
+            self.msg("Telescope name and antenna diameter have not been set.",priority="error")
+            return False
+
+        # copied from task_simdata:
+
+        sm.setconfig(telescopename=telescope, x=stnx, y=stny, z=stnz, 
+                     dishdiameter=diam.tolist(), 
+                     mount=['alt-az'], antname=antnames, padname=padnames, 
+                     coordsystem='global', referencelocation=posobs)
+                
+        model_nchan=1
+        # RI TODO isquantity checks
+        model_width=qa.quantity(bandwidth) # note: ATM uses band center
+
+        # but we want band center at center of first channel, and 
+        #model_start=qa.add(qa.quantity(freq),qa.mul(model_width,-0.5))
+        model_start=qa.quantity(freq)
+       
+#        model_nchan=2
+#        model_width=qa.mul(qa.quantity(bandwidth),0.5)
+#        model_start=qa.add(qa.quantity(freq),qa.mul(model_width,-0.25))
+
+        if str.upper(telescope).find('VLA')>0:
+            sm.setspwindow(spwname="band1", freq=qa.tos(model_start), 
+                           deltafreq=qa.tos(model_width), 
+                           freqresolution=qa.tos(model_width), 
+                           nchannels=model_nchan, 
+                           stokes='RR LL')
+            sm.setfeed(mode='perfect R L',pol=[''])
+        else:            
+            sm.setspwindow(spwname="band1", freq=qa.tos(model_start), 
+                           deltafreq=qa.tos(model_width), 
+                           freqresolution=qa.tos(model_width), 
+                           nchannels=model_nchan, 
+                           stokes='XX YY')
+            sm.setfeed(mode='perfect X Y',pol=[''])
+
+        sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
+        sm.setauto(0.0)
+
+        obslat=qa.convert(obs['m1'],'deg')
+        dec=qa.add(obslat, qa.add(qa.quantity("90deg"),qa.mul(elevation,-1)))
+
+        sm.setfield(sourcename="src1", 
+                    sourcedirection="J2000 00:00:00.00 "+qa.angle(dec),
+                    calcode="OBJ", distance='0m')
+        reftime = me.epoch('TAI', "2012/01/01/00:00:00")
+        sm.settimes(integrationtime=etime, usehourangle=True, 
+                    referencetime=reftime)
+        sm.observe(sourcename="src1", spwname="band1",
+                   starttime=qa.quantity(0, "s"),
+                   stoptime=qa.quantity(etime));
+        
+        sm.setdata()
+        sm.setvp()
+        
+        eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = self.noisetemp(telescope=telescope,freq=freq)
+        eta_a = eta_p * eta_s * eta_b * eta_t
+        
+        if pwv==None:
+            # RI TODO choose based on freq octile
+            pwv=2.0
+
+        # things hardcoded in ALMA etimecalculator
+        t_ground=270.
+        t_cmb=2.73
+        eta_q = 0.88  # change in simutil, as well as surface =20um, eta_eff=.95
+        eta_a = 0.95*0.8*eta_s
+
+        sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                    antefficiency=eta_a,trx=t_rx,
+                    tground=t_ground,tcmb=t_cmb,pwv=str(pwv)+"mm",
+                    mode="tsys-atm",table="tmp.caltbl")
+        
+        #sm.corrupt()
+        sm.done()
+        
+        tb.open("tmp.caltbl.T.cal")
+        gain=tb.getcol("GAIN")
+        #RI TODO average instead of first?
+        tb.done()
+
+        return 1./(gain[0][0][0].real)**2 /pl.sqrt(.5*nant*(nant-1))
 
 
 
@@ -2873,5 +3005,7 @@ class simutil:
         ia.setbrightnessunit("Jy/beam")
         ia.setrestoringbeam(beam=beam)
         ia.done()
+
+
 
 

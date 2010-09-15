@@ -1342,7 +1342,7 @@ void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
   modelVisCube_p.resize(visIter_p->visibilityShape());
   modelVisCube_p.set(0.0);
   for (Int icorr=0;icorr<nCorr();++icorr) 
-    if (abs(stkvis(icorr))>0.0)
+    if (abs(stkvis(corrmap(icorr)))>0.0)
       modelVisCube_p(Slice(icorr,1,1),Slice(),Slice()).set(stkvis(corrmap(icorr)));
   modelVisCubeOK_p=True;
 
